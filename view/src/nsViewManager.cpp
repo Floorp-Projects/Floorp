@@ -533,11 +533,45 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
   if (nsnull != mContext)
   {
     if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+    {
+      if (aUpdateFlags & NS_VMREFRESH_AUTO_DOUBLE_BUFFER)
+      {
+        nsRect  vrect, rrect;
+        nscoord varea;
+
+        //see if the paint region is greater than .75 the area of our root view.
+        //if so, enable double buffered painting.
+
+        mRootView->GetBounds(vrect);
+
+        varea = vrect.width * vrect.height;
+
+        if (varea == 0)
+          return;
+
+#ifdef USE_DIRTY_RECT
+        rrect = mDirtyRect;
+#else
+        mDirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
+        rrect *= mContext->GetPixelsToTwips();
+#endif
+
+        if ((((float)rrect.width * rrect.height) / (float)varea) >  0.75f)
+          aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+        else
+          aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+
+        //now clear the bit that got us here...
+
+        aUpdateFlags &= ~NS_VMREFRESH_AUTO_DOUBLE_BUFFER;
+      }
+
 #ifdef USE_DIRTY_RECT
       Refresh(mRootView, nsnull, &mDirtyRect, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
 #else
       Refresh(mRootView, nsnull, mDirtyRegion, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
 #endif
+    }
     else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
     {
       PRTime now = PR_Now();
