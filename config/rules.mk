@@ -846,7 +846,7 @@ ifndef COMPILER_DEPEND
 #
 # Generate dependencies on the fly
 #
-_MDDEPFILE = $(MDDEPDIR)/$(<F).pp
+_MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
 define MAKE_DEPS_AUTO
 if test -d $(@D); then \
