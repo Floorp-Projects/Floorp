@@ -2530,9 +2530,11 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         bp += 2;
         js_strncpy(bp, JSSTRING_CHARS(name), namelength);
         bp += namelength;
-        *bp++ = (jschar) ' ';
-        js_strncpy(bp, JSSTRING_CHARS(str), length);
-        bp += length;
+        if (length != 0) {
+            *bp++ = (jschar) ' ';
+            js_strncpy(bp, JSSTRING_CHARS(str), length);
+            bp += length;
+        }
         js_strncpy(bp, pi_suffix_ucNstr, 2);
         bp[2] = 0;
         str = js_NewString(cx, base, newlength, 0);
@@ -7706,26 +7708,44 @@ js_CloneXMLObject(JSContext *cx, JSObject *obj)
     return NewXMLObject(cx, xml);
 }
 
-JSObject *
+JSBool
 js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
-                       JSString *value)
+                       JSString *value, JSObject **objp)
 {
+    uintN flags;
     JSObject *obj;
     JSXML *xml;
     JSXMLQName *qn;
 
+    if (!GetXMLSettingFlags(cx, &flags))
+        return JS_FALSE;
+
+    *objp = NULL;
+    switch (xml_class) {
+      case JSXML_CLASS_COMMENT:
+        if (flags & XSF_IGNORE_COMMENTS)
+            return JS_TRUE;
+        break;
+      case JSXML_CLASS_PROCESSING_INSTRUCTION:
+        if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
+            return JS_TRUE;
+        break;
+      default:;
+    }
+
     obj = js_NewXMLObject(cx, xml_class);
     if (!obj)
-        return NULL;
+        return JS_FALSE;
     xml = (JSXML *) JS_GetPrivate(cx, obj);
     if (name) {
         qn = js_NewXMLQName(cx, cx->runtime->emptyString, NULL, name);
         if (!qn)
-            return NULL;
+            return JS_FALSE;
         xml->name = qn;
     }
     xml->xml_value = value;
-    return obj;
+    *objp = obj;
+    return JS_TRUE;
 }
 
 #endif /* JS_HAS_XML_SUPPORT */

@@ -5176,22 +5176,19 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
           case JSOP_XMLCDATA:
             atom = GET_ATOM(cx, script, pc);
             str = ATOM_TO_STRING(atom);
-            obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
-            if (!obj) {
-                ok = JS_FALSE;
+            ok = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str, &obj);
+            if (!ok)
                 goto out;
-            }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
           case JSOP_XMLCOMMENT:
             atom = GET_ATOM(cx, script, pc);
             str = ATOM_TO_STRING(atom);
-            obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
-            if (!obj) {
-                ok = JS_FALSE;
+            ok = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str,
+                                        &obj);
+            if (!ok)
                 goto out;
-            }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
@@ -5200,13 +5197,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             str = ATOM_TO_STRING(atom);
             atom = GET_ATOM(cx, script, pc + ATOM_INDEX_LEN);
             str2 = ATOM_TO_STRING(atom);
-            obj = js_NewXMLSpecialObject(cx,
-                                         JSXML_CLASS_PROCESSING_INSTRUCTION,
-                                         str, str2);
-            if (!obj) {
-                ok = JS_FALSE;
+            ok = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION,
+                                        str, str2, &obj);
+            if (!ok)
                 goto out;
-            }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
