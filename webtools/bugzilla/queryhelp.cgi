@@ -22,8 +22,6 @@
 #                         Terry Weissman <terry@mozilla.org>
 #                         Tara Hernandez <tara@tequilarista.org>
 
-use vars %::FORM;
-
 use strict;
 
 use lib qw(.);
@@ -36,8 +34,6 @@ quietly_check_login();
 GetVersionTable();
 
 print Bugzilla->cgi->header();
-
-my $product = $::FORM{'product'};
 
 PutHeader("Bugzilla Query Page Help","Help", "This page is to help you learn how to use the query form.");
 
@@ -657,6 +653,7 @@ products being developed. Each product has its own components.
 $line_count = 0;
 $max_table_size = 50;
 my @products;
+my $product;
 
 $tableheader =         qq{ <p><table border=0><tr><td>
         <table border="1" width="100%" cellpadding="4" cellspacing="0">
