@@ -188,8 +188,8 @@ OPDEF(JSOP_UINT16,    88, "uint16",     NULL,         3,  0,  1, 12,  JOF_UINT16
 /* Object and array literal support. */
 OPDEF(JSOP_NEWINIT,   89, "newinit",    NULL,         1,  2,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_ENDINIT,   90, "endinit",    NULL,         1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_INITPROP,  91, "initprop",   NULL,         3,  1,  0,  0,  JOF_CONST|JOF_PROP)
-OPDEF(JSOP_INITELEM,  92, "initelem",   NULL,         1,  2,  0,  0,  JOF_BYTE |JOF_ELEM)
+OPDEF(JSOP_INITPROP,  91, "initprop",   NULL,         3,  1,  0,  0,  JOF_CONST|JOF_PROP|JOF_DETECTING)
+OPDEF(JSOP_INITELEM,  92, "initelem",   NULL,         1,  2,  0,  0,  JOF_BYTE |JOF_ELEM|JOF_DETECTING)
 OPDEF(JSOP_DEFSHARP,  93, "defsharp",   NULL,         3,  0,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_USESHARP,  94, "usesharp",   NULL,         3,  0,  1,  0,  JOF_UINT16)
 
