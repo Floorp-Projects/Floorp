@@ -66,88 +66,88 @@ tree {
 
 /* ::::: tree rows ::::: */
 
-tree[selstyle="primary"] > treechildren:-moz-tree-row,
-treechildren:-moz-tree-row {
+tree[selstyle="primary"] > treechildren::-moz-tree-row,
+treechildren::-moz-tree-row {
   border: 1px solid transparent;
   background-color: transparent;
   min-height: 18px;
   height: 1.3em;
 }
 
-treechildren:-moz-tree-row(selected) {
+treechildren::-moz-tree-row(selected) {
   background-color: #C7D0D9;
 }
 
-treechildren:-moz-tree-row(selected, focus) {
+treechildren::-moz-tree-row(selected, focus) {
   background-color: #424F63;
 }
 
-treechildren:-moz-tree-row(current, focus) {
+treechildren::-moz-tree-row(current, focus) {
   border-top-color: #000000;
   border-bottom-color: #000000;
 }
 
 /* ::::: tree cells ::::: */
 
-treechildren:-moz-tree-cell {
+treechildren::-moz-tree-cell {
   padding: 0px 2px 0px 2px;
 }
 
-tree[selstyle="primary"] > treechildren:-moz-tree-cell-text,
-treechildren:-moz-tree-cell-text {
+tree[selstyle="primary"] > treechildren::-moz-tree-cell-text,
+treechildren::-moz-tree-cell-text {
   border: 1px solid transparent;
   color: inherit;
 }
 
-treechildren:-moz-tree-cell-text(selected) {
+treechildren::-moz-tree-cell-text(selected) {
   color: #000000;
 }
 
-tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected) {
+tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, selected) {
   background-color: #C7D0D9;
   color: #000000;
 }
 
-treechildren:-moz-tree-cell-text(selected, focus) {
+treechildren::-moz-tree-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
-tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, selected, focus) {
+tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, selected, focus) {
   background-color: #424F63;
   color: #FFFFFF;
 }
 
-tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, current, focus) {
+tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, current, focus) {
   border-color: #000000;
 }
 
 /* ::::: lines connecting cells ::::: */
 
-tree[selstyle="primary"] > treechildren:-moz-tree-line,
-treechildren:-moz-tree-line {
+tree[selstyle="primary"] > treechildren::-moz-tree-line,
+treechildren::-moz-tree-line {
   border: 1px dotted #808080;
 }
 
-treechildren:-moz-tree-line(selected, focus) {
+treechildren::-moz-tree-line(selected, focus) {
   border: 1px dotted #FFFFFF;
 }
 
 /* ::::: tree separator ::::: */
 
-treechildren:-moz-tree-separator {
+treechildren::-moz-tree-separator {
   border-top: 1px solid #7A8490;
   border-bottom: 1px solid #FEFEFE;
 }
 
 /* ::::: drop feedback ::::: */
 
-tree[selstyle="primary"] > treechildren:-moz-tree-cell-text(primary, dropOn),
-treechildren:-moz-tree-cell-text(primary, dropOn) {
+tree[selstyle="primary"] > treechildren::-moz-tree-cell-text(primary, dropOn),
+treechildren::-moz-tree-cell-text(primary, dropOn) {
   background-color: #424F63;
   color: #FFFFFF;
 }
 
-treechildren:-moz-tree-drop-feedback {
+treechildren::-moz-tree-drop-feedback {
   background-color: #424F63;
   width: 50px;
   height: 2px;
@@ -156,7 +156,7 @@ treechildren:-moz-tree-drop-feedback {
 
 /* ::::: tree progress meter ::::: */
 
-treechildren:-moz-tree-progressmeter {
+treechildren::-moz-tree-progressmeter {
   margin: 2px 4px;
   border: 2px solid;
   -moz-border-top-colors: #8997A1 #C7D0D9;
@@ -166,11 +166,11 @@ treechildren:-moz-tree-progressmeter {
   color: #6B7B8D;
 }
 
-treechildren:-moz-tree-progressmeter(progressUndetermined) {
+treechildren::-moz-tree-progressmeter(progressUndetermined) {
   list-style-image: url("chrome://global/skin/progressmeter/progress-busy.gif");
 }
 
-treechildren:-moz-tree-cell-text(progressmeter) {
+treechildren::-moz-tree-cell-text(progressmeter) {
   margin: 2px 4px;
  }
 
@@ -241,11 +241,11 @@ treecol[insertbefore="true"] {
   -moz-border-left-colors: #000000 #666666;
 }
 
-treechildren:-moz-tree-column(insertbefore) {
+treechildren::-moz-tree-column(insertbefore) {
   border-left: 1px solid #AAAAAA;
 }
 
-treechildren:-moz-tree-column(insertafter) {
+treechildren::-moz-tree-column(insertafter) {
   border-right: 1px solid #AAAAAA;
 }
 
@@ -271,28 +271,28 @@ treechildren:-moz-tree-column(insertafter) {
 
 /* ::::: twisty :::::  */
 
-treechildren:-moz-tree-twisty {
+treechildren::-moz-tree-twisty {
   padding-right: 2px;
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
-treechildren:-moz-tree-twisty(open) {
+treechildren::-moz-tree-twisty(open) {
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
-treechildren:-moz-tree-indentation {
+treechildren::-moz-tree-indentation {
   width: 16px;
 }
 
 /* ::::: gridline style ::::: */
 
-treechildren.gridlines:-moz-tree-cell {
+treechildren.gridlines::-moz-tree-cell {
   border-right: 1px solid #CCCCCC;
   border-bottom: 1px solid #CCCCCC;
 }
 
-treechildren.gridlines:-moz-tree-row {
+treechildren.gridlines::-moz-tree-row {
   border: none;
 }

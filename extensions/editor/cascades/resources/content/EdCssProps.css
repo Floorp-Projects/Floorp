@@ -65,7 +65,7 @@ html|p#brownFoxLabel {
   white-space : nowrap;
 }
 
-treechildren:-moz-tree-cell-text(external) {
+treechildren::-moz-tree-cell-text(external) {
     font-style: italic ! important;
 }
 

@@ -85,7 +85,7 @@
 
 /* ::::: download manager ::::: */
 
-#downloadView > treechildren:-moz-tree-image(Name) {
+#downloadView > treechildren::-moz-tree-image(Name) {
   margin-right: 2px;
 }
 

@@ -45,42 +45,42 @@
 
 /* ::::: bookmark items ::::: */
 
-treechildren:-moz-tree-image(Name) {
+treechildren::-moz-tree-image(Name) {
   margin-right: 2px;
 }
 
 .bookmark-item,
-treechildren:-moz-tree-image(Name) {
+treechildren::-moz-tree-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
 .bookmark-item[container="true"],
-treechildren:-moz-tree-image(Name, container) {
+treechildren::-moz-tree-image(Name, container) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
 .bookmark-item[open="true"],
-treechildren:-moz-tree-image(Name, open) {
+treechildren::-moz-tree-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
-treechildren:-moz-tree-twisty(group, hidetwisty) {
+treechildren::-moz-tree-twisty(group, hidetwisty) {
   list-style-image: none;
 }
 
-treechildren:-moz-tree-image(Name, container, group) {
+treechildren::-moz-tree-image(Name, container, group) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-group.gif");
 }
 
-treechildren:-moz-tree-image(Name, separator) {
+treechildren::-moz-tree-image(Name, separator) {
   list-style-image: none;
 }
 
-treechildren:-moz-tree-cell-text(Name, separator) {
+treechildren::-moz-tree-cell-text(Name, separator) {
   color: #808080;
   margin: 0px 5px 0px 5px;
 }
 
-treechildren:-moz-tree-cell-text(Name, separator, selected, focus) {
+treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
   color: #FFFFFF;
 }

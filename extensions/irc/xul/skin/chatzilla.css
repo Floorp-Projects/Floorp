@@ -131,19 +131,19 @@ window {
 }
 
 /* op image column */
-treechildren:-moz-tree-image(usercol-op, state-true) {
+treechildren::-moz-tree-image(usercol-op, state-true) {
     list-style-image: url(chrome://chatzilla/skin/images/is-op.gif)
 }
 
-treechildren:-moz-tree-image(usercol-op, state-false) {
+treechildren::-moz-tree-image(usercol-op, state-false) {
     list-style-image: url(chrome://chatzilla/skin/images/isnt-op.gif)
 }
 
 /* voice image column */
-treechildren:-moz-tree-image(usercol-voice, state-true) {
+treechildren::-moz-tree-image(usercol-voice, state-true) {
     list-style-image: url(chrome://chatzilla/skin/images/is-voice.gif)
 }
 
-treechildren:-moz-tree-image(usercol-voice, state-false) {
+treechildren::-moz-tree-image(usercol-voice, state-false) {
     list-style-image: url(chrome://chatzilla/skin/images/isnt-voice.gif)
 }

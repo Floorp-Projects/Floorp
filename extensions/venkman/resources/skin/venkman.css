@@ -446,200 +446,200 @@ viewcontainer[type="tab"][dragover="down"] {
 }
 */
 
-treechildren:-moz-tree-cell(source\:col-0) {
+treechildren::-moz-tree-cell(source\:col-0) {
     background: #CCCCCC;
     border-right: 1px grey solid;
 }
 
-treechildren:-moz-tree-cell(source\:col-1) {
+treechildren::-moz-tree-cell(source\:col-1) {
     border-right: 2px #CCCCCC solid;
     text-align: right;
     background: #EEEEEE;
 }
 
-treechildren:-moz-tree-row(current-line, selected) {
+treechildren::-moz-tree-row(current-line, selected) {
     background: green !important;
 }
 
-treechildren:-moz-tree-cell(source\:col-1, highlight-start),
-treechildren:-moz-tree-cell(source\:col-1, highlight-range),
-treechildren:-moz-tree-cell(source\:col-1, highlight-end) {
+treechildren::-moz-tree-cell(source\:col-1, highlight-start),
+treechildren::-moz-tree-cell(source\:col-1, highlight-range),
+treechildren::-moz-tree-cell(source\:col-1, highlight-end) {
     border-right: 2px #919bd6 solid;
     background: #d5d5e0;
 }
 
-treechildren:-moz-tree-cell(source\:col-2, highlight-start),
-treechildren:-moz-tree-cell(source\:col-2, highlight-range),
-treechildren:-moz-tree-cell(source\:col-2, highlight-end) {
+treechildren::-moz-tree-cell(source\:col-2, highlight-start),
+treechildren::-moz-tree-cell(source\:col-2, highlight-range),
+treechildren::-moz-tree-cell(source\:col-2, highlight-end) {
     border-left: 1px black solid;
     background: #EEEEEE;
 }
 
-treechildren:-moz-tree-cell(source\:col-1, selected),
-treechildren:-moz-tree-cell(source\:col-2, selected) {
+treechildren::-moz-tree-cell(source\:col-1, selected),
+treechildren::-moz-tree-cell(source\:col-2, selected) {
     border-left: inherit !important;
     background: inherit !important;
 }
 
-treechildren:-moz-tree-cell(source\:col-1, current-line),
-treechildren:-moz-tree-cell(source\:col-2, current-line) {
+treechildren::-moz-tree-cell(source\:col-1, current-line),
+treechildren::-moz-tree-cell(source\:col-2, current-line) {
     background: #ecef34;
 }
 
-#source-tree-body:-moz-tree-row {
+#source-tree-body::-moz-tree-row {
     border: 0px;
 }
 
-treechildren:-moz-tree-image(source\:col-0, code) {
+treechildren::-moz-tree-image(source\:col-0, code) {
     list-style-image: url("chrome://venkman/skin/images/code-line.gif");
 }
 
-treechildren:-moz-tree-image(source\:col-0, code, prettyprint) {
+treechildren::-moz-tree-image(source\:col-0, code, prettyprint) {
     list-style-image: url("chrome://venkman/skin/images/code-line-dis.gif");
 }
 
-treechildren:-moz-tree-image(source\:col-0, future-breakpoint) {
+treechildren::-moz-tree-image(source\:col-0, future-breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-future-line.gif");
 }
 
-treechildren:-moz-tree-image(source\:col-0, breakpoint) {
+treechildren::-moz-tree-image(source\:col-0, breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
 }
 
-treechildren:-moz-tree-image(current-frame-flag){
+treechildren::-moz-tree-image(current-frame-flag){
     list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
 }
 
-treechildren:-moz-tree-image(windows\:col-0, item-window) {
+treechildren::-moz-tree-image(windows\:col-0, item-window) {
     list-style-image: url("chrome://venkman/skin/images/window.png");
 }
 
-treechildren:-moz-tree-image(windows\:col-0, item-files) {
+treechildren::-moz-tree-image(windows\:col-0, item-files) {
     list-style-image: url("chrome://venkman/skin/images/files.png");
 }
 
-treechildren:-moz-tree-image(windows\:col-0, item-file) {
+treechildren::-moz-tree-image(windows\:col-0, item-file) {
     list-style-image: url("chrome://venkman/skin/images/file-js.png");
 }
 
-treechildren:-moz-tree-image(breaks\:col-0, future-breakpoint) {
+treechildren::-moz-tree-image(breaks\:col-0, future-breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-future.gif");
 }
 
-treechildren:-moz-tree-image(breaks\:col-0, item-breakpoint) {
+treechildren::-moz-tree-image(breaks\:col-0, item-breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint.png");
 }
 
-treechildren:-moz-tree-image(scripts\:col-0, file-function) {
+treechildren::-moz-tree-image(scripts\:col-0, file-function) {
     list-style-image: url("chrome://venkman/skin/images/file-function.png");
 }
 
-treechildren:-moz-tree-image(scripts\:col-0, file-function, item-has-bp) {
+treechildren::-moz-tree-image(scripts\:col-0, file-function, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-function-bp.png");
 }
 
-treechildren:-moz-tree-cell-text(watches\:col-0, item-error) {
+treechildren::-moz-tree-cell-text(watches\:col-0, item-error) {
     font-weight: bold;
     font-style: italic;
     color: darkred;
 }
 
-treechildren:-moz-tree-cell-text(scripts\:col-0, script-disabled) {
+treechildren::-moz-tree-cell-text(scripts\:col-0, script-disabled) {
     font-style: italic;
     color: darkred;
 }
 
-treechildren:-moz-tree-cell-text(scripts\:col-0, script-disabled, selected, focus) {
+treechildren::-moz-tree-cell-text(scripts\:col-0, script-disabled, selected, focus) {
     color: white;
 }
 
-treechildren:-moz-tree-cell-text(item-exception) {
+treechildren::-moz-tree-cell-text(item-exception) {
     font-weight: bold;
     color: darkred;
 }
 
-treechildren:-moz-tree-cell-text(item-hinted) {
+treechildren::-moz-tree-cell-text(item-hinted) {
     font-weight: bold;
     color: #555555;
 }
 
-treechildren:-moz-tree-cell-text(item-hinted,selected) {
+treechildren::-moz-tree-cell-text(item-hinted,selected) {
     color: white;
 }
 
-treechildren:-moz-tree-image(item-unk) {
+treechildren::-moz-tree-image(item-unk) {
     list-style-image: url("chrome://venkman/skin/images/file-unknown.png");
 }
 
-treechildren:-moz-tree-image(item-js) {
+treechildren::-moz-tree-image(item-js) {
     list-style-image: url("chrome://venkman/skin/images/file-js.png");
 }
 
-treechildren:-moz-tree-image(item-html) {
+treechildren::-moz-tree-image(item-html) {
     list-style-image: url("chrome://venkman/skin/images/file-html.png");
 }
 
-treechildren:-moz-tree-image(item-xul) {
+treechildren::-moz-tree-image(item-xul) {
     list-style-image: url("chrome://venkman/skin/images/file-xul.png");
 }
 
-treechildren:-moz-tree-image(item-xml) {
+treechildren::-moz-tree-image(item-xml) {
     list-style-image: url("chrome://venkman/skin/images/file-xml.png");
 }
 
-treechildren:-moz-tree-image(item-unk, item-has-bp) {
+treechildren::-moz-tree-image(item-unk, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-unknown-bp.png");
 }
 
-treechildren:-moz-tree-image(item-js, item-has-bp) {
+treechildren::-moz-tree-image(item-js, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-js-bp.png");
 }
 
-treechildren:-moz-tree-image(item-html, item-has-bp) {
+treechildren::-moz-tree-image(item-html, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-html-bp.png");
 }
 
-treechildren:-moz-tree-image(item-xul, item-has-bp) {
+treechildren::-moz-tree-image(item-xul, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-xul-bp.png");
 }
 
-treechildren:-moz-tree-image(item-xml, item-has-bp) {
+treechildren::-moz-tree-image(item-xml, item-has-bp) {
     list-style-image: url("chrome://venkman/skin/images/file-xml-bp.png");
 }
 
-treechildren:-moz-tree-image(item-frame) {
+treechildren::-moz-tree-image(item-frame) {
 /*    list-style-image: url("chrome://venkman/skin/images/value-frame.png");*/
     list-style-image: url("chrome://venkman/skin/images/clear.png");
 }
 
-treechildren:-moz-tree-image(item-void) {
+treechildren::-moz-tree-image(item-void) {
     list-style-image: url("chrome://venkman/skin/images/value-void.png");
 }
 
-treechildren:-moz-tree-image(item-null) {
+treechildren::-moz-tree-image(item-null) {
     list-style-image: url("chrome://venkman/skin/images/value-null.png");
 }
 
-treechildren:-moz-tree-image(item-bool) {
+treechildren::-moz-tree-image(item-bool) {
     list-style-image: url("chrome://venkman/skin/images/value-bool.png");
 }
 
-treechildren:-moz-tree-image(item-int) {
+treechildren::-moz-tree-image(item-int) {
     list-style-image: url("chrome://venkman/skin/images/value-int.png");
 }
 
-treechildren:-moz-tree-image(item-double) {
+treechildren::-moz-tree-image(item-double) {
     list-style-image: url("chrome://venkman/skin/images/value-double.png");
 }
 
-treechildren:-moz-tree-image(item-string) {
+treechildren::-moz-tree-image(item-string) {
     list-style-image: url("chrome://venkman/skin/images/value-string.png");
 }
 
-treechildren:-moz-tree-image(item-function) {
+treechildren::-moz-tree-image(item-function) {
     list-style-image: url("chrome://venkman/skin/images/value-function.png");
 }
 
-treechildren:-moz-tree-image(item-object) {
+treechildren::-moz-tree-image(item-object) {
     list-style-image: url("chrome://venkman/skin/images/value-object.png");
 }

@@ -308,11 +308,11 @@ tree.list {
 
 /* ::::: select edit dialog ::::: */
 
-#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-false) {
+#SelectTreeChildren::-moz-tree-cell(SelectSelCol, checked-false) {
   background: url("chrome://global/skin/checkbox/cbox.gif") 50% 50% no-repeat;
 }
 
-#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-true) {
+#SelectTreeChildren::-moz-tree-cell(SelectSelCol, checked-true) {
   background: url("chrome://global/skin/checkbox/cbox-check.gif") 50% 50% no-repeat;
 }
 

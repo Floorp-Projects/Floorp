@@ -48,24 +48,24 @@
   border: none;
 }
 
-treechildren:-moz-tree-image(FilenameColumn) {
+treechildren::-moz-tree-image(FilenameColumn) {
   margin-right: 2px;
   list-style-image: url("chrome://communicator/skin/directory/file.gif");
 }
 
-treechildren:-moz-tree-image(FilenameColumn, container) {
+treechildren::-moz-tree-image(FilenameColumn, container) {
   list-style-image: url("chrome://communicator/skin/directory/folder-clsd.gif");
 }
 
-treechildren:-moz-tree-image(FilenameColumn, container, open) {
+treechildren::-moz-tree-image(FilenameColumn, container, open) {
   list-style-image: url("chrome://communicator/skin/directory/folder-open.gif");
 }
 
-treechildren:-moz-tree-image(FilenameColumn, loading) {
+treechildren::-moz-tree-image(FilenameColumn, loading) {
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 
-treechildren:-moz-tree-cell-text(symbolic-link) {
+treechildren::-moz-tree-cell-text(symbolic-link) {
   font-style: italic;
 }
 

@@ -16,12 +16,12 @@
     -moz-box-align: left;
 }
 
-#abResultsTree treechildren:-moz-tree-row( disabled )
+#abResultsTree treechildren::-moz-tree-row( disabled )
 {
   background-color: transparent;
 }
 
-#abResultsTree treechildren:-moz-tree-cell-text( disabled )
+#abResultsTree treechildren::-moz-tree-cell-text( disabled )
 {
     font-style: italic;
 }

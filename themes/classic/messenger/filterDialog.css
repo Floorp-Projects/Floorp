@@ -31,11 +31,11 @@
 
 /* ::::: columns :::::: */
 
-treechildren:-moz-tree-image(activeColumn) {
+treechildren::-moz-tree-image(activeColumn) {
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
 
-treechildren:-moz-tree-image(activeColumn, Enabled-true) {
+treechildren::-moz-tree-image(activeColumn, Enabled-true) {
  list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 

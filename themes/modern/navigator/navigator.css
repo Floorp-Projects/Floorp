@@ -448,11 +448,11 @@ toolbox {
 
 /* ::::: autocomplete ::::: */
 
-.autocomplete-treebody:-moz-tree-cell-text(value) {
+.autocomplete-treebody::-moz-tree-cell-text(value) {
   padding-left: 15px;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text(comment) {
+.autocomplete-treebody::-moz-tree-cell-text(comment) {
   color: #555566;
 }
 

@@ -45,11 +45,11 @@
 
 /* ::::: columns :::::: */
 
-treechildren:-moz-tree-image(activeColumn) {
+treechildren::-moz-tree-image(activeColumn) {
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-treechildren:-moz-tree-image(activeColumn, Enabled-true) {
+treechildren::-moz-tree-image(activeColumn, Enabled-true) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 

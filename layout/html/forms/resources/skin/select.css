@@ -50,7 +50,7 @@ select[size] {
 /*  -moz-appearance: treeview; */
 }
   
-xul|*.select-treebody:-moz-tree-row {
+xul|*.select-treebody::-moz-tree-row {
 /*  -moz-apperance: treeitem; */
   border: 1px solid transparent;
 }
@@ -63,61 +63,61 @@ xul|*.select-treecol {
 
 /* ::::: tree rows ::::: */
 
-xul|*.select-treebody:-moz-tree-row {
+xul|*.select-treebody::-moz-tree-row {
   border: 1px solid transparent;
   height: 18px;
 }
 
-xul|*.select-treebody:-moz-tree-row(selected) {
+xul|*.select-treebody::-moz-tree-row(selected) {
   background-color: -moz-Dialog;
 }
 
-xul|*.select-treebody:-moz-tree-row(selected, focus) {
+xul|*.select-treebody::-moz-tree-row(selected, focus) {
   background-color: Highlight;
 }
 
-xul|*.select-treebody:-moz-tree-row(current, focus) {
+xul|*.select-treebody::-moz-tree-row(current, focus) {
   border: 1px dotted #F5DB95;
 }
 
 /* ::::: tree cells ::::: */
 
-xul|*.select-treebody:-moz-tree-cell {
+xul|*.select-treebody::-moz-tree-cell {
   padding: 0px 0px 0px 2px;
 }
 
-xul|*.select-treebody:-moz-tree-cell-text {
+xul|*.select-treebody::-moz-tree-cell-text {
   color: inherit;
 }
 
-xul|*.select-treebody:-moz-tree-cell-text(selected) {
+xul|*.select-treebody::-moz-tree-cell-text(selected) {
   color: -moz-DialogText;
 }
 
-xul|*.select-treebody:-moz-tree-cell-text(selected, focus) {
+xul|*.select-treebody::-moz-tree-cell-text(selected, focus) {
   color: HighlightText;
 }
 
 
 /* ::::: twisty ::::: */
 
-xul|*.select-treebody[hasgroups="true"]:-moz-tree-twisty 
+xul|*.select-treebody[hasgroups="true"]::-moz-tree-twisty 
 {
   padding-right: 2px;
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://forms/skin/twisty-clsd.gif");
 }
 
-xul|*.select-treebody[hasgroups="true"]:-moz-tree-twisty(open) {
+xul|*.select-treebody[hasgroups="true"]::-moz-tree-twisty(open) {
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://forms/skin/twisty-open.gif");
 }
 
-xul|*.select-treebody[hasgroups="true"]:-moz-tree-indentation {
+xul|*.select-treebody[hasgroups="true"]::-moz-tree-indentation {
   width: 16px;   
 }
 
-xul|*.select-treebody:-moz-tree-line {
+xul|*.select-treebody::-moz-tree-line {
   visibility: hidden;
 }
 

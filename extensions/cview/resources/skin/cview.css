@@ -27,18 +27,18 @@
     font-family: monospace;
 }
 
-treechildren:-moz-tree-image(cmp-name,component) {
+treechildren::-moz-tree-image(cmp-name,component) {
     list-style-image: url("chrome://cview/skin/images/component.gif");
 }
 
-treechildren:-moz-tree-image(cmp-name,interface) {
+treechildren::-moz-tree-image(cmp-name,interface) {
     list-style-image: url("chrome://cview/skin/images/interface.gif");
 }
 
-treechildren:-moz-tree-image(cmp-name,method) {
+treechildren::-moz-tree-image(cmp-name,method) {
     list-style-image: url("chrome://cview/skin/images/method.gif");
 }
 
-treechildren:-moz-tree-image(ifc-name) {
+treechildren::-moz-tree-image(ifc-name) {
     list-style-image: url("chrome://cview/skin/images/interface.gif");
 }

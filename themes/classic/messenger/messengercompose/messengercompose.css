@@ -148,22 +148,22 @@
 
 /* ::::: autocomplete icons ::::: */
 
-treechildren:-moz-tree-cell-text(default-match) {
+treechildren::-moz-tree-cell-text(default-match) {
   margin: 2px -3px 2px 15px;
   border: none;
 }
 
-treechildren:-moz-tree-image(local-abook) {
+treechildren::-moz-tree-image(local-abook) {
   margin: 2px -1px 2px 4px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.gif");
 }
 
-treechildren:-moz-tree-image(remote-abook) {
+treechildren::-moz-tree-image(remote-abook) {
   margin: 2px -3px 2px 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook.gif");
 }
 
-treechildren:-moz-tree-image(remote-err) {
+treechildren::-moz-tree-image(remote-err) {
   margin: 2px -3px 2px 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-error.gif");
 }

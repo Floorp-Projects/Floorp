@@ -94,14 +94,14 @@ textbox {
   padding: 0 !important;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text {
+.autocomplete-treebody::-moz-tree-cell-text {
   padding-left: 8px;
 }
 
-.autocomplete-treebody:-moz-tree-row(menuactive) {
+.autocomplete-treebody::-moz-tree-row(menuactive) {
   background-color: Highlight;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text(menuactive)  {
+.autocomplete-treebody::-moz-tree-cell-text(menuactive)  {
   color: HighlightText !important;
 }

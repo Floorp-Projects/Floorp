@@ -1240,43 +1240,43 @@ then observed (ERic 20/06/03)
 
 /* TO DO ITEMS */
 
-treechildren:-moz-tree-cell-text(inprogress)
+treechildren::-moz-tree-cell-text(inprogress)
 {
    color                 : green;
 }
-treechildren:-moz-tree-row(inprogress,selected)
+treechildren::-moz-tree-row(inprogress,selected)
 {
    background-color                 : green;
 }
 
-treechildren:-moz-tree-cell-text(overdue)
+treechildren::-moz-tree-cell-text(overdue)
 {
    color                  : red;
 }
-treechildren:-moz-tree-row(overdue,selected)
+treechildren::-moz-tree-row(overdue,selected)
 {
    background-color                  : red;
 }
 
-treechildren:-moz-tree-cell-text(duetoday)
+treechildren::-moz-tree-cell-text(duetoday)
 {
    color                  : blue;
 }
-treechildren:-moz-tree-row(duetoday,selected)
+treechildren::-moz-tree-row(duetoday,selected)
 {
    background-color                  : blue;
 }
 
-treechildren:-moz-tree-cell-text(future)
+treechildren::-moz-tree-cell-text(future)
 {
    color                  : gray;
 }
-treechildren:-moz-tree-row(future,selected)
+treechildren::-moz-tree-row(future,selected)
 {
    background-color                  : gray;
 }
 
-treechildren:-moz-tree-cell-text(completed)
+treechildren::-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
    color                  : black;
@@ -1285,15 +1285,15 @@ treechildren:-moz-tree-cell-text(completed)
 
 /* TO DO LIST IMAGES */
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed),
+treechildren::-moz-tree-image(unifinder-todo-tree-col-completed, completed),
 #unifinder-todo-tree-col-completed {
    list-style-image      : url("chrome://calendar/skin/unifinder/checkbox_checked.png");
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday),
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue),
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, future),
-treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
+treechildren::-moz-tree-image(unifinder-todo-tree-col-completed, duetoday),
+treechildren::-moz-tree-image(unifinder-todo-tree-col-completed, overdue),
+treechildren::-moz-tree-image(unifinder-todo-tree-col-completed, future),
+treechildren::-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
    list-style-image      : url("chrome://calendar/skin/unifinder/checkbox_unchecked.png");
 }
 
@@ -1301,19 +1301,19 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, mediumpriority) {
+treechildren::-moz-tree-image(unifinder-todo-tree-col-priority, mediumpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
+treechildren::-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_high.png" )
 }
 
-treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
+treechildren::-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
    list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
 }
 
-treechildren:-moz-tree-cell-text(selected) {
+treechildren::-moz-tree-cell-text(selected) {
    color                  : HighlightText;
 }
 
