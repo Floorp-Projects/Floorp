@@ -34,6 +34,7 @@
 #include "nsIURL.h"
 #include "prio.h"
 #include "prmem.h" // XXX can be removed when we start doing real content-type discovery
+#include "nsCOMPtr.h"
 
 #include "nsIMIMEService.h"
 
@@ -568,7 +569,6 @@ nsFileChannel::Process(void)
     switch (mState) {
       case START_READ: {
           nsISupports* fs;
-          NS_ASSERTION(mSourceOffset == 0, "implement seek");
 
           if (mListener) {
               if (mLoadGroup)
@@ -580,6 +580,17 @@ nsFileChannel::Process(void)
           mStatus = NS_NewTypicalInputFileStream(&fs, mSpec);
           if (NS_FAILED(mStatus)) goto error;
 
+		  if (mSourceOffset > 0) // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
+		  {
+			nsCOMPtr<nsIRandomAccessStore> inputStream;
+			inputStream = do_QueryInterface(fs, &mStatus);
+			if (NS_FAILED(mStatus)) goto error;
+			// for now, assume the offset is always relative to the start of the file (position 0)
+			// so use PR_SEEK_SET
+			inputStream->Seek(PR_SEEK_SET, mSourceOffset);
+		  }
+
+		  
           mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
