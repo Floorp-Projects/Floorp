@@ -87,6 +87,8 @@ extern int XP_ERRNO_EIO;
 
 #define MAX_CACHED_HTTP_CONNECTIONS 4
 
+#define INTERNET_KEYWORD_METATAG "Content-keywords"
+
 /* the maximum size of a HTTP servers first line of response
  */
 #define MAX_FIRST_LINE_SIZE 250
@@ -288,6 +290,52 @@ NET_SetIdentifyMeType(IdentifyMeEnum method)
 	http_identification_method = method;
 }
 
+/* Build a string containing the internet keyword extracted from a URL struct.
+   inURL is the raw data containing the data
+   outKeyword is where the return value will be built.  It will be a
+      null-terminated string (of 0 length of there is no keyword(s)).
+   inMaxLength is the size of outKeyword.
+*/
+PUBLIC void
+NET_getInternetKeyword(const URL_Struct *inURL, char *outKeyword, int16 inMaxLength) {
+
+    uint        ctr,
+                endIndex = inURL->all_headers.empty_index;
+    Bool	doCopy;
+    char	nextChar,
+		*key,
+		*header,
+		*keyEnd = outKeyword+(inMaxLength-1);
+
+    outKeyword[0] = 0;
+    if (inMaxLength <= 0)
+        return;
+
+    key = outKeyword;
+    for (ctr = 0; ctr < inURL->all_headers.empty_index; ctr++)
+        if (strcasecomp(inURL->all_headers.key[ctr], INTERNET_KEYWORD_METATAG) == 0) {
+            /* add a separator, if appropriate */
+            if (key > outKeyword)
+                if (key < keyEnd-1) {
+                    *key++ = ';';
+                    *key++ = ' ';
+                }
+
+            /* append value, stripping modifiers */
+            header = inURL->all_headers.value[ctr];
+            doCopy = TRUE;
+            while (key < keyEnd && (nextChar = *header++) != 0) {
+                if (nextChar == ',') /* modifiers follow */
+                    doCopy = FALSE;
+                else if (nextChar == ';') /* additional keywords follow */
+                    doCopy = TRUE;
+                if (doCopy)
+                    *key++ = nextChar;
+            }
+        }
+    *key = 0;
+}
+
 /* look for names like "ford" and "netscape"
  * and turn them into "www.ford.com" and "www.netscape.com"
  * If goBrowsing is enabled, this feature is turned off and the browser
@@ -305,7 +353,7 @@ net_check_for_company_hostname(ActiveEntry *ce)
 	Bool add_com = FALSE;
 	Bool goBrowsing = FALSE;
    
-    if (PREF_GetBoolPref("browser.goBrowsingEnabled", &goBrowsing) != PREF_OK) goBrowsing = 0;
+    if (PREF_GetBoolPref("browser.goBrowsing.enabled", &goBrowsing) != PREF_OK) goBrowsing = 0;
 
 	if(!cd->orig_host)
 	  {
