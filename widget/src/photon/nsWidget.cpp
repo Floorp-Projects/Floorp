@@ -19,10 +19,10 @@
  *
  * Contributor(s): 
  *     Jerry.Kirk@Nexwarecorp.com
+ *     Michael.Kedl@Nexwarecorp.com
  *	   Dale.Stansberry@Nexwarecorop.com
  */
 
-//#undef DEBUG
 
 #include "nsWidget.h"
 
@@ -44,11 +44,11 @@
 #include "prefapi.h"
 #include "nsPhWidgetLog.h"
 
+#include <errno.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-
 
 // BGR, not RGB - REVISIT
 #define NSCOLOR_TO_PHCOLOR(g,n) \
@@ -64,6 +64,12 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 nsIRollupListener *nsWidget::gRollupListener = nsnull;
 nsIWidget         *nsWidget::gRollupWidget = nsnull;
 PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
+PtWidget_t        *nsWidget::gRollupScreenRegion = NULL;
+
+/* These are used to keep Popup Menus from drawing twice when they are put away */
+/* because of extra EXPOSE events from Photon */
+PhRid_t          nsWidget::gLastUnrealizedRegion = -1;
+PhRid_t          nsWidget::gLastUnrealizedRegionsParent = -1;
 
 //
 // Keep track of the last widget being "dragged"
@@ -89,11 +95,6 @@ PRUint32            nsWidget::sWidgetCount = 0;
 /* Enable experimental direct draw code, this bypasses PtDamageExtent */
 /* and calls doPaint method which calls nsWindow::RawDrawFunc */
 //#define ENABLE_DOPAINT
-
-#if DEBUG
-static nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent);
-#endif
-
 
 nsWidget::nsWidget()
 {
@@ -195,6 +196,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d> mWidget=<%p> mIsDestroying=<%d>\n",this,mRefCnt, mWidget, mIsDestroying));
+
  // make sure we don't call this more than once.
   if (mIsDestroying)
     return NS_OK;
@@ -247,9 +249,16 @@ void nsWidget::OnDestroy()
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
 
+#if 1
+  nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
+  DispatchStandardEvent(NS_DESTROY);
+#else
   NS_ADDREF_THIS();
   DispatchStandardEvent(NS_DESTROY);
   NS_RELEASE_THIS();
+#endif
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnDestroy Exiting this=<%p> mRefCnt=<%d>\n", this, mRefCnt ));
+
 }
 
 //-------------------------------------------------------------------------
@@ -321,6 +330,7 @@ realized. So you must just blindly bash on both the DELAY_REALIZE flags and
 the PtRealizeWidget functions */
 
   PtArg_t   arg;
+
   if (bState)
   {
     int err = 0;
@@ -331,7 +341,21 @@ the PtRealizeWidget functions */
 	  {
         PtWidget_t *parent = PtWidgetParent(mWidget);
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) ));
+        printf("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) );
       }
+
+       if (mWidget->rid == -1)
+       {
+        PtRegionWidget_t *region = (PtRegionWidget_t *) mWidget;
+
+         printf("nsWidget::errno = %s\n", strerror(errno));
+         printf("nsWidget PtRealizeWidget <%p> rid=<%d> parent rid <%d>\n", mWidget, mWidget->rid, region->parent);
+         NS_ASSERTION(0,"nsWidget::Show mWidget's rid == -1\n");
+         //DebugBreak();
+         //abort();
+         mShown = PR_FALSE; 
+         return NS_ERROR_FAILURE;
+       }
 
       EnableDamage( mWidget, PR_TRUE );
 
@@ -344,6 +368,26 @@ the PtRealizeWidget functions */
   else
   {
       EnableDamage( mWidget, PR_FALSE );
+
+
+      if (PtWidgetIsClass(mWidget, PtRegion))
+      {
+        PtWidget_t *w=nsnull, *w1=nsnull;
+
+         gLastUnrealizedRegion = PtWidgetRid(mWidget);
+         w = mWidget;
+         while (1)
+         {
+           w1 = PtWidgetParent(w);
+           if (w1==0)
+           {
+             gLastUnrealizedRegionsParent = PtWidgetRid(w);
+             break;
+           }
+           w = w1;
+         }
+      }
+
       PtUnrealizeWidget(mWidget);
       EnableDamage( mWidget, PR_TRUE );
 
@@ -373,22 +417,8 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
   if (mWidget)
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::IsVisible this=<%p> IsRealized=<%d> mShown=<%d>\n", this, PtWidgetIsRealized(mWidget), mShown));
 
-#if 0
-  if( mWidget )
-  {
-    if( PtWidgetIsRealized( mWidget ))
-      mShown = PR_TRUE;
-    else
-      mShown = PR_FALSE;
-
-    aState = mShown;
-  }
-  else
-    aState = PR_FALSE;
-#else
   /* Try a simpler algorthm */
   aState = mShown;
-#endif
 
   return NS_OK;
 }
@@ -437,12 +467,12 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
         else
        {
           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Move Getting offeset for type=<%s>\n", mWidget->class_rec ));
-          printf ("nsWidget::Move type: %p\n",mWidget->class_rec);
+          //printf ("nsWidget::Move type: %p\n",mWidget->class_rec);
 
           PtWidgetOffset( parent, &offset );
           if (PtWidgetIsClass(mWidget,PtRegion))
           {
-     		printf ("nsWidget::Move offset: %d %d\n",offset.x,offset.y);
+     		//printf ("nsWidget::Move offset: %d %d\n",offset.x,offset.y);
             rect2.x = offset.x;
             rect2.y = offset.y;
           }
@@ -847,57 +877,13 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   PtWidget_t *aWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
   long widgetFlags = PtWidgetFlags(aWidget);
 
-//  if (Pt_DISJOINT && widgetFlags)
-  {
-     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 - This is a disjoint widget so ignore parent clipping\n"));
+    /* Damage has to be relative Widget coords */
+    mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
 
-     //if (PtWidgetIsRealized(mWidget))
-     {
-         /* Damage has to be relative Widget coords */
-         mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
-
-        if (aIsSynchronous)
-        {
-          UpdateWidgetDamage();
-        }
-        else
-        {
-          QueueWidgetDamage();
-        }
-     }
-  }    
-/* HACK! */
-#if 0
-  else if ( GetParentClippedArea(rect) == PR_TRUE)
-  {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
-
-	  /* Damage has to be relative Widget coords */
-      mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
-
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped mUpdateArea=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height ));
-
-      if (PtWidgetIsRealized(mWidget))
-      {
-        if (aIsSynchronous)
-        {
-          UpdateWidgetDamage();
-        }
-        else
-        {
-          QueueWidgetDamage();
-        }
-      }
-      else
-	  {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Not Relealized skipping Damage Queue\n"));
-	  }
-  }
-  else
-  {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Skipping because GetParentClippedArea(rect returned empty rect\n"));
-  }
-#endif
+    if (aIsSynchronous)
+      UpdateWidgetDamage();
+    else
+      QueueWidgetDamage();
 
   return NS_OK;
 }
@@ -1983,63 +1969,21 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 {
   PRBool  result = PR_TRUE; // call the default nsWindow proc
   int     err;
-  char EventName[50];
+  PhEvent_t* event = aCbInfo->event;
 
 
-    PhEvent_t* event = aCbInfo->event;
-    EventName[0] = NULL;
-
-#if defined(DEBUG) && 1
-   switch ( event->type )
-    {
-      case Ph_EV_KEY:
-        strcpy(EventName, "Ph_EV_KEY");
-        break;
-      case Ph_EV_DRAG:        
-        strcpy(EventName, "Ph_EV_DRAG");
-        break;
-      case Ph_EV_PTR_MOTION_BUTTON:
-        strcpy(EventName, "Ph_EV_BUTTON");
-        break;
-      case Ph_EV_PTR_MOTION_NOBUTTON:
-        strcpy(EventName, "Ph_EV_NOBUTTON");
-        break;
-      case Ph_EV_BUT_PRESS:
-        strcpy(EventName, "Ph_EV_BUT_PRESS");
-        break;
-      case Ph_EV_BUT_RELEASE:
-        strcpy(EventName, "Ph_EV_BUT_RELEASE");
-        break;
-      case Ph_EV_BOUNDARY:
-        strcpy(EventName, "Ph_EV_BOUNDARY");
-        break;
-      case Ph_EV_WM:
-        strcpy(EventName, "Ph_EV_WM");
-        break;
-      case Ph_EV_EXPOSE:
-        strcpy(EventName, "Ph_EV_EXPOSE");
-        break;
-      default:
-        strcpy(EventName, "UNKNOWN");
-        break;      
-    }
-#endif
-
-printf("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
-	this, mWidget, (event->processing_flags & Ph_CONSUMED), EventName );
+//printf("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
+//	this, mWidget, (event->processing_flags & Ph_CONSUMED), (const char *) nsCAutoString(PhotonEventToString(event)) );
  
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
-	this, mWidget, (event->processing_flags & Ph_CONSUMED), EventName ));
+	this, mWidget, (event->processing_flags & Ph_CONSUMED),  (const char *) nsCAutoString(PhotonEventToString(event)) ));
     
-#if defined(PHOTON2_ONLY) && 1
     /* Photon 2 added a Consumed flag which indicates a  previous receiver of the */
     /* event has processed it */
 	if (event->processing_flags & Ph_CONSUMED)
 	{
-        printf("nsWidget::HandleEvent Ignoring Event, already consumed event=<%d>\n",  event->type);
 		return PR_TRUE;
 	}
-#endif
 
     switch ( event->type )
     {
@@ -2060,39 +2004,39 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
           switch(event->subtype)
 		  {
 		  case Ph_EV_DRAG_BOUNDARY: 
-  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
+//  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
 			break;
 		  case Ph_EV_DRAG_COMPLETE: 
             {  
  		      nsMouseEvent      theMouseEvent;
               PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
 
-              printf("nsWidget::HandleEvent Ph_EV_DRAG_COMPLETE\n");
+//              printf("nsWidget::HandleEvent Ph_EV_DRAG_COMPLETE\n");
               ScreenToWidget( ptrev2->pos );
               InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_UP );
               result = DispatchMouseEvent(theMouseEvent);
             }
 			break;
 		  case Ph_EV_DRAG_INIT: 
-  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_INIT\n");
+//  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_INIT\n");
 			break;
 		  case Ph_EV_DRAG_KEY_EVENT: 
-  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_KEY_EVENT\n");
+//  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_KEY_EVENT\n");
 			break;
 		  case Ph_EV_DRAG_MOTION_EVENT: 
   		    {
             PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
             ScreenToWidget( ptrev2->pos );
-			printf("nsWidget::HandleEvent Ph_EV_DRAG_MOTION_EVENT pos=(%d,%d)\n", ptrev2->pos.x,ptrev2->pos.y );
+//			printf("nsWidget::HandleEvent Ph_EV_DRAG_MOTION_EVENT pos=(%d,%d)\n", ptrev2->pos.x,ptrev2->pos.y );
   	        InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_MOVE );
             result = DispatchMouseEvent(theMouseEvent);
 			}
 			break;
 		  case Ph_EV_DRAG_MOVE: 
-  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
+//  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
 			break;
 		  case Ph_EV_DRAG_START: 
-  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_START\n");
+//  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_START\n");
 			break;			
 		  }
 		}
@@ -2160,8 +2104,8 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
           PtWidget_t *rollupWidget =  (PtWidget_t *)gRollupWidget->GetNativeData(NS_NATIVE_WIDGET);
           PtWidget_t *thisWidget = (PtWidget_t *)GetNativeData(NS_NATIVE_WIDGET);
  
-          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS rollupWidget=%p thisWidget=%p\n", rollupWidget, thisWidget);
-          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS PtFindDisjoint(thisWidget)=%p\n", PtFindDisjoint(thisWidget));
+//          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS rollupWidget=%p thisWidget=%p\n", rollupWidget, thisWidget);
+//          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS PtFindDisjoint(thisWidget)=%p\n", PtFindDisjoint(thisWidget));
 
           if (rollupWidget != thisWidget && PtFindDisjoint(thisWidget) != rollupWidget)
           {
@@ -2172,9 +2116,9 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
 
         if (ptrev)
         {
-          printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES before translation: (%ld,%ld) mWidget=<%p> PtIsFocused(mWidget)=<%d> \n", ptrev->pos.x, ptrev->pos.y, mWidget, PtIsFocused(mWidget) );
+//          printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES before translation: (%ld,%ld) mWidget=<%p> PtIsFocused(mWidget)=<%d> \n", ptrev->pos.x, ptrev->pos.y, mWidget, PtIsFocused(mWidget) );
           ScreenToWidget( ptrev->pos );
-          printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES after translation: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y);
+//          printf( "nsWidget::HandleEvent Ph_EV_BUT_PRES after translation: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y);
 
           if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
           {
@@ -2199,7 +2143,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
 	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
         nsMouseEvent      theMouseEvent;
 
-		printf("nsWidget::HandleEvent Ph_EV_BUT_RELEASE this=<%p> event->subtype=<%d>\n", this,event->subtype);
+//		printf("nsWidget::HandleEvent Ph_EV_BUT_RELEASE this=<%p> event->subtype=<%d>\n", this,event->subtype);
 
         if (event->subtype==Ph_EV_RELEASE_REAL || event->subtype==Ph_EV_RELEASE_PHANTOM)
 	{
@@ -2233,8 +2177,8 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
       case Ph_EV_WM:
        {
 	    PhWindowEvent_t* wmev = (PhWindowEvent_t*) PhGetData( event );
-   	    printf("nsWidget::HandleEvent Ph_EV_WM  this=<%p> subtype=<%d> vent_f=<%d>\n",
-		  this, event->subtype, wmev->event_f);
+//   	    printf("nsWidget::HandleEvent Ph_EV_WM  this=<%p> subtype=<%d> vent_f=<%d>\n",
+//		  this, event->subtype, wmev->event_f);
 /*
         switch( wmev->event_f )
         {
@@ -2250,20 +2194,22 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidge
 	    break;
 
       case Ph_EV_EXPOSE:
-   	    printf("nsWidget::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d> flags=<%d> num_rects=<%d>\n", 
-		  this, event->subtype, event->flags, event->num_rects );
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::HandleEvent Ph_EV_EXPOSE this=<%p> subtype=<%d> flags=<%d> num_rects=<%d>\n", 
-		  this, event->subtype, event->flags, event->num_rects ));
-		PhRect_t *rects = PhGetRects(event);
-		unsigned short rect_count = event->num_rects;
-		while(rect_count--)
-		{
-			printf("\t rect %d (%d,%d) ->  (%d,%d)\n", rect_count,
-			  rects->ul.x, rects->ul.y, rects->lr.x, rects->lr.y);
-			rects++;
-		}
-        result = PR_TRUE;
-      	break;
+      {
+        int reg;
+        int parreg;
+
+         reg = event->emitter.rid;
+         parreg = PtWidgetRid(mWidget);
+         if (reg == gLastUnrealizedRegion && parreg == gLastUnrealizedRegionsParent)
+         {
+           result = PR_TRUE;
+         }
+         else
+         {
+           result = PR_FALSE;
+         }
+       }
+       break;
     }
 
   return result;
@@ -2638,12 +2584,12 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 {
   nsWidget *pWidget = (nsWidget *) data;
 
-
+/*
   if (widget->parent)
     printf("nsWidget::GotFocusCallback widget->parent=<%p> PtIsFocused(widget)=<%d>\n", widget->parent, PtIsFocused(widget));
   else
     printf("nsWidget::GotFocusCallback widget->parent=<%p>\n", widget->parent);
-  
+*/  
   
   if ((!widget->parent) || (PtIsFocused(widget) != 2))
   {
@@ -2683,8 +2629,8 @@ int nsWidget::DestroyedCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
   PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::DestroyedCallback pWidget=<%p> mWidget=<%p> mIsDestroying=<%d>\n", pWidget, pWidget->mWidget, pWidget->mIsDestroying));
   if (!pWidget->mIsDestroying)
   {
-    pWidget->OnDestroy();
     pWidget->RemoveDamagedWidget(pWidget->mWidget);
+    pWidget->OnDestroy();
   }
    
   return Pt_CONTINUE;
@@ -2704,10 +2650,10 @@ void nsWidget::EnableDamage( PtWidget_t *widget, PRBool enable )
   }
 }
 
-#if DEBUG
+#if defined(DEBUG)
 /**************************************************************/
 /* This was stolen from widget/src/xpwidgets/nsBaseWidget.cpp */
-nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent)
+nsAutoString nsWidget::GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
@@ -2780,6 +2726,45 @@ case _value: eventName = _name ; break
       char buf[32];
       
       sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
+      
+      eventName = buf;
+    }
+    break;
+  }
+  
+  return nsAutoString(eventName);
+}
+
+
+
+nsAutoString nsWidget::PhotonEventToString(PhEvent_t * aPhEvent)
+{
+  NS_ASSERTION(nsnull != aPhEvent,"cmon, null photon gui event.");
+
+  nsAutoString eventName = "UNKNOWN";
+
+#define _ASSIGN_eventName(_value,_name)\
+case _value: eventName = _name ; break
+ 
+   switch ( aPhEvent->type )
+    {
+	  _ASSIGN_eventName(Ph_EV_KEY, "Ph_EV_KEY");
+	  _ASSIGN_eventName(Ph_EV_DRAG, "Ph_EV_DRAG");
+	  _ASSIGN_eventName(Ph_EV_PTR_MOTION_BUTTON, "Ph_EV_PTR_MOTION_BUTTON");
+	  _ASSIGN_eventName(Ph_EV_PTR_MOTION_NOBUTTON, "Ph_EV_PTR_MOTION_NOBUTTON");
+	  _ASSIGN_eventName(Ph_EV_BUT_PRESS, "Ph_EV_BUT_PRESS");
+	  _ASSIGN_eventName(Ph_EV_BUT_RELEASE, "Ph_EV_BUT_RELEASE");
+	  _ASSIGN_eventName(Ph_EV_BOUNDARY, "Ph_EV_BOUNDARY");
+	  _ASSIGN_eventName(Ph_EV_WM, "Ph_EV_WM");
+	  _ASSIGN_eventName(Ph_EV_EXPOSE, "Ph_EV_EXPOSE");	  
+
+#undef _ASSIGN_eventName
+
+  default: 
+    {
+      char buf[32];
+      
+      sprintf(buf,"UNKNOWN: %d",aPhEvent->type);
       
       eventName = buf;
     }
