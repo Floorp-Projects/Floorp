@@ -97,6 +97,7 @@ LLIBS=                         \
  $(DIST)\lib\raptornativewidgets_s.lib     \
  $(DIST)\lib\raptorbasewidget_s.lib     \
  $(DIST)\lib\raptorwidget_s.lib     \
+ $(DIST)\lib\appfilelocprovider_s.lib \
 # $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\DebugRobot.lib     \
  $(DIST)\lib\xpcom.lib        \
