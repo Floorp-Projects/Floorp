@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-#include "nsIDOMHTMLModElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -40,8 +39,6 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLAttributes.h"
 
-
-static NS_DEFINE_IID(kIDOMHTMLModElementIID, NS_IDOMHTMLMODELEMENT_IID);
 
 class nsHTMLUnknownElement : public nsIDOMHTMLElement,
                              public nsIJSScriptObject,
