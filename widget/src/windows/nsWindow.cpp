@@ -5968,7 +5968,14 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 BOOL
 nsWindow::HandleStartComposition(HIMC hIMEContext)
 {
-  NS_ASSERTION(!sIMEIsComposing, "conflict state");
+  // ATOK send the messages following order at starting composition.
+  // 1. WM_IME_COMPOSITION
+  // 2. WM_IME_STARTCOMPOSITION
+  // We call this function at both step #1 and #2.
+  // However, the composition start event should occur only once.
+  if (sIMEIsComposing)
+    return PR_TRUE;
+
   nsCompositionEvent event(NS_COMPOSITION_START, this);
   nsPoint point(0, 0);
   CANDIDATEFORM candForm;
