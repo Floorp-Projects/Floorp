@@ -1396,9 +1396,13 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
 nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                            PRInt32 *aOffset,
                                            nsIAtom *aProperty,          // null here means we split all properties
-                                           const nsString *aAttribute)
+                                           const nsString *aAttribute,
+                                           nsCOMPtr<nsIDOMNode> *outLeftNode,
+                                           nsCOMPtr<nsIDOMNode> *outRightNode)
 {
   if (!aNode || !*aNode || !aOffset) return NS_ERROR_NULL_POINTER;
+  if (outLeftNode)  *outLeftNode  = nsnull;
+  if (outRightNode) *outRightNode = nsnull;
   // split any matching style nodes above the node/offset
   nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
   PRInt32 offset;
@@ -1409,7 +1413,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
          (!aProperty && NodeIsProperty(tmp)) )         // or node is any prop, and we asked to split them all
     {
       // found a style node we need to split
-      SplitNodeDeep(tmp, *aNode, *aOffset, &offset);
+      SplitNodeDeep(tmp, *aNode, *aOffset, &offset, PR_FALSE, outLeftNode, outRightNode);
       // reset startNode/startOffset
       tmp->GetParentNode(getter_AddRefs(*aNode));
       *aOffset = offset;
