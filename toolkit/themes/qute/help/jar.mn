@@ -1,0 +1,9 @@
+help.jar:
+  skin/classic/help/contents.rdf    
+  skin/classic/help/sidebar.css     
+	skin/classic/help/sbtab-twisty.gif
+  skin/classic/help/help.css     
+	skin/classic/help/helpFileLayout.css
+	skin/classic/help/sbtab-twisty-open.gif
+	skin/classic/help/sidebarBindings.xml
+	skin/classic/help/zoomImg.png

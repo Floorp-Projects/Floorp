@@ -1,0 +1,27 @@
+classic.jar:
+        skin/classic/browser/aboutDialog.css
+        skin/classic/browser/browser.css
+        skin/classic/browser/browser.xml
+        skin/classic/browser/Close-tab.png
+        skin/classic/browser/contents.rdf
+        skin/classic/browser/Go.png
+        skin/classic/browser/Info.png
+        skin/classic/browser/pageInfo.css
+        skin/classic/browser/page-themes.png
+        skin/classic/browser/search-arrow.gif
+        skin/classic/browser/Search-bar.png
+        skin/classic/browser/Secure.png
+        skin/classic/browser/Security-broken.png
+        skin/classic/browser/Throbber.gif
+        skin/classic/browser/Throbber.png
+        skin/classic/browser/Throbber-small.gif
+        skin/classic/browser/Throbber-small.png
+        skin/classic/browser/Toolbar.png
+        skin/classic/browser/Toolbar-small.png
+        skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
+        skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
+        skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
+        skin/classic/browser/pref/Options.png                   (pref/Options.png)
+        skin/classic/browser/pref/pref.css                      (pref/pref.css)
+        icon.png
+        preview.png

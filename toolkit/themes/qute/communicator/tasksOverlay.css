@@ -1,0 +1,100 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ==== tasksOverlay.css ================================================
+   == Styles used by the the overlay which contains tasks related
+   == content, such as the taskbar and product launcher icons.
+   ====================================================================== */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: communicator product icons ::::: */
+
+.taskbutton {
+  padding: 1px;
+}
+
+.taskbutton:hover:active {
+  padding: 2px 0 0 2px;
+}
+
+#mini-nav {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator.gif");
+}
+
+#mini-nav:hover {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator-hov.gif");
+}
+
+.icon-navigator16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator-16.gif");
+}
+
+#mini-mail {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail.gif");
+}
+
+#mini-mail:hover {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-hov.gif");
+}
+
+#mini-mail[BiffState="NewMail"] {
+  list-style-image: url("chrome://communicator/skin/taskbar/mailnew.gif");
+}
+
+#mini-mail[BiffState="NewMail"]:hover {
+  list-style-image: url("chrome://communicator/skin/taskbar/mailnew-hov.gif");
+}
+
+.icon-mail16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
+}
+
+#mini-addr {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook.gif");
+}
+
+#mini-addr:hover {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-hov.gif");
+}
+
+.icon-addressbook16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-16.gif");
+}
+
+#mini-comp {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer.gif");
+}
+
+#mini-comp:hover {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer-hov.gif");
+}
+.icon-composer16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer-16.gif");
+}
+
+/* ::::: component bar ::::: */
+
+#component-bar {
+  -moz-box-align: stretch;
+}

@@ -1,0 +1,58 @@
+.listbox {
+  -moz-appearance: listbox;
+}
+
+#itemList {
+  margin: 10px 4px 10px 4px;
+}
+
+#dialogContentBox {
+  padding: 5px;
+}
+
+installitem {
+  padding: 5px 0px 5px 5px;
+  border-bottom: 1px dotted #C0C0C0;
+  margin-bottom: 5px;
+}
+
+.warning {
+  font-weight: bold;
+}
+
+.xpinstallItemIcon {
+  width: 32px;
+  height: 32px;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  margin-right: 5px;
+}
+
+.xpinstallItemName {
+  font-weight: bold;
+}
+
+.xpinstallItemSigned {
+  font-style: italic;
+}
+
+.xpinstallItemSigned[signed=false] {
+  color: #ED1C24;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.xpinstallItemNameRow {
+  padding-bottom: 3px;
+}
+
+.xpinstallItemURL {
+  -moz-appearance: none;
+  border: none;
+  background-color: Window;
+}
+
+.xpinstallItemIcon {
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+}
+

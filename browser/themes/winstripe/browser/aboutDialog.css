@@ -1,0 +1,58 @@
+#aboutDialog {
+  padding: 0px 0px 10px 0px;
+}
+
+#clientBox {
+  background-image: url("chrome://browser/skin/about.png");
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding-top: 203px;
+  color: #000000;
+}
+
+#brandName {
+  font-weight: bold; font-size: larger;
+} 
+
+#detailsBox {
+  padding: 8px 10px 10px 8px;
+}
+
+#userAgent {
+  margin: 3px 10px 3px 5px;
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 1px 0px 1px 3px;
+  -moz-appearance: none;
+  overflow: hidden;
+  height: 2.4em;
+  border: none;
+}
+
+#groove {
+  margin-top: 0px;
+}
+
+#creditsIframe {
+  cursor: default;
+  -moz-user-select: none;
+}
+
+#version {
+  font-weight: bold;
+  color: #909090;
+  margin: 1em 0px 10px 17px;
+}
+
+#copyright {
+  margin: 0px 0px 3px 16px;
+}
+
+button[dlgtype="extra2"] {
+  margin-left: 13px;
+}
+
+button[dlgtype="accept"] {
+  margin-right: 13px;
+}
+

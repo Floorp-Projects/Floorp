@@ -1,0 +1,93 @@
+#bookmark-window toolbarbutton {
+  list-style-image: url("chrome://browser/skin/bookmarks/Bookmarks-toolbar.png");
+  -moz-box-orient: vertical;
+  padding: 6px !important;
+}
+
+/* new bookmark */
+
+toolbarbutton#newbookmark {
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+toolbarbutton#newbookmark:hover {
+  -moz-image-region: rect(24px 24px 48px 0px);
+}
+
+toolbarbutton#newbookmark[disabled="true"] {
+  -moz-image-region: rect(48px 24px 72px 0px) !important;
+}
+
+/* new folder */
+
+toolbarbutton#newfolder {
+  -moz-image-region: rect(0px 48px 24px 24px);
+}
+toolbarbutton#newfolder:hover {
+  -moz-image-region: rect(24px 48px 48px 24px);
+}
+toolbarbutton#newfolder[disabled="true"] {
+   -moz-image-region: rect(48px 48px 72px 24px) !important;
+}
+
+/* new separator */
+
+toolbarbutton#newseparator {
+  -moz-image-region: rect(0px 72px 24px 48px);
+}
+toolbarbutton#newseparator:hover {
+  -moz-image-region: rect(24px 72px 48px 48px);
+}
+toolbarbutton#newseparator[disabled="true"] {
+  -moz-image-region: rect(48px 72px 72px 48px) !important;
+}
+
+/* move bookmark */
+
+toolbarbutton#moveBookmark {
+  -moz-image-region: rect(0px 96px 24px 72px);
+}
+toolbarbutton#moveBookmark:hover {
+  -moz-image-region: rect(24px 96px 48px 72px);
+}
+toolbarbutton#moveBookmark[disabled="true"] {
+  -moz-image-region: rect(48px 96px 72px 72px);
+}
+
+/* properties */
+
+toolbarbutton#properties {
+  -moz-image-region: rect(0px 120px 24px 96px);
+}
+toolbarbutton#properties:hover {
+  -moz-image-region: rect(24px 120px 48px 96px);
+}
+
+toolbarbutton#properties[disabled="true"] {
+  -moz-image-region: rect(48px 120px 72px 96px) !important;
+}
+
+/* rename */
+
+toolbarbutton#rename {
+  -moz-image-region: rect(0px 144px 24px 120px);
+}
+toolbarbutton#rename:hover {
+  -moz-image-region: rect(24px 144px 48px 120px);
+}
+toolbarbutton#rename[disabled="true"] {
+  -moz-image-region: rect(48px 144px 72px 120px) !important;
+}
+
+/* delete */
+
+toolbarbutton#delete {
+  -moz-image-region: rect(0px 168px 24px 144px);
+}
+toolbarbutton#delete:hover {
+  -moz-image-region: rect(24px 168px 48px 144px);
+}
+toolbarbutton#delete[disabled="true"] {
+  -moz-image-region: rect(48px 168px 72px 144px) !important;
+}
+

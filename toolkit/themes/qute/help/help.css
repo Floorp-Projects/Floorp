@@ -1,0 +1,134 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Help CSS
+#
+# The Initial Developer of the Original Code is
+# R.J. Keller
+# Portions created by the Initial Developer are Copyright (C) 2003
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+@import url("chrome://global/skin/");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+.toolbarbutton-1 {
+	-moz-box-orient: vertical;
+	min-width: 0px;
+#ifdef MOZ_PHOENIX
+	list-style-image: url("chrome://browser/skin/Toolbar.png");
+#else
+	list-style-image: url("chrome://help/skin/Toolbar.png");
+#endif
+}
+
+ #help-zoom-large-button,
+ #help-zoom-small-button,
+ #help-sidebar-button {
+	list-style-image: url("chrome://help/skin/zoomImg.png");
+}
+
+toolbarbutton:not([disabled="true"]):hover,
+menubutton:not([disabled="true"]):hover,
+toolbarbutton:not([disabled="true"]):hover:active,
+menubutton:not([disabled="true"]):hover:active {
+	color: ButtonText !important;
+}
+
+# *** BEGIN TOOLBAR BUTTON CODE ***
+# All toolbar button images are 30x30 for the Help Viewer.
+#
+ #help-back-button { -moz-image-region: rect(0px 30px 30px 0px); }
+ #help-back-button[buttonover="true"] { -moz-image-region: rect(30px 30px 60px 0px); }
+ #help-back-button[disabled="true"] { -moz-image-region: rect(60px 30px 90px 0px); }
+
+ #help-forward-button { -moz-image-region: rect(0px 60px 30px 30px); }
+ #help-forward-button[buttonover="true"] { -moz-image-region: rect(30px 60px 60px 30px); }
+ #help-forward-button[disabled="true"] { -moz-image-region: rect(60px 60px 90px 30px); }
+
+ #help-find-button { -moz-image-region: rect(0px 240px 30px 210px); }
+ #help-find-button:hover { -moz-image-region: rect(30px 240px 60px 210px); }
+
+ #help-toolbar-customization { -moz-image-region: rect(0px 330px 30px 300px); }
+ #help-toolbar-customization:hover { -moz-image-region: rect(30px 330px 60px 300px); }
+
+ #help-home-button { -moz-image-region: rect(0px 150px 30px 120px); }
+ #help-home-button:hover { -moz-image-region: rect(30px 150px 60px 120px); }
+
+ #help-print-button { -moz-image-region: rect(0px 270px 30px 240px); }
+ #help-print-button:hover { -moz-image-region: rect(30px 270px 60px 240px); }
+
+ #help-zoom-large-button { -moz-image-region: rect(0px 30px 30px 0px); }
+ #help-zoom-large-button:hover { -moz-image-region: rect(30px 30px 60px 0px); }
+
+ #help-zoom-small-button { -moz-image-region: rect(0px 60px 30px 30px); }
+ #help-zoom-small-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
+
+ #help-sidebar-button { -moz-image-region: rect(0px 90px 60px 60px); }
+ #help-sidebar-button { -moz-image-region: rect(30px 90px 60px 60px); }
+
+# ** Toolbar Customization stuff **
+toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
+toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text 
+toolbar[mode="icons"] > toolbarbutton[type="menu-button"] > .toolbarbutton-icon,
+toolbar[mode="text"] > toolbarbutton[type="menu-button"] > .toolbarbutton-text {
+	display: -moz-box;
+}
+
+toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-text,
+toolbar[mode="text"] > toolbarbutton > .toolbarbutton-icon,
+toolbar[mode="text"] > toolbarbutton > toolbarbutton > .toolbarbutton-icon,
+toolbar[mode="icons"] > toolbarbutton > toolbarbutton > .toolbarbutton-text {
+	display: none;
+}
+
+# Small icons are not supported.
+ #smallicons { display: none; }
+
+# *** THROBBER ***
+ #help-throbber {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  margin: 0 !important;
+  border: none !important;
+  padding: 0px !important;
+  min-width: 0;
+  background-color: transparent;
+#ifdef MOZ_PHOENIX
+  list-style-image: url("chrome://browser/skin/Throbber.png");
+#else
+  list-style-image: url("chrome://help/skin/throbber.png");
+#endif
+}
+
+ #help-throbber[busy="true"] {
+#ifdef MOZ_PHOENIX
+  list-style-image: url("chrome://global/skin/icons/Loading.gif");
+#else
+  list-style-image: url("chrome://help/skin/throbber-busy.gif");
+#endif
+}

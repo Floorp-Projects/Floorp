@@ -1,0 +1,142 @@
+#extensionManager {
+  background-color: ThreeDFace;
+}
+
+/*
+#extensionsView[state="extensions"] {
+  background-image: url("chrome://mozapps/skin/extensions/viewWatermarkExtensions.png");
+}
+
+#extensionsView[state="themes"] {
+  background-image: url("chrome://mozapps/skin/extensions/viewWatermarkThemes.png");
+}
+*/
+
+/* Extension Manager Command Bar */
+#commandBar {
+  padding: 0px 10px 5px 10px;
+}
+
+#uninstallButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 20px, 20px, 0px) !important;
+}
+
+#uninstallButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 20px, 40px, 0px) !important;
+}
+
+#updateButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 40px, 20px, 20px) !important;
+}
+
+#updateButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 40px, 40px, 20px) !important;
+}
+
+#useThemeButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 60px, 20px, 40px) !important;
+}
+
+#useThemeButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(20px, 60px, 40px, 40px) !important;
+}
+
+#uninstallButton .button-icon, #updateButton .button-icon {
+  margin: 0px 5px 0px 0px !important;
+}
+
+.commandBarSeparator {
+  margin-left: 5px;
+}
+
+#getMore {
+  color: #0000FF;
+  text-decoration: underline !important;
+  cursor: pointer;
+  text-align: right;
+}
+
+/* Extension Buttons (Iconic buttons in each extension item) */
+.extension-button {
+  width: 16px;
+  height: 16px;
+  margin: 1px;
+}
+
+.extension-button[anonid="options-button"] {
+  background-image: url("chrome://mozapps/skin/extensions/extensionOptions.png");
+}
+
+.extension-button[anonid="about-button"] {
+  background-image: url("chrome://mozapps/skin/extensions/extensionAbout.png");
+}
+
+.extension-button[anonid="homepage-button"] {
+  background-image: url("chrome://mozapps/skin/extensions/extensionHome.png");
+}
+
+/* Extension List Items */
+extension[selected="true"] {
+  background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
+}
+
+extension {
+  padding: 13px 10px 13px 13px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
+  background-image: url("chrome://mozapps/skin/shared/itemFader.png");
+}
+
+extension[disabled="true"] {
+  color: GrayText;
+  background-image: none;
+}
+
+extension[disabled="true"][selected="true"] {
+  background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
+}
+
+extension[disabled="true"] .extension-icon {
+  opacity: 0.3;
+}
+
+.extension-item-name {
+  font-weight: bold;
+}
+
+.extension-icon {
+  margin-right: 10px; 
+}
+
+.previewText {
+  font-size: larger;
+  font-weight: bold;
+  color: ThreeDShadow;
+  text-align: center;
+}
+
+extension[itemType="theme"] {
+  padding: 7px 5px 7px 6px;
+}
+
+extension[itemType="theme"] .extension-icon {
+  margin-right: 3px;
+}
+
+.themePreviewArea {
+  -moz-appearance: listbox;
+  margin: 10px 10px 5px 5px;
+}
+
