@@ -51,7 +51,7 @@ my $makecommand;
 if ($^O eq "linux") {
   $makecommand = "make";
 } elsif ($^O eq "MSWin32") {
-  $makecommand = "nmake /nologo /f makefile.win";
+  $makecommand = "make";
 }
 
 use Cwd;
@@ -405,9 +405,9 @@ sub get_matrix_size {
   }
 
   if($debug) {
-	print "----- sizes -----\n";
-	print "            deps: " . get_matrix_size(%deps) . "\n";
-	print "toplevel_modules: " . get_matrix_size(%toplevel_modules) . "\n";
-	print "       clustered: " . get_matrix_size(%clustered) . "\n";
+	print STDERR "----- sizes -----\n";
+	print STDERR "            deps: " . get_matrix_size(%deps) . "\n";
+	print STDERR "toplevel_modules: " . get_matrix_size(%toplevel_modules) . "\n";
+	print STDERR "       clustered: " . get_matrix_size(%clustered) . "\n";
   }
 }
