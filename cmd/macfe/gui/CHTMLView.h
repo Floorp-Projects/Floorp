@@ -250,7 +250,7 @@ class CHTMLView :
 		virtual void			ImageToAvailScreenPoint(const SPoint32 &inImagePoint, Point &outPoint) const;
 			// TIMER URL
 		
-		virtual void			SetTimerURL(Uint32 inSeconds, const char* inURL);
+		virtual void			SetTimerURL(const URL_Struct* inURL);
 		virtual void			ClearTimerURL(void);
 
 		inline CCharSet			GetCharSet()	{ return mCharSet; }
@@ -796,6 +796,7 @@ class CHTMLView :
 		
 		Uint32					mTimerURLFireTime;
 		char*					mTimerURLString;
+		NET_ReloadMethod		mTimerURLReloadPolicy;
 
 		CRouterDrawable*		mOnscreenDrawable;
 		COffscreenDrawable*		mOffscreenDrawable;

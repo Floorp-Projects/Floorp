@@ -205,7 +205,7 @@ void FE_SetRefreshURLTimer(
 	URL_Struct*				URL_s)
 {
 	if (ExtractHyperView(context))
-		ExtractHyperView(context)->SetTimerURL(URL_s->refresh, URL_s->refresh_url);
+		ExtractHyperView(context)->SetTimerURL(URL_s);
 }
 
 void FE_ShowScrollBars(MWContext *context, XP_Bool show)

@@ -724,7 +724,7 @@ void CHTMLView::SpendTime(const EventRecord& /* inMacEvent */)
 		( XP_IsContextBusy(*mContext) == false) &&
 		CFrontApp::GetApplication() && CFrontApp::GetApplication()->HasProperlyStartedUp())
 	{
-		URL_Struct * request = NET_CreateURLStruct (mTimerURLString, NET_NORMAL_RELOAD);
+		URL_Struct * request = NET_CreateURLStruct (mTimerURLString, mTimerURLReloadPolicy);
 		ClearTimerURL();	// ...frees mTimerURLString, so must do this _after_ |NET_CreateURLStruct|.
 		if (request)
 		{
@@ -4801,13 +4801,17 @@ void CHTMLView::DoDragSendData(FlavorType inFlavor,
 //
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CHTMLView::SetTimerURL(Uint32 inSeconds, const char* inURL)
+void CHTMLView::SetTimerURL(const URL_Struct* inURL)
 {
 	if (inURL)
-		mTimerURLString = XP_STRDUP(inURL);
+		mTimerURLString = XP_STRDUP(inURL->refresh_url);
 	else
 		return;
-	mTimerURLFireTime = ::TickCount() + inSeconds * 60;
+	mTimerURLFireTime = ::TickCount() + inURL->refresh * 60;
+	if ( inURL->dont_cache )
+		mTimerURLReloadPolicy = NET_SUPER_RELOAD;
+	else
+		mTimerURLReloadPolicy = inURL->force_reload;
 	StartRepeating();
 }
 
