@@ -846,6 +846,16 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
+    nsCOMPtr<nsIXULChildDocument> childDocument;
+    childDocument = do_QueryInterface(mDocument);
+    if (childDocument != nsnull) {
+        childDocument->GetFragmentRoot(&mFragmentRoot);
+        if (mFragmentRoot) {
+            // We're totally a subdocument. Find the root document's
+            // data source and make assertions there.
+        }
+    }
+
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
@@ -872,16 +882,6 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     
     mState = eXULContentSinkState_InProlog;
-
-    nsCOMPtr<nsIXULChildDocument> childDocument;
-    childDocument = do_QueryInterface(mDocument);
-    if (childDocument != nsnull) {
-        childDocument->GetFragmentRoot(&mFragmentRoot);
-        if (mFragmentRoot) {
-            // We're totally a subdocument. Find the root document's
-            // data source and make assertions there.
-        }
-    }
 
     return NS_OK;
 }
