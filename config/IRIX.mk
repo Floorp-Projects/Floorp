@@ -74,7 +74,9 @@ ifeq ($(OS_RELEASE),6)
 # stuff strewn all over db (apparently for Macintoshes).
 #
 NO_NOISE		= -woff 131
+ifndef NS_USE_GCC
 PLATFORM_FLAGS		+= -multigot -Wl,-nltgot,170
+endif
 PORT_FLAGS		+= -DNO_UINT32_T -DNO_INT64_T -DNEED_BSD_TYPES
 SHLIB_LD_OPTS		= -no_unresolved
 ifeq ($(AWT_11),1)
