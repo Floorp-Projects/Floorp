@@ -243,9 +243,10 @@ function highlight(range, node)
 
 function getSelectionControllerForFindToolbar(ds)
 {
-  var display = ds.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsISelectionDisplay);
-  if (!display)
-    return null;
+  try {
+    var display = ds.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsISelectionDisplay);
+  }
+  catch (e) { return null; }
   return display.QueryInterface(Components.interfaces.nsISelectionController);
 }
 
