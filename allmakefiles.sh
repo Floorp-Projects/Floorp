@@ -561,6 +561,10 @@ widget/timer/src/os2/Makefile
 "
 
 MAKEFILES_xpcom="
+string/Makefile
+string/obsolete/Makefile
+string/public/Makefile
+string/src/Makefile
 xpcom/Makefile
 xpcom/base/Makefile
 xpcom/build/Makefile

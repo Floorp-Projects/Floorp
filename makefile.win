@@ -50,6 +50,7 @@ DIRS =                         \
   jpeg                         \
   sun-java                     \
   modules\libreg               \
+  string                       \
   xpcom                        \
   db                           \
   dbm                          \
