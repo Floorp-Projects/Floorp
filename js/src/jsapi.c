@@ -1781,7 +1781,7 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 }
 
 #ifdef DEBUG
-static void
+/* FIXME: 242518 static */ void
 CheckStackGrowthDirection(int *dummy1addr, jsuword limitAddr)
 {
     int dummy2;
