@@ -66,63 +66,50 @@
 // nsProxiedService
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsProxiedService : public nsService
+class nsProxiedService
 {
-protected:
-    nsISupports* mProxiedService;
-public:
-  nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-            nsIEventQueue* pIProxyQueue, nsresult*rv): nsService(aClass, aIID, rv),
-            mProxiedService(nsnull)
-    {
-    static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+ protected:
+   nsISupports* mProxiedService;
+   nsISupports* mService;
+ public:
+   nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
+                    nsIEventQueue* pIProxyQueue, nsresult*rv)
+      : mProxiedService(nsnull)
+   {
+       static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-    if(NS_FAILED(*rv))
-        return;
-    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                        kProxyObjectManagerCID, rv);
-    if(NS_FAILED(*rv))
-        {
-        nsServiceManager::ReleaseService(mCID, mService);
-        mService = nsnull;
-        return;
-        }
+       *rv = nsServiceManager::GetService(aClass, aIID, &mService);
+       if (NS_FAILED(*rv)) return;
 
-    *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue,
-                                                            aIID,
-                                                            mService,
-                                                            PROXY_SYNC,
-                                                            (void**)&mProxiedService);
-    if(NS_FAILED(*rv))
-        {
-        nsServiceManager::ReleaseService(mCID, mService);
-        mService = nsnull;
-        return;
-        }
-    }
+       NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                       kProxyObjectManagerCID, rv);
+       if (NS_FAILED(*rv)) return;
+
+       *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, aIID, mService,
+                                                  PROXY_SYNC, (void**)&mProxiedService);
+   }
     
-    ~nsProxiedService()
-        {
-        if(mProxiedService)
-            NS_RELEASE(mProxiedService);
-        // Base class will free mService
-        }
+   ~nsProxiedService()
+   {
+       NS_IF_RELEASE(mProxiedService);
+       NS_IF_RELEASE(mService);
+   }
 
-    nsISupports* operator->() const
-        {
-        NS_PRECONDITION(mProxiedService != 0, "Your code should test the error result from the constructor.");
-        return mProxiedService;
-        }
+   nsISupports* operator->() const
+   {
+       NS_PRECONDITION(mProxiedService != 0, "Your code should test the error result from the constructor.");
+       return mProxiedService;
+   }
 
-    PRBool operator==(const nsISupports* other)
-        {
-        return ((mProxiedService == other) || (mService == other));
-        }
+   PRBool operator==(const nsISupports* other)
+   {
+      return ((mProxiedService == other) || (mService == other));
+   }
 
-    operator nsISupports*() const
-        {
-        return mProxiedService;
-        }
+   operator nsISupports*() const
+   {
+       return mProxiedService;
+   }
 };
 
 
