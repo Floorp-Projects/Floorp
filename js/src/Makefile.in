@@ -96,7 +96,7 @@ EXPORTS		= js.msg \
 		  jsemit.h \
 		  jsfun.h \
 		  jsgc.h \
-	          jshash.h \
+		  jshash.h \
 		  jsinterp.h \
 		  jslock.h \
 		  jslong.h \
@@ -119,6 +119,7 @@ EXPORTS		= js.msg \
 		  jstypes.h \
 		  jsutil.h \
 		  jsxdrapi.h \
+		  jsstddef.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
