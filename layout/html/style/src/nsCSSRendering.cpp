@@ -287,7 +287,7 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
 PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
                                 nsIRenderingContext& aContext,
                                 PRIntn whichSide,
-                                const nsRect& inside, const nsRect& outside,
+                                const nsRect& outside, const nsRect& inside,
                                 PRIntn borderPart, float borderFrac,
                                 nscoord twipsPerPixel)
 {
@@ -306,7 +306,7 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
   switch (whichSide) {
   case NS_SIDE_TOP:
     if (borderPart == BORDER_FULL) {
-      thickness = outside.y - inside.y;
+      thickness = inside.y - outside.y;
 
       aPoints[np++].MoveTo(outside.XMost(), outside.y);
       if (thickness >= twipsPerPixel) {
@@ -376,7 +376,7 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 
   case NS_SIDE_BOTTOM:
     if (borderPart == BORDER_FULL) {
-      thickness = outside.y - inside.y;
+      thickness = outside.YMost() - inside.YMost();
 
       aPoints[np++].MoveTo(outside.x, outside.YMost());
       if (thickness >= twipsPerPixel) {
@@ -411,7 +411,7 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 
   case NS_SIDE_RIGHT:
     if (borderPart == BORDER_FULL) {
-      thickness = outside.x - inside.x;
+      thickness = outside.XMost() - inside.XMost();
 
       aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
       aPoints[np++].MoveTo(outside.XMost(), outside.y);
