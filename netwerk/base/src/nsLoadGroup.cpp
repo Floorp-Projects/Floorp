@@ -31,6 +31,7 @@
 #include "nsIURI.h"
 #include "prlog.h"
 #include "nsCRT.h"
+#include "netCore.h"
 
 #if defined(PR_LOGGING)
 //
@@ -477,8 +478,8 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
-                           nsresult status, const PRUnichar *errorMsg)
+nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt, 
+                           nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
 
@@ -489,10 +490,10 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     nsCOMPtr<nsIURI> uri;
 
     if (channel) {
-    	rv = channel->GetURI(getter_AddRefs(uri));
+        rv = channel->GetURI(getter_AddRefs(uri));
     }
     else {
-	rv = NS_ERROR_NULL_POINTER;
+        rv = NS_ERROR_NULL_POINTER;
     }
 
     if (NS_SUCCEEDED(rv))
@@ -504,7 +505,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
 
     PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
            ("LOADGROUP [%x]: Removing channel %x %s status %x (count=%d).\n",
-            this, channel, uriStr, status, count-1));
+            this, channel, uriStr, aStatus, count-1));
     nsCRT::free(uriStr);
   }
 #endif /* PR_LOGGING */
@@ -541,7 +542,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                     "(foreground count=%d).\n",
                     this, channel, mForegroundCount));
 
-            rv = observer->OnStopRequest(channel, ctxt, status, errorMsg);
+            rv = observer->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
             if (NS_FAILED(rv)) {
                 PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
                        ("LOADGROUP [%x]: OnStopRequest for channel %x FAILED.\n",

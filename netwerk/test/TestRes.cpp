@@ -29,6 +29,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -142,7 +143,7 @@ public:
     }
     
     NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                             nsresult status, const PRUnichar *errorMsg) {
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
         rv = channel->GetURI(getter_AddRefs(uri));
@@ -150,7 +151,7 @@ public:
             char* str;
             rv = uri->GetSpec(&str);
             if (NS_SUCCEEDED(rv)) {
-                fprintf(stdout, "Ending load %s, status=%x\n", str, status);
+                fprintf(stdout, "Ending load %s, status=%x\n", str, aStatus);
                 nsCRT::free(str);
             }
         }

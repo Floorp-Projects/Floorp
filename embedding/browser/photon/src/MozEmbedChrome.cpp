@@ -680,7 +680,9 @@ NS_IMETHODIMP MozEmbedChrome::OnStateChange(nsIWebProgress *progress, nsIRequest
   return NS_OK;
 }
 
-NS_IMETHODIMP MozEmbedChrome::OnLocationChange(nsIURI *aLocation)
+NS_IMETHODIMP MozEmbedChrome::OnLocationChange(nsIWebProgress* aWebProgress,
+                                               nsIRequest* aRequest,
+                                               nsIURI *aLocation)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("MozEmbedChrome::OnLocationChange\n"));
   char *newURIString = NULL;
@@ -692,6 +694,15 @@ NS_IMETHODIMP MozEmbedChrome::OnLocationChange(nsIURI *aLocation)
   if (mLocationCB)
     mLocationCB(mLocationCBData);
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+MozEmbedChrome::OnStatusChange(nsIWebProgress* aWebProgress,
+                               nsIRequest* aRequest,
+                               nsresult aStatus,
+                               const PRUnichar* aMessage)
+{
+    return NS_OK;
 }
 
 // nsIBaseWindow interface

@@ -73,10 +73,9 @@ public:
 
     NS_IMETHOD OnStopRequest(nsIChannel* channel,
                              nsISupports* context, 
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) 
+                             nsresult aStatus, const PRUnichar* aStatusArg) 
     { 
-        return nsAsyncStreamObserver::OnStopRequest(channel, context, aStatus, aMsg); 
+        return nsAsyncStreamObserver::OnStopRequest(channel, context, aStatus, aStatusArg); 
     }
 
     NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,

@@ -254,15 +254,15 @@ public:
     nsOnStopRequestEvent(nsAsyncStreamObserver* listener, 
                          nsISupports* context, nsIChannel* channel)
         : nsStreamListenerEvent(listener, channel, context),
-          mStatus(NS_OK), mMessage(nsnull) {}
+          mStatus(NS_OK) {}
     virtual ~nsOnStopRequestEvent();
 
-    nsresult Init(nsresult status, const PRUnichar* aMsg);
+    nsresult Init(nsresult aStatus, const PRUnichar* aStatusArg);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    PRUnichar*  mMessage;
+    nsString    mStatusArg;
 };
 
 nsOnStopRequestEvent::~nsOnStopRequestEvent()
@@ -270,10 +270,10 @@ nsOnStopRequestEvent::~nsOnStopRequestEvent()
 }
 
 nsresult
-nsOnStopRequestEvent::Init(nsresult status, const PRUnichar* aMsg)
+nsOnStopRequestEvent::Init(nsresult aStatus, const PRUnichar* aStatusArg)
 {
-    mStatus = status;
-    mMessage = (PRUnichar*)aMsg;
+    mStatus = aStatus;
+    mStatusArg = aStatusArg;
     return NS_OK;
 }
 
@@ -281,30 +281,29 @@ NS_IMETHODIMP
 nsOnStopRequestEvent::HandleEvent()
 {
 #if defined(PR_LOGGING)
-  if (!gStreamEventLog)
-    gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
-  PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
-         ("netlibEvent: Handle Stop [event=%x]", this));
+    if (!gStreamEventLog)
+        gStreamEventLog = PR_NewLogModule("netlibStreamEvent");
+    PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
+           ("netlibEvent: Handle Stop [event=%x]", this));
 #endif
-  nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  nsresult status = NS_OK;
-  nsresult rv = mChannel->GetStatus(&status);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
+    nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+    nsresult status = NS_OK;
+    nsresult rv = mChannel->GetStatus(&status);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
-  //
-  // If the consumer returned a failure code, then pass it out in the
-  // OnStopRequest(...) notification...
-  //
-  if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
-    mStatus = status;
-  }
-  return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
+    //
+    // If the consumer returned a failure code, then pass it out in the
+    // OnStopRequest(...) notification...
+    //
+    if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
+        mStatus = status;
+    }
+    return receiver->OnStopRequest(mChannel, mContext, mStatus, mStatusArg.GetUnicode());
 }
 
 NS_IMETHODIMP 
 nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
-                                     nsresult aStatus,
-                                     const PRUnichar* aMsg)
+                                     nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
 
@@ -317,7 +316,7 @@ nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = event->Init(aStatus, aMsg);
+    rv = event->Init(aStatus, aStatusArg);
     if (NS_FAILED(rv)) goto failed;
 #if defined(PR_LOGGING)
     PLEventQueue *equeue;

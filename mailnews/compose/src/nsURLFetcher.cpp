@@ -410,7 +410,19 @@ nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsURLFetcher::OnLocationChange(nsIURI *aURI)
+nsURLFetcher::OnLocationChange(nsIWebProgress* aWebProgress,
+                               nsIRequest* aRequest,
+                               nsIURI *aURI)
 {
   return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsURLFetcher::OnStatusChange(nsIWebProgress* aWebProgress,
+                             nsIRequest* aRequest,
+                             nsresult aStatus,
+                             const PRUnichar* aMessage)
+{
+    return NS_OK;
+}
+

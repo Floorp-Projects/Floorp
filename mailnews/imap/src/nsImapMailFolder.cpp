@@ -3563,7 +3563,7 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
               nsTextFormatter::smprintf_free(printfString);
             }
           }
-          progressSink->OnStatus(mockChannel, nsnull, progressMsg);
+          progressSink->OnStatus(mockChannel, nsnull, NS_OK, progressMsg);      // XXX i18n message
         }
       }
     }
@@ -3592,7 +3592,7 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
         {
           progressSink->OnProgress(mockChannel, nsnull, aInfo->currentProgress, aInfo->maxProgress);
           if (aInfo->message)
-            progressSink->OnStatus(mockChannel, nsnull, aInfo->message);
+            progressSink->OnStatus(mockChannel, nsnull, NS_OK, aInfo->message);      // XXX i18n message
 
         }
 

@@ -443,7 +443,8 @@ nsFingerChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
 
 NS_IMETHODIMP
 nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
-                                      nsresult aStatus, const PRUnichar* aMsg) {
+                               nsresult aStatus, const PRUnichar* aStatusArg)
+{
 #ifdef DEBUG_bryner
     printf("nsFingerChannel::OnStopRequest, mActAsObserver=%d\n",
             mActAsObserver);
@@ -453,10 +454,10 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
 
     if (NS_FAILED(aStatus) || !mActAsObserver) {
         if (mLoadGroup) {
-          rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
+          rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
           if (NS_FAILED(rv)) return rv;
         }
-        rv = mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+        rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
         mTransport = 0;
         return rv;
     } else {

@@ -5014,12 +5014,14 @@ void nsNNTPProtocol::SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgres
 void
 nsNNTPProtocol::SetProgressStatus(char *message)
 {
+  nsresult rv;
   PR_LOG(NNTP,PR_LOG_ALWAYS,("nsNNTPProtocol::SetProgressStatus(%s)",message));
   if (mProgressEventSink) 
   {
     nsAutoString formattedString; 
     formattedString.AssignWithConversion(message);
-    mProgressEventSink->OnStatus(this, m_channelContext, formattedString.GetUnicode());
+    rv = mProgressEventSink->OnStatus(this, m_channelContext, NS_OK, formattedString.GetUnicode());      // XXX i18n message
+    NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
   }
 }
 

@@ -112,12 +112,13 @@ nsStreamLoader::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 
 NS_IMETHODIMP 
 nsStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                              nsresult status, const PRUnichar *errorMsg)
+                              nsresult aStatus, const PRUnichar* aStatusArg)
 {
+  nsresult rv;
   mChannel = channel;
-  nsresult rv = mObserver->OnStreamComplete(this, mContext, status, 
-                                            mData.Length(), 
-                                            mData.GetBuffer());
+  rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
+                                   mData.Length(),
+                                   mData.GetBuffer());
   return rv;
 }
 

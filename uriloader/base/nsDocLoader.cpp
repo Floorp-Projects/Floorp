@@ -40,7 +40,9 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIStringBundle.h"
 
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #if defined(PR_LOGGING)
 //
@@ -1109,8 +1111,21 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* aChannel, nsISupports* ctx
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIChannel* channel, nsISupports* ctxt, const PRUnichar* aMsg)
+NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIChannel* aChannel, nsISupports* ctxt, 
+                                        nsresult aStatus, const PRUnichar* aStatusArg)
 {
+  //
+  // Fire progress notifications out to any registered nsIWebProgressListeners
+  //
+  if (aStatus) {
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLString msg;
+    rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(msg));
+    if (NS_FAILED(rv)) return rv;
+    FireOnStatusChange(this, aChannel, aStatus, msg);
+  }
   return NS_OK;
 }
 
@@ -1245,7 +1260,9 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::FireOnLocationChange(nsIURI *aUri)
+nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
+                                      nsIRequest* aRequest,
+                                      nsIURI *aUri)
 {
   PRInt32 count;
 
@@ -1261,7 +1278,33 @@ nsDocLoaderImpl::FireOnLocationChange(nsIURI *aUri)
       continue;
     }
 
-    listener->OnLocationChange(aUri);
+    listener->OnLocationChange(aWebProgress, aRequest, aUri);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    nsresult aStatus,
+                                    const PRUnichar* aMessage)
+{
+  PRInt32 count;
+
+  count = mListenerList.Count();
+  while (count > 0) {
+    nsIWebProgressListener *listener;
+
+    listener = NS_STATIC_CAST(nsIWebProgressListener*,
+                              mListenerList.ElementAt(--count));
+
+    NS_ASSERTION(listener, "NULL listener found in list.");
+    if (! listener) {
+      continue;
+    }
+
+    listener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
   }
 
   return NS_OK;

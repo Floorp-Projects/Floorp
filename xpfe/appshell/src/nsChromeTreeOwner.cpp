@@ -342,11 +342,22 @@ nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIURI* aLocation)
+NS_IMETHODIMP nsChromeTreeOwner::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                  nsIRequest* aRequest,
+                                                  nsIURI* aLocation)
 {
    // If loading a new root .xul document, then redo chrome.
    mXULWindow->mChromeLoaded = PR_FALSE;
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsChromeTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
+                                  nsIRequest* aRequest,
+                                  nsresult aStatus,
+                                  const PRUnichar* aMessage)
+{
+    return NS_OK;
 }
 
 //*****************************************************************************

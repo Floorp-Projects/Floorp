@@ -2308,9 +2308,20 @@ nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsDocShell::OnLocationChange(nsIURI *aURI)
+nsDocShell::OnLocationChange(nsIWebProgress *aProgress, 
+                             nsIRequest *aRequest,
+                             nsIURI *aURI)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocShell::OnStatusChange(nsIWebProgress* aWebProgress,
+                           nsIRequest* aRequest,
+                           nsresult aStatus,
+                           const PRUnichar* aMessage)
+{
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -3275,7 +3286,7 @@ void nsDocShell::SetCurrentURI(nsIURI* aURI)
    
    NS_ASSERTION(loader, "No document loader");
    if (loader) {
-     loader->FireOnLocationChange(aURI);
+     loader->FireOnLocationChange(nsnull, nsnull, aURI);
    }
 }
 

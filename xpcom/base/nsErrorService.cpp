@@ -120,19 +120,19 @@ nsErrorService::GetErrorStringBundle(PRInt16 errorModule, char **result)
 NS_IMETHODIMP
 nsErrorService::RegisterErrorStringBundleKey(nsresult error, const char *stringBundleKey)
 {
-    return mErrorStringBundleKeyMap.Put(NS_ERROR_GET_CODE(error), stringBundleKey);
+    return mErrorStringBundleKeyMap.Put(error, stringBundleKey);
 }
 
 NS_IMETHODIMP
 nsErrorService::UnregisterErrorStringBundleKey(nsresult error)
 {
-    return mErrorStringBundleKeyMap.Remove(NS_ERROR_GET_CODE(error));
+    return mErrorStringBundleKeyMap.Remove(error);
 }
 
 NS_IMETHODIMP
 nsErrorService::GetErrorStringBundleKey(nsresult error, char **result)
 {
-    char* value = mErrorStringBundleKeyMap.Get(NS_ERROR_GET_CODE(error));
+    char* value = mErrorStringBundleKeyMap.Get(error);
     if (value == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     *result = value;

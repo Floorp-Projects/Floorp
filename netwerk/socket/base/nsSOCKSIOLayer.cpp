@@ -377,8 +377,8 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime time
     // destination port
     PRUint16 destPort = PR_NetAddrInetPort(addr);
     
-    request[request_len-1] = destPort >> 8;
-    request[request_len-2] = destPort;
+    request[request_len-1] = (unsigned char)(destPort >> 8);
+    request[request_len-2] = (unsigned char)destPort;
     
     if (PR_Write(fd, request, request_len) != request_len) {
         // bad write

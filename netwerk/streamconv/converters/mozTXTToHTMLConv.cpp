@@ -1148,7 +1148,7 @@ mozTXTToHTMLConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 
 NS_IMETHODIMP
 mozTXTToHTMLConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
-                                nsresult status, const PRUnichar *errorMsg)
+                                nsresult aStatus, const PRUnichar* aStatusArg)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

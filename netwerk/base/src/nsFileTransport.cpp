@@ -374,8 +374,6 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPEN_FOR_READ [this=%x %s]",
                 this, mStreamName.GetBuffer()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
-
-        // if we're reading:
         if (mListener) {
             nsresult rv = mListener->OnStartRequest(this, mContext);  // always send the start notification
             if (NS_SUCCEEDED(mStatus))
@@ -504,20 +502,18 @@ nsFileTransport::Process(void)
 
         mSource = null_nsCOMPtr();
 
+        nsresult rv;
         if (mListener) {
-            // XXX where do we get the done message?
-            nsresult rv = mListener->OnStopRequest(this, mContext, mStatus, nsnull);
+            rv = mListener->OnStopRequest(this, mContext, mStatus, nsnull);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStopRequest failure");
             mListener = null_nsCOMPtr();
         }
         if (mProgress && !(mLoadAttributes & LOAD_BACKGROUND)) {
-            // XXX fix up this message for i18n
-            nsAutoString msg;
-            msg.AssignWithConversion("Read ");
-            nsXPIDLCString spec;
-            (void)
-            msg.AppendWithConversion(mStreamName);
-            (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
+            nsAutoString fileName; fileName.AssignWithConversion(mStreamName);
+            rv = mProgress->OnStatus(this, mContext, 
+                                     NS_NET_STATUS_READ_FROM, 
+                                     fileName.GetUnicode());
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStopRequest failure");
         }
         mContext = null_nsCOMPtr();
 
@@ -530,9 +526,10 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPEN_FOR_WRITE [this=%x %s]",
                 this, mStreamName.GetBuffer()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
-
         if (mObserver) {
-            mStatus = mObserver->OnStartRequest(this, mContext);  // always send the start notification
+            nsresult rv = mObserver->OnStartRequest(this, mContext);  // always send the start notification
+            if (NS_SUCCEEDED(mStatus))
+                mStatus = rv;
         }
 
         mXferState = NS_FAILED(mStatus) ? END_WRITE : START_WRITE;
@@ -666,17 +663,18 @@ nsFileTransport::Process(void)
             mSource = null_nsCOMPtr();
         }
 
+        nsresult rv;
         if (mObserver) {
-            // XXX where do we get the done message?
-            (void)mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
+            rv = mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStopRequest failure");
             mObserver = null_nsCOMPtr();
         }
         if (mProgress && !(mLoadAttributes & LOAD_BACKGROUND)) {
-            // XXX fix up this message for i18n
-            nsAutoString msg;
-            msg.AssignWithConversion("Wrote ");
-            msg.AssignWithConversion(mStreamName);
-            (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
+            nsAutoString fileName; fileName.AssignWithConversion(mStreamName);
+            rv = mProgress->OnStatus(this, mContext,
+                                     NS_NET_STATUS_WROTE_TO, 
+                                     fileName.GetUnicode());
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStopRequest failure");
         }
         mContext = null_nsCOMPtr();
 

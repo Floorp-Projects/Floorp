@@ -146,7 +146,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
     // If anything is enqueued (or left-over) in mBuf, then feed it to
     // the reader first.
-    while (mOffset < mBuf.Length() && aCount != 0) {
+    while (mOffset < (PRInt32)mBuf.Length() && aCount != 0) {
         *(aBuf++) = char(mBuf.CharAt(mOffset++));
         --aCount;
         ++nread;
@@ -260,7 +260,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
         // ...and once we've either run out of directory entries, or
         // filled up the buffer, then we'll push it to the reader.
-        while (mOffset < mBuf.Length() && aCount != 0) {
+        while (mOffset < (PRInt32)mBuf.Length() && aCount != 0) {
             *(aBuf++) = char(mBuf.CharAt(mOffset++));
             --aCount;
             ++nread;

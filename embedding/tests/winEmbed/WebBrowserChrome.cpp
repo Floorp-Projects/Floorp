@@ -215,11 +215,21 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIURI *location)
+NS_IMETHODIMP WebBrowserChrome::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                 nsIRequest* aRequest,
+                                                 nsIURI *location)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP 
+WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
+                                 nsIRequest* aRequest,
+                                 nsresult aStatus,
+                                 const PRUnichar* aMessage)
+{
+    return NS_OK;
+}
 
 //*****************************************************************************
 // WebBrowserChrome::nsIBaseWindow

@@ -43,9 +43,18 @@ interface nsIProgressEventSink : nsISupports
 
     /**
      * Notify the EventSink with a status message for the URL load.<BR>
+     * @param status - A status code denoting the type of notification. This
+     *          can be a message to be displayed (e.g. for file I/O, 
+     *          STATUS_READ_FROM, or STATUS_WROTE_TO), or can be an event
+     *          to be programmatically handled.
+     * @param statusArg - An argument or arguments to the status notification.
+     *          These arguments will be formatted into any status or error
+     *          message. Multiple arguments can be passed by delimiting them 
+     *          with newline ('\n') characters.
      */
     void onStatus(in nsIChannel channel,
                   in nsISupports ctxt,
-                  in wstring aMsg);
+                  in nsresult status,
+                  in wstring statusArg);
 
 };

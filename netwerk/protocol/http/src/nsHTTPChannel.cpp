@@ -58,6 +58,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIWalletService.h"
+#include "netCore.h"
 
 // FIXME - Temporary include.  Delete this when cache is enabled on all 
 // platforms
@@ -839,12 +840,12 @@ nsHTTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
 
 // nsIProgressEventSink methods
 NS_IMETHODIMP
-nsHTTPChannel::OnStatus(nsIChannel *aChannel,
-                        nsISupports *aContext,
-                        const PRUnichar *aMsg) {
+nsHTTPChannel::OnStatus(nsIChannel *aChannel, nsISupports *aContext, 
+                        nsresult aStatus, const PRUnichar* aStatusArg)
+{
     nsresult rv = NS_OK;
     if (mProgressEventSink) {
-        rv = mProgressEventSink->OnStatus(this, aContext, aMsg);
+        rv = mProgressEventSink->OnStatus(this, aContext, aStatus, aStatusArg);
     }
     return rv;
 }
@@ -1714,10 +1715,8 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   return rv;
 }
 
-nsresult nsHTTPChannel::ResponseCompleted(
-        nsIStreamListener *aListener,
-        nsresult aStatus, 
-        const PRUnichar* aMsg)
+nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
+                                          nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv = NS_OK;
 
@@ -1727,7 +1726,7 @@ nsresult nsHTTPChannel::ResponseCompleted(
              this, (void*)mResponseDataListener, aStatus));
 
 #if 0
-    if (NS_FAILED (aStatus) && !mResponse)
+    if (NS_FAILED (status) && !mResponse)
     {
         // ruslan: must have failed during connect phase
 
@@ -1736,7 +1735,7 @@ nsresult nsHTTPChannel::ResponseCompleted(
         
         if (NS_SUCCEEDED (rv1))
         {
-            aStatus = NS_ERROR_GENERATE_SUCCESS (NS_ERROR_MODULE_NETWORK, NS_ERROR_GET_CODE (aStatus));
+            status = NS_ERROR_GENERATE_SUCCESS (NS_ERROR_MODULE_NETWORK, NS_ERROR_GET_CODE (status));
             return NS_OK;
         }
     }
@@ -1754,7 +1753,7 @@ nsresult nsHTTPChannel::ResponseCompleted(
     // Call the consumer OnStopRequest(...) to end the request...
     if (aListener)
     {
-        rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aMsg);
+        rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aStatusArg);
 
         if (NS_FAILED (rv))
         {
@@ -1788,7 +1787,7 @@ nsresult nsHTTPChannel::ResponseCompleted(
     //
     
     if (mLoadGroup)
-        mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
+        mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
 
 
     // Null out pointers that are no longer needed...
@@ -2719,10 +2718,10 @@ nsSyncHelper::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsSyncHelper::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                            nsresult aStatus, const PRUnichar *aMsg)
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     mProcessing = PR_FALSE;
-    return mListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
+    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 }
 
 

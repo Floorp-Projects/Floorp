@@ -170,8 +170,7 @@ protected:
     nsresult doWriteFromStream(PRUint32 *aCount);
     
     nsresult fireStatus(PRUint32 aCode);
-    nsresult GetSocketErrorString(PRUint32 iCode, PRUnichar** oString) const;
-    
+
 private:
     PRIntervalTime mSocketTimeout;
     PRIntervalTime mSocketConnectTimeout;

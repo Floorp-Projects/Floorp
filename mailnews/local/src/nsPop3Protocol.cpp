@@ -472,8 +472,8 @@ void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 {
 	if (m_statusFeedback)
 	{
-    PRUnichar * statusString = nsnull;
-    mStringService->GetStringByID(aStatusID, &statusString);
+        PRUnichar * statusString = nsnull;
+        mStringService->GetStringByID(aStatusID, &statusString);
 		UpdateStatusWithString(statusString);
 		nsCRT::free(statusString);
 	}
@@ -481,8 +481,11 @@ void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 
 void nsPop3Protocol::UpdateStatusWithString(PRUnichar * aStatusString)
 {
-  if (mProgressEventSink)
-    mProgressEventSink->OnStatus(this, m_channelContext, aStatusString);
+    nsresult rv;
+    if (mProgressEventSink) {
+        rv = mProgressEventSink->OnStatus(this, m_channelContext, NS_OK, aStatusString);      // XXX i18n message
+        NS_ASSERTION(NS_SUCCEEDED(rv), "dropping error result");
+    }
 }
 
 void nsPop3Protocol::UpdateProgressPercent (PRUint32 totalDone, PRUint32 total)
@@ -674,7 +677,9 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 		server->SetServerBusy(PR_TRUE); // the server is now busy
 	}
 
-  m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
+    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
+
+    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
 	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(queryPart, "uidl=");

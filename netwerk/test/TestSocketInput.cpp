@@ -61,8 +61,7 @@ public:
                              PRUint32 aLength);
 
   NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
+                           nsresult aStatus, const PRUnichar* aStatusArg);
 
 };
 
@@ -111,10 +110,8 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopRequest(nsIChannel* channel, 
-                                 nsISupports* context,
-                                 nsresult aStatus,
-                                 const PRUnichar* aMsg)
+InputTestConsumer::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   gKeepRunning = 0;
   printf("+++ OnStopRequest status %x +++\n", aStatus);

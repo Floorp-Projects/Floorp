@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -280,10 +280,8 @@ OpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 }
 
 NS_IMETHODIMP
-OpenObserver::OnStopRequest(nsIChannel* channel, 
-                            nsISupports* context,
-                            nsresult aStatus,
-                            const PRUnichar* aMsg)
+OpenObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     printf("\n+++ OpenObserver::OnStopRequest (status = %x) +++."
            "\tContext = %p\n", 
@@ -371,10 +369,8 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopRequest(nsIChannel* channel, 
-                                 nsISupports* context,
-                                 nsresult aStatus,
-                                 const PRUnichar* aMsg)
+InputTestConsumer::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   URLLoadInfo* info = (URLLoadInfo*)context;
 
@@ -420,7 +416,7 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
     pURI->GetSpec(&location);
   }
 
-  printf("\nFinished loading: %s  Status Code: %x\n", location ? location : "UNKNOWN URL", aStatus);
+  printf("\nFinished loading: %s  Status Code: %x\n", location ? location : "UNKNOWN URL", status);
 
   if (location) {
     nsCRT::free(location);
@@ -460,7 +456,6 @@ public:
 NS_IMPL_ISUPPORTS1(nsNotificationCallbacks, nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
-
 
 nsresult StartLoadingURL(const char* aUrlString)
 {

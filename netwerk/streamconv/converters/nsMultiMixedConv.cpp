@@ -250,10 +250,11 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
 
 NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
-                                nsresult status, const PRUnichar *errorMsg) {
-	nsresult rv = NS_OK;
-	if (NS_FAILED(status)) {
-		if (mPartChannel) {
+                                nsresult aStatus, const PRUnichar* aStatusArg) {
+    nsresult rv = NS_OK;
+
+    if (NS_FAILED(aStatus)) {
+        if (mPartChannel) {
             // we've already fired an onstart.
             // push any buffered data out and then push
             // an onstop out.
@@ -264,25 +265,24 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
                 mBuffer = nsnull;
                 mBufLen = 0;
             }
-			rv = mFinalListener->OnStopRequest(mPartChannel, mContext,
-											   status, errorMsg);
+            rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus, aStatusArg);
         } else {
             rv = mFinalListener->OnStartRequest(channel, ctxt);
             if (NS_FAILED(rv)) return rv;
 
-		    rv = mFinalListener->OnStopRequest(channel, ctxt, status, errorMsg);
+            rv = mFinalListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
         }
-	}
-    else
-    if (mBufLen > 0 && mBuffer)
-    {
-        SendData(mBuffer, mBufLen);
-        nsMemory::Free(mBuffer);
-        mBuffer = nsnull;
-        mBufLen = 0;
-        rv = SendStop ();
     }
-
+    else {
+        if (mBufLen > 0 && mBuffer)
+        {
+            SendData(mBuffer, mBufLen);
+            nsMemory::Free(mBuffer);
+            mBuffer = nsnull;
+            mBufLen = 0;
+            rv = SendStop ();
+        }
+    }
     return rv;
 }
 

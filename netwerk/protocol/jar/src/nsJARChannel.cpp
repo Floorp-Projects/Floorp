@@ -72,10 +72,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel* jarCacheTransport, 
-                             nsISupports* context, 
-                             nsresult status, 
-                             const PRUnichar* aMsg) {
+    NS_IMETHOD OnStopRequest(nsIChannel* jarCacheTransport, nsISupports* context,
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
         nsresult rv = NS_OK;
         nsAutoMonitor monitor(mJARChannel->mMonitor);
 
@@ -88,11 +86,11 @@ public:
             if (NS_SUCCEEDED(rv)) {
                 PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                        ("nsJarProtocol: jar download complete %s status=%x",
-                        (const char*)jarURLStr, status));
+                        (const char*)jarURLStr, aStatus));
             }
         }
 #endif
-        if (NS_SUCCEEDED(status) && mJARChannel->mJarCacheTransport) {
+        if (NS_SUCCEEDED(aStatus) && mJARChannel->mJarCacheTransport) {
             NS_ASSERTION(jarCacheTransport == (mJARChannel->mJarCacheTransport).get(),
                          "wrong transport");
             // after successfully downloading the jar file to the cache,
@@ -528,7 +526,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
 
   error:
     if (NS_FAILED(rv) && mLoadGroup) {
-        nsresult rv2 = mLoadGroup->RemoveChannel(this, nsnull, rv, nsnull); // XXX fix error message
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, nsnull, NS_OK, nsnull);
         NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
     }
     return rv;
@@ -864,10 +862,8 @@ nsJARChannel::OnStartRequest(nsIChannel* jarExtractionTransport,
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport,
-                            nsISupports* context, 
-                            nsresult status, 
-                            const PRUnichar* aMsg)
+nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport, nsISupports* context, 
+                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
     nsresult rv;
 #ifdef PR_LOGGING
@@ -877,14 +873,14 @@ nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport,
     if (NS_SUCCEEDED(rv)) {
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                ("nsJarProtocol: jar extraction complete %s status=%x",
-                (const char*)jarURLStr, status));
+                (const char*)jarURLStr, aStatus));
     }
 #endif
-    rv = mUserListener->OnStopRequest(this, mUserContext, status, aMsg);
+    rv = mUserListener->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
 
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
-            mLoadGroup->RemoveChannel(this, context, status, aMsg);
+            mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
         }
     }
 

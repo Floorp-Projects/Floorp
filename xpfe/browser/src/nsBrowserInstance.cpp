@@ -1736,15 +1736,16 @@ nsBrowserInstance::OnStateChange(nsIWebProgress* aWebProgress,
 
     channel = do_QueryInterface(aRequest, &rv);
     if (NS_SUCCEEDED(rv)) {
-      mXULBrowserWindow->OnStatusChange(channel, aProgressStateFlags);
+      mXULBrowserWindow->OnStateChange(channel, aProgressStateFlags);
     }
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBrowserInstance::OnLocationChange(nsIURI* aLocation)
+NS_IMETHODIMP nsBrowserInstance::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                  nsIRequest* aRequest,
+                                                  nsIURI* aLocation)
 {
-
    EnsureXULBrowserWindow();
    if(!mXULBrowserWindow)
       return NS_OK;
@@ -1755,6 +1756,25 @@ NS_IMETHODIMP nsBrowserInstance::OnLocationChange(nsIURI* aLocation)
    mXULBrowserWindow->OnLocationChange(specW.GetUnicode());
 
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::OnStatusChange(nsIWebProgress* aWebProgress,
+                                  nsIRequest* aRequest,
+                                  nsresult aStatus,
+                                  const PRUnichar* aMessage)
+{
+  EnsureXULBrowserWindow();
+  if(mXULBrowserWindow) {
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mXULBrowserWindow->OnStatus(channel, aStatus, aMessage);
+    }
+  }
+  return NS_OK;
 }
 
 //*****************************************************************************

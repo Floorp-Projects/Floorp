@@ -110,5 +110,16 @@ interface nsIWebProgressListener : nsISupports
 
 	@param location - The URI of the location that is being loaded.
 	*/
-	void onLocationChange(in nsIURI location);
+	void onLocationChange(in nsIWebProgress aWebProgress,
+                          in nsIRequest aRequest,
+                          in nsIURI location);
+
+    /**
+     * Notification that the status has changed. The status message is usually
+     * printed in the status bar of the browser.
+     */
+    void onStatusChange(in nsIWebProgress aWebProgress,
+                        in nsIRequest aRequest,
+                        in nsresult aStatus,
+                        in wstring aMessage);
 };

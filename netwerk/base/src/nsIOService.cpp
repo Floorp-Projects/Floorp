@@ -32,11 +32,14 @@
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
+#include "nsIErrorService.h" 
+#include "netCore.h" 
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
+static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +69,27 @@ nsIOService::Init()
     rv = nsServiceManager::GetService(kDNSServiceCID,
                                       NS_GET_IID(nsIDNSService),
                                       getter_AddRefs(mDNSService));
-    
+
+    // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
+    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_READ_FROM, "ReadFrom");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_WROTE_TO, "WroteTo");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RESOLVING_HOST, "ResolvingHost");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTED_TO, "ConnectedTo");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_SENDING_TO, "SendingTo");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_RECEIVING_FROM, "ReceivingFrom");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_CONNECTING_TO, "ConnectingTo");
+        if (NS_FAILED(rv)) return rv;
+    }
     return rv;
 }
 

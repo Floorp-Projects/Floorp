@@ -61,8 +61,7 @@ nsSyncStreamListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
 
 NS_IMETHODIMP 
 nsSyncStreamListener::OnStopRequest(nsIChannel* channel, nsISupports* context,
-                                    nsresult aStatus,
-                                    const PRUnichar* aMsg)
+                                    nsresult aStatus, const PRUnichar* aStatusArg)
 {
     // XXX what do we do with the status and error message?
     return mOutputStream->Close();

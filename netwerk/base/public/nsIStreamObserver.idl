@@ -28,13 +28,21 @@ interface nsIChannel;
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIStreamObserver : nsISupports
 {
+    /**
+     * Called to signify the beginning of an asyncronous request.
+     */
     void onStartRequest(in nsIChannel channel,
                         in nsISupports ctxt);
 
+    /**
+     * Called to signify the end of an asyncronous request.
+     * @param notif - a notification object containing any error code and error parameters
+     *                (may be null if the notification status is NS_OK)
+     */
     void onStopRequest(in nsIChannel channel,
-                       in nsISupports ctxt, 
+                       in nsISupports ctxt,
                        in nsresult status,
-                       in wstring errorMsg);
+                       in wstring statusArg);
 };
 
 /**

@@ -33,3 +33,14 @@ interface nsIFTPChannel : nsIChannel
     readonly attribute PRBool UsingProxy;
     readonly attribute PRBool UsingTransparentProxy;
 };
+
+%{C++
+
+/**
+ * Status nsresult codes: used with nsINotification objects 
+ */
+#define NS_NET_STATUS_BEGIN_FTP_TRANSACTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 27)
+#define NS_NET_STATUS_END_FTP_TRANSACTION   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 28)
+
+
+%}

@@ -1170,8 +1170,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIChannel* channel,
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIChannel* channel, 
-                                                   nsISupports* aContext, 
-                                                   const PRUnichar* aMsg)
+                                                   nsISupports* aContext,
+                                                   nsresult aStatus,
+                                                   const PRUnichar* aStatusArg)
 {
   return NS_OK;
 }

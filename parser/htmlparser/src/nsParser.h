@@ -69,6 +69,7 @@
 #include "nsHTMLTags.h"
 #include "nsDTDUtils.h"
 #include "nsTimer.h"
+#include "nsIProgressEventSink.h"
 
 class IContentSink;
 class nsIDTD;
@@ -250,9 +251,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser,
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
-    // nsIProgressEventSink methods:
-    NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports* context, const PRUnichar* aMmsg);
+    NS_DECL_NSIPROGRESSEVENTSINK
 
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER

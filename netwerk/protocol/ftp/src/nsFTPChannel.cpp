@@ -29,8 +29,9 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 
-static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
-
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+ 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
@@ -296,8 +297,10 @@ nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
     mUserContext = ctxt;
 
     if (mEventSink) {
-        nsAutoString statusMsg; statusMsg.AssignWithConversion("Beginning FTP transaction.");
-        rv = mEventSink->OnStatus(this, ctxt, statusMsg.GetUnicode());
+        nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mEventSink->OnStatus(this, ctxt, NS_NET_STATUS_BEGIN_FTP_TRANSACTION, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -609,19 +612,21 @@ nsFTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
 
 // nsIProgressEventSink methods
 NS_IMETHODIMP
-nsFTPChannel::OnStatus(nsIChannel *aChannel,
-                                nsISupports *aContext,
-                                const PRUnichar *aMsg) {
+nsFTPChannel::OnStatus(nsIChannel *aChannel, nsISupports *aContext,
+                       nsresult aStatus, const PRUnichar* aStatusArg)
+{
+    if (!mEventSink)
+        return NS_OK;
+
+    nsAutoString str;
     if (mProxyChannel) {
-        // XXX We're appending the *real* host to this string
-        // XXX coming from the proxy channel progress notifications.
-        // XXX This assumes the proxy channel was setup using a null host name
-        nsAutoString msg(aMsg);
-        msg.AppendWithConversion(NS_STATIC_CAST(const char*, mHost));
-        return mEventSink ? mEventSink->OnStatus(this, aContext, msg.GetUnicode()) : NS_OK;
-    } else {
-        return mEventSink ? mEventSink->OnStatus(this, aContext, aMsg) : NS_OK;
+        if (aStatusArg) {
+            str.Append(aStatusArg); 
+            str.AppendWithConversion("\n");
+        }
+        str.AppendWithConversion(mHost);
     }
+    return mEventSink->OnStatus(this, aContext, aStatus, str.GetUnicode());
 }
 
 NS_IMETHODIMP
@@ -634,22 +639,23 @@ nsFTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
 // nsIStreamObserver methods.
 NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
-                            nsresult aStatus, const PRUnichar* aMsg) {
+                            nsresult aStatus, const PRUnichar* aStatusArg)
+{
     nsresult rv = NS_OK;
     mConnThread = nsnull;
 
     if (mLoadGroup) {
-        rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
+        rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
     
     if (mObserver) {
-        rv = mObserver->OnStopRequest(this, aContext, aStatus, aMsg);
+        rv = mObserver->OnStopRequest(this, aContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
 
     if (mListener) {
-        rv = mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+        rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
     return rv;

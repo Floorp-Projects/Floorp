@@ -99,8 +99,8 @@ TestConverter::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
 
 NS_IMETHODIMP
 TestConverter::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                             nsresult status, const PRUnichar *errorMsg) {
-    return mListener->OnStopRequest(channel, ctxt, status, errorMsg);
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
+    return mListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
 };
 
 

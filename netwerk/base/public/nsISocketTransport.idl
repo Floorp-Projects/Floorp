@@ -25,6 +25,9 @@
 [scriptable, uuid(785CA0F0-C39E-11d3-9ED6-0010A4053FD0)]
 interface nsISocketTransport : nsISupports 
 {
+    /**
+     *
+     */
     attribute boolean reuseConnection;
     
     /**

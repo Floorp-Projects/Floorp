@@ -641,15 +641,15 @@ nsDiskCacheRecordChannel::OnStartRequest(nsIChannel* transportChannel, nsISuppor
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
-                             nsresult aStatus, const PRUnichar* aMsg)
+                                        nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv;
 
-  rv = mRealListener->OnStopRequest(this, context, aStatus, aMsg);
+  rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
 
   if (mLoadGroup) {
     if (NS_SUCCEEDED(rv)) {
-      mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
+      mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
     }
   }
 
@@ -674,7 +674,7 @@ nsDiskCacheRecordChannel::OnDataAvailable(nsIChannel* transportChannel, nsISuppo
   // insure that the transport will go away even if it is blocked waiting
   // for the consumer to empty the pipe...
   //
-  if (NS_FAILED(rv && mFileTransport)) {
+  if (NS_FAILED(rv) && mFileTransport) {
     mFileTransport->Cancel(rv);
   }
   return rv;

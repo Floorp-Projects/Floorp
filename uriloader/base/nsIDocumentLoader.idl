@@ -30,6 +30,8 @@ interface nsIDocumentLoaderObserver;
 interface nsIContentViewerContainer;
 interface nsIChannel;
 interface nsIURI;
+interface nsIWebProgress;
+interface nsIRequest;
 
 [scriptable, uuid(f43ba260-0737-11d2-beb9-00805f8a66dc)]
 interface nsIDocumentLoader : nsISupports
@@ -50,6 +52,12 @@ interface nsIDocumentLoader : nsISupports
   // called between a parent doc loader and it's child.
   void clearParentDocLoader();
 
-  void fireOnLocationChange(in nsIURI aUri);
+  void fireOnLocationChange(in nsIWebProgress aWebProgress,
+                            in nsIRequest aRequest,
+                            in nsIURI aUri);
+  void fireOnStatusChange(in nsIWebProgress aWebProgress,
+                          in nsIRequest aRequest,
+                          in nsresult aStatus,
+                          in wstring aMessage);
 };
 

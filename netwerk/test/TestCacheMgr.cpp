@@ -217,10 +217,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, 
-                             nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) {
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+                             nsresult aStatus, const PRUnichar* aStatusArg) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
         

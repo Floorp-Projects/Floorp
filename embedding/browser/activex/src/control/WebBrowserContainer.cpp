@@ -263,13 +263,23 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 
 
 /* void onLocationChange (in nsIURI location); */
-NS_IMETHODIMP CWebBrowserContainer::OnLocationChange(nsIURI *location)
+NS_IMETHODIMP CWebBrowserContainer::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                     nsIRequest* aRequest,
+                                                     nsIURI *location)
 {
 //	nsXPIDLCString aPath;
 //	location->GetPath(getter_Copies(aPath));
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP 
+CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
+                                     nsIRequest* aRequest,
+                                     nsresult aStatus,
+                                     const PRUnichar* aMessage)
+{
+    return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener

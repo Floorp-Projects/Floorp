@@ -138,9 +138,20 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnLocationChange(nsIURI* aLocation)
+NS_IMETHODIMP nsMsgStatusFeedback::OnLocationChange(nsIWebProgress* aWebProgress,
+                                                    nsIRequest* aRequest,
+                                                    nsIURI* aLocation)
 {
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsMsgStatusFeedback::OnStatusChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    nsresult aStatus,
+                                    const PRUnichar* aMessage)
+{
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -340,7 +351,15 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIChannel* channel, nsISupports* 
                           aProgress /* current total progress */, aProgressMax /* max total progress */);
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ctxt, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIChannel* channel, nsISupports* ctxt, 
+                                            nsresult aStatus, const PRUnichar* aStatusArg)
 {
-  return ShowStatusString(aMsg);
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(kStringBundleServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsXPIDLString str;
+  rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
+  if (NS_FAILED(rv)) return rv;
+  nsAutoString msg = str;
+  return ShowStatusString(msg.GetUnicode());
 }

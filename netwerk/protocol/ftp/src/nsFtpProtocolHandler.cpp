@@ -47,7 +47,7 @@
 // For proxification of FTP URLs
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIHTTPChannel.h"
-
+#include "nsIErrorService.h" 
 
 #if defined(PR_LOGGING)
 //
@@ -68,6 +68,7 @@ PRLogModuleInfo* gFTPLog = nsnull;
 static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
+static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,6 +112,14 @@ nsFtpProtocolHandler::Init() {
     mLock = PR_NewLock();
     if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
 
+    // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
+    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_BEGIN_FTP_TRANSACTION, "BeginFTPTransaction");
+        if (NS_FAILED(rv)) return rv;
+        rv = errorService->RegisterErrorStringBundleKey(NS_NET_STATUS_END_FTP_TRANSACTION, "EndFTPTransaction");
+        if (NS_FAILED(rv)) return rv;
+    }
     return rv;
 }
 

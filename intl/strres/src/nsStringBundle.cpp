@@ -49,12 +49,14 @@
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIChromeRegistry.h"
+#include "nsIErrorService.h"
 
 #include "nsAcceptLang.h" // for nsIAcceptLang
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
@@ -181,7 +183,8 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
                                      PRUnichar **aResult)
 {
   nsAutoString formatStr;
-  GetStringFromName(aName, formatStr);
+  nsresult rv = GetStringFromName(aName, formatStr);
+  if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);
 }
@@ -657,7 +660,10 @@ public:
 private:
   nsresult getStringBundle(const char *aUrl, nsILocale* aLocale,
                            nsIStringBundle** aResult);
-  
+  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
+                            PRUint32 argCount, PRUnichar** argArray,
+                            PRUnichar* *result);
+
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
                                       nsStringKey *aHashKey);
 
@@ -668,7 +674,8 @@ private:
   PLArenaPool mCacheEntryPool;
 
   // reuse the same uri structure over and over
-  nsCOMPtr<nsIURI> mScratchUri;
+  nsCOMPtr<nsIURI>              mScratchUri;
+  nsCOMPtr<nsIErrorService>     mErrorService;
 };
 
 nsStringBundleService::nsStringBundleService() :
@@ -686,6 +693,8 @@ nsStringBundleService::nsStringBundleService() :
 
   mScratchUri = do_CreateInstance(kStandardUrlCID);
   NS_ASSERTION(mScratchUri, "Couldn't create scratch URI");
+  mErrorService = do_GetService(kErrorServiceCID);
+  NS_ASSERTION(mErrorService, "Couldn't get error service");
 }
 
 nsStringBundleService::~nsStringBundleService()
@@ -855,6 +864,119 @@ nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey,
   return res;
 }
 
+#define GLOBAL_PROPERTIES "chrome://global/locale/xpcom.properties"
+
+nsresult
+nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
+                                        PRUint32 argCount, PRUnichar** argArray,
+                                        PRUnichar* *result)
+{
+  nsresult rv;
+  nsXPIDLCString key;
+
+  // then find a key into the string bundle for that particular error:
+  rv = mErrorService->GetErrorStringBundleKey(aStatus, getter_Copies(key));
+
+  // first try looking up the error message with the string key:
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString name; name.AssignWithConversion(key);
+    rv = bundle->FormatStringFromName(name.GetUnicode(), (const PRUnichar**)argArray, 
+                                      argCount, result);
+  }
+
+  // if the string key fails, try looking up the error message with the int key:
+  if (NS_FAILED(rv)) {
+    PRUint16 code = NS_ERROR_GET_CODE(aStatus);
+    rv = bundle->FormatStringFromID(code, (const PRUnichar**)argArray, argCount, result);
+  }
+
+  // If the int key fails, try looking up the default error message. E.g. print:
+  //   An unknown error has occurred (0x804B0003).
+  if (NS_FAILED(rv)) {
+    nsAutoString statusStr; statusStr.AppendInt(aStatus, 16);
+    const PRUnichar* otherArgArray[1];
+    otherArgArray[0] = statusStr.GetUnicode();
+    PRUint16 code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
+    rv = bundle->FormatStringFromID(code, otherArgArray, 1, result);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsStringBundleService::FormatStatusMessage(nsresult aStatus,
+                                           const PRUnichar* aStatusArg,
+                                           PRUnichar* *result)
+{
+  nsresult rv;
+  PRUint32 i, argCount = 0;
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsXPIDLCString stringBundleURL;
+
+  // XXX hack for mailnews who has already formatted their messages:
+  if (aStatus == NS_OK && aStatusArg) {
+    *result = nsCRT::strdup(aStatusArg);
+    return NS_OK;
+  }
+
+  if (aStatus == NS_OK) {
+    return NS_ERROR_FAILURE;       // no message to format
+  }
+
+  // format the arguments:
+  nsAutoString args(aStatusArg);
+  argCount = args.CountChar('\n') + 1;
+  NS_ENSURE_ARG(argCount <= 10); // enforce 10-parameter limit
+  PRUnichar* argArray[10];
+
+  // convert the aStatusArg into a PRUnichar array
+  if (argCount == 1) {
+    // avoid construction for the simple case:
+    argArray[0] = (PRUnichar*)aStatusArg;
+  }
+  else if (argCount > 1) {
+    PRInt32 offset = 0;
+    for (i = 0; i < argCount; i++) {
+      PRInt32 pos = args.FindChar('\n', PR_FALSE, offset);
+      if (pos = -1) 
+        pos = args.Length();
+      nsAutoString arg;
+      args.Mid(arg, offset, pos);
+      argArray[i] = arg.ToNewUnicode();
+      if (argArray[i] == nsnull) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        argCount = i - 1; // don't try to free uninitialized memory
+        goto done;
+      }
+      offset = pos + 1;
+    }
+  }
+
+  // find the string bundle for the error's module:
+  rv = mErrorService->GetErrorStringBundle(NS_ERROR_GET_MODULE(aStatus), 
+                                           getter_Copies(stringBundleURL));
+  if (NS_SUCCEEDED(rv)) {
+    rv = getStringBundle(stringBundleURL, nsnull, getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
+    }
+  }
+  if (NS_FAILED(rv)) {
+    rv = getStringBundle(GLOBAL_PROPERTIES, nsnull, getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      rv = FormatWithBundle(bundle, aStatus, argCount, argArray, result);
+    }
+  }
+
+done:
+  if (argCount > 1) {
+    for (i = 0; i < argCount; i++) {
+      if (argArray[i])
+        nsMemory::Free(argArray[i]);
+    }
+  }
+  return rv;
+}
 
 NS_IMETHODIMP
 NS_NewStringBundleService(nsISupports* aOuter, const nsIID& aIID,

@@ -138,7 +138,6 @@ private:
     // internal methods
     nsresult    StopProcessing();
     FTP_STATE   FindActionState(void);
-    nsresult    MapResultCodeToString(nsresult aResultCode, PRUnichar* *aOutMsg);
     void        SetDirMIMEType(nsString& aString);
     nsresult    Process();
 
