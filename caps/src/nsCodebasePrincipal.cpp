@@ -34,6 +34,7 @@ NS_IMPL_QUERY_INTERFACE2(nsCodebasePrincipal, nsICodebasePrincipal, nsIPrincipal
 NS_IMETHODIMP_(nsrefcnt)
 nsCodebasePrincipal::AddRef(void)
 {
+    NS_PRECONDITION(PRInt32(mRefCnt) == 0, "illegal mRefCnt");
     NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
     ++mJSPrincipals.refcount;
     NS_LOG_ADDREF(this, mJSPrincipals.refcount, "nsCodebasePrincipal", sizeof(*this));
@@ -43,6 +44,7 @@ nsCodebasePrincipal::AddRef(void)
 NS_IMETHODIMP_(nsrefcnt)
 nsCodebasePrincipal::Release(void)
 {
+    NS_PRECONDITION(PRInt32(mRefCnt) == 0, "illegal mRefCnt");
     NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
     --mJSPrincipals.refcount;
     NS_LOG_RELEASE(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
