@@ -161,15 +161,17 @@ public:
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
+	NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
   NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
+	NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
+	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
@@ -177,6 +179,17 @@ public:
   NS_IMETHOD SetName(const PRUnichar* aName);
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
+
+		/**
+	 * Set the type of the webshell to be content or chrome.
+   */
+	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
+
+	/**
+	 * Get the type of the webshell. Indicates whether the webshell is content or chrome.
+	 */
+	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
+
   NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
@@ -358,6 +371,8 @@ protected:
   PRBool  mIsFrame;
   nsVoidArray mRefreshments;
 
+	nsWebShellType mWebShellType;
+
   void ReleaseChildren();
   void DestroyChildren();
   nsresult CreateScriptEnvironment();
@@ -481,6 +496,7 @@ nsWebShell::nsWebShell()
 //  mURLListener = nsnull;
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
+	mWebShellType = nsWebShellContent;
 }
 
 nsWebShell::~nsWebShell()
@@ -1129,6 +1145,24 @@ nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
 }
 
 NS_IMETHODIMP
+nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell*& aResult)
+{
+  nsIWebShell* top = this;
+  NS_ADDREF(this);
+  for (;;) {
+    nsIWebShell* parent;
+    top->GetParentEvenIfChrome(parent);
+    if (nsnull == parent) {
+      break;
+    }
+    NS_RELEASE(top);
+    top = parent;
+  }
+  aResult = top;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShell::SetParent(nsIWebShell* aParent)
 {
   NS_IF_RELEASE(mParent);
@@ -1139,6 +1173,29 @@ nsWebShell::SetParent(nsIWebShell* aParent)
 
 NS_IMETHODIMP
 nsWebShell::GetParent(nsIWebShell*& aParent)
+{
+	if (mWebShellType == nsWebShellContent)
+	{
+		// We cannot return our parent if it is a chrome webshell.
+		nsWebShellType parentType;
+		if (mParent)
+		{
+			mParent->GetWebShellType(parentType);
+		  if (parentType == nsWebShellChrome)
+			{
+				aParent = nsnull; // Just return null.
+				return NS_OK;
+			}
+		}
+	}
+
+  aParent = mParent;
+  NS_IF_ADDREF(mParent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetParentEvenIfChrome(nsIWebShell*& aParent)
 {
   aParent = mParent;
   NS_IF_ADDREF(mParent);
@@ -1162,6 +1219,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
   NS_ADDREF(aChild);
+
   return NS_OK;
 }
 
@@ -1222,6 +1280,26 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetWebShellType(nsWebShellType& aWebShellType)
+{
+	aWebShellType = mWebShellType;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
+{
+	if (aWebShellType != nsWebShellChrome && 
+		  aWebShellType != nsWebShellContent)
+  {
+		NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
+		return NS_ERROR_FAILURE;
+	}
+	mWebShellType = aWebShellType;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2095,7 +2173,7 @@ nsIBrowserWindow* nsWebShell::GetBrowserWindow()
   nsIBrowserWindow *browserWindow = nsnull;
   nsIWebShell *rootWebShell;
 
-  GetRootWebShell(rootWebShell);
+  GetRootWebShellEvenIfChrome(rootWebShell);
 
   if (nsnull != rootWebShell) {
     nsIWebShellContainer *rootContainer;
