@@ -167,6 +167,8 @@ public:
 
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
+  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
+  
 // Static members
   static PRUint32 gRefCnt;
   
@@ -185,6 +187,8 @@ public:
   static nsIAtom* kPropertyAtom;
   static nsIAtom* kOnSetAtom;
   static nsIAtom* kOnGetAtom;
+  static nsIAtom* kGetterAtom;
+  static nsIAtom* kSetterAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
   static nsIAtom* kNameAtom;
@@ -249,6 +253,8 @@ nsIAtom* nsXBLBinding::kBodyAtom = nsnull;
 nsIAtom* nsXBLBinding::kPropertyAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnSetAtom = nsnull;
 nsIAtom* nsXBLBinding::kOnGetAtom = nsnull;
+nsIAtom* nsXBLBinding::kGetterAtom = nsnull;
+nsIAtom* nsXBLBinding::kSetterAtom = nsnull;
 nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 nsIAtom* nsXBLBinding::kURIAtom = nsnull;
@@ -307,7 +313,8 @@ NS_IMPL_ISUPPORTS2(nsXBLBinding, nsIXBLBinding, nsIScriptObjectOwner)
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
-:mAttributeTable(nsnull), mScriptObject(nsnull)
+: mScriptObject(nsnull),
+  mAttributeTable(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -329,6 +336,8 @@ nsXBLBinding::nsXBLBinding(void)
     kPropertyAtom = NS_NewAtom("property");
     kOnSetAtom = NS_NewAtom("onset");
     kOnGetAtom = NS_NewAtom("onget");
+    kGetterAtom = NS_NewAtom("getter");
+    kSetterAtom = NS_NewAtom("setter");    
     kNameAtom = NS_NewAtom("name");
     kReadOnlyAtom = NS_NewAtom("readonly");
     kURIAtom = NS_NewAtom("uri");
@@ -389,6 +398,8 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kPropertyAtom); 
     NS_RELEASE(kOnSetAtom);
     NS_RELEASE(kOnGetAtom);
+    NS_RELEASE(kGetterAtom);
+    NS_RELEASE(kSetterAtom);
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kReadOnlyAtom);
     NS_RELEASE(kURIAtom);
@@ -785,6 +796,28 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
           if (readOnly.EqualsWithConversion("true"))
             attrs |= JSPROP_READONLY;
 
+          // try for first <getter> tag
+          if (getter.IsEmpty()) {
+            PRInt32 childCount;
+            child->ChildCount(childCount);
+
+            nsCOMPtr<nsIContent> getterElement;
+            for (PRInt32 j=0; j<childCount; j++) {
+              child->ChildAt(j, *getter_AddRefs(getterElement));
+              
+              if (!getterElement) continue;
+              
+              nsCOMPtr<nsIAtom> getterTag;
+              getterElement->GetTag(*getter_AddRefs(getterTag));
+              
+              if (getterTag.get() == kGetterAtom) {
+                GetTextData(getterElement, getter);
+                break;          // stop at first tag
+              }
+            }
+
+          }
+          
           if (!getter.IsEmpty()) {
             rv = context->CompileFunction(mScriptObject,
                                           "onget",
@@ -799,6 +832,26 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
             attrs |= JSPROP_GETTER;
           }
 
+          // try for first <setter> tag
+          if (setter.IsEmpty()) {
+            PRInt32 childCount;
+            child->ChildCount(childCount);
+
+            nsCOMPtr<nsIContent> setterElement;
+            for (PRInt32 j=0; j<childCount; j++) {
+              child->ChildAt(j, *getter_AddRefs(setterElement));
+              
+              if (!setterElement) continue;
+              
+              nsCOMPtr<nsIAtom> setterTag;
+              setterElement->GetTag(*getter_AddRefs(setterTag));
+              if (setterTag.get() == kSetterAtom) {
+                GetTextData(setterElement, setter);
+                break;          // stop at first tag
+              }
+            }
+          }
+          
           if (!setter.IsEmpty()) {
             rv = context->CompileFunction(mScriptObject,
                                           "onset",
@@ -1362,6 +1415,28 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const
   rv = manager->AddScriptEventListener(context, scriptOwner, eventName, aValue, aIID, PR_FALSE);
 
   return rv;
+}
+
+nsresult
+nsXBLBinding::GetTextData(nsIContent *aParent, nsString& aResult)
+{
+  aResult.Truncate(0);
+
+  nsCOMPtr<nsIContent> textChild;
+  PRInt32 textCount;
+  aParent->ChildCount(textCount);
+  nsAutoString answer;
+  for (PRInt32 j = 0; j < textCount; j++) {
+    // Get the child.
+    aParent->ChildAt(j, *getter_AddRefs(textChild));
+    nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
+    if (text) {
+      nsAutoString data;
+      text->GetData(data);
+      aResult += data;
+    }
+  }
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
