@@ -43,6 +43,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <X11/Xatom.h>
+#ifdef POLL_WITH_XCONNECTIONNUMBER
+#include <poll.h>
+#endif
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
@@ -266,8 +269,14 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
       waited = True;
       while (1) {
 	XEvent event;
-	fd_set select_set;
 	int select_retval;
+#ifdef POLL_WITH_XCONNECTIONNUMBER
+       struct pollfd fds[1];
+       fds[0].fd = XConnectionNumber(mDisplay);
+       fds[0].events = POLLIN;
+       select_retval = poll(fds,1,10*1000);
+#else
+	fd_set select_set;
 	struct timeval delay;
 	delay.tv_sec = 10;
 	delay.tv_usec = 0;
@@ -277,6 +286,7 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
 	FD_SET(ConnectionNumber(mDisplay), &select_set);
 	select_retval = select(ConnectionNumber(mDisplay) + 1,
 			       &select_set, NULL, NULL, &delay);
+#endif
 	// did we time out?
 	if (select_retval == 0) {
 	  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("timed out waiting for window\n"));
