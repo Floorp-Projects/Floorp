@@ -160,23 +160,34 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;
     PRBool aRedraw;
-
-    if (!gAccessKeyPrefInitialized) {
-        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-        gAccessKeyPrefInitialized = PR_TRUE;
-        if (prefs) {
-            nsXPIDLString prefValue;
-            nsresult res = prefs->GetLocalizedUnicharPref("intl.menuitems.alwaysappendacceskeys", getter_Copies(prefValue));
-            if (NS_SUCCEEDED(res)) {
-                gAlwaysAppendAccessKey = nsDependentString(prefValue).Equals(NS_LITERAL_STRING("true"));
-            }
-        }
-    }
- 
     UpdateAttributes(aPresContext, nsnull, aResize, aRedraw); /* update all */
 
     return rv;
 }
+
+PRBool
+nsTextBoxFrame::AlwaysAppendAccessKey()
+{
+  if (!gAccessKeyPrefInitialized) 
+  {
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    gAccessKeyPrefInitialized = PR_TRUE;
+    if (prefs) 
+    {
+      nsXPIDLString prefValue;
+      nsresult res = prefs->GetLocalizedUnicharPref(
+                               "intl.menuitems.alwaysappendacceskeys", 
+                                getter_Copies(prefValue));
+      if (NS_SUCCEEDED(res)) 
+      {
+        gAlwaysAppendAccessKey = nsDependentString(prefValue).Equals(
+                                             NS_LITERAL_STRING("true"));
+      }
+    }
+  }
+  return gAlwaysAppendAccessKey;
+}
+ 
 
 void
 nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
@@ -731,7 +742,9 @@ nsTextBoxFrame::UpdateAccessTitle()
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
     if (menuAccessKey) {
         if (!mAccessKey.IsEmpty()) {
-            if ((mTitle.Find(mAccessKey, PR_TRUE) == kNotFound) || gAlwaysAppendAccessKey) {
+            if ((mTitle.Find(mAccessKey, PR_TRUE) == kNotFound) 
+                || AlwaysAppendAccessKey()) 
+            {
                 nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
                 tmpstring += mAccessKey;
                 tmpstring.ToUpperCase();
@@ -761,7 +774,7 @@ nsTextBoxFrame::UpdateAccessIndex()
             if (!mAccessKeyInfo)
                 mAccessKeyInfo = new nsAccessKeyInfo();
 
-            if (!gAlwaysAppendAccessKey) {
+            if (!AlwaysAppendAccessKey()) {
                 // not appending access key - do case-sensitive search first
                 mAccessKeyInfo->mAccesskeyIndex = mCroppedTitle.Find(mAccessKey, PR_FALSE);
                 if (mAccessKeyInfo->mAccesskeyIndex == kNotFound) {
