@@ -54,8 +54,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsMsgWindow, nsIMsgWindow, nsIURIContentListener)
 nsMsgWindow::nsMsgWindow()
 {
   NS_INIT_ISUPPORTS();
-  mRootDocShell = nsnull;
-  mMessageWindowDocShell = nsnull;
 }
 
 nsMsgWindow::~nsMsgWindow()
@@ -86,6 +84,32 @@ nsresult nsMsgWindow::Init()
   return rv;
 }
 
+void nsMsgWindow::GetMessageWindowDocShell(nsIDocShell ** aDocShell)
+{
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mMessageWindowDocShellWeak));
+  if (!docShell)
+  {
+    // if we don't have a docshell, then we need to look up the message pane docshell
+    nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
+    if (rootShell)
+    {
+      nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootShell));
+
+      nsCOMPtr<nsIDocShellTreeItem> msgDocShellItem;
+      if(rootAsNode)
+         rootAsNode->FindChildWithName(NS_LITERAL_STRING("messagepane"), PR_TRUE, PR_FALSE,
+                                       nsnull, getter_AddRefs(msgDocShellItem));
+
+      docShell = do_QueryInterface(msgDocShellItem);
+      // we don't own mMessageWindowDocShell so don't try to keep a reference to it!
+      mMessageWindowDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell));
+    }
+  }
+
+  *aDocShell = docShell;
+  NS_IF_ADDREF(*aDocShell);
+}
+
 /* void SelectFolder (in string folderUri); */
 NS_IMETHODIMP nsMsgWindow::SelectFolder(const char *folderUri)
 {
@@ -111,11 +135,13 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
   if (mStatusFeedback)
     mStatusFeedback->CloseWindow(); 
 
-	if(mRootDocShell)
+  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
+
+	if(rootShell)
 	{
-		mRootDocShell->SetParentURIContentListener(nsnull);
-		mRootDocShell = nsnull;
-		mMessageWindowDocShell = nsnull;
+		rootShell->SetParentURIContentListener(nsnull);
+		mRootDocShellWeak = nsnull;
+		mMessageWindowDocShellWeak = nsnull;
 	}
 
   return NS_OK;
@@ -134,13 +160,16 @@ NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeed
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
 {
 
-  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mMessageWindowDocShell));
+  nsCOMPtr<nsIDocShell> messageWindowDocShell; 
+  GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
+
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(messageWindowDocShell));
   nsCOMPtr<nsIWebProgressListener> webProgressListener(do_QueryInterface(mStatusFeedback));
 
 	mStatusFeedback = aStatusFeedback;
 
   // register our status feedback object
-  if (mStatusFeedback && mMessageWindowDocShell)
+  if (webProgress && mStatusFeedback && messageWindowDocShell)
   {
     webProgressListener = do_QueryInterface(mStatusFeedback);
     webProgress->AddProgressListener(webProgressListener);
@@ -219,10 +248,12 @@ NS_IMETHODIMP nsMsgWindow::GetRootDocShell(nsIDocShell * *aDocShell)
   if(!aDocShell)
     return NS_ERROR_NULL_POINTER;
 
-  if (mRootDocShell == nsnull)
+  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
+
+  if (rootShell == nsnull)
     *aDocShell = nsnull;
   else
-    mRootDocShell->QueryInterface(nsIDocShell::GetIID(), (void **) aDocShell);
+    rootShell->QueryInterface(nsIDocShell::GetIID(), (void **) aDocShell);
 
   return NS_OK;
 }
@@ -230,11 +261,11 @@ NS_IMETHODIMP nsMsgWindow::GetRootDocShell(nsIDocShell * *aDocShell)
 NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
 {
   // Query for the doc shell and release it
-  mRootDocShell = nsnull;
+  mRootDocShellWeak = nsnull;
   if (aDocShell)
   {
-    mRootDocShell = aDocShell;
-    mRootDocShell->SetParentURIContentListener(this);
+    mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(aDocShell));
+    aDocShell->SetParentURIContentListener(this);
   }
   return NS_OK;
 }
@@ -296,16 +327,11 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
       nsAutoString childName; childName.AssignWithConversion("messagepane");
       nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootAsItem));
-      mRootDocShell = docShell;
+      mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell));
 
-      nsCOMPtr<nsIDocShellTreeItem> msgDocShellItem;
-      if(rootAsNode)
-         rootAsNode->FindChildWithName(childName.GetUnicode(), PR_TRUE, PR_FALSE,
-         nsnull, getter_AddRefs(msgDocShellItem));
-
-      nsCOMPtr<nsIDocShell> msgDocShell(do_QueryInterface(msgDocShellItem));
-      // we don't own mMessageWindowDocShell so don't try to keep a reference to it!
-      mMessageWindowDocShell = msgDocShell;
+      // force ourselves to figure out the message pane
+      nsCOMPtr<nsIDocShell> messageWindowDocShell; 
+      GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
       SetStatusFeedback(mStatusFeedback);
    }
 
@@ -325,13 +351,15 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 
 NS_IMETHODIMP nsMsgWindow::StopUrls()
 {
-    nsCOMPtr<nsIDocShell> docShell;
-    GetRootDocShell(getter_AddRefs(docShell));
-    if (docShell)
-    {
-      return docShell->StopLoad();
-    }
-    nsCOMPtr <nsIWebShell> rootWebShell(do_QueryInterface(mRootDocShell));
+  nsCOMPtr<nsIDocShell> docShell;
+  GetRootDocShell(getter_AddRefs(docShell));
+  if (docShell)
+  {
+    return docShell->StopLoad();
+  }
+  
+  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
+  nsCOMPtr <nsIWebShell> rootWebShell(do_QueryInterface(rootShell));
 	if (rootWebShell)
 	{
 		nsCOMPtr <nsIDocumentLoader> docLoader;
@@ -371,7 +399,9 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand 
   if (aContentType)
   {
     // forward the DoContent call to our docshell
-    nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(mMessageWindowDocShell);
+    nsCOMPtr<nsIDocShell> messageWindowDocShell; 
+    GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
+    nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(messageWindowDocShell);
     if (ctnListener)
     {
       // get the url for the channel...let's hope it is a mailnews url so we can set our msg hdr sink on it..
@@ -413,7 +443,9 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
   // it's docshell can handle...ask the content area if it can handle
   // the content type...
   
-  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(mMessageWindowDocShell));
+  nsCOMPtr<nsIDocShell> messageWindowDocShell; 
+  GetMessageWindowDocShell(getter_AddRefs(messageWindowDocShell));
+  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(messageWindowDocShell));
   if (ctnListener)
     return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
                                          aDesiredContentType, aCanHandleContent);
@@ -446,19 +478,20 @@ NS_IMETHODIMP nsMsgWindow::SetLoadCookie(nsISupports * aLoadCookie)
 
 NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
 {
-    nsresult rv = NS_OK;
-    NS_ENSURE_ARG_POINTER(aPrompt);
-    if (mRootDocShell)
-    {
-        nsCOMPtr<nsIPrompt> dialog;
-        dialog = do_GetInterface(mRootDocShell, &rv);
-        if (dialog)
-        {
-            *aPrompt = dialog;
-            NS_ADDREF(*aPrompt);
-        }
-        return rv;
-    }
-    else
-        return NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aPrompt);
+  nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
+  if (rootShell)
+  {
+      nsCOMPtr<nsIPrompt> dialog;
+      dialog = do_GetInterface(rootShell, &rv);
+      if (dialog)
+      {
+          *aPrompt = dialog;
+          NS_ADDREF(*aPrompt);
+      }
+      return rv;
+  }
+  else
+      return NS_ERROR_NULL_POINTER;
 }

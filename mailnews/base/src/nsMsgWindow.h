@@ -31,6 +31,7 @@
 #include "nsIDocShell.h"
 #include "nsIURIContentListener.h"
 #include "nsIMimeMiscStatus.h"
+#include "nsWeakReference.h"
 
 #include "nsCOMPtr.h"
 
@@ -55,10 +56,15 @@ protected:
   nsCOMPtr<nsIMsgWindowCommands> mMsgWindowCommands;
 
   // let's not make this a strong ref - we don't own it.
-  nsIDocShell *mRootDocShell;
-  nsIDocShell *mMessageWindowDocShell;
+  nsWeakPtr mRootDocShellWeak;
+  nsWeakPtr mMessageWindowDocShellWeak;
 
   nsString mMailCharacterSet;
+
+  // small helper function used to optimize our use of a weak reference
+  // on the message window docshell. Under no circumstances should you be holding on to
+  // the docshell returned here outside the scope of your routine.
+  void GetMessageWindowDocShell(nsIDocShell ** aDocShell);
 };
 
 #endif
