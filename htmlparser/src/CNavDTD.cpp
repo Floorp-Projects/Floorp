@@ -1648,7 +1648,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_title:
       break;
 
-    case eHTMLTag_map:
     case eHTMLTag_form:
     case eHTMLTag_head:
       result=CloseContainer(theNode,theChildTag,PR_FALSE);
