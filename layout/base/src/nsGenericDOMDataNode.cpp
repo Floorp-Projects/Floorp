@@ -809,7 +809,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
       if (NS_OK == result) {
         result = newNode->QueryInterface(kITextContentIID, (void**)&text);
         if (NS_OK == result) {
-          text->SetText(cutText, cutText.Length(), PR_FALSE);
+          text->SetText(cutText.GetUnicode(), cutText.Length(), PR_FALSE);
           // Find the parent of the current node and insert the
           // new text node as a child after the current node
           GetParent(parentNode);

@@ -1207,10 +1207,10 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
 
     // Now pass on absolute url to the click handler
     if (aClick) {
-      handler->OnLinkClick(mContent, aVerb, absURLSpec, aTargetSpec);
+      handler->OnLinkClick(mContent, aVerb, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
     }
     else {
-      handler->OnOverLink(mContent, absURLSpec, aTargetSpec);
+      handler->OnOverLink(mContent, absURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
     }
     NS_RELEASE(handler);
   }
