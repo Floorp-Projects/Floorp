@@ -610,7 +610,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
   // want to check parent frame's context for cached child context first
   if ((nsnull != parentContext) && (nsnull != aContent)) {
-    result = parentContext->FindChildWithContent(aContent);
+//XXX Disabled this for the dom, as per peter's note
+//XXX    result = parentContext->FindChildWithContent(aContent);
   }
 
   if (nsnull == result) {
