@@ -203,16 +203,6 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
   }
 
-  if (mScrollWatchTimer) {
-    mScrollWatchTimer->Cancel();
-    mScrollWatchTimer = nsnull;
-  }
-
-  if (mDocLoadTimer) {
-    mDocLoadTimer->Cancel();
-    mDocLoadTimer = nsnull;
-  }
-
   RemoveContentDocListeners();
 
   if (mCaretAccessible) {
