@@ -238,8 +238,8 @@ CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext,
   {
     NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(downloadFile));
     
-    nsXPIDLString leafName;
-    inLauncher->GetSuggestedFileName(getter_Copies(leafName));
+    nsCAutoString leafName;
+    inLauncher->GetSuggestedFileName(leafName);
     if (leafName.IsEmpty())
     {
       nsCOMPtr<nsIURI> sourceURI;
