@@ -30,10 +30,7 @@
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
 
-//#define GESS_MACHINE
-#ifdef GESS_MACHINE
-#include "nsEntityEx.cpp"
-#endif
+
 
 static const char*  gUserdefined = "userdefined";
 
