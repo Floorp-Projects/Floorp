@@ -40,6 +40,7 @@ function onLoad() {
 	if ( !browser ) {
 		dump( "unable to get browser app core\n" );
 		toolkit.CloseWindow( window );
+        return;
 	}
 
 	/* Give input field the focus. */

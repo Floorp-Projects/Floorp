@@ -20,6 +20,7 @@
   var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
+  var debugSecurity = false; // Set this true to enable Security chrome testing.
 
   function Startup()
   {
@@ -695,19 +696,20 @@
         }
 
         function securityOn() {
+            // Set debugSecurity (at top of file) to turn this code on.
+            if ( !debugSecurity ) {
+                return;
+            }
+
             var security = document.getElementById("Browser:Security");
             if ( security.getAttribute("secure") == "false" ) {
                 security.setAttribute("secure","true");
-                // Temporary till onchange handlers work.
-                onSecurity();
             }
         }
         function securityOff() {
             var security = document.getElementById("Browser:Security");
             if ( security.getAttribute("secure") == "true" ) {
                 security.setAttribute("secure","false");
-                // Temporary till onchange handlers work.
-                onSecurity();
             }
         }
         function doTests() {
