@@ -166,7 +166,7 @@ public:
     IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
     PRBool
-    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource);
+    IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource, PRBool trackEmptyFlag = PR_TRUE);
 
     PRBool
     IsOpen(nsIContent* aElement);
@@ -235,6 +235,7 @@ protected:
     static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kOpenAtom;
+    static nsIAtom* kEmptyAtom;
     static nsIAtom* kResourceAtom;
     static nsIAtom* kURIAtom;
     static nsIAtom* kContainmentAtom;
