@@ -2671,10 +2671,10 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 	  {
 		  if (! NS_IS_MSG_ERROR(aExitCode))
 			  aExitCode = NS_ERROR_SEND_FAILED;
-
-      ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
-      NS_RELEASE(ptr);
     }
+    
+    ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
+    NS_RELEASE(ptr);
   }
 
   return aExitCode;
