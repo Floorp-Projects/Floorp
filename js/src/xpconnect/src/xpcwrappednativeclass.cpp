@@ -520,12 +520,18 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         dp->val.p = NULL;
         dispatchParamsInitedCount++;
 
+        if(type.TagPart() == nsXPTType::T_INTERFACE ||
+           type.TagPart() == nsXPTType::T_INTERFACE_IS)
+        {
+            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
+        }
+
         // set 'src' to be the object from which we get the value and
         // prepare for out param
 
         if(param.IsOut())
         {
-            dp->flags = nsXPTCVariant::PTR_IS_DATA;
+            dp->flags |= nsXPTCVariant::PTR_IS_DATA;
             dp->ptr = &dp->val;
 
             if(!param.IsRetval() &&
@@ -558,8 +564,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(type.TagPart() == nsXPTType::T_INTERFACE)
         {
-            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
-
             if(NS_FAILED(GetInterfaceInfo()->
                                 GetIIDForParam(&param, &conditional_iid)))
             {
@@ -570,8 +574,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
         else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
         {
-            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
-
             uint8 arg_num = param.GetInterfaceIsArgNumber();
             const nsXPTParamInfo& param = info->GetParam(arg_num);
             const nsXPTType& type = param.GetType();
