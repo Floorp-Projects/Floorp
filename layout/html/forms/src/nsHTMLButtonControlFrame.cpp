@@ -166,6 +166,7 @@ nsHTMLButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumVal
     aNumValues = 0;
     return PR_FALSE;
   }
+
 }
 
 
@@ -237,32 +238,62 @@ nsHTMLButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   }
 }
 
+PRBool
+nsHTMLButtonControlFrame::IsReset(PRInt32 type)
+{
+  if (NS_FORM_BUTTON_RESET == type) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
+}
+
+PRBool
+nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
+{
+  if (NS_FORM_BUTTON_SUBMIT == type) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
+}
+
+
 void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   PRInt32 type;
   GetType(&type);
-  if (nsnull != mFormFrame) {
-    if (NS_FORM_BUTTON_RESET == type) {
-      //Send DOM event
-      nsEventStatus mStatus;
-      nsEvent mEvent;
-      mEvent.eventStructType = NS_EVENT;
-      mEvent.message = NS_FORM_RESET;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, NS_EVENT_FLAG_INIT, mStatus); 
 
-      mFormFrame->OnReset();
-    } else if (NS_FORM_BUTTON_SUBMIT == type) {
-      //Send DOM event
-      nsEventStatus mStatus;
-      nsEvent mEvent;
-      mEvent.eventStructType = NS_EVENT;
-      mEvent.message = NS_FORM_SUBMIT;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, NS_EVENT_FLAG_INIT, mStatus); 
+  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    nsIContent *formContent = nsnull;
+    mFormFrame->GetContent(&formContent);
 
-      mFormFrame->OnSubmit(aPresContext, this);
+    if (IsReset(type) == PR_TRUE) {
+      event.message = NS_FORM_RESET;
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      }
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnReset();
+      }
     }
-  } 
+    else if (IsSubmit(type) == PR_TRUE) {
+      event.message = NS_FORM_SUBMIT;
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+      if (nsEventStatus_eConsumeNoDefault != status) {
+        mFormFrame->OnSubmit(aPresContext, this);
+      }
+    }
+ 
+    NS_IF_RELEASE(formContent);
+  }
+
 }
 
 void 
@@ -424,6 +455,10 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
   // XXX remove the following when the reflow state is fixed
   ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
 

@@ -99,43 +99,28 @@ NS_NewGfxButtonControlFrame(nsIFrame** aNewFrame)
   *aNewFrame = it;
   return NS_OK;
 }
-                                    
-void
-nsGfxButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
+      
+
+PRBool
+nsGfxButtonControlFrame::IsReset(PRInt32 type)
 {
-  PRInt32 type;
-  GetType(&type);
-
-  if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    nsIContent *formContent = nsnull;
-    mFormFrame->GetContent(&formContent);
-
-    switch(type) {
-    case NS_FORM_INPUT_RESET:
-      event.message = NS_FORM_RESET;
-      if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-      }
-      if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnReset();
-      }
-      break;
-    case NS_FORM_INPUT_SUBMIT:
-      event.message = NS_FORM_SUBMIT;
-      if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-      }
-      if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnSubmit(aPresContext, this);
-      }
-    }
-    NS_IF_RELEASE(formContent);
-  } 
+  if (NS_FORM_INPUT_RESET == type) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
 }
 
+PRBool
+nsGfxButtonControlFrame::IsSubmit(PRInt32 type)
+{
+  if (NS_FORM_INPUT_SUBMIT == type) {
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
+}
+                              
 const nsIID&
 nsGfxButtonControlFrame::GetIID()
 {
@@ -178,9 +163,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
                              const nsHTMLReflowState& aReflowState, 
                              nsReflowStatus&          aStatus)
 {
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
-  }
+   // The mFormFrame is set in the initial reflow within nsHTMLButtonControlFrame
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {

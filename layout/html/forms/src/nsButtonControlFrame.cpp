@@ -178,6 +178,8 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 void
 nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
+  //XXX: This method should probably go away. The nsHTMLButtonControl frame's
+  //mouse click should be sufficient.
   PRInt32 type;
   GetType(&type);
 
