@@ -1775,11 +1775,9 @@ nsFrame::GetCursor(nsIPresContext* aPresContext,
   const nsStyleColor* styleColor;
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
   aCursor = styleColor->mCursor;
-
-  if ((NS_STYLE_CURSOR_AUTO == aCursor) && (nsnull != mParent)) {
-    mParent->GetCursor(aPresContext, aPoint, aCursor);
+  if (NS_STYLE_CURSOR_AUTO == aCursor) {
+    aCursor = NS_STYLE_CURSOR_DEFAULT;
   }
-
   return NS_OK;
 }
 
