@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 menu, menuitem  
   {
     font                  : menu;
@@ -114,7 +116,7 @@ popup > menuitem[menuactive="true"]
 
 .menu-accel 
   {
-    margin                : 2px 14px 2px 6px;
+    margin                : 2px 14px 2px 10px;
   }
 
 .menu-iconic-accel 

@@ -1,3 +1,4 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
  
 menu, menuitem  
   {
@@ -134,7 +135,7 @@ menuitem[type="checkbox"] > .menu-iconic-left, menuitem[type="radio"] > .menu-ic
 
 .menu-accel, .menu-iconic-accel
   {
-    margin-left           : 4px;
+    margin-left           : 10px;
     padding-right         : 14px;
   }
 
