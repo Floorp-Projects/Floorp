@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsIByteRangeRequest.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -75,12 +76,16 @@ static NS_DEFINE_CID(kMultiMixedConverterCID,          NS_MULTIMIXEDCONVERTER_CI
 //  
 //
 
-class nsMultiMixedConv : public nsIStreamConverter {
+class nsMultiMixedConv : public nsIStreamConverter, public nsIByteRangeRequest, public nsIChannel {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMCONVERTER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIBYTERANGEREQUEST
+    
+    NS_FORWARD_SAFE_NSICHANNEL(mPartChannel)
+    NS_FORWARD_SAFE_NSIREQUEST(mPartChannel)
 
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
@@ -91,7 +96,7 @@ protected:
     nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                           PRUint32 &aLen, PRBool *_retval);
-    PRInt8 PushOverLine(char *&aPtr, PRUint32 &aLen);
+    PRInt32  PushOverLine(char *&aPtr, PRUint32 &aLen);
     char *FindToken(char *aCursor, PRUint32 aLen);
     nsresult BufferData(char *aData, PRUint32 aLen);
 
@@ -112,6 +117,10 @@ protected:
     char                *mBuffer;
     PRUint32            mBufLen;
     PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
+
+    PRInt32             mByteRangeStart;
+    PRInt32             mByteRangeEnd;
+    PRBool              mIsByteRangeRequest;
 };
 
 #endif /* __nsmultimixedconv__h__ */
