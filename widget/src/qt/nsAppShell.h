@@ -59,7 +59,6 @@ public:
 private:
     nsDispatchListener	 * mDispatchListener;
     nsQApplication       * mApplication;
-    QStyle               * mStyle;
 
 protected:
     nsIEventQueueService * mEventQService;
