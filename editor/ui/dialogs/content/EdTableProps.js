@@ -43,6 +43,8 @@ var defVAlign =   "middle";
 var topStr =      "top";
 var bottomStr =   "bottom";
 var bgcolor = "bgcolor";
+var TableColor;
+var CellColor;
 
 var rowCount = 1;
 var colCount = 1;
@@ -123,18 +125,9 @@ function Startup()
   dialog.CellHAlignList = document.getElementById("CellHAlignList");
   dialog.CellAlignCharInput = document.getElementById("CellAlignCharInput");
   dialog.CellVAlignList = document.getElementById("CellVAlignList");
-  dialog.CellStyleList = document.getElementById("CellStyleList");
-  dialog.TextWrapList = document.getElementById("TextWrapList");
   dialog.CellInheritColor = document.getElementById("CellInheritColor");
-
-  dialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
-  dialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
-  dialog.RowSpanCheckbox = document.getElementById("RowSpanCheckbox");
-  dialog.ColSpanCheckbox = document.getElementById("ColSpanCheckbox");
-  dialog.CellHAlignCheckbox = document.getElementById("CellHAlignCheckbox");
-  dialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
-  dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
-  dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
+  dialog.HeaderCheck = document.getElementById("HeaderCheck");
+  dialog.NoWrapCheck = document.getElementById("NoWrapCheck");
 
   TabPanel = document.getElementById("TabPanel");
   var TableTab = document.getElementById("TableTab");
@@ -271,7 +264,8 @@ function InitDialog()
   }
   dialog.TableCaptionList.selectedIndex = index;
   
-  SetColor("tableBackgroundCW", globalTableElement.bgColor); 
+  TableColor = globalTableElement.bgColor;
+  SetColor("tableBackgroundCW", TableColor); 
 
   InitCellPanel(SelectedCellsType);
 }
@@ -316,9 +310,9 @@ function InitCellPanel()
         {
           dialog.CellAlignCharInput.value = alignChar;
           dialog.CellHAlignList.selectedIndex = 4;
-          dialog.CellAlignCharInput.removeAttribute("collapsed");
-
-        } else {
+        } 
+        else
+        {
           // "char" align set but no alignment char value
           dialog.CellHAlignList.selectedIndex = 0;
         }
@@ -328,14 +322,14 @@ function InitCellPanel()
         break;
     }
 
-    // Hide align char input if not that align type
-    dialog.CellHAlignList.selectedIndex != 4
-      dialog.CellAlignCharInput.setAttribute("collapsed","true");
+    // Hide align char input if not appropriate align type
+    dialog.CellHAlignList.selectedIndex == 4 ? "true" : "";
 
-    dialog.CellStyleList.selectedIndex = (globalCellElement.nodeName == "TH") ? 1 : 0;
-    dialog.TextWrapList.selectedIndex = globalCellElement.noWrap ? 1 : 0;
+    dialog.HeaderCheck.checked = globalCellElement.nodeName.toLowerCase() == "th";
+    dialog.NoWrapCheck.checked = globalCellElement.noWrap ? true : false;
     
-    SetColor("cellBackgroundCW", globalCellElement.bgColor); 
+    CellColor = globalCellElement.bgColor;
+    SetColor("cellBackgroundCW", CellColor); 
   }
 }
 
@@ -390,24 +384,51 @@ function SelectCellTab()
 function SelectCellHAlign()
 {
   if (dialog.CellHAlignList.selectedIndex == 4)
+  {
+    // Activate the textfield for the alignment character
     dialog.CellAlignCharInput.removeAttribute("collapsed");
+    SetTextfieldFocus(dialog.CellAlignCharInput);
+  }
   else
     dialog.CellAlignCharInput.setAttribute("collapsed","true");
-
-  SetCheckbox("CellHAlignCheckbox");
 }
 
-function GetColorAndUpdate(ColorPickerID, ColorWellID, CheckboxID, popup)
+function GetColorAndUpdate(ColorWellID)
 {
-  // Close the colorpicker
-  popup.closePopup();
-  var color = null;
-  if (ColorPickerID)
-    color = getColor(ColorPickerID);
+  var colorWell = document.getElementById(ColorWellID);
+  if (!colorWell) return;
 
-  SetColor(ColorWellID, color);
-  
-  SetCheckbox(CheckboxID);
+  var colorObj = new Object;
+
+  switch( ColorWellID )
+  {
+    case "tableBackgroundCW":
+      colorObj.Type = "Table";
+      colorObj.TableColor = TableColor;
+      break;
+    case "cellBackgroundCW":
+      colorObj.Type = "Cell";
+      colorObj.CellColor = CellColor;
+      break;
+  }
+
+  window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", colorObj);
+
+  // User canceled the dialog
+  if (colorObj.Cancel)
+    return;
+
+  switch( ColorWellID )
+  {
+    case "tableBackgroundCW":
+      TableColor = colorObj.BackgroundColor;
+      SetColor(ColorWellID, TableColor);
+      break;
+    case "cellBackgroundCW":
+      CellColor = colorObj.BackgroundColor;
+      SetColor(ColorWellID, CellColor);
+      break;
+  }
 }
 
 function SetColor(ColorWellID, color)
@@ -478,7 +499,7 @@ function ChangeSelection(newType)
   DoCellSelection();
   SetSelectionButtons();
 
-  // Enable/Disable appropriate span checkboxes
+  // Enable/Disable appropriate span textfields
   SetSpanEnable();
 
   // Note: globalCellElement should still be a clone of CellElement
@@ -624,7 +645,6 @@ dump("Moving selection -- apply attributes...\n");
   {
 dump("InitCellPanel should be called...\n");
     InitCellPanel();
-    // Uncheck all the checkboxes used from last selection?
   }
 
   // Change the selection
@@ -671,9 +691,9 @@ function SetSelectionButtons()
 function SetSpanEnable()
 {
   // If entire row is selected, don't allow changing colspan...
-  dialog.RowSpanCheckbox.setAttribute("disabled", (SelectedCellsType == SELECT_COLUMN) ? "true" : "false");
+  dialog.RowSpanInput.setAttribute("disabled", (SelectedCellsType == SELECT_COLUMN) ? "true" : "false");
   // ...and similarly:
-  dialog.ColSpanCheckbox.setAttribute("disabled", (SelectedCellsType == SELECT_ROW) ? "true" : "false");
+  dialog.ColSpanInput.setAttribute("disabled", (SelectedCellsType == SELECT_ROW) ? "true" : "false");
 }
 
 function SwitchPanel(newPanel)
@@ -706,7 +726,7 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
   var isPercent = false;
 
   var numString = inputWidget.value.trimString();
-  if (numString && numString != "")
+  if (numString)
   {
     if (listWidget)
       isPercent = (listWidget.selectedIndex == 1);
@@ -714,7 +734,7 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
       maxLimit = 100;
 
     numString = ValidateNumberString(numString, minVal, maxLimit);
-    if(numString == "")
+    if(!numString)
     {
       dump("Error returned from ValidateNumberString\n");
 
@@ -787,70 +807,63 @@ function ValidateCellData()
 
   validatePanel = CellPanel;
 
-  if (dialog.CellHeightCheckbox.checked)
-  {
-    ValidateNumber("CellHeightInput", dialog.CellHeightUnits, 
-                    1, maxPixels, globalCellElement, "height");
-    if (error) return false;
-  }
+  ValidateNumber("CellHeightInput", dialog.CellHeightUnits, 
+                  1, maxPixels, globalCellElement, "height");
+  if (error) return false;
 
-  if (dialog.CellWidthCheckbox.checked)
-  {
-    ValidateNumber("CellWidthInput", dialog.CellWidthUnits, 
-                   1, maxPixels, globalCellElement, "width");
-    if (error) return false;
-  }
+  ValidateNumber("CellWidthInput", dialog.CellWidthUnits, 
+                 1, maxPixels, globalCellElement, "width");
+  if (error) return false;
   
-  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.disabled != "true")
+  if (dialog.RowSpanInput.disabled != "true")
   {
     // Note that span = 0 is allowed and means "span entire row/col"
     ValidateNumber("RowSpanInput", null,
                    0, rowCount, globalCellElement, "rowspan");
     if (error) return false;
   }
-  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
+  if (dialog.ColSpanInput.getAttribute("disabled") != "true")
   {
     ValidateNumber("ColSpanInput", null,
                    0, colCount, globalCellElement, "colspan");
     if (error) return false;
   }
 
-  if (dialog.CellHAlignCheckbox.checked)
-  {
-    // Vertical alignment is complicated by "char" type
-    var hAlign = dialog.CellHAlignList.selectedItem.data;
-dump("Cell hAlign = "+hAlign+"\n");
+  // Vertical alignment is complicated by "char" type
+  var hAlign = dialog.CellHAlignList.selectedItem.data;
 
-    if (hAlign != charStr)
-      globalCellElement.removeAttribute(charStr);
-    
-    if (hAlign == "left")
+  if (hAlign != charStr)
+    globalCellElement.removeAttribute(charStr);
+  
+  if (hAlign == "left")
+  {
+    globalCellElement.removeAttribute("align");
+  }
+  else
+  {
+    if (hAlign == charStr)
     {
-      globalCellElement.removeAttribute("align");
-    }
-    else
-    {
-      if (hAlign == charStr)
+      //Note: Is space a valid align character?
+      // Assume yes and don't use "trimString()"
+      var alignChar = dialog.CellAlignCharInput.value.charAt(0);
+      globalCellElement.setAttribute(charStr, alignChar);
+      if (!alignChar)
       {
-        var alignChar = dialog.CellAlignCharInput.value.trimString().charAt(0);
-        globalCellElement.setAttribute(charStr, alignChar);
-dump("Alignment char="+alignChar+"\n");
+        ShowInputErrorMessage(GetString("NoAlignChar"));
+        SetTextfieldFocus(dialog.CellAlignCharInput);
+        return false;
       }
-
-      globalCellElement.setAttribute("align", hAlign);
     }
+    globalCellElement.setAttribute("align", hAlign);
   }
 
-  if (dialog.CellVAlignCheckbox.checked)
-    SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
+  SetAlign("CellVAlignList", defVAlign, globalCellElement, "valign");
 
-  if (dialog.TextWrapCheckbox.checked)
-  {
-    if (dialog.TextWrapList.selectedIndex == 1)
-      globalCellElement.setAttribute("nowrap","true");
-    else
-      globalCellElement.removeAttribute("nowrap");
-  }
+  if (dialog.NoWrapCheck.checked)
+    globalCellElement.setAttribute("nowrap","true");
+  else
+    globalCellElement.removeAttribute("nowrap");
+
   return true;
 }
 
@@ -884,26 +897,18 @@ function ValidateData()
   return true;
 }
 
-// Call this when a textfield or menulist is changed
-//   so the checkbox is automatically set
-function SetCheckbox(checkboxID)
-{
-  if (checkboxID && checkboxID.length > 0)
-  {
-    // Set associated checkbox
-    document.getElementById(checkboxID).checked = true;
-  }
-  if (currentPanel == CellPanel)
-    CellDataChanged = true;
-}
-
-function ChangeIntTextfield(textfieldID, checkboxID)
+function ChangeCellTextfield(textfieldID)
 {
   // Filter input for just integers
   forceInteger(textfieldID);
 
-  // Set associated checkbox
-  SetCheckbox(checkboxID);
+  if (currentPanel == CellPanel)
+    CellDataChanged = true;
+}
+
+function ChangeCellData()
+{
+  CellDataChanged = true;
 }
 
 function CloneAttribute(destElement, srcElement, attr)
@@ -973,6 +978,8 @@ function ApplyTableAttributes()
   }
 
   var countDelta;
+  var foundcell;
+  var i;
 
   // If user is deleting any cells and get confirmation
   // (This is a global to the dialog and we ask only once per dialog session)
@@ -1015,8 +1022,8 @@ function ApplyTableAttributes()
       {
         // Find first cell starting in first row we delete
         var firstDeleteRow = rowCount + countDelta;
-        var foundCell = false;
-        for (var i = 0; i <= lastColIndex; i++)
+        foundCell = false;
+        for ( i = 0; i <= lastColIndex; i++)
         {
           if (!GetCellData(firstDeleteRow, i))
             break; // We failed to find a cell
@@ -1081,8 +1088,8 @@ function ApplyTableAttributes()
       if (canDelete)
       {
         var firstDeleteCol = colCount + countDelta;
-        var foundCell = false;
-        for (var i = 0; i <= lastRowIndex; i++)
+        foundCell = false;
+        for ( i = 0; i <= lastRowIndex; i++)
         {
           // Find first cell starting in first column we delete
           if (!GetCellData(i, firstDeleteCol))
@@ -1138,44 +1145,27 @@ function ApplyCellAttributes()
 
 function ApplyAttributesToOneCell(destElement)
 {
-  if (dialog.CellHeightCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "height");
+  CloneAttribute(destElement, globalCellElement, "height");
 
-  if (dialog.CellWidthCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "width");
+  CloneAttribute(destElement, globalCellElement, "width");
 
-  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.getAttribute("disabled") != "true")
-    CloneAttribute(destElement, globalCellElement, "rowspan");
+  if (dialog.RowSpanInput.getAttribute("disabled") != "true")
+   CloneAttribute(destElement, globalCellElement, "rowspan");
 
-  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
+  if (dialog.ColSpanInput.getAttribute("disabled") != "true")
     CloneAttribute(destElement, globalCellElement, "colspan");
 
-  if (dialog.CellHAlignCheckbox.checked)
-  {
-    CloneAttribute(destElement, globalCellElement, "align");
-    CloneAttribute(destElement, globalCellElement, charStr);
-  }
-
-  if (dialog.CellVAlignCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "valign");
-
-  if (dialog.TextWrapCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "nowrap");
-
+  CloneAttribute(destElement, globalCellElement, "align");
+  CloneAttribute(destElement, globalCellElement, charStr);
+  CloneAttribute(destElement, globalCellElement, "valign");
+  CloneAttribute(destElement, globalCellElement, "nowrap");
   CloneAttribute(destElement, globalCellElement, "bgcolor");
 
-  if (dialog.CellStyleCheckbox.checked)
+  if (dialog.HeaderCheck.checked == (destElement.nodeName.toLowerCase() == "td"))
   {
-    var newStyleIndex = dialog.CellStyleList.selectedIndex;
-    var currentStyleIndex = (destElement.nodeName == "TH") ? 1 : 0;
-
-    if (newStyleIndex != currentStyleIndex)
-    {
-      // Switch cell types 
-      // (replaces with new cell and copies attributes and contents)
-      destElement = editorShell.SwitchTableCellHeaderType(destElement);
-      CurrentStyleIndex = newStyleIndex;
-    }
+    // Switch cell types 
+    // (replaces with new cell and copies attributes and contents)
+    destElement = editorShell.SwitchTableCellHeaderType(destElement);
   }
 }
 

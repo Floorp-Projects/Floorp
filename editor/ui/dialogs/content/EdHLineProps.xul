@@ -83,7 +83,7 @@
     <spring flex="1"/>
     <button id="AdvancedEditButton"/>
   </box>
-  <separator class="groove"/>
+  <separator class="groove-thin tb-margin"/>
   <!-- from global dialogOverlay -->
   <box id="okCancelButtons"/>
 </window>

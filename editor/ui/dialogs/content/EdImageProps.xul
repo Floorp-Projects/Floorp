@@ -64,12 +64,12 @@
             for   = "srcInput"
             value = "&locationEditField.label;"
             tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
-            align = "right" />
+            />
           <textfield 
             id         = "srcInput" 
             onkeyup    = "doOverallEnabling()"
             onmouseup  = "doOverallEnabling()"
-            onchange   = "doOverallEnabling()"
+            onchange   = "ChangeImageSrc()"
             style      = "min-width : 20em"/>
           <!-- from EdDialogOverlay.xul -->
           <button id="ChooseFile" />
@@ -90,7 +90,7 @@
     <spring class="spacer"/>
   </titledbox>
   <spring class="spacer"/>
-  <box> 
+  <box valign="middle" autostretch="never"> 
     <button 
       class   = "dialog" 
       id      = "MoreFewerButton" 
@@ -98,11 +98,34 @@
       oncommand = "onMoreFewerImage()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
+    <spring class="spacer"/>
+    <titledbox style="padding: 4px">
+      <box id="preview-image-box" valign="middle" autostretch="never">
+        <spring flex="1"/>
+        <html id="preview-image-holder"/>
+        <spring flex="1"/>
+      </box>
+      <box id="PreviewSize" orient="vertical" collapsed="true">
+        <spring flex="1"/>
+        <text class="label" value="&actualSize.label;"/>
+        <box orient="horizontal">
+          <text class="label" value="&widthEditField.label;"/>
+          <spring flex="1"/>
+          <text id="PreviewWidth" class="label"/>
+        </box>
+        <box orient="horizontal">
+          <text class="label" value="&heightEditField.label;"/>
+          <spring flex="1"/>
+          <text id="PreviewHeight" class="label"/>
+        </box>
+        <spring flex="1"/>
+      </box>
+    </titledbox>
     <spring flex="1"/>
     <!-- From EdDialogOverlay.xul -->
     <button id="AdvancedEditButton"/>
   </box>
-
+  <spring class="spacer"/>
   <!-- Area that shows and hides via MoreFewerButton --> 
   <box id="MoreSection" orient="vertical" flex="1">
     <box>
@@ -114,13 +137,13 @@
             <radiogroup id="imgSizeGroup" orient="vertical">
               <radio
                 group   = "imgSizeGroup"
-                id      = "originalsizeRadio" 
-                value   = "&originalSizeRadio.label;"
-                tooltip = "aTooltip" tooltiptext="&originalSizeRadio.tooltip;"
-                oncommand = "doDimensionEnabling();"/>
+                id      = "actualSizeRadio" 
+                value   = "&actualSizeRadio.label;"
+                tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
+                oncommand = "SetActualSize()"/>
               <radio
                 group   = "imgSizeGroup"
-                id      = "customsizeRadio" 
+                id      = "customSizeRadio" 
                 value   = "&customSizeRadio.label;"
                 tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
                 oncommand = "doDimensionEnabling();" />
@@ -130,6 +153,7 @@
               <spring flex="1"/>
               <!--////// CONSTRAIN DIMENSIONS //////-->
               <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
+                   oncommand="document.getElementById('widthInput').focus()"
                    tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
             </box>
             <spring flex="1"/>
@@ -168,6 +192,7 @@
               </row>
             </rows>          
           </grid>
+          <spring flex="1"/>
         </titledbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <titledbox orient="vertical" flex="1">
@@ -300,8 +325,7 @@
       <button id="AdvancedEditButton2"/>
     </box>
   </box> <!-- END OF MORE/FEWER SECTION -->
-  <separator class="groove"/>
+  <separator class="groove-thin tb-margin"/>
   <!-- from global dialogOverlay -->
   <box id="okCancelButtons"/> 
-
 </window>

@@ -33,9 +33,9 @@
 <!ENTITY tabJSE.label                   "JavaScript Events">
 
 <!ENTITY AddJSEAttributeLabel.label     "Add a JavaScript Event Handler">
-<!ENTITY AddHTMLAttributeLabel.label    "Add a HTML Attribute">
+<!ENTITY AddHTMLAttributeLabel.label    "Add an HTML Attribute">
 <!ENTITY AddCSSAttributeLabel.label     "Add a Style Attribute">
 
-<!ENTITY context.RemoveAttribute.label  "Remove Attribute">
-<!ENTITY context.AddAttribute.label     "Add Attribute">
+<!ENTITY editAttribute.label    "Click on an item to edit its value">
+<!ENTITY removeAttribute.label  "Remove Attribute">
 

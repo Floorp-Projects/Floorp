@@ -37,9 +37,8 @@ var HTMLAttrs   = [];   // html attributes
 var CSSAttrs    = [];   // css attributes
 var JSEAttrs    = [];   // js events 
 
-var HTMLRAttrs  = [];   // removed html attributes
-var CSSRAttrs   = [];   // removed css attributes
-var JSERAttrs   = [];   // removed js events
+var gSelecting = false; // To prevent recursive selection
+var dialog;
 
 /************** INITIALISATION && SETUP **************/
 
@@ -61,9 +60,6 @@ function Startup()
   // initialise the ok and cancel buttons
   doSetOKCancel(onOK, onCancel);
 
-  // load string bundle
-  bundle = srGetStrBundle("chrome://editor/locale/editor.properties");
-    
   // Element to edit is passed in
   element = window.arguments[1];
   if (!element || element == undefined) {
@@ -168,81 +164,63 @@ function CheckAttributeNotRemoved( attName, attArray )
  * returns    : nothing
  * desc.      : removes an attribute or attributes from the tree
  **/
-// Note: now changing this to remove all selected ITEMS. this makes it easier. 
-function doRemoveAttribute( which )
+function RemoveAttribute( treeId )
 {
-  if(which.nodeName != "tree") {
-    var tree = which.parentNode;
-    while ( tree.nodeName != "tree" )
-    {
-      tree = tree.parentNode; // climb up the tree one notch
-    } // now we are pointing at the tree element
-  } else
-    tree = which;
+  var tree = document.getElementById(treeId);
+  if (!tree) return;
   
   var kids = tree.lastChild;  // treechildren element of tree
-  var selArray = [];
-  for ( var i = 0; i < tree.selectedItems.length; i++ )
+  var newIndex = tree.selectedIndex;
+  // We only allow 1 selected item
+  if (tree.selectedItems.length)
   {
-    var item = tree.selectedItems[i];
-    // add to array of removed items for the particular panel that is displayed
-    var name = item.firstChild.firstChild;
+    var item = tree.selectedItems[0];
+    // Name is the value of the treecell
+    var name = item.firstChild.firstChild.getAttribute("value");
+
+    // remove the item from the attribute arrary
     switch ( tree.id ) {
       case "HTMLATree":
-        HTMLRAttrs[HTMLRAttrs.length] = TrimString(name.getAttribute("value"));
-//        dump("HTMLRAttrs[" + (HTMLRAttrs.length - 1) + "]: " + HTMLRAttrs[HTMLRAttrs.length-1] + "\n");
+        if (newIndex >= (HTMLAttrs.length-1))
+          newIndex--;
+        RemoveNameFromAttArray(HTMLAttrs, name);
         break;
       case "CSSATree":   
-        CSSRAttrs[CSSRAttrs.length] = TrimString(name.getAttribute("value"));
+        if (newIndex >= (CSSAttrs.length-1))
+          newIndex--;
+        RemoveNameFromAttArray(CSSAttrs, name);
         break;
       case "JSEATree":
-        JSERAttrs[JSERAttrs.length] = TrimString(name.getAttribute("value"));
+        if (newIndex >= (JSEAttrs.length-1))
+          newIndex--;
+        RemoveNameFromAttArray(JSEAttrs, name);
         break;      
       default: break;
     }
-    selArray[i] = item;
-  }
-  // need to do this in a separate loop because selectedItems is NOT STATIC and 
-  // this causes problems.
-  for ( var i = 0; i < selArray.length; i++ )
-  {
-    // remove the item
-    kids.removeChild ( selArray[i] );
-  } 
-}
 
-/**
- * function   : void doAddAttribute( DOMElement which );
- * parameters : DOMElement referring to element context-clicked
- * returns    : nothing
- * desc.      : focusses the add attribute "name" field in the current pane.
- **/
-function doAddAttribute(which)
+    // Remove the item from the tree
+    kids.removeChild (item);
+
+    // Reselect an item
+    tree.selectedIndex = newIndex;
+    SelectTreeItem(tree);
+  }
+}
+function RemoveNameFromAttArray(attArray, name)
 {
-  if(which.nodeName != "tree") {
-    var tree = which.parentNode;
-    while ( tree.nodeName != "tree" )
+  for (var i=0; i < attArray.length; i++)
+  {
+    if (attArray[i] == name)
     {
-      tree = tree.parentNode; // climb up the tree one notch
-    } // now we are pointing at the tree element
-  } else
-    tree = which;
-
-  switch(tree.id) {
-    case "HTMLATree":
-      SetTextfieldFocus(document.getElementById("AddHTMLAttributeNameInput"));
-      break;
-    case "CSSATree":
-      SetTextfieldFocus(document.getElementById("AddCSSAttributeNameInput"));
-      break;
-    case "JSEATree":
-      SetTextfieldFocus(document.getElementById("AddJSEAttributeNameInput"));
-      break;
-    default:
-      break;
+      // Remove 1 array item
+      attArray.splice(i,1);
+      break; 
+    }
   }
 }
 
+// NOT USED
+/*
 function doSelect(e)
 {
   if ( TEXT_WIDGETS_DONT_SUCK && PERFORMANCE_BOOSTS ) {
@@ -264,23 +242,28 @@ function doSelect(e)
     SetTextfieldFocus(input);
   }
 }
+*/
 
 // adds a generalised treeitem.
-function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
+function AddTreeItem ( name, value, treekidsId, attArray, valueCaseFunc )
 {
   attArray[attArray.length] = name;
-  var treekids    = document.getElementById ( treekids );
+  var treekids    = document.getElementById ( treekidsId );
   var treeitem    = document.createElementNS ( XUL_NS, "treeitem" );
   var treerow     = document.createElementNS ( XUL_NS, "treerow" );
   var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
   attrcell.setAttribute( "value", name.toLowerCase() );
+  // Modify treerow selection to better show focus in textfield
+  treeitem.setAttribute( "class", "ae-selection");
+
   treerow.appendChild ( attrcell );
   
   if ( !valueCaseFunc ) {
     // no handling function provided, create default cell.
-    var valcell = CreateCellWithField ( name, value);
-    treerow.appendChild ( valcell );
+    var valCell = CreateCellWithField ( name, value );
+    if (!valCell) return null;
+    treerow.appendChild ( valCell );
   } else 
     valueCaseFunc();  // run user specified function for adding content
   
@@ -293,16 +276,56 @@ function AddTreeItem ( name, value, treekids, attArray, valueCaseFunc )
 // optional parameters for initial values.
 function CreateCellWithField( name, value )
 {
-  var valcell     = document.createElementNS ( XUL_NS, "treecell" );
-  valcell.setAttribute ( "class", "value propertylist" );
-  valcell.setAttribute ( "allowevents", "true" );
+  var valCell     = document.createElementNS ( XUL_NS, "treecell" );
+  if (!valCell) return null;
+  valCell.setAttribute ( "class", "value propertylist" );
+  valCell.setAttribute ( "allowevents", "true" );
   var valField    = document.createElementNS ( XUL_NS, "textfield" );
   if ( name  ) valField.setAttribute ( "id", name );
+  if (!valField) return null;
   if ( value ) valField.setAttribute ( "value", value );
   valField.setAttribute ( "flex", "1" );
   valField.setAttribute ( "class", "plain" );
-  valcell.appendChild ( valField );
-  return valcell;
+  //XXX JS errors (can't tell where!) are preventing this from firing
+  valField.setAttribute ( "onfocus", "SelectItemWithTextfield("+name+")");
+  valCell.appendChild ( valField );
+  return valCell;
+}
+
+function SelectItemWithTextfield(id)
+{
+dump("*** SelectItemWithTextfield\n");
+  var textfield = document.getItemById(id);
+  if (textfield)
+  {
+    var treerow = textfield.parentNode.parentNode;
+    var tree = treeerow.parentNode.parentNode;
+    if (tree)
+    {
+      gSelecting = true;
+      tree.selectedItem = textfield.parentNode;
+      gSelecting = false;
+    }
+  }
+}
+
+// When a "name" treecell is selected, shift focus to the textfield
+function SelectTreeItem(tree)
+{
+  // Prevent infinite loop -- SetTextfieldFocusById triggers recursive call
+  if (gSelecting) return;
+  gSelecting = true;  
+  if (tree && tree.selectedItems && tree.selectedItems.length)
+  {
+    // 2nd cell (value column) contains the textfield
+    var textfieldCell = tree.selectedItems[0].firstChild.firstChild.nextSibling;
+    if (textfieldCell)
+    {
+      // Select its contents and set focus
+      SetTextfieldFocusById(textfieldCell.firstChild.id);
+    }
+  }
+  gSelecting = false;
 }
 
 // todo: implement attribute parsing, e.g. colorpicker appending, etc.

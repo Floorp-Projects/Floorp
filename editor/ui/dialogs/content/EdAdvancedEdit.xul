@@ -41,6 +41,7 @@
     orient="vertical">
 
   <keyset id="keyset"/>
+  <popupset id="aTooltipSet" />
     
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -54,13 +55,6 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 	<script language="javascript" src="chrome://global/content/strres.js" />
 
-  <popupset>
-    <popup id="attlistPopup">
-      <menuitem value="&context.RemoveAttribute.label;" oncommand="doRemoveAttribute(document.popupNode);"/>
-      <menuitem value="&context.AddAttribute.label;" oncommand="doAddAttribute(document.popupNode);"/>
-    </popup>
-  </popupset>
-  
   <broadcaster id="args" value=""/>
 
   <box autostretch="never">
@@ -80,108 +74,126 @@
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
-        <box flex="1" orient="vertical">
-          <tree id="HTMLATree" 
-            class="AttributesTree inset" 
-            flex="1" 
-            context="attlistPopup">
-            <treecols>
-              <treecol flex="35" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="65" width="0"/>
-            </treecols>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
-              </treerow>
-            </treehead>
-            <treechildren id="HTMLAList" flex="1"/>
-          </tree>
-          <box orient="vertical">
-            <spring class="spacer"/>
-            <titledbox orient="vertical">
-              <title value="&AddHTMLAttributeLabel.label;"/>
-              <box autostretch="never">
-                <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-                <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
-                <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.keyCode)"/>
-                <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
-              </box>
-            </titledbox>
-          </box>
+      <box flex="1" orient="vertical">
+        <tree id="HTMLATree" 
+          class="AttributesTree inset" 
+          flex="1"
+          tooltip="aTooltip" tooltiptext="Click on item to edit value"
+          onselect="SelectTreeItem(this)">
+          <treecols>
+            <treecol flex="35" width="0"/>
+            <splitter class="tree-splitter"/>
+            <treecol flex="65" width="0"/>
+          </treecols>
+          <treehead>
+            <treerow>
+              <treecell class="treecell-header" value="&tree.attributeHeader.label;"
+                tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
+              <treecell class="treecell-header" value="&tree.valueHeader.label;"
+                tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
+            </treerow>
+          </treehead>
+          <treechildren id="HTMLAList" flex="1"/>
+        </tree>
+        <box valign="middle" autostretch="never" flex="1">
+          <text class="label" value="&editAttribute.label;"/>
+          <spring flex="1"/>
+          <button class="dialog" value="&removeAttribute.label;" oncommand="RemoveAttribute('HTMLATree')"/>
         </box>
+        <box orient="vertical">
+          <spring class="spacer"/>
+          <titledbox orient="vertical">
+            <title value="&AddHTMLAttributeLabel.label;"/>
+            <box autostretch="never">
+              <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
+              <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)" onfocus="dump('foo\n')"/>
+              <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
+          	  <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.keyCode)"/>
+              <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+            </box>
+          </titledbox>
+        </box>
+      </box>
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
-        <box flex="1" orient="vertical">
-          <tree id="CSSATree" class="AttributesTree inset" flex="1" context="attlistPopup">
-            <treecolgroup>
-              <treecol flex="35" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="65" width="0"/>
-            </treecolgroup>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
-              </treerow>
-            </treehead>
-            <treechildren id="CSSAList" flex="1"/>
-          </tree>
-          <box orient="vertical">
-            <spring class="spacer"/>
-            <titledbox orient="vertical">
-              <title value="&AddCSSAttributeLabel.label;"/>
-              <box autostretch="never">
-                <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
-                <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
-                <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.keyCode)"/>
-                <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
-              </box>
-            </titledbox>
-          </box>
+      <box flex="1" orient="vertical">
+        <tree id="CSSATree" class="AttributesTree inset" flex="1"
+          onselect="SelectTreeItem(this)">
+          <treecolgroup>
+            <treecol flex="35" width="0"/>
+            <splitter class="tree-splitter"/>
+            <treecol flex="65" width="0"/>
+          </treecolgroup>
+          <treehead>
+            <treerow>
+              <treecell class="treecell-header" value="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header" value="&tree.valueHeader.label;"/>
+            </treerow>
+          </treehead>
+          <treechildren id="CSSAList" flex="1"/>
+        </tree>
+        <box valign="middle" autostretch="never" flex="1">
+          <text class="label" value="&editAttribute.label;"/>
+          <spring flex="1"/>
+          <button class="dialog" value="&removeAttribute.label;" oncommand="RemoveAttribute('CSSATree')"/>
         </box>
+        <box orient="vertical">
+          <spring class="spacer"/>
+          <titledbox orient="vertical">
+            <title value="&AddCSSAttributeLabel.label;"/>
+            <box autostretch="never">
+              <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
+              <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
+              <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
+          	  <textfield flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.keyCode)"/>
+              <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+            </box>
+          </titledbox>
+        </box>
+      </box>
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
-        <box flex="1" orient="vertical">
-          <tree id="JSEATree" class="AttributesTree inset" flex="1" context="attlistPopup">
-            <treecolgroup>
-              <treecol flex="35" width="0"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="65" wdith="0"/>
-            </treecolgroup>
-            <treehead>
-              <treerow>
-                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
-              </treerow>
-            </treehead>
-            <treechildren id="JSEAList" flex="1"/>
-          </tree>
-          <box orient="vertical">
-            <spring class="spacer"/>
-            <titledbox orient="vertical">
-              <title value="&AddJSEAttributeLabel.label;"/>
-              <box autostretch="never">
-                <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
-                <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
-                <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
-          	    <textfield flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.keyCode)"/>
-                <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
-              </box>
-            </titledbox>
-          </box>
+      <box flex="1" orient="vertical">
+        <tree id="JSEATree" class="AttributesTree inset" flex="1"
+          onselect="SelectTreeItem(this)">
+          <treecolgroup>
+            <treecol flex="35" width="0"/>
+            <splitter class="tree-splitter"/>
+            <treecol flex="65" wdith="0"/>
+          </treecolgroup>
+          <treehead>
+            <treerow>
+              <treecell class="treecell-header" value="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header" value="&tree.valueHeader.label;"/>
+            </treerow>
+          </treehead>
+          <treechildren id="JSEAList" flex="1"/>
+        </tree>
+        <box valign="middle" autostretch="never" flex="1">
+          <text class="label" value="&editAttribute.label;"/>
+          <spring flex="1"/>
+          <button class="dialog" value="&removeAttribute.label;" oncommand="RemoveAttribute('JSEATree')"/>
         </box>
+        <box orient="vertical">
+          <spring class="spacer"/>
+          <titledbox orient="vertical">
+            <title value="&AddJSEAttributeLabel.label;"/>
+            <box autostretch="never">
+              <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
+              <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
+              <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
+          	  <textfield flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.keyCode)"/>
+              <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+            </box>
+          </titledbox>
+        </box>
+      </box>
       <!-- ============================================================== -->
     </tabpanel>
   </tabcontrol>
-
-  <separator/>
-  
+  <spring class="spacer"/>
   <box id="okCancelButtonsRight"/> 
 
 </window>

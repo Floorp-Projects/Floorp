@@ -60,12 +60,12 @@
             <columns><column/><column/></columns>
             <rows>
               <row valign="middle">
-                <checkbox id="RowsCheckbox" value="&tableRows.label;"/>
-                <textfield class="narrow" id="TableRowsInput" onkeyup="ChangeIntTextfield(this.id,'RowsCheckbox');"/>
+                <text class="label" value="&tableRows.label;"/>
+                <textfield class="narrow" id="TableRowsInput" onkeyup="forceInteger(this.id);"/>
               </row>
               <row valign="middle">
-                <checkbox id="ColumnsCheckbox" value="&tableColumns.label;"/>
-                <textfield class="narrow" id="TableColumnsInput" onkeyup="ChangeIntTextfield(this.id,'ColumnsCheckbox');"/>
+                <text class="label" value="&tableColumns.label;"/>
+                <textfield class="narrow" id="TableColumnsInput" onkeyup="forceInteger(this.id);"/>
               </row>
             </rows>
           </grid>
@@ -74,90 +74,74 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle">
-                <checkbox id="TableHeightCheckbox" value="&tableHeight.label;"/>
-                <textfield class="narrow" id="TableHeightInput" onkeyup="ChangeIntTextfield(this.id,'TableHeightCheckbox');"/>
-                <menulist id="TableHeightUnits" oncommand="SetCheckbox('TableHeightCheckbox');"/>
+                <text class="label" value="&tableHeight.label;"/>
+                <textfield class="narrow" id="TableHeightInput" onkeyup="forceInteger(this.id);"/>
+                <menulist id="TableHeightUnits"/>
               </row>
               <row valign="middle">
-                <checkbox id="TableWidthCheckbox" value="&tableWidth.label;"/>
-                <textfield class="narrow" id="TableWidthInput" onkeyup="ChangeIntTextfield(this.id,'TableWidthCheckbox');"/>
-                <menulist id="TableWidthUnits" oncommand="SetCheckbox('TableWidthCheckbox');"/>
+                <text class="label" value="&tableWidth.label;"/>
+                <textfield class="narrow" id="TableWidthInput" onkeyup="forceInteger(this.id);"/>
+                <menulist id="TableWidthUnits"/>
               </row>
             </rows>
           </grid>
         </titledbox>
-        <box><!-- Border and Alignment -->
-          <titledbox orient="vertical"><title align="left" value="&tableBorderSpacing.label;"/>
-          <grid>
-            <columns><column/><column/><column/></columns>
-            <rows>
-              <row valign="middle">
-                <checkbox id="TableBorderCheckbox" value="&tableBorderWidth.label;"/>
-                <textfield class="narrow" id="BorderWidthInput" onkeyup="ChangeIntTextfield(this.id,'TableBorderCheckbox');"/>
-                <text class="label" align="left" value="&pixels.label;"/>
-              </row>
-              <row valign="middle">
-                <checkbox id="CellSpacingCheckbox" value="&tableSpacing.label;"/>
-                <textfield class="narrow" id="SpacingInput" onkeyup="ChangeIntTextfield(this.id,'CellSpacingCheckbox');"/>
-                <text class="label" value="&tablePxBetwCells.label;"/>
-              </row>
-              <row valign="middle" autostretch="never">
-                <checkbox id="CellPaddingCheckbox" value="&tablePadding.label;"/>
-                <textfield class="narrow" id="PaddingInput" onkeyup="ChangeIntTextfield(this.id,'CellPaddingCheckbox');"/>
-                <!-- Use HTML instead of TEXT to let it wrap -->
-                <html flex="1">&tablePxBetwBrdrCellContent.label;</html>
-              </row>
-            </rows>
-          </grid>
-          </titledbox>
+        <titledbox orient="vertical"><title align="left" value="&tableBorderSpacing.label;"/>
+        <grid>
+          <columns><column/><column/><column/></columns>
+          <rows>
+            <row valign="middle">
+              <text class="label" value="&tableBorderWidth.label;"/>
+              <textfield class="narrow" id="BorderWidthInput" onkeyup="forceInteger(this.id);"/>
+              <text class="label" align="left" value="&pixels.label;"/>
+            </row>
+            <row valign="middle">
+              <text class="label" value="&tableSpacing.label;"/>
+              <textfield class="narrow" id="SpacingInput" onkeyup="forceInteger(this.id);"/>
+              <text class="label" value="&tablePxBetwCells.label;"/>
+            </row>
+            <row valign="middle" autostretch="never">
+              <text class="label" value="&tablePadding.label;"/>
+              <textfield class="narrow" id="PaddingInput" onkeyup="forceInteger(this.id);"/>
+              <text class="label" value="&tablePxBetwBrdrCellContent.label;"/>
+            </row>
+          </rows>
+        </grid>
+        </titledbox>
+        <!-- Table Alignment and Caption -->
+        <box flex="1" valign="middle" autostretch="never">
+          <text class="label" value="&tableAlignment.label;"/>
+          <menulist id="TableAlignList">
+            <menupopup>
+              <menuitem value="&AlignLeft.label;"   data="left"/>
+              <menuitem value="&AlignCenter.label;" data="center"/>
+              <menuitem value="&AlignRight.label;"  data="right"/>
+            </menupopup>
+          </menulist>
           <spring class="spacer"/>
-          <box orient="vertical" flex="1">
-            <spring class="bigspacer"/>
-            <box orient="vertical" flex="1">
-              <checkbox id="TableHAlignCheckbox" value="&tableAlignment.label;"/>
-              <spring class="smallspacer"/>
-              <menulist id="TableAlignList" oncommand="SetCheckbox('TableHAlignCheckbox');">
-                <menupopup>
-                  <menuitem value="&AlignLeft.label;"   data="left"/>
-                  <menuitem value="&AlignCenter.label;" data="center"/>
-                  <menuitem value="&AlignRight.label;"  data="right"/>
-                </menupopup>
-              </menulist>
-              <spring class="bigspacer"/>
-              <checkbox id="TableCaptionCheckbox" value="&tableCaption.label;"/>
-              <spring class="smallspacer"/>
-              <menulist id="TableCaptionList" oncommand="SetCheckbox('TableCaptionCheckbox');">
-                <menupopup>
-                  <menuitem value="&tableCaptionNone.label;"  data=""/>
-                  <menuitem value="&tableCaptionAbove.label;" data="top"/>
-                  <menuitem value="&tableCaptionBelow.label;" data="bottom"/>
-                </menupopup>
-              </menulist>
-              <spring flex="1"/>
-            </box>
-          </box>
-          <spring class="bigspacer"/>
-        </box> <!-- Border and alignment -->
-        <spring class="spacer"/>
-        <box>
+          <text class="label" value="&tableCaption.label;"/>
+          <menulist id="TableCaptionList">
+            <menupopup>
+              <menuitem value="&tableCaptionNone.label;"  data=""/>
+              <menuitem value="&tableCaptionAbove.label;" data="top"/>
+              <menuitem value="&tableCaptionBelow.label;" data="bottom"/>
+            </menupopup>
+          </menulist>
+        </box>
+        <separator class="groove-thin tb-margin"/>
+        <box valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
-          <spring class="spacer"/>
-          <menu class="colorpicker">
-    	      <box>
+          <stack>
+    	      <box autostretch="never" valign="middle">
               <spring id="tableBackgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-    	      <menupopup>
-              <colorpicker id="tableBackgroundCP" palettename="standard" 
-                onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',null, this.parentNode);"/>
-              <button class="dialog" value="&defaultColor.label;" 
-                oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',null, this.parentNode)"/>
-    	      </menupopup>
-          </menu>
+            <button class="dialog color-button" onclick="GetColorAndUpdate('tableBackgroundCW')" flex="1"/>
+          </stack>
           <spring class="spacer"/>
           <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
         </box>
-        <spring class="spacer"/>
+        <separator class="groove-thin tb-margin"/>
         <box flex="1" autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
@@ -197,14 +181,14 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="CellHeightCheckbox" value="&tableHeight.label;"/>
-                <textfield class="narrow" id="CellHeightInput" onkeyup="ChangeIntTextfield(this.id,'CellHeightCheckbox');"/>
-                <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
+                <text class="label" value="&tableHeight.label;"/>
+                <textfield class="narrow" id="CellHeightInput" onkeyup="ChangeCellTextfield(this.id);"/>
+                <menulist id="CellHeightUnits" oncommand="ChangeCellData();"/>
               </row>
               <row valign="middle" autostretch="never">
-                <checkbox id="CellWidthCheckbox" value="&tableWidth.label;"/>
-                <textfield class="narrow" id="CellWidthInput" onkeyup="ChangeIntTextfield(this.id,'CellWidthCheckbox');"/>
-                <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
+                <text class="label" value="&tableWidth.label;"/>
+                <textfield class="narrow" id="CellWidthInput" onkeyup="ChangeCellTextfield(this.id);"/>
+                <menulist id="CellWidthUnits" oncommand="ChangeCellData();"/>
               </row>
             </rows>
           </grid>
@@ -213,94 +197,73 @@
             <columns><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="RowSpanCheckbox" value="&cellRowSpan.label;"/>
-                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
+                <text class="label" value="&cellRowSpan.label;"/>
+                <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeCellTextfield(this.id);"/>
               </row>
               <row valign="middle" autostretch="never">
-                <checkbox id="ColSpanCheckbox" value="&cellColSpan.label;"/>
-                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
+                <text class="label" value="&cellColSpan.label;"/>
+                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeCellTextfield(this.id);"/>
               </row>
             </rows>
           </grid>
         </titledbox>
-        <box><!-- Alignment and style -->
-          <titledbox orient="vertical" flex="1">
-            <title align="left" value="&cellContentAlignment.label;"/>
-            <grid>
-              <columns><column/><column/><column/></columns>
-              <rows>
-                <row valign="middle" autostretch="never">
-                  <checkbox id="CellHAlignCheckbox" value="&cellHorizontal.label;"/>
-                  <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
-                    <menupopup>
-                      <menuitem value="&AlignLeft.label;"        data="left"/>
-                      <menuitem value="&AlignCenter.label;"      data="center"/>
-                      <menuitem value="&AlignRight.label;"       data="right"/>
-                      <menuitem value="&cellAlignJustify.label;" data="justify"/>
-                      <menuitem value="&cellAlignAtChar.label;"  data="char"/>
-                    </menupopup>
-                  </menulist>
-                  <textfield id="CellAlignCharInput" style="width: 2em"/>
-                </row>
-                <spring class="bigspacer"/>
-                <row valign="middle" autostretch="never">
-                  <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
-                  <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
-                    <menupopup>
-                      <menuitem value="&cellAlignTop.label;"    data="top"/>
-                      <menuitem value="&cellAlignMiddle.label;" data="middle"/>
-                      <menuitem value="&cellAlignBottom.label;" data="bottom"/>
-                    </menupopup>
-                  </menulist>
-                  <spring/>
-                </row>
-              </rows>
-            </grid>
-          </titledbox>
-          <spring class="spacer"/>
-          <box orient="vertical">
-            <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
-            <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
-              <menupopup>
-                <menuitem value="&cellNormal.label;" data="td"/>
-                <menuitem value="&cellHeader.label;" data="th"/>
-              </menupopup>
-            </menulist>
-            <spring class="spacer"/>
-            <checkbox id="TextWrapCheckbox" value="&cellTextWrap.label;"/>
-            <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
-              <menupopup>
-                <menuitem value="&cellWrap.label;" data="wrap"/>
-                <menuitem value="&cellNoWrap.label;" data="nowrap"/>
-              </menupopup>
-            </menulist>
+
+        <!-- Alignment -->
+        <titledbox valign="middle" autostretch="never">
+          <title value="&cellContentAlignment.label;"/>
+          <text class="label" value="&cellHorizontal.label;"/>
+          <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
+            <menupopup>
+              <menuitem value="&AlignLeft.label;"        data="left"/>
+              <menuitem value="&AlignCenter.label;"      data="center"/>
+              <menuitem value="&AlignRight.label;"       data="right"/>
+              <menuitem value="&cellAlignJustify.label;" data="justify"/>
+              <menuitem value="&cellAlignAtChar.label;"  data="char"/>
+            </menupopup>
+          </menulist>
+          <box style="width: 5em min-width: 5em">
+            <!-- We collapse this if not needed, so box preserves space -->
+            <textfield id="CellAlignCharInput" style="width: 2em"/>
           </box>
-        </box><!-- Alignment and Style -->
+          <spring flex="1"/>
+          <text class="label" value="&cellVertical.label;"/>
+          <menulist id="CellVAlignList" oncommand="ChangeCellData();">
+            <menupopup>
+              <menuitem value="&cellAlignTop.label;"    data="top"/>
+              <menuitem value="&cellAlignMiddle.label;" data="middle"/>
+              <menuitem value="&cellAlignBottom.label;" data="bottom"/>
+            </menupopup>
+          </menulist>
+        </titledbox>
         <spring class="spacer"/>
-        <box>
-          <text class="label" value="&backgroundColor.label;"/>
+        
+        <box valign="middle" autostretch="never">
           <spring class="spacer"/>
-          <menu class="colorpicker">
-    	      <box>
+          <checkbox id="HeaderCheck" value="&cellHeader.label;"/>
+          <spring class="bigspacer"/>
+          <checkbox id="NoWrapCheck"  value="&cellNoWrap.label;"/>
+        </box>
+
+        <separator class="groove-thin tb-margin"/>
+        <box valign="middle" autostretch="never">
+          <text class="label" value="&backgroundColor.label;"/>
+          <stack>
+    	      <box autostretch="never" valign="middle">
               <spring id="cellBackgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-    	      <menupopup>
-              <colorpicker id="cellBackgroundCP" palettename="standard"
-                  onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
-              <button class="dialog" value="&defaultColor.label;"
-                  oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
-    	      </menupopup>
-          </menu>
+            <button class="dialog color-button" onclick="GetColorAndUpdate('cellBackgroundCW')" flex="1"/>
+          </stack>
           <spring class="spacer"/>
           <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
         </box>
-        <spring class="spacer"/>
+        <separator class="groove-thin tb-margin"/>
         <box autostretch="never">
-          <html  class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</html>
           <!-- From EdDialogOvlerlay.xul -->
+          <spring flex="1"/>
           <button class="dialog" id="AdvancedEditButton2"/>
         </box>
+        <spring class="spacer"/>
       </box><!-- Cell Panel -->
 
     </tabpanel> 

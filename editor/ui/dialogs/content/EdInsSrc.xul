@@ -58,7 +58,7 @@
     <text class="bold" value="&exampleCloseTag.label;"/>
   </box>
   <spring class="spacer"/>
-  <separator class="groove"/>
+  <separator class="groove-thin tb-margin"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
 </window>

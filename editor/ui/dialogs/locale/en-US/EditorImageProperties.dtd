@@ -36,13 +36,14 @@
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
-
 <!-- These controls are in the Dimensions box of the expanded area -->
 <!ENTITY dimensionsBox.label "Dimensions">
-<!ENTITY originalSizeRadio.label "Original Size">
-<!ENTITY originalSizeRadio.tooltip "Revert to the image's original size">
+<!-- actualSize.label should be same as actualSizeRadio.label + ":" -->
+<!ENTITY actualSize.label "Actual Size:">
+<!ENTITY actualSizeRadio.label "Actual Size">
+<!ENTITY actualSizeRadio.tooltip "Revert to the image's actual size">
 <!ENTITY customSizeRadio.label "Custom Size">
-<!ENTITY customSizeRadio.tooltip "Change the image's original size">
+<!ENTITY customSizeRadio.tooltip "Change the image's size as displayed in the page">
 <!ENTITY heightEditField.label "Height:">
 <!ENTITY widthEditField.label "Width:">
 <!ENTITY constrainCheckbox.label "Constrain">
