@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsContentIterator.cpp \
 		nsContentList.cpp \
 		nsContentPolicy.cpp \
+		nsCopySupport.cpp \
 		nsDocument.cpp \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \

@@ -172,6 +172,14 @@ public:
   NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
 
   /**
+   *  Get the mime type preferred by the encoder.  This piece of api was
+   *  added because the copy encoder may need to switch mime types on you
+   *  if you ask it to copy html that really represents plaintext content.
+   *  Call this AFTER Init() and SetSelection() have both been called.
+   */
+  NS_IMETHOD GetMimeType(nsAWritableString& aMimeType) = 0;
+  
+  /**
    *  The document is encoded, the result is sent to the 
    *  to nsIOutputStream.
    * 

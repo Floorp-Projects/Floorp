@@ -36,6 +36,7 @@ CPPSRCS =				\
 	nsContentList.cpp		\
 	nsContentIterator.cpp		\
 	nsContentPolicy.cpp \
+	nsCopySupport.cpp   \
 	nsDocument.cpp			\
 	nsDocumentEncoder.cpp		\
 	nsDocumentFragment.cpp		\
@@ -87,6 +88,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsContentIterator.obj 	\
 	.\$(OBJDIR)\nsContentPolicy.obj         \
+	.\$(OBJDIR)\nsCopySupport.obj         \
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentEncoder.obj	\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\

@@ -117,8 +117,6 @@
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
-#include "nsITransferable.h"
-#include "nsIFormatConverter.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
@@ -126,8 +124,8 @@
 #include "nsIScrollableFrame.h"
 #include "prtime.h"
 #include "prlong.h"
-#include "nsIDocumentEncoder.h"
 #include "nsIDragService.h"
+#include "nsCopySupport.h"
 
 // Dummy layout request
 #include "nsIChannel.h"
@@ -167,10 +165,6 @@ static nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
 #define kStyleWatchStart   8
 #define kStyleWatchStop    16
 #define kStyleWatchReset   32
-
-// private clipboard data flavors for html copy, used by editor when pasting
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
@@ -3572,9 +3566,7 @@ PresShell::DoCopy()
   if (!doc) return NS_ERROR_FAILURE;
   
   nsresult rv;
-
   nsCOMPtr<nsISelection> sel;
-  
   nsCOMPtr<nsIEventStateManager> manager;
   nsCOMPtr<nsIContent> content;
   rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
@@ -3612,73 +3604,10 @@ PresShell::DoCopy()
   if (isCollapsed)
     return NS_OK;
 
-  nsCOMPtr<nsIDocumentEncoder> docEncoder;
-
-  docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
-
-  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
-  docEncoder->SetSelection(sel);
-
-  nsAutoString buffer, parents, info;
-  
-  rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
-  if (NS_FAILED(rv)) 
+  // call the copy code
+  rv = nsCopySupport::HTMLCopy(sel, doc, nsIClipboard::kGlobalClipboard);
+  if (NS_FAILED(rv))
     return rv;
-  
-  // Get the Clipboard
-  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  if ( clipboard ) 
-  {
-    // Create a transferable for putting data on the Clipboard
-    nsCOMPtr<nsITransferable> trans;
-    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                            NS_GET_IID(nsITransferable), 
-                                            getter_AddRefs(trans));
-    if ( trans ) 
-    {
-      // set up the data converter
-      nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kHTMLConverterCID);
-      NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
-      trans->SetConverter(htmlConverter);
-      
-      // Add the html DataFlavor to the transferable
-      trans->AddDataFlavor(kHTMLMime);
-      // Add the htmlcontext DataFlavor to the transferable
-      trans->AddDataFlavor(kHTMLContext);
-      // Add the htmlinfo DataFlavor to the transferable
-      trans->AddDataFlavor(kHTMLInfo);
-      
-      // get wStrings to hold clip data
-      nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
-      dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-      contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-      NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
-      infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-      NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
-
-      // populate the strings
-      dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
-      contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.GetUnicode()) );
-      infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.GetUnicode()) );
-      
-      // QI the data object an |nsISupports| so that when the transferable holds
-      // onto it, it will addref the correct interface.
-      nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
-      trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
-      genericDataObj = do_QueryInterface(contextWrapper);
-      trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
-      genericDataObj = do_QueryInterface(infoWrapper);
-      trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
-
-      // put the transferable on the clipboard
-      clipboard->SetData(trans, nsnull, nsIClipboard::kGlobalClipboard);
-    }
-  }
   
   // Now that we have copied, update the Paste menu item
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
