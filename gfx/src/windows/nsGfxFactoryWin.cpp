@@ -27,7 +27,7 @@
 #include "nsRegionWin.h"
 #include "nsBlenderWin.h"
 #include "nsDeviceContextSpecWin.h"
-#include "nsDeviceContextSpecFactoryWin.h"
+#include "nsDeviceContextSpecFactoryW.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);

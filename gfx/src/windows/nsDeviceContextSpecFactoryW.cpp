@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsDeviceContextSpecFactoryWin.h"
+#include "nsDeviceContextSpecFactoryW.h"
 #include "nsDeviceContextSpecWin.h"
 #include <windows.h>
 #include <commdlg.h>

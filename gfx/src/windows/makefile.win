@@ -42,7 +42,7 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsBlenderWin.obj				\
 	.\$(OBJDIR)\nsRegionWin.obj          \
 	.\$(OBJDIR)\nsDeviceContextSpecWin.obj          \
-	.\$(OBJDIR)\nsDeviceContextSpecFactoryWin.obj          \
+	.\$(OBJDIR)\nsDeviceContextSpecFactoryW.obj          \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
 
