@@ -166,8 +166,13 @@ native_netscape_javascript_JSObject_getMember(
 
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-					     (const jbyte *) cx->charSetName,
-					     (jint) cx->charSetNameLength))) {
+                       NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
+
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal member name");
         member = NULL;
@@ -242,8 +247,13 @@ native_netscape_javascript_JSObject_setMember(
 
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-					     (const jbyte *) cx->charSetName,
-					     (jint) cx->charSetNameLength))) {
+                                             NULL, 0) {
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
+
         js_throwJSException(env, "illegal member name");
         goto do_exit;
     }
@@ -309,8 +319,12 @@ native_netscape_javascript_JSObject_removeMember(
 #ifdef JAVA
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-					     (const jbyte *) cx->charSetName,
-					     (jint) cx->charSetNameLength))) {
+                                             NULL, 0) {
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal member name");
         goto do_exit;
@@ -354,8 +368,12 @@ native_netscape_javascript_JSObject_call(
 
     if (! method ||
         ! (cstr = JRI_GetStringPlatformChars(env, method,
-					     (const jbyte *) cx->charSetName,
-					     (jint) cx->charSetNameLength))) {
+                                             NULL, 0) {
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal member name");
         ret = NULL;
@@ -424,8 +442,12 @@ native_netscape_javascript_JSObject_eval(
 
     if (! s ||
         ! (cstr = JRI_GetStringPlatformChars(env, s,
-					     (const jbyte *) cx->charSetName,
-					     (jint) cx->charSetNameLength))) {
+                                             NULL, 0) {
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength) {
+    */
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal eval string");
         ret = NULL;
@@ -507,15 +529,24 @@ native_netscape_javascript_JSObject_toString(
         ret = JRI_NewStringPlatform(env,
 				    (const jbyte *) cstr,
 				    (jint) JS_GetStringLength(jsstr),
-				    (const jbyte *) cx->charSetName,
-				    (jint) cx->charSetNameLength);
+                                    NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
+
     } else {
         /* FIXME could grab the clazz name from the JSObject */
         ret = JRI_NewStringPlatform(env,
 				    (const jbyte *) "*JSObject*",
 				    (jint) strlen("*JSObject*"),
-				    (const jbyte *) cx->charSetName,
-				    (jint) cx->charSetNameLength);
+                                    NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
     }
 #endif
 

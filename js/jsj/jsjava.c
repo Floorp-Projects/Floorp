@@ -1200,8 +1200,12 @@ js_isSubclassOf(JSContext *cx, ClassClass *cb1, ClassClass *cb2)
 	message = (char *)
 	    JRI_GetStringPlatformChars((JRIEnv *) ee,
 				       (struct java_lang_String *) hdetail,
-				       (const jbyte *) cx->charSetName,
-				       (jint) cx->charSetNameLength);
+                                       NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
 
 	PR_LOG(MojaSrc, error,
                ("exception in is_subclass_of %s (\"%s\")",
@@ -1417,8 +1421,12 @@ js_convertJSValueToJObject(HObject **objp, JSContext *cx,
 		  JRI_NewStringPlatform((JRIEnv *) ee,
 					(const jbyte *) JS_GetStringBytes(str),
 					(jint) JS_GetStringLength(str),
-					(const jbyte *) cx->charSetName,
-					(jint) cx->charSetNameLength);
+                                        NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
 	    }
 	    return JS_TRUE;
 	}
@@ -2104,8 +2112,13 @@ js_convertJObjectToJSString(JSContext *cx, HObject *ho, JSBool isClass,
 	cstr = (char *)
 	    JRI_GetStringPlatformChars((JRIEnv *) ee,
 				       (struct java_lang_String *) hstr,
-				       (const jbyte *) cx->charSetName,
-				       (jint) cx->charSetNameLength);
+                                       NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
+
 	if (cstr)
 	    cstr = strdup(cstr);
     }
@@ -3436,8 +3449,13 @@ js_JExceptionToJSError(JSContext *cx, ExecEnv *ee)
 	    message = (char *)
 		JRI_GetStringPlatformChars((JRIEnv *) ee,
 					   (struct java_lang_String *) hdetail,
-					   (const jbyte *) cx->charSetName,
-					   (jint) cx->charSetNameLength);
+                                           NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
+
 	    PR_LOG(MojaSrc, debug,
                    ("m-j converted exception %s, \"%s\" to error cx=0x%x ee=0x%x",
 		    cbName(cb), message, cx, ee));
@@ -3643,8 +3661,12 @@ js_FindJavaClass_stub(void *d)
 	message = (char *)
 	    JRI_GetStringPlatformChars((JRIEnv *) ee,
 				       (struct java_lang_String *) hdetail,
-				       (const jbyte *) data->cx->charSetName,
-				       (jint) data->cx->charSetNameLength);
+                                       NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
 
 	PR_LOG(MojaSrc, debug,
                ("exception in is_subclass_of %s (\"%s\")",

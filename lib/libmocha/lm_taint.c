@@ -793,8 +793,12 @@ printPrincipalsToConsole(JSContext *cx, JSPrincipals *principals)
         javaString = netscape_security_Principal_getVendor(env, principal);
         if (javaString) {
             const char *s = JRI_GetStringPlatformChars(env, javaString,
-                                     (const jbyte *)cx->charSetName,
-                                     (jint)cx->charSetNameLength);
+                                                       NULL, 0);
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
             if (s == NULL) {
                 JS_ReportOutOfMemory(cx);
                 return;
