@@ -1241,27 +1241,30 @@ mips-nec-sysv*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(NETBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
-    if test -z "$OBJECT_FMT"; then
-        if echo __ELF__ | ${CC-cc} -E - | grep -q __ELF__ 2>/dev/null; then
-            OBJECT_FMT=a.out;
-        else
-            OBJECT_FMT=ELF
-        fi
-    fi
-    if test "$OBJECT_FMT" = "ELF"; then
-        DLL_SUFFIX=so
-    else
-        DLL_SUFFIX=so.1.0
-    fi
-    CFLAGS="$CFLAGS -ansi -Wall -pipe"
-    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
-    DSO_CFLAGS='-fPIC -DPIC'
-    DSO_LDOPTS='-x -shared'
-    if test "$LIBRUNPATH"; then
-        DSO_LDOPTS="$DSO_LDOPTS -R$(LIBRUNPATH)"
-    fi
+    USE_NSPR_THREADS=1
     MDCPUCFG_H=_netbsd.cfg
     PR_MD_CSRCS=netbsd.c
+
+    DSO_CFLAGS='-fPIC -DPIC'
+    CFLAGS="$CFLAGS -ansi -Wall -pipe"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    MKSHLIB='$(CC) -o $@ $(DSO_LDOPTS)'
+
+    if test -z "$OBJECT_FMT"; then
+        if echo __ELF__ | ${CC-cc} -E - | grep -q __ELF__ 2>/dev/null; then
+            OBJECT_FMT=a.out
+            DLL_SUFFIX=so.1.0
+            DSO_LDOPTS='-shared'
+        else
+            OBJECT_FMT=ELF
+            DLL_SUFFIX=so
+            DSO_LDOPTS='-shared -Wl,-soname,$(notdir $@)'
+        fi
+    fi
+
+    if test "$LIBRUNPATH"; then
+        DSO_LDOPTS="$DSO_LDOPTS -Wl,-R$LIBRUNPATH"
+    fi
     ;;
 
 mips-sony-newsos*)
@@ -1958,7 +1961,7 @@ dnl Special thread exceptions
 case "$target" in
 *-aix*)
     if test -n "$USE_NSPR_THREADS"; then
-        AC_DEFINE(-D_PR_LOCAL_THREADS_ONLY)
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     case "$target_os" in
     aix4.1*)
@@ -1988,7 +1991,7 @@ case "$target" in
     ;;
 *-freebsd*)
     if test -n "$USE_NSPR_THREADS"; then
-        AC_DEFINE(-D_PR_LOCAL_THREADS_ONLY)
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
 *-hpux*)
@@ -2028,13 +2031,13 @@ case "$target" in
     USE_USER_PTHREADS=
     ;;
 *-netbsd*)
-    if test -z "$USE_PTHREADS"; then
-        OS_LIBS="$OS_LIBS -lc"
+    if test -n "$USE_NSPR_THREADS"; then
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
-    ;;    
+    ;;
 *-osf*)
     if test -n "$USE_NSPR_THREADS"; then
-        AC_DEFINE(-D_PR_LOCAL_THREADS_ONLY)
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     if test -n "$USE_PTHREADS"; then
         if echo $OS_RELEASE | egrep -c '(V2.0|V3.2)' 2>/dev/null; then
@@ -2048,11 +2051,11 @@ case "$target" in
     if test -n "$USE_NATIVE_THREADS"; then
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     else
-        if test -n "$USE_USER_PTHREADS"; then
+        if test -n "$USE_NSPR_THREADS"; then
             AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
         fi
     fi
-    if test -z "$USE_USER_PTHREADS"; then
+    if test -z "$USE_NSPR_THREADS"; then
         AC_DEFINE(_REENTRANT)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
         if test "$OS_TEST" = "i86pc"; then
