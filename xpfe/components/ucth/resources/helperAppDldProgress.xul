@@ -1,0 +1,117 @@
+<?xml version="1.0"?> 
+
+ <!-- -*- Mode: HTML -*- -->
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-2000 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+  Scott MacGregor <mscott@netscape.com>
+
+ -->
+
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+  		  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        orient="vertical"
+        title="&downloadWindow.title;"
+        onload="onLoad()"
+        style="width: 36em;"
+        onunload="onUnload()">
+
+    <script src="chrome://global/content/helperAppDldProgress.js"></script>
+
+    <!-- This is non-visible content that simply adds translatable string
+         into the document so that it is accessible to JS code.
+         
+         XXX-TODO: 
+          convert to use string bundles. 
+    -->
+  
+    <data id="dialog.strings.confirmCancel">&confirmCancel;</data>
+    <data id="dialog.strings.progressMsg">&progressMsg;</data>
+    <data id="dialog.strings.completeMsg">&completeMsg;</data>
+    <data id="dialog.strings.percentMsg">&percentMsg;</data>
+    <data id="dialog.strings.shortTimeFormat">&shortTimeFormat;</data>
+    <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
+    <data id="dialog.strings.unknownTime">&unknownTime;</data>
+
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      
+      <rows>
+        <row>
+          <box autostretch="never" halign="right">
+            <text class="label" value="&location;"/>
+          </box>
+          <textfield id="dialog.location" class="scrollfield" readonly="" flex="1"/>
+        </row>
+        <separator class="thin"/>
+        <row>
+          <box autostretch="never" halign="right">
+            <text class="label" value="&saving;"/>
+          </box>
+          <textfield id="dialog.fileName" class="scrollfield" readonly="" flex="1"/>
+        </row>
+        <separator class="thin"/>
+        <row>
+          <box autostretch="never" halign="right">
+            <text class="label" value="&status;"/>
+          </box>
+          <text class="label" id="dialog.status" value="&#160;" flex="1"/>
+        </row>
+        <separator class="thin"/>
+        <row>
+          <box autostretch="never" halign="right">
+            <text class="label" value="&timeLeft;"/>
+          </box>
+          <text class="label" id="dialog.timeLeft" value="&#160;"/>
+        </row>
+        <separator class="thin"/>
+        <row>
+          <box autostretch="never" halign="right">
+            <text class="label" value="&timeElapsed;"/>
+          </box>
+          <text class="label" id="dialog.timeElapsed" value="&#160;"/>
+        </row>
+        <separator class="thin"/>
+        <row>
+          <spring/>
+          <progressmeter id="dialog.progress" mode="normal" value="0"/>
+        </row>
+      </rows>
+    </grid>
+    
+    <separator/>
+    
+    <box id="CancelButton">
+      <spring flex="1"/>
+      <button class="dialog" id="cancel" value="&dialogCancel.label;" onclick="doCancelButton()"/>
+      <spring flex="1"/>
+    </box>
+
+</window>
