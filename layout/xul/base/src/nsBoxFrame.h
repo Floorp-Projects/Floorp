@@ -38,6 +38,8 @@ class nsHTMLReflowCommand;
 class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
     nsSize calculatedSize;
+    PRBool prefWidthIntrinsic;
+    PRBool prefHeightIntrinsic;
     PRBool sizeValid;
     PRBool needsReflow;
     PRBool needsRecalc;
@@ -113,7 +115,7 @@ public:
 protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
-    virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
+    virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult FlowChildren(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,

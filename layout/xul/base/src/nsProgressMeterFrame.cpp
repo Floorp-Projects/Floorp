@@ -338,7 +338,7 @@ nsProgressMeterFrame :: Paint ( nsIPresContext& aPresContext,
   // get our border
 	const nsStyleSpacing* spacing =
 		(const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	nsMargin border;
+	nsMargin border(0,0,0,0);
 	spacing->CalcBorderFor(this, border);
 
 	const nsStyleColor* colorStyle =
