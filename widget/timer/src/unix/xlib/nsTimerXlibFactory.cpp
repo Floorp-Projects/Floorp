@@ -19,153 +19,33 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 
 #include "nsTimerXlib.h"
 
-#include "nsUnixTimerCIID.h"
+/* Same CID for Xlib as GTK. Originally CID's were in 
+ * widget/timer/src/unix/nsUnixTimerCIID.h but wont use this for now.
+ * May become an future issue.
+ */
 
-#include "nsIFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
+// {48B62AD2-48D3-11d3-B224-000064657374}
+#define NS_TIMER_XLIB_CID \
+{ 0x48b62ad2, 0x48d3, 0x11d3, \
+  { 0xb2, 0x24, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
-static NS_DEFINE_CID(kCTimerXlib, NS_TIMER_XLIB_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerXlib)
 
-class nsTimerXlibFactory : public nsIFactory
+static nsModuleComponentInfo components[] =
 {
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  nsTimerXlibFactory(const nsCID &aClass);
-  virtual ~nsTimerXlibFactory();
-
-private:
-  nsCID mClassID;
-
+  { "XLIB timer",
+    NS_TIMER_XLIB_CID,
+    "component://netscape/timer", 
+    nsTimerXlibConstructor }
 };
 
-nsTimerXlibFactory::nsTimerXlibFactory(const nsCID &aClass) :
-  mRefCnt(0),
-  mClassID(aClass)
-{   
-}   
-
-nsTimerXlibFactory::~nsTimerXlibFactory()   
-{   
-}   
-
-NS_IMPL_ISUPPORTS(nsTimerXlibFactory, NS_GET_IID(nsIFactory))
-
-
-NS_IMETHODIMP
-nsTimerXlibFactory::CreateInstance(nsISupports *aOuter,  
-                                const nsIID &aIID,  
-                                void **aResult)  
-{  
-  if (aResult == nsnull)
-    return NS_ERROR_NULL_POINTER;  
-
-  *aResult = nsnull;  
-  
-  nsISupports *inst = nsnull;
-
-  if (mClassID.Equals(kCTimerXlib)) 
-  {
-    inst = (nsISupports *)(nsTimerXlib *) new nsTimerXlib();
-  }
-
-  if (inst == nsnull) 
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-
-  if (rv != NS_OK) 
-    delete inst;
-  
-  return rv;
-}
-
-nsresult nsTimerXlibFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.  
-  return NS_OK;
-}
-
-nsresult
-NSGetFactory(nsISupports* servMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aFactory = new nsTimerXlibFactory(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
-  
-}
-
-PRBool
-NSCanUnload(nsISupports* aServMgr)
-{
-  return PR_FALSE;
-}
-
-nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
-{
-  nsresult rv;
-
-#ifdef NS_DEBUG
-  printf("*** Registering XLIB timer\n");
-#endif
-
-  nsCOMPtr<nsIServiceManager>
-    serviceManager(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kCTimerXlib,
-                                  "XLIB timer",
-                                  "component://netscape/timer/unix/xlib",
-                                  fullpath,
-                                  PR_TRUE, 
-                                  PR_TRUE);
-  
-  return rv;
-}
-
-nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
-{
-
-  nsresult rv;
-  nsCOMPtr<nsIServiceManager>
-    serviceManager(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  compMgr->UnregisterComponent(kCTimerXlib, fullpath);
-  
-  return NS_OK;
-}
+NS_IMPL_NSGETMODULE("nsXlibTimerModule", components)
