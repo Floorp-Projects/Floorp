@@ -359,7 +359,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // reflow on this binding doc to deal with the fact that iframes
     // don't construct or load their subdocs until they get a reflow.
     if (count > 0) {
-      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
       nsCOMPtr<nsIDocument> document;
       req->mBoundElement->GetDocument(*getter_AddRefs(document));
       if (document)
