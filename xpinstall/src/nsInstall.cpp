@@ -725,6 +725,7 @@ nsInstall::Execute(const nsString& aJarSource, PRInt32* aReturn)
 PRInt32    
 nsInstall::FinalizeInstall(PRInt32* aReturn)
 {
+    PRInt32 result;
     PRBool  rebootNeeded = PR_FALSE;
 
     *aReturn = SanityCheck();
@@ -762,7 +763,6 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                         PR_FALSE );
         }
 
-        PRInt32 result;
         nsInstallObject* ie = nsnull;
 
         for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
@@ -823,7 +823,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         }
    }
 
-    CleanUp();
+    if((result == nsInstall::SUCCESS) || (result == REBOOT_NEEDED))
+        CleanUp();
 
     return NS_OK;
 }
