@@ -28,7 +28,6 @@ MODULE		= mozpango-dvngx
 LIBRARY_NAME	= mozpango-dvngx
 # See bug 201167 ("No CTL support in StaticBuilds")
 FORCE_SHARED_LIB = 1
-EXPORT_LIBRARY	= 1
 EXTRA_DSO_LIBS	= mozpango
 
 CSRCS		= \
