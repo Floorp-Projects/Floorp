@@ -195,6 +195,12 @@ protected:
     **/
     double evaluateToNumber(Expr* expr, Node* context, ContextState* cs);
 
+    /*
+     * Evaluates the given Expression and converts it's result to a NodeSet.
+     * If the result is not a NodeSet NULL is returned.
+     */
+    NodeSet* evaluateToNodeSet(Expr* aExpr, Node* aContext, ContextState* aCs);
+
     String name;
 }; //-- FunctionCall
 

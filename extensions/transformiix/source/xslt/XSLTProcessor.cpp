@@ -1648,7 +1648,7 @@ void XSLTProcessor::processAttributeSets
         return;
 
     //-- split names
-    Tokenizer tokenizer(names);
+    txTokenizer tokenizer(names);
     String name;
     while ( tokenizer.hasMoreTokens() ) {
         tokenizer.nextToken(name);

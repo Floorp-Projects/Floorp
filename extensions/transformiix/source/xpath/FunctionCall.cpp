@@ -139,6 +139,33 @@ double FunctionCall::evaluateToNumber(Expr* expr, Node* context,
     return result;
 } //-- evaluateToNumber
 
+/*
+ * Evaluates the given Expression and converts its result to a NodeSet.
+ * If the result is not a NodeSet NULL is returned.
+ */
+NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr,
+                                         Node* aContext,
+                                         ContextState* aCs)
+{
+    NS_ASSERTION(aExpr, "Missing expression to evaluate");
+
+    ExprResult* exprResult = aExpr->evaluate(aContext, aCs);
+    if (!exprResult)
+        return 0;
+
+    if (exprResult->getResultType() != ExprResult::NODESET) {
+        String err("NodeSet expected as argument");
+        aCs->recieveError(err);
+        delete exprResult;
+        return 0;
+    }
+
+    NodeSet* nodes = (NodeSet*)exprResult;
+    aCs->sortByDocumentOrder(nodes);
+
+    return nodes;
+}
+
 /**
  * Called to check number of parameters
 **/

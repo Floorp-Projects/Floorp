@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -28,7 +29,7 @@
  */
 
 /**
- * Tokenizer
+ * txTokenizer
  * A simple String tokenizer
 **/
 
@@ -39,48 +40,31 @@
 #include "baseutils.h"
 #include "TxString.h"
 
-class Tokenizer {
-
+class txTokenizer
+{
 public:
 
-      //----------------/
-     //- Constructors -/
-    //----------------/
+    /*
+     * Creates a new txTokenizer using the given source string
+     */
+    txTokenizer(const String& aSource);
 
-    /**
-     * Creates a new Tokenizer
-    **/
-    Tokenizer();
-
-    /**
-     * Creates a new Tokenizer using the given source string,
-     * uses the default set of tokens (' ', '\r', '\n', '\t');
-    **/
-    Tokenizer(const String& source);
-
-    /**
-     * Creates a new Tokenizer using the given source string
-     * and set of character tokens
-    **/
-    Tokenizer(const String& source, const String& tokens);
-
-
-    /**
-     * Default Destructor
-    **/
-    virtual ~Tokenizer();
-
+    /*
+     * Checks if any more tokens are avalible
+     */
     MBool hasMoreTokens();
 
-    void nextToken(String& buffer);
+    /*
+     * Sets aBuffer to value of next token
+     */
+    void nextToken(String& aBuffer);
 
 private:
 
-    PRInt32 currentPos;
-    PRInt32 size;
-    String str;
-    String delimiters;
+    PRInt32 mCurrentPos;
+    PRInt32 mSize;
+    String mSource;
 
-}; //-- Tokenizer
+};
 #endif
 
