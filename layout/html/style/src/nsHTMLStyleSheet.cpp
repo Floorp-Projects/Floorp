@@ -325,6 +325,8 @@ protected:
                             nsIFrame*   aParentFrame,
                             nsIFrame*&  aFrame);
 
+  PRBool IsScrollable(nsIFrame* aFrame, const nsStyleDisplay* aDisplay);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -1351,6 +1353,28 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   return rv;
 }
 
+PRBool
+HTMLStyleSheetImpl::IsScrollable(nsIFrame*             aFrame,
+                                 const nsStyleDisplay* aDisplay)
+{
+  // If the overflow property is scroll then it's scrollable regardless
+  // of whether the content overflows the block.
+  // XXX This isn't correct. Only do this if the height is not allowed to
+  // grow to accomodate its child frames...
+  if (NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) {
+    return PR_TRUE;
+  }
+
+#if 0
+  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
+  // If the element has a fixed height (it isn't auto) and an overflow
+  // property of scroll or auto, then it's potentially scrollable.
+  // XXX Deal with width considerations, too
+      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
+#endif
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
@@ -1406,20 +1430,32 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 
         }
 
-#if 0
-        // If the frame is a block-level frame and it has a fixed height and overflow
-        // property of scroll, then wrap it in a scroll frame.
-        // XXX Deal with replaced elements and overflow of auto and width, too
-        nsIFrame* kidFrame = nsnull;
-        nsresult rv;
-        if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
-            (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
-          rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
-          if (NS_OK == rv) {
-            kidFrame->SetStyleContext(aPresContext, kidSC);
+        // If the frame is a block-level frame and is scrollable then wrap it
+        // in a scroll frame.
+        // XXX Applies to replaced elements, too, but how to tell if the element
+        // is replaced?
+        if (nsnull != aFrameSubTree) {
+          if (display->IsBlockLevel() && IsScrollable(aFrameSubTree, display)) {
+            nsIFrame* scrollFrame;
+  
+            if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+              // The scroll frame gets the original style context, and the scrolled
+              // frame gets a pseudo style context.
+              // XXX Is this the best way to do this?
+              scrollFrame->SetStyleContext(aPresContext, styleContext);
+
+              nsIStyleContext*  pseudoStyle;
+              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
+                                                                       scrollFrame);
+              aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
+              NS_RELEASE(pseudoStyle);
+
+              // Initialize the scroll frame
+              scrollFrame->Init(*aPresContext, aFrameSubTree);
+              aFrameSubTree = scrollFrame;
+            }
           }
         }
-#endif
       }
     }
     NS_RELEASE(styleContext);
