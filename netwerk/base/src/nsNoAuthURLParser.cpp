@@ -268,7 +268,9 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
             CRTFREEIF(dirfile);
             dirfile = tempdir.ToNewCString();
             if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
-        } else {
+        } 
+#if 0
+        else {
           // if it is not beginning with a drive and 
           // there are no three slashes then add them and
           // take it as an unc path 
@@ -289,6 +291,7 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
                 if (!dirfile) return NS_ERROR_OUT_OF_MEMORY;
             }
         } 
+#endif
 #endif
         CoaleseDirs(dirfile);
         // Get length again

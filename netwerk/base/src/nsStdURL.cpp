@@ -41,6 +41,7 @@
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
+#include <direct.h>
 #endif
 
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
@@ -1034,6 +1035,19 @@ nsStdURL::GetFile(nsIFile * *aFile)
              path.Insert(host, 0);
          }
     }
+    
+    if ((path.CharAt(0) == '/' && path.CharAt(1) == '/')) {
+        // unc path
+#ifdef DEBUG_dougt
+        printf("+++ accessing UNC path\n");
+#endif
+    }
+    else if (path.CharAt(1) != ':') {
+        char driveLetter = toupper( _getdrive() ) + 'A' - 1;
+        path.Insert(driveLetter, 0);
+        path.Insert(":\\", 1);
+    }
+
     path.ReplaceChar('/', '\\');
 #endif
 
