@@ -41,18 +41,18 @@ public:
 
 // Implementation
 	static nsICommandParams * GetCommandParamObject();
-	void GetValueTypeTest(const char *, const char *);
-	void GetBooleanValueTest(const char *, const char *);
-	void GetLongValueTest(PRInt32, const char *);
-	void GetDoubleValueTest(double, const char *);
-	void GetStringValueTest(char *, const char *);
-	void GetCStringValueTest(const char *, const char *);
+	void GetValueTypeTest(const char *, const char *, int);
+	void GetBooleanValueTest(const char *, const char *, int);
+	void GetLongValueTest(PRInt32, const char *, int);
+	void GetDoubleValueTest(double, const char *, int);
+	void GetStringValueTest(char *, const char *, int);
+	void GetCStringValueTest(const char *, const char *, int);
 
-	void SetBooleanValueTest(PRBool, const char *);
-	void SetLongValueTest(PRInt32, const char *);
-	void SetDoubleValueTest(double, const char *);
-	void SetStringValueTest(char *, const char *);
-	void SetCStringValueTest(char *, const char *);
+	void SetBooleanValueTest(PRBool, const char *, int);
+	void SetLongValueTest(PRInt32, const char *, int);
+	void SetDoubleValueTest(double, const char *, int);
+	void SetStringValueTest(char *, const char *, int);
+	void SetCStringValueTest(char *, const char *, int);
 
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();

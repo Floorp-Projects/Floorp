@@ -531,7 +531,10 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 
 	if (myDialog.DoModal() == IDOK)
 	{
-		rv = NS_NewURI(getter_AddRefs(theURI), myDialog.m_urlfield);
+		nsCAutoString theStr;
+
+		theStr = myDialog.m_urlfield;
+		rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 		RvTestResult(rv, "For OpenURI(): NS_NewURI() test", 1);
 		GetTheUri(theURI, 1);
 		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);

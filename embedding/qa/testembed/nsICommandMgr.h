@@ -71,10 +71,10 @@ public:
 public:
 	static nsICommandManager * GetCommandMgrObject(nsIWebBrowser *aWebBrowser);
 	static nsICommandManager * GetCommandMgrWithContractIDObject();
-	void IsCommandSupportedTest(const char *);
-	void IsCommandEnabledTest(const char *);
-	void GetCommandStateTest(const char *);
-	void DoCommandTest(const char *, const char *);
+	void IsCommandSupportedTest(const char *, int);
+	void IsCommandEnabledTest(const char *, int);
+	void GetCommandStateTest(const char *, int);
+	void DoCommandTest(const char *, const char *, int);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 // Operations
@@ -97,12 +97,13 @@ protected:
 struct CommandTest
 {
 	const char *mCmdName;
-	const char *mDoCmdParam;
-	const char *mGetCmdStateParam1;
-	const char *mGetCmdStateParam2;
-	const char *mGetCmdStateParam3;
-	const char *mGetCmdStateParam4;
-	PRBool		mGetCmdParamValue;
+	const char *mDoCmdState;
+	const char *mCmdParamState;
+	PRBool	    mBooleanValue;
+	PRInt32	    mLongValue;
+	double	    mDoubleValue;
+	char	   *mStringValue;
+	char	   *mCStringValue;
 };
 
 /////////////////////////////////////////////////////////////////////////////
