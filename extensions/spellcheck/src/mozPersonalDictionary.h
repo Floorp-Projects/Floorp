@@ -45,14 +45,47 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-
-class nsAVLTree;
+#include "nsTHashtable.h"
+#include "nsCRT.h"
 
 #define MOZ_PERSONALDICTIONARY_CONTRACTID "@mozilla.org/spellchecker/personaldictionary;1"
 #define MOZ_PERSONALDICTIONARY_CID         \
 { /* 7EF52EAF-B7E1-462B-87E2-5D1DBACA9048 */  \
 0X7EF52EAF, 0XB7E1, 0X462B, \
   { 0X87, 0XE2, 0X5D, 0X1D, 0XBA, 0XCA, 0X90, 0X48 } }
+
+class nsUniCharEntry : public PLDHashEntryHdr
+{
+public:
+  // Hash methods
+  typedef const PRUnichar* KeyType;
+  typedef const PRUnichar* KeyTypePointer;
+
+  nsUniCharEntry(const PRUnichar* aKey) : mKey(nsCRT::strdup(aKey)) {}
+  nsUniCharEntry(const nsUniCharEntry& toCopy)
+  { 
+    NS_NOTREACHED("ALLOW_MEMMOVE is set, so copy ctor shouldn't be called");
+  }
+
+  ~nsUniCharEntry()
+  { 
+    if (mKey)
+      nsCRT::free(mKey);
+  }
+ 
+  KeyType GetKey() const { return mKey; }
+  KeyTypePointer GetKeyPointer() const { return mKey; }
+  PRBool KeyEquals(KeyTypePointer aKey) const { return !nsCRT::strcmp(mKey, aKey); }
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return nsCRT::HashCode(aKey); }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  PRUnichar *mKey;
+};
+
 
 class mozPersonalDictionary : public mozIPersonalDictionary, 
                               public nsIObserver,
@@ -66,12 +99,14 @@ public:
   mozPersonalDictionary();
   virtual ~mozPersonalDictionary();
 
+  nsresult Init();
+
 protected:
   nsStringArray  mDictionary;  /* use something a little smarter eventually*/
   PRBool         mDirty;       /* has the dictionary been modified */
-  nsAVLTree     *mUnicodeTree;  /* the dictionary entries */
-  nsAVLTree     *mUnicodeIgnoreTree;  /* the ignore all entries */
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder; /*Encoder to use to compare with spellchecker word */
+  nsTHashtable<nsUniCharEntry> mDictionaryTable;
+  nsTHashtable<nsUniCharEntry> mIgnoreTable;
+  nsCOMPtr<nsIUnicodeEncoder>  mEncoder; /*Encoder to use to compare with spellchecker word */
 };
 
 #endif

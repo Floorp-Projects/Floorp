@@ -55,7 +55,7 @@
 //
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellChecker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozPersonalDictionary)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
 
 ////////////////////////////////////////////////////////////////////////
