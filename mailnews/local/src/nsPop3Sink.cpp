@@ -63,9 +63,7 @@ nsPop3Sink::~nsPop3Sink()
     PR_FREEIF(m_outputBuffer);
     NS_IF_RELEASE(m_popServer);
 	NS_IF_RELEASE(m_folder);
-
-	if (m_newMailParser)
-		delete m_newMailParser;
+    NS_IF_RELEASE(m_newMailParser);
 }
 
 nsresult
@@ -180,6 +178,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
     
     // create a new mail parser
     m_newMailParser = new nsParseNewMailState;
+    NS_IF_ADDREF(m_newMailParser);
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -192,8 +191,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
 	// we can still continue without one...
     if (NS_FAILED(rv))
 	{
-		delete m_newMailParser;
-		m_newMailParser = nsnull;
+		NS_IF_RELEASE(m_newMailParser);
 		rv = NS_OK;
 	}
 
@@ -216,8 +214,6 @@ nsPop3Sink::EndMailDelivery()
     if (m_outFileStream)
       m_outFileStream->flush();	// try this.
     m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
-    delete m_newMailParser;
-    m_newMailParser = NULL;
   }
   if (m_outFileStream)
   {

@@ -1770,11 +1770,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (!NS_SUCCEEDED(err))
     return err;
 
-	nsISupports *myThis;
-
-	QueryInterface(NS_GET_IID(nsISupports), (void **) &myThis);
-
-	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
+	nsCOMPtr <nsISupports> myISupports = do_QueryInterface(NS_STATIC_CAST(nsIMsgParseMailMsgState*, this));
 
 //	NS_RELEASE(myThis);
 	// Make sure no one else is writing into this folder
