@@ -589,15 +589,13 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
             appFileLocationProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
 
-            if (greDir)
-            {
+            if (greDir) {
 #ifdef DEBUG_dougt
-	printf("start - Registering GRE components\n");
+                printf("start - Registering GRE components\n");
 #endif
-                nsCOMPtr<nsIProperties> dirServiceP = do_QueryInterface(dirService);
-                NS_ENSURE_TRUE(dirServiceP, NS_NOINTERFACE);
-
-                rv = dirServiceP->Get(NS_GRE_COMPONENT_DIR, nsIFile::GetIID(), getter_AddRefs(greDir));
+                rv = gDirectoryService->Get(NS_GRE_COMPONENT_DIR,
+                                            NS_GET_IID(nsIFile),
+                                            getter_AddRefs(greDir));
                 if (NS_FAILED(rv)) {
                     NS_ERROR("Could not get GRE components directory!");
                     return rv;
@@ -612,15 +610,40 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                     nsComponentManagerImpl::gComponentManager->AutoRegisterNonNativeComponents(nsnull);        
 
 #ifdef DEBUG_dougt
-	printf("end - Registering GRE components\n");
+                printf("end - Registering GRE components\n");
 #endif          
-				if (NS_FAILED(rv))
-                {
+                if (NS_FAILED(rv)) {
                     NS_ERROR("Could not AutoRegister GRE components");
                     return rv;
                 }
             }
         }
+
+        //
+        // If additional component directories have been specified, then
+        // register them as well.
+        //
+
+        nsCOMPtr<nsISimpleEnumerator> dirList;
+        gDirectoryService->Get(NS_XPCOM_COMPONENT_DIR_LIST,
+                               NS_GET_IID(nsISimpleEnumerator),
+                               getter_AddRefs(dirList));
+        if (dirList) {
+            PRBool hasMore;
+            while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
+                nsCOMPtr<nsISupports> elem;
+                dirList->GetNext(getter_AddRefs(elem));
+                if (elem) {
+                    nsCOMPtr<nsIFile> dir = do_QueryInterface(elem);
+                    if (dir)
+                        nsComponentManagerImpl::gComponentManager->AutoRegister(dir);
+
+                    // XXX should we worry about new component loaders being
+                    // XXX defined by this process?
+                }
+            }
+        }
+
     }
     
     // Pay the cost at startup time of starting this singleton.
