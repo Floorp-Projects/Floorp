@@ -2661,4 +2661,7 @@ public class Context
 
     // It can be used to return the second uint32 result from function
     long scratchUint32;
+
+    // It can be used to return the second Scriptable result from function
+    Scriptable scratchScriptable;
 }

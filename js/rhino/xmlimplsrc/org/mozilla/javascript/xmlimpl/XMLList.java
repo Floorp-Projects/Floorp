@@ -1533,52 +1533,7 @@ class XMLList extends XMLObjectImpl implements Function
             throw ScriptRuntime.typeError1("msg.isnt.function",
                                            methodName);
 
-        int L = args.length;
-        Object callThis =
-            (L == 0 || args[0] == null || args[0] == Undefined.instance)
-            ? ScriptableObject.getTopLevelScope(scope)
-            : ScriptRuntime.toObject(cx, scope, args[0]);
-
-        Object[] callArgs;
-        if (isApply)
-        {
-            // Follow Ecma 15.3.4.3
-            if (L <= 1)
-            {
-                callArgs = ScriptRuntime.emptyArgs;
-            }
-            else
-            {
-                Object arg1 = args[1];
-                if (arg1 == null || arg1 == Undefined.instance)
-                {
-                    callArgs = ScriptRuntime.emptyArgs;
-                }
-                else if (ScriptRuntime.isArrayObject(arg1))
-                {
-                    callArgs = ScriptRuntime.getArrayElements((Scriptable)arg1);
-                }
-                else
-                {
-                    throw ScriptRuntime.typeError0("msg.arg.isnt.array");
-                }
-            }
-        }
-        else
-        {
-            // Follow Ecma 15.3.4.4
-            if (L <= 1)
-            {
-                callArgs = ScriptRuntime.emptyArgs;
-            }
-            else
-            {
-                callArgs = new Object[L - 1];
-                System.arraycopy(args, 1, callArgs, 0, L - 1);
-            }
-        }
-
-        return ScriptRuntime.call(cx, thisObj, callThis, callArgs, scope);
+        return ScriptRuntime.applyOrCall(isApply, cx, scope, thisObj, args);
     }
 
     protected Object jsConstructor(Context cx, boolean inNewExpr,

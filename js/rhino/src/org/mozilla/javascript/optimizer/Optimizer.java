@@ -419,6 +419,17 @@ class Optimizer
                 }
             case Token.CALL :
                 {
+                    Node child = n.getFirstChild(); // the function node
+                    if (child.getType() == Token.GETELEM) {
+                        // Optimization of x[0]() is not supported
+                        // so bypass GETELEM optimization that
+                        // rewriteForNumberVariables would trigger
+                        rewriteAsObjectChildren(child, child.getFirstChild());
+                    } else {
+                        rewriteForNumberVariables(child);
+                    }
+                    child = child.getNext(); // the first arg
+
                     OptFunctionNode target
                             = (OptFunctionNode)n.getProp(Node.DIRECTCALL_PROP);
                     if (target != null) {
@@ -426,9 +437,6 @@ class Optimizer
     we leave each child as a Number if it can be. The codegen will
     handle moving the pairs of parameters.
 */
-                        Node child = n.getFirstChild(); // the function node
-                        rewriteForNumberVariables(child);
-                        child = child.getNext(); // the first arg
                         while (child != null) {
                             int type = rewriteForNumberVariables(child);
                             if (type == NumberType) {
@@ -436,29 +444,35 @@ class Optimizer
                             }
                             child = child.getNext();
                         }
-                        return NoType;
-                    }
-                    // else fall thru...
-                }
-            default : {
-                    Node child = n.getFirstChild();
-                    while (child != null) {
-                        Node nextChild = child.getNext();
-                        int type = rewriteForNumberVariables(child);
-                        if (type == NumberType) {
-                            if (!convertParameter(child)) {
-                                n.removeChild(child);
-                                Node nuChild = new Node(TO_OBJECT, child);
-                                if (nextChild == null)
-                                    n.addChildToBack(nuChild);
-                                else
-                                    n.addChildBefore(nuChild, nextChild);
-                            }
-                        }
-                        child = nextChild;
+                    } else {
+                        rewriteAsObjectChildren(n, child);
                     }
                     return NoType;
                 }
+            default : {
+                    rewriteAsObjectChildren(n, n.getFirstChild());
+                    return NoType;
+                }
+        }
+    }
+
+    private void rewriteAsObjectChildren(Node n, Node child)
+    {
+        // Force optimized children to be objects
+        while (child != null) {
+            Node nextChild = child.getNext();
+            int type = rewriteForNumberVariables(child);
+            if (type == NumberType) {
+                if (!convertParameter(child)) {
+                    n.removeChild(child);
+                    Node nuChild = new Node(TO_OBJECT, child);
+                    if (nextChild == null)
+                        n.addChildToBack(nuChild);
+                    else
+                        n.addChildBefore(nuChild, nextChild);
+                }
+            }
+            child = nextChild;
         }
     }
 

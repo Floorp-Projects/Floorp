@@ -242,7 +242,8 @@ public class BaseFunction extends IdScriptableObject implements Function
 
           case Id_apply:
           case Id_call:
-            return applyOrCall(id, cx, scope, thisObj, args);
+            return ScriptRuntime.applyOrCall(id == Id_apply,
+                                             cx, scope, thisObj, args);
         }
         throw new IllegalArgumentException(String.valueOf(id));
     }
@@ -497,56 +498,6 @@ public class BaseFunction extends IdScriptableObject implements Function
         ScriptRuntime.setFunctionProtoAndParent(global, fn);
 
         return fn;
-    }
-
-    /**
-     * Function.prototype.apply and Function.prototype.call
-     *
-     * See Ecma 15.3.4.[34]
-     */
-    private static Object applyOrCall(int id,
-                                      Context cx, Scriptable scope,
-                                      Scriptable thisObj, Object[] args)
-        throws JavaScriptException
-    {
-        int L = args.length;
-        Object function = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-
-        Object callThis;
-        if (L == 0 || args[0] == null || args[0] == Undefined.instance) {
-            callThis = ScriptableObject.getTopLevelScope(scope);
-        } else {
-            callThis = ScriptRuntime.toObject(cx, scope, args[0]);
-        }
-
-        Object[] callArgs;
-        if (id == Id_apply) {
-            // Follow Ecma 15.3.4.3
-            if (L <= 1) {
-                callArgs = ScriptRuntime.emptyArgs;
-            } else {
-                Object arg1 = args[1];
-                if (arg1 == null || arg1 == Undefined.instance) {
-                    callArgs = ScriptRuntime.emptyArgs;
-                } else if (arg1 instanceof NativeArray
-                           || arg1 instanceof Arguments)
-                {
-                    callArgs = cx.getElements((Scriptable) arg1);
-                } else {
-                    throw ScriptRuntime.typeError0("msg.arg.isnt.array");
-                }
-            }
-        } else {
-            // Follow Ecma 15.3.4.4
-            if (L <= 1) {
-                callArgs = ScriptRuntime.emptyArgs;
-            } else {
-                callArgs = new Object[L - 1];
-                System.arraycopy(args, 1, callArgs, 0, L - 1);
-            }
-        }
-
-        return ScriptRuntime.call(cx, function, callThis, callArgs, scope);
     }
 
     protected int findPrototypeId(String s)

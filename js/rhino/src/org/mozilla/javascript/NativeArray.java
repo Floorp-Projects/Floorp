@@ -547,13 +547,13 @@ public class NativeArray extends IdScriptableObject
                         if (toLocale && elem != Undefined.instance &&
                             elem != null)
                         {
-                            Scriptable obj = ScriptRuntime.
-                                    toObject(cx, thisObj, elem);
-                            Object tls = ScriptRuntime.
-                                    getObjectProp(obj, "toLocaleString", cx);
-                            elem = ScriptRuntime.call(cx, tls, elem,
-                                                      ScriptRuntime.emptyArgs,
-                                                      scope);
+                            Function fun;
+                            Scriptable funThis;
+                            fun = ScriptRuntime.getPropFunctionAndThis(
+                                      elem, "toLocaleString", cx, scope);
+                            funThis = ScriptRuntime.lastStoredScriptable(cx);
+                            elem = fun.call(cx, scope, funThis,
+                                            ScriptRuntime.emptyArgs);
                         }
                         result.append(ScriptRuntime.toString(elem));
                     }
@@ -720,7 +720,10 @@ public class NativeArray extends IdScriptableObject
             // assemble args and call supplied JS cmp function
             cmpBuf[0] = x;
             cmpBuf[1] = y;
-            Object ret = ScriptRuntime.call(cx, cmp, null, cmpBuf, scope);
+            Function fun = ScriptRuntime.getValueFunctionAndThis(cmp, cx);
+            Scriptable funThis = ScriptRuntime.lastStoredScriptable(cx);
+
+            Object ret = fun.call(cx, scope, funThis, cmpBuf);
             double d = ScriptRuntime.toNumber(ret);
 
             // XXX what to do when cmp function returns NaN?  ECMA states

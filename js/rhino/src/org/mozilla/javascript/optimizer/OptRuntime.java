@@ -91,6 +91,58 @@ public final class OptRuntime extends ScriptRuntime
         }
     }
 
+    /**
+     * Implement ....() call. This is mostly to shrink optimizer code
+     */
+    public static Object call0(Function fun, Scriptable thisObj,
+                               Context cx, Scriptable scope)
+    {
+        return fun.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
+    }
+
+    /**
+     * Implement ....(arg) call. This is mostly to shrink optimizer code
+     */
+    public static Object call1(Function fun, Scriptable thisObj, Object arg0,                                   Context cx, Scriptable scope)
+    {
+        Object[] args = new Object[1];
+        args[0] = arg0;
+        return fun.call(cx, scope, thisObj, args);
+    }
+
+    /**
+     * Implement name(args) call. This is mostly to shrink optimizer code
+     */
+    public static Object callName(Object[] args, String name,
+                                  Context cx, Scriptable scope)
+    {
+        Function f = getNameFunctionAndThis(name, cx, scope);
+        Scriptable thisObj = lastStoredScriptable(cx);
+        return f.call(cx, scope, thisObj, args);
+    }
+
+    /**
+     * Implement name() call. This is mostly to shrink optimizer code
+     */
+    public static Object callName0(String name,
+                                   Context cx, Scriptable scope)
+    {
+        Function f = getNameFunctionAndThis(name, cx, scope);
+        Scriptable thisObj = lastStoredScriptable(cx);
+        return f.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
+    }
+
+    /**
+     * Implement x.property() call. This is mostly to shrink optimizer code
+     */
+    public static Object callProp0(Object value, String property,
+                                   Context cx, Scriptable scope)
+    {
+        Function f = getPropFunctionAndThis(value, property, cx, scope);
+        Scriptable thisObj = lastStoredScriptable(cx);
+        return f.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
+    }
+
     public static Object add(Object val1, double val2)
     {
         if (val1 instanceof Scriptable)
@@ -109,35 +161,6 @@ public final class OptRuntime extends ScriptRuntime
         return toString(val1).concat((String)val2);
     }
 
-    public static Object callSimple(Context cx, String id, Scriptable scope,
-                                    Object[] args)
-        throws JavaScriptException
-    {
-        Object prop;
-        Scriptable obj = scope;
- search: {
-            while (obj != null) {
-                prop = ScriptableObject.getProperty(obj, id);
-                if (prop != Scriptable.NOT_FOUND) {
-                    break search;
-                }
-                obj = obj.getParentScope();
-            }
-            throw ScriptRuntime.notFoundError(scope, id);
-        }
-
-        Scriptable thisArg = ScriptRuntime.getThis(obj);
-
-        if (!(prop instanceof Function)) {
-            Object[] errorArgs = { toString(prop)  };
-            throw cx.reportRuntimeError(
-                getMessage("msg.isnt.function", errorArgs));
-        }
-
-        Function function = (Function)prop;
-        return function.call(cx, scope, thisArg, args);
-    }
-
     public static Object[] padStart(Object[] currentArgs, int count) {
         Object[] result = new Object[currentArgs.length + count];
         System.arraycopy(currentArgs, 0, result, count, currentArgs.length);
@@ -150,14 +173,14 @@ public final class OptRuntime extends ScriptRuntime
         ScriptRuntime.initFunction(cx, scope, fn, functionType, false);
     }
 
-    public static Object callSpecial(Context cx, Object fun,
-                                     Object thisObj, Object[] args,
+    public static Object callSpecial(Context cx, Function fun,
+                                     Scriptable thisObj, Object[] args,
                                      Scriptable scope,
                                      Scriptable callerThis, int callType,
                                      String fileName, int lineNumber)
         throws JavaScriptException
     {
-        return ScriptRuntime.callSpecial(cx, fun, false, thisObj, args, scope,
+        return ScriptRuntime.callSpecial(cx, fun, thisObj, args, scope,
                                          callerThis, callType,
                                          fileName, lineNumber);
     }
@@ -167,9 +190,7 @@ public final class OptRuntime extends ScriptRuntime
                                           Scriptable callerThis, int callType)
         throws JavaScriptException
     {
-        return ScriptRuntime.callSpecial(cx, fun, true, null, args, scope,
-                                         callerThis, callType,
-                                         "", -1);
+        return ScriptRuntime.newSpecial(cx, fun, args, scope, callType);
     }
 
     public static Double wrapDouble(double num)

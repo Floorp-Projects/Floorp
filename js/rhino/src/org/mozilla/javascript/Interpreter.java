@@ -84,74 +84,75 @@ public class Interpreter
         Icode_TYPEOFNAME                = -13,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = -14,
-        Icode_NAME_SLOW_THIS            = -15,
-        Icode_PUSH_PARENT               = -16,
+        Icode_NAME_AND_THIS             = -14,
+        Icode_PROP_AND_THIS             = -15,
+        Icode_ELEM_AND_THIS             = -16,
+        Icode_VALUE_AND_THIS            = -17,
 
     // Create closure object for nested functions
-        Icode_CLOSURE_EXPR              = -17,
-        Icode_CLOSURE_STMT              = -18,
+        Icode_CLOSURE_EXPR              = -18,
+        Icode_CLOSURE_STMT              = -19,
 
     // Special calls
-        Icode_CALLSPECIAL               = -19,
+        Icode_CALLSPECIAL               = -20,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -20,
+        Icode_RETUNDEF                  = -21,
 
     // Exception handling implementation
-        Icode_CATCH                     = -21,
-        Icode_GOSUB                     = -22,
-        Icode_RETSUB                    = -23,
+        Icode_CATCH                     = -22,
+        Icode_GOSUB                     = -23,
+        Icode_RETSUB                    = -24,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -24,
+        Icode_LINE                      = -25,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -25,
-        Icode_INTNUMBER                 = -26,
+        Icode_SHORTNUMBER               = -26,
+        Icode_INTNUMBER                 = -27,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -27,
-        Icode_LITERAL_SET               = -28,
+        Icode_LITERAL_NEW               = -28,
+        Icode_LITERAL_SET               = -29,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -29,
+        Icode_SPARE_ARRAYLIT            = -30,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -30,
-        Icode_REG_IND_C1                = -31,
-        Icode_REG_IND_C2                = -32,
-        Icode_REG_IND_C3                = -33,
-        Icode_REG_IND_C4                = -34,
-        Icode_REG_IND_C5                = -35,
-        Icode_REG_IND1                  = -36,
-        Icode_REG_IND2                  = -37,
-        Icode_REG_IND4                  = -38,
+        Icode_REG_IND_C0                = -31,
+        Icode_REG_IND_C1                = -32,
+        Icode_REG_IND_C2                = -33,
+        Icode_REG_IND_C3                = -34,
+        Icode_REG_IND_C4                = -35,
+        Icode_REG_IND_C5                = -36,
+        Icode_REG_IND1                  = -37,
+        Icode_REG_IND2                  = -38,
+        Icode_REG_IND4                  = -39,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -39,
-        Icode_REG_STR_C1                = -40,
-        Icode_REG_STR_C2                = -41,
-        Icode_REG_STR_C3                = -42,
-        Icode_REG_STR1                  = -43,
-        Icode_REG_STR2                  = -44,
-        Icode_REG_STR4                  = -45,
+        Icode_REG_STR_C0                = -40,
+        Icode_REG_STR_C1                = -41,
+        Icode_REG_STR_C2                = -42,
+        Icode_REG_STR_C3                = -43,
+        Icode_REG_STR1                  = -44,
+        Icode_REG_STR2                  = -45,
+        Icode_REG_STR4                  = -46,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -46,
-        Icode_SETVAR1                   = -47,
+        Icode_GETVAR1                   = -47,
+        Icode_SETVAR1                   = -48,
 
     // Load unefined
-        Icode_UNDEF                     = -48,
-        Icode_ZERO                      = -49,
-        Icode_ONE                       = -50,
+        Icode_UNDEF                     = -49,
+        Icode_ZERO                      = -50,
+        Icode_ONE                       = -51,
 
     // entrance and exit from .()
-       Icode_ENTERDQ                    = -51,
-       Icode_LEAVEDQ                    = -52,
+       Icode_ENTERDQ                    = -52,
+       Icode_LEAVEDQ                    = -53,
 
     // Last icode
-        MIN_ICODE                       = -52;
+        MIN_ICODE                       = -53;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -196,9 +197,10 @@ public class Interpreter
           case Icode_REF_INC_DEC:      return "REF_INC_DEC";
           case Icode_SCOPE:            return "SCOPE";
           case Icode_TYPEOFNAME:       return "TYPEOFNAME";
-          case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
-          case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
-          case Icode_PUSH_PARENT:      return "PUSH_PARENT";
+          case Icode_NAME_AND_THIS:    return "NAME_AND_THIS";
+          case Icode_PROP_AND_THIS:    return "PROP_AND_THIS";
+          case Icode_ELEM_AND_THIS:    return "ELEM_AND_THIS";
+          case Icode_VALUE_AND_THIS:   return "VALUE_AND_THIS";
           case Icode_CLOSURE_EXPR:     return "CLOSURE_EXPR";
           case Icode_CLOSURE_STMT:     return "CLOSURE_STMT";
           case Icode_CALLSPECIAL:      return "CALLSPECIAL";
@@ -775,64 +777,21 @@ public class Interpreter
 
           case Token.CALL:
           case Token.NEW:
-          case Token.REF_CALL: {
-            if (type == Token.NEW) {
-                iCodeTop = visitExpression(child, iCodeTop);
-            } else {
-                iCodeTop = generateCallFunAndThis(child, iCodeTop);
-                if (itsStackDepth - savedStackDepth != 2)
-                    Kit.codeBug();
-            }
-            // To get better debugging output for undefined or null calls.
-            int debugNameIndex = itsLastStringIndex;
-            int argCount = 0;
-            while ((child = child.getNext()) != null) {
-                iCodeTop = visitExpression(child, iCodeTop);
-                ++argCount;
-            }
-            int callType = node.getIntProp(Node.SPECIALCALL_PROP,
-                                           Node.NON_SPECIALCALL);
-            if (callType != Node.NON_SPECIALCALL) {
-                // embed line number and source filename
-                iCodeTop = addIndexOp(Icode_CALLSPECIAL, argCount, iCodeTop);
-                iCodeTop = addByte(callType, iCodeTop);
-                iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
-                iCodeTop = addShort(itsLineNumber, iCodeTop);
-            } else {
-                iCodeTop = addIndexOp(type, argCount, iCodeTop);
-                if (debugNameIndex < 0xFFFF) {
-                    // Use only 2 bytes to store debug index
-                    iCodeTop = addShort(debugNameIndex, iCodeTop);
-                } else {
-                    iCodeTop = addShort(0xFFFF, iCodeTop);
-                }
-            }
-            // adjust stack
-            if (type == Token.NEW) {
-                // f, args -> results
-               itsStackDepth -= argCount;
-            } else {
-                // f, thisObj, args -> results
-               itsStackDepth -= (argCount + 1);
-            }
-            if (argCount > itsData.itsMaxCalleeArgs)
-                itsData.itsMaxCalleeArgs = argCount;
+          case Token.REF_CALL:
+            iCodeTop = visitCall(node, iCodeTop);
             break;
-          }
 
           case Token.AND:
           case Token.OR: {
             iCodeTop = visitExpression(child, iCodeTop);
             iCodeTop = addIcode(Icode_DUP, iCodeTop);
-            itsStackDepth++;
-            if (itsStackDepth > itsData.itsMaxStack)
-                itsData.itsMaxStack = itsStackDepth;
+            stackChange(1);
             int afterSecondJumpStart = iCodeTop;
             int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
             iCodeTop = addForwardGoto(jump, iCodeTop);
-            itsStackDepth--;
+            stackChange(-1);
             iCodeTop = addIcode(Icode_POP, iCodeTop);
-            itsStackDepth--;
+            stackChange(-1);
             child = child.getNext();
             iCodeTop = visitExpression(child, iCodeTop);
             resolveForwardGoto(afterSecondJumpStart, iCodeTop);
@@ -857,11 +816,11 @@ public class Interpreter
           }
 
           case Token.GETPROP:
-            iCodeTop = visitGetProp(node, child, false, iCodeTop);
+            iCodeTop = visitGetProp(node, child, iCodeTop);
             break;
 
           case Token.GETELEM:
-            iCodeTop = visitGetElem(node, child, false, iCodeTop);
+            iCodeTop = visitGetElem(node, child, iCodeTop);
             break;
 
           case Token.GET_REF:
@@ -1123,73 +1082,105 @@ public class Interpreter
         return iCodeTop;
     }
 
+    private int visitCall(Node node, int iCodeTop)
+    {
+        int type = node.getType();
+        Node child = node.getFirstChild();
+        if (type == Token.NEW) {
+            iCodeTop = visitExpression(child, iCodeTop);
+        } else {
+            iCodeTop = generateCallFunAndThis(child, iCodeTop);
+        }
+        // To get better debugging output for undefined or null calls.
+        int debugNameIndex = itsLastStringIndex;
+        int argCount = 0;
+        while ((child = child.getNext()) != null) {
+            iCodeTop = visitExpression(child, iCodeTop);
+            ++argCount;
+        }
+        int callType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                       Node.NON_SPECIALCALL);
+        if (callType != Node.NON_SPECIALCALL) {
+            // embed line number and source filename
+            iCodeTop = addIndexOp(Icode_CALLSPECIAL, argCount, iCodeTop);
+            iCodeTop = addByte(callType, iCodeTop);
+            iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
+            iCodeTop = addShort(itsLineNumber, iCodeTop);
+        } else {
+            iCodeTop = addIndexOp(type, argCount, iCodeTop);
+            if (debugNameIndex < 0xFFFF) {
+                // Use only 2 bytes to store debug index
+                iCodeTop = addShort(debugNameIndex, iCodeTop);
+            } else {
+                iCodeTop = addShort(0xFFFF, iCodeTop);
+            }
+        }
+        // adjust stack
+        if (type == Token.NEW) {
+            // f, args -> results
+           stackChange(-argCount);
+        } else {
+            // f, thisObj, args -> results
+           stackChange(-1 - argCount);
+        }
+        if (argCount > itsData.itsMaxCalleeArgs)
+            itsData.itsMaxCalleeArgs = argCount;
+
+        return iCodeTop;
+    }
+
     private int generateCallFunAndThis(Node left, int iCodeTop)
     {
         // Generate code to place on stack function and thisObj
-        switch (left.getType()) {
+        int type = left.getType();
+        switch (type) {
           case Token.NAME: {
             String name = left.getString();
-            // Conditionally skip ScriptRuntime.getThis.
-            // The getThis entry in the runtime will take a
-            // Scriptable object intended to be used as a 'this'
-            // and make sure that it is neither a With object or
-            // an activation object.
-            // Executing getThis requires at least two instanceof
-            // tests, so we only include it if we are currently
-            // inside a 'with' statement, or if we are executing
-            // eval script (to protect against an eval inside a with).
-            boolean skipGetThis = (itsWithDepth == 0
-                                   && (itsInFunctionFlag
-                                       || !itsData.itsFromEvalCode));
-            int op = skipGetThis ? Icode_NAME_FAST_THIS : Icode_NAME_SLOW_THIS;
-            iCodeTop = addStringOp(op, name, iCodeTop);
+            // stack: ... -> ... function thisObj
+            iCodeTop = addStringOp(Icode_NAME_AND_THIS, name, iCodeTop);
             stackChange(2);
             break;
           }
           case Token.GETPROP:
-            // x.y(...)
-            //  -> tmp = x, (tmp.y, tmp)(...)
-            iCodeTop = visitGetProp(left, left.getFirstChild(), true, iCodeTop);
-            iCodeTop = addIcode(Icode_SWAP, iCodeTop);
+          case Token.GETELEM: {
+            Node target = left.getFirstChild();
+            iCodeTop = visitExpression(target, iCodeTop);
+            Node id = target.getNext();
+            if (type == Token.GETPROP) {
+                String property = id.getString();
+                // stack: ... target -> ... function thisObj
+                iCodeTop = addStringOp(Icode_PROP_AND_THIS, property, iCodeTop);
+                stackChange(1);
+            } else {
+                iCodeTop = visitExpression(id, iCodeTop);
+                // stack: ... target id -> ... function thisObj
+                iCodeTop = addIcode(Icode_ELEM_AND_THIS, iCodeTop);
+            }
             break;
-          case Token.GETELEM:
-            // x[y](...)
-            //  -> tmp = x, (tmp[y], tmp)(...)
-            iCodeTop = visitGetElem(left, left.getFirstChild(), true, iCodeTop);
-            iCodeTop = addIcode(Icode_SWAP, iCodeTop);
-            break;
+          }
           default:
             // Including Token.GETVAR
             iCodeTop = visitExpression(left, iCodeTop);
-            iCodeTop = addIcode(Icode_PUSH_PARENT, iCodeTop);
+            // stack: ... value -> ... function thisObj
+            iCodeTop = addIcode(Icode_VALUE_AND_THIS, iCodeTop);
             stackChange(1);
             break;
         }
         return iCodeTop;
     }
 
-    private int visitGetProp(Node node, Node child, boolean dupObject,
-                             int iCodeTop)
+    private int visitGetProp(Node node, Node child, int iCodeTop)
     {
         iCodeTop = visitExpression(child, iCodeTop);
-        if (dupObject) {
-            iCodeTop = addIcode(Icode_DUP, iCodeTop);
-            stackChange(1);
-        }
         child = child.getNext();
         String property = child.getString();
         iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
         return iCodeTop;
     }
 
-    private int visitGetElem(Node node, Node child, boolean dupObject,
-                             int iCodeTop)
+    private int visitGetElem(Node node, Node child, int iCodeTop)
     {
         iCodeTop = visitExpression(child, iCodeTop);
-        if (dupObject) {
-            iCodeTop = addIcode(Icode_DUP, iCodeTop);
-            stackChange(1);
-        }
         child = child.getNext();
         iCodeTop = visitExpression(child, iCodeTop);
         iCodeTop = addToken(Token.GETELEM, iCodeTop);
@@ -2574,6 +2565,42 @@ switch (op) {
         stack[stackTop] = stack[LOCAL_SHFT + indexReg];
         sDbl[stackTop] = sDbl[LOCAL_SHFT + indexReg];
         continue Loop;
+    case Icode_NAME_AND_THIS :
+        // stringReg: name
+        ++stackTop;
+        stack[stackTop] = ScriptRuntime.getNameFunctionAndThis(stringReg,
+                                                               cx, scope);
+        ++stackTop;
+        stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
+        continue Loop;
+    case Icode_PROP_AND_THIS: {
+        Object obj = stack[stackTop];
+        if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop]);
+        // stringReg: property
+        stack[stackTop] = ScriptRuntime.getPropFunctionAndThis(obj, stringReg,
+                                                               cx, scope);
+        ++stackTop;
+        stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
+        continue Loop;
+    }
+    case Icode_ELEM_AND_THIS: {
+        Object obj = stack[stackTop - 1];
+        if (obj == DBL_MRK) obj = doubleWrap(sDbl[stackTop - 1]);
+        Object id = stack[stackTop];
+        if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
+        stack[stackTop - 1] = ScriptRuntime.getElemFunctionAndThis(obj, id,
+                                                                   cx, scope);
+        stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
+        continue Loop;
+    }
+    case Icode_VALUE_AND_THIS : {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.getValueFunctionAndThis(value, cx);
+        ++stackTop;
+        stack[stackTop] = ScriptRuntime.lastStoredScriptable(cx);
+        continue Loop;
+    }
     case Icode_CALLSPECIAL : {
         if (instructionCounting) {
             cx.instructionCount += INVOCATION_COST;
@@ -2584,22 +2611,22 @@ switch (op) {
         int sourceLine = getShort(iCode, pc + 2);
         stackTop -= indexReg;
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
-        Object functionThis;
         if (isNew) {
-            functionThis = null;
+            Object function = stack[stackTop];
+            if (function == DBL_MRK) function = doubleWrap(sDbl[stackTop]);
+            stack[stackTop] = ScriptRuntime.newSpecial(
+                                  cx, function, outArgs, scope, callType);
         } else {
-            functionThis = stack[stackTop];
-            if (functionThis == DBL_MRK) {
-                functionThis = doubleWrap(sDbl[stackTop]);
-            }
+            // Call code generation ensure that stack here
+            // is ... Function Scriptable
+            Scriptable functionThis = (Scriptable)stack[stackTop];
             --stackTop;
+            Function function = (Function)stack[stackTop];
+            stack[stackTop] = ScriptRuntime.callSpecial(
+                                  cx, function, functionThis, outArgs,
+                                  scope, thisObj, callType,
+                                  idata.itsSourceFile, sourceLine);
         }
-        Object function = stack[stackTop];
-        if (function == DBL_MRK) function = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.callSpecial(
-                              cx, function, isNew, functionThis, outArgs,
-                              scope, thisObj, callType,
-                              idata.itsSourceFile, sourceLine);
         pc += 4;
         continue Loop;
     }
@@ -2610,37 +2637,29 @@ switch (op) {
         // indexReg: number of arguments
         stackTop -= indexReg;
         int calleeArgShft = stackTop + 1;
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+
+        // CALL generation ensures that funThisObj and fun
+        // are already Scriptable and Function objects respectively
+        Scriptable funThisObj = (Scriptable)stack[stackTop];
         --stackTop;
-        Object lhs = stack[stackTop];
-        Scriptable calleeScope = scope;
+        Function fun = (Function)stack[stackTop];
+
+        Scriptable funScope = scope;
         if (idata.itsNeedsActivation) {
-            calleeScope = ScriptableObject.getTopLevelScope(scope);
+            funScope = ScriptableObject.getTopLevelScope(scope);
         }
 
-        Scriptable calleeThis;
-        if (rhs instanceof Scriptable || rhs == null) {
-            calleeThis = (Scriptable)rhs;
-        } else {
-            calleeThis = ScriptRuntime.toObject(cx, calleeScope, rhs);
-        }
-
-        if (lhs instanceof InterpretedFunction) {
+        if (fun instanceof InterpretedFunction) {
             // Inlining of InterpretedFunction.call not to create
             // argument array
-            InterpretedFunction f = (InterpretedFunction)lhs;
-            stack[stackTop] = interpret(cx, calleeScope, calleeThis,
+            InterpretedFunction ifun = (InterpretedFunction)fun;
+            stack[stackTop] = interpret(cx, funScope, funThisObj,
                                         stack, sDbl, calleeArgShft, indexReg,
-                                        f, f.itsData);
-        } else if (lhs instanceof Function) {
-            Function f = (Function)lhs;
+                                        ifun, ifun.itsData);
+        } else {
             Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
                                             indexReg);
-            stack[stackTop] = f.call(cx, calleeScope, calleeThis, outArgs);
-        } else {
-            if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-            throw notAFunction(lhs, idata, pc);
+            stack[stackTop] = fun.call(cx, funScope, funThisObj, outArgs);
         }
         pc += 2;
         continue Loop;
@@ -2686,17 +2705,20 @@ switch (op) {
         // indexReg: number of arguments
         stackTop -= indexReg;
         int calleeArgShft = stackTop + 1;
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+
+        // REF_CALL generation ensures that funThisObj and fun
+        // are already Scriptable and Function objects respectively
+        Scriptable funThisObj = (Scriptable)stack[stackTop];
         --stackTop;
-        Object lhs = stack[stackTop];
-        Scriptable calleeScope = scope;
+        Function fun = (Function)stack[stackTop];
+
+        Scriptable funScope = scope;
         if (idata.itsNeedsActivation) {
-            calleeScope = ScriptableObject.getTopLevelScope(scope);
+            funScope = ScriptableObject.getTopLevelScope(scope);
         }
         Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, indexReg);
-        stack[stackTop] = ScriptRuntime.referenceCall(lhs, rhs, outArgs,
-                                                      cx, calleeScope);
+        stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj, outArgs,
+                                                      cx, funScope);
         pc += 2;
         continue Loop;
     }
@@ -2708,10 +2730,6 @@ switch (op) {
     }
     case Icode_TYPEOFNAME :
         stack[++stackTop] = ScriptRuntime.typeofName(scope, stringReg);
-        continue Loop;
-    case Icode_NAME_FAST_THIS :
-    case Icode_NAME_SLOW_THIS :
-        stackTop = do_nameAndThis(stack, stackTop, scope, stringReg, op);
         continue Loop;
     case Token.STRING :
         stack[++stackTop] = stringReg;
@@ -2857,12 +2875,6 @@ switch (op) {
         stack[stackTop] = (op == Token.ENUM_NEXT)
                           ? (Object)ScriptRuntime.enumNext(val)
                           : (Object)ScriptRuntime.enumId(val, cx);
-        continue Loop;
-    }
-    case Icode_PUSH_PARENT : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[++stackTop] = ScriptRuntime.getParent(lhs);
         continue Loop;
     }
     case Token.SPECIAL_REF : {
@@ -3385,7 +3397,7 @@ switch (op) {
         Object result;
         Object id = stack[stackTop];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.getObjectId(lhs, id, cx, scope);
+            result = ScriptRuntime.getObjectElem(lhs, id, cx, scope);
         } else {
             double val = sDbl[stackTop];
             if (lhs == null || lhs == Undefined.instance) {
@@ -3419,7 +3431,7 @@ switch (op) {
         Object result;
         Object id = stack[stackTop - 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.setObjectId(lhs, id, rhs, cx, scope);
+            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, scope);
         } else {
             double val = sDbl[stackTop - 1];
             if (lhs == null || lhs == Undefined.instance) {
@@ -3439,31 +3451,6 @@ switch (op) {
         }
         stackTop -= 2;
         stack[stackTop] = result;
-        return stackTop;
-    }
-
-    private static int do_nameAndThis(Object[] stack, int stackTop,
-                                      Scriptable scope, String name,
-                                      int op)
-    {
-        Object prop;
-        Scriptable obj = scope;
- search: {
-            while (obj != null) {
-                prop = ScriptableObject.getProperty(obj, name);
-                if (prop != Scriptable.NOT_FOUND) {
-                    break search;
-                }
-                obj = obj.getParentScope();
-            }
-            throw ScriptRuntime.notFoundError(scope, name);
-        }
-
-        Scriptable thisArg = (op == Icode_NAME_FAST_THIS)
-                             ? obj : ScriptRuntime.getThis(obj);
-        stack[++stackTop] = prop;
-        stack[++stackTop] = thisArg;
-
         return stackTop;
     }
 

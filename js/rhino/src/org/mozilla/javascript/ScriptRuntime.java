@@ -1059,14 +1059,6 @@ public class ScriptRuntime {
         return s.getPrototype();
     }
 
-    public static Scriptable getParent(Object obj) {
-        if (!(obj instanceof Scriptable)) {
-            return null;
-        }
-        Scriptable s = (Scriptable)obj;
-        return getThis(s.getParentScope());
-    }
-
    public static Scriptable getParent(Object obj, Scriptable scope) {
         Scriptable s;
         if (obj instanceof Scriptable) {
@@ -1172,31 +1164,6 @@ public class ScriptRuntime {
         return -1;
     }
 
-    private static void storeIndexResult(Context cx, int index)
-    {
-        cx.scratchIndex = index;
-    }
-
-    static int lastIndexResult(Context cx)
-    {
-        return cx.scratchIndex;
-    }
-
-    public static void storeUint32Result(Context cx, long value)
-    {
-        if ((value >>> 32) != 0)
-            throw new IllegalArgumentException();
-        cx.scratchUint32 = value;
-    }
-
-    public static long lastUint32Result(Context cx)
-    {
-        long value = cx.scratchUint32;
-        if ((value >>> 32) != 0)
-            throw new IllegalStateException();
-        return value;
-    }
-
     /**
      * If s represents index, then return index value wrapped as Integer
      * and othewise return s.
@@ -1254,11 +1221,14 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object getObjectId(Object obj, Object id,
-                                     Context cx, Scriptable scope)
+    /**
+     * Call obj.[[Get]](id)
+     */
+    public static Object getObjectElem(Object obj, Object elem,
+                                       Context cx, Scriptable scope)
     {
         if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, id);
+            throw undefReadError(obj, elem);
         }
         Scriptable sobj;
         if (obj instanceof Scriptable) {
@@ -1266,20 +1236,20 @@ public class ScriptRuntime {
         } else {
             sobj = toObject(cx, scope, obj);
         }
-        return getObjectId(sobj, id, cx);
+        return getObjectElem(sobj, elem, cx);
     }
 
-    public static Object getObjectId(Scriptable obj, Object id,
-                                     Context cx)
+    public static Object getObjectElem(Scriptable obj, Object elem,
+                                       Context cx)
     {
         if (obj instanceof XMLObject) {
             XMLObject xmlObject = (XMLObject)obj;
-            return xmlObject.ecmaGet(cx, id);
+            return xmlObject.ecmaGet(cx, elem);
         }
 
         Object result;
 
-        String s = toStringIdOrIndex(cx, id);
+        String s = toStringIdOrIndex(cx, elem);
         if (s == null) {
             int index = lastIndexResult(cx);
             result = ScriptableObject.getProperty(obj, index);
@@ -1295,7 +1265,7 @@ public class ScriptRuntime {
     }
 
     /**
-     * Version of getObjectId when id is a valid JS identifier name.
+     * Version of getObjectElem when elem is a valid JS identifier name.
      */
     public static Object getObjectProp(Object obj, String property,
                                        Context cx, Scriptable scope)
@@ -1349,13 +1319,13 @@ public class ScriptRuntime {
     }
 
     /*
-     * Generic assignment to member element.
+     * Call obj.[[Put]](id, value)
      */
-    public static Object setObjectId(Object obj, Object id, Object value,
-                                     Context cx, Scriptable scope)
+    public static Object setObjectElem(Object obj, Object elem, Object value,
+                                       Context cx, Scriptable scope)
     {
         if (obj == null || obj == Undefined.instance) {
-            throw undefWriteError(obj, id, value);
+            throw undefWriteError(obj, elem, value);
         }
         Scriptable sobj;
         if (obj instanceof Scriptable) {
@@ -1363,19 +1333,19 @@ public class ScriptRuntime {
         } else {
             sobj = toObject(cx, scope, obj);
         }
-        return setObjectId(sobj, id, value, cx);
+        return setObjectElem(sobj, elem, value, cx);
     }
 
-    public static Object setObjectId(Scriptable obj, Object id, Object value,
-                                     Context cx)
+    public static Object setObjectElem(Scriptable obj, Object elem,
+                                       Object value, Context cx)
     {
         if (obj instanceof XMLObject) {
             XMLObject xmlObject = (XMLObject)obj;
-            xmlObject.ecmaPut(cx, id, value);
+            xmlObject.ecmaPut(cx, elem, value);
             return value;
         }
 
-        String s = toStringIdOrIndex(cx, id);
+        String s = toStringIdOrIndex(cx, elem);
         if (s == null) {
             int index = lastIndexResult(cx);
             ScriptableObject.putProperty(obj, index, value);
@@ -1387,7 +1357,7 @@ public class ScriptRuntime {
     }
 
     /**
-     * Version of setObjectId when id is a valid JS identifier name.
+     * Version of setObjectElem when elem is a valid JS identifier name.
      */
     public static Object setObjectProp(Object obj, String property,
                                        Object value,
@@ -1563,11 +1533,11 @@ public class ScriptRuntime {
      */
     public static Object name(Context cx, Scriptable scopeChain, String id)
     {
-        Scriptable obj = scopeChain;
+        Scriptable scope = scopeChain;
         XMLObject firstXMLObject = null;
-        while (obj != null) {
-            if (obj instanceof NativeWith) {
-                Scriptable withObj = obj.getPrototype();
+        do {
+            if (scope instanceof NativeWith) {
+                Scriptable withObj = scope.getPrototype();
                 if (withObj instanceof XMLObject) {
                     XMLObject xmlObj = (XMLObject)withObj;
                     if (xmlObj.ecmaHas(cx, id)) {
@@ -1583,13 +1553,13 @@ public class ScriptRuntime {
                     }
                 }
             } else {
-                Object result = ScriptableObject.getProperty(obj, id);
+                Object result = ScriptableObject.getProperty(scope, id);
                 if (result != Scriptable.NOT_FOUND) {
                     return result;
                 }
             }
-            obj = obj.getParentScope();
-        }
+            scope = scope.getParentScope();
+        } while (scope != null);
 
         if (firstXMLObject != null) {
             // The name was not found, but we did find an XML object in the
@@ -1816,12 +1786,127 @@ public class ScriptRuntime {
         x.index = 0;
     }
 
-    public static Object call(Context cx, Object fun, Object thisArg,
-                              Object[] args, Scriptable scope)
+    /**
+     * Prepare for calling name(...): return function corresponding to
+     * name and make current top scope available
+     * as ScriptRuntime.lastStoredScriptable() for consumption as thisObj.
+     * The caller must call ScriptRuntime.lastStoredScriptable() immediately
+     * after calling this method.
+     */
+    public static Function getNameFunctionAndThis(String name,
+                                                  Context cx,
+                                                  Scriptable scope)
+    {
+        Object value = name(cx, scope, name);
+        if (!(value instanceof Function)) {
+            throw notFunctionError(value, name);
+        }
+
+        Scriptable thisObj = scope;
+        if (scope.getParentScope() != null) {
+            // Check for with and activation:
+            while (thisObj instanceof NativeWith) {
+                thisObj = thisObj.getPrototype();
+            }
+            if (thisObj instanceof NativeCall) {
+                thisObj = ScriptableObject.getTopLevelScope(thisObj);
+            }
+        }
+
+        storeScriptable(cx, thisObj);
+        return (Function)value;
+    }
+
+    /**
+     * Prepare for calling obj[id](...): return function corresponding to
+     * obj[id] and make obj properly converted to Scriptable available
+     * as ScriptRuntime.lastStoredScriptable() for consumption as thisObj.
+     * The caller must call ScriptRuntime.lastStoredScriptable() immediately
+     * after calling this method.
+     */
+    public static Function getElemFunctionAndThis(Object obj,
+                                                  Object elem,
+                                                  Context cx,
+                                                  Scriptable scope)
+    {
+        if (obj == null || obj == Undefined.instance) {
+            throw undefReadError(obj, elem);
+        }
+        Scriptable thisObj;
+        if (obj instanceof Scriptable) {
+            thisObj = (Scriptable)obj;
+        } else {
+            thisObj = toObject(cx, scope, obj);
+        }
+
+        // Do NOT check for XMLObject: x.elem() calls are resolved via normal
+        // Scriptable machinery
+
+        Object value = getObjectElem(thisObj, elem, cx);
+        if (!(value instanceof Function)) {
+            throw notFunctionError(value, elem);
+        }
+
+        storeScriptable(cx, thisObj);
+        return (Function)value;
+    }
+
+    /**
+     * Prepare for calling obj.property(...): return function corresponding to
+     * obj.property and make obj properly converted to Scriptable available
+     * as ScriptRuntime.lastStoredScriptable() for consumption as thisObj.
+     * The caller must call ScriptRuntime.lastStoredScriptable() immediately
+     * after calling this method.
+     */
+    public static Function getPropFunctionAndThis(Object obj,
+                                                  String property,
+                                                  Context cx,
+                                                  Scriptable scope)
+    {
+        if (obj == null || obj == Undefined.instance) {
+            throw undefReadError(obj, property);
+        }
+        Scriptable thisObj;
+        if (obj instanceof Scriptable) {
+            thisObj = (Scriptable)obj;
+        } else {
+            thisObj = toObject(cx, scope, obj);
+        }
+
+        Object value = getObjectProp(thisObj, property, cx);
+        if (!(value instanceof Function)) {
+            throw notFunctionError(value, property);
+        }
+
+        storeScriptable(cx, thisObj);
+        return (Function)value;
+    }
+
+    /**
+     * Prepare for calling <expression>(...): return function corresponding to
+     * <expression> and make parent scope of the function available
+     * as ScriptRuntime.lastStoredScriptable() for consumption as thisObj.
+     * The caller must call ScriptRuntime.lastStoredScriptable() immediately
+     * after calling this method.
+     */
+    public static Function getValueFunctionAndThis(Object value, Context cx)
+    {
+        if (!(value instanceof Function)) {
+            throw notFunctionError(value);
+        }
+
+        Function f = (Function)value;
+        Scriptable thisObj = f.getParentScope();
+        storeScriptable(cx, thisObj);
+        return f;
+    }
+
+    private static Object call(Object fun, Context cx, Scriptable scope,
+                               Object thisArg, Object[] args)
         throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
-            throw typeError1("msg.isnt.function", toString(fun));
+            throw notFunctionError(fun);
         }
         Function function = (Function)fun;
         Scriptable thisObj;
@@ -1842,21 +1927,10 @@ public class ScriptRuntime {
      * can be GC-reachable after this method returns. If this is necessary,
      * store args.clone(), not args array itself.
      */
-    public static Object referenceCall(Object fun, Object thisArg,
+    public static Object referenceCall(Function function, Scriptable thisObj,
                                        Object[] args,
                                        Context cx, Scriptable scope)
-        throws JavaScriptException
     {
-        if (!(fun instanceof Function)) {
-            throw typeError1("msg.isnt.function", toString(fun));
-        }
-        Function function = (Function)fun;
-        Scriptable thisObj;
-        if (thisArg instanceof Scriptable || thisArg == null) {
-            thisObj = (Scriptable) thisArg;
-        } else {
-            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
-        }
         if (function instanceof BaseFunction) {
             BaseFunction bf = (BaseFunction)function;
             Reference ref = bf.referenceCall(cx, scope, thisObj, args);
@@ -1864,7 +1938,7 @@ public class ScriptRuntime {
         }
         // No runtime support for now
         String msg = getMessage1("msg.no.ref.from.function",
-                                 toString(fun));
+                                 toString(function));
         throw constructError("ReferenceError", msg);
     }
 
@@ -1873,19 +1947,19 @@ public class ScriptRuntime {
      *
      * See ECMA 11.2.2
      */
-    public static Scriptable newObject(Context cx, Object fun,
-                                       Object[] args, Scriptable scope)
+    public static Scriptable newObject(Object fun, Context cx,
+                                       Scriptable scope, Object[] args)
         throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
-            throw typeError1("msg.isnt.function", toString(fun));
+            throw notFunctionError(fun);
         }
         Function function = (Function)fun;
         return function.construct(cx, scope, args);
     }
 
-    public static Object callSpecial(Context cx, Object fun,
-                                     boolean isNew, Object thisObj,
+    public static Object callSpecial(Context cx, Function fun,
+                                     Scriptable thisObj,
                                      Object[] args, Scriptable scope,
                                      Scriptable callerThis, int callType,
                                      String filename, int lineNumber)
@@ -1893,29 +1967,98 @@ public class ScriptRuntime {
     {
         if (callType == Node.SPECIALCALL_EVAL) {
             if (NativeGlobal.isEvalFunction(fun)) {
-                if (isNew) {
-                    throw typeError1("msg.not.ctor", "eval");
-                }
                 return evalSpecial(cx, scope, callerThis, args,
                                    filename, lineNumber);
             }
         } else if (callType == Node.SPECIALCALL_WITH) {
             if (NativeWith.isWithFunction(fun)) {
-                if (!isNew) {
-                    throw Context.reportRuntimeError1("msg.only.from.new",
-                                                      "With");
-                }
+                throw Context.reportRuntimeError1("msg.only.from.new",
+                                                  "With");
+            }
+        } else {
+            throw Kit.codeBug();
+        }
+
+        return fun.call(cx, scope, thisObj, args);
+    }
+
+    public static Object newSpecial(Context cx, Object fun,
+                                    Object[] args, Scriptable scope,
+                                    int callType)
+        throws JavaScriptException
+    {
+        if (callType == Node.SPECIALCALL_EVAL) {
+            if (NativeGlobal.isEvalFunction(fun)) {
+                throw typeError1("msg.not.ctor", "eval");
+            }
+        } else if (callType == Node.SPECIALCALL_WITH) {
+            if (NativeWith.isWithFunction(fun)) {
                 return NativeWith.newWithSpecial(cx, scope, args);
             }
         } else {
-            Kit.codeBug();
+            throw Kit.codeBug();
         }
 
-        if (isNew) {
-            return newObject(cx, fun, args, scope);
+        return newObject(fun, cx, scope, args);
+    }
+
+    /**
+     * Function.prototype.apply and Function.prototype.call
+     *
+     * See Ecma 15.3.4.[34]
+     */
+    public static Object applyOrCall(boolean isApply,
+                                     Context cx, Scriptable scope,
+                                     Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        int L = args.length;
+        Function function;
+        if (thisObj instanceof Function) {
+            function = (Function)thisObj;
         } else {
-            return call(cx, fun, thisObj, args, scope);
+            Object value = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
+            if (!(value instanceof Function)) {
+                throw ScriptRuntime.notFunctionError(value, thisObj);
+            }
+            function = (Function)value;
         }
+
+        Scriptable callThis;
+        if (L == 0 || args[0] == null || args[0] == Undefined.instance) {
+            callThis = ScriptableObject.getTopLevelScope(scope);
+        } else {
+            callThis = ScriptRuntime.toObject(cx, scope, args[0]);
+        }
+
+        Object[] callArgs;
+        if (isApply) {
+            // Follow Ecma 15.3.4.3
+            if (L <= 1) {
+                callArgs = ScriptRuntime.emptyArgs;
+            } else {
+                Object arg1 = args[1];
+                if (arg1 == null || arg1 == Undefined.instance) {
+                    callArgs = ScriptRuntime.emptyArgs;
+                } else if (arg1 instanceof NativeArray
+                           || arg1 instanceof Arguments)
+                {
+                    callArgs = cx.getElements((Scriptable) arg1);
+                } else {
+                    throw ScriptRuntime.typeError0("msg.arg.isnt.array");
+                }
+            }
+        } else {
+            // Follow Ecma 15.3.4.4
+            if (L <= 1) {
+                callArgs = ScriptRuntime.emptyArgs;
+            } else {
+                callArgs = new Object[L - 1];
+                System.arraycopy(args, 1, callArgs, 0, L - 1);
+            }
+        }
+
+        return function.call(cx, scope, callThis, callArgs);
     }
 
     /**
@@ -2134,7 +2277,7 @@ public class ScriptRuntime {
                                       Context cx, Scriptable scope,
                                       int incrDecrMask)
     {
-        Object value = getObjectId(obj, index, cx, scope);
+        Object value = getObjectElem(obj, index, cx, scope);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -2152,7 +2295,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = new Double(number);
-        setObjectId(obj, index, result, cx, scope);
+        setObjectElem(obj, index, result, cx, scope);
         if (post) {
             return value;
         } else {
@@ -2621,6 +2764,8 @@ public class ScriptRuntime {
             if (cx.currentActivationCall != null)
                 throw new IllegalStateException();
             cx.topActivationScope = null;
+
+            // Cleanup references
             cx.cachedXMLLib = null;
         }
     }
@@ -2902,11 +3047,26 @@ public class ScriptRuntime {
         return typeError2(messageId, valueStr, msg);
     }
 
-    public static RuntimeException notFoundError(Scriptable object, String property)
+    public static RuntimeException notFoundError(Scriptable object,
+                                                 String property)
     {
         // XXX: use object to improve the error message
         String msg = getMessage1("msg.is.not.defined", property);
         throw constructError("ReferenceError", msg);
+    }
+
+    public static RuntimeException notFunctionError(Object value)
+    {
+        return notFunctionError(value, value);
+    }
+
+    public static RuntimeException notFunctionError(Object value,
+                                                    Object messageHelper)
+    {
+        // XXX Use value for better error reporting
+        String msg = (messageHelper == null)
+                     ? "null" : messageHelper.toString();
+        return typeError1("msg.isnt.function", msg);
     }
 
     public static RegExpProxy getRegExpProxy(Context cx)
@@ -3001,6 +3161,51 @@ public class ScriptRuntime {
             m = m.getPrototype();
         } while (m != null);
         return false;
+    }
+
+    private static void storeIndexResult(Context cx, int index)
+    {
+        cx.scratchIndex = index;
+    }
+
+    static int lastIndexResult(Context cx)
+    {
+        return cx.scratchIndex;
+    }
+
+    public static void storeUint32Result(Context cx, long value)
+    {
+        if ((value >>> 32) != 0)
+            throw new IllegalArgumentException();
+        cx.scratchUint32 = value;
+    }
+
+    public static long lastUint32Result(Context cx)
+    {
+        long value = cx.scratchUint32;
+        if ((value >>> 32) != 0)
+            throw new IllegalStateException();
+        return value;
+    }
+
+    private static void storeScriptable(Context cx, Scriptable value)
+    {
+        if (value == null)
+            throw new IllegalArgumentException();
+        // The previosly stored scratchScriptable should be consumed
+        if (cx.scratchScriptable != null)
+            throw new IllegalStateException();
+        cx.scratchScriptable = value;
+    }
+
+    public static Scriptable lastStoredScriptable(Context cx)
+    {
+        Scriptable result = cx.scratchScriptable;
+        if (result == null)
+            throw new IllegalStateException();
+        // Consume the result
+        cx.scratchScriptable = null;
+        return result;
     }
 
     static String makeUrlForGeneratedScript
