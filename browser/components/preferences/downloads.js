@@ -41,7 +41,9 @@ var gDownloadsPane = {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     var fp = Components.classes["@mozilla.org/filepicker;1"]
                        .createInstance(nsIFilePicker);
-    fp.init(window, "Choose Download Folder", nsIFilePicker.modeGetFolder);
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    var title = bundlePreferences.getString("chooseDownloadFolderTitle");
+    fp.init(window, title, nsIFilePicker.modeGetFolder);
     
     const nsILocalFile = Components.interfaces.nsILocalFile;
     var customDirPref = document.getElementById("browser.download.dir");
