@@ -31,7 +31,8 @@
 #include "FSpCompat.h"
 #include "FileCopy.h"
 #include "PascalString.h"
-#include "Files.h"
+#include <Files.h>
+#include <Folders.h>
 #include <LString.h>
 #include "cstring.h"
 

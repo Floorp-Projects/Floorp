@@ -37,10 +37,12 @@
 #include "NSReg.h"
 #endif
 
+#if 0
 #ifdef XP_MAC
 #ifdef MOZ_NGLAYOUT
 #define IMPL_MAC_REPOSITORY
 #include "nsMacRepository.h"
+#endif
 #endif
 #endif
 

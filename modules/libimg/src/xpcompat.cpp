@@ -25,6 +25,7 @@
  * of the XP_ library.
  */
 #include "xpcompat.h"
+#include "xp_mcom.h"
 #include <stdlib.h>
 /* BSDI did not have this header and we do not need it here.  -slamm */
 /* #include <search.h> */
@@ -41,7 +42,6 @@ extern ilISystemServices *il_ss;
 #include <limits.h>
 #endif /* XP_PC */
 
-#ifndef XP_MAC
 PR_BEGIN_EXTERN_C
 int MK_UNABLE_TO_LOCATE_FILE = -1;
 int MK_OUT_OF_MEMORY = -2;
@@ -68,7 +68,6 @@ int XP_MSG_COMMENT = -25;
 int XP_MSG_UNKNOWN = -26;	
 int XP_MSG_COMPRESS_REMOVE = -27;	
 PR_END_EXTERN_C
-#endif /* XP_MAC */
 
 char *XP_GetString(int i)
 {
@@ -120,8 +119,8 @@ static void  swap(char *p, char *q, unsigned int width);
 
 void XP_QSORT (
     void *base,
-    unsigned num,
-    unsigned width,
+    size_t num,
+    size_t width,
     int ( *comp)(const void *, const void *)
     )
 {
@@ -369,10 +368,60 @@ static void  swap (
 
 #endif /* SOLARIS or XP_MAC */
 
+#ifdef XP_MAC
+#include <OSUtils.h>
+
+static void MyReadLocation(MachineLocation * loc)
+{
+	static MachineLocation storedLoc;	// InsideMac, OSUtilities, page 4-20
+	static Boolean didReadLocation = FALSE;
+	if (!didReadLocation)
+	{	
+		ReadLocation(&storedLoc);
+		didReadLocation = TRUE;
+	}
+	*loc = storedLoc;
+}
+
+// current local time = GMTDelta() + GMT
+// GMT = local time - GMTDelta()
+static long GMTDelta()
+{
+	MachineLocation loc;
+	long gmtDelta;
+	
+	MyReadLocation(&loc);
+	gmtDelta = loc.u.gmtDelta & 0x00FFFFFF;
+	if ((gmtDelta & 0x00800000) != 0)
+		gmtDelta |= 0xFF000000;
+	return gmtDelta;
+}
+
+// This routine simulates stdclib time(), time in seconds since 1.1.1970
+// The time is in GMT
+time_t GetTimeMac()
+{
+	unsigned long maclocal;
+	// Get Mac local time
+	GetDateTime(&maclocal); 
+	// Get Mac GMT	
+	maclocal -= GMTDelta();
+	// return unix GMT
+	return (maclocal - UNIXMINUSMACTIME);
+}
+
+// Returns the GMT times
+time_t Mactime(time_t *timer)
+{
+	time_t t = GetTimeMac();
+	if (timer != NULL)
+		*timer = t;
+	return t;
+}
+#endif /* XP_MAC */
 
 /*	Allocate a new copy of a block of binary data, and returns it
  */
-#ifndef XP_MAC
 char * 
 NET_BACopy (char **destination, const char *source, size_t length)
 {
@@ -395,7 +444,6 @@ NET_BACopy (char **destination, const char *source, size_t length)
       }
     return *destination;
 }
-#endif /* XP_MAC */ 
 
 /*	binary block Allocate and Concatenate
  *
@@ -403,7 +451,6 @@ NET_BACopy (char **destination, const char *source, size_t length)
  *   source_length   is the length of the block being added to the 
  *   destination block
  */
-#ifndef XP_MAC
 char * 
 NET_BACat (char **destination, 
 		   size_t destination_length, 
@@ -433,11 +480,9 @@ NET_BACat (char **destination,
 
   return *destination;
 }
-#endif /* XP_MAC */ 
 
 /*	Very similar to strdup except it free's too
  */
-#ifndef XP_MAC
 char * 
 NET_SACopy (char **destination, const char *source)
 {
@@ -460,11 +505,9 @@ NET_SACopy (char **destination, const char *source)
       }
     return *destination;
 }
-#endif /* XP_MAC */ 
 
 /*  Again like strdup but it concatinates and free's and uses Realloc
 */
-#ifndef XP_MAC
 char *
 NET_SACat (char **destination, const char *source)
 {
@@ -490,7 +533,6 @@ NET_SACat (char **destination, const char *source)
       }
     return *destination;
 }
-#endif /* XP_MAC */ 
 
 #if 0
 #include <windows.h>
@@ -770,14 +812,14 @@ static void wfe_ProcessTimeouts(DWORD dwNow)
     dwSyncHack = 0;
 }
 #else
-void * 
+NS_EXPORT void * 
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     return il_ss->SetTimeout((ilTimeoutCallbackFunction)func,
                              closure, msecs);
 }
 
-void 
+NS_EXPORT void 
 FE_ClearTimeout(void *timer_id)
 {
     il_ss->ClearTimeout(timer_id);

@@ -68,6 +68,7 @@ extern "C" PRBool		NSCanUnload_PREF_DLL(void);
 
 // library list
 static MacLibrary	libraries[] = {
+#if 0
 	WIDGET_DLL,		NSGetFactory_WIDGET_DLL,	NULL,
 	GFXWIN_DLL,		NSGetFactory_GFXWIN_DLL,	NULL,
 	VIEW_DLL,		NSGetFactory_VIEW_DLL,		NULL,
@@ -79,7 +80,9 @@ static MacLibrary	libraries[] = {
 	LAYOUT_DLL,		NSGetFactory_LAYOUT_DLL,	NULL,
 	NETLIB_DLL,		NSGetFactory_NETLIB_DLL,	NULL,
 	//EDITOR_DLL,		NSGetFactory_EDITOR_DLL,	NULL,		// FIX ME
-	NULL};
+#endif
+	NULL
+};
 
 static void* FindMacSymbol(char* libName, const char *symbolName)
 {

@@ -26,7 +26,9 @@
 
 #include <string.h>
 #include "prmem.h"
+#include "plstr.h"
 #include "FullPath.h"
+#include "net.h"
 
 // Returns a full pathname to the given file
 // Returned value is allocated with XP_ALLOC, and must be freed with XP_FREE
@@ -175,8 +177,8 @@ static char* encodeMacPath(char* inPath, Boolean prependSlash)
 	
 	if (newPath != NULL) {
 		swapSlashColon(newPath);
-		// finalPath = NET_Escape(newPath, URL_PATH);
-		// XP_FREE(newPath);
+		finalPath = NET_Escape(newPath, URL_PATH);
+		XP_FREE(newPath);
 	}
 
 	PR_Free( inPath );
@@ -201,7 +203,7 @@ static char* macPathFromUnixPath(const char* unixPath)
 		else if (strchr(src, '/'))	// ¥ partial path, and not just a leaf name
 			*dst++ = ':';
 		strcpy(dst, src);
-		// NET_UnEscape(dst);		// Hex Decode
+		NET_UnEscape(dst);		// Hex Decode
 		swapSlashColon(dst);
 	}
 	return result;
@@ -274,4 +276,138 @@ Boolean FileExists(const FSSpec& fsSpec)
 	err = FSMakeFSSpec( fsSpec.vRefNum, fsSpec.parID, fsSpec.name, &temp );
 	
 	return (err == noErr);
+}
+
+
+// beard:  brought over from mkparse.c to break dependency.
+
+/* encode illegal characters into % escaped hex codes.
+ *
+ * mallocs and returns a string that must be freed
+ */
+static int netCharType[256] =
+/*	Bit 0		xalpha		-- the alphas
+**	Bit 1		xpalpha		-- as xalpha but 
+**                             converts spaces to plus and plus to %20
+**	Bit 3 ...	path		-- as xalphas but doesn't escape '/'
+*/
+    /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
+    {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 0x */
+		 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 1x */
+		 0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,	/* 2x   !"#$%&'()*+,-./	 */
+         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,	/* 3x  0123456789:;<=>?	 */
+	     0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
+	     /* bits for '@' changed from 7 to 0 so '@' can be escaped   */
+	     /* in usernames and passwords in publishing.                */
+	     7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,	/* 5X  PQRSTUVWXYZ[\]^_	 */
+	     0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 6x  `abcdefghijklmno	 */
+	     7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,	/* 7X  pqrstuvwxyz{\}~	DEL */
+		 0, };
+
+#define HEX_ESCAPE '%'
+
+#define IS_OK(C) (netCharType[((unsigned int) (C))] & (mask))
+
+PUBLIC char *
+NET_Escape (const char * str, int mask)
+{
+    if(!str)
+        return NULL;
+    return NET_EscapeBytes (str, (int32)PL_strlen(str), mask, NULL);
+}
+
+PUBLIC char *
+NET_EscapeBytes (const char * str, int32 len, int mask, int32 * out_len)
+{
+    register const unsigned char *src;
+    register unsigned char *dst;
+    char        *result;
+    int32       i, extra = 0;
+    char        *hexChars = "0123456789ABCDEF";
+
+	if(!str)
+		return(0);
+
+	src = (unsigned char *) str;
+    for(i = 0; i < len; i++)
+	  {
+        if (!IS_OK(src[i]))
+            extra+=2; /* the escape, plus an extra byte for each nibble */
+	  }
+
+    if(!(result = (char *) PR_Malloc(len + extra + 1)))
+        return(0);
+
+    dst = (unsigned char *) result;
+    for(i = 0; i < len; i++)
+	  {
+		unsigned char c = src[i];
+		if (IS_OK(c))
+		  {
+			*dst++ = c;
+		  }
+		else if(mask == URL_XPALPHAS && c == ' ')
+		  {
+			*dst++ = '+'; /* convert spaces to pluses */
+		  }
+		else 
+		  {
+			*dst++ = HEX_ESCAPE;
+			*dst++ = hexChars[c >> 4];		/* high nibble */
+			*dst++ = hexChars[c & 0x0f];	/* low nibble */
+		  }
+	  }
+
+    *dst = '\0';     /* tack on eos */
+	if(out_len)
+		*out_len = dst - (unsigned char *) result;
+    return result;
+}
+
+/* decode % escaped hex codes into character values
+ */
+#define UNHEX(C) \
+    ((C >= '0' && C <= '9') ? C - '0' : \
+     ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
+     ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
+
+PUBLIC int
+NET_UnEscapeCnt (char * str)
+{
+    register char *src = str;
+    register char *dst = str;
+
+    while(*src)
+        if (*src != HEX_ESCAPE)
+		  {
+        	*dst++ = *src++;
+		  }
+        else 	
+		  {
+        	src++; /* walk over escape */
+        	if (*src)
+              {
+            	*dst = UNHEX(*src) << 4;
+            	src++;
+              }
+        	if (*src)
+              {
+            	*dst = (*dst + UNHEX(*src));
+            	src++;
+              }
+        	dst++;
+          }
+
+    *dst = 0;
+
+    return (int)(dst - str);
+
+} /* NET_UnEscapeCnt */
+
+PUBLIC char *
+NET_UnEscape(char * str)
+{
+	(void)NET_UnEscapeCnt(str);
+
+	return str;
 }

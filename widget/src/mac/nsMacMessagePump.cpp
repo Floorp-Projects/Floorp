@@ -51,7 +51,7 @@ const char MOUSEMOVEDMESSAGE = 0xFA;
 //nsWindow* nsMacMessagePump::gGrabWindow = nsnull;			// need this for grabmouse
 
 //static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
-nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
+NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
 
 
 bool IsUserWindow ( WindowPtr ) ;

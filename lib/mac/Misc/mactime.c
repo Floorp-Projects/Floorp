@@ -31,6 +31,13 @@ _END_C_LIB_DECL
 #endif
 #include <time.h>
 
+#ifndef __OSUTILS__
+#include <OSUtils.h>
+#endif
+#ifndef __TOOLUTILS__
+#include <ToolUtils.h>
+#endif
+
 // Because serial port and SLIP conflict with ReadXPram calls,
 // we cache the call here
 // The symptoms are the 
@@ -41,11 +48,11 @@ long GMTDelta();
 void MyReadLocation(MachineLocation * loc)
 {
 	static MachineLocation storedLoc;	// InsideMac, OSUtilities, page 4-20
-	static Boolean didReadLocation = FALSE;
+	static Boolean didReadLocation = false;
 	if (!didReadLocation)
 	{	
 		ReadLocation(&storedLoc);
-		didReadLocation = TRUE;
+		didReadLocation = true;
 	}
 	*loc = storedLoc;
 }

@@ -150,12 +150,8 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef MAC_STATIC
+#if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_VIEW nsresult NSGetFactory_VIEW_DLL(const nsCID &aClass, nsIFactory **aFactory)
-#elif defined(MAC_SHARED)
-#pragma export on
-extern "C" NS_VIEW nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
-#pragma export off
 #else
 extern "C" NS_VIEW nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 #endif

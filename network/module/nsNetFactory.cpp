@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -143,7 +144,7 @@ nsresult nsNetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_NET nsresult NSGetFactory_NETLIB_DLL(const nsCID &aClass, nsIFactory **aFactory)
 #else
 extern "C" NS_NET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)

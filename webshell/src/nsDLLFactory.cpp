@@ -27,12 +27,8 @@ static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 
 
-#ifdef MAC_STATIC
+#if defined(XP_MAC) && defined(MAC_STATIC)
 extern "C" NS_WEB nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsIFactory** aFactory)
-#elif defined(MAC_SHARED)
-#pragma export on
-extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
-#pragma export on
 #else
 extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
 #endif
