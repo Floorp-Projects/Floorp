@@ -15,3 +15,50 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+ /**
+ * A character set converter from Unicode to GBK.
+ * 
+ *
+ * @created         08/Sept/1999
+ * @author  Yueheng Xu, Yueheng.Xu@intel.com
+ */
+
+#ifndef nsUnicodeToGBK_h___
+#define nsUnicodeToGBK_h___
+
+#include "nsUCvCnSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsUnicodeToGBK [declaration]
+
+class nsUnicodeToGBK: public nsMultiTableEncoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToGBK();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+  NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
+                            PRInt32 * aSrcLength, 
+                            char * aDest, 
+                            PRInt32 * aDestLength);
+
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+};
+
+#endif /* nsUnicodeToGBK_h___ */
+
