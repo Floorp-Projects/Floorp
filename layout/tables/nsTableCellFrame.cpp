@@ -673,18 +673,18 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
       if (border.right > 0) 
         smallestMinWidth += onePixel;
     }
-    PRInt32 colspan = GetColSpan();
-    if (colspan > 1) {
-      smallestMinWidth = PR_MAX(smallestMinWidth, colspan * onePixel);
-      nscoord spacingX = tableFrame->GetCellSpacingX();
-      nscoord spacingExtra = spacingX * (colspan - 1);
-      smallestMinWidth += spacingExtra;
-      if (padding.left > 0) {
-        smallestMinWidth -= onePixel;
-      }
+  }
+  PRInt32 colspan = GetColSpan();
+  if (colspan > 1) {
+    smallestMinWidth = PR_MAX(smallestMinWidth, colspan * onePixel);
+    nscoord spacingX = tableFrame->GetCellSpacingX();
+    nscoord spacingExtra = spacingX * (colspan - 1);
+    smallestMinWidth += spacingExtra;
+    if (padding.left > 0) {
+      smallestMinWidth -= onePixel;
     }
   }
-
+ 
   if ((0 == kidSize.width) && (NS_UNCONSTRAINEDSIZE != kidReflowState.availableWidth)) {
     // empty content has to be forced to the assigned width for resize or incremental reflow
     kidSize.width = kidReflowState.availableWidth;
