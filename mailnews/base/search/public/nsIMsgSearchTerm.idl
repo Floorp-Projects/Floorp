@@ -33,12 +33,12 @@ native nsCStringRef(nsCString&);
 
 [scriptable, uuid(52db94d7-71c8-46c9-9692-91ff880a8cb7)]
 interface nsIMsgSearchTerm : nsISupports {
-    readonly attribute nsMsgSearchAttribValue attrib;
-    readonly attribute nsMsgSearchOpValue op;
-    readonly attribute nsIMsgSearchValue value;
+    attribute nsMsgSearchAttribValue attrib;
+    attribute nsMsgSearchOpValue op;
+    attribute nsIMsgSearchValue value;
 
-    readonly attribute boolean booleanAnd;
-    readonly attribute string arbitraryHeader;
+    attribute boolean booleanAnd;
+    attribute string arbitraryHeader;
 
     boolean matchRfc822String(in string aString, in string charset);
     boolean matchString(in string aString, in string charset,

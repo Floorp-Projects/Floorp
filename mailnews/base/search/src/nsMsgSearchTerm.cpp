@@ -1151,6 +1151,13 @@ nsMsgSearchTerm::GetAttrib(nsMsgSearchAttribValue *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgSearchTerm::SetAttrib(nsMsgSearchAttribValue aValue)
+{
+    m_attribute = aValue;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgSearchTerm::GetOp(nsMsgSearchOpValue *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
@@ -1159,11 +1166,26 @@ nsMsgSearchTerm::GetOp(nsMsgSearchOpValue *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgSearchTerm::SetOp(nsMsgSearchOpValue aValue)
+{
+    m_operator = aValue;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsMsgSearchTerm::GetValue(nsIMsgSearchValue **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = new nsMsgSearchValueImpl(&m_value);
     NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::SetValue(nsIMsgSearchValue* aValue)
+{
+	nsMsgResultElement::AssignValues (aValue, &m_value);
     return NS_OK;
 }
 
@@ -1176,10 +1198,26 @@ nsMsgSearchTerm::GetBooleanAnd(PRBool *aResult)
 }
 
 NS_IMETHODIMP
+nsMsgSearchTerm::SetBooleanAnd(PRBool aValue)
+{
+    m_booleanOp =
+        aValue ? nsMsgSearchBooleanOp::BooleanAND :
+        nsMsgSearchBooleanOp::BooleanOR;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgSearchTerm::GetArbitraryHeader(char* *aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = m_arbitraryHeader.ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchTerm::SetArbitraryHeader(const char* aValue)
+{
+    m_arbitraryHeader = aValue;
     return NS_OK;
 }
 
