@@ -17,10 +17,14 @@
  */
 
 #include "nsRenderingContextWin.h"
+#include "nsRegionWin.h"
 #include <math.h>
 
-#define FLAG_CLIP_VALID   0x0001
-#define FLAG_CLIP_CHANGED 0x0002
+#define FLAG_CLIP_VALID       0x0001
+#define FLAG_CLIP_CHANGED     0x0002
+#define FLAG_LOCAL_CLIP_VALID 0x0004
+
+#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
 
 class GraphicsState
 {
@@ -39,7 +43,7 @@ public:
   HFONT           mFont;
   nscolor         mPenColor;
   HPEN            mSolidPen;
-  PRUint32        mFlags;
+  PRInt32         mFlags;
 };
 
 GraphicsState :: GraphicsState()
@@ -54,7 +58,7 @@ GraphicsState :: GraphicsState()
   mFont = NULL;
   mPenColor = NS_RGB(0, 0, 0);
   mSolidPen = NULL;
-  mFlags = 0;
+  mFlags = ~FLAGS_ALL;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -69,7 +73,7 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
   mFont = NULL;
   mPenColor = aState.mPenColor;
   mSolidPen = NULL;
-  mFlags = 0;
+  mFlags = ~FLAGS_ALL;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -341,7 +345,7 @@ void nsRenderingContextWin :: PushState(void)
     state->mFont = NULL;
     state->mPenColor = mStates->mPenColor;
     state->mSolidPen = NULL;
-    state->mFlags = 0;
+    state->mFlags = ~FLAGS_ALL;
 
     mStates = state;
   }
@@ -383,7 +387,7 @@ void nsRenderingContextWin :: PopState(void)
           ::SelectClipRgn(mDC, pstate->mClipRegion);
       }
 
-      oldstate->mFlags &= ~(FLAG_CLIP_VALID | FLAG_CLIP_CHANGED);
+      oldstate->mFlags &= ~FLAGS_ALL;
       oldstate->mSolidBrush = NULL;
       oldstate->mFont = NULL;
       oldstate->mSolidPen = NULL;
@@ -406,6 +410,8 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCo
 
 	mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
+
+  mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
   //how we combine the new rect with the previous?
 
@@ -456,14 +462,26 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCo
 
 PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
 {
-  aRect = mStates->mLocalClip;
-
-  return PR_TRUE;
+  if (mStates->mFlags & FLAG_LOCAL_CLIP_VALID)
+  {
+    aRect = mStates->mLocalClip;
+    return PR_TRUE;
+  }
+  else
+    return PR_FALSE;
 }
 
 void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
-  //XXX wow, needs to do something.
+  nsRegionWin *pRegion = (nsRegionWin *)&aRegion;
+  HRGN hrgn = pRegion->GetHRGN();
+
+  if (NULL != hrgn)
+  {
+    mStates->mFlags &= ~FLAG_LOCAL_CLIP_VALID;
+    PushClipState();
+    ::SelectClipRgn(mDC, hrgn);
+  }
 }
 
 void nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
