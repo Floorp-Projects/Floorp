@@ -55,7 +55,7 @@ PRBool copy_IDE(XPTInterfaceDirectoryEntry *from,
                 XPTInterfaceDirectoryEntry *to);
 PRBool copy_fixElement(fixElement *from, fixElement *to);
 static void print_IID(struct nsID *iid, FILE *file);
-static void xpt_dump_usage(char *argv[]);
+static void xpt_link_usage(char *argv[]);
 
 struct fixElement {
     nsID iid;
@@ -74,6 +74,11 @@ struct fixElement {
 int trueNumberOfInterfaces = 0;
 int totalNumberOfInterfaces = 0;
 
+#ifdef XP_MAC
+#define main xptlink_main
+int xptlink_main(int argc, char *argv[]);
+#endif
+
 int 
 main(int argc, char **argv)
 {
@@ -84,7 +89,7 @@ main(int argc, char **argv)
     XPTInterfaceDescriptor *id;
     XPTTypeDescriptor *td;
     XPTAnnotation *ann, *first_ann;
-    uint32 header_sz, len;
+    PRUint32 header_sz, len;
     struct stat file_stat;
     size_t flen = 0;
     char *head, *data, *whole;
@@ -94,7 +99,7 @@ main(int argc, char **argv)
     int k = 0;
 
     if (argc < 3) {
-        xpt_dump_usage(argv);
+        xpt_link_usage(argv);
         return 1;
     }
         
@@ -672,7 +677,7 @@ print_IID(struct nsID *iid, FILE *file)
 }
 
 static void
-xpt_dump_usage(char *argv[]) 
+xpt_link_usage(char *argv[]) 
 {
     fprintf(stdout, "Usage: %s outfile file1.xpt file2.xpt ...\n"
             "       Links multiple typelib files into one outfile\n", argv[0]);
