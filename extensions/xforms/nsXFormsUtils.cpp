@@ -58,6 +58,10 @@
 #include "nsIDOMEventTarget.h"
 #include "nsDataHashtable.h"
 
+#include "nsIScriptSecurityManager.h"
+#include "nsIPermissionManager.h"
+#include "nsServiceManagerUtils.h"
+
 struct EventData
 {
   const char *name;
@@ -834,4 +838,31 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
   }
   
   return NS_OK;
+}
+
+/* static */ PRBool
+nsXFormsUtils::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
+{
+  nsresult rv;
+
+  // check to see if we're allowed to load this URI
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+  if (secMan) {
+    rv = secMan->CheckSameOriginURI(aBaseURI, aTestURI);
+    if (NS_SUCCEEDED(rv))
+      return PR_TRUE;
+  }
+
+  // else, check with the permission manager to see if this host is
+  // permitted to access sites from other domains.
+
+  nsCOMPtr<nsIPermissionManager> permMgr =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  PRUint32 perm;
+  rv = permMgr->TestPermission(aBaseURI, "xforms-load", &perm);
+  if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION)
+    return PR_TRUE; 
+
+  return PR_FALSE;
 }

@@ -47,6 +47,7 @@
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIXFormsModelElement;
+class nsIURI;
 class nsString;
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
@@ -292,6 +293,11 @@ public:
                                                 PRInt32        *aContextPosition,
                                                 PRInt32        *aContextSize);
 
+  /**
+   * @return true if aTestURI has the same origin as aBaseURI
+   */
+  static NS_HIDDEN_(PRBool) CheckSameOrigin(nsIURI *aBaseURI,
+                                            nsIURI *aTestURI);
 };
 
 #endif

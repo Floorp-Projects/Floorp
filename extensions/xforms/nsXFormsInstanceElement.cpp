@@ -49,6 +49,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsXFormsUtils.h"
+#include "nsNetUtil.h"
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInstanceElement,
                              nsXFormsStubElement,
@@ -253,14 +254,29 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
   if (NS_FAILED(CreateInstanceDocument()))
     return;
 
-  nsCOMPtr<nsIDOMEventReceiver> rec = do_QueryInterface(mDocument);
-  rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMLoadListener));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+  if (!doc)
+    return;
 
-  nsCOMPtr<nsIDOMXMLDocument> xmlDoc = do_QueryInterface(mDocument);
-  NS_ASSERTION(xmlDoc, "we created a document but it's not an XMLDocument?");
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
+            doc->GetDocumentURI());
+  if (!uri)
+    return;
 
-  PRBool success;
-  xmlDoc->Load(aSrc, &success);
+  PRBool success = PR_FALSE;
+
+  if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+    nsCOMPtr<nsIDOMEventReceiver> rec = do_QueryInterface(mDocument);
+    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMLoadListener));
+
+    nsCOMPtr<nsIDOMXMLDocument> xmlDoc = do_QueryInterface(mDocument);
+    NS_ASSERTION(xmlDoc, "we created a document but it's not an XMLDocument?");
+
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    xmlDoc->Load(NS_ConvertUTF8toUTF16(spec), &success);
+  }
 
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model) {

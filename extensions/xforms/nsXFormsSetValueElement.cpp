@@ -92,6 +92,8 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIDOMXPathResult> xpResult =
       nsXFormsUtils::EvaluateXPath(value, docElement, mElement,
                                    nsIDOMXPathResult::STRING_TYPE);
+    if (!xpResult)
+      return NS_OK;
     xpResult->GetStringValue(value);
   }
   else {
