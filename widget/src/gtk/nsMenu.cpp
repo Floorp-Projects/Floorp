@@ -66,7 +66,7 @@ GtkWidget *nsMenu::GetNativeParent()
   } else {
     return NULL;
   }
-  return GTK_WIDGET(voidData);
+  return voidData;
 }
 
 
@@ -96,6 +96,7 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
   mLabel = aLabel;
   mMenu = gtk_menu_new();
   aParent->AddMenu(this);
+
   return NS_OK;
 }
 
@@ -152,23 +153,27 @@ NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
-  GtkWidget *widget, *nmenu;
+  GtkWidget *item=NULL, *parentmenu=NULL, *newmenu=NULL;
   char *labelStr;
-  void *voidData;
+  void *voidData=NULL;
+  
+  fprintf(stderr, "nsMenu::AddMenu called\n");
   
   aMenu->GetLabel(Label);
 
   labelStr = Label.ToNewCString();
 
-  widget = gtk_menu_item_new_with_label (labelStr);
-  gtk_menu_append (GTK_MENU (mMenu), widget);
+  parentmenu = GetNativeParent();
+
+  item = gtk_menu_item_new_with_label (labelStr);
+  gtk_menu_append (GTK_MENU (parentmenu), item);
 
   delete[] labelStr;
 
   aMenu->GetNativeData(voidData);
-  nmenu = GTK_WIDGET(voidData);
+  newmenu = GTK_WIDGET(voidData);
 
-  gtk_menu_item_set_submenu (GTK_MENU_ITEM (widget), nmenu);
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), newmenu);
 
   // XXX add aMenu to internal data structor list
   return NS_OK;

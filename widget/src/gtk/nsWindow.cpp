@@ -284,11 +284,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 #endif
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(TRUE, 0);
+    mVBox = gtk_vbox_new(FALSE, 3);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
 
     mWidget = gtk_layout_new(FALSE, FALSE);
-    gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 5);
+    gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
   } else {
 #ifdef DEBUG_shaver
     fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea\n");
@@ -541,10 +541,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
     //gtk_widget_show(mWidget);
     if (mWidget)
     {
+//    gtk_widget_show(mWidget);
+
       GtkWidget *toplevel;
       toplevel = gtk_widget_get_toplevel(mWidget);
       if (toplevel)
         gtk_widget_show_all(toplevel);
+
     } else {
 #ifdef DEBUG_shaver
       g_print("showing a NULL-be-widgeted nsWindow: %p\n", this);
@@ -1567,7 +1570,8 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   aMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
 
-  gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 5);
+  gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
+  gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
   return NS_OK;
 }
