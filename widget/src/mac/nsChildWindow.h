@@ -39,7 +39,7 @@ public:
 		                            nsWidgetInitData *aInitData,
 		                            nsNativeWidget aNativeParent = nsnull);
 
-	virtual void				CalcWindowRegions(nsIWidget* aParent, nsRect& aBounds);
+	virtual void				CalcWindowRegions();
 
 protected:
 	PRBool						mClipChildren;
