@@ -74,6 +74,9 @@
 [% tableheader = BLOCK %]
   <table class="bz_buglist" cellspacing="0" cellpadding="4" width="100%">
     <colgroup>
+      [% IF dotweak %]
+        <col class="bz_checkbox_column">
+      [% END %]
       <col class="bz_id_column">
       [% FOREACH id = displaycolumns %]
       <col class="bz_[% id FILTER css_class_quote %]_column">
