@@ -321,7 +321,7 @@ nsDirectoryIterator::nsDirectoryIterator(
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
     , mDir(nsnull)
-    , mExists(false)
+    , mExists(PR_FALSE)
 {
     mCurrent += "sysygy"; // prepare the path for SetLeafName
     mDir = opendir((const char*)nsFilePath(inDirectory));
@@ -340,7 +340,7 @@ nsDirectoryIterator::~nsDirectoryIterator()
 nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 //----------------------------------------------------------------------------------------
 {
-    mExists = false;
+    mExists = PR_FALSE;
     if (!mDir)
         return *this;
     char* dot    = ".";
@@ -352,7 +352,7 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
         entry = readdir(mDir);
     if (entry)
     {
-        mExists = true;
+        mExists = PR_TRUE;
         mCurrent.SetLeafName(entry->d_name);
     }
     return *this;

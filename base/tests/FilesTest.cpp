@@ -90,7 +90,7 @@ void FilesTest::WriteStuff(nsOutputFileStream& s)
 //----------------------------------------------------------------------------------------
 {
 	// Initialize a URL from a string without suffix.  Change the path to suit your machine.
-	nsFileURL fileURL("file:///Development/MPW/MPW%20Shell", false);
+	nsFileURL fileURL("file:///Development/MPW/MPW%20Shell", PR_FALSE);
 	s << "File URL initialized to:     \"" << fileURL << "\""<< nsEndl;
 	
 	// Initialize a Unix path from a URL
@@ -126,7 +126,7 @@ void FilesTest::WriteStuff(nsOutputFileStream& s)
 int FilesTest::OutputStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, true); // relative path.
+	nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
 	const char* pathAsString = (const char*)myTextFilePath;
 	nsFileSpec mySpec(myTextFilePath);
 	{
@@ -161,7 +161,7 @@ int FilesTest::OutputStream(const char* relativePath)
 int FilesTest::IOStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, true); // relative path.
+	nsFilePath myTextFilePath(relativePath, PR_TRUE); // relative path.
 	const char* pathAsString = (const char*)myTextFilePath;
 	nsFileSpec mySpec(myTextFilePath);
 	mConsole
@@ -198,7 +198,7 @@ int FilesTest::Persistence(
 	const char* relativePathToWrite)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePathToWrite, true);
+	nsFilePath myTextFilePath(relativePathToWrite, PR_TRUE);
 	const char* pathAsString = (const char*)myTextFilePath;
 	nsFileSpec mySpec(myTextFilePath);
 
@@ -248,7 +248,7 @@ int FilesTest::Persistence(
 int FilesTest::InputStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, true);
+	nsFilePath myTextFilePath(relativePath, PR_TRUE);
 	const char* pathAsString = (const char*)myTextFilePath;
 	mConsole << "READING BACK DATA FROM " << pathAsString << nsEndl << nsEndl;
 	nsFileSpec mySpec(myTextFilePath);
@@ -280,7 +280,7 @@ int FilesTest::Parent(
 	nsFileSpec& outParent)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, true);
+	nsFilePath myTextFilePath(relativePath, PR_TRUE);
 	const char* pathAsString = (const char*)myTextFilePath;
 	nsFileSpec mySpec(myTextFilePath);
 
@@ -308,7 +308,7 @@ int FilesTest::Delete(nsFileSpec& victim)
 		<< "\n\t" << (const char*)victimPath
 		<< "\n without recursive option (should fail)"	
 		<< nsEndl;
-	victim.Delete(false);	
+	victim.Delete(PR_FALSE);	
 	if (victim.Exists())
 		Passed();
 	else
@@ -330,7 +330,7 @@ int FilesTest::Delete(nsFileSpec& victim)
 		<< "\n\t" << (const char*)victimPath
 		<< "\n with recursive option"
 		<< nsEndl;
-	victim.Delete(true);
+	victim.Delete(PR_TRUE);
 	if (victim.Exists())
 	{
 		mConsole
@@ -363,7 +363,7 @@ int FilesTest::CreateDirectory(nsFileSpec& dirSpec)
 		Failed();
 		return -1;
 	}
-	dirSpec.Delete(true);
+	dirSpec.Delete(PR_TRUE);
 	return 0;
 }
 
@@ -401,7 +401,7 @@ int FilesTest::CanonicalPath(
 	const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-	nsFilePath myTextFilePath(relativePath, true);
+	nsFilePath myTextFilePath(relativePath, PR_TRUE);
 	const char* pathAsString = (const char*)myTextFilePath;
 	if (*pathAsString != '/')
 	{
@@ -421,7 +421,7 @@ int FilesTest::CanonicalPath(
 int FilesTest::Copy(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec dirPath(dir, true);
+    nsFileSpec dirPath(dir, PR_TRUE);
 		
 	dirPath.CreateDirectory();
     if (! dirPath.Exists())
@@ -431,7 +431,7 @@ int FilesTest::Copy(const char* file, const char* dir)
 	}
     
 
-    nsFileSpec mySpec(file, true); // relative path.
+    nsFileSpec mySpec(file, PR_TRUE); // relative path.
     {
 	    nsIOFileStream testStream(mySpec); // creates the file
 	    // Scope ends here, file gets closed
@@ -462,7 +462,7 @@ int FilesTest::Copy(const char* file, const char* dir)
 int FilesTest::Move(const char* file, const char* dir)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec dirPath(dir, true);
+    nsFileSpec dirPath(dir, PR_TRUE);
 		
 	dirPath.CreateDirectory();
     if (! dirPath.Exists())
@@ -472,7 +472,7 @@ int FilesTest::Move(const char* file, const char* dir)
 	}
     
 
-    nsFileSpec srcSpec(file, true); // relative path.
+    nsFileSpec srcSpec(file, PR_TRUE); // relative path.
     {
        nsIOFileStream testStream(srcSpec); // creates the file
        // file gets closed here because scope ends here.
@@ -502,7 +502,7 @@ int FilesTest::Move(const char* file, const char* dir)
 int FilesTest::Execute(const char* appName, const char* args)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec appPath(appName, false);
+    nsFileSpec appPath(appName, PR_FALSE);
     if (!appPath.Exists())
 	{
 		Failed();
