@@ -72,14 +72,19 @@ ifeq ($(OS_CONFIG),Rhapsody10.0)
 NSPR_CFLAGS	+= -DGETCWD_CANT_MALLOC
 endif
 
-export:: $(TARGETS)
-	$(INSTALL) -m 444 nsBuildID.h $(DIST)/include
+HEADERS		= nsBuildID.h
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(INSTALL) -m 444 $(srcdir)/os2/dirent.h  $(DIST)/include
+HEADERS		+= $(srcdir)/os2/dirent.h
+endif
+
+export:: $(TARGETS) $(HEADERS)
+	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
+ifdef MOZ_TRACK_MODULE_DEPS
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(HEADERS)
 endif
 	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 
-GARBAGE += build_number nsBuildId.h
+GARBAGE += build_number nsBuildID.h
 
 ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 _BN_OFFICIAL=1

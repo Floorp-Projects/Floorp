@@ -185,6 +185,9 @@ include $(topsrcdir)/config/rules.mk
 export::
 	+$(LOOP_OVER_EXPORT_DIRS)
 
+export::
+	@$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include
+
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
