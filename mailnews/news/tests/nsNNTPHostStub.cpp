@@ -346,7 +346,7 @@ nsresult nsNNTPHostStub::QueryPropertyForGet (const char *property, char **retva
     *retval=NULL;
 	for (int i = 0; i < m_propertiesForGet.Count(); i++)
 		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet[i])) {
-            *retval = (const char *)m_valuesForGet[i];
+            *retval = (char *)m_valuesForGet[i];
 			printf("Retrieving property %s for get. \n", *retval);
 			return NS_OK;
         }
