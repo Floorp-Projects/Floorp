@@ -74,6 +74,7 @@ public:
 
     // override to clear all passwords associated with server
     NS_IMETHODIMP ForgetPassword();
+    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 
 protected:
 	nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,

@@ -97,6 +97,6 @@ function SetFolderPicker(uri,pickerID)
 		                            .replace(/%serverName%/, serverName);
 	}
 
-	picker.setAttribute("value",selectedValue);
+	picker.setAttribute("label",selectedValue);
 	picker.setAttribute("uri",uri);
 }

@@ -1562,3 +1562,10 @@ nsNntpIncomingServer::SetPrettyNameForGroup(const char *name, const char *pretty
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}

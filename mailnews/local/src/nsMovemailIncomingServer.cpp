@@ -179,4 +179,10 @@ nsMovemailIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow,
     return rv;
 }        
 
-
+NS_IMETHODIMP
+nsMovemailIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}

@@ -55,7 +55,7 @@ function setDivText(divid, str) {
         if (divtag.getAttribute("after"))
             newstr += divtag.getAttribute("after");
         
-        divtag.setAttribute("value", newstr);
+        divtag.setAttribute("label", newstr);
     }
 }
 

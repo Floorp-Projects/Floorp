@@ -288,7 +288,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -307,12 +307,8 @@ Rights Reserved.
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                  oncommand="MsgMoveMessage(event.target)"
-                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -355,7 +351,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -374,12 +370,8 @@ Rights Reserved.
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                  oncommand="MsgCopyMessage(event.target)"
-                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -535,7 +527,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -554,12 +546,8 @@ Rights Reserved.
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                  oncommand="MsgMoveMessage(event.target)"
-                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -602,7 +590,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -621,12 +609,8 @@ Rights Reserved.
               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                  oncommand="MsgCopyMessage(event.target)"
-                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1006,7 +990,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1025,12 +1009,8 @@ Rights Reserved.
              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                 oncommand="MsgMoveMessage(event.target)"
-                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1070,7 +1050,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1089,12 +1069,8 @@ Rights Reserved.
              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" 
-                 oncommand="MsgCopyMessage(event.target)"
-                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuitem label="&fileHereMenu.label;" 
+                  oncommand="MsgCopyMessage(event.target.parentNode.parentNode)"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1194,7 +1170,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuitem label="&fileHereMenu.label;" disabled="true"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -1213,12 +1189,8 @@ Rights Reserved.
                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                 <menupopup>
-                  <menuitem uri="..." label="&fileHereMenu.label;" 
-                   oncommand="MsgMoveMessage(event.target)"
-                   SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                   BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                   IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                   ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                  <menuitem label="&fileHereMenu.label;" 
+                    oncommand="MsgMoveMessage(event.target.parentNode.parentNode)"/>
                   <menuseparator/>
                 </menupopup>
               </menu>

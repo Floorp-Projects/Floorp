@@ -44,6 +44,7 @@ public:
     virtual ~nsMovemailIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
+    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 };
 
 

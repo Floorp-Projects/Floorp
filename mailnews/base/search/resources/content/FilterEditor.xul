@@ -70,8 +70,7 @@ Rights Reserved.
         </menupopup>
       </menulist>
       <deck id="actionValueDeck" flex="1">
-        <menulist id="actionTargetFolder" flex="1"
-                  oncommand="onTargetFolderSelected(event);"/>
+        <menulist id="actionTargetFolder" flex="1"/>
         <menulist id="actionValuePriority" flex="1">
           <menupopup>
             <!-- see MailNewsTypes2.idl -->

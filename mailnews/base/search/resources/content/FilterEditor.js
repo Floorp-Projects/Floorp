@@ -146,15 +146,10 @@ function initializeDialog(filter)
 
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
         // preselect target folder
-        // there are multiple sub-items that have given attribute
-        var targets = gActionTargetElement.getElementsByAttribute("value", filter.actionTargetFolderUri);
+        var target = filter.actionTargetFolderUri;
 
-        if (targets && targets.length > 0) {
-            var target = targets[0];
-            if (target.localName == "menuitem"){
-                gActionTargetElement.selectedItem = target;
-                PickedMsgFolder(gActionTargetElement.selectedItem, gActionTargetElement.id)
-            }
+        if (target) {
+            SetFolderPicker(target, gActionTargetElement.id);
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {
         // initialize priority
@@ -195,7 +190,7 @@ function saveFilter() {
 
     if (action == nsMsgFilterAction.MoveToFolder) {
         if (gActionTargetElement)
-            targetUri = gActionTargetElement.selectedItem.getAttribute("value");
+            targetUri = gActionTargetElement.getAttribute("uri");
         if (!targetUri || targetUri == "") {
             str = gFilterBundle.getString("mustSelectFolder");
             window.alert(str);
@@ -258,7 +253,7 @@ function showActionElementFor(menuitem)
 
 function GetFirstSelectedMsgFolder()
 {
-    var selectedFolder = gActionTargetElement.selectedItem.getAttribute("value");
+    var selectedFolder = gActionTargetElement.getAttribute("uri");
 
     var msgFolder = GetMsgFolderFromUri(selectedFolder);
     return msgFolder;

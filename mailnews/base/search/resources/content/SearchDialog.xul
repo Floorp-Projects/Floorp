@@ -75,8 +75,7 @@ Rights Reserved.
       <label value="&conditions.label;"/>
       <box autostretch="never">
         <text class="label" value="&searchHeading.label;"/>
-        <menulist id="searchableFolders" flex="2"
-                oncommand="onChooseFolder(event);"/>
+        <menulist id="searchableFolders" flex="2"/>
         <spring flex="1"/>
           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true"/>
       </box>
@@ -156,7 +155,7 @@ Rights Reserved.
 				</rule>
 				<rule nc:CanFileMessages="true">
 					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+						<menuitem uri="..." class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
 						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"

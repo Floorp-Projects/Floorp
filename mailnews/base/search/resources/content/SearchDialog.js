@@ -250,34 +250,24 @@ function getFirstItemByTag(root, tag)
 }
 
 function selectFolder(folder) {
-    var items;
+    var folderURI;
     if (!folder) {
-        // walk folders to find first menuitem
-        var firstMenuitem = getFirstItemByTag(gFolderPicker, "menuitem");
-        gFolderPicker.selectedItem = firstMenuitem;
-
+        // walk folders to find first item
+        var firstItem = getFirstItemByTag(gFolderPicker, "menu");
+        folderURI = firstItem.id;
     } else {
-        // the URI of the folder is in the value attribute of the menuitem
-        var folderResource =
-            folder.QueryInterface(Components.interfaces.nsIRDFResource);
-
-        var elements =
-            gFolderPicker.getElementsByAttribute("value", folderResource.Value);
-        if (elements && elements.length)
-            gFolderPicker.selectedItem = elements[0];
+        folderURI = folder.URI;
     }
-    updateSearchFolderPicker()
+    updateSearchFolderPicker(folderURI);
 }
 
-function updateSearchFolderPicker() {
-
-    var selectedItem = gFolderPicker.selectedItem;
-    if (selectedItem.localName != "menuitem") return;
-    SetFolderPicker(selectedItem.id, gFolderPicker.id);
+function updateSearchFolderPicker(folderURI) {
+ 
+    SetFolderPicker(folderURI, gFolderPicker.id);
 
     // use the URI to get the real folder
     gCurrentFolder =
-        RDF.GetResource(selectedItem.id).QueryInterface(nsIMsgFolder);
+        RDF.GetResource(folderURI).QueryInterface(nsIMsgFolder);
 
 
     setSearchScope(GetScopeForFolder(gCurrentFolder));
@@ -285,7 +275,8 @@ function updateSearchFolderPicker() {
 }
 
 function onChooseFolder(event) {
-    updateSearchFolderPicker();
+    var folderURI = event.id;
+    updateSearchFolderPicker(folderURI);
 }
 
 function onSearch(event)
