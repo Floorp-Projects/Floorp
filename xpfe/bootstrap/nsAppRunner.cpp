@@ -348,7 +348,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
               OpenChromURL((const char *)chromeUrlForTask,height, width);
             }
             else if (NS_SUCCEEDED(rv) && cmdResult) {
-              if (PL_strcmp("1",cmdResult)) {
+              if (PL_strcmp("1",cmdResult) == 0) {
                 OpenChromURL((const char *)chromeUrlForTask,height, width);
               }
               else {
