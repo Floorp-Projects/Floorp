@@ -222,7 +222,7 @@
 /**
  *
  */
-#include "nsIPluginInputStream2.h"
+#include "nsIPluginInputStream.h"
 
 /**
  * The nsIPluginTagInfo2 interface provides additional html tag information
