@@ -22,8 +22,11 @@
 
 #
 # This is a collection of test files to guard against regressions
-# in the Gecko output system.
+# in the Mozilla output system.
 #
+
+# Make sure . is in the path, so we can load the other shared libraries
+$ENV{LD_LIBRARY_PATH} .= ":.";
 
 $errmsg = "";
 
