@@ -9,15 +9,15 @@
 <!ENTITY downloadManager.title            "Download Manager">
 
 
-<!ENTITY cmd.downloadFile.label           "Download File">
-<!ENTITY cmd.downloadFile.accesskey       "o">
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
 <!ENTITY cmd.properties.keybinding        "i">
 <!ENTITY cmd.pause.label                  "Pause">
 <!ENTITY cmd.pause.accesskey              "p">
-<!ENTITY cmd.delete.label                 "Delete">
-<!ENTITY cmd.delete.accesskey             "d">
+<!ENTITY cmd.remove.label                 "Remove from list">
+<!ENTITY cmd.remove.accesskey             "r">
+<!ENTITY cmd.cancel.label                 "Cancel">
+<!ENTITY cmd.cancel.accesskey             "c">
 <!ENTITY cmd.openfile.label               "Open File">
 <!ENTITY cmd.openfile.accesskey           "o">
 

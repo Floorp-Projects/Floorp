@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
-interface nsIDOMWindowInternal;
+interface nsIDOMWindow;
 interface nsIDownloadItem;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
@@ -66,24 +66,33 @@ interface nsIDownloadManager : nsISupports {
   * nsIWebBrowserPersist::CancelSave.  Else, if an observer is set on the item
   * (it should be), it will be notified with the "oncancel" topic.  Callers
   * that don't provide a persist object promise to listen for this topic and cancel
-  * the download; the download will be removed from the manager.
+  * the download.
   */
 
   void cancelDownload(in string key);
+
+  /**
+  * removeDownload
+  * Remove a download that is not currently in progress.  Whereas cancelDownload simply
+  * cancels the transfer but retains information about it, removeDownload removes all
+  * knowledge of it.
+  */
+
+  void removeDownload(in string key);
 
   /**
   * open
   * Opens the Download Manager front end.
   */
 
-  void open(in nsIDOMWindowInternal aOwnerWindow);
+  void open(in nsIDOMWindow aParent);
 
   /**
   * openProgressDialogFor
   * Opens an individual progress dialog displaying progress for the download.
   */
 
-  void openProgressDialogFor(in string key, in nsIDOMWindowInternal aOwnerWindow);
+  void openProgressDialogFor(in string key, in nsIDOMWindow aParent);
 
   /**
   * onClose

@@ -44,18 +44,10 @@ var gDownloadViewChildren = null;
 var gDownloadManager = null;
 var gRDFService = null;
 var gNC_File = null;
-// random global variables...
-var keepProgressWindowUpBox;
 
 function NODE_ID(aElement)
 {
   return aElement.getAttribute("ref") || aElement.id;
-}
-
-function openPropertiesDialog()
-{
-  window.openDialog("chrome://global/content/nsProgressDlg.xul", "",
-                    "chrome,titlebar,minimizable,dialog=yes", null, gDownloadView.selectedItems[0].id);
 }
 
 function Startup()
@@ -82,27 +74,14 @@ function Startup()
   gDownloadView.builder.rebuild();
 }
 
-var downloadView = {
-  onClick: function downloadView_click(aEvent)
-  {
-  
-  },
-  
-  onSelect: function downloadView_select(aEvent)
-  {
-  
-  },
-  
-};
-
 var downloadViewController = {
   supportsCommand: function dVC_supportsCommand (aCommand)
   {
     switch (aCommand) {
-    case "cmd_downloadFile":
     case "cmd_properties":
     case "cmd_pause":
-    case "cmd_delete":
+    case "cmd_cancel":
+    case "cmd_remove":
     case "cmd_openfile":
     case "cmd_showinshell":
     case "cmd_selectAll":
@@ -113,12 +92,10 @@ var downloadViewController = {
   
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
-    var cmds = ["cmd_properties", "cmd_pause", "cmd_delete",
+    var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel",
                 "cmd_openfile", "cmd_showinshell"];
     var selectionCount = gDownloadView.selectedItems.length;
     switch (aCommand) {
-    case "cmd_downloadFile":
-      return true;
     case "cmd_openfile":
     case "cmd_showinshell":
       if (selectionCount != 1)
@@ -128,7 +105,13 @@ var downloadViewController = {
     case "cmd_properties":
       return selectionCount == 1;
     case "cmd_pause":
-    case "cmd_delete":
+    case "cmd_cancel":
+      // XXX check if selection is still in progress
+      //     how to handle multiple selection?
+      return selectionCount > 0;
+    case "cmd_remove":
+      // XXX ensure selection isn't still in progress
+      //     how to handle multiple selection?
       return selectionCount > 0;
     case "cmd_selectAll":
       return gDownloadViewChildren.childNodes.length != selectionCount;
@@ -139,12 +122,10 @@ var downloadViewController = {
   doCommand: function dVC_doCommand (aCommand)
   {
     var selection = gDownloadView.selectedItems;
+    var i;
     switch (aCommand) {
-    case "cmd_downloadFile":
-      downloadFile();
-      break;
     case "cmd_properties":
-      openPropertiesDialog();
+      gDownloadManager.openProgressDialogFor(selection[0].id);
       break;
     case "cmd_openfile":
       var file = getFileForItem(selection[0]);
@@ -156,14 +137,16 @@ var downloadViewController = {
       break;
     case "cmd_pause":
       break;
-    case "cmd_delete":
-      // a) Prompt user to confirm end of transfers in progress
-      // b) End transfers
-      // c) Delete entries from datasource
- 
-      for (var i = 0; i < selection.length; ++i)
+    case "cmd_cancel":
+      // XXX we should probably prompt the user
+      for (i = 0; i < selection.length; ++i)
         gDownloadManager.cancelDownload(selection[i].id);
-      deleteItem(selection);
+
+      break;
+    case "cmd_remove":
+      for (i = 0; i < selection.length; ++i)
+        gDownloadManager.removeDownload(selection[i].id);
+      
       break;
     case "cmd_selectAll":
       gDownloadView.selectAll();
@@ -182,103 +165,12 @@ var downloadViewController = {
 
   onCommandUpdate: function dVC_onCommandUpdate ()
   {
-    var cmds = ["cmd_properties", "cmd_pause", "cmd_delete",
+    var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel", "cmd_remove",
                 "cmd_openfile", "cmd_showinshell"];
     for (var command in cmds)
       goUpdateCommand(cmds[command]);
   }
 };
-
-function downloadFile()
-{
-  var bundle = document.getElementById("downloadBundle");
-  
-  // Select a file to download
-  const promptContractID = "@mozilla.org/embedcomp/prompt-service;1";
-  const promptIID = Components.interfaces.nsIPromptService;
-  var promptSvc = Components.classes[promptContractID].getService(promptIID);
-  
-  var downloadFileTitle = bundle.getString("downloadFileTitle");
-  var downloadFileMsg = bundle.getString("downloadFileMsg");
-  
-  var rv = { value: "" };
-  var accept = promptSvc.prompt(window, downloadFileTitle, downloadFileMsg, 
-                                rv, null, { });
-  
-  if (accept && rv.value != "") {
-    // Now select a location to save it to
-    const fpContractID = "@mozilla.org/filepicker;1";
-    const fpIID = Components.interfaces.nsIFilePicker;
-    const fp = Components.classes[fpContractID].getService(fpIID);
-    
-    // XXX-todo: make this file picker use the user's download folder
-    var title = bundle.getString("chooseDestinationTitle");
-    fp.init(window, title, fpIID.modeSave);
-    fp.appendFilters(fpIID.filterAll);
-    if (fp.show() == fpIID.returnOK) {
-      const uriContractID = "@mozilla.org/network/standard-url;1";
-      const uriIID = Components.interfaces.nsIURI;
-      const uri = Components.classes[uriContractID].createInstance(uriIID);
-      uri.spec = rv.value;
-    
-      const dlmgrContractID = "@mozilla.org/download-manager;1";
-      const dlmgrIID = Components.interfaces.nsIDownloadManager;
-      const dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
-      const dlitemContractID = "@mozilla.org/download-manager/item;1";
-      const dlitem = Components.classes[dlitemContractID].createInstance(Components.interfaces.nsIDownloadItem);
-      dlitem.prettyName = fp.file.leafName;
-      dlitem.source = uri;
-      dlitem.target = fp.file;
-      dlmgr.addItem(dlitem);
-    }
-  }
-}
-
-function deleteItem(aElements)
-{
-  var selection = [];
-  for (var i = 0; i < aElements.length; ++i) 
-    selection[i] = aElements[i];
-
-  var itemToSelect;
-  for (i = 0; i < selection.length; ++i) {
-    var itemResource = gRDFService.GetResource(NODE_ID(selection[i]));
-    itemToSelect = getItemToSelect(selection[i]);
-
-    // Alert the user that transfers will be halted
-    // End transfers
-    
-    // Remove the download from the database
-    var downloads = getDownloadsContainer();
-    downloads.RemoveElement(itemResource, true);
-  }
-  gDownloadView.selectItem(itemToSelect);
-  
-  var ds = gRDFService.GetDataSource("rdf:downloads");
-  var remote = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-  ds.Flush();
-}
-
-function getItemToSelect(aElement)
-{
-  if (aElement.nextSibling)
-    return aElement.nextSibling;
-  else if (aElement.previousSibling)
-    return aElement.previousSibling;
-  return aElement.parentNode.parentNode;
-}
-
-function getDownloadsContainer()
-{
-  var downloads = gRDFService.GetResource("NC:DownloadsRoot", true);
-  
-  const ctrContractID = "@mozilla.org/rdf/container;1";
-  const ctrIID = Components.interfaces.nsIRDFContainer;
-  const ctr = Components.classes[ctrContractID].getService(ctrIID);
-
-  ctr.Init(gDownloadView.database, downloads);
-  return ctr;
-}
 
 function getFileForItem(aElement)
 {

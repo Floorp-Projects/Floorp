@@ -52,7 +52,6 @@
 
 interface nsIURI;
 interface nsILocalFile;
-interface nsIDownloadProgressListener;
 interface nsIObserver;
 interface nsIWebBrowserPersist;
 
