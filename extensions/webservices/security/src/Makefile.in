@@ -35,15 +35,15 @@
 #
 # ***** END LICENSE BLOCK ***** *
 
-DEPTH      = ../../../..
-topsrcdir  = @top_srcdir@
-srcdir     = @srcdir@
-VPATH      = @srcdir@
+DEPTH       = ../../../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = xmlextras
-LIBRARY_NAME    = xmlextrassecurity_s
+MODULE         = websrvcs
+LIBRARY_NAME   = websrvcssecurity_s
 REQUIRES	= xpcom \
 		  string \
 		  caps \
@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  necko \
 		  intl \
+		  xmlextras \
 		  $(NULL)
 
 CPPSRCS        = \

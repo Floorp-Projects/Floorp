@@ -59,7 +59,7 @@
 #define WSA_FILE_NOT_FOUND        (1 << 1)
 #define WSA_FILE_DELEGATED        (1 << 2)
 
-#define SECURITY_PROPERTIES "chrome://communicator/locale/xmlextras/security.properties"
+#define SECURITY_PROPERTIES "chrome://communicator/locale/webservices/security.properties"
 
 NS_NAMED_LITERAL_STRING(kNamespace2002, "http://www.mozilla.org/2002/soap/security");
 
@@ -168,7 +168,7 @@ struct TestStruct {
 static 
 const TestStruct kStrings[] = {
   { "f*o*bar", "foobar", PR_TRUE },
-  { "foo**bar", "foofbar", PR_TRUE },
+  { "foo*bar", "foofbar", PR_TRUE },
   { "*foo*bar", "ffoofoobbarbarbar", PR_TRUE },
   { "*foo*bar*barbar", "ffoofoobbarbarbar", PR_TRUE },
   { "http://*.*.*/*", "http://www.mozilla.org/", PR_TRUE},

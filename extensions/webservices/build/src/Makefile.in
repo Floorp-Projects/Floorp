@@ -19,22 +19,18 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../../../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xmlextras
-LIBRARY_NAME	= xmlextras
-EXPORT_LIBRARY = 1
-ifneq ($(OS_ARCH),WINNT)
-SHORT_LIBNAME	= xmlextra
-endif
-IS_COMPONENT	= 1
-MODULE_NAME	= nsXMLExtrasModule
-GRE_MODULE	= 1
+MODULE          = websrvcs
+LIBRARY_NAME    = websrvcs
+EXPORT_LIBRARY  = 1
+IS_COMPONENT    = 1
+MODULE_NAME     = nsWebServicesModule
 
 REQUIRES	= xpcom \
 		  string \
@@ -47,23 +43,29 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  embedcomponents \
 		  xpconnect \
+		  xmlextras \
 		  $(NULL)
 
-ifdef MOZ_WSP
-REQUIRES += iiextras
-endif
+CPPSRCS = nsWebServicesModule.cpp
 
-CPPSRCS		= nsXMLExtrasModule.cpp
 
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)xmlextrasbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xmlextraspointers_s.$(LIB_SUFFIX) \
-		$(NULL)
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcssecurity_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcsschema_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcssoap_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcsinterfaceinfo_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcswsdl_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)websrvcsproxy_s.$(LIB_SUFFIX) \
+	$(NULL)
 
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../pointers/src \
-		$(NULL)
+LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../../security/src \
+		-I$(srcdir)/../../soap/src \
+		-I$(srcdir)/../../schema/src \
+		-I$(srcdir)/../../interfaceinfo/src \
+		-I$(srcdir)/../../wsdl/src \
+		-I$(srcdir)/../../proxy/src \
+
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
@@ -73,5 +75,3 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-

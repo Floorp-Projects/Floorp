@@ -35,15 +35,15 @@
 #
 # ***** END LICENSE BLOCK ***** *
 
-DEPTH                = ../../../..
-topsrcdir        = @top_srcdir@
-srcdir                = @srcdir@
-VPATH                = @srcdir@
+DEPTH       = ../../../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE                = xmlextras
-LIBRARY_NAME        = xmlextrassoap_s
+MODULE        = websrvcs
+LIBRARY_NAME  = websrvcssoap_s
 REQUIRES	= xpcom \
 		  string \
 		  caps \
@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  necko \
+		  xmlextras \
 		  $(NULL)
 
 CPPSRCS        =                                 \
@@ -74,3 +75,4 @@ CPPSRCS        =                                 \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+

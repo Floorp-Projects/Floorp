@@ -19,15 +19,15 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xmlextras
-LIBRARY_NAME	= xmlextrasschema_s
+MODULE    = websrvcs
+LIBRARY_NAME	= websrvcsschema_s
 
 REQUIRES	= xpcom \
 		  string \
@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  content \
 		  js \
 		  necko \
+		  xmlextras \
 		  $(NULL)
 
 CPPSRCS	= 				\

@@ -135,7 +135,7 @@ function captureContentClick(aEvent)
 {
   if ("parentNode" in aEvent.target && 
       aEvent.target.parentNode.hasAttribute("message")) {
-    alertMessage(aEvent.target.parentNode.getAttribute("message");
+    alertMessage(aEvent.target.parentNode.getAttribute("message"));
   }
 }
 

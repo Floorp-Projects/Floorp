@@ -226,12 +226,7 @@ bin/components/commandhandler.xpt
 bin/components/webbrowserpersist.xpt
 bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
-bin/components/xmlextras_interfaceinfo.xpt
 bin/components/libxmlextras.so
-bin/components/xmlsoap.xpt
-bin/components/xmlschema.xpt
-bin/components/wsdl.xpt
-bin/components/wsproxy.xpt
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
@@ -244,6 +239,11 @@ bin/components/libuniversalchardet.so
 bin/components/typeaheadfind.xpt
 bin/components/libtypeaheadfind.so
 bin/components/nsCloseAllWindows.js
+
+; webservices
+bin/components/libwebsrvcs.so
+bin/components/websrvcs.xpt
+
 ; LDAP components need to be in the browser for AutoConfig
 bin/libldap50.so
 bin/libprldap50.so

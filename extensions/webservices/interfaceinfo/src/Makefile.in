@@ -32,15 +32,15 @@
 # file under either the NPL or the GPL.
 #
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xmlextras
-LIBRARY_NAME	= xmlextrasinterfaceinfo_s
+MODULE    = websrvcs
+LIBRARY_NAME	= websrvcsinterfaceinfo_s
 
 REQUIRES	= xpcom \
 		  string \

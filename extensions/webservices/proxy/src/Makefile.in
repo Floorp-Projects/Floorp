@@ -19,37 +19,33 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
+MODULE    = websrvcs
+LIBRARY_NAME	= websrvcsproxy_s
+REQUIRES 	= xpcom \
+		string \
+		xpconnect \
+		caps \
+		js \
+		necko \
+		dom \
+		iiextras \
+		$(NULL)
 
-MODULE		= xmlextras
-LIBRARY_NAME	= xmlextrasproxy_s
-REQUIRES = xpcom \
-	   string \
-	   xpconnect \
-	   caps \
-	   js \
-	   necko \
-	   dom \
-	   iiextras \
-	   $(NULL)
-
-CPPSRCS=					\
+CPPSRCS=			\
 	wspinfoservice.cpp	\
-	wspproxy.cpp				\
-	wspcallcontext.cpp			\
-	wspfactory.cpp				\
-	wspexception.cpp			\
-	wspcomplextypewrapper.cpp		\
-	wsppropertybagwrapper.cpp		\
+	wspproxy.cpp		\
+	wspcallcontext.cpp	\
+	wspfactory.cpp		\
+	wspexception.cpp		\
+	wspcomplextypewrapper.cpp	\
+	wsppropertybagwrapper.cpp	\
 	$(NULL)
 
 LOCAL_INCLUDES	= \
