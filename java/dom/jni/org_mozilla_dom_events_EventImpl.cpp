@@ -151,15 +151,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
         return NULL;
     }
 
-    char* cret = ret.ToNewCString();
-    jstring jret = env->NewStringUTF(cret);
+    jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
     if (!jret) {
         JavaDOMGlobals::ThrowException(env,
             "Event.getType: NewStringUTF failed");
         return NULL;
     }
-
-    delete[] cret;
 
     return jret;
 }

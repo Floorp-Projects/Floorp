@@ -1835,16 +1835,15 @@ void JavaDOMEventsGlobals::Destroy(JNIEnv *env)
 
 //returns true if specified event "type" exists in the given list of types
 // NOTE: it is assumed that "types" list is enden with NULL
-static jboolean isEventOfType(char **types, char *type) 
+static jboolean isEventOfType(char **types, nsString type) 
 {
     int i=0;
 
-    if (type) 
-        while (types[i]) {
-            if (strcmp(type, types[i]) == 0)
-                return JNI_TRUE;
-            i++;
-        }
+    while (types && types[i]) {
+      if (type == types[i])
+	return JNI_TRUE;
+      i++;
+    }
 
     return JNI_FALSE;
 }
@@ -1884,21 +1883,28 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
             "Event.getType at JavaDOMEventsGlobals: failed");
         return NULL;
     }
-    char *type = nsType.ToNewCString();
 
-    if (isEventOfType(mouseEventTypes, type) == JNI_TRUE) {
+    if (isEventOfType(mouseEventTypes, nsType) == JNI_TRUE) {
         clazz = mouseEventClass;
-    } else if (isEventOfType(keyEventTypes, type) == JNI_TRUE) {
+    } else if (isEventOfType(keyEventTypes, nsType) == JNI_TRUE) {
         clazz = keyEventClass;
-    } else if (isEventOfType(uiEventTypes, type) == JNI_TRUE) {  
+    } else if (isEventOfType(uiEventTypes, nsType) == JNI_TRUE) {  
             clazz = uiEventClass;
     } else {
+      /* Being paranoid here, make sure the (unicode) string is
+         NULL-terminated before passing it to PR_LOG. Otherwise, we
+         may cause a crash */
+
+            PRInt32 length = nsType.Length();
+            char* buffer = new char[length+1];
+	    strncpy(buffer, nsType.GetBuffer(), length);
+	    buffer[length] = 0;
+
             PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
-                ("Unknown type of UI event (%s)", type));
+                ("Unknown type of UI event (%s)", buffer));
+	    delete[] buffer;
             clazz = uiEventClass;
     }
-
-    delete [] type;
 
     event->Release();
     event = (nsIDOMEvent *) target;
