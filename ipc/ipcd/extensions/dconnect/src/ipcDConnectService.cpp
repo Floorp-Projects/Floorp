@@ -1282,6 +1282,8 @@ ipcDConnectService::GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
 
     result = *p;
   }
+  else
+    rv = NS_ERROR_UNEXPECTED;
   return rv;
 }
 
@@ -1543,8 +1545,8 @@ ipcDConnectService::OnInvoke(PRUint32 peer, const DConnectInvoke *invoke, PRUint
 
   const nsXPTMethodInfo *methodInfo;
   nsXPTCVariant *params = nsnull;
-  nsIInterfaceInfo *iinfo;
-  PRUint8 i, paramCount, paramUsed = 0;
+  nsIInterfaceInfo *iinfo = nsnull;
+  PRUint8 i, paramCount = 0, paramUsed = 0;
   nsresult rv;
   
   // make sure we've been sent a valid wrapper
