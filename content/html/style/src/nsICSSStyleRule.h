@@ -25,7 +25,7 @@ class nsIAtom;
 class nsIArena;
 class nsString;
 class nsICSSDeclaration;
-class nsIStyleSheet;
+class nsICSSStyleSheet;
 
 struct nsCSSSelector {
 public:
@@ -66,8 +66,7 @@ public:
 
   virtual nsIStyleRule* GetImportantRule(void) = 0;
 
-  virtual nsIStyleSheet* GetStyleSheet(void) = 0;
-  virtual void SetStyleSheet(nsIStyleSheet *aSheet) = 0;
+  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 };
 
 extern NS_HTML nsresult

@@ -42,7 +42,73 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
-class BodyRule;
+//----------------------------------------------------------------------
+
+class nsHTMLBodyElement;
+
+class BodyRule: public nsIStyleRule {
+public:
+  BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet);
+  ~BodyRule();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+
+  // Strength is an out-of-band weighting, always 0 here
+  NS_IMETHOD GetStrength(PRInt32& aStrength);
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
+  nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
+};
+
+//----------------------------------------------------------------------
+
+// special subclass of inner class to override set document
+class nsBodyInner: public nsGenericHTMLContainerElement
+{
+public:
+  nsBodyInner();
+  ~nsBodyInner();
+
+  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
+
+  BodyRule*   mStyleRule;
+};
+
+nsBodyInner::nsBodyInner()
+  : nsGenericHTMLContainerElement(),
+    mStyleRule(nsnull)
+{
+}
+
+nsBodyInner::~nsBodyInner()
+{
+  if (nsnull != mStyleRule) {
+    mStyleRule->mPart = nsnull;
+    mStyleRule->mSheet = nsnull;
+    NS_RELEASE(mStyleRule);
+  }
+}
+
+nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+{
+  if (nsnull != mStyleRule) {
+    mStyleRule->mPart = nsnull;
+    mStyleRule->mSheet = nsnull;
+    NS_RELEASE(mStyleRule); // destroy old style rule since the sheet will probably change
+  }
+  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep);
+}
+
+//----------------------------------------------------------------------
 
 class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
                           public nsIScriptObjectOwner,
@@ -92,38 +158,19 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC2(mInner)
 
 protected:
-  nsGenericHTMLContainerElement mInner;
-  BodyRule* mStyleRule;
+  nsBodyInner mInner;
 
 friend BodyRule;
 };
 
-class BodyRule: public nsIStyleRule {
-public:
-  BodyRule(nsHTMLBodyElement* aPart);
-  ~BodyRule();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
-  // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
-
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
-                          nsIPresContext* aPresContext);
-
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-
-  nsHTMLBodyElement* mPart;
-};
 
 //----------------------------------------------------------------------
 
-BodyRule::BodyRule(nsHTMLBodyElement* aPart)
+BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet)
 {
   NS_INIT_REFCNT();
   mPart = aPart;
+  mSheet = aSheet;
 }
 
 BodyRule::~BodyRule()
@@ -143,6 +190,14 @@ NS_IMETHODIMP
 BodyRule::HashValue(PRUint32& aValue) const
 {
   aValue = (PRUint32)(mPart);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
   return NS_OK;
 }
 
@@ -244,7 +299,6 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 }
 
 nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
-  : mStyleRule(nsnull)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
@@ -252,10 +306,6 @@ nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
 
 nsHTMLBodyElement::~nsHTMLBodyElement()
 {
-  if (nsnull != mStyleRule) {
-    mStyleRule->mPart = nsnull;
-    NS_RELEASE(mStyleRule);
-  }
 }
 
 NS_IMPL_ADDREF(nsHTMLBodyElement)
@@ -454,14 +504,39 @@ nsHTMLBodyElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
+{
+  nsIHTMLStyleSheet*  sheet = nsnull;
+  nsIHTMLContentContainer*  htmlContainer;
+  
+  if (nsnull != aDocument) {
+    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+      htmlContainer->GetAttributeStyleSheet(&sheet);
+      NS_RELEASE(htmlContainer);
+    }
+  }
+  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
+  return sheet;
+}
+
 NS_IMETHODIMP
 nsHTMLBodyElement::GetStyleRule(nsIStyleRule*& aResult)
 {
-  if (nsnull == mStyleRule) {
-    mStyleRule = new BodyRule(this);
-    NS_IF_ADDREF(mStyleRule);
+  if (nsnull == mInner.mStyleRule) {
+    nsIHTMLStyleSheet*  sheet = nsnull;
+
+    if (nsnull != mInner.mDocument) {  // find style sheet
+      sheet = GetAttrStyleSheet(mInner.mDocument);
+    }
+
+    mInner.mStyleRule = new BodyRule(this, sheet);
+    NS_IF_RELEASE(sheet);
+    NS_IF_ADDREF(mInner.mStyleRule);
   }
-  NS_IF_ADDREF(mStyleRule);
-  aResult = mStyleRule;
+  NS_IF_ADDREF(mInner.mStyleRule);
+  aResult = mInner.mStyleRule;
   return NS_OK;
 }
+
+

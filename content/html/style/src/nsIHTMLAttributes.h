@@ -25,6 +25,7 @@
 class nsIAtom;
 class nsISizeOfHandler;
 class nsISupportsArray;
+class nsIHTMLStyleSheet;
 
 
 // IID for the nsIHTMLAttributes interface {a18f85f0-c058-11d1-8031-006008159b5a}
@@ -66,6 +67,7 @@ public:
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) = 0;
   NS_IMETHOD Reset(void) = 0;
   NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc) = 0;
+  NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
 
   /**
    * Add this object's size information to the sizeof handler.
@@ -76,7 +78,9 @@ public:
 };
 
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsMapAttributesFunc aMapFunc);
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult,
+                       nsIHTMLStyleSheet* aSheet,
+                       nsMapAttributesFunc aMapFunc);
 
 #endif /* nsIHTMLAttributes_h___ */
 

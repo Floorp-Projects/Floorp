@@ -197,7 +197,7 @@ static nsresult EnsureWritableAttributes(nsIHTMLContent* aContent,
       nsMapAttributesFunc mapFunc;
       result = aContent->GetAttributeMappingFunction(mapFunc);
       if (NS_OK == result) {
-        result = NS_NewHTMLAttributes(&aAttributes, mapFunc);
+        result = NS_NewHTMLAttributes(&aAttributes, nsnull, mapFunc);
         if (NS_OK == result) {
           aAttributes->AddContentRef();
         }
@@ -366,6 +366,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   if ((nsnull != mDocument) && (nsnull != mAttributes)) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
+      mAttributes->SetStyleSheet(sheet);
       sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
       NS_RELEASE(sheet);
     }

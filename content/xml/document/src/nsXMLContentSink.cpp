@@ -18,7 +18,6 @@
  */
 
 #include "nsXMLContentSink.h"
-#include "nsIStyleSheet.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
 #include "nsIXMLDocument.h"
@@ -38,6 +37,7 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 #include "nsICSSParser.h"
+#include "nsICSSStyleSheet.h"
 #include "nsHTMLAtoms.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -695,36 +695,19 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
 // XXX Borrowed from HTMLContentSink. Should be shared.
 nsresult
 nsXMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                 nsIUnicharInputStream* aUIN,
-                                 PRBool aInline)
+                                 nsIUnicharInputStream* aUIN)
 {
   /* XXX use repository */
   nsICSSParser* parser;
   nsresult rv = NS_NewCSSParser(&parser);
   if (NS_OK == rv) {
-    if (aInline && (nsnull != mStyleSheet)) {
-      parser->SetStyleSheet(mStyleSheet);
-      // XXX we do probably need to trigger a style change reflow
-      // when we are finished if this is adding data to the same sheet
-    }
-    nsIStyleSheet* sheet = nsnull;
+    nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
-      if (aInline) {
-        if (nsnull == mStyleSheet) {
-          // Add in the sheet the first time; if we update the sheet
-          // with new data (mutliple style tags in the same document)
-          // then the sheet will be updated by the css parser and
-          // therefore we don't need to add it to the document)
-          mDocument->AddStyleSheet(sheet);
-          mStyleSheet = sheet;
-        }
-      }
-      else {
-        mDocument->AddStyleSheet(sheet);
-      }
+      mDocument->AddStyleSheet(sheet);
+      NS_RELEASE(sheet);
       rv = NS_OK;
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;/* XXX */
@@ -827,7 +810,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         return result;
       }
       
-      result = LoadStyleSheet(url, uin, PR_FALSE);
+      result = LoadStyleSheet(url, uin);
       NS_RELEASE(uin);
       NS_RELEASE(url);
     }

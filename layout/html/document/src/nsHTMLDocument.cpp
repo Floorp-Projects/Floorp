@@ -131,8 +131,14 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mEmbeds);
   NS_IF_RELEASE(mLinks);
   NS_IF_RELEASE(mAnchors);
-   NS_IF_RELEASE(mAttrStyleSheet);
-  NS_IF_RELEASE(mStyleAttrStyleSheet);
+  if (nsnull != mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
+  }
+  if (nsnull != mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mStyleAttrStyleSheet);
+  }
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
     nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
@@ -208,8 +214,14 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 
   nsIWebShell* webShell;
 
-  NS_IF_RELEASE(mAttrStyleSheet);
-  NS_IF_RELEASE(mStyleAttrStyleSheet);
+  if (nsnull != mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
+  }
+  if (nsnull != mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mStyleAttrStyleSheet);
+  }
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -231,10 +243,10 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 #endif
 
     if (NS_OK == rv) {
-      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL)) {
+      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this)) {
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
       }
-      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL)) {
+      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this)) {
         AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
       }
 

@@ -85,7 +85,10 @@ nsXMLDocument::~nsXMLDocument()
     }
     mNameSpaces = nsnull;
   }
-  NS_IF_RELEASE(mAttrStyleSheet);
+  if (nsnull != mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
+  }
   if (nsnull != mProlog) {
     delete mProlog;
   }
@@ -136,6 +139,11 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
     return rv;
   }
 
+  if (nsnull != mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
+  }
+
   nsIWebShell* webShell;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -154,7 +162,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
 
     if (NS_OK == rv) {
       // For the HTML content within a document
-      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl)) {
+      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this)) {
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
       }
       

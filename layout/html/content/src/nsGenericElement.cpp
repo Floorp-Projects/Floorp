@@ -1408,7 +1408,7 @@ static nsresult EnsureWritableAttributes(nsIContent* aContent,
   if (nsnull == aAttributes) {
     if (PR_TRUE == aCreate) {
       if (NS_OK == result) {
-        result = NS_NewHTMLAttributes(&aAttributes, &MapAttributesInto);
+        result = NS_NewHTMLAttributes(&aAttributes, nsnull, &MapAttributesInto);
         if (NS_OK == result) {
           aAttributes->AddContentRef();
         }

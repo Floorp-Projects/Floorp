@@ -17,6 +17,7 @@
  */
 
 #include "nsIHTMLAttributes.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsIStyleRule.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
@@ -171,7 +172,7 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLAttributesImpl(nsMapAttributesFunc aMapFunc);
+  HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, nsMapAttributesFunc aMapFunc);
   HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
   ~HTMLAttributesImpl(void);
 
@@ -212,6 +213,8 @@ public:
 
   // nsIStyleRule 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+  NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
@@ -231,11 +234,12 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  PRInt32       mContentRefCount;
-  PRInt32       mCount;
-  HTMLAttribute mFirst;
-  nsIAtom*      mID;
-  nsIAtom*      mClass;
+  nsIHTMLStyleSheet*  mSheet;
+  PRInt32             mContentRefCount;
+  PRInt32             mCount;
+  HTMLAttribute       mFirst;
+  nsIAtom*            mID;
+  nsIAtom*            mClass;
   nsMapAttributesFunc mMapper;
 
 #ifdef DEBUG_REFS
@@ -285,8 +289,10 @@ void HTMLAttributesImpl::operator delete(void* ptr)
 }
 
 
-HTMLAttributesImpl::HTMLAttributesImpl(nsMapAttributesFunc aMapFunc)
-  : mFirst(),
+HTMLAttributesImpl::HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, 
+                                       nsMapAttributesFunc aMapFunc)
+  : mSheet(aSheet),
+    mFirst(),
     mCount(0),
     mID(nsnull),
     mClass(nsnull),
@@ -302,7 +308,8 @@ HTMLAttributesImpl::HTMLAttributesImpl(nsMapAttributesFunc aMapFunc)
 }
 
 HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
-  : mFirst(aCopy.mFirst),
+  : mSheet(aCopy.mSheet),
+    mFirst(aCopy.mFirst),
     mCount(aCopy.mCount),
     mID(aCopy.mID),
     mClass(aCopy.mClass),
@@ -803,6 +810,21 @@ HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPre
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLAttributesImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  NS_IF_ADDREF(mSheet);
+  aSheet = mSheet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
+{ // this is not ref-counted, sheet sets to null when it goes away
+  mSheet = aSheet;
+  return NS_OK;
+}
+
 // Strength is an out-of-band weighting, always 0 here
 NS_IMETHODIMP
 HTMLAttributesImpl::GetStrength(PRInt32& aStrength)
@@ -840,13 +862,14 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsMapAttributesFunc aMapFunc)
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsIHTMLStyleSheet* aSheet,
+                       nsMapAttributesFunc aMapFunc)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aMapFunc);
+  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aSheet, aMapFunc);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -175,6 +175,14 @@ public:
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer);
 
+  NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint); // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
+
   /**
     * Returns the Selection Object
    */

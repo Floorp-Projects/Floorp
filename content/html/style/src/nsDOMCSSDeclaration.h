@@ -20,12 +20,12 @@
 #define nsDOMCSSSDeclaration_h___
 
 #include "nsISupports.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSS2Properties.h"
 #include "nsIScriptObjectOwner.h"
 
 class nsICSSDeclaration;
 
-class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration,
+class nsDOMCSSDeclaration : public nsIDOMCSS2Properties,
                             public nsIScriptObjectOwner
 {
 public:
@@ -34,6 +34,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_IDOMCSSSTYLEDECLARATION
+
+  NS_DECL_IDOMCSS2PROPERTIES
   
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);

@@ -192,10 +192,17 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
     
     if (sheet != nsnull)
     {
-      nsIURL& sheetURL = *sheet->GetURL();
+      nsIURL* sheetURL = nsnull;
+      sheet->GetURL(sheetURL);
       
-      if (!(sheetURL == docURL))
+      if (nsnull == sheetURL) {
         break;
+      }
+      if (!(*sheetURL == docURL)) {
+        NS_RELEASE(sheetURL);
+        break;
+      }
+      NS_RELEASE(sheetURL);
       
       nsresult  isCss = sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
       if ((isCss == NS_OK) && (cssSheet != nsnull))

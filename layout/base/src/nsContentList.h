@@ -93,6 +93,16 @@ public:
   NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                             nsIStyleSheet* aStyleSheet,
                                             PRBool aDisabled) { return NS_OK; }
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) { return NS_OK; }
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) { return NS_OK; }
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:

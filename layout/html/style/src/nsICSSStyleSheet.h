@@ -22,7 +22,7 @@
 #include "nsIStyleSheet.h"
 
 class nsICSSStyleRule;
-class nsIDocument;
+class nsIDOMNode;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -30,21 +30,22 @@ class nsIDocument;
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
-  virtual PRBool ContainsStyleSheet(nsIURL* aURL) = 0;
+  virtual PRBool ContainsStyleSheet(nsIURL* aURL) const = 0;
 
   virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
 
-  // XXX do these belong here or are they generic?
   virtual void PrependStyleRule(nsICSSStyleRule* aRule) = 0;
   virtual void AppendStyleRule(nsICSSStyleRule* aRule) = 0;
 
-  virtual PRInt32   StyleRuleCount(void) = 0;
-  virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule) = 0;
+  virtual PRInt32   StyleRuleCount(void) const = 0;
+  virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule) const = 0;
 
-  virtual PRInt32   StyleSheetCount() = 0;
-  virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) = 0;
+  virtual PRInt32   StyleSheetCount(void) const = 0;
+  virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
-  virtual void      SetDocument(nsIDocument* aDocument) = 0;
+  NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
+  NS_IMETHOD  AppendMedium(const nsString& aMedium) = 0;
+  NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 };
 
 extern NS_HTML nsresult
