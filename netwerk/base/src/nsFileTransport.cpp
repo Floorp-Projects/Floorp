@@ -476,6 +476,23 @@ nsFileTransport::Process(void)
                ("nsFileTransport: OPENING [this=%x %s]",
                 this, mStreamName.GetBuffer()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
+
+        if (mListener) {
+            mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
+            if (NS_FAILED(mStatus)) {
+                mState = END_READ;
+                return;
+            }
+        }
+
+        if (mObserver) {
+            mStatus = mObserver->OnStartRequest(this, mContext);  // always send the start notification
+            if (NS_FAILED(mStatus)) {
+                mState = END_WRITE;
+                return;
+            }
+        }
+
         switch (mCommand) {
           case INITIATE_READ:
             mState = NS_FAILED(mStatus) ? END_READ : START_READ;
@@ -537,13 +554,6 @@ nsFileTransport::Process(void)
         }
         mTotalAmount = mTransferAmount;
 
-        if (mListener) {
-            mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
-            if (NS_FAILED(mStatus)) {
-                mState = END_READ;
-                return;
-            }
-        }
         mState = READING;
         break;
       }
@@ -686,14 +696,6 @@ nsFileTransport::Process(void)
             mBuffer = new char[mBufferSegmentSize];
             if (mBuffer == nsnull) {
                 mStatus = NS_ERROR_OUT_OF_MEMORY;
-                mState = END_WRITE;
-                return;
-            }
-        }
-
-        if (mObserver) {
-            mStatus = mObserver->OnStartRequest(this, mContext);  // always send the start notification
-            if (NS_FAILED(mStatus)) {
                 mState = END_WRITE;
                 return;
             }
