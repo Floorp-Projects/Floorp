@@ -47,9 +47,6 @@
 #include "plstr.h"
 #include "prlog.h"
 
-#ifdef XP_PC
-#include <direct.h> //this is here for debug reasons...
-#endif
 #include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 

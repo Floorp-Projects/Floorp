@@ -51,9 +51,6 @@
 #include "nsHTMLEntities.h"
 #include "nsLinebreakConverter.h"
 
-#ifdef XP_PC
-#include <direct.h> //this is here for debug reasons...
-#endif
 #include "prmem.h"
 
 

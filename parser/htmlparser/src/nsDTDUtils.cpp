@@ -929,10 +929,13 @@ nsDeque* nsObserverTopic::GetObserversForTag(eHTMLTags aTag) {
 }
 
 void nsObserverTopic::RegisterObserverForTag(nsIElementObserver *anObserver,eHTMLTags aTag) {
-  if(mObservers[aTag] == nsnull) {
-     mObservers[aTag] = new nsDeque(0);
+  if(anObserver) {
+    if(mObservers[aTag] == nsnull) {
+       mObservers[aTag] = new nsDeque(0);
+    }
+    NS_ADDREF(anObserver);
+    mObservers[aTag]->Push(anObserver);
   }
-  mObservers[aTag]->Push(anObserver);
 }
 
 

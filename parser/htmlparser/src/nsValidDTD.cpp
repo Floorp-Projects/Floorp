@@ -48,9 +48,6 @@
 #include "prio.h"
 #include "plstr.h"
 
-#ifdef XP_PC
-#include <direct.h> //this is here for debug reasons...
-#endif
 #include "prmem.h"
 
 
