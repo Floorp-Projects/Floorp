@@ -40,7 +40,7 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=188206
 * and http://bugzilla.mozilla.org/show_bug.cgi?id=85721#c48 etc.
 * and http://bugzilla.mozilla.org/show_bug.cgi?id=190685
-*
+* and http://bugzilla.mozilla.org/show_bug.cgi?id=197451
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -172,6 +172,40 @@ checkThis(' /x{{0}}/ ');
 
 status = inSection(27);
 checkThis(' /x{{1}}/ ');
+
+
+/*
+ * Misusing the {DecmalDigits} quantifier - according to BOTH ECMA and Perl.
+ *
+ * Just as with the * and + quantifiers above, can't have two {DecmalDigits}
+ * quantifiers in succession - it's a SyntaxError.
+ */
+status = inSection(28);
+testThis(' /x{1}{1}/ ');
+
+status = inSection(29);
+testThis(' /x{1,}{1}/ ');
+
+status = inSection(30);
+testThis(' /x{1,2}{1}/ ');
+
+status = inSection(31);
+testThis(' /x{1}{1,}/ ');
+
+status = inSection(32);
+testThis(' /x{1,}{1,}/ ');
+
+status = inSection(33);
+testThis(' /x{1,2}{1,}/ ');
+
+status = inSection(34);
+testThis(' /x{1}{1,2}/ ');
+
+status = inSection(35);
+testThis(' /x{1,}{1,2}/ ');
+
+status = inSection(36);
+testThis(' /x{1,2}{1,2}/ ');
 
 
 
