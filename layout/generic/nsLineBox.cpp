@@ -797,6 +797,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     return NS_ERROR_FAILURE;
 
   nsRect r1, r2;
+  nsIFrame *stoppingFrame = nsnull;
 
   if (aX < line->mBounds.x) {
     nsIFrame* frame;
@@ -814,6 +815,10 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       *aXIsAfterLastFrame = PR_FALSE;
       return NS_OK;
     }
+    else if (mRightToLeft)
+      stoppingFrame = frame;
+    else
+      stoppingFrame = line->LastChild();
   }
   else if (aX >= line->mBounds.XMost()) {
     nsIFrame* frame;
@@ -831,6 +836,10 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       *aXIsAfterLastFrame = PR_TRUE;
       return NS_OK;
     }
+    else if (mRightToLeft)
+      stoppingFrame = line->mFirstChild;
+    else
+      stoppingFrame = frame;
   }
 
   // Find the frame closest to the X coordinate. Gaps can occur
@@ -884,6 +893,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       else
 #endif // IBMBIDI
         frame->GetNextSibling(&nextFrame);
+      if (nextFrame == stoppingFrame)
+        break;
       frame->GetRect(r1);
       if (r1.width && aX > r1.x) {
         break;
@@ -939,6 +950,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       else
 #endif // IBMBIDI
       frame->GetNextSibling(&nextFrame);
+      if (nextFrame == stoppingFrame)
+        break;
       frame->GetRect(r1);
       if (r1.width && aX < r1.XMost()) {
         break;
