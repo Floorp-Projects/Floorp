@@ -7433,7 +7433,7 @@ void ReflowCountMgr::ClearGrandTotals()
 //------------------------------------------------------------------
 PRIntn ReflowCountMgr::DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg)
 {
-  PRBool cycledOnce = (PRBool)arg;
+  PRBool cycledOnce = (arg != 0);
 
   char *str = (char *)he->key;
   ReflowCounter * counter = (ReflowCounter *)he->value;
