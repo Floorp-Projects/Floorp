@@ -151,6 +151,8 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIFormControl.h"
 #include "nsITimer.h"
 #include "nsITimerInternal.h"
 
@@ -4185,9 +4187,9 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
   } else {
     // Align the frame edge according to the specified percentage
     nscoord frameAlignY =
-      NSToCoordRound(aRect.y + aRect.height * (aVPercent / 100.0));
+      NSToCoordRound(aRect.y + aRect.height * (aVPercent / 100.0f));
     scrollOffsetY =
-      NSToCoordRound(frameAlignY - visibleRect.height * (aVPercent / 100.0));
+      NSToCoordRound(frameAlignY - visibleRect.height * (aVPercent / 100.0f));
   }
 
   // See how the frame should be positioned horizontally
@@ -4223,9 +4225,9 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
   } else {
     // Align the frame edge according to the specified percentage
     nscoord frameAlignX =
-      NSToCoordRound(aRect.x + aRect.width * (aHPercent / 100.0));
+      NSToCoordRound(aRect.x + (aRect.width) * (aHPercent / 100.0f));
     scrollOffsetX =
-      NSToCoordRound(frameAlignX - visibleRect.width * (aHPercent / 100.0));
+      NSToCoordRound(frameAlignX - visibleRect.width * (aHPercent / 100.0f));
   }
 
   aScrollingView->ScrollTo(scrollOffsetX, scrollOffsetY,
@@ -4443,19 +4445,37 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
 }
 
 // GetImageLocation: copy image location to clipboard
-NS_IMETHODIMP PresShell::GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString)
+NS_IMETHODIMP
+PresShell::GetImageLocation(nsIDOMNode* aNode, nsAString& aLocationString)
 {
-#ifdef DEBUG_dr
-  printf("dr :: PresShell::GetImageLocation\n");
-#endif
-
   NS_ENSURE_ARG_POINTER(aNode);
-  nsresult rv;
+  aLocationString.Truncate();
 
-  // are we an image?
-  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return img->GetSrc(aLocationString);
+  // Is aNode an image?
+  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(aNode));
+
+  if (img) {
+    // aNode is an image, return its source.
+
+    return img->GetSrc(aLocationString);
+  }
+
+  // aNode is not an image, check if it's an <input type=image>...
+  nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(aNode));
+
+  if (form_control && form_control->GetType() == NS_FORM_INPUT_IMAGE) {
+    // aNode is an <input type=image>, return its source.
+
+    nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(aNode));
+    NS_ASSERTION(input, "Whaaa, image form control is not an "
+                        "nsIDOMHTMLInputElement!");
+
+    return input->GetSrc(aLocationString);
+  }
+
+  // aNode is not an image, return an empty location.
+
+  return NS_OK;
 }
 
 // DoCopyImageContents: copy image contents to clipboard

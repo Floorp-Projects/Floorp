@@ -1764,7 +1764,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   nsCOMPtr<nsIDeviceContext> dx;
   mPresContext->GetDeviceContext(getter_AddRefs(dx));
 
-
   nsRect tbounds = aBounds;
   float p2t;
   mPresContext->GetPixelsToTwips(&p2t);
@@ -2001,13 +2000,12 @@ NS_IMETHODIMP DocumentViewerImpl::CopyLinkLocation()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupLinkNode(getter_AddRefs(node));
+  GetPopupLinkNode(getter_AddRefs(node));
   // make noise if we're not in a link
-  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   nsAutoString locationText;
-  rv = mPresShell->GetLinkLocation(node, locationText);
+  nsresult rv = mPresShell->GetLinkLocation(node, locationText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
@@ -2021,16 +2019,16 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageLocation()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  GetPopupImageNode(getter_AddRefs(node));
   // make noise if we're not in an image
-  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   nsAutoString locationText;
-  rv = mPresShell->GetImageLocation(node, locationText);
+  nsresult rv = mPresShell->GetImageLocation(node, locationText);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
+  nsCOMPtr<nsIClipboardHelper> clipboard =
+    do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // copy the href onto the clipboard
@@ -2041,10 +2039,10 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImageContents()
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupImageNode(getter_AddRefs(node));
+  GetPopupImageNode(getter_AddRefs(node));
   // make noise if we're not in an image
-  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+
   return mPresShell->DoCopyImageContents(node);
 }
 
@@ -2805,13 +2803,23 @@ DocumentViewerImpl::GetPopupImageNode(nsIDOMNode** aNode)
 
   // XXX find out if we're an image. this really ought to look for objects
   // XXX with type "image/...", but this is good enough for now.
-  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node, &rv));
-  if (NS_FAILED(rv)) return rv;
-  NS_ENSURE_TRUE(img, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node));
 
-  // if we made it here, we're an image.
+  if (!img) {
+    nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
+
+    if (!form_control || form_control->GetType() != NS_FORM_INPUT_IMAGE) {
+      // We're neither an <img> nor an <input type=image> element,
+      // nothing to return.
+
+      return NS_OK;
+    }
+  }
+
+  // if we made it here, we're an <img> or an <input type=image>.
   *aNode = node;
-  NS_IF_ADDREF(*aNode); // addref
+  NS_ADDREF(*aNode);
+
   return NS_OK;
 }
 
