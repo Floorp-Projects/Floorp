@@ -90,7 +90,6 @@ typedef enum _FTP_STATE {
     FTP_S_ACCT, FTP_R_ACCT,
     FTP_S_TYPE, FTP_R_TYPE,
     FTP_S_CWD,  FTP_R_CWD,
-    FTP_S_PWD,  FTP_R_PWD,
     FTP_S_SIZE, FTP_R_SIZE,
     FTP_S_MDTM, FTP_R_MDTM,
     FTP_S_REST, FTP_R_REST,
@@ -98,6 +97,7 @@ typedef enum _FTP_STATE {
     FTP_S_STOR, FTP_R_STOR,
     FTP_S_LIST, FTP_R_LIST,
     FTP_S_PASV, FTP_R_PASV,
+    FTP_S_PWD,  FTP_R_PWD
 } FTP_STATE;
 
 // higher level ftp actions
@@ -141,12 +141,11 @@ private:
     // BEGIN: STATE METHODS
     nsresult        S_user(); FTP_STATE       R_user();
     nsresult        S_pass(); FTP_STATE       R_pass();
-    nsresult        S_acct(); FTP_STATE       R_acct();
     nsresult        S_syst(); FTP_STATE       R_syst();
+    nsresult        S_acct(); FTP_STATE       R_acct();
 
     nsresult        S_type(); FTP_STATE       R_type();
     nsresult        S_cwd();  FTP_STATE       R_cwd();
-    nsresult        S_pwd();  FTP_STATE       R_pwd();
 
     nsresult        S_size(); FTP_STATE       R_size();
     nsresult        S_mdtm(); FTP_STATE       R_mdtm();
@@ -156,6 +155,7 @@ private:
     nsresult        S_retr(); FTP_STATE       R_retr();
     nsresult        S_stor(); FTP_STATE       R_stor();
     nsresult        S_pasv(); FTP_STATE       R_pasv();
+    nsresult        S_pwd();  FTP_STATE       R_pwd();
     // END: STATE METHODS
     ///////////////////////////////////
 
@@ -167,6 +167,8 @@ private:
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
     nsresult SendFTPCommand(nsCString& command);
+    void ConvertFilespecToVMS(nsCString& fileSpec);
+    void ConvertDirspecToVMS(nsCString& fileSpec);
     nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
     nsresult SetContentType();
     PRBool CanReadEntry();
@@ -197,6 +199,10 @@ private:
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
     nsCOMPtr<nsIProxyInfo>          mProxyInfo;
 
+        // ****** connection cache vars
+    PRInt32             mServerType;    // What kind of server are we talking to
+    PRPackedBool        mList;          // Use LIST instead of NLST
+
         // ****** protocol interpretation related state vars
     nsString            mUsername;      // username
     nsString            mPassword;      // password
@@ -204,23 +210,26 @@ private:
     PRPackedBool        mAnonymous;     // try connecting anonymous (default)
     PRPackedBool        mRetryPass;     // retrying the password
     nsresult            mInternalError; // represents internal state errors
-    PRInt32             mServerType;        // What kind of server are we talking to
 
         // ****** URI vars
-    nsCOMPtr<nsIURI>       mURI;        // the uri we're connecting to
+    nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
+    nsString               mFilename;   // url filename (if any)
     nsCString              mPath;       // the url's path
     nsCString              mPwd;        // login Path
 
         // ****** other vars
-    nsCOMPtr<nsIInputStream>  mWriteStream; // This stream is written to the server.
-    PRUint32                  mWriteCount;
-    PRUint8                   mSuspendCount;// number of times we've been suspended.
-    PRPackedBool              mIPv6Checked;
-    nsCOMPtr<nsIPrompt>       mPrompter;
-    nsCOMPtr<nsIFTPEventSink> mFTPEventSink;
-    nsCOMPtr<nsIAuthPrompt>   mAuthPrompter;
-    PRUint32                  mListFormat;
+    PRUint8                mSuspendCount;// number of times we've been suspended.
+    PRUint32               mBufferSegmentSize;
+    PRUint32               mBufferMaxSize;
+    PRLock                 *mLock;
+    nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
+    PRUint32                 mWriteCount;
+    PRPackedBool           mIPv6Checked;
+    nsCOMPtr<nsIPrompt>    mPrompter;
+    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
+    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
+    PRUint32               mListFormat;
     
     static PRUint32         mSessionStartTime;
 
