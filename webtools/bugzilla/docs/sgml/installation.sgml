@@ -1724,11 +1724,14 @@ deny from all
 
       <programlisting>
 ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
 ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-ns_register_filter preauth GET /bugzilla/localconfig filter_deny
 ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
 ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
-
+ns_register_filter preauth GET /bugzilla/data/* filter_deny
+ns_register_filter preauth GET /bugzilla/template/* filter_deny
+                                                                                
 proc filter_deny { why } {
     ns_log Notice "filter_deny"
     return "filter_return"
@@ -1736,17 +1739,29 @@ proc filter_deny { why } {
       </programlisting>
 
       <warning>
-        <para>This doesn't appear to account for everything mentioned in
-        <xref linkend="security"/>. In particular, it doesn't block access
-        to the <filename class="directory">data</filename> or
-        <filename class="directory">template</filename> directories. It also
-        doesn't account for the editor backup files that were the topic of
+        <para>This probably doesn't account for all possible editor backup
+        files so you may wish to add some additional variations of
+        <filename>localconfig</filename>. For more information, see
         <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">bug
-        186383</ulink>, <ulink
-        url="http://online.securityfocus.com/bid/6501">Bugtraq ID 6501</ulink>,
-        and a partial cause for the 2.16.2 release.
+        186383</ulink> or <ulink
+        url="http://online.securityfocus.com/bid/6501">Bugtraq ID 6501</ulink>.
         </para>
       </warning>
+
+      <note>
+        <para>If you are using webdot from research.att.com (the default
+        configuration for the <option>webdotbase</option> paramater), you
+        will need to allow access to <filename>data/webdot/*.dot</filename>
+        for the reasearch.att.com machine.
+        </para>
+        <para>If you are using a local installation of <ulink
+        url="http://www.graphviz.org">GraphViz</ulink>, you will need to allow
+        everybody to access <filename>*.png</filename>,
+        <filename>*.gif</filename>, <filename>*.jpg</filename>, and
+        <filename>*.map</filename> in the
+        <filename class="directory">data/webdot</filename> directory.
+        </para>
+      </note>
     </section>
   </section>
 
