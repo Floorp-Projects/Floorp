@@ -155,7 +155,8 @@ public:
     */
   virtual PRBool BalanceColumnsConstrained(const nsReflowState& aReflowState,
                                            nscoord aAvailWidth,
-                                           nscoord aMaxWidth);
+                                           nscoord aMaxWidth,
+                                           PRBool  aTableIsAutoWidth);
 
   /** post-process to AssignFixedColumnWidths
     *

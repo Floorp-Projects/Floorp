@@ -753,7 +753,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsReflowState&
   { // the table fits somewhere between its min and desired size
     if (gsDebug) printf ("  * auto table desired size does not fit, calling BalanceColumnsConstrained\n");
     result = BalanceColumnsConstrained(aReflowState, aAvailWidth,
-                                       actualMaxWidth);
+                                       actualMaxWidth, aTableIsAutoWidth);
   }
 
   return result;
@@ -1239,13 +1239,22 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
   {
     DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
   }
-  nscoord computedWidth=0;
-  for (PRInt32 i=0; i<mNumCols; i++) {
-    computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+  // IFF the table is NOT (auto-width && all columns have fixed width)
+  PRInt32 numFixedColumns=0;
+  PRInt32 *fixedColumns=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  if (!((PR_TRUE==aTableIsAutoWidth) && (numFixedColumns==mNumCols)))
+  {
+    nscoord computedWidth=0;
+    for (PRInt32 i=0; i<mNumCols; i++) {
+      computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+    }
+    if (computedWidth>aMaxWidth) {
+      AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
+    }
   }
-  if (computedWidth>aMaxWidth) {
-    AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
-  }
+
+  // cleanup
   if (nsnull!=spanList)
   {
     NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
@@ -1344,7 +1353,8 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aAvailWidth,
  */
 PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState& aReflowState,
                                                             nscoord aAvailWidth,
-                                                            nscoord aMaxWidth)
+                                                            nscoord aMaxWidth,
+                                                            PRBool  aTableIsAutoWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -1715,15 +1725,24 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
-  nscoord computedWidth=0;
-  for (PRInt32 i=0; i<mNumCols; i++) {
-    computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
-  }
-  if (computedWidth<aMaxWidth) {
-    AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
-  }
-  else if (computedWidth>aMaxWidth) {
-    AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
+  // IFF the table is NOT (auto-width && all columns have fixed width)
+  PRInt32 numFixedColumns=0;
+  PRInt32 *fixedColumns=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+  if (!((PR_TRUE==aTableIsAutoWidth) && (numFixedColumns==mNumCols)))
+  {
+    nscoord computedWidth=0;
+    for (PRInt32 i=0; i<mNumCols; i++) {
+      computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+    }
+    if (computedWidth<aMaxWidth) 
+    { // then widen the table because it's too narrow
+      AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
+    }
+    else if (computedWidth>aMaxWidth) 
+    { // then shrink the table width because its too wide
+      AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
+    }
   }
 
 
