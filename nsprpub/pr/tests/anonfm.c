@@ -108,7 +108,7 @@ static void ClientOne( void )
     PR_LOG(lm, msgLevel,
         ("ClientOne(): PR_ImportFileMapFromString(): fm: %p", fm ));
 
-    addr = PR_MemMap( fm, 0, fmSize );
+    addr = PR_MemMap( fm, LL_ZERO, fmSize );
     if ( NULL == addr ) {
         failed_already = 1;    
         PR_LOG(lm, msgLevel,
@@ -189,7 +189,7 @@ static void ServerOne( void )
     PR_snprintf( envBuf, sizeof(envBuf), "%s=%s", fmEnvName, fmString);
     putenv( envBuf );
     
-    addr = PR_MemMap( fm, 0, fmSize );
+    addr = PR_MemMap( fm, LL_ZERO, fmSize );
     if ( NULL == addr ) {
         failed_already = 1;    
         PR_LOG(lm, msgLevel,
