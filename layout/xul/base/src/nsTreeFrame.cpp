@@ -27,6 +27,7 @@
 #include "nsCSSRendering.h"
 #include "nsTreeCellFrame.h"
 #include "nsTableColFrame.h"
+#include "nsTreeRowFrame.h"
 #include "nsCellMap.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsINameSpaceManager.h"
@@ -40,6 +41,15 @@
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLParts.h"
+
+#include "nsIDOMRange.h"
+#include "nsIComponentManager.h"
+
+#include "nsLayoutCID.h"
+static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
+#include "nsIContentIterator.h"
+static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+#include "nsLayoutAtoms.h"
 
 //
 // NS_NewTreeFrame
@@ -138,7 +148,107 @@ void nsTreeFrame::ToggleSelection(nsIPresContext* aPresContext, nsTreeCellFrame*
 
 void nsTreeFrame::RangedSelection(nsIPresContext* aPresContext, nsTreeCellFrame* pEndFrame)
 {
- // XXX Re-implement!
+	nsCOMPtr<nsIContent> endCellContent;
+	pEndFrame->GetContent(getter_AddRefs(endCellContent));
+	if (!endCellContent)
+		return;
+
+	nsCOMPtr<nsIContent> endRowContent;
+	endCellContent->GetParent(*getter_AddRefs(endRowContent));
+	if (!endRowContent)
+		return;
+
+	nsCOMPtr<nsIContent> endItemContent;
+	endRowContent->GetParent(*getter_AddRefs(endItemContent));
+	if (!endItemContent)
+		return;
+
+	nsCOMPtr<nsIContent> endParent;
+	endItemContent->GetParent(*getter_AddRefs(endParent));
+	if (!endParent)
+		return;
+
+	nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(mContent);
+	nsIDOMNodeList* selectedItems;
+	treeElement->GetSelectedItems(&selectedItems);
+	if (!selectedItems)
+		return;
+
+	PRUint32 length;
+	selectedItems->GetLength(&length);
+	if (length < 1)
+		return;
+
+	nsCOMPtr<nsIDOMNode> domNode;
+	selectedItems->Item(0, getter_AddRefs(domNode));
+	nsCOMPtr<nsIContent> startItemContent = do_QueryInterface(domNode);
+
+	nsCOMPtr<nsIContent> startParent;
+	startItemContent->GetParent(*getter_AddRefs(startParent));
+	if (!startParent)
+		return;
+
+	// Get a range so we can create an iterator
+	nsCOMPtr<nsIDOMRange> range;
+	nsresult result;
+	result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
+						nsIDOMRange::GetIID(), getter_AddRefs(range));
+
+	PRInt32 startIndex = 0;
+	PRInt32 endIndex = 0;
+	startParent->IndexOf(startItemContent, startIndex);
+	endParent->IndexOf(endItemContent, endIndex);
+
+	nsCOMPtr<nsIDOMNode> startDOMNode = do_QueryInterface(startParent);
+	nsCOMPtr<nsIDOMNode> endDOMNode = do_QueryInterface(endParent);
+	result = range->SetStart(startDOMNode, startIndex);
+	result = range->SetEnd(endDOMNode, endIndex+1);
+	if (NS_FAILED(result))
+	{
+		// Ranges need to be increasing, try reversing directions
+		result = range->SetStart(endDOMNode, endIndex);
+		result = range->SetEnd(startDOMNode, startIndex+1);
+		if (NS_FAILED(result))
+			return;
+	}
+
+	// Create the iterator
+	nsCOMPtr<nsIContentIterator> iter;
+	result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+																							nsIContentIterator::GetIID(), 
+																							getter_AddRefs(iter));
+	if (NS_FAILED(result))
+    return; // result;
+
+	// Iterate and select
+	nsCOMPtr<nsIAtom> treeItemAtom = dont_AddRef(NS_NewAtom("treeitem"));
+	nsCOMPtr<nsIAtom> selectedAtom = dont_AddRef(NS_NewAtom("selected"));
+	nsCOMPtr<nsIAtom> suppressSelectAtom = dont_AddRef(NS_NewAtom("suppressonselect"));
+	nsAutoString trueString("true", 4);
+	nsCOMPtr<nsIContent> content = nsnull;
+	nsCOMPtr<nsIAtom> tag;
+
+	iter->Init(range);
+	result = iter->First();
+	while (NS_SUCCEEDED(result) && NS_ENUMERATOR_FALSE == iter->IsDone())
+	{
+		result = iter->CurrentNode(getter_AddRefs(content));
+		if (NS_FAILED(result) || !content)
+			return; // result;
+
+		// If tag==item, Do selection stuff
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag && tag == treeItemAtom)
+    {
+			content->SetAttribute(kNameSpaceID_None, selectedAtom, 
+														trueString, /*aNotify*/ PR_TRUE);
+		}
+
+		result = iter->Next();
+		// Deal with closed nodes here
+		// Also had strangeness where parent of selected subrange was selected even 
+		// though it wasn't in the range.
+	}
 }
 
 void
