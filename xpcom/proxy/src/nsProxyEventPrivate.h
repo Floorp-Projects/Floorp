@@ -117,30 +117,28 @@ public:
     nsProxyEventObject(nsIEventQueue *destQueue,
                        PRInt32 proxyType,
                        nsISupports* aObj,
-    				   nsProxyEventClass* aClass,
+                       nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
     
     virtual ~nsProxyEventObject();
     
-    nsProxyEventObject*   Find(REFNSIID aIID);
+    nsProxyEventObject*   LockedFind(REFNSIID aIID);
 
 #ifdef DEBUG_xpcom_proxy
     void DebugDump(const char * message, PRUint32 hashKey);
 #endif
 
 protected:
-    PRLock                *mLock;
+    void LockedRemoveProxy();
 
-    nsCOMPtr<nsProxyEventClass>  mClass;
-    nsCOMPtr<nsProxyObject> mProxyObject;
-    /* 
-        nsProxyEventObject are
-        incomplete classes.  do not try changing 
-        them into nsCOMPtr's, or you will find 
-        that it wont work :-)
-    */
-    
+protected:
+    nsCOMPtr<nsProxyEventClass> mClass;
+    nsCOMPtr<nsProxyObject>     mProxyObject;
+
+    // Owning reference...
     nsProxyEventObject *mRoot;
+
+    // Weak reference...
     nsProxyEventObject *mNext;
 };
 
@@ -170,12 +168,14 @@ public:
     
     nsHashtable* GetRealObjectToProxyObjectMap() const { return mProxyObjectMap;}   
     nsHashtable* GetIIDToProxyClassMap() const { return mProxyClassMap; }   
-        
+
+    PRMonitor*   GetMonitor() const { return mProxyCreationMonitor; }
     
 private:
     static nsProxyObjectManager* mInstance;
     nsHashtable *mProxyObjectMap;
     nsHashtable *mProxyClassMap;
+    PRMonitor   *mProxyCreationMonitor;
 };
 
 

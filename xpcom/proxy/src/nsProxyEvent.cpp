@@ -298,7 +298,7 @@ nsProxyObject::Release(void)
         mDestQueue->PostEvent(event);
         return 0;
   }                          
-  return mRefCnt;
+  return count;
 }                
 
 

@@ -104,6 +104,8 @@ nsProxyObjectManager::nsProxyObjectManager()
     
     mProxyClassMap = new nsHashtable(256, PR_TRUE);
     mProxyObjectMap = new nsHashtable(256, PR_TRUE);
+
+    mProxyCreationMonitor = PR_NewMonitor();
 }
 
 static PRBool PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
@@ -122,6 +124,11 @@ nsProxyObjectManager::~nsProxyObjectManager()
     }
 
     delete mProxyObjectMap;
+
+    if (mProxyCreationMonitor) {
+        PR_DestroyMonitor(mProxyCreationMonitor);
+    }
+
     nsProxyObjectManager::mInstance = nsnull;
 }
 
