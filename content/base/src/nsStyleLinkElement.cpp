@@ -48,13 +48,22 @@ nsStyleLinkElement::nsStyleLinkElement() :
 
 nsStyleLinkElement::~nsStyleLinkElement()
 {
+  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(mStyleSheet);
+  if (cssSheet) {
+    cssSheet->SetOwningNode(nsnull);
+  }
 }
 
 NS_IMETHODIMP 
 nsStyleLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
 {
+  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(mStyleSheet);
+  if (cssSheet) {
+    cssSheet->SetOwningNode(nsnull);
+  }
+
   mStyleSheet = aStyleSheet;
-  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(aStyleSheet);
+  cssSheet = do_QueryInterface(mStyleSheet);
   if (cssSheet) {
     nsCOMPtr<nsIDOMNode> node;
     CallQueryInterface(this,
@@ -166,6 +175,15 @@ NS_IMETHODIMP
 nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
                                      nsICSSLoaderObserver* aObserver)
 {
+  if (mStyleSheet && aOldDocument) {
+    // We're removing the link element from the document, unload the
+    // stylesheet.  We want to do this even if updates are disabled, since
+    // otherwise a sheet with a stale linking element pointer will be hanging
+    // around -- not good!
+    aOldDocument->RemoveStyleSheet(mStyleSheet);
+    mStyleSheet = nsnull;
+  }
+
   if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
   }
@@ -184,13 +202,6 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
   nsCOMPtr<nsIDocument> doc;
   thisContent->GetDocument(*getter_AddRefs(doc));
-
-  if (mStyleSheet && aOldDocument) {
-    // We're removing the link element from the document, unload the
-    // stylesheet.
-    aOldDocument->RemoveStyleSheet(mStyleSheet);
-    mStyleSheet = nsnull;
-  }
 
   if (!doc) {
     return NS_OK;

@@ -743,6 +743,8 @@ nsGenericElement::nsGenericElement()
 
 nsGenericElement::~nsGenericElement()
 {
+  NS_PRECONDITION(!mDocument, "Please remove this from the document properly");
+  
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
 
@@ -790,7 +792,7 @@ nsGenericElement::~nsGenericElement()
     delete slots;
   }
 
-  // No calling GetFlags() beond this point...
+  // No calling GetFlags() beyond this point...
 }
 
 PR_STATIC_CALLBACK(void)
