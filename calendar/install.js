@@ -16,20 +16,16 @@ logComment("calendarDir is: " + calendarDir);
 
 setPackageFolder(calendarDir);
 
-err = addDirectory( "resources" );
-
-logComment("addDirectory() for resources returned: " + err);
-
-err = addDirectory("", "bin/components", getFolder( "Components" ), "" );
+err = addDirectory("", "components", getFolder( "Components" ), "" );
 
 logComment("addDirectory() for components returned: " + err);
 
-err = addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
+err = addDirectory( "", "", "other_stuff/icons", getFolder( "Chrome", "icons" ), "", true );
 
 logComment("addDirectory() for icons returned: " + err);
 
 err = addFile( "Calendar Chrome",
-         "bin/chrome/calendar.jar", // jar source folder 
+         "chrome/calendar.jar", // jar source folder 
          getFolder("Chrome"),        // target folder
          "");
 
@@ -39,8 +35,6 @@ var err = getLastError();
 
 if ( err == SUCCESS ) { 
   
-   var calendarLocale  = getFolder(calendarDir, "locale");
-
    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "content/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/classic/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/modern/calendar/");
@@ -52,14 +46,24 @@ if ( err == SUCCESS ) {
       chkJarFileName = addLocales[i] + ".jar";
       tmp_f = getFolder("Chrome", chkJarFileName);
       if ( File.exists(tmp_f) ) {
-        registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, addLocales[i] + "/");
+        err = addFile( "Calendar Chrome-"+addLocales[i],
+                       "chrome/calendar-"+addLocales[i]+".jar", // jar source folder 
+                       getFolder("Chrome"),        // target folder
+                       "");
+        registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-"+addLocales[i]+".jar"),
+                                                "locale/"+addLocales[i]+"/calendar/");
       }
 
       // Check Mozilla Thunderbird (Mail/News)
       chkJarFileName = addLocales[i] + "-mail.jar";
       tmp_f = getFolder("Chrome", chkJarFileName);
       if ( File.exists(tmp_f) ) {
-        registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, addLocales[i] + "/");
+        err = addFile( "Calendar Chrome-"+addLocales[i],
+                       "chrome/calendar-"+addLocales[i]+".jar", // jar source folder 
+                       getFolder("Chrome"),        // target folder
+                       "");
+        registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar-"+addLocales[i]+".jar"),
+                                                "locale/"+addLocales[i]+"/calendar/");
       }
    }
 
@@ -74,7 +78,7 @@ if ( err == SUCCESS ) {
        cancelInstall(err);
    }
 } 
-else { 
+else {
    alert("Failed to create directory. \n"
     +"You probably don't have appropriate permissions \n"
     +"(write access to <mozilla>/chrome directory). \n"

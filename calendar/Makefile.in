@@ -102,20 +102,23 @@ xpi::
 
 	$(PERL) $(srcdir)/createBuildId.pl $(srcdir)/resources/content/about.html
 	make
-	mkdir -p ./xpi/bin/components
-	mkdir -p ./xpi/bin/chrome
-	mkdir -p ./xpi/resources
-	cp $(DEPTH)/dist/bin/chrome/calendar.jar ./xpi/bin/chrome
-	cp libxpical/$(LIB_PREFIX)xpical$(DLL_SUFFIX) ./xpi/bin/components
-	cp libxpical/_xpidlgen/calendar.xpt ./xpi/bin/components
-	cp $(srcdir)/resources/content/calendarService.js ./xpi/bin/components
-	cp -r $(srcdir)/resources/locale ./xpi/resources
-	cp -r $(srcdir)/$(calplatform)/icons ./xpi
+	mkdir -p ./xpi/components
+	mkdir -p ./xpi/chrome
+	mkdir -p ./xpi/other_stuff
+	cp $(DEPTH)/dist/bin/chrome/calendar.jar ./xpi/chrome
+	cp libxpical/$(LIB_PREFIX)xpical$(DLL_SUFFIX) ./xpi/components
+	cp libxpical/_xpidlgen/calendar.xpt ./xpi/components
+	cp $(srcdir)/resources/content/calendarService.js ./xpi/components
+	cp $(DEPTH)/dist/bin/chrome/calendar-*.jar ./xpi/chrome
+	
+         #TODO: correct next-line for when icons are supported by Extension Manager
+	cp -r $(srcdir)/$(calplatform)/icons ./xpi/other_stuff
 	if [ $(calplatform) = "linux" ]; then \
-	   mkdir -p xpi/bin/init.d; \
-	   cp $(topsrcdir)/xpfe/bootstrap/init.d/???calendar* xpi/bin/init.d; \
+	   mkdir -p xpi/other_stuff/bin/init.d; \
+	   cp $(topsrcdir)/xpfe/bootstrap/init.d/???calendar* xpi/other_stuff/bin/init.d; \
 	fi
 	cp $(srcdir)/install.js ./xpi
-	cd xpi; find bin resources icons install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
+	cd xpi; find other_stuff chrome components install.js \
+	   \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
 	echo "Done."
