@@ -620,13 +620,12 @@ input[type="submit"] {
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
-
+  user-select: none !important;
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
 
   behavior: none;
-  user-select: none !important;
 	cursor: default;
 }
 
@@ -636,7 +635,6 @@ input[type="submit"]:hover {
 
 input[type="submit"]:active:hover {
   border-style: inset;
-
   padding-left: 2px;
   padding-right: 0px;
   padding-top: 2px;
@@ -677,9 +675,8 @@ input[type="reset"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
-
-  user-select: none !important;
   behavior: none;
+  user-select: none !important;
 	cursor: default;
 }
 
@@ -701,6 +698,7 @@ input[type="reset"]:-moz-focus-inner {
    padding-right : 2px;
    padding-top   : 1px;
    padding-bottom: 1px;
+
    margin: 0px;
 }
 
@@ -709,7 +707,7 @@ input[type="reset"]:focus:-moz-focus-inner {
    padding-right : 1px;
    padding-top   : 0px;
    padding-bottom: 0px;
- 
+
    margin: 0px;
    border : 1px dotted black;
 }
@@ -718,6 +716,7 @@ input[type="reset"][disabled],input[type="reset"][disabled]:active {
   border: 1px solid rgb(156, 154, 156);
   padding: 1px;
   color: gray;
+
 }
 
 /* button */
@@ -731,6 +730,7 @@ input[type="button"] {
   font-size: small;
   behavior: none;
   white-space: pre;
+  user-select: none !important;
 	cursor: default;
 }
 
@@ -799,7 +799,6 @@ button:hover {
 
 button:active:hover {
   border-style: inset;
-
   padding-left: 2px;
   padding-right: 0px;
   padding-top: 2px;
@@ -819,7 +818,6 @@ button:focus:-moz-focus-inner {
    padding-right : 1px;
    padding-top   : 0px;
    padding-bottom: 0px;
- 
    margin: 0px;
    border : 1px dotted black;
 }
