@@ -108,6 +108,11 @@ PUBLIC PRBool MatchCookieToLabel2( char *TargetURL,  char *CookieName,
 	char *CookiePath, char *CookieHost, 
 	TrustLabel **TheLabel );
 
+/* given a URL search the list of URL_s structures for one that has
+ * a non-empty trust list.
+ * Return a pointer to the non empty trust last */
+extern XP_List * NET_GetTrustList( char *TargetURL ) ;
+
 #endif
 
 #endif
