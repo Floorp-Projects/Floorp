@@ -715,7 +715,9 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_IF_RELEASE(servMgr);
 
     // Shutdown global servicemanager
-    nsComponentManagerImpl::gComponentManager->FreeServices();
+    if (nsComponentManagerImpl::gComponentManager) {
+        nsComponentManagerImpl::gComponentManager->FreeServices();
+    }
     nsServiceManager::ShutdownGlobalServiceManager(nsnull);
 
     if (currentQ) {
@@ -742,8 +744,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
-    rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
+    if (nsComponentManagerImpl::gComponentManager) {
+        rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
+    } else
+        NS_WARNING("Component Manager was never created ...");
 
     // Release our own singletons
     // Do this _after_ shutting down the component manager, because the
