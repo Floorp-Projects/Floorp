@@ -26,7 +26,9 @@
 #include "nsIDOMNativeObjectRegistry.h"
 #include "nsScriptNameSetRegistry.h"
 #include "nsIScriptEventListener.h"
+#ifndef NECKO
 #include "jsurl.h"
+#endif
 #include "nsIScriptContext.h"
 #include "nsHTMLTagsEnums.h"
 #include "nsIDOMAttr.h"
