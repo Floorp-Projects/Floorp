@@ -70,7 +70,7 @@ nsFileProtocolHandler::Init()
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
                               nsIFileProtocolHandler,
                               nsIProtocolHandler,
-                              nsISupportsWeakReference);
+                              nsISupportsWeakReference)
 
 //-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:

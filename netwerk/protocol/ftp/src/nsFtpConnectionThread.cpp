@@ -359,7 +359,7 @@ DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
                               nsIStreamListener, 
                               nsIRequestObserver, 
-                              nsIRequest);
+                              nsIRequest)
 
 nsFtpState::nsFtpState()
 {

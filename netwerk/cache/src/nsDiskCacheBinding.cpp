@@ -106,7 +106,7 @@ GetCacheEntryBinding(nsCacheEntry * entry)
  *  nsDiskCacheBinding
  *****************************************************************************/
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheBinding);
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheBinding)
 
 nsDiskCacheBinding::nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record)
     :   mCacheEntry(entry)

@@ -103,4 +103,4 @@ static const nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE(nsStreamConvModule, components);
+NS_IMPL_NSGETMODULE(nsStreamConvModule, components)

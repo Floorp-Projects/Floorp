@@ -46,7 +46,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsTXTToHTMLConv,
                               nsIStreamConverter,
                               nsITXTToHTMLConv,
                               nsIRequestObserver,
-                              nsIStreamListener);
+                              nsIStreamListener)
 
 
 // nsIStreamConverter methods

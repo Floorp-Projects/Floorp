@@ -2043,8 +2043,8 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
     return NS_NOINTERFACE;                                                 
 }
 
-NS_IMPL_ADDREF(CPluginManager);
-NS_IMPL_RELEASE(CPluginManager);
+NS_IMPL_ADDREF(CPluginManager)
+NS_IMPL_RELEASE(CPluginManager)
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -2324,8 +2324,8 @@ CPluginInstancePeer::SetWindowSize(PRUint32 width, PRUint32 height)
 // nsISupports functions
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 
-NS_IMPL_ADDREF(CPluginInstancePeer);
-NS_IMPL_RELEASE(CPluginInstancePeer);
+NS_IMPL_ADDREF(CPluginInstancePeer)
+NS_IMPL_RELEASE(CPluginInstancePeer)
 
 NS_METHOD
 CPluginInstancePeer::QueryInterface(const nsIID& iid, void** ptr) 

@@ -85,8 +85,8 @@ nsBinHexDecoder::~nsBinHexDecoder()
     nsMemory::Free(mOutgoingBuffer);
 }
 
-NS_IMPL_ADDREF(nsBinHexDecoder);
-NS_IMPL_RELEASE(nsBinHexDecoder);
+NS_IMPL_ADDREF(nsBinHexDecoder)
+NS_IMPL_RELEASE(nsBinHexDecoder)
 
 NS_INTERFACE_MAP_BEGIN(nsBinHexDecoder)
    NS_INTERFACE_MAP_ENTRY(nsIStreamConverter)

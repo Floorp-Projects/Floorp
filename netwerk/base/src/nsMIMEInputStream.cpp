@@ -90,7 +90,7 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsMIMEInputStream,
                               nsIMIMEInputStream,
                               nsIInputStream,
-                              nsISeekableStream);
+                              nsISeekableStream)
 
 nsMIMEInputStream::nsMIMEInputStream() : mAddContentLength(PR_FALSE),
                                          mStartedReading(PR_FALSE)

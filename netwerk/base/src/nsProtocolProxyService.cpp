@@ -120,9 +120,9 @@ proxy_GetIntPref(nsIPrefBranch *aPrefBranch,
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsProtocolProxyService,
                               nsIProtocolProxyService,
-                              nsIObserver);
+                              nsIObserver)
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService::nsProxyInfo,
-                              nsIProxyInfo);
+                              nsIProxyInfo)
 
 nsProtocolProxyService::nsProtocolProxyService()
     : mUseProxy(0)

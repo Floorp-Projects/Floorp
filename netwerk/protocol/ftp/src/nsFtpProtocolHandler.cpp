@@ -104,7 +104,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsFtpProtocolHandler,
                               nsIProtocolHandler,
                               nsIProxiedProtocolHandler,
                               nsIObserver,
-                              nsISupportsWeakReference);
+                              nsISupportsWeakReference)
 
 nsresult
 nsFtpProtocolHandler::Init()

@@ -50,7 +50,7 @@
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterService)
 
 
 ////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ static PRBool PR_CALLBACK DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, voi
     delete entry->data.edges;
     delete entry;
     return PR_TRUE;   
-};
+}
 
 nsresult
 nsStreamConverterService::Init() {
@@ -263,7 +263,7 @@ static PRBool PR_CALLBACK InitBFSTable(nsHashKey *aKey, void *aData, void* closu
 
     BFSTable->Put(aKey, data);
     return PR_TRUE;   
-};
+}
 
 // cleans up the BFS state table
 static PRBool PR_CALLBACK DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {

@@ -214,7 +214,7 @@ nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_AGGREGATED(nsLoadGroup);
+NS_IMPL_AGGREGATED(nsLoadGroup)
 
 NS_IMETHODIMP
 nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)

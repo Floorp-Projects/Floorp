@@ -41,16 +41,16 @@
 #include "nsISupportsObsolete.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
-                              nsIDirIndex);
+                              nsIDirIndex)
 
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
                            mSize((PRUint32)(-1)),
                            mLastModified(-1) {
-};
+}
 
-nsDirIndex::~nsDirIndex() {};
+nsDirIndex::~nsDirIndex() {}
 
-NS_IMPL_GETSET(nsDirIndex, Type, PRUint32, mType);
+NS_IMPL_GETSET(nsDirIndex, Type, PRUint32, mType)
 
 // GETSET macros for modern strings would be nice...
 
@@ -99,6 +99,6 @@ nsDirIndex::SetDescription(const PRUnichar* aDescription) {
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsDirIndex, Size, PRUint32, mSize);
-NS_IMPL_GETSET(nsDirIndex, LastModified, PRInt64, mLastModified);
+NS_IMPL_GETSET(nsDirIndex, Size, PRUint32, mSize)
+NS_IMPL_GETSET(nsDirIndex, LastModified, PRInt64, mLastModified)
 

@@ -371,7 +371,7 @@ ClearEntry(PLDHashTable *      /* table */,
  *  nsDNSRequest methods:
  *****************************************************************************/
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRequest, nsIRequest);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRequest, nsIRequest)
 
 
 nsresult
@@ -527,7 +527,7 @@ nsDNSRequest::SetLoadFlags(nsLoadFlags  loadFlags)
 #pragma mark nsDNSLookup
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsDNSLookup);
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsDNSLookup)
 
 nsDNSLookup::nsDNSLookup()
     : mHostName(nsnull)
@@ -1135,7 +1135,7 @@ nsDNSService::~nsDNSService()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsIRunnable, nsIObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsIRunnable, nsIObserver)
 
 NS_METHOD
 nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -1821,7 +1821,7 @@ static unsigned long convert_addr(const char* ip)
         PL_strfree(buf);
     }
     return htonl(addr);
-};
+}
 
 
 NS_IMETHODIMP

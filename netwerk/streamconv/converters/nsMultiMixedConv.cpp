@@ -406,7 +406,7 @@ nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
                               nsIStreamConverter, 
                               nsIStreamListener,
-                              nsIRequestObserver);
+                              nsIRequestObserver)
 
 
 // nsIStreamConverter implementation

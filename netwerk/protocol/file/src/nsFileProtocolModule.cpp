@@ -54,4 +54,4 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE(nsFileProtocolModule, components);
+NS_IMPL_NSGETMODULE(nsFileProtocolModule, components)

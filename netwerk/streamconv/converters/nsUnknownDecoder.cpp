@@ -92,8 +92,8 @@ nsUnknownDecoder::~nsUnknownDecoder()
 //
 // ----
 
-NS_IMPL_ADDREF(nsUnknownDecoder);
-NS_IMPL_RELEASE(nsUnknownDecoder);
+NS_IMPL_ADDREF(nsUnknownDecoder)
+NS_IMPL_RELEASE(nsUnknownDecoder)
 
 NS_INTERFACE_MAP_BEGIN(nsUnknownDecoder)
    NS_INTERFACE_MAP_ENTRY(nsIStreamConverter)

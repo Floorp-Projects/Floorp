@@ -48,6 +48,6 @@ static const nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE(nsJarProtocolModule, components);
+NS_IMPL_NSGETMODULE(nsJarProtocolModule, components)
 
 

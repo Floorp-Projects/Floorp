@@ -200,7 +200,7 @@ nsHttpNTLMAuth::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator);
+NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator)
 
 NS_IMETHODIMP
 nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,

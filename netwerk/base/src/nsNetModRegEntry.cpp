@@ -52,7 +52,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //////////////////////////////
 //// nsISupports
 //////////////////////////////
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNetModRegEntry, nsINetModRegEntry);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNetModRegEntry, nsINetModRegEntry)
 
 
 //////////////////////////////
