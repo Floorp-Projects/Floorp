@@ -53,6 +53,7 @@ Rights Reserved.
 </popup>
 
 <hbox id="msgHeaderView" persist="state">
+
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
   <columns>
     <column class="collapsedToggleHdrBox" align="top" pack="center">
@@ -61,24 +62,24 @@ Rights Reserved.
     </column>
       
     <column id="collapsedsubjectBox" collapsed="true" crop="right" flex="1">
-       <hbox>  
+      <hbox>  
         <text class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
         <text id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
-       </hbox>
-		</column>
+      </hbox>
+	</column>
 
-		<column id="collapsedfromBox" collapsed="true">
-        <hbox>
-          <text class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
-          <mail-emailaddress id="collapsedfromValue" flex="1"/>
-        </hbox>
-		</column>
+    <column id="collapsedfromBox" collapsed="true">
+      <hbox>
+        <text class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
+        <mail-emailaddress id="collapsedfromValue" flex="1"/>
+      </hbox>
+    </column>
 
     <column id = "collapseddateBox" collapsed="true">
       <hbox style="text-align: right;">
-			  <text id="collapseddateValue" class="collapsedHeaderValue"/>
+        <text id="collapseddateValue" class="collapsedHeaderValue"/>
       </hbox>
-		</column>
+    </column>
 
     <column id="collapsedAttachmentBox" hide="true" >
       <image id="collapsedAttachment" class="collapsedAttachmentButton" onclick="ToggleHeaderView();" />  
@@ -87,112 +88,39 @@ Rights Reserved.
 </grid>
 
 <hbox id="expandedHeaderView" class="header-part1" flex="1" collapsed="true">
-  <vbox flex="1">
-    <hbox id="expandedsubjectBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="top">
-        <image id="toggleHeaderView" class="expandHeaderViewButton" 
-          onclick="ToggleHeaderView();"/>
-        <spacer flex="1"/>
-        <text class="headerdisplayname" value="&subjectField.label;"/>
-      </hbox>
-        <html id="expandedsubjectValue" class="headerValue subjectvalue" flex="1">*</html>
-		</hbox>
+  <vbox id="expandedHeaders" flex="1">
+    <mail-toggle-headerfield id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
+    
+    <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+    <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
 
-    <hbox id="expandedfromBox" class="headerBox" collapsed="true">
-       <hbox class="headerValueBox">
-         <text class="headerdisplayname" value="&fromField.label;"/>
-       </hbox>
-       <mail-emailaddress id="expandedfromValue" flex="1"/>
-		</hbox>
+    <mail-headerfield id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
 
-    <hbox id="expandedreply-toBox" class="headerBox" collapsed="true"> 
-      <hbox class="headerValueBox">
-        <text class="headerdisplayname" value="&replyToField.label;"/>
-      </hbox>
-        <mail-emailaddress id="expandedreply-toValue" flex="1"/>
-     </hbox>
-		
-    <hbox id = "expandeddateBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox">
-        <text class="headerdisplayname" value="&dateField.label;"/>
-      </hbox>
-			<html id="expandeddateValue" class="headerValue" flex="1">*</html>
-		</hbox>
+    <mail-multi-emailHeaderField id="expandedtoBox"  label="&toField.label;"  collapsed="true"/>
+    <mail-multi-emailHeaderField id="expandedccBox"  label="&ccField.label;"  collapsed="true"/>
+    <mail-multi-emailHeaderField id="expandedbccBox" label="&bccField.label;" collapsed="true"/>
 
-    <hbox id="expandedtoBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="top">
-       <hbox align="center">
-        <image class="showMoreAddressesButton" id="expandedtoToggleIcon" 
-             onclick="ToggleLongShortAddresses('expandedtoToggleIcon','expandedtoValue', 'expandedtoValueLong');"/>
-        <text class="headerdisplayname" value="&toField.label;"/>
-      </hbox>       
-      </hbox>       
-      <html id="expandedtoValue"  class="headerValue" flex="1"/>
-      <html id="expandedtoValueLong" class="headerValue" collapsed="true" flex="1"/>
-		</hbox>
-			
-    <hbox id="expandedccBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="top">
-        <hbox align="center">
-         <image class="showMoreAddressesButton" id="expandedccToggleIcon"
-             onclick="ToggleLongShortAddresses('expandedccToggleIcon', 'expandedccValue', 'expandedccValueLong');"/>
-         <text class="headerdisplayname" value="&ccField.label;"/>
-      </hbox>
-      </hbox>
-      <html id="expandedccValue" class="headerValue" flex="1"/>
-      <html id="expandedccValueLong" class="headerValue" collapsed="true" flex="1"/>
-	  </hbox>
-
-     <hbox id="expandedbccBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="top">
-        <hbox align="center">
-         <image class="showMoreAddressesButton" id="expandedbccToggleIcon"
-             onclick="ToggleLongShortAddresses('expandedbccToggleIcon', 'expandedbccValue', 'expandedbccValueLong');"/>
-         <text class="headerdisplayname" value="&bccField.label;"/>
-        </hbox>
-      </hbox>
-      <html id="expandedbccValue" class="headerValue" flex="1"/>
-      <html id="expandedbccValueLong" class="headerValue" collapsed="true" flex="1"/>
-	  </hbox>
-
-     <hbox id="expandednewsgroupsBox" class="headerBox" collapsed="true">
-        <hbox class="headerValueBox">
-          <text class="headerdisplayname" value="&newsgroupsField.label;"/>
-        </hbox>
-        <html id="expandednewsgroupsValue" class="headerValue" flex="1">*</html>
-		 </hbox>
-
-     <hbox id="expandedfollowup-toBox" class="headerBox" collapsed="true">
-       <hbox class="headerValueBox">
-          <text class="headerdisplayname" value="&followupToField.label;"/>
-       </hbox>          
-       <html id="expandedfollowup-toValue" class="headerValue" flex="1">*</html> 
-     </hbox>
-
-     <hbox id="expandeduser-agentBox" class="headerBox" collapsed="true">
-       <hbox class="headerValueBox">  
-        <text class="headerdisplayname" value="&userAgentField.label;"/>
-       </hbox>       
-       <text id="expandeduser-agentValue" class="collapsedHeaderValue" flex="1"/>
-		</hbox>
+    <mail-headerfield id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
+    <mail-headerfield id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+    <mail-headerfield id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/>
    
    </vbox>
 
    <vbox id="editMessageBox" class="header-part1" collapsed="true">
-    <spacer class="buttonSpacer"/> 
-    <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
-    <spacer class="buttonSpacer"/> 
+     <spacer class="buttonSpacer"/> 
+     <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
+     <spacer class="buttonSpacer"/> 
    </vbox> 
 
    <hbox id="expandedAttachmentBox" class="header-part1">
      <text class="label" id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-     <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
-       <treecolgroup>
-        <treecol flex="1"/>
-       </treecolgroup>
-       <treechildren id="attachmentsBody" flex="1">
-       </treechildren>
-     </tree>
+       <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
+         <treecolgroup>
+           <treecol flex="1"/>
+         </treecolgroup>
+         <treechildren id="attachmentsBody" flex="1">
+         </treechildren>
+       </tree>
    </hbox>
 
   </hbox>
