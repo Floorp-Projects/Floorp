@@ -20,6 +20,13 @@
  *   Scott MacGregor <mscott@netscape.com>
  */
 
+const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
+const nsX509CertDBContractID = "@mozilla.org/security/x509certdb;1";
+const nsIX509Cert = Components.interfaces.nsIX509Cert;
+
+const email_recipient_cert_usage = 5;
+const email_signing_cert_usage = 4;
+
 var gIdentity;
 var gPref = null;
 var gEncryptionCertName = null;
@@ -119,6 +126,86 @@ function disableIfLocked( prefstrArray )
     }
 }
 
+function getPromptService()
+{
+  var ifps = Components.interfaces.nsIPromptService;
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  if (promptService) {
+    promptService = promptService.QueryInterface(ifps);
+  }
+  return promptService;
+}
+
+function alertUser(message)
+{
+  var ps = getPromptService();
+  if (ps) {
+    ps.alert(
+      window,
+      gBrandBundle.getString("brandShortName"), 
+      message);
+  }
+}
+
+function askUser(message)
+{
+  var ps = getPromptService();
+  if (!ps)
+    return false;
+  
+  return ps.confirm(
+    window,
+    gBrandBundle.getString("brandShortName"), 
+    message);
+}
+
+function checkOtherCert(nickname, pref, usage, msgNeedCertWantSame, msgWantSame, msgNeedCertWantToSelect, enabler)
+{
+  var otherCertInfo = document.getElementById(pref);
+  if (!otherCertInfo)
+    return;
+
+  if (otherCertInfo.value == nickname)
+    // all is fine, same cert is now selected for both purposes
+    return;
+
+  var certdb = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB);
+  if (!certdb)
+    return null;
+  
+  if (email_recipient_cert_usage == usage) {
+    matchingOtherCert = certdb.getEmailEncryptionCert(nickname);
+  }
+  else if (email_signing_cert_usage == usage) {
+    matchingOtherCert = certdb.getEmailSigningCert(nickname);
+  }
+  else
+    return;
+
+  var userWantsSameCert = false;
+
+  if (!otherCertInfo.value.length) {
+    if (matchingOtherCert) {
+      userWantsSameCert = askUser(gBundle.getString(msgNeedCertWantSame));
+    }
+    else {
+      if (askUser(gBundle.getString(msgNeedCertWantToSelect))) {
+        smimeSelectCert(pref);
+      }
+    }
+  }
+  else {
+    if (matchingOtherCert) {
+      userWantsSameCert = askUser(gBundle.getString(msgWantSame));
+    }
+  }
+
+  if (userWantsSameCert) {
+    otherCertInfo.value = nickname;
+    enabler();
+  }
+}
+
 function smimeSelectCert(smime_cert)
 {
   var certInfo = document.getElementById(smime_cert);
@@ -132,12 +219,15 @@ function smimeSelectCert(smime_cert)
   var certUsage;
   var selectEncryptionCert;
 
-  if (smime_cert == "identity.encryption_cert_name") {
+  var encryptionCertPrefName = "identity.encryption_cert_name";
+  var signingCertPrefName = "identity.signing_cert_name";
+
+  if (smime_cert == encryptionCertPrefName) {
     selectEncryptionCert = true;
-    certUsage = 5;
-  } else if (smime_cert == "identity.signing_cert_name") {
+    certUsage = email_recipient_cert_usage;
+  } else if (smime_cert == signingCertPrefName) {
     selectEncryptionCert = false;
-    certUsage = 4;
+    certUsage = email_signing_cert_usage;
   }
 
   try {
@@ -159,28 +249,42 @@ function smimeSelectCert(smime_cert)
       else {
         errorString = "NoSigningCert";
       }
-      var ifps = Components.interfaces.nsIPromptService;
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-      if (promptService) {
-        promptService = promptService.QueryInterface(ifps);
-      }
-      if (promptService) {
-        promptService.alert(
-          window, 
-          gBrandBundle.getString("brandShortName"), 
-          gBundle.getString(errorString));
-      }
+      alertUser(gBundle.getString(errorString));
     }
     else {
       certInfo.removeAttribute("disabled");
       certInfo.value = x509cert.nickname;
 
       if (selectEncryptionCert) {
-        gEncryptAlways.removeAttribute("disabled");
-        gNeverEncrypt.removeAttribute("disabled");
+        enableEncryptionControls();
+
+        checkOtherCert(certInfo.value,
+          signingCertPrefName, email_signing_cert_usage, 
+          "signing_needCertWantSame", 
+          "signing_wantSame", 
+          "signing_needCertWantToSelect",
+          enableSigningControls);
       } else {
-        gSignMessages.removeAttribute("disabled");
+        enableSigningControls();
+
+        checkOtherCert(certInfo.value,
+          encryptionCertPrefName, email_recipient_cert_usage, 
+          "encryption_needCertWantSame", 
+          "encryption_wantSame", 
+          "encryption_needCertWantToSelect",
+          enableEncryptionControls);
       }
     }
   }
+}
+
+function enableEncryptionControls()
+{
+  gEncryptAlways.removeAttribute("disabled");
+  gNeverEncrypt.removeAttribute("disabled");
+}
+
+function enableSigningControls()
+{
+  gSignMessages.removeAttribute("disabled");
 }

@@ -43,6 +43,8 @@ Contributors:
                 pref="true" preftype="int" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.encryptionpolicy"/>
 
+  <description>&securityHeading.label;</description>
+
   <groupbox orient="vertical" id="signing.titlebox">
     <caption label="&signingGroupTitle.label;"/>
     
