@@ -22,6 +22,7 @@
 
 #define alphabetize 1
 
+#include "nsCookie.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsFileStream.h"
@@ -108,12 +109,6 @@ typedef struct _cookie_DeferStruct {
   time_t timeToExpire;
 } cookie_DeferStruct;
 
-typedef enum {
-  COOKIE_Accept,
-  COOKIE_DontAcceptForeign,
-  COOKIE_DontUse
-} cookie_BehaviorEnum;
-
 #include "prthread.h"
 #include "prmon.h"
 
@@ -121,7 +116,7 @@ PRBool cookie_SetCookieStringInUse = PR_FALSE;
 PRIVATE PRBool cookie_cookiesChanged = PR_FALSE;
 PRIVATE PRBool cookie_permissionsChanged = PR_FALSE;
 PRIVATE PRBool cookie_rememberChecked = PR_FALSE;
-PRIVATE cookie_BehaviorEnum cookie_behavior = COOKIE_Accept;
+PRIVATE COOKIE_BehaviorEnum cookie_behavior = COOKIE_Accept;
 PRIVATE PRBool cookie_warning = PR_FALSE;
 
 PRIVATE nsVoidArray * cookie_cookieList=0;
@@ -714,7 +709,7 @@ cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
 
 /* cookie utility functions */
 PRIVATE void
-cookie_SetBehaviorPref(cookie_BehaviorEnum x) {
+cookie_SetBehaviorPref(COOKIE_BehaviorEnum x) {
   cookie_behavior = x;
 //HG83330 -- @@??
   if(cookie_behavior == COOKIE_DontUse) {
@@ -728,8 +723,8 @@ cookie_SetWarningPref(PRBool x) {
   cookie_warning = x;
 }
 
-PRIVATE cookie_BehaviorEnum
-cookie_GetBehaviorPref() {
+PUBLIC COOKIE_BehaviorEnum
+COOKIE_GetBehaviorPref() {
   return cookie_behavior;
 }
 
@@ -746,7 +741,7 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     cookie_SetBehaviorPref(COOKIE_Accept);
   } else {
-    cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
+    cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   }
   return PREF_NOERROR;
 }
@@ -807,9 +802,9 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     cookie_SetBehaviorPref(COOKIE_Accept);
   } else {
-    cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
+    cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   }
-  cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
+  cookie_SetBehaviorPref((COOKIE_BehaviorEnum)n);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
   if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
@@ -838,7 +833,7 @@ COOKIE_GetCookie(char * address) {
   char * rv=0;
 
   /* disable cookies if the user's prefs say so */
-  if(cookie_GetBehaviorPref() == COOKIE_DontUse) {
+  if(COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     return NULL;
   }
   if (!PL_strncasecmp(address, "https", 5)) {
@@ -1025,7 +1020,7 @@ cookie_isForeign (char * curURL, char * firstURL) {
 PUBLIC char *
 COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
 
-  if ((cookie_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
+  if ((COOKIE_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
       cookie_isForeign(address, firstAddress)) {
 
     /*
@@ -1223,7 +1218,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
     return;
   }
 */
-  if(cookie_GetBehaviorPref() == COOKIE_DontUse) {
+  if(COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     PR_Free(cur_path);
     PR_Free(cur_host);
     return;
@@ -1668,7 +1663,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieH
   time_t gmtCookieExpires=0, expires=0, sDate;
 
   /* check for foreign cookie if pref says to reject such */
-  if ((cookie_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
+  if ((COOKIE_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
       cookie_isForeign(curURL, firstURL)) {
     /* it's a foreign cookie so don't set the cookie */
     return;
@@ -1719,7 +1714,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieH
 PRIVATE void
 cookie_SavePermissions() {
   cookie_PermissionStruct * cookie_permission_s;
-  if (cookie_GetBehaviorPref() == COOKIE_DontUse) {
+  if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     return;
   }
   if (!cookie_permissionsChanged) {
@@ -1854,7 +1849,7 @@ cookie_SaveCookies() {
   cookie_CookieStruct * cookie_s;
   time_t cur_date = time(NULL);
   char date_string[36];
-  if (cookie_GetBehaviorPref() == COOKIE_DontUse) {
+  if (COOKIE_GetBehaviorPref() == COOKIE_DontUse) {
     return;
   }
   if (!cookie_cookiesChanged) {

@@ -91,6 +91,13 @@ public:
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results)=0;
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList)=0;
   NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList)=0;
+
+  /*
+   * Specifies whether cookies will be accepted or not. 
+   * XXX This method can be refined to return more specific information
+   * (i.e. whether we accept foreign cookies or not, etc.) if necessary.
+   */
+  NS_IMETHOD CookieEnabled(PRBool* aEnabled)=0;
 };
 
 
