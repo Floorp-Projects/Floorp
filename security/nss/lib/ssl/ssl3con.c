@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.59 2003/10/19 01:55:50 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.60 2003/10/31 07:01:05 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2240,7 +2240,7 @@ ssl3_HandleChangeCipherSpecs(sslSocket *ss, sslBuffer *buf)
     SSL_TRC(3, ("%d: SSL3[%d]: handle change_cipher_spec record",
 		SSL_GETPID(), ss->fd));
 
-    if (ws != wait_change_cipher && ws != wait_cert_verify) {
+    if (ws != wait_change_cipher) {
 	(void)SSL3_SendAlert(ss, alert_fatal, unexpected_message);
 	PORT_SetError(SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER);
 	return SECFailure;
@@ -8171,23 +8171,22 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 	    /* must be copied to msg_body and dealt with from there */
 	    unsigned int bytes;
 
-	    bytes = PR_MIN(buf->len, ssl3->hs.msg_len);
+	    PORT_Assert(ssl3->hs.msg_body.len <= ssl3->hs.msg_len);
+	    bytes = PR_MIN(buf->len, ssl3->hs.msg_len - ssl3->hs.msg_body.len);
 
 	    /* Grow the buffer if needed */
-	    if (bytes > ssl3->hs.msg_body.space - ssl3->hs.msg_body.len) {
-		rv = sslBuffer_Grow(&ssl3->hs.msg_body,
-		                  ssl3->hs.msg_body.len + bytes);
-		if (rv != SECSuccess) {
-		    /* sslBuffer_Grow has set a memory error code. */
-		    return SECFailure;
-	    	}
+	    rv = sslBuffer_Grow(&ssl3->hs.msg_body, ssl3->hs.msg_len);
+	    if (rv != SECSuccess) {
+		/* sslBuffer_Grow has set a memory error code. */
+		return SECFailure;
 	    }
+
 	    PORT_Memcpy(ssl3->hs.msg_body.buf + ssl3->hs.msg_body.len,
-		      buf->buf, buf->len);
+		        buf->buf, bytes);
+	    ssl3->hs.msg_body.len += bytes;
 	    buf->buf += bytes;
 	    buf->len -= bytes;
 
-	    /* should not be more than one message in msg_body */
 	    PORT_Assert(ssl3->hs.msg_body.len <= ssl3->hs.msg_len);
 
 	    /* if we have a whole message, do it */
