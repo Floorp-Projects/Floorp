@@ -278,7 +278,7 @@ orkinPortTableCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 }
 
 /*virtual*/ mdb_err
-orkinPortTableCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
+orkinPortTableCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 {
   mdb_err outErr = 0;
   morkEnv* ev =
@@ -342,9 +342,8 @@ orkinPortTableCursor::SetRowScope(nsIMdbEnv* mev, // sets pos to -1
   {
     morkPortTableCursor* cursor = (morkPortTableCursor*) mHandle_Object;
     cursor->mCursor_Pos = -1;
-    cursor->mPortTableCursor_RowScope = inRowScope;
     
-    ev->StubMethodOnlyError(); // need to do something to map iter
+    cursor->SetRowScope(ev, inRowScope);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -379,9 +378,8 @@ orkinPortTableCursor::SetTableKind(nsIMdbEnv* mev, // sets pos to -1
   {
     morkPortTableCursor* cursor = (morkPortTableCursor*) mHandle_Object;
     cursor->mCursor_Pos = -1;
-    cursor->mPortTableCursor_TableKind = inTableKind;
     
-    ev->StubMethodOnlyError(); // need to do something to map iter
+    cursor->SetTableKind(ev, inTableKind);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -413,18 +411,20 @@ orkinPortTableCursor::NextTable( // get table at next position in the db
   nsIMdbTable** acqTable)
 {
   mdb_err outErr = 0;
+  nsIMdbTable* outTable = 0;
   morkEnv* ev =
     this->CanUsePortTableCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-	  
     morkPortTableCursor* cursor = (morkPortTableCursor*) mHandle_Object;
-	morkTable* table = cursor->NextTable(ev);
+    morkTable* table = cursor->NextTable(ev);
     if ( table && ev->Good() )
-		*acqTable = table->AcquireTableHandle(ev);
-      
-	outErr = ev->AsErr();
+      outTable = table->AcquireTableHandle(ev);
+        
+    outErr = ev->AsErr();
   }
+  if ( acqTable )
+    *acqTable = outTable;
   return outErr;
 }
 // } ----- end table iteration methods -----
