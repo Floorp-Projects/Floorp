@@ -94,6 +94,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIScriptElement.h"
 #include "nsStyleLinkElement.h"
+#include "nsIImageLoadingContent.h"
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -680,6 +681,23 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
+    }
+  } else if (tagAtom == nsHTMLAtoms::img ||
+             tagAtom == nsHTMLAtoms::input ||
+             tagAtom == nsHTMLAtoms::object ||
+             tagAtom == nsHTMLAtoms::applet) {
+    nsAutoString cmd;
+    if (mParser) {
+      mParser->GetCommand(cmd);
+    }
+    if (cmd.EqualsWithConversion(kLoadAsData)) {
+      // XXXbz Should this be in HandleStartElement so it applies to all
+      // elements, not just XHTML ones?  We don't have any non-XHTML
+      // image loading things yet, but....
+      nsCOMPtr<nsIImageLoadingContent> imgLoader(do_QueryInterface(htmlContent));
+      if (imgLoader) {
+        imgLoader->SetLoadingEnabled(PR_FALSE);
+      }
     }
   }
 

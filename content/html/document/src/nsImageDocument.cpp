@@ -409,7 +409,6 @@ nsImageDocument::ToggleImageSize()
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsImageDocument::OnStartDecode(imgIRequest* aRequest)
 {
@@ -555,9 +554,8 @@ nsImageDocument::CreateSyntheticDocument()
   mDocumentURL->GetSpec(src);
 
   NS_ConvertUTF8toUCS2 srcString(src);
-  nsHTMLValue val(srcString);
 
-  image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
+  image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);
 
   if (mStringBundle) {
     const PRUnichar* formatString[1] = { srcString.get() };
@@ -565,8 +563,7 @@ nsImageDocument::CreateSyntheticDocument()
     rv = mStringBundle->FormatStringFromName(NS_LITERAL_STRING("InvalidImage").get(),
       formatString, 1, getter_Copies(errorMsg));
 
-    nsHTMLValue errorText(errorMsg);
-    image->SetHTMLAttribute(nsHTMLAtoms::alt, errorText, PR_FALSE);
+    image->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
   }
 
   root->AppendChildTo(body, PR_FALSE, PR_FALSE);

@@ -74,22 +74,8 @@ private:
   nsImageFrame *mFrame;
 };
 
-
-struct ImageLoad {
-  ImageLoad() : mIntrinsicSize(0,0) { }
-  nsCOMPtr<imgIRequest> mRequest;
-  nsSize mIntrinsicSize;
-
-  nsTransform2D mTransform;
-};
-
-// Image Frame state
 #define IMAGE_SIZECONSTRAINED       0x00100000
 #define IMAGE_GOTINITIALREFLOW      0x00200000
-#define IMAGE_INITIALLOADCOMPLETED  0x00400000
-#define IMAGE_CANSENDLOADEVENT      0x00800000
-#define IMAGE_BLOCKED               0x01000000
-#define IMAGE_FAILUREREPLACE        0x02000000
 
 #define ImageFrameSuper nsSplittableFrame
 
@@ -152,28 +138,6 @@ public:
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 
-  NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
-                                 PRUint32 *naturalHeight);
-
-  NS_IMETHOD GetImageRequest(imgIRequest **aRequest);
-
-  NS_IMETHOD IsImageComplete(PRBool* aComplete);
-
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
-  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnStartFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest,
-                             gfxIImageFrame *aFrame,
-                             const nsRect * rect);
-  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame);
-  NS_IMETHOD OnStopContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
-                          nsresult aStatus,
-                          const PRUnichar *aStatusArg);
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
-                          gfxIImageFrame *aNewframe,
-                          nsRect *aDirtyRect);
-
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -219,59 +183,105 @@ protected:
                     nsRect& aInnerArea) const;
 
 protected:
-
-  inline PRBool CanLoadImage(nsIURI *aURI);
-
-  inline void GetURI(const nsAString& aSpec, nsIURI **aURI);
-  inline void GetRealURI(const nsAString& aSpec, nsIIOService *aIOService,
-                         nsIURI **aURI);
-
-  inline void GetBaseURI(nsIURI **uri);
-  inline void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
-
-  void FireDOMEvent(PRUint32 aMessage);
+  friend class nsImageListener;
+  nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  nsresult OnDataAvailable(imgIRequest *aRequest,
+                           gfxIImageFrame *aFrame,
+                           const nsRect * rect);
+  nsresult OnStopDecode(imgIRequest *aRequest,
+                        nsresult aStatus,
+                        const PRUnichar *aStatusArg);
+  nsresult FrameChanged(imgIContainer *aContainer,
+                        gfxIImageFrame *aNewframe,
+                        nsRect *aDirtyRect);
 
 private:
-  nsresult LoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
-  nsresult RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
-  inline int GetImageLoad(imgIRequest *aRequest);
+  // random helpers
+  inline void SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
+                        nsIURI **aURI);
+
+  inline void GetBaseURI(nsIURI **uri);
+  inline void GetLoadGroup(nsIPresContext *aPresContext,
+                           nsILoadGroup **aLoadGroup);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
   void GetDocumentCharacterSet(nsAString& aCharset) const;
 
+  /**
+   * This function will recalculate mTransform.  If a non-null image
+   * is passed in, mIntrinsicSize will be recalculated from the image
+   * size.  Otherwise, mIntrinsicSize will not be touched.
+   *
+   * @return PR_TRUE if aImage is non-null and its size did _not_
+   *         match our previous intrinsic size
+   * @return PR_FALSE otherwise
+   */
+  PRBool RecalculateTransform(imgIContainer* aImage);
+
+  /**
+   * Helper functions to check whether the request or image container
+   * corresponds to a load we don't care about.  Most of the decoder
+   * observer methods will bail early if these return true.
+   */
+  PRBool IsPendingLoad(imgIRequest* aRequest) const;
+  PRBool IsPendingLoad(imgIContainer* aContainer) const;
+
+  /**
+   * Helper to convert a rect in pixels to one in twips using the
+   * prescontext's p2t factor
+   */
+  nsRect ConvertPxRectToTwips(const nsRect & aRect) const;
+
+  /**
+   * Function to call when a load fails; this handles things like alt
+   * text, broken image icons, etc
+   */
+  void HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell);
+  
   nsImageMap*         mImageMap;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
-  /**
-   * 0 is the current image being displayed on the screen.
-   * 1 is for attribute changed images.
-   * when the load from 1 completes, it will replace 0.
-   */
-  struct ImageLoad mLoads[2];
-
   nsSize mComputedSize;
   nsSize mIntrinsicSize;
-
+  nsTransform2D mTransform;
+  
   nsMargin            mBorderPadding;
-  PRUint32            mNaturalImageWidth;
-  PRUint32            mNaturalImageHeight;
 
   nsIPresContext*     mPresContext;  // weak ref
 
   /* loading / broken image icon support */
 
-  // LoadIcons: initiate the loading of the static icons used to show loading / broken images
+  // XXXbz this should be handled by the prescontext, I think; that
+  // way we would have a single iconload per mozilla session instead
+  // of one per document...
+
+  // LoadIcons: initiate the loading of the static icons used to show
+  // loading / broken images
   nsresult LoadIcons(nsIPresContext *aPresContext);
-  // HandleIconLoads: See if the request is for an Icon load. If it is, handle it and return TRUE
-  // otherwise, return FALSE (aCompleted is an input arg telling the routine if the request has completed)
+  nsresult LoadIcon(const nsAString& aSpec, nsIPresContext *aPresContext,
+                    imgIRequest **aRequest);
+  
+  // HandleIconLoads: See if the request is for an Icon load. If it
+  // is, handle it and return TRUE otherwise, return FALSE (aCompleted
+  // is an input arg telling the routine if the request has completed)
   PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
   void InvalidateIcon(nsIPresContext *aPresContext);
+
+  struct SingleIconLoad {
+    nsCOMPtr<imgIRequest> mRequest;
+  };
 
   class IconLoad {
     // private class that wraps the data and logic needed for 
     // broken image and loading image icons
   public:
-    IconLoad(nsIPresContext *aPresContext):mRefCount(0),mIconsLoaded(PR_FALSE) { GetPrefs(aPresContext); }
+    IconLoad(nsIPresContext *aPresContext)
+      : mRefCount(0),
+        mIconsLoaded(PR_FALSE)
+    {
+      GetPrefs(aPresContext);
+    }
+
     ~IconLoad()
     {
       if (mIconLoads[0].mRequest) {
@@ -281,12 +291,19 @@ private:
         mIconLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
       }
     }
+
     void AddRef(void) { ++mRefCount; }
     PRBool Release(void) { return --mRefCount == 0; }
+  private:
     void GetPrefs(nsIPresContext *aPresContext);
 
     PRUint32         mRefCount;
-    struct ImageLoad mIconLoads[2];   // 0 is for the 'loading' icon, 1 is for the 'broken' icon
+
+    // values for image loading icons
+#define NS_ICON_LOADING_IMAGE (0)
+#define NS_ICON_BROKEN_IMAGE  (1)
+  public:
+    struct SingleIconLoad mIconLoads[2];
     PRPackedBool     mIconsLoaded;
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefAllImagesBlocked;

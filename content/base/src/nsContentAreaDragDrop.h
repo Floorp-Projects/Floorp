@@ -54,7 +54,6 @@ class nsIOverrideDropSite;
 class nsIImage;
 class nsIPresShell;
 class nsIPresContext;
-class nsIImageFrame;
 class nsIContent;
 class nsIDocument;
 
@@ -106,8 +105,6 @@ private:
   static void NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* inSelection);
   static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
   static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
-  static nsresult GetImageFrame(nsIContent* aContent, nsIDocument *aDocument, nsIPresContext *aPresContext,
-                                  nsIPresShell *aPresShell, nsIImageFrame** aImageFrame);
 
   PRBool BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
                         nsAString & outHTMLString, nsIImage** outImage, PRBool* outIsAnchor);

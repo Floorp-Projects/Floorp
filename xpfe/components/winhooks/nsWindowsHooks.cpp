@@ -71,7 +71,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsIImageFrame.h"
+#include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
@@ -936,36 +936,17 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
 {
   nsresult rv;
   
-  // get the document so we can get the presShell from it
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = aElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) return rv;
-
-  // get the presShell so we can get the frame from it
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = doc->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell) return rv;
-
   nsCOMPtr<gfxIImageFrame> gfxFrame;
   if (aUseBackground) {
     // XXX write background loading stuff!
   } else {
-    // get the frame for the image element
-    nsIFrame* frame = nsnull;
-    nsCOMPtr<nsIContent> imageContent = do_QueryInterface(aElement);
-    rv = presShell->GetPrimaryFrameFor(imageContent, &frame);
-    if (!frame) return rv;
-    
-    // if it was an html:img element, it will QI to nsIImageFrame
-    void* voidFrame;
-    frame->QueryInterface(NS_GET_IID(nsIImageFrame), &voidFrame);
-    nsIImageFrame* imageFrame = NS_STATIC_CAST(nsIImageFrame*, voidFrame);
-    if (!imageFrame) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIImageLoadingContent> imageContent = do_QueryInterface(aElement, &rv);
+    if (!imageContent) return rv;
     
     // get the image container
     nsCOMPtr<imgIRequest> request;
-    rv = imageFrame->GetImageRequest(getter_AddRefs(request));
+    rv = imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                  getter_AddRefs(request));
     if (!request) return rv;
     nsCOMPtr<imgIContainer> container;
     rv = request->GetImage(getter_AddRefs(container));

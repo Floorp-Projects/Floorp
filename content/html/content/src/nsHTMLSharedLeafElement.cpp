@@ -42,6 +42,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsImageLoadingContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -51,6 +52,7 @@
 
 
 class nsHTMLSharedLeafElement : public nsGenericHTMLLeafElement,
+                                public nsImageLoadingContent,
                                 public nsIDOMHTMLEmbedElement,
                                 public nsIDOMHTMLIsIndexElement,
                                 public nsIDOMHTMLParamElement,
@@ -151,6 +153,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedLeafElement,
                                              nsIDOMHTMLEmbedElement)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMHTMLElement, nsIDOMHTMLEmbedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLEmbedElement, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(imgIDecoderObserver, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIImageLoadingContent, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLParamElement, param)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLIsIndexElement, isindex)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseElement, base)

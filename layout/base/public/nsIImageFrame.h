@@ -53,13 +53,6 @@ public:
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize) = 0;
 
-  NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 
-                                 PRUint32 *naturalHeight) = 0;
-
-  NS_IMETHOD GetImageRequest(imgIRequest **aRequest) = 0;
-
-  NS_IMETHOD IsImageComplete(PRBool* aComplete) = 0;
-
   NS_IMETHOD GetImageMap(nsIPresContext *aPresContext, nsIImageMap **aImageMap) = 0;
 };
 

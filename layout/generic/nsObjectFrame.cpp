@@ -105,6 +105,7 @@
 #include "nsHTMLUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
+#include "nsIImageLoadingContent.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -595,6 +596,24 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   //Ideally this should move to Reflow when the stream starts to come
   if (IsSupportedImage(aContent))
   {
+    // kick off the image load in the content node
+    // XXX once this moves to somewhere where we have the data stream,
+    // we should have a way to load images with a channel....
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
+    if (!imageLoader) {
+      NS_ERROR("Not an image loading content?");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    nsAutoString data;
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
+    }
+    imageLoader->ImageURIChanged(data);
+    
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
