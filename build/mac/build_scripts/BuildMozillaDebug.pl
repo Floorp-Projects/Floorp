@@ -30,6 +30,7 @@ use Cwd;
 use Moz;
 use MozillaBuildList;
 
+
 #-------------------------------------------------------------
 # Where have the build options gone?
 # 
@@ -61,6 +62,7 @@ $PROFILE                = 0;
 $RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
 $GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
 $MOZILLA_OFFICIAL       = 0;    # generate build number
+$LOG_TO_FILE            = 0;    # write perl output to a file
 
 #-------------------------------------------------------------
 # configuration variables that affect the manner of building, 
@@ -89,6 +91,8 @@ $USE_TIMESTAMPED_LOGS   = 0;
 #-------------------------------------------------------------
 # END OF CONFIG SWITCHES
 #-------------------------------------------------------------
+
+
 
 my($cur_dir) = cwd();
 $cur_dir =~ s/:mozilla:build:mac:build_scripts$//;
