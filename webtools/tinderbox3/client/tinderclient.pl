@@ -22,20 +22,57 @@ $SIG{TERM} = sub { print "SIGTERM\n"; die; };
 #
 # Get arguments
 #
-our %args;
-$args{trust} = 1;
-$args{throttle} = 60;
-$args{statusinterval} = 15;
-GetOptions(\%args, "throttle:i", "url:s",
-                   "trust!", "usepatches!", "usecommands!", "usemozconfig!",
-                   "upgrade!", "upgrade_url:s",
-                   "branch:s", "cvs_co_date:s", "cvsroot:s", "tests:s",
-                   "clobber!", "lowbandwidth!", "statusinterval:s",
-                   "upload_ssh_loc:s", "upload_ssh_dir:s", "upload_dir:s",
-                   "uploaded_url:s", "distribute:s",
-                   "help|h|?!");
-if (!$args{url} || @ARGV != 2 || $args{help}) {
-  print <<EOM;
+my @clients;
+create_clients(\@clients, \@original_args);
+
+while (1) {
+  foreach my $client (@clients) {
+    $client->build_iteration();
+  }
+}
+
+
+sub create_clients {
+  my ($clients, $original_args) = @_;
+
+      print "EEK @ARGV\n";
+  my %args;
+  $args{trust} = 1;
+  $args{throttle} = 60;
+  $args{statusinterval} = 15;
+  GetOptions(\%args, "config:s", "dir:s",
+                     "throttle:i", "url:s",
+                     "trust!", "usepatches!", "usecommands!", "usemozconfig!",
+                     "upgrade!", "upgrade_url:s",
+                     "branch:s", "cvs_co_date:s", "cvsroot:s", "tests:s",
+                     "clobber!", "lowbandwidth!", "statusinterval:s",
+                     "upload_ssh_loc:s", "upload_ssh_dir:s", "upload_dir:s",
+                     "uploaded_url:s", "distribute:s",
+                     "help|h|?!");
+  if ($args{config}) {
+    # Go through each line, parse the arguments into @ARGV, and re-call this
+    # function to interpret the args
+    open CONFIG, $args{config} or die "Could not find config file $args{config}\n";
+    while (<CONFIG>) {
+      chomp;
+      @ARGV = ();
+      open PARSED_PARAMS, 'perl -e \'foreach (@ARGV) { print "$_\n"; }\' - ' . $_ . "|" or die "Could not parse arguments: $!";
+      # throw away the -
+      readline(*PARSED_PARAMS);
+      while (my $param = readline(*PARSED_PARAMS)) {
+        chomp $param;
+        push @ARGV, $param;
+      }
+      close PARSED_PARAMS;
+      create_clients($clients, $original_args);
+    }
+    close CONFIG;
+    # config is mutually exclusive with other args
+    return;
+  }
+
+  if (!$args{url} || @ARGV != 2 || $args{help}) {
+    print <<EOM;
 
 Usage: tinderclient.pl [OPTIONS] [--help] Tree MachineName ...
 
@@ -82,31 +119,37 @@ will be used instead.
               the dist/bin directory (actually makes a .tgz).
 --raw_zip_name: the project name of the raw build (defaults to "mozilla")
 
+CONFIG MODE (SWITCHING TINDERBOX):
+  tinderclient.pl --config=<file>
+
+Specifies a text file where tbox configuration is stored.  Each line in the
+file is nothing more than the arguments to the program.  If you specify multiple
+lines (and thus multiple sets of arguments), the client will *switch* between
+different builds and trees: i.e. it will build with the first line, then the
+second, then the third, then back to the first, and so on.  It is HIGHLY
+RECOMMENDED that you specify --dir for each tree, or else the tbox is likely
+going to clobber your tree between each build (if the options for different
+trees are different).
+
 EOM
-  exit(1);
-}
+    exit(1);
+  }
 
-$args{usecommands} = $args{trust} if !defined($args{usecommands});
-$args{usemozconfig} = $args{trust} if !defined($args{usemozconfig});
-$args{usepatches} = $args{trust} if !defined($args{usepatches});
-$args{upgrade} = $args{trust} if !defined($args{upgrade});
-if (!$args{trust}) {
-  $args{tests} = "Tp,Ts,Txul" if !defined($args{tests});
-  $args{cvsroot} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot' if !defined($args{cvsroot});
-  $args{cvs_co_date} = "" if !defined($args{cvs_co_date});
-  $args{branch} = "" if !defined($args{branch});
-  $args{clobber} = 0 if !defined($args{clobber});
-  $args{distribute} = "build_zip" if !defined($args{distribute});
-  $args{raw_zip_name} = "mozilla" if !defined($args{distribute});
-}
+  $args{usecommands} = $args{trust} if !defined($args{usecommands});
+  $args{usemozconfig} = $args{trust} if !defined($args{usemozconfig});
+  $args{usepatches} = $args{trust} if !defined($args{usepatches});
+  $args{upgrade} = $args{trust} if !defined($args{upgrade});
+  if (!$args{trust}) {
+    $args{tests} = "Tp,Ts,Txul" if !defined($args{tests});
+    $args{cvsroot} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot' if !defined($args{cvsroot});
+    $args{cvs_co_date} = "" if !defined($args{cvs_co_date});
+    $args{branch} = "" if !defined($args{branch});
+    $args{clobber} = 0 if !defined($args{clobber});
+    $args{distribute} = "build_zip" if !defined($args{distribute});
+    $args{raw_zip_name} = "mozilla" if !defined($args{distribute});
+  }
 
-if ($args{dir}) {
-  chdir($args{dir});
-}
-
-my $client = new TinderClient(\%args, $ARGV[0], $ARGV[1], \@original_args);
-while (1) {
-  $client->build_iteration();
+  push @{$clients}, new TinderClient(\%args, $ARGV[0], $ARGV[1], $original_args);
 }
 
 
@@ -118,7 +161,7 @@ use strict;
 use LWP::UserAgent;
 use CGI;
 use HTTP::Date qw(time2str);
-use Cwd qw(abs_path);
+use Cwd qw(abs_path getcwd);
 
 our $VERSION;
 our $PROTOCOL_VERSION;
@@ -632,6 +675,12 @@ sub call_module {
 sub build_iteration {
   my $this = shift;
 
+  my $olddir;
+  if ($this->{ARGS}{dir}) {
+    $olddir = getcwd();
+    chdir($this->{ARGS}{dir});
+  }
+
   # Open the log
   open $this->{LOG_OUT}, ">tinderclient.log" or die "Could not output to tinder log";
   open $this->{LOG_IN}, "tinderclient.log" or die "Could not read tinder log";
@@ -679,7 +728,10 @@ sub build_iteration {
   # Determine if we need to throttle
   $this->maybe_throttle();
 
-  chdir(".."); #
+  # Change back to where we were before this iteration
+  if (defined($olddir)) {
+    chdir($olddir);
+  }
 }
 
 
@@ -1186,7 +1238,7 @@ sub do_action {
         $build_vars->{PACKAGES}{$field_name} =~ /([^\/]*)$/;
         my $upload_file = $1;
         $upload_file =~ s/(\..*)$/-$build_id$1/;
-        upload_build($config, $build_vars, $field_name, $build_vars->{PACKAGES}{$field_name}, $upload_file);
+        upload_build($client, $config, $build_vars, $field_name, $build_vars->{PACKAGES}{$field_name}, $upload_file);
       }
     }
   } else {
@@ -1197,7 +1249,7 @@ sub do_action {
 }
 
 sub upload_build {
-  my ($config, $build_vars, $field_name, $local_name, $upload_name) = @_;
+  my ($client, $config, $build_vars, $field_name, $local_name, $upload_name) = @_;
   if ($config->{upload_ssh_loc} && `which scp`) {
     $config->{upload_ssh_dir} .= "/" if $config->{upload_ssh_dir} && $config->{upload_ssh_dir} !~ /\/$/;
     $client->do_command("scp $local_name $config->{upload_ssh_loc}:$config->{upload_ssh_dir}$upload_name");
