@@ -39,6 +39,9 @@ endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 endif
+ifeq ($(MOZ_PKG_FORMAT),ZIP)
+PKG_SUFFIX	= .zip
+endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 PKG_SUFFIX	= .rpm
 endif
@@ -77,6 +80,9 @@ GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 ifeq ($(OS_ARCH),IRIX)
 STRIP_FLAGS	= -f
 endif
+ifeq ($(OS_ARCH),BeOS)
+STRIP_FLAGS	= -g
+endif
 
 all export libs install:: $(TARGETS)
 
@@ -90,7 +96,16 @@ endif
 # NOTE: this must be a cp now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
+# Only zip/unzip preserve BeOS' special file attributes
+ifeq ($(OS_ARCH),BeOS)
+	@rm -f $(DIST)/package.zip
+	@mkdir $(DIST)/package
+	@(cd $(DIST)/bin ; zip -r0 ../package.zip .)
+	@(cd $(DIST)/package; unzip ../package.zip)
+	@rm -f $(DIST)/package.zip
+else
 	@cp -rp ${DIST}/bin $(DIST)/package
+endif
 	@echo "Stripping package directory..."
 	@cd $(DIST)/package; find . ! -type d \
 			! -name "*.js" \
@@ -113,9 +128,13 @@ endif
 			! -name "*.tbl" \
 			! -name "*.src" \
 			! -name "*.reg" \
+			! -name "*.stub" \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
+endif
+ifeq ($(MOZ_PKG_FORMAT),ZIP)
+	cd $(DIST); $(ZIP) -vr9 $@ package
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 	@echo "Sorry, don't know how to build an RPM file yet...."
