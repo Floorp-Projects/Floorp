@@ -121,11 +121,11 @@ public class NativeDate extends IdScriptable {
         throws JavaScriptException
     {
         switch (methodId) {
-        case ConstructorId_UTC: return wrap_dbl
+        case ConstructorId_UTC: return wrap_double
             (jsStaticFunction_UTC(cx, thisObj, args, f));
 
-        case ConstructorId_parse: return wrap_dbl
-            (jsStaticFunction_parse(to_str(args, 0)));
+        case ConstructorId_parse: return wrap_double
+            (jsStaticFunction_parse(ScriptRuntime.toString(args, 0)));
 
         case CONSTRUCTOR_ID:
             return jsConstructor(cx, args, f, thisObj == null);
@@ -139,125 +139,127 @@ public class NativeDate extends IdScriptable {
         case Id_toDateString: return realThis(thisObj, f, true).
             jsFunction_toDateString();
 
-        case Id_toLocaleString:    return realThis(thisObj, f, true).
+        case Id_toLocaleString: return realThis(thisObj, f, true).
             jsFunction_toLocaleString();
 
-        case Id_toLocaleTimeString:    return realThis(thisObj, f, true).
+        case Id_toLocaleTimeString: return realThis(thisObj, f, true).
             jsFunction_toLocaleTimeString();
 
-        case Id_toLocaleDateString:    return realThis(thisObj, f, true).
+        case Id_toLocaleDateString: return realThis(thisObj, f, true).
             jsFunction_toLocaleDateString();
 
         case Id_toUTCString: return realThis(thisObj, f, true).
             jsFunction_toUTCString();
 
-        case Id_valueOf: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_valueOf: return wrap_double(realThis(thisObj, f, true).
             jsFunction_valueOf());
 
-        case Id_getTime: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getTime: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getTime());
 
-        case Id_getYear: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getYear: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getYear());
 
-        case Id_getFullYear: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getFullYear: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getFullYear());
 
-        case Id_getUTCFullYear:    return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCFullYear: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCFullYear());
 
-        case Id_getMonth: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getMonth: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getMonth());
 
-        case Id_getUTCMonth: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCMonth: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCMonth());
 
-        case Id_getDate: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getDate: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getDate());
 
-        case Id_getUTCDate: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCDate: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCDate());
 
-        case Id_getDay: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getDay: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getDay());
 
-        case Id_getUTCDay: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCDay: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCDay());
 
-        case Id_getHours: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getHours: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getHours());
 
-        case Id_getUTCHours: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCHours: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCHours());
 
-        case Id_getMinutes:    return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getMinutes: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getMinutes());
 
-        case Id_getUTCMinutes: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCMinutes: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCMinutes());
 
-        case Id_getSeconds: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getSeconds: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getSeconds());
 
-        case Id_getUTCSeconds: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getUTCSeconds: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getUTCSeconds());
 
-        case Id_getMilliseconds: return wrap_dbl(realThis(thisObj, f, true).
+        case Id_getMilliseconds: return wrap_double(realThis(thisObj, f, true).
             jsFunction_getMilliseconds());
 
-        case Id_getUTCMilliseconds: return wrap_dbl(realThis(thisObj, f, true).
-            jsFunction_getUTCMilliseconds());
+        case Id_getUTCMilliseconds: 
+			return wrap_double(realThis(thisObj, f, true).
+            	jsFunction_getUTCMilliseconds());
 
-        case Id_getTimezoneOffset: return wrap_dbl(realThis(thisObj, f, true).
-            jsFunction_getTimezoneOffset());
+        case Id_getTimezoneOffset: 
+			return wrap_double(realThis(thisObj, f, true).
+            	jsFunction_getTimezoneOffset());
 
-        case Id_setTime: return wrap_dbl(realThis(thisObj, f, true).
-            jsFunction_setTime(to_dbl(args, 0)));
+        case Id_setTime: return wrap_double(realThis(thisObj, f, true).
+            jsFunction_setTime(ScriptRuntime.toNumber(args, 0)));
 
-        case Id_setMilliseconds: return wrap_dbl
+        case Id_setMilliseconds: return wrap_double
             (jsFunction_setMilliseconds(cx, thisObj, args, f));
 
-        case Id_setUTCMilliseconds:    return wrap_dbl(
+        case Id_setUTCMilliseconds: return wrap_double(
             jsFunction_setUTCMilliseconds(cx, thisObj, args, f));
 
-        case Id_setSeconds:    return wrap_dbl(
+        case Id_setSeconds: return wrap_double(
             jsFunction_setSeconds(cx, thisObj, args, f));
 
-        case Id_setUTCSeconds:return wrap_dbl(
+        case Id_setUTCSeconds: return wrap_double(
             jsFunction_setUTCSeconds(cx, thisObj, args, f));
 
-        case Id_setMinutes:    return wrap_dbl(
+        case Id_setMinutes: return wrap_double(
             jsFunction_setMinutes(cx, thisObj, args, f));
 
-        case Id_setUTCMinutes: return wrap_dbl(
+        case Id_setUTCMinutes: return wrap_double(
             jsFunction_setUTCMinutes(cx, thisObj, args, f));
 
-        case Id_setHours: return wrap_dbl(
+        case Id_setHours: return wrap_double(
             jsFunction_setHours(cx, thisObj, args, f));
 
-        case Id_setUTCHours: return wrap_dbl(
+        case Id_setUTCHours: return wrap_double(
             jsFunction_setUTCHours(cx, thisObj, args, f));
 
-        case Id_setDate: return wrap_dbl(
+        case Id_setDate: return wrap_double(
             jsFunction_setDate(cx, thisObj, args, f));
 
-        case Id_setUTCDate:    return wrap_dbl(
+        case Id_setUTCDate: return wrap_double(
             jsFunction_setUTCDate(cx, thisObj, args, f));
 
-        case Id_setMonth: return wrap_dbl(
+        case Id_setMonth: return wrap_double(
             jsFunction_setMonth(cx, thisObj, args, f));
 
-        case Id_setUTCMonth: return wrap_dbl(
+        case Id_setUTCMonth: return wrap_double(
             jsFunction_setUTCMonth(cx, thisObj, args, f));
 
-        case Id_setFullYear: return wrap_dbl(
+        case Id_setFullYear: return wrap_double(
             jsFunction_setFullYear(cx, thisObj, args, f));
 
-        case Id_setUTCFullYear:    return wrap_dbl(
+        case Id_setUTCFullYear: return wrap_double(
             jsFunction_setUTCFullYear(cx, thisObj, args, f));
 
-        case Id_setYear: return wrap_dbl(realThis(thisObj, f, true).
-            jsFunction_setYear(to_dbl(args, 0)));
+        case Id_setYear: return wrap_double(realThis(thisObj, f, true).
+            jsFunction_setYear(ScriptRuntime.toNumber(args, 0)));
         }
 
         return Scriptable.NOT_FOUND;

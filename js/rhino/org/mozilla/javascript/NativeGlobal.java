@@ -50,18 +50,62 @@ import java.lang.reflect.Method;
  * @author Mike Shaver
  */
 
-public class NativeGlobal implements IdFunction.Master {
+public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
 
-    public static void init(Scriptable scope)
-        throws PropertyException,
-               NotAFunctionException,
-               JavaScriptException
-    {
-        NativeGlobal instance = new NativeGlobal();
-        Context cx = Context.getContext();
-        // We can downcast here because Context.initStandardObjects
-        // takes a ScriptableObject scope.
-        instance.initForGlobal(cx, (ScriptableObject) scope, false);
+    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+
+        for (int id = 1; id <= LAST_METHOD_ID; ++id) {
+            String name = getMethodName(id);
+            IdFunction f = new IdFunction(this, name, id);
+            f.setParentScope(scope);
+            if (sealed) { f.sealObject(); }
+            ScriptableObject.defineProperty(scope, name, f,
+                                            ScriptableObject.DONTENUM);
+        }
+
+        ScriptableObject.defineProperty(scope, "NaN", 
+                                        ScriptRuntime.NaNobj,
+                                        ScriptableObject.DONTENUM);
+        ScriptableObject.defineProperty(scope, "Infinity", 
+                                        new Double(Double.POSITIVE_INFINITY),
+                                        ScriptableObject.DONTENUM);
+        ScriptableObject.defineProperty(scope, "undefined", 
+                                        Undefined.instance,
+                                        ScriptableObject.DONTENUM);
+
+        String[] errorMethods = { "ConversionError",
+                                  "EvalError",  
+                                  "RangeError",
+                                  "ReferenceError",
+                                  "SyntaxError",
+                                  "TypeError",
+                                  "URIError"
+                                };          
+     
+        /*
+            Each error constructor gets its own Error object as a prototype,
+            with the 'name' property set to the name of the error.
+        */
+        for (int i = 0; i < errorMethods.length; i++) {
+            String name = errorMethods[i];
+            IdFunction ctor = new IdFunction(this, name, Id_new_CommonError);
+            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
+            ctor.setParentScope(scope);
+            ScriptableObject.defineProperty(scope, name, ctor,
+                                            ScriptableObject.DONTENUM);
+
+            Scriptable errorProto = ScriptRuntime.newObject
+                (cx, scope, "Error", ScriptRuntime.emptyArgs);
+            
+            errorProto.put("name", errorProto, name);
+            ctor.put("prototype", ctor, errorProto);
+            if (sealed) {
+                ctor.sealObject();
+                if (errorProto instanceof ScriptableObject) {
+                    ((ScriptableObject)errorProto).sealObject();    
+                }
+            }
+        }
     }
 
     public Object execMethod(int methodId, IdFunction function, Context cx,
@@ -110,60 +154,6 @@ public class NativeGlobal implements IdFunction.Master {
             case Id_unescape:            return "unescape";
         }
         return null;
-    }
-
-
-    public void initForGlobal(Context cx, ScriptableObject global, 
-                              boolean sealed) 
-        throws PropertyException,
-               NotAFunctionException,
-               JavaScriptException
-    {
-        for (int id = 1; id <= LAST_METHOD_ID; ++id) {
-            String name = getMethodName(id);
-            IdFunction f = new IdFunction(this, name, id);
-            f.setParentScope(global);
-            if (sealed) { f.sealObject(); }
-            global.defineProperty(name, f, ScriptableObject.DONTENUM);
-        }
-
-        global.defineProperty("NaN", ScriptRuntime.NaNobj,
-                              ScriptableObject.DONTENUM);
-        global.defineProperty("Infinity", new Double(Double.POSITIVE_INFINITY),
-                              ScriptableObject.DONTENUM);
-        global.defineProperty("undefined", Undefined.instance,
-                              ScriptableObject.DONTENUM);
-
-        String[] errorMethods = { "ConversionError",
-                                  "EvalError",  
-                                  "RangeError",
-                                  "ReferenceError",
-                                  "SyntaxError",
-                                  "TypeError",
-                                  "URIError"
-                                };          
-     
-        /*
-            Each error constructor gets its own Error object as a prototype,
-            with the 'name' property set to the name of the error.
-        */
-        for (int i = 0; i < errorMethods.length; i++) {
-            String name = errorMethods[i];
-            IdFunction ctor = new IdFunction(this, name, Id_new_CommonError);
-            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
-            ctor.setParentScope(global);
-            global.defineProperty(name, ctor, ScriptableObject.DONTENUM);
-
-            Scriptable errorProto = cx.newObject(global, "Error");
-            errorProto.put("name", errorProto, name);
-            ctor.put("prototype", ctor, errorProto);
-            if (sealed) {
-                ctor.sealObject();
-                if (errorProto instanceof ScriptableObject) {
-                    ((ScriptableObject)errorProto).sealObject();    
-                }
-            }
-        }
     }
 
     /**
