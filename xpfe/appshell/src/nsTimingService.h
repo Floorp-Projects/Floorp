@@ -21,7 +21,7 @@
  */
 
 #include "nsITimingService.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 #define NS_TIMINGSERVICE_CID \
 { /* ea74eba8-efb7-4ac5-a10d-25917e3d6ee4 */ \
