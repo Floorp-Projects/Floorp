@@ -1005,7 +1005,7 @@ sm_FinalizerLoop(void* unused)
             }
         }
         sm_Heap.collectingGenNum = SMGenNum_Free;
-//        SM_VERIFY_HEAP();
+        /*        SM_VERIFY_HEAP(); */
     }
     PR_ExitMonitor(sm_Heap.finalizerMon);
 }
