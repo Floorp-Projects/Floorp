@@ -191,6 +191,7 @@ ifdef USE_HYBRID
     OS_CFLAGS += -xchip=ultra2
 endif # USE_HYBRID
 endif # NS_USE_GCC
+SYSV_SPARC=1
 SOLARIS_AS = /usr/ccs/bin/as
 ifdef NS_USE_GCC
 ifdef GCC_USE_GNU_LD
@@ -308,6 +309,8 @@ $(OBJDIR)/$(PROG_PREFIX)mpprime$(OBJ_SUFFIX): primes.c
 
 $(OBJDIR)/ldvector$(OBJ_SUFFIX) $(OBJDIR)/loader$(OBJ_SUFFIX) : loader.h
 
+ifeq ($(SYSV_SPARC),1)
+
 $(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s 
 	@$(MAKE_OBJDIR)
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
@@ -317,6 +320,8 @@ $(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
 
 $(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
+
+endif
 
 ifdef FREEBL_EXTENDED_BUILD
 
