@@ -482,6 +482,7 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 NS_IMETHODIMP
 nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, nsresult aStatus)
 {
+    NS_ENSURE_ARG_POINTER(request);
     nsresult rv;
 
 #if defined(PR_LOGGING)

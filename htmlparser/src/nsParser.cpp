@@ -1380,9 +1380,9 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   nsresult result=anErrorCode;
 
   if (IsComplete()) {
-    if(mParserContext && !mParserContext->mPrevContext) {
+    if (mParserContext && !mParserContext->mPrevContext) {
       if (mParserContext->mDTD) {
-        result = mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
+        result = mParserContext->mDTD->DidBuildModel(anErrorCode,PR_TRUE,this,mSink);
       }
       //Ref. to bug 61462.
       mParserContext->mRequest = 0;

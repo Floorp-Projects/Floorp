@@ -5950,16 +5950,18 @@ nsXULDocument::ResumeWalk()
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
         observer->EndLoad(this);
     }
+    NS_ASSERTION(mPlaceHolderRequest, "Bug 119310, perhaps overlayinfo referenced a overlay that doesn't exist");
+    if (mPlaceHolderRequest) {
+        // Remove the placeholder channel; if we're the last channel in the
+        // load group, this will fire the OnEndDocumentLoad() method in the
+        // docshell, and run the onload handlers, etc.
+        nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+        if (group) {
+            rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK);
+            if (NS_FAILED(rv)) return rv;
 
-    // Remove the placeholder channel; if we're the last channel in the
-    // load group, this will fire the OnEndDocumentLoad() method in the
-    // docshell, and run the onload handlers, etc.
-    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-    if (group) {
-        rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK);
-        if (NS_FAILED(rv)) return rv;
-
-        mPlaceHolderRequest = nsnull;
+            mPlaceHolderRequest = nsnull;
+        }
     }
     return rv;
 }
