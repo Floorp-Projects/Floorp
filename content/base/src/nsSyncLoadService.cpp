@@ -320,7 +320,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIURI> docURI;
-        rv = aChannel->GetURI(getter_AddRefs(docURI));
+        rv = aChannel->GetOriginalURI(getter_AddRefs(docURI));
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = securityManager->CheckLoadURI(aLoaderURI, docURI,
