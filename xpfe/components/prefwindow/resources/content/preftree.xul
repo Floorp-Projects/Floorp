@@ -32,13 +32,17 @@
 <tree id="prefsTree" 
       onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
 
+  <treecolgroup>
+    <treecol flex="1"/>
+  </treecolgroup>      
+      
   <treehead name="tree">
     <treerow>
       <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>
     </treerow>
   </treehead>
 
-  <treechildren id="panelChildren">
+  <treechildren id="panelChildren" flex="1">
 
     
     <treeitem container="true" open="true" id="appearance">
@@ -99,41 +103,6 @@
     </treeitem>
     <!-- XXX -->
 
-    <!-- XXX remove once mailnews overlays.rdf works properly -->
-    <treeitem container="true" open="true" id="mailnews">
-      <treerow>       
-        <treecell class="treecell-indent" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
-      </treerow>
-      <treechildren id="messengerChildren">
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" value="&composingMessages.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-formatting.xul" value="&format.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" value="&address.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/pref-diskspace.xul" value="&disk.label;"/> 
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </treeitem>
-    <!-- XXX -->
- 
     <!-- XXX remove once overlays.rdf works properly for editor -->
     <treeitem container="true" open="true" id="editor">
       <treerow>       

@@ -26,7 +26,7 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 

@@ -1,9 +1,6 @@
 intl.css
 globalOverlay.dtd
 dialogOverlay.dtd
-tasksOverlay.dtd
-taskbarOverlay.dtd
-taskbar.rdf
 builtinURLs.rdf
 commonDialog.dtd
 charsetOverlay.dtd

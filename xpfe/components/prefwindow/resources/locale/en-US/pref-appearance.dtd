@@ -8,9 +8,6 @@
 <!--LOCALIZATION NOTE (navCheck.label): DONT_TRANSLATE -->
 <!ENTITY navCheck.label "Navigator">
 <!ENTITY navCheck.accesskey "n">
-<!--LOCALIZATION NOTE (mesCheck.label): DONT_TRANSLATE -->
-<!ENTITY mesCheck.label "&vendorShortName; Mail">
-<!ENTITY mesCheck.accesskey "m">
 <!--LOCALIZATION NOTE (compCheck.label): DONT_TRANSLATE -->
 <!ENTITY compCheck.label "Composer">
 <!ENTITY compCheck.accesskey "c">

@@ -19,3 +19,13 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <!ENTITY console.title "JavaScript Console">
+
+<!ENTITY url.label     "Source File:">
+<!ENTITY line.label    "Line:">
+<!ENTITY col.label     "Column:">
+<!ENTITY error.label   "Error:">
+
+<!ENTITY all.label      "All Messages">
+<!ENTITY errors.label   "Errors">
+<!ENTITY warnings.label "Warnings">
+

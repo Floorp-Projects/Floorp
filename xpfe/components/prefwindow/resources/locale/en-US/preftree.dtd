@@ -12,13 +12,6 @@
 <!ENTITY applications.label "Helper Applications">
 <!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
 <!ENTITY smartBrowse.label "Smart Browsing">
-<!ENTITY mail.label "Mail and Newsgroups">
-<!ENTITY address.label "Addressing">
-<!ENTITY viewingMessages.label "Viewing Messages">
-<!ENTITY composingMessages.label "Composing Messages">
-<!ENTITY format.label "Formatting">
-<!ENTITY return.label "Return Receipts">
-<!ENTITY disk.label "Disk Space">
 <!ENTITY compose.label "Composer">
 <!ENTITY editing.label "New Page Settings">
 <!ENTITY publish.label "Publish">

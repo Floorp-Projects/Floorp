@@ -1,24 +1,22 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/PSMTaskMenu.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/PSMTaskMenu.dtd" >
 
 <overlay id="psmTaskMenuID"
-xmlns:html="http://www.w3.org/1999/xhtml"
-xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript">
+  <script language="JavaScript">
+    function displaySecurityAdvisor()
+    {
+      var psm = Components.classes["component://netscape/psm"].getService();
+      psm = psm.QueryInterface(Components.interfaces.nsIPSMComponent);
+      psm.displaySecurityAdvisor( null, null );
+    }
+  </script>
 
-function displaySecurityAdvisor()
-{
-    var psm = Components.classes["component://netscape/psm"].getService();
-    psm = psm.QueryInterface(Components.interfaces.nsIPSMComponent);
-    psm.displaySecurityAdvisor( null, null );
-}
-
-</html:script>
-
-<menupopup id="personalManagers">
+  <menupopup id="personalManagers">
     <menuitem id="PSMMentItem" position="1" value="&PSMCmd.label;" oncommand="displaySecurityAdvisor()"/>
-</menupopup>
+  </menupopup>
 
 </overlay>

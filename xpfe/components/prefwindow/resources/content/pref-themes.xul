@@ -24,6 +24,8 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
 
@@ -41,53 +43,71 @@
   <html>&installedThemes.label;</html>
   
   <tree class="inset" id="skinsTree" datasources="rdf:chrome" 
-         ref="urn:mozilla:skin:root" flex="1">
+        onselect="themeSelect();"
+        ref="urn:mozilla:skin:root" flex="1">
     <treecolgroup>
-       <treecol/>
+      <treecol flex="1"/>
     </treecolgroup>
     <template>
       <rule>
-        <conditions>
-          <content uri="?uri"/>
-          <triple subject="?uri"
-                  predicate="http://www.mozilla.org/rdf/chrome#packages"
-                  object="?packageList"/>
-          <member container="?packageList"
-                  child="?entry"/>
-          <triple subject="?entry"
-                  predicate="http://www.mozilla.org/rdf/chrome#package"
-                  object="?package"/>
-          <triple subject="?package"
-                  predicate="http://www.mozilla.org/rdf/chrome#displayName"
-                  object="?displayName"/>
-        </conditions>
-        <action>
-          <treechildren>
-            <treeitem uri="?entry"> 
-              <treerow>
-                <treecell class="treecell-indent" value="?displayName"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
-        </action>
-      </rule>
-      <rule>
-          <treechildren>
-            <treeitem uri="?child" author="rdf:http://www.mozilla.org/rdf/chrome#author"
-                      container="true" name="rdf:http://www.mozilla.org/rdf/chrome#name">
-              <treerow>
-                <treecell class="treecell-indent" value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
+        <treechildren flex="1">
+          <treeitem uri="?child" skin="true"
+                    author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                    displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    name="rdf:http://www.mozilla.org/rdf/chrome#name"
+                    email="rdf:http://www.mozilla.org/rdf/chrome#email"
+                    website="rdf:http://www.mozilla.org/rdf/chrome#website"
+                    image="rdf:http://www.mozilla.org/rdf/chrome#image">
+            <treerow>
+              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
       </rule>
     </template>
   </tree>
-   
+
+  <tabcontrol orient="vertical">
+    <tabpanel>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <text class="label" value="&displayName.label;"/>
+            <text class="label" id="displayName"/>
+          </row>
+          <row>
+            <text class="label" value="&author.label;"/>
+            <text class="label" id="author"/>
+          </row>
+          <row>
+            <spring/>
+            <box>
+              <button id="email" value="&email.label;" accesskey="&email.accesskey;" 
+                      oncommand="sendEmail(this);" tooltip="aTooltip" disabled="true"/>
+              <button id="website" value="&website.label;" accesskey="&website.accesskey;" 
+                      oncommand="gotoWebsite(this);" tooltip="aTooltip" disabled="true"/>
+            </box>
+          </row>
+        </rows>
+      </grid>
+      <box class="inset" style="overflow: auto; height: 8em;">
+        <image id="previewImage"/>
+      </box>
+    </tabpanel>
+    <tabbox>
+      <tab value="&general.label;"/>
+      <tab value="&preview.label;"/>
+    </tabbox>
+  </tabcontrol>
+
+  <separator class="thin"/>
+  
   <box autostretch="never">
     <button value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="selectSkin();"/>
-    <spring flex="1"/>
-    <button value="&installSkin.label;" accesskey="&installSkin.accesskey;" oncommand="installSkin();"/>
   </box>
   
 </window>

@@ -33,6 +33,9 @@ CHROME_MISC = \
 CHROME_L10N = \
 	.\utilityOverlay.dtd \
 	.\utilityOverlay.properties \
+	.\taskbar.rdf \
+	.\tasksOverlay.dtd \
+	.\taskbarOverlay.dtd \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>

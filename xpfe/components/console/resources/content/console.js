@@ -103,8 +103,11 @@ function onUnloadJSConsole()
  */
 function appendMessage(messageObject)
 {
-    var c = document.getElementById("console");
-    var el = document.createElement("message");
+    var c = document.getElementById("consoleTreeChildren");
+    var item = document.createElement("treeitem");
+    var row = document.createElement("treerow");
+    var cell = document.createElement("treecell");
+    cell.setAttribute("class", "treecell-error");
     var msgContent;
     var text;
     try {
@@ -136,23 +139,49 @@ function appendMessage(messageObject)
          *
          * But for now, I'm just pushing it out the door.
          */
-        text = scriptError.category + ": ";
-        text += "JavaScript " + (warning ? "Warning: " : "Error: ");
-        text += scriptError.sourceName;
-        text += " line " + scriptError.lineNumber +
-            ", column " + scriptError.columnNumber + ": " + scriptError.message;
-        text += " Source line: " + scriptError.sourceLine;
-
-        msgContent = document.createTextNode(text);
+         
+        cell.setAttribute("type", warning ? "warning" : "error");
+        // XXX localize
+        cell.setAttribute("typetext", warning ? "Warning: " : "Error: ");
+        cell.setAttribute("url", scriptError.sourceName);
+        cell.setAttribute("line", scriptError.lineNumber);
+        cell.setAttribute("col", scriptError.columnNumber);
+        cell.setAttribute("msg", scriptError.message);
+        cell.setAttribute("error", scriptError.sourceLine);
     } catch (exn) {
         dump(exn + '\n');
         // QI failed, just try to treat it as an nsIConsoleMessage
         text = messageObject.message;
-        msgContent = document.createTextNode(text);
+        cell.setAttribute("value", text);
     }
+    row.appendChild(cell);
+    item.appendChild(row);
+    c.appendChild(item);
+}
 
-    el.appendChild(msgContent);
-    c.appendChild(el);
+function changeMode (aMode, aElement)
+{
+  var broadcaster = document.getElementById(aElement.getAttribute("observes"));
+  var bcset = document.getElementById("broadcasterset");
+  for (var i = 0; i < bcset.childNodes.length; i++) {
+    bcset.childNodes[i].removeAttribute("toggled");
+    bcset.childNodes[i].removeAttribute("checked");
+  }
+  broadcaster.setAttribute("toggled", "true");
+  broadcaster.setAttribute("checked", "true");
+  var tree = document.getElementById("console");
+  switch (aMode) {
+    case "errors":
+      tree.setAttribute("mode", "errors");
+      break;
+    case "warnings":
+      tree.setAttribute("mode", "warnings");
+      break;
+    default:
+    case "all":
+      tree.removeAttribute("mode");
+      break;
+  }
 }
 
 // XXX q: if window is open, does it grow forever?  Is that OK?

@@ -26,19 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
+COMMUNICATOR_RESOURCE_CONTENT = \
 	$(srcdir)/PSMTaskMenu.dtd \
-	$(NULL)
-
-EXPORT_NAV_RESOURCE_CONTENT = \
 	$(srcdir)/security.properties \
+	$(srcdir)/securityOverlay.dtd \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/locales/en-US/global/locale
-	$(INSTALL) $(EXPORT_NAV_RESOURCE_CONTENT) $(DIST)/bin/chrome/locales/en-US/navigator/locale
+	$(INSTALL) $(COMMUNICATOR_RESOURCE_CONTENT) $(DIST)/bin/chrome/locales/en-US/communicator/locale
 
 
 

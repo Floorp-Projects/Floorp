@@ -1,0 +1,16 @@
+
+.treecell-error
+  {
+    behavior              : url("chrome://global/content/consoleBindings.xml#errormsg");
+  }
+  
+#console[mode="errors"] > treechildren > treeitem > treerow > treecell[type="warning"]
+  {
+    display               : none;
+  }
+  
+#console[mode="warnings"] > treechildren > treeitem > treerow > treecell[type="error"]
+  {
+    display               : none;
+  }  
+  
