@@ -368,6 +368,7 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
   {
 		case WM_INITDIALOG:
+      DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
 			return FALSE;
 

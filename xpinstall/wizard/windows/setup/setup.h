@@ -56,7 +56,7 @@ typedef int PRInt32;
 #endif
 
 #define CLASS_NAME_SETUP                "Setup"
-#define CLASS_NAME_SETUP_DLG            "SetupDlg"
+#define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 #define FILE_INI_SETUP                  "setup.ini"
 #define FILE_INI_CONFIG                 "config.ini"
 #define FILE_IDI_GETCONFIGINI           "getconfigini.idi"
@@ -277,6 +277,7 @@ typedef struct setupStruct
   LPSTR     szPath;
   LPSTR     szSubPath;
   LPSTR     szProgramName;
+  LPSTR     szCompanyName;
   LPSTR     szProductName;
   LPSTR     szProgramFolderName;
   LPSTR     szProgramFolderPath;

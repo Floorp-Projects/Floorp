@@ -55,6 +55,16 @@ void AskCancelDlg(HWND hDlg)
   }
 } 
 
+void DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose)
+{
+  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_RESTORE,  MF_BYCOMMAND | MF_GRAYED);
+  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_SIZE,     MF_BYCOMMAND | MF_GRAYED);
+  EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
+
+  if(bDisableClose)
+    EnableMenuItem(GetSystemMenu(hWnd, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+}
+
 void PaintGradientShade(HWND hWnd, HDC hdc)
 {
   RECT    rectClient;        // Rectangle for entire client area
@@ -154,6 +164,7 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diWelcome.szTitle);
 
       wsprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName);
@@ -163,6 +174,7 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
       break;
 
     case WM_COMMAND:
@@ -170,12 +182,7 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       {
         case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-          break;
-
-        case IDWIZBACK:
-          DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequenceNext();
           break;
 
         case IDCANCEL:
@@ -204,6 +211,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diLicense.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diLicense.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diLicense.szMessage1);
@@ -239,12 +247,12 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       {
         case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDCANCEL:
@@ -602,6 +610,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
@@ -853,14 +862,14 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           dwTempSetupType = dwSetupType;
           lstrcpy(szTempSetupPath, sgProduct.szPath);
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDCANCEL:
@@ -1091,6 +1100,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diSelectComponents.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
@@ -1275,12 +1285,12 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
         case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDCANCEL:
@@ -1316,6 +1326,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diSelectAdditionalComponents.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectAdditionalComponents.szMessage0);
 
@@ -1445,12 +1456,12 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
 
         case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDCANCEL:
@@ -1482,6 +1493,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diWindowsIntegration.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diWindowsIntegration.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diWindowsIntegration.szMessage1);
@@ -1568,7 +1580,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
           }
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
@@ -1576,7 +1588,7 @@ LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, L
           CheckWizardStateCustom(DLG_SETUP_TYPE);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDCANCEL:
@@ -1602,6 +1614,7 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diProgramFolder.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diProgramFolder.szMessage0);
       SetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, sgProduct.szProgramFolderName);
@@ -1645,12 +1658,12 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
           dwWizardState = DLG_ADVANCED_SETTINGS;
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDC_LIST:
@@ -1680,6 +1693,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diAdvancedSettings.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
@@ -1701,13 +1715,13 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
 
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
         case IDCANCEL:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         default:
@@ -1747,6 +1761,7 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diDownloadOptions.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
@@ -1792,20 +1807,20 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
         case IDWIZNEXT:
           SaveDownloadOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           SaveDownloadOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDC_BUTTON_ADDITIONAL_SETTINGS:
           SaveDownloadOptions(hDlg, hwndCBSiteSelector);
           dwWizardState = DLG_PROGRAM_FOLDER;
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDCANCEL:
@@ -2065,6 +2080,7 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diStartInstall.szTitle);
 
       if(GetClientRect(hDlg, &rDlg))
@@ -2093,19 +2109,19 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       {
         case IDWIZNEXT:
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDWIZBACK:
           dwWizardState = DLG_ADVANCED_SETTINGS;
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          DlgSequencePrev();
           break;
 
         case IDC_BUTTON_SITE_SELECTOR:
           dwWizardState = DLG_PROGRAM_FOLDER;
           DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+          DlgSequenceNext();
           break;
 
         case IDCANCEL:
@@ -2132,6 +2148,7 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
       CheckDlgButton(hDlg, IDC_RADIO_YES, BST_CHECKED);
       SetFocus(hRadioYes);
 
@@ -2193,10 +2210,28 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   LOGFONT   logFont;
   HFONT     hfontTmp;
   HFONT     hfontOld;
+  char      szBuf[MAX_BUF];
+  char      szBuf2[MAX_BUF];
+
+  ZeroMemory(szBuf, sizeof(szBuf));
+  ZeroMemory(szBuf2, sizeof(szBuf2));
 
   switch(msg)
   {
     case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, TRUE);
+
+      if(NS_LoadString(hSetupRscInst, IDS_STR_MESSAGEBOX_TITLE, szBuf2, sizeof(szBuf2)) == WIZ_OK)
+      {
+        if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
+          wsprintf(szBuf, szBuf2, sgProduct.szProductName);
+        else
+          wsprintf(szBuf, szBuf2, "");
+      }
+      else if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
+        lstrcpy(szBuf, sgProduct.szProductName);
+
+      SetWindowText(hDlg, szBuf);
       break;
 
     case WM_COMMAND:
@@ -2220,8 +2255,8 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
           ReleaseDC(hSTMessage, hdcSTMessage);
 
           SetWindowPos(hDlg, HWND_TOP,
-                      (dwScreenX/2)-((sizeString.cx + 40)/2), (dwScreenY/2)-((sizeString.cy + 40)/2),
-                      sizeString.cx + 40, sizeString.cy + 40,
+                      (dwScreenX/2)-((sizeString.cx + 55)/2), (dwScreenY/2)-((sizeString.cy + 50)/2),
+                      sizeString.cx + 55, sizeString.cy + 50,
                       SWP_SHOWWINDOW);
 
           if(GetClientRect(hDlg, &rDlg))
@@ -2309,231 +2344,256 @@ void DlgSequenceNext()
   HRESULT hrValue;
   HRESULT hrErr;
   char    szBuf[MAX_PATH];
+  BOOL    bDone = FALSE;
 
-  switch(dwWizardState)
+  do
   {
-    case DLG_NONE:
-      dwWizardState = DLG_WELCOME;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diWelcome.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWelcome.szTitle, DlgProcWelcome);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      break;
+    switch(dwWizardState)
+    {
+      case DLG_NONE:
+        dwWizardState = DLG_WELCOME;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diWelcome.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWelcome.szTitle, DlgProcWelcome);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_WELCOME:
-      dwWizardState = DLG_LICENSE;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diLicense.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diLicense.szTitle, DlgProcLicense);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
+      case DLG_WELCOME:
+        dwWizardState = DLG_LICENSE;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diLicense.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diLicense.szTitle, DlgProcLicense);
+          bDone = TRUE;
+        }
+        break;
 
-      break;
+      case DLG_LICENSE:
+        dwWizardState = DLG_SETUP_TYPE;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diSetupType.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
+          bDone = TRUE;
+        }
+        else
+        {
+          CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
+        }
+        break;
 
-    case DLG_LICENSE:
-      dwWizardState = DLG_SETUP_TYPE;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diSetupType.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
-      else
-      {
-        CheckWizardStateCustom(DLG_ADVANCED_SETTINGS);
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      }
-      break;
+      case DLG_SETUP_TYPE:
+        dwWizardState = DLG_SELECT_COMPONENTS;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diSelectComponents.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SETUP_TYPE:
-      dwWizardState = DLG_SELECT_COMPONENTS;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diSelectComponents.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      break;
+      case DLG_SELECT_COMPONENTS:
+        dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+        gbProcessingXpnstallFiles = FALSE;
+        if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SELECT_COMPONENTS:
-      dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
-      gbProcessingXpnstallFiles = FALSE;
-      if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      break;
+      case DLG_SELECT_ADDITIONAL_COMPONENTS:
+        dwWizardState = DLG_WINDOWS_INTEGRATION;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diWindowsIntegration.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SELECT_ADDITIONAL_COMPONENTS:
-      dwWizardState = DLG_WINDOWS_INTEGRATION;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diWindowsIntegration.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      break;
+      case DLG_WINDOWS_INTEGRATION:
+        dwWizardState = DLG_PROGRAM_FOLDER;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diProgramFolder.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
+          bDone = TRUE;
+        }
+        else
+        {
+          dwWizardState = DLG_ADVANCED_SETTINGS;
+        }
+        break;
 
-    case DLG_WINDOWS_INTEGRATION:
-      dwWizardState = DLG_PROGRAM_FOLDER;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diProgramFolder.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
-      else
-      {
+      case DLG_PROGRAM_FOLDER:
         dwWizardState = DLG_ADVANCED_SETTINGS;
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      }
-      break;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diAdvancedSettings.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
+          bDone = TRUE;
+        }
+        else
+        {
+          dwWizardState = DLG_ADVANCED_SETTINGS;
+        }
+        break;
 
-    case DLG_PROGRAM_FOLDER:
-      dwWizardState = DLG_ADVANCED_SETTINGS;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diAdvancedSettings.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
-      else
-      {
-        dwWizardState = DLG_ADVANCED_SETTINGS;
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      }
-      break;
+      case DLG_ADVANCED_SETTINGS:
+        dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        gbProcessingXpnstallFiles = FALSE;
 
-    case DLG_ADVANCED_SETTINGS:
-      dwWizardState = DLG_DOWNLOAD_OPTIONS;
-      gbProcessingXpnstallFiles = FALSE;
+        do
+        {
+          hrValue = VerifyDiskSpace();
+          if(hrValue == IDOK)
+          {
+            /* show previous visible window */
+            dwWizardState = DLG_SELECT_COMPONENTS;
+            DlgSequencePrev();
+            bDone = TRUE;
+            break;
+          }
+          else if(hrValue == IDCANCEL)
+          {
+            AskCancelDlg(hWndMain);
+            hrValue = IDRETRY;
+          }
+        }while(hrValue == IDRETRY);
 
-      do
-      {
-        hrValue = VerifyDiskSpace();
         if(hrValue == IDOK)
         {
-          /* show previous visible window */
-          dwWizardState = DLG_SELECT_COMPONENTS;
-          DlgSequencePrev();
+          /* break out of this case because we need to show the previous dialog */
+          bDone = TRUE;
           break;
         }
-        else if(hrValue == IDCANCEL)
+
+        if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
         {
-          AskCancelDlg(hWndMain);
-          hrValue = IDRETRY;
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+          bDone = TRUE;
         }
-      }while(hrValue == IDRETRY);
-
-      if(hrValue == IDOK)
-      {
-        /* break out of this case because we need to show the previous dialog */
-        break;
-      }
-
-      if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
-      else
-      {
-        dwWizardState = DLG_DOWNLOAD_OPTIONS;
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      }
-      break;
-
-    case DLG_DOWNLOAD_OPTIONS:
-      dwWizardState = DLG_START_INSTALL;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diStartInstall.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
-      break;
-
-    default:
-      dwWizardState = DLG_START_INSTALL;
-      gbProcessingXpnstallFiles = TRUE;
-
-      /* PRE_DOWNLOAD process file manipulation functions */
-      ProcessFileOps(T_PRE_DOWNLOAD);
-
-      if(RetrieveArchives() == WIZ_OK)
-      {
-        char szInstallLogFile[MAX_BUF];
-
-        /* POST_DOWNLOAD process file manipulation functions */
-        ProcessFileOps(T_POST_DOWNLOAD);
-        /* PRE_XPCOM process file manipulation functions */
-        ProcessFileOps(T_PRE_XPCOM);
-
-        ProcessXpcomFile();
-
-        /* POST_XPCOM process file manipulation functions */
-        ProcessFileOps(T_POST_XPCOM);
-        /* PRE_SMARTUPDATE process file manipulation functions */
-        ProcessFileOps(T_PRE_SMARTUPDATE);
-
-        if(CheckInstances())
+        else
         {
+          dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        }
+        break;
+
+      case DLG_DOWNLOAD_OPTIONS:
+        dwWizardState = DLG_START_INSTALL;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diStartInstall.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
+          bDone = TRUE;
+        }
+        break;
+
+      default:
+        dwWizardState = DLG_START_INSTALL;
+        gbProcessingXpnstallFiles = TRUE;
+
+        /* PRE_DOWNLOAD process file manipulation functions */
+        ProcessFileOps(T_PRE_DOWNLOAD);
+
+        if(RetrieveArchives() == WIZ_OK)
+        {
+          char szInstallLogFile[MAX_BUF];
+
+          /* POST_DOWNLOAD process file manipulation functions */
+          ProcessFileOps(T_POST_DOWNLOAD);
+          /* PRE_XPCOM process file manipulation functions */
+          ProcessFileOps(T_PRE_XPCOM);
+
+          ProcessXpcomFile();
+
+          /* POST_XPCOM process file manipulation functions */
+          ProcessFileOps(T_POST_XPCOM);
+          /* PRE_SMARTUPDATE process file manipulation functions */
+          ProcessFileOps(T_PRE_SMARTUPDATE);
+
+          if(CheckInstances())
+          {
+            /* save the installer files in the local machine */
+            if(diDownloadOptions.bSaveInstaller)
+              SaveInstallerFiles();
+
+            CleanupXpcomFile();
+            PostQuitMessage(0);
+
+            /* break out of switch statment */
+            bDone = TRUE;
+            break;
+          }
+
+          lstrcpy(szBuf, sgProduct.szPath);
+          if(*sgProduct.szSubPath != '\0')
+          {
+            AppendBackSlash(szBuf, sizeof(szBuf));
+            lstrcat(szBuf, sgProduct.szSubPath);
+          }
+          AppendBackSlash(szBuf, sizeof(szBuf));
+
+          if(gdwUpgradeValue == UG_DELETE)
+          {
+            char szMessage[MAX_BUF];
+
+            NS_LoadString(hSetupRscInst, IDS_STR_DELETING_DESTINATION_DIR, szMessage, sizeof(szMessage));
+            ShowMessage(szMessage, TRUE);
+            DirectoryRemove(szBuf, TRUE);
+            CreateDirectoriesAll(szBuf, TRUE);
+            ShowMessage(szMessage, FALSE);
+          }
+
+          /* copy the install_wizard.log file from the temp\ns_temp dir to
+           * the destination dir and use the new destination file to continue
+           * logging.
+           */
+          lstrcpy(szInstallLogFile, szTempDir);
+          AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+          lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+          FileCopy(szInstallLogFile, szBuf, FALSE);
+          DeleteFile(szInstallLogFile);
+          gbILUseTemp = FALSE;
+
+          lstrcat(szBuf, "Uninstall\\");
+          CreateDirectoriesAll(szBuf, TRUE);
+
           /* save the installer files in the local machine */
           if(diDownloadOptions.bSaveInstaller)
             SaveInstallerFiles();
 
-          CleanupXpcomFile();
-          PostQuitMessage(0);
-
-          /* break out of switch statment */
-          break;
-        }
-
-        lstrcpy(szBuf, sgProduct.szPath);
-        if(*sgProduct.szSubPath != '\0')
-        {
-          AppendBackSlash(szBuf, sizeof(szBuf));
-          lstrcat(szBuf, sgProduct.szSubPath);
-        }
-        AppendBackSlash(szBuf, sizeof(szBuf));
-
-        if(gdwUpgradeValue == UG_DELETE)
-        {
-          char szMessage[MAX_BUF];
-
-          NS_LoadString(hSetupRscInst, IDS_STR_DELETING_DESTINATION_DIR, szMessage, sizeof(szMessage));
-          ShowMessage(szMessage, TRUE);
-          DirectoryRemove(szBuf, TRUE);
-          CreateDirectoriesAll(szBuf, TRUE);
-          ShowMessage(szMessage, FALSE);
-        }
-
-        /* copy the install_wizard.log file from the temp\ns_temp dir to
-         * the destination dir and use the new destination file to continue
-         * logging.
-         */
-        lstrcpy(szInstallLogFile, szTempDir);
-        AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-        lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
-        FileCopy(szInstallLogFile, szBuf, FALSE);
-        DeleteFile(szInstallLogFile);
-        gbILUseTemp = FALSE;
-
-        lstrcat(szBuf, "Uninstall\\");
-        CreateDirectoriesAll(szBuf, TRUE);
-
-        /* save the installer files in the local machine */
-        if(diDownloadOptions.bSaveInstaller)
-          SaveInstallerFiles();
-
-        hrErr = SmartUpdateJars();
-        if((hrErr == WIZ_OK) || (hrErr == 999))
-        {
-          UpdateJSProxyInfo();
-
-          /* POST_SMARTUPDATE process file manipulation functions */
-          ProcessFileOps(T_POST_SMARTUPDATE);
-          /* PRE_LAUNCHAPP process file manipulation functions */
-          ProcessFileOps(T_PRE_LAUNCHAPP);
-
-          LaunchApps();
-
-          /* POST_LAUNCHAPP process file manipulation functions */
-          ProcessFileOps(T_POST_LAUNCHAPP);
-          /* DEPEND_REBOOT process file manipulation functions */
-          ProcessFileOps(T_DEPEND_REBOOT);
-          ProcessProgramFolderShowCmd();
-
-          if(NeedReboot())
+          hrErr = SmartUpdateJars();
+          if((hrErr == WIZ_OK) || (hrErr == 999))
           {
-            CleanupXpcomFile();
-            hDlgCurrent = InstantiateDialog(hWndMain, DLG_RESTART, diReboot.szTitle, DlgProcReboot);
+            UpdateJSProxyInfo();
+
+            /* POST_SMARTUPDATE process file manipulation functions */
+            ProcessFileOps(T_POST_SMARTUPDATE);
+            /* PRE_LAUNCHAPP process file manipulation functions */
+            ProcessFileOps(T_PRE_LAUNCHAPP);
+
+            LaunchApps();
+
+            /* POST_LAUNCHAPP process file manipulation functions */
+            ProcessFileOps(T_POST_LAUNCHAPP);
+            /* DEPEND_REBOOT process file manipulation functions */
+            ProcessFileOps(T_DEPEND_REBOOT);
+            ProcessProgramFolderShowCmd();
+
+            if(NeedReboot())
+            {
+              CleanupXpcomFile();
+              hDlgCurrent = InstantiateDialog(hWndMain, DLG_RESTART, diReboot.szTitle, DlgProcReboot);
+            }
+            else
+            {
+              CleanupXpcomFile();
+              PostQuitMessage(0);
+            }
           }
           else
           {
@@ -2543,119 +2603,125 @@ void DlgSequenceNext()
         }
         else
         {
+          bSDUserCanceled = TRUE;
           CleanupXpcomFile();
           PostQuitMessage(0);
         }
-      }
-      else
-      {
-        bSDUserCanceled = TRUE;
-        CleanupXpcomFile();
-        PostQuitMessage(0);
-      }
-      gbProcessingXpnstallFiles = FALSE;
-
-      break;
-  }
+        gbProcessingXpnstallFiles = FALSE;
+        bDone = TRUE;
+        break;
+    }
+  } while(!bDone);
 }
 
 void DlgSequencePrev()
 {
-  switch(dwWizardState)
+  BOOL bDone = FALSE;
+
+  do
   {
-    case DLG_START_INSTALL:
-      dwWizardState = DLG_ADVANCED_SETTINGS;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diAdvancedSettings.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+    switch(dwWizardState)
+    {
+      case DLG_START_INSTALL:
+        dwWizardState = DLG_ADVANCED_SETTINGS;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diAdvancedSettings.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_ADVANCED_SETTINGS:
-      dwWizardState = DLG_DOWNLOAD_OPTIONS;
-      gbProcessingXpnstallFiles = FALSE;
-      if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_ADVANCED_SETTINGS:
+        dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        gbProcessingXpnstallFiles = FALSE;
+        if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_DOWNLOAD_OPTIONS:
-      dwWizardState = DLG_PROGRAM_FOLDER;
-      gbProcessingXpnstallFiles = FALSE;
-      if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
-      {
-        if(diProgramFolder.bShowDialog)
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
-        else
-          PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      }
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_DOWNLOAD_OPTIONS:
+        dwWizardState = DLG_PROGRAM_FOLDER;
+        gbProcessingXpnstallFiles = FALSE;
+        if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))
+        {
+          if(diProgramFolder.bShowDialog)
+            hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_PROGRAM_FOLDER:
-      dwWizardState = DLG_WINDOWS_INTEGRATION;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diWindowsIntegration.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_PROGRAM_FOLDER:
+        dwWizardState = DLG_WINDOWS_INTEGRATION;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diWindowsIntegration.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_WINDOWS_INTEGRATION:
-      dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
-      gbProcessingXpnstallFiles = FALSE;
-      if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_WINDOWS_INTEGRATION:
+        dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+        gbProcessingXpnstallFiles = FALSE;
+        if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SELECT_ADDITIONAL_COMPONENTS:
-      dwWizardState = DLG_SELECT_COMPONENTS;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diSelectComponents.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_SELECT_ADDITIONAL_COMPONENTS:
+        dwWizardState = DLG_SELECT_COMPONENTS;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diSelectComponents.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SELECT_COMPONENTS:
-      dwWizardState = DLG_SETUP_TYPE;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diSetupType.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_SELECT_COMPONENTS:
+        dwWizardState = DLG_SETUP_TYPE;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diSetupType.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_SETUP_TYPE:
-      dwWizardState = DLG_LICENSE;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diLicense.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diLicense.szTitle, DlgProcLicense);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_SETUP_TYPE:
+        dwWizardState = DLG_LICENSE;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diLicense.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diLicense.szTitle, DlgProcLicense);
+          bDone = TRUE;
+        }
+        break;
 
-    case DLG_LICENSE:
-      dwWizardState = DLG_WELCOME;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diWelcome.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWelcome.szTitle, DlgProcWelcome);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
+      case DLG_LICENSE:
+        dwWizardState = DLG_WELCOME;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diWelcome.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWelcome.szTitle, DlgProcWelcome);
+          bDone = TRUE;
+        }
+        break;
 
-    default:
-      dwWizardState = DLG_WELCOME;
-      gbProcessingXpnstallFiles = FALSE;
-      if(diWelcome.bShowDialog)
-        hDlgCurrent = InstantiateDialog(hWndMain, DLG_WELCOME, diWelcome.szTitle, DlgProcWelcome);
-      else
-        PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-      break;
-  }
+      default:
+        dwWizardState = DLG_WELCOME;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diWelcome.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, DLG_WELCOME, diWelcome.szTitle, DlgProcWelcome);
+          bDone = TRUE;
+        }
+        break;
+    }
+  } while(!bDone);
 }

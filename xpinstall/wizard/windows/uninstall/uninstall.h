@@ -110,6 +110,7 @@ typedef struct uninstallStruct
   DWORD     dwMode;
   LPSTR     szLogPath;
   LPSTR     szLogFilename;
+  LPSTR     szCompanyName;
   LPSTR     szProductName;
   LPSTR     szDescription;
   LPSTR     szUninstallKeyDescription;
