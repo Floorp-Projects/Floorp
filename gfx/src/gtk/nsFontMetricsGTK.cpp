@@ -1815,12 +1815,6 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
-    // get italic correction
-    unsigned long pr = 0;
-    if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
-      aBoundingMetrics.subItalicCorrection = (gint) pr; 
-      aBoundingMetrics.supItalicCorrection = (gint) pr;
-    }
   }
 
   return NS_OK;
@@ -2069,13 +2063,6 @@ nsFontGTKUserDefined::GetBoundingMetrics(const PRUnichar*   aString,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
-    // get italic correction
-    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
-    unsigned long pr = 0;
-    if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
-      aBoundingMetrics.subItalicCorrection = (gint) pr; 
-      aBoundingMetrics.supItalicCorrection = (gint) pr;
-    }
   }
 
   return NS_OK;

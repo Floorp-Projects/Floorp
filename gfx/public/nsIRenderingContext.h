@@ -824,7 +824,7 @@ struct nsBoundingMetrics {
 
   // Note that Win32/Mac/PostScript use a different convention for
   // the descent (all vertical measurements are oriented from bottom
-  // to top on these palatforms). Make sure to flip to sign of the
+  // to top on these palatforms). Make sure to flip the sign of the
   // descent on these platforms for cross-platform compatibility.
 
   // Any of the following member variables listed here can have 
@@ -859,32 +859,6 @@ struct nsBoundingMetrics {
           to follow the current one. Depending on the font, this
           could be greater than or less than the right bearing. */
 
-  nscoord supItalicCorrection, subItalicCorrection, leftItalicCorrection;
-       /* The horizontal gaps between the string in slanted style
-          (italic) and the same string in upright style (normal).
-
-          If the font was designed with an italic angle, then the
-          subItalicCorrection (useful for attaching a subscript) 
-          is obtained by multiplying the tangent of the italic angle
-          by the last character's descent.
-
-          The supItalicCorrection (useful for attaching a superscript)
-          gives the amount of space to add after the italic string 
-          before immediately placing a superscript (or another string
-          in and upright style).
-
-          These values are of opposite sign. For a forward-slanted
-          font (italic style), supItalicCorrection >= 0 and 
-          subItalicCorrection <= 0.
-
-          For a back-slanted font, supItalicCorrection <= 0 
-          and subItalicCorrection >= 0.
-
-          The leftItalicCorrection gives the amount of space that should 
-          be added before the italic string when it is immediately to be
-          preceded by an upright string. 
-       */
-
   //////////
   // Utility methods and operators:
 
@@ -893,13 +867,10 @@ struct nsBoundingMetrics {
   Clear() {
     leftBearing = rightBearing = 0;
     ascent = descent = width = 0;
-    supItalicCorrection = subItalicCorrection = 0;
-    leftItalicCorrection = 0;
   }
 
   /* Append another bounding metrics */
-  /* Notice that leftBearing and leftItalicCorrection are not set. 
-     The user must set leftBearing and leftItalicCorrection on 
+  /* Notice that leftBearing is not set. The user must set leftBearing on 
      initialization and (repeatedly) use this operator to append 
      other bounding metrics on the right.
    */
@@ -909,8 +880,6 @@ struct nsBoundingMetrics {
     if (descent < bm.descent) descent = bm.descent;   
     rightBearing = width + bm.rightBearing;
     width += bm.width;
-    supItalicCorrection = bm.supItalicCorrection;
-    subItalicCorrection = bm.subItalicCorrection;
   }
 };
 #endif // MOZ_MATHML

@@ -1811,7 +1811,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC,
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -1844,7 +1843,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC,
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -1876,7 +1874,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC,
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics);
@@ -3069,11 +3066,6 @@ HDC   dc1 = NULL;
       mXHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * dev2app);
     }
     // End -- getting x-height
-
-#ifdef MOZ_MATHML
-    mItalicSlope = float(oMetrics.otmsCharSlopeRun)/float(oMetrics.otmsCharSlopeRise);
-    if (oMetrics.otmItalicAngle > 0) mItalicSlope = -mItalicSlope; // back-slanted font
-#endif
   }
   else {
     // Make a best-effort guess at extended metrics
@@ -3087,15 +3079,6 @@ HDC   dc1 = NULL;
     mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0f); // 50% of xHeight
     mUnderlineSize = onePixel; // XXX this is a guess
     mUnderlineOffset = -NSToCoordRound((float)metrics.tmDescent * dev2app * 0.30f); // 30% of descent
-
-#ifdef MOZ_MATHML
-    mItalicSlope = 0.0f;
-    if (0 != metrics.tmItalic) { // Italic fonts are usually slanted between 10-20 degrees.
-      // e.g. for a slant of 10 degrees, the slope is 0.176f 
-      mItalicSlope = float(metrics.tmMaxCharWidth )/float(metrics.tmHeight);
-      // XXX what about a back-slanted font
-    }
-#endif
   }
 
   mLeading = NSToCoordRound(metrics.tmInternalLeading * dev2app);
@@ -3125,15 +3108,6 @@ HDC   dc1 = NULL;
 
   return NS_OK;
 }
-
-#ifdef MOZ_MATHML
-NS_IMETHODIMP
-nsFontMetricsWin :: GetItalicSlope(float& aResult)
-{
-  aResult = mItalicSlope;
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetXHeight(nscoord& aResult)
@@ -3379,7 +3353,6 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 #ifdef MOZ_MATHML
 nsresult
 nsFontWinUnicode::GetBoundingMetrics(HDC                aDC, 
-                                     float              aItalicSlope,
                                      const PRUnichar*   aString,
                                      PRUint32           aLength,
                                      nsBoundingMetrics& aBoundingMetrics)
@@ -3439,22 +3412,6 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
       ::GetTextExtentPointW(aDC, aString, aLength, &size);
       aBoundingMetrics.width = size.cx;
       aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    }
-
-    // italic correction
-    if (aItalicSlope) {
-      ABC abc;
-      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
-      if (GetCharABCWidths(aDC, aString[aLength-1], aString[aLength-1], &abc)) {
-        if (abc.abcC < 0) {
-          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
-        }
-      }
-      if (GetCharABCWidths(aDC, aString[0], aString[0], &abc)) {
-        if (abc.abcA < 0) {
-          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
-        }
-      }
     }
 
     if (pstr != str) {
@@ -3535,7 +3492,6 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 #ifdef MOZ_MATHML
 nsresult
 nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC, 
-                                        float              aItalicSlope,
                                         const PRUnichar*   aString,
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics)
@@ -3591,21 +3547,6 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
       aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
     }
 
-    // italic correction
-    if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
-      ABC abc;
-      if (GetCharABCWidths(aDC, PRUint8(pstr[aLength-1]), PRUint8(pstr[aLength-1]), &abc)) {
-        if (abc.abcC < 0) {
-          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
-        }
-      }
-      if (GetCharABCWidths(aDC, PRUint8(pstr[0]), PRUint8(pstr[0]), &abc)) {
-        if (abc.abcA < 0) {
-          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
-        }
-      }
-    }
     if (pstr != str) {
       delete[] pstr;
     }
@@ -3713,7 +3654,6 @@ nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 #ifdef MOZ_MATHML
 nsresult
 nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC, 
-                                        float              aItalicSlope,
                                         const PRUnichar*   aString,
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics)
@@ -3777,22 +3717,6 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
       ::GetTextExtentPointW(aDC, pstr, aLength, &size);
       aBoundingMetrics.width = size.cx;
       aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    }
-
-    // italic correction
-    if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
-      ABC abc;
-      if (GetCharABCWidths(aDC, pstr[aLength-1], pstr[aLength-1], &abc)) {
-        if (abc.abcC < 0) {
-          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
-        }
-      }
-      if (GetCharABCWidths(aDC, pstr[0], pstr[0], &abc)) {
-        if (abc.abcA < 0) {
-          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
-        }
-      }
     }
 
     if (pstr != str) {
@@ -3991,7 +3915,6 @@ nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 #ifdef MOZ_MATHML
 nsresult
 nsFontSubset::GetBoundingMetrics(HDC                aDC, 
-                                 float              aItalicSlope,
                                  const PRUnichar*   aString,
                                  PRUint32           aLength,
                                  nsBoundingMetrics& aBoundingMetrics)
@@ -4059,22 +3982,6 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
 
     }
 
-    // italic correction
-    if (aItalicSlope) {
-      aBoundingMetrics.subItalicCorrection = -nscoord(aItalicSlope * float(descent));
-      ABC abc;
-      if (GetCharABCWidths(aDC, pstr[nb-1], pstr[nb-1], &abc)) {
-        if (abc.abcC < 0) {
-          aBoundingMetrics.supItalicCorrection = -abc.abcC; 
-        }
-      }
-      if (GetCharABCWidths(aDC, pstr[0], pstr[0], &abc)) {
-        if (abc.abcA < 0) {
-          aBoundingMetrics.leftItalicCorrection = -abc.abcA; 
-        }
-      }
-    }
-
     if (pstr != str) {
       delete[] pstr;
     }
@@ -4134,7 +4041,6 @@ nsFontWinA::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
 #ifdef MOZ_MATHML
 nsresult
 nsFontWinA::GetBoundingMetrics(HDC                aDC, 
-                               float              aItalicSlope,
                                const PRUnichar*   aString,
                                PRUint32           aLength,
                                nsBoundingMetrics& aBoundingMetrics)
