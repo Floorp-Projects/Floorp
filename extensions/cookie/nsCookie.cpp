@@ -2435,8 +2435,17 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     buffer[0] = '\0';
     g = 0;
 
+    /*
+     * Cookie expiration times on mac will not be decoded correctly because
+     * they were based on get_current_time() instead of time(NULL) -- see comments in
+     * get_current_time.  So we need to adjust for that now in order for the
+     * display of the expiration time to be correct
+     */
+    time_t expires;
+    expires = cookie->expires + (time(NULL) - get_current_time());
+
     nsString temp1; temp1.AssignWithConversion("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S");
-    nsString temp2; temp2.AssignWithConversion(ctime(&(cookie->expires)));
+    nsString temp2; temp2.AssignWithConversion(ctime(&(expires)));
     g += nsTextFormatter::snprintf(buffer+g, BUFLEN2-g,
       temp1.GetUnicode(),
       BREAK, cookieNum,
