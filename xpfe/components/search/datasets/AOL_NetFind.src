@@ -1,0 +1,30 @@
+# Created by Gord Lacey
+# Visit www.apple-donuts.com
+# mailto:bluefrog@shaw.wave.ca
+
+<search 
+name="AOL Netfind"
+method=post
+action="http://netfind.aol.com/search.gw"
+update="http://www.apple-donuts.com/sherlock/AOLNetfind.src.hqx"
+updateCheckDays = 3 
+>
+	
+<INPUT NAME="search" user>
+<INPUT NAME="lk" VALUE="excite_netfind_us">
+<INPUT NAME="nrm" VALUE="n">
+<INPUT NAME="pri" VALUE="on">
+<INPUT NAME="xls" VALUE="b">
+
+<interpret
+resultListStart="<!-- /crosslinks -->"
+resultListEnd="</table>"
+resultItemStart=">    "
+resultItemEnd="<P>"
+relevanceStart="<b>"
+relevanceEnd="</b>"
+bannerStart="<!-- AOL Ad Start -->"
+bannerEnd="<!-- AOL Ad Stop -->"
+>
+</search>
+

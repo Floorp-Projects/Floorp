@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
+	AOL_NetFind.src				\
+	AOL_NetFind.gif				\
 	Google.src				\
 	GoTo.com.gif				\
 	GoTo.com.src				\
