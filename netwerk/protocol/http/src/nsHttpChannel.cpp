@@ -2251,11 +2251,9 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         }
     }
 
-    // If the defensive auth pref is set, then we'll warn the user before
-    // automatically using the identity from the URL to automatically log
-    // them into a site (see bug 232567).
     if (identFromURI) {
-        // ask the user...
+        // Warn the user before automatically using the identity from the URL
+        // to automatically log them into a site (see bug 232567).
         if (!ConfirmAuth(NS_LITERAL_STRING("AutomaticAuth"), PR_FALSE)) {
             // calling cancel here sets our mStatus and aborts the HTTP
             // transaction, which prevents OnDataAvailable events.
@@ -2555,9 +2553,11 @@ nsHttpChannel::ConfirmAuth(const nsString &bundleKey, PRBool doYesNoPrompt)
 void
 nsHttpChannel::CheckForSuperfluousAuth()
 {
-    // check whether authentication was provided, even if not required.
-    // if so, prompt the user as to whether to continue, as this might be an
-    // attempt to spoof a different site (see bug 232567).
+    // we've been called because it has been determined that this channel is
+    // getting loaded without taking the userpass from the URL.  if the URL
+    // contained a userpass, then (provided some other conditions are true),
+    // we'll give the user an opportunity to abort the channel as this might be
+    // an attempt to spoof a different site (see bug 232567).
     if (!mAuthRetryPending) {
         // ask user...
         if (!ConfirmAuth(NS_LITERAL_STRING("SuperfluousAuth"), PR_TRUE)) {
