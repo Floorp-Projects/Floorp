@@ -42,7 +42,10 @@
 #include "nsAString.h"
 %}
 
-[scriptable, uuid(d12c08c6-9ef6-11d3-8cda-0060b0fc14a3)]
+/**
+ * Protocol handler interface for the resource:// protocol
+ */
+[scriptable, uuid(067ca872-e947-4bd6-8946-a479cb6ba5dd)]
 interface nsIResProtocolHandler : nsIProtocolHandler
 {
     /**
@@ -54,19 +57,19 @@ interface nsIResProtocolHandler : nsIProtocolHandler
      * A root key should always be lowercase; however, this may not be
      * enforced.
      */
-    void setSubstitution(in string root, in nsIURI baseURI);
+    void setSubstitution(in ACString root, in nsIURI baseURI);
 
     /**
      * Gets the substitution for the root key.
      *
      * @throws NS_ERROR_NOT_AVAILABLE if none exists.
      */
-    nsIURI getSubstitution(in string root);
+    nsIURI getSubstitution(in ACString root);
 
     /**
      * Returns TRUE if the substitution exists and FALSE otherwise.
      */
-    boolean hasSubstitution(in string root);
+    boolean hasSubstitution(in ACString root);
 
     /**
      * Utility function to resolve a resource URI.  A resolved URI is not 

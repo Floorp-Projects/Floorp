@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,7 +41,7 @@
 #define nsResProtocolHandler_h___
 
 #include "nsIResProtocolHandler.h"
-#include "nsHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
 #include "nsWeakReference.h"
@@ -58,9 +59,8 @@ public:
     nsresult Init();
 
 private:
-    nsresult SetSpecialDir(const char* rootName, const char* specialDir);
-
-    nsSupportsHashtable    mSubstitutions;
+    nsresult AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution);
+    nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
     nsCOMPtr<nsIIOService> mIOService;
 
     friend class nsResURL;

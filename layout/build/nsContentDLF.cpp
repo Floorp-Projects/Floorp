@@ -72,7 +72,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kPluginDocumentCID, NS_PLUGINDOCUMENT_CID);
 
 // URL for the "user agent" style sheet
-#define UA_CSS_URL "resource:/res/ua.css"
+#define UA_CSS_URL "resource://gre/res/ua.css"
 
 // Factory code for creating variations on html documents
 

@@ -142,7 +142,7 @@ nsLanguageAtomService::InitLangGroupTable()
   if (NS_FAILED(rv)) return rv;
 
 
-  rv = bundleService->CreateBundle("resource:/res/langGroups.properties",
+  rv = bundleService->CreateBundle("resource://gre/res/langGroups.properties",
                                    getter_AddRefs(mLangGroups));
   return rv;
 }

@@ -203,7 +203,7 @@ input {
   vertical-align: text-bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
-  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
+  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#inputFields");
   padding: 1px 0 1px 0;
 }
 
@@ -218,7 +218,7 @@ textarea {
   vertical-align: text-bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
-  -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
+  -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
 }
 
 textarea > scrollbar {

@@ -72,7 +72,7 @@ nsresult nsPlatformCharset::InitInfo()
 {  
   // load the .property file if necessary
   if (gInfo == nsnull) {
-    nsURLProperties *info = new nsURLProperties( NS_LITERAL_CSTRING("resource:/res/maccharset.properties") );
+    nsURLProperties *info = new nsURLProperties( NS_LITERAL_CSTRING("resource://gre/res/maccharset.properties") );
     NS_ASSERTION(info , "cannot open properties file");
     NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
     gInfo = info;

@@ -100,7 +100,7 @@ nsresult nsCharsetConverterManager::RegisterConverterManagerData()
   RegisterConverterCategory(catman, NS_TITLE_BUNDLE_CATEGORY,
                             "chrome://global/locale/charsetTitles.properties");
   RegisterConverterCategory(catman, NS_DATA_BUNDLE_CATEGORY,
-                            "resource:/res/charsetData.properties");
+                            "resource://gre/res/charsetData.properties");
 
   return NS_OK;
 }

@@ -96,7 +96,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
   {
     nsAutoLock guard(gLock);
     if (!gInfo_deprecated) {
-      nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/unixcharset.properties"));
+      nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource://gre/res/unixcharset.properties"));
       NS_ASSERTION( info, "cannot create nsURLProperties");
       gInfo_deprecated = info;
     }
@@ -233,7 +233,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     if (!gNLInfo) {
       nsCAutoString propertyURL;
       // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
-      propertyURL.Assign(NS_LITERAL_CSTRING("resource:/res/unixcharset."));
+      propertyURL.Assign(NS_LITERAL_CSTRING("resource://gre/res/unixcharset."));
       propertyURL.Append(OSARCH);
       propertyURL.Append(NS_LITERAL_CSTRING(".properties"));
       nsURLProperties *info;

@@ -112,10 +112,10 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   *persistant = PR_TRUE;
 
   //---------------------------------------------------------------
-  // Note that by returning a valid localFile's for NS_GRE_DIR and
-  // NS_GRE_COMPONENT_DIR, your app is indicating to XPCOM that 
-  // it found a GRE version with which it's compatible with and 
-  // intends to be "run against" that GRE.
+  // Note that by returning a valid localFile's for NS_GRE_DIR,
+  // your app is indicating to XPCOM that it found a GRE version
+  // with which it's compatible with and intends to be "run against"
+  // that GRE.
   //
   // Please see http://www.mozilla.org/projects/embedding/MRE.html
   // for more info on GRE.
@@ -124,16 +124,7 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   {
     rv = GetGreDirectory(getter_AddRefs(localFile));
   }    
-  else if(strcmp(prop, NS_GRE_COMPONENT_DIR) == 0)
-  {
-    rv = GetGreDirectory(getter_AddRefs(localFile));
-    if(NS_SUCCEEDED(rv)) {
-      nsEmbedCString leaf;
-      leaf.Assign("components");
-      rv = localFile->AppendRelativeNativePath(leaf);
-    }
-  }    
-
+  
   if(!localFile || NS_FAILED(rv))
     return rv;
 

@@ -79,6 +79,7 @@ components\layout_base.xpt
 components\layout_xul.xpt
 components\layout_xul_tree.xpt               
 components\content_base.xpt
+res\dtd\xhtml11.dtd
 
 ; 
 ; Imaging:
@@ -146,6 +147,14 @@ components\shistory.xpt
 ; rdf
 components\rdf.dll
 components\rdf.xpt
+
+; required l10n resources
+res\language.properties
+res\langGroups.properties
+res\charsetData.properties
+res\charsetalias.properties
+res\wincharset.properties
+; res\strres.properties 
 
 ; required i18n libraries
 components\i18n.dll
@@ -234,10 +243,57 @@ nssckbi.dll
 components\xmlextras.dll
 components\xmlextras.xpt
 
+; 
+; res:
+; 
+res\html.css   
+res\quirk.css
+res\viewsource.css
+res\ua.css
+res\forms.css
+res\platform-forms.css
+res\arrow.gif
+res\arrowd.gif
+res\loading-image.gif
+res\broken-image.gif
+res\builtin\htmlBindings.xml
+res\builtin\platformHTMLBindings.xml
+res\entityTables\html40Special.properties
+res\entityTables\htmlEntityVersions.properties
+res\entityTables\html40Latin1.properties
+res\entityTables\html40Symbols.properties
+res\entityTables\transliterate.properties
+res\fonts\fontEncoding.properties
+
+; needed for ftp:// dir listings etc
+res\html\gopher-audio.gif
+res\html\gopher-binary.gif
+res\html\gopher-find.gif
+res\html\gopher-image.gif
+res\html\gopher-menu.gif
+res\html\gopher-movie.gif
+res\html\gopher-sound.gif
+res\html\gopher-telnet.gif
+res\html\gopher-text.gif
+res\html\gopher-unknown.gif
+
 ;
 ; MathML, optional for MathML charset conversion
 ;
 ; components\ucvmath.dll
+; res\mathml.css
+; res\dtd\mathml.dtd
+; res\entityTables\mathml20.properties
+; res\fonts\mathfont.properties
+; res\fonts\mathfontCMEX10.properties
+; res\fonts\mathfontCMSY10.properties
+; res\fonts\mathfontMath1.properties
+; res\fonts\mathfontMath2.properties
+; res\fonts\mathfontMath4.properties
+; res\fonts\mathfontMTExtra.properties
+; res\fonts\mathfontPUA.properties
+; res\fonts\mathfontSymbol.properties
+
 
 ; p3p
 components\p3p.dll

@@ -1614,7 +1614,7 @@ NS_IMETHODIMP
 MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
                                               nsIContent** aResult)
 {
-  static const char kMathMLStyleSheetURI[] = "resource:///res/mathml.css";
+  static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
 
   // this bit of code is to load mathml.css on demand
   nsIDocument* doc = aNodeInfo->GetDocument();

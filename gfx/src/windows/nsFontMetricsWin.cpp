@@ -1276,7 +1276,7 @@ GetEncoding(const char* aFontName, nsCString& aValue)
   // if we have not init the property yet, init it right now.
   if (!gFontEncodingProperties)
     NS_LoadPersistentPropertiesFromURISpec(&gFontEncodingProperties,
-      NS_LITERAL_CSTRING("resource:/res/fonts/fontEncoding.properties"));
+      NS_LITERAL_CSTRING("resource://gre/res/fonts/fontEncoding.properties"));
 
   if (gFontEncodingProperties) {
     nsAutoString prop;

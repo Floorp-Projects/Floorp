@@ -380,7 +380,7 @@ StyleSetImpl::StyleSetImpl()
 {
   if (gInstances++ == 0)
   {
-    static const char kQuirk_href[] = "resource:/res/quirk.css";
+    static const char kQuirk_href[] = "resource://gre/res/quirk.css";
     NS_NewURI (&gQuirkURI, NS_LITERAL_CSTRING(kQuirk_href));
     NS_ASSERTION (gQuirkURI != 0, "Cannot allocate nsStyleSetImpl::gQuirkURI");
   }

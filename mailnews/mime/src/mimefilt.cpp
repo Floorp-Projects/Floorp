@@ -129,17 +129,17 @@ static char *
 test_type_icon(const char *type, void *stream_closure)
 {
   if (!nsCRT::strncasecmp(type, "text/", 5))
-	return nsCRT::strdup("resource:/res/html/gopher-text.gif");
-  else if (!nsCRT::strncasecmp(type, "image/", 6))
-	return nsCRT::strdup("resource:/res/html/gopher-image.gif");
-  else if (!nsCRT::strncasecmp(type, "audio/", 6))
-	return nsCRT::strdup("resource:/res/html/gopher-sound.gif");
-  else if (!nsCRT::strncasecmp(type, "video/", 6))
-	return nsCRT::strdup("resource:/res/html/gopher-movie.gif");
-  else if (!nsCRT::strncasecmp(type, "application/", 12))
-	return nsCRT::strdup("resource:/res/html/gopher-binary.gif");
-  else
-	return nsCRT::strdup("resource:/res/html/gopher-unknown.gif");
+	return nsCRT::strdup("resource://gre/res/html/gopher-text.gif");
+  if (!nsCRT::strncasecmp(type, "image/", 6))
+	return nsCRT::strdup("resource://gre/res/html/gopher-image.gif");
+  if (!nsCRT::strncasecmp(type, "audio/", 6))
+	return nsCRT::strdup("resource://gre/res/html/gopher-sound.gif");
+  if (!nsCRT::strncasecmp(type, "video/", 6))
+	return nsCRT::strdup("resource://gre/res/html/gopher-movie.gif");
+  if (!nsCRT::strncasecmp(type, "application/", 12))
+	return nsCRT::strdup("resource://gre/res/html/gopher-binary.gif");
+
+  return nsCRT::strdup("resource://gre/res/html/gopher-unknown.gif");
 }
 
 static int

@@ -89,7 +89,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 
   nsCOMPtr<nsIStringBundle> bundle;
 #if 1
-  res = sBundleService->CreateBundle("resource:/res/language.properties",
+  res = sBundleService->CreateBundle("resource://gre/res/language.properties",
                                      getter_AddRefs(bundle));
 #else
   res = sBundleService->CreateBundle("chrome://global/locale/languageNames.properties",

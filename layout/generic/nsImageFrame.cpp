@@ -1931,8 +1931,8 @@ nsImageFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGro
 
 nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
 {
-  NS_NAMED_LITERAL_STRING(loadingSrc,"resource:/res/loading-image.gif"); 
-  NS_NAMED_LITERAL_STRING(brokenSrc,"resource:/res/broken-image.gif");
+  NS_NAMED_LITERAL_STRING(loadingSrc,"resource://gre/res/loading-image.gif"); 
+  NS_NAMED_LITERAL_STRING(brokenSrc,"resource://gre/res/broken-image.gif");
 
   PRBool doLoad = PR_FALSE;  // only load icons once...
 
