@@ -61,6 +61,8 @@
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyInfo.h"
 #include "nsEventQueueUtils.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
@@ -111,6 +113,10 @@ nsresult nsMsgProtocol::InitFromURI(nsIURI *aUrl)
 nsMsgProtocol::~nsMsgProtocol()
 {}
 
+
+static PRBool gGotTimeoutPref;
+static PRInt32 gSocketTimeout = 60;
+
 nsresult
 nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
                                          PRInt32 aGetPort,
@@ -144,6 +150,20 @@ nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
 
   m_socketIsOpen = PR_FALSE;
   m_transport = strans;
+
+  if (!gGotTimeoutPref)
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (prefBranch)
+    {
+      prefBranch->GetIntPref("mailnews.tcptimeout", &gSocketTimeout);
+      gGotTimeoutPref = PR_TRUE;
+    }
+  }
+  strans->SetTimeout(nsISocketTransport::TIMEOUT_CONNECT, gSocketTimeout + 60);  
+  strans->SetTimeout(nsISocketTransport::TIMEOUT_READ_WRITE, gSocketTimeout);  
+
+
   return SetupTransportState();
 }
 
@@ -263,7 +283,6 @@ nsresult nsMsgProtocol::SetupTransportState()
     // open buffered, blocking output stream
     rv = m_transport->OpenOutputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(m_outputStream));
     if (NS_FAILED(rv)) return rv;
-    
     // we want to open the stream 
   } // if m_transport
   
