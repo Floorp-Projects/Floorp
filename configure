@@ -14185,6 +14185,8 @@ if test "$MOZ_LDAP_XPCOM"; then
         else
             LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/nsldappr32v50.${LIB_SUFFIX}'
         fi
+    elif test "$VACPP"; then
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/ldappr50.${LIB_SUFFIX}'
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap50 -llber50 -lprldap50'
     fi
@@ -14202,14 +14204,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 14206 "configure"
+#line 14208 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:14213: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:14215: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
