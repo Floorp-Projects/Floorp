@@ -43,7 +43,6 @@
 main()
 {
     nsresult rv;
-    char buf[80];
 
     nsCOMPtr<nsIServiceManager> servMan;
     NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
