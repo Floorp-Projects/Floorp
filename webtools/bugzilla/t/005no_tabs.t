@@ -32,7 +32,6 @@ BEGIN { use Test::More tests => $tests; }
 use strict;
 
 my @testitems = @Support::Files::testitems;
-my $verbose = $::ENV{TEST_VERBOSE};
 
 foreach my $file (@testitems) {
     open (FILE, "$file");

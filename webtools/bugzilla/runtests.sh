@@ -1,11 +1,11 @@
 #!/bin/sh
 
-export TEST_VERBOSE=0
+TEST_VERBOSE=0
 PART1='use Test::Harness qw(&runtests $verbose); $verbose='
 PART2='; runtests @ARGV;'
 for f in $*; do
   if [ $f == "--verbose" ] ; then
-    export TEST_VERBOSE=1
+    TEST_VERBOSE=1
   fi
 done
 

@@ -44,7 +44,6 @@ BEGIN { use Test::More tests => $tests; }
 use strict;
 
 my @testitems = @Support::Files::testitems; # get the files to test.
-my $verbose = $::ENV{TEST_VERBOSE};
 
 foreach my $file (@testitems) {
         $file =~ s/\s.*$//; # nuke everything after the first space (#comment)

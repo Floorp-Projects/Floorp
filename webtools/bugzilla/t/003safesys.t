@@ -44,7 +44,9 @@ BEGIN { use Test::More tests => $tests; }
 use strict;
 
 my @testitems = @Support::Files::testitems; 
-my $verbose = $::ENV{TEST_VERBOSE};
+# Capture the TESTERR from Test::More for printing errors.
+# This will handle verbosity for us automatically
+*TESTOUT = \*Test::More::TESTOUT;
 my $perlapp = $^X;
 
 foreach my $file (@testitems) {
@@ -54,7 +56,7 @@ foreach my $file (@testitems) {
         my $loginfo=`$command`;
         if ($loginfo =~ /arguments for Support::Systemexec::(system|exec)/im) {
                 ok(0,"$file DOES NOT use proper system or exec calls");
-                if ($verbose) { print STDERR $loginfo; }
+                print TESTOUT $loginfo;
         } else {
                 ok(1,"$file uses proper system and exec calls");
         }

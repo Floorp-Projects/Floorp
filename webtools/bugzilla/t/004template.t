@@ -34,7 +34,6 @@ use Template;
 
 my @testitems = @Support::Templates::testitems;
 my $include_path = $Support::Templates::include_path;
-my $verbose = $::ENV{TEST_VERBOSE};
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.

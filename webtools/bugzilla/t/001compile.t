@@ -45,8 +45,9 @@ use strict;
 
 # First now we test the scripts                                                   
 my @testitems = @Support::Files::testitems; 
-#my %warnings;
-my $verbose = $::ENV{TEST_VERBOSE};
+# Capture the TESTERR from Test::More for printing errors.
+# This will handle verbosity for us automatically
+*TESTOUT = \*Test::More::TESTOUT;
 my $perlapp = $^X;
 
 foreach my $file (@testitems) {
@@ -63,15 +64,14 @@ foreach my $file (@testitems) {
         my $loginfo=`$command`;
         #print '@@'.$loginfo.'##';
         if ($loginfo =~ /syntax ok$/im) {
-#                $warnings{$_} = 1 foreach ($loginfo =~ /\((W.*?)\)/mg);
                 if ($loginfo ne "$file syntax OK\n") {
-                        if ($verbose) { print STDERR $loginfo; }
+                        print TESTOUT $loginfo;
                         ok(0,$file."--WARNING");
                 } else {
                         ok(1,$file);
                 }
         } else {
-                if ($verbose) { print STDERR $loginfo; }
+                print TESTOUT $loginfo;
                 ok(0,$file."--ERROR");
         }
 }      
