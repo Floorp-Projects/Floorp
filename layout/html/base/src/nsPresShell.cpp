@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */ 
-
+ 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
 #include "nsISpaceManager.h"
@@ -2772,8 +2772,11 @@ GetFirstChildFrame(nsIPresContext* aPresContext,
   // Get the first child frame
   aFrame->FirstChild(aPresContext, nsnull, &childFrame);
 
-  // If the child frame is a pseudo-frame, then return its first child
-  if (childFrame && IsPseudoFrame(childFrame, aContent)) {
+  // If the child frame is a pseudo-frame, then return its first child.
+  // Note that the frame we create for the generated content is also a
+  // pseudo-frame and so don't drill down in that case
+  if (childFrame && IsPseudoFrame(childFrame, aContent) &&
+      !IsGeneratedContentFrame(childFrame)) {
     return GetFirstChildFrame(aPresContext, childFrame, aContent);
   }
 
@@ -2794,7 +2797,7 @@ GetLastChildFrame(nsIPresContext* aPresContext,
     lastInFlow->GetNextInFlow(&aFrame);
   }
 
-  // Get the first child frame
+  // Get the last child frame
   nsIFrame* firstChildFrame;
   lastInFlow->FirstChild(aPresContext, nsnull, &firstChildFrame);
   if (firstChildFrame) {
@@ -2803,8 +2806,23 @@ GetLastChildFrame(nsIPresContext* aPresContext,
 
     NS_ASSERTION(lastChildFrame, "unexpected error");
 
-    // If the last child frame is a pseudo-frame, then return its last child
-    if (lastChildFrame && IsPseudoFrame(lastChildFrame, aContent)) {
+    // Get the frame's first-in-flow. This matters in case the frame has
+    // been continuted across multiple lines
+    while (PR_TRUE) {
+      nsIFrame* prevInFlow;
+      lastChildFrame->GetPrevInFlow(&prevInFlow);
+      if (prevInFlow) {
+        lastChildFrame = prevInFlow;
+      } else {
+        break;
+      }
+    }
+
+    // If the last child frame is a pseudo-frame, then return its last child.
+    // Note that the frame we create for the generated content is also a
+    // pseudo-frame and so don't drill down in that case
+    if (lastChildFrame && IsPseudoFrame(lastChildFrame, aContent) &&
+        !IsGeneratedContentFrame(lastChildFrame)) {
       return GetLastChildFrame(aPresContext, lastChildFrame, aContent);
     }
 
