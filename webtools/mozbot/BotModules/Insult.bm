@@ -64,9 +64,12 @@ sub RegisterConfig {
     $self->registerVariables(
       # [ name, save?, settable? ]
       ['insultOverrides', 1, 1, { # overrides for the insults (keys must be lowercase)
-           'mozilla' => 'You are nothing but the best browser on the planet.',
-           'mozilla.org' => 'You are nothing but the best caretaker Mozilla ever had.',
-           'c++' => 'you are evil',
+           '' => '%source: exactly how stupid do you think i am?',
+           'yourself' => '%source: nice try, fool',
+           'urself' => '%source: at least learn to spell, you moronic noodle',
+           'mozilla' => '%target: You are nothing but the best browser on the planet.',
+           'mozilla.org' => '%target: You are nothing but the best caretaker Mozilla ever had.',
+           'c++' => '%target: you are evil',
        }],
     );
 }
@@ -77,15 +80,23 @@ sub Told {
     if ($message =~ /^\s*(?:will\s+you\s+)?(?:insult|harass)\s+(\S+?)(?:[\s,.]+please)?[\s.?!]*$/osi) {
         my $who = $1;
         my $line;
-        if (defined($self->{'insultOverrides'}->{lc $who})) {
+
+        if (lc $who eq 'me') {
+          $who = $event->{'from'};
+        }
+
+        my $me = quotemeta($event->{'nick'});
+        if ($who =~ m/^$me$/si and
+            defined $self->{'insultOverrides'}->{''}) {
+            $line = $self->{'insultOverrides'}->{''};
+        } elsif (defined $self->{'insultOverrides'}->{lc $who}) {
             $line = $self->{'insultOverrides'}->{lc $who};
         } else {
-            if (lc $who eq 'me') {
-                $who = $event->{'from'};
-            }
-            $line = $self->generateInsult();
+            $line = $who . ': ' . $self->generateInsult();
         }
-        $self->say($event, "$who: $line");
+        $line =~ s/%source/$event->{'from'}/gos;
+        $line =~ s/%target/$who/gos;
+        $self->sayOrEmote($event, $line); 
     } else {
         return $self->SUPER::Told(@_);
     }
