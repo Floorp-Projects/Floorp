@@ -346,7 +346,6 @@ nsImapProtocol::GetImapHostName()
 const char*
 nsImapProtocol::GetImapUserName()
 {
-    char* userName = nsnull;
 	nsIMsgIncomingServer * server = m_server;
 	if (!m_userName && server)
 		server->GetUserName(&m_userName);
@@ -444,7 +443,6 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 		if (NS_SUCCEEDED(rv) && m_runningUrl && !m_transport /* and we don't have a transport yet */)
 		{
 			// extract the file name and create a file transport...
-			const char * hostName = nsnull;
 			PRUint32 port = IMAP_PORT;
 
 			m_runningUrl->GetHostPort(&port);
@@ -453,7 +451,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			if (NS_SUCCEEDED(rv) && pNetService)
  				rv = pNetService->CreateSocketTransport(getter_AddRefs(m_transport), port, GetImapHostName());
 
-			nsresult rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
+			rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
 			rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
@@ -496,7 +494,9 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
 	if (NS_FAILED(result))
 		return;
 		
-	PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread", PR_GetCurrentThread());
+		PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread",
+                                       PR_GetCurrentThread());
+
 
 	if (NS_FAILED(result = pEventQService->CreateFromPLEventQueue(aPLQueue, getter_AddRefs(me->m_eventQueue))))
 		return;
@@ -817,8 +817,6 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 		if (m_inputStream == nsnull)
 			m_inputStream = dont_QueryInterface(aIStream);
 
-		NS_ASSERTION(m_inputStream == aIStream, "hmm somehow we got a different stream than we were expecting");
-
         // if we received data, we need to signal the data available monitor...
 		// Read next line from input will actually read the data out of the stream
 		PR_EnterMonitor(m_dataAvailableMonitor);
@@ -905,7 +903,6 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
-	nsIImapUrl * imapUrl = nsnull;
 	if (aURL)
 	{
 		if (aConsumer)
@@ -2164,7 +2161,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 	    IncrementCommandTagNumber();
 
 		char *commandString = PR_smprintf("%s UID fetch %s (%s)%s",
-                                          GetServerCommandTag(), uid,
+                                          GetServerCommandTag(), uid.GetBuffer(),
                                           stringToFetch.GetBuffer(), CRLF);
 
 		if (commandString)
@@ -2401,7 +2398,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 		nsString2 fetchStr;
 		PRInt32 added = 0, deleted = 0;
 
-		nsresult res = m_flagState.GetNumberOfMessages(&added);
+		m_flagState.GetNumberOfMessages(&added);
 		deleted = m_flagState.GetNumberOfDeletedMessages();
 
 		if (!added || (added == deleted))
@@ -2582,8 +2579,7 @@ NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imap
 {
 	PRInt32 index;
 
-	imapMessageFlagsType flags = -1;
-	flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &index);
+	imapMessageFlagsType flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &index);
 	if (*foundIt)
 		*resultFlags = flags;
 	return NS_OK;
@@ -2703,8 +2699,6 @@ PRBool nsImapProtocol::CheckNewMail()
 
 void nsImapProtocol::AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString)
 {
-	int blocksAllocated = 1;
-	
 	PRInt32 startSequence = (msgCount > 0) ? msgUids[0] : -1;
 	PRInt32 curSequenceEnd = startSequence;
 	PRUint32 total = msgCount;
@@ -2751,7 +2745,7 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 	static char *nonAuthStateName = "NA";
 	static char *authStateName = "A";
 	static char *selectedStateName = "S";
-	static char *waitingStateName = "W";
+    //	static char *waitingStateName = "W";
 	char *stateName = NULL;
     const char *hostName = "";  // initilize to empty string
     if (m_runningUrl)
@@ -3502,7 +3496,7 @@ nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
 	            protocolStringSize,                              // max size
 	            formatString,                                   // format string
 	            commandTag,                  					// command tag
-	            messageList,
+	            messageList.GetBuffer(),
 	            messageData);
 	            
 	    SendData(protocolString);
@@ -3607,7 +3601,6 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
 #endif
     IncrementCommandTagNumber();
 
-	const char *currentTagToken = GetServerCommandTag();
 	char * currentCommand;
     
 	if (flag & kHasAuthPlainCapability)
@@ -4250,7 +4243,7 @@ void nsImapProtocol::DiscoverMailboxList()
 	// Get the ACLs for newly discovered folders
 	if (GetServerStateParser().ServerHasACLCapability())
 	{
-		PRInt32 total = m_listedMailboxList.Count(), count = 0;
+		PRInt32 total = m_listedMailboxList.Count(), cnt = 0;
 		GetServerStateParser().SetReportingErrors(FALSE);
 		if (total)
 		{
@@ -4275,10 +4268,10 @@ void nsImapProtocol::DiscoverMailboxList()
 						}
 					}
 #ifdef UNREADY_CODE
-					PercentProgressUpdateEvent(NULL, (count*100)/total);
+					PercentProgressUpdateEvent(NULL, (cnt*100)/total);
 #endif
 					delete mb;	// this is the last time we're using the list, so delete the entries here
-					count++;
+					cnt++;
 				}
 			} while (mb && !DeathSignalReceived());
 		}
@@ -4885,7 +4878,6 @@ PRBool nsImapProtocol::TryToLogon()
 	do
 	{
 	    PRBool imapPasswordIsNew = PR_FALSE;
-	    PRBool setUserAuthenticatedIsSafe = PR_FALSE;
 
 	    if (userName && password)
 	    {
