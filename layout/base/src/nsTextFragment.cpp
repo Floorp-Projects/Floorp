@@ -206,7 +206,7 @@ nsTextFragment::CopyTo(PRUnichar* aDest, PRInt32 aOffset, PRInt32 aCount)
       unsigned char* cp = m1b + aOffset;
       unsigned char* end = cp + aCount;
       while (cp < end) {
-        *aDest = PRUnichar(*cp++);
+        *aDest++ = PRUnichar(*cp++);
       }
     }
   }
@@ -224,7 +224,7 @@ nsTextFragment::CopyTo(char* aDest, PRInt32 aOffset, PRInt32 aCount)
       PRUnichar* cp = m2b + aOffset;
       PRUnichar* end = cp + aCount;
       while (cp < end) {
-        *aDest = (unsigned char) (*cp++);
+        *aDest++ = (unsigned char) (*cp++);
       }
     }
     else {
