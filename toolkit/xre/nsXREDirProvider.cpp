@@ -44,12 +44,25 @@
 #include "prenv.h"
 #endif
 
+// WARNING: These hard coded names need to go away. They need to
+// come from localizable resources
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#define APP_REGISTRY_NAME NS_LITERAL_CSTRING("Application Registry")
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define APP_REGISTRY_NAME NS_LITERAL_CSTRING("registry.dat")
+#else
+#define APP_REGISTRY_NAME NS_LITERAL_CSTRING("appreg")
+#endif
+
 nsXREDirProvider::nsXREDirProvider(const nsACString& aProductName)
 {
   NS_INIT_ISUPPORTS();
-  mProductName.Assign(aProductName);
 #ifdef XP_UNIX
-  ToLowerCase(mProductName);
+  mProductDir.Assign(NS_LITERAL_CSTRING(".") + aProductName);
+  ToLowerCase(mProductDir);
+#else
+  mProductDir.Assign(aProductName);
 #endif
 }
 
@@ -70,6 +83,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 
   if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_DIR))
     rv = GetProductDirectory(getter_AddRefs(localFile));
+  else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
+    rv = GetProductDirectory(getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+      rv = localFile->AppendNative(APP_REGISTRY_NAME);
+  }
   else if (!strcmp(aProperty, NS_APP_USER_PROFILES_ROOT_DIR)) {
     rv = GetProductDirectory(getter_AddRefs(localFile));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -80,13 +98,8 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 #endif
 
     // We must create the profile directory here if it does not exist.
-    PRBool exists;
-    rv = localFile->Exists(&exists);
+    rv = EnsureDirectoryExists(localFile);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   if (localFile)
@@ -140,5 +153,24 @@ nsXREDirProvider::GetProductDirectory(nsILocalFile** aFile)
 #endif
 
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = localDir->AppendRelativeNativePath(mProductDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = EnsureDirectoryExists(localDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aFile = localDir;
+  NS_ADDREF(*aFile);
   return NS_OK;
+}
+
+nsresult
+nsXREDirProvider::EnsureDirectoryExists(nsILocalFile* aDirectory)
+{
+  PRBool exists;
+  nsresult rv = aDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists)
+    rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0775);
+
+  return rv;
 }

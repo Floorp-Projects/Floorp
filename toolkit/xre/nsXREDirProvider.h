@@ -55,8 +55,9 @@ public:
 
 private:
   nsresult GetProductDirectory(nsILocalFile** aFile);
+  nsresult EnsureDirectoryExists(nsILocalFile* aDirectory);
 
-  nsCString mProductName;
+  nsCString mProductDir;
 };
 
 #endif
