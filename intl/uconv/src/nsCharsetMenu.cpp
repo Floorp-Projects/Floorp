@@ -302,7 +302,7 @@ void nsCharsetMenu::CreateDefaultCharsetList(CharsetInfo *** aArray,
   res = components->First();
   if (NS_FAILED(res)) goto done;
 
-  while (!components -> IsDone()) {
+  while (NS_OK != components->IsDone()) {
     nsISupports * base = NULL;
     nsIRegistryNode * node = NULL;
     char * name = NULL;
