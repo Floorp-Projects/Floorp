@@ -57,9 +57,6 @@ class nsIAtom;
   IBOutlet id mOutlineView;	
   IBOutlet id mBrowserWindowController;
   
-  IBOutlet id mRenameSheet;
-  IBOutlet NSTextField* mRenameTextField;
-  
   NSString* mCachedHref;
   
   BookmarkInfoController* mBookmarkInfoController;
@@ -82,10 +79,6 @@ class nsIAtom;
 -(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder;
 
 -(NSString*)resolveKeyword:(NSString*)aKeyword;
-
--(IBAction)beginRenameBookmark:(id)sender;
--(IBAction)cancelRenameBookmarkSheet:(id)sender;
--(IBAction)doRenameBookmarkSheet:(id)sender;
 
 -(IBAction)openBookmarkInNewTab:(id)aSender;
 -(IBAction)openBookmarkInNewWindow:(id)aSender;
