@@ -125,7 +125,7 @@ public:
   NS_IMETHOD GetBaseTag(nsIAtom** aResult);
 
 protected:
-  nsGenericHTMLContainerElement mInner;
+  nsGenericHTMLContainerFormElement mInner;
   nsIForm*   mForm;
   nsCOMPtr<nsIControllers> mControllers;
   nsCOMPtr<nsIXBLBinding> mBinding;
@@ -564,6 +564,9 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   NS_IF_RELEASE(formControl);
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

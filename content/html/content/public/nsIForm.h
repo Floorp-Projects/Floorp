@@ -23,6 +23,7 @@
 #define nsIForm_h___
 
 #include "nsISupports.h"
+#include "nsString.h"
 class nsIFormControl;
 class nsISizeOfHandler;
 
@@ -50,6 +51,15 @@ public:
     * @return NS_OK if the element was successfully added 
     */
   NS_IMETHOD AddElement(nsIFormControl* aElement) = 0;
+
+  /**    
+    * Add an element to the lookup table mainted by the form.
+    * We can't fold this method into AddElement() because when
+    * AddElement() is called, the form control has no
+    * attributes.  The name or id attributes of the form control
+    * are used as a key into the table.
+    */
+  NS_IMETHOD AddElementToTable(nsIFormControl* aElement, const nsString& aName) = 0;
 
   /**
     * Get the element at a specified index position

@@ -209,7 +209,7 @@ public:
 protected:
   NS_IMETHOD GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray);
 
-  nsGenericHTMLContainerElement mInner;
+  nsGenericHTMLContainerFormElement mInner;
   nsIForm*      mForm;
   nsHTMLOptionCollection* mOptions;
   PRBool        mIsDoneAddingContent;
@@ -1128,6 +1128,9 @@ nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   NS_IF_RELEASE(formControl);
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

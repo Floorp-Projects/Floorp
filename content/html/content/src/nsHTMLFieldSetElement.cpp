@@ -79,8 +79,8 @@ public:
   NS_IMETHOD Init() { return NS_OK; }
 
 protected:
-  nsGenericHTMLContainerElement mInner;
-  nsIForm*                      mForm;
+  nsGenericHTMLContainerFormElement mInner;
+  nsIForm*                          mForm;
 };
 
 // construction, destruction
@@ -224,6 +224,9 @@ nsHTMLFieldSetElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   NS_IF_RELEASE(formControl);
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

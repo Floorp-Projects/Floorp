@@ -159,13 +159,14 @@ protected:
   nsresult   GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
 protected:
-  nsGenericHTMLLeafElement mInner;
+  nsGenericHTMLLeafFormElement mInner;
   nsIForm*                 mForm;
   PRInt32                  mType;
   PRBool                   mSkipFocusEvent;
   nsCOMPtr<nsIControllers> mControllers;
   nsCOMPtr<nsIXBLBinding>  mBinding;
   PRBool                   mDidMouseDown;
+
 
   PRBool IsImage() const {
     nsAutoString tmp;
@@ -1072,6 +1073,9 @@ nsHTMLInputElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   NS_IF_RELEASE(formControl);
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

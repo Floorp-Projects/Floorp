@@ -97,9 +97,9 @@ public:
   NS_IMETHOD Init() { return NS_OK; }
 
 protected:
-  nsGenericHTMLContainerElement mInner;
-  nsIForm*                      mForm;
-  PRInt32                       mType;
+  nsGenericHTMLContainerFormElement mInner;
+  nsIForm*                          mForm;
+  PRInt32                           mType;
 };
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -528,6 +528,9 @@ nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   NS_IF_RELEASE(formControl);
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

@@ -83,8 +83,8 @@ public:
 
 
 protected:
-  nsGenericHTMLContainerElement mInner;
-  nsIForm*                      mForm;
+  nsGenericHTMLContainerFormElement mInner;
+  nsIForm*                          mForm;
 };
 
 nsresult
@@ -199,6 +199,9 @@ nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
       NS_RELEASE(formControl);
     }
   }
+
+  mInner.SetForm(mForm);
+
   return result;
 }
 

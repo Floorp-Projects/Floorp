@@ -454,6 +454,42 @@ public:
 
 //----------------------------------------------------------------------
 
+class nsGenericHTMLContainerFormElement : public nsGenericHTMLContainerElement {
+public:
+  nsGenericHTMLContainerFormElement();
+  ~nsGenericHTMLContainerFormElement();
+
+  nsresult SetForm(nsIForm* aForm);
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                          PRBool aNotify);
+  nsresult SetAttribute(const nsString& aName, const nsString& aValue)
+  {
+    return nsGenericHTMLElement::SetAttribute(aName, aValue);
+  }
+
+  nsIForm* mForm;
+};
+
+//----------------------------------------------------------------------
+
+class nsGenericHTMLLeafFormElement : public nsGenericHTMLLeafElement {
+public:
+  nsGenericHTMLLeafFormElement();
+  ~nsGenericHTMLLeafFormElement();
+
+  nsresult SetForm(nsIForm* aForm);
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+                          PRBool aNotify);
+  nsresult SetAttribute(const nsString& aName, const nsString& aValue)
+  {
+    return nsGenericHTMLElement::SetAttribute(aName, aValue);
+  }
+
+  nsIForm* mForm;
+};
+
+
+//----------------------------------------------------------------------
 /**
  * Implement the nsIDOMHTMLElement API by forwarding the methods to a
  * generic content object (either nsGenericHTMLLeafElement or
