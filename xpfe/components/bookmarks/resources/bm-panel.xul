@@ -61,7 +61,7 @@
   <popupset id="popupset"/>
   
   <!-- bookmarks string bundle -->
-  <stringbundleset id="bookmarksStringBundles"/>
+  <stringbundleset id="stringbundleset"/>
   
   <!-- bookmarks & edit commands -->
   <commands id="commands">
@@ -106,14 +106,14 @@
         <treechildren>
           <treeitem uri="rdf:*" persist="open" class="bookmark-item"
                     web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
               <treecell class="treecell-indent treecell-editable"
                         editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
             </treerow>
           </treeitem>

@@ -70,7 +70,7 @@ BookmarksPanelTree.prototype = {
     // eventually we can bookmark mail messages and editor documents.
     var contentArea = top.document.getElementById('content');
     if (contentArea)
-      BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation);
+      BookmarksUtils.addBookmarkForBrowser(contentArea.webNavigation, true);
   },
   
   manageBookmarks: function ()

@@ -81,11 +81,6 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-history.xul" label="&history.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem id="bookmarks">
-          <treerow>
-            <treecell class="treecell-indent" url="chrome://communicator/content/bookmarks/pref-bookmarks.xul" label="&bookmarks.label;"/> 
-          </treerow>
-        </treeitem>
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages.xul" label="&languages.label;"/> 

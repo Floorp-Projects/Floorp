@@ -29,7 +29,7 @@
 <overlay id="bookmarksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <stringbundleset id="bookmarksStringBundles">
+  <stringbundleset id="stringbundleset">
     <stringbundle id="bookmarksbundle"
                   src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   </stringbundleset>
@@ -39,33 +39,33 @@
            oncreate="gBookmarksShell.createContextMenu(event);"/>
   </popupset>
 
-  <commandset id="bookmarksItems">
-    <command id="cmd_open" oncommand="goDoCommand('cmd_open');"/>
-    <command id="cmd_openfolder" oncommand="goDoCommand('cmd_openfolder');"/>
-    <command id="cmd_newfolder" oncommand="goDoCommand('cmd_newfolder');"/>
-    <command id="cmd_newbookmark" oncommand="goDoCommand('cmd_newbookmark');"/>
-    <command id="cmd_newseparator" oncommand="goDoCommand('cmd_newseparator');"/>
-    <command id="cmd_find" oncommand="goDoCommand('cmd_find');"/>
-    <command id="cmd_setnewbookmarkfolder" oncommand="goDoCommand('cmd_setnewbookmarkfolder');"/>
-    <command id="cmd_setpersonaltoolbarfolder" oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
-    <command id="cmd_setnewsearchfolder" oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
-    <command id="cmd_properties" oncommand="goDoCommand('cmd_properties');"/>
-    <command id="cmd_rename" oncommand="goDoCommand('cmd_rename');"/>
-    <command id="cmd_openfolderinnewwindow" oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
-    <command id="cmd_import" oncommand="goDoCommand('cmd_import');"/>
-    <command id="cmd_export" oncommand="goDoCommand('cmd_export');"/>  
-    <commandset id="CommandUpdate_Bookmarks"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()"/>             
+  <commands id="commands">
+    <commandset id="bookmarksItems">
+      <command id="cmd_open"                      oncommand="goDoCommand('cmd_open');"/>
+      <command id="cmd_openfolder"                oncommand="goDoCommand('cmd_openfolder');"/>
+      <command id="cmd_newfolder"                 oncommand="goDoCommand('cmd_newfolder');"/>
+      <command id="cmd_newbookmark"               oncommand="goDoCommand('cmd_newbookmark');"/>
+      <command id="cmd_newseparator"              oncommand="goDoCommand('cmd_newseparator');"/>
+      <command id="cmd_find"                      oncommand="goDoCommand('cmd_find');"/>
+      <command id="cmd_setnewbookmarkfolder"      oncommand="goDoCommand('cmd_setnewbookmarkfolder');"/>
+      <command id="cmd_setpersonaltoolbarfolder"  oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
+      <command id="cmd_setnewsearchfolder"        oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
+      <command id="cmd_properties"                oncommand="goDoCommand('cmd_properties');"/>
+      <command id="cmd_rename"                    oncommand="goDoCommand('cmd_rename');"/>
+      <command id="cmd_openfolderinnewwindow"     oncommand="goDoCommand('cmd_openfolderinnewwindow');"/>
+      <command id="cmd_import"                    oncommand="goDoCommand('cmd_import');"/>
+      <command id="cmd_export"                    oncommand="goDoCommand('cmd_export');"/>
+
+      <command id="cmd_bm_cut"                    oncommand="goDoCommand('cmd_bm_cut');"/>
+      <command id="cmd_bm_copy"                   oncommand="goDoCommand('cmd_bm_copy');"/>
+      <command id="cmd_bm_paste"                  oncommand="goDoCommand('cmd_bm_paste');"/>
+      <command id="cmd_bm_delete"                 oncommand="goDoCommand('cmd_bm_delete');"/>
+      <command id="cmd_bm_selectAll"              oncommand="goDoCommand('cmd_bm_selectAll');"/>
+    </commandset>
     <commandset id="selectEditMenuItems"/>
     <commandset id="globalEditMenuItems"/>
-    <command id="cmd_cut"/>
-    <command id="cmd_copy"/>
-    <command id="cmd_paste"/>
-    <command id="cmd_delete"/>
-    <command id="cmd_selectAll"/>
-  </commandset>
+  </commands>
+
 </overlay>
 
          

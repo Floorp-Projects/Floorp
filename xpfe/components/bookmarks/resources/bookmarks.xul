@@ -68,7 +68,14 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
-  <commandset id="tasksCommands">
+  <commands id="commands">
+    <commandset id="CommandUpdate_Bookmarks"
+                commandupdater="true"
+                events="focus,tree-select"
+                oncommandupdate="BookmarksTree.prototype.controller.onCommandUpdate()">
+    </commandset>                
+
+    <commandset id="tasksCommands"/>
     <commandset id="bookmarksItems"/>
   
      <!-- File Menu -->
@@ -78,11 +85,11 @@
     <command id="cmd_quit"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
-  </commandset>
+  </commands>
 
   <popupset id="popupset"/>
 
-  <stringbundleset id="bookmarksStringBundles"/>
+  <stringbundleset id="stringbundleset"/>
   
   <keyset id="tasksKeys">
     <!-- File Menu -->
@@ -232,8 +239,8 @@
     </toolbar>
   </toolbox>
   
-  <tree id="bookmarksTree" class="bookmarks-window-tree" context="bmContext" ref="NC:NavCenter"
-        datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
+  <tree id="bookmarksTree" class="bookmarks-window-tree" context="bmContext" ref="NC:BookmarksRoot"
+        datasources="rdf:bookmarks rdf:localsearch rdf:internetsearch"
         multiple="true" flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
         ondraggesture="nsDragAndDrop.startDrag(event, bookmarksDNDObserver);"
