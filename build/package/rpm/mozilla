@@ -114,4 +114,9 @@ MOZILLA_FIVE_HOME="/usr/lib/mozilla"
 
 export MOZILLA_FIVE_HOME
 
+##
+## Set LD_LIBRARY_PATH
+##
+LD_LIBRARY_PATH=/usr/lib/mozilla/lib:$LD_LIBRARY_PATH
+
 exec ./$MOZ_PROGRAM ${1+"$@"}
