@@ -1601,21 +1601,28 @@ CHyperTreeSelector :: CellIsSelected ( const STableCell &inCell ) const
 // Since HT is the one that retains the selection for the view, when a new view is
 // displayed, we will be out of sync. This methods gets us back in sync.
 //
+// This routine is called a lot (during refresh, when nodes are added, whenever js
+// affects the selection, etc) so we want it to be fast when the size of the list is
+// large. I had some cool ideas this morning in the shower, but when I came in to
+// implement them, I realized that all of them boiled down to having to iterate over
+// every element of the list because of the way LTableRowSelector finds which cells are
+// selected. Since that class probably won't be changing any time soon, just do the
+// stupid thing since it works out to the same in the end. (Note that HT_GetNthItem is O(1)).
+//
+// A valid wimpout? Doubtful, but at least you know what's going on here when we find
+// how slow it is ;)
+//
 void
 CHyperTreeSelector :: SyncSelectorWithHT ( )
 {
-	// unselect all cells in this selector so we start with a clean slate
-	mSelectedRowCount = 0;
 	const char notSelected = 0;
-	for ( int i = 1; i <= GetCount(); i++ )
-		AssignItemsAt ( 1, i, &notSelected );
-	
-	// walk through the HT selection and update our internal bookkeeping info
-	HT_Resource curr = HT_GetNextSelection(mTreeView, HT_TopNode(mTreeView));
-	while ( curr ) {
-		LTableRowSelector::DoSelect ( URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(mTreeView, curr)),
-										true, true, false );
-		curr = HT_GetNextSelection(mTreeView, curr);
+	for ( int PPRow = 1; PPRow <= GetCount(); PPRow++ ) {	
+		// get the corresponding row in HT. Set the value in the selector accordingly.
+		HT_Resource curr = HT_GetNthItem ( mTreeView, URDFUtilities::PPRowToHTRow(PPRow) );
+		if ( curr ) {
+			PRBool isSelected = HT_IsSelected ( curr );
+			LTableRowSelector::DoSelect ( PPRow, isSelected, true, false );
+		}
 	}
 	
 } // SyncSelectorWithHT
