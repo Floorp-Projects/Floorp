@@ -226,7 +226,7 @@ typedef struct REBackTrackData {
     const jschar *cp;               /* index in text of match at backtrack */
     uint16 parenIndex;              /* start index of saved paren contents */
     uint16 parenCount;              /* # of saved paren contents */
-    uint16 precedingStateTop;       /* number of parent states */
+    uint16 saveStateStackTop;       /* number of parent states */
     /* saved parent states follow */
     /* saved paren contents follow */
 } REBackTrackData;
@@ -244,11 +244,11 @@ typedef struct REGlobalData {
 
     REProgState *stateStack;        /* stack of state of current parents */
     uint16 stateStackTop;
-    uint16 maxStateStack;
+    uint16 stateStackLimit;
 
     REBackTrackData *backTrackStack;/* stack of matched-so-far positions */
     REBackTrackData *backTrackSP;
-    size_t maxBackTrack;
+    size_t backTrackStackSize;
     size_t cursz;                   /* size of current stack entry */
 
     JSArenaPool pool;               /* I don't understand but it's faster to
@@ -1742,22 +1742,23 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     REBackTrackData *result =
         (REBackTrackData *) ((char *)gData->backTrackSP + gData->cursz);
 
-    size_t sz = sizeof(REBackTrackData)
-                    + gData->stateStackTop * sizeof(REProgState)
-                    + parenCount * sizeof(RECapture);
+    size_t sz = sizeof(REBackTrackData) +
+                gData->stateStackTop * sizeof(REProgState) +
+                parenCount * sizeof(RECapture);
 
+    ptrdiff_t btsize = gData->backTrackStackSize;
+    ptrdiff_t btincr = ((char *)result + sz) -
+                       ((char *)gData->backTrackStack + btsize);
 
-    if ((char *)result + sz >
-        (char *)gData->backTrackStack + gData->maxBackTrack) {
+    if (btincr > 0) {
         ptrdiff_t offset = (char *)result - (char *)gData->backTrackStack;
-        gData->backTrackStack
-            = (REBackTrackData *)JS_ArenaGrow(&gData->pool,
-                                              gData->backTrackStack,
-                                              gData->maxBackTrack,
-                                              gData->maxBackTrack);
-        gData->maxBackTrack <<= 1;
+
+        btincr = JS_ROUNDUP(btincr, btsize);
+        JS_ARENA_GROW_CAST(gData->backTrackStack, REBackTrackData *,
+                           &gData->pool, btsize, btincr);
         if (!gData->backTrackStack)
             return NULL;
+        gData->backTrackStackSize = btsize + btincr;
         result = (REBackTrackData *) ((char *)gData->backTrackStack + offset);
     }
     gData->backTrackSP = result;
@@ -1769,15 +1770,17 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     result->cp = cp;
     result->parenCount = parenCount;
 
-    result->precedingStateTop = gData->stateStackTop;
+    result->saveStateStackTop = gData->stateStackTop;
     JS_ASSERT(gData->stateStackTop);
     memcpy(result + 1, gData->stateStack,
-           sizeof(REProgState) * result->precedingStateTop);
+           sizeof(REProgState) * result->saveStateStackTop);
 
-    if (parenCount != -1) {
+    /* FIXME: parenCount should be uintN */
+    JS_ASSERT(parenCount >= 0);
+    if (parenCount > 0) {
         result->parenIndex = parenIndex;
         memcpy((char *)(result + 1) +
-               sizeof(REProgState) * result->precedingStateTop,
+               sizeof(REProgState) * result->saveStateStackTop,
                &x->parens[parenIndex],
                sizeof(RECapture) * parenCount);
         for (i = 0; i < parenCount; i++)
@@ -2122,21 +2125,22 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 static JSBool
 ReallocStateStack(REGlobalData *gData)
 {
-    size_t sz = sizeof(REProgState) * gData->maxStateStack;
-    gData->maxStateStack <<= 1;
-    gData->stateStack
-        = (REProgState *)JS_ArenaGrow(&gData->pool, gData->stateStack, sz, sz);
+    uint16 limit = gData->stateStackLimit;
+    size_t sz = sizeof(REProgState) * limit;
+
+    JS_ARENA_GROW_CAST(gData->stateStack, REProgState *, &gData->pool, sz, sz);
     if (!gData->stateStack) {
         gData->ok = JS_FALSE;
         return JS_FALSE;
     }
+    gData->stateStackLimit = limit + limit;
     return JS_TRUE;
 }
 
 #define PUSH_STATE_STACK(data)                                                \
     JS_BEGIN_MACRO                                                            \
         ++(data)->stateStackTop;                                              \
-        if ((data)->stateStackTop == (data)->maxStateStack &&                 \
+        if ((data)->stateStackTop == (data)->stateStackLimit &&               \
             !ReallocStateStack((data))) {                                     \
             return NULL;                                                      \
         }                                                                     \
@@ -2705,8 +2709,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     op = (REOp) *pc++;
                 } else {
                     if (!PushBackTrackState(gData, REOP_MINIMALREPEAT,
-                                            pc, x, x->cp, 0, 0))
+                                            pc, x, x->cp, 0, 0)) {
                         return NULL;
+                    }
                     --gData->stateStackTop;
                     pc = pc + GET_OFFSET(pc);
                     op = (REOp) *pc++;
@@ -2763,9 +2768,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 if (!PushBackTrackState(gData, REOP_MINIMALREPEAT,
                                         pc, x, x->cp,
                                         curState->parenSoFar,
-                                        parenSoFar
-                                            - curState->parenSoFar))
+                                        parenSoFar - curState->parenSoFar)) {
                     return NULL;
+                }
                 --gData->stateStackTop;
                 pc = pc + GET_OFFSET(pc);
                 op = (REOp) *pc++;
@@ -2791,17 +2796,17 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
             x->cp = backTrackData->cp;
             pc = backTrackData->backtrack_pc;
             op = backTrackData->backtrack_op;
-            gData->stateStackTop = backTrackData->precedingStateTop;
+            gData->stateStackTop = backTrackData->saveStateStackTop;
             JS_ASSERT(gData->stateStackTop);
 
             memcpy(gData->stateStack, backTrackData + 1,
-                   sizeof(REProgState) * backTrackData->precedingStateTop);
+                   sizeof(REProgState) * backTrackData->saveStateStackTop);
             curState = &gData->stateStack[gData->stateStackTop - 1];
 
             if (backTrackData->parenCount) {
                 memcpy(&x->parens[backTrackData->parenIndex],
                        (char *)(backTrackData + 1) +
-                       sizeof(REProgState) * backTrackData->precedingStateTop,
+                       sizeof(REProgState) * backTrackData->saveStateStackTop,
                        sizeof(RECapture) * backTrackData->parenCount);
                 parenSoFar = backTrackData->parenIndex + backTrackData->parenCount;
             } else {
@@ -2856,7 +2861,7 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
     REMatchState *result;
     uintN i;
 
-    gData->maxBackTrack = INITIAL_BACKTRACK;
+    gData->backTrackStackSize = INITIAL_BACKTRACK;
     JS_ARENA_ALLOCATE_CAST(gData->backTrackStack, REBackTrackData *,
                            &gData->pool,
                            INITIAL_BACKTRACK);
@@ -2866,7 +2871,7 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
     gData->cursz = 0;
 
 
-    gData->maxStateStack = INITIAL_STATESTACK;
+    gData->stateStackLimit = INITIAL_STATESTACK;
     JS_ARENA_ALLOCATE_CAST(gData->stateStack, REProgState *,
                            &gData->pool,
                            sizeof(REProgState) * INITIAL_STATESTACK);
