@@ -308,6 +308,8 @@ mime_generate_headers (nsMsgCompFields *fields,
   const char* pOtherHdr;
   char *convbuf;
 
+  PRBool hasDisclosedRecipient = PR_FALSE;
+
   nsCAutoString headerBuf;    // accumulate header strings to get length
   headerBuf.Truncate(0);
 
@@ -565,6 +567,7 @@ RRT_HEADER:
     }
 
     PR_FREEIF(duppedNewsGrp);
+    hasDisclosedRecipient = PR_TRUE;
   }
 
   /* #### shamelessly duplicated from above */
@@ -606,10 +609,20 @@ RRT_HEADER:
 
   if (pTo && *pTo) {
     ENCODE_AND_PUSH("To: ", PR_TRUE, pTo, charset, usemime);
+    hasDisclosedRecipient = PR_TRUE;
   }
  
   if (pCc && *pCc) {
     ENCODE_AND_PUSH("CC: ", PR_TRUE, pCc, charset, usemime);
+    hasDisclosedRecipient = PR_TRUE;
+  }
+
+  // If we don't have disclosed recipient (only Bcc), address the message to the sender to
+  // prevent problem with some servers
+  if (!hasDisclosedRecipient) {
+    const char* pBcc = fields->GetBcc(); //Do not free me!
+    if (pBcc && *pBcc)
+      ENCODE_AND_PUSH("To: ", PR_TRUE, pFrom, charset, usemime);
   }
 
   if (pSubject && *pSubject) {
