@@ -125,6 +125,7 @@ nsFileChannel::Init(nsIFileProtocolHandler* handler, const char* command, nsIURI
 
 nsFileChannel::~nsFileChannel()
 {
+    if (mCommand) nsCRT::free(mCommand);
 }
 
 NS_IMETHODIMP
