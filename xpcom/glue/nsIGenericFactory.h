@@ -29,6 +29,12 @@
 #define NS_IGENERICFACTORY_IID \
 { 0x3bc97f00, 0xccdf, 0x11d2, { 0xba, 0xb8, 0xb5, 0x48, 0x65, 0x44, 0x61, 0xfc } }
 
+#ifdef XP_PC
+#define NS_CALLBACK(_name) nsresult (__stdcall * _name)
+#else
+#define NS_CALLBACK(_name) nsresult (* _name)
+#endif
+
 /**
  * Provides a Generic nsIFactory implementation that can be used by
  * DLLs with very simple factory needs.
@@ -37,7 +43,7 @@ class nsIGenericFactory : public nsIFactory {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IGENERICFACTORY_IID; return iid; }
     
-    typedef nsresult (*ConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    typedef NS_CALLBACK(ConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 	/**
 	 * Establishes the generic factory's constructor function, which will be called
