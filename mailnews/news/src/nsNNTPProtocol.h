@@ -400,8 +400,9 @@ private:
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
-  nsCOMPtr <nsITimer> mUpdateTimer; 
+    nsCOMPtr <nsITimer> mUpdateTimer; 
 	nsresult AlertError(PRInt32 errorCode, const char *text);
+	PRInt32 mBytesReceived;
 };
 
 NS_BEGIN_EXTERN_C

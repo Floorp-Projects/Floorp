@@ -794,7 +794,7 @@ nsNntpIncomingServer::LoadHostInfoFile()
 }
 
 nsresult
-nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow)
+nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
@@ -813,6 +813,22 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 
 		mGroupsOnServerIndex++;
 		if ((mGroupsOnServerIndex % HOSTINFO_COUNT_MAX) == 0) break;
+	}
+
+
+	if (mMsgWindow) {
+		nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
+
+		rv = mMsgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
+		if (NS_FAILED(rv)) return rv;
+
+		if (mGroupsOnServerCount != 0) {
+			// xxx todo
+			// if old percent == new percent, don't call ShowProgress()
+			// why poke the front end, through xpconnect, if we don't have to?
+			rv = msgStatusFeedback->ShowProgress((mGroupsOnServerIndex * 100) / mGroupsOnServerCount);
+		}
+		if (NS_FAILED(rv)) return rv;
 	}
 
 	if (mGroupsOnServerIndex < mGroupsOnServerCount) {
@@ -852,7 +868,7 @@ nsNntpIncomingServer::Notify(nsITimer *timer)
 {
   NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
   mUpdateTimer = nsnull;    // release my hold  
-  PopulateSubscribeDatasourceFromHostInfo(mMsgWindow);
+  PopulateSubscribeDatasourceFromHostInfo();
 }
 
 NS_IMETHODIMP
@@ -907,7 +923,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
 	mGroupsOnServerCount = mGroupsOnServer.Count();
 	mMsgWindow = aMsgWindow;
 
-	rv = PopulateSubscribeDatasourceFromHostInfo(aMsgWindow);
+	rv = PopulateSubscribeDatasourceFromHostInfo();
 	if (NS_FAILED(rv)) return rv;
   }
   else {

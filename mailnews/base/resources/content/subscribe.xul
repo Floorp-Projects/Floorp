@@ -21,7 +21,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
-
+<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
@@ -36,6 +36,7 @@ Rights Reserved.
         
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/mailCommands.js"/>
+<script language="JavaScript" src="chrome://messenger/content/mailWindow.js"/>
 <script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
 
 	<keyset id="keyset"/>
@@ -132,10 +133,10 @@ Rights Reserved.
   <separator/>
 
   <box autostretch="never">
+   <statusbarpanel id="offline-status"/> 
     <progressmeter id="statusbar-icon" value="0"/>
-    <text id="statusText" value="this space for rent" crop="right" flex="1"/>
+ <statusbarpanel id="statusText" value="" crop="right" flex="1"/>  
     <spring flex="1"/>
-    <box id="okCancelButtonsRight"/>
-  </box>  
-  
+  </box>
+    <box id="okCancelButtons"/>
 </window>

@@ -90,7 +90,7 @@ private:
 	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();
-	nsresult PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow);
+	nsresult PopulateSubscribeDatasourceFromHostInfo();
 	
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;

@@ -8,6 +8,7 @@ var gSubscribeDS = null;
 var gStatusBar = null;
 var gNameField = null;
 var gFolderDelimiter = ".";
+var gStatusFeedback = new nsMsgStatusFeedback;
 
 function SetUpRDF()
 {
@@ -23,8 +24,7 @@ function SetUpRDF()
 
 function Stop()
 {
-	//dump("Stop()\n");
-	dump("xxx todo: we need to stop the url that is running.\n");
+	dump("xxx todo implement stop.\n");
 }
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
@@ -102,8 +102,9 @@ var MySubscribeListener = {
 			gSubscribeTree.setAttribute('ref',gServerURI);
 		}
 
-		// Turn progress meter off.
-      	gStatusBar.setAttribute("mode","normal");	
+		gStatusFeedback.ShowProgress(100);
+		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("doneString"));
+		gStatusBar.setAttribute("mode","normal");
 	}
 };
 
@@ -112,6 +113,7 @@ function SetUpTree(forceToServer)
 	//dump("SetUpTree()\n");
 	SetUpRDF();
 	
+	gStatusBar = document.getElementById('statusbar-icon');
 	gSubscribeTree.setAttribute('ref',null);
 
 	if (!gServerURI) return;
@@ -124,23 +126,28 @@ function SetUpTree(forceToServer)
 
 		gSubscribableServer.subscribeListener = MySubscribeListener;
 
-		// Turn progress meter on.
-      	gStatusBar.setAttribute("mode","undetermined");	
+		gStatusFeedback.ShowProgress(0);
+		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+		gStatusBar.setAttribute("mode","undetermined");
 
-		gSubscribableServer.populateSubscribeDatasource(null /* eventually, a nsIMsgWindow */, forceToServer);
+		gSubscribableServer.populateSubscribeDatasource(msgWindow, forceToServer);
 	}
 	catch (ex) {
 		dump("failed to populate subscribe ds: " + ex + "\n");
 	}
 }
 
+
 function SubscribeOnLoad()
 {
 	//dump("SubscribeOnLoad()\n");
 	
     gSubscribeTree = document.getElementById('subscribetree');
-	gStatusBar = document.getElementById('statusbar-icon');
 	gNameField = document.getElementById('namefield');
+
+	msgWindow = Components.classes[msgWindowProgID].createInstance(Components.interfaces.nsIMsgWindow);
+    msgWindow.statusFeedback = gStatusFeedback;
+	msgWindow.SetDOMWindow(window);
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 
@@ -332,10 +339,11 @@ function SubscribeOnClick(event)
 				
 				dump("do twisty for " + uri + "\n");
 
-				// Turn progress meter on.
-				gStatusBar.setAttribute("mode","undetermined");	
+				gStatusFeedback.ShowProgress(0);
+				gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
+				gStatusBar.setAttribute("mode","undetermined");
 
-				gSubscribableServer.populateSubscribeDatasourceWithUri(null /* eventually, a nsIMsgWindow */, true /* force to server */, uri);
+				gSubscribableServer.populateSubscribeDatasourceWithUri(msgWindow, true /* force to server */, uri);
 			}
 		}
 		else {

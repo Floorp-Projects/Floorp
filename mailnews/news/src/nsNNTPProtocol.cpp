@@ -61,6 +61,7 @@
 #include "nsIMsgHeaderParser.h" 
 #include "nsIMsgSearchSession.h"
 #include "nsIMsgSearchAdapter.h"
+#include "nsIMsgStatusFeedback.h"
 
 #include "nsMsgKeySet.h"
 
@@ -95,6 +96,7 @@
 #define READ_NEWS_LIST_COUNT_MAX 20 /* number of groups to process at a time when reading the list from the server */
 #define READ_NEWS_LIST_TIMEOUT 50	/* uSec to wait until doing more */
 
+#define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
 class nsDummyBufferStream : public nsIInputStream
@@ -454,9 +456,11 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 
     m_commandSpecificData = nsnull;
     m_searchData = nsnull;
+	mBytesReceived = 0;
 
-    if (aMsgWindow) 
+    if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
+    }
 
 	m_runningURL = null_nsCOMPtr();
   m_connectionBusy = PR_FALSE;
@@ -485,8 +489,9 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
     PRBool isSecure = PR_FALSE;
 
-    if (aMsgWindow) 
+    if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
+    }
     nsMsgProtocol::InitFromURI(aURL);
 
 	rv = m_url->GetHost(getter_Copies(m_hostName));
@@ -1239,7 +1244,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
 #endif
 	}
 
@@ -2255,7 +2260,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 						 ce->bytes_received, status,
 						 ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
 #endif
 	}
 
@@ -2397,18 +2402,24 @@ nsNNTPProtocol::SetNewsFolder()
 
     if (!m_newsFolder) {
         nsCAutoString folderURI = "news://";
+
+		if ((const char *)m_userName) {
+			folderURI += (const char *)m_userName;
+			folderURI += "@";
+		}
         folderURI += (const char *)m_hostName;
-        folderURI += "/";
 
         nsXPIDLCString newsgroupName;
         rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
 		if (NS_FAILED(rv)) return rv;
 
         if ((const char *)newsgroupName) {
+        	folderURI += "/";
             folderURI += (const char *)newsgroupName;
-            rv = InitializeNewsFolderFromUri((const char *)folderURI);
-			if (NS_FAILED(rv)) return rv;
-        }
+		}
+
+        rv = InitializeNewsFolderFromUri((const char *)folderURI);
+		if (NS_FAILED(rv)) return rv;
     }
 	return NS_OK;
 }
@@ -2685,6 +2696,8 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
 
 	ce->bytes_received = 0;
+#else
+	mBytesReceived = 0;
 #endif
 	return(status);
 }
@@ -2756,7 +2769,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
 #endif
     }
 
@@ -2785,6 +2798,8 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 
 #ifdef UNREADY_CODE
 	ce->bytes_received++;  /* small numbers of groups never seem to trigger this */
+#else
+	mBytesReceived += status;
 #endif
 	m_newsHost->AddNewNewsgroup(line, oldest, youngest, flag, PR_FALSE);
 
@@ -2811,8 +2826,6 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
-#else
-	NNTP_LOG_NOTE("progress, receiving list of newsgroups...");
 #endif
 	 
     return(status);
@@ -2867,9 +2880,38 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     	ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
+
+		if (m_msgWindow) {
+        	nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
+
+        	rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
+        	if (NS_FAILED(rv)) return rv;
+// XXXXX
+                nsXPIDLString statusString;
+		
+                nsCOMPtr<nsIStringBundleService> bundleService = 
+                do_GetService(kStringBundleServiceCID, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+               	nsCOMPtr<nsIStringBundle> bundle;
+                rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, 
+                                            getter_AddRefs(bundle));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsAutoString bytesStr; bytesStr.AppendInt(mBytesReceived);
+		
+                const PRUnichar *formatStrings[] = { bytesStr.GetUnicode() };
+		const PRUnichar *propertyTag = NS_LITERAL_STRING("bytesReceived");
+                rv = bundle->FormatStringFromName(propertyTag,
+                                                  formatStrings, 1,
+                                                  getter_Copies(statusString));
+
+        	rv = msgStatusFeedback->ShowStatusString(statusString);
+        	if (NS_FAILED(rv)) return rv;
+		}
 #endif
-	}
+    }
     
 	 /* find whitespace seperator if it exits */
     for(i=0; line[i] != '\0' && !NET_IS_SPACE(line[i]); i++)
@@ -2895,7 +2937,6 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		rv = NS_ERROR_FAILURE;
 	}
 #endif
-	PR_FREEIF(line);
 
 	if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
 		m_readNewsListCount = 0;
@@ -2917,6 +2958,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 		m_nextState = NEWS_FINISHED;
     }
 
+	PR_FREEIF(line);
 	if (NS_FAILED(rv)) return -1;
     return(status);
 }
@@ -3174,7 +3216,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status,
 						 ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
 #endif
 	}
 
@@ -3304,7 +3346,6 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   return !NS_SUCCEEDED(rv);
 }
 
-#define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 
 nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString)
 {
@@ -4267,7 +4308,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 		ce->bytes_received += status;
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
 #else
-		PR_LOG(NNTP,PR_LOG_ALWAYS,("received %d bytes", status));
+		mBytesReceived += status;
 #endif
 	}
 
