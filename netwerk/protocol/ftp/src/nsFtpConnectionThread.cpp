@@ -1415,6 +1415,19 @@ nsFtpState::S_list() {
     nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
 
+#ifdef MOZ_NEW_CACHE
+    if ( mCacheEntry ) {
+        if (!mReadingFromCache) {
+            nsCString aString; aString.AssignWithConversion(fromStr);
+            mCacheEntry->SetMetaDataElement((const char*)"MimeType", (const char*) aString);
+        } else {
+            nsXPIDLCString aString;
+            mCacheEntry->GetMetaDataElement((const char*)"MimeType", getter_Copies(aString));
+            fromStr.AssignWithConversion(aString);
+        }
+    } 
+#endif
+
     if (mGenerateHTMLContent) {
         nsAutoString textHTMLStr; textHTMLStr.AssignWithConversion("text/html");
         nsCOMPtr<nsIStreamListener> converterListener2;
@@ -1434,19 +1447,6 @@ nsFtpState::S_list() {
         rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), httpIndexFormatStr.GetUnicode(),
                                                  mListener, mURL, getter_AddRefs(converterListener));
     }
-
-#ifdef MOZ_NEW_CACHE
-    if ( mCacheEntry ) {
-        if (!mReadingFromCache) {
-            nsCString aString; aString.AssignWithConversion(fromStr);
-            mCacheEntry->SetMetaDataElement((const char*)"MimeType", (const char*) aString);
-        } else {
-            nsXPIDLCString aString;
-            mCacheEntry->GetMetaDataElement((const char*)"MimeType", getter_Copies(aString));
-            fromStr.AssignWithConversion(aString);
-        }
-    } 
-#endif
 
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
 
