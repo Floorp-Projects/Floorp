@@ -390,6 +390,11 @@ static void DumpArbitraryHelp()
             }
           }
         }
+        else {
+#ifdef DEBUG_sspitzer
+            printf("failed to QI from nsISupports to nsICmdLineHandler\n");
+#endif
+        }
         
         rv = e->GetNext(getter_AddRefs(el));
       }
@@ -479,6 +484,11 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
             if (cmdResult && (PL_strcmp("1",cmdResult)==0))
               OpenChromURL((const char *)chromeUrlForTask,height, width);
           }
+        }
+        else {
+#ifdef DEBUG_sspitzer
+            printf("failed to QI from nsISupports to nsICmdLineHandler\n");
+#endif
         }
         
         rv = e->GetNext(getter_AddRefs(el));

@@ -58,7 +58,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #else
 
 // XP_UNIX || XP_BEOS
-#define APPCORES_DLL	"libappcores"MOZ_DLL_SUFFIX
 #define EDITOR_DLL	"libender"MOZ_DLL_SUFFIX
 
 #endif // XP_MAC

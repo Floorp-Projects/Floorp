@@ -9,7 +9,6 @@
 ;
 
 [core]
-bin\appcores.dll
 bin\component.reg
 bin\gkgfxwin.dll
 bin\gkplugin.dll
