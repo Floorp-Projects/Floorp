@@ -2672,10 +2672,11 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   targetContent->GetDocument(getter_AddRefs(document));
 
   if (!document) {
+    // XXXbz GetOwnerDocument
     nsCOMPtr<nsINodeInfo> nodeInfo;
     targetContent->GetNodeInfo(getter_AddRefs(nodeInfo));
     if (nodeInfo) {
-      nodeInfo->GetDocument(getter_AddRefs(document));
+      document = nodeInfo->GetDocument();
     }
   }
 

@@ -883,8 +883,7 @@ nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
     if (mDocument) {
         return CallQueryInterface(mDocument, aOwnerDocument);
     }
-    nsCOMPtr<nsIDocument> doc;
-    NodeInfo()->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = NodeInfo()->GetDocument();
     if (doc) {
         return CallQueryInterface(doc, aOwnerDocument);
     }

@@ -237,6 +237,13 @@ nsImageLoadingContent::GetImageBlocked(PRBool* aBlocked)
   *aBlocked = mImageIsBlocked;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImageLoadingContent::GetImageURI(nsIURI** aURI)
+{
+  NS_NOTREACHED("Subclasses need to implement this");
+  return NS_ERROR_NOT_AVAILABLE;  
+}
                                       
 NS_IMETHODIMP
 nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
@@ -565,10 +572,11 @@ nsImageLoadingContent::GetOurDocument(nsIDocument** aDocument)
 
   rv = thisContent->GetDocument(aDocument);
   if (!*aDocument) {  // nodeinfo time
+    // XXXbz GetOwnerDocument
     nsCOMPtr<nsINodeInfo> nodeInfo;
     rv = thisContent->GetNodeInfo(getter_AddRefs(nodeInfo));
     if (nodeInfo) {
-      rv = nodeInfo->GetDocument(aDocument);
+      NS_IF_ADDREF(*aDocument = nodeInfo->GetDocument());
     }
   }
 

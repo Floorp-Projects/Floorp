@@ -315,12 +315,10 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   return GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
 }
 
-NS_IMETHODIMP
-nsNodeInfoManager::GetDocument(nsIDocument** aDocument)
+nsIDocument*
+nsNodeInfoManager::GetDocument() const
 {
-  NS_IF_ADDREF(*aDocument = mDocument);
-
-  return NS_OK;
+  return mDocument;
 }
 
 NS_IMETHODIMP

@@ -288,10 +288,10 @@ nsNodeInfo::PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult)
                                     aResult);
 }
 
-NS_IMETHODIMP
-nsNodeInfo::GetDocument(nsIDocument** aDocument) const
+nsIDocument*
+nsNodeInfo::GetDocument() const
 {
-  return mOwnerManager->GetDocument(aDocument);
+  return mOwnerManager->GetDocument();
 }
 
 NS_IMETHODIMP

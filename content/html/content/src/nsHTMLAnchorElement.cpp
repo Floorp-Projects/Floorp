@@ -384,10 +384,9 @@ nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDocument> doc;
-  mNodeInfo->GetDocument(getter_AddRefs(doc));
-
-  return GetProtocolFromHrefString(href, aProtocol, doc);
+  // XXX this should really use GetHrefURI and not do so much string stuff
+  return GetProtocolFromHrefString(href, aProtocol,
+                                   nsGenericHTMLContainerElement::GetOwnerDocument());
 }
 
 NS_IMETHODIMP

@@ -1702,8 +1702,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               nsCOMPtr<nsINodeInfo> nodeInfo;
               mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
               NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
-              nsCOMPtr<nsIDocument> doc;
-              nodeInfo->GetDocument(getter_AddRefs(doc));
+              nsIDocument* doc = nodeInfo->GetDocument();
               nsCAutoString charset;
               if (doc) {
                 doc->GetDocumentCharacterSet(charset);
