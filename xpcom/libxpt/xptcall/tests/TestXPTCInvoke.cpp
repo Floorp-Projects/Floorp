@@ -146,7 +146,7 @@ int main()
     var[2].ptr = &var[2].val.i64;
 
     if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 5, 3, var)))
-        printf("\t1L * 1L = %dL\n", var[2].val.i64);
+        printf("\t1L + 1L = %dL\n", var[2].val.i64);
     else
         printf("\tFAILED");
 
