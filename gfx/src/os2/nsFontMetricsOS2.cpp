@@ -1846,11 +1846,34 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     if( pFontMetrics[i].usWeightClass > 5 )
       font->metrics.fsSelection |= FM_SEL_BOLD;
 
-     /* Set the key values for Collation sort */
-    char* fontptr;
-    if( font->metrics.fsType & FM_TYPE_DBCS )
+     // Problem:  OS/2 has many non-standard fonts that do not follow the
+     //           normal Family-name/Face-name conventions (i.e. 'foo',
+     //           'foo bold', 'foo italic', 'foo bold italic').  This is
+     //           especially true for DBCS fonts (i.e. the 'WarpSans' family
+     //           can contain the 'WarpSans', 'WarpSans Bold', and 'WarpSans
+     //           Combined' faces).
+     // Solution: Unfortunately, there is no perfect way to handle this.  After
+     //           many attempts, we will attempt to remedy the situation by
+     //           searching the Facename for certain indicators ('bold',
+     //           'italic', 'oblique', 'regular').  If the Facename contains
+     //           one of these indicators, then we will create the sort key
+     //           based on the Familyname.  Otherwise, use the Facename.
+    char* fontptr = nsnull;
+    if (PL_strcasestr(font->metrics.szFacename, "bold") != nsnull ||
+        PL_strcasestr(font->metrics.szFacename, "italic") != nsnull ||
+        PL_strcasestr(font->metrics.szFacename, "oblique") != nsnull ||
+        PL_strcasestr(font->metrics.szFacename, "regular") != nsnull ||
+        PL_strcasestr(font->metrics.szFacename, "-normal") != nsnull)
     {
+      fontptr = font->metrics.szFamilyname;
+    } else {
       fontptr = font->metrics.szFacename;
+    }
+    
+     // The fonts in gBadDBCSFontMapping do not display well in non-Chinese
+     //   systems.  Map them to a more intelligible name.
+    if (font->metrics.fsType & FM_TYPE_DBCS)
+    {
       if ((ulSystemCodePage != 1386) &&
           (ulSystemCodePage != 1381) &&
           (ulSystemCodePage != 950)) {
@@ -1863,41 +1886,33 @@ nsFontMetricsOS2::InitializeGlobalFonts()
            j++;
         }
       }
-        
-       /* Make vertical fonts (start with '@') come right after the
-          non-vertical font with the same name                      */
-      convertedLength = MultiByteToWideChar(0, fontptr, strlen(fontptr), str, FACESIZE);
-      if( fontptr[0] == '@' )
-      {
-        font->name.Assign( str + 1, convertedLength-1 );
-        font->name.Append( NS_LITERAL_STRING(" ") );
-      }
-      else
-        font->name.Assign( str, convertedLength);
     }
-    else
+
+     // For vertical DBCS fonts (those that start with '@'), we want them to
+     //   appear directly below the non-vertical font of the same family.
+    convertedLength = MultiByteToWideChar(0, fontptr, strlen(fontptr), str, FACESIZE);
+    if (fontptr[0] == '@')
     {
-      convertedLength = MultiByteToWideChar(0, font->metrics.szFamilyname, 
-                          strlen(font->metrics.szFamilyname), str, FACESIZE);
+      font->name.Assign( str + 1, convertedLength-1 );
+      font->name.Append( NS_LITERAL_STRING(" ") );
+    } else {
       font->name.Assign( str, convertedLength );
     }
-      
+
+     // Create collation sort key
     res = gCollation->GetSortKeyLen(kCollationCaseInSensitive, 
                                    font->name, &font->len);
 
-    if( NS_SUCCEEDED(res) )
+    if (NS_SUCCEEDED(res))
     {
       font->key = (PRUint8*) nsMemory::Alloc(font->len * sizeof(PRUint8));
       res = gCollation->CreateRawSortKey( kCollationCaseInSensitive, 
                                          font->name, font->key,
                                          &font->len );
 
-       /* reset DBCS name to actual value */
-      if( font->metrics.fsType & FM_TYPE_DBCS && fontptr[0] == '@' )
-      {
-        convertedLength = MultiByteToWideChar(0, fontptr, strlen(fontptr), str, FACESIZE);
-        font->name.Assign( str, convertedLength );
-      }
+       // reset DBCS name to actual value
+      if (fontptr[0] == '@')
+        font->name.Insert( NS_LITERAL_STRING("@"), 0 );
     }
     
     gGlobalFonts->AppendElement(font);
@@ -1905,8 +1920,8 @@ nsFontMetricsOS2::InitializeGlobalFonts()
 
   gGlobalFonts->Sort(CompareFontFamilyNames, gCollation);
 
-   /* Set nextFamily in the array, such that we can skip from family to
-    * family in order to speed up searches.                             */
+   // Set nextFamily in the array, such that we can skip from family to
+   //   family in order to speed up searches.
   int prevIndex = 0;
   nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(0);
   PRUint8* lastkey = font->key;
@@ -1955,6 +1970,12 @@ nsFontMetricsOS2::InitializeGlobalFonts()
       
     if( fm->fsSelection & FM_SEL_ITALIC )
       printf( " : italic" );
+    else
+      printf( " :       " );
+
+    if( fm->fsType & FM_TYPE_DBCS ||
+        fm->fsType & FM_TYPE_MBCS )
+      printf( " : M/DBCS" );
     else
       printf( " :       " );
 
