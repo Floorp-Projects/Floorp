@@ -666,15 +666,14 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
       if (fm) {
         nsChangeHint maxChange = NS_STYLE_HINT_NONE, minChange = NS_STYLE_HINT_NONE;
         nsStyleChangeList changeList;
-        fm->ComputeStyleChangeFor(aPresContext, aFrame,
-                                  kNameSpaceID_None, nsMathMLAtoms::fontsize,
-                                  changeList, minChange, maxChange);
+        fm->ComputeStyleChangeFor(aFrame, kNameSpaceID_None,
+                                  nsMathMLAtoms::fontsize, changeList,
+                                  minChange, maxChange);
 #ifdef DEBUG
         // Use the parent frame to make sure we catch in-flows and such
         nsIFrame* parentFrame;
         aFrame->GetParent(&parentFrame);
-        fm->DebugVerifyStyleTree(aPresContext,
-                                 parentFrame ? parentFrame : aFrame);
+        fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aFrame);
 #endif
       }
     }

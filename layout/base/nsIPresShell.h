@@ -344,8 +344,7 @@ public:
    * The content object associated with aFrame should either be a IMG
    * element, an OBJECT element, or an APPLET element
    */
-  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
-                                       nsIFrame*       aFrame) = 0;
+  NS_IMETHOD CantRenderReplacedElement(nsIFrame* aFrame) = 0;
 
 
   /**

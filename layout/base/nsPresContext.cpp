@@ -1008,7 +1008,7 @@ nsPresContext::ReParentStyleContext(nsIFrame* aFrame,
   nsCOMPtr<nsIFrameManager> manager;
   nsresult rv = mShell->GetFrameManager(getter_AddRefs(manager));
   if (NS_SUCCEEDED(rv) && manager) {
-    rv = manager->ReParentStyleContext(this, aFrame, aNewParentContext);
+    rv = manager->ReParentStyleContext(aFrame, aNewParentContext);
   }
   return rv;
 }

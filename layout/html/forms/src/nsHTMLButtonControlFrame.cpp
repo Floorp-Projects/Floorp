@@ -340,7 +340,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     frame->SetParent(mFrames.FirstChild());
     // now reparent the contexts for the reparented frame too
     if (frameManager) {
-      frameManager->ReParentStyleContext(aPresContext,frame,newParentContext);
+      frameManager->ReParentStyleContext(frame, newParentContext);
     }
   }
 

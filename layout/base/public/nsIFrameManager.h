@@ -91,7 +91,7 @@ public:
 
   // Get the canvas frame. The canvas frame may or may not exist, so the
   // argument aCanvasFrame may be nsnull.
-  NS_IMETHOD GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFrame) const = 0;
+  NS_IMETHOD GetCanvasFrame(nsIFrame** aCanvasFrame) const = 0;
 
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame) = 0;
@@ -117,32 +117,23 @@ public:
   NS_IMETHOD ClearUndisplayedContentMap() = 0;
 
   // Functions for manipulating the frame model
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIFrame*       aParentFrame,
+  NS_IMETHOD AppendFrames(nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList) = 0;
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIFrame*       aParentFrame,
+  NS_IMETHOD InsertFrames(nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList) = 0;
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIFrame*       aParentFrame,
+  NS_IMETHOD RemoveFrame(nsIFrame*       aParentFrame,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIFrame*       aParentFrame,
+  NS_IMETHOD ReplaceFrame(nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame) = 0;
 
   // Notification that we were unable to render a replaced element
-  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
-                                       nsIFrame*       aFrame) = 0;
+  NS_IMETHOD CantRenderReplacedElement(nsIFrame*       aFrame) = 0;
 
   // Notification that a frame is about to be destroyed. This allows any outstanding
   // references to the frame to be cleaned up
@@ -150,13 +141,11 @@ public:
 
   // reparent the style contexts of this frame sub tree to live under the
   // new given parent style context
-  NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext, 
-                                  nsIFrame* aFrame, 
+  NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext) = 0;
 
   // Re-resolve style contexts for frame tree
-  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext* aPresContext,
-                                   nsIFrame* aFrame, 
+  NS_IMETHOD ComputeStyleChangeFor(nsIFrame* aFrame, 
                                    PRInt32 aAttrNameSpaceID,
                                    nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
@@ -164,8 +153,7 @@ public:
                                    nsChangeHint& aTopLevelChange) = 0;
 
   // Determine whether an attribute affects style
-  NS_IMETHOD HasAttributeDependentStyle(nsIPresContext* aPresContext,
-                                        nsIContent *aContent,
+  NS_IMETHOD HasAttributeDependentStyle(nsIContent *aContent,
                                         nsIAtom *aAttribute,
                                         PRInt32 aModType,
                                         PRBool *aResult) = 0;
@@ -175,21 +163,17 @@ public:
    * aState is the document state storage object onto which each frame 
    * stores its state.
    */
-  NS_IMETHOD CaptureFrameState(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame,
+  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame,
                                nsILayoutHistoryState* aState) = 0;
-  NS_IMETHOD RestoreFrameState(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame,
+  NS_IMETHOD RestoreFrameState(nsIFrame* aFrame,
                                nsILayoutHistoryState* aState) = 0;
   // Add/restore state for one frame (special, global type, like scroll position)
-  NS_IMETHOD CaptureFrameStateFor(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame,
-                               nsILayoutHistoryState* aState,
-                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
-  NS_IMETHOD RestoreFrameStateFor(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame,
-                               nsILayoutHistoryState* aState,
-                               nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
+  NS_IMETHOD CaptureFrameStateFor(nsIFrame* aFrame,
+                                  nsILayoutHistoryState* aState,
+                                  nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
+  NS_IMETHOD RestoreFrameStateFor(nsIFrame* aFrame,
+                                  nsILayoutHistoryState* aState,
+                                  nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
 
   /**
    * Gets a property value for a given frame.
@@ -250,7 +234,7 @@ public:
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
    */
-  NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame) = 0;
+  NS_IMETHOD DebugVerifyStyleTree(nsIFrame* aFrame) = 0;
 #endif
 };
 
