@@ -41,13 +41,9 @@
 		ondragdrop="return DropOnFolderTree(event);"
 		onclick="FolderPaneOnClick(event);"> 
 
-    <treecols>
-	    <treecol persist="width" flex="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
-    </treecols>
-
 	  <template>
 	  	<rule>
-	      <treechildren flex="1">
+	      <treechildren>
 			<treeitem class="folderTreeItem" uri="..." 
 			  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -86,6 +82,11 @@
 		</rule>
 	  </template>
 
+	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
+          <treehead>
+            <treerow>
+            </treerow>
+          </treehead>
 	</tree>
 
 </overlay>
