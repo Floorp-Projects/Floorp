@@ -73,6 +73,7 @@ $rel_path = '';
 &do_panel,            exit if $form{panel};
 &do_hdml,             exit if $form{hdml};
 &do_vxml,             exit if $form{vxml};
+&do_wml,              exit if $form{wml}; 
 &do_tinderbox,        exit;
 
 # end of main
@@ -1057,4 +1058,64 @@ sub do_vxml {
   print '<pause>1000</pause><audio src="http://www.boulderdesign.com/sounds/goodbye.wav">goodbye</audio>';
   print "\n";
   print '<disconnect/></block></form></vxml>';
+}
+
+sub do_wml {
+  print "Content-type: text/vnd.wap.wml\n\n";
+
+  print '<!DOCTYPE wml PUBLIC "-//WAPFORUM//DTD WML 1.1//EN" "http://www.wapforum.org/DTD/wml_1.1.xml">';
+
+  print '<wml><card id="Status" title="Status">';
+  print '<do type="accept" label="Builds"><go href="#Builds"/></do>';
+  print '<p align ="center"><b><u>Moz Tinderbox</u></b></p>';
+
+  %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
+
+  if (is_tree_state_available()) {
+    print "<p>$::tree is " .  (is_tree_open() ? 'open.' : 'closed.') . "</p>";
+  }
+  my (%build, %times);
+  tb_loadquickparseinfo($::tree, \%build, \%times);
+
+  $testFailed = 0;
+  $flames = 0;
+
+  print "\n";
+  foreach my $buildname (sort keys %build) {
+    if ($build{$buildname} eq 'busted') {
+      $flames = 1;
+    } elsif ($build{$buildname} eq 'testfailed') {
+      $testFailed = 1;
+    }
+  }
+  
+  if ($flames) {
+    print "<p>There's bustage.</p>";
+  }
+  if ($testFailed) {
+    print "<p>Tests are failing.</p>";
+  } 
+  
+  if ($flames == 0 && $testFailed == 0) {
+    print "<p>No bustage.</p>";
+  }
+  print "</card>\n";
+
+  print '<card id="Builds" title="Builds">';
+  print '<p align="center"><b><u>Builds</u></b></p>';
+  print '<p mode="nowrap"><table columns="2">';
+
+  foreach my $buildname (sort keys %build) {
+    print "<tr><td>[";
+    if ($build{$buildname} eq 'busted') {
+      print '<b>RED</b>';
+    } elsif ($build{$buildname} eq 'testfailed') {
+      print '<b>TEST FAILED</b>';
+    } else {
+      print 'GREEN';
+    }
+    print ']</td><td>$buildname</td></tr>';
+    print "\n";
+  }
+  print '</table></p></card></wml>';
 }
