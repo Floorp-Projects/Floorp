@@ -227,17 +227,24 @@ pull_clientmak:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
+nsprpub\config.status: nsprpub\configure nsprpub\configure.in
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	sh $(NSPR_CONFIGURE)
+
 clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
+distclean:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	gmake distclean
+	@cd $(MOZ_SRC)\$(MOZ_TOP)
+	nmake /f client.mak clobber_psm
+	nmake /f client.mak clobber_seamonkey
+		
 clobber_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-!ifdef USE_NSPR_AUTOCONF
-	gmake distclean
-!else
-	nmake -f makefile.win clobber_all
-!endif
+	gmake clobber
 
 clobber_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
@@ -285,20 +292,9 @@ depend_xpconnect:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
 	nmake -f makefile.win depend
 
-!ifdef USE_NSPR_AUTOCONF
-nsprpub\config.status: nsprpub\configure nsprpub\configure.in
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	sh $(NSPR_CONFIGURE)
-
 build_nspr: nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake
-!else
-
-build_nspr: 
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win export
-!endif
 
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
@@ -347,7 +343,7 @@ install:
 
 export:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win export
+	nmake -f makefile.win export	
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
