@@ -334,19 +334,13 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
     nsresult rv;                                                           \
     nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,     \
                                                           &rv));           \
-    if (NS_SUCCEEDED(rv)) {                                                \
-      foundInterface =                                                     \
-        sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);            \
-                                                                           \
-      if (foundInterface) {                                                \
-        *aInstancePtr = foundInterface;                                    \
-                                                                           \
-        return NS_OK;                                                      \
-      }                                                                    \
-    } else {                                                               \
-      *aInstancePtr = 0;                                                   \
+    if (NS_FAILED(rv)) {                                                   \
+      *aInstancePtr = nsnull;                                              \
       return rv;                                                           \
     }                                                                      \
+                                                                           \
+    foundInterface =                                                       \
+      sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);              \
   } else
 
 // Looks up the nsIClassInfo for a class name registered with the 
@@ -363,15 +357,17 @@ typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
       nsresult rv;                                                         \
       nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID,   \
                                                             &rv));         \
-      if (NS_SUCCEEDED(rv)) {                                              \
-        foundInterface =                                                   \
-          sof->GetExternalClassInfoInstance(NS_LITERAL_STRING(#_class));   \
-                                                                           \
-        if (foundInterface)                                                \
-          NS_CLASSINFO_NAME(_class) = foundInterface;                      \
-      } else {                                                             \
-        *aInstancePtr = 0;                                                 \
+      if (NS_FAILED(rv)) {                                                 \
+        *aInstancePtr = nsnull;                                            \
         return rv;                                                         \
+      }                                                                    \
+                                                                           \
+      foundInterface =                                                     \
+        sof->GetExternalClassInfoInstance(NS_LITERAL_STRING(#_class));     \
+                                                                           \
+      if (foundInterface) {                                                \
+        NS_CLASSINFO_NAME(_class) = foundInterface;                        \
+        NS_CLASSINFO_NAME(_class)->AddRef();                               \
       }                                                                    \
     }                                                                      \
   } else

@@ -73,7 +73,6 @@
 
 #include "nsContentUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRMonitor*   nsRange::mMonitor = nsnull;
@@ -347,33 +346,7 @@ nsRangeUtils::~nsRangeUtils()
 /******************************************************
  * nsISupports
  ******************************************************/
- 
-NS_IMPL_ADDREF(nsRangeUtils)
-NS_IMPL_RELEASE(nsRangeUtils)
-
-nsresult nsRangeUtils::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
-{
-  NS_PRECONDITION(aInstancePtrResult, "null pointer");
-  if (!aInstancePtrResult) 
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) 
-  {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIRangeUtils *)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIRangeUtils))) 
-  {
-    *aInstancePtrResult = (void*)(nsIRangeUtils*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
+NS_IMPL_ISUPPORTS1(nsRangeUtils, nsIRangeUtils)
 
 /******************************************************
  * nsIRangeUtils methods

@@ -564,80 +564,33 @@ nsXULElement::Create(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 NS_IMPL_ADDREF(nsXULElement)
 NS_IMPL_RELEASE(nsXULElement)
 
-NS_IMETHODIMP
-nsXULElement::QueryInterface(REFNSIID iid, void** result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-    *result = nsnull;
+NS_INTERFACE_MAP_BEGIN(nsXULElement)
+    NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
+    NS_INTERFACE_MAP_ENTRY(nsIContent)
+    NS_INTERFACE_MAP_ENTRY(nsIXULContent)
+    NS_INTERFACE_MAP_ENTRY(nsIXMLContent)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMXULElement)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptEventHandlerOwner)
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
+                                   nsDOMEventRTTearoff::Create(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventTarget,
+                                   nsDOMEventRTTearoff::Create(this))
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3EventTarget,
+                                   nsDOMEventRTTearoff::Create(this))
+    NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+    NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node,
+                                   new nsNode3Tearoff(this))
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULElement)
+    if (mDocument) {
+        return mDocument->GetBindingManager()->GetBindingImplementation(this,
+                                                                        aIID,
+                                                                        aInstancePtr);
+    } else
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULElement)
+NS_INTERFACE_MAP_END
 
-    if (iid.Equals(NS_GET_IID(nsIStyledContent)) ||
-        iid.Equals(NS_GET_IID(nsIContent)) ||
-        iid.Equals(NS_GET_IID(nsISupports))) {
-        *result = NS_STATIC_CAST(nsIStyledContent*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIXMLContent))) {
-        *result = NS_STATIC_CAST(nsIXMLContent*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIXULContent))) {
-        *result = NS_STATIC_CAST(nsIXULContent*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULElement)) ||
-             iid.Equals(NS_GET_IID(nsIDOMElement)) ||
-             iid.Equals(NS_GET_IID(nsIDOMNode))) {
-        *result = NS_STATIC_CAST(nsIDOMXULElement*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
-        *result = NS_STATIC_CAST(nsIScriptEventHandlerOwner*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
-             iid.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-      nsISupports *inst = NS_STATIC_CAST(nsIDOMEventReceiver *,
-                            nsDOMEventRTTearoff::Create(this));
-      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-      NS_ADDREF(inst);
-      *result = inst;
-      return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
-      nsISupports *inst = NS_STATIC_CAST(nsIDOM3EventTarget *,
-                            nsDOMEventRTTearoff::Create(this));
-      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-      NS_ADDREF(inst);
-      *result = inst;
-      return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
-        *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOM3Node))) {
-        nsISupports *inst = new nsNode3Tearoff(this);
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-        NS_ADDREF(inst);
-        *result = inst;
-        return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIClassInfo))) {
-        nsISupports *inst = nsContentUtils::
-                GetClassInfoInstance(eDOMClassInfo_XULElement_id);
-
-        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-
-        *result = inst;
-
-        return NS_OK;
-    }
-    else if (mDocument) {
-        return mDocument->GetBindingManager()->GetBindingImplementation(this, iid, result);
-    } else {
-        *result = nsnull;
-        return NS_NOINTERFACE;
-    }
-
-    // if we get here, we know one of the above IIDs was ok.
-    NS_ADDREF(this);
-    return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsIDOMNode interface

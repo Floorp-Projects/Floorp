@@ -219,27 +219,11 @@ private:
 NS_IMPL_ADDREF(nsGenericHTMLElementTearoff)
 NS_IMPL_RELEASE(nsGenericHTMLElementTearoff)
 
-NS_IMETHODIMP
-nsGenericHTMLElementTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtr);
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElementTearoff)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
+NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
-    inst = NS_STATIC_CAST(nsIDOMNSHTMLElement *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
-    inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *, this);
-  } else {
-    return mElement->QueryInterface(aIID, aInstancePtr);
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
 
 static nsICSSOMFactory* gCSSOMFactory = nsnull;
 static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
@@ -254,26 +238,10 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   delete mAttributes;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NS_SUCCEEDED(nsGenericElement::QueryInterface(aIID, aInstancePtr)))
-    return NS_OK;
-
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIHTMLContent))) {
-    inst = NS_STATIC_CAST(nsIHTMLContent *, this);
-  } else {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLContent)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
+ 
 
 nsresult
 nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
@@ -2197,7 +2165,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                                  aPrefix, &value) :
                        NS_CONTENT_ATTR_NOT_THERE;
   } else {
-    aNameSpaceID = kNameSpaceID_None;
     rv = mAttributes ? mAttributes->GetAttribute(aAttribute, &value) :
                        NS_CONTENT_ATTR_NOT_THERE;
   }
@@ -2210,7 +2177,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       return rv;
     }
 
-    nscolor color;
     // Provide default conversions for most everything
     switch (value->GetUnit()) {
     case eHTMLUnit_Null:
@@ -2252,12 +2218,14 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
       }
 
     case eHTMLUnit_Color:
-      char cbuf[20];
-      color = nscolor(value->GetColorValue());
-      PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
-                  NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-      CopyASCIItoUTF16(cbuf, aResult);
-      break;
+      {
+        char cbuf[20];
+        nscolor color = value->GetColorValue();
+        PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
+                    NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
+        CopyASCIItoUTF16(cbuf, aResult);
+        break;
+      }
 
     default:
     case eHTMLUnit_Enumerated:
@@ -3873,27 +3841,10 @@ nsGenericHTMLContainerFormElement::~nsGenericHTMLContainerFormElement()
   SetForm(nsnull);
 }
 
-NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::QueryInterface(REFNSIID aIID,
-                                                  void** aInstancePtr)
-{
-  if (NS_SUCCEEDED(nsGenericHTMLElement::QueryInterface(aIID, aInstancePtr)))
-    return NS_OK;
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLContainerFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIFormControl)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    inst = NS_STATIC_CAST(nsIFormControl *, this);
-  } else {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP_(PRBool)
 nsGenericHTMLContainerFormElement::IsContentOfType(PRUint32 aFlags)
@@ -4103,28 +4054,10 @@ nsGenericHTMLLeafFormElement::~nsGenericHTMLLeafFormElement()
   SetForm(nsnull);
 }
 
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLLeafFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIFormControl)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
-NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::QueryInterface(REFNSIID aIID,
-                                             void** aInstancePtr)
-{
-  if (NS_SUCCEEDED(nsGenericHTMLElement::QueryInterface(aIID, aInstancePtr)))
-    return NS_OK;
-
-  nsISupports *inst = nsnull;
-
-  if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    inst = NS_STATIC_CAST(nsIFormControl *, this);
-  } else {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF(inst);
-
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP_(PRBool)
 nsGenericHTMLLeafFormElement::IsContentOfType(PRUint32 aFlags)

@@ -221,49 +221,19 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
     }
     delete mContentStack;
   }
-  if (nsnull != mText) {
-    PR_FREEIF(mText);
-  }
+
+  PR_FREEIF(mText);
 }
 
 NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
 NS_IMPL_RELEASE(nsHTMLFragmentContentSink)
 
-NS_IMETHODIMP 
-nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  if (aIID.Equals(NS_GET_IID(nsIHTMLFragmentContentSink))) {
-    nsIHTMLFragmentContentSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIHTMLContentSink))) {
-    nsIHTMLContentSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIContentSink))) {
-    nsIContentSink* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  } 
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsHTMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLFragmentContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentSink)
+  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHTMLFragmentContentSink)
+NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP 
