@@ -1944,7 +1944,7 @@ PRUint32 StyleXULBlob::ComputeCRC32(PRUint32 aCrc) const
 //
 #define STYLEDATA(type)   nsStyle##type
 #define STYLEBLOB(type)   Style##type##Blob
-#define BLOBARRAY         mStyleData->mBlobArray
+#define BLOBARRAY         mStyleData->mData.mBlobArray
 #define GETDATA(type)     ((const nsStyle##type##*)FetchInheritedStyleStruct(eStyleStruct_##type))
 #define GETBLOB(type)     ((STYLEBLOB(##type##)*)FetchInheritedStyleBlob(eStyleStruct_##type))
 
@@ -2059,8 +2059,8 @@ public:
       STYLEBLOB(XUL)*			    	 mXUL;
 #endif
       //#insert new style structs here#
-    } mData;
-  };
+    } mBlobs;
+  } mData;
 
 #ifdef SHARE_STYLECONTEXTS
   PRUint32    mRefCnt;
@@ -2167,7 +2167,7 @@ nsStyleContextData::nsStyleContextData()
 #endif
 
   for (short i = 0; i < eStyleStruct_Max; i ++) {
-    mBlobArray[i] = nsnull;
+    mData.mBlobArray[i] = nsnull;
 #ifdef LOG_STYLE_STRUCTS
     mGotMutable[i] = PR_FALSE;
 #endif
@@ -2255,7 +2255,7 @@ nsresult nsStyleContextData::AllocateStyleBlobs(nsIStyleContext* aStyleContext, 
 
   // clear the pointers: we'll inherit from the parent (if we have a parent)
   for (i = 0; i < eStyleStruct_Max; i ++) {
-    mBlobArray[i] = nsnull;
+    mData.mBlobArray[i] = nsnull;
   }
 
   if (CanShareStyleData(aStyleContext)) {
@@ -2269,8 +2269,8 @@ nsresult nsStyleContextData::AllocateStyleBlobs(nsIStyleContext* aStyleContext, 
   // no parent: allocate the blobs
   for (i = 0; i < eStyleStruct_Max; i ++) {
     nsStyleStructID structID = (nsStyleStructID)(i + 1);
-    mBlobArray[i] = AllocateOneBlob(structID, aPresContext);
-    if (!mBlobArray[i]) {
+    mData.mBlobArray[i] = AllocateOneBlob(structID, aPresContext);
+    if (!mData.mBlobArray[i]) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -2285,7 +2285,7 @@ nsresult nsStyleContextData::AllocateStyleBlobs(nsIStyleContext* aStyleContext, 
 
 void nsStyleContextData::DeleteStyleBlobs() {
   for (short i = 0; i < eStyleStruct_Max; i ++) {
-    NS_IF_DELETE(mBlobArray[i]);
+    NS_IF_DELETE(mData.mBlobArray[i]);
   }
 }
 
@@ -2314,8 +2314,8 @@ PRUint32 nsStyleContextData::ComputeCRC32(PRUint32 aCrc) const
 
   // have each style blob compute its own CRC, propagating the previous value...
   for (short i = 0; i < eStyleStruct_Max; i ++) {
-    if (mBlobArray[i]) {
-      crc = mBlobArray[i]->ComputeCRC32(crc);
+    if (mData.mBlobArray[i]) {
+      crc = mData.mBlobArray[i]->ComputeCRC32(crc);
     }
   }
   return crc;
@@ -2342,22 +2342,22 @@ void nsStyleContextData::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   // add the sizes of the individual style blobs
-  if (mData.mFont)          aSize += sizeof(StyleFontBlob);
-  if (mData.mColor)         aSize += sizeof(StyleColorBlob);
-  if (mData.mList)          aSize += sizeof(StyleListBlob);
-  if (mData.mPosition)      aSize += sizeof(StylePositionBlob);
-  if (mData.mText)          aSize += sizeof(StyleTextBlob);
-  if (mData.mDisplay)       aSize += sizeof(StyleDisplayBlob);
-  if (mData.mTable)         aSize += sizeof(StyleTableBlob);
-  if (mData.mContent)       aSize += sizeof(StyleContentBlob);
-  if (mData.mUserInterface) aSize += sizeof(StyleUserInterfaceBlob);
-  if (mData.mPrint)         aSize += sizeof(StylePrintBlob);
-  if (mData.mMargin)        aSize += sizeof(StyleMarginBlob);
-  if (mData.mPadding)       aSize += sizeof(StylePaddingBlob);
-  if (mData.mBorder)        aSize += sizeof(StyleBorderBlob);
-  if (mData.mOutline)       aSize += sizeof(StyleOutlineBlob);
+  if (mData.mBlobs.mFont)          aSize += sizeof(StyleFontBlob);
+  if (mData.mBlobs.mColor)         aSize += sizeof(StyleColorBlob);
+  if (mData.mBlobs.mList)          aSize += sizeof(StyleListBlob);
+  if (mData.mBlobs.mPosition)      aSize += sizeof(StylePositionBlob);
+  if (mData.mBlobs.mText)          aSize += sizeof(StyleTextBlob);
+  if (mData.mBlobs.mDisplay)       aSize += sizeof(StyleDisplayBlob);
+  if (mData.mBlobs.mTable)         aSize += sizeof(StyleTableBlob);
+  if (mData.mBlobs.mContent)       aSize += sizeof(StyleContentBlob);
+  if (mData.mBlobs.mUserInterface) aSize += sizeof(StyleUserInterfaceBlob);
+  if (mData.mBlobs.mPrint)         aSize += sizeof(StylePrintBlob);
+  if (mData.mBlobs.mMargin)        aSize += sizeof(StyleMarginBlob);
+  if (mData.mBlobs.mPadding)       aSize += sizeof(StylePaddingBlob);
+  if (mData.mBlobs.mBorder)        aSize += sizeof(StyleBorderBlob);
+  if (mData.mBlobs.mOutline)       aSize += sizeof(StyleOutlineBlob);
 #ifdef INCLUDE_XUL
-  if (mData.mXUL)           aSize += sizeof(StyleXULBlob);
+  if (mData.mBlobs.mXUL)           aSize += sizeof(StyleXULBlob);
 #endif
   //#insert new style structs here#
 
