@@ -81,6 +81,7 @@
 #include "nsInternetCiter.h"
 #include "nsISupportsPrimitives.h"
 #include "InsertTextTxn.h"
+#include "SetDocTitleTxn.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -415,6 +416,25 @@ NS_IMETHODIMP nsHTMLEditor::InitRules()
   return res;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::SetDocumentTitle(const PRUnichar *aTitle)
+{
+  SetDocTitleTxn *txn;
+  nsresult result = TransactionFactory::GetNewTransaction(SetDocTitleTxn::GetCID(), (EditTxn **)&txn);
+  if (NS_SUCCEEDED(result))  
+  {
+    nsAutoString title(aTitle);
+    result = txn->Init(this, &title);
+
+    if (NS_SUCCEEDED(result)) 
+    {
+      result = nsEditor::Do(txn);  
+    }
+    // The transaction system (if any) has taken ownwership of txn
+    NS_IF_RELEASE(txn);
+  }
+  return result;
+}
 
 PRBool nsHTMLEditor::IsModifiable()
 {
@@ -613,7 +633,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
                          &row, nsnull);
     if (NS_FAILED(res)) return res;
     // ...so that we can ask for first cell in that row...
-    res = GetCellAt(tblElement, row, 0, *(getter_AddRefs(cell)));
+    res = GetCellAt(tblElement, row, 0, getter_AddRefs(cell));
     if (NS_FAILED(res)) return res;
     // ...and then set selection there.
     // (Note that normally you should use CollapseSelectionToDeepestNonTableFirstChild(),
@@ -1792,7 +1812,7 @@ nsHTMLEditor::Align(const nsString& aAlignType)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
+nsHTMLEditor::GetElementOrParentByTagName(const nsAReadableString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)
 {
   if (aTagName.Length() == 0 || !aReturn )
     return NS_ERROR_NULL_POINTER;
@@ -1838,8 +1858,8 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
   {
     TagName.AssignWithConversion("a");  
   }
-  PRBool findTableCell = aTagName.EqualsIgnoreCase("td");
-  PRBool findList = aTagName.EqualsIgnoreCase("list");
+  PRBool findTableCell = TagName.EqualsWithConversion("td");
+  PRBool findList = TagName.EqualsWithConversion("list");
 
   // default is null - no element found
   *aReturn = nsnull;
@@ -2159,13 +2179,14 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)
+nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDOMElement** aReturn)
 {
   nsresult res=NS_ERROR_NOT_INITIALIZED;
   if (aReturn)
     *aReturn = nsnull;
 
   if (aTagName.IsEmpty() || !aReturn)
+//  if (!aTagName || !aReturn)
     return NS_ERROR_NULL_POINTER;
     
   nsAutoString TagName(aTagName);

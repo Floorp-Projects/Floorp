@@ -126,6 +126,7 @@ CPPSRCS = $(CPPSRCS)                      \
            nsWrapUtils.cpp                \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
+           SetDocTitleTxn.cpp             \
            $(NULL)
 
 CPP_OBJS = $(CPP_OBJS)                                \
@@ -145,6 +146,7 @@ CPP_OBJS = $(CPP_OBJS)                                \
            .\$(OBJDIR)\nsWrapUtils.obj                \
            .\$(OBJDIR)\TextEditorTest.obj             \
            .\$(OBJDIR)\TypeInState.obj                \
+           .\$(OBJDIR)\SetDocTitleTxn.obj             \
            $(NULL)
 
 # Enable Editor API Logging!

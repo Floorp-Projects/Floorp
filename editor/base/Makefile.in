@@ -91,6 +91,7 @@ CPPSRCS += nsAOLCiter.cpp                 \
            nsWrapUtils.cpp                \
            TextEditorTest.cpp             \
            TypeInState.cpp                \
+           SetDocTitleTxn.cpp             \
            $(NULL)
 
 # Enable Editor API Logging!

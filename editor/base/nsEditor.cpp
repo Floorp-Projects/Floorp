@@ -889,15 +889,23 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
   if (!diskDoc)
     return NS_ERROR_NO_INTERFACE;
 
-  // Should we prettyprint?
   PRUint32 flags = nsIDocumentEncoder::OutputEncodeEntities;
-  NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefService)
+  if (aFormat == NS_LITERAL_STRING("text/plain"))
   {
-    PRBool prettyprint = PR_FALSE;;
-    rv = prefService->GetBoolPref("editor.prettyprint", &prettyprint);
-    if (NS_SUCCEEDED(rv) && prettyprint)
-      flags |= nsIDocumentEncoder::OutputFormatted;
+    // When saving in "text/plain" format, always do formatting
+    flags |= nsIDocumentEncoder::OutputFormatted;
+  }
+  else
+  {
+    // Should we prettyprint? Check the pref
+    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefService)
+    {
+      PRBool prettyprint = PR_FALSE;;
+      rv = prefService->GetBoolPref("editor.prettyprint", &prettyprint);
+      if (NS_SUCCEEDED(rv) && prettyprint)
+        flags |= nsIDocumentEncoder::OutputFormatted;
+    }
   }
 
   PRInt32 wrapColumn = 72;
