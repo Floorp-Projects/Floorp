@@ -30,3 +30,8 @@ Rights Reserved.
 <!ENTITY other.label "In all other cases:">
 <!ENTITY ok.label "Ok">
 <!ENTITY cancel.label "Cancel">
+
+<!ENTITY notInToCc.accesskey "t">
+<!ENTITY outside.accesskey   "o">
+<!ENTITY other.accesskey     "a">
+

@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/custreceipt.dtd">
 
@@ -7,61 +9,51 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		title="&window.title;"
 		class="dialog"
-		onload="StartUp('Mailnews-Customize Receipts')" >
+		align="vertical">
 
-<html:script language="javascript">
+	<box align="vertical" style="width:100%">
+	<box orient="horizontal" style="width:100%">
+			<spring flex="1"/>
+     <text class="label" value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" for="NotInToCc"/>
+      <menulist id="NotInToCc" pref="true" preftype="int" prefstring="mail.mdn.report.not_in_to_cc"
+                prefattribute="data">
+        <menupopup>
+          <menuitem data="0" value="&neverSend.label;"/>
+          <menuitem data="1" value="&automatically.label;"/>
+          <menuitem data="2" value="&askMe.label;"/>
+        </menupopup>
+      </menulist>
+	</box>
 
-function DoOKButton() 
-{
-	top.window.close();
-}
+	<box orient="horizontal" style="width:100%">
+			<spring flex="1"/>
+      <text class="label" value="&outside.label;" accesskey="&outside.accesskey;" for="OutsideDomain"/>
+      <menulist id="OutsideDomain" pref="true" preftype="int" prefstring="mail.mdn.report.outside_domain"
+                prefattribute="data">
+        <menupopup>
+          <menuitem data="0" value="&neverSend.label;"/>
+          <menuitem data="1" value="&automatically.label;"/>
+          <menuitem data="2" value="&askMe.label;"/>
+        </menupopup>
+      </menulist>
+	</box>
 
-function DoCancelButton() 
-{
-	top.window.close();
-}
+	<box orient="horizontal" style="width:100%">
+ 			<spring flex="1"/>
+     <text class="label" value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
+      <menulist id="Other" pref="true" preftype="int" prefstring="mail.mdn.report.other"
+                prefattribute="data">
+        <menupopup>
+          <menuitem data="0" value="&neverSend.label;"/>
+          <menuitem data="1" value="&automatically.label;"/>
+          <menuitem data="2" value="&askMe.label;"/>
+        </menupopup>
+      </menulist>
+	</box>
+	</box>
 
-</html:script>
+	<spring style="height:1em"/>
+		
+	<box id="okCancelButtons"/>
 
-<html:div flex="100%">
-
-<html:br/>
-&sendReceipt.label;
-<html:form>
-	<html:table>
-		<html:tr><html:td> &notInToCc.label;
-			<html:select>
-			<html:option>&neverSend.label;</html:option>
-			<html:option>&automatically.label;</html:option>
-			<html:option>&askMe.label;</html:option>
-			</html:select>
-		</html:td></html:tr>
-		<html:tr><html:td>&outside.label;
-			<html:select>
-			<html:option>&neverSend.label;</html:option>
-			<html:option>&automatically.label;</html:option>
-			<html:option>&askMe.label;</html:option>
-			</html:select>
-		</html:td></html:tr>
-		<html:tr><html:td>&other.label;
-			<html:select>
-			<html:option>&neverSend.label;</html:option>
-			<html:option>&automatically.label;</html:option>
-			<html:option>&askMe.label;</html:option>
-			</html:select>
-		</html:td></html:tr>
-	</html:table>
-</html:form>
-
-<html:br/>
-<html:form>
-	<html:table>
-    <html:tr><html:td>
-		<html:input name="ok" type="button" value="&ok.label;" onclick="DoOKButton()"/>
-		<html:input name="cancel" type="button" value="&cancel.label;" onclick="DoCancelButton()"/>
-	</html:td></html:tr>
-	</html:table>
-</html:form>
-
-</html:div>
 </window>
