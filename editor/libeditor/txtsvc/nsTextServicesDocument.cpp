@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#error This file is no longer used.
+
 #include "nscore.h"
 #include "nsLayoutCID.h"
 #include "nsIAtom.h"

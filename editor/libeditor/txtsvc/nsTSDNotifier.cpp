@@ -35,6 +35,10 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#error This file is no longer used.
+
+
 #include "nsString.h"
 #include "nsIEditActionListener.h"
 #include "nsTSDNotifier.h"
