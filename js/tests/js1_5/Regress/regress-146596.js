@@ -55,6 +55,12 @@ var expectedvalues = [];
 /*
  * Just seeing we don't crash when compiling this function -
  * This example provided by jim-patterson@ncf.ca
+ * 
+ * Brendan: "Jim, thanks for the testcase. But note that |var|
+ * in a JS function makes a function-scoped variable --  JS lacks
+ * block scope apart from for catch variables within catch blocks.
+ *
+ * Therefore the catch variable hides the function-local variable in your case"
  */
 function F()
 {
