@@ -464,6 +464,7 @@ input {
   box-sizing: border-box;
   font-family:-moz-fixed;
   behavior: url("resource:/chrome/platformHTMLBindings.xml#inputFields");
+	cursor: text;
 }
 
 input[type=hidden] {
@@ -478,6 +479,7 @@ input[type=image] {
   vertical-align:baseline;
   behavior: none;
   background-color: inherit;
+	cursor: default;
 }
 
 input[type=image]:focus {
@@ -495,6 +497,7 @@ input[type="file"] {
   white-space: nowrap;
   border:none;
   behavior: none;
+	cursor: default;
 }
 
 input[type="file"] > input {
@@ -530,6 +533,7 @@ input[type=radio] {
   height:8px;
   behavior: none;
   -moz-border-radius:6px;
+	cursor: default;
 }
 
 input[type=radio][disabled] {
@@ -580,6 +584,7 @@ input[type=checkbox] {
   height:9px;
   color:black;
   behavior: none;
+	cursor: default;
 /*  -moz-border-radius:1px; */
 }
 
@@ -619,6 +624,7 @@ input[type="submit"] {
   font-size: small;
 
   behavior: none;
+	cursor: default;
 }
 
 input[type="submit"]:hover {
@@ -669,6 +675,7 @@ input[type="reset"] {
   font-family: sans-serif;
   font-size: small;
   behavior: none;
+	cursor: default;
 }
 
 input[type="reset"]:hover {
@@ -719,6 +726,7 @@ input[type="button"] {
   font-size: small;
   behavior: none;
   white-space: pre;
+	cursor: default;
 }
 
 input[type="button"]:hover {
@@ -831,6 +839,7 @@ input[type="text"] {
 
 input[type="text"][disabled] {
   color: gray;
+	cursor: default;
 }
 
 input[type=password] {
@@ -841,6 +850,7 @@ input[type=password] {
 
 input[type=password][disabled] {
   color: gray;
+	cursor: default;
 }
 
 label {
