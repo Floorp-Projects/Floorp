@@ -235,9 +235,9 @@ void nsSelectionMgr::SelectionRequestor(GtkWidget *widget,
   if(str) {
     gtk_selection_data_set(selection_data,
 			   GDK_SELECTION_TYPE_STRING,
-			   8, str, strlen((char*)str));
+			   8, str, mCopyStream->pcount());
+    // the format arg, "8", indicates string data with no endianness
   }
-  // the format arg, "8", indicates string data with no endianness
 }
 
 //
