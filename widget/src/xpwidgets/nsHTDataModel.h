@@ -56,6 +56,8 @@ public:
 	nsIImageGroup* GetImageGroup() const { NS_ADDREF(mImageGroup); return mImageGroup; }
 
 protected:
+	enum { cDMImageLoaded = 0 } ;
+
 	nsDataModelWidget* mListener; // Events are sent to the listening widget.
 	nsIImageGroup* mImageGroup; // Image group used for loading all images in the model.
 
