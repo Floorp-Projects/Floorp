@@ -76,6 +76,7 @@ my %pubcmds = (
                "debug" => \&bot_debug,
                "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
+               "review" -> \&bot_review,
                );
 
 my %admincmds = (
@@ -1143,6 +1144,11 @@ sub bot_translate {
     } else {
         translate_usage($nick);
     }
+}
+
+sub bot_review {
+    my ($nick, $cmd, $rest) = (@_);
+    sendmsg($nick, "$::speaker, I've reviewed your code, and it looks great.  r=mozbot.");
 }
 
 sub trim {
