@@ -1,0 +1,81 @@
+#ToString__4nsIDCFv		# nsID::ToString() const
+Parse__4nsIDFPc		# nsID::Parse(char*)
+#__vt__5IDKey		# IDKey::__vt
+#monitor__12nsRepository		# nsRepository::monitor
+#factories__12nsRepository		# nsRepository::factories
+#HashValue__5IDKeyCFv		# IDKey::HashValue() const
+#Equals__5IDKeyCFPC9nsHashKey		# IDKey::Equals(const nsHashKey*) const
+#Clone__5IDKeyCFv		# IDKey::Clone() const
+#FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
+UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
+UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
+RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
+RegisterFactory__12nsRepositoryFRC4nsIDP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,nsIFactory*,int)
+CreateInstance2__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPvPPv		# nsRepository::CreateInstance2(const nsID&,nsISupports*,const nsID&,void*,void**)
+CreateInstance__12nsRepositoryFRC4nsIDP11nsISupportsRC4nsIDPPv		# nsRepository::CreateInstance(const nsID&,nsISupports*,const nsID&,void**)
+#Initialize__12nsRepositoryFv		# nsRepository::Initialize()
+#checkInitialized__12nsRepositoryFv		# nsRepository::checkInitialized()
+#__dt__5IDKeyFv		# IDKey::~IDKey()
+FindFactory__12nsRepositoryFRC4nsIDPP10nsIFactory		# nsRepository::FindFactory(const nsID&,nsIFactory**)
+#__vt__9nsHashKey		# nsHashKey::__vt
+Enumerate__11nsHashtableFPFP9nsHashKeyPvPv_iPv  # nsHashtable::Enumerate(int (*)(nsHashKey*, void*))
+Clone__11nsHashtableFv		# nsHashtable::Clone()
+Remove__11nsHashtableFP9nsHashKey		# nsHashtable::Remove(nsHashKey*)
+Get__11nsHashtableFP9nsHashKey		# nsHashtable::Get(nsHashKey*)
+Put__11nsHashtableFP9nsHashKeyPv		# nsHashtable::Put(nsHashKey*,void*)
+__dt__11nsHashtableFv		# nsHashtable::~nsHashtable()
+__ct__11nsHashtableFUi		# nsHashtable::nsHashtable(unsigned int)
+__dt__9nsHashKeyFv		# nsHashKey::~nsHashKey()
+__ct__9nsHashKeyFv		# nsHashKey::nsHashKey()
+Warning__7nsDebugFPCcPCci		# nsDebug::Warning(const char*,const char*,int)
+Error__7nsDebugFPCcPCci		# nsDebug::Error(const char*,const char*,int)
+NotReached__7nsDebugFPCcPCci		# nsDebug::NotReached(const char*,const char*,int)
+NotYetImplemented__7nsDebugFPCcPCci		# nsDebug::NotYetImplemented(const char*,const char*,int)
+Assertion__7nsDebugFPCcPCcPCci		# nsDebug::Assertion(const char*,const char*,const char*,int)
+PostCondition__7nsDebugFPCcPCcPCci		# nsDebug::PostCondition(const char*,const char*,const char*,int)
+PreCondition__7nsDebugFPCcPCcPCci		# nsDebug::PreCondition(const char*,const char*,const char*,int)
+Create__8nsMallocFP11nsISupportsRC4nsIDPPv		# nsMalloc::Create(nsISupports*,const nsID&,void**)
+#Break__7nsDebugFPCci		# nsDebug::Break(const char*,int)
+Abort__7nsDebugFPCci		# nsDebug::Abort(const char*,int)
+#__vt__17SupportsArrayImpl		# SupportsArrayImpl::__vt
+#__vt__16nsISupportsArray		# nsISupportsArray::__vt
+#__vt__11nsISupports		# nsISupports::__vt
+#__eq__17SupportsArrayImplCFRC16nsISupportsArray		# SupportsArrayImpl::operator ==(const nsISupportsArray&) const
+#Count__17SupportsArrayImplCFv		# SupportsArrayImpl::Count() const
+#__vc__17SupportsArrayImplCFi		# SupportsArrayImpl::operator [](int) const
+#AppendElement__17SupportsArrayImplFP11nsISupports		# SupportsArrayImpl::AppendElement(nsISupports*)
+NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsArray**)
+#EnumerateBackwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateBackwards(int (*)(nsISupports*, void*),void*)
+#EnumerateForwards__17SupportsArrayImplFPFP11nsISupportsPv_iPv		# SupportsArrayImpl::EnumerateForwards(int (*)(nsISupports*, void*),void*)
+#Compact__17SupportsArrayImplFv		# SupportsArrayImpl::Compact()
+#Clear__17SupportsArrayImplFv		# SupportsArrayImpl::Clear()
+#RemoveLastElement__17SupportsArrayImplFPC11nsISupports		# SupportsArrayImpl::RemoveLastElement(const nsISupports*)
+#RemoveElement__17SupportsArrayImplFPC11nsISupportsi		# SupportsArrayImpl::RemoveElement(const nsISupports*,int)
+#RemoveElementAt__17SupportsArrayImplFi		# SupportsArrayImpl::RemoveElementAt(int)
+#ReplaceElementAt__17SupportsArrayImplFP11nsISupportsi		# SupportsArrayImpl::ReplaceElementAt(nsISupports*,int)
+#InsertElementAt__17SupportsArrayImplFP11nsISupportsi		# SupportsArrayImpl::InsertElementAt(nsISupports*,int)
+#LastIndexOf__17SupportsArrayImplCFPC11nsISupports		# SupportsArrayImpl::LastIndexOf(const nsISupports*) const
+#IndexOf__17SupportsArrayImplCFPC11nsISupportsi		# SupportsArrayImpl::IndexOf(const nsISupports*,int) const
+#ElementAt__17SupportsArrayImplCFi		# SupportsArrayImpl::ElementAt(int) const
+#Equals__17SupportsArrayImplCFPC16nsISupportsArray		# SupportsArrayImpl::Equals(const nsISupportsArray*) const
+#__as__17SupportsArrayImplFRC16nsISupportsArray		# SupportsArrayImpl::operator =(const nsISupportsArray&)
+#DeleteArray__17SupportsArrayImplFv		# SupportsArrayImpl::DeleteArray()
+#QueryInterface__17SupportsArrayImplFRC4nsIDPPv		# SupportsArrayImpl::QueryInterface(const nsID&,void**)
+#Release__17SupportsArrayImplFv		# SupportsArrayImpl::Release()
+#AddRef__17SupportsArrayImplFv		# SupportsArrayImpl::AddRef()
+#__dt__17SupportsArrayImplFv		# SupportsArrayImpl::~SupportsArrayImpl()
+#__ct__17SupportsArrayImplFv		# SupportsArrayImpl::SupportsArrayImpl()
+PL_VectorAssertValid
+PL_VectorRemove
+PL_VectorInsert
+PL_VectorAdd
+PL_VectorSet
+PL_VectorClone
+PL_VectorCopy
+PL_VectorCompact
+PL_VectorIsValidIndex
+PL_VectorSetSize
+PL_VectorFinalize
+PL_VectorInitialize
+PL_VectorDestroy
+PL_NewVector
