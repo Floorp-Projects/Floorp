@@ -23,11 +23,18 @@ DEPTH=..\..
 
 LocalDirs=public src resources eudora text
 
+MODULE=import
 
-!if "$(_MSC_VER)" == "1200"
+!if "$(_MSC_VER)" != "" && "$(_MSC_VER)" != "1100"
 DIRS=$(LocalDirs) oexpress outlook
 !else
 DIRS=$(LocalDirs)
 !endif
 
 include <$(DEPTH)\config\rules.mak>
+
+
+install::
+!if "$(_MSC_VER)" == "" || "$(_MSC_VER)" == "1100"
+	@echo NOTE: Skipping oexpress and outlook import modules, requires _MSC_VER=1200
+!endif
