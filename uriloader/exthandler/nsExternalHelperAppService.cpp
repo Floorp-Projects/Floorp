@@ -952,7 +952,7 @@ nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlat
   }
 
 
-  return NS_ERROR_FILE_NOT_FOUND;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
