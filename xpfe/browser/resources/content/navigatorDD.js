@@ -433,7 +433,7 @@ var proxyIconDNDObserver = {
       var urlBar = document.getElementById("urlbar");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: urlBar.value };
-      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window.title };
+      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window._content.document.title };
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
       flavourList["text/html"] = { width: 2, data: htmlString };
       return flavourList;
