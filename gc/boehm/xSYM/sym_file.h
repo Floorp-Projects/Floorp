@@ -49,7 +49,7 @@ typedef struct sym_file sym_file;
 sym_file* open_sym_file(const FSSpec* symSpec);
 void close_sym_file(sym_file* symbols);
 
-int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32* fileOffset);
+int get_source(sym_file* symbols, UInt32 codeOffset, char symbolName[256], char fileName[256], UInt32* fileOffset);
 
 #ifdef __cplusplus
 } /* extern "C" */

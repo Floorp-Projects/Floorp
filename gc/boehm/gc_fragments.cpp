@@ -13,6 +13,7 @@ struct CodeLocation {
 	CodeLocation* mNext;
 	char* mCodeAddr;
 	UInt32 mFileOffset;
+	char mSymbolName[256];
 	char mFileName[256];
 	
 	CodeLocation() : mNext(NULL), mCodeAddr(NULL), mFileOffset(0)
@@ -31,7 +32,7 @@ struct CodeLocationCache {
 	CodeLocationCache();
 
 	CodeLocation* findLocation(char* codeAddr);
-	void saveLocation(char* codeAddr, char fileName[256], UInt32 fileOffset);
+	void saveLocation(char* codeAddr, char symbolName[256], char fileName[256], UInt32 fileOffset);
 };
 
 CodeLocationCache::CodeLocationCache()
@@ -69,7 +70,7 @@ CodeLocation* CodeLocationCache::findLocation(char* codeAddr)
 	return NULL;
 }
 
-void CodeLocationCache::saveLocation(char* codeAddr, char fileName[256], UInt32 fileOffset)
+void CodeLocationCache::saveLocation(char* codeAddr, char symbolName[256], char fileName[256], UInt32 fileOffset)
 {
 	CodeLocation** link = mLastLink;
 	CodeLocation* location = *link;
@@ -85,6 +86,7 @@ void CodeLocationCache::saveLocation(char* codeAddr, char fileName[256], UInt32 
 	// save the specified location.
 	location->mCodeAddr = codeAddr;
 	location->mFileOffset = fileOffset;
+	::strcpy(location->mSymbolName, symbolName);
 	::strcpy(location->mFileName, fileName);
 }
 
@@ -182,7 +184,7 @@ void GC_unregister_fragment(char* dataStart, char* dataEnd,
 	GC_remove_roots(dataStart, dataEnd);
 }
 
-int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
+int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256], UInt32* fileOffset)
 {
 	CodeFragment** link = find_fragment(codeAddr);
 	if (link != NULL) {
@@ -196,15 +198,16 @@ int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset)
 		// see if this is a cached location.
 		CodeLocation* location = fragment->mLocations.findLocation(codeAddr);
 		if (location != NULL) {
+			::strcpy(symbolName, location->mSymbolName);
 			::strcpy(fileName, location->mFileName);
 			*fileOffset = location->mFileOffset;
 			return 1;
 		}
 		sym_file* symbols = fragment->mSymbols;
 		if (symbols != NULL) {
-			if (get_source(symbols, UInt32(codeAddr - fragment->mCodeStart), fileName, fileOffset)) {
+			if (get_source(symbols, UInt32(codeAddr - fragment->mCodeStart), symbolName, fileName, fileOffset)) {
 				// save this location in the per-fragment cache.
-				fragment->mLocations.saveLocation(codeAddr, fileName, *fileOffset);
+				fragment->mLocations.saveLocation(codeAddr, symbolName, fileName, *fileOffset);
 				return 1;
 			}
 		}

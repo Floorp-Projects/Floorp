@@ -249,7 +249,7 @@ inline UInt32 delta(UInt32 x, UInt32 y)
 		return (y - x);
 }
 
-int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32* fileOffset)
+int get_source(sym_file* symbols, UInt32 codeOffset, char symbolName[256], char fileName[256], UInt32* fileOffset)
 {
 	const DiskSymbolHeaderBlock& header = symbols->mHeader;
 	const ResourceTableEntry& codeEntry = symbols->mCodeEntry;
@@ -265,14 +265,20 @@ int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32*
 		UInt32 moduleIndex = (i % modulesPerPage);
 		symbols->seek((header.dshb_mte.dti_first_page + modulePage) * header.dshb_page_size + moduleIndex * sizeof(ModulesTableEntry));
 		if (symbols->read(&moduleEntry, sizeof(moduleEntry)) == sizeof(moduleEntry)) {
-			const UInt8* moduleName = symbols->getName(moduleEntry.mte_nte_index);
-			// printf("module name = %#s\n", moduleName);
 			if (isMeatyModule(moduleEntry) && (codeOffset >= moduleEntry.mte_res_offset) && (codeOffset - moduleEntry.mte_res_offset) < moduleEntry.mte_size) {
 				FileReferenceTableEntry frte;
 				if (getFileReferenceTableEntry(symbols, moduleEntry.mte_imp_fref, &frte)) {
+					UInt32 length;
+					// get the name of the symbol.
+					const UInt8* moduleName = symbols->getName(moduleEntry.mte_nte_index);
+					// printf("module name = %#s\n", moduleName);
+					// trim off the leading "."
+					length = moduleName[0] - 1;
+					BlockMoveData(moduleName + 2, symbolName, length);
+					symbolName[length] = '\0';
 					// get the name of the file.
 					const UInt8* name = symbols->getName(frte.frte_fn.nte_index);
-					UInt32 length = name[0];
+					length = name[0];
 					BlockMoveData(name + 1, fileName, length);
 					fileName[length] = '\0';
 					// printf("file name = %s\n", fileName);

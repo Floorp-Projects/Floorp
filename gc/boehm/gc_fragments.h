@@ -19,7 +19,7 @@ void GC_register_fragment(char* dataStart, char* dataEnd,
 void GC_unregister_fragment(char* dataStart, char* dataEnd,
                             char* codeStart, char* codeEnd);
 
-int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset);
+int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256], UInt32* fileOffset);
 
 #ifdef __cplusplus
 } /* extern "C" */
