@@ -129,6 +129,7 @@
 #include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgCompFields.h"
+#include "nsMsgComposeBE.h"
 
 #include "net.h" /* should be defined into msgCore.h? */
 // RICHIE   #include "intl_csi.h"
