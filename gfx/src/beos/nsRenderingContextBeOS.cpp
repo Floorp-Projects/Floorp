@@ -1247,18 +1247,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, const nsRect& 
 		dr.x,dr.y,dr.width,dr.height);
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 3/16/00 dwc
- */
-NS_IMETHODIMP 
-nsRenderingContextBeOS::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                                    nscoord aWidth,nscoord aHeight)
-{
-
-  return NS_OK;
-}
-
 // #pragma mark checkme
 NS_IMETHODIMP
 nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
