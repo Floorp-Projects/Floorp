@@ -317,11 +317,13 @@ NS_NewGenericModule(const char* moduleName,
                     nsIModule* *result);
 
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
+#  define NS_MODULEINFO                   nsModuleInfo
 #  define NSMODULEINFO(_name)             _name##_gModuleInfo
 #  define NSGETMODULE_ENTRY_POINT(_info)
 #  define NSDEPENDENT_LIBS(_name)         const char* _name##_gDependlibs[]={DEPENDENT_LIBS "\0"};
 #  define NSDEPENDENT_LIBS_NAME(_name)    _name##_gDependlibs
 #else
+#  define NS_MODULEINFO                   static nsModuleInfo
 #  define NSMODULEINFO(_name)             gModuleInfo
 #  define NSDEPENDENT_LIBS(_name)         static const char* gDependlibs[]={DEPENDENT_LIBS "\0"};
 #  define NSDEPENDENT_LIBS_NAME(_name)    gDependlibs
@@ -353,7 +355,7 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
 #ifndef DEPENDENT_LIBS
 
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
-static nsModuleInfo NSMODULEINFO(_name) = {                                   \
+NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
     NS_MODULEINFO_VERSION,                                                    \
     (#_name),                                                                 \
     (_components),                                                            \
@@ -368,7 +370,7 @@ NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
 
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
 NSDEPENDENT_LIBS(_name)                                                       \
-static nsModuleInfo NSMODULEINFO(_name) = {                                   \
+NS_MODULEINFO NSMODULEINFO(_name) = {                                         \
     NS_MODULEINFO_VERSION,                                                    \
     (#_name),                                                                 \
     (_components),                                                            \
