@@ -653,7 +653,7 @@ fi
 	MOTIF_INCLUDE_DIR=
     fi
 
-	TK_LIBS="$MOTIF_XP_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $X11_LIBS $XEXT_LIBS $XSM_LIBS $XICE_LIBS"
+	TK_LIBS="$MOTIF_XP_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS  $XSM_LIBS $XICE_LIBS"
 
     AC_ARG_WITH(static-motif,
     [  --with-static-motif     link Motif statically if possible],
@@ -719,7 +719,8 @@ fi
 # tk=xlib build.
 if echo ":$MOZ_WIDGET_TOOLKIT" | grep "xlib" >/dev/null; then
     TK_CFLAGS='$(XCFLAGS)'
-    TK_LIBS='$(XLDFLAGS) $(XLIBS)'
+    TK_LIBS='$(XLDFLAGS)'
+    TK_LIBS="$TK_LIBS $XEXT_LIBS $X11_LIBS"
 fi
 
 fi # $no_x
