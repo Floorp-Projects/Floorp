@@ -135,6 +135,9 @@ $show_raw = $form{'raw'} ne '';
 # branch
 #
 $query_branch = $form{'branch'};
+if (!defined $query_branch) {
+    $query_branch = 'HEAD';
+}
 $query_branchtype = $form{'branchtype'};
 
 
