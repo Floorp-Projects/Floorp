@@ -527,9 +527,10 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
 
 void nsImapOfflineSync::ProcessEmptyTrash(nsIMsgOfflineImapOperation *currentOp)
 {
-	m_currentFolder->EmptyTrash(m_window, this);
-	m_currentDB->RemoveOfflineOp(currentOp);
-	m_currentDB = nsnull;	// empty trash deletes the database?
+  m_currentFolder->EmptyTrash(m_window, this);
+  // don't need to remove the current op because emptying trash will
+  // delete the database.
+  m_currentDB = nsnull;	// empty trash deletes the database?
 }
 
 // returns PR_TRUE if we found a folder to create, PR_FALSE if we're done creating folders.
