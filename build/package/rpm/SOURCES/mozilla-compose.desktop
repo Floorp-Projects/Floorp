@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Mozilla Mail Message
-Comment=Compose a Mail Message with Mozilla
-Exec=/usr/bin/mozilla -compose
-Icon=mozilla-compose-icon.gif
-Terminal=0
-Type=Application
