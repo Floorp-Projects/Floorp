@@ -144,19 +144,32 @@ NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
 	return (sPrefWindow != nsnull);
 }
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::Init(const PRUnichar* aID)
+NS_IMETHODIMP nsPrefWindow::showWindow(
+		const PRUnichar *id,
+		nsIDOMWindow *currentFrontWin,
+		const PRUnichar* panelURL)
 // The ID is currently only used to display debugging text on the console.
 //----------------------------------------------------------------------------------------
 { 
 #ifdef NS_DEBUG
-    nsOutputConsoleStream stream;
+	nsOutputConsoleStream stream;
     char buf[512];
-    stream << "Pref object initialized by "
-    	<< nsString(aID).ToCString(buf, sizeof(buf))
-    	<< nsEndl;
 #endif
-    if (!mPrefs)
+	if (mPrefs)
+	{
+#ifdef NS_DEBUG
+	    stream << "Existing pref object reused by "
+	    	<< nsString(id).ToCString(buf, sizeof(buf))
+	    	<< nsEndl;
+#endif
+    }
+    else
     {
+#ifdef NS_DEBUG
+	    stream << "Pref object initialized by "
+	    	<< nsString(id).ToCString(buf, sizeof(buf))
+	    	<< nsEndl;
+#endif
 	    nsIPref* prefs = nsnull;
 	    nsresult rv = nsServiceManager::GetService(
 	    	kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
@@ -166,8 +179,42 @@ NS_IMETHODIMP nsPrefWindow::Init(const PRUnichar* aID)
     }
     if (!mPrefs)
         return NS_ERROR_FAILURE;
-    return NS_OK;
-} // nsPrefWindow::Init()
+
+    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
+    if (mWindow)
+    	return NS_OK;
+    nsIWebShellWindow* window = nsnull;
+    nsCOMPtr<nsIURL> urlObj;
+    nsresult rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://pref/content/");
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsIXULWindowCallbacks *cb = nsnull;
+    nsCOMPtr<nsIWebShellWindow> parent;
+    DOMWindowToWebShellWindow(currentFrontWin, &parent);
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+                                 nsnull, cb, 504, 436);
+    if (window)
+    {
+        mWindow = window;
+        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+        nsresult gotParent
+        	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                             NS_ERROR_FAILURE;
+        // Windows OS is the only one that needs the parent disabled, or cares
+        // arguably this should be done by the new window, within ShowModal...
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_FALSE);
+        window->ShowModal();
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_TRUE);
+    }
+    return rv;
+} // nsPrefWindow::showWindow()
 
 //----------------------------------------------------------------------------------------
 static PRBool CheckAndStrip(
@@ -566,47 +613,7 @@ nsresult nsPrefWindow::FinalizePrefWidgets()
 } // nsPrefWindow::FinalizePrefWidgets
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
-//----------------------------------------------------------------------------------------
-{
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    if (mWindow)
-    	return NS_OK;
-    nsIWebShellWindow* window = nsnull;
-    nsCOMPtr<nsIURL> urlObj;
-    nsresult rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://pref/content/");
-    if (NS_FAILED(rv))
-        return rv;
-
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsIXULWindowCallbacks *cb = nsnull;
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
-                                 nsnull, cb, 504, 436);
-    if (window)
-    {
-        mWindow = window;
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent
-        	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
-    }
-    return rv;
-} // nsPrefWindow::ShowWindow
-
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::ChangePanel(const PRUnichar* aURL)
+NS_IMETHODIMP nsPrefWindow::changePanel(const PRUnichar* aURL)
 // Start loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
@@ -630,7 +637,7 @@ NS_IMETHODIMP nsPrefWindow::ChangePanel(const PRUnichar* aURL)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::PanelLoaded(nsIDOMWindow* aWin)
+NS_IMETHODIMP nsPrefWindow::panelLoaded(nsIDOMWindow* aWin)
 // Callback after loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
@@ -697,7 +704,7 @@ static nsresult Close(nsIDOMWindow*& dw)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::SavePrefs()
+NS_IMETHODIMP nsPrefWindow::savePrefs()
 //----------------------------------------------------------------------------------------
 {
     FinalizePrefWidgets();
@@ -714,7 +721,7 @@ NS_IMETHODIMP nsPrefWindow::SavePrefs()
 } // nsPrefWindow::SavePrefs
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::CancelPrefs()
+NS_IMETHODIMP nsPrefWindow::cancelPrefs()
 //----------------------------------------------------------------------------------------
 {
     // Do the prefs stuff...
@@ -750,7 +757,7 @@ char* nsPrefWindow::GetSubstitution(nsString& formatstr)
 } // nsPrefWindow::GetSubstitution
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::SetSubstitutionVar(
+NS_IMETHODIMP nsPrefWindow::setSubstitutionVar(
 	PRUint32 aStringnum,
     const char* aVal)
 //----------------------------------------------------------------------------------------

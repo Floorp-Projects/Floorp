@@ -15,17 +15,6 @@ function StartUp(windowName)
 	}
 	if (prefwindow != null && windowName != "Top" && windowName != "Bottom")
 	{
-		prefwindow.PanelLoaded(window);
+		prefwindow.panelLoaded(window);
 	}
 }
-
-function DoSave()
-{
-	prefwindow.SavePrefs();
-}
-
-function DoCancel()
-{
-	prefwindow.CancelPrefs();
-}
-

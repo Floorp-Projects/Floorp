@@ -28,15 +28,14 @@ class nsIDOMWindow;
 [scriptable, uuid(55AF8384-E11E-11D2-915F-A053F05FF7BC)]
 interface nsIPrefWindow : nsISupports
 {
-	void Init(in wstring id);
-	void ShowWindow(in nsIDOMWindow currentFrontWin);
+	void showWindow(in wstring id, in nsIDOMWindow currentFrontWin, in wstring panelURL);
 
-	void ChangePanel(in wstring url);
-	void PanelLoaded(in nsIDOMWindow win);
+	void changePanel(in wstring url); // called by the pref-tree click handler
+	void panelLoaded(in nsIDOMWindow win); // callback notification.
 
-	void SavePrefs();
-	void CancelPrefs();
-    void SetSubstitutionVar(in unsigned long stringnum, in string val);
+	void savePrefs();
+	void cancelPrefs();
+    void setSubstitutionVar(in unsigned long stringnum, in string val);
 };
 
 %{ C++
