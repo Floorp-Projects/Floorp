@@ -728,7 +728,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 
       // Set clipping of child views.
       nsRegion region;
-      region.Copy(nsRectFast(clipRect));
+      region.Copy(clipRect);
       vm->SetViewChildClipRegion(aView, &region);
     } else {
       // Remove clipping of child views.
