@@ -97,6 +97,8 @@ protected:
     // Data for the search interfaces
 	nsSupportsHashtable mCardList ;
     PRInt32 mSearchContext ;
+    // Windows AB type
+    PRUint32 mAbWinType ;
 
 private:
 };

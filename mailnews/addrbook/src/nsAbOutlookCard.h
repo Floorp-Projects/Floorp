@@ -45,7 +45,8 @@ public:
     
 protected:
     nsMapiEntry *mMapiData ;
-    
+    PRUint32 mAbWinType ;
+
 private:
 };
 

@@ -24,117 +24,48 @@
 #ifndef nsMapiAddressBook_h___
 #define nsMapiAddressBook_h___
 
-#include <windows.h>
-#include <mapix.h>
-
-#include "nsString.h"
-#include "nsVoidArray.h"
-#include "nsXPIDLString.h"
-
-struct nsMapiEntry
-{
-    ULONG     mByteCount ;
-    LPENTRYID mEntryId ;
-    
-    nsMapiEntry(void) ;
-    ~nsMapiEntry(void) ;
-    nsMapiEntry(ULONG aByteCount, LPENTRYID aEntryId) ;
-    
-    void Assign(ULONG aByteCount, LPENTRYID aEntryId) ;
-    void Dump(void) const ;
-} ;
-
-struct nsMapiEntryArray 
-{
-    nsMapiEntry *mEntries ;
-    ULONG      mNbEntries ;
-    
-    nsMapiEntryArray(void) ;
-    ~nsMapiEntryArray(void) ;
-    
-    const nsMapiEntry& operator [] (int aIndex) const { return mEntries [aIndex] ; }
-    void CleanUp(void) ;
-} ;
-
-class nsMapiAddressBook
+#include "nsAbWinHelper.h"
+ 
+class nsMapiAddressBook : public nsAbWinHelper
 {
 public :
     nsMapiAddressBook(void) ;
-    ~nsMapiAddressBook(void) ;
-    
-    // Get the top address books
-    BOOL GetFolders(nsMapiEntryArray& aFolders) ;
-    // Get a list of entries for cards/mailing lists in a folder/mailing list
-    BOOL GetCards(const nsMapiEntry& aParent, LPSRestriction aRestriction, 
-        nsMapiEntryArray& aCards) ;
-    // Get a list of mailing lists in a folder
-    BOOL GetNodes(const nsMapiEntry& aParent, nsMapiEntryArray& aNodes) ;
-    // Get the number of cards/mailing lists in a folder/mailing list
-    BOOL GetCardsCount(const nsMapiEntry& aParent, ULONG& aNbCards) ;
-    // Access last MAPI error
-    HRESULT LastError(void) const { return mLastError ; }
-    // Get the value of a MAPI property of type string
-    BOOL GetPropertyString(const nsMapiEntry& aObject, ULONG aPropertyTag, nsCString& aValue) ;
-    // Same as previous, but string is returned as unicode
-    BOOL GetPropertyUString(const nsMapiEntry& aObject, ULONG aPropertyTag, nsString& aValue) ;
-    // Get multiple string MAPI properties in one call.
-    BOOL GetPropertiesUString(const nsMapiEntry& aObject, const ULONG *aPropertiesTag, 
-                              ULONG aNbProperties, nsStringArray& aValues) ;
-    // Get the value of a MAPI property of type SYSTIME
-    BOOL GetPropertyDate(const nsMapiEntry& aObject, ULONG aPropertyTag, 
-                         WORD& aYear, WORD& aMonth, WORD& aDay) ;
-    // Get the value of a MAPI property of type LONG
-    BOOL GetPropertyLong(const nsMapiEntry& aObject, ULONG aPropertyTag, ULONG& aValue) ;
-    // Get the value of a MAPI property of type BIN
-    BOOL GetPropertyBin(const nsMapiEntry& aObject, ULONG aPropertyTag, nsMapiEntry& aValue) ;
-    // Convert MAPI entries into strings and back
-    BOOL StringToEntry(const nsCString& aString, nsMapiEntry& aEntry) const ;
-    BOOL EntryToString(const nsMapiEntry& aEntry, nsCString& aString) const ;
-    // Tests if a container contains an entry
-    BOOL TestOpenEntry(const nsMapiEntry& aContainer, const nsMapiEntry& aEntry) ;
-    // Delete an entry in the address book
-    BOOL DeleteEntry(const nsMapiEntry& aContainer, const nsMapiEntry& aEntry) ;
-    // Set the value of a MAPI property of type string in unicode
-    BOOL SetPropertyUString (const nsMapiEntry& aObject, ULONG aPropertyTag, 
-                             const PRUnichar *aValue) ;
-    // Same as previous, but with a bunch of properties in one call
-    BOOL SetPropertiesUString(const nsMapiEntry& aObject, const ULONG *aPropertiesTag,
-        ULONG aNbProperties, nsXPIDLString *aValues) ;
-    // Set the value of a MAPI property of type SYSTIME
-    BOOL SetPropertyDate(const nsMapiEntry& aObject, ULONG aPropertyTag, 
-                         WORD aYear, WORD aMonth, WORD aDay) ;
-    // Create entry in the address book
-    BOOL CreateEntry(const nsMapiEntry& aParent, nsMapiEntry& aNewEntry) ;
-    // Create a distribution list in the address book
-    BOOL CreateDistList(const nsMapiEntry& aParent, nsMapiEntry& aNewEntry) ;
-    // Copy an existing entry in the address book
-    BOOL CopyEntry(const nsMapiEntry& aContainer, const nsMapiEntry& aSource, nsMapiEntry& aTarget) ;
-    // Get a default address book container
-    BOOL GetDefaultContainer(nsMapiEntry& aContainer) ;
-    
+    virtual ~nsMapiAddressBook(void) ;
+
 protected :
-    
-private :
-    LPMAPISESSION mSession ;
-    LPADRBOOK mAddressBook ;
-    BOOL mLogonDone ;
-    BOOL mInitialized ;
-    HRESULT mLastError ;
-    static ULONG mEntryCounter ;
-    
+    // Class members to handle the library/entry points
+    static HMODULE mLibrary ;
+    static PRInt32 mLibUsage ;
+    static LPMAPIINITIALIZE mMAPIInitialize ;
+    static LPMAPIUNINITIALIZE mMAPIUninitialize ;
+    static LPMAPIALLOCATEBUFFER mMAPIAllocateBuffer ;
+    static LPMAPIFREEBUFFER mMAPIFreeBuffer ;
+    static LPMAPILOGONEX mMAPILogonEx ;
+    // Shared session and address book used by all instances.
+    // For reasons best left unknown, MAPI doesn't seem to like
+    // having different threads playing with supposedly different
+    // sessions and address books. They ll end up fighting over
+    // the same resources, with hangups and GPF resulting. Not nice.
+    // So it seems that if everybody (as long as some client is 
+    // still alive) is using the same sessions and address books,
+    // MAPI feels better. And who are we to get in the way of MAPI
+    // happiness? Thus the following class members:
+    static BOOL mInitialized ;
+    static BOOL mLogonDone ;
+    static LPMAPISESSION mRootSession ;
+    static LPADRBOOK mRootBook ;
+
     // Load the MAPI environment
     BOOL Initialize(void) ;
-    // Retrieve the contents of a container, with an optional restriction
-    BOOL GetContents(const nsMapiEntry& aParent, LPSRestriction aRestriction, 
-                     nsMapiEntry **aList, ULONG &aNbElements, ULONG aMapiType) ;
-    // Retrieve the values of a set of properties on a MAPI object
-    BOOL GetMAPIProperties(const nsMapiEntry& aObject, const ULONG *aPropertyTags, 
-                           ULONG aNbProperties,
-                           LPSPropValue& aValues, ULONG& aValueCount) ;
-    // Set the values of a set of properties on a MAPI object
-    BOOL SetMAPIProperties(const nsMapiEntry& aObject, ULONG aNbProperties, 
-                           const LPSPropValue& aValues) ;
-    
+    // Allocation of a buffer for transmission to interfaces
+    virtual void AllocateBuffer(ULONG aByteCount, LPVOID *aBuffer) ;
+    // Destruction of a buffer provided by the interfaces
+    virtual void FreeBuffer(LPVOID aBuffer) ;
+    // Library management 
+    static BOOL LoadMapiLibrary(void) ;
+    static void FreeMapiLibrary(void) ;
+
+private :
 } ;
 
 #endif // nsMapiAddressBook_h___

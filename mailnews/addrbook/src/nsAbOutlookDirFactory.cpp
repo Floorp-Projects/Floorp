@@ -22,7 +22,7 @@
  * Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
  */
 #include "nsAbOutlookDirFactory.h"
-#include "nsMapiAddressBook.h"
+#include "nsAbWinHelper.h"
 #include "nsIAbDirectory.h"
 
 #include "nsIRDFService.h"
@@ -63,41 +63,69 @@ nsAbOutlookDirFactory::~nsAbOutlookDirFactory(void)
 }
 
 extern const char *kOutlookDirectoryScheme ;
+extern const char *kURIPropertyName ;
+
+
+
+static void parseProperties(PRUint32 aNbProperties, const char **aPropertyNames,
+                            const PRUnichar **aPropertyValues, nsAbWinType& aWinType)
+{
+    aWinType = nsAbWinType_Unknown ;
+    PRUint32 i = 0 ;
+
+    for (i = 0 ; i < aNbProperties ; ++ i) {
+        if (nsCRT::strcmp(aPropertyNames [i], kURIPropertyName) == 0) {
+            nsCAutoString uri ;
+            nsCString stub ;
+            nsCString entry ;
+
+            uri.AssignWithConversion(aPropertyValues [i]) ;
+            aWinType = getAbWinType(kOutlookDirectoryScheme, uri.get(), stub, entry) ;
+            break ;
+        }
+    }
+}
 
 NS_IMETHODIMP nsAbOutlookDirFactory::CreateDirectory(PRUint32 aNbProperties, 
                                                      const char **aPropertyNames, 
                                                      const PRUnichar **aPropertyValues, 
                                                      nsISimpleEnumerator **aDirectories)
 {
-    if (aPropertyNames == nsnull ||
-        aPropertyValues == nsnull || 
-        aDirectories == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aPropertyNames || !aPropertyValues || !aDirectories) { 
+        return NS_ERROR_NULL_POINTER ; 
+    }
     *aDirectories = nsnull ;
     nsresult retCode = NS_OK ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinType abType = nsAbWinType_Unknown ;
+
+    parseProperties(aNbProperties, aPropertyNames, aPropertyValues, abType) ;
+    if (abType == nsAbWinType_Unknown) {
+        return NS_ERROR_FAILURE ;
+    }
+    nsAbWinHelperGuard mapiAddBook (abType) ;
     nsMapiEntryArray folders ;
     ULONG nbFolders = 0 ;
     nsCOMPtr<nsISupportsArray> directories ;
     
     retCode = NS_NewISupportsArray(getter_AddRefs(directories)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    if (!mapiAddBook.GetFolders(folders)) {
+    if (!mapiAddBook->IsOK() || !mapiAddBook->GetFolders(folders)) {
         return NS_ERROR_FAILURE ;
     }
     nsCOMPtr<nsIRDFService> rdf = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &retCode);
-    NS_ENSURE_SUCCESS(retCode, retCode);
+    NS_ENSURE_SUCCESS(retCode, retCode) ;
     nsCAutoString entryId ;
     nsCAutoString uri ;
     nsCOMPtr<nsIRDFResource> resource ;
-    
+
     for (ULONG i = 0 ; i < folders.mNbEntries ; ++ i) {
-        if (mapiAddBook.EntryToString(folders.mEntries [i], entryId)) {
-            uri.Assign(kOutlookDirectoryScheme) ;
-            uri.Append(entryId) ;
-            retCode = rdf->GetResource(uri, getter_AddRefs(resource)) ;
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            directories->AppendElement(resource) ;
-        }
+        folders.mEntries [i].ToString(entryId) ;
+        buildAbWinUri(kOutlookDirectoryScheme, abType, uri) ;
+        uri.Append(entryId) ;
+        
+        retCode = rdf->GetResource(uri, getter_AddRefs(resource)) ;
+        NS_ENSURE_SUCCESS(retCode, retCode) ;
+        directories->AppendElement(resource) ;
     }
     return NS_NewArrayEnumerator(aDirectories, directories) ;
 }

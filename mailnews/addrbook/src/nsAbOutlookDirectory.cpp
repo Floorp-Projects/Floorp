@@ -22,7 +22,7 @@
  * Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
  */
 #include "nsAbOutlookDirectory.h"
-#include "nsMapiAddressBook.h"
+#include "nsAbWinHelper.h"
 
 #include "nsIRDFService.h"
 
@@ -70,7 +70,8 @@ private:
 
 nsAbOutlookDirectory::nsAbOutlookDirectory(void)
 : nsAbDirectoryRDFResource(), nsAbDirProperty(), nsAbDirSearchListenerContext(), 
-mQueryThreads(16, PR_TRUE), mCurrentQueryId(0), mSearchContext(-1), mMapiData(nsnull)
+mQueryThreads(16, PR_TRUE), mCurrentQueryId(0), mSearchContext(-1), 
+mAbWinType(nsAbWinType_Unknown), mMapiData(nsnull)
 {
     mMapiData = new nsMapiEntry ;
     mProtector = PR_NewLock() ;
@@ -84,9 +85,6 @@ nsAbOutlookDirectory::~nsAbOutlookDirectory(void)
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsAbOutlookDirectory, nsAbDirectoryRDFResource, 
                              nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch)
-                             
-const char *kOutlookCardScheme = "moz-aboutlookcard://" ;
-const char *kOutlookDirectoryScheme = "moz-aboutlookdirectory://" ;
 
 // nsIRDFResource method
 NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
@@ -94,30 +92,33 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     nsresult retCode = nsAbDirectoryRDFResource::Init(aUri) ;
     
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsMapiAddressBook mapiAddBook ;
-    nsAutoString unichars ;
-    ULONG objectType = 0 ;
-    nsCAutoString subUri ;
-    PRInt32 schemeLength = nsCRT::strlen(kOutlookDirectoryScheme) ;
-    
-    if (nsCRT::strncmp(mURINoQuery, kOutlookDirectoryScheme, schemeLength) != 0) {
+    nsCAutoString entry ;
+    nsCAutoString stub ;
+
+    mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery, stub, entry) ;
+    if (mAbWinType == nsAbWinType_Unknown) {
         PRINTF("Huge problem URI=%s.\n", mURINoQuery) ;
         return NS_ERROR_INVALID_ARG ;
     }
-    subUri = mURINoQuery + schemeLength ;
-    if (!mapiAddBook.StringToEntry(subUri, *mMapiData)) {
-        PRINTF("Cannot parse string %s.\n", subUri.get()) ;
-        return NS_ERROR_INVALID_ARG ;
-    }
-    if (!mapiAddBook.GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
+    nsString prefix ;
+    nsAutoString unichars ;
+    ULONG objectType = 0 ;
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
+    mMapiData->Assign(entry) ;
+    if (!mapiAddBook->GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
         PRINTF("Cannot get type.\n") ;
         return NS_ERROR_FAILURE ;
     }
-    if (!mapiAddBook.GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
+    if (!mapiAddBook->GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
         PRINTF("Cannot get name.\n") ;
         return NS_ERROR_FAILURE ;
     }
-    SetDirName(unichars.get()) ; 
+    if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignWithConversion("OP ") ; }
+    else { prefix.AssignWithConversion("OE ") ; }
+    prefix.Append(unichars) ;
+    SetDirName(prefix.get()) ; 
     if (objectType == MAPI_DISTLIST) {
         SetListName(unichars.get()) ; 
         SetIsMailList(PR_TRUE) ;
@@ -131,7 +132,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 // nsIAbDirectory methods
 NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsIEnumerator **aNodes)
 {
-    if (aNodes == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aNodes) { return NS_ERROR_NULL_POINTER ; }
     *aNodes = nsnull ;
     nsCOMPtr<nsISupportsArray> nodeList ;
     nsresult retCode = NS_OK ;
@@ -148,7 +149,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsIEnumerator **aNodes)
 
 NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
 {
-    if (aCards == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aCards) { return NS_ERROR_NULL_POINTER ; }
     *aCards = nsnull ;
     nsCOMPtr<nsISupportsArray> cardList ;
     nsresult retCode ;
@@ -163,6 +164,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
     }
     if (NS_SUCCEEDED(retCode)) {
         // Fill the results array and update the card list
+        // Also update the address list and notify any changes.
         PRUint32 nbCards = 0 ;
         nsCOMPtr<nsISupports> element ;
         
@@ -171,25 +173,77 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
         for (PRUint32 i = 0 ; i < nbCards ; ++ i) {
             cardList->GetElementAt(i, getter_AddRefs(element)) ;
             nsVoidKey newKey (NS_STATIC_CAST(void *, element)) ;
-            
-            mCardList.Put(&newKey, element) ;
+            nsCOMPtr<nsISupports> oldElement = mCardList.Get(&newKey) ;
+
+            if (!oldElement) {
+                // We are dealing with a new element (probably directly
+                // added from Outlook), we may need to sync m_AddressList
+                mCardList.Put(&newKey, element) ;
+                nsCOMPtr<nsIAbCard> card (do_QueryInterface(element, &retCode)) ;
+
+                NS_ENSURE_SUCCESS(retCode, retCode) ;
+                PRBool isMailList = PR_FALSE ;
+
+                retCode = card->GetIsMailList(&isMailList) ;
+                NS_ENSURE_SUCCESS(retCode, retCode) ;
+                if (isMailList) {
+                    // We can have mailing lists only in folder, 
+                    // we must add the directory to m_AddressList
+                    nsXPIDLCString mailListUri ;
+
+                    retCode = card->GetMailListURI(getter_Copies(mailListUri)) ;
+                    NS_ENSURE_SUCCESS(retCode, retCode) ;
+                    nsCOMPtr<nsIRDFResource> resource ;
+
+                    retCode = gRDFService->GetResource(mailListUri, getter_AddRefs(resource)) ;
+                    NS_ENSURE_SUCCESS(retCode, retCode) ;
+                    nsCOMPtr<nsIAbDirectory> mailList(do_QueryInterface(resource, &retCode)) ;
+                    
+                    NS_ENSURE_SUCCESS(retCode, retCode) ;
+                    m_AddressList->AppendElement(mailList) ;
+                    NotifyItemAddition(mailList) ;
+                }
+                else if (m_bIsMailList) {
+                    m_AddressList->AppendElement(card) ;
+                    NotifyItemAddition(card) ;
+                }
+            }
+            else {
+                NS_ASSERTION(oldElement == element, "Different card stored") ;
+            }
         }
     }
     return retCode ;
 }
 
+NS_IMETHODIMP nsAbOutlookDirectory::HasCard(nsIAbCard *aCard, PRBool *aHasCard)
+{
+    if (!aCard || !aHasCard) { return NS_ERROR_NULL_POINTER ; }
+    nsVoidKey key (NS_STATIC_CAST(void *, aCard)) ;
+
+    *aHasCard = mCardList.Exists(&key) ;
+    return NS_OK ;
+}
+
+NS_IMETHODIMP nsAbOutlookDirectory::HasDirectory(nsIAbDirectory *aDirectory, PRBool *aHasDirectory)
+{
+    if (!aDirectory || !aHasDirectory ) { return NS_ERROR_NULL_POINTER ; }
+    *aHasDirectory = (m_AddressList->IndexOf(aDirectory) >= 0) ;
+    return NS_OK ;
+}
+
 static nsresult ExtractEntryFromUri(nsIRDFResource *aResource, nsCString &aEntry,
-                                    const char *aPrefix, PRUint32 aPrefixSize)
+                                    const char *aPrefix)
 {
     aEntry.Truncate() ;
-    if (aPrefix == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aPrefix ) { return NS_ERROR_NULL_POINTER ; }
     nsXPIDLCString uri ;
     nsresult retCode = aResource->GetValue(getter_Copies(uri)) ;
     
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    if (nsCRT::strncmp(uri.get(), aPrefix, aPrefixSize) == 0) {
-        aEntry = uri.get() + aPrefixSize ;
-    }
+    nsCAutoString stub ;
+    nsAbWinType objType = getAbWinType(aPrefix, uri.get(), stub, aEntry) ;
+
     return NS_OK ;
 }
 
@@ -201,8 +255,7 @@ static nsresult ExtractCardEntry(nsIAbCard *aCard, nsCString& aEntry)
     
     // Receiving a non-RDF card is accepted
     if (NS_FAILED(retCode)) { return NS_OK ; }
-    return ExtractEntryFromUri(resource, aEntry, kOutlookCardScheme, 
-                               nsCRT::strlen(kOutlookCardScheme)) ;
+    return ExtractEntryFromUri(resource, aEntry, kOutlookCardScheme) ;
 }
 
 static nsresult ExtractDirectoryEntry(nsIAbDirectory *aDirectory, nsCString& aEntry)
@@ -213,35 +266,18 @@ static nsresult ExtractDirectoryEntry(nsIAbDirectory *aDirectory, nsCString& aEn
     
     // Receiving a non-RDF directory is accepted
     if (NS_FAILED(retCode)) { return NS_OK ; }
-    return ExtractEntryFromUri(resource, aEntry, kOutlookDirectoryScheme, 
-                               nsCRT::strlen(kOutlookDirectoryScheme)) ;
-}
-
-NS_IMETHODIMP nsAbOutlookDirectory::HasCard(nsIAbCard *aCard, PRBool *aHasCard)
-{
-    if (aCard == nsnull || 
-        aHasCard == nsnull) { return NS_ERROR_NULL_POINTER ; }
-    nsVoidKey key (NS_STATIC_CAST(void *, aCard)) ;
-    
-    *aHasCard = mCardList.Exists(&key) ;
-    return NS_OK ;
-}
-
-NS_IMETHODIMP nsAbOutlookDirectory::HasDirectory(nsIAbDirectory *aDirectory, PRBool *aHasDirectory)
-{
-    if (aDirectory == nsnull || 
-        aHasDirectory == nsnull) { return NS_ERROR_NULL_POINTER ; }
-    *aHasDirectory = (m_AddressList->IndexOf(aDirectory) >= 0) ;
-    return NS_OK ;
+    return ExtractEntryFromUri(resource, aEntry, kOutlookDirectoryScheme) ;
 }
 
 NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
-    if (aCardList == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aCardList) { return NS_ERROR_NULL_POINTER ; }
     PRUint32 nbCards = 0 ;
     nsresult retCode = NS_OK ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     
     retCode = aCardList->Count(&nbCards) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
@@ -249,30 +285,28 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
     nsCOMPtr<nsISupports> element ;
     nsCAutoString entryString ;
     nsMapiEntry cardEntry ;
-    
-    for (i = 0 ; i < nbCards ; ++ i) { 
+
+    for (i = 0 ; i < nbCards ; ++ i) {
         retCode = aCardList->GetElementAt(i, getter_AddRefs(element)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
         nsCOMPtr<nsIAbCard> card (do_QueryInterface(element, &retCode)) ;
         
         NS_ENSURE_SUCCESS(retCode, retCode) ;
+
         retCode = ExtractCardEntry(card, entryString) ;
         if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
-            if (!mapiAddBook.StringToEntry(entryString, cardEntry)) {
-                PRINTF("Cannot manage uri %s.\n", entryString.get()) ;
+
+            cardEntry.Assign(entryString) ;
+            if (!mapiAddBook->DeleteEntry(*mMapiData, cardEntry)) {
+                PRINTF("Cannot delete card %s.\n", entryString.get()) ;
             }
             else {
-                if (!mapiAddBook.DeleteEntry(*mMapiData, cardEntry)) {
-                    PRINTF("Cannot delete card %s.\n", entryString.get()) ;
-                }
-                else {
-                    nsVoidKey key (NS_STATIC_CAST(void *, element)) ;
-                    
-                    mCardList.Remove(&key) ;
-                    if (m_bIsMailList) { m_AddressList->RemoveElement(element) ; }
-                    retCode = NotifyItemDeletion(element) ;
-                    NS_ENSURE_SUCCESS(retCode, retCode) ;
-                }
+                nsVoidKey key (NS_STATIC_CAST(void *, element)) ;
+                
+                mCardList.Remove(&key) ;
+                if (m_bIsMailList) { m_AddressList->RemoveElement(element) ; }
+                retCode = NotifyItemDeletion(element) ;
+                NS_ENSURE_SUCCESS(retCode, retCode) ;
             }
         }
         else {
@@ -285,27 +319,24 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
 NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
-    if (aDirectory == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aDirectory) { return NS_ERROR_NULL_POINTER ; }
     nsresult retCode = NS_OK ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsCAutoString entryString ;
-    
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = ExtractDirectoryEntry(aDirectory, entryString) ;
     if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
         nsMapiEntry directoryEntry ;
-        
-        if (!mapiAddBook.StringToEntry(entryString, directoryEntry)) {
-            PRINTF("Cannot manage uri %s.\n", entryString.get()) ;
+
+        directoryEntry.Assign(entryString) ;
+        if (!mapiAddBook->DeleteEntry(*mMapiData, directoryEntry)) {
+            PRINTF("Cannot delete directory %s.\n", entryString.get()) ;
         }
         else {
-            if (!mapiAddBook.DeleteEntry(*mMapiData, directoryEntry)) {
-                PRINTF("Cannot delete directory %s.\n", entryString.get()) ;
-            }
-            else {
-                m_AddressList->RemoveElement(aDirectory) ;
-                retCode = NotifyItemDeletion(aDirectory) ;
-                NS_ENSURE_SUCCESS(retCode, retCode) ;
-            }
+            m_AddressList->RemoveElement(aDirectory) ;
+            retCode = NotifyItemDeletion(aDirectory) ;
+            NS_ENSURE_SUCCESS(retCode, retCode) ;
         }
     }
     else {
@@ -317,7 +348,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **aCard) 
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
-    if (aData == nsnull || aCard == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aData || !aCard) { return NS_ERROR_NULL_POINTER ; }
     *aCard = nsnull ;
     nsresult retCode = NS_OK ;
     PRBool hasCard = PR_FALSE ;
@@ -346,35 +377,32 @@ NS_IMETHODIMP nsAbOutlookDirectory::DropCard(nsIAbCard *aData, nsIAbCard **aCard
 NS_IMETHODIMP nsAbOutlookDirectory::AddMailList(nsIAbDirectory *aMailList)
 {
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
-    if (aMailList == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aMailList) { return NS_ERROR_NULL_POINTER ; }
     if (m_bIsMailList) { return NS_OK ; }
     nsresult retCode = NS_OK ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsCAutoString entryString ;
     nsMapiEntry newEntry ;
     PRBool didCopy = PR_FALSE ;
-    
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = ExtractDirectoryEntry(aMailList, entryString) ;
     if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
         nsMapiEntry sourceEntry ;
-        
-        if (mapiAddBook.StringToEntry(entryString, sourceEntry)) {
-            mapiAddBook.CopyEntry(*mMapiData, sourceEntry, newEntry) ;
-        }
+
+        sourceEntry.Assign(entryString) ;
+        mapiAddBook->CopyEntry(*mMapiData, sourceEntry, newEntry) ;
     }
     if (newEntry.mByteCount == 0) {
-        if (!mapiAddBook.CreateDistList(*mMapiData, newEntry)) {
+        if (!mapiAddBook->CreateDistList(*mMapiData, newEntry)) {
             return NS_ERROR_FAILURE ; 
         }
     }
     else { didCopy = PR_TRUE ; }
-    if (!mapiAddBook.EntryToString(newEntry, entryString)) {
-        PRINTF("Cannot manage entry.\n") ;
-        return NS_ERROR_FAILURE ;
-    }
+    newEntry.ToString(entryString) ;
     nsCAutoString uri ;
-    
-    uri.Assign(kOutlookDirectoryScheme) ;
+
+    buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uri) ;
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
     retCode = gRDFService->GetResource(uri, getter_AddRefs(resource)) ;
@@ -398,11 +426,12 @@ NS_IMETHODIMP nsAbOutlookDirectory::EditMailListToDatabase(const char *aUri)
     if (mIsQueryURI) { return NS_ERROR_NOT_IMPLEMENTED ; }
     nsresult retCode = NS_OK ;
     nsXPIDLString name ;
-    nsMapiAddressBook mapiAddBook ;
-    
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = GetListName(getter_Copies(name)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    if (!mapiAddBook.SetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, name.get())) {
+    if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, name.get())) {
         return NS_ERROR_FAILURE ;
     }
     retCode = CommitAddressList() ;
@@ -411,15 +440,8 @@ NS_IMETHODIMP nsAbOutlookDirectory::EditMailListToDatabase(const char *aUri)
 
 NS_IMETHODIMP nsAbOutlookDirectory::GetTotalCards(PRBool aSubDirectoryCount, PRUint32 *aNbCards)
 {
-    if (aNbCards == nsnull) { return NS_ERROR_NULL_POINTER ; }
-    *aNbCards = 0 ;
-    nsMapiAddressBook mapiAddBook ;
-    ULONG nbCards = 0 ;
-    
-    if (!mapiAddBook.GetCardsCount(*mMapiData, nbCards)) { 
-        return NS_ERROR_FAILURE ; 
-    }
-    *aNbCards = NS_STATIC_CAST(PRUint32, nbCards) ;
+    if (!aNbCards) { return NS_ERROR_NULL_POINTER ; }
+    *aNbCards = mCardList.Count();
     return NS_OK ;
 }
 
@@ -524,7 +546,7 @@ static nsresult BuildRestriction(nsIAbBooleanConditionString *aCondition,
                                  SRestriction& aRestriction,
                                  PRBool& aSkipItem)
 {
-    if (aCondition == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aCondition) { return NS_ERROR_NULL_POINTER ; }
     aSkipItem = PR_FALSE ;
     nsAbBooleanConditionType conditionType = 0 ;
     nsresult retCode = NS_OK ;
@@ -658,7 +680,7 @@ static nsresult BuildRestriction(nsIAbBooleanConditionString *aCondition,
 static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel, 
                                  SRestriction& aRestriction)
 {
-    if (aLevel == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aLevel) { return NS_ERROR_NULL_POINTER ; }
     aRestriction.rt = RES_COMMENT ;
     nsresult retCode = NS_OK ;
     nsAbBooleanOperationType operationType = 0 ;
@@ -684,7 +706,7 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
     PRBool skipItem = PR_FALSE ;
     PRUint32 i = 0 ;
     nsCOMPtr<nsISupports> element ;
-    
+
     for (i = 0 ; i < nbExpressions ; ++ i) {
         retCode = expressions->GetElementAt(i, getter_AddRefs(element)) ;
         if (NS_SUCCEEDED(retCode)) {
@@ -699,7 +721,7 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
             }
             else { 
                 nsCOMPtr<nsIAbBooleanExpression> subExpression (do_QueryInterface(element, &retCode)) ;
-                
+
                 if (NS_SUCCEEDED(retCode)) {
                     retCode = BuildRestriction(subExpression, *restrictionArray) ;
                     if (NS_SUCCEEDED(retCode)) {
@@ -754,10 +776,10 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
 static nsresult BuildRestriction(nsIAbDirectoryQueryArguments *aArguments, 
                                  SRestriction& aRestriction)
 {
-    if (aArguments == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aArguments) { return NS_ERROR_NULL_POINTER ; }
     nsresult retCode = NS_OK ;
     nsCOMPtr<nsIAbBooleanExpression> booleanQuery ;
-    
+
     retCode = aArguments->GetExpression(getter_AddRefs(booleanQuery)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = BuildRestriction(booleanQuery, aRestriction) ;
@@ -813,9 +835,9 @@ static void DestroyRestriction(SRestriction& aRestriction)
 nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArguments, 
                             nsISupportsArray **aValues)
 {
-    if (aCard == nsnull || 
-        aArguments == nsnull || 
-        aValues == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aCard || !aArguments || !aValues ) { 
+        return NS_ERROR_NULL_POINTER ; 
+    }
     *aValues = nsnull ;
     CharPtrArrayGuard properties ;
     nsCOMPtr<nsISupportsArray> values ;
@@ -826,43 +848,43 @@ nsresult FillPropertyValues(nsIAbCard *aCard, nsIAbDirectoryQueryArguments *aArg
     PRUint32 i = 0 ;
     nsCAutoString cPropName ;
     nsAbDirectoryQueryPropertyValue *newValue = nsnull ;
-    nsCOMPtr<nsIAbDirectoryQueryPropertyValue> propertyValue ;
-    
+	nsCOMPtr<nsIAbDirectoryQueryPropertyValue> propertyValue ;
+
     for (i = 0 ; i < properties.GetSize() ; ++ i) {
-        newValue = nsnull ;   
+        newValue = nsnull ;
         cPropName.Assign(properties [i]) ;
-        if (cPropName.EqualsWithConversion ("card:nsIAbCard")) {
-            nsCOMPtr<nsISupports> bogusInterface (do_QueryInterface(aCard, &retCode)) ;
-            
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            newValue = new nsAbDirectoryQueryPropertyValue (cPropName, bogusInterface) ;
-        }
-        else if (cPropName.EqualsWithConversion ("card:URI")) {
-            nsCOMPtr<nsIRDFResource> rdfResource (do_QueryInterface(aCard, &retCode)) ;
-            nsXPIDLCString uri;
-            nsAutoString convertedString ;
-            
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            retCode = rdfResource->GetValue(getter_Copies(uri)) ;
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            convertedString.AssignWithConversion(uri.get()) ;
-            newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), convertedString.get()) ;
-        }
+		if (cPropName.EqualsWithConversion ("card:nsIAbCard")) {
+			nsCOMPtr<nsISupports> bogusInterface (do_QueryInterface(aCard, &retCode)) ;
+
+			NS_ENSURE_SUCCESS(retCode, retCode) ;
+			newValue = new nsAbDirectoryQueryPropertyValue (cPropName, bogusInterface) ;
+		}
+		else if (cPropName.EqualsWithConversion ("card:URI")) {
+			nsCOMPtr<nsIRDFResource> rdfResource (do_QueryInterface(aCard, &retCode)) ;
+			nsXPIDLCString uri;
+			nsAutoString convertedString ;
+
+			NS_ENSURE_SUCCESS(retCode, retCode) ;
+			retCode = rdfResource->GetValue(getter_Copies(uri)) ;
+			NS_ENSURE_SUCCESS(retCode, retCode) ;
+			convertedString.AssignWithConversion(uri.get()) ;
+			newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), convertedString.get()) ;
+		}
         else {
-            nsXPIDLString value ;
-            
-            retCode = aCard->GetCardValue(cPropName, getter_Copies(value)) ;
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            if (value.get() != nsnull && nsCRT::strlen(value.get()) != 0) {
+			nsXPIDLString value ;
+
+			retCode = aCard->GetCardValue(cPropName, getter_Copies(value)) ;
+			NS_ENSURE_SUCCESS(retCode, retCode) ;
+            if (value.get() && nsCRT::strlen(value.get()) != 0) {
                 newValue = new nsAbDirectoryQueryPropertyValue(cPropName.get(), value.get()) ;
             }
-        }
-        if (newValue != nsnull) {
-            if (!values) {
-                NS_NewISupportsArray(getter_AddRefs(values)) ;
-            }
-            propertyValue = newValue ;
-            values->AppendElement (propertyValue) ;
+		}
+        if (newValue) {
+			if (!values) {
+				NS_NewISupportsArray(getter_AddRefs(values)) ;
+			}
+			propertyValue = newValue ;
+			values->AppendElement (propertyValue) ;
         }
     }
     *aValues = values ;
@@ -883,8 +905,8 @@ struct QueryThreadArgs
 static void QueryThreadFunc(void *aArguments)
 {
     QueryThreadArgs *arguments = NS_REINTERPRET_CAST(QueryThreadArgs *, aArguments) ;
-    
-    if (aArguments == nsnull) { return ; }
+
+    if (!aArguments) { return ; }
     arguments->mThis->ExecuteQuery(arguments->mArguments, arguments->mListener,
                                    arguments->mResultLimit, arguments->mTimeout,
                                    arguments->mThreadId) ;
@@ -896,15 +918,15 @@ nsresult nsAbOutlookDirectory::DoQuery(nsIAbDirectoryQueryArguments *aArguments,
                                        PRInt32 aResultLimit, PRInt32 aTimeout,
                                        PRInt32 *aReturnValue) 
 {
-    if (aArguments == nsnull || 
-        aListener == nsnull || 
-        aReturnValue == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aArguments || !aListener || !aReturnValue)  { 
+        return NS_ERROR_NULL_POINTER ; 
+    }
     *aReturnValue = -1 ;
     
     QueryThreadArgs *threadArgs = new QueryThreadArgs ;
     PRThread *newThread = nsnull ;
-    
-    if (threadArgs == nsnull) { 
+
+    if (!threadArgs) { 
         return NS_ERROR_OUT_OF_MEMORY ;
     }
     threadArgs->mThis = this ;
@@ -923,7 +945,7 @@ nsresult nsAbOutlookDirectory::DoQuery(nsIAbDirectoryQueryArguments *aArguments,
                                 PR_GLOBAL_THREAD,
                                 PR_UNJOINABLE_THREAD,
                                 0) ;
-    if (newThread == nsnull) {
+    if (!newThread ) {
         delete threadArgs ;
         return NS_ERROR_OUT_OF_MEMORY ;
     }
@@ -937,8 +959,8 @@ nsresult nsAbOutlookDirectory::StopQuery(PRInt32 aContext)
 {
     nsIntegerKey contextKey(aContext) ;
     PRThread *queryThread = NS_REINTERPRET_CAST(PRThread *, mQueryThreads.Get(&contextKey)) ;
-    
-    if (queryThread != nsnull) { 
+
+    if (queryThread) { 
         PR_Interrupt(queryThread) ; 
         mQueryThreads.Remove(&contextKey) ;
     }
@@ -956,7 +978,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::StartSearch(void)
     mCardList.Reset() ;
     nsCOMPtr<nsIAbDirectoryQueryArguments> arguments ;
     nsCOMPtr<nsIAbBooleanExpression> expression ;
-    
+
     NS_NewIAbDirectoryQueryArguments(getter_AddRefs(arguments)) ;
     retCode = nsAbQueryStringToExpression::Convert(mQueryString.get (), getter_AddRefs(expression)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
@@ -1006,9 +1028,11 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
                                             nsIAbDirectoryQueryResultListener *aListener,
                                             PRInt32 aResultLimit, PRInt32 aTimeout,
                                             PRInt32 aThreadId) 
+
 {
-    if (aArguments == nsnull || 
-        aListener == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aArguments || !aListener) { 
+        return NS_ERROR_NULL_POINTER ; 
+    }
     SRestriction arguments ;
     nsresult retCode = NS_OK ;
     
@@ -1050,7 +1074,7 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
         newResult = new nsAbDirectoryQueryResult(0, aArguments,
                                                  nsIAbDirectoryQueryResult::queryResultMatch, 
                                                  propertyValues) ;
-        if (newResult == nsnull) { return NS_ERROR_OUT_OF_MEMORY ; }
+        if (!newResult) { return NS_ERROR_OUT_OF_MEMORY ; }
         result = newResult ;
         aListener->OnQueryItem(result) ;
     }
@@ -1059,39 +1083,35 @@ nsresult nsAbOutlookDirectory::ExecuteQuery(nsIAbDirectoryQueryArguments *aArgum
     mQueryThreads.Remove(&hashKey) ;
     return retCode ;
 }
-
 nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards, 
                                              void *aRestriction)
 {
-    if (aCards == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aCards) { return NS_ERROR_NULL_POINTER ; }
     *aCards = nsnull ;
     nsresult retCode = NS_OK ;
     nsCOMPtr<nsISupportsArray> cards ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsMapiEntryArray cardEntries ;
     LPSRestriction restriction = (LPSRestriction) aRestriction ;
-    
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = NS_NewISupportsArray(getter_AddRefs(cards)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    if (!mapiAddBook.GetCards(*mMapiData, restriction, cardEntries)) {
+    if (!mapiAddBook->GetCards(*mMapiData, restriction, cardEntries)) {
         PRINTF("Cannot get cards.\n") ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
     nsCAutoString uriName ;
     nsCOMPtr<nsIRDFResource> resource ;
-    
+
     for (ULONG card = 0 ; card < cardEntries.mNbEntries ; ++ card) {
-        if (mapiAddBook.EntryToString(cardEntries.mEntries [card], entryId)) {
-            uriName.Assign(kOutlookCardScheme) ;
-            uriName.Append(entryId) ;
-            retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            cards->AppendElement(resource) ;
-        }
-        else {
-            PRINTF("Cannot manage entry %d.\n", card) ;
-        }
+        cardEntries.mEntries [card].ToString(entryId) ;
+        buildAbWinUri(kOutlookCardScheme, mAbWinType, uriName) ;
+        uriName.Append(entryId) ;
+        retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
+        NS_ENSURE_SUCCESS(retCode, retCode) ;
+        cards->AppendElement(resource) ;
     }
     *aCards = cards ;
     NS_ADDREF(*aCards) ;
@@ -1100,34 +1120,31 @@ nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards,
 
 nsresult nsAbOutlookDirectory::GetChildNodes(nsISupportsArray **aNodes)
 {
-    if (aNodes == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aNodes) { return NS_ERROR_NULL_POINTER ; }
     *aNodes = nsnull ;
     nsresult retCode = NS_OK ;
     nsCOMPtr<nsISupportsArray> nodes ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsMapiEntryArray nodeEntries ;
-    
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     retCode = NS_NewISupportsArray(getter_AddRefs(nodes)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    if (!mapiAddBook.GetNodes(*mMapiData, nodeEntries)) {
+    if (!mapiAddBook->GetNodes(*mMapiData, nodeEntries)) {
         PRINTF("Cannot get nodes.\n") ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
     nsCAutoString uriName ;
     nsCOMPtr <nsIRDFResource> resource ;
-    
-    for (ULONG node = 0 ; node < nodeEntries.mNbEntries ; ++ node) {    
-        if (mapiAddBook.EntryToString(nodeEntries.mEntries [node], entryId)) {
-            uriName.Assign(kOutlookDirectoryScheme) ;
-            uriName.Append(entryId) ;
-            retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
-            NS_ENSURE_SUCCESS(retCode, retCode) ;
-            nodes->AppendElement(resource) ;
-        }
-        else {
-            PRINTF("Cannot manage entry %d.\n", node) ;
-        }
+
+    for (ULONG node = 0 ; node < nodeEntries.mNbEntries ; ++ node) {
+        nodeEntries.mEntries [node].ToString(entryId) ;
+        buildAbWinUri(kOutlookDirectoryScheme, mAbWinType, uriName) ;
+        uriName.Append(entryId) ;
+        retCode = gRDFService->GetResource(uriName, getter_AddRefs(resource)) ;
+        NS_ENSURE_SUCCESS(retCode, retCode) ;
+        nodes->AppendElement(resource) ;
     }
     *aNodes = nodes ;
     NS_ADDREF(*aNodes) ;
@@ -1174,7 +1191,7 @@ nsresult nsAbOutlookDirectory::CommitAddressList(void)
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     nsCOMPtr<nsISupports> element ;
     nsCOMPtr<nsIAbCard> newCard ;
-    
+
     for (i = 0 ; i < nbCards ; ++ i) {
         retCode = m_AddressList->GetElementAt(i, getter_AddRefs(element)) ;
         NS_ENSURE_SUCCESS(retCode, retCode) ;
@@ -1183,6 +1200,7 @@ nsresult nsAbOutlookDirectory::CommitAddressList(void)
             nsCOMPtr<nsIAbCard> card (do_QueryInterface(element, &retCode)) ;
             
             NS_ENSURE_SUCCESS(retCode, retCode) ;
+
             retCode = CreateCard(card, getter_AddRefs(newCard)) ;
             NS_ENSURE_SUCCESS(retCode, retCode) ;
             m_AddressList->ReplaceElementAt(newCard, i) ;
@@ -1207,33 +1225,34 @@ nsresult nsAbOutlookDirectory::UpdateAddressList(void)
 
 nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard) 
 {
-    if (aData == nsnull || aNewCard == nsnull) { return NS_ERROR_NULL_POINTER ; }
+    if (!aData || !aNewCard) { return NS_ERROR_NULL_POINTER ; }
     *aNewCard = nsnull ;
     nsresult retCode = NS_OK ;
-    nsMapiAddressBook mapiAddBook ;
+    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
     nsMapiEntry newEntry ;
     nsCAutoString entryString ;
     PRBool didCopy = PR_FALSE ;
-    
+
+    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     // If we get a RDF resource and it maps onto an Outlook card uri,
     // we simply copy the contents of the Outlook card.
     retCode = ExtractCardEntry(aData, entryString) ;
     if (NS_SUCCEEDED(retCode) && entryString.Length() > 0) {
         nsMapiEntry sourceEntry ;
         
-        if (mapiAddBook.StringToEntry(entryString, sourceEntry)) {
-            if (m_bIsMailList) {
-                // In the case of a mailing list, we can use the address
-                // as a direct template to build the new one (which is done
-                // by CopyEntry).
-                mapiAddBook.CopyEntry(*mMapiData, sourceEntry, newEntry) ;
-                didCopy = PR_TRUE ;
-            }
-            else {
-                // Else, we have to create a temporary address and copy the
-                // source into it. Yes it's silly.
-                mapiAddBook.CreateEntry(*mMapiData, newEntry) ;
-            }
+        
+        sourceEntry.Assign(entryString) ;
+        if (m_bIsMailList) {
+            // In the case of a mailing list, we can use the address
+            // as a direct template to build the new one (which is done
+            // by CopyEntry).
+            mapiAddBook->CopyEntry(*mMapiData, sourceEntry, newEntry) ;
+            didCopy = PR_TRUE ;
+        }
+        else {
+            // Else, we have to create a temporary address and copy the
+            // source into it. Yes it's silly.
+            mapiAddBook->CreateEntry(*mMapiData, newEntry) ;
         }
     }
     // If this approach doesn't work, well we're back to creating and copying.
@@ -1244,33 +1263,30 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
         if (m_bIsMailList) {
             nsMapiEntry parentEntry ;
             nsMapiEntry temporaryEntry ;
-            
-            if (!mapiAddBook.GetDefaultContainer(parentEntry)) {
+
+            if (!mapiAddBook->GetDefaultContainer(parentEntry)) {
                 return NS_ERROR_FAILURE ;
             }
-            if (!mapiAddBook.CreateEntry(parentEntry, temporaryEntry)) {
+            if (!mapiAddBook->CreateEntry(parentEntry, temporaryEntry)) {
                 return NS_ERROR_FAILURE ;
             }
-            if (!mapiAddBook.CopyEntry(*mMapiData, temporaryEntry, newEntry)) {
+            if (!mapiAddBook->CopyEntry(*mMapiData, temporaryEntry, newEntry)) {
                 return NS_ERROR_FAILURE ;
             }
-            if (!mapiAddBook.DeleteEntry(parentEntry, temporaryEntry)) {
+            if (!mapiAddBook->DeleteEntry(parentEntry, temporaryEntry)) {
                 return NS_ERROR_FAILURE ;
             }
         }
         // If we're on a real address book folder, we can directly create an
         // empty card.
-        else if (!mapiAddBook.CreateEntry(*mMapiData, newEntry)) {
+        else if (!mapiAddBook->CreateEntry(*mMapiData, newEntry)) {
             return NS_ERROR_FAILURE ;
         }
     }
-    if (!mapiAddBook.EntryToString(newEntry, entryString)) {
-        PRINTF("Cannot manage entry.\n") ;
-        return NS_ERROR_FAILURE ;
-    }
+    newEntry.ToString(entryString) ;
     nsCAutoString uri ;
-    
-    uri.Assign(kOutlookCardScheme) ;
+
+    buildAbWinUri(kOutlookCardScheme, mAbWinType, uri) ;
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
     

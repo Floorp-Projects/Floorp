@@ -111,6 +111,8 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbBooleanExpression.obj \
     .\$(OBJDIR)\nsAbDirectoryRDFResource.obj \
     .\$(OBJDIR)\nsAbQueryStringToExpression.obj \
+    .\$(OBJDIR)\nsAbWinHelper.obj \
+    .\$(OBJDIR)\nsWabAddressBook.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
