@@ -1861,34 +1861,30 @@ AC_ARG_WITH(libIDL,
 	SKIP_IDL_CHECK="yes"
    fi ])
 
-dnl
-dnl Only do silly ORBit fallback check if not cross-compiling
-dnl
-if test -z "$CROSS_COMPILE"; then
-
-AC_PATH_PROGS(LIBIDL_CONFIG, $LIBIDL_CONFIG libIDL-config)
-
-dnl We don't have a libIDL config program.  Look for orbit-config instead
-if test -z "$LIBIDL_CONFIG"; then
-    AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
-    if test -n "$ORBIT_CONFIG"; then
-        SKIP_IDL_CHECK="yes"
-	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
-	_ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
-        _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
-        _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
-        LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
-        LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
-    fi
-fi
-fi
-
 if test "$SKIP_IDL_CHECK" = "no"
 then
-AM_PATH_LIBIDL($LIBIDL_VERSION,,
-  [echo libIDL $LIBIDL_VERSION or higher is required.]
-  [echo See http://andrewtv.org/libIDL/ for more information.]
-  [AC_MSG_ERROR(libIDL not installed.)])
+    AM_PATH_LIBIDL($LIBIDL_VERSION,,_LIBIDL_NOT_FOUND=1)
+    dnl
+    dnl If we don't have a libIDL config program & not cross-compiling, 
+    dnl     look for orbit-config instead.
+    dnl
+    if test -z "$LIBIDL_CONFIG" && test -z "$CROSS_COMPILE"; then
+        AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
+        if test -n "$ORBIT_CONFIG"; then
+        	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
+    	    _ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
+            _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
+            _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
+            LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
+            LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
+            _LIBIDL_NOT_FOUND=
+        fi
+    fi
+    if test -n "$_LIBIDL_NOT_FOUND"; then
+        AC_MSG_ERROR([libIDL not found.
+        libIDL $LIBIDL_VERSION or higher is required.
+        See http://andrewtv.org/libIDL/ for more information.])
+    fi
 fi
 
 if test -n "$CROSS_COMPILE"; then
