@@ -98,9 +98,7 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
 
     PRUint32 cbData = pRecord->pfnImport(pData, (void**) &pData);
 
-    // XXX HTML gets found but always seems to end up a 1-byte empty string
-    if (strcmp(pRecord->szMimeType, kHTMLMime))
-      dataFound = PR_TRUE;
+    dataFound = PR_TRUE;
 
     if (!strcmp(pRecord->szMimeType, kTextMime)) {
 
@@ -305,7 +303,7 @@ static FormatRecord records[] =
 {
   { kTextMime,      CF_TEXT, 0,      Import8Bit,  Export8Bit  },
   { kUnicodeMime,   0, "CF_UNICODE", Import16Bit, Export16Bit },
-  { kHTMLMime,      0, "CF_HTML",    Import8Bit,  Export8Bit  },
+  { kHTMLMime,      0, "CF_HTML",    Import16Bit, Export16Bit },
   { kPNGImageMime,  0, "CF_PNG",     ImportBin,   ExportBin   },
   { kGIFImageMime,  0, "CF_GIF",     ImportBin,   ExportBin   },
   { kJPEGImageMime, 0, "CF_JPEG",    ImportBin,   ExportBin   },
