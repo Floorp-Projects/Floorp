@@ -729,7 +729,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     // Look in the chrome cache: we've got this puppy loaded
     // already.
     nsCOMPtr<nsIXULPrototypeDocument> proto;
-    gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
+    if (IsChromeURI(mDocumentURL))
+        gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
 
     // Same comment as nsChromeProtocolHandler::NewChannel and 
     // nsXULDocument::ResumeWalk
@@ -1749,7 +1750,8 @@ nsXULDocument::EndLoad()
     // and we're filling the FastLoad disk cache, tell the cache we're done 
     // loading it, and write the prototype. 
     if (useXULCache && mIsWritingFastLoad && 
-        mMasterPrototype != mCurrentPrototype)
+        mMasterPrototype != mCurrentPrototype &&
+        IsChromeURI(uri))
         gXULCache->WritePrototype(mCurrentPrototype);
 
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
@@ -5563,7 +5565,8 @@ nsXULDocument::ResumeWalk()
 #endif
         // Look in the prototype cache for the prototype document with
         // the specified overlay URI.
-        gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
+        if (IsChromeURI(uri))
+            gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
 
         // Same comment as nsChromeProtocolHandler::NewChannel and 
         // nsXULDocument::StartDocumentLoad
@@ -5671,7 +5674,7 @@ nsXULDocument::ResumeWalk()
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
 
-    if (useXULCache && mIsWritingFastLoad)
+    if (useXULCache && mIsWritingFastLoad && IsChromeURI(mDocumentURL))
         gXULCache->WritePrototype(mMasterPrototype);
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
