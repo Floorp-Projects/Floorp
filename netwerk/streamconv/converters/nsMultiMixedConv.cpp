@@ -651,7 +651,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     }
 
-    bndry = strstr(delimiter.get(), "boundary");
+    bndry = strstr(delimiter.BeginWriting(), "boundary");
     if (!bndry) return NS_ERROR_FAILURE;
 
     bndry = strchr(bndry, '=');

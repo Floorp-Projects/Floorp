@@ -99,7 +99,7 @@ nsDataChannel::ParseData() {
     if (NS_FAILED(rv)) return rv;
 
     // move past "data:"
-    const char *buffer = strstr(spec.get(), "data:");
+    char *buffer = (char *) strstr(spec.BeginWriting(), "data:");
     if (!buffer) {
         // malfored url
         return NS_ERROR_MALFORMED_URI;
@@ -107,13 +107,13 @@ nsDataChannel::ParseData() {
     buffer += 5;
 
     // First, find the start of the data
-    char *comma = PL_strchr(buffer, ',');
+    char *comma = strchr(buffer, ',');
     if (!comma) return NS_ERROR_FAILURE;
 
     *comma = '\0';
 
     // determine if the data is base64 encoded.
-    char *base64 = PL_strstr(buffer, ";base64");
+    char *base64 = strstr(buffer, ";base64");
     if (base64) {
         lBase64 = PR_TRUE;
         *base64 = '\0';
@@ -125,7 +125,7 @@ nsDataChannel::ParseData() {
         mContentCharset = NS_LITERAL_CSTRING("US-ASCII");
     } else {
         // everything else is content type
-        char *semiColon = PL_strchr(buffer, ';');
+        char *semiColon = (char *) strchr(buffer, ';');
         if (semiColon)
             *semiColon = '\0';
         

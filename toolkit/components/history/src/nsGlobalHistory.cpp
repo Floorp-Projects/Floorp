@@ -1162,7 +1162,7 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
   // now try for a domain match, if necessary
   if (hostInfo->entireDomain) {
     // do a reverse-search to match the end of the string
-    char *domain = PL_strrstr(urlHost.get(), hostInfo->host);
+    const char *domain = PL_strrstr(urlHost.get(), hostInfo->host);
     
     // now verify that we're matching EXACTLY the domain, and
     // not some random string inside the hostname
