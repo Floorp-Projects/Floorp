@@ -1203,6 +1203,7 @@ function addException( dateToAdd )
 
    //add a row to the listbox.
    var listbox = document.getElementById( "exception-dates-listbox" );
+   //ensure user can see that add occurred (also, avoid bug 231765, bug 250123)
    listbox.ensureElementIsVisible( listbox.appendItem( DateLabel, dateToAdd.getTime() ));
 
    sizeToContent();
