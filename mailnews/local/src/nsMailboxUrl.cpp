@@ -331,7 +331,7 @@ NS_IMETHODIMP nsMailboxUrl::IsUrlType(PRUint32 type, PRBool *isType)
 			*isType = (m_mailboxAction == nsIMailboxUrl::ActionMoveMessage);
 			break;
 		case nsIMsgMailNewsUrl::eDisplay:
-			*isType = (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage);
+			*isType = (m_mailboxAction == nsIMailboxUrl::ActionFetchMessage);
 			break;
 		default:
 			*isType = PR_FALSE;
@@ -355,13 +355,20 @@ nsresult nsMailboxUrl::ParseSearchPart()
 	// add code to this function to decompose everything past the '?'.....
 	if (NS_SUCCEEDED(rv) && searchPart)
 	{
+    // the action for this mailbox must be a display message...
+    char * msgPart = extractAttributeValue(searchPart, "part=");
+    if (msgPart)  // if we have a part in the url then we must be fetching just the part.
+      m_mailboxAction = nsIMailboxUrl::ActionFetchPart;
+    else
+		  m_mailboxAction = nsIMailboxUrl::ActionFetchMessage;
+
 		char * messageKey = extractAttributeValue(searchPart, "number=");
 		m_messageID = extractAttributeValue(searchPart,"messageid=");
 		if (messageKey)
 			m_messageKey = atol(messageKey); // convert to a long...
 		if (messageKey || m_messageID)
-			// the action for this mailbox must be a display message...
-			m_mailboxAction = nsIMailboxUrl::ActionDisplayMessage;
+		
+    PR_FREEIF(msgPart);
 		PR_FREEIF(messageKey);
 	}
 	else

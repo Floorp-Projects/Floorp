@@ -135,8 +135,6 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
   nsMailboxAction actionToUse = mailboxAction;
-  if (mailboxAction == nsIMailboxUrl::ActionOpenAttachment)
-    actionToUse = nsIMailboxUrl::ActionDisplayMessage;
 
   rv = PrepareMessageUrl(aMessageURI, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
 
@@ -160,7 +158,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
       // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
       // treat this load as if it were a user click event. Then the dispatching stuff will be much
       // happier.
-      if (mailboxAction == nsIMailboxUrl::ActionOpenAttachment)
+      if (mailboxAction == nsIMailboxUrl::ActionFetchPart)
       {
         docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
         loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
@@ -187,7 +185,7 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
 {
   return FetchMessage(aMessageURI, aDisplayConsumer,
                       aMsgWindow,aUrlListener, nsnull,
-                      nsIMailboxUrl::ActionDisplayMessage, aCharsetOveride, aURL);
+                      nsIMailboxUrl::ActionFetchMessage, aCharsetOveride, aURL);
 }
 
 NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, 
@@ -208,7 +206,7 @@ NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType,
   partMsgUrl += aContentType;
   return FetchMessage(partMsgUrl, aDisplayConsumer,
                       aMsgWindow,aUrlListener, aFileName,
-                      nsIMailboxUrl::ActionOpenAttachment, nsnull, nsnull);
+                      nsIMailboxUrl::ActionFetchPart, nsnull, nsnull);
 
 }
 
@@ -251,7 +249,7 @@ NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **a
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMailboxUrl> mailboxurl;
-  rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl), aMsgWindow);
+  rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionFetchMessage, getter_AddRefs(mailboxurl), aMsgWindow);
   if (NS_SUCCEEDED(rv) && mailboxurl)
     rv = mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   return rv;
@@ -307,9 +305,9 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		nsCAutoString folderURI;
 		nsFileSpec folderPath;
 		nsMsgKey msgKey;
-        const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
+    const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
 		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
-        NS_ENSURE_SUCCESS(rv,rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 		rv = nsLocalURI2Path(kMailboxRootURI, folderURI, folderPath);
 
 		if (NS_SUCCEEDED(rv))
@@ -374,30 +372,29 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 {
 	nsCOMPtr<nsIMailboxUrl> aMsgUrl;
 	nsresult rv = NS_OK;
-    if (PL_strstr(aSpec, "?uidl=") || PL_strstr(aSpec, "&uidl="))
-    {
-        NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
-                                                                 &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = handler->NewURI(aSpec, aBaseURI, _retval);
-    }
-    else
-    {
-        rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                                nsnull,
-                                                NS_GET_IID(nsIMailboxUrl),
-                                                getter_AddRefs(aMsgUrl));
+  if (PL_strstr(aSpec, "?uidl=") || PL_strstr(aSpec, "&uidl="))
+  {
+    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
+                                                             &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = handler->NewURI(aSpec, aBaseURI, _retval);
+  }
+  else
+  {
+    rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+                                            nsnull,
+                                            NS_GET_IID(nsIMailboxUrl),
+                                            getter_AddRefs(aMsgUrl));
         
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
-            aUrl->SetSpec((char *) aSpec);
-            aMsgUrl->SetMailboxAction(nsIMailboxUrl::ActionDisplayMessage);
-            aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
-        }
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
+      aUrl->SetSpec((char *) aSpec);
+      aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
     }
+  }
 
 	return rv;
 }
@@ -424,7 +421,7 @@ nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
 {
   mPrintingOperation = PR_TRUE;
   nsresult rv = FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, nsnull, 
-                      nsIMailboxUrl::ActionDisplayMessage, nsnull, aURL);
+                             nsIMailboxUrl::ActionFetchMessage, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
 }
@@ -437,26 +434,26 @@ NS_IMETHODIMP nsMailboxService::Search(nsIMsgSearchSession *aSearchSession, nsIM
 nsresult 
 nsMailboxService::DecomposeMailboxURI(const char * aMessageURI, nsIMsgFolder ** aFolder, nsMsgKey *aMsgKey)
 {
-    NS_ENSURE_ARG_POINTER(aMessageURI);
-    NS_ENSURE_ARG_POINTER(aFolder);
-    NS_ENSURE_ARG_POINTER(aMsgKey);
-    
-    nsresult rv = NS_OK;
-    nsCAutoString folderURI;
-    rv = nsParseLocalMessageURI(aMessageURI, folderURI, aMsgKey);
-    NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_ARG_POINTER(aMessageURI);
+  NS_ENSURE_ARG_POINTER(aFolder);
+  NS_ENSURE_ARG_POINTER(aMsgKey);
+  
+  nsresult rv = NS_OK;
+  nsCAutoString folderURI;
+  rv = nsParseLocalMessageURI(aMessageURI, folderURI, aMsgKey);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
-    NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(folderURI, getter_AddRefs(res));
-    NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIRDFResource> res;
+  rv = rdf->GetResource(folderURI, getter_AddRefs(res));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
-    NS_ENSURE_SUCCESS(rv,rv);
+  rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

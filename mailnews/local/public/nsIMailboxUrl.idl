@@ -71,11 +71,11 @@ interface nsIMailboxUrl : nsISupports {
 
     /* these are nsMailboxActions */
 	const long ActionParseMailbox = 0;
-    const long ActionDisplayMessage = 1;
+    const long ActionFetchMessage = 1;
     const long ActionCopyMessage = 2;
 	const long ActionMoveMessage = 3;
 	const long ActionSaveMessageToDisk = 4;
 	const long ActionAppendMessageToDisk = 5;
-	const long ActionOpenAttachment = 6;
+	const long ActionFetchPart = 6;
 };
 
