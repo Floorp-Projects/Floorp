@@ -83,7 +83,7 @@ NS_NewToolboxFrame ( nsIFrame*& aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0)
+  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted)
 {
 	//*** anything?
 }
