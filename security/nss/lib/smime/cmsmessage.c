@@ -34,7 +34,7 @@
 /*
  * CMS message methods.
  *
- * $Id: cmsmessage.c,v 1.2 2000/06/13 21:56:30 chrisk%netscape.com Exp $
+ * $Id: cmsmessage.c,v 1.3 2001/09/20 22:15:32 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -54,7 +54,7 @@
 NSSCMSMessage *
 NSS_CMSMessage_Create(PLArenaPool *poolp)
 {
-    void *mark;
+    void *mark = NULL;
     NSSCMSMessage *cmsg;
     PRBool poolp_is_ours = PR_FALSE;
 
@@ -63,16 +63,18 @@ NSS_CMSMessage_Create(PLArenaPool *poolp)
 	if (poolp == NULL)
 	    return NULL;
 	poolp_is_ours = PR_TRUE;
-    }
+    } 
 
     if (!poolp_is_ours)
 	mark = PORT_ArenaMark(poolp);
 
     cmsg = (NSSCMSMessage *)PORT_ArenaZAlloc (poolp, sizeof(NSSCMSMessage));
     if (cmsg == NULL) {
-	if (!poolp_is_ours)
-	    PORT_ArenaRelease(poolp, mark);
-	else
+	if (!poolp_is_ours) {
+	    if (mark) {
+		PORT_ArenaRelease(poolp, mark);
+	    }
+	} else
 	    PORT_FreeArena(poolp, PR_FALSE);
 	return NULL;
     }
@@ -81,7 +83,7 @@ NSS_CMSMessage_Create(PLArenaPool *poolp)
     cmsg->poolp_is_ours = poolp_is_ours;
     cmsg->refCount = 1;
 
-    if (!poolp_is_ours)
+    if (mark)
 	PORT_ArenaUnmark(poolp, mark);
 
     return cmsg;

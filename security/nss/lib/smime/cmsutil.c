@@ -34,7 +34,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.5 2001/01/30 21:02:18 wtc%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.6 2001/09/20 22:15:32 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -380,7 +380,7 @@ NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut,
 	return SECFailure;
     }
     if (input) {
-	rv = NSS_CMSEncoder_Update(ecx, input->data, input->len);
+	rv = NSS_CMSEncoder_Update(ecx, (char *)input->data, input->len);
 	if (rv) {
 	    PORT_SetError(SEC_ERROR_BAD_DATA);
 	}
