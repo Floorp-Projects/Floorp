@@ -469,8 +469,6 @@ protected:
     List mHead;
 
 public:
-    class Iterator;
-
     class ConstIterator {
     protected:
         friend class Iterator; // XXXwaterson so broken.

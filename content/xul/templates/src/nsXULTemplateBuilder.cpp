@@ -416,8 +416,6 @@ protected:
     enum { kHashTableThreshold = 8 };
 
 public:
-    class Iterator;
-
     class ConstIterator {
     protected:
         friend class Iterator; // XXXwaterson so broken.
