@@ -47,12 +47,10 @@ public:
 
 protected:
 
-#ifdef INTEL_CHANGE
   NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
                             PRInt32 * aSrcLength, 
                             char * aDest, 
                             PRInt32 * aDestLength);
-#endif
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]

@@ -28,7 +28,7 @@
 // those invalid GB cells will be mapped to unicode GB_UNDEFINED = 0xFFFF
 
 #define GB_UNDEFINED 0xFFFF
-#define MAX_GB_LENGTH	  (0x77-0x20)*(0x7e-0x20)
+#define MAX_GB_LENGTH	  ((0x77-0x20)*(0x7e-0x20))
 
 typedef struct
 {

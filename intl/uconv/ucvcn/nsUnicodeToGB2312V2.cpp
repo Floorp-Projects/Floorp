@@ -17,16 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#define INTEL_CHANGE
-
 #include "nsUnicodeToGB2312V2.h"
 #include "nsUCvCnDll.h"
 
 
-#ifdef INTEL_CHANGE
 #define _GBU_TABLE_		// make the table in the include file to be extern
 #include "gbu.h"
-#endif
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -61,7 +57,6 @@ nsUnicodeToGB2312V2::nsUnicodeToGB2312V2()
 {
 }
 
-#ifdef INTEL_CHANGE
 
 #define TRUE 1
 #define FALSE 0
@@ -149,7 +144,6 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
     return NS_OK;
 }
 
-#endif
 
 nsresult nsUnicodeToGB2312V2::CreateInstance(nsISupports ** aResult) 
 {

@@ -17,14 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#define INTEL_CHANGE
 
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUCvCnDll.h"
 
-#ifdef INTEL_CHANGE
 #include "gbu.h"
-#endif
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -86,7 +83,6 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::GetMaxLength(const char * aSrc,
 
 
 
-#ifdef INTEL_CHANGE
 
 //Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
 //side effects: all the helper functions called by UCvCnSupport are deprecated
@@ -153,5 +149,3 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
 	return NS_OK;
 }
 
-
-#endif
