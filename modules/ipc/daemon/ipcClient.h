@@ -41,8 +41,7 @@
 #include "prio.h"
 #include "ipcMessageQ.h"
 #include "ipcStringList.h"
-
-class ipcMessage;
+#include "ipcIDList.h"
 
 //-----------------------------------------------------------------------------
 // ipcClient
@@ -65,7 +64,18 @@ public:
     void   DelName(const char *name);
     PRBool HasName(const char *name) const { return mNames.Find(name) != NULL; }
 
-    void EnqueueOutboundMsg(ipcMessage *msg) { mOutMsgQ.Append(msg); }
+    void   AddTarget(const nsID &target);
+    void   DelTarget(const nsID &target);
+    PRBool HasTarget(const nsID &target) const { return mTargets.Find(target) != NULL; }
+
+    //
+    // returns TRUE if successfully enqueued.  will return FALSE if client
+    // does not have a registered message handler for this message's target.
+    //
+    // on success or failure, this function takes ownership of |msg| and will
+    // delete it when appropriate.
+    //
+    PRBool EnqueueOutboundMsg(ipcMessage *msg);
 
 private:
     int WriteMsgs(PRFileDesc *fd);
@@ -74,7 +84,7 @@ private:
 
     int                       mID;
     ipcStringList             mNames;
-    //ipcList<ipcClientTarget>  mTargets;
+    ipcIDList                 mTargets;
     ipcMessage               *mInMsg;    // buffer for incoming message
     ipcMessageQ               mOutMsgQ;  // outgoing message queue
 

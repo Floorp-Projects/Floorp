@@ -35,46 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ipcStringList.h"
+#ifndef ipcIDList_h__
+#define ipcIDList_h__
 
-void *
-ipcStringNode::operator new(size_t size, const char *str) CPP_THROW_NEW
+#include "nsID.h"
+#include "ipcList.h"
+
+//-----------------------------------------------------------------------------
+// nsID node
+//-----------------------------------------------------------------------------
+
+class ipcIDNode
 {
-    int len = strlen(str);
+public:
+    ipcIDNode(const nsID &id)
+        : mID(id)
+        { }
 
-    size += len;
+    const nsID &Value() const { return mID; }
 
-    ipcStringNode *node = (ipcStringNode *) ::operator new(size);
-    if (!node)
-        return NULL;
+    PRBool Equals(const nsID &id) const { return mID.Equals(id); }
 
-    node->mNext = NULL;
-    memcpy(node->mData, str, len);
-    node->mData[len] = '\0';
+    class ipcIDNode *mNext;
+private:
+    nsID mID;
+};
 
-    return node;
-}
+//-----------------------------------------------------------------------------
+// singly-linked list of nsIDs
+//-----------------------------------------------------------------------------
 
-ipcStringNode *
-ipcStringList::FindNode(ipcStringNode *node, const char *str)
+class ipcIDList : public ipcList<ipcIDNode>
 {
-    while (node) {
-        if (node->Equals(str))
-            return node;
-        node = node->mNext;
+public:
+    typedef ipcList<ipcIDNode> Super;
+
+    void Prepend(const nsID &id)
+    {
+        Super::Prepend(new ipcIDNode(id));
     }
-    return NULL;
-}
 
-ipcStringNode *
-ipcStringList::FindNodeBefore(ipcStringNode *node, const char *str)
-{
-    ipcStringNode *prev = NULL;
-    while (node) {
-        if (node->Equals(str))
-            return prev;
-        prev = node;
-        node = node->mNext;
+    void Append(const nsID &id)
+    {
+        Super::Append(new ipcIDNode(id));
     }
-    return NULL;
-}
+
+    const ipcIDNode *Find(const nsID &id) const
+    {
+        return FindNode(mHead, id);
+    }
+
+    void FindAndDelete(const nsID &id)
+    {
+        ipcIDNode *node = FindNodeBefore(mHead, id);
+        if (node)
+            DeleteAfter(node);
+        else
+            DeleteFirst();
+    }
+
+private:
+    static ipcIDNode *FindNode      (ipcIDNode *head, const nsID &id);
+    static ipcIDNode *FindNodeBefore(ipcIDNode *head, const nsID &id);
+};
+
+#endif // !ipcIDList_h__

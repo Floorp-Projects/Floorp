@@ -99,14 +99,16 @@ public:
     {
         LOG(("got CLIENT_ADD_TARGET\n"));
 
-        // XXX implement me
+        ipcMessageCast<ipcmMessageClientAddTarget> msg(rawMsg);
+        client->AddTarget(msg->Target());
     }
 
     void OnClientDelTarget(ipcClient *client, const ipcMessage *rawMsg)
     {
         LOG(("got CLIENT_DEL_TARGET\n"));
 
-        // XXX implement me
+        ipcMessageCast<ipcmMessageClientDelTarget> msg(rawMsg);
+        client->DelTarget(msg->Target());
     }
 
     void OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)

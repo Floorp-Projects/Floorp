@@ -35,43 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ipcStringList.h"
+#include "ipcIDList.h"
 
-void *
-ipcStringNode::operator new(size_t size, const char *str) CPP_THROW_NEW
-{
-    int len = strlen(str);
-
-    size += len;
-
-    ipcStringNode *node = (ipcStringNode *) ::operator new(size);
-    if (!node)
-        return NULL;
-
-    node->mNext = NULL;
-    memcpy(node->mData, str, len);
-    node->mData[len] = '\0';
-
-    return node;
-}
-
-ipcStringNode *
-ipcStringList::FindNode(ipcStringNode *node, const char *str)
+ipcIDNode *
+ipcIDList::FindNode(ipcIDNode *node, const nsID &id)
 {
     while (node) {
-        if (node->Equals(str))
+        if (node->Equals(id))
             return node;
         node = node->mNext;
     }
     return NULL;
 }
 
-ipcStringNode *
-ipcStringList::FindNodeBefore(ipcStringNode *node, const char *str)
+ipcIDNode *
+ipcIDList::FindNodeBefore(ipcIDNode *node, const nsID &id)
 {
-    ipcStringNode *prev = NULL;
+    ipcIDNode *prev = NULL;
     while (node) {
-        if (node->Equals(str))
+        if (node->Equals(id))
             return prev;
         prev = node;
         node = node->mNext;

@@ -42,6 +42,7 @@
 #include "ipcClient.h"
 #include "ipcMessage.h"
 #include "ipcd.h"
+#include "ipcm.h"
 
 int ipcClient::gLastID = 0;
 
@@ -60,6 +61,9 @@ ipcClient::Init()
 
     mSendOffset = 0;
 
+    // every client must be able to handle IPCM messages.
+    mTargets.Append(IPCM_TARGET);
+
     // wait for the client to send us a command
     return PR_POLL_READ;
 }
@@ -74,6 +78,7 @@ ipcClient::Finalize()
         delete mInMsg;
     mOutMsgQ.DeleteAll();
     mNames.DeleteAll();
+    mTargets.DeleteAll();
     return 0;
 }
 
@@ -166,6 +171,44 @@ ipcClient::DelName(const char *name)
     LOG(("deleting client name: %s\n", name));
 
     mNames.FindAndDelete(name);
+}
+
+void
+ipcClient::AddTarget(const nsID &target)
+{
+    LOG(("adding client target\n"));
+
+    if (HasTarget(target))
+        return;
+
+    mTargets.Append(target);
+}
+
+void
+ipcClient::DelTarget(const nsID &target)
+{
+    LOG(("deleting client target\n"));
+
+    //
+    // cannot remove the IPCM target
+    //
+    if (!target.Equals(IPCM_TARGET))
+        mTargets.FindAndDelete(target);
+}
+
+PRBool
+ipcClient::EnqueueOutboundMsg(ipcMessage *msg)
+{
+    LOG(("enqueue outbound message\n"));
+
+    if (!HasTarget(msg->Target())) {
+        LOG(("  no registered message handler\n"));
+        delete msg;
+        return PR_FALSE;
+    }
+
+    mOutMsgQ.Append(msg);
+    return PR_TRUE;
 }
 
 //

@@ -57,6 +57,7 @@ CPPSRCS		= \
 			ipcMessage.cpp \
 			ipcMessagePrimitives.cpp \
 			ipcStringList.cpp \
+			ipcIDList.cpp \
 			ipcm.cpp
 
 EXPORTS     = \
