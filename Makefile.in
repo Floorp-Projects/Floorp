@@ -60,11 +60,6 @@ ifdef MOZ_CALENDAR
 endif
 	$(MAKE) tier_99
 
-# Build any application after embedding has completed.
-ifdef MINIMO
-	$(MAKE) embedding/minimo
-endif
-
 # Make sure that the existing rulesets work
 DIRS = \
 	$(tier_0_dirs) \
