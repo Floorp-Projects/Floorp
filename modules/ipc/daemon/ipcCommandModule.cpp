@@ -41,6 +41,7 @@
 #include "ipcModule.h"
 #include "ipcClient.h"
 #include "ipcMessage.h"
+#include "ipcMessageUtils.h"
 #include "ipcd.h"
 #include "ipcm.h"
 
@@ -49,6 +50,49 @@ typedef const char * constCharPtr;
 class ipcCommandModule : public ipcModule
 {
 public:
+    typedef void (ipcCommandModule:: *MsgHandler)(ipcClient *, const ipcMessage *);
+
+    //
+    // message handlers
+    //
+
+    void handlePing(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        printf("### got PING\n");
+
+        IPC_SendMsg(client, new ipcmMessagePing());
+    }
+
+    void handleClientHello(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        printf("### got CLIENT_HELLO\n");
+
+        ipcMessageCast<ipcmMessageClientHello> msg(rawMsg);
+        const char *name = msg->PrimaryName();
+        if (name)
+            client->SetName(name);
+
+        IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
+    }
+
+    void handleForward(ipcClient *client, const ipcMessage *rawMsg)
+    {
+        printf("### got FORWARD\n");
+
+        ipcMessageCast<ipcmMessageForward> msg(rawMsg);
+        ipcClient *dest = IPC_GetClientByID(msg->DestClientID());
+
+        ipcMessage *newMsg = new ipcMessage();
+        newMsg->Init(msg->InnerTarget(),
+                     msg->InnerData(),
+                     msg->InnerDataLen());
+        IPC_SendMsg(dest, newMsg);
+    }
+
+    //
+    // ipcModule interface impl
+    //
+
     void Shutdown()
     {
     }
@@ -58,55 +102,43 @@ public:
         return IPCM_TARGET;
     }
 
-    void HandleMsg(ipcClient *client, const ipcMessage *msg)
+    void HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
     {
-        // XXX replace w/ function table
-        switch (IPCM_GetMsgType(msg)) {
-        case IPCM_MSG_PING: 
-            printf("### got ping\n");
-            {
-                IPC_SendMsg(client, new ipcmMessagePING());
+        static MsgHandler handlers[] =
+        {
+            &ipcCommandModule::handlePing,
+            NULL, // ERROR
+            &ipcCommandModule::handleClientHello,
+            NULL, // CLIENT_ID
+            NULL, // CLIENT_INFO
+            NULL, // CLIENT_ADD_NAME
+            NULL, // CLIENT_DEL_NAME
+            NULL, // CLIENT_ADD_TARGET
+            NULL, // CLIENT_DEL_TARGET
+            NULL, // QUERY_CLIENT_BY_NAME
+            NULL, // QUERY_CLIENT_INFO
+            NULL, // QUERY_FAILED
+            &ipcCommandModule::handleForward,
+        };
+
+        int type = IPCM_GetMsgType(rawMsg);
+        if (type < IPCM_MSG_TYPE_UNKNOWN) {
+            if (handlers[type]) {
+                MsgHandler handler = handlers[type];
+                (this->*handler)(client, rawMsg);
             }
-            break;
-        case IPCM_MSG_CNAME:
-            printf("### got cname\n");
-            {
-                const char *name = ((const ipcmMessageCNAME *) msg)->ClientName();
-                if (name)
-                    client->SetName(name);
-            }
-            break;
-        case IPCM_MSG_CENUM:
-            printf("### got cenum\n");
-            {
-                int len;
-                ipcClient *clients = IPC_GetClients(&len);
-                if (clients) {
-                    constCharPtr *clist = new constCharPtr[len-1];
-                    if (clist) {
-                        for (int i = 0; i < len; ++i) {
-                            if (clients + i != client)
-                                clist[i] = clients[i].Name();
-                        }
-                        IPC_SendMsg(client, new ipcmMessageCLIST(clist, len-1));
-                        delete[] clist;
-                    }
-                }
-            }
-            break;
+        }
+
+#if 0
         case IPCM_MSG_FWD:
             printf("### got fwd\n");
             {
-                const ipcmMessageFWD *fMsg = (const ipcmMessageFWD *) msg;
-                ipcClient *client = IPC_GetClientByName(fMsg->DestClient());
-                ipcMessage *newMsg = new ipcMessage();
-                if (fMsg->DestMessage(newMsg) == PR_SUCCESS)
-                    IPC_SendMsg(client, newMsg);
             }
             break;
         default:
             printf("### got unknown message\n");
         }
+#endif
     }
 };
 

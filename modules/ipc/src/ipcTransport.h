@@ -126,7 +126,7 @@ public:
         , mObserver(nsnull)
         , mFD(nsnull)
         , mWriteSuspended(PR_FALSE)
-        , mSentInitialMsgs(PR_FALSE)
+        , mSentHello(PR_FALSE)
         , mHaveConnection(PR_FALSE)
         , mConnectionAttemptCount(0)
         { }
@@ -169,7 +169,7 @@ private:
     nsCString              mSocketPath;
     PRFileDesc            *mFD;
     PRPackedBool           mWriteSuspended;
-    PRPackedBool           mSentInitialMsgs;
+    PRPackedBool           mSentHello;
     PRPackedBool           mHaveConnection;
     PRUint8                mConnectionAttemptCount;
 };

@@ -164,21 +164,25 @@ ipcTransport::Connect()
 }
 
 void
-ipcTransport::OnMsgAvailable(const ipcMessage *msg)
+ipcTransport::OnMsgAvailable(const ipcMessage *rawMsg)
 {
-    LOG((">>> ipcTransport::OnMsgAvailable [dataLen=%u]\n", msg->DataLen()));
+    LOG((">>> ipcTransport::OnMsgAvailable [dataLen=%u]\n", rawMsg->DataLen()));
 
     //
     // all IPCM messages stop here.
     //
-    if (msg->Target().Equals(IPCM_TARGET)) {
+    if (rawMsg->Target().Equals(IPCM_TARGET)) {
         //
         // check for startup PING
         //
         if (!mHaveConnection) {
-            if (IPCM_GetMsgType(msg) == IPCM_MSG_PING) {
+            if (IPCM_GetMsgType(rawMsg) == IPCM_MSG_TYPE_CLIENT_ID) {
                 LOG((">>>    connection established!\n"));
                 mHaveConnection = PR_TRUE;
+                /* XXX inform the service that we now know our ID
+                ipcMessageCast<ipcmMessageClientID> msg(rawMsg);
+                msg->ClientID();
+                */
                 //
                 // move messages off the delayed queue
                 //
@@ -193,7 +197,7 @@ ipcTransport::OnMsgAvailable(const ipcMessage *msg)
         }
     }
     else if (mObserver)
-        mObserver->OnMsgAvailable(msg);
+        mObserver->OnMsgAvailable(rawMsg);
 }
 
 void
@@ -202,17 +206,12 @@ ipcTransport::OnStartRequest(nsIRequest *req)
     nsresult status;
     req->GetStatus(&status);
 
-    if (NS_SUCCEEDED(status) && !mHaveConnection && !mSentInitialMsgs) {
+    if (NS_SUCCEEDED(status) && !mHaveConnection && !mSentHello) {
         //
-        // send "startup messages"
+        // send CLIENT_HELLO; expect CLIENT_ID in response.
         //
-        //   PING  - expect a PING in response to this message
-        //   CNAME - expect nothing in response to this message
-        //
-        SendMsg_Internal(new ipcmMessagePING());
-        SendMsg_Internal(new ipcmMessageCNAME("test-app")); // XXX need real client name
-
-        mSentInitialMsgs = PR_TRUE;
+        SendMsg_Internal(new ipcmMessageClientHello("test-app")); // XXX need real client name
+        mSentHello = PR_TRUE;
     }
 }
 

@@ -47,15 +47,9 @@ const nsID IPCM_TARGET =
     {0xb1, 0x15, 0x8c, 0x29, 0x44, 0xda, 0x11, 0x50}
 };
 
-static const char     IPCM_PING[]    = { (char) IPCM_MSG_PING };
-static const PRUint32 IPCM_PING_LEN  = sizeof(IPCM_PING);
-
-static const char     IPCM_CNAME[]   = { (char) IPCM_MSG_CNAME };
-static const PRUint32 IPCM_CNAME_LEN = sizeof(IPCM_CNAME);
-
 //
 //  +--------------------+
-//  | BYTE : msgType     |
+//  | DWORD : MSG_TYPE   |
 //  +--------------------+
 //  | (variable)         |
 //  +--------------------+
@@ -67,80 +61,24 @@ IPCM_GetMsgType(const ipcMessage *msg)
     // make sure message topic matches
     if (msg->Target().Equals(IPCM_TARGET)) {
         // the type is encoded as the first byte
-        char type = msg->Data()[0];
-        if (type < IPCM_MSG_UNKNOWN)
+        PRUint32 type = * (PRUint32 *) msg->Data();
+        if (type < IPCM_MSG_TYPE_UNKNOWN)
             return type;
     }
-    return IPCM_MSG_UNKNOWN;
+    return IPCM_MSG_TYPE_UNKNOWN;
 }
 
 //
-// PING message
+// MSG_TYPE values
 //
-//  +----------------------+
-//  | BYTE - IPCM_MSG_PING |
-//  +----------------------+
-//
+const PRUint32 ipcmMessagePing::MSG_TYPE = IPCM_MSG_TYPE_PING;
+const PRUint32 ipcmMessageError::MSG_TYPE = IPCM_MSG_TYPE_ERROR;
+const PRUint32 ipcmMessageClientHello::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_HELLO;
+const PRUint32 ipcmMessageClientID::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_ID;
+const PRUint32 ipcmMessageQueryClientByName::MSG_TYPE = IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME;
+const PRUint32 ipcmMessageForward::MSG_TYPE = IPCM_MSG_TYPE_FORWARD;
 
-const char ipcmMessagePING::MSG_TYPE = (char) IPCM_MSG_PING;
-
-ipcmMessagePING::ipcmMessagePING()
-{
-    Init(IPCM_TARGET, &MSG_TYPE, 1);
-}
-
-//
-// CNAME message
-//
-//  +-----------------------+
-//  | BYTE - IPCM_MSG_CNAME |
-//  +-----------------------+
-//  | clientName            |
-//  +-----------------------+
-//  | null                  |
-//  +-----------------------+
-//
-
-const char ipcmMessageCNAME::MSG_TYPE = (char) IPCM_MSG_CNAME;
-
-ipcmMessageCNAME::ipcmMessageCNAME(const char *cName)
-{
-    int cLen = strlen(cName);
-    int dataLen = 1 +       // msg_type
-                  cLen +    // cName
-                  1;        // null
-
-    Init(IPCM_TARGET, NULL, dataLen);
-    SetData(0, &MSG_TYPE, 1);
-    SetData(1, cName, cLen + 1);
-}
-
-const char *
-ipcmMessageCNAME::ClientName() const
-{
-    // make sure data is null terminated
-    const char *data = Data();
-    if (data[DataLen() - 1] != '\0')
-        return NULL;
-
-    return Data() + 1;
-}
-
-//
-// CENUM message
-//
-//  +-----------------------+
-//  | BYTE - IPCM_MSG_CENUM |
-//  +-----------------------+
-//
-
-const char ipcmMessageCENUM::MSG_TYPE = (char) IPCM_MSG_CENUM;
-
-ipcmMessageCENUM::ipcmMessageCENUM()
-{
-    Init(IPCM_TARGET, &MSG_TYPE, 1);
-}
-
+#if 0
 //
 // CLIST message
 //
@@ -192,57 +130,76 @@ ipcmMessageCLIST::NextClientName(const char *cName) const
         cName = NULL;
     return cName;
 }
+#endif
 
 //
 // FWD message
 //
-//  +----------------------+
-//  | BYTE - IPCM_MSG_FWD  |
-//  +----------------------+
-//  | dest_client          |
-//  +----------------------+
-//  | null                 |
-//  +----------------------+
-//  | dest_msg             |
-//  +----------------------+
+//  +-------------------------------+
+//  | DWORD : IPCM_MSG_TYPE_FORWARD |
+//  +-------------------------------+
+//  | clientID                      |
+//  +-------------------------------+
+//  | innerMsgHeader                |
+//  +-------------------------------+
+//  | innerMsgData                  |
+//  +-------------------------------+
 //
 
-const char ipcmMessageFWD::MSG_TYPE = (char) IPCM_MSG_FWD;
-
-ipcmMessageFWD::ipcmMessageFWD(const char *dClient, const ipcMessage *dMsg)
+ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
+                                       const nsID &target,
+                                       const char *data,
+                                       PRUint32 dataLen)
 {
-    int cLen = strlen(dClient);
-    int dataLen = 1 +             // msg_type
-                  cLen +          // dest_client
-                  1 +             // null
-                  dMsg->MsgLen(); // dest_msg
+    int len = sizeof(MSG_TYPE) +     // MSG_TYPE
+              sizeof(cID) +          // cID
+              IPC_MSG_HEADER_SIZE +  // innerMsgHeader
+              dataLen;               // innerMsgData
 
-    Init(IPCM_TARGET, NULL, dataLen);
-    SetData(0, &MSG_TYPE, 1);
-    SetData(1, dClient, cLen + 1);
-    SetData(1 + cLen + 1, dMsg->MsgBuf(), dMsg->MsgLen());
+    Init(IPCM_TARGET, NULL, len);
+
+    SetData(0, (char *) &MSG_TYPE, sizeof(MSG_TYPE));
+    SetData(1, (char *) &cID, sizeof(cID));
+
+    ipcMessageHeader hdr;
+    hdr.mLen = IPC_MSG_HEADER_SIZE + dataLen;
+    hdr.mVersion = IPC_MSG_VERSION;
+    hdr.mFlags = 0;
+    hdr.mTarget = target;
+
+    SetData(1 + sizeof(cID), (char *) &hdr, IPC_MSG_HEADER_SIZE);
+    if (data)
+        SetInnerData(0, data, dataLen);
+}
+
+void
+ipcmMessageForward::SetInnerData(PRUint32 offset, const char *data, PRUint32 dataLen)
+{
+    SetData(8 + IPC_MSG_HEADER_SIZE + offset, data, dataLen);
+}
+
+PRUint32
+ipcmMessageForward::DestClientID() const
+{
+    return * (PRUint32 *) (Data() + 4);
+}
+
+const nsID &
+ipcmMessageForward::InnerTarget() const
+{
+    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 8);
+    return hdr->mTarget;
 }
 
 const char *
-ipcmMessageFWD::DestClient() const
+ipcmMessageForward::InnerData() const
 {
-    return Data() + 1;
+    return Data() + 8 + IPC_MSG_HEADER_SIZE;
 }
 
-PRStatus
-ipcmMessageFWD::DestMessage(ipcMessage *msg) const
+PRUint32
+ipcmMessageForward::InnerDataLen() const
 {
-    const char *ptr = DestClient();
-
-    // XXX use a custom loop here to avoid walking off the end of the buffer
-    PRUint32 cLen = strlen(ptr);
-    PRUint32 dLen = MsgLen() - 1 - cLen - 1;
-    PRUint32 bytesRead;
-    PRBool complete;
-
-    ptr += (cLen + 1);
-    if (msg->ReadFrom(ptr, dLen, &bytesRead, &complete) != PR_SUCCESS || !complete)
-        return PR_FAILURE;
-
-    return PR_SUCCESS;
+    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 8);
+    return hdr->mLen - IPC_MSG_HEADER_SIZE;
 }
