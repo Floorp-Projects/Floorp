@@ -150,32 +150,251 @@ PRBool nsFileWidget::Show()
   StringToStr255(mTitle,title);
   StringToStr255(mDefault,defaultName);
     
-  StandardFileReply reply;
+  FSSpec theFile;
+  PRBool userClicksOK = PR_FALSE;
+  
+  // XXX Ignore the filter list for now....
+  
+  if (mMode == eMode_load)
+    userClicksOK = GetFile ( title, &theFile );
+  else if (mMode == eMode_save)
+    userClicksOK = PutFile ( title, defaultName, &theFile );
+  else if (mMode == eMode_getfolder)
+    userClicksOK = GetFolder ( title, &theFile );  
 
-  if (mMode == eMode_load) {
-    PRInt32 numTypes = -1; 				// DO NO FILTERING FOR NOW! -1 on the Mac means no filtering is done
-    SFTypeList typeList;
-    StandardGetFile (nsnull, numTypes, typeList, &reply );
-  }
-  else if (mMode == eMode_save) {
-  	StandardPutFile (title, defaultName, &reply );
-  }
-  else {
-    NS_ASSERTION(0, "Only load and save are supported modes"); 
-  }
-   // Clean up filter buffers
+  // Clean up filter buffers
   delete[] filterBuffer;
 
-	if (!reply.sfGood) return PR_FALSE;
-
-	nsNativeFileSpec		fileSpec(reply.sfFile);
-	nsFilePath					filePath(fileSpec);
+  if ( userClicksOK ) {
+    nsNativeFileSpec fileSpec(theFile);
+    nsFilePath filePath(fileSpec);
 	
-	mFile = filePath;
-	mFileSpec = fileSpec;
-	
-  return PR_TRUE;
+    mFile = filePath;
+    mFileSpec = fileSpec;
+  }
+  
+  return userClicksOK;
 }
+
+
+//
+// myProc
+//
+// An event filter proc for NavServices so the dialogs will be movable-modals. However,
+// this doesn't seem to work as of yet...I'll play around with it some more.
+//
+pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data ) ;
+pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
+{
+	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+	switch ( msg ) {
+		case kNavCBEvent:
+			switch ( cbRec->eventData.eventDataParms.event->what ) {
+				case updateEvt:
+					::BeginUpdate(window);
+					::EndUpdate(window);
+					break;
+			}
+			break;
+	}
+}
+
+
+//
+// PutFile
+//
+// Use NavServices to do a PutFile. Returns PR_TRUE if the user presses OK in the dialog. If
+// they do so, the location to put the file and the name, etc is in the FSSpec.
+//
+PRBool
+nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outSpec )
+{
+ 	PRBool retVal = PR_FALSE;
+	NavReplyRecord reply;
+	NavDialogOptions dialogOptions;
+	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+
+	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
+	if (anErr == noErr)	{	
+		// Set the options for how the get file dialog will appear
+		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
+		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
+		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
+		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		
+		// Display the get file dialog
+		anErr = ::NavGetFile(
+					NULL,
+					&reply,
+					&dialogOptions,
+					eventProc,
+					NULL, // preview proc
+					NULL, // filter proc
+					NULL, //typeList,
+					NULL); // callbackUD	
+	
+		// See if the user has selected save
+		if (anErr == noErr && reply.validRecord) {
+			AEKeyword	theKeyword;
+			DescType	actualType;
+			Size		actualSize;
+			FSSpec		theFSSpec;
+			
+			// Get the FSSpec for the file to be opened
+			anErr = AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
+				&theFSSpec, sizeof(theFSSpec), &actualSize);
+			
+			if (anErr == noErr) {
+				*outSpec = theFSSpec;	// Return the FSSpec
+				
+				// Some housekeeping for Nav Services 
+				::NavCompleteSave(&reply, kNavTranslateInPlace);
+				::NavDisposeReply(&reply);
+				
+				retVal = PR_TRUE;
+			}
+
+		} // if user clicked OK	
+	} // if can get dialog options
+	
+	if ( eventProc )
+		::DisposeRoutineDescriptor(eventProc);
+		
+	return retVal;
+	
+} // PutFile
+
+
+
+//
+// GetFile
+//
+// Use NavServices to do a GetFile. Returns PR_TRUE if the user presses OK in the dialog. If
+// they do so, the selected file is in the FSSpec.
+//
+PRBool
+nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec* outSpec )
+{
+ 	PRBool retVal = PR_FALSE;
+	NavReplyRecord reply;
+	NavDialogOptions dialogOptions;
+	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+
+	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
+	if (anErr == noErr)	{	
+		// Set the options for how the get file dialog will appear
+		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
+		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
+		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
+		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		
+		// Display the get file dialog
+		anErr = ::NavGetFile(
+					NULL,
+					&reply,
+					&dialogOptions,
+					eventProc,
+					NULL, // preview proc
+					NULL, // filter proc
+					NULL, //typeList,
+					NULL); // callbackUD	
+	
+		// See if the user has selected save
+		if (anErr == noErr && reply.validRecord) {
+			AEKeyword	theKeyword;
+			DescType	actualType;
+			Size		actualSize;
+			FSSpec		theFSSpec;
+			
+			// Get the FSSpec for the file to be opened
+			anErr = AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
+				&theFSSpec, sizeof(theFSSpec), &actualSize);
+			
+			if (anErr == noErr) {
+				*outSpec = theFSSpec;	// Return the FSSpec
+				
+				// Some housekeeping for Nav Services 
+				::NavDisposeReply(&reply);
+				
+				retVal = PR_TRUE;
+			}
+
+		} // if user clicked OK	
+	} // if can get dialog options
+	
+	if ( eventProc )
+		::DisposeRoutineDescriptor(eventProc);
+		
+	return retVal;
+
+} // GetFile
+
+
+//
+// GetFolder
+//
+// Use NavServices to do a PutFile. Returns PR_TRUE if the user presses OK in the dialog. If
+// they do so, the folder location is in the FSSpec.
+//
+PRBool
+nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
+{
+ 	PRBool retVal = PR_FALSE;
+	NavReplyRecord reply;
+	NavDialogOptions dialogOptions;
+	NavEventUPP eventProc = NewNavEventProc(myProc);  // doesn't really matter if this fails
+
+	OSErr anErr = NavGetDefaultDialogOptions(&dialogOptions);
+	if (anErr == noErr)	{	
+		// Set the options for how the get file dialog will appear
+		dialogOptions.dialogOptionFlags |= kNavNoTypePopup;
+		dialogOptions.dialogOptionFlags |= kNavDontAutoTranslate;
+		dialogOptions.dialogOptionFlags |= kNavDontAddTranslateItems;
+		dialogOptions.dialogOptionFlags ^= kNavAllowMultipleFiles;
+		::BlockMoveData(inTitle, dialogOptions.message, *inTitle + 1);
+		
+		// Display the get file dialog
+		anErr = ::NavChooseFolder(
+					NULL,
+					&reply,
+					&dialogOptions,
+					eventProc,
+					NULL, // filter proc
+					NULL); // callbackUD	
+	
+		// See if the user has selected save
+		if (anErr == noErr && reply.validRecord) {
+			AEKeyword	theKeyword;
+			DescType	actualType;
+			Size		actualSize;
+			FSSpec		theFSSpec;
+			
+			// Get the FSSpec for the file to be opened
+			anErr = AEGetNthPtr(&(reply.selection), 1, typeFSS, &theKeyword, &actualType,
+				&theFSSpec, sizeof(theFSSpec), &actualSize);
+			
+			if (anErr == noErr) {
+				*outSpec = theFSSpec;	// Return the FSSpec
+				
+				// Some housekeeping for Nav Services 
+				::NavDisposeReply(&reply);
+				
+				retVal = PR_TRUE;
+			}
+
+		} // if user clicked OK	
+	} // if can get dialog options
+	
+	if ( eventProc )
+		::DisposeRoutineDescriptor(eventProc);
+		
+	return retVal;
+
+
+} // GetFolder
+
 
 //-------------------------------------------------------------------------
 //

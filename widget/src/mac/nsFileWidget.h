@@ -23,6 +23,8 @@
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
 #include "nsWindow.h"
+#include <Navigation.h>
+
 
 /**
  * Native Mac FileSelector wrapper
@@ -79,7 +81,10 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
     NS_IMETHOD            OnOk();
     NS_IMETHOD            OnCancel();
 
-
+		// actual implementations of get/put dialogs using NavServices
+	PRBool PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outFileSpec ) ;
+	PRBool GetFile ( Str255 & inTitle, FSSpec* outFileSpec ) ;
+	PRBool GetFolder ( Str255 & inTitle, FSSpec* outFileSpec ) ;
   
   protected:
      PRBool                 mIOwnEventLoop;
