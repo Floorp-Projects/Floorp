@@ -32,4 +32,8 @@ interface nsIDOMNSHTMLImageElement : nsISupports
 
   readonly attribute long             naturalHeight;
   readonly attribute long             naturalWidth;
+
+  // These attributes are mapped to .offsetLeft and .offsetTop
+  readonly attribute long             x;
+  readonly attribute long             y;
 };
