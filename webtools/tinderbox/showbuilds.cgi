@@ -834,7 +834,7 @@ sub do_rdf {
 sub do_hdml {
   print "Content-type: text/hdml\n\n" unless $form{static};
 
-  print q{<hdml version=2.0 ttl=0>
+  print q{<hdml public=true version=2.0 ttl=0>
     <display title=Tinderbox>
       <action type=help task=go dest=#help>
   };
