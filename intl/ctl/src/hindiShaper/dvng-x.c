@@ -155,7 +155,7 @@ typedef struct _DvngFontInfo DvngFontInfo;
  */
 typedef enum {
   DVNG_FONT_NONE,
-  DVNG_FONT_SUN,  
+  DVNG_FONT_SUN
 } DvngFontType;
 
 /*
@@ -594,7 +594,7 @@ static const DvngGlyphEntry sunGlyphTbl[MAP_SIZE] = {
   /* da + halant -> half da + kern space */
   { {0x0926,0x094d,0x0},                {0x0926,0x094d,0xF839,0x0} },
 
-  /* da ri 1
+  /* da ri 1 */
   /* da + ru -> da + ru + kern space */
   { {0x0926,0x0943,0x0},                {0xF7E2,0xF839,0x0} },
 
