@@ -383,6 +383,20 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
   return JS_TRUE;
 }
 
+static void
+SetXPCExceptionWasThrown()
+{
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+
+  if (xpc) {
+    nsCOMPtr<nsIXPCNativeCallContext> nccx;
+    xpc->GetCurrentNativeCallContext(getter_AddRefs(nccx));
+    if (nccx) {
+      nccx->SetExceptionWasThrown(PR_TRUE);
+    }
+  }
+}
+
 
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
 #define MAYBE_STOP_BRANCH_COUNT_MASK 0x003fffff
@@ -695,8 +709,17 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                               aURL,
                                               aLineNo,
                                               &val);
+
       if (aVersion)
         ::JS_SetVersion(mContext, oldVersion);
+
+      if (!ok) {
+        // Tell XPConnect that an exception was thrown. This is needed
+        // to avoid dropping JS exceptions in case we got here through
+        // nested calls through XPConnect.
+
+        SetXPCExceptionWasThrown();
+      }
     }
   }
 
@@ -762,19 +785,10 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // We've got a pending exception. Tell XPConnect's current native
-    // call context (if any) about this exception so that it doesn't
-    // keep going as if nothing happened.
-
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
-    if (xpc) {
-      nsCOMPtr<nsIXPCNativeCallContext> nccx;
-      xpc->GetCurrentNativeCallContext(getter_AddRefs(nccx));
-      if (nccx) {
-        nccx->SetExceptionWasThrown(PR_TRUE);
-      }
-    }
+    // Tell XPConnect that an exception was thrown. This is needed to
+    // avoid dropping JS exceptions in case we got here through nested
+    // calls through XPConnect.
+    SetXPCExceptionWasThrown();
   }
 
   return NS_OK;
@@ -873,8 +887,14 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                                               aURL,
                                               aLineNo,
                                               &val);
-      if (aVersion)
+
+      if (aVersion) {
         ::JS_SetVersion(mContext, oldVersion);
+      }
+
+      if (!ok) {
+        SetXPCExceptionWasThrown();
+      }
     }
   }
 
@@ -1031,6 +1051,11 @@ nsJSContext::ExecuteScript(void* aScriptObject,
     if (aRetValue) {
       aRetValue->Truncate();
     }
+
+    // Tell XPConnect that an exception was thrown. This is needed to
+    // avoid dropping JS exceptions in case we got here through nested
+    // calls through XPConnect.
+    SetXPCExceptionWasThrown();
   }
 
   ScriptEvaluated(PR_TRUE);
@@ -1178,7 +1203,8 @@ nsJSContext::CompileFunction(void* aTarget,
 
 NS_IMETHODIMP
 nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
-                              void *argv, PRBool *aBoolResult, PRBool aReverseReturnResult)
+                              void *argv, PRBool *aBoolResult,
+                              PRBool aReverseReturnResult)
 {
   if (!mScriptsEnabled) {
     *aBoolResult = !aReverseReturnResult;
@@ -1216,12 +1242,18 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
     jsval val;
     jsval funval = OBJECT_TO_JSVAL(aHandler);
     PRBool ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
-                                argc, (jsval *)argv, &val);
+                                       argc, (jsval *)argv, &val);
+
     *aBoolResult = ok
                    ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
                    : JS_TRUE;
 
     ScriptEvaluated(PR_TRUE);
+
+    if (!ok) {
+      // Tell XPConnect that something went wrong.
+      SetXPCExceptionWasThrown();
+    }
   }
 
   if (NS_FAILED(stack->Pop(nsnull)))
