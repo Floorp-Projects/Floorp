@@ -490,7 +490,11 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   PRBool makeCX = PR_FALSE;
   if (!mPresContext) {
     // Create presentation context
+#if 1 
     rv = NS_NewGalleyContext(getter_AddRefs(mPresContext));
+#else // turn on print preview for debugging until print preview is fixed
+    rv = NS_NewPrintPreviewContext(getter_AddRefs(mPresContext));
+#endif
     if (NS_FAILED(rv)) return rv;
 
     mPresContext->Init(aDeviceContext); 

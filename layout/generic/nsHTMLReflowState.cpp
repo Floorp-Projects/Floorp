@@ -1870,7 +1870,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
     }
 
     // Now that we have the computed-width, compute the side margins
-    CalculateBlockSideMargins(cbrs, mComputedWidth);
+    CalculateBlockSideMargins(cbrs->mComputedWidth, mComputedWidth);
   }
 
   // Compute the content height
@@ -1926,20 +1926,20 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
 //
 // Note: the width unit is not auto when this is called
 void
-nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
+nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
                                              nscoord aComputedWidth)
 {
   // We can only provide values for auto side margins in a constrained
   // reflow. For unconstrained reflow there is no effective width to
   // compute against...
   if ((NS_UNCONSTRAINEDSIZE == aComputedWidth) ||
-      (NS_UNCONSTRAINEDSIZE == cbrs->mComputedWidth)) {
+      (NS_UNCONSTRAINEDSIZE == aAvailWidth)) {
     return;
   }
 
   nscoord sum = mComputedMargin.left + mComputedBorderPadding.left +
     aComputedWidth + mComputedBorderPadding.right + mComputedMargin.right;
-  if (sum == cbrs->mComputedWidth) {
+  if (sum == aAvailWidth) {
     // The sum is already correct
     return;
   }
@@ -1952,7 +1952,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
     eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
 
   // Calculate how much space is available for margins
-  nscoord availMarginSpace = cbrs->mComputedWidth - aComputedWidth -
+  nscoord availMarginSpace = aAvailWidth - aComputedWidth -
     mComputedBorderPadding.left - mComputedBorderPadding.right;
 
   if (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
