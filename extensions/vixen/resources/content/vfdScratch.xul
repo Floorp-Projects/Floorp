@@ -17,10 +17,8 @@
    - Copyright (C) 2000 Netscape Communications Corporation.
    - All Rights Reserved.
 
-   - Original Author:
-       Ben Goodger <ben@netscape.com>
-   
    - Contributor(s): 
+   -   Ben Goodger <ben@netscape.com> (Original Author)
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>

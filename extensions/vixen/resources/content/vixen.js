@@ -17,181 +17,115 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Original Author: 
- *   Ben Goodger <ben@netscape.com>
- *
  * Contributor(s): 
+ *   Ben Goodger <ben@netscape.com> (Original Author)
  */
  
- 
-const _DEBUG = true;
-function _dd(aString)
-{
-  if (_DEBUG)
-    dump("*** " + aString + "\n");
-}
-
-function _ddf(aString, aValue)
-{
-  if (_DEBUG)
-    dump("*** " + aString + " = " + aValue + "\n");
-}
-
 const kMenuHeight = 130;
 const kPropertiesWidth = 170;
+const kProjectWidth = 170;
 
-var gVixenShell;
-
-function vx_Startup()
+var vxShell = 
 {
-  _dd("vx_Startup");
-  
-  // initialise the vfd shell (this is not a service! need to shift to new_vfd)
-  const kVixenProgid = "component://netscape/vixen/shell";
-  gVixenShell = nsJSComponentManager.createInstance(kVixenProgid, "nsIVixenShell");
-  gVixenShell.foopy = "Noopy";
-  
-  _ddf("Foopy", gVixenShell.foopy);
-  
-  // size the window
-  window.moveTo(0,0);
-  window.outerWidth = screen.availWidth;
-  window.outerHeight = kMenuHeight;
-  
-  // initialise commands
-  controllers.insertControllerAt(0, defaultController);
- 
-  // load a scratch document
-  vx_LoadForm("chrome://vixen/content/vfdScratch.xul");
-  
-}
+  mFocusObserver: null,
+  mFocusedWindow: null,
 
-function vx_Shutdown()
-{
-  _dd("vx_Shutdown");
-  
-}
-
-function vx_LoadForm(aURL)
-{
-  hwnd = openDialog(aURL, "", "chrome,dialog=no,resizable,dependant");
-  hwnd.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
-  hwnd.outerWidth = screen.availWidth - (kPropertiesWidth * 2) - 5;
-  hwnd.outerHeight = screen.availHeight - kMenuHeight - 20;
-}
-
-var defaultController = {
-  supportsCommand: function(command)
+  startup: function ()
   {
-    switch (command) {
+    _dd("vx_Startup");
     
-    case "cmd_insert_button":
-    case "cmd_insert_toolbarbutton":
-    case "cmd_insert_menubutton":
+    // Shell Startup
+    // This requires several steps. Probably more, in time.
+  
+    // position and initialise the application window
+    vxShell.initAppWindow(); 
+    
+    // load the property inspector
+    // loadPropertyInspector();
+    
+    // load document inspector window
+    // loadDocumentInspector();
+  
+    // load the palette
+    vxShell.loadPalette();
+    
+    // load a blank form (until projects come online)
+    this.focusedWindow = vxShell.loadDocument(null);
+  
+    // initialise the document focus observer
+    const kObserverServicePROGID = "component://netscape/observer-service";
+    const kObserverServiceIID = "nsIObserverService";
+    this.mFocusObserver = nsJSComponentManager.getService(kObserverServicePROGID, kObserverServiceIID);
+    
+  },
+  
+  shutdown: function ()
+  {
+    _dd("vx_Shutdown");
+  },
+  
+  initAppWindow: function ()
+  {
+    // size the window
+    moveTo(0,0);
+    outerWidth = screen.availWidth;
+    outerHeight = kMenuHeight;
+  },
+  
+  loadPalette: function ()
+  {
+    // open the palette window
+    const features = "resizable=no,dependent,chrome,dialog=yes";
+    var hPalette = openDialog("chrome://vixen/content/palette/vxPalette.xul", "", features);
 
-    case "cmd_insert_toplevel_menu":
-    case "cmd_insert_menu":
-    case "cmd_insert_menuseparator":
-    case "cmd_insert_menulist":
-    case "cmd_insert_combobox":
-    
-    case "cmd_insert_textfield":
-    case "cmd_insert_textarea":
-    case "cmd_insert_rdf_editor":
-    
-    case "cmd_insert_static":
-    case "cmd_insert_wrapping":
-    case "cmd_insert_image":
-    case "cmd_insert_browser":
-    
-    case "cmd_insert_box":
-    case "cmd_insert_grid":
-    case "cmd_insert_grid_row":
-    case "cmd_insert_grid_col":
-    case "cmd_insert_grid_spring":
-    case "cmd_insert_splitter":
-      return true;
+    // size the palette window
+    hPalette.moveTo(0, kMenuHeight + 5);
+    hPalette.outerWidth = kPropertiesWidth;
+    hPalette.outerHeight = screen.availHeight - kMenuHeight - 20;
+  },
+  
+  loadDocument: function (aURL)
+  {
+    _dd("vx_LoadDocument");
+    // open a blank form designer window
+    const features = "resizable=yes,dependent,chrome,dialog=yes";
+    var params = {
+      documentURL: aURL
+    };
+    var hVFD = window.openDialog("chrome://vixen/content/vfd/vfd.xul", "", features, params);
+    _dd("we've opened a dialog succesfully");
+    hVFD.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
+    hVFD.outerWidth = screen.availWidth - kPropertiesWidth - kProjectWidth - 10;
+    hVFD.outerHeight = screen.availHeight - kMenuHeight - 20;
+    _dd("by all rights, we should be done");
+    return hVFD;
+  },
+  
+  loadDocumentWithUI: function ()
+  {
+    const kFilePickerIID = "nsIFilePicker";
+    const kFilePickerPROGID = "component://mozilla/filepicker";
+    var filePicker = nsJSComponentManager.createInstance(kFilePickerPROGID, kFilePickerIID);
+    if (filePicker) {
+      const FP = Components.interfaces.nsIFilePicker;
+      filePicker.init(window, "Open", FP.modeOpen);
+      // XUL VFDs
+      filePicker.appendFilter("XUL Files", "*.xul");
+      // XXX-TODO: add filters for other types, e.g. string tables
       
-    default:
-      return false;
+      var filePicked = filePicker.show();
+      if (filePicked == FP.returnOK && filePicker.file) {
+        var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
+        return this.loadDocument(file.path);
+      }
     }
+    return null;
   },
   
-  isCommandEnabled: function(command)
+  appAbout: function ()
   {
-    switch (command) {    
-    case "cmd_insert_button":
-    case "cmd_insert_toolbarbutton":
-    case "cmd_insert_menubutton":
+    // XXX TEMP
+    alert("ViXEn - The Visual XUL Environment.\nhttp://www.mozilla.org/projects/vixen/");
+  }  
+};
 
-    case "cmd_insert_toplevel_menu":
-    case "cmd_insert_menu":
-    case "cmd_insert_menuseparator":
-    case "cmd_insert_menulist":
-    case "cmd_insert_combobox":
-    
-    case "cmd_insert_textfield":
-    case "cmd_insert_textarea":
-    case "cmd_insert_rdf_editor":
-    
-    case "cmd_insert_static":
-    case "cmd_insert_wrapping":
-    case "cmd_insert_image":
-    case "cmd_insert_browser":
-    
-    case "cmd_insert_box":
-    case "cmd_insert_grid":
-    case "cmd_insert_grid_row":
-    case "cmd_insert_grid_col":
-    case "cmd_insert_grid_spring":
-    case "cmd_insert_splitter":
-      return true;
-    
-    default:
-      return false;
-    }
-  },
-  
-  doCommand: function(command)
-  {
-    switch (command)
-    {
-    
-    case "cmd_insert_button":
-      nsVFD.insertButtonElement("button");
-      return true;
-    case "cmd_insert_toolbarbutton":
-    case "cmd_insert_menubutton":
-
-    case "cmd_insert_toplevel_menu":
-    case "cmd_insert_menu":
-    case "cmd_insert_menuseparator":
-    case "cmd_insert_menulist":
-    case "cmd_insert_combobox":
-    
-    case "cmd_insert_textfield":
-    case "cmd_insert_textarea":
-    case "cmd_insert_rdf_editor":
-    
-    case "cmd_insert_static":
-    case "cmd_insert_wrapping":
-    case "cmd_insert_image":
-    case "cmd_insert_browser":
-    
-    case "cmd_insert_box":
-    case "cmd_insert_grid":
-    case "cmd_insert_grid_row":
-    case "cmd_insert_grid_col":
-    case "cmd_insert_grid_spring":
-    case "cmd_insert_splitter":
-      return true;
-      
-    default:
-      return false;
-    }
-  },
-  
-  onEvent: function(event)
-  {
-  }
-}
