@@ -132,7 +132,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 #define DETECT_WEBSHELL_LEAKS
 #endif
 
-//#ifdef SH_IN_FRAMES 1
+//#define SH_IN_FRAMES 1
 
 #ifdef NS_DEBUG
 /**
@@ -580,7 +580,11 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
                   const char* aCommand,
                   nsISupports* aExtraInfo)
 {
+#ifdef SH_IN_FRAMES
+	return nsDocShell::Embed(aContentViewer, aCommand, aExtraInfo);
+#else
    return SetupNewViewer(aContentViewer);
+#endif /* SH_IN_FRAMES */
 }
 
 NS_IMETHODIMP
@@ -870,7 +874,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
             mCharsetReloadState = eCharsetReloadRequested;
-            return Reload(reloadNormal);
+            return Reload(nsIWebNavigation::loadReloadNormal);
          }
       }
     }

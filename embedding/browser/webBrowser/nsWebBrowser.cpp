@@ -454,7 +454,7 @@ NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry)
+nsWebBrowser::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry, PRInt32 aChildOffset)
 {
 
   //XXX Not yet implemented
