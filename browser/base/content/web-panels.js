@@ -48,11 +48,10 @@ var panelProgressListener = {
 var gLoadFired = false;
 function loadWebPanel(aURI) {
     var panelBrowser = document.getElementById('web-panels-browser');
-    panelBrowser.removeAttribute("src");
     panelBrowser.removeAttribute("cachedurl");
     if (!gLoadFired)
       load();
-    panelBrowser.setAttribute("src", aURI);
+    panelBrowser.webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
     panelBrowser.setAttribute("cachedurl", aURI);
 }
 
@@ -63,9 +62,8 @@ function load()
 
   var panelBrowser = document.getElementById('web-panels-browser');
   panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-  if (panelBrowser.getAttribute("cachedurl")) {
-    panelBrowser.setAttribute("src", panelBrowser.getAttribute("cachedurl"));
-  }
+  if (panelBrowser.getAttribute("cachedurl"))
+    panelBrowser.webNavigation.loadURI(panelBrowser.getAttribute("cachedurl"), nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
   gLoadFired = true;
 }
 
