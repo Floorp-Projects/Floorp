@@ -875,14 +875,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   mIMEBufferLength = 0;
   
   /* Show the caret */
-  // XXX: I suppose it's legal to fail to get a caret, so don't propogate the
-  //      result of GetCaret
-  nsCOMPtr<nsICaret>  caret;
-  if (NS_SUCCEEDED(ps->GetCaret(getter_AddRefs(caret))) && caret)
-  {
-    // caret->SetCaretVisible(PR_TRUE); // let's assume we'll get a focus message that does this
-    caret->SetCaretReadOnly(PR_FALSE);
-  }
+  aSelCon->SetCaretReadOnly(PR_FALSE);
+  aSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 
   // Set the selection to the beginning:
   BeginningOfDocument();
