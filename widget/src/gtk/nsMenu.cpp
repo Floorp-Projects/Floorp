@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsMenu.h"
+#include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
@@ -327,7 +328,7 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
 #if 0
   // this may work here better than Removeall(), but i'm not sure how to test this one
-  void *item = mMenuItemVoidArray[aPos];
+  nsISupports *item = mMenuItemVoidArray[aPos];
   delete item;
   mMenuItemVoidArray.RemoveElementAt(aPos);
 #endif
@@ -352,14 +353,39 @@ NS_METHOD nsMenu::RemoveAll()
 #if 0
   // this doesn't work quite right, but this is about all that should really be needed
   int i=0;
-  for (i = mMenuItemVoidArray.Count(); i > 0; i--) {
-    if(nsnull != mMenuItemVoidArray[i-1]) {
-      void *item = mMenuItemVoidArray[i-1];
-      delete item;
-      mMenuItemVoidArray.RemoveElementAt(i-1);
+  nsresult rv = -1;
+  nsIMenu *menu = nsnull;
+  nsIMenuItem *menuitem = nsnull;
+  nsISupports *item = nsnull;
+
+  for (i=mMenuItemVoidArray.Count(); i>0; i--)
+  {
+    item = (nsISupports*)mMenuItemVoidArray[i-1];
+
+    if(nsnull != item)
+    {
+      rv = item->QueryInterface(kIMenuItemIID, (void**)&menuitem);
+      if (NS_SUCCEEDED(rv)) {
+        // we do this twice because we have to do it once for QueryInterface,
+        // then we want to get rid of it.
+        NS_RELEASE(menuitem);
+        NS_RELEASE(menuitem);
+        menuitem = nsnull;
+      } else {
+        rv = item->QueryInterface(kIMenuIID, (void**)&menu);
+        if (NS_SUCCEEDED(rv)) {
+          NS_RELEASE(menu);
+          NS_RELEASE(menu);
+          menu = nsnull;
+        }
+      }
+
+      //      mMenuItemVoidArray.RemoveElementAt(i-1);
     }
   }
+  mMenuItemVoidArray.Clear();
 #endif
+
   for (int i = mMenuItemVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenuItemVoidArray[i-1]) {
       nsIMenuItem * menuitem = nsnull;
@@ -369,9 +395,9 @@ NS_METHOD nsMenu::RemoveAll()
         void *gtkmenuitem = nsnull;
         menuitem->GetNativeData(gtkmenuitem);
         if (gtkmenuitem) {
-          gtk_widget_ref(GTK_WIDGET(gtkmenuitem));
-          gtk_widget_destroy(GTK_WIDGET(gtkmenuitem));
-          // gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem));
+          //          gtk_widget_ref(GTK_WIDGET(gtkmenuitem));
+          //gtk_widget_destroy(GTK_WIDGET(gtkmenuitem));
+           gtk_container_remove (GTK_CONTAINER (mMenu), GTK_WIDGET(gtkmenuitem));
         }
  
       } else {
@@ -394,6 +420,7 @@ NS_METHOD nsMenu::RemoveAll()
       }
     }
   }
+
   return NS_OK;
 }
 
