@@ -248,7 +248,7 @@
         ]]>
       </handler>
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
-      <handler event="blur" action="this.treeBoxObject.focused = false;"/>  
+      <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="keypress" keycode="vk_enter" action="this.changeOpenState(this.currentIndex);"/>
       <handler event="keypress" keycode="vk_return" action="this.changeOpenState(this.currentIndex);"/>
       <handler event="keypress" keycode="vk_left">

@@ -317,6 +317,10 @@
         null
       </field>
 
+      <property name="userTypedValue"
+                onget="return this._userTypedValue;"
+                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
+
       <field name="focusedWindow">
         null
       </field>
@@ -325,10 +329,6 @@
         null
       </field>
 
-      <property name="userTypedValue"
-                onget="return this._userTypedValue;"
-                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
-     
       <constructor>
         <![CDATA[
           try {
@@ -394,10 +394,9 @@
             var buttonPressed = promptService.confirmEx(window, 
               this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'), 
               this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
-              (promptService.BUTTON_TITLE_OK * promptService.BUTTON_POS_0) +
-              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-              null, null, null,
-              this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'), 
+              (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
+              (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1),
+              null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
               checkValue);
             if (buttonPressed != 0)
               return;

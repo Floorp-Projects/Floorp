@@ -59,7 +59,7 @@
                                          if (val) this.setAttribute('readonly', 'true');
                                          else this.removeAttribute('readonly'); return val;"
                                   onget="return this.inputField.readonly;"/>
-                            
+
       <method name="select">
         <body>
           this.inputField.select();

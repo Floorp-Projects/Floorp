@@ -97,7 +97,7 @@ function nsTreeController_copy()
       if (isContainer(this.tree, k))
         continue;
       var col = this.tree.columns["URL"];
-      var pageUrl  = this.treeView.getCellText(k, col);        
+      var pageUrl  = this.treeView.getCellText(k, col);
       col = this.tree.columns["Name"];
       var pageName = this.treeView.getCellText(k, col);
 

@@ -105,4 +105,3 @@
   <treechildren id="configTreeBody" ondblclick="if (event.button == 0) ModifySelected();"/>
 </tree>
 </window>
-

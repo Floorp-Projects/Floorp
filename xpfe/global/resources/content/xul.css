@@ -59,8 +59,7 @@ menulist.uri-element
 
 /****** elements that have no visual representation ******/
 
-script,
-data,
+script, data,
 xbl|children,
 commands, commandset, command,
 broadcasterset, broadcaster, observes,

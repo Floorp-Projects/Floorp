@@ -629,10 +629,11 @@
             if (!href)
               return;
 
+            const nsIContentPolicy = Components.interfaces.nsIContentPolicy;
             try {
               var contentPolicy =
                 Components.classes['@mozilla.org/layout/content-policy;1']
-                          .getService(Components.interfaces.nsIContentPolicy);
+                          .getService(nsIContentPolicy);
             } catch(e) {
               return; // Refuse to load if we can't do a security check.
             }
@@ -673,10 +674,10 @@
               // We need to update a tab.
               for (i = 0; i < this.browsers.length; i++) {
                 if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
-                  if (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
+                  if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
                                                uri, origURI, event.target,
                                                safeGetProperty(event.target, "type"),
-                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT)
+                                               null) != nsIContentPolicy.ACCEPT)
                     return;
 
                   this.mTabListeners[i].mIcon = href;
@@ -686,10 +687,10 @@
               }
             }
             else if ((this.contentDocument != event.originalTarget.ownerDocument) ||
-                     (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
+                     (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
                                                uri, origURI, event.target,
                                                safeGetProperty(event.target, "type"),
-                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT))
+                                               null) != nsIContentPolicy.ACCEPT))
               return;
 
             if (notifyListeners && this.mProgressListeners) {

@@ -192,7 +192,7 @@
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
 
-              if (aStateFlags & nsIWebProgressListener.STATE_START && 
+              if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 // It's okay to clear what the user typed when we start
                 // loading a document. If the user types, this flag gets
@@ -205,7 +205,7 @@
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
                   this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
-                  this.mTab.removeAttribute("image"); 
+                  this.mTab.removeAttribute("image");
                   this.mIcon = "";
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
@@ -227,7 +227,7 @@
                 var location = aRequest.QueryInterface(nsIChannel).URI;
                 if (this.mIcon) {
                   this.mTab.setAttribute("image", this.mIcon);
-                  mIcon = "";
+                  this.mIcon = "";
                 }
                 else if (this.mTabBrowser.shouldLoadFavIcon(location))
                   this.mTabBrowser.loadFavIcon(location, "image", this.mTab);
@@ -246,10 +246,10 @@
                     p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
                 }
               }
-            }
-            ,
+            },
 
-            onLocationChange : function(aWebProgress, aRequest, aLocation) {
+            onLocationChange : function(aWebProgress, aRequest, aLocation)
+            {
               // The document loaded correctly, clear the value if we should
               if (this.mBrowser.userTypedClear)
                 this.mBrowser.userTypedValue = null;
@@ -263,7 +263,8 @@
               }
             },
 
-            onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+            onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+            {
               if (this.mBlank)
                 return;
 
@@ -295,8 +296,7 @@
                 return this;
               throw Components.results.NS_NOINTERFACE;
             }
-                  
-            });
+          });
         ]]>
         </body>
       </method>
@@ -316,7 +316,7 @@
         <body>
           <![CDATA[
             return (aURI && this.mPrefs.getBoolPref("browser.chrome.site_icons") &&
-                    this.mPrefs.getBoolPref("browser.chrome.favicons") && 
+                    this.mPrefs.getBoolPref("browser.chrome.favicons") &&
                     ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
           ]]>
         </body>
@@ -484,7 +484,7 @@
 
             // Update the window title.
             this.updateTitlebar();
-            
+
             // If the new tab is busy, and our current state is not busy, then
             // we need to fire a start to all progress listeners.
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
@@ -769,7 +769,9 @@
             }
 
             // Wire up a progress listener to our filter.
-            const listener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, false);
+            const listener = this.mTabProgressListener(this.mCurrentTab,
+                                                       this.mCurrentBrowser,
+                                                       false);
             filter.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
           ]]>
@@ -783,15 +785,13 @@
         <parameter name="aPostData"/>
         <body>
           <![CDATA[
-            var blank = (aURI == "about:blank");
-
             if (!this.mTabbedMode)
               this.enterTabbedMode();
 
-            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                             "browser"); 
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
+
+            var blank = (aURI == "about:blank");
 
             if (blank)
               t.setAttribute("label", this.mStringBundle.getString("tabs.untitled"));
@@ -807,6 +807,8 @@
             t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             this.mTabContainer.appendChild(t);
 
+            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "browser");
             b.setAttribute("type", "content");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));

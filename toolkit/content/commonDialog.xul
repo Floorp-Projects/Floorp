@@ -49,8 +49,6 @@
     </vbox>
   </hbox>
 
-  <separator class="thin"/>
-  
   <!-- This method is called inline because it may unset hidden="true" on the
        above boxes, causing their frames to be build and bindings to load.  
        So, by calling this inline, we guarantee the textboxes and checkboxes 

@@ -208,9 +208,9 @@ function commonDialogOnLoad()
 
 function commonDialogReenableButtons()
 {
-    document.documentElement.getButton("accept").disabled = false;
-    document.documentElement.getButton("extra1").disabled = false;
-    document.documentElement.getButton("extra2").disabled = false;
+  document.documentElement.getButton("accept").disabled = false;
+  document.documentElement.getButton("extra1").disabled = false;
+  document.documentElement.getButton("extra2").disabled = false;
 }
 
 function initTextbox(aName, aLabelIndex, aValueIndex, aAlwaysLabel)

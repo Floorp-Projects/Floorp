@@ -69,7 +69,7 @@ function goDoCommand(command)
       controller.doCommand(command);
   }
   catch (e) {
-    dump("An error occurred executing the "+command+" command\n");
+    dump("An error occurred executing the " + command + " command\n" + e + "\n");
   }
 }
 

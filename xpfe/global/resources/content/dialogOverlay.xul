@@ -5,8 +5,8 @@
 <!DOCTYPE overlay SYSTEM "chrome://global/locale/dialogOverlay.dtd">
 
 <overlay id="dialogOverlay"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 	
 </overlay>		

@@ -306,10 +306,7 @@
           if (popup)
             arr = popup.getElementsByAttribute('label', this.inputField.value);
 
-          if (arr && arr.item(0))
-            this.setSelectionInternal(arr[0]);
-          else
-            this.setSelectionInternal(null);
+          this.setSelectionInternal(arr ? arr.item(0) : null);
         ]]>
         </body>
       </method>
