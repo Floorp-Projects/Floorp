@@ -124,7 +124,6 @@ public:
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
-  NS_IMETHOD SetMainChildFrame(nsIFrame* aAreaFrame) { mMainChild = aAreaFrame; return NS_OK;}
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
