@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:set expandtab ts=4 sw=4 sts=4: */
+/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -541,19 +541,26 @@ nsHttpChannel::SetupTransaction()
         PR_snprintf(buf, sizeof(buf), "bytes=%llu-", mStartPos);
         mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
 
-        if (mEntityID) {
+        if (!mEntityID.IsEmpty()) {
             // Also, we want an error if this resource changed in the meantime
-            nsCAutoString entityTag;
-            rv = mEntityID->GetEntityTag(entityTag);
-            if (NS_SUCCEEDED(rv) && !entityTag.IsEmpty()) {
-                mRequestHead.SetHeader(nsHttp::If_Match, entityTag);
+            // Format of the entity id is: escaped_etag/size/lastmod
+            nsCString::const_iterator start, end, slash;
+            mEntityID.BeginReading(start);
+            mEntityID.EndReading(end);
+            mEntityID.BeginReading(slash);
+
+            if (FindCharInReadable('/', slash, end)) {
+                nsCAutoString buf;
+                mRequestHead.SetHeader(nsHttp::If_Match,
+                        NS_UnescapeURL(Substring(start, slash), 0, buf));
+
+                ++slash; // Incrementing, so that searching for '/' won't find
+                         // the same slash again
             }
 
-            nsCAutoString lastMod;
-            rv = mEntityID->GetLastModified(lastMod);
-            if (NS_SUCCEEDED(rv) && !lastMod.IsEmpty()) {
-                mRequestHead.SetHeader(nsHttp::If_Unmodified_Since, lastMod);
-
+            if (FindCharInReadable('/', slash, end)) {
+                mRequestHead.SetHeader(nsHttp::If_Unmodified_Since,
+                        Substring(++slash, end));
             }
         }
     }
@@ -810,17 +817,15 @@ nsHttpChannel::ProcessNormal()
     // Check that the server sent us what we were asking for
     if (mResuming) {
         // Create an entity id from the response
-        nsCOMPtr<nsIResumableEntityID> id;
-        rv = GetEntityID(getter_AddRefs(id));
+        nsCAutoString id;
+        rv = GetEntityID(id);
         if (NS_FAILED(rv)) {
             // If creating an entity id is not possible -> error
             Cancel(NS_ERROR_NOT_RESUMABLE);
         }
         // If we were passed an entity id, verify it's equal to the server's
-        else if (mEntityID) {
-            PRBool equal;
-            rv = mEntityID->Equals(id, &equal);
-            if (NS_FAILED(rv) || !equal)
+        else if (!mEntityID.IsEmpty()) {
+            if (!mEntityID.Equals(id))
                 Cancel(NS_ERROR_ENTITY_CHANGED);
         }
     }
@@ -3863,7 +3868,7 @@ nsHttpChannel::IsFromCache(PRBool *value)
 
 NS_IMETHODIMP
 nsHttpChannel::ResumeAt(PRUint64 aStartPos,
-                        nsIResumableEntityID* aEntityID)
+                        const nsACString& aEntityID)
 {
     mEntityID = aEntityID;
     mStartPos = aStartPos;
@@ -3872,17 +3877,15 @@ nsHttpChannel::ResumeAt(PRUint64 aStartPos,
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetEntityID(nsIResumableEntityID** aEntityID)
+nsHttpChannel::GetEntityID(nsACString& aEntityID)
 {
     // Don't return an entity ID for HTTP/1.0 servers
     if (mResponseHead && (mResponseHead->Version() < NS_HTTP_VERSION_1_1)) {
-        *aEntityID = nsnull;
-        return NS_OK;
+        return NS_ERROR_NOT_RESUMABLE;
     }
     // Neither return one for Non-GET requests which require additional data
     if (mRequestHead.Method() != nsHttp::Get) {
-        *aEntityID = nsnull;
-        return NS_OK;
+        return NS_ERROR_NOT_RESUMABLE;
     }
 
     PRUint64 size = LL_MaxUint();
@@ -3896,8 +3899,18 @@ nsHttpChannel::GetEntityID(nsIResumableEntityID** aEntityID)
         if (cEtag)
             etag = cEtag;
     }
+    nsCString entityID;
+    NS_EscapeURL(etag.BeginReading(), etag.Length(), esc_AlwaysCopy |
+            esc_FileBaseName | esc_Forced, entityID);
+    entityID.Append('/');
+    entityID.AppendInt(PRInt64(size));
+    entityID.Append('/');
+    entityID.Append(lastmod);
+    // NOTE: Appending lastmod as the last part avoids having to escape it
 
-    return NS_NewResumableEntityID(aEntityID, size, lastmod, etag);
+    aEntityID = entityID;
+
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

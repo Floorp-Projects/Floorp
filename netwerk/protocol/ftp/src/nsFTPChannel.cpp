@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sts=4 sw=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -277,12 +278,12 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     nsresult rv = AsyncOpenAt(listener, ctxt, mStartPos, mEntityID);
     // mEntityID no longer needed, clear it to avoid returning a wrong entity
     // id when someone asks us
-    mEntityID = nsnull;
+    mEntityID.Truncate();
     return rv;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::ResumeAt(PRUint64 aStartPos, nsIResumableEntityID* aEntityID)
+nsFTPChannel::ResumeAt(PRUint64 aStartPos, const nsACString& aEntityID)
 {
     mEntityID = aEntityID;
     mStartPos = aStartPos;
@@ -290,16 +291,18 @@ nsFTPChannel::ResumeAt(PRUint64 aStartPos, nsIResumableEntityID* aEntityID)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetEntityID(nsIResumableEntityID **entityID)
+nsFTPChannel::GetEntityID(nsACString& entityID)
 {
-    *entityID = mEntityID;
-    NS_IF_ADDREF(*entityID);
+    if (mEntityID.IsEmpty())
+      return NS_ERROR_NOT_RESUMABLE;
+
+    entityID = mEntityID;
     return NS_OK;
 }
 
 nsresult
 nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
-                          PRUint64 startPos, nsIResumableEntityID* entityID)
+                          PRUint64 startPos, const nsACString& entityID)
 {
     PRInt32 port;
     nsresult rv = mURL->GetPort(&port);
@@ -328,7 +331,7 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
     // Note that ftp doesn't store metadata, so disable caching if there was
     // an entityID. Storing this metadata isn't worth it until we can
     // get partial data out of the cache anyway...
-    if (mCacheSession && !mUploadStream && !entityID &&
+    if (mCacheSession && !mUploadStream && entityID.IsEmpty() &&
         (startPos==0 || startPos==PRUint32(-1))) {
         mIOService->GetOffline(&offline);
 
@@ -360,7 +363,7 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
 }
 
 nsresult 
-nsFTPChannel::SetupState(PRUint32 startPos, nsIResumableEntityID* entityID)
+nsFTPChannel::SetupState(PRUint32 startPos, const nsACString& entityID)
 {
     if (!mFTPState) {
         NS_NEWXPCOM(mFTPState, nsFtpState);
@@ -667,8 +670,9 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
         request->GetStatus(&mStatus);
     
     nsCOMPtr<nsIResumableChannel> resumable = do_QueryInterface(request);
-    if (resumable)
-        resumable->GetEntityID(getter_AddRefs(mEntityID));
+    if (resumable) {
+        resumable->GetEntityID(mEntityID);
+    }
     
     nsresult rv = NS_OK;
     if (mListener) {
@@ -726,7 +730,7 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         mCacheEntry = entry;
     }
     
-    rv = SetupState(PRUint32(-1),nsnull);
+    rv = SetupState(PRUint32(-1), EmptyCString());
 
     if (NS_FAILED(rv)) {
         Cancel(rv);

@@ -69,7 +69,6 @@ CPPSRCS		= \
 		nsMIMEInputStream.cpp \
 		nsProtocolProxyService.cpp \
 		nsRequestObserverProxy.cpp \
-		nsResumableEntityID.cpp \
 		nsSimpleStreamListener.cpp \
 		nsSimpleURI.cpp \
 		nsStandardURL.cpp \

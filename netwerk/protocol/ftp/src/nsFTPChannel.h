@@ -51,7 +51,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFtpConnectionThread.h"
 #include "netCore.h"
-#include "nsXPIDLString.h"
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
 #include "nsIPrompt.h"
@@ -60,7 +59,6 @@
 #include "nsIUploadChannel.h"
 #include "nsIProxyInfo.h"
 #include "nsIResumableChannel.h"
-#include "nsIResumableEntityID.h"
 
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -105,11 +103,11 @@ public:
                   nsIProxyInfo* proxyInfo,
                   nsICacheSession* session);
 
-    nsresult SetupState(PRUint32 startPos, nsIResumableEntityID* entityID);
+    nsresult SetupState(PRUint32 startPos, const nsACString& entityID);
     nsresult GenerateCacheKey(nsACString &cacheKey);
     
     nsresult AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
-                         PRUint64 startPos, nsIResumableEntityID* entityID);
+                         PRUint64 startPos, const nsACString& entityID);
 
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
@@ -150,7 +148,7 @@ protected:
     nsCOMPtr<nsICacheSession>         mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCOMPtr<nsIProxyInfo>            mProxyInfo;
-    nsCOMPtr<nsIResumableEntityID>    mEntityID;
+    nsCString                         mEntityID;
     PRUint64                          mStartPos;
 };
 

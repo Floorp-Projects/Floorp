@@ -66,7 +66,6 @@
 #include "nsIStreamTransportService.h"
 #include "nsIHttpChannel.h"
 #include "nsIDownloader.h"
-#include "nsIResumableEntityID.h"
 #include "nsIStreamLoader.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsIPipe.h"
@@ -614,24 +613,6 @@ NS_GetURLSpecFromFile(nsIFile      *aFile,
     rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
     if (NS_SUCCEEDED(rv))
         rv = fileHandler->GetURLSpecFromFile(aFile, aUrl);
-    return rv;
-}
-
-inline nsresult
-NS_NewResumableEntityID(nsIResumableEntityID **aRes,
-                        PRUint64               size,
-                        const nsACString      &lastModified,
-                        const nsACString      &entityTag)
-{
-    nsresult rv;
-    nsCOMPtr<nsIResumableEntityID> ent =
-        do_CreateInstance(NS_RESUMABLEENTITYID_CONTRACTID,&rv);
-    if (NS_SUCCEEDED(rv)) {
-        ent->SetSize(size);
-        ent->SetLastModified(lastModified);
-        ent->SetEntityTag(entityTag);
-        NS_ADDREF(*aRes = ent);
-    }
     return rv;
 }
 

@@ -37,9 +37,8 @@
 #include "nsISupports.idl"
  
 interface nsIStreamListener;
-interface nsIResumableEntityID;
 
-[scriptable, uuid(87cccd68-1dd2-11b2-8b66-cbf10a1b6438)]
+[scriptable, uuid(4ad136fa-83af-4a22-a76e-503642c0f4a8)]
 interface nsIResumableChannel : nsISupports {
     /**
      * Prepare this channel for resuming. The request will not start until
@@ -48,7 +47,7 @@ interface nsIResumableChannel : nsISupports {
      *
      * @param startPos the starting offset, in bytes, to use to download
      * @param entityID information about the file, to match before obtaining
-     *  the file. Pass null to use anything.
+     *  the file. Pass an empty string to use anything.
      *
      * During OnStartRequest, this channel will have a status of
      *  NS_ERROR_NOT_RESUMABLE if the file cannot be resumed, eg because the
@@ -61,11 +60,11 @@ interface nsIResumableChannel : nsISupports {
      *  OnStopRequest will immediately follow with the same status code.
      */
     void resumeAt(in unsigned long long startPos,
-                  in nsIResumableEntityID entityID);
+                  in ACString entityID);
 
     /**
-     * The nsIResumableEntityID for this URI. Available after OnStartRequest.
-     * If this attribute is null, then this load is not resumable.
+     * The entity id for this URI. Available after OnStartRequest.
+     * @throw NS_ERROR_NOT_RESUMABLE if this load is not resumable.
      */
-    readonly attribute nsIResumableEntityID entityID;
+    readonly attribute ACString entityID;
 };

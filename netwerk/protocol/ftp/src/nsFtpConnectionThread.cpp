@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set tw=80 ts=4 sts=4 sw=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -75,7 +76,6 @@
 #include "nsICacheListener.h"
 
 #include "nsIResumableChannel.h"
-#include "nsIResumableEntityID.h"
 
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID,      NS_STREAMLISTENERTEE_CID);
@@ -128,7 +128,7 @@ public:
 
     nsresult SetStreamListener(nsIStreamListener *listener);
     nsresult SetCacheEntry(nsICacheEntryDescriptor *entry, PRBool writing);
-    nsresult SetEntityID(nsIResumableEntityID *entity);
+    nsresult SetEntityID(const nsACString& entity);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
@@ -140,7 +140,7 @@ public:
     NS_FORWARD_NSICHANNEL(mFTPChannel->)
     NS_FORWARD_NSIFTPCHANNEL(mFTPChannel->)
     
-    PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
+    PRUint32 GetBytesTransfered() {return mBytesTransfered;}
     void Uploading(PRBool value, PRUint32 uploadCount);
     void SetRetrying(PRBool retry);
     
@@ -151,7 +151,7 @@ protected:
     nsCOMPtr<nsIStreamListener>       mListener;
     nsCOMPtr<nsIProgressEventSink>    mEventSink;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    nsCOMPtr<nsIResumableEntityID>    mEntityID;
+    nsCString                         mEntityID;
 
     PRUint32 mBytesTransfered;
     PRUint32 mBytesToUpload;
@@ -258,23 +258,25 @@ DataRequestForwarder::SetStreamListener(nsIStreamListener *listener)
 }
 
 nsresult
-DataRequestForwarder::SetEntityID(nsIResumableEntityID *aEntityID)
+DataRequestForwarder::SetEntityID(const nsACString& aEntityID)
 {
     mEntityID = aEntityID;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-DataRequestForwarder::GetEntityID(nsIResumableEntityID* *aEntityID)
+DataRequestForwarder::GetEntityID(nsACString& aEntityID)
 {
-    *aEntityID = mEntityID;
-    NS_IF_ADDREF(*aEntityID);
+    if (mEntityID.IsEmpty())
+        return NS_ERROR_NOT_RESUMABLE;
+
+    aEntityID = mEntityID;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 DataRequestForwarder::ResumeAt(PRUint64, 
-                               nsIResumableEntityID *)
+                               const nsACString&)
 {
     // We shouldn't get here. This class only exists in the middle of a
     // request
@@ -431,10 +433,12 @@ nsFtpState::~nsFtpState()
 }
 
 nsresult
-nsFtpState::GetEntityID(nsIResumableEntityID** aEntityID)
+nsFtpState::GetEntityID(nsACString& aEntityID)
 {
-    *aEntityID = mEntityID;
-    NS_IF_ADDREF(*aEntityID);
+    if (mEntityID.IsEmpty())
+        return NS_ERROR_NOT_RESUMABLE;
+
+    aEntityID = mEntityID;
     return NS_OK;
 }
 
@@ -1406,9 +1410,10 @@ nsFtpState::R_mdtm() {
         }
     }
 
-    nsresult rv = NS_NewResumableEntityID(getter_AddRefs(mEntityID),
-                                          mFileSize, mModTime, EmptyCString());
-    if (NS_FAILED(rv)) return FTP_ERROR;
+    mEntityID.Truncate();
+    mEntityID.AppendInt(PRInt64(mFileSize));
+    mEntityID.Append('/');
+    mEntityID.Append(mModTime);
     mDRequestForwarder->SetEntityID(mEntityID);
 
     // if we tried downloading this, lets try restarting it...
@@ -1422,10 +1427,9 @@ nsFtpState::R_mdtm() {
         return FTP_S_RETR;
 
     //if (our entityID == supplied one (if any))
-    PRBool entEqual = PR_FALSE;
-    if (!mSuppliedEntityID ||
-        (NS_SUCCEEDED(mEntityID->Equals(mSuppliedEntityID, &entEqual)) &&
-         entEqual)) {
+    if (mSuppliedEntityID.IsEmpty() ||
+        mEntityID.Equals(mSuppliedEntityID))
+    {
         return FTP_S_REST;
     } else {
         mInternalError = NS_ERROR_ENTITY_CHANGED;
@@ -1476,16 +1480,16 @@ nsFtpState::S_list() {
     mDRequestForwarder->SetStreamListener(converter);
     mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_TRUE);
     // dir listings aren't resumable
-    NS_ASSERTION(!mSuppliedEntityID,
+    NS_ASSERTION(mSuppliedEntityID.IsEmpty(),
                  "Entity ID given to directory request");
     NS_ASSERTION(mStartPos == PRUint32(-1) || mStartPos == 0,
-                 "Non-intial start position given to directory request");
-    if (mSuppliedEntityID || (mStartPos != PRUint32(-1) && mStartPos != 0)) {
+                 "Non-initial start position given to directory request");
+    if (!mSuppliedEntityID.IsEmpty() || (mStartPos != PRUint32(-1) && mStartPos != 0)) {
         // If we reach this code, then the caller is in error
         return NS_ERROR_NOT_RESUMABLE;
     }
 
-    mDRequestForwarder->SetEntityID(nsnull);
+    mDRequestForwarder->SetEntityID(EmptyCString());
 
     nsCAutoString listString;
     if (mServerType == FTP_VMS_TYPE)
@@ -1587,7 +1591,7 @@ FTP_STATE
 nsFtpState::R_rest() {
     if (mResponseCode/100 == 4) {
         // If REST fails, then we can't resume
-        mEntityID = nsnull;
+        mEntityID.Truncate();
 
         mInternalError = NS_ERROR_NOT_RESUMABLE;
         mResponseMsg.Truncate();
@@ -2150,7 +2154,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
                  nsICacheEntryDescriptor* cacheEntry,
                  nsIProxyInfo* proxyInfo,
                  PRUint32 startPos,
-                 nsIResumableEntityID* entity) 
+                 const nsACString& entity) 
 {
     nsresult rv = NS_OK;
 
@@ -2208,7 +2212,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
             
             mDRequestForwarder->SetStreamListener(converter);
             mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_FALSE);
-            mDRequestForwarder->SetEntityID(nsnull);
+            mDRequestForwarder->SetEntityID(EmptyCString());
 
             // Get a transport to the cached data...
             nsCOMPtr<nsIInputStream> input;

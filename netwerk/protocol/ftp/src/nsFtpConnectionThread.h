@@ -52,7 +52,6 @@
 #include "nsIFTPChannel.h"
 #include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
@@ -61,7 +60,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
-#include "nsIResumableEntityID.h"
 
 #include "nsFtpControlConnection.h"
 
@@ -124,12 +122,12 @@ public:
                   nsICacheEntryDescriptor* cacheEntry,
                   nsIProxyInfo* proxyInfo,
                   PRUint32 startPos,
-                  nsIResumableEntityID* entity);
+                  const nsACString& entity);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream);
 
-    nsresult GetEntityID(nsIResumableEntityID* *aEntityID);
+    nsresult GetEntityID(nsACString& aEntityID);
 
     nsresult Connect();
 
@@ -243,8 +241,8 @@ private:
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     
     PRUint32 mStartPos;
-    nsCOMPtr<nsIResumableEntityID> mSuppliedEntityID;
-    nsCOMPtr<nsIResumableEntityID> mEntityID;
+    nsCString mSuppliedEntityID;
+    nsCString mEntityID;
 };
 
 
