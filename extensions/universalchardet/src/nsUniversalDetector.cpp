@@ -106,10 +106,10 @@ nsUniversalDetector::Reset()
 #define SHORTCUT_THRESHOLD      (float)0.95
 #define MINIMUM_THRESHOLD      (float)0.20
 
-void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
+nsresult nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
 {
   if(mDone) 
-    return;
+    return NS_OK;
 
   if (aLen > 0)
     mGotData = PR_TRUE;
@@ -155,7 +155,7 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
       if (mDetectedCharset)
       {
         mDone = PR_TRUE;
-        return;
+        return NS_OK;
       }
   }
   
@@ -203,8 +203,11 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   switch (mInputState)
   {
   case eEscAscii:
-    if (nsnull == mEscCharSetProber)
+    if (nsnull == mEscCharSetProber) {
       mEscCharSetProber = new nsEscCharSetProber;
+      if (nsnull == mEscCharSetProber)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     st = mEscCharSetProber->HandleData(aBuf, aLen);
     if (st == eFoundIt)
     {
@@ -220,7 +223,7 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
       {
         mDone = PR_TRUE;
         mDetectedCharset = mCharSetProbers[i]->GetCharSetName();
-        return;
+        return NS_OK;
       } 
     }
     break;
@@ -228,7 +231,7 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   default:  //pure ascii
     ;//do nothing here
   }
-  return ;  
+  return NS_OK;
 }
 
 
@@ -317,19 +320,19 @@ NS_IMETHODIMP nsUniversalXPCOMDetector::DoIt(
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 
   if((nsnull == aBuf) || (nsnull == oDontFeedMe))
-     return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_ILLEGAL_VALUE;
 
-  this->HandleData(aBuf, aLen);
-	
+  nsresult rv = this->HandleData(aBuf, aLen);
+  if (NS_FAILED(rv))
+    return rv;
+
   if (mDone)
   {
-
     if (mDetectedCharset)
     {
-	    Report(mDetectedCharset);
+       Report(mDetectedCharset);
     }
-
-	 *oDontFeedMe = PR_TRUE;
+    *oDontFeedMe = PR_TRUE;
   }
   *oDontFeedMe = PR_FALSE;
   return NS_OK;
@@ -377,16 +380,18 @@ void nsUniversalXPCOMStringDetector::Report(const char *aCharset)
 NS_IMETHODIMP nsUniversalXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aLen, 
                      const char** oCharset, nsDetectionConfident &oConf)
 {
-   mResult = nsnull;
-   this->Reset();
-   this->HandleData(aBuf, aLen); 
-   this->DataEnd();
-   if (mResult)
-   {
-       *oCharset=mResult;
-       oConf = eBestAnswer;
-   }
-   return NS_OK;
+  mResult = nsnull;
+  this->Reset();
+  nsresult rv = this->HandleData(aBuf, aLen);
+  if (NS_FAILED(rv))
+    return rv;
+  this->DataEnd();
+  if (mResult)
+  {
+    *oCharset=mResult;
+    oConf = eBestAnswer;
+  }
+  return NS_OK;
 }
        
 
