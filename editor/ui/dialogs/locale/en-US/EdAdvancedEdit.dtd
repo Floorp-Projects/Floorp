@@ -24,8 +24,10 @@
 <!ENTITY WindowTitle.label              "Advanced Property Editor">
 <!ENTITY AttName.label                  "Attribute: ">
 <!ENTITY AttValue.label                 "Value: ">
+<!ENTITY PropertyName.label             "Property: ">
 <!ENTITY currentattributesfor.label     "Current attributes for: ">
 <!ENTITY tree.attributeHeader.label     "Attribute">
+<!ENTITY tree.propertyHeader.label      "Property">
 <!ENTITY tree.valueHeader.label         "Value">
 <!ENTITY tabHTML.label                  "HTML Attributes">
 <!ENTITY tabCSS.label                   "Inline Style">

@@ -21,7 +21,6 @@
  *    Beth Epperson
  */
 
-
 // HTML Attributes object for "Name" menulist
 var gHTMLAttr = {};
 
@@ -33,13 +32,15 @@ var gJSAttr = {};
 // This is appended to Name menulist when "_core" is attribute name
 var gCoreHTMLAttr =
 [
-	"id",
+  "id",
 	"class",
 	"title"
 ];
 
 // Core event attribute values //
 // This is appended to all JS menulists
+//   except those elements having "noJSEvents"
+//   as a value in their gJSAttr array.
 var gCoreJSEvents =
 [
 	"onclick",
@@ -111,6 +112,34 @@ var gVAlignTable =
 ];
 
 // ================ HTML Attributes ================ //
+/* For each element, there is an array of attributes,
+   whose name is the element name,
+   used to fill the "Attribute Name" menulist.
+   For each of those attributes, if they have a specific
+   set of values, those are listed in an array named:
+   "elementName_attName".
+
+   In each values string, the following characters
+   are signal to do input filtering:
+    "#"  Allow only integer values
+    "%"  Allow integer values or a number ending in "%"
+    "!"  Allow only one character
+    "$"  is an attribute required by HTML DTD
+*/
+
+/*
+   Most elements have the "dir" attribute,
+   so we use this value array
+   for all elements instead of specifying  
+   separately for each element
+*/
+gHTMLAttr.all_dir =
+[
+  "ltr",
+  "rtl"
+];
+
+
 gHTMLAttr.a =
 [
 	"charset",
@@ -211,11 +240,11 @@ gHTMLAttr.applet =
 	"object",
 	"alt",
 	"name",
-	"$width",
-	"$height",
+	"%$width",
+	"%$height",
 	"align",
-	"hspace",
-	"vspace",
+	"#hspace",
+	"#vspace",
   "-",
   "_core"
 ];
@@ -286,6 +315,8 @@ gHTMLAttr.basefont_color = gHTMLColors;
 
 gHTMLAttr.bdo =
 [
+  "_core",
+  "-",
 	"lang",
 	"$dir"
 ];
@@ -328,8 +359,6 @@ gHTMLAttr.body =
 	"lang",
 	"dir"
 ];
-
-gHTMLAttr.body_background = gHTMLColors;
 
 gHTMLAttr.body_bgcolor = gHTMLColors;
 
@@ -500,7 +529,11 @@ gHTMLAttr.dd =
 gHTMLAttr.del =
 [
 	"cite",
-	"datetime"
+	"datetime",
+  "_core",
+  "-",
+	"lang",
+	"dir"
 ];
 
 gHTMLAttr.dfn =
@@ -582,7 +615,7 @@ gHTMLAttr.fieldset =
 // this is deprecated //
 gHTMLAttr.font =
 [
-	"size",
+	"#size",
 	"color",
 	"face",
   "-",
@@ -621,6 +654,13 @@ gHTMLAttr.form_enctype =
 	"application/x-www-form-urlencoded"
 ];
 
+gHTMLAttr.form_target =
+[
+  "blank",
+  "self",
+  "parent",
+  "top"
+];
 
 gHTMLAttr.frame =
 [
@@ -808,6 +848,15 @@ gHTMLAttr.iframe_scrolling =
 	"no"
 ];
 
+gHTMLAttr.iframe_align =
+[
+	"top",
+	"middle",
+	"bottom",
+	"left",
+	"right"
+];
+
 gHTMLAttr.img =
 [
 	"$src",
@@ -819,9 +868,9 @@ gHTMLAttr.img =
 	"usemap",
 	"ismap",
 	"align",
-	"border",
-	"hspace",
-	"vspace",
+	"#border",
+	"#hspace",
+	"#vspace",
   "-",
   "_core",
   "-",
@@ -1119,9 +1168,9 @@ gHTMLAttr.object =
 	"name",
 	"#tabindex",
 	"align",
-	"border",
-	"hspace",
-	"vspace",
+	"#border",
+	"#hspace",
+	"#vspace",
   "-",
   "_core",
   "-",
@@ -1677,7 +1726,9 @@ gHTMLAttr._var =
 
 // ================ JS Attributes ================ //
 // These are element specif even handlers. 
-// All elements use gCoreJSEvents
+/* Most all elements use gCoreJSEvents, so those 
+   are assumed except for those listed here with "noEvents"
+*/
 
 gJSAttr.a =
 [
@@ -1742,5 +1793,26 @@ gJSAttr.textarea =
 	"onblur",
 	"onselect",
 	"onchange"
+];
+
+// Elements that don't have JSEvents:
+gJSAttr.font =
+[
+  "noJSEvents"
+];
+
+gJSAttr.applet =
+[
+  "noJSEvents"
+];
+
+gJSAttr.isindex =
+[
+  "noJSEvents"
+];
+
+gJSAttr.iframe =
+[
+  "noJSEvents"
 ];
 

@@ -70,7 +70,7 @@
     <tabs>
       <tab label="&tabHTML.label;"/>
       <tab label="&tabCSS.label;"/>
-      <tab label="&tabJSE.label;"/>
+      <tab label="&tabJSE.label;" id="tabJSE"/>
     </tabs>
     <tabpanels flex="1">
       <!-- ============================================================== -->
@@ -140,7 +140,7 @@
           </treecolgroup>
           <treehead>
             <treerow>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" label="&tree.propertyHeader.label;"/>
               <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"/>
             </treerow>
           </treehead>
@@ -157,7 +157,7 @@
           </columns>
           <rows>
             <row valign="bottom" equalsize="always">
-              <text class="label" for="AddCSSAttributeNameInput"  value="&AttName.label;"/>
+              <text class="label" for="AddCSSAttributeNameInput"  value="&PropertyName.label;"/>
               <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
             </row>
             <row valign="middle" equalsize="always">

@@ -26,26 +26,41 @@ function BuildJSEAttributeNameList()
   ClearMenulist(dialog.AddJSEAttributeNameList);
   
   // Get events specific to current element
-  var attNames = gJSAttr[gElement.localName.toLowerCase()];
-  var i;
-  var popup;
-  var sep;
-
-  if (attNames && attNames.length)
+  var elementName = gElement.localName.toLowerCase();
+  if (elementName in gJSAttr)
   {
-    for (i = 0; i < attNames.length; i++)
-      AppendStringToMenulist(dialog.AddJSEAttributeNameList, attNames[i]);
+    var attNames = gJSAttr[elementName];
+    var i;
+    var popup;
+    var sep;
 
-    popup = dialog.AddJSEAttributeNameList.firstChild;
-    if (popup)
+    if (attNames && attNames.length)
     {
-      sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
-      if (sep)
-        popup.appendChild(sep);
-    }        
+      // Since we don't allow user-editable JS events yet (but we will soon)
+      //  simply remove the JS tab to not allow adding JS events
+      if (attNames[0] == "noJSEvents")
+      {
+        var tab = document.getElementById("tabJSE");
+        if (tab)
+          tab.parentNode.removeChild(tab);
+
+        return;
+      }
+
+      for (i = 0; i < attNames.length; i++)
+        AppendStringToMenulist(dialog.AddJSEAttributeNameList, attNames[i]);
+
+      popup = dialog.AddJSEAttributeNameList.firstChild;
+      if (popup)
+      {
+        sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuseparator");
+        if (sep)
+          popup.appendChild(sep);
+      }        
+    }
   }
 
-  // Always add core JS events
+  // Always add core JS events unless we aborted above
   for (i = 0; i < gCoreJSEvents.length; i++)
   {
     if (gCoreJSEvents[i] == "-")

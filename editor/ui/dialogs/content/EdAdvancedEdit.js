@@ -162,7 +162,7 @@ function UpdateExistingAttribute( attName, attValue, treeChildrenId )
 {
   var treeChildren = document.getElementById(treeChildrenId);
   if (!treeChildren)
-    return;
+    return false;
 
   var name;
   var i;
