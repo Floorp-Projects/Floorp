@@ -1247,6 +1247,8 @@ void nsImapProtocol::EstablishServerConnection()
 PRBool nsImapProtocol::ProcessCurrentURL()
 {
   Log("ProcessCurrentURL", nsnull, "entering");
+  (void) GetImapHostName(); // force m_hostName to get set.
+
 
   PRBool  logonFailed = PR_FALSE;
   PRBool anotherUrlRun = PR_FALSE;
@@ -1945,8 +1947,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
   imapMessageFlagsType  msgFlags = 0;
   nsCString       urlHost;
   
-  (void) GetImapHostName(); // force m_hostName to get set.
-
   // this can't fail, can it?
   nsresult res;
   res = m_runningUrl->GetImapAction(&m_imapAction);
@@ -7233,27 +7233,13 @@ PRBool nsImapProtocol::TryToLogon()
         rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapServerKey(), imapPasswordIsNew);
         if (NS_SUCCEEDED(rv) && imapPasswordIsNew)
           m_hostSessionList->SetPasswordVerifiedOnline(GetImapServerKey());
-#ifdef UNREADY_CODE
-        NET_SetPopPassword2(passwordForHost); // bug 53380
-#endif
         if (imapPasswordIsNew) 
         {
-                  if (m_currentBiffState == nsIMsgFolder::nsMsgBiffState_Unknown)
-                  {
-                    m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
-                      SendSetBiffIndicatorEvent(m_currentBiffState);
-                  }
-#ifdef UNREADY_CODE
-                  LIBNET_LOCK();
-                  if (!DeathSignalReceived())
-                  {
-                    setUserAuthenticatedIsSafe = GetActiveEntry()->URL_s->msg_pane != NULL;
-            MWContext *context = GetActiveEntry()->window_id;
-            if (context)
-              FE_RememberPopPassword(context, SECNAV_MungeString(passwordForHost));
+          if (m_currentBiffState == nsIMsgFolder::nsMsgBiffState_Unknown)
+          {
+              m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
+              SendSetBiffIndicatorEvent(m_currentBiffState);
           }
-          LIBNET_UNLOCK();
-#endif
         }
 
         loginSucceeded = PR_TRUE;
