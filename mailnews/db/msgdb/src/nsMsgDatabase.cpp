@@ -953,7 +953,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
     }
 
 	if (commit)
-		Commit(kSmallCommit);			// ### dmb is this a good time to commit?
+		Commit(kLargeCommit);			// ### dmb is this a good time to commit?
 	return NS_OK;
 }
 
@@ -974,7 +974,6 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 		return NS_ERROR_NULL_POINTER;
 	nsresult ret = NS_OK;
 	 // turn this on when Scottip has rdf stuff worked out.
-#if 0
 	nsCOMPtr <nsIMsgThread> thread ;
 	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
 	if (NS_SUCCEEDED(ret))
@@ -987,7 +986,6 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	}
 	else
 		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
-#endif
 	// even if we couldn't find the thread,we should try to remove the header.
 	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
 	return ret;
@@ -1524,6 +1522,7 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
 	nsresult rv;
 	nsIMdbRow* hdrRow;
 	mdb_pos rowPos;
+	PRUint32 flags;
 
     do {
         NS_IF_RELEASE(mResultHdr);
@@ -1544,8 +1543,15 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
             key = outOid.mOid_Id;
 
         rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
-        if (NS_FAILED(rv)) return rv;
-    } while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK);
+        if (NS_FAILED(rv))
+			return rv;
+
+		if (mResultHdr)
+			mResultHdr->GetFlags(&flags);
+		else
+			flags = 0;
+    } 
+	while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK && !(flags & MSG_FLAG_EXPUNGED));
 	return rv;
 }
 
