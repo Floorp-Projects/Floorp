@@ -202,6 +202,8 @@ double Stopwatch::GetCPUTime(){
    return (double)(cpt.tms_utime+cpt.tms_stime) / gTicks;
 #elif defined(R__VMS)
    return(double)clock()/gTicks;
+#elif defined(WINCE)
+   return 0;
 #elif defined(WIN32)
 
   OSVERSIONINFO OsVersionInfo;
