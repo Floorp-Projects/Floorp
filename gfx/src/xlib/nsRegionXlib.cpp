@@ -46,8 +46,10 @@ nsresult
 nsRegionXlib::Init()
 {
   //NS_ASSERTION(!mRegion, "already initialized");
-  if (mRegion)
+  if (mRegion) {
     ::XDestroyRegion(mRegion);
+    mRegion = nsnull;
+  }
 
   mRegion = ::XCreateRegion();
   mRegionType = eRegionComplexity_empty;
@@ -161,6 +163,8 @@ nsRegionXlib::Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 PRBool
 nsRegionXlib::IsEmpty(void)
 {
+  if (!mRegion)
+    return PR_TRUE;
   return ::XEmptyRegion(mRegion);
 }
 
@@ -189,7 +193,9 @@ nsRegionXlib::GetBoundingBox(PRInt32 *aX, PRInt32 *aY,
 void
 nsRegionXlib::Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
-  ::XOffsetRegion(mRegion, aXOffset, aYOffset);
+  if (mRegion) {
+    ::XOffsetRegion(mRegion, aXOffset, aYOffset);
+  }
 }
 
 PRBool
@@ -309,4 +315,3 @@ nsRegionXlib::CreateRectRegion(PRInt32 aX,
 
   return (tRegion);
 } 
-
