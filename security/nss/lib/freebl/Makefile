@@ -89,7 +89,11 @@ endif
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(USE_N32),1)
     ASFILES  = mpi_mips.s
+ifeq ($(NS_USE_GCC),1)
+    ASFLAGS = -Wp,-P -Wp,-traditional -O -mips3
+else
     ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 
+endif
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
     DEFINES += -DMP_USE_UINT_DIGIT
 else
