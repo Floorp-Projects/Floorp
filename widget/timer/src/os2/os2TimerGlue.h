@@ -60,7 +60,7 @@ extern TID QueryCurrentTID(void);
 typedef ULONG         DWORD;
 
 #define HEARTBEATTIMEOUT 50
-#define HEARTBEATTIMERID 0x7ffe
+#define HEARTBEATTIMERID TID_USERMAX
 
 struct TIDKey : public nsVoidKey
 {
