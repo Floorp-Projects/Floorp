@@ -128,12 +128,13 @@ nsresult NS_COM XPCOMGlueShutdown()
         xpcomFunctions = nsnull;
     }
 
+    GlueShutdownMemory();
+
     if (xpcomLib) {
         PR_UnloadLibrary(xpcomLib);
         xpcomLib = nsnull;
     }
     
-    GlueShutdownMemory();
     return NS_OK;
 #endif
 }
