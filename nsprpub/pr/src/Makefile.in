@@ -98,19 +98,12 @@ endif
 endif
 endif
 
-ifeq ($(OS_ARCH),OpenVMS)
-OS_LIBS		= -lvms_jackets
-endif
-
 ifeq ($(OS_ARCH),OSF1)
 ifeq ($(USE_PTHREADS), 1)
 OS_LIBS 	= -lpthread -lrt
 endif
 ifneq ($(OS_RELEASE),V2.0)
 OS_LIBS		+= -lc_r
-endif
-ifeq ($(USE_IPV6), 1)
-OS_LIBS		+= -lip6
 endif
 endif
 
@@ -131,7 +124,7 @@ OS_LIBS 	= -lpthread
 endif
 endif
 ifeq ($(PTHREADS_USER), 1)
-OS_LIBS 	= -lpthread
+OS_LIBS 	= -lpthread -lrt
 endif
 ifeq ($(basename $(OS_RELEASE)),A.09)
 OS_LIBS		+= -ldld -L/lib/pa1.1 -lm
@@ -183,6 +176,8 @@ OBJS = \
     malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
     malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
     md/$(OBJDIR)/prosdep.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshm.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prshma.$(OBJ_SUFFIX) \
     memory/$(OBJDIR)/prseg.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pralarm.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/pratom.$(OBJ_SUFFIX) \
@@ -194,6 +189,7 @@ OBJS = \
     misc/$(OBJDIR)/prerrortable.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinit.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prinrval.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripc.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
@@ -214,7 +210,8 @@ OBJS += \
     io/$(OBJDIR)/prdir.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prfile.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prio.$(OBJ_SUFFIX) \
-    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX)
+    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pripcsem.$(OBJ_SUFFIX)
 
 ifndef USE_BTHREADS
 OBJS += \
@@ -301,7 +298,9 @@ OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+        md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX)    \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)	\
+        md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)       \
 	md/windows/$(OBJDIR)/w95dllmain.$(OBJ_SUFFIX)
 else
 ifeq ($(OS_TARGET),OS2)
@@ -324,6 +323,8 @@ OBJS +=	md/windows/$(OBJDIR)/ntdllmn.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
 	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
 	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+        md/windows/$(OBJDIR)/w32ipcsem.$(OBJ_SUFFIX) \
+        md/windows/$(OBJDIR)/w32shm.$(OBJ_SUFFIX)       \
 	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif
 endif
@@ -345,8 +346,6 @@ LIBRARY_NAME = nspr
 LIBRARY_VERSION = $(MOD_VERSION)
 
 RELEASE_LIBS = $(TARGETS)
-
-GARBAGE += $(TINC)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -410,7 +409,15 @@ endif
 export:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
 ifdef SHARED_LIBRARY
+ifeq ($(OS_ARCH),HP-UX)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/bin
+else
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+endif
+ifeq ($(OS_ARCH), OpenVMS)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+endif
 endif
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(TARGETS) $(MOZ_DIST)/lib

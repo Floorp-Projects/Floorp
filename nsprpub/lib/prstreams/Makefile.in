@@ -30,20 +30,27 @@ include $(topsrcdir)/config/config.mk
 ifeq ($(OS_ARCH),SunOS)
     ifeq ($(OS_RELEASE),4.1.3_U1)
         OPTIMIZER =
+    else
+	# The C++ compiler in Workshop 5.0 uses standard
+	# iostreams as default.  -library=iostream will
+	# allow Workshop 5.0 to work with classic iostreams.
+	ifndef NS_USE_GCC
+	CCC_VERSION := $(shell $(CCC) -V 2>&1)
+	ifneq (,$(findstring 5.0,$(CCC_VERSION)))
+	CCC_ONLY_FLAGS += -library=iostream
+	endif
+	endif
     endif
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-    CFLAGS += -KPIC
     ifneq ($(OS_RELEASE),5.3)
-        CFLAGS += -exceptions
+	CCC_ONLY_FLAGS += -exceptions
     endif
 endif
 
-ifeq ($(OS_ARCH),HP-UX)
-    ifeq (($USE_64),1)
-        CCCFLAGS += +DA2.0W
-    endif
+ifeq ($(OS_ARCH), BeOS)
+    CFLAGS += -frtti -fexceptions
 endif
 
 INCLUDES = -I$(DIST)/include
@@ -110,6 +117,9 @@ endif
 ifeq ($(OS_ARCH),SCOOS)
     EXTRA_LIBS =
 endif
+ifeq ($(OS_ARCH),BeOS)
+    EXTRA_LIBS = -lstdc++.r4 -L$(DIST)/lib -lnspr$(MOD_VERSION)
+endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
     OS_LIBS += -lC
@@ -172,5 +182,16 @@ endif
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+ifeq ($(OS_ARCH),HP-UX)
+ifdef SHARED_LIBRARY
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
+endif
+endif
+ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
+ifdef SHARED_LIBRARY
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+endif
+endif
 
 install:: export
