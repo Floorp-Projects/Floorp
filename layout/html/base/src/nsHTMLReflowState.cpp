@@ -2135,23 +2135,6 @@ nsHTMLReflowState::UseComputedHeight()
   return useComputedHeight;
 }
 
-static nsIStyleContext*
-GetNonInheritedLineHeightStyleContext(nsIStyleContext* aStyleContext)
-{
-  nsIStyleContext* parentSC;
-  parentSC = aStyleContext->GetParent();
-  if (parentSC) {
-    const nsStyleText* text = (const nsStyleText*)
-      parentSC->GetStyleData(eStyleStruct_Text);
-    if (eStyleUnit_Inherit == text->mLineHeight.GetUnit()) {
-      nsIStyleContext* sc = GetNonInheritedLineHeightStyleContext(parentSC);
-      NS_RELEASE(parentSC);
-      return sc;
-    }
-  }
-  return parentSC;
-}
-
 static nscoord
 ComputeLineHeight(nsIRenderingContext* aRenderingContext,
                   nsIStyleContext* aStyleContext)
@@ -2168,30 +2151,16 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
       (const nsStyleVisibility*)aStyleContext->GetStyleData(eStyleStruct_Visibility);
   
   nsStyleUnit unit = text->mLineHeight.GetUnit();
-  if (eStyleUnit_Inherit == unit) {
-    // Inherit parents line-height value
-    nsCOMPtr<nsIStyleContext> parentSC =
-      getter_AddRefs(GetNonInheritedLineHeightStyleContext(aStyleContext));
-    if (parentSC) {
-      text = (const nsStyleText*) parentSC->GetStyleData(eStyleStruct_Text);
-      unit = text->mLineHeight.GetUnit();
-      if (eStyleUnit_Percent == unit) {
-        // For percent, we inherit the computed value so update the
-        // font to use the parent's font not our font.
-        font = (const nsStyleFont*) parentSC->GetStyleData(eStyleStruct_Font);
-      }
-    }
-  }
 
   if (eStyleUnit_Coord == unit) {
     // For length values just use the pre-computed value
     lineHeight = text->mLineHeight.GetCoordValue();
   }
   else {
-    // For "normal", factor or percentage units the computed value of
-    // the line-height property is found by multiplying the factor by
-    // the font's <b>actual</b> em height. For "normal" we use the
-    // font's normal line height (em height + leading).
+    // For "normal" or factor units the computed value of the
+    // line-height property is found by multiplying the factor by the
+    // font's <b>actual</b> em height. For "normal" we use the font's
+    // normal line height (em height + leading).
     nscoord emHeight = -1;
     nscoord normalLineHeight = -1;
     nsCOMPtr<nsIDeviceContext> deviceContext;
@@ -2212,10 +2181,8 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     if (eStyleUnit_Factor == unit) {
       factor = text->mLineHeight.GetFactorValue();
     }
-    else if (eStyleUnit_Percent == unit) {
-      factor = text->mLineHeight.GetPercentValue();
-    }
     else {
+      NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
       factor = (((float) normalLineHeight) / PR_MAX(1, emHeight));
     }
 

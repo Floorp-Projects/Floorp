@@ -186,7 +186,7 @@ nsString& Unquote(nsString& aString)
 }
 
 nscoord CalcLength(const nsCSSValue& aValue,
-                   nsFont* aFont, 
+                   const nsFont* aFont, 
                    nsIStyleContext* aStyleContext,
                    nsIPresContext* aPresContext,
                    PRBool& aInherited)
@@ -200,18 +200,18 @@ nscoord CalcLength(const nsCSSValue& aValue,
     case eCSSUnit_EM:
     case eCSSUnit_Char: {
       aInherited = PR_TRUE;
-      nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
+      const nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
       return NSToCoordRound(aValue.GetFloatValue() * (float)font->size);
       // XXX scale against font metrics height instead?
     }
     case eCSSUnit_EN: {
       aInherited = PR_TRUE;
-      nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
+      const nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
       return NSToCoordRound((aValue.GetFloatValue() * (float)font->size) / 2.0f);
     }
     case eCSSUnit_XHeight: {
       aInherited = PR_TRUE;
-      nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
+      const nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
       nsIFontMetrics* fm;
       aPresContext->GetMetricsFor(*font, &fm);
       NS_ASSERTION(nsnull != fm, "can't get font metrics");
@@ -228,7 +228,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
     case eCSSUnit_CapHeight: {
       NS_NOTYETIMPLEMENTED("cap height unit");
       aInherited = PR_TRUE;
-      nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
+      const nsFont* font = aStyleContext ? &(((nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font))->mFont) : aFont;
       nscoord capHeight = ((font->size / 3) * 2); // XXX HACK!
       return NSToCoordRound(aValue.GetFloatValue() * (float)capHeight);
     }
@@ -255,7 +255,6 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
 #define SETCOORD_AH     (SETCOORD_AUTO | SETCOORD_INHERIT)
 #define SETCOORD_LPH    (SETCOORD_LP | SETCOORD_INHERIT)
-#define SETCOORD_LPFHN  (SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_NORMAL)
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
@@ -1631,8 +1630,9 @@ nsRuleNode::gComputeStyleDataFn[] = {
 static void
 SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
         nscoord aMinFontSize, PRBool aUseDocumentFonts, PRBool aChromeOverride,
-        PRBool aIsGeneric, const nsCSSFont& aFontData, const nsFont& aDefaultFont,
-        nsStyleFont* aParentFont, nsStyleFont* aFont, PRBool& aInherited)
+        PRBool aIsGeneric, const nsCSSFont& aFontData,
+        const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
+        nsStyleFont* aFont, PRBool& aInherited)
 {
   nsFont defaultVariableFont, defaultFixedFont;
   aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultVariableFont);
@@ -2032,7 +2032,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
 
   const nsCSSFont& fontData = NS_STATIC_CAST(const nsCSSFont&, aData);
   nsStyleFont* font = nsnull;
-  nsStyleFont* parentFont = font;
+  const nsStyleFont* parentFont = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -2045,7 +2045,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentFont = (nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
+        parentFont = NS_STATIC_CAST(const nsStyleFont*,
+                               parentContext->GetStyleData(eStyleStruct_Font));
       if (parentFont)
         font = new (mPresContext) nsStyleFont(*parentFont);
     }
@@ -2161,7 +2162,7 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
 
   const nsCSSText& textData = NS_STATIC_CAST(const nsCSSText&, aData);
   nsStyleText* text = nsnull;
-  nsStyleText* parentText = text;
+  const nsStyleText* parentText = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -2174,29 +2175,32 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentText = (nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
-      if (parentText) {
+        parentText = NS_STATIC_CAST(const nsStyleText*,
+                               parentContext->GetStyleData(eStyleStruct_Text));
+      if (parentText)
         text = new (mPresContext) nsStyleText(*parentText);
-
-        // Percentage line heights are not inherited.  We need to change the value
-        // of line-height to inherit.
-        nsStyleUnit unit = text->mLineHeight.GetUnit();
-        if (unit != eStyleUnit_Normal && unit != eStyleUnit_Factor && unit != eStyleUnit_Coord)
-          text->mLineHeight.SetInheritValue();
-      }
     }
   }
 
   if (!text)
-    text = parentText = new (mPresContext) nsStyleText();
+    parentText = text = new (mPresContext) nsStyleText();
 
     // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
            SETCOORD_LH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
 
   // line-height: normal, number, length, percent, inherit
-  SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
-           SETCOORD_LPFHN, aContext, mPresContext, inherited);
+  if (eCSSUnit_Percent == textData.mLineHeight.GetUnit()) {
+    aInherited = PR_TRUE;
+    const nsStyleFont* parentFont = NS_STATIC_CAST(const nsStyleFont*,
+                               parentContext->GetStyleData(eStyleStruct_Font));
+    text->mLineHeight.SetCoordValue((nscoord)((float)(parentFont->mSize) *
+                                     textData.mLineHeight.GetPercentValue()));
+  } else
+    SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
+             SETCOORD_LH | SETCOORD_FACTOR | SETCOORD_NORMAL,
+             aContext, mPresContext, inherited);
+
 
   // text-align: enum, string, inherit
   if (eCSSUnit_Enumerated == textData.mTextAlign.GetUnit()) {
@@ -2345,7 +2349,7 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
   
   const nsCSSUserInterface& uiData = NS_STATIC_CAST(const nsCSSUserInterface&, aData);
   nsStyleUserInterface* ui = nsnull;
-  nsStyleUserInterface* parentUI = ui;
+  const nsStyleUserInterface* parentUI = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartData)
@@ -2358,14 +2362,15 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentUI = (nsStyleUserInterface*)parentContext->GetStyleData(eStyleStruct_UserInterface);
+        parentUI = NS_STATIC_CAST(const nsStyleUserInterface*,
+                      parentContext->GetStyleData(eStyleStruct_UserInterface));
       if (parentUI)
         ui = new (mPresContext) nsStyleUserInterface(*parentUI);
     }
   }
 
   if (!ui)
-    ui = parentUI = new (mPresContext) nsStyleUserInterface();
+    parentUI = ui = new (mPresContext) nsStyleUserInterface();
 
   // cursor: enum, auto, url, inherit
   nsCSSValueList*  list = uiData.mCursor;
@@ -2460,10 +2465,11 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
     ui = new (mPresContext) nsStyleUIReset(*NS_STATIC_CAST(nsStyleUIReset*, aStartData));
   else
     ui = new (mPresContext) nsStyleUIReset();
-  nsStyleUIReset* parentUI = ui;
+  const nsStyleUIReset* parentUI = ui;
 
   if (parentContext)
-    parentUI = (nsStyleUIReset*)parentContext->GetStyleData(eStyleStruct_UIReset);
+    parentUI = NS_STATIC_CAST(const nsStyleUIReset*,
+                            parentContext->GetStyleData(eStyleStruct_UIReset));
   PRBool inherited = aInherited;
   
   // user-select: none, enum, inherit
@@ -2543,10 +2549,11 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display = new (mPresContext) nsStyleDisplay(*NS_STATIC_CAST(nsStyleDisplay*, aStartStruct));
   else
     display = new (mPresContext) nsStyleDisplay();
-  nsStyleDisplay* parentDisplay = display;
+  const nsStyleDisplay* parentDisplay = display;
 
   if (parentContext)
-    parentDisplay = (nsStyleDisplay*)parentContext->GetStyleData(eStyleStruct_Display);
+    parentDisplay = NS_STATIC_CAST(const nsStyleDisplay*,
+                            parentContext->GetStyleData(eStyleStruct_Display));
   PRBool inherited = aInherited;
 
   // display: enum, none, inherit
@@ -2751,7 +2758,7 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
   
   const nsCSSDisplay& displayData = NS_STATIC_CAST(const nsCSSDisplay&, aData);
   nsStyleVisibility* visibility = nsnull;
-  nsStyleVisibility* parentVisibility = visibility;
+  const nsStyleVisibility* parentVisibility = visibility;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -2764,14 +2771,15 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentVisibility = (nsStyleVisibility*)parentContext->GetStyleData(eStyleStruct_Visibility);
+        parentVisibility = NS_STATIC_CAST(const nsStyleVisibility*,
+                         parentContext->GetStyleData(eStyleStruct_Visibility));
       if (parentVisibility)
         visibility = new (mPresContext) nsStyleVisibility(*parentVisibility);
     }
   }
 
   if (!visibility)
-    visibility = parentVisibility = new (mPresContext) nsStyleVisibility(mPresContext);
+    parentVisibility = visibility = new (mPresContext) nsStyleVisibility(mPresContext);
 
   // opacity: factor, percent, inherit
   if (eCSSUnit_Percent == displayData.mOpacity.GetUnit()) {
@@ -2845,7 +2853,7 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   
   const nsCSSColor& colorData = NS_STATIC_CAST(const nsCSSColor&, aData);
   nsStyleColor* color = nsnull;
-  nsStyleColor* parentColor = color;
+  const nsStyleColor* parentColor = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -2858,14 +2866,15 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentColor = (nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+        parentColor = NS_STATIC_CAST(const nsStyleColor*,
+                              parentContext->GetStyleData(eStyleStruct_Color));
       if (parentColor)
         color = new (mPresContext) nsStyleColor(*parentColor);
     }
   }
 
   if (!color)
-    color = parentColor = new (mPresContext) nsStyleColor(mPresContext);
+    parentColor = color = new (mPresContext) nsStyleColor(mPresContext);
 
   // color: color, string, inherit
   SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, inherited);
@@ -2905,10 +2914,11 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     bg = new (mPresContext) nsStyleBackground(*NS_STATIC_CAST(nsStyleBackground*, aStartStruct));
   else
     bg = new (mPresContext) nsStyleBackground(mPresContext);
-  nsStyleBackground* parentBG = bg;
+  const nsStyleBackground* parentBG = bg;
 
   if (parentContext)
-    parentBG = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
+    parentBG = NS_STATIC_CAST(const nsStyleBackground*,
+                         parentContext->GetStyleData(eStyleStruct_Background));
   PRBool inherited = aInherited;
 
   // background-color: color, string, enum (flags), inherit
@@ -3063,10 +3073,11 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     margin = new (mPresContext) nsStyleMargin(*NS_STATIC_CAST(nsStyleMargin*, aStartStruct));
   else
     margin = new (mPresContext) nsStyleMargin();
-  nsStyleMargin* parentMargin = margin;
+  const nsStyleMargin* parentMargin = margin;
 
   if (parentContext)
-    parentMargin = (nsStyleMargin*)parentContext->GetStyleData(eStyleStruct_Margin);
+    parentMargin = NS_STATIC_CAST(const nsStyleMargin*,
+                             parentContext->GetStyleData(eStyleStruct_Margin));
   PRBool inherited = aInherited;
 
   // margin: length, percent, auto, inherit
@@ -3128,9 +3139,10 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   else
     border = new (mPresContext) nsStyleBorder(mPresContext);
   
-  nsStyleBorder* parentBorder = border;
+  const nsStyleBorder* parentBorder = border;
   if (parentContext)
-    parentBorder = (nsStyleBorder*)parentContext->GetStyleData(eStyleStruct_Border);
+    parentBorder = NS_STATIC_CAST(const nsStyleBorder*,
+                             parentContext->GetStyleData(eStyleStruct_Border));
   PRBool inherited = aInherited;
 
   // border-size: length, enum, inherit
@@ -3375,9 +3387,10 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   else
     padding = new (mPresContext) nsStylePadding();
   
-  nsStylePadding* parentPadding = padding;
+  const nsStylePadding* parentPadding = padding;
   if (parentContext)
-    parentPadding = (nsStylePadding*)parentContext->GetStyleData(eStyleStruct_Padding);
+    parentPadding = NS_STATIC_CAST(const nsStylePadding*,
+                            parentContext->GetStyleData(eStyleStruct_Padding));
   PRBool inherited = aInherited;
 
   // padding: length, percent, inherit
@@ -3439,9 +3452,10 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   else
     outline = new (mPresContext) nsStyleOutline(mPresContext);
   
-  nsStyleOutline* parentOutline = outline;
+  const nsStyleOutline* parentOutline = outline;
   if (parentContext)
-    parentOutline = (nsStyleOutline*)parentContext->GetStyleData(eStyleStruct_Outline);
+    parentOutline = NS_STATIC_CAST(const nsStyleOutline*,
+                            parentContext->GetStyleData(eStyleStruct_Outline));
   PRBool inherited = aInherited;
 
   // outline-width: length, enum, inherit
@@ -3503,7 +3517,7 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   
   const nsCSSList& listData = NS_STATIC_CAST(const nsCSSList&, aData);
   nsStyleList* list = nsnull;
-  nsStyleList* parentList = list;
+  const nsStyleList* parentList = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -3516,14 +3530,15 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentList = (nsStyleList*)parentContext->GetStyleData(eStyleStruct_List);
+        parentList = NS_STATIC_CAST(const nsStyleList*,
+                               parentContext->GetStyleData(eStyleStruct_List));
       if (parentList)
         list = new (mPresContext) nsStyleList(*parentList);
     }
   }
 
   if (!list)
-    list = parentList = new (mPresContext) nsStyleList();
+    parentList = list = new (mPresContext) nsStyleList();
 
   // list-style-type: enum, none, inherit
   if (eCSSUnit_Enumerated == listData.mType.GetUnit()) {
@@ -3594,9 +3609,10 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct, const nsCSSStruct& 
   else
     pos = new (mPresContext) nsStylePosition();
   
-  nsStylePosition* parentPos = pos;
+  const nsStylePosition* parentPos = pos;
   if (parentContext)
-    parentPos = (nsStylePosition*)parentContext->GetStyleData(eStyleStruct_Position);
+    parentPos = NS_STATIC_CAST(const nsStylePosition*,
+                           parentContext->GetStyleData(eStyleStruct_Position));
   PRBool inherited = aInherited;
 
   // box offsets: length, percent, auto, inherit
@@ -3701,9 +3717,10 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   else
     table = new (mPresContext) nsStyleTable();
   
-  nsStyleTable* parentTable = table;
+  const nsStyleTable* parentTable = table;
   if (parentContext)
-    parentTable = (nsStyleTable*)parentContext->GetStyleData(eStyleStruct_Table);
+    parentTable = NS_STATIC_CAST(const nsStyleTable*,
+                              parentContext->GetStyleData(eStyleStruct_Table));
   PRBool inherited = aInherited;
 
   // table-layout: auto, enum, inherit
@@ -3763,7 +3780,7 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
   
   const nsCSSTable& tableData = NS_STATIC_CAST(const nsCSSTable&, aData);
   nsStyleTableBorder* table = nsnull;
-  nsStyleTableBorder* parentTable = table;
+  const nsStyleTableBorder* parentTable = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -3776,14 +3793,15 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentTable = (nsStyleTableBorder*)parentContext->GetStyleData(eStyleStruct_TableBorder);
+        parentTable = NS_STATIC_CAST(const nsStyleTableBorder*,
+                        parentContext->GetStyleData(eStyleStruct_TableBorder));
       if (parentTable)
         table = new (mPresContext) nsStyleTableBorder(*parentTable);
     }
   }
 
   if (!table)
-    table = parentTable = new (mPresContext) nsStyleTableBorder(mPresContext);
+    parentTable = table = new (mPresContext) nsStyleTableBorder(mPresContext);
 
   // border-collapse: enum, inherit
   if (eCSSUnit_Enumerated == tableData.mBorderCollapse.GetUnit()) {
@@ -3867,9 +3885,10 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   else
     content = new (mPresContext) nsStyleContent();
   
-  nsStyleContent* parentContent = content;
+  const nsStyleContent* parentContent = content;
   if (parentContext)
-    parentContent = (nsStyleContent*)parentContext->GetStyleData(eStyleStruct_Content);
+    parentContent = NS_STATIC_CAST(const nsStyleContent*,
+                            parentContext->GetStyleData(eStyleStruct_Content));
   PRBool inherited = aInherited;
 
   // content: [string, url, counter, attr, enum]+, inherit
@@ -4055,7 +4074,7 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   
   const nsCSSContent& contentData = NS_STATIC_CAST(const nsCSSContent&, aData);
   nsStyleQuotes* quotes = nsnull;
-  nsStyleQuotes* parentQuotes = quotes;
+  const nsStyleQuotes* parentQuotes = nsnull;
   PRBool inherited = aInherited;
 
   if (aStartStruct)
@@ -4068,14 +4087,15 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
       // with inherited vals from parent.
       inherited = PR_TRUE;
       if (parentContext)
-        parentQuotes = (nsStyleQuotes*)parentContext->GetStyleData(eStyleStruct_Quotes);
+        parentQuotes = NS_STATIC_CAST(const nsStyleQuotes*,
+                             parentContext->GetStyleData(eStyleStruct_Quotes));
       if (parentQuotes)
         quotes = new (mPresContext) nsStyleQuotes(*parentQuotes);
     }
   }
 
   if (!quotes)
-    quotes = parentQuotes = new (mPresContext) nsStyleQuotes();
+    parentQuotes = quotes = new (mPresContext) nsStyleQuotes();
 
   // quotes: [string string]+, none, inherit
   PRUint32 count;
@@ -4155,10 +4175,11 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
   else
     xul = new (mPresContext) nsStyleXUL();
 
-  nsStyleXUL* parentXUL = xul;
+  const nsStyleXUL* parentXUL = xul;
 
   if (parentContext)
-    parentXUL = (nsStyleXUL*)parentContext->GetStyleData(eStyleStruct_XUL);
+    parentXUL = NS_STATIC_CAST(const nsStyleXUL*,
+                                parentContext->GetStyleData(eStyleStruct_XUL));
 
   PRBool inherited = aInherited;
 
