@@ -155,7 +155,7 @@ function FindNextFolder(originalFolderURI)
 
     msgFolders = GetSubFoldersInFolderPaneOrder(folder.parent);
     for (i=0;i<msgFolders.length;i++) {
-      if (msgFolders[i].URI == folder.URI) 
+      if (msgFolders[i].URI == folder.URI)
         break;
     }
     
@@ -176,7 +176,7 @@ function FindNextFolder(originalFolderURI)
           return null;
         }
         else {
-          FindNextFolder(folder.parent.URI);
+          return FindNextFolder(folder.parent.URI);
         }
       }
     }
