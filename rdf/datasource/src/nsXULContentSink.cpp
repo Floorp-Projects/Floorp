@@ -64,6 +64,7 @@
 #include "nsIXULContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
+#include "nsRDFContentUtils.h"
 #include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
@@ -1150,19 +1151,18 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         if (nameSpaceID != kNameSpaceID_None)
             continue;
 
-        if (attr == kXULID) {
-            nsAutoString uri = aNode.GetValueAt(i);
-            nsRDFParserUtils::StripAndConvert(uri);
+        if (attr != kXULID)
+            continue;
 
-            // XXX Take the URI and make it fully qualified by
-            // sticking it into the document's URL. This may not be
-            // appropriate...
-            const char* documentURL;
-            mDocumentURL->GetSpec(&documentURL);
-            rdf_PossiblyMakeAbsolute(documentURL, uri);
+        // Found it! Use the ID they specify as the basis for the URI
+        // of the element.
+        nsAutoString id = aNode.GetValueAt(i);
+        nsRDFParserUtils::StripAndConvert(id);
 
-            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
-        }
+        nsAutoString uri;
+        nsRDFContentUtils::MakeElementURI(mDocument, id, uri);
+
+        return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...

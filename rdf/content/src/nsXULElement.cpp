@@ -1992,20 +1992,12 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
                 if ((aNameSpaceID == kNameSpaceID_None) &&
                     (attr->mName == kIdAtom))
                 {
-                  aResult = attr->mValue;
-
                   // RDF will treat all document IDs as absolute URIs, so we'll need convert 
                   // a possibly-absolute URI into a relative ID attribute.
-                  if (nsnull != mDocument) {
-                    nsIURL* docURL = nsnull;
-                    mDocument->GetBaseURL(docURL);
-                    if (docURL) {
-                      const char* url;
-                      docURL->GetSpec(&url);
-                      rdf_PossiblyMakeRelative(url, aResult);
-                      NS_RELEASE(docURL);
+                    NS_ASSERTION(mDocument != nsnull, "not initialized");
+                    if (nsnull != mDocument) {
+                        nsRDFContentUtils::MakeElementID(mDocument, attr->mValue, aResult);
                     }
-                  }
                 }
                 break;
             }
@@ -2421,25 +2413,17 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 NS_IMETHODIMP
 RDFElementImpl::GetResource(nsIRDFResource** aResource)
 {
-    nsAutoString uri;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None, kIdAtom, uri)) {
-        // RDF will treat all document IDs as absolute URIs, so we'll need convert 
-        // a possibly-relative ID attribute into a fully-qualified (that is, with
-        // the current document's URL) URI.
-        NS_ASSERTION(mDocument != nsnull, "element has no document");
-        if (nsnull != mDocument) {
-          nsIURL* docURL = nsnull;
-          mDocument->GetBaseURL(docURL);
-          if (docURL) {
-            const char* url;
-            docURL->GetSpec(&url);
-            rdf_PossiblyMakeAbsolute(url, uri);
-            NS_RELEASE(docURL);
-          }
+    if (mAttributes) {
+        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
+            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
+            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
+                (attr->mName == kIdAtom)) {
+                return gRDFService->GetUnicodeResource(attr->mValue.GetUnicode(), aResource);
+            }
         }
-        return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
     }
 
+    // No resource associated with this element.
     *aResource = nsnull;
     return NS_OK;
 }

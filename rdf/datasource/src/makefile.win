@@ -34,7 +34,8 @@ CPP_OBJS=\
 # in this library: this'll go away once we formalize utilities into an
 # "real live" XPCOM interface.
 
-LINCS=  -I$(DEPTH)\rdf\base\src \
+LINCS=  -I$(DEPTH)\rdf\base\src         \
+        -I$(DEPTH)\rdf\content\src      \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

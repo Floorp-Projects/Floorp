@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -1020,11 +1020,11 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 								getter_AddRefs(treeGrandchild))))
 						continue;
 
-					nsCOMPtr<nsIDocument>	nsIDoc = do_QueryInterface(mDocument);
-					if (nsIDoc)
-					{
-						treeGrandchild->SetDocument(nsIDoc, PR_FALSE);
-					}
+					nsCOMPtr<nsIDocument>	doc = do_QueryInterface(mDocument);
+					if (! doc)
+						continue;
+
+					treeGrandchild->SetDocument(doc, PR_FALSE);
 				}
 			}
 

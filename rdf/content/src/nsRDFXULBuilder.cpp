@@ -1892,17 +1892,11 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
 
     // XXX Won't somebody just cram this back into a fully qualified
     // URI somewhere?
-    nsString fullURI(uri);
-    nsIURL* docURL = nsnull;
-    doc->GetBaseURL(docURL);
-    if (docURL) {
-        const char* url;
-        docURL->GetSpec(&url);
-        rdf_PossiblyMakeRelative(url, fullURI);
-        NS_RELEASE(docURL);
-    }
+    nsAutoString id;
+    rv = nsRDFContentUtils::MakeElementID(doc, nsAutoString(uri), id);
+    if (NS_FAILED(rv)) return rv;
        
-    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, fullURI, PR_FALSE))) {
+    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kIdAtom, id, PR_FALSE))) {
         NS_ERROR("unable to set element's ID");
         return rv;
     }
