@@ -186,13 +186,13 @@
                 </menupopup>
               </menulist>
             </hbox>
-            <button label="&advancedFonts.label;" 
+            <button icon="select-font" label="&advancedFonts.label;" 
                     accesskey="&advancedFonts.accesskey;" 
                     oncommand="gContentPane.showFonts();"/>
           </row>
           <row>
             <hbox/>
-            <button label="&colors.label;" 
+            <button icon="select-color" label="&colors.label;" 
                     accesskey="&colors.accesskey;" 
                     oncommand="gContentPane.showColors();"/>
           </row>

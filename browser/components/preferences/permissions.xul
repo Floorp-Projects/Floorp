@@ -94,13 +94,15 @@
   </vbox>
   <hbox align="end">
     <hbox class="actionButtons" flex="1">
-      <button id="removePermission" disabled="true" label="&removepermission.label;" 
+      <button id="removePermission" disabled="true"
+              icon="remove" label="&removepermission.label;" 
               oncommand="gPermissionManager.onPermissionDeleted();"/>
-      <button id="removeAllPermissions" label="&removeallpermissions.label;" 
+      <button id="removeAllPermissions"
+              icon="clear" label="&removeallpermissions.label;" 
               oncommand="gPermissionManager.onAllPermissionsDeleted();"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
-      <button oncommand="close();"
+      <button oncommand="close();" icon="close"
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
 #endif
     </hbox>

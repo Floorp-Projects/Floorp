@@ -114,7 +114,8 @@
           </hbox>
           <separator flex="1"/>
           <hbox pack="end">
-            <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+            <button icon="clear" label="&clearHistory.label;"
+                    accesskey="&clearHistory.accesskey;"
                     oncommand="gPrivacyPane.clear(this);" item="history"
                     preference="pref.privacy.disable_button.clear_history"/>
           </hbox>
@@ -127,7 +128,8 @@
           </vbox>
           <separator flex="1"/>
           <hbox pack="end">
-            <button label="&clearFormData.label;" accesskey="&clearFormData.accesskey;"
+            <button icon="clear" label="&clearFormData.label;"
+                    accesskey="&clearFormData.accesskey;"
                     oncommand="gPrivacyPane.clear(this);" item="formdata"
                     preference="pref.privacy.disable_button.clear_formdata"/>
           </hbox>
@@ -181,7 +183,8 @@
             <button label="&viewDownloads.label;" accesskey="&viewDownloads.accesskey;"
                     oncommand="gPrivacyPane.viewDownloads();"/>
             <spring flex="1"/>
-            <button label="&clearDownloads.label;" accesskey="&clearDownloads.accesskey;"
+            <button icon="clear" label="&clearDownloads.label;"
+                    accesskey="&clearDownloads.accesskey;"
                     oncommand="gPrivacyPane.clear(this);" item="downloads"/>
           </hbox>
         </tabpanel>
@@ -233,7 +236,8 @@
                     oncommand="gPrivacyPane.viewCookies();"
                     preference="pref.privacy.disable_button.view_cookies"/>
             <spring flex="1"/>
-            <button label="&clearCookies.label;" accesskey="&clearCookies.accesskey;"
+            <button icon="clear" label="&clearCookies.label;"
+                    accesskey="&clearCookies.accesskey;"
                     oncommand="gPrivacyPane.clear(this);" item="cookies"
                     preference="pref.privacy.disable_button.clear_cookies"/>
           </hbox>
@@ -249,7 +253,8 @@
           </hbox>
           <separator flex="1"/>
           <hbox pack="end">
-            <button label="&clearCache.label;" accesskey="&clearCache.accesskey;"
+            <button icon="clear" label="&clearCache.label;"
+                    accesskey="&clearCache.accesskey;"
                     oncommand="gPrivacyPane.clear(this);" item="cache"
                     preference="pref.privacy.disable_button.clear_cache"/>
           </hbox>
