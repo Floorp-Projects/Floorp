@@ -106,6 +106,13 @@ si_ConfirmYN(char * szMessage) {
   return Wallet_ConfirmYN(szMessage);
 }
 
+extern PRInt32 Wallet_3ButtonConfirm(char * szMessage);
+
+PRIVATE PRInt32
+si_3ButtonConfirm(char * szMessage) {
+  return Wallet_3ButtonConfirm(szMessage);
+}
+
 PRIVATE PRBool
 si_PromptUsernameAndPassword(char *szMessage, char **szUsername, char **szPassword) {
 #ifdef NECKO
@@ -247,7 +254,6 @@ si_Prompt(char *szMessage, char* szDefaultUsername) {
 
 PRIVATE PRBool
 si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
-#ifdef NECKO
   PRBool retval = PR_TRUE; /* default value */
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
@@ -266,7 +272,11 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
     nsString msg = "user = ";
     msg += pList[i];
     msg += "?";
+#ifdef YN_DIALOGS_FIXED
     res = dialog->ConfirmYN(msg.GetUnicode(), &retval);
+#else
+    res = dialog->Confirm(msg.GetUnicode(), &retval);
+#endif
     if (NS_SUCCEEDED(res) && retval) {
       *pCount = i;
       break;
@@ -274,34 +284,6 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
   }
 #endif
   return retval;
-#else
-  PRBool retval = PR_TRUE; /* default value */
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return retval;
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-#ifdef xxx
-    dialog->Select(message, pList, pCount, &retval);
-#else
-    for (int i=0; i<*pCount; i++) {
-      nsString msg = "user = ";
-      msg += pList[i];
-      msg += "?";
-      dialog->ConfirmYN(msg, &retval);
-      if (retval) {
-        *pCount = i;
-        break;
-      }
-    }
-#endif
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  return retval;
-#endif
 }
 
 
@@ -2017,6 +1999,15 @@ si_OkToSave(char *URLName, char *userName) {
   }
 
   char * message = Wallet_Localize("WantToSavePassword?");
+  PRInt32 button;
+  if ((button = si_3ButtonConfirm(message)) != 1) {
+    if (button == -1) {
+      si_PutReject(strippedURLName, userName, PR_TRUE);
+    }
+    PR_Free(strippedURLName);
+    PR_FREEIF(message);
+    return PR_FALSE;
+  }
   if (!si_ConfirmYN(message)) {
     si_PutReject(strippedURLName, userName, PR_TRUE);
     PR_Free(strippedURLName);
@@ -2147,6 +2138,23 @@ SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value) {
   }
 
   si_lock_signon_list();
+
+  /* determine if name has been saved (avoids unlocking the database if not) */
+  PRBool nameFound = PR_FALSE;
+  user = si_GetUser(URLName, PR_FALSE, name);
+  if (user) {
+    PRInt32 dataCount = LIST_COUNT(user->signonData_list);
+    for (PRInt32 i=0; i<dataCount; i++) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      if(name && PL_strcmp(data->name, name)==0) {
+        nameFound = PR_TRUE;
+      }
+    }
+  }
+  if (!nameFound) {
+    si_unlock_signon_list();
+    return;
+  }
 
 #ifdef xxx
   /*
