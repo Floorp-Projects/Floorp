@@ -51,7 +51,8 @@ public:
     void CloseTransaction(nsAHttpTransaction *, nsresult);
     void GetConnectionInfo(nsHttpConnectionInfo **);
     void GetSecurityInfo(nsISupports **);
-    PRBool IsPersistent();
+    PRBool IsPersistent() { return PR_TRUE; }  // pipelining requires this
+    PRBool IsReused()     { return PR_TRUE; }  // pipelining requires this
     nsresult PushBack(const char *, PRUint32);
     
     // nsAHttpTransaction methods:
