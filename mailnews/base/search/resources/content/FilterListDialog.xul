@@ -52,7 +52,7 @@ Rights Reserved.
     <box orient="horizontal" style="min-height: 200px; min-width: 200px">
     <tree id="filterTree" class="inset" flex="1"
        onselect="onFilterSelect(event);"
-       rdf:datasources="rdf:msgaccountmanager rdf:msgfilters"
+       rdf:datasources="rdf:msgfilters rdf:msgaccountmanager "
        rdf:containment="http://home.netscape.com/NC-rdf#child">
           <template>
           <rule>
@@ -61,7 +61,7 @@ Rights Reserved.
                    Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
                   <treerow >
                     <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                    <treecell allowevents="true" class="enabledcol image"/>
+                    <treecell allowevents="true" class="enabledcol image" onclick="toggleEnabled(event);"/>
                   </treerow>
             </treeitem>
             </treechildren>
