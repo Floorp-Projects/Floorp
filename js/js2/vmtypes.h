@@ -112,6 +112,7 @@ namespace VM {
     };
 
 
+
     /********************************************************************/
 
     static char *opcodeNames[] = {
@@ -349,9 +350,9 @@ namespace VM {
         }
     };
     
-    class Compare : public Instruction_2<Register, Register> {
+    class Unary : public Instruction_2<Register, Register> {
     public:
-        Compare(ICodeOp aOpcode, Register aDest, Register aSrc) :
+        Unary(ICodeOp aOpcode, Register aDest, Register aSrc) :
             Instruction_2<Register, Register>(aOpcode, aDest, aSrc) {}
         virtual Formatter& print (Formatter& f) {
             f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2;
@@ -531,67 +532,67 @@ namespace VM {
         }
     };
 
-    class CompareEQ : public Compare {
+    class CompareEQ : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareEQ (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_EQ, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareEQ (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_EQ, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareGE : public Compare {
+    class CompareGE : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareGE (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_GE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareGE (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_GE, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareGT : public Compare {
+    class CompareGT : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareGT (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_GT, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareGT (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_GT, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareIN : public Compare {
+    class CompareIN : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareIN (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_IN, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareIN (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_IN, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareLE : public Compare {
+    class CompareLE : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareLE (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_LE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareLE (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_LE, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareLT : public Compare {
+    class CompareLT : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareLT (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_LT, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareLT (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_LT, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class CompareNE : public Compare {
+    class CompareNE : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        CompareNE (Register aOp1, Register aOp2) :
-            Compare
-            (COMPARE_NE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        CompareNE (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (COMPARE_NE, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
     class Divide : public Arithmetic {
@@ -621,7 +622,7 @@ namespace VM {
 
     class GetElement : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, array, index */
+        /* dest, base, index */
         GetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
             (GET_ELEMENT, aOp1, aOp2, aOp3) {};
@@ -651,13 +652,13 @@ namespace VM {
         }
     };
 
-    class Instanceof : public Compare {
+    class Instanceof : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        Instanceof (Register aOp1, Register aOp2) :
-            Compare
-            (INSTANCEOF, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        Instanceof (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (INSTANCEOF, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
     class Jsr : public GenericBranch {
@@ -973,7 +974,7 @@ namespace VM {
 
     class SetElement : public Instruction_3<Register, Register, Register> {
     public:
-        /* base, source1, source2 */
+        /* base, index, value */
         SetElement (Register aOp1, Register aOp2, Register aOp3) :
             Instruction_3<Register, Register, Register>
             (SET_ELEMENT, aOp1, aOp2, aOp3) {};
@@ -1021,22 +1022,22 @@ namespace VM {
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class StrictEQ : public Compare {
+    class StrictEQ : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        StrictEQ (Register aOp1, Register aOp2) :
-            Compare
-            (STRICT_EQ, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        StrictEQ (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (STRICT_EQ, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
-    class StrictNE : public Compare {
+    class StrictNE : public Instruction_3<Register, Register, Register> {
     public:
-        /* dest, source */
-        StrictNE (Register aOp1, Register aOp2) :
-            Compare
-            (STRICT_NE, aOp1, aOp2) {};
-        /* print() and printOperands() inherited from Compare */
+        /* dest, source1, source2 */
+        StrictNE (Register aOp1, Register aOp2, Register aOp3) :
+            Instruction_3<Register, Register, Register>
+            (STRICT_NE, aOp1, aOp2, aOp3) {};
+        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
     };
 
     class Subtract : public Arithmetic {

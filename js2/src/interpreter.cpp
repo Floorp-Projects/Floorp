@@ -171,21 +171,174 @@ void Context::doCall(JSFunction *target, Instruction *pc)
     }
 }
 */
-JSValue multiply_number(const JSValues& argv)
-{
-    return JSValue (argv[0].f64 * argv[1].f64);
-}
 
-JSValue multiply_object(const JSValues& argv)
+JSValue shiftLeft_Default(const JSValue& r1, const JSValue& r2)
 {
-    JSValue num1(argv[0].toNumber());
-    JSValue num2(argv[1].toNumber());
+    JSValue num1(r1.toInt32());
+    JSValue num2(r2.toUInt32());
+    return JSValue(num1.i32 << (num2.u32 & 0x1F));
+}
+JSValue shiftRight_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toInt32());
+    JSValue num2(r2.toUInt32());
+    return JSValue(num1.i32 >> (num2.u32 & 0x1F));
+}
+JSValue UshiftRight_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toUInt32());
+    JSValue num2(r2.toUInt32());
+    return JSValue(num1.u32 >> (num2.u32 & 0x1F));
+}
+JSValue and_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toInt32());
+    JSValue num2(r2.toInt32());
+    return JSValue(num1.i32 & num2.i32);
+}
+JSValue or_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toInt32());
+    JSValue num2(r2.toInt32());
+    return JSValue(num1.i32 | num2.i32);
+}
+JSValue xor_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toInt32());
+    JSValue num2(r2.toInt32());
+    return JSValue(num1.i32 ^ num2.i32);
+}
+JSValue add_Default(const JSValue& r1, const JSValue& r2)
+{
+    //
+    // could also handle these as separate entries in the override table for add
+    // by specifying add(String, Any), add(Any, String), add(String, String)
+    //
+    if (r1.isString() || r2.isString()) {
+        JSValue r = r1.toString();
+        JSString& str1 = *r.string;
+        JSString& str2 = *r2.toString().string;
+        str1 += str2;
+        return r;
+    }
+    else {
+        JSValue num1(r1.toNumber());
+        JSValue num2(r2.toNumber());
+        return JSValue(num1.f64 + num2.f64);
+    }
+}
+JSValue add_String1(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toNumber());
+    JSValue num2(r2.toNumber());
+    return JSValue(num1.f64 + num2.f64);
+}
+JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toNumber());
+    JSValue num2(r2.toNumber());
+    return JSValue(num1.f64 - num2.f64);
+}
+JSValue multiply_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toNumber());
+    JSValue num2(r2.toNumber());
     return JSValue(num1.f64 * num2.f64);
+}
+JSValue divide_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toNumber());
+    JSValue num2(r2.toNumber());
+    return JSValue(num1.f64 / num2.f64);
+}
+JSValue remainder_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue num1(r1.toNumber());
+    JSValue num2(r2.toNumber());
+    return JSValue(fmod(num1.f64, num2.f64));
+}
+JSValue less_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue lv = r1.toPrimitive(JSValue::Number);
+    JSValue rv = r2.toPrimitive(JSValue::Number);
+    if (lv.isString() && rv.isString()) {
+        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
+        return JSValue();
+    }
+    else {
+        lv = lv.toNumber();
+        rv = rv.toNumber();
+        if (lv.isNaN() || rv.isNaN())
+            return JSValue();
+        else
+            return JSValue(lv.f64 < rv.f64);
+    }
+}
+JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue lv = r1.toPrimitive(JSValue::Number);
+    JSValue rv = r2.toPrimitive(JSValue::Number);
+    if (lv.isString() && rv.isString()) {
+        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
+        return JSValue();
+    }
+    else {
+        lv = lv.toNumber();
+        rv = rv.toNumber();
+        if (lv.isNaN() || rv.isNaN())
+            return JSValue();
+        else
+            return JSValue(lv.f64 <= rv.f64);
+    }
+}
+JSValue equal_Default(const JSValue& r1, const JSValue& r2)
+{
+    JSValue lv = r1.toPrimitive(JSValue::Number);
+    JSValue rv = r2.toPrimitive(JSValue::Number);
+    if (lv.isString() && rv.isString()) {
+        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
+        return JSValue();
+    }
+    else {
+        lv = lv.toNumber();
+        rv = rv.toNumber();
+        if (lv.isNaN() || rv.isNaN())
+            return JSValue();
+        else
+            return JSValue(lv.f64 == rv.f64);
+    }
+}
+JSValue identical_Default(const JSValue& r1, const JSValue& r2)
+{
+    if (r1.getType() != r2.getType())
+        return kFalse;
+    if (r1.isUndefined() )
+        return kTrue;
+    if (r1.isNull())
+        return kTrue;
+    if (r1.isNumber()) {
+        if (r1.isNaN())
+            return kFalse;
+        if (r2.isNaN())
+            return kFalse;
+        return JSValue(r1.f64 == r2.f64);
+    }
+    else {
+        if (r1.isString())
+            return kFalse;     // XXX implement me!! w_strcmp??
+        if (r1.isBoolean())
+            return JSValue(r1.boolean == r2.boolean);
+        if (r1.isObject())
+            return JSValue(r1.object == r2.object);
+        return kFalse;
+    }
 }
 
 
 class BinaryOperator {
 public:
+
+    // Wah, here's a third enumeration of opcodes - ExprNode, ICodeOp and now here, this can't be right??
     typedef enum { 
         Add, Subtract, Multiply, Divide,
         Remainder, LeftShift, RightShift, LogicalRightShift,
@@ -193,14 +346,44 @@ public:
         Equal, Identical
     } BinaryOp;
 
-    BinaryOperator(const JSType *t1, const JSType *t2, JSFunction *function) :
+    BinaryOperator(const JSType *t1, const JSType *t2, JSBinaryOperator *function) :
         t1(t1), t2(t2), function(function) { }
+
+    static BinaryOp mapICodeOp(ICodeOp op);
 
     const JSType *t1;
     const JSType *t2;
-    JSFunction *function;
+    JSBinaryOperator *function;
 
 };
+
+BinaryOperator::BinaryOp BinaryOperator::mapICodeOp(ICodeOp op) {
+    // a table later... or maybe we need a grand opcode re-unification 
+    switch (op) {
+    case ADD        : return Add;
+    case SUBTRACT   : return Subtract;
+    case MULTIPLY   : return Multiply;
+    case DIVIDE     : return Divide;
+    case REMAINDER  : return Remainder;
+    case SHIFTLEFT  : return LeftShift;
+    case SHIFTRIGHT : return RightShift;
+    case USHIFTRIGHT: return LogicalRightShift;
+
+    case AND        : return BitwiseAnd;
+    case OR         : return BitwiseOr;
+    case XOR        : return BitwiseXor;
+    
+    case COMPARE_LT : return Less;
+    case COMPARE_LE : return LessEqual;
+    case COMPARE_EQ : return Equal;
+    case STRICT_EQ  : return Identical;
+    default :
+        NOT_REACHED("Unsupported binary op");
+        return (BinaryOp)-1;
+    }
+}
+
+
 
 typedef std::vector<BinaryOperator *> BinaryOperatorList;
 BinaryOperatorList binaryOperators[15];
@@ -210,8 +393,21 @@ BinaryOperatorList binaryOperators[15];
 class InitBinaryOperators {
 public:
     InitBinaryOperators() {
-        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Number_Type, &Number_Type, new JSNativeFunction(multiply_number)));
-        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSNativeFunction(multiply_object)));
+        binaryOperators[BinaryOperator::Add].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(add_Default)));
+        binaryOperators[BinaryOperator::Subtract].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(subtract_Default)));
+        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(multiply_Default)));
+        binaryOperators[BinaryOperator::Divide].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(divide_Default)));
+        binaryOperators[BinaryOperator::Remainder].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(remainder_Default)));
+        binaryOperators[BinaryOperator::LeftShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(shiftLeft_Default)));
+        binaryOperators[BinaryOperator::RightShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(shiftRight_Default)));
+        binaryOperators[BinaryOperator::LogicalRightShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(UshiftRight_Default)));
+        binaryOperators[BinaryOperator::BitwiseOr].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(or_Default)));
+        binaryOperators[BinaryOperator::BitwiseXor].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(xor_Default)));
+        binaryOperators[BinaryOperator::BitwiseAnd].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(and_Default)));
+        binaryOperators[BinaryOperator::Less].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(less_Default)));
+        binaryOperators[BinaryOperator::LessEqual].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(lessEqual_Default)));
+        binaryOperators[BinaryOperator::Equal].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(equal_Default)));
+        binaryOperators[BinaryOperator::Identical].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(identical_Default)));
     }
 } initializer = InitBinaryOperators();
 
@@ -439,68 +635,6 @@ using JSString throughout.
                     continue;
                 }
                 break;
-/*
-            case BRANCH_LT:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 < 0) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_LE:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 <= 0) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_EQ:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 == 0) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_NE:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 != 0) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_GE:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 >= 0) {
-                        mPC = begin_pc + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-            case BRANCH_GT:
-                {
-                    GenericBranch* bc =
-                        static_cast<GenericBranch*>(instruction);
-                    if ((*registers)[src1(bc)].i32 > 0) {
-                        mPC = begin_pc + ofs(bc);
-                        continue;
-                    }
-                }
-                break;
-*/
             case BRANCH_TRUE:
                 {
                     GenericBranch* bc =
@@ -524,156 +658,42 @@ using JSString throughout.
                 }
                 break;
             case SHIFTLEFT:
-                {
-                    Arithmetic* shl = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(shl)];
-                    JSValue& r1 = (*registers)[src1(shl)];
-                    JSValue& r2 = (*registers)[src2(shl)];
-                    JSValue num1(r1.toInt32());
-                    JSValue num2(r2.toUInt32());
-                    dest = num1.i32 << (num2.u32 & 0x1F);
-                }
-                break;
             case SHIFTRIGHT:
-                {
-                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(shr)];
-                    JSValue& r1 = (*registers)[src1(shr)];
-                    JSValue& r2 = (*registers)[src2(shr)];
-                    JSValue num1(r1.toInt32());
-                    JSValue num2(r2.toUInt32());
-                    dest = num1.i32 >> (num2.u32 & 0x1F);
-                }
-                break;
             case USHIFTRIGHT:
-                {
-                    Arithmetic* ushr = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(ushr)];
-                    JSValue& r1 = (*registers)[src1(ushr)];
-                    JSValue& r2 = (*registers)[src2(ushr)];
-                    JSValue num1(r1.toUInt32());
-                    JSValue num2(r2.toUInt32());
-                    dest = num1.u32 >> (num2.u32 & 0x1F);
-                }
-                break;
-
             case AND:
-                {
-                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(shr)];
-                    JSValue& r1 = (*registers)[src1(shr)];
-                    JSValue& r2 = (*registers)[src2(shr)];
-                    JSValue num1(r1.toInt32());
-                    JSValue num2(r2.toInt32());
-                    dest = num1.i32 & num2.i32;
-                }
-                break;
             case OR:
-                {
-                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(shr)];
-                    JSValue& r1 = (*registers)[src1(shr)];
-                    JSValue& r2 = (*registers)[src2(shr)];
-                    JSValue num1(r1.toInt32());
-                    JSValue num2(r2.toInt32());
-                    dest = num1.i32 | num2.i32;
-                }
-                break;
             case XOR:
-                {
-                    Arithmetic* shr = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(shr)];
-                    JSValue& r1 = (*registers)[src1(shr)];
-                    JSValue& r2 = (*registers)[src2(shr)];
-                    JSValue num1(r1.toInt32());
-                    JSValue num2(r2.toInt32());
-                    dest = num1.i32 ^ num2.i32;
-                }
-                break;
-
             case ADD:
-                {
-                    // could get clever here with Functional forms.
-                    Arithmetic* add = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(add)];
-                    JSValue& r1 = (*registers)[src1(add)];
-                    JSValue& r2 = (*registers)[src2(add)];
-                    if (r1.isString() || r2.isString()) {
-                        dest = r1.toString();
-                        JSString& str1 = *dest.string;
-                        JSString& str2 = *r2.toString().string;
-                        str1 += str2;
-                    }
-                    else {
-                        JSValue num1(r1.toNumber());
-                        JSValue num2(r2.toNumber());
-                        dest = num1.f64 + num2.f64;
-                    }
-                }
-                break;
             case SUBTRACT:
-                {
-                    Arithmetic* sub = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(sub)];
-                    JSValue& r1 = (*registers)[src1(sub)];
-                    JSValue& r2 = (*registers)[src2(sub)];
-                    JSValue num1(r1.toNumber());
-                    JSValue num2(r2.toNumber());
-                    dest = num1.f64 - num2.f64;
-                }
-                break;
             case MULTIPLY:
+            case DIVIDE:
+            case REMAINDER:
+            case COMPARE_LT:
+            case COMPARE_LE:
+            case COMPARE_EQ:
+            case STRICT_EQ:
                 {
                     Arithmetic* mul = static_cast<Arithmetic*>(instruction);
                     JSValue& dest = (*registers)[dst(mul)];
                     JSValue& r1 = (*registers)[src1(mul)];
                     JSValue& r2 = (*registers)[src2(mul)];
-                    const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::Multiply);
-                    if (ovr.isFunction()) {
-                        JSFunction *target = ovr.function;
-                        if (target->isNative()) {
-                            JSValues argv(2);
-                            argv[0] = r1;
-                            argv[1] = r2;
-                            dest = static_cast<JSNativeFunction*>(target)->mCode(argv);
-                            break;
-                        }
-                        else {
-                            mLinkage = new Linkage(mLinkage, ++mPC,
-                                                   mActivation, dst(mul));
-                            mActivation = new Activation(target->getICode(), r1, r2);
-                            registers = &mActivation->mRegisters;
-                            mPC = mActivation->mICode->its_iCode->begin();
-                            continue;
-                        }
+                    const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::mapICodeOp(instruction->op()));
+                    JSFunction *target = ovr.function;
+                    if (target->isNative()) {
+                        JSValues argv(2);
+                        argv[0] = r1;
+                        argv[1] = r2;
+                        dest = static_cast<JSBinaryOperator*>(target)->mCode(r1, r2);
+                        break;
                     }
                     else {
-                        JSValue num1(r1.toNumber());
-                        JSValue num2(r2.toNumber());
-                        dest = num1.f64 * num2.f64;
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, dst(mul));
+                        mActivation = new Activation(target->getICode(), r1, r2);
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        continue;
                     }
-                }
-                break;
-            case DIVIDE:
-                {
-                    Arithmetic* div = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(div)];
-                    JSValue& r1 = (*registers)[src1(div)];
-                    JSValue& r2 = (*registers)[src2(div)];
-                    JSValue num1(r1.toNumber());
-                    JSValue num2(r2.toNumber());
-                    dest = num1.f64 / num2.f64;
-                }
-                break;
-            case REMAINDER:
-                {
-                    Arithmetic* rem = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(rem)];
-                    JSValue& r1 = (*registers)[src1(rem)];
-                    JSValue& r2 = (*registers)[src2(rem)];
-                    JSValue num1(r1.toNumber());
-                    JSValue num2(r2.toNumber());
-                    dest = fmod(num1.f64, num2.f64);
                 }
                 break;
 
@@ -701,51 +721,6 @@ using JSString throughout.
                 }
                 break;
 
-            case COMPARE_LT:
-            case COMPARE_LE:
-            case COMPARE_EQ:
-            case COMPARE_NE:
-            case COMPARE_GT:
-            case COMPARE_GE:
-                {
-                    Arithmetic* cmp = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(cmp)];
-                    JSValue lv = (*registers)[src1(cmp)].toPrimitive(JSValue::Number);
-                    JSValue rv = (*registers)[src2(cmp)].toPrimitive(JSValue::Number);
-                    if (lv.isString() && rv.isString()) {
-                        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-                    }
-                    else {
-                        lv = lv.toNumber();
-                        rv = rv.toNumber();
-                        if (lv.isNaN() || rv.isNaN())
-                            dest = JSValue();
-                        else {
-                            // FIXME, does this do the right thing for +/- infinity?
-                            switch (instruction->op()) {
-                            case COMPARE_LT:
-                                dest = JSValue(lv.f64 < rv.f64); break;
-                            case COMPARE_LE:
-                                dest = JSValue(lv.f64 <= rv.f64); break;
-                            case COMPARE_EQ:
-                                dest = JSValue(lv.f64 == rv.f64); break;
-                            case COMPARE_NE:
-                                dest = JSValue(lv.f64 != rv.f64); break;
-                            case COMPARE_GT:
-                                dest = JSValue(lv.f64 > rv.f64); break;
-                            case COMPARE_GE:
-                                dest = JSValue(lv.f64 >= rv.f64); break;
-                            default:
-                                assert(0); /* quiet linux warnings */
-                                
-                            }
-//                            float64 diff = lv.f64 - rv.f64;
-//                            dest = JSValue( (int32) (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
-                        }
-                    }
-
-                }
-                break;
             case TEST:
                 {
                     Test* tst = static_cast<Test*>(instruction);
@@ -770,15 +745,13 @@ using JSString throughout.
                     (*registers)[dst(bn)] = JSValue(~(*registers)[src1(bn)].toInt32().i32);
                 }
                 break;
-/*
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
-                    (*registers)[dst(nt)] =
-                        JSValue(int32(!(*registers)[src1(nt)].i32));
+                    ASSERT((*registers)[src1(nt)].isBoolean());
+                    (*registers)[dst(nt)] = JSValue(!(*registers)[src1(nt)].boolean);
                 }
                 break;
-*/           
             case THROW:
                 {
                     Throw* thrw = static_cast<Throw*>(instruction);

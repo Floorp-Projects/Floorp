@@ -212,7 +212,7 @@ namespace ICG {
         void callVoid(Register target, RegisterList args);
 
         void move(Register destination, Register source);
-        void complement(Register destination, Register source);
+        Register not(Register source);
         Register test(Register source);
         
         Register compare(ICodeOp op, Register source1, Register source2);
