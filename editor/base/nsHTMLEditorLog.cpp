@@ -909,7 +909,7 @@ nsHTMLEditorLog::PrintUnicode(const nsString &aString)
 
   for (i = 0; i < len; i++)
   {
-    if (nsString::IsAlpha(uc[i]) || nsString::IsDigit(uc[i]) || uc[i] == ' ')
+    if (nsCRT::IsAsciiAlpha(uc[i]) || nsCRT::IsAsciiDigit(uc[i]) || uc[i] == ' ')
       sprintf(buf, "%c", uc[i]);
     else
       sprintf(buf, "\\u%.4x", uc[i]);

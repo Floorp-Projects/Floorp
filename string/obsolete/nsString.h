@@ -130,16 +130,6 @@ public:
    */
   void Truncate(PRUint32 anIndex=0);
 
-
-  /**
-   *  Determine whether or not the characters in this
-   *  string are in sorted order.
-   *  
-   *  @return  TRUE if ordered.
-   */
-  PRBool IsOrdered(void) const;
-
-
   /**
    *  Determine whether or not this string has a length of 0
    *  
@@ -516,15 +506,6 @@ public:
     Searching methods...                
    *********************************************************************/
  
-  /**
-   *  Search for given character within this string.
-   *  This method does so by using a binary search,
-   *  so your string HAD BETTER BE ORDERED!
-   *  
-   *  @param   aChar is the unicode char to be found
-   *  @return  offset in string, or -1 (kNotFound)
-   */
-  PRInt32 BinarySearch(PRUnichar aChar) const;
 
   /**
    *  Search for given substring within this string

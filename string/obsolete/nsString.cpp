@@ -143,27 +143,6 @@ void nsCString::Truncate(PRUint32 anIndex) {
   nsStr::Truncate(*this,anIndex);
 }
 
-/**
- *  Determine whether or not the characters in this
- *  string are in sorted order.
- *  
- *  @update  gess 8/25/98
- *  @return  TRUE if ordered.
- */
-PRBool nsCString::IsOrdered(void) const {
-  PRBool  result=PR_TRUE;
-  if(mLength>1) {
-    PRUint32 theIndex;
-    for(theIndex=1;theIndex<mLength;theIndex++) {
-      if(mStr[theIndex-1]>mStr[theIndex]) {
-        result=PR_FALSE;
-        break;
-      }
-    }
-  }
-  return result;
-}
-
 
 /**
  * Call this method if you want to force the string to a certain capacity
@@ -1205,30 +1184,6 @@ nsCString& nsCString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   Searching methods...                
  *********************************************************************/
  
-/**
- *  Search for given character within this string.
- *  This method does so by using a binary search,
- *  so your string HAD BETTER BE ORDERED!
- *  
- *  @param   aChar is the unicode char to be found
- *  @return  offset in string, or -1 (kNotFound)
- */
-PRInt32 nsCString::BinarySearch(PRUnichar aChar) const{
-  PRInt32 low=0;
-  PRInt32 high=mLength-1;
-
-  while (low <= high) {
-    int middle = (low + high) >> 1;
-    PRUnichar theChar=GetCharAt(*this,middle);
-    if (theChar==aChar)
-      return middle;
-    if (theChar>aChar)
-      high = middle - 1; 
-    else
-      low = middle + 1; 
-  }
-  return kNotFound;
-}
 
 /**
  *  Search for given cstr within this string

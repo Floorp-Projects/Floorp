@@ -116,7 +116,7 @@ PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
     PRBool  quoted = PR_FALSE;
     PRBool  generic = PR_FALSE;
 
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
 

@@ -853,7 +853,7 @@ static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc
   while (running && (kNullCh != *start)) {
     PRBool  quoted = PR_FALSE;
 
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
 
@@ -884,8 +884,8 @@ static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc
     // truncate at first non letter, digit or hyphen
     PRUnichar* test = start;
     while (test <= end) {
-      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
-          (PR_FALSE == nsString::IsDigit(*test)) && (kMinus != *test)) {
+      if ((PR_FALSE == nsCRT::IsAsciiAlpha(*test)) && 
+          (PR_FALSE == nsCRT::IsAsciiDigit(*test)) && (kMinus != *test)) {
         *test = kNullCh;
         break;
       }

@@ -2771,7 +2771,7 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
    for(strIndex = 0; strIndex < aName.Length(); strIndex++)
       {
       mChar = aName.CharAt(strIndex);
-      if(!nsString::IsAlpha(mChar) && !nsString::IsDigit(mChar) && 
+      if(!nsCRT::IsAsciiAlpha(mChar) && !nsCRT::IsAsciiDigit(mChar) && 
          mChar != '_')
          {
          char* cp = aName.ToNewCString();

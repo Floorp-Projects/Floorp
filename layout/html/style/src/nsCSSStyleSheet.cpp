@@ -2198,12 +2198,12 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
     end = start;
 
-    while ((kNullCh != *end) && (PR_FALSE == nsString::IsSpace(*end))) { // look for space or end
+    while ((kNullCh != *end) && (PR_FALSE == nsCRT::IsAsciiSpace(*end))) { // look for space or end
       end++;
     }
     *end = kNullCh; // end string here
@@ -2239,7 +2239,7 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
   PRUnichar* end   = start;
 
   if (kNullCh != *start) {
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
       start++;
     }
     end = start;
