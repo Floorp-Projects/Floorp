@@ -2079,6 +2079,10 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::WillReflow(nsIPresContext* aPresContext)
 {
+  // bug 81268
+  NS_ASSERTION(!(mState & NS_FRAME_IN_REFLOW),
+               "nsFrame::WillReflow: frame is already in reflow");
+
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("WillReflow: oldState=%x", mState));
   mState |= NS_FRAME_IN_REFLOW;
@@ -2625,21 +2629,13 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 {
   const nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-    
-  if (display->mPosition != NS_STYLE_POSITION_STATIC) {
-    aBase = PR_TRUE;
-  }
-  else {
-    if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
-        (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM) ||
-        (display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
-      aBase = PR_TRUE;
-    }
-    else {
-      aBase = PR_FALSE;
-    }
-  }
+  ::GetStyleData(mStyleContext, &display);
+
+  // Absolute positioning causes |display->mDisplay| to be set to block,
+  // if needed.
+  aBase = display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
+          display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
+          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
   return NS_OK;
 }
 
