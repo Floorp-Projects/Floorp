@@ -165,6 +165,33 @@ extern JS_PUBLIC_API(JSBool)
 JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 		    ...);
 
+#ifdef va_start
+JS_PUBLIC_API(JSBool)
+JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
+		      const char *format, va_list ap);
+#endif
+
+/*
+ * Inverse of JS_ConvertArguments: scan format and convert trailing arguments
+ * into jsvals, GC-rooted if necessary by the JS stack.  Return null on error,
+ * and a pointer to the new argument vector on success.  Also return a stack
+ * mark on success via *markp, in which case the caller must eventually clean
+ * up by calling JS_PopArguments.
+ *
+ * Note that the number of actual arguments supplied is specified exclusively
+ * by format, so there is no argc parameter.
+ */
+extern JS_PUBLIC_API(jsval *)
+JS_PushArguments(JSContext *cx, void **markp, const char *format, ...);
+
+#ifdef va_start
+extern JS_PUBLIC_API(jsval *)
+JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap);
+#endif
+
+extern JS_PUBLIC_API(void)
+JS_PopArguments(JSContext *cx, void *mark);
+
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp);
 
@@ -1045,18 +1072,17 @@ JS_SetPendingException(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx);
 
-/*                                                                              
-* Save the current exception state. This takes a snapshot of the current        
-* exception state without making any change to that state.                      
-*                                                                               
-* The returned object MUST be later passed to either JS_RestoreExceptionState   
-* (to restore that saved state) or JS_DropExceptionState (to cleanup the state  
-* object in case it is not desireable to restore to that state). Both           
-* JS_RestoreExceptionState and JS_DropExceptionState will destroy the          
-* JSExceptionState object -- so that object can not be referenced again 
-* after making either of those calls.                                                        
-*/                                                                              
-
+/*
+ * Save the current exception state. This takes a snapshot of the current
+ * exception state without making any change to that state.
+ *
+ * The returned object MUST be later passed to either JS_RestoreExceptionState
+ * (to restore that saved state) or JS_DropExceptionState (to cleanup the state
+ * object in case it is not desireable to restore to that state). Both
+ * JS_RestoreExceptionState and JS_DropExceptionState will destroy the
+ * JSExceptionState object -- so that object can not be referenced again
+ * after making either of those calls.
+ */
 extern JS_PUBLIC_API(JSExceptionState *)
 JS_SaveExceptionState(JSContext *cx);
 
@@ -1093,7 +1119,7 @@ JS_ClearContextThread(JSContext *cx);
  * Returns true if a script is executing and its current bytecode is a set
  * (assignment) operation.
  *
- * NOTE: Previously conditional on NETSCAPE_INTERNAL. This function may 
+ * NOTE: Previously conditional on NETSCAPE_INTERNAL. This function may
  * be removed in the future.
  */
 extern JS_FRIEND_API(JSBool)
