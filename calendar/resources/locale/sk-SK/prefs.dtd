@@ -141,7 +141,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Časová zóna">
 <!ENTITY pref.calendar.timezone.caption "Časová zóna">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "ID časovej zóny je (kontinent alebo oceán)/(väčšie mestá vo Vašej časovej zóne).">
 <!ENTITY pref.defaultzone.label     "Východzia časová zóna:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidjan" >
