@@ -56,7 +56,7 @@ ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS +=  -L/usr/lib -L/usr/X11R6/lib  -rdynamic  -lXi -lXext -lX11 -lm -lXt
 endif
 
-LOCAL_INCLUDES = -I$(srcdir)/$(XPIDL_GEN_DIR) \
+LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
                  -I$(srcdir)/../include \
                  -I$(srcdir)/../../include \
                  $(NULL)
