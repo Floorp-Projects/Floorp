@@ -1146,12 +1146,14 @@ NS_IMETHODIMP nsMsgFolder::ClearRequiresCleanup()
 	return NS_OK;
 }
 
-#ifdef HAVE_PANE
-NS_IMETHODIMP nsMsgFolder::CanBeInFolderPane(PRBool *canBeInFolderPane)
+NS_IMETHODIMP nsMsgFolder::ManyHeadersToDownload(PRBool *_retval)
 {
-
+	if (!_retval)
+		return NS_ERROR_NULL_POINTER;
+	*_retval = PR_FALSE;
+	return NS_OK;
 }
-#endif
+
 
 NS_IMETHODIMP nsMsgFolder::GetKnowsSearchNntpExtension(PRBool *knowsExtension)
 {

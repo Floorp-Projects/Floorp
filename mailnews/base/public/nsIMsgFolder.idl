@@ -96,6 +96,8 @@ interface nsIMsgFolder : nsIFolder {
 
 	void ClearRequiresCleanup();
 
+	boolean ManyHeadersToDownload();
+
 	readonly attribute boolean knowsSearchNntpExtension;
 	readonly attribute boolean allowsPosting;
 

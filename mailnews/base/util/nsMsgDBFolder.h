@@ -52,6 +52,7 @@ public:
 
 	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
+	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
 	NS_IMETHOD MarkAllMessagesRead(void);
 

@@ -628,6 +628,13 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *ite
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgMessageDataSource::OnFolderLoaded(nsIFolder *folder)
+{
+	nsresult rv = NS_OK;
+	return NS_OK;
+}
+
+
 nsresult
 nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,

@@ -113,12 +113,6 @@ public:
   NS_IMETHOD BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url);
 #endif
 
-#ifdef HAVE_MASTER
-  NS_IMETHOD SetMaster(MSG_Master *master);
-#endif
-
-
-
   NS_IMETHOD BuildFolderURL(char ** url);
 
 
@@ -217,9 +211,7 @@ public:
   NS_IMETHOD GetCanBeRenamed(PRBool *canBeRenamed);
   NS_IMETHOD GetRequiresCleanup(PRBool *requiredCleanup);
   NS_IMETHOD ClearRequiresCleanup() ;
-#ifdef HAVE_PANE
-	virtual PRBool CanBeInFolderPane();
-#endif
+  NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
   NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *knowsExtension);
   NS_IMETHOD GetAllowsPosting(PRBool *allowsPosting);

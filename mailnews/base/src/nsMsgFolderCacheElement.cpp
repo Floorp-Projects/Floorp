@@ -114,7 +114,7 @@ NS_IMETHODIMP nsMsgFolderCacheElement::SetStringProperty(const char *propertyNam
 				yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
 				yarn.mYarn_Fill = yarn.mYarn_Size - 1;
 				yarn.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
-				nsresult err = m_mdbRow->AddColumn(m_owningCache->GetEnv(), property_token, &yarn);
+				err = m_mdbRow->AddColumn(m_owningCache->GetEnv(), property_token, &yarn);
 				return err;
 			}
 		}

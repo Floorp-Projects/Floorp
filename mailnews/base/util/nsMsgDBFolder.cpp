@@ -362,6 +362,22 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
+{
+	PRInt32 numTotalMessages;
+
+	if (!retval)
+		return NS_ERROR_NULL_POINTER;
+	if (!mDatabase)
+		*retval = PR_TRUE;
+	else if (NS_SUCCEEDED(GetTotalMessages(PR_FALSE, &numTotalMessages)) && numTotalMessages <= 0)
+		*retval = PR_TRUE;
+	else
+		*retval = PR_FALSE;
+	return NS_OK;
+}
+
+
 nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
 {
 	nsresult rv = NS_OK;

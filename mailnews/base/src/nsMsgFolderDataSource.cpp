@@ -746,6 +746,12 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item
 
 }
 
+NS_IMETHODIMP nsMsgFolderDataSource::OnFolderLoaded(nsIFolder *folder)
+{
+	nsresult rv = NS_OK;
+	return NS_OK;
+}
+
 nsresult nsMsgFolderDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
 													  const char *oldValue, const char *newValue)

@@ -212,6 +212,13 @@ NS_IMETHODIMP nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *i
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgNotificationManager::OnFolderLoaded(nsIFolder *folder)
+{
+	nsresult rv = NS_OK;
+	return NS_OK;
+}
+
+
 nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 {
 	nsresult rv;
