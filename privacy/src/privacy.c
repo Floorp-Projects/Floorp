@@ -295,7 +295,8 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
 PUBLIC const char *
 PRVCY_TutorialURL()
 {
-  return "http://warp/h/peoplestage/d/homepages/morse/privacy/index.html";
+  return "http://people.netscape.com/morse/privacy/index.html";
+/*return "http://warp/h/peoplestage/d/homepages/morse/privacy/index.html";*/
 }
 
 PRIVATE Bool anonymous = FALSE;
