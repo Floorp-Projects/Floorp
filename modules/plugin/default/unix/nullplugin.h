@@ -34,16 +34,16 @@
 
 #define TARGET              "_blank"
 #define MIME_TYPES_HANDLED  "*:.*:All types"
-#define PLUGIN_NAME         "Netscape Default Plugin"
+#define PLUGIN_NAME         "Default Plugin"
 #define PLUGIN_DESCRIPTION  "The default plugin handles plugin data for mimetypes and extensions that are not specified and facilitates downloading of new plugins."
 #define CLICK_TO_GET        "Click here to get the plugin"       
 #define CLICK_WHEN_DONE     "Click here after installing the plugin"
 
 #define REFRESH_PLUGIN_LIST "javascript:navigator.plugins.refresh(true)"
-#define PLUGINSPAGE_URL     "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi"
+#define PLUGINSPAGE_URL     "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi" //XXX Branding: make configurable via .properties or prefs
 #define OK_BUTTON           "OK"
 #define CANCEL_BUTTON       "CANCEL"
-#define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html" 
+#define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html" //XXX Branding: see above
 #define JVM_MINETYPE        "application/x-java-vm"
 #define MESSAGE "\
 This page contains information of a type (%s) that can\n\
