@@ -37,6 +37,3 @@ include $(topsrcdir)/config/rules.mk
 install:: $(srcdir)/bloaturls.txt
 	$(INSTALL) $< $(DIST)/bin
 
-# Install startup.html, startup test page.
-install:: $(srcdir)/startup-test.html
-	$(INSTALL) $< $(DIST)/bin
