@@ -270,7 +270,15 @@ char * fe_URLtoLocalName(const char * url, const char *pMimeType)
 
     // replace extra periods in 8 character name with underscores   
     for (idx =0 ; idx < csName.GetLength(); idx++) {
+#ifdef XP_WIN16
         if ((name[idx] == '.')||(name[idx] == ':')) name[idx] = '_';
+#else
+        //  Long filename fix, allow multiple periods for Win32.
+        //  brian@inforum.net (Brian Wiles)
+        if(':' == name[idx])    {
+            name[idx] = '_';
+        }
+#endif
     }
     csName.ReleaseBuffer(-1);
     
