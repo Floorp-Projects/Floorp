@@ -125,8 +125,6 @@
 #include "winbase.h"
 #endif
 
-#include "nsPluginDocLoaderFactory.h"
-
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsILocalFile.h"
@@ -337,25 +335,8 @@ nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
         }
       } else {  // no pres shell --> full-page plugin
         
-       /**
-        * This document does not have a presentation shell. It may be a full-page plugin.
-        * Full-page plugins don't really have the same problem of crashing because they
-        * are not currently scriptable. However, they do leave a non-painting, defunct
-        * window which doesn't look good. A reload of the page for full-page plugins
-        * is needed to kickstart the instance.
-        */
-        
-        nsCOMPtr<nsIScriptGlobalObject> gso;
-        doc->GetScriptGlobalObject(getter_AddRefs(gso));
-        if (gso) {
-          nsCOMPtr<nsIDocShell> docShell;
-          gso->GetDocShell(getter_AddRefs(docShell));
-          nsCOMPtr<nsIWebNavigation> webNav (do_QueryInterface(docShell));
-          if (webNav)
-            webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
-          
-          else NS_WARNING("refreshing plugins: couldn't get webnav or docshell from gso");
-        } else NS_WARNING("refreshing plugins: could not get the global script object -- did the plugin set it?");
+        NS_NOTREACHED("all plugins should have a pres shell!");
+
       }
     }
   }
@@ -3521,7 +3502,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
 
 ////////////////////////////////////////////////////////////////////////
-/* Called by nsPluginViewer.cpp (full-page case) */
+/* Called by full-page case */
 NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType, 
                                                           nsString& aURLSpec,
                                                           nsIStreamListener *&aStreamListener,
@@ -3681,24 +3662,9 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
   nsCOMPtr<nsICategoryManager> catMan = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
   if (!catMan)
     return;
-
-  // XXX temporary for testing transition
-  static PRBool sLoadViaPlugin = PR_FALSE;
-  static PRBool sLoadViaPluginInitialized = PR_FALSE;
-  if (!sLoadViaPluginInitialized) {
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefService) {
-      sLoadViaPluginInitialized = PR_TRUE;
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-      if (prefBranch)
-        prefBranch->GetBoolPref("plugin.disable_load_full_page_via_content", &sLoadViaPlugin);
-    }
-  }
+ 
+  const char *contractId = "@mozilla.org/content/plugin/document-loader-factory;1";
   
-  const char *contractId = sLoadViaPlugin ? "@mozilla.org/plugin/doc-loader/factory;1" :
-                                            "@mozilla.org/content/plugin/document-loader-factory;1";
   for(int i = 0; i < mVariants; i++) {
     if (aType == ePluginUnregister) {
       nsXPIDLCString value;

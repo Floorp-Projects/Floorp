@@ -40,7 +40,6 @@
 #include "nsIPluginManager.h"
 #include "nsPluginsCID.h"
 #include "nsPluginHostImpl.h"
-#include "nsPluginDocLoaderFactory.h"
 #include "ns4xPlugin.h"
 
 static const nsModuleComponentInfo gComponentInfo[] = {
@@ -53,11 +52,6 @@ static const nsModuleComponentInfo gComponentInfo[] = {
     NS_PLUGINMANAGER_CID,
     "@mozilla.org/plugin/manager;1",
     nsPluginHostImpl::Create },
-
-  { "Plugin Doc Loader Factory",
-    NS_PLUGINDOCLOADERFACTORY_CID,
-    "@mozilla.org/plugin/doc-loader/factory;1",
-    nsPluginDocLoaderFactory::Create },
 };
 
 PR_STATIC_CALLBACK(void)

@@ -55,7 +55,6 @@
 #include "nsScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
-#include "nsIPluginViewer.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
@@ -4604,17 +4603,6 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                                                        aContentHandler,
                                                        aViewer),
                       NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPluginViewer> pv(do_QueryInterface(*aViewer));
-    if (pv) {
-      if (mName.EqualsIgnoreCase("messagepane")) {
-        NS_IF_RELEASE(*aViewer);
-        NS_IF_RELEASE(*aContentHandler);
-        return NS_ERROR_FAILURE; 
-      }
-      else
-        SetTitle(nsnull);  // clear title bar for full-page plugin
-    }
 
     (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *, this));
     return NS_OK;
