@@ -172,7 +172,7 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
 
   nsIContent* content = GetCurrentContent();
   if (content && (content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XBL) || (
-      content->IsContentOfType(nsIContent::eXUL) &&
+      content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XUL) &&
       content->Tag() != nsXULAtoms::label &&
       content->Tag() != nsXULAtoms::description))) {
 
