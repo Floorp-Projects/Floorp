@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+interface nsIInputStream;
+interface nsIChannel;
+interface nsIFile;
+
+[scriptable, uuid(ddf633d8-e9a4-439d-ad88-de636fd9bb75)]
+interface nsIUploadChannel : nsISupports
+{
+  /**
+   * Set the stream to be uploaded by this channel. 
+   * History here is that we need to support both streams that already have header (eg.
+   * content-type & content-length) information prepend to the stream (namely plugins) 
+   * as well as clients (composer, uploading application) that want to upload data streams 
+   * without any knowledgle of protocol specifications.  For this reason, we have a special
+   * meaning for contentType.  See below.
+   * 
+   *   @param stream
+   *          Stream to be uploaded by this channel
+   *   @param contentType
+   *          If the contentType is nsnull, the protocol will assume that no content 
+   *          headers are to be added to the uploaded stream and that any required
+   *          headers are already in the param |stream|.  In HTTP's case, if you do
+   *          specify a content header, the implemention should prepend this as a 
+   *          content-type header to the uploading stream.  In FTP's case, this 
+   *          parameter is ignored. 
+   *   @param contentLength
+   *          Use of -1 assumes that the data length is returned by the |stream|'s 
+   *          Available() method. 
+   */
+  void setUploadStream(in nsIInputStream stream, in string contentType, in long contentLength);    
+
+  /** 
+   * Sets a file to be uploaded by this channel.  
+   *   @param file
+   *          The nsIFile to be uploaded by this channel
+   *   @param contentType
+   *          If the contentType is nsnull here, the protocol may ask the MIME service 
+   *          for an appropriate content type if one is required for uploading.
+   *   @param contentLength
+   *          Use of -1 assumes that the data length is returned by nsIFile::fileSize 
+   */
+  void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
+};
+
+
