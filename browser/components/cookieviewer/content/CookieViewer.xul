@@ -1,4 +1,5 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil -*- -->
+<?xml version="1.0"?>
+# -*- Mode: SGML; indent-tabs-mode: nil -*-
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -47,11 +48,11 @@
                 onselect="CookieSelected();"
                 hidecolumnpicker="true">
         <treecols>
-          <treecol id="domainCol" label="&treehead.cookiedomain.label;" flex="6"
-                       onclick="CookieColumnSort('rawHost', true);"/>
+          <treecol id="domainCol" label="&treehead.cookiedomain.label;" flex="2"
+                       onclick="CookieColumnSort('rawHost', true);" persist="width"/>
           <splitter class="tree-splitter"/>
-          <treecol id="nameCol" label="&treehead.cookiename.label;" flex="14"
-                       onclick="CookieColumnSort('name', true);"/>
+          <treecol id="nameCol" label="&treehead.cookiename.label;" flex="1"
+                       onclick="CookieColumnSort('name', true);" persist="width"/>
         </treecols>
         <treechildren/>
       </tree>
