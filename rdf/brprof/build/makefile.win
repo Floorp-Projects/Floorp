@@ -33,7 +33,6 @@ CPP_OBJS=\
 LLIBS=\
  $(DIST)\lib\xpcom32.lib         \
  $(DIST)\lib\raptorbase.lib      \
- $(DIST)\lib\rdf.lib             \
  $(DIST)\lib\brprof_s.lib        \
  $(LIBNSPR)  
 
