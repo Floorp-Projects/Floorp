@@ -71,10 +71,6 @@ public:
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult) = 0;
   NS_IMETHOD ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue) = 0;
 
-#ifdef XP_MAC
-  NS_IMETHOD ProcessEvents() = 0;
-#endif 
-
 };
 
 #endif /* nsIEventQueueService_h___ */
