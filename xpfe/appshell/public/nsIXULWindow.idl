@@ -94,7 +94,7 @@ interface nsIXULWindow : nsISupports
   const unsigned long raisedZ = 6;   /* "alwaysRaised" attribute */
   const unsigned long highestZ = 9;
 
-  readonly attribute unsigned long zlevel;
+           attribute unsigned long zLevel;
 
   /**
    * contextFlags are from nsIWindowCreator2
