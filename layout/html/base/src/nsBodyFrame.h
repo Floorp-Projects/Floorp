@@ -73,6 +73,12 @@ protected:
 
   ~nsBodyFrame();
 
+  void ComputeDesiredSize(const nsRect& aDesiredRect,
+                          const nsSize& aMaxSize,
+                          nsStyleSpacing* aSpacing,
+                          PRBool aIsPseudoFrame,
+                          nsReflowMetrics& aDesiredSize);
+
   virtual PRIntn GetSkipSides() const;
 
 private:
