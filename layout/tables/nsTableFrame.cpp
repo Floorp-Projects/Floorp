@@ -4142,7 +4142,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
   if (NS_UNCONSTRAINEDSIZE != width) {
     float p2t;
     p2t = GetPresContext()->PixelsToTwips();
-    width = RoundToPixel(width, p2t);
+    width = RoundToPixel(width, p2t, eRoundUpIfHalfOrMore);
   }
 
   return width;
