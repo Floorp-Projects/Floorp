@@ -1106,7 +1106,7 @@ function serv_chanmode (e)
                     (typeof e.channel.bans[ban] == "undefined"))
                 {
                     e.channel.bans[ban] = {host: ban};
-                    ban_evt = new CEvent ("channel", "ban", e.channel,
+                    var ban_evt = new CEvent ("channel", "ban", e.channel,
                                           "onBan");
                     ban_evt.channel = e.channel;
                     ban_evt.ban = ban;
