@@ -17,9 +17,10 @@
 
 DEPTH=..\..\..
 MODULE=chrome
+XPIDL_MODULE=chrome
 
-EXPORTS	= \
-	nsIChromeRegistry.h      \
+XPIDLSRCS =               \
+  .\nsIChromeRegistry.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -148,13 +148,6 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    static PRBool inited = PR_FALSE;
-    if (!inited) {
-        rv = reg->InitRegistry();
-        if (NS_FAILED(rv)) return rv;
-        inited = PR_TRUE;
-    }
-
     nsIURI* chromeURI;
     rv = uri->Clone(&chromeURI);        // don't mangle the original
     if (NS_FAILED(rv)) return rv;

@@ -67,8 +67,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIChromeRegistry methods:
-    NS_IMETHOD InitRegistry();  
-    NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURL);
+    NS_DECL_NSICHROMEREGISTRY
 
     // nsChromeRegistry methods:
     nsChromeRegistry();
@@ -85,6 +84,7 @@ public:
     static nsIRDFResource* kCHROME_archive;
     static nsIRDFResource* kCHROME_name;
     static nsIRDFResource* kCHROME_displayname;
+    static nsSupportsHashtable *mDataSourceTable;
 
 protected:
     NS_IMETHOD InitializeDataSource(nsString &aPackage,
@@ -94,12 +94,14 @@ protected:
     nsresult GetChromeResource(nsIRDFDataSource *aDataSource,
                                nsString& aResult, nsIRDFResource* aChromeResource,
                                nsIRDFResource* aProperty);    
-protected:
-    nsSupportsHashtable *mDataSourceTable;
+private:
+    NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult);
+
 };
 
 PRUint32 nsChromeRegistry::gRefCnt  ;
 nsIRDFService* nsChromeRegistry::gRDFService = nsnull;
+nsSupportsHashtable* nsChromeRegistry::mDataSourceTable = nsnull;
 
 nsIRDFResource* nsChromeRegistry::kCHROME_chrome = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_skin = nsnull;
@@ -116,13 +118,48 @@ nsIRDFResource* nsChromeRegistry::kCHROME_displayname = nsnull;
 nsChromeRegistry::nsChromeRegistry()
 {
 	NS_INIT_REFCNT();
-  mDataSourceTable = nsnull;
+
+
+  gRefCnt++;
+  if (gRefCnt == 1) {
+      nsresult rv;
+      rv = nsServiceManager::GetService(kRDFServiceCID,
+                                        kIRDFServiceIID,
+                                        (nsISupports**)&gRDFService);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+
+      // get all the properties we'll need:
+      rv = gRDFService->GetResource(kURICHROME_chrome, &kCHROME_chrome);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_skin, &kCHROME_skin);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_content);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_locale, &kCHROME_locale);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_base, &kCHROME_base);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_main, &kCHROME_main);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+
+      rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+  }
 }
 
 nsChromeRegistry::~nsChromeRegistry()
 {
-    delete mDataSourceTable;
-
     --gRefCnt;
     if (gRefCnt == 0) {
 
@@ -136,6 +173,7 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_archive);
         NS_IF_RELEASE(kCHROME_displayname);
         NS_IF_RELEASE(kCHROME_name);
+        delete mDataSourceTable;
        
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -314,56 +352,43 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsChromeRegistry::InitRegistry()
+NS_IMETHODIMP nsChromeRegistry::GetOverlayCount(const PRUnichar *aChromeURL, PRInt32 *aResult)
 {
-    gRefCnt++;
-    if (gRefCnt == 1) {
-        nsresult rv;
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          kIRDFServiceIID,
-                                          (nsISupports**)&gRDFService);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return rv;
+  return NS_OK;
+}
 
-        // get all the properties we'll need:
-        rv = gRDFService->GetResource(kURICHROME_chrome, &kCHROME_chrome);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
+NS_IMETHODIMP nsChromeRegistry::GetOverlayAt(const PRUnichar *aChromeURL, PRInt32 aIndex, PRUnichar **aResult)
+{
+  return NS_OK;
+}
 
-        rv = gRDFService->GetResource(kURICHROME_skin, &kCHROME_skin);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
+NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult)
+{
+    nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                     nsnull,
+                                                     NS_GET_IID(nsIRDFDataSource),
+                                                     (void**) aResult);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_content, &kCHROME_content);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_locale, &kCHROME_locale);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(*aResult);
+    if (! remote)
+        return NS_ERROR_UNEXPECTED;
 
-        rv = gRDFService->GetResource(kURICHROME_base, &kCHROME_base);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_main, &kCHROME_main);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
+    rv = remote->Init(aFileName);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_archive, &kCHROME_archive);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
+    // We need to read this synchronously.
+    rv = remote->Refresh(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv)) return rv;
-    }
+    if (!mDataSourceTable)
+      mDataSourceTable = new nsSupportsHashtable;
+
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
+    mDataSourceTable->Put(&nsStringKey(aFileName), (void*)supports.get());
 
     return NS_OK;
 }
@@ -373,18 +398,20 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
                                        nsString &aProvider,
                                        nsIRDFDataSource **aResult)
 {
-
-    nsCAutoString chromeFile;
+    nsCAutoString chromeFile, overlayFile;
 
     // Retrieve the mInner data source.
     chromeFile = "resource:/chrome/";
     chromeFile += aPackage;
     chromeFile += aProvider; // provider already has a / in the front of it
     chromeFile += "/";
-    chromeFile += "current.rdf";  
+    overlayFile = chromeFile;
+    chromeFile += "current.rdf";
+    overlayFile += "overlays.rdf";
 
     if (mDataSourceTable)
     {
+      // current.rdf and overlays.rdf are loaded in pairs and so if one is loaded, the other should be too.
       void *data = mDataSourceTable->Get(&nsStringKey(chromeFile));
       if (data)
       {
@@ -402,32 +429,12 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
       }
     }
 
-    nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                     nsnull,
-                                                     NS_GET_IID(nsIRDFDataSource),
-                                                     (void**) aResult);
-    if (NS_FAILED(rv)) return rv;
+   nsCOMPtr<nsIRDFDataSource> overlayDataSource;
 
+   LoadDataSource(chromeFile, aResult);
+   LoadDataSource(overlayFile, getter_AddRefs(overlayDataSource));
 
-    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(*aResult);
-    if (! remote)
-        return NS_ERROR_UNEXPECTED;
-
-
-    rv = remote->Init(chromeFile);
-    if (NS_FAILED(rv)) return rv;
-
-    // We need to read this synchronously.
-    rv = remote->Refresh(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!mDataSourceTable)
-      mDataSourceTable = new nsSupportsHashtable;
-
-    nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
-    mDataSourceTable->Put(&nsStringKey(chromeFile), (void*)supports.get());
-
-    return NS_OK;
+   return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
