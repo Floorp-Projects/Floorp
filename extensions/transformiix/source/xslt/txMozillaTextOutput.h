@@ -43,13 +43,23 @@
 #include "nsIContent.h"
 #include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 #include "txOutputFormat.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
 
-class txMozillaTextOutput : public txMozillaXMLEventHandler
+class nsITransformObserver;
+
+class txMozillaTextOutput : public txIOutputXMLEventHandler
 {
 public:
-    txMozillaTextOutput();
+    txMozillaTextOutput(nsIDOMDocument* aSourceDocument,
+                        nsIDOMDocument* aResultDocument,
+                        nsITransformObserver* aObserver);
+    txMozillaTextOutput(nsIDOMDocumentFragment* aDest);
     virtual ~txMozillaTextOutput();
+
+    NS_DECL_ISUPPORTS
 
     /**
      * Signals to receive the start of an attribute.
@@ -68,6 +78,16 @@ public:
      * @param aData the characters to receive
      */
     void characters(const String& aData);
+
+    /**
+     * Signals to receive characters that don't need output escaping.
+     *
+     * @param aData the characters to receive
+     */
+    void charactersNoOutputEscaping(const String& aData)
+    {
+        NS_ASSERTION(0, "Don't call this in module, we don't do d-o-e");
+    }
 
     /**
      * Signals to receive data that should be treated as a comment.
@@ -92,6 +112,18 @@ public:
                     const PRInt32 aNsID);
 
     /**
+     * Returns whether the output handler supports
+     * disable-output-escaping.
+     *
+     * @return MB_TRUE if this handler supports
+     *                 disable-output-escaping
+     */
+    MBool hasDisableOutputEscaping()
+    {
+        return MB_FALSE;
+    }
+
+    /**
      * Signals to receive a processing instruction.
      *
      * @param aTarget the target of the processing instruction
@@ -114,48 +146,19 @@ public:
                       const PRInt32 aNsID);
 
     /**
-     * Sets the output format.
-     *
-     * @param aOutputFormat the output format
-     */
-    void setOutputFormat(txOutputFormat* aOutputFormat);
-
-    /**
-     * Disables loading of stylesheets.
-     */
-    void disableStylesheetLoad();
-
-    /**
-     * Returns the root content of the result.
-     *
-     * @param aReturn the root content
-     */
-    nsresult getRootContent(nsIContent** aReturn);
-
-    /**
-     * Returns PR_TRUE if the event handler has finished anything
-     * extra that had to happen after the transform has finished.
-     */
-    PRBool isDone();
-
-    /**
-     * Removes a script element from the array of elements that are
-     * still loading.
-     *
-     * @param aReturn the script element to remove
-     */
-    void removeScriptElement(nsIDOMHTMLScriptElement *aElement);
-
-    /**
-     * Sets the Mozilla output document.
+     * Gets the Mozilla output document
      *
      * @param aDocument the Mozilla output document
      */
-    void setOutputDocument(nsIDOMDocument* aDocument);
+    void getOutputDocument(nsIDOMDocument** aDocument);
 
 private:
+    void createResultDocument(nsIDOMDocument* aSourceDocument,
+                              nsIDOMDocument* aResultDocument);
+
     nsCOMPtr<nsIDOMCharacterData> mTextNode;
-    nsCOMPtr<nsIContent> mRootContent;
+    nsWeakPtr mObserver;
+    nsCOMPtr<nsIDOMDocument> mDocument;
     txOutputFormat mOutputFormat;
 };
 

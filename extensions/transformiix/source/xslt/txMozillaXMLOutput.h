@@ -44,16 +44,30 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsString.h"
 #include "nsSupportsArray.h"
+#include "nsWeakPtr.h"
 #include "txOutputFormat.h"
 
-class txMozillaXMLOutput : public txMozillaXMLEventHandler
+class txMozillaXMLOutput : public txIOutputXMLEventHandler,
+                           public nsIScriptLoaderObserver
 {
 public:
-    txMozillaXMLOutput();
+    txMozillaXMLOutput(const String& aRootName,
+                       PRInt32 aRootNsID,
+                       txOutputFormat* aFormat,
+                       nsIDOMDocument* aSourceDocument,
+                       nsIDOMDocument* aResultDocument,
+                       nsITransformObserver* aObserver);
+    txMozillaXMLOutput(txOutputFormat* aFormat,
+                       nsIDOMDocumentFragment* aFragment);
     virtual ~txMozillaXMLOutput();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTLOADEROBSERVER
 
     /**
      * Signals to receive the start of an attribute.
@@ -72,6 +86,16 @@ public:
      * @param aData the characters to receive
      */
     void characters(const String& aData);
+
+    /**
+     * Signals to receive characters that don't need output escaping.
+     *
+     * @param aData the characters to receive
+     */
+    void charactersNoOutputEscaping(const String& aData)
+    {
+        NS_ASSERTION(0, "Don't call this in module, we don't do d-o-e");
+    }
 
     /**
      * Signals to receive data that should be treated as a comment.
@@ -94,6 +118,18 @@ public:
      */
     void endElement(const String& aName,
                     const PRInt32 aNsID);
+
+    /**
+     * Returns whether the output handler supports
+     * disable-output-escaping.
+     *
+     * @return MB_TRUE if this handler supports
+     *                 disable-output-escaping
+     */
+    MBool hasDisableOutputEscaping()
+    {
+        return MB_FALSE;
+    }
 
     /**
      * Signals to receive a processing instruction.
@@ -119,31 +155,6 @@ public:
                       const PRInt32 aNsID);
 
     /**
-     * Sets the output format.
-     *
-     * @param aOutputFormat the output format
-     */
-    void setOutputFormat(txOutputFormat* aOutputFormat);
-
-    /**
-     * Disables loading of stylesheets.
-     */
-    void disableStylesheetLoad();
-
-    /**
-     * Returns the root content of the result.
-     *
-     * @param aReturn the root content
-     */
-    nsresult getRootContent(nsIContent** aReturn);
-
-    /**
-     * Returns PR_TRUE if the event handler has finished anything
-     * extra that had to happen after the transform has finished.
-     */
-    PRBool isDone();
-
-    /**
      * Removes a script element from the array of elements that are
      * still loading.
      *
@@ -152,11 +163,11 @@ public:
     void removeScriptElement(nsIDOMHTMLScriptElement *aElement);
 
     /**
-     * Sets the Mozilla output document.
+     * Gets the Mozilla output document
      *
      * @param aDocument the Mozilla output document
      */
-    void setOutputDocument(nsIDOMDocument* aDocument);
+    void getOutputDocument(nsIDOMDocument** aDocument);
 
 private:
     void closePrevious(PRInt8 aAction);
@@ -164,11 +175,16 @@ private:
     void endHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
     void processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue);
     void wrapChildren(nsIDOMNode* aCurrentNode, nsIDOMElement* aWrapper);
+    nsresult createResultDocument(const String& aName, PRInt32 aNsID,
+                                  nsIDOMDocument* aSourceDocument,
+                                  nsIDOMDocument* aResultDocument);
+    void SignalTransformEnd();
 
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsIDOMNode> mCurrentNode;
     nsCOMPtr<nsIDOMNode> mParentNode;
     nsCOMPtr<nsIContent> mRootContent;
+    nsWeakPtr mObserver;
 
     nsCOMPtr<nsIDOMNode> mNonAddedParent;
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
@@ -184,12 +200,14 @@ private:
 
     txOutputFormat mOutputFormat;
 
-    PRPackedBool mDisableStylesheetLoad;
     PRPackedBool mDontAddCurrent;
 
     PRPackedBool mHaveTitleElement;
     PRPackedBool mHaveBaseElement;
 
+    PRPackedBool mInTransform;
+    PRPackedBool mCreatingNewDocument;
+ 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
 };
 

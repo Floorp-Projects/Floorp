@@ -52,7 +52,7 @@
         <parameter name="aData"/>
         <body>
           if (aTopic == "prettyprint-dom-created")
-            document.getAnonymousNodes(this).item(0).appendChild(aSubject.documentElement);
+            document.getAnonymousNodes(this).item(0).appendChild(aSubject);
         </body>
       </method>
     </implementation>

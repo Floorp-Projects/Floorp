@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Nisheeth Ranjan <nisheeth@netscape.com> (original author)
  *   Peter Van der Beken <peterv@netscape.com>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,57 +38,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txTextOutput.h"
-#include "TxString.h"
+#include "nsISupports.idl"
 
-txTextOutput::txTextOutput(ostream* aOut)
-    : mOut(aOut)
-{
-}
+interface nsIDOMNode;
+interface nsIDOMDocument;
 
-txTextOutput::~txTextOutput()
-{
-}
+/**
+ * DEPRECATED! Don't use this interface! Use nsIXSLTProcessor instead!!
+ */
 
-void txTextOutput::attribute(const String& aName,
-                             const PRInt32 aNsID,
-                             const String& aValue)
+[scriptable, uuid(3fbff728-2d20-11d3-aef3-00108300ff91)]
+interface nsIXSLTProcessorObsolete : nsISupports
 {
-}
-
-void txTextOutput::characters(const String& aData)
-{
-    *mOut << aData;
-}
-
-void txTextOutput::charactersNoOutputEscaping(const String& aData)
-{
-    characters(aData);
-}
-
-void txTextOutput::comment(const String& aData)
-{
-}
-
-void txTextOutput::endDocument()
-{
-}
-
-void txTextOutput::endElement(const String& aName,
-                              const PRInt32 aNsID)
-{
-}
-
-void txTextOutput::processingInstruction(const String& aTarget,
-                                         const String& aData)
-{
-}
-
-void txTextOutput::startDocument()
-{
-}
-
-void txTextOutput::startElement(const String& aName,
-                                const PRInt32 aNsID)
-{
-}
+    void transformDocument(in nsIDOMNode aSourceDOM,
+                           in nsIDOMNode aStyleDOM,
+                           in nsIDOMDocument aOutputDOC,
+                           in nsISupports aObserver);
+};

@@ -91,10 +91,10 @@ public:
     MBool mShorthand;
 };
 
-class txXMLOutput : public txStreamXMLEventHandler
+class txXMLOutput : public txIOutputXMLEventHandler
 {
 public:
-    txXMLOutput();
+    txXMLOutput(txOutputFormat* aFormat, ostream* aOut);
     virtual ~txXMLOutput();
 
     static const int DEFAULT_INDENT;
@@ -146,6 +146,18 @@ public:
     virtual void endElement(const String& aName,
                             const PRInt32 aNsID);
 
+    /**
+     * Returns whether the output handler supports
+     * disable-output-escaping.
+     *
+     * @return MB_TRUE if this handler supports
+     *                 disable-output-escaping
+     */
+    MBool hasDisableOutputEscaping()
+    {
+        return MB_TRUE;
+    }
+
     /*
      * Signals to receive a processing instruction.
      *
@@ -168,27 +180,6 @@ public:
      */
     virtual void startElement(const String& aName,
                               const PRInt32 aNsID);
-
-    /*
-     * Sets the output format.
-     *
-     * @param aOutputFormat the output format
-     */
-    void setOutputFormat(txOutputFormat* aOutputFormat);
-
-    /**
-     * Get the output stream.
-     *
-     * @param aOutputStream the current output stream
-     */
-    void getOutputStream(ostream** aOutputStream);
-
-    /**
-     * Sets the output stream.
-     *
-     * @param aOutputStream the new output stream
-     */
-    void setOutputStream(ostream* aOutputStream);
 
 protected:
     virtual void closeStartTag(MBool aUseEmptyElementShorthand);

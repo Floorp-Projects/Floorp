@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is TransforMiiX XSLT Processor.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Axel Hecht.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peterv@netscape.com>
+ *  Axel Hecht, <axel@pike.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,57 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txTextOutput.h"
-#include "TxString.h"
+#include "nsIException.idl"
+#include "domstubs.idl"
 
-txTextOutput::txTextOutput(ostream* aOut)
-    : mOut(aOut)
-{
-}
+[scriptable, uuid(e06dfaea-92d5-47f7-a800-c5f5404d8771)]
+interface nsIXSLTException : nsIException {
+    /**
+     * The node in the stylesheet that triggered the exception.
+     */
+    readonly attribute nsIDOMNode styleNode;
 
-txTextOutput::~txTextOutput()
-{
-}
-
-void txTextOutput::attribute(const String& aName,
-                             const PRInt32 aNsID,
-                             const String& aValue)
-{
-}
-
-void txTextOutput::characters(const String& aData)
-{
-    *mOut << aData;
-}
-
-void txTextOutput::charactersNoOutputEscaping(const String& aData)
-{
-    characters(aData);
-}
-
-void txTextOutput::comment(const String& aData)
-{
-}
-
-void txTextOutput::endDocument()
-{
-}
-
-void txTextOutput::endElement(const String& aName,
-                              const PRInt32 aNsID)
-{
-}
-
-void txTextOutput::processingInstruction(const String& aTarget,
-                                         const String& aData)
-{
-}
-
-void txTextOutput::startDocument()
-{
-}
-
-void txTextOutput::startElement(const String& aName,
-                                const PRInt32 aNsID)
-{
-}
+    /**
+     * The context node, may be null
+     */
+    readonly attribute nsIDOMNode sourceNode;
+};

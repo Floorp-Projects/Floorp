@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  webshell \
 		  docshell \
+		  layout \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
@@ -116,9 +117,11 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/Names.$(OBJ_SUFFIX) \
   ../source/xslt/ProcessorState.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaTextOutput.$(OBJ_SUFFIX) \
+  ../source/xslt/txMozillaXSLTProcessor.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaXMLOutput.$(OBJ_SUFFIX) \
   ../source/xslt/txRtfHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txTextHandler.$(OBJ_SUFFIX) \
+  ../source/xslt/txUnknownHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTNumber.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTPatterns.$(OBJ_SUFFIX) \

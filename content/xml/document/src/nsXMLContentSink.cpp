@@ -118,6 +118,7 @@
 #include "nsIObserver.h"
 #include "nsIDocumentTransformer.h"
 #include "nsISyncLoadDOMService.h"
+#include "nsIXSLTProcessor.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -442,18 +443,17 @@ nsXMLContentSink::MaybePrettyPrint()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Transform the document
-  nsCOMPtr<nsIDocumentTransformer> transformer =
+  nsCOMPtr<nsIXSLTProcessor> transformer =
       do_CreateInstance("@mozilla.org/document-transformer;1?type=text/xsl", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMDocument> resultDocument;
-  nsAutoString emptyStr;
-  rv = NS_NewDOMDocument(getter_AddRefs(resultDocument), emptyStr, emptyStr,
-                         nsnull, mDocumentURL);
-  NS_ENSURE_SUCCESS(rv, rv);
   
+  rv = transformer->ImportStylesheet(xslDocument);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocumentFragment> resultFragment;
   nsCOMPtr<nsIDOMDocument> sourceDocument = do_QueryInterface(mDocument);
-  rv = transformer->TransformDocument(sourceDocument, xslDocument,
-                                      resultDocument, nsnull);
+  rv = transformer->TransformToFragment(sourceDocument, xslDocument,
+                                        getter_AddRefs(resultFragment));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add the binding
@@ -478,7 +478,7 @@ nsXMLContentSink::MaybePrettyPrint()
   NS_ASSERTION(binding, "Prettyprint binding doesn't implement nsIObserver");
   NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
 
-  return binding->Observe(resultDocument, "prettyprint-dom-created", NS_LITERAL_STRING("").get());
+  return binding->Observe(resultFragment, "prettyprint-dom-created", NS_LITERAL_STRING("").get());
 }
 
 
@@ -555,6 +555,20 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // reference.
   NS_IF_RELEASE(mParser);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::OnDocumentCreated(nsIDOMDocument* aResultDocument)
+{
+  NS_ENSURE_ARG(aResultDocument);
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer) {
+    contentViewer->SetDOMDocument(aResultDocument);
+  }
   return NS_OK;
 }
 
@@ -636,32 +650,11 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 nsresult
 nsXMLContentSink::SetupTransformMediator()
 {
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
   mXSLTransformMediator->SetSourceContentModel(currentDOMDoc);
-
-  // Create the result document
-  nsCOMPtr<nsIDOMDocument> resultDOMDoc;
-
-  nsCOMPtr<nsIURI> url;
-  mDocument->GetBaseURL(*getter_AddRefs(url));
-
-  nsAutoString emptyStr;
-  rv = NS_NewDOMDocument(getter_AddRefs(resultDOMDoc), emptyStr, emptyStr, nsnull, url);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (contentViewer) {
-    contentViewer->SetDOMDocument(resultDOMDoc);
-  }
-
-  mXSLTransformMediator->SetResultDocument(resultDOMDoc);
   mXSLTransformMediator->SetTransformObserver(this);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -840,7 +833,9 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
     // httpChannel->SetReferrer(documentURI);
   }
 
-  // XXX need to set a load group on this channel!
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  channel->SetLoadGroup(loadGroup);
 
   return channel->AsyncOpen(sl, nsnull);
 }
