@@ -587,7 +587,8 @@ class Parser {
                         nf.createCatch(varName, catchCond, 
                                        statements(ts, source), 
                                        ts.getLineno()));
-                    ts.matchToken(ts.RC);
+
+                    mustMatchToken(ts, ts.RC, "msg.no.brace.after.body");
                     source.append((char)ts.RC);
                     source.append((char)ts.EOL);
                 }
