@@ -3586,7 +3586,14 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_STARTUP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Start Menu\\Programs\\Startup" directory */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Startup", szVariable, dwVariableSize);
+    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    {
+      GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Startup", szVariable, dwVariableSize);
+    }
+    else
+    {
+      GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Startup", szVariable, dwVariableSize);
+    }
   }
   else if(lstrcmpi(szVariable, "COMMON_PROGRAMS") == 0)
   {
@@ -3615,7 +3622,14 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "COMMON_DESKTOP") == 0)
   {
     /* parse for the "C:\WINNT40\Profiles\All Users\Desktop" directory */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Desktop", szVariable, dwVariableSize);
+    if((dwOSType & OS_WIN95) || (dwOSType & OS_WIN98))
+    {
+      GetWinReg(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Desktop", szVariable, dwVariableSize);
+    }
+    else
+    {
+      GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "Common Desktop", szVariable, dwVariableSize);
+    }
   }
   else if(lstrcmpi(szVariable, "PERSONAL_STARTUP") == 0)
   {

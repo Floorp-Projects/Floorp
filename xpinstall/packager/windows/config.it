@@ -56,8 +56,17 @@ Program Folder Path=[COMMON_PROGRAMS]
 Default Setup Type=Setup Type 0
 
 Setup Title0=Mozilla Seamonkey Setup
+Setup Title0 Font Size=
+Setup Title0 Font Color=
+Setup Title0 Font Shadow=TRUE
 Setup Title1=Build $Version$
+Setup Title0 Font Size=
+Setup Title0 Font Color=
+Setup Title0 Font Shadow=TRUE
 Setup Title2=
+Setup Title0 Font Size=
+Setup Title0 Font Color=
+Setup Title0 Font Shadow=TRUE
 
 ; HKey:              valid decryptable setup keys are [Mozilla Seamonkey CurrentVersion]
 ;                    and [Mozilla Seamonkey CurrentVersion].
@@ -400,7 +409,7 @@ WorkingDir=[SETUP PATH]
 ;                    original size and position. An application should specify
 ;                    this flag when displaying the window for the first time.
 [Program Folder0]
-Timing=post download
+Timing=post smartupdate
 Show Folder=SHOW
 Program Folder=[Default Folder]
 
