@@ -1260,6 +1260,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument)
   , mDocElementContainingBlock(nsnull)
   , mGfxScrollFrame(nsnull)
   , mUpdateCount(0)
+  , mQuotesDirty(PR_FALSE)
 {
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
