@@ -35,7 +35,7 @@
 #else
 #define _PR_SI_ARCHITECTURE "vax"
 #endif
-#define PR_DLL_SUFFIX		".exe"
+#define PR_DLL_SUFFIX		".so"
 
 #define _PR_VMBASE		0x30000000
 #define _PR_STACK_VMBASE	0x50000000
