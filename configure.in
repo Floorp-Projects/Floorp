@@ -2624,6 +2624,12 @@ MOZ_ARG_ENABLE_BOOL(leaky,
 [  --enable-leaky          Enable leaky memory tool],
   MOZ_LEAKY=1)
 
+dnl mozilla/tools/leaky not part of default build.
+MOZ_ARG_ENABLE_BOOL(jprof,
+[  --enable-jprof          Enable leaky memory tool],
+  MOZ_JPROF=1
+  AC_DEFINE(MOZ_JPROF))
+
 dnl Detect webshell leaks
 MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,
 [  --enable-detect-webshell-leaks   Enable detection of webshell leaks],
@@ -2835,6 +2841,7 @@ AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
+AC_SUBST(MOZ_JPROF)
 AC_SUBST(DETECT_WEBSHELL_LEAKS)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
