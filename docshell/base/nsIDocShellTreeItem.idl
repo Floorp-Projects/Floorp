@@ -90,7 +90,8 @@ interface nsIDocShellTreeItem : nsISupports
 	Further note however when others try to Get the interface you should add
 	ref it before handing it to them.
 	*/
-	attribute nsIDocShellTreeItem parent;
+	readonly attribute nsIDocShellTreeItem parent;
+	[noscript] void setParent(in nsIDocShellTreeItem parent);
 
 	/*
 	This is call returns the same thing parent does however if the parent is
@@ -158,7 +159,8 @@ interface nsIDocShellTreeItem : nsISupports
 	Further note however when others try to get the interface it should be 
 	addref'd before handing it to them. 
 	*/
-	attribute nsIDocShellTreeOwner treeOwner;
+	readonly attribute nsIDocShellTreeOwner treeOwner;
+	[noscript] void setTreeOwner(in nsIDocShellTreeOwner treeOwner);
 
 	/* The offset of yourself in your parent's child list */
 	attribute long childOffset;
