@@ -2412,7 +2412,7 @@ function toDownloadManager()
   
 function toJavaScriptConsole()
 {
-    toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+    toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
 }
 
 function javaItemEnabling()
@@ -2480,10 +2480,8 @@ function OpenTaskURL( inURL )
   window.open( inURL );
 }
 
-function goAboutDialog()
+function openAboutDialog()
 {
-  // XXXBlake -- the about dialog should be modal, but then clicking the link in it just opens
-  //             a blank browser window (the page isn't loaded).
   window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 }
 

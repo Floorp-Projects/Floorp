@@ -671,12 +671,9 @@ Contributor(s):
                     label="&releaseCmd.label;"
                     oncommand="openTopWin('&releaseURL;');"/>
           <menuseparator/>
-          <menuitem accesskey="&aboutCommPluginsCmd.accesskey;"
-                    label="&aboutCommPluginsCmd.label;"
-                    oncommand="openTopWin('about:plugins')"/>
           <menuitem accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
-                    oncommand="goAboutDialog();"/>
+                    oncommand="openAboutDialog();"/>
         </menupopup>
       </menu>
     </menubar>
