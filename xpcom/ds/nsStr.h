@@ -65,7 +65,7 @@
 
     6. Downsampling from nsString to nsCString can be lossy -- avoid it if possible!
 
-    7. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to Recycle().
+    7. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to nsMemory::Free().
 
  ***********************************************************************/
 
@@ -468,6 +468,8 @@ inline void AddNullTerminator(nsStr& aDest) {
 }
 
 /**
+ * Deprecated: don't use |Recycle|, just call |nsMemory::Free| directly
+ *
  * Return the given buffer to the heap manager. Calls allocator::Free()
  * @return string length
  */
