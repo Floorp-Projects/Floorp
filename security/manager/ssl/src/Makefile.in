@@ -91,6 +91,3 @@ EXTRA_LIBS	+= \
         $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
         $(NULL)
 
-OUR_CC = $(shell which $(CCC))
-libs::
-	echo We used c++ at $(OUR_CC)
