@@ -281,7 +281,7 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
   return;
 }
 
-nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url)
+nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url, PRBool aDefaultPlugin)
 {
   mNext = nsnull;
   mPeer = nsnull;
@@ -293,6 +293,7 @@ nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url)
     aInstance->GetPeer(&mPeer);
     NS_ADDREF(aInstance);
   }
+  mDefaultPlugin = aDefaultPlugin;
   mStopped = PR_FALSE;
   mllStopTime = LL_ZERO;
 }
@@ -319,71 +320,71 @@ void nsActivePlugin::setStopped(PRBool stopped)
 
 nsActivePluginList::nsActivePluginList()
 {
-  first = nsnull;
-  last = nsnull;
-  count = 0;
+  mFirst = nsnull;
+  mLast = nsnull;
+  mCount = 0;
 }
 
 nsActivePluginList::~nsActivePluginList()
 {
-  if(first == nsnull)
+  if(mFirst == nsnull)
     return;
   shut();
 }
 
 void nsActivePluginList::shut()
 {
-  if(first == nsnull)
+  if(mFirst == nsnull)
     return;
 
-  for(nsActivePlugin * plugin = first; plugin != nsnull;)
+  for(nsActivePlugin * plugin = mFirst; plugin != nsnull;)
   {
     nsActivePlugin * next = plugin->mNext;
     remove(plugin);
     plugin = next;
   }
-  first = nsnull;
-  last = nsnull;
+  mFirst = nsnull;
+  mLast = nsnull;
 }
 
 PRInt32 nsActivePluginList::add(nsActivePlugin * plugin)
 {
-  if (first == nsnull)
+  if (mFirst == nsnull)
   {
-    first = plugin;
-    last = plugin;
-    first->mNext = nsnull;
+    mFirst = plugin;
+    mLast = plugin;
+    mFirst->mNext = nsnull;
   }
   else
   {
-    last->mNext = plugin;
-    last = plugin;
+    mLast->mNext = plugin;
+    mLast = plugin;
   }
-  last->mNext = nsnull;
-  count++;
-  return count;
+  mLast->mNext = nsnull;
+  mCount++;
+  return mCount;
 }
 
 PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
 {
-  if(first == nsnull)
+  if(mFirst == nsnull)
     return PR_FALSE;
 
   nsActivePlugin * prev = nsnull;
-  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(p == plugin)
     {
-      if(p == first)
-        first = p->mNext;
+      if(p == mFirst)
+        mFirst = p->mNext;
       else
         prev->mNext = p->mNext;
 
       if((prev != nsnull) && (prev->mNext == nsnull))
-        last = prev;
+        mLast = prev;
 
       delete p;
-      count--;
+      mCount--;
       return PR_TRUE;
     }
     prev = p;
@@ -391,9 +392,58 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
   return PR_FALSE;
 }
 
+void nsActivePluginList::stopRunning()
+{
+  if(mFirst == nsnull)
+    return;
+
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
+  {
+    if(!p->mStopped && p->mInstance)
+    {
+      p->mInstance->SetWindow(nsnull);
+      p->mInstance->Stop();
+      p->setStopped(PR_TRUE);
+    }
+  }
+}
+
+void nsActivePluginList::removeAllStopped()
+{
+  if(mFirst == nsnull)
+    return;
+
+  nsActivePlugin * prev = nsnull;
+  nsActivePlugin * next = nsnull;
+
+  for(nsActivePlugin * p = mFirst; p != nsnull;)
+  {
+    next = p->mNext;
+
+    if(p->mStopped)
+    {
+      if(p == mFirst)
+        mFirst = next;
+      else
+        prev->mNext = next;
+
+      if(p == mLast)
+        mLast = prev;
+
+      delete p;
+      mCount--;
+      p = next;
+      continue;
+    }
+    prev = p;
+    p = next;
+  }
+  return;
+}
+
 nsActivePlugin * nsActivePluginList::find(nsIPluginInstance* instance)
 {
-  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(p->mInstance == instance)
       return p;
@@ -401,9 +451,36 @@ nsActivePlugin * nsActivePluginList::find(nsIPluginInstance* instance)
   return nsnull;
 }
 
+nsActivePlugin * nsActivePluginList::find(char * mimetype)
+{
+  PRBool defaultplugin = (PL_strcmp(mimetype, "*") == 0);
+
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
+  {
+    // give it some special treatment for the default plugin first
+    // because we cannot tell the default plugin by asking peer for a mime type
+    if(defaultplugin && p->mDefaultPlugin)
+      return p;
+
+    if(!p->mPeer)
+      continue;
+
+    nsMIMEType mt;
+
+    nsresult res = p->mPeer->GetMIMEType(&mt);
+
+    if(NS_FAILED(res))
+      continue;
+
+    if(PL_strcasecmp(mt, mimetype) == 0)
+      return p;
+  }
+  return nsnull;
+}
+
 nsActivePlugin * nsActivePluginList::findStopped(char * url)
 {
-  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(!PL_strcmp(url, p->mURL) && p->mStopped)
       return p;
@@ -414,7 +491,7 @@ nsActivePlugin * nsActivePluginList::findStopped(char * url)
 PRUint32 nsActivePluginList::getStoppedCount()
 {
   PRUint32 stoppedCount = 0;
-  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(p->mStopped)
       stoppedCount++;
@@ -426,7 +503,7 @@ nsActivePlugin * nsActivePluginList::findOldestStopped()
 {
   nsActivePlugin * res = nsnull;
   PRInt64 llTime = LL_MAXINT;
-  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
     if(!p->mStopped)
       continue;
@@ -440,18 +517,30 @@ nsActivePlugin * nsActivePluginList::findOldestStopped()
   return res;
 }
 
+nsUnloadedLibrary::nsUnloadedLibrary(PRLibrary * aLibrary)
+{
+  mLibrary = aLibrary;
+}
+
+nsUnloadedLibrary::~nsUnloadedLibrary()
+{
+  if(mLibrary)
+    PR_UnloadLibrary(mLibrary);
+}
+
 nsPluginTag::nsPluginTag()
 {
-	mNext = nsnull;
-	mName = nsnull;
-	mDescription = nsnull;
-	mVariants = 0;
-	mMimeTypeArray = nsnull;
-	mMimeDescriptionArray = nsnull;
-	mExtensionsArray = nsnull;
-	mLibrary = nsnull;
-	mEntryPoint = nsnull;
-	mFlags = NS_PLUGIN_FLAG_ENABLED;
+  mNext = nsnull;
+  mName = nsnull;
+  mDescription = nsnull;
+  mVariants = 0;
+  mMimeTypeArray = nsnull;
+  mMimeDescriptionArray = nsnull;
+  mExtensionsArray = nsnull;
+  mLibrary = nsnull;
+  mCanUnloadLibrary = PR_TRUE;
+  mEntryPoint = nsnull;
+  mFlags = NS_PLUGIN_FLAG_ENABLED;
   mFileName = nsnull;
 }
 
@@ -468,10 +557,10 @@ inline char* new_str(const char* str)
 
 nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
 {
-	mNext = nsnull;
-	mName = new_str(aPluginTag->mName);
-	mDescription = new_str(aPluginTag->mDescription);
-	mVariants = aPluginTag->mVariants;
+  mNext = nsnull;
+  mName = new_str(aPluginTag->mName);
+  mDescription = new_str(aPluginTag->mDescription);
+  mVariants = aPluginTag->mVariants;
 
   mMimeTypeArray = nsnull;
   mMimeDescriptionArray = nsnull;
@@ -480,36 +569,37 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
   if(aPluginTag->mMimeTypeArray != nsnull)
   {
     mMimeTypeArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mMimeTypeArray[i] = new_str(aPluginTag->mMimeTypeArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mMimeTypeArray[i] = new_str(aPluginTag->mMimeTypeArray[i]);
   }
 
   if(aPluginTag->mMimeDescriptionArray != nsnull) 
   {
     mMimeDescriptionArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mMimeDescriptionArray[i] = new_str(aPluginTag->mMimeDescriptionArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mMimeDescriptionArray[i] = new_str(aPluginTag->mMimeDescriptionArray[i]);
   }
 
   if(aPluginTag->mExtensionsArray != nsnull) 
   {
     mExtensionsArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mExtensionsArray[i] = new_str(aPluginTag->mExtensionsArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mExtensionsArray[i] = new_str(aPluginTag->mExtensionsArray[i]);
 	}
 
-	mLibrary = nsnull;
-	mEntryPoint = nsnull;
-	mFlags = NS_PLUGIN_FLAG_ENABLED;
+  mLibrary = nsnull;
+  mCanUnloadLibrary = PR_TRUE;
+  mEntryPoint = nsnull;
+  mFlags = NS_PLUGIN_FLAG_ENABLED;
   mFileName = new_str(aPluginTag->mFileName);
 }
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 {
-	mNext = nsnull;
+  mNext = nsnull;
   mName = new_str(aPluginInfo->fName);
-	mDescription = new_str(aPluginInfo->fDescription);
-	mVariants = aPluginInfo->fVariantCount;
+  mDescription = new_str(aPluginInfo->fDescription);
+  mVariants = aPluginInfo->fVariantCount;
 
   mMimeTypeArray = nsnull;
   mMimeDescriptionArray = nsnull;
@@ -518,29 +608,30 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   if(aPluginInfo->fMimeTypeArray != nsnull)
   {
     mMimeTypeArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
   }
 
   if(aPluginInfo->fMimeDescriptionArray != nsnull) 
   {
     mMimeDescriptionArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mMimeDescriptionArray[i] = new_str(aPluginInfo->fMimeDescriptionArray[i]);
   }
 
   if(aPluginInfo->fExtensionArray != nsnull) 
   {
     mExtensionsArray = new char*[mVariants];
-		for (int i = 0; i < mVariants; i++)
-			mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
+    for (int i = 0; i < mVariants; i++)
+      mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
 	}
 
-	mFileName = new_str(aPluginInfo->fFileName);
+  mFileName = new_str(aPluginInfo->fFileName);
 
-	mLibrary = nsnull;
-	mEntryPoint = nsnull;
-	mFlags = NS_PLUGIN_FLAG_ENABLED;
+  mLibrary = nsnull;
+  mCanUnloadLibrary = PR_TRUE;
+  mEntryPoint = nsnull;
+  mFlags = NS_PLUGIN_FLAG_ENABLED;
 }
 
 
@@ -557,6 +648,7 @@ nsPluginTag::nsPluginTag(const char* aName,
     mMimeDescriptionArray(nsnull),
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
+    mCanUnloadLibrary(PR_TRUE),
     mEntryPoint(nsnull),
     mFlags(0)
 {
@@ -615,7 +707,9 @@ nsPluginTag::~nsPluginTag()
     mExtensionsArray = nsnull;
   }
 
-  if (nsnull != mLibrary) {
+  if ((nsnull != mLibrary) && mCanUnloadLibrary)
+  {
+    // before we unload check if we are allowed to, see bug #61388
     PR_UnloadLibrary(mLibrary);
     mLibrary = nsnull;
   }
@@ -1489,6 +1583,7 @@ nsPluginHostImpl::nsPluginHostImpl()
   NS_INIT_REFCNT();
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
+  mUnloadedLibraries = nsnull;
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
@@ -1509,6 +1604,8 @@ printf("killing plugin host\n");
     delete mPlugins;
     mPlugins = temp;
   }
+
+  CleanUnloadedLibraries();
 }
 
 NS_IMPL_ISUPPORTS5(nsPluginHostImpl,
@@ -1558,15 +1655,111 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
   return rv;
 }
 
+PRBool nsPluginHostImpl::IsRunningPlugin(nsPluginTag * plugin)
+{
+  if(!plugin)
+    return PR_FALSE;
+
+  // we can check for mLibrary to be non-zero and then querry nsIPluginInstancePeer
+  // in nsActivePluginList to see if plugin with matching mime type is not stopped
+  if(!plugin->mLibrary)
+    return PR_FALSE;
+
+  for(int i = 0; i < plugin->mVariants; i++)
+  {
+    nsActivePlugin * p = mActivePluginList.find(plugin->mMimeTypeArray[i]);
+    if(p && !p->mStopped)
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+// this will unload loaded but no longer needed libs which are
+// gathered in mUnloadedLibraries list, see bug #61388
+void nsPluginHostImpl::CleanUnloadedLibraries()
+{
+  if(!mUnloadedLibraries)
+    return;
+
+  while (nsnull != mUnloadedLibraries)
+  {
+    nsUnloadedLibrary *temp = mUnloadedLibraries->mNext;
+    delete mUnloadedLibraries;
+    mUnloadedLibraries = temp;
+  }
+}
+
 nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 {
   // XXX don't we want to nuke the old mPlugins right now?
       // we should. Otherwise LoadPlugins will add the same plugins to the list
   // XXX for new-style plugins, we should also call nsIComponentManager::AutoRegister()
+
+  // we are re-scanning plugins. New plugins may have been added, also some
+  // plugins may have been removed, so we should probably shut everything down
+  // but don't touch running (active and  not stopped) plugins
+
+  if(reloadPages)
+  {
+    // if we have currently running plugins we should set a flag not to
+    // unload them from memory, see bug #61388
+    // and form a list of libs to be unloaded later
+    for(nsPluginTag * p = mPlugins; p != nsnull; p = p->mNext)
+    {
+      if(IsRunningPlugin(p))
+      {
+        p->mCanUnloadLibrary = PR_FALSE;
+        nsUnloadedLibrary * unloadedLibrary = new nsUnloadedLibrary(p->mLibrary);
+        if(unloadedLibrary)
+        {
+          unloadedLibrary->mNext = mUnloadedLibraries;
+          mUnloadedLibraries = unloadedLibrary;
+        }
+      }
+    }
+
+    // then stop any running plugins
+    mActivePluginList.stopRunning();
+  }
+
+  // clean active plugin list
+  mActivePluginList.removeAllStopped();
+
+  // shutdown plugins and kill the list if there are no running plugins
+  nsPluginTag * prev = nsnull;
+  nsPluginTag * next = nsnull;
+
+  for(nsPluginTag * p = mPlugins; p != nsnull;)
+  {
+    next = p->mNext;
+
+    if(!IsRunningPlugin(p))
+    {
+      if(p == mPlugins)
+        mPlugins = next;
+      else
+        prev->mNext = next;
+
+      if(p->mEntryPoint)
+        p->mEntryPoint->Shutdown();
+
+      delete p;
+      p = next;
+      continue;
+    }
+
+    prev = p;
+    p = next;
+  }
+
+  // set flags
   mPluginsLoaded = PR_FALSE;
 
   // load them again
-  return LoadPlugins();
+  nsresult rv = LoadPlugins();
+
+  return rv;
 }
 
 #define NS_RETURN_UASTRING_SIZE 128
@@ -2345,16 +2538,13 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 }
 
 void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, 
-                                               nsIURI* aURL)
-{
+                                               nsIURI* aURL,
+                                               PRBool aDefaultPlugin)
 
+{
   // first, determine if the plugin wants to be cached
-  PRBool doCache = PR_TRUE;
-  aInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, 
-                      (void *) &doCache);
-  if (!doCache) {
-    return;
-  }
+     // Code moved to StopPluginInstance as we still need running
+     // plugins to be present in the 'active' list
   
   char* url;
 
@@ -2363,7 +2553,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
   	
   (void)aURL->GetSpec(&url);
 
-  nsActivePlugin * plugin = new nsActivePlugin(aInstance, url);
+  nsActivePlugin * plugin = new nsActivePlugin(aInstance, url, aDefaultPlugin);
 
   if(plugin == nsnull)
     return;
@@ -2578,7 +2768,7 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   NS_RELEASE(pi);
 
   // we should addref here
-  AddInstanceToActiveList(instance, aURL);
+  AddInstanceToActiveList(instance, aURL, PR_TRUE);
 
   //release what was addreffed in Create(Plugin)Instance
   NS_RELEASE(instance);
@@ -2872,15 +3062,19 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	if(!aMimeType)
 		return NS_ERROR_ILLEGAL_VALUE;
 
+  // unload any libs that can remain after plugins.refresh(1), see #61388
+  CleanUnloadedLibraries();
+
 	// If plugins haven't been scanned yet, do so now
   LoadPlugins();
 
 	nsPluginTag* pluginTag;
 	if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
 	{
-		#ifdef NS_DEBUG
-			printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
-		#endif
+#ifdef NS_DEBUG
+    if(aMimeType && pluginTag->mFileName)
+      printf("For %s found plugin %s\n", aMimeType, pluginTag->mFileName);
+#endif
 
 		if (nsnull == pluginTag->mLibrary)		// if we haven't done this yet
 		{
@@ -3004,8 +3198,7 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir, 
                                                 nsIComponentManager * compManager, 
                                                 nsIFile * layoutPath,
-                                                PRBool checkForUnwantedPlugins,
-                                                PRBool checkForDups)
+                                                PRBool checkForUnwantedPlugins)
 {
   for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) 
   {
@@ -3037,13 +3230,16 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
 
       PRBool bAddIt = PR_TRUE;
 
+      // check if there are specific plugins we don't want
       if(checkForUnwantedPlugins)
       {
         if(isUnwantedPlugin(pluginTag))
           bAddIt = PR_FALSE;
       }
 
-      if(bAddIt && checkForDups)
+      // check if we already have this plugin in the list which
+      // is possible if we do refresh
+      if(bAddIt)
       {
         for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
         {
@@ -3055,6 +3251,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
         }
       }
 
+      // so if we still want it -- do it
       if(bAddIt)
       {
         pluginTag->mNext = mPlugins;
@@ -3118,8 +3315,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     ScanPluginsDirectory(pluginsDirMacOld, 
                          compManager, 
                          lpath, 
-                         PR_FALSE, // don't check for specific plugins
-                         PR_TRUE); // check for dups
+                         PR_FALSE); // don't check for specific plugins
   }
 #endif // XP_MAC
 
@@ -3159,8 +3355,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     ScanPluginsDirectory(pluginsDir4x, 
                          compManager, 
                          lpath, 
-                         PR_TRUE,  // check for specific plugins
-                         PR_TRUE); // check for dups
+                         PR_TRUE);  // check for specific plugins
   }
 #endif // !XP_WIN
 
@@ -3364,10 +3559,28 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
     nsRegistryKey key;
     node->GetKey(&key);
 
-    nsPluginTag* tag;
+    nsPluginTag* tag = nsnull;
     rv = LoadXPCOMPlugin(aComponentManager, registry, cid, key, &tag);
     if (NS_FAILED(rv))
       continue;
+
+    // skip it if we already have it
+    PRBool bAddIt = PR_TRUE;
+    for(nsPluginTag* existingtag = mPlugins; existingtag != nsnull; existingtag = existingtag->mNext)
+    {
+      if(areTheSameFileNames(tag->mFileName, existingtag->mFileName))
+      {
+        bAddIt = PR_FALSE;
+        break;
+      }
+    }
+
+    if(!bAddIt)
+    {
+      if(tag)
+        delete tag;
+      continue;
+    }
 
     tag->mNext = mPlugins;
     mPlugins = tag;
@@ -3655,13 +3868,23 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
   if(plugin != nsnull)
   {
-    if(mActivePluginList.getStoppedCount() >= MAX_NUMBER_OF_STOPPED_PLUGINS)
+    // if the plugin does not want to be 'cached' just remove it
+    PRBool doCache = PR_TRUE;
+    aInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+    if (!doCache)
     {
-      nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
-      if(oldest != nsnull)
-        mActivePluginList.remove(oldest);
+      mActivePluginList.remove(plugin);
     }
-    plugin->setStopped(PR_TRUE);
+    else
+    {
+      if(mActivePluginList.getStoppedCount() >= MAX_NUMBER_OF_STOPPED_PLUGINS)
+      {
+        nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
+        if(oldest != nsnull)
+          mActivePluginList.remove(oldest);
+      }
+      plugin->setStopped(PR_TRUE);
+    }
   }
 
   return NS_OK;
@@ -3671,36 +3894,36 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
 
 nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
                                                   nsIPluginInstanceOwner *aOwner,
-												  nsIPluginInstance* aInstance)
+                                                  nsIPluginInstance* aInstance)
 {
-	nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
+  nsPluginStreamListenerPeer  *listener = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
   if (listener == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
 
-	if (!aURL)
-		return NS_OK;
+  if (!aURL)
+    return NS_OK;
 
-	// if we have an instance, everything has been set up
-	// if we only have an owner, then we need to pass it in
-	// so the listener can set up the instance later after
-	// we've determined the mimetype of the stream
-	if(aInstance != nsnull)
-		rv = listener->InitializeEmbeded(aURL, aInstance);
-	else if(aOwner != nsnull)
-		rv = listener->InitializeEmbeded(aURL, nsnull, aOwner, (nsIPluginHost *)this);
-	else
-		rv = NS_ERROR_ILLEGAL_VALUE;
+  // if we have an instance, everything has been set up
+  // if we only have an owner, then we need to pass it in
+  // so the listener can set up the instance later after
+  // we've determined the mimetype of the stream
+  if(aInstance != nsnull)
+    rv = listener->InitializeEmbeded(aURL, aInstance);
+  else if(aOwner != nsnull)
+    rv = listener->InitializeEmbeded(aURL, nsnull, aOwner, (nsIPluginHost *)this);
+  else
+    rv = NS_ERROR_ILLEGAL_VALUE;
 
-	if (NS_OK == rv) {
-      // XXX: Null LoadGroup?
-      rv = NS_OpenURI(listener, nsnull, aURL, nsnull);
-	}
+  if (NS_OK == rv) {
+    // XXX: Null LoadGroup?
+    rv = NS_OpenURI(listener, nsnull, aURL, nsnull);
+  }
 
-	//NS_RELEASE(aURL);
+  //NS_RELEASE(aURL);
 
-	return rv;
+  return rv;
 }
 
 /* Called by InstantiateFullPagePlugin() */

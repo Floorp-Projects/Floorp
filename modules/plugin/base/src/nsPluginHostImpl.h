@@ -68,6 +68,7 @@ public:
   char          **mMimeDescriptionArray;
   char          **mExtensionsArray;
   PRLibrary     *mLibrary;
+  PRBool        mCanUnloadLibrary;
   nsIPlugin     *mEntryPoint;
   PRUint32      mFlags;
   char          *mFileName;
@@ -81,8 +82,9 @@ struct nsActivePlugin
   nsIPluginInstance*     mInstance;
   PRBool                 mStopped;
   PRTime                 mllStopTime;
+  PRBool                 mDefaultPlugin;
 
-  nsActivePlugin(nsIPluginInstance* aInstance, char * url);
+  nsActivePlugin(nsIPluginInstance* aInstance, char * url, PRBool aDefaultPlugin);
   ~nsActivePlugin();
 
   void setStopped(PRBool stopped);
@@ -93,9 +95,9 @@ struct nsActivePlugin
 class nsActivePluginList
 {
 public:
-  nsActivePlugin * first;
-  nsActivePlugin * last;
-  PRInt32 count;
+  nsActivePlugin * mFirst;
+  nsActivePlugin * mLast;
+  PRInt32 mCount;
 
   nsActivePluginList();
   ~nsActivePluginList();
@@ -104,9 +106,29 @@ public:
   PRBool add(nsActivePlugin * plugin);
   PRBool remove(nsActivePlugin * plugin);
   nsActivePlugin * find(nsIPluginInstance* instance);
+  nsActivePlugin * find(char * mimetype);
   nsActivePlugin * findStopped(char * url);
   PRUint32 getStoppedCount();
   nsActivePlugin * findOldestStopped();
+  void removeAllStopped();
+  void stopRunning();
+};
+
+// The purpose of this list is to keep track of unloaded plugin libs
+// we need to keep some libs in memory when we destroy mPlugins list
+// during refresh with reload if the plugin is currently running
+// on the page. They should be unloaded later, see bug #61388
+// The list is only created during plugins.refresh(1) and should
+// go away when we hit a page with a plugin again. It should not
+// exist under any other circumstances
+class nsUnloadedLibrary
+{
+public:
+  nsUnloadedLibrary *mNext;
+  PRLibrary *mLibrary;
+
+  nsUnloadedLibrary(PRLibrary * aLibrary);
+  ~nsUnloadedLibrary();
 };
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
@@ -352,7 +374,7 @@ private:
   SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   void
-  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL);
+  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL, PRBool aDefaultPlugin = PR_FALSE);
 
   nsresult 
   RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
@@ -361,8 +383,10 @@ private:
   ScanPluginsDirectory(nsPluginsDir& pluginsDir, 
                        nsIComponentManager * compManager, 
                        nsIFile * layoutPath,
-                       PRBool checkForUnwantedPlugins = PR_FALSE, 
-                       PRBool checkForDups = PR_FALSE);
+                       PRBool checkForUnwantedPlugins = PR_FALSE);
+
+  PRBool IsRunningPlugin(nsPluginTag * plugin);
+  void CleanUnloadedLibraries();
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;
@@ -370,6 +394,7 @@ private:
   PRBool      mDontShowBadPluginMessage;
 
   nsActivePluginList mActivePluginList;
+  nsUnloadedLibrary *mUnloadedLibraries;
 };
 
 #endif
