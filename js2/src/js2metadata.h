@@ -33,6 +33,7 @@
 */
 
 #include "jsapi.h"
+#include "jsstr.h"
 
 #include "world.h"
 #include "utilities.h"
@@ -45,6 +46,8 @@ namespace MetaData {
 
 
 // forward definitions:
+class ExecutionState;
+class JS2Metadata;
 class JS2Class;
 class StaticBinding;
 class Environment;
@@ -54,6 +57,9 @@ typedef jsval js2val;
 typedef void (Invokable)();
 typedef Invokable Callor;
 typedef Invokable Constructor;
+
+
+enum Phase { CompilePhase, RunPhase };
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -95,12 +101,17 @@ public:
     bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (id == b.id); }
 
     Namespace *nameSpace;    // The namespace qualifier
-    const StringAtom &id;          // The name
+    const StringAtom &id;    // The name
 };
 
 // MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
-typedef std::vector<QualifiedName *> Multiname;
-typedef Multiname::iterator MultinameIterator;
+typedef std::vector<QualifiedName *> QualifierList;
+typedef QualifierList::iterator QualifierListIterator;
+class Multiname {
+public:
+    QualifierList qList;
+    StringAtom &name;
+};
 
 
 class Object_Uninit_Future {
@@ -364,15 +375,26 @@ public:
 class FunctionFrame : public Frame {
 public:
     Plurality plurality;
-    JS2Object *thisObject;                  // The value of this; none if this function doesn't define this;
-                // XXX                      // inaccessible if this function defines this but the value is not 
-                                            // available because this function hasn't been called yet
-    bool prototype;                         // true if this function is not an instance method but defines this anyway
+    jsval thisObject;               // The value of this; none if this function doesn't define this;
+                                    // inaccessible if this function defines this but the value is not 
+                                    // available because this function hasn't been called yet.
+
+                                    // Here we use NULL as no this and VOID as inaccessible
+
+    bool prototype;                 // true if this function is not an instance method but defines this anyway
 };
 
 class BlockFrame : public Frame {
 public:
     Plurality plurality;
+};
+
+
+class LookupKind {
+public:
+    LookupKind(bool isLexical, jsval thisObject) : isLexical(isLexical), thisObject(thisObject) { }
+    bool isLexical;         // if isLexical, use the 'this' below. Otherwise it's a propertyLookup
+    jsval thisObject;
 };
 
 // Environments contain the bindings that are visible from a given point in the source code. An ENVIRONMENT is 
@@ -386,6 +408,13 @@ public:
     JS2Class *getEnclosingClass();
     Frame *getRegionalFrame();
     Frame *getTopFrame()            { return firstFrame; }
+
+    jsval findThis(bool allowPrototypeThis);
+    jsval lexicalRead(ExecutionState *eState, Multiname *multiname, Phase phase);
+
+    bool readProperty(ExecutionState *eState, jsval container, Multiname *multinameVal, LookupKind *lookupKind, Phase phase, jsval *rval);
+
+
 private:
     Frame *firstFrame;
 };
@@ -435,8 +464,6 @@ public:
 class JS2Metadata {
 public:
     
-    enum Phase { CompilePhase, RunPhase };
-
     JS2Metadata(World &world);
 
     void setCurrentParser(Parser *parser) { mParser = parser; }
@@ -454,20 +481,45 @@ public:
     jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
     jsval EvalStmt(Environment *env, Phase phase, StmtNode *p);
 
+
+    JS2Class *objectType(jsval obj);
+
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);
 
 
     void initializeMonkey();
-    jsval execute(String *str);
+    jsval execute(String *str, Environment *env, JS2Metadata *meta, size_t pos);
 
 
     // The one and only 'public' namespace
     Namespace *publicNamespace;      // XXX is this the right place for this ???
 
+    // The base classes:
+    JS2Class *undefinedClass;
+    JS2Class *nullClass;
+    JS2Class *booleanClass;
+    JS2Class *numberClass;
+    JS2Class *characterClass;
+    JS2Class *stringClass;
+
     
     Parser *mParser;                // used for error reporting
 
+};
+
+// Captures some metadata-related info. that gets passed back into
+//       js2metadata routines from executing JS code
+// - it's hidden in the Monkey context private
+class ExecutionState {
+public:        
+    ExecutionState(JSContext *cx, Environment *env, JS2Metadata *meta, size_t pos) : cx(cx), env(env), meta(meta), pos(pos) { }
+    virtual ~ExecutionState()   { }
+
+    JSContext *cx;          // the SpiderMonkey context
+    Environment *env;       // the frame array, used for lookups
+    JS2Metadata *meta;      // base class for error reporting
+    size_t pos;             // position from node being executed (vaguely)
 };
 
 

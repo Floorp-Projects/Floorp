@@ -143,7 +143,7 @@ static int readEvalPrint(FILE *in)
                 MetaData::Context cxt;
 
                 metadata->ValidateStmtList(&cxt, &env, parsedStatements);
-                metadata->EvalStmtList(&env, MetaData::JS2Metadata::RunPhase, parsedStatements);
+                metadata->EvalStmtList(&env, MetaData::RunPhase, parsedStatements);
 
             }
             clear(buffer);

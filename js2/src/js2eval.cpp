@@ -76,60 +76,145 @@ namespace MetaData {
                                        JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
                                        JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
 
-    JSClass gMonkeyLexicalReferenceClass = { "LexicalReference", 0, JS_PropertyStub, JS_PropertyStub,
-                                       JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
-                                       JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
+    JSClass gMonkeyMultinameClass = 
+            { "Multiname", 0, JS_PropertyStub, JS_PropertyStub,
+               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
 
-    static JSBool
-    LexicalReference_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-    {
-        ASSERT(argc == 3);
-        ASSERT(JSVAL_IS_STRING(argv[0]));
-        ASSERT(JSVAL_IS_BOOLEAN(argv[1]));
-        ASSERT(JSVAL_IS_NULL(argv[2]) || JSVAL_IS_OBJECT(argv[2]));
-        
-        JSString *str = JSVAL_TO_STRING(argv[0]);
-        if (!str)
-            return JS_FALSE;
-        
-        if (!JS_SetProperty(cx, obj, "name", argv[0]))
-            return JS_FALSE;
+    // forward ref.
+    static void LexicalReference_finalize(JSContext *cx, JSObject *obj);
 
+    JSClass gMonkeyLexicalReferenceClass =
+            { "LexicalReference", JSCLASS_HAS_PRIVATE, 
+               JS_PropertyStub, JS_PropertyStub,
+               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub, LexicalReference_finalize };
 
-        return JS_TRUE;
-    }
-
-    static JSBool
-    readReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-    {
-        // for this reference, use the
-        return JS_TRUE;
-    }
-
-    static JSBool
-    writeReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-    {
-        return JS_TRUE;
-    }
-
-    JSFunctionSpec jsfLexicalReference [] =
-    {
-        { "readReference",    readReference,    0, 0, 0 },
-        { "writeReference",   writeReference,   0, 0, 0 },
-	{ 0 }
-    };
-
+    // member functions at global scope
     JSFunctionSpec jsfGlobal [] =
     {
 	{ 0 }
     };
 
+    // The Monkey error handler, simply throws back to JS2MetaData
     void MonkeyError(JSContext *cx, const char *message, JSErrorReport *report)
     {
         throw message;
     }
 
-    void JS2Metadata::initializeMonkey( )
+
+
+    /******************************************************************************
+     LexicalReference
+    ******************************************************************************/
+
+    // finish constructing a LexicalReference
+    static JSBool
+    LexicalReference_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+
+        ASSERT(argc == 2);
+        ASSERT(JSVAL_IS_BOOLEAN(argv[0]));  // the 'strict' flag (XXX what's that for?)
+        ASSERT(JSVAL_IS_OBJECT(argv[1]));   // the multiname object
+        
+        JSObject *multiNameObj = JSVAL_TO_OBJECT(argv[1]);
+        ASSERT(OBJ_GET_CLASS(cx, multiNameObj) == &gMonkeyMultinameClass); 
+        Multiname *mName = static_cast<Multiname *>(JS_GetPrivate(cx, multiNameObj));
+
+        if (!JS_SetPrivate(cx, obj, new LexicalReference(mName, eState->env, (JSVAL_TO_BOOLEAN(argv[0])) == JS_TRUE) ))
+            return JS_FALSE;
+
+        return JS_TRUE;
+    }
+
+    // finalize a LexicalReference - called by Monkey gc
+    static void
+    LexicalReference_finalize(JSContext *cx, JSObject *obj)
+    {
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyLexicalReferenceClass);
+        LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
+        if (lRef) delete lRef;
+    }
+
+    // Given a LexicalReference, read it's contents
+    static JSBool
+    readLexicalReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyLexicalReferenceClass);
+        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+        LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
+
+        eState->env->lexicalRead(eState, lRef->variableMultiname, RunPhase);
+        return JS_TRUE;
+    }
+
+    // Write a value into a LexicalReference
+    static JSBool
+    writeLexicalReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyLexicalReferenceClass);
+        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+        LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
+
+
+        return JS_TRUE;
+    }
+
+    // member functions in a LexicalReference
+    JSFunctionSpec jsfLexicalReference [] =
+    {
+        { "readReference",    readLexicalReference,    0, 0, 0 },
+        { "writeReference",   writeLexicalReference,   0, 0, 0 },
+	{ 0 }
+    };
+
+
+
+    /******************************************************************************
+     Multiname
+    ******************************************************************************/
+
+    // finish constructing a Multiname
+    static JSBool
+    Multiname_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        ASSERT(argc >= 1);      // could be just the base name
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyMultinameClass);
+
+        ASSERT(JSVAL_IS_STRING(argv[0]));
+
+        // XXX use reserved slots instead
+        if (!JS_SetProperty(cx, obj, "name", &argv[0]))
+            return JS_FALSE;
+
+        jsval qualifierVal = JSVAL_NULL;
+        if (argc > 1) {
+            JSObject *qualArray = JS_NewArrayObject(cx, argc - 1, &argv[1]);
+            if (!qualArray)
+                return JS_FALSE;
+            qualifierVal = OBJECT_TO_JSVAL(qualArray);
+        }
+        if (!JS_SetProperty(cx, obj, "qualifiers", &qualifierVal))
+            return JS_FALSE;
+
+        return JS_TRUE;
+    }
+
+    // member functions in a Multiname
+    JSFunctionSpec jsfMultiname [] =
+    {
+	{ 0 }
+    };
+
+
+
+
+
+
+
+    // Initialize the SpiderMonkey engine
+    void JS2Metadata::initializeMonkey()
     {
         gMonkeyRuntime = JS_NewRuntime( 1000000L );
         if (!gMonkeyRuntime)
@@ -138,6 +223,7 @@ namespace MetaData {
         gMonkeyContext = JS_NewContext( gMonkeyRuntime, 8192 );
         if (!gMonkeyContext)
             throw "Monkey start failure";
+
 
         gMonkeyGlobalObject = JS_NewObject(gMonkeyContext, &gMonkeyGlobalClass, NULL, NULL);
         if (!gMonkeyGlobalObject)
@@ -149,17 +235,25 @@ namespace MetaData {
 
         JS_InitClass(gMonkeyContext, gMonkeyGlobalObject, NULL,
                      &gMonkeyLexicalReferenceClass, LexicalReference_constructor, 0,
-                     NULL, jsfLexicalReference,
-                     NULL, NULL);
+                     NULL, jsfLexicalReference, NULL, NULL);
+
+        JS_InitClass(gMonkeyContext, gMonkeyGlobalObject, NULL,
+                     &gMonkeyMultinameClass, Multiname_constructor, 0,
+                     NULL, jsfMultiname, NULL, NULL);
 
         JS_DefineFunctions(gMonkeyContext, gMonkeyGlobalObject, jsfGlobal);
 
     }
 
-    
-    jsval JS2Metadata::execute(String *str)
+    // Execute a JS string against the given environment
+    // Errors are thrown back to C++ by the error handler
+    jsval JS2Metadata::execute(String *str, Environment *env, JS2Metadata *meta, size_t pos)
     {
         jsval retval;
+
+        ExecutionState eState(gMonkeyContext, env, meta, pos);
+        JS_SetContextPrivate(gMonkeyContext, &eState);
+
         JS_EvaluateUCScript(gMonkeyContext, gMonkeyGlobalObject, str->c_str(), str->length(), "file", 1, &retval);
         
         return retval;

@@ -440,7 +440,7 @@ namespace MetaData {
         String s;
         EvalExprNode(env, phase, p, s);
         try {
-            return execute(&s);
+            return execute(&s, env, this, p->pos);
         }
         catch (const char *err) {
             reportError(Exception::internalError, err, p->pos);
@@ -477,7 +477,7 @@ namespace MetaData {
                         s += r + ")";
                 }
                 else
-                    ASSERT(false);  // shouldn't this have been checked by validate?
+                    ASSERT(false);    // not an lvalue, shouldn't this have been checked by validate?
             }
             break;
         case ExprNode::add:
@@ -497,6 +497,8 @@ namespace MetaData {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
                 // rather than inserting "(r = , a = readRef(), r.writeRef(a + 1), a)" with
                 // all the attendant performance overhead and temp. handling issues.
+                if (!EvalExprNode(env, phase, u->op, s))
+                    ASSERT(false);  // not an lvalue
                 s += ".postIncrement()";
                 returningRef = true;
             }
@@ -510,24 +512,13 @@ namespace MetaData {
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                s += "new LexicalReference(\"" + i->name + "\", ";
-                s += (i->cxt->strict) ? "true, " : "false, ";
-                NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
-                if (nli != end) {
-                    s += "new Multiname(";
-                    while (true) {
-                        s += (*nli)->name;
-                        nli++;
-                        if (nli != end)
-                            s += ", ";
-                        else
-                            break;
-                    }
-                    s += ")";
+                s += "new LexicalReference(" + (i->cxt->strict) ? "true, " : "false, ";
+                s += "new Multiname(\"" + i->name + "\"";
+                for (NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
+                        (nli != end); nli++) {
+                    s += ", " + (*nli)->name;
                 }
-                else
-                    s += "null";
-                s += ")";
+                s += "))";
                 returningRef = true;
             }
             break;
@@ -576,6 +567,48 @@ namespace MetaData {
             pf = prev;
         return pf;
     }
+
+    // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
+    // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
+    // false, allow this to be defined only by an instance member of a class.
+    jsval Environment::findThis(bool allowPrototypeThis)
+    {
+        Frame *pf = firstFrame;
+        while (pf) {
+            if ((pf->kind == Frame::Function)
+                    && !JSVAL_IS_NULL(checked_cast<FunctionFrame *>(pf)->thisObject))
+                if (allowPrototypeThis || !checked_cast<FunctionFrame *>(pf)->prototype)
+                    return checked_cast<FunctionFrame *>(pf)->thisObject;
+            pf = pf->nextFrame;
+        }
+        return JSVAL_VOID;
+    }
+
+    // Slightly varies from spec. - the multiname is actually the list of
+    // qualifiers to apply to the name
+    jsval Environment::lexicalRead(ExecutionState *eState, Multiname *multiname, Phase phase)
+    {
+        LookupKind lookup(true, findThis(false));
+        Frame *pf = firstFrame;
+        while (pf) {
+            jsval rval;
+            if (readProperty(eState, pf, multiname, &lookup, phase, &rval))
+                return rval;
+
+            pf = pf->nextFrame;
+        }
+        eState->meta->reportError(Exception::referenceError, "{0} is undefined", eState->pos, multiname->name);
+        return JSVAL_VOID;
+    }
+
+
+
+    bool Environment::readProperty(ExecutionState *eState, jsval container, Multiname *multinameVal, LookupKind *lookupKind, Phase phase, jsval *rval)
+    {
+    }
+
+
+
 
 /************************************************************************************
  *
@@ -649,6 +682,34 @@ namespace MetaData {
         publicNamespace(new Namespace(world.identifiers["public"]))
     {
         initializeMonkey();
+    }
+
+    // objectType(o) returns an OBJECT o's most specific type.
+    JS2Class *JS2Metadata::objectType(jsval obj)
+    {
+        if (JSVAL_IS_VOID(obj))
+            return undefinedClass;
+        if (JSVAL_IS_NULL(obj))
+            return nullClass;
+        if (JSVAL_IS_BOOLEAN(obj))
+            return booleanClass;
+        if (JSVAL_IS_NUMBER(obj))
+            return numberClass;
+        if (JSVAL_IS_STRING(obj)) {
+            if (JS_GetStringLength(JSVAL_TO_STRING(obj)) == 1)
+                return characterClass;
+            else 
+                return stringClass;
+        }
+/*
+            NAMESPACE do return namespaceClass;
+            COMPOUNDATTRIBUTE do return attributeClass;
+            CLASS do return classClass;
+            METHODCLOSURE do return functionClass;
+            PROTOTYPE do return prototypeClass;
+            INSTANCE do return resolveAlias(o).type;
+            PACKAGE or GLOBAL do return packageClass
+*/
     }
 
 
