@@ -1909,11 +1909,6 @@ unsigned short * AllocateStringCopy<unsigned short, unsigned short>(basic_nsARea
 ToNewUnicode(basic_nsAReadableString<unsigned short> const &)
 nsHTMLValue::SetStringValue(basic_nsAReadableString<unsigned short> const &, nsHTMLUnit)
 
-<nsImageGTK>
-__builtin_new
-__builtin_vec_new
-nsImageGTK::Init(int, int, int, nsMaskRequirements)
-
 <nsMemCache>
 PR_Malloc
 PL_HashTableFinalize(PLHashTable *)
@@ -2055,6 +2050,10 @@ nsSupportsWStringImpl::SetDataWithLength(unsigned int, unsigned short const *)
 nsSupportsWStringImpl::SetData(unsigned short const *)
 nsPresState::SetStateProperty(basic_nsAReadableString<unsigned short> const &, basic_nsAReadableString<unsigned short> const &)
 
+#----------------------------------------------------------------------
+# Imagelib Stuff
+#
+
 <ImageRequestImpl>
 __builtin_new
 ImageRequestImpl::AddObserver(nsIImageRequestObserver *)
@@ -2068,58 +2067,65 @@ ImageRequestImpl::Init(void *, char const *, nsIImageRequestObserver *, unsigned
 __builtin_new
 ImageNetContextImpl::GetURL(ilIURL *, ImgCachePolicy, ilINetReader *, int)
 
-<imglib-unclassified>
+<imglib-gifdecode>
 PR_Calloc
 il_gif_write(il_container_struct *, unsigned char const *, int)
 
-<imglib-unclassified>
+<imglib-gifdecode>
 PR_Malloc
 il_gif_write(il_container_struct *, unsigned char const *, int)
 
-<imglib-unclassified>
-PR_Calloc
-IL_GetImage
-
-<imglib-unclassified>
+<gif_struct>
 PR_Calloc
 il_gif_init(il_container_struct *)
 
-<imglib-unclassified>
+<IL_ImageReq>
+PR_Calloc
+IL_GetImage
+
+<imglib-container-stuff>
 PR_Calloc
 il_get_container(_IL_GroupContext *, ImgCachePolicy, char const *, _NI_IRGB *, IL_DitherMode, int, int, int)
 
-<imglib-unclassified>
+<IL_ColorSpace>
 PR_Calloc
 IL_CreateTrueColorSpace
 
-<imglib-unclassified>
+<IL_Pixmap>
 PR_Calloc
 il_size(il_container_struct *)
 ImgDCallbk::ImgDCBImageSize(void)
 
-<imglib-unclassified>
-PR_Calloc
-ImgDCallbk::CreateInstance(nsID const &, il_container_struct *, nsID const &, void **)
-
-<imglib-unclassified>
+<IL_ColorSpace>
 PR_Calloc
 IL_CreateGreyScaleColorSpace
 
-<imglib-unclassified>
+<imglib-gifcompat>
 PR_Malloc
 il_BACat(char **, unsigned int, char const *, unsigned int)
 
-<imglib-unclassified>
+<imglib-gifcompat>
 PR_Realloc
 il_BACat(char **, unsigned int, char const *, unsigned int)
 
-<imglib-unclassified>
-PR_Malloc
-il_group_notify(_IL_GroupContext *, long)
-
-<imglib-unclassified>
+<ImageConsumer>
 PR_Malloc
 ImageConsumer::OnStartRequest(nsIChannel *, nsISupports *)
+
+# These are really called from `static' routines in ilclient.cpp,
+# *not* ImgDCallbk::CreateInstance()
+<imglib-list>
+PR_Calloc
+ImgDCallbk::CreateInstance(nsID const &, il_container_struct *, nsID const &, void **)
+
+#----------------------------------------------------------------------
+
+<nsImageGTK>
+__builtin_new
+__builtin_vec_new
+nsImageGTK::Init(int, int, int, nsMaskRequirements)
+
+#----------------------------------------------------------------------
 
 <nsLayoutHistoryState>
 PR_Malloc
