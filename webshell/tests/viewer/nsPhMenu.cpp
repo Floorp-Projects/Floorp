@@ -193,6 +193,16 @@ struct MenuList_s DemoList[18] =
 //#ifdef DEBUG 
   menu = CreateTopLevelMenu(menubar, "Debug");
   CreateMenuItem(menu, "Visual Debugging", VIEWER_VISUAL_DEBUGGING);
+  CreateMenuItem(menu, NULL, 0);
+  submenu=CreateSubMenu(menu, "Event Debugging");
+  CreateMenuItem(submenu, "Toggle Paint Flashing", VIEWER_TOGGLE_PAINT_FLASHING);
+  CreateMenuItem(submenu, "Toggle Paint Dumpinging", VIEWER_TOGGLE_PAINT_DUMPING);
+  CreateMenuItem(submenu, "Toggle Invalidate Dumping", VIEWER_TOGGLE_INVALIDATE_DUMPING);
+  CreateMenuItem(submenu, "Toggle Event Dumping", VIEWER_TOGGLE_EVENT_DUMPING);
+  CreateMenuItem(submenu, NULL, 0);
+  CreateMenuItem(submenu, "Toggle Motion Event Dumping", VIEWER_TOGGLE_MOTION_EVENT_DUMPING);
+  CreateMenuItem(submenu, "Toggle Crossing Event Dumpinging", VIEWER_TOGGLE_CROSSING_EVENT_DUMPING);
+  CreateMenuItem(menu, NULL, 0);
   CreateMenuItem(menu, "Reflow Test", VIEWER_REFLOW_TEST);
   CreateMenuItem(menu, NULL, 0);
   CreateMenuItem(menu, "Dump Content", VIEWER_DUMP_CONTENT);
