@@ -82,7 +82,8 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
     : mNotifyData(notifyData),
       mStreamStarted(PR_FALSE),
       mStreamCleanedUp(PR_FALSE),
-      mStreamInfo(nsnull)
+      mStreamInfo(nsnull),
+      mCallNotify(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mInst = (ns4xPluginInstance*) inst;
@@ -100,12 +101,13 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
 ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
 {
   // remove itself from the instance stream list
-  if(mInst) {
+  ns4xPluginInstance *inst = mInst;
+  if(inst) {
     nsInstanceStream * prev = nsnull;
-    for(nsInstanceStream *is = mInst->mStreams; is != nsnull; is = is->mNext) {
+    for(nsInstanceStream *is = inst->mStreams; is != nsnull; is = is->mNext) {
       if(is->mPluginStreamListener == this) {
         if(prev == nsnull)
-          mInst->mStreams = is->mNext;
+          inst->mStreams = is->mNext;
         else
           prev->mNext = is->mNext;
 
@@ -115,7 +117,13 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
       prev = is;
     }
   }
-  NS_IF_RELEASE(mInst);
+
+  // For those cases when NewStream is never called, we still may need to fire a
+  // notification callback. Return network error as fallback reason because for other
+  // cases, notify should have already been called for other reasons elsewhere.
+  CallURLNotify(NPRES_NETWORK_ERR);
+
+  NS_IF_RELEASE(inst);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -155,22 +163,6 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
       rv = NS_OK;
   }
 
-  // check to see if we have a callback
-  if (callbacks->urlnotify && mNotifyData) {
-    PRLibrary* lib = nsnull;
-    lib = mInst->fLibrary;
-
-    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
-                                                npp,
-                                                mNPStream.url,
-                                                nsPluginReason_Done,
-                                                mNotifyData), lib);
-
-    NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-    ("NPP URLNotify called: this=%p, npp=%p, notify=%p, url=%s\n",
-    this, npp, mNotifyData, mNPStream.url));
-  }
-
   // lets get rid of the buffer if we made one globally
   if (mStreamBuffer)
   {
@@ -180,7 +172,48 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 
   mStreamCleanedUp = PR_TRUE;
   mStreamStarted   = PR_FALSE;
+
+  // fire notification back to plugin, just like before
+  CallURLNotify(reason);
+
   return rv;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+void ns4xPluginStreamListener::CallURLNotify(NPReason reason)
+{
+  if(!mCallNotify || !mInst || !mInst->IsStarted())
+    return;
+
+  mCallNotify = PR_FALSE; // only do this ONCE and prevent recursion
+
+  const NPPluginFuncs *callbacks = nsnull;
+  mInst->GetCallbacks(&callbacks);
+  if(!callbacks)
+    return;
+
+  NPP npp;
+  mInst->GetNPP(&npp);
+
+  if (callbacks->urlnotify) {
+    PRLibrary* lib = mInst->fLibrary;
+
+    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
+                                                npp,
+                                                mNPStream.url,
+                                                reason,
+                                                mNotifyData), lib);
+
+    NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+    ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
+    this, npp, mNotifyData, reason, mNPStream.url));
+  }
+
+  // Let's not leak this stream listener. Release the reference to the stream listener 
+  // added for the notify callback in NewNotifyStream. 
+  // Note: This may destroy us if we are not being destroyed already.
+  NS_RELEASE_THIS();
 }
 
 
@@ -762,13 +795,17 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   // clean up open streams
   for(nsInstanceStream *is = mStreams; is != nsnull;) {
-    if(is->mPluginStreamListener)
-      is->mPluginStreamListener->CleanUpStream(NPRES_USER_BREAK);
+    ns4xPluginStreamListener * listener = is->mPluginStreamListener;
 
     nsInstanceStream *next = is->mNext;
     delete is;
     is = next;
     mStreams = is;
+
+    // Clean up our stream after removing it from the list because 
+    // it may be released and destroyed at this point.
+    if(listener)
+      listener->CleanUpStream(NPRES_USER_BREAK);
   }
 
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary);
@@ -1039,7 +1076,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP SetWindow called: this=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d], return=%d\n",
-    this, &fNPP, window->x, window->y, window->width, window->height,
+    this, window->x, window->y, window->width, window->height,
     window->clipRect.top, window->clipRect.bottom, window->clipRect.left, window->clipRect.right, error));
       
     // XXX In the old code, we'd just ignore any errors coming
@@ -1052,29 +1089,30 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
 ////////////////////////////////////////////////////////////////////////
 /* NOTE: the caller must free the stream listener */
+// Create a normal stream, one without a urlnotify callback
 NS_IMETHODIMP ns4xPluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
-  return NewNotifyStream(listener, nsnull);
+  return NewNotifyStream(listener, nsnull, PR_FALSE);
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData)
+// Create a stream that will notify when complete
+nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener, 
+                                             void* notifyData,
+                                             PRBool aCallNotify)
 {
   ns4xPluginStreamListener* stream = new ns4xPluginStreamListener(this, notifyData);
-
-  if(stream == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
 
   // add it to the list
   nsInstanceStream * is = new nsInstanceStream();
-
-  if(!is)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(is, NS_ERROR_OUT_OF_MEMORY);
 
   is->mNext = mStreams;
   is->mPluginStreamListener = stream;
   mStreams = is;
+  stream->SetCallNotify(aCallNotify);  // set flag in stream to call URLNotify
 
   NS_ADDREF(stream);  // Stabilize
     

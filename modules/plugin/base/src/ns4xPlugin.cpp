@@ -65,6 +65,12 @@
 #include "gtkxtbin.h"
 #endif
 
+// POST/GET stream type
+enum eNPPStreamTypeInternal {
+  eNPPStreamTypeInternal_Get,
+  eNPPStreamTypeInternal_Post
+};
+
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -656,6 +662,52 @@ ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
   }
 }
 
+// Create a new NPP GET or POST url stream that may have a notify callback
+NPError MakeNew4xStreamInternal (NPP npp, 
+                                 const char *relativeURL, 
+                                 const char *target, 
+                                 eNPPStreamTypeInternal type,  /* GET or POST */
+                                 PRBool bDoNotify = PR_FALSE,
+                                 void *notifyData = nsnull,
+                                 uint32 len = 0, 
+                                 const char *buf = nsnull, 
+                                 NPBool file = PR_FALSE)
+{
+  if(!npp) return NPERR_INVALID_INSTANCE_ERROR;
+
+  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+
+  NS_ASSERTION(inst != NULL, "null instance");
+  if (inst == NULL) 
+    return NPERR_INVALID_INSTANCE_ERROR;
+
+  nsCOMPtr<nsIPluginManager> pm = do_GetService(kPluginManagerCID);
+  NS_ASSERTION(pm, "failed to get plugin manager");
+  if (!pm) return NPERR_GENERIC_ERROR;
+
+  nsIPluginStreamListener* listener = nsnull;
+  if(target == nsnull)
+    ((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData, bDoNotify);
+
+  switch (type) {
+  case eNPPStreamTypeInternal_Get:
+    {
+      if(NS_FAILED(pm->GetURL(inst, relativeURL, target, listener)))
+        return NPERR_GENERIC_ERROR;
+      break;
+    }
+  case eNPPStreamTypeInternal_Post:
+    {
+      if(NS_FAILED(pm->PostURL(inst, relativeURL, len, buf, file, target, listener)))
+        return NPERR_GENERIC_ERROR;
+      break;
+    }
+  default:
+    NS_ASSERTION(0, "how'd I get here");
+  }
+
+  return NPERR_NO_ERROR;
+}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -668,33 +720,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_GetURL: npp=%p, target=%s, url=%s\n", (void *)npp, target, relativeURL));
 
-  if(!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  if(gServiceMgr == nsnull)
-    return NPERR_GENERIC_ERROR;
-
-  nsIPluginStreamListener* listener = nsnull;
-  if(target == nsnull)
-    inst->NewStream(&listener);
-
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
-
-  if(pm->GetURL(inst, relativeURL, target, listener) != NS_OK)
-    return NPERR_GENERIC_ERROR;
-
-  NS_RELEASE(pm);
-
-  return NPERR_NO_ERROR;
+  return MakeNew4xStreamInternal (npp, relativeURL, target, eNPPStreamTypeInternal_Get);
 }
 
 
@@ -705,33 +731,7 @@ _geturlnotify(NPP npp, const char* relativeURL, const char* target, void* notify
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, 
     ("NPN_GetURLNotify: npp=%p, target=%s, notify=%p, url=%s\n", (void*)npp, target, notifyData, relativeURL));
 
-  if(!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  if(gServiceMgr == nsnull)
-    return NPERR_GENERIC_ERROR;
-
-  nsIPluginStreamListener* listener = nsnull;
-  if(target == nsnull)
-    ((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
-
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
-
-  if(pm->GetURL(inst, relativeURL, target, listener) != NS_OK)
-    return NPERR_GENERIC_ERROR;
-
-  NS_RELEASE(pm);
-
-  return NPERR_NO_ERROR;
+  return MakeNew4xStreamInternal (npp, relativeURL, target, eNPPStreamTypeInternal_Get, PR_TRUE, notifyData);
 }
 
 
@@ -744,33 +744,8 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
   ("NPN_PostURLNotify: npp=%p, target=%s, len=%d, file=%d, notify=%p, url=%s, buf=%s\n",
   (void*)npp, target, len, file, notifyData, relativeURL, buf));
 
-  if(!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  if(gServiceMgr == nsnull)
-    return NPERR_GENERIC_ERROR;
-
-  nsIPluginStreamListener* listener = nsnull;
-  if(target == nsnull)
-    ((ns4xPluginInstance*)inst)->NewNotifyStream(&listener, notifyData);
-
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
-
-  if(pm->PostURL(inst, relativeURL, len, buf, file, target, listener) != NS_OK)
-    return NPERR_GENERIC_ERROR;
-
-  NS_RELEASE(pm);
-
-  return NPERR_NO_ERROR;
+  return MakeNew4xStreamInternal (npp, relativeURL, target, eNPPStreamTypeInternal_Post, 
+                                  PR_TRUE, notifyData, len, buf, file);
 }
 
 
@@ -783,33 +758,8 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
   ("NPN_PostURL: npp=%p, target=%s, file=%d, len=%d, url=%s, buf=%s\n",
   (void*)npp, target, file, len, relativeURL, buf));
 
-  if(!npp)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-
-  NS_ASSERTION(inst != NULL, "null instance");
-  NS_ASSERTION(gServiceMgr != NULL, "null service manager");
-
-  if (inst == NULL)
-    return NPERR_INVALID_INSTANCE_ERROR;
-
-  if(gServiceMgr == nsnull)
-    return NPERR_GENERIC_ERROR;
-
-  nsIPluginStreamListener* listener = nsnull;
-  if(target == nsnull)
-    inst->NewStream(&listener);
-
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
-
-  if(pm->PostURL(inst, relativeURL, len, buf, file, target, listener) != NS_OK)
-    return NPERR_GENERIC_ERROR;
-
-  NS_RELEASE(pm);
-
-  return NPERR_NO_ERROR;
+ return MakeNew4xStreamInternal (npp, relativeURL, target, eNPPStreamTypeInternal_Post, 
+                                 PR_FALSE, nsnull, len, buf, file);
 }
 
 
