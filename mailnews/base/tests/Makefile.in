@@ -22,9 +22,22 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PROGRAM = testmailnews
+
 CPPSRCS = \
 		test.cpp \
 		$(NULL)
+
+LIBS =	\
+		-L$(DIST)/lib			\
+		-L$(DIST)/bin			\
+		-lxpcom					\
+		-lreg					\
+		-lnspr21				\
+		-lplc21					\
+		-lplds21				\
+		$(NULL)
+
 
 include $(topsrcdir)/config/config.mk
 
