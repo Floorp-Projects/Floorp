@@ -33,11 +33,6 @@
 #include "nsICharRepresentable.h"
 #include "prmem.h"
 
-// {84B0F181-C6C7-11d2-B3B0-00805F8A6670}
-#undef NS_IMPL_IDS
-NS_DECLARE_ID(kIPlatformCharsetIID, 
- 0x84b0f181, 0xc6c7, 0x11d2, 0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 );
-#define NS_IMPL_IDS
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
@@ -1083,7 +1078,7 @@ nsresult  testPlatformCharset()
 {
   nsIPlatformCharset * cinfo;
   nsresult res = nsServiceManager::GetService(kPlatformCharsetCID,
-      kIPlatformCharsetIID, (nsISupports **)&cinfo);
+      NS_GET_IID(nsIPlatformCharset), (nsISupports **)&cinfo);
   if (NS_FAILED(res)) {
     printf("ERROR at GetService() code=0x%x.\n",res);
     return res;
