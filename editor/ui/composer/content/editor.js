@@ -1771,6 +1771,7 @@ function SetEditMode(mode)
 
     } catch (e) {}
 
+    flags |= 1024; // OutputLFLineBreak
     var source = editor.outputToString(kHTMLMimeType, flags);
     var start = source.search(/<html/i);
     if (start == -1) start = 0;
@@ -1796,9 +1797,9 @@ function SetEditMode(mode)
 
       editor.beginTransaction();
       try {
-        // We are comming from edit source mode,
+        // We are coming from edit source mode,
         //   so transfer that back into the document
-        source = gSourceTextEditor.outputToString(kTextMimeType, 0);
+        source = gSourceTextEditor.outputToString(kTextMimeType, 1024); // OutputLFLineBreak
         editor.rebuildDocumentFromSource(source);
 
         // Get the text for the <title> from the newly-parsed document
@@ -1850,7 +1851,7 @@ function FinishHTMLSource()
   //Or RebuildDocumentFromSource() will fail.
   if (IsInHTMLSourceMode())
   {
-    var htmlSource = gSourceTextEditor.outputToString(kTextMimeType, 0);
+    var htmlSource = gSourceTextEditor.outputToString(kTextMimeType, 1024); // OutputLFLineBreak
     if (htmlSource.length > 0)
     {
       var beginHead = htmlSource.indexOf("<head");
