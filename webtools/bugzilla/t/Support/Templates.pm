@@ -22,12 +22,14 @@
 
 package Support::Templates;
 
+use Support::Files;
+
 $include_path = "template/default";
 
 # Scan Bugzilla's code looking for templates used and put them
 # in the @testitems array to be used by the template.t test.
 
-my @files = glob('*');
+my @files = @Support::Files::testitems;
 my %t;
 
 foreach my $file (@files) {
