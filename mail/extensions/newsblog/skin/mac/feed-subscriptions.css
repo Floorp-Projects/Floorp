@@ -44,7 +44,7 @@
 
 #subscriptionChildren::-moz-tree-image(folderNameCol) {
   margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
+  list-style-image: url("chrome://messenger/skin/icons/server-newsblog.png");
 }
 
 #subscriptionChildren::-moz-tree-image(folderNameCol, container) {
