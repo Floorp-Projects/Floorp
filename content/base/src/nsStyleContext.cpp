@@ -930,7 +930,7 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
     mSpanWidth      = aParent->mSpanWidth;
   }
   else {
-    mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
+    mBorderCollapse = NS_STYLE_BORDER_COLLAPSE;
     mEmptyCells = NS_STYLE_TABLE_EMPTY_CELLS_HIDE;
     mCaptionSide = NS_SIDE_TOP;
     mBorderSpacingX.Reset();
