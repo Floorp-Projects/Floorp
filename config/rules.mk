@@ -1336,6 +1336,9 @@ $(MDDEPDIR)/%.pp: %.c
 $(MDDEPDIR)/%.pp: %.cpp
 	$(MAKE_DEPS_NOAUTO)
 
+$(MDDEPDIR)/%.pp: %.s
+	$(MAKE_DEPS_NOAUTO)
+
 ifneq (,$(OBJS))
 depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MDDEPFILES)
 else
