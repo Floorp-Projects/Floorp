@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -47,6 +47,9 @@
 #include "nsIEventQueueService.h"
 #include "nsILocalFile.h"
 
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -73,6 +76,45 @@ extern "C" void RunInstallOnThread(void *data);
 static void
 XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
+    nsresult rv;
+
+    /* Use the console service to register the error. */
+    nsCOMPtr<nsIConsoleService> consoleService
+        (do_GetService("mozilla.consoleservice.1"));
+
+    /*
+     * Make an nsIScriptError, populate it with information from this
+     * error, then log it with the console service.
+     */
+    nsCOMPtr<nsIScriptError>
+        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+    
+    if (consoleService != nsnull && errorObject != nsnull && report != nsnull) {
+        /*
+         * Got an error object; prepare appropriate-width versions of
+         * various arguments to it.
+         */
+        nsAutoString fileUni;
+        fileUni.AssignWithConversion(report->filename);
+
+        const PRUnichar *newFileUni = fileUni.ToNewUnicode();
+        
+        PRUint32 column = report->uctokenptr - report->uclinebuf;
+
+        rv = errorObject->Init(report->ucmessage, newFileUni, report->uclinebuf,
+                               report->lineno, column, report->flags,
+                               "XP Install JavaScript");
+        nsAllocator::Free((void *)newFileUni);
+        if (NS_SUCCEEDED(rv)) {
+            rv = consoleService->LogMessage(errorObject);
+            if (NS_SUCCEEDED(rv)) {
+              // We're done!
+              // For now, always also print out the error to stderr.
+              // return;
+            }
+        }
+    }
+
     int i, j, k, n;
 
     fputs("xpinstall: ", stderr);
