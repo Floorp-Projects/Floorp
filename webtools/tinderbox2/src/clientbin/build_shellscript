@@ -29,11 +29,12 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.16 $
-# $Date: 2003/08/16 18:31:05 $
+# $Revision: 1.17 $
+# $Date: 2003/08/17 00:48:54 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
