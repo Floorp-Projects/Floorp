@@ -3,8 +3,8 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.3 $ 
-# $Date: 2000/09/10 17:29:17 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/09/18 19:23:17 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -61,6 +61,12 @@ sub set_static_vars {
 # so we have a list of them and a comment of what they are for.
 
 
+  # localtime(2000 * 1000 * 1000) = 'Tue May 17 23:33:20 2033'
+  $LARGEST_VALID_TIME = (2000 * 1000 * 1000);
+  
+  # localtime(2000 * 1000 * 400) = 'Tue May  9 02:13:20 1995'
+  $SMALLEST_VALID_TIME = (2000 * 1000 * 400);
+  
 
 
   # where errors are loged
@@ -172,21 +178,21 @@ sub get_env {
 
 
   # pick a unique id to append to file names. We do not want to worry
-  # about locks, and multiple instances of this program can be active
-  # at the same time
+  # about locks when writing files, and multiple instances of this
+  # program can be active at the same time
 
   $UID = join('.', $TIME, $$);
 
   $SIG{'__DIE__'} = \&fatal_error;
   $SIG{'__WARN__'} = \&log_warning;
 
-  return ;
+  return 1;
 }
 
 
 # a dummy status handler
 sub null {
-  return ;
+  return 1;
 }
 
 # the functions max, min, median all return undefined if they are
@@ -242,7 +248,7 @@ sub mkdir_R {
 	  die("Could not mkdir: $dir, for writing: $!\n");
   }
   
-  return ;
+  return 1;
 }
 
 
@@ -287,32 +293,45 @@ sub log_warning {
 }
 
 
-sub overwrite_file {
-  my ($filename, @out) = @_;
-
-  my ($outfile) = $filename;
-  my ($tmpfile) = "$outfile.$UID";
-
-  my ($dir) = File::Basename::dirname($outfile);
-  
-  mkdir_R($dir);
-  
-  open(FILE, ">$tmpfile") ||
-    die("Could not open: $tmpfile. $!\n");
-  
-  print FILE @out;
-  
-  close(FILE) ||
-    die("Could not close: $tmpfile. $!\n");
+sub atomic_rename_file {
+  my ($oldfile, $outfile) = @_;
 
   (-f $outfile) && 
     (!(unlink($outfile))) &&
       die("Could not unlink: $outfile. $!\n");
-    
-  rename($tmpfile, $outfile) ||
-    die("Could not rename: '$tmpfile to $outfile. $!\n");
+  
+  rename($oldfile, $outfile) ||
+    die("Could not rename: '$oldfile to $outfile. $!\n");
+  
+  return 1;
+}
 
-  return ;
+
+sub overwrite_file {
+  my ($outfile, @outdata) = @_;
+
+  my ($dirname) = File::Basename::dirname($outfile);
+  my ($basename) = File::Basename::basename($outfile);
+
+  # It is important that the tmp files have a Unique prefix so that #
+  # when the TinderDB globs for update files it does not find the half
+  # written updates.
+
+  my ($tmpfile) = "$dirname/Tmp.$basename.$main::UID";
+
+  mkdir_R($dirname);
+  
+  open(FILE, ">$tmpfile") ||
+    die("Could not open: $tmpfile. $!\n");
+  
+  print FILE @outdata;
+  
+  close(FILE) ||
+    die("Could not close: $tmpfile. $!\n");
+
+  atomic_rename_file($tmpfile, $outfile);
+
+  return 1;
 }
 
 
@@ -329,7 +348,7 @@ sub append_file {
   close(FILE) ||
     die("Could not close: $filename. $!\n");
 
-  return ;
+  return 1;
 }
 
 # returns the unique elements of a list in sorted order.
@@ -365,5 +384,137 @@ sub require_modules {
 
   return 1;
 }
+
+
+
+# return true iff the argument is a valid time in time() format.
+
+sub is_time_valid {
+  my ($time) = @_;
+  
+  $valid = (
+            ($time < $LARGEST_VALID_TIME) &&
+            ($time > $SMALLEST_VALID_TIME) 
+           );
+
+  return $valid;
+}
+
+
+
+# ---------- 
+
+# The 'extract' functions will untaint their input data and return
+# only data which meets the extraction critireion.
+
+# ----------
+
+
+# remove unprintable characters from a string
+
+# this is for untainting data which could be almost anything but
+# should not be 'binary' data.
+
+sub extract_printable_chars {
+  my ($str) = @_;
+
+  $str =~ s![^a-zA-Z0-9\ \t\n\`\"\'\;\:\,\?\.\-\_\+\=\\\|\/\~\!\@\#\$\%\^\&\*\(\)\{\}\[\]\<\>]+!!g;
+
+  $str =~ m!(.*)!s;
+  $str = $1;
+
+  return $str;
+}
+
+
+# remove characters are not digits from a string
+sub extract_digits {
+  my ($str) = @_;
+
+  $str =~ m/([0-9]+)/;
+  $str = $1;
+
+  return $str;
+}
+
+
+# remove characters which do not belong in a filename/static URL from a string
+sub extract_filename_chars {
+  my ($str) = @_;
+
+  $str =~ m/([0-9a-zA-Z\.\-\_\/\:]+)/;
+  $str = $1;
+
+  return $str;
+}
+
+
+# remove unprintable characters and return a "safe" html string.
+
+
+# we must filter user input to prevent this:
+
+# http://www.ciac.org/ciac/bulletins/k-021.shtml
+# http://www.cert.org/advisories/CA-2000-02.html
+
+#   When a victim with scripts enabled in their browser reads this
+#   message, the malicious code may be executed
+#   unexpectedly. Scripting tags that can be embedded in this way
+#   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
+
+# note that since we want some tags to be allowed (href) but not
+# others.  This requirement breaks the taint perl mechanisms for
+# checking as we can not escape every '<>'.
+
+# If there are bad tags this could really mangle the html, however
+# the result is always 'safe html'.
+
+sub extract_html_chars {
+  my ($str) = @_;
+
+  $str = extract_printable_chars($str);
+
+  # Remove any known "bad" tags.  Since any user can post notices we
+  # have to prevent bad scripts from being posted.  It is just too
+  # hard to follow proper security procedures ('tainting') and escape
+  # everything then put back the good tags.
+
+  $str =~ s!	<
+		[^>]*			# ignore modifiers which do not end tag
+		(?:(?:SCRIPT)|(?:OBJECT)|(?:APPLET)|(?:EMBED)) # these are bad
+		[^>]*			# ignore modifiers which do not end tag
+		>
+	!!ixg;
+
+  return $str;
+}
+
+
+
+
+# remove characters which do not belong in a mail addresses, or CVS
+# authors or Unix log int ids from a string
+
+
+sub extract_user {
+  my ($user) = @_;
+
+  # If the data looks like this: 
+  # 	' "leaf (Daniel Nunes)" <leaf@mozilla.org> ' 
+  # extract the mail address.
+
+  if ( $user =~ m/<([^>]+)>/ ) {
+    $user = $1;
+  }
+
+  # At mozilla.org authors are email addresses with the "\@"
+  # replaced by "\%" they have one user with a + in his name
+
+  $user =~ m/([a-zA-Z0-9\_\-\.\%\+\@]+)/;
+  $user = $1;
+
+  return $user;
+}
+
 
 1;
