@@ -117,6 +117,7 @@ class nsDocAccessible : public nsBlockAccessible,
     void AddScrollListener();
     void RemoveScrollListener();
     virtual void FireDocLoadFinished();
+    void nsDocAccessible::ShutdownNodes(nsIDOMNode *aStartNode);
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
