@@ -422,6 +422,8 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
                                nsIStyleContext* aContext,
                                nsIFrame*        aPrevInFlow)
 {
+  MapAttributesIntoCSS(aPresContext, aContent);
+
   return nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 

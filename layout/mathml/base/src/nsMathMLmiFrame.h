@@ -35,9 +35,7 @@ public:
   friend nsresult NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,

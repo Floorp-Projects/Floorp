@@ -3,19 +3,19 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla MathML Project.
- * 
- * The Initial Developer of the The Original Code is The University Of 
+ *
+ * The Initial Developer of the The Original Code is The University Of
  * Queensland.  Portions created by The University Of Queensland are
  * Copyright (C) 1999 The University Of Queensland.  All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  */
@@ -57,7 +57,7 @@ NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aNewFrame = it;  
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -91,36 +91,43 @@ nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
   for (PRInt32 kid = 0; kid < numKids; kid++) {
     nsCOMPtr<nsIContent> kidContent;
     mContent->ChildAt(kid, *getter_AddRefs(kidContent));
-    if (kidContent.get()) {      	
+    if (kidContent.get()) {
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText.get()) {
-      	nsAutoString kidData;
+        nsAutoString kidData;
         kidText->GetData(kidData);
         data += kidData;
       }
     }
   }
 
+  // attributes may override the default behavior
   PRInt32 length = data.Length();
   nsAutoString fontstyle;
+  PRBool restyle = PR_TRUE;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::fontstyle_, fontstyle))
+    restyle = PR_FALSE;
   if (1 == length) {
-    // our text content consits of a single character
+    // our textual content consists of a single character
     if (IsStyleInvariant(data[0])) {
       // bug 65951 - we always enforce the style to normal for a non-stylable char
-      // XXX also disable bold type? (makes sense to let the set IR be bold, no?) 
+      // XXX also disable bold type? (makes sense to let the set IR be bold, no?)
       fontstyle.Assign(NS_LITERAL_STRING("normal"));
+      restyle = PR_TRUE;
     }
     else {
       fontstyle.Assign(NS_LITERAL_STRING("italic"));
     }
   }
   else {
-    // our text content consits of multiple characters
+    // our textual content consists of multiple characters
     fontstyle.Assign(NS_LITERAL_STRING("normal"));
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow
-  mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
+  if (restyle)
+    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
 
   // then, re-resolve the style contexts in our subtree
   nsCOMPtr<nsIPresShell> presShell;
@@ -139,17 +146,12 @@ nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
+nsMathMLmiFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  // First, let the base class do its work
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  if (NS_FAILED(rv)) return rv;
-
   // re-style our content depending on what it is
+  // (this will query attributes from the mstyle hierarchy)
   ProcessTextData(aPresContext);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -176,7 +178,7 @@ NS_IMETHODIMP
 nsMathMLmiFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
                                   nsIFrame*     aChild)
 {
-  // if we get this, it means it was called by the nsTextFrame beneath us, and 
+  // if we get this, it means it was called by the nsTextFrame beneath us, and
   // this means something changed in the text content. So re-process our text
 
   nsCOMPtr<nsIPresContext> presContext;
