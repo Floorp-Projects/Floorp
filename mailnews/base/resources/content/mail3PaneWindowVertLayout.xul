@@ -92,6 +92,8 @@ Rights Reserved.
 
 <broadcasterset id="broadcasterset"/>
 
+<stringbundleset id="stringbundleset"/>
+
 <keyset id="keyset"/>
 
 <popupset>
@@ -146,7 +148,7 @@ Rights Reserved.
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->
-				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+				<browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
 			</box>	
 			<statusbar id="status-bar" class="mailwindow-statusbar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>

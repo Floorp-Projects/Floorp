@@ -34,7 +34,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
-                  
+
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -90,6 +90,8 @@ Rights Reserved.
 	<commandset id="clipboardEditMenuItems"/>
 
 </commands>
+
+<stringbundleset id="stringbundleset"/>
 
 <broadcasterset id="broadcasterset"/>
 
@@ -153,7 +155,7 @@ Rights Reserved.
 			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
 				<toolbox id="msgHeaderView"/>
     
-				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
+				<browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
 			<statusbar id="status-bar" class="mailwindow-statusbar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>

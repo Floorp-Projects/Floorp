@@ -21,6 +21,7 @@ Rights Reserved.
 -->
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
@@ -41,6 +42,7 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 
+<stringbundleset id="stringbundleset"/>
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
@@ -788,6 +790,9 @@ Rights Reserved.
 					 oncommand="MsgViewNormalHeaders();"/>
 				</menupopup>
 			</menu>
+			<menuseparator/>
+			<!-- overlayed from viewZoomOverlay.xul -->
+			<menu id="menu_textZoom"/>
 			<menuseparator/>
 			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
 			<menuitem id="stopMenuitem" value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>

@@ -634,7 +634,7 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
     if(!messageUri)
     {
-        message = GetLoadedMessage();
+        message = GetSelectedMessage(0);
         var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
         messageUri = messageResource.Value;
     }
@@ -931,6 +931,21 @@ function SetUpToolbarButtons(uri)
     if (buttonToShow) {
         buttonToShow.removeAttribute('hidden');
     }
+}
+
+var gMessageBrowser;
+
+function getMessageBrowser()
+{
+  if (!gMessageBrowser)
+    gMessageBrowser = document.getElementById("messagepane");
+
+  return gMessageBrowser;
+}
+
+function getMarkupDocumentViewer()
+{
+  return getMessageBrowser().markupDocumentViewer;
 }
 
 function MsgMarkByDate() {}

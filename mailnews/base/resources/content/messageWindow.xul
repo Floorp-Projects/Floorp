@@ -68,6 +68,7 @@ Rights Reserved.
 					oncommandupdate="CommandUpdate_Mail()"/>
 	</commands>
 	
+	<stringbundleset id="stringbundleset"/>
 
 	<broadcasterset id="broadcasterset"/>
 	<keyset id="keyset"/>
@@ -96,7 +97,7 @@ Rights Reserved.
 		<toolbox id="msgHeaderView"/>
 
 		<!-- message view -->
-		<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+		<browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
 	</box>	
 
 
