@@ -1,4 +1,3 @@
-# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -22,6 +21,8 @@ DEPTH		= ../../..
 topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/dom/jni
 VPATH		= $(topsrcdir)/java/dom/jni
+
+JAVAHOME        = $(JDKHOME)
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -55,5 +56,10 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-classes:
-	javac -d $(topsrcdir)/dist/classes *.java
+libs:: classes
+
+#XXX - assume that DOM2 java-bindings are in CLASSPATH 
+classes: $(JAVA_DESTPATH)
+	@echo "Making java classes ..."
+	$(JAVAHOME)/bin/javac -d $(JAVA_DESTPATH) *.java
+

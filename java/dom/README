@@ -49,14 +49,10 @@ gmake in this directory.
 Similarly apply the DocumetnImpl.java patch. Then recompile the
 DocumentImpl class. No changes in makefiles needed.
 
-Currently, you will have to make the Java class files yourself, which
-is pretty straight-forward. Just do a javac -d
-$MOZILLA_FIVE_HOME/classes *.java in the java/dom/jni directory. I
-chose to put my class files in $MOZILLA_FIVE_HOME/classes, you can put
-them elsewhere, just make sure it is in the CLASSPATH. 
+Define JDKHOME so that $JDKHOME/bin points to javac.
 
 You will also need to get the w3c DOM level 2 interfaces from
-http://www.w3.org/TR/1999/WD-DOM-Level-2-19990923/java-binding.zip
+http://www.w3.org/TR/WD-DOM-Level-2/java-binding.zip
 and put the class files in your CLASSPATH.
 
 

@@ -1,4 +1,3 @@
-# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -21,22 +20,35 @@
 DEPTH		= ../..
 topsrcdir	= $(DEPTH)
 srcdir		= .
-VPATH		= .
+DIRS      	= jni
 
 include $(DEPTH)/config/autoconf.mk
 
+JAVAHOME	= $(JDKHOME)
 MODULE		= javadom
 LIBRARY_NAME	= javadom
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
 	nsJavaDOMImpl.cpp \
-	nsJavaDOMModule.cpp
+	nsJavaDOMModule.cpp 
 
 include $(topsrcdir)/config/config.mk
 
-INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
-DSO_LDOPTS	+= \
+ifeq ($(OS_ARCH),Linux)
+ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
+ DSO_LDOPTS	+= \
+	-L$(JAVAHOME)/jre/lib/i386 \
+	-L$(JAVAHOME)/jre/lib/i386/classic \
+	-L$(JAVAHOME)/jre/lib/i386/native_threads \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386 \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/classic \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/native_threads \
+	-ljvm -lhpi
+ DEFINES	+= -DDISABLE_JIT
+else
+ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
+ DSO_LDOPTS	+= \
 	-L$(JAVAHOME)/jre/lib/sparc \
 	-L$(JAVAHOME)/jre/lib/sparc/classic \
 	-L$(JAVAHOME)/jre/lib/sparc/native_threads \
@@ -44,8 +56,10 @@ DSO_LDOPTS	+= \
 	-R$(JAVAHOME)/jre/lib/sparc/classic \
 	-R$(JAVAHOME)/jre/lib/sparc/native_threads \
 	-ljvm -lhpi
+endif
 
 EXPORTS 	= \
+	nsJavaDOMCID.h \
 	nsIJavaDOM.h 
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
