@@ -87,14 +87,11 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kCShellInstance)) {
     inst = (nsISupports *)new nsShellInstance();
   } else if (mClassID.Equals(kCXPFCCanvas)) {
-    nsXPFCCanvas * canvas = (nsXPFCCanvas *)new nsXPFCCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsXPFCCanvas(aOuter);
   } else if (mClassID.Equals(kCXPFCHTMLCanvas)) {
-    nsXPFCHTMLCanvas * canvas = (nsXPFCHTMLCanvas *)new nsXPFCHTMLCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsXPFCHTMLCanvas(aOuter);
   } else if (mClassID.Equals(kCXPFolderCanvas)) {
-    nsXPFolderCanvas * canvas = (nsXPFolderCanvas *)new nsXPFolderCanvas(aOuter);
-    canvas->QueryInterface(kISupportsIID,(void **)&inst);
+    inst = (nsISupports *)(nsIXPFCCanvas *)new nsXPFolderCanvas(aOuter);
   } else if (mClassID.Equals(kCXPFCMenuContainer)) {
     inst = (nsISupports *)(nsIXPFCMenuContainer *)new nsXPFCMenuContainer();
   } else if (mClassID.Equals(kCXPFCToolbar)) {
