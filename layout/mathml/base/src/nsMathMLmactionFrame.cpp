@@ -278,8 +278,11 @@ nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
                                        nsIFrame**        aFrame)
 {
   nsIFrame* childFrame = GetSelectedFrame();
-  if (childFrame)
-    return childFrame->GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  if (childFrame) {
+    nsPoint pt;
+    pt.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+    return childFrame->GetFrameForPoint(aPresContext, pt, aWhichLayer, aFrame);
+  }
   else
     return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
