@@ -108,6 +108,8 @@ PRBool nsFileWidget::Show()
   ofn.hwndOwner = mWnd;
   ofn.lpstrFile = fileBuffer;
   ofn.nMaxFile = MAX_PATH;
+
+  // XXX use OFN_NOCHANGEDIR  for M5
   ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
   
   PRBool result;
@@ -117,10 +119,10 @@ PRBool nsFileWidget::Show()
   VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
 
   if (mMode == eMode_load) {
-    result = GetOpenFileName(&ofn);
+    result = ::GetOpenFileName(&ofn);
   }
   else if (mMode == eMode_save) {
-    result = GetSaveFileName(&ofn);
+    result = ::GetSaveFileName(&ofn);
   }
   else {
     NS_ASSERTION(0, "Only load and save are supported modes"); 
@@ -265,27 +267,52 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
   return NS_OK;
 }
 
-nsFileDlgResults nsFileWidget::GetFile(
-                           nsIWidget        * aParent,
-                           nsString         & promptString,    
-                           nsFileSpec       & theFileSpec)
+nsFileDlgResults nsFileWidget::GetFile(nsIWidget        * aParent,
+                                       nsString         & promptString,    
+                                       nsFileSpec       & theFileSpec)
 {
-  return nsFileDlgResults_Cancel;
+  Create(aParent, promptString, eMode_load, nsnull, nsnull);
+  PRBool result = Show();
+  nsFileDlgResults status = nsFileDlgResults_Cancel;
+  if (result && mFile.Length() > 0) {
+    nsFilePath filePath(mFile);
+    nsFileSpec fileSpec(filePath);
+    theFileSpec = fileSpec;
+  }
+  return status;
 }
 
-nsFileDlgResults nsFileWidget::GetFolder(
-                           nsIWidget        * aParent,
-                           nsString         & promptString,    
-                           nsFileSpec       & theFileSpec)
+nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
+                                         nsString         & promptString,    
+                                         nsFileSpec       & theFileSpec)
 {
-  return nsFileDlgResults_Cancel;
+  Create(aParent, promptString, eMode_load, nsnull, nsnull);
+  PRBool result = Show();
+  nsFileDlgResults status = nsFileDlgResults_Cancel;
+  if (result && mFile.Length() > 0) {
+    nsFilePath filePath(mFile);
+    nsFileSpec fileSpec(filePath);
+    theFileSpec = fileSpec;
+  }
+  return status;
 }
 
-nsFileDlgResults nsFileWidget::PutFile(
-                           nsIWidget        * aParent,
-                           nsString         & promptString,    
-                           nsFileSpec       & theFileSpec)
+nsFileDlgResults nsFileWidget::PutFile(nsIWidget        * aParent,
+                                       nsString         & promptString,    
+                                       nsFileSpec       & theFileSpec)
 {
-  return nsFileDlgResults_Cancel;
+  Create(aParent, promptString, eMode_load, nsnull, nsnull);
+  PRBool result = Show();
+  nsFileDlgResults status = nsFileDlgResults_Cancel;
+  if (result && mFile.Length() > 0) {
+    nsFilePath filePath(mFile);
+    nsFileSpec fileSpec(filePath);
+    theFileSpec = fileSpec;
+
+    if (result) {
+      status = (theFileSpec.Exists()?nsFileDlgResults_Replace:nsFileDlgResults_OK);
+    }
+  }
+  return status;
 }
 
