@@ -27,8 +27,8 @@
 #endif
 
 #ifdef DEBUG_rods
-#define DO_REFLOW_DEBUG
-#define DO_REFLOW_COUNTER
+//#define DO_REFLOW_DEBUG
+//#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
 #endif
@@ -290,6 +290,9 @@ public:
   nsCWeakReferent *WeakReferent()
     { return &mWeakReferent; }
 
+  // Helper 
+  void SetPassId(PRInt16 aId)  { mPassId = aId; }
+
 protected:
 
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
@@ -401,6 +404,9 @@ protected:
 
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
+
+  PRInt16 mPassId;
+  nsSize mCachedDesiredMaxSize;
 
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;

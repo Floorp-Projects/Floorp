@@ -60,8 +60,10 @@
 #include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
+#include "nsListControlFrame.h"
 #include "nsIElementFactory.h"
 #include "nsContentCID.h"
+
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
@@ -94,6 +96,7 @@ const PRInt32 kSizeNotSet = -1;
 
 // static class data member for Bug 32920
 nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
+nscoord nsComboboxControlFrame::mCachedScrollbarWidth     = kSizeNotSet;
 
 nsresult
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
@@ -1205,24 +1208,25 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // the default size of the of scrollbar
   // that will be the default width of the dropdown button
   // the height will be the height of the text
-  nscoord scrollbarWidth = -1;
-  nsCOMPtr<nsIDeviceContext> dx;
-  aPresContext->GetDeviceContext(getter_AddRefs(dx));
-  if (dx) { 
-    // Get the width in Device pixels (in this case screen)
-    SystemAttrStruct info;
-    dx->GetSystemAttribute(eSystemAttr_Size_ScrollbarWidth, &info);
-    // Get the pixels to twips conversion for the current device (screen or printer)
-    float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
-    // Get the scale factor for mapping from one device (screen) 
-    //   to another device (screen or printer)
-    // Typically when it is a screen the scale 1.0
-    //   when it is a printer is could be anything
-    float scale;
-    dx->GetCanonicalPixelScale(scale); 
-    scrollbarWidth = NSIntPixelsToTwips(info.mSize, p2t*scale);
-  }  
+  if (mCachedScrollbarWidth == kSizeNotSet) {
+    nsCOMPtr<nsIDeviceContext> dx;
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
+    if (dx) { 
+      // Get the width in Device pixels (in this case screen)
+      SystemAttrStruct info;
+      dx->GetSystemAttribute(eSystemAttr_Size_ScrollbarWidth, &info);
+      // Get the pixels to twips conversion for the current device (screen or printer)
+      float p2t;
+      aPresContext->GetPixelsToTwips(&p2t);
+      // Get the scale factor for mapping from one device (screen) 
+      //   to another device (screen or printer)
+      // Typically when it is a screen the scale 1.0
+      //   when it is a printer is could be anything
+      float scale;
+      dx->GetCanonicalPixelScale(scale); 
+      mCachedScrollbarWidth = NSIntPixelsToTwips(info.mSize, p2t*scale);
+    }
+  }
   
   // set up a new reflow state for use throughout
   nsHTMLReflowState firstPassState(aReflowState);
@@ -1257,7 +1261,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG("------------Reflowing AreaFrame and bailing----\n\n");
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                            mDisplayFrame, mButtonFrame, mItemDisplayWidth, 
-                           scrollbarWidth, borderPadding);
+                           mCachedScrollbarWidth, borderPadding);
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("&** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
@@ -1310,7 +1314,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         // Do simple reflow and bail out
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                            mDisplayFrame, mButtonFrame, 
-                           mItemDisplayWidth, scrollbarWidth, borderPadding, kSizeNotSet, PR_TRUE);
+                           mItemDisplayWidth, mCachedScrollbarWidth, borderPadding, kSizeNotSet, PR_TRUE);
         REFLOW_DEBUG_MSG3("+** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
@@ -1379,11 +1383,18 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   if ((mCachedUncDropdownSize.width == kSizeNotSet && 
        mCachedUncDropdownSize.height == kSizeNotSet) || forceReflow) {
     REFLOW_DEBUG_MSG3("---Re %d,%d\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
+
+    // Tell it we are doing the first pass, which means it will
+    // do the unconstained reflow and skip the second reflow this time around
+    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+    lcf->SetPassId(1);
     // A width has not been specified for the select so size the display area
     // to match the width of the longest item in the drop-down list. The dropdown
     // list has already been reflowed and sized to shrink around its contents above.
     ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, 
                           aStatus, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
+    lcf->SetPassId(0); // reset it back
+
     if (forceReflow) {
       mCachedUncDropdownSize.width  = dropdownDesiredSize.width;
       mCachedUncDropdownSize.height = dropdownDesiredSize.height;
@@ -1466,8 +1477,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // the variable "size" will now be 
   // the default size of the dropdown btn
-  if (scrollbarWidth > 0) {
-    size.width = scrollbarWidth;
+  if (mCachedScrollbarWidth > 0) {
+    size.width = mCachedScrollbarWidth;
   }
 
   // Get the border and padding for the dropdown
@@ -1524,7 +1535,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
+                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, mCachedScrollbarWidth, 
                      borderPadding, size.height);
 
   // The dropdown was reflowed UNCONSTRAINED before, now we need to check to see
@@ -1534,17 +1545,21 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // than for any particular item in the dropdown. So, if the new size of combobox
   // is smaller than the dropdown, that is OK, The dropdown MUST always be either the same
   //size as the combo or larger if necessary
-#if 1
   if (aDesiredSize.width > dropdownDesiredSize.width) {
     if (eReflowReason_Initial == firstPassState.reason) {
       firstPassState.reason = eReflowReason_Resize;
     }
     REFLOW_DEBUG_MSG3("*** Reflowing ListBox to width: %d it was %d\n", PX(aDesiredSize.width), PX(dropdownDesiredSize.width));
+
+    // Tell it we are doing the second pass, which means we will skip
+    // doing the unconstained reflow, we already know that size
+    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+    lcf->SetPassId(2);
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, 
                           aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
+    lcf->SetPassId(0); // reset it back
   }
-#endif
 
 #else  // DO_NEW_REFLOW
 
@@ -1573,7 +1588,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
+                     mDisplayFrame, mButtonFrame, mItemDisplayWidth, mCachedScrollbarWidth, 
                      borderPadding, 
                      aDesiredSize.height- borderPadding.top - borderPadding.bottom -
                      dspBorderPadding.top - dspBorderPadding.bottom);

@@ -242,6 +242,7 @@ nsListControlFrame::nsListControlFrame()
   mCachedUnconstrainedSize.height = -1;
   
   mOverrideReflowOpt           = PR_FALSE;
+  mPassId                      = 0;
 
   REFLOW_COUNTER_INIT()
 }
@@ -611,61 +612,45 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  nsresult res = nsScrollFrame::Reflow(aPresContext, 
-                                       scrolledAreaDesiredSize,
-                                       firstPassState, 
-                                       aStatus);
-  if (NS_FAILED(res)) {
-    NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
-    NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
-    return res;
+  if (mPassId == 0 || mPassId == 1) {
+    nsresult res = nsScrollFrame::Reflow(aPresContext, 
+                                         scrolledAreaDesiredSize,
+                                         firstPassState, 
+                                         aStatus);
+    if (NS_FAILED(res)) {
+      NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
+      NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
+      return res;
+    }
+    mCachedUnconstrainedSize.width  = scrolledAreaDesiredSize.width;
+    mCachedUnconstrainedSize.height = scrolledAreaDesiredSize.height;
+    mCachedDesiredMaxSize.width     = scrolledAreaDesiredSize.maxElementSize->width;
+    mCachedDesiredMaxSize.height    = scrolledAreaDesiredSize.maxElementSize->height;
+  } else {
+    scrolledAreaDesiredSize.width  = mCachedUnconstrainedSize.width;
+    scrolledAreaDesiredSize.height = mCachedUnconstrainedSize.height;
+    scrolledAreaDesiredSize.maxElementSize->width  = mCachedDesiredMaxSize.width;
+    scrolledAreaDesiredSize.maxElementSize->height = mCachedDesiredMaxSize.height;
   }
 
-  nsIScrollableFrame * scrollableFrame = nsnull;
-  nsRect scrolledRect;
-  if (NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
-    nsIFrame * scrolledFrame;
-    scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-    NS_ASSERTION(scrolledFrame != nsnull, "Must have scrollable frame");
-    scrolledFrame->GetRect(scrolledRect);
-  } else {
-    NS_ASSERTION(scrollableFrame != nsnull, "Must have scrollableFrame frame");
-  }
   // Compute the bounding box of the contents of the list using the area 
   // calculated by the first reflow as a starting point.
   //
    // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
   // to the maxElementSize, so these need to be subtracted
-  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width;
-  nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
+  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width - 
+                               (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height - 
+                               (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
 
-  // Keep the oringal values
+  // Set up max values
   mMaxWidth  = scrolledAreaWidth;
-  mMaxHeight = scrolledAreaDesiredSize.maxElementSize->height;
-
-  // The first reflow produces a box with the scrollbar width and borders
-  // added in so we need to subtract them out.
-
-  // Retrieve the scrollbar's width and height
-  float sbWidth  = 0.0;
-  float sbHeight = 0.0;;
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  dc->GetScrollBarDimensions(sbWidth, sbHeight);
-  // Convert to nscoord's by rounding
-  nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
-  //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
-
-  mMaxWidth  -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  mMaxHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  mMaxHeight = scrolledAreaDesiredSize.maxElementSize->height - 
+               (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
-
   PRBool isInDropDownMode = IsInDropDownMode();
-
-  scrolledAreaWidth  -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-  scrolledAreaHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   nscoord visibleWidth = 0;
   if (isInDropDownMode) {
@@ -679,7 +664,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.mComputedWidth;// - scrollbarWidth;
+      visibleWidth = aReflowState.mComputedWidth;
     }
   }
 
@@ -870,9 +855,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
 
-  nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
-
+  if (mPassId == 0 || mPassId == 2) {
+    nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
     // Set the max element size to be the same as the desired element size.
+  } else {
+    aDesiredSize.width  = visibleWidth;
+    aDesiredSize.height = visibleHeight;
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+  }
+
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
@@ -880,7 +872,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsX
   if (!isInDropDownMode) {
     PRInt32 numRows = 1;
     GetSizeAttribute(&numRows);
