@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -1760,6 +1760,8 @@ public final class Context {
 
     static String getSourcePositionFromStack(int[] linep) {
         Context cx = getCurrentContext();
+        if (cx == null)
+            return null;
         if (cx.interpreterLine > 0 && cx.interpreterSourceFile != null) {
             linep[0] = cx.interpreterLine;
             return cx.interpreterSourceFile;
