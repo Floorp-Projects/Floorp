@@ -48,19 +48,9 @@ interface nsICacheListener;
 interface nsICacheSession;
 interface nsICacheVisitor;
 
-[scriptable, uuid(0ebec4c7-742f-4f27-8e7b-7c8a0cc76348)]
+[scriptable, uuid(de114eb4-29fc-4959-b2f7-2d03eb9bc771)]
 interface nsICacheService : nsISupports
 {
-    /**
-     * Initialize the cache service.
-     */
-    void init();
-
-    /**
-     * Shutdown the cache service.
-     */
-    void shutdown();
-
     /**
      * Create a cache session
      *

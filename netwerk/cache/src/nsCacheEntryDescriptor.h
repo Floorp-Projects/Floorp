@@ -62,10 +62,6 @@ public:
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
     virtual ~nsCacheEntryDescriptor();
     
-    static nsresult Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
-                           nsICacheEntryDescriptor ** result);
-
-
     /**
      * utility method to attempt changing data size of associated entry
      */

@@ -219,13 +219,6 @@ main(int argc, char* argv[])
 
 
  error_exit:
-    if (gCacheService) {
-        rv = gCacheService->Shutdown();
-        if (NS_FAILED(rv))
-            printf("nsCacheService::Shutdown() :    rv      = %x\n", rv);
-        gCacheService = nsnull;
-    }
-
     gEventQ = nsnull;
     eventQService = nsnull;
 

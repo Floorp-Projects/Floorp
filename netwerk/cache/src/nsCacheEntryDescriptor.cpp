@@ -57,8 +57,8 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
     : mCacheEntry(entry),
       mAccessGranted(accessGranted)
 {
-  PR_INIT_CLIST(this);
-  NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
+    PR_INIT_CLIST(this);
+    NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
 }
 
 
@@ -67,26 +67,6 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
     Close();
     nsCacheService * service = nsCacheService::GlobalInstance();
     NS_RELEASE(service);
-}
-
-
-nsresult
-nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGranted,
-                               nsICacheEntryDescriptor ** result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    nsresult rv = nsnull;
-    
-    nsCacheEntryDescriptor * descriptor =
-        new nsCacheEntryDescriptor(entry, accessGranted);
-
-    if (descriptor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(descriptor);
-    rv = descriptor->QueryInterface(NS_GET_IID(nsICacheEntryDescriptor), (void**)result);
-    NS_RELEASE(descriptor);
-    return rv;
 }
 
 
