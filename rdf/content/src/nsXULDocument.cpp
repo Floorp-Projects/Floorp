@@ -205,6 +205,59 @@ nsIXULPrototypeCache* nsXULDocument::gXULCache;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
+class nsProxyLoadStream : public nsIInputStream
+{
+private:
+  const char* mBuffer;
+  PRUint32    mSize;
+  PRUint32    mIndex;
+
+public:
+  nsProxyLoadStream(void) : mBuffer(nsnull)
+  {
+      NS_INIT_REFCNT();
+  }
+
+  virtual ~nsProxyLoadStream(void) {
+  }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIBaseStream
+  NS_IMETHOD Close(void) {
+      return NS_OK;
+  }
+
+  // nsIInputStream
+  NS_IMETHOD Available(PRUint32 *aLength) {
+      *aLength = mSize - mIndex;
+      return NS_OK;
+  }
+
+  NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
+      PRUint32 readCount = 0;
+      while (mIndex < mSize && aCount > 0) {
+          *aBuf = mBuffer[mIndex];
+          aBuf++;
+          mIndex++;
+          readCount++;
+          aCount--;
+      }
+      *aReadCount = readCount;
+      return NS_OK;
+  }
+
+  // Implementation
+  void SetBuffer(const char* aBuffer, PRUint32 aSize) {
+      mBuffer = aBuffer;
+      mSize = aSize;
+      mIndex = 0;
+  }
+};
+
+NS_IMPL_ISUPPORTS(nsProxyLoadStream, nsIInputStream::GetIID());
+
 //----------------------------------------------------------------------
 //
 // PlaceholderChannel
@@ -1264,6 +1317,8 @@ nsXULDocument::EndLoad()
     rv = PrepareToWalk();
     if (NS_FAILED(rv)) return rv;
 
+    if (mIsKeyBindingDoc && (mCurrentPrototype != mMasterPrototype))
+      return NS_OK; // If we're a keybinding doc and we're loading an overlay
     return ResumeWalk();
 }
 
@@ -4654,7 +4709,7 @@ nsXULDocument::ResumeWalk()
             PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was cached"));
         }
         else {
-            // Not there. Initiate an asynchronous load.
+            // Not there. Initiate a load.
             PR_LOG(gXULLog, PR_LOG_DEBUG, ("xul: overlay was not cached"));
 
             nsCOMPtr<nsIParser> parser;
@@ -4667,9 +4722,57 @@ nsXULDocument::ResumeWalk()
 
             parser->Parse(uri);
 
-            nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-            rv = NS_OpenURI(listener, nsnull, uri, group);
-            if (NS_FAILED(rv)) return rv;
+            // If we're a keybinding document, the overlay load must
+            // occur synchronously.
+            if (mIsKeyBindingDoc) {
+              nsCOMPtr<nsIChannel> channel;
+              rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
+              if (NS_FAILED(rv)) return rv;
+              nsCOMPtr<nsIInputStream> in;
+              PRUint32 sourceOffset = 0;
+              rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+
+              // If we couldn't open the channel, then just return.
+              if (NS_FAILED(rv)) return NS_OK;
+
+              NS_ASSERTION(in != nsnull, "no input stream");
+              if (! in) return NS_ERROR_FAILURE;
+
+              rv = NS_ERROR_OUT_OF_MEMORY;
+              nsProxyLoadStream* proxy = new nsProxyLoadStream();
+              if (! proxy)
+                return NS_ERROR_FAILURE;
+  
+              listener->OnStartRequest(channel, nsnull);
+              while (PR_TRUE) {
+                char buf[1024];
+                PRUint32 readCount;
+
+                if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
+                    break; // error
+
+                if (readCount == 0)
+                    break; // eof
+
+                proxy->SetBuffer(buf, readCount);
+
+                rv = listener->OnDataAvailable(channel, nsnull, proxy, sourceOffset, readCount);
+                sourceOffset += readCount;
+                if (NS_FAILED(rv))
+                    break;
+              }
+
+              listener->OnStopRequest(channel, nsnull, NS_OK, nsnull);
+
+              // don't leak proxy!
+              proxy->Close();
+              delete proxy;
+            }
+            else {
+              nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+              rv = NS_OpenURI(listener, nsnull, uri, group);
+              if (NS_FAILED(rv)) return rv;
+            }
 
             // Return to the main event loop and eagerly await the
             // overlay load's completion. When the content sink
