@@ -104,6 +104,7 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 //*********************************************************************************************
 
 TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
+TagList  gTableRootTags={3,{eHTMLTag_body,eHTMLTag_table,eHTMLTag_applet}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
 
 TagList  gLIRootTags={7,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td}};
@@ -1093,7 +1094,7 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_table,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+	    /*rootnodes,endrootnodes*/          &gTableRootTags,&gTableRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
       /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), 2,
