@@ -3609,7 +3609,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				nsCRT::free(absURIStr);
 				absURIStr = nsnull;
 
-				if (absURI)
+				if ((absURI) && (skipLocalFlag == PR_TRUE))
 				{
 					char	*absPath = nsnull;
 					absURI->GetPath(&absPath);
@@ -3624,7 +3624,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 						if (pathsMatchFlag == PR_TRUE)	continue;
 					}
 
-					if ((hostStr.Length() > 0) && (skipLocalFlag == PR_TRUE))
+					if (hostStr.Length() > 0)
 					{
 						char		*absHost = nsnull;
 						absURI->GetHost(&absHost);
@@ -4029,9 +4029,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			// if no branding icon, use some default icons
 			nsAutoString	iconChromeDefault;
 
-			if (browserResultTypeStr.Equals("category"))
+			if (browserResultTypeStr.EqualsIgnoreCase("category"))
 				iconChromeDefault = "chrome://search/skin/category.gif";
-			else if ((browserResultTypeStr.Equals("result")) && (!engineIconNode))
+			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
 				iconChromeDefault = "chrome://search/skin/result.gif";
 
 			if (iconChromeDefault.Length() > 0)
