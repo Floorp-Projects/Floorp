@@ -96,7 +96,7 @@ public:
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsITransactionManager *txnMgr);
+                            nsITransactionManager *txnMgr, PRBool deleteStorage);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();
 
@@ -126,7 +126,9 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
-	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr);
+	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
+	nsresult MoveMessageToTrash(nsIMessage *message, nsIMsgFolder *trashFolder);
+
 	virtual const nsIID& GetIncomingServerType() {return nsIPop3IncomingServer::GetIID();}
 
 protected:

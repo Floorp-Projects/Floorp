@@ -47,6 +47,8 @@
 #include "nsMsgLocalCID.h"
 #include "nsString.h"
 #include "nsLocalFolderSummarySpec.h"
+#include "nsMsgUtils.h"
+#include "nsICopyMessageStreamListener.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -54,6 +56,7 @@ static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
+static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1048,7 +1051,7 @@ nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFold
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
-                                                   nsITransactionManager *txnMgr)
+                                                   nsITransactionManager *txnMgr, PRBool deleteStorage)
 {
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
@@ -1056,13 +1059,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
 		PRUint32 messageCount;
     rv = messages->Count(&messageCount);
     if (NS_FAILED(rv)) return rv;
-		for(PRUint32 i = 0; i < messageCount; i++)
+//		for(PRUint32 i = 0; i < messageCount; i++)
+		//Putting in until we can queue copying. For now you can only delete one at a time.
+		for(PRUint32 i = 0; i < 1; i++)
 		{
 			nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
 			nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
 			if(message)
 			{
-				DeleteMessage(message, txnMgr);
+				DeleteMessage(message, txnMgr, deleteStorage);
 			}
 		}
 	}
@@ -1070,18 +1075,38 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
 }
 
 nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
-                                             nsITransactionManager *txnMgr)
+                                             nsITransactionManager *txnMgr, PRBool deleteStorage)
 {
 	nsresult rv;
-	nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
-	nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-
-	if(NS_SUCCEEDED(rv))
+	PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
+	if(!deleteStorage && !isTrashFolder)
 	{
-		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+		nsCOMPtr<nsIMsgFolder> rootFolder;
+		rv = GetRootFolder(getter_AddRefs(rootFolder));
 		if(NS_SUCCEEDED(rv))
 		{
-			rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			nsIMsgFolder *trashFolder;
+			PRUint32 numFolders;
+			rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, &trashFolder, 1, &numFolders);
+			if(NS_SUCCEEDED(rv) && (numFolders == 1))
+			{
+				rv = MoveMessageToTrash(message, trashFolder);
+				NS_IF_RELEASE(trashFolder);
+			}
+		}
+	}
+	else
+	{
+		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+
+		if(NS_SUCCEEDED(rv))
+		{
+			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+			if(NS_SUCCEEDED(rv))
+			{
+				rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			}
 		}
 	}
 	return rv;
@@ -1243,3 +1268,43 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 	return rv;
 }
 
+nsresult nsMsgLocalMailFolder::MoveMessageToTrash(nsIMessage *message, nsIMsgFolder *trashFolder)
+{
+	nsresult rv;
+	nsCOMPtr<nsIRDFResource> messageNode(do_QueryInterface(message));
+	if(!messageNode)
+		return NS_ERROR_FAILURE;
+
+	char *uri;
+	messageNode->GetValue(&uri);
+
+	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
+	rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
+											nsICopyMessageStreamListener::GetIID(),
+											getter_AddRefs(copyStreamListener)); 
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsICopyMessageListener> copyListener(do_QueryInterface(trashFolder));
+	if(!copyListener)
+		return NS_ERROR_NO_INTERFACE;
+
+	rv = copyStreamListener->Init(this, copyListener, nsnull);
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsIMsgMessageService * messageService = nsnull;
+	rv = GetMessageServiceFromURI(uri, &messageService);
+
+	if (NS_SUCCEEDED(rv) && messageService)
+	{
+		nsIURL * url = nsnull;
+		nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
+		if(!streamListener)
+			return NS_ERROR_NO_INTERFACE;
+		messageService->CopyMessage(uri, streamListener, PR_TRUE, nsnull, &url);
+		ReleaseMessageServiceFromURI(uri, messageService);
+	}
+
+	return rv;
+}

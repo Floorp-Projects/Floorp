@@ -129,13 +129,13 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
 	NS_LOCK_INSTANCE();
 
 	nsMailboxAction mailboxAction = nsMailboxActionMoveMessage;
-	if (!moveMessage)
-		url->SetMailboxAction(nsMailboxActionCopyMessage);
 
 	rv = PrepareMessageUrl(aSrcMailboxURI, aUrlListener, mailboxAction, getter_AddRefs(url));
 
 	if (NS_SUCCEEDED(rv))
 	{
+		if (!moveMessage)
+			url->SetMailboxAction(nsMailboxActionCopyMessage);
 		url->SetMailboxCopyHandler(aMailboxCopyHandler);
 		rv = RunMailboxUrl(url);
 	}
