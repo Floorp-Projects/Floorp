@@ -52,10 +52,6 @@ nsReflowPath::~nsReflowPath()
         delete NS_STATIC_CAST(nsReflowPath *, mChildren[i]);
 
     delete mReflowCommand;
-
-#ifdef DEBUG
-    ::memset(this, 0xdd, sizeof(*this));
-#endif
 }
 
 nsReflowPath::iterator
