@@ -40,6 +40,11 @@
 #include "nsIUnicodeDecoder.h"
 
 #include "nsICharsetAlias.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+#include "nsIPersistentProperties2.h"
+#include "nsCRT.h"
+
 
 #ifdef VMS
 #include <stdlib.h>
@@ -367,8 +372,6 @@ nsPostScriptObj::begin_document()
 {
 int i;
 XP_File f;
-char* charset_name = NULL;
-
 
   f = mPrintContext->prSetup->out;
   XP_FilePrintf(f, "%%!PS-Adobe-3.0\n");
@@ -707,6 +710,9 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "} bind def\n");
 
   XP_FilePrintf(f, "\n");
+
+  // read the printer properties file
+  InitUnixPrinterProps();
 
   // setup prolog for each langgroup
   initlanggroup();
@@ -1479,10 +1485,80 @@ nsPostScriptObj::setlanggroup(nsIAtom * aLangGroup)
   }
 }
 
+PRBool
+nsPostScriptObj::InitUnixPrinterProps()
+{
+  nsCOMPtr<nsIPersistentProperties> printerprops_tmp;
+  nsAutoString propertyURL;
+  propertyURL.AssignWithConversion("resource:/res/unixpsfonts.properties");
+  nsCOMPtr<nsIURI> uri;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), propertyURL), PR_FALSE);
+  nsCOMPtr<nsIInputStream> in;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), PR_FALSE);
+  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(
+    NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
+    NS_GET_IID(nsIPersistentProperties), getter_AddRefs(printerprops_tmp)),
+    PR_FALSE);
+  NS_ENSURE_SUCCESS(printerprops_tmp->Load(in), PR_FALSE);
+  mPrinterProps = printerprops_tmp;
+  return PR_TRUE;
+}
+
+PRBool
+nsPostScriptObj::GetUnixPrinterSetting(const nsCAutoString& aKey, char** aVal)
+{
+
+  if (!mPrinterProps) {
+    return nsnull;
+  }
+
+  nsAutoString key;
+  key.AssignWithConversion(aKey.get());
+  nsAutoString oValue;
+  nsresult res = mPrinterProps->GetStringProperty(key, oValue);
+  if (!NS_SUCCEEDED(res)) {
+    return PR_FALSE;
+  }
+  *aVal = oValue.ToNewCString();
+  return PR_TRUE;
+}
+
+
+typedef struct _unixPrinterFallbacks_t {
+    char *key;
+    char *val;
+} unixPrinterFallbacks_t;
+
+static unixPrinterFallbacks_t unixPrinterFallbacks[] = {
+  {"print.psnativefont.ja", "Ryumin-Light-EUC-H"},
+  {"print.psnativecode.ja", "euc-jp"},
+  {nsnull, nsnull}
+};
+
+PRBool
+GetUnixPrinterFallbackSetting(const nsCAutoString& aKey, char** aVal)
+{
+  unixPrinterFallbacks_t *p;
+  const char* key = aKey.get();
+  for (p=unixPrinterFallbacks; p->key; p++) {
+    if (strcmp(key, p->key) == 0) {
+      *aVal = nsCRT::strdup(p->val);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+XP_File nsPostScriptObj::GetPrintFile()
+{
+  return(mPrintContext->prSetup->out);
+}
+
 /* make <langgroup>_ls define for each LangGroup here */
 static void PrefEnumCallback(const char *aName, void *aClosure)
 {
-  XP_File f = (XP_File) aClosure;
+  nsPostScriptObj *psObj = (nsPostScriptObj*)aClosure;
+  XP_File f = psObj->GetPrintFile();
 
   nsAutoString lang; lang.AssignWithConversion(aName);
 
@@ -1501,40 +1577,75 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   }
 
   /* define new language group */
-  char *psnativefont = nsnull;
-  char *psnativecode = nsnull;
-  char *psunicodefont = nsnull;
+  nsXPIDLCString psnativefont;
+  nsXPIDLCString psnativecode;
+  nsXPIDLCString psunicodefont;
   int psfontorder = 0;
+  PRBool use_prefsfile = PR_FALSE;
+  PRBool use_vendorfile = PR_FALSE;
 
-  /* check native fonts */
+  //
+  // Try to get the info from the user's prefs file
+  //
   nsCAutoString namepsnativefont("print.psnativefont.");
   namepsnativefont.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsnativefont.get(), &psnativefont);
+  gPrefs->CopyCharPref(namepsnativefont.get(), getter_Copies(psnativefont));
 
   nsCAutoString namepsnativecode("print.psnativecode.");
   namepsnativecode.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsnativecode.get(), &psnativecode);
+  gPrefs->CopyCharPref(namepsnativecode.get(), getter_Copies(psnativecode));
+  if (((psnativefont)&&(*psnativefont)) && ((psnativecode)&&(*psnativecode))) {
+    use_prefsfile = PR_TRUE;
+  } else {
+    psnativefont = nsnull;
+    psnativecode = nsnull;
+  }
+
+  //
+  // if not found look for info from the printer vendor
+  //
+  if (use_prefsfile != PR_TRUE) {
+    psObj->GetUnixPrinterSetting(namepsnativefont, getter_Copies(psnativefont));
+    psObj->GetUnixPrinterSetting(namepsnativecode, getter_Copies(psnativecode));
+    if ((psnativefont) && (psnativecode)) {
+      use_vendorfile = PR_TRUE;
+    } else {
+      psnativefont = nsnull;
+      psnativecode = nsnull;
+    }
+  }
+  if (!use_prefsfile && !use_vendorfile) {
+    GetUnixPrinterFallbackSetting(namepsnativefont, getter_Copies(psnativefont));
+    GetUnixPrinterFallbackSetting(namepsnativecode, getter_Copies(psnativecode));
+  }
 
   /* psnativefont and psnativecode both should be set */
   if (!psnativefont || !psnativecode) {
-    if (psnativefont) {
-      nsMemory::Free(psnativefont);
-    }
     psnativefont = nsnull;
-    if (psnativecode) {
-      nsMemory::Free(psnativecode);
-    }
     psnativecode = nsnull;
   } else {
     nsCAutoString namepsfontorder("print.psfontorder.");
     namepsfontorder.AppendWithConversion(lang);
-    gPrefs->GetIntPref(namepsfontorder.get(), &psfontorder);
+    if (use_prefsfile) {
+      gPrefs->GetIntPref(namepsfontorder.get(), &psfontorder);
+    }
+    else if (use_vendorfile) {
+      nsXPIDLCString psfontorder_str;
+      psObj->GetUnixPrinterSetting(namepsfontorder, getter_Copies(psfontorder_str));
+      if (psfontorder_str) {
+        psfontorder = atoi(psfontorder_str);
+      }
+    }
   }
 
   /* check UCS fonts */
   nsCAutoString namepsunicodefont("print.psunicodefont.");
   namepsunicodefont.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsunicodefont.get(), &psunicodefont);
+  if (use_prefsfile) {
+    gPrefs->CopyCharPref(namepsunicodefont.get(), getter_Copies(psunicodefont));
+  } else if (use_vendorfile) {
+    psObj->GetUnixPrinterSetting(namepsunicodefont, getter_Copies(psunicodefont));
+  }
 
   nsresult res = NS_OK;
 
@@ -1596,15 +1707,6 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
       linfo->mU2Ntable = new nsHashtable();
     }
   }
-  if (psnativefont) {
-    nsMemory::Free(psnativefont);
-  }
-  if (psunicodefont) {
-    nsMemory::Free(psunicodefont);
-  }
-  if (psnativecode) {
-    nsMemory::Free(psnativecode);
-  }
 }
 
 /** ---------------------------------------------------
@@ -1614,10 +1716,11 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 void
 nsPostScriptObj::initlanggroup()
 {
+
   /* check langgroup of preference */
   gPrefs->EnumerateChildren("print.psnativefont.",
-	    PrefEnumCallback, (void *) mPrintContext->prSetup->out);
+	    PrefEnumCallback, (void *) this);
 
   gPrefs->EnumerateChildren("print.psunicodefont.",
-	    PrefEnumCallback, (void *) mPrintContext->prSetup->out);
+	    PrefEnumCallback, (void *) this);
 }
