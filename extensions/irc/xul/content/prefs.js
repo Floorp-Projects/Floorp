@@ -81,7 +81,7 @@ function initPrefs()
          ["aliases",            [],       "lists.aliases"],
          ["autoAwayCap",        300,      "global"],
          ["autoRejoin",         false,    ".connect"],
-         ["bugURL",           "http://bugzilla.mozilla.org/show_bug.cgi?id=%s",
+         ["bugURL",           "https://bugzilla.mozilla.org/show_bug.cgi?id=%s",
                                           "global"],
          ["channelHeader",      true,     "global.header"],
          ["channelLog",         false,    "global.log"],
