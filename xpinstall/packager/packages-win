@@ -49,6 +49,7 @@ bin\jsdom.dll
 bin\jsj3250.dll
 bin\mozilla.exe
 bin\mozctl.dll
+bin\mozctlx.dll
 bin\regxpcom.exe
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
