@@ -138,11 +138,7 @@ public:
     NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
-#if XP_NEW_SELECTION
     NS_IMETHOD GetSelection(nsICollection** aSelection);
-#else
-    NS_IMETHOD GetSelection(nsISelection *& aSelection);
-#endif
 
     NS_IMETHOD SelectAll();
 
@@ -232,11 +228,7 @@ protected:
     nsIScriptContextOwner* mScriptContextOwner;
     nsCharSetID            mCharSetID;
     nsVoidArray            mStyleSheets;
-#if XP_NEW_SELECTION
     nsICollection*         mSelection;
-#else
-    nsISelection*          mSelection;
-#endif
     PRBool                 mDisplaySelection;
     nsVoidArray            mPresShells;
     nsVoidArray            mNameSpaces;
