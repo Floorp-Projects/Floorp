@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim:expandtab:shiftwidth=2:tabstop=2:
+ * vim:expandtab:shiftwidth=2:tabstop=2:cin:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2186,9 +2186,13 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   // clean up after ourselves and delete the temp file...
   // but only if we got asked to open the file. when saving,
   // we leave the file there - the partial file might be useful
+  // But if we haven't received disposition info yet, then we're
+  // here because the user cancelled the helper app dialog.
+  // Delete the file in this case.
   nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
-  if (mTempFile && action != nsIMIMEInfo::saveToDisk)
+  if (!mReceivedDispositionInfo ||
+      (mTempFile && action != nsIMIMEInfo::saveToDisk))
   {
     mTempFile->Remove(PR_TRUE);
     mTempFile = nsnull;
