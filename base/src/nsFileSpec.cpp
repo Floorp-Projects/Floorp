@@ -734,7 +734,7 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
 	if (err != noErr)
 		return;
 */
-return -50;
+
 	PRUint32 bytes = GetHandleSize((Handle) aliasH);
 	HLock((Handle) aliasH);
 	char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
