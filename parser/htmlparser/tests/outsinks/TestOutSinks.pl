@@ -23,6 +23,8 @@
 #
 # This is a collection of test files to guard against regressions
 # in the Mozilla output system.
+# Documentation on the tests is available at:
+# http://www.mozilla.org/editor/serializer-tests.html
 #
 
 # Make sure . is in the path, so we can load the other shared libraries
@@ -87,8 +89,9 @@ if ($status != 0) {
 }
 
 if ($errmsg ne "") {
-  print "\nERROR: DOM CONVERSION TEST FAILED: $errmsg\n";
+  print "\nERROR: DOM SERIALIZER TEST FAILED: $errmsg\n";
+  print "See http://www.mozilla.org/editor/serializer-tests.html for help.\n"
   exit 1
 } else {
-  print "DOM CONVERSION TESTS SUCCEEDED\n";
+  print "DOM SERIALIZER TESTS SUCCEEDED\n";
 }
