@@ -217,13 +217,59 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
 {
     PRBool eq = PR_FALSE;
     if (i_OtherURI) {
-        nsXPIDLCString spec;
-        nsXPIDLCString spec2;
-        nsresult rv = i_OtherURI->GetSpec(getter_Copies(spec));
-        if (NS_FAILED(rv)) return rv;
-        rv = this->GetSpec(getter_Copies(spec2));
-        if (NS_FAILED(rv)) return rv;
-        eq = nsCAutoString(spec).Equals(spec2);
+        nsIURL* url = nsnull;
+        nsresult rv = i_OtherURI->QueryInterface(kThisStdURLImplementationCID,
+                                                 (void**)&url);
+        if (NS_FAILED(rv)) {
+            *o_Equals = eq;
+            return rv;
+        }
+        // Maybe the directorys are different
+        if (nsCRT::strcasecmp(this->mDirectory,
+                              ((nsStdURL*)url)->mDirectory)==0) {
+            // Or the Filebasename?
+            if (nsCRT::strcasecmp(this->mFileBaseName,
+                                 ((nsStdURL*)url)->mFileBaseName)==0) {
+                // Maybe the Fileextension?
+                if (nsCRT::strcasecmp(this->mFileExtension,
+                         ((nsStdURL*)url)->mFileExtension)==0) {
+                    // Or the Host?
+                    if (nsCRT::strcasecmp(this->mHost,
+                             ((nsStdURL*)url)->mHost)==0) {
+                        // Or the Scheme?
+                        if (nsCRT::strcasecmp(this->mScheme,
+                                 ((nsStdURL*)url)->mScheme)==0) {
+                            // Username?
+                            if (nsCRT::strcasecmp(this->mUsername,
+                                     ((nsStdURL*)url)->mUsername)==0) {
+                                // Password?
+                                if (nsCRT::strcasecmp(this->mPassword,
+                                   ((nsStdURL*)url)->mPassword)==0) {
+                                    // Param?
+                                    if (nsCRT::strcasecmp(this->mParam,
+                                       ((nsStdURL*)url)->mParam)==0) {
+                                        // Query?
+                                        if (nsCRT::strcasecmp(this->mQuery,
+                                        ((nsStdURL*)url)->mQuery)==0) {
+                                            // Ref?
+                                            if (nsCRT::strcasecmp(this->mRef,
+                                          ((nsStdURL*)url)->mRef)==0) {
+                                                // Port?
+                                                if (this->mPort == 
+                                             ((nsStdURL*)url)->mPort) {
+                                                    // They are equal!!!!!
+                                                    eq = PR_TRUE;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     *o_Equals = eq;
     return NS_OK;
