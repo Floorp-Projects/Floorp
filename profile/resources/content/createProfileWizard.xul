@@ -35,7 +35,7 @@
 
   <box class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
   <box class="wizard-box" flex="1">
-    <iframe src="about:blank" style="width: 40em; height: 20em; overflow: auto;" name="content" id="content" flex="1"/>
+    <html:iframe src="about:blank" style="width: 40em; height: 20em; overflow: auto;" name="content" id="content" flex="1"/>
   </box>
   <separator class="groove"/>
   <box id="wizardButtons"/>
