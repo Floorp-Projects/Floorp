@@ -2808,7 +2808,7 @@ fe_NeutralizeFocus(MWContext * context)
 }
 //////////////////////////////////////////////////////////////////////////
 extern "C" MWContext *FE_GetRDFContext(void) {
-    MWContext *context = NULL;
+  /* MWContext *context = NULL; */
     
 /*    if(theApp.m_pRDFCX) {
         pRetval = theApp.m_pRDFCX->GetContext();
@@ -2822,9 +2822,9 @@ extern "C" MWContext *FE_GetRDFContext(void) {
    */
 
 extern "C" Widget
-fe_showRDFTreeView (Widget parent, LO_BuiltinStruct *builtin_struct)
+fe_showRDFTreeView (MWContext *context, LO_BuiltinStruct *builtin_struct)
 {
-  MWContext *context = fe_WidgetToMWContext (parent);
+  Widget parent = CONTEXT_DATA (context)->drawing_area;
   XFE_Component *toplevel = fe_frameFromMWContext (context);
 
   // XFE_View *view =

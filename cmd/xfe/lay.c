@@ -2313,7 +2313,7 @@ XFE_FreeEdgeElement (MWContext *context, LO_EdgeStruct *edge)
   XP_FREE (sashinfo);
 }
 
-extern Widget fe_showRDFTreeView (Widget w, 
+extern Widget fe_showRDFTreeView (MWContext *context, 
 								  LO_BuiltinStruct *builtin_struct);
 
 void
@@ -2343,8 +2343,7 @@ XFE_DisplayBuiltin (MWContext *context, int iLocation,
 	url = LO_GetBuiltInAttribute(builtin_struct, "data");
 	target = LO_GetBuiltInAttribute(builtin_struct, "target");
 	
-	view = fe_showRDFTreeView(CONTEXT_DATA (context)->drawing_area,
-							  builtin_struct);
+	view = fe_showRDFTreeView(context, builtin_struct);
 							  
     builtin_struct->FE_Data = (void *) view;
 

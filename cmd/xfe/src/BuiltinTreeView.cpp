@@ -50,21 +50,12 @@ XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component,
 	target  = LO_GetBuiltInAttribute(builtin_struct, "target");
 
 	// New HT pane.
-	newPaneFromURL(url, builtin_struct->attributes.n, 
+	newPaneFromURL(context, url, 
+                   builtin_struct->attributes.n, 
 				   builtin_struct->attributes.names, 
 				   builtin_struct->attributes.values);
 
     setHTView(HT_GetSelectedView(_ht_pane));
-
-
-#if 0
-	// Test, I'm not seeing a tree yet.  Please delete this soon :-)
-	{
-		Widget testHack = XmCreatePushButton(mainForm, "RDFTreeView", NULL, 0);
-		XtManageChild(testHack);
-	}
-#endif
-
 
 	// Register the MWContext instance in the XP list.
 	XP_SetLastActiveContext(context);

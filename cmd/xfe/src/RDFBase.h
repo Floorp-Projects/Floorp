@@ -46,7 +46,8 @@ public:
     void                  newBookmarksPane      ();
     void                  newHistoryPane        ();
     void                  newToolbarPane        ();
-    void                  newPaneFromURL        (char * url, 
+    void                  newPaneFromURL        (MWContext *context,
+                                                 char * url, 
 												 int param_count = 0,
 												 char **param_names = NULL,
 												 char **param_values = NULL);

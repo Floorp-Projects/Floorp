@@ -71,14 +71,15 @@ XFE_RDFBase::newPane()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFBase::newPaneFromURL(char *url,
+XFE_RDFBase::newPaneFromURL(MWContext *context,
+                            char *url,
 							int  param_count,
 							char **param_names,
 							char **param_values)
 {
     startPaneCreate();
 
-    _ht_pane = HT_PaneFromURL(NULL, url, _ht_ns, 0,
+    _ht_pane = HT_PaneFromURL(context, url, _ht_ns, 0,
                               param_count, param_names, param_values);
 
     finishPaneCreate();
