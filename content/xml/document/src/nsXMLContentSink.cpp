@@ -267,36 +267,6 @@ NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
 
-/**
- * DOCTYPE declaration is covered with very strict rules, which
- * makes our life here simpler because the XML parser has already
- * detected errors. The only slightly problematic case is whitespace
- * between the tokens. There MUST be whitespace between the tokens
- * EXCEPT right before > and [.
- */
-static const char* kWhitespace = " \r\n\t\b"; // Optimized for typical cases
-
-static void
-GetDocTypeToken(nsString& aStr,
-                nsString& aToken,
-                PRBool aQuotedString)
-{
-  aStr.Trim(kWhitespace,PR_TRUE,PR_FALSE); // If we don't do this we must look ahead
-                                           // before Cut() and adjust the cut amount.
-  
-  if (aQuotedString) {    
-    PRInt32 endQuote = aStr.FindChar(aStr[0],1);
-    aStr.Mid(aToken,1,endQuote-1);
-    aStr.Cut(0,endQuote+1);
-  } else {    
-    static const char* kDelimiter = " >[\r\n\t\b"; // Optimized for typical cases
-    PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
-    if (tokenEnd > 0) {
-      aStr.Left(aToken, tokenEnd);
-      aStr.Cut(0, tokenEnd);
-    }
-  }
-}
   // nsIContentSink
 NS_IMETHODIMP
 nsXMLContentSink::WillBuildModel(void)
@@ -1855,8 +1825,10 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
-                                    PRUint32 aLength,
+nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset, 
+                                    const nsAString & aName, 
+                                    const nsAString & aSystemId, 
+                                    const nsAString & aPublicId,
                                     nsISupports* aCatalogData)
 {
   nsresult rv = NS_OK;
@@ -1865,31 +1837,12 @@ nsXMLContentSink::HandleDoctypeDecl(const PRUnichar *aDoctype,
   if (!doc)
     return NS_OK;
 
-  nsAutoString str(aDoctype, aLength); 
-  nsAutoString name, publicId, systemId;
-
-  GetDocTypeToken(str, name, PR_FALSE);
-
-  nsAutoString token;
-
-  GetDocTypeToken(str, token, PR_FALSE);
-  if (token.Equals(NS_LITERAL_STRING("PUBLIC"))) {
-    GetDocTypeToken(str, publicId, PR_TRUE);
-    GetDocTypeToken(str, systemId, PR_TRUE);
-  }
-  else if (token.Equals(NS_LITERAL_STRING("SYSTEM"))) {
-    GetDocTypeToken(str, systemId, PR_TRUE);
-  }
-
-  // The rest is the internal subset (minus whitespace)
-  str.Trim(kWhitespace);
-
   nsCOMPtr<nsIDOMDocumentType> docType;
   
   // Create a new doctype node
   rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
-                             name, nsnull, nsnull,
-                             publicId, systemId, str);
+                             aName, nsnull, nsnull,
+                             aPublicId, aSystemId, aSubset);
   if (NS_FAILED(rv) || !docType) {
     return rv;
   }

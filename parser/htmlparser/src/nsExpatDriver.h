@@ -88,16 +88,15 @@ protected:
   void     GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset, nsString& aLine);
 
   XML_Parser       mExpatParser;  
-  nsIExpatSink*    mSink;
-  const PRUnichar* mBuffer; // weak
-
   nsString         mLastLine;
   nsString         mCDataText;
+  nsString         mDoctypeText;
   PRPackedBool     mInCData;
+  PRPackedBool     mInDoctype;
   PRInt32          mBytePosition;
   nsresult         mInternalState;
   PRUint32         mBytesParsed;
-  PRUint32         mDoctypePos;
+  nsIExpatSink*    mSink;
   const nsCatalogData* mCatalogData; // weak
 
 };
