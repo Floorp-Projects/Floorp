@@ -119,7 +119,7 @@ BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
 
 BOOL IsDBCS();
 
-extern nsGfxModuleData gModuleData;
+extern nsGfxModuleData gGfxModuleData;
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))

@@ -117,7 +117,7 @@ extern "C" void ShowOSAlert(char* aMessage);
 
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
-nsresult
+nsresult PR_CALLBACK
 apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 

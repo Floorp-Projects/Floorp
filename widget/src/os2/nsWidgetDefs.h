@@ -124,7 +124,7 @@ class nsIFontRetrieverService;
 class nsDragService;
 class nsIAppShell;
 
-extern nsWidgetModuleData *gModuleData;
+extern nsWidgetModuleData *gWidgetModuleData;
 
 // messages - here to avoid duplication
 #define WMU_CALLMETHOD   (WM_USER + 1)

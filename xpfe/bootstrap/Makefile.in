@@ -38,9 +38,16 @@ PROGRAM		= mozilla-bin
 endif
 
 ifdef BUILD_STATIC_LIBS
+ifeq ($(OS_ARCH),OS2)
+EXTRA_DSO_LIBS = $(addprefix lib,$(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)))
+EXTRA_DSO_LIBS += mpfilelocprovider_s
+EXTRA_DSO_LDOPTS += libuls.lib libconv.lib unikbd.lib
+_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
+else
 EXTRA_DSO_LDOPTS = -L$(DEPTH)/dist/lib/components
 EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
 _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
+endif
 else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
 endif
@@ -83,9 +90,17 @@ XP_LIBS		+= \
 endif
 
 ifdef MOZ_LDAP_XPCOM
+ifeq ($(OS_ARCH),OS2)
+# link with import ldap libs on os/2
+XP_LIBS   += \
+		$(DIST)/lib/ldap40.lib \
+		$(DIST)/lib/lber40.lib \
+		$(NULL)
+else  
 XP_LIBS		+= \
 		-lldap40 -llber40 \
 		$(NULL)
+endif
 endif
 
 ifdef MOZ_ENABLE_GTK
@@ -121,11 +136,7 @@ XP_LIBS         += -ljprof
 endif
 
 ifdef MOZ_OJI
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OJI_LIBS	= $(DIST)/lib/jsj.lib
-else
 OJI_LIBS	= -ljsj
-endif
 endif
 
 LIBS		= $(XP_LIBS)
@@ -156,14 +167,18 @@ LIBS += $(MOZ_GTK_LDFLAGS)
 
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+EXE_DEF_FILE = mozilla.def
+endif
+else
 EXTRA_DEPS	= \
 		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
 		$(NULL)
-endif
 
 ifdef BUILD_STATIC_LIBS
 EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/lib,$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/lib,$(shell cat $(FINAL_LINK_LIBS))))
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -211,6 +226,19 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 install:: $(srcdir)/splash.xpm
 	$(INSTALL) $< $(DIST)/bin
+endif
+
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+$(EXE_DEF_FILE):
+	rm -f $@
+	@echo NAME mozilla >$(EXE_DEF_FILE)
+	@echo IMPORTS >>$(EXE_DEF_FILE)
+	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
+	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
+	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
+	@echo  	DaxOpenSave					= PMCTLS.295   >>$(EXE_DEF_FILE)
+endif
 endif
 
 ifeq ($(MOZ_REORDER),1)

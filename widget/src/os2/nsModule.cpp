@@ -545,4 +545,4 @@ int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pTex
   return ulSize - cplen;
 }
 
-nsWidgetModuleData *gModuleData = nsnull;
+nsWidgetModuleData *gWidgetModuleData = nsnull;

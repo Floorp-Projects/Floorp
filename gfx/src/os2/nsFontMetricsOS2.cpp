@@ -810,7 +810,7 @@ HDC   ps = NULL;
           } /* endif */
        } /* endif */
     } /* endfor */
-//   fh->fattrs.usCodePage = gModuleData.ulCodepage;
+//   fh->fattrs.usCodePage = gGfxModuleData.ulCodepage;
            
    // 7) Find the point size for the font, and set up the charbox too
    float app2dev, app2twip, twip2dev;

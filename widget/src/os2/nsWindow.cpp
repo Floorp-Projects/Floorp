@@ -1384,7 +1384,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
    if( mToolkit) // called from print-routine (XXX check)
    {
-      const char *fontname = gModuleData->ConvertFromUcs( aFont.name);
+      const char *fontname = gWidgetModuleData->ConvertFromUcs( aFont.name);
    
       // jump through hoops to convert the size in the font (in app units)
       // into points. 
@@ -1475,7 +1475,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     if( sptr)
        mPointer = WinQuerySysPointer( HWND_DESKTOP, sptr, FALSE);
     else
-       mPointer = gModuleData->GetPointer( aCursor);
+       mPointer = gWidgetModuleData->GetPointer( aCursor);
  
     WinSetPointer( HWND_DESKTOP, mPointer);
     mCursor = aCursor;
@@ -1855,7 +1855,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       inbuf[1] = '\0';
       outbuf[0] = (UniChar)0;
 
-      gModuleData->ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
+      gWidgetModuleData->ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
 
       event.charCode = outbuf[0];
 
@@ -2659,7 +2659,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
    else if( mWnd)
    {
       WinSetWindowText( GetMainWindow(),
-                        gModuleData->ConvertFromUcs( aTitle));
+                        gWidgetModuleData->ConvertFromUcs( aTitle));
    }
    return NS_OK;
 } 
@@ -2835,7 +2835,7 @@ PRBool nsWindow::OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr)
    // somehow.
 
    // Tell drag service about the drag
-  //   gModuleData->dragService->InitDragOver( (PDRAGINFO) mp1);
+  //   gWidgetModuleData->dragService->InitDragOver( (PDRAGINFO) mp1);
 
    // Invoke gecko for enter if appropriate
   //   if( !mDragInside)
@@ -2848,16 +2848,16 @@ PRBool nsWindow::OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr)
   //   DispatchDragDropEvent( NS_DRAGDROP_OVER);
 
    // Get action back from drag service
-  //   mr = gModuleData->dragService->TermDragOver();
+  //   mr = gWidgetModuleData->dragService->TermDragOver();
 
    return PR_TRUE;
 }
 
 PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
 {
-  //   gModuleData->dragService->InitDragExit( (PDRAGINFO) mp1);
+  //   gWidgetModuleData->dragService->InitDragExit( (PDRAGINFO) mp1);
   //   DispatchDragDropEvent( NS_DRAGDROP_EXIT);
-  //   gModuleData->dragService->TermDragExit();
+  //   gWidgetModuleData->dragService->TermDragExit();
 
   //   mDragInside = FALSE;
 
@@ -2866,9 +2866,9 @@ PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
 
 PRBool nsWindow::OnDrop( MPARAM mp1, MPARAM mp2)
 {
-  //   gModuleData->dragService->InitDrop( (PDRAGINFO) mp1);
+  //   gWidgetModuleData->dragService->InitDrop( (PDRAGINFO) mp1);
   //   DispatchDragDropEvent( NS_DRAGDROP_DROP);
-  //   gModuleData->dragService->TermDrop();
+  //   gWidgetModuleData->dragService->TermDrop();
 
    mDragInside = FALSE;
 

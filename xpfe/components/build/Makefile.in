@@ -40,16 +40,6 @@ REQUIRES	+= mozldap
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	= autocomplete_s bookmarks_s directory_s history_s related_s \
-		search_s timebomb_s urlbarhistory_s	
-
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
-endif
-
-else
-
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libautocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
@@ -63,8 +53,6 @@ SHARED_LIBRARY_LIBS = \
 
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
-endif
-
 endif
 
 LOCAL_INCLUDES	= \
