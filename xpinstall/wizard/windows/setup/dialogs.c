@@ -209,7 +209,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_MESSAGE1, diLicense.szMessage1);
 
       lstrcpy(szBuf, szSetupDir);
-      lstrcat(szBuf, "\\");
+      AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, diLicense.szLicenseFilename);
 
       if((hFLicense = FindFirstFile(szBuf, &wfdFindFileData)) != INVALID_HANDLE_VALUE)
@@ -218,7 +218,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         FindClose(hFLicense);
         if((szLicenseFilenameBuf = NS_GlobalAlloc(dwFileSize)) != NULL)
         {
-          if((fLicense = fopen(szBuf, "r+b")) != NULL)
+          if((fLicense = fopen(szBuf, "rb")) != NULL)
           {
             dwBytesRead = fread(szLicenseFilenameBuf, sizeof(char), dwFileSize, fLicense);
             fclose(fLicense);
