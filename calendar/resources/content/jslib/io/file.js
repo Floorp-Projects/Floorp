@@ -152,10 +152,9 @@ const JS_FILE_DEFAULT_PERMS = 0644;
 const JS_FILE_OK            = true;
 
 try {
-  /*
   const JS_FILE_FileChannel  = new C.Constructor
   (JS_FILE_F_CHANNEL_CID, JS_FILE_I_FILE_CHANNEL);
-  */
+  
   const JS_FILE_InputStream  = new C.Constructor
   (JS_FILE_I_STREAM_CID, JS_FILE_I_SCRIPTABLE_IN_STREAM);
 
@@ -166,12 +165,10 @@ try {
    * The File Transport Service provides nsITransport objects 
    * which can supply nsIOutputStream objects for writing to files.
    */
-
-  /*
   const JS_FILE_FileTransportService =
   C.classes[JS_FILE_F_TRANSPORT_SERVICE_CID].
   getService(C.interfaces.nsIFileTransportService);
-  */
+  
 } catch (e) {
   jslibError (e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
                 "NS_ERROR_FAILURE", 
@@ -384,6 +381,7 @@ File.prototype.open = function(aMode, aPerms)
         this.mLineBuffer         = new Array();
         this.mFileChannel.init(this.mFileInst, JS_FILE_READ, this.permissions);
         this.mInputStream.init(this.mFileChannel.open());
+        this.mLineBuffer         = new Array();
         rv=true;
       } catch (e) {
         jslibError(e, "open(r) (error setting permissions)", 

@@ -40,17 +40,15 @@ Instructions:
 
 */
 
-if(typeof(JS_LIB_LOADED)=='boolean')
-{
+if (typeof(JS_LIB_LOADED)=='boolean') {
 
 /************* INCLUDE FILESYSTEM *****************/
 if(typeof(JS_FILESYSTEM_LOADED)!='boolean')
-  include(JS_LIB_PATH+'io/filesystem.js');
+  include(jslib_filesystem);
 /************* INCLUDE FILESYSTEM *****************/
 
 
 /****************** Globals **********************/
-
 const JS_DIR_FILE                    = "dir.js";
 const JS_DIR_LOADED                  = true;
 
@@ -68,70 +66,62 @@ const JS_DIR_OK                      = true;
 
 const JS_DIR_DEFAULT_PERMS           = 0755;
 
-const JS_DIR_FilePath = new Components.Constructor( JS_DIR_LOCAL_CID, JS_DIR_I_LOCAL_FILE, JS_DIR_INIT_W_PATH);
-
+const JS_DIR_FilePath                = new C.Constructor(JS_DIR_LOCAL_CID, 
+                                                   JS_DIR_I_LOCAL_FILE, 
+                                                   JS_DIR_INIT_W_PATH);
+/****************** Globals **********************/
 
 /****************** Dir Object Class *********************/
+// constructor
 function Dir(aPath) {
 
-  if(!aPath)
-  {
+  if(!aPath) {
     jslibError(null,
               "Please enter a local file path to initialize",
               "NS_ERROR_XPC_NOT_ENOUGH_ARGS", JS_DIR_FILE);
-    throw Components.results.NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+    throw C.results.NS_ERROR_XPC_NOT_ENOUGH_ARGS;
   }
 
-    return this.initPath(arguments);
-
-} // constructor
+  return this.initPath(arguments);
+} // end constructor
 
 Dir.prototype = new FileSystem;
-
 Dir.prototype.fileInst = null;
 
 /********************* CREATE ****************************/
 Dir.prototype.create = function(aPermissions) 
 {
-  if(!this.mPath)
-  {
+  if(!this.mPath) {
     jslibError(null, "create (no file path defined)", "NS_ERROR_NOT_INITIALIZED");
-    return Components.results.NS_ERROR_NOT_INITIALIZED;
+    return C.results.NS_ERROR_NOT_INITIALIZED;
   }
 
-  if(this.exists())
-  {
+  if(this.exists()) {
     jslibError(null, "(Dir already exists", "NS_ERROR_FAILURE", JS_DIR_FILE+":create");
     return null;
   }
 
-  if(aPermissions){
+  if(aPermissions) {
     var checkPerms = this.validatePermissions(aPermissions);
 
-    if(!checkPerms)
-    {
-      jslibError(null, "create (invalid permissions)", "NS_ERROR_INVALID_ARG", JS_DIR_FILE+":create");
-      return Components.results.NS_ERROR_INVALID_ARG;
+    if(!checkPerms) {
+      jslibError(null, "create (invalid permissions)", 
+                       "NS_ERROR_INVALID_ARG", JS_DIR_FILE+":create");
+      return C.results.NS_ERROR_INVALID_ARG;
     }               
 
     //var baseTen = permissions.toString(10);
-
     //if(baseTen.substring(0,1) != 0)
       //aPermissions = 0+baseTen;
-  }
-  else
-  {
+  } else {
     checkPerms = JS_DIR_DEFAULT_PERMS;
   }
 
   var rv = null;
 
-  try
-  {
+  try {
     rv=this.mFileInst.create(JS_DIR_DIRECTORY, parseInt(aPermissions) );
-  }
-  catch (e)
-  { 
+  } catch (e) { 
     jslibError(e, "(unable to create)", "NS_ERROR_FAILURE", JS_DIR_FILE+":create");
     rv=null;
   }
@@ -143,18 +133,15 @@ Dir.prototype.create = function(aPermissions)
 Dir.prototype.readDir = function ()
 {
 
-  if(!this.exists())
-  {
+  if(!this.exists()) {
     jslibError(null, "(Dir already exists", "NS_ERROR_FAILURE", JS_DIR_FILE+":readDir");
     return null;
   }
 
   var rv=null;
 
-  try
-  {
-    if(!this.isDir())
-    {
+  try {
+    if(!this.isDir()) {
       jslibError(null, "(file is not a directory)", "NS_ERROR_FAILURE", JS_DIR_FILE+":readDir");
       return null;
     }
@@ -166,9 +153,8 @@ Dir.prototype.readDir = function ()
     if(typeof(JS_FILE_LOADED)!='boolean')
       include(JS_LIB_PATH+'io/file.js');
 
-    while(files.hasMoreElements())
-    {
-      file = files.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+    while(files.hasMoreElements()) {
+      file = files.getNext().QueryInterface(C.interfaces.nsILocalFile);
       if(file.isFile())
         listings.push(new File(file.path));
 
@@ -177,10 +163,7 @@ Dir.prototype.readDir = function ()
     }
 
     rv=listings;
-  }
-
-  catch(e)
-  { 
+  } catch(e) { 
     jslibError(e, "(unexpected error)", "NS_ERROR_UNEXPECTED", JS_FILE_FILE+":readDir");
     rv=null;
   }
@@ -196,34 +179,30 @@ Dir.prototype.remove = function (aRecursive)
     aRecursive=false;
 
   if(!this.checkInst())
-    throw Components.results.NS_ERROR_NOT_INITIALIZED;
+    throw C.results.NS_ERROR_NOT_INITIALIZED;
 
   if(!this.mPath)
   {
-    jslibError(null, "remove (no path defined)", "NS_ERROR_INVALID_ARG", JS_DIR_FILE+":remove");
+    jslibError(null, "remove (no path defined)", 
+                     "NS_ERROR_INVALID_ARG", JS_DIR_FILE+":remove");
     return null;
   }
 
   var rv=null
 
-  try
-  { 
-    if(!this.exists())
-    {
+  try { 
+    if(!this.exists()) {
       jslibError(null, "(directory doesn't exist)", "NS_ERROR_FAILURE", JS_DIR_FILE+":remove");
       return null;
     }
 
-    if(!this.isDir())
-    {
+    if(!this.isDir()) {
       jslibError(null, "(file is not a directory)", "NS_ERROR_FAILURE", JS_DIR_FILE+":remove");
       return null;
     }
 
     rv=this.mFileInst.remove(aRecursive);
-  }
-  catch (e)
-  { 
+  } catch (e) { 
     jslibError(e, "(dir not empty, use 'remove(true)' for recursion)", "NS_ERROR_UNEXPECTED", 
                   JS_DIR_FILE+":remove");
     rv=null;
@@ -236,8 +215,7 @@ Dir.prototype.remove = function (aRecursive)
 Dir.prototype.super_help = FileSystem.prototype.help;
 
 Dir.prototype.__defineGetter__('help', 
-function()
-{
+function() {
   var help = this.super_help()              +
 
     "   create(aPermissions);\n"            +
@@ -247,14 +225,11 @@ function()
   return help;
 });
 
-jslib_debug('*** load: '+JS_DIR_FILE+' OK');
+jslibDebug('*** load: '+JS_DIR_FILE+' OK');
 
-}
-
-else
-{
+} else {
     dump("JSLIB library not loaded:\n"                                  +
          " \tTo load use: chrome://jslib/content/jslib.js\n"            +
-         " \tThen: include('chrome://jslib/content/io/dir.js');\n\n");
+         " \tThen: include(jslib_dir);\n\n");
 }
 

@@ -78,15 +78,13 @@ FileSystem.prototype  = {
 ***************************/
 initPath : function(args)
 {
-   var fileURL;
-   var i;
 
    // check if the argument is a file:// url
    if(typeof(args)=='object') {
-      for (i=0; i<args.length; i++) {
+      for (var i=0; i<args.length; i++) {
          if(args[i].search(/^file:/) == 0) {
             try {
-               fileURL= new JS_FS_URL();
+               var fileURL= new JS_FS_URL();
                fileURL.spec=args[i];
                args[i] = fileURL.path;
             } catch (e) { 
@@ -99,7 +97,7 @@ initPath : function(args)
    } else {
       if(args.search(/^file:/) == 0) {
          try {
-            fileURL= new JS_FS_URL();
+            var fileURL= new JS_FS_URL();
             fileURL.spec=args;
             args = fileURL.path;
          } catch (e) { 
@@ -360,7 +358,7 @@ get dateModified()
   }
   var rv = null;
   try { 
-    rv = (new Date(this.mFileInst.lastModificationDate)); 
+    rv = (new Date(this.mFileInst.lastModifiedTime)); 
   } catch(e) {
     jslibError(e, 
       "(problem getting file instance)", 
@@ -471,9 +469,9 @@ move : function (aDest)
     }
     var dir=f.parent;
     if (dir.exists() && dir.isDirectory()) {
-      jslib_debug(newName);
+      jslibDebug(newName);
       this.mFileInst.moveTo(dir, newName);
-      jslib_debug(JS_FILESYSTEM_FILE+':move successful!\n');
+      jslibDebug(JS_FILESYSTEM_FILE+':move successful!\n');
       this.mPath=f.path;
       this.resetCache();
       delete dir;
@@ -669,7 +667,7 @@ help  : function()
 
 }; // END FileSystem Class
 
-jslib_debug('*** load: '+JS_FILESYSTEM_FILE+' OK');
+jslibDebug('*** load: '+JS_FILESYSTEM_FILE+' OK');
 
 } // END BLOCK JS_LIB_LOADED CHECK
 

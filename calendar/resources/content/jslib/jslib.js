@@ -34,8 +34,8 @@ const JS_LIB_LOADED     = true;
 const JS_LIBRARY        = "jslib";
 const JS_LIB_FILE       = "jslib.js"
 const JS_LIB_PATH       = "chrome://calendar/content/jslib/";
-const JS_LIB_VERSION    = "0.00";
-const JS_LIB_AUTHORS    = "\tPete Collins       <petejc@optonline.net>\n"     +
+const JS_LIB_VERSION    = "0.1.8";
+const JS_LIB_AUTHORS    = "\tPete Collins       <petejc@mozdevgroup.com>\n"     +
                           "\tEric Plaster       <plaster@urbanrage.com>\n"    +
                           "\tMartin.T.Kutschker <Martin.T.Kutschker@blackbox.net>\n";
 const JS_LIB_BUILD      = "0.9.5";
@@ -67,6 +67,23 @@ const JS_LIB_HELP       = "\n\nWelcome to jslib version "+JS_LIB_VERSION+"\n\n"
                           + "JS_LIB_HOME    \n\t"+JS_LIB_HOME    +"\n\n"
                           + "Global Variables:\n\n"            
                           + "  JS_LIB_DEBUG\n  JS_LIB_ERROR\n\n";
+
+// help identifier
+const jslib_help = "need to write some global help docs here\n";
+
+// Library Identifiers
+
+// io library modules
+const jslib_io         = JS_LIB_PATH+'io/io.js';
+const jslib_filesystem = JS_LIB_PATH+'io/filesystem.js'
+const jslib_file       = JS_LIB_PATH+'io/file.js';
+const jslib_fileutils  = JS_LIB_PATH+'io/fileUtils.js';
+const jslib_dir        = JS_LIB_PATH+'io/dir.js';
+const jslib_dirutils   = JS_LIB_PATH+'io/dirUtils.js';
+
+// sound library modules
+const jslib_sound = JS_LIB_PATH+'sound/sound.js';
+
 
 /*************************** GLOBALS ***************************/
 
@@ -122,7 +139,7 @@ function include(aScriptPath) {
 }
 
 /****************************************************************
-* void jslibDdebug(aOutString)                                  *
+* void jslibDebug(aOutString)                                  *
 * aOutString is an argument of string debug message             *
 * returns void                                                  *
 *   Ex:                                                         * 
@@ -184,6 +201,7 @@ function jslibError(e, aType, aResults, aCaller) {
     return (dump("JS_LIB_ERROR=ON\n"));
 
   var errMsg="ERROR: "+(aCaller?"in "+aCaller:"")+"  "+aType+"\n";
+  var e = null;
   if (e) {
     var m = (e.message?e.message:e);
     var r = (typeof(e.result)!='undefined'?'0x'+e.result.toString(16):'');
