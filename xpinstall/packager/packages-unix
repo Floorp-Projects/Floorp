@@ -146,6 +146,9 @@ bin/components/webBrowser_core.xpt
 bin/components/libwallet.so
 bin/components/libwalletviewers.so
 bin/components/libwidget_gtk.so
+bin/components/libwidget_gtk2.so
+; accessibility library for gtk2 is loaded at runtime
+bin/libmai.so
 bin/components/libxpconnect.so
 bin/components/locale.xpt
 bin/components/mozbrwsr.xpt
