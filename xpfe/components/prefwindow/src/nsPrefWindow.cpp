@@ -30,7 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 #include "nsFileSpec.h"
-#include "nsIFileSpec.h"
+#include "nsIFileSpecWithUI.h"
 #include "nsFileStream.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -551,7 +551,7 @@ nsresult nsPrefWindow::FinalizeOneWidget(
             nsresult rv = inElement->GetValue(fieldValue);
             if (NS_FAILED(rv))
                 return rv;
-            nsIFileSpec* specValue = NS_CreateFileSpec();
+            nsIFileSpecWithUI* specValue = NS_CreateFileSpecWithUI();
             if (!specValue)
             	return NS_ERROR_FAILURE;
             nsCAutoString str(fieldValue);
