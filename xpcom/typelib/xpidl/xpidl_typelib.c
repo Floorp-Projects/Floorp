@@ -812,7 +812,6 @@ handle_iid_is:
               }
               case IDLN_NATIVE: {
                   char *ident;
-                  gboolean isID;
 
                   /* jband - adding goto for iid_is when type is native */
                   if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL &&
@@ -821,30 +820,7 @@ handle_iid_is:
                       goto handle_iid_is;
 
                   ident = IDL_IDENT(type).str;
-                  isID = FALSE;
-
-                  if(IDL_tree_property_get(type, "nsid"))
-                      isID = TRUE;
-
-                  /* XXX obsolete the below! */
-
-                  /* check for nsID, nsCID, nsIID, nsIIDRef */
-                  if (!isID && ident[0] == 'n' && ident[1] == 's') {
-                      ident += 2;
-                      if (ident[0] == 'C')
-                          ident ++;
-                      else if (ident[0] == 'I' && ident[1] == 'I')
-                          ident ++;
-                      if (ident[0] == 'I' && ident[1] == 'D') {
-                          ident += 2;
-                          if ((ident[0] == '\0') ||
-                              (ident[0] == 'R' && ident[1] == 'e' &&
-                               ident[2] == 'f' && ident[3] == '\0')) {
-                              isID = TRUE;
-                          }
-                      }
-                  }
-                  if (isID) {
+                  if(IDL_tree_property_get(type, "nsid")) {
                       td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
                       if(IDL_tree_property_get(type, "ref"))
                           td->prefix.flags |= XPT_TDP_REFERENCE;
