@@ -29,7 +29,7 @@ Contributor(s):
                 Stuart Parmenter <pavlov@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/find/findDialog.dtd">
 
