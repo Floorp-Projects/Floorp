@@ -39,7 +39,6 @@
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 
-static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
@@ -49,8 +48,10 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 // Class nsCharsetConverterManager [declaration]
 
 /**
- * The actual implementation of the nsICharsetConverterManager interface.
+ * The actual implementation of the nsICharsetConverterManager2 interface. It 
+ * alsoimplements the soon to be deprecated nsICharsetConverterManager.
  *
+ * XXX completely deprecate the nsICharsetConverterManager interface
  * XXX optimise the memory allocations in "scriptable" and "friendly" methods
  *
  * @created         15/Nov/1999
@@ -101,19 +102,6 @@ public:
       nsIUnicodeEncoder ** aResult);
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult);
-
-  NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount);
-  NS_IMETHOD GetCharsetDetectorList(nsStringArray * aArray);
-
-  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
-      nsString ** aResult);
-  NS_IMETHOD GetCharsetTitle(nsString * aCharset, nsString ** aResult);
-  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult);
-
-  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult);
-  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, nsString ** 
-      aResult);
 
   //--------------------------------------------------------------------------
   // Interface nsICharsetConverterManager2 [declaration]
@@ -524,66 +512,6 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   if(NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
   return res;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(nsString *** aResult, 
-                                                        PRInt32 * aCount)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(nsString *** aResult, 
-                                                        PRInt32 * aCount)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(
-                                         nsStringArray * aArray)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetData(nsString * aCharset, 
-                                                        nsString * aProp, 
-                                                        nsString ** aResult)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(nsString * aCharset, 
-                                                         nsString ** aResult)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
-                                         nsString * aCharset, 
-                                         nsIAtom ** aResult)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetMIMEMailCharset(
-                                         nsString * aCharset, 
-                                         nsString ** aResult)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP nsCharsetConverterManager::GetMIMEHeaderEncodingMethod(
-                                         nsString * aCharset, 
-                                         nsString ** aResult)
-{
-  // XXX deprecated
-  return NS_ERROR_UNEXPECTED;
 }
 
 //----------------------------------------------------------------------------
