@@ -171,7 +171,8 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 
   HMENU nativeMenuHandle;
   void * voidData;
-  aMenu->GetNativeData(voidData);
+  aMenu->GetNativeData(&voidData);
+
   nativeMenuHandle = (HMENU)voidData;
 
   MENUITEMINFO menuInfo;
