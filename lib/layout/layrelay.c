@@ -82,6 +82,9 @@ static LO_Element * lo_rl_FitFormEle( lo_RelayoutState *relay_state, LO_Element 
 static LO_Element * lo_rl_FitTable( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitCell( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitEmbed( lo_RelayoutState *relay_state, LO_Element *lo_ele );
+#ifdef SHACK
+static LO_Element * lo_rl_FitBuiltin( lo_RelayoutState *relay_state, LO_Element *lo_ele );
+#endif /* SHACK */
 static LO_Element * lo_rl_FitJava( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitObject( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitParagraph( lo_RelayoutState *relay_state, LO_Element *lo_ele );
@@ -129,7 +132,10 @@ static lo_FitFunction lo_rl_FitFunctionTable[] = {
 	lo_rl_FitHeading,		/* LO_HEADING */
 	lo_rl_FitSpan,			/* LO_SPAN */
 	lo_rl_FitDiv,			/* LO_DIV */
-	lo_rl_FitSpacer			/* LO_SPACER */
+#ifdef SHACK
+	lo_rl_FitBuiltin,		/* LO_BUILTIN */
+#endif /* SHACK */
+	lo_rl_FitSpacer 		/* LO_SPACER */
 };
 
 
@@ -1158,6 +1164,23 @@ lo_rl_FitEmbed( lo_RelayoutState *relay_state, LO_Element *lo_ele )
   return next;
 }
 
+#ifdef SHACK
+static LO_Element *
+lo_rl_FitBuiltin( lo_RelayoutState *relay_state, LO_Element *lo_ele )
+{
+  int32 line_inc, baseline_inc;
+  LO_Element *next = lo_tv_GetNextLayoutElement(relay_state->doc_state, lo_ele, FALSE);
+  LO_BuiltinStruct *builtin = (LO_BuiltinStruct*)lo_ele;
+
+  lo_FillInBuiltinGeometry(relay_state->doc_state, builtin, TRUE);
+  lo_LayoutInflowBuiltin(relay_state->context, relay_state->doc_state, builtin, TRUE, &line_inc, &baseline_inc);
+  lo_AppendToLineList(relay_state->context, relay_state->doc_state, lo_ele, baseline_inc);
+  lo_UpdateStateAfterBuiltinLayout(relay_state->doc_state, builtin, line_inc, baseline_inc);
+
+  return next;
+}
+#endif /* SHACK */
+
 static LO_Element *
 lo_rl_FitJava( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 {
@@ -1407,6 +1430,20 @@ lo_rl_FitFloat( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 
 		layer = embed->layer;
 	}
+#ifdef SHACK
+	else if (lo_ele->lo_float.float_ele->lo_any.type == LO_BUILTIN) {
+		LO_BuiltinStruct *builtin = (LO_BuiltinStruct *)lo_ele->lo_float.float_ele;
+		
+		lo_LayoutFloatEmbed( relay_state->context, relay_state->doc_state, 
+							 (LO_EmbedStruct *)builtin, FALSE );
+
+		/* Determine the new position of the layer. */
+		x = builtin->x + builtin->x_offset + builtin->border_width;
+		y = builtin->y + builtin->y_offset + builtin->border_width;
+
+		layer = builtin->layer;
+	}
+#endif /* SHACK */
 	else if (lo_ele->lo_float.float_ele->lo_any.type == LO_TABLE) {
 		LO_TableStruct *table_ele = (LO_TableStruct *)lo_ele->lo_float.float_ele;
 		lo_DocState *state = relay_state->doc_state;

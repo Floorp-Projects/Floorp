@@ -109,8 +109,8 @@ lo_FormatBuiltinObject (MWContext *context, lo_DocState* state,
 
 void
 lo_FillInBuiltinGeometry(lo_DocState *state,
-					   LO_BuiltinStruct *builtin,
-					   Bool relayout)
+						 LO_BuiltinStruct *builtin,
+						 Bool relayout)
 {
 	int32 doc_width;
 
@@ -404,7 +404,7 @@ lo_FormatBuiltinInternal (MWContext *context, lo_DocState *state, PA_Tag *tag,
 	builtin->border_horiz_space = FEUNITS_X(builtin->border_horiz_space,
 						context);
 
-	/* embed_list for reflection? XXX */
+	/* builtin_list for reflection? XXX */
 
 	lo_FinishBuiltin (context, state, builtin);
 }
@@ -414,7 +414,6 @@ lo_FinishBuiltin (MWContext *context, lo_DocState *state, LO_BuiltinStruct *buil
 {
 	int32 baseline_inc;
 	int32 line_inc;
-	int32 embed_height, embed_width;
 
 #ifdef DEBUG_SPENCE
 	printf ("lo_FinishBuiltin\n");
@@ -476,5 +475,105 @@ lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 	/* Determine the new position of the layer. */
 	x = builtin->x + builtin->x_offset + builtin->border_width;
 	y = builtin->y + builtin->y_offset + builtin->border_width;
+}
+
+
+void
+lo_LayoutInflowBuiltin(MWContext *context,
+					 lo_DocState *state,
+					 LO_BuiltinStruct *builtin,
+					 Bool inRelayout,
+					 int32 *line_inc,
+					 int32 *baseline_inc)
+{
+  int32 builtin_width, builtin_height;
+  Bool line_break;
+  PA_Block buff;
+  char *str;
+  LO_TextStruct tmp_text;
+  LO_TextInfo text_info;
+  lo_TopState *top_state;
+  
+  top_state = state->top_state;
+  
+  /*
+   * All this work is to get the text_info filled in for the current
+   * font in the font stack. Yuck, there must be a better way.
+   */
+  memset (&tmp_text, 0, sizeof (tmp_text));
+  buff = PA_ALLOC(1);
+  if (buff == NULL)
+	{
+	  top_state->out_of_memory = TRUE;
+	  return;
+	}
+  PA_LOCK(str, char *, buff);
+  str[0] = ' ';
+  PA_UNLOCK(buff);
+  tmp_text.text = buff;
+  tmp_text.text_len = 1;
+  tmp_text.text_attr =
+	state->font_stack->text_attr;
+  FE_GetTextInfo(context, &tmp_text, &text_info);
+  PA_FREE(buff);
+  
+  builtin_width = builtin->width + (2 * builtin->border_width) +
+	(2 * builtin->border_horiz_space);
+  builtin_height = builtin->height + (2 * builtin->border_width) +
+	(2 * builtin->border_vert_space);
+  
+  /*
+   * Will this builtin make the line too wide.
+   */
+  if ((state->x + builtin_width) > state->right_margin)
+	{
+	  line_break = TRUE;
+	}
+  else
+	{
+	  line_break = FALSE;
+	}
+  
+  /*
+   * if we are at the beginning of the line.  There is
+   * no point in breaking, we are just too wide.
+   * Also don't break in unwrapped preformatted text.
+   * Also can't break inside a NOBR section.
+   */
+  if ((state->at_begin_line != FALSE)||
+	  (state->preformatted == PRE_TEXT_YES)||
+	  (state->breakable == FALSE))
+	{
+	  line_break = FALSE;
+	}
+  
+  /*
+   * break on the builtin if we have
+   * a break.
+   */
+  if (line_break != FALSE)
+	{
+	  /*
+	   * We need to make the elements sequential, linefeed
+	   * before builtin.
+	   */
+		top_state->element_id = builtin->ele_id;	  
+
+		if (!inRelayout)
+		{
+			lo_SoftLineBreak(context, state, TRUE);
+		}
+		else 
+		{
+			lo_rl_AddSoftBreakAndFlushLine(context, state);
+		}
+		builtin->x = state->x;
+		builtin->y = state->y;
+		builtin->ele_id = NEXT_ELEMENT;
+	}
+
+  lo_CalcAlignOffsets(state, &text_info, (intn)builtin->alignment,
+					  builtin_width, builtin_height,
+					  &builtin->x_offset, &builtin->y_offset, line_inc, baseline_inc);
 }
 
