@@ -82,7 +82,7 @@ XP_DIST_LIBS = \
 		$(NULL)
 
 # cls/shaver are responsible for this amazingness
-EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.so,$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
 
 XP_LIBS = \
 		$(XP_DIST_LIBS) \
@@ -100,4 +100,3 @@ CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 install:: $(srcdir)/mozilla-apprunner.sh
 	$(INSTALL) $< $(DIST)/bin
-
