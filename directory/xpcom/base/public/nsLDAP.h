@@ -36,30 +36,6 @@
 #include "nspr.h"
 #include "nsILDAPErrors.h"
 
-#define NS_ERROR_LDAP_OPERATIONS_ERROR \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::OPERATIONS_ERROR)
-
-#define NS_ERROR_LDAP_ENCODING_ERROR \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::ENCODING_ERROR)
-
-#define NS_ERROR_LDAP_SERVER_DOWN \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::SERVER_DOWN)
-
-#define NS_ERROR_LDAP_NOT_SUPPORTED \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::NOT_SUPPORTED)
-
-#define NS_ERROR_LDAP_DECODING_ERROR \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::DECODING_ERROR)
-
-#define NS_ERROR_LDAP_CONNECT_ERROR \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LDAP, \
-                              nsILDAPErrors::CONNECT_ERROR)
-
 #ifdef PR_LOGGING
 extern PRLogModuleInfo *gLDAPLogModule;	   // defn in nsLDAPProtocolModule.cpp
 #endif

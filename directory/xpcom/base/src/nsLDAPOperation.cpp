@@ -230,6 +230,12 @@ nsLDAPOperation::SearchExt(const PRUnichar *aBaseDn, PRInt32 aScope,
                            const char **aAttributes, PRIntervalTime aTimeOut,
                            PRInt32 aSizeLimit) 
 {
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+           ("nsLDAPOperation::SearchExt(): called with aBaseDn = '%s'; "
+            "aFilter = '%s', aAttrCounts = %u, aSizeLimit = %d", 
+            NS_ConvertUCS2toUTF8(aBaseDn).get(), 
+            NS_ConvertUCS2toUTF8(aFilter).get(), aAttrCount, aSizeLimit));
+
     char **attrs = 0;
 
     // Convert our XPCOM style C-Array to one that the C-SDK will like, i.e.

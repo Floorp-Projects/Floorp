@@ -474,6 +474,9 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
                          PRUnichar ***aValues)
 {
     char **values;
+    
+    PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
+           ("nsLDAPMessage::GetValues(): called with aAttr = '%s'", aAttr));
 
     values = ldap_get_values(mConnectionHandle, mMsgHandle, aAttr);
 
@@ -483,7 +486,12 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
         PRInt32 lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
 
         if ( lderrno == LDAP_DECODING_ERROR ) {
-            NS_WARNING("nsLDAPMessage::GetValues(): Error decoding values");
+            // this may not be an error; it could just be that the 
+            // caller has asked for an attribute that doesn't exist.
+            //
+            PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+                   ("nsLDAPMessage::GetValues(): ldap_get_values returned "
+                    "LDAP_DECODING_ERROR"));
             return NS_ERROR_LDAP_DECODING_ERROR;
 
         } else if ( lderrno == LDAP_PARAM_ERROR ) {
@@ -541,3 +549,18 @@ nsLDAPMessage::ToUnicode(PRUnichar* *aString)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsLDAPMessage::GetErrorMessage(nsAWritableString & aErrorMessage)
+{
+    aErrorMessage = NS_ConvertUTF8toUCS2(mErrorMessage);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPMessage::GetMatchedDn(nsAWritableString & aMatchedDn)
+{
+    aMatchedDn = NS_ConvertUTF8toUCS2(mMatchedDn);
+    return NS_OK;
+}
+

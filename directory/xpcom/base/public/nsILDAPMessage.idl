@@ -35,6 +35,11 @@
 #include "nsISupports.idl"
 #include "nsILDAPOperation.idl"
 
+/* hack around XPIDL bug 78848; when that's fixed, this can disappear */
+%{C++
+#include "nsAString.h"
+%}
+
 [scriptable, uuid(973ff50f-2002-4f0c-b57d-2242156139a2)]
 interface nsILDAPMessage : nsISupports
 {
@@ -161,4 +166,16 @@ interface nsILDAPMessage : nsISupports
      * @return unicode encoded string representation.
      */
     wstring toUnicode();
+
+    /**
+     * Additional error information optionally sent by the server.
+     */
+    readonly attribute AString errorMessage;
+
+    /**
+     * In LDAPv3, when the server returns any of the following errors:
+     * NO_SUCH_OBJECT, ALIAS_PROBLEM, INVALID_DN_SYNTAX, ALIAS_DEREF_PROBLEM,
+     * it also returns the closest existing DN to the entry requested.
+     */
+    readonly attribute AString matchedDn;
 };

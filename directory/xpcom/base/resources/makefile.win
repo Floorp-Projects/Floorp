@@ -1,4 +1,4 @@
-# 
+#!nmake 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -13,10 +13,10 @@
 # 
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are 
-# Copyright (C) 2000 Netscape Communications Corporation.  All
+# Copyright (C) 2000-2001 Netscape Communications Corporation.  All
 # Rights Reserved.
 # 
-# Contributor(s): Dan Mosedale <dmose@mozilla.org>
+# Contributor(s): Dan Mosedale <dmose@netscape.com>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -31,14 +31,10 @@
 # GPL.
 # 
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+include <$(DEPTH)\config\rules.mak>
 
-DIRS		= public src resources
-
-include $(topsrcdir)/config/rules.mk
-
+chrome::
+        $(REGCHROME) content mozldap comm.jar
+        $(REGCHROME) locale en-US/mozldap en-US.jar
