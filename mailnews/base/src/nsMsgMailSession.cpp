@@ -17,20 +17,20 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers
-#include "nsIMsgIdentity.h"
+//#include "nsIMsgIdentity.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIPop3IncomingServer.h"
+//#include "nsIPop3IncomingServer.h"
 #include "nsMsgMailSession.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
-#include "nsIPref.h"
+//#include "nsIPref.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsIMsgMailSession::GetIID());
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
-static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+//static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
+//static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
+//static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
     
 
 nsMsgMailSession::nsMsgMailSession():
