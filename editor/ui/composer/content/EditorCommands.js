@@ -18,8 +18,8 @@
       appCore = new EditorAppCore();
       if (appCore) {
         dump("EditorAppCore has been created.\n");
-		appCore.Init(editorName);
-		appCore.setEditorType("html");
+        appCore.Init(editorName);
+        appCore.setEditorType("html");
         appCore.setContentWindow( window.frames[0] );
         appCore.setWebShellWindow(window);
         appCore.setToolbarWindow(window);
@@ -316,3 +316,6 @@ function EditorInsertLink()
 		}
 	}
 
+  function Shutdown()
+  {
+  }

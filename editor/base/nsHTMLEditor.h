@@ -128,6 +128,7 @@ public:
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
+  NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);

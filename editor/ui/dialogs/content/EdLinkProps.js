@@ -8,12 +8,11 @@ var insertNew = true;
 var needLinkText = false;
 var selection;
 var undoCount = 0;
-var makeLinkWithSelection = false;
+var insertLinkAroundSelection = false;
 
 // NOTE: Use "HREF" instead of "A" to distinguish from Named Anchor
 // The returned node is has an "A" tagName
 var tagName = "HREF";
-var data;
 var dialog;
 
 // dialog initialization code
@@ -86,16 +85,6 @@ function initDialog() {
   if (anchorElement) {
     // We found an element and don't need to insert one
     insertNew = false;
-
-    if (!selection.isCollapsed)
-    {
-      // HREF is a weird case: If selection extends beyond
-      //   the link, user probably wants to extend link to 
-      //   entire selection.
-      // TODO: We need to know if selection extends beyond existing
-      //   link text before we should do this
-      //makeLinkWithSelection = true;
-    }
   } else {
     // We don't have an element selected, 
     //  so create one with default attributes
@@ -120,6 +109,18 @@ function initDialog() {
     //   their URL? E.g.: "Link source [image:http://myimage.gif]"
     dialog.linkMessage.data = "[Link source text or image URL goes here]";
   }
+
+  if (!selection.isCollapsed)
+  {
+    // HREF is a weird case: If selection extends beyond
+    //   the link, user probably wants to extend link to 
+    //   entire selection.
+    // TODO: If there was already a link, 
+    //   we need to know if selection extends beyond existing
+    //   link text before we should do this
+    insertLinkAroundSelection = true;
+    dump("insertLinkAroundSelection is TRUE\n");
+  }
 }
 
 function applyChanges()
@@ -143,6 +144,9 @@ function applyChanges()
     if (newElement != anchorElement) {
       dump("Returned element from insertElement is different from orginal element.\n");
     }
+  } else if (insertLinkAroundSelection) {
+    dump("Setting link around selected text\n");
+    appCore.insertLinkAroundSelection(anchorElement);
   }
   undoCount = undoCount + 1;
   appCore.endBatchChanges();
