@@ -40,6 +40,7 @@ class nsIRDFContent;
 class nsIRDFContentModelBuilder;
 class nsISupportsArray;
 class nsIRDFResource;
+class nsIDOMElement;
 class nsIDOMHTMLFormElement;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
@@ -103,6 +104,16 @@ public:
 
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm) = 0;
+
+  /**
+   * Add a "forward declaration" of a XUL observer. Such declarations
+   * will be resolved when document loading completes.
+   */
+  NS_IMETHOD AddForwardObserverDecl(nsIDOMElement* aListener,
+                                    const nsString& aTargetID,
+                                    const nsString& aAttribute) = 0;
+
+  NS_IMETHOD ResolveForwardObserverDecls() = 0;
 };
 
 // factory functions
