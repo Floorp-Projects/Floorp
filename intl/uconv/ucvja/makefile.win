@@ -29,6 +29,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsSJIS2Unicode.cpp		\
 	nsUnicodeToSJIS.cpp		\
+	nsCP932ToUnicode.cpp		\
+	nsUnicodeToCP932.cpp		\
 	nsUCvJaSupport.cpp		\
 	nsUCVJADll.cpp			\
 	$(NULL)
@@ -36,6 +38,8 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsSJIS2Unicode.obj 			\
 	.\$(OBJDIR)\nsUnicodeToSJIS.obj			\
+	.\$(OBJDIR)\nsCP932ToUnicode.obj 			\
+	.\$(OBJDIR)\nsUnicodeToCP932.obj			\
 	.\$(OBJDIR)\nsUCvJaSupport.obj			\
 	.\$(OBJDIR)\nsUCVJADll.obj 			\
 	$(NULL)
