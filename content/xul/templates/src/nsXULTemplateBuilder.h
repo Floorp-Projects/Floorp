@@ -33,6 +33,7 @@
 #include "nsISecurityCheckedComponent.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
@@ -374,6 +375,7 @@ protected:
     // pseudo-constants
     static nsrefcnt gRefCnt;
     static nsIRDFService*            gRDFService;
+    static nsIRDFContainerUtils*     gRDFContainerUtils;
     static nsINameSpaceManager*      gNameSpaceManager;
     static nsIScriptSecurityManager* gScriptSecurityManager;
     static nsIPrincipal*             gSystemPrincipal;
