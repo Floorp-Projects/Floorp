@@ -1131,7 +1131,6 @@ int32 gdiff_copy( pDIFFDATA dd, uint32 position, uint32 count )
 
 
 #ifdef WIN32
-#include <winfile.h>
 /*---------------------------------------------------------
  *  su_unbind()
  *
