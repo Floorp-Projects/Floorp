@@ -44,6 +44,8 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
+  NS_IMETHOD GetTop(PRInt32* aWidth);
+  NS_IMETHOD GetLeft(PRInt32* aWidth);
   NS_IMETHOD GetWidth(PRInt32* aWidth);
   NS_IMETHOD GetHeight(PRInt32* aHeight);
   NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
