@@ -4655,8 +4655,8 @@ CheckFixDamageArea(PRInt32 aNumRows,
                    PRInt32 aNumCols,
                    nsRect& aDamageArea)
 {
-  if (((aDamageArea.XMost() > aNumCols) && (aDamageArea.width  != 1) & (aNumCols != 0)) || 
-      ((aDamageArea.YMost() > aNumRows) && (aDamageArea.height != 1) & (aNumRows != 0))) {
+  if (((aDamageArea.XMost() > aNumCols) && (aDamageArea.width  != 1) && (aNumCols != 0)) || 
+      ((aDamageArea.YMost() > aNumRows) && (aDamageArea.height != 1) && (aNumRows != 0))) {
     // the damage area was set incorrectly, just be safe and make it the entire table
     NS_ASSERTION(PR_FALSE, "invalid BC damage area");
     aDamageArea.x      = 0;
@@ -5710,7 +5710,7 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
   }
 }
 
-#define MAX_TABLE_BORDER_WIDTH 256
+#define MAX_TABLE_BORDER_WIDTH 255
 static PRUint8
 LimitBorderWidth(PRUint16 aWidth)
 {
