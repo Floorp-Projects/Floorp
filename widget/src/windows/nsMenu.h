@@ -66,6 +66,7 @@ public:
   // Native Impl Methods
   nsIMenu    * GetMenuParent()    { return mMenuParent;    }
   nsIMenuBar * GetMenuBarParent() { return mMenuBarParent; }
+  HMENU        GetNativeMenu()    { return mMenu;          }
 
 protected:
   nsIMenuBar * GetMenuBar(nsIMenu * aMenu);
