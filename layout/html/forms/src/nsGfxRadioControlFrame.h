@@ -64,7 +64,7 @@ public:
                         const nsRect& aDirtyRect);
 
   ///XXX: End o the temporary methods
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
   NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
