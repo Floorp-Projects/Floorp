@@ -39,7 +39,7 @@
 
 #ifdef NS_DEBUG
 #undef NOISY
-#define NOISY_BLINK
+#undef NOISY_BLINK
 #else
 #undef NOISY
 #undef NOISY_BLINK
