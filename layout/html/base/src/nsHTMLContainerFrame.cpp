@@ -57,15 +57,15 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                                       const nsRect& aDirtyRect)
 {
   // Paint our background and border
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible && mRect.width && mRect.height) {
     PRIntn skipSides = GetSkipSides();
-    nsStyleColor* color =
-      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-    nsStyleSpacing* spacing =
-      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    const nsStyleColor* color =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
@@ -191,8 +191,8 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
                                             PRInt32& aCursor)
 {
   // Get my cursor
-  nsStyleColor* styleColor = (nsStyleColor*)
-    mStyleContext->GetData(eStyleStruct_Color);
+  const nsStyleColor* styleColor = (const nsStyleColor*)
+    mStyleContext->GetStyleData(eStyleStruct_Color);
   PRInt32 myCursor = styleColor->mCursor;
 
   // Get child's cursor, if any
@@ -297,11 +297,11 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
                                      nsIFrame*&       aResult)
 {
   // Get the style data for the frame
-  nsStylePosition*    position = (nsStylePosition*)
-    aStyleContext->GetData(eStyleStruct_Position);
-  nsStyleDisplay*     display = (nsStyleDisplay*)
-    aStyleContext->GetData(eStyleStruct_Display);
-  nsIFrame*           frame = nsnull;
+  const nsStylePosition*  position = (const nsStylePosition*)
+    aStyleContext->GetStyleData(eStyleStruct_Position);
+  const nsStyleDisplay*   display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+  nsIFrame*               frame = nsnull;
 
   // See whether it wants any special handling
   nsresult rv;
@@ -448,8 +448,8 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
 nsresult
 nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
 {
-  nsStyleDisplay* display = (nsStyleDisplay*)
-    mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                ("nsHTMLContainerFrame::ProcessInitialReflow: display=%d",
                 display->mDisplay));

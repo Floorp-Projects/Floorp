@@ -64,10 +64,10 @@ nsAbsoluteFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-nsIView* nsAbsoluteFrame::CreateView(nsIView*         aContainingView,
-                                     const nsRect&    aRect,
-                                     nsStylePosition* aPosition,
-                                     nsStyleDisplay*  aDisplay) const
+nsIView* nsAbsoluteFrame::CreateView(nsIView*               aContainingView,
+                                     const nsRect&          aRect,
+                                     const nsStylePosition* aPosition,
+                                     const nsStyleDisplay*  aDisplay) const
 {
   nsIView*  view;
 
@@ -158,9 +158,9 @@ void nsAbsoluteFrame::GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) c
   } while ((nsnull != frame) && (frame != aFrameTo));
 }
 
-void nsAbsoluteFrame::ComputeViewBounds(nsIFrame*        aContainingBlock,
-                                        nsStylePosition* aPosition,
-                                        nsRect&          aRect) const
+void nsAbsoluteFrame::ComputeViewBounds(nsIFrame*              aContainingBlock,
+                                        const nsStylePosition* aPosition,
+                                        nsRect&                aRect) const
 {
   nsRect    containingRect;
 
@@ -176,7 +176,7 @@ void nsAbsoluteFrame::ComputeViewBounds(nsIFrame*        aContainingBlock,
 
   // Compute the offset and size of the view based on the position properties
   // and the inner rect of the containing block
-  nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
+  const nsStylePosition*  position = (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
 
   // If either the left or top are 'auto' then get the offset of our frame from
   // the containing block
@@ -254,10 +254,10 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 
   GetContentParent(result);
   while (nsnull != result) {
-    nsStylePosition* position;
+    const nsStylePosition* position;
 
     // Get the style data
-    result->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
+    result->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
 
     if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
       break;
@@ -306,13 +306,13 @@ NS_METHOD nsAbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     nsIFrame* containingBlock = GetContainingBlock();
     
     // Use the position properties to determine the offset and size
-    nsStylePosition*  position = (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
-    nsRect            rect;
+    const nsStylePosition*  position = (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+    nsRect                  rect;
 
     ComputeViewBounds(containingBlock, position, rect);
 
     // Create a view for the frame
-    nsStyleDisplay*  display = (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+    const nsStyleDisplay*  display = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
     nsIView*         containingView;
     containingBlock->GetView(containingView);
     nsIView*         view = CreateView(containingView, rect, position, display);

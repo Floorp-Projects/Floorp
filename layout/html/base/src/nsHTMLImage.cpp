@@ -360,8 +360,8 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
     // First paint background and borders
@@ -528,8 +528,8 @@ ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
   // The default cursor is to have no cursor
   aCursor = NS_STYLE_CURSOR_INHERIT;
 
-  nsStyleColor* styleColor = (nsStyleColor*)
-    mStyleContext->GetData(eStyleStruct_Color);
+  const nsStyleColor* styleColor = (const nsStyleColor*)
+    mStyleContext->GetStyleData(eStyleStruct_Color);
   if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
     // If we have a particular cursor, use it
     *aFrame = this;
@@ -775,9 +775,9 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
 {
   if (ALIGN_UNSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(eStyleStruct_Display);
+      aContext->GetMutableStyleData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
-      aContext->GetData(eStyleStruct_Text);
+      aContext->GetMutableStyleData(eStyleStruct_Text);
     switch (mAlign) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;

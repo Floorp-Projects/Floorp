@@ -550,14 +550,14 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
                               const nsRect& aDirtyRect)
 {
   // table paint code is concerned primarily with borders and bg color
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    nsStyleColor* myColor =
-      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-    nsStyleSpacing* mySpacing =
-      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    const nsStyleColor* myColor =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleSpacing* mySpacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     NS_ASSERTION(nsnull != myColor, "null style color");
     NS_ASSERTION(nsnull != mySpacing, "null style spacing");
     if (nsnull!=mySpacing)
@@ -717,8 +717,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
   // Compute the insets (sum of border and padding)
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord topInset = borderPadding.top;
@@ -883,8 +883,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  nsStyleSpacing* mySpacing = (nsStyleSpacing*)
-    mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin myBorderPadding;
   mySpacing->CalcBorderPaddingFor(this, myBorderPadding);
 
@@ -1125,8 +1125,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       nsIStyleContextPtr kidSC;
 
       kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(eStyleStruct_Spacing);
+      const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
+        kidSC->GetStyleData(eStyleStruct_Spacing);
       nsMargin kidMargin;
       kidSpacing->CalcMarginFor(kidFrame, kidMargin);
 
@@ -1683,16 +1683,16 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   PRInt32 maxTableWidth = 0;
   PRInt32 totalFixedWidth = 0;
 
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
   // need to figure out the overall table width constraint
   // default case, get 100% of available space
   PRInt32 maxWidth;
-  nsStylePosition* position =
-    (nsStylePosition*)mStyleContext->GetData(eStyleStruct_Position);
+  const nsStylePosition* position =
+    (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
   switch (position->mWidth.GetUnit()) {
   case eStyleUnit_Coord:
     maxWidth = position->mWidth.GetCoordValue();
@@ -1752,8 +1752,8 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   }
 
   // Compute the insets (sum of border and padding)
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -1786,8 +1786,8 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   PRInt32 rowIndex;
   PRInt32 tableHeight = 0;
 
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
 
@@ -2139,7 +2139,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
               // assumes that the col style has been twiddled to account for first cell width attribute
               nsIStyleContextPtr colSC;
               colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-              nsStylePosition* colPosition = (nsStylePosition*)colSC->GetData(eStyleStruct_Position);
+              const nsStylePosition* colPosition = (const nsStylePosition*)colSC->GetStyleData(eStyleStruct_Position);
               mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colFrame->GetColumnIndex());
             }
           }
@@ -2396,7 +2396,7 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   
 
   nsIStyleContext* styleContext = mStyleContext; 
-  nsStyleColor*   colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+  const nsStyleColor*   colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
 
   // Look until we find a style context with a NON-transparent background color
   while (styleContext)
@@ -2407,7 +2407,7 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
       styleContext = styleContext->GetParent();
       if (temp != mStyleContext)
         NS_RELEASE(temp);
-      colorData = (nsStyleColor*)styleContext->GetData(eStyleStruct_Color);
+      colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
     }
     else
     {
@@ -2482,7 +2482,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   if (!table)
     return;
 
-  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
   if (border_result == eContentAttr_HasValue)
@@ -2632,7 +2632,7 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
     nsIFrame * parent = nsnull;
     aTableFrame->GetGeometricParent(parent);
     parent->GetStyleContext(nsnull, parentStyle);
-    nsStylePosition* tablePosition = (nsStylePosition*)parentStyle->GetData(eStyleStruct_Position);
+    const nsStylePosition* tablePosition = (const nsStylePosition*)parentStyle->GetStyleData(eStyleStruct_Position);
     // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
     switch (tablePosition->mWidth.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width

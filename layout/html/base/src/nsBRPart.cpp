@@ -62,8 +62,8 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
                const nsRect&        aDirtyRect)
 {
   if (nsIFrame::GetShowFrameBorders()) {
-    nsStyleColor* color = (nsStyleColor*)
-      mStyleContext->GetData(eStyleStruct_Color);
+    const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(color->mColor);
     aRenderingContext.FillRect(0, 0, nscoord(5 * p2t), mRect.height);
@@ -81,8 +81,8 @@ BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
   }
 
   // We have no width, but we're the height of the default font
-  nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+  const nsStyleFont* font =
+    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
   nsIFontMetrics* fm = aPresContext->GetMetricsFor(font->mFont);
 
   aMetrics.width = 0;
@@ -105,8 +105,8 @@ BRFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
     if (nsnull != lineLayoutState) {
       lineLayoutState->mReflowResult =
         NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        mStyleContext->GetData(eStyleStruct_Display);
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        mStyleContext->GetStyleData(eStyleStruct_Display);
       lineLayoutState->mPendingBreak = display->mBreakType;
       if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
         lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
@@ -134,8 +134,8 @@ BRFrame::Reflow(nsIPresContext*      aPresContext,
     if (nsnull != lineLayoutState) {
       lineLayoutState->mReflowResult =
         NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        mStyleContext->GetData(eStyleStruct_Display);
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        mStyleContext->GetStyleData(eStyleStruct_Display);
       lineLayoutState->mPendingBreak = display->mBreakType;
       if (NS_STYLE_CLEAR_NONE == lineLayoutState->mPendingBreak) {
         lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
@@ -218,7 +218,7 @@ BRPart::MapAttributesInto(nsIStyleContext* aContext,
 {
   if (nsnull != mAttributes) {
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(eStyleStruct_Display);
+      aContext->GetMutableStyleData(eStyleStruct_Display);
     nsHTMLValue value;
     GetAttribute(nsHTMLAtoms::clear, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {

@@ -57,7 +57,7 @@ void nsBlockBandData::ComputeAvailSpaceRect()
       nsBandTrapezoid*  trapezoid = &data[i];
 
       if (trapezoid->state != nsBandTrapezoid::Available) {
-        nsStyleDisplay* display;
+        const nsStyleDisplay* display;
       
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
           PRInt32 numFrames = trapezoid->frames->Count();
@@ -66,14 +66,14 @@ void nsBlockBandData::ComputeAvailSpaceRect()
           for (PRInt32 i = 0; i < numFrames; i++) {
             nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(i);
 
-            f->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+            f->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
             if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
               goto foundRightFloater;
             }
           }
 
         } else {
-          trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+          trapezoid->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
           if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
             break;
           }
@@ -91,13 +91,13 @@ void nsBlockBandData::ComputeAvailSpaceRect()
     // The trapezoid is available
     trapezoid->GetRect(availSpace);
   } else {
-    nsStyleDisplay* display;
+    const nsStyleDisplay* display;
 
     // The trapezoid is occupied. That means there's no available space
     trapezoid->GetRect(availSpace);
 
     // XXX Handle the case of multiple frames
-    trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+    trapezoid->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
       availSpace.x = availSpace.XMost();
     }
@@ -179,10 +179,10 @@ nsresult nsBlockReflowState::RecoverState(nsLineData* aLine)
   
     // If the previous line is a block, then factor in its bottom margin
     if (prevLine->mIsBlock) {
-      nsStyleSpacing* kidSpacing;
-      nsIFrame*       kid = prevLine->mFirstChild;
+      const nsStyleSpacing* kidSpacing;
+      nsIFrame*             kid = prevLine->mFirstChild;
   
-      kid->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct*&)kidSpacing);
+      kid->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)kidSpacing);
       nsMargin  kidMargin;
       kidSpacing->CalcMarginFor(kid, kidMargin);
       if (kidMargin.bottom < 0) {
@@ -511,7 +511,7 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
       nsBandTrapezoid*  trapezoid = &trapezoids[i];
 
       if (trapezoid->state != nsBandTrapezoid::Available) {
-        nsStyleDisplay* display;
+        const nsStyleDisplay* display;
       
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
           PRInt32 numFrames = trapezoid->frames->Count();
@@ -520,14 +520,14 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
           for (PRInt32 i = 0; i < numFrames; i++) {
             nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(i);
 
-            f->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+            f->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
             if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
               goto foundRightFloater;
             }
           }
 
         } else {
-          trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+          trapezoid->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
           if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
             break;
           }
@@ -545,13 +545,13 @@ nsBlockFrame::ReflowBlockChild(nsIFrame*            aKidFrame,
     // The trapezoid is available
     trapezoid->GetRect(availBand);
   } else {
-    nsStyleDisplay* display;
+    const nsStyleDisplay* display;
 
     // The trapezoid is occupied. That means there's no available space
     trapezoid->GetRect(availBand);
 
     // XXX Handle the case of multiple frames
-    trapezoid->frame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+    trapezoid->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
       availBand.x = availBand.XMost();
     }
@@ -692,7 +692,7 @@ nsBlockFrame::ClearFloaters(nsBlockReflowState& aState, PRUint8 aBreakType)
     nsRect tmp;
     PRInt32 i;
     for (i = 0; i < aState.mCurrentBand.count; i++) {
-      nsStyleDisplay* display;
+      const nsStyleDisplay* display;
       nsBandTrapezoid* trapezoid = &aState.mCurrentBand.data[i];
       if (trapezoid->state != nsBandTrapezoid::Available) {
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
@@ -700,7 +700,7 @@ nsBlockFrame::ClearFloaters(nsBlockReflowState& aState, PRUint8 aBreakType)
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (fn = 0; fn < numFrames; fn++) {
             nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(fn);
-            f->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+            f->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
             switch (display->mFloats) {
             case NS_STYLE_FLOAT_LEFT:
@@ -728,7 +728,7 @@ nsBlockFrame::ClearFloaters(nsBlockReflowState& aState, PRUint8 aBreakType)
         }
         else {
           trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                         (nsStyleStruct*&)display);
+                                         (const nsStyleStruct*&)display);
           switch (display->mFloats) {
           case NS_STYLE_FLOAT_LEFT:
             if ((NS_STYLE_CLEAR_LEFT == aBreakType) ||
@@ -1228,10 +1228,10 @@ nsBlockFrame::InitializeState(nsIPresContext*      aPresContext,
 
   // Apply border and padding adjustments for regular frames only
   if (!aState.mBlockIsPseudo) {
-    nsStyleSpacing* mySpacing = (nsStyleSpacing*)
-      mStyleContext->GetData(eStyleStruct_Spacing);
-    nsStylePosition* myPosition = (nsStylePosition*)
-      mStyleContext->GetData(eStyleStruct_Position);
+    const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+      mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    const nsStylePosition* myPosition = (const nsStylePosition*)
+      mStyleContext->GetStyleData(eStyleStruct_Position);
 
     mySpacing->CalcBorderPaddingFor(this, aState.mBorderPadding);
     aState.mY = aState.mBorderPadding.top;
@@ -1287,11 +1287,11 @@ nsBlockFrame::InitializeState(nsIPresContext*      aPresContext,
 
   // Setup list flags in block reflow state if this block is a list
   // item.
-  nsStyleDisplay* myDisplay = (nsStyleDisplay*)
-    mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* myDisplay = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
   if (NS_STYLE_DISPLAY_LIST_ITEM == myDisplay->mDisplay) {
-    nsStyleList* myList = (nsStyleList*)
-      mStyleContext->GetData(eStyleStruct_List);
+    const nsStyleList* myList = (const nsStyleList*)
+      mStyleContext->GetStyleData(eStyleStruct_List);
     if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == myList->mListStylePosition) {
       aState.mListPositionOutside = PR_TRUE;
     }
@@ -1774,8 +1774,8 @@ nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
   nsISpaceManager* sm = aState.mSpaceManager;
 
   // Get the type of floater
-  nsStyleDisplay* floaterDisplay;
-  aFloater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)floaterDisplay);
+  const nsStyleDisplay* floaterDisplay;
+  aFloater->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)floaterDisplay);
 
   // Commit some space in the space manager, and adjust our current
   // band of available space.
@@ -1833,8 +1833,8 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
     GetAvailableSpace(aState, aY);
 
     // Get the type of floater
-    nsStyleDisplay* sd;
-    floater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)sd);
+    const nsStyleDisplay* sd;
+    floater->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)sd);
   
     floater->GetRect(region);
     // XXX GetAvailableSpace() is translating availSpace by aState.mY...

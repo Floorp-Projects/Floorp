@@ -48,14 +48,14 @@ protected:
 
   virtual ~nsAbsoluteFrame();
 
-  nsIView*  CreateView(nsIView*         aContainingView,
-                       const nsRect&    aRect,
-                       nsStylePosition* aPosition,
-                       nsStyleDisplay*  aDisplay) const;
+  nsIView*  CreateView(nsIView*               aContainingView,
+                       const nsRect&          aRect,
+                       const nsStylePosition* aPosition,
+                       const nsStyleDisplay*  aDisplay) const;
   nsIFrame* GetContainingBlock() const;
-  void      ComputeViewBounds(nsIFrame*        aContainingBlock,
-                              nsStylePosition* aPosition,
-                              nsRect&          aRect) const;
+  void      ComputeViewBounds(nsIFrame*              aContainingBlock,
+                              const nsStylePosition* aPosition,
+                              nsRect&                aRect) const;
   void      GetOffsetFromFrame(nsIFrame* aFrameTo, nsPoint& aOffset) const;
 };
 

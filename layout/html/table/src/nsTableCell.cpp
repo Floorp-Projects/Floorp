@@ -219,7 +219,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
-      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
     
@@ -227,7 +227,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
-      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
 
@@ -236,7 +236,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     // width: pixel
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetData(eStyleStruct_Position);
+      aContext->GetMutableStyleData(eStyleStruct_Position);
     GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = nscoord(p2t * value.GetPixelValue());

@@ -230,8 +230,8 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
                                      const nsRect&        aDirtyRect)
 {
   // Set clip rect so that children don't leak out of us
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   PRBool hidden = PR_FALSE;
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.PushState();

@@ -34,7 +34,7 @@ public:
    */
   static nscoord VerticallyAlignChildren(nsIPresContext* aPresContext,
                                          nsIFrame* aContainer,
-                                         nsStyleFont* aContainerFont,
+                                         const nsStyleFont* aContainerFont,
                                          nscoord aY0,
                                          nsIFrame* aFirstChild,
                                          PRInt32 aChildCount,

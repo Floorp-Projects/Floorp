@@ -164,9 +164,9 @@ public:
     * for the purposes of column width determination.
     * return false if the width changes based on content, parent size, etc.
     */
-  virtual PRBool IsFixedWidth(nsStylePosition* aStylePosition);
+  virtual PRBool IsFixedWidth(const nsStylePosition* aStylePosition);
 
-  virtual PRBool IsAutoWidth(nsStylePosition* aStylePosition);
+  virtual PRBool IsAutoWidth(const nsStylePosition* aStylePosition);
 
 protected:
   nsTableFrame * mTableFrame;

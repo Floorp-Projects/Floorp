@@ -113,8 +113,8 @@ nsLineData::Verify(PRBool aFinalCheck) const
       nsIFrame* child = mFirstChild;
       nsIStyleContext* sc;
       child->GetStyleContext(nsnull, sc);
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        sc->GetData(eStyleStruct_Display);
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        sc->GetStyleData(eStyleStruct_Display);
       NS_ASSERTION((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
                    (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay),
                    "bad mIsBlock state");
@@ -492,15 +492,15 @@ nsLineLayout::ReflowMappedChild()
   if (NS_OK != rv) {
     return rv;
   }
-  nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+    kidSC->GetStyleData(eStyleStruct_Display);
   if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
     // XXX If it floats it needs to go through the normal path so that
     // PlaceFloater is invoked.
     return ReflowChild(nsnull, PR_FALSE);
   }
-  nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-    kidSC->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
+    kidSC->GetStyleData(eStyleStruct_Spacing);
   PRBool isBlock = PR_FALSE;
   switch (kidDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
@@ -605,8 +605,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
   // XXX absolute positioning
   // XXX floating frames
   // XXX break-before
-  nsStyleDisplay * kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(eStyleStruct_Display);
+  const nsStyleDisplay * kidDisplay = (const nsStyleDisplay*)
+    kidSC->GetStyleData(eStyleStruct_Display);
   PRBool isBlock = PR_FALSE;
   PRBool isFirstChild = PRBool(kidFrame == mLine->mFirstChild);
   switch (kidDisplay->mDisplay) {
@@ -640,8 +640,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
   nsSize kidAvailSize;
   kidAvailSize.width = availWidth;
   kidAvailSize.height = mMaxHeight;
-  nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-    kidSC->GetData(eStyleStruct_Spacing);
+  const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
+    kidSC->GetStyleData(eStyleStruct_Spacing);
   nsMargin kidMargin;
   kidSpacing->CalcMarginFor(kidFrame, kidMargin);
   if (!mUnconstrainedWidth) {
@@ -734,8 +734,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
         // Supply a default top margin
         nsIStyleContext* blockSC;
         mBlock->GetStyleContext(mPresContext, blockSC);
-        nsStyleFont* styleFont = (nsStyleFont*)
-          blockSC->GetData(eStyleStruct_Font);
+        const nsStyleFont* styleFont = (const nsStyleFont*)
+          blockSC->GetStyleData(eStyleStruct_Font);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
         mBlockReflowState.mPrevNegBottomMargin = 0;
         mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
@@ -780,8 +780,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
         // ebina's engine uses the height of the font for the bottom margin.
         nsIStyleContext* blockSC;
         mBlock->GetStyleContext(mPresContext, blockSC);
-        nsStyleFont* styleFont = (nsStyleFont*)
-          blockSC->GetData(eStyleStruct_Font);
+        const nsStyleFont* styleFont = (const nsStyleFont*)
+          blockSC->GetStyleData(eStyleStruct_Font);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
         mBlockReflowState.mPrevNegBottomMargin = 0;
         mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
@@ -943,8 +943,8 @@ nsLineLayout::PlaceChild(nsRect& kidRect,
         // Compute gap between bullet and inner rect left edge
         nsIStyleContext* blockCX;
         mBlock->GetStyleContext(mPresContext, blockCX);
-        nsStyleFont* font =
-          (nsStyleFont*)blockCX->GetData(eStyleStruct_Font);
+        const nsStyleFont* font =
+          (const nsStyleFont*)blockCX->GetStyleData(eStyleStruct_Font);
         NS_RELEASE(blockCX);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(font->mFont);
         nscoord kidAscent = fm->GetMaxAscent();
@@ -1262,7 +1262,7 @@ done:
 //----------------------------------------------------------------------
 
 static PRBool
-IsBlock(nsStyleDisplay* aDisplay)
+IsBlock(const nsStyleDisplay* aDisplay)
 {
   switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
@@ -1317,8 +1317,8 @@ nsLineLayout::PullUpChildren()
       if (NS_OK != rv) {
         return rv;
       }
-      nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-        kidSC->GetData(eStyleStruct_Display);
+      const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+        kidSC->GetStyleData(eStyleStruct_Display);
       if (IsBlock(kidDisplay)) {
         if ((nsnull != mLine->mPrevLine) || (0 != mLine->mChildCount)) {
           goto done;
@@ -1422,10 +1422,10 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
   if (nsnull == kidSC) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsStylePosition* kidPosition = (nsStylePosition*)
-    kidSC->GetData(eStyleStruct_Position);
-  nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
-    kidSC->GetData(eStyleStruct_Display);
+  const nsStylePosition* kidPosition = (const nsStylePosition*)
+    kidSC->GetStyleData(eStyleStruct_Position);
+  const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+    kidSC->GetStyleData(eStyleStruct_Display);
 
   // Check whether it wants to floated or absolutely positioned
   PRBool isBlock = PR_FALSE;
@@ -1671,12 +1671,12 @@ nsLineLayout::AlignChildren()
 
   nsIStyleContextPtr blockSC;
   mBlock->GetStyleContext(mPresContext, blockSC.AssignRef());
-  nsStyleFont* blockFont = (nsStyleFont*)
-    blockSC->GetData(eStyleStruct_Font);
-  nsStyleText* blockText = (nsStyleText*)
-    blockSC->GetData(eStyleStruct_Text);
-  nsStyleDisplay* blockDisplay = (nsStyleDisplay*)
-    blockSC->GetData(eStyleStruct_Display);
+  const nsStyleFont* blockFont = (const nsStyleFont*)
+    blockSC->GetStyleData(eStyleStruct_Font);
+  const nsStyleText* blockText = (const nsStyleText*)
+    blockSC->GetStyleData(eStyleStruct_Text);
+  const nsStyleDisplay* blockDisplay = (const nsStyleDisplay*)
+    blockSC->GetStyleData(eStyleStruct_Display);
 
   // First vertically align the children on the line; this will
   // compute the actual line height for us.

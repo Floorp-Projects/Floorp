@@ -189,8 +189,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
   // Reflow the child frame
   if (nsnull != mFirstChild) {
     // Get our border/padding info
-    nsStyleSpacing* mySpacing =
-      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    const nsStyleSpacing* mySpacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     nsMargin  borderPadding;
     mySpacing->CalcBorderPaddingFor(this, borderPadding);
   

@@ -160,10 +160,10 @@ public:
   virtual PRInt32 GetWeight(void) const;
   virtual void SetWeight(PRInt32 aWeight);
 
-  virtual nscoord CalcLength(const nsCSSValue& aValue, nsStyleFont* aFont, 
+  virtual nscoord CalcLength(const nsCSSValue& aValue, const nsStyleFont* aFont, 
                              nsIPresContext* aPresContext);
   virtual PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                          PRInt32 aMask, nsStyleFont* aFont, 
+                          PRInt32 aMask, const nsStyleFont* aFont, 
                           nsIPresContext* aPresContext);
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -416,7 +416,7 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
 }
 
 nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
-                                     nsStyleFont* aFont, 
+                                     const nsStyleFont* aFont, 
                                      nsIPresContext* aPresContext)
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
@@ -462,7 +462,7 @@ nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_IAH    (SETCOORD_INTEGER | SETCOORD_AH)
 
 PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                                  PRInt32 aMask, nsStyleFont* aFont, 
+                                  PRInt32 aMask, const nsStyleFont* aFont, 
                                   nsIPresContext* aPresContext)
 {
   PRBool  result = PR_TRUE;
@@ -510,15 +510,15 @@ PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord
 void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mDeclaration) {
-    nsStyleFont*  font = (nsStyleFont*)aContext->GetData(eStyleStruct_Font);
+    nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
 
     nsCSSFont*  ourFont;
     if (NS_OK == mDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
       if (nsnull != ourFont) {
-        nsStyleFont* parentFont = font;
+        const nsStyleFont* parentFont = font;
         nsIStyleContext* parentContext = aContext->GetParent();
         if (nsnull != parentContext) {
-          parentFont = (nsStyleFont*)parentContext->GetData(eStyleStruct_Font);
+          parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
         }
 
         // font-family: string list
@@ -620,7 +620,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     if (NS_OK == mDeclaration->GetData(kCSSTextSID, (nsCSSStruct**)&ourText)) {
       if (nsnull != ourText) {
         // Get our text style and our parent's text style
-        nsStyleText* text = (nsStyleText*) aContext->GetData(eStyleStruct_Text);
+        nsStyleText* text = (nsStyleText*) aContext->GetMutableStyleData(eStyleStruct_Text);
 
         // letter-spacing
         SetCoord(ourText->mLetterSpacing, text->mLetterSpacing, SETCOORD_LH | SETCOORD_NORMAL, 
@@ -670,12 +670,12 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
       if (nsnull != ourDisplay) {
         // Get our style and our parent's style
         nsStyleDisplay* display = (nsStyleDisplay*)
-          aContext->GetData(eStyleStruct_Display);
+          aContext->GetMutableStyleData(eStyleStruct_Display);
 
-        nsStyleDisplay* parentDisplay = display;
+        const nsStyleDisplay* parentDisplay = display;
         nsIStyleContext* parentContext = aContext->GetParent();
         if (nsnull != parentContext) {
-          parentDisplay = (nsStyleDisplay*)parentContext->GetData(eStyleStruct_Display);
+          parentDisplay = (const nsStyleDisplay*)parentContext->GetStyleData(eStyleStruct_Display);
         }
 
         // display
@@ -767,7 +767,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSColor*  ourColor;
     if (NS_OK == mDeclaration->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor)) {
       if (nsnull != ourColor) {
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+        nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
 
         // color: color
         if (ourColor->mColor.GetUnit() == eCSSUnit_Color) {
@@ -850,12 +850,11 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Number) {
           color->mOpacity = ourColor->mOpacity.GetFloatValue();
         }
-        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Enumerated) {
-          // Only enum value is inherit
-          nsStyleColor* parentColor = color;
+        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Inherit) {
+          const nsStyleColor* parentColor = color;
           nsIStyleContext* parentContext = aContext->GetParent();
           if (nsnull != parentContext) {
-            parentColor = (nsStyleColor*)parentContext->GetData(eStyleStruct_Color);
+            parentColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
             color->mOpacity = parentColor->mOpacity;
             NS_RELEASE(parentContext);
           }
@@ -870,7 +869,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     if (NS_OK == mDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
       if (nsnull != ourMargin) {
         nsStyleSpacing* spacing = (nsStyleSpacing*)
-          aContext->GetData(eStyleStruct_Spacing);
+          aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
         // margin: length, percent, auto, inherit
         if (nsnull != ourMargin->mMargin) {
@@ -941,7 +940,6 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         }
 
         // border-color
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
         if (nsnull != ourMargin->mColor) {
           nsCSSRect* ourColor = ourMargin->mColor;
           if (ourColor->mTop.GetUnit() == eCSSUnit_Color) {
@@ -963,7 +961,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSPosition*  ourPosition;
     if (NS_OK == mDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
       if (nsnull != ourPosition) {
-        nsStylePosition* position = (nsStylePosition*)aContext->GetData(eStyleStruct_Position);
+        nsStylePosition* position = (nsStylePosition*)aContext->GetMutableStyleData(eStyleStruct_Position);
 
         // position: normal, enum, inherit
         if (ourPosition->mPosition.GetUnit() == eCSSUnit_Normal) {
@@ -976,7 +974,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           // explicit inheritance
           nsIStyleContext* parentContext = aContext->GetParent();
           if (nsnull != parentContext) {
-            nsStylePosition* parentPosition = (nsStylePosition*)parentContext->GetData(eStyleStruct_Position);
+            const nsStylePosition* parentPosition = (const nsStylePosition*)parentContext->GetStyleData(eStyleStruct_Position);
             position->mPosition = parentPosition->mPosition;
           }
         }
@@ -995,7 +993,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSList* ourList;
     if (NS_OK == mDeclaration->GetData(kCSSListSID, (nsCSSStruct**)&ourList)) {
       if (nsnull != ourList) {
-        nsStyleList* list = (nsStyleList*)aContext->GetData(eStyleStruct_List);
+        nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
         // list-style-type: enum
         if (ourList->mType.GetUnit() == eCSSUnit_Enumerated) {

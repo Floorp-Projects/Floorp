@@ -53,7 +53,7 @@ NS_DEF_PTR(nsIContentDelegate);
 class nsInlineState
 {
 public:
-  nsStyleFont*         font;           // style font
+  const nsStyleFont*   font;           // style font
   nsMargin             borderPadding;  // inner margin
   nsSize               mStyleSize;
   PRIntn               mStyleSizeFlags;
@@ -73,7 +73,7 @@ public:
   // Constructor
   nsInlineState(nsIPresContext*      aPresContext,
                 nsIFrame*            aInlineFrame,
-                nsStyleFont*         aStyleFont,
+                const nsStyleFont*   aStyleFont,
                 const nsMargin&      aBorderPadding,
                 const nsReflowState& aReflowState,
                 nsSize*              aMaxElementSize)
@@ -681,10 +681,10 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
-    nsStyleDisplay*  kidDisplay =
-      (nsStyleDisplay*)kidStyleContext->GetData(eStyleStruct_Display);
-    nsStylePosition* kidPosition = (nsStylePosition*)
-      kidStyleContext->GetData(eStyleStruct_Position);
+    const nsStyleDisplay*  kidDisplay =
+      (const nsStyleDisplay*)kidStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStylePosition* kidPosition = (const nsStylePosition*)
+      kidStyleContext->GetStyleData(eStyleStruct_Position);
 
     // Check whether it wants to floated or absolutely positioned
     nsresult rv;
@@ -831,10 +831,10 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Get the style molecule
-  nsStyleFont* styleFont = (nsStyleFont*)
-    mStyleContext->GetData(eStyleStruct_Font);
-  nsStyleSpacing* styleSpacing = (nsStyleSpacing*)
-    mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleFont* styleFont = (const nsStyleFont*)
+    mStyleContext->GetStyleData(eStyleStruct_Font);
+  const nsStyleSpacing* styleSpacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
   // Check for an overflow list
   if (eReflowReason_Incremental != aReflowState.reason) {

@@ -241,7 +241,7 @@ SpacerPart::MapAttributesInto(nsIStyleContext* aContext,
   if (nsnull != mAttributes) {
     nsHTMLValue value;
     nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetData(eStyleStruct_Display);
+      aContext->GetMutableStyleData(eStyleStruct_Display);
     GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       switch (value.GetIntValue()) {

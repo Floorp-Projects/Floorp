@@ -77,8 +77,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*      aPresContext,
       // Resolve style
       nsIStyleContextPtr kidSC =
         aPresContext->ResolveStyleContextFor(kid, this);
-      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
-        kidSC->GetData(eStyleStruct_Spacing);
+      const nsStyleSpacing* kidSpacing = (const nsStyleSpacing*)
+        kidSC->GetStyleData(eStyleStruct_Spacing);
 
       // Create a child frame
       nsIContentDelegate* kidDel = nsnull;
@@ -151,17 +151,17 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
 
     PRInt32 colIndex=0;
     nsIFrame *colFrame=nsnull;
-    nsIStyleContext *colStyleContext;
+    nsIStyleContextPtr colStyleContext;
     for (; colIndex<numCols; colIndex++)
     {
       ChildAt(colIndex, colFrame);
       if (nsnull==colFrame)
         break;  // the attribute value specified was greater than the actual number of columns
       nsStylePosition * colPosition=nsnull;
-      colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+      colFrame->GetStyleContext(aPresContext, colStyleContext.AssignRef());
+      colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
       nsStyleCoord width (1, eStyleUnit_Proportional);
       colPosition->mWidth = width;
-      colFrame->GetStyleContext(aPresContext, colStyleContext);
       colStyleContext->RecalcAutomaticData(aPresContext);
     }
     // if there are more columns, there width is set to "minimum"
@@ -172,9 +172,9 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
       ChildAt(colIndex, colFrame);
       NS_ASSERTION(nsnull!=colFrame, "bad column frame");
       nsStylePosition * colPosition=nsnull;
-      colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+      colFrame->GetStyleContext(aPresContext, colStyleContext.AssignRef());
+      colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
       colPosition->mWidth.SetCoordValue(0);
-      colFrame->GetStyleContext(aPresContext, colStyleContext);
       colStyleContext->RecalcAutomaticData(aPresContext);
     }
 

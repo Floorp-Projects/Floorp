@@ -197,8 +197,8 @@ nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
                              nsIStyleContext* aStyleContext,
                              nsIFrame*& aResult)
 {
-  nsStyleDisplay* styleDisplay =
-    (nsStyleDisplay*) aStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* styleDisplay =
+    (const nsStyleDisplay*) aStyleContext->GetStyleData(eStyleStruct_Display);
 
   // Use style to choose what kind of frame to create
   nsIFrame* frame = nsnull;
@@ -487,7 +487,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
     GetAttribute(nsHTMLAtoms::dir, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       nsStyleDisplay* display = (nsStyleDisplay*)
-        aContext->GetData(eStyleStruct_Display);
+        aContext->GetMutableStyleData(eStyleStruct_Display);
       display->mDirection = value.GetIntValue();
     }
 
@@ -495,7 +495,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       // align: enum
       GetAttribute(nsHTMLAtoms::align, value);
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
-        nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+        nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
         text->mTextAlign = value.GetIntValue();
       }
     }
@@ -507,11 +507,11 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
     else if (mTag == nsHTMLAtoms::font) {
-      nsStyleFont* font = (nsStyleFont*)aContext->GetData(eStyleStruct_Font);
-      nsStyleFont* parentFont = font;
+      nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+      const nsStyleFont* parentFont = font;
       nsIStyleContext* parentContext = aContext->GetParent();
       if (nsnull != parentContext) {
-        parentFont = (nsStyleFont*)parentContext->GetData(eStyleStruct_Font);
+        parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
       }
 
       // face: string list
@@ -607,7 +607,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       // color: color
       GetAttribute(nsHTMLAtoms::color, value);
       if (value.GetUnit() == eHTMLUnit_Color) {
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+        nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
         color->mColor = value.GetColorValue();
       }
       else if (value.GetUnit() == eHTMLUnit_String) {
@@ -616,7 +616,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         char cbuf[40];
         buffer.ToCString(cbuf, sizeof(cbuf));
 
-        nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+        nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
         NS_ColorNameToRGB(cbuf, &(color->mColor));
       }
       
@@ -691,7 +691,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       }
     }
     else if (mTag == nsHTMLAtoms::li) {
-      nsStyleList* list = (nsStyleList*)aContext->GetData(eStyleStruct_List);
+      nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
       // type: enum
       GetAttribute(nsHTMLAtoms::type, value);
@@ -701,7 +701,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
     }
     else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
              (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
-      nsStyleList* list = (nsStyleList*)aContext->GetData(eStyleStruct_List);
+      nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
       // type: enum
       GetAttribute(nsHTMLAtoms::type, value);
@@ -752,7 +752,7 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
       if (nsnull != docURL) {
         NS_RELEASE(docURL);
       }
-      nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+      nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       color->mBackgroundImage = absURLSpec;
       color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
       color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
@@ -762,7 +762,7 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   // bgcolor
   if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
     if (eHTMLUnit_Color == value.GetUnit()) {
-      nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+      nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       color->mBackgroundColor = value.GetColorValue();
       color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
     }
@@ -772,7 +772,7 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
       char cbuf[40];
       buffer.ToCString(cbuf, sizeof(cbuf));
 
-      nsStyleColor* color = (nsStyleColor*)aContext->GetData(eStyleStruct_Color);
+      nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
       color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
     }

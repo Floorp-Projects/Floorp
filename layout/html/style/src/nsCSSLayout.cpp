@@ -40,7 +40,7 @@ NS_DEF_PTR(nsIContent);
 nscoord
 nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
                                      nsIFrame* aContainer,
-                                     nsStyleFont* aContainerFont,
+                                     const nsStyleFont* aContainerFont,
                                      nscoord aY0,
                                      nsIFrame* aFirstChild,
                                      PRIntn aChildCount,
@@ -62,7 +62,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     nsIStyleContextPtr kidSC;
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(eStyleStruct_Text);
+    const nsStyleText* textStyle = (const nsStyleText*)kidSC->GetStyleData(eStyleStruct_Text);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
     PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
 
@@ -165,7 +165,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
       nsIStyleContextPtr kidSC;
 
       kid->GetStyleContext(aCX, kidSC.AssignRef());
-      nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(eStyleStruct_Text);
+      const nsStyleText* textStyle = (const nsStyleText*)kidSC->GetStyleData(eStyleStruct_Text);
       nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
       if (eStyleUnit_Percent == verticalAlignUnit) {
@@ -264,8 +264,8 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
     nsIStyleContextPtr kidSC;
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    nsStylePosition* kidPosition = (nsStylePosition*)
-      kidSC->GetData(eStyleStruct_Position);
+    const nsStylePosition* kidPosition = (const nsStylePosition*)
+      kidSC->GetStyleData(eStyleStruct_Position);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
       // XXX Check the unit: could be auto or percent (not just length)
@@ -282,8 +282,8 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 static PRBool
 GetStyleDimension(nsIPresContext* aPresContext,
                   const nsReflowState& aReflowState,
-                  nsStylePosition* aStylePos,
-                  nsStyleCoord& aCoord,
+                  const nsStylePosition* aStylePos,
+                  const nsStyleCoord& aCoord,
                   nscoord& aResult)
 {
   PRBool rv = PR_FALSE;
@@ -341,8 +341,8 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   nsIStyleContext* sc = nsnull;
   aReflowState.frame->GetStyleContext(aPresContext, sc);
   if (nsnull != sc) {
-    nsStylePosition* pos = (nsStylePosition*)
-      sc->GetData(eStyleStruct_Position);
+    const nsStylePosition* pos = (const nsStylePosition*)
+      sc->GetStyleData(eStyleStruct_Position);
     if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;

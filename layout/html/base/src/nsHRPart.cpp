@@ -99,8 +99,8 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect)
 {
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (PR_FALSE == disp->mVisible) {
     return NS_OK;
   }
@@ -109,12 +109,12 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
 
   // Get style data
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    mStyleContext->GetData(eStyleStruct_Spacing);
-  nsStyleColor* color = (nsStyleColor*)
-    mStyleContext->GetData(eStyleStruct_Color);
-  nsStylePosition* position = (nsStylePosition*)
-    mStyleContext->GetData(eStyleStruct_Position);
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStyleColor* color = (const nsStyleColor*)
+    mStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStylePosition* position = (const nsStylePosition*)
+    mStyleContext->GetStyleData(eStyleStruct_Position);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord x0 = borderPadding.left;
@@ -135,8 +135,8 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
   if (newWidth < width) {
     // center or right align rule within the extra space
-    nsStyleText* text =
-      (nsStyleText*) mStyleContext->GetData(eStyleStruct_Text);
+    const nsStyleText* text =
+      (const nsStyleText*) mStyleContext->GetStyleData(eStyleStruct_Text);
     switch (text->mTextAlign) {
     case NS_STYLE_TEXT_ALIGN_RIGHT:
       x0 += width - newWidth;
@@ -228,8 +228,8 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowMetrics& aDesiredSize)
 {
-  nsStylePosition* position = (nsStylePosition*)
-    mStyleContext->GetData(eStyleStruct_Position);
+  const nsStylePosition* position = (const nsStylePosition*)
+    mStyleContext->GetStyleData(eStyleStruct_Position);
   if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
     aDesiredSize.width = position->mWidth.GetCoordValue();
   }
@@ -381,14 +381,14 @@ HRulePart::MapAttributesInto(nsIStyleContext* aContext,
     // align: enum
     GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
 
     // width: pixel, percent
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetData(eStyleStruct_Position);
+      aContext->GetMutableStyleData(eStyleStruct_Position);
     GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = nscoord(p2t * value.GetPixelValue());

@@ -155,8 +155,8 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
 {
-  nsStyleDisplay* disp =
-    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
     // Make sure the widget is visible if it isn't currently visible
@@ -451,7 +451,7 @@ nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsInputFrame* aFrame,
   //printf("\n GetTextSize %s", aString.ToNewCString());
   nsIStyleContext* styleContext;
   aFrame->GetStyleContext(&aPresContext, styleContext);
-  nsStyleFont* styleFont = (nsStyleFont*)styleContext->GetData(eStyleStruct_Font);
+  const nsStyleFont* styleFont = (const nsStyleFont*)styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
   nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
   nsIFontCache* fontCache = deviceContext->GetFontCache();
@@ -604,10 +604,10 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 }
 
 
-nsFont& 
+const nsFont& 
 nsInputFrame::GetFont(nsIPresContext* aPresContext)
 {
-  nsStyleFont* styleFont = (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+  const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
   return styleFont->mFont;
 }

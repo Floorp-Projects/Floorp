@@ -130,7 +130,7 @@ void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext,
   nscoord pad = (int)(3 * p2t + 0.5);
 
   // add left and right padding around the radio button via css
-  nsStyleSpacing* spacing = (nsStyleSpacing*) aContext->GetData(eStyleStruct_Spacing);
+  nsStyleSpacing* spacing = (nsStyleSpacing*) aContext->GetMutableStyleData(eStyleStruct_Spacing);
   if (eStyleUnit_Null == spacing->mMargin.GetLeftUnit()) {
     nsStyleCoord left(pad);
     spacing->mMargin.SetLeft(left);

@@ -70,10 +70,10 @@ PRInt32 nsTableCaptionFrame::GetMaxWidth()
 void  nsTableCaptionFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 {
   
-  nsStyleText* textStyle =
-    (nsStyleText*)mStyleContext->GetData(eStyleStruct_Text);
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+  const nsStyleText* textStyle =
+    (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   
