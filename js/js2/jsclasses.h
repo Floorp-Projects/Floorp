@@ -221,7 +221,7 @@ namespace JSClasses {
         }
         
 #if !defined(XP_MAC)
-        void operator delete(void* /*ptr*/, JSClass* thisClass) {}
+        void operator delete(void* /*ptr*/, JSClass* /*thisClass*/) {}
 #endif
         
         JSInstance(JSClass* thisClass)
