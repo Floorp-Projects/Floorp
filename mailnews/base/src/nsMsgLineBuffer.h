@@ -33,6 +33,7 @@ public:
 	nsresult	GrowBuffer(PRUint32 desired_size, PRUint32 quantum = 1024);
 	nsresult	AppendString(const char *string);
 	nsresult	AppendBuffer(const char *buffer, PRUint32 length);
+	void		ResetWritePos() {m_bufferPos = 0;}
 	char		*GetBuffer() {return m_buffer;}
 protected:
 	char		*m_buffer;
