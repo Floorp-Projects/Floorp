@@ -20,7 +20,9 @@
  * JS bytecode descriptors, disassemblers, and decompilers.
  */
 #include "jsstddef.h"
+#ifdef HAVE_MEMORY_H
 #include <memory.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
