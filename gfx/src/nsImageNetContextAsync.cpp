@@ -24,13 +24,11 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
-#else
-#include "nsIURLGroup.h"
-#endif
+#include "nsWeakPtr.h"
+
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -103,7 +101,7 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
-  nsILoadGroup* mLoadGroup;
+  nsWeakPtr mLoadGroup;
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
 };
@@ -451,8 +449,7 @@ ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
-  mLoadGroup = aLoadGroup;
-  NS_IF_ADDREF(mLoadGroup);
+  mLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
   mReloadPolicy = aReloadPolicy;
   mReconnectCallback = aReconnectCallback;
   mReconnectArg = aReconnectArg;
@@ -469,7 +466,7 @@ ImageNetContextImpl::~ImageNetContextImpl()
     }
     delete mRequests;
   }
-  NS_IF_RELEASE(mLoadGroup);
+///  NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
@@ -478,8 +475,9 @@ ilINetContext*
 ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
 
-  if (NS_NewImageNetContext(&cx, mLoadGroup, mReconnectCallback, mReconnectArg) == NS_OK)
+  if (NS_NewImageNetContext(&cx, group, mReconnectCallback, mReconnectArg) == NS_OK)
   {
     return cx;
   }
@@ -523,8 +521,9 @@ ImageNetContextImpl::CreateURL(const char *aURL,
                                NET_ReloadMethod aReloadMethod)
 {
   ilIURL *url;
+  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
 
-  if (NS_NewImageURL(&url, aURL, mLoadGroup) == NS_OK)
+  if (NS_NewImageURL(&url, aURL, group) == NS_OK)
   {
     return url;
   }
@@ -600,7 +599,8 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     else {
 #ifdef NECKO
       nsCOMPtr<nsIChannel> channel;
-      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl, mLoadGroup);
+      nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
+      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
 
       if (NS_SUCCEEDED(rv)) {
         PRBool bIsBackground = aURL->GetBackgroundLoad();
