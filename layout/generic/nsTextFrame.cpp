@@ -441,7 +441,7 @@ public:
       mSmallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont->variant;
       if (mSmallCaps) {
         nscoord originalSize = plainFont->size;
-        plainFont->size = nscoord(0.7 * plainFont->size);
+        plainFont->size = nscoord(0.8 * plainFont->size);
         aPresContext->GetMetricsFor(*plainFont, &mSmallFont);
         // Reset to the size value saved earlier.
         plainFont->size = originalSize;
