@@ -1,7 +1,38 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="preftree.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY appear.label "Appearance">
+<!ENTITY fonts.label "Fonts">
+<!ENTITY colors.label "Colors">
+<!ENTITY navigator.label "Navigator">
+<!ENTITY languages.label "Languages">
+<!ENTITY applications.label "Applications">
+<!ENTITY smartBrowse.label "Smart Browsing">
+<!ENTITY mail.label "Mail &amp; News">
+<!ENTITY identity.label "Identity">
+<!ENTITY mailServer.label "Mail Servers">
+<!ENTITY newsServer.label "News Servers">
+<!ENTITY address.label "Addressing">
+<!ENTITY mess.label "Messages">
+<!ENTITY windowSet.label "Window Settings">
+<!ENTITY copyFolder.label "Copies &amp; Folders">
+<!ENTITY format.label "Formatting">
+<!ENTITY return.label "Return Receipts">
+<!ENTITY disk.label "Disk Space">
+<!ENTITY compose.label "Composer">
+<!ENTITY publish.label "Publish">
+<!ENTITY offline.label "Offline">
+<!ENTITY advance.label "Advanced">
+<!ENTITY down.label "Download">
+<!ENTITY cache.label "Cache">
+<!ENTITY proxies.label "Proxies">
+<!ENTITY smart.label "Smart Update">
+
+]
+
+>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -43,14 +74,14 @@
   
     <treeitem>
        
-      <treecell name="resource://res/samples/pref-appearance.html"><treeindentation/>Appearance</treecell>
+      <treecell name="resource://res/samples/pref-appearance.html"><treeindentation/>&appear.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/samples/pref-fonts.html"><treeindentation/>Fonts</treecell>
+          <treecell name="resource://res/samples/pref-fonts.html"><treeindentation/>&fonts.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/samples/pref-colors.html"><treeindentation/>Colors</treecell>
+          <treecell name="resource://res/samples/pref-colors.html"><treeindentation/>&colors.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -58,17 +89,17 @@
  
     <treeitem>
 
-      <treecell name="resource://res/samples/pref-navigator.html"><treeindentation/>Navigator</treecell>
+      <treecell name="resource://res/samples/pref-navigator.html"><treeindentation/>&navigator.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>Languages</treecell>
+          <treecell><treeindentation/>&languages.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/samples/pref-applications.html"><treeindentation/>Applications</treecell>
+          <treecell name="resource://res/samples/pref-applications.html"><treeindentation/>&applications.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/samples/pref-smart_browsing.html"><treeindentation/>Smart Browsing</treecell>
+          <treecell name="resource://res/samples/pref-smart_browsing.html"><treeindentation/>&smartBrowse.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -76,38 +107,38 @@
  
      <treeitem>
        
-      <treecell name="resource://res/mailnews/preference/pref-mailnews.html"><treeindentation/>Mail &amp; News</treecell>
+      <treecell name="resource://res/mailnews/preference/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-identity.html"><treeindentation/>Identity</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-identity.html"><treeindentation/>&identity.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-mailservers.html"><treeindentation/>Mail Servers</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-newsservers.html"><treeindentation/>News Servers</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-addressing.html"><treeindentation/>Addressing</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-addressing.html"><treeindentation/>&address.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-messages.html"><treeindentation/>Messages</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-messages.html"><treeindentation/>&mess.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-winsetting.html"><treeindentation/>Window Settings</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
 	    </treeitem>
         <treeitem>
-        <treecell name="resource://res/mailnews/preference/pref-copiesfolders.html"><treeindentation/>Copies &amp; Folders</treecell>
+        <treecell name="resource://res/mailnews/preference/pref-copiesfolders.html"><treeindentation/>&copyFolder.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-formatting.html"><treeindentation/>Formatting</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-formatting.html"><treeindentation/>&format.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-receipts.html"><treeindentation/>Return Receipts</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-receipts.html"><treeindentation/>&return.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/mailnews/preference/pref-diskspace.html"><treeindentation/>Disk Space</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -115,11 +146,11 @@
     
      <treeitem>
        
-      <treecell name="resource://res/samples/pref-composer.html"><treeindentation/>Composer</treecell>
+      <treecell name="resource://res/samples/pref-composer.html"><treeindentation/>&compose.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/samples/pref-publish.html"><treeindentation/>Publish</treecell>
+          <treecell name="resource://res/samples/pref-publish.html"><treeindentation/>&publish.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -128,11 +159,11 @@
     
      <treeitem>
        
-      <treecell name="resource://res/samples/pref-offline.html"><treeindentation/>Offline</treecell>
+      <treecell name="resource://res/samples/pref-offline.html"><treeindentation/>&offline.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/samples/pref-download.html"><treeindentation/>Download</treecell>
+          <treecell name="resource://res/samples/pref-download.html"><treeindentation/>&down.label;</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -140,17 +171,17 @@
     
      <treeitem>
        
-      <treecell name="resource://res/samples/pref-advanced.html"><treeindentation/>Advanced</treecell>
+      <treecell name="resource://res/samples/pref-advanced.html"><treeindentation/>&advance.label;</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell name="resource://res/samples/pref-cache.html"><treeindentation/>Cache</treecell>
+          <treecell name="resource://res/samples/pref-cache.html"><treeindentation/>&cache.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/samples/pref-proxies.html"><treeindentation/>Proxies</treecell>
+          <treecell name="resource://res/samples/pref-proxies.html"><treeindentation/>&proxies.label;</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell name="resource://res/samples/pref-smartupdate.html"><treeindentation/>Smart Update</treecell>
+          <treecell name="resource://res/samples/pref-smartupdate.html"><treeindentation/>&smart.label;</treecell>
 	    </treeitem>
       </treechildren>
     
