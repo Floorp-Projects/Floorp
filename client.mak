@@ -50,14 +50,14 @@ MOZ_OBJDIR = WIN32_O.OBJ
 #GFX2_CO_TAG=SeaMonkey_M17_BRANCH
 
 
-!if "$(MOZ_BRANCH)" != ""
+!ifdef MOZ_BRANCH
 CVS_BRANCH=-r $(MOZ_BRANCH)
 HAVE_BRANCH=1
 !else
 HAVE_BRANCH=0
 !endif
 
-!if "$(MOZ_DATE)" != ""
+!ifdef MOZ_DATE
 CVS_BRANCH=-D "$(MOZ_DATE)"
 HAVE_DATE=1
 !else
@@ -69,8 +69,14 @@ ERR_MESSAGE=$(ERR_MESSAGE)^
 Cannot specify both MOZ_BRANCH and MOZ_DATE
 !endif
 
-!if "$(MOZ_CVS_FLAGS)" != ""
-CVS_FLAGS=$(MOZ_CVS_FLAGS)
+# default pull is "quiet" but it can be overridden with MOZ_CVS_VERBOSE
+!ifndef MOZ_CVS_VERBOSE
+CVS_FLAGS=-q
+!endif
+
+# honor any user-defined CVS flags
+!ifdef MOZ_CVS_FLAGS
+CVS_FLAGS=$(CVS_FLAGS) $(MOZ_CVS_FLAGS)
 !endif
 
 # let's be explicit about CVSROOT... some windows cvs clients
@@ -89,45 +95,18 @@ CVS_FLAGS=$(CVS_FLAGS) -d "$(CVSROOT)"
 !endif
 !endif
 
-!if "$(MOZ_CO_FLAGS)" != ""
-CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) $(MOZ_CO_FLAGS)
-CVSCO_TAG = cvs -q co $(MOZ_CO_FLAGS)
-!else
-CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
-CVSCO_TAG = cvs -q co -P
+!ifndef MOZ_CO_FLAGS
+MOZ_CO_FLAGS = -P
 !endif
 
-# Branch tags we use
-
-IMGLIB2_BRANCH =
-GFX2_BRANCH =
-PLUGIN_BRANCH =
-XPCOM_BRANCH =
-
-!if defined(MOZ_DATE)
-# CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO)
-CVSCO_PLUGIN = $(CVSCO)
-!else
-# CVS commands to pull the appropriate branch versions
-CVSCO_LIBPREF = $(CVSCO) -A
-CVSCO_PLUGIN = $(CVSCO) -A
-!endif
-
-CVSCO_XPCOM = $(CVSCO)
-CVSCO_IMGLIB2 = $(CVSCO)
-CVSCO_GFX2 = $(CVSCO)
-CVSCO_RAPTOR = $(CVSCO)
-CVSCO_LIZARD = $(CVSCO)
-CVSCO_NETWORK = $(CVSCO)
+CVSCO = cvs $(CVS_FLAGS) co $(MOZ_CO_FLAGS) $(CVS_BRANCH)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull NSPR.
 #// If no NSPR_CO_TAG is specified, use the default static tag
 #//------------------------------------------------------------------------
 
-NSPR_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef NSPR_CO_FLAGS
 NSPR_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
@@ -137,15 +116,14 @@ NSPR_CO_FLAGS=$(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
 NSPR_CO_FLAGS=$(NSPR_CO_FLAGS) -r NSPRPUB_CLIENT_TAG
 !endif
 
-CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS)
+CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull NSS and PSM libs.
 #// If no NSS_CO_TAG or PSM_CO_TAG is specified, use the default static tag
 #//------------------------------------------------------------------------
 
-NSS_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef NSS_CO_FLAGS
 NSS_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
@@ -155,18 +133,19 @@ NSS_CO_FLAGS=$(NSS_CO_FLAGS) -r $(NSS_CO_TAG)
 NSS_CO_FLAGS=$(NSS_CO_FLAGS) -r NSS_CLIENT_TAG
 !endif
 
-CVSCO_NSS = cvs -q $(CVS_FLAGS) co $(NSS_CO_FLAGS)
+CVSCO_NSS = cvs $(CVS_FLAGS) co $(NSS_CO_FLAGS)
 
-PSM_CO_FLAGS=-P -A
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef PSM_CO_FLAGS
 PSM_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
 !if "$(PSM_CO_TAG)" != ""
 PSM_CO_FLAGS=$(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
+!else
+PSM_CO_FLAGS=$(PSM_CO_FLAGS) $(CVS_BRANCH)
 !endif
 
-CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS)
+CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull LDAP C SDK client libs.
@@ -174,8 +153,7 @@ CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS)
 #//------------------------------------------------------------------------
 
 
-LDAPCSDK_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef LDAPCSDK_CO_FLAGS
 LDAPCSDK_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
@@ -185,55 +163,58 @@ LDAPCSDK_CO_FLAGS=$(LDAPCSDK_CO_FLAGS) -r $(LDAPCSDK_CO_TAG)
 LDAPCSDK_CO_FLAGS=$(LDAPCSDK_CO_FLAGS) -r LDAPCSDK_40_BRANCH
 !endif
 
-CVSCO_LDAPCSDK = cvs -q $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS)
+CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull accessibility libs.
 #// If no ACCESSIBLE_CO_TAG is specified, use the default tag
 #//------------------------------------------------------------------------
 
-ACCESSIBLE_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef ACCESSIBLE_CO_FLAGS
 ACCESSIBLE_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
 !if "$(ACCESSIBLE_CO_TAG)" != ""
-ACCESSIBLE_CO_FLAGS=$(ACCESSIBLE_CO_FLAG) -r $(ACCESSIBLE_CO_TAG)
+ACCESSIBLE_CO_FLAGS=$(ACCESSIBLE_CO_FLAGS) -r $(ACCESSIBLE_CO_TAG)
+!else
+ACCESSIBLE_CO_FLAGS=$(ACCESSIBLE_CO_FLAGS) $(CVS_BRANCH)
 !endif
 
-CVSCO_ACCESSIBLE = cvs -q $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS)
+CVSCO_ACCESSIBLE = cvs $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull new image library.
 #// If no IMGLIB2_CO_TAG is specified, use the default tag
 #//------------------------------------------------------------------------
 
-IMGLIB2_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef IMGLIB2_CO_FLAGS
 IMGLIB2_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
 !if "$(IMGLIB2_CO_TAG)" != ""
 IMGLIB2_CO_FLAGS=$(IMGLIB2_CO_FLAGS) -r $(IMGLIB2_CO_TAG)
+!else
+IMGLIB2_CO_FLAGS=$(IMGLIB2_CO_FLAGS) $(CVS_BRANCH)
 !endif
 
-CVSCO_IMGLIB2 = cvs -q $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS)
+CVSCO_IMGLIB2 = cvs $(CVS_FLAGS) co $(IMGLIB2_CO_FLAGS)
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull new image library.
 #// If no GFX2_CO_TAG is specified, use the default tag
 #//------------------------------------------------------------------------
 
-GFX2_CO_FLAGS=-P
-!if "$(MOZ_CO_FLAGS)" != ""
+!ifndef GFX2_CO_FLAGS
 GFX2_CO_FLAGS=$(MOZ_CO_FLAGS)
 !endif
 
 !if "$(GFX2_CO_TAG)" != ""
 GFX2_CO_FLAGS=$(GFX2_CO_FLAGS) -r $(GFX2_CO_TAG)
+!else
+GFX2_CO_FLAGS=$(GFX2_CO_FLAGS) $(CVS_BRANCH)
 !endif
 
-CVSCO_GFX2 = cvs -q $(CVS_FLAGS) co $(GFX2_CO_FLAGS)
+CVSCO_GFX2 = cvs $(CVS_FLAGS) co $(GFX2_CO_FLAGS)
 
 
 ## The master target
