@@ -124,9 +124,10 @@ static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
 //#define NEWGFX_LIST
+//#define NEWGFX_DROPDOWN
 #define NEWGFX_LIST_SCROLLFRAME
 
-#ifdef NEWGFX_LIST
+#if defined(NEWGFX_LIST) || defined(NEWGFX_DROPDOWN) 
 nsresult
 NS_NewGfxListControlFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 #endif
@@ -2953,7 +2954,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       PRBool multipleSelect = PR_FALSE;
       sel->GetMultiple(&multipleSelect);
        // Construct a combobox if size=1 or no size is specified and its multiple select
-      if (((1 == size) || (kNoSizeSpecified  == size)) && (PR_FALSE == multipleSelect)) {
+      if (((1 == size || 0 == size) || (kNoSizeSpecified  == size)) && (PR_FALSE == multipleSelect)) {
           // Construct a frame-based combo box.
           // The frame-based combo box is built out of tree parts. A display area, a button and
           // a dropdown list. The display area and button are created through anonymous content.
@@ -2976,7 +2977,163 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
                                                  aStyleContext, PR_FALSE);
+#ifdef NEWGFX_DROPDOWN
+        ///////////////////////////////////////////////////////////////////
+        // Combobox - New GFX Implementation
+        ///////////////////////////////////////////////////////////////////
+        // Construct a frame-based list box 
+        nsIComboboxControlFrame* comboBox = nsnull;
+        if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
+          comboBox->SetFrameConstructor(this);
 
+          nsIFrame * listFrame; 
+          rv = NS_NewGfxListControlFrame(aPresShell, &listFrame);
+
+            // Notify the listbox that it is being used as a dropdown list.
+          nsIListControlFrame * listControlFrame;
+          if (NS_SUCCEEDED(listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame))) {
+            listControlFrame->SetComboboxFrame(comboboxFrame);
+          }
+             // Notify combobox that it should use the listbox as it's popup
+          comboBox->SetDropDown(listFrame);
+
+          nsCOMPtr<nsIStyleContext> gfxListStyle;
+          aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                            nsHTMLAtoms::dropDownListPseudo, 
+                                            aStyleContext, PR_FALSE, 
+                                            getter_AddRefs(gfxListStyle)); 
+
+          // initialize the list control 
+          InitAndRestoreFrame(aPresContext, aState, aContent, 
+                              comboboxFrame, gfxListStyle, nsnull, listFrame);
+
+          nsHTMLContainerFrame::CreateViewForFrame(aPresContext, listFrame,
+                                         gfxListStyle, PR_TRUE);
+
+          // create the area frame we are scrolling 
+          PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
+          nsIFrame* scrolledFrame = nsnull;
+          NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
+
+          // resolve a style for our gfx scrollframe based on the list frames style 
+          // resolve a style for our gfx scrollframe based on the list frames style 
+          nsCOMPtr<nsIStyleContext> scrollFrameStyle;
+          aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                            nsLayoutAtoms::selectScrolledContentPseudo,
+                                            gfxListStyle, PR_FALSE, 
+                                            getter_AddRefs(scrollFrameStyle)); 
+        
+         InitAndRestoreFrame(aPresContext, aState, aContent, 
+                              listFrame, scrollFrameStyle, nsnull, scrolledFrame);
+
+          // XXX Temporary for Bug 19416
+          {
+            nsIView * lstView;
+            scrolledFrame->GetView(aPresContext, &lstView);
+            if (lstView) {
+              lstView->IgnoreSetPosition(PR_TRUE);
+            }
+          }
+          // this is what is returned when the scrollframe is created. 
+          // newScrollFrame - Either a gfx scrollframe or a native scrollframe that was created 
+          // scrolledFrameStyleContext - The resolved style context of the scrolledframe you passed in. 
+          // this is not the style of the scrollFrame. 
+
+          nsIFrame* newScrollFrame = nsnull; 
+
+          nsFrameItems anonChildItems; 
+            // Create display and button frames from the combobox'es anonymous content
+          CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox, aState, aContent, comboboxFrame,
+                                anonChildItems);
+        
+          comboboxFrame->SetInitialChildList(aPresContext, nsnull,
+                                 anonChildItems.childList);
+
+
+          /* scroll frame */
+
+#ifdef NEWGFX_LIST_SCROLLFRAME
+          nsIStyleContext * scrolledFrameStyleContext = nsnull; 
+
+          // ok take the style context, the Select area frame to scroll,the listFrame, and its parent 
+          // and build the scrollframe. 
+          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, scrollFrameStyle, scrolledFrame, 
+                           listFrame, newScrollFrame, scrolledFrameStyleContext); 
+#else
+          newScrollFrame = scrolledFrame;
+#endif
+
+
+
+          // The area frame is a floater container 
+          PRBool haveFirstLetterStyle, haveFirstLineStyle; 
+          HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext, 
+                                &haveFirstLetterStyle, &haveFirstLineStyle); 
+          nsFrameConstructorSaveState floaterSaveState; 
+          aState.PushFloaterContainingBlock(scrolledFrame, floaterSaveState, 
+                                            haveFirstLetterStyle, 
+                                            haveFirstLineStyle); 
+
+          // Process children 
+          nsFrameItems childItems; 
+
+          ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_FALSE, 
+                          childItems, PR_TRUE); 
+
+          // if a select is being created with zero options we need to create 
+          // a special pseudo frame so it can be sized as best it can 
+          nsCOMPtr<nsIDOMHTMLSelectElement> selectElement; 
+          nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement), 
+                                                       (void**)getter_AddRefs(selectElement)); 
+          if (NS_SUCCEEDED(result) && selectElement) { 
+            PRUint32 numOptions = 0; 
+            result = selectElement->GetLength(&numOptions); 
+            if (NS_SUCCEEDED(result) && 0 == numOptions) { 
+              nsCOMPtr<nsIStyleContext> styleContext;
+              nsIFrame*         generatedFrame = nsnull; 
+              scrolledFrame->GetStyleContext(getter_AddRefs(styleContext)); 
+              if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
+                                              styleContext, nsLayoutAtoms::dummyOptionPseudo, 
+                                              PR_FALSE, &generatedFrame)) { 
+                // Add the generated frame to the child list 
+                childItems.AddChild(generatedFrame); 
+              } 
+            } 
+          } 
+
+          // Set the scrolled frame's initial child lists 
+          scrolledFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList); 
+
+          // set the floated list 
+          if (aState.mFloatedItems.childList) { 
+            scrolledFrame->SetInitialChildList(aPresContext, 
+                                               nsLayoutAtoms::floaterList, 
+                                               aState.mFloatedItems.childList); 
+          } 
+
+          // now we need to set the initial child list of the listFrame and this of course will be the gfx scrollframe 
+          listFrame->SetInitialChildList(aPresContext, nsnull, newScrollFrame); 
+
+          // Initialize the additional popup child list which contains the dropdown list frame.
+          nsFrameItems popupItems;
+          popupItems.AddChild(listFrame);
+          comboboxFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::popupList,
+                                             popupItems.childList);
+
+          // our new frame retured is the top frame which is the list frame. 
+          //aNewFrame = listFrame; 
+
+          // yes we have already initialized our frame 
+           // Don't process, the children, They are already processed by the InitializeScrollFrame
+           // call above.
+          aProcessChildren = PR_FALSE;
+          aNewFrame = comboboxFrame;
+          aFrameHasBeenInitialized = PR_TRUE;
+        }
+#else
+        ///////////////////////////////////////////////////////////////////
+        // Combobox - Old Native Implementation
+        ///////////////////////////////////////////////////////////////////
         nsIComboboxControlFrame* comboBox = nsnull;
         if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
           comboBox->SetFrameConstructor(this);
@@ -3026,6 +3183,10 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           nsIView *listView; 
           listFrame->GetView(aPresContext, &listView);
           NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
+          nsIWidget * viewWidget;
+          listView->GetWidget(viewWidget);
+          //viewWidget->SetOverrideShow(PR_TRUE);
+          NS_RELEASE(viewWidget);
           //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
           nsIFrame* frame = nsnull;
@@ -3051,8 +3212,12 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           aNewFrame = comboboxFrame;
           aFrameHasBeenInitialized = PR_TRUE;
         }
+#endif
       } else {
 #ifdef NEWGFX_LIST
+        ///////////////////////////////////////////////////////////////////
+        // ListBox - New GFX Implementation
+        ///////////////////////////////////////////////////////////////////
     // Construct a frame-based list box 
         nsIFrame * listFrame; 
         rv = NS_NewGfxListControlFrame(aPresShell, &listFrame);
@@ -3122,10 +3287,10 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           if (NS_SUCCEEDED(result) && 0 == numOptions) { 
             nsCOMPtr<nsIStyleContext> styleContext;
             nsIFrame*         generatedFrame = nsnull; 
-            scrolledFrame->GetStyleContext(&styleContext); 
+            scrolledFrame->GetStyleContext(getter_AddRefs(styleContext)); 
             if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
                                             styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                            PR_FALSE, getter_AddRefs(generatedFrame))) { 
+                                            PR_FALSE, &generatedFrame)) { 
               // Add the generated frame to the child list 
               childItems.AddChild(generatedFrame); 
             } 
@@ -3151,6 +3316,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // yes we have already initialized our frame 
         aFrameHasBeenInitialized = PR_TRUE; 
 #else
+        ///////////////////////////////////////////////////////////////////
+        // ListBox - Old Native Implementation
+        ///////////////////////////////////////////////////////////////////
         nsIFrame * listFrame;
         rv = NS_NewListControlFrame(aPresShell, &listFrame);
         aNewFrame = listFrame;
