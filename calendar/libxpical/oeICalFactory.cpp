@@ -58,7 +58,7 @@ static nsModuleComponentInfo pModuleInfo[] =
   }
 };
 
-NS_IMPL_NSGETMODULE("ICal Component", pModuleInfo)
+NS_IMPL_NSGETMODULE(oeICalModule, pModuleInfo)
 
 
 
