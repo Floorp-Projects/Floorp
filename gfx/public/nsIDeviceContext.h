@@ -102,60 +102,28 @@ typedef void * nsNativeDeviceContext;
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
 
-/**
- *
- *
- */
   typedef enum {
-    // Colors
-    eSystemAttr_Color_WindowBackground,
-    eSystemAttr_Color_WindowForeground,
-    eSystemAttr_Color_WidgetBackground,
-    eSystemAttr_Color_WidgetForeground,
-    eSystemAttr_Color_WidgetSelectBackground,
-    eSystemAttr_Color_WidgetSelectForeground,
-    eSystemAttr_Color_Widget3DHighlight,
-    eSystemAttr_Color_Widget3DShadow,
-    eSystemAttr_Color_TextBackground,
-    eSystemAttr_Color_TextForeground,
-    eSystemAttr_Color_TextSelectBackground,
-    eSystemAttr_Color_TextSelectForeground,
-    // Size
-    eSystemAttr_Size_WindowTitleHeight,
-    eSystemAttr_Size_WindowBorderWidth,
-    eSystemAttr_Size_WindowBorderHeight,
-    eSystemAttr_Size_Widget3DBorder,
-    eSystemAttr_Size_ScrollbarHeight,
-    eSystemAttr_Size_ScrollbarWidth,
-    // Fonts
-    eSystemAttr_Font_Caption,					// css2
-    eSystemAttr_Font_Icon,
-    eSystemAttr_Font_Menu,
-    eSystemAttr_Font_MessageBox,
-    eSystemAttr_Font_SmallCaption,
-    eSystemAttr_Font_StatusBar,
+    eSystemFont_Caption,         // css2
+    eSystemFont_Icon,
+    eSystemFont_Menu,
+    eSystemFont_MessageBox,
+    eSystemFont_SmallCaption,
+    eSystemFont_StatusBar,
 
-		eSystemAttr_Font_Window,					// css3
-		eSystemAttr_Font_Document,
-		eSystemAttr_Font_Workspace,
-		eSystemAttr_Font_Desktop,
-		eSystemAttr_Font_Info,
-		eSystemAttr_Font_Dialog,
-		eSystemAttr_Font_Button,
-		eSystemAttr_Font_PullDownMenu,
-		eSystemAttr_Font_List,
-		eSystemAttr_Font_Field,
+    eSystemFont_Window,          // css3
+    eSystemFont_Document,
+    eSystemFont_Workspace,
+    eSystemFont_Desktop,
+    eSystemFont_Info,
+    eSystemFont_Dialog,
+    eSystemFont_Button,
+    eSystemFont_PullDownMenu,
+    eSystemFont_List,
+    eSystemFont_Field,
 
-    eSystemAttr_Font_Tooltips,				// moz
-    eSystemAttr_Font_Widget
-  } nsSystemAttrID;
-
-  typedef union {
-    PRUint32   mSize;
-    nscolor  * mColor;
-    nsFont   * mFont;
-  } SystemAttrStruct;
-
+    eSystemFont_Tooltips,        // moz
+    eSystemFont_Widget
+  } nsSystemFontID;
 
 class nsIDeviceContext : public nsISupports
 {
@@ -289,13 +257,15 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
 
   /**
-   * Get the width of a vertical scroll bar and the height
-   * of a horizontal scrollbar in application units.
-   * @param anID The snum of the type of information you want back
-   * @param aInfo out parameter for the system data
+   * Fill in an nsFont based on the ID of a system font.  This function
+   * may or may not fill in the size, so the size should be set to a
+   * reasonable default before calling.
+   *
+   * @param aID    The system font ID.
+   * @param aInfo  The font structure to be filled in.
    * @return error status
    */
-  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const = 0;
+  NS_IMETHOD  GetSystemFont(nsSystemFontID aID, nsFont *aFont) const = 0;
 
   /**
    * Get the nsIFontMetrics that describe the properties of

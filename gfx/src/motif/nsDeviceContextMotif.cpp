@@ -629,88 +629,25 @@ NS_IMETHODIMP nsDeviceContextMotif::EndPage(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextMotif::GetSystemAttribute(nsSystemAttrID anID, 
-                                                       SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextMotif::GetSystemFont(nsSystemFontID aID, 
+                                                  nsFont *aFont) const
 {
   nsresult status = NS_OK;
 
-  switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = NS_RGB(0x40,0x40,0x40);
-        break;
-    case eSystemAttr_Color_TextBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_TextForeground: 
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-      *aInfo->mColor = NS_RGB(255,255,255);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = NS_RGB(0,0,0);
-        break;
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight:
-        aInfo->mSize = 20;
-        break;
-    case eSystemAttr_Size_ScrollbarWidth: 
-        aInfo->mSize = 20;
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = 0;
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-      //      aInfo->mSize = style->klass->xthickness;
-      aInfo->mSize = 1;
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-      //        aInfo->mSize = style->klass->ythickness;
-        aInfo->mSize = 1;
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = 4;
-        break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption:
-    case eSystemAttr_Font_Icon:
-    case eSystemAttr_Font_Menu:
-    case eSystemAttr_Font_MessageBox:
-    case eSystemAttr_Font_SmallCaption:
-    case eSystemAttr_Font_StatusBar:
-    case eSystemAttr_Font_Tooltips:
-    case eSystemAttr_Font_Widget:
+  NS_NOTYETIMPLEMENTED("nsDeviceContextMotif::GetSystemFont");
+
+  switch (aID) {
+    case eSystemFont_Caption:
+    case eSystemFont_Icon:
+    case eSystemFont_Menu:
+    case eSystemFont_MessageBox:
+    case eSystemFont_SmallCaption:
+    case eSystemFont_StatusBar:
+    case eSystemFont_Tooltips:
+    case eSystemFont_Widget:
       status = NS_ERROR_FAILURE;
       break;
   } // switch
 
-  return NS_OK;
+  return status;
 }

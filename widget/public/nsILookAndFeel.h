@@ -41,9 +41,8 @@
 #include "nsColor.h"
 #include "nsFont.h"
 
-#ifdef NS_DEBUG
-#include "nsSize.h"
-#endif
+  // for |#ifdef NS_DEBUG|
+struct nsSize;
 
 
 // {21B51DE1-21A3-11d2-B6E0-00805F8A2676}
@@ -212,8 +211,6 @@ public:
                         nsSize &aSize) = 0;
 #endif
 };
-
-#define nsLAF nsILookAndFeel
 
 	// On the Mac, GetColor(eColor_TextSelectForeground, color) returns this
 	// constant to specify that the foreground color should not be changed

@@ -329,7 +329,7 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
-nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont) const
+nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const
 {
   NONCLIENTMETRICS ncm;
   HGDIOBJ hGDI;
@@ -338,7 +338,7 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   LOGFONT* ptrLogFont = NULL;
 
   BOOL status;
-  if (anID == eSystemAttr_Font_Icon) 
+  if (anID == eSystemFont_Icon) 
   {
     status = ::SystemParametersInfo(SPI_GETICONTITLELOGFONT,
                                   sizeof(logFont),
@@ -362,44 +362,44 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   switch (anID)
   {
     // Caption in CSS is NOT the same as Caption on Windows
-    //case eSystemAttr_Font_Caption: 
+    //case eSystemFont_Caption: 
     //  ptrLogFont = &ncm.lfCaptionFont;
     //  break;
 
-    case eSystemAttr_Font_Icon: 
+    case eSystemFont_Icon: 
       ptrLogFont = &logFont;
       break;
 
-    case eSystemAttr_Font_Menu: 
+    case eSystemFont_Menu: 
       ptrLogFont = &ncm.lfMenuFont;
       break;
 
-    case eSystemAttr_Font_MessageBox: 
+    case eSystemFont_MessageBox: 
       ptrLogFont = &ncm.lfMessageFont;
       break;
 
-    case eSystemAttr_Font_SmallCaption: 
+    case eSystemFont_SmallCaption: 
       ptrLogFont = &ncm.lfSmCaptionFont;
       break;
 
-    case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Tooltips: 
+    case eSystemFont_StatusBar: 
+    case eSystemFont_Tooltips: 
       ptrLogFont = &ncm.lfStatusFont;
       break;
 
-    case eSystemAttr_Font_Widget:
+    case eSystemFont_Widget:
 
-    case eSystemAttr_Font_Window:      // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
-    case eSystemAttr_Font_Caption: 
+    case eSystemFont_Window:      // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
+    case eSystemFont_Caption: 
       hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
       if (hGDI != NULL)
       {
@@ -466,93 +466,30 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
+NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
 {
   nsresult status = NS_OK;
 
   switch (anID) {
-    //---------
-    // Colors
-    //---------
-    case eSystemAttr_Color_WindowBackground:
-        *aInfo->mColor = ::GetSysColor(COLOR_WINDOW);
-        break;
-    case eSystemAttr_Color_WindowForeground:
-        *aInfo->mColor = ::GetSysColor(COLOR_WINDOWTEXT);
-        break;
-    case eSystemAttr_Color_WidgetBackground:
-        *aInfo->mColor = ::GetSysColor(COLOR_BTNFACE);
-        break;
-    case eSystemAttr_Color_WidgetForeground:
-        *aInfo->mColor = ::GetSysColor(COLOR_BTNTEXT);
-        break;
-    case eSystemAttr_Color_WidgetSelectBackground:
-        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHT);
-        break;
-    case eSystemAttr_Color_WidgetSelectForeground:
-        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
-        break;
-    case eSystemAttr_Color_Widget3DHighlight:
-        *aInfo->mColor = ::GetSysColor(COLOR_BTNHIGHLIGHT);
-        break;
-    case eSystemAttr_Color_Widget3DShadow:
-        *aInfo->mColor = ::GetSysColor(COLOR_BTNSHADOW);
-        break;
-    case eSystemAttr_Color_TextBackground:
-        *aInfo->mColor = ::GetSysColor(COLOR_WINDOW);
-        break;
-    case eSystemAttr_Color_TextForeground:
-        *aInfo->mColor = ::GetSysColor(COLOR_WINDOWTEXT);
-        break;
-    case eSystemAttr_Color_TextSelectBackground:
-        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHT);
-        break;
-    case eSystemAttr_Color_TextSelectForeground:
-        *aInfo->mColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
-        break;
-    //---------
-    // Size
-    //---------
-    case eSystemAttr_Size_ScrollbarHeight : 
-        aInfo->mSize = ::GetSystemMetrics(SM_CXHSCROLL);
-        break;
-    case eSystemAttr_Size_ScrollbarWidth : 
-        aInfo->mSize = ::GetSystemMetrics(SM_CXVSCROLL);
-        break;
-    case eSystemAttr_Size_WindowTitleHeight:
-        aInfo->mSize = ::GetSystemMetrics(SM_CYCAPTION);
-        break;
-    case eSystemAttr_Size_WindowBorderWidth:
-        aInfo->mSize = ::GetSystemMetrics(SM_CXFRAME);
-        break;
-    case eSystemAttr_Size_WindowBorderHeight:
-        aInfo->mSize = ::GetSystemMetrics(SM_CYFRAME);
-        break;
-    case eSystemAttr_Size_Widget3DBorder:
-        aInfo->mSize = ::GetSystemMetrics(SM_CXEDGE);
-        break;
-    //---------
-    // Fonts
-    //---------
-    case eSystemAttr_Font_Caption: 
-    case eSystemAttr_Font_Icon: 
-    case eSystemAttr_Font_Menu: 
-    case eSystemAttr_Font_MessageBox: 
-    case eSystemAttr_Font_SmallCaption: 
-    case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Tooltips: 
-    case eSystemAttr_Font_Widget:
+    case eSystemFont_Caption: 
+    case eSystemFont_Icon: 
+    case eSystemFont_Menu: 
+    case eSystemFont_MessageBox: 
+    case eSystemFont_SmallCaption: 
+    case eSystemFont_StatusBar: 
+    case eSystemFont_Tooltips: 
+    case eSystemFont_Widget:
 
-    case eSystemAttr_Font_Window:      // css3
-    case eSystemAttr_Font_Document:
-    case eSystemAttr_Font_Workspace:
-    case eSystemAttr_Font_Desktop:
-    case eSystemAttr_Font_Info:
-    case eSystemAttr_Font_Dialog:
-    case eSystemAttr_Font_Button:
-    case eSystemAttr_Font_PullDownMenu:
-    case eSystemAttr_Font_List:
-    case eSystemAttr_Font_Field:
+    case eSystemFont_Window:      // css3
+    case eSystemFont_Document:
+    case eSystemFont_Workspace:
+    case eSystemFont_Desktop:
+    case eSystemFont_Info:
+    case eSystemFont_Dialog:
+    case eSystemFont_Button:
+    case eSystemFont_PullDownMenu:
+    case eSystemFont_List:
+    case eSystemFont_Field:
     {
       HWND  hwnd;
       HDC   tdc;
@@ -565,16 +502,16 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, Syst
       else
         tdc = mDC;
 
-      status = GetSysFontInfo(tdc, anID, aInfo->mFont);
+      status = GetSysFontInfo(tdc, anID, aFont);
 
       if (nsnull == mDC)
         ::ReleaseDC(hwnd, tdc);
 
       break;
     }
-  } // switch 
+  }
 
-  return NS_OK;
+  return status;
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)

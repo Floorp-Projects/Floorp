@@ -65,6 +65,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     res = NS_OK;
   }
 
+  /*
+   * There used to be an entirely separate list of these colors in
+   * nsDeviceContextBeOS::GetSystemAttribute.  The colors given there
+   * were a bit different from these.  If these are inaccurate, it might
+   * be worth looking at cvs history for the ones there to see if they
+   * were better.
+   */
+
   int idx;
   switch (aID) {
     case eColor_WindowBackground:
@@ -96,7 +104,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       break;
     case eColor_TextForeground: 
       aColor = NS_RGB(0x00,0x00,0x00);
-	  break;
+      break;
     case eColor_TextSelectBackground:
       aColor = NS_RGB(0x00,0x00,0x00);
       break;
@@ -222,6 +230,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       return res;
     res = NS_OK;
   }
+
+  /*
+   * There used to be an entirely separate list of these metrics in
+   * nsDeviceContextBeOS::GetSystemAttribute.  The metrics given there
+   * were a bit different from these.  If these are inaccurate, it might
+   * be worth looking at cvs history for the ones there to see if they
+   * were better.
+   */
 
   switch (aID) 
   {

@@ -1352,19 +1352,16 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsCOMPtr<nsIDeviceContext> dx;
     aPresContext->GetDeviceContext(getter_AddRefs(dx));
     if (dx) { 
-      // Get the width in Device pixels (in this case screen)
-      SystemAttrStruct info;
-      dx->GetSystemAttribute(eSystemAttr_Size_ScrollbarWidth, &info);
-      // Get the pixels to twips conversion for the current device (screen or printer)
-      float p2t;
-      aPresContext->GetPixelsToTwips(&p2t);
+      float w, h;
+      // Get the width in Device pixels times p2t
+      dx->GetScrollBarDimensions(w, h);
       // Get the scale factor for mapping from one device (screen) 
       //   to another device (screen or printer)
       // Typically when it is a screen the scale 1.0
       //   when it is a printer is could be anything
       float scale;
       dx->GetCanonicalPixelScale(scale); 
-      mCachedScrollbarWidth = NSIntPixelsToTwips(info.mSize, p2t*scale);
+      mCachedScrollbarWidth = NSToCoordRound(w * scale);
     }
   }
   
