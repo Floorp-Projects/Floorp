@@ -52,9 +52,9 @@ void nsNewsSummarySpec::	CreateSummaryFileName()
 
 	nsString fullLeafName(leafName);
 
-	// Append .nsf (news summary file) 
+	// Append .msf (message summary file) 
 
-	fullLeafName += ".nsf";				// news summary file
+	fullLeafName += ".msf";				// message summary file
 	char *cLeafName = fullLeafName.ToNewCString();
 	SetLeafName(cLeafName);
 	delete [] cLeafName;	// ###use nsCString when it's available!@
