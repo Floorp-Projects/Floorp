@@ -1120,7 +1120,7 @@ nsJSEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
     result = PrintAttributeNode(attr, aDepth);
 
     if (NS_FAILED(result))
-      result;
+      return result;
   }
 
   result = PrintNodeChildren(aNode, aDepth);
