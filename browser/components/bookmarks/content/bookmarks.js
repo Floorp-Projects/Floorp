@@ -864,7 +864,7 @@ var BookmarksController = {
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1)
         return false;
-      return item0 != "NC:PersonalToolbarFolder" && 
+      return item0 != BMSVC.getBookmarksToolbarFolder().Value && 
              item0 != "NC:BookmarksRoot" && type0 == "Folder";
     case "cmd_bm_movebookmark":
       return length > 0 && !aSelection.containsImmutable;
@@ -1104,7 +1104,7 @@ var BookmarksUtils = {
       aSelection.type       [i] = type;
       aSelection.isContainer[i] = isContainer;
     }
-    if (this.isContainerChildOrSelf(RDF.GetResource("NC:PersonalToolbarFolder"), aSelection))
+    if (this.isContainerChildOrSelf(BMSVC.getBookmarksToolbarFolder(), aSelection))
       aSelection.containsPTF = true;
   },
 
