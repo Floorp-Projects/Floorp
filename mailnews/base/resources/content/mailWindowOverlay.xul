@@ -258,6 +258,7 @@ Rights Reserved.
     <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_recalculateJunkScore" oncommand="goDoCommand('cmd_recalculateJunkScore');" disabled="true"/>
 </commandset>
 
 <commandset id="mailLabelMenuItems"
@@ -604,6 +605,9 @@ Rights Reserved.
         <menuitem label="&markAsNotJunkCmd.label;"
                   accesskey="&markAsNotJunkCmd.accesskey;"
                   observes="cmd_markAsNotJunk"/>
+        <menuitem label="&recalculateJunkScoreCmd.label;"
+                  accesskey="&recalculateJunkScoreCmd.accesskey;"
+                  command="cmd_recalculateJunkScore"/>
       </menupopup>
     </menu>
     <menuseparator/>
@@ -942,6 +946,9 @@ Rights Reserved.
         <menuitem label="&markAsNotJunkCmd.label;" 
                   accesskey="&markAsNotJunkCmd.accesskey;" 
                   observes="cmd_markAsNotJunk"/>
+        <menuitem label="&recalculateJunkScoreCmd.label;"
+                  accesskey="&recalculateJunkScoreCmd.accesskey;"
+                  command="cmd_recalculateJunkScore"/>
       </menupopup>
     </menu>
     <menuseparator id="messagePaneContext-sep-labels-2"/>
@@ -1536,6 +1543,9 @@ Rights Reserved.
                   key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;" 
                   observes="cmd_markAsNotJunk"/>
+        <menuitem label="&recalculateJunkScoreCmd.label;"
+                  accesskey="&recalculateJunkScoreCmd.accesskey;"
+                  command="cmd_recalculateJunkScore"/>
       </menupopup>
     </menu>
     <menuseparator/>
