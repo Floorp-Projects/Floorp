@@ -18,7 +18,6 @@
 <!ENTITY newNavigatorCmd.label				"Navigator Window">
 <!ENTITY newNavigatorCmd.key				"N">
 <!ENTITY newNavigatorCmd.accesskey			"n">
-<!-- LOCALIZATION NOTE (newMessageCmd.label): DONT_TRANSLATE -->
 <!ENTITY newMessageCmd.label				"Message">
 <!ENTITY newMessageCmd.key					"M">
 <!ENTITY newMessageCmd.accesskey			"m">
