@@ -77,7 +77,6 @@ nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create body pseudo frame
   NS_NewBodyFrame(mContent, this, mFirstChild);
-  mChildCount = 1;
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
@@ -194,7 +193,6 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   if (nsnull == mPrevInFlow) {
     // No, create a body pseudo frame
     NS_NewBodyFrame(mContent, this, mFirstChild);
-    mChildCount = 1;
 
     // Resolve style and set the style context
     nsIStyleContext* styleContext =
@@ -212,7 +210,6 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     prevPseudoFrame->GetStyleContext(aPresContext, kidSC);
     prevPseudoFrame->CreateContinuingFrame(*aPresContext, this, kidSC, mFirstChild);
     NS_RELEASE(kidSC);
-    mChildCount = 1;
   }
 }
 
@@ -295,8 +292,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     printf("%p nsTableCellFrame::Reflow: maxSize=%d,%d\n",
            this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
-  mFirstContentOffset = mLastContentOffset = 0;
-
   nsSize availSize(aReflowState.maxSize);
   nsSize maxElementSize;
   nsSize *pMaxElementSize = aDesiredSize.maxElementSize;
@@ -322,8 +317,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsMargin      margin(0,0,0,0);
   nsTableFrame* tableFrame = GetTableFrame();
   tableFrame->GetCellMarginData(this,margin);
-
-  mLastContentIsComplete = PR_TRUE;
 
   // get frame, creating one if needed
   if (nsnull==mFirstChild)
@@ -378,10 +371,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
              this, kidSize.width, kidSize.height);
   }
 
-  // Set our last content offset based on the pseudo-frame
-  nsBodyFrame* bodyPseudoFrame = (nsBodyFrame*)mFirstChild;
-  mLastContentOffset = bodyPseudoFrame->GetLastContentOffset();
-
   // Place the child
   //////////////////////////////// HACK //////////////////////////////
   kidSize.width = PR_MIN(kidSize.width, availSize.width);
@@ -389,12 +378,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   mFirstChild->SetRect(nsRect(leftInset, topInset,
                            kidSize.width, kidSize.height));  
     
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    // If the child didn't finish layout then it means that it used
-    // up all of our available space (or needs us to split).
-    mLastContentIsComplete = PR_FALSE;
-  }
-
   // Return our size and our result
 
   // first, compute the height
@@ -1126,7 +1109,7 @@ NS_METHOD nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
     fputs("\n", out);
   }
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
@@ -1201,7 +1184,7 @@ void nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
   }
 
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {

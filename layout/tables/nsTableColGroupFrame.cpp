@@ -90,7 +90,6 @@ nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aC
   } else {
     lastChild->SetNextSibling(aChildList);
   }
-  mChildCount += LengthOf(aChildList);
 
   return NS_OK;
 }
@@ -312,7 +311,7 @@ NS_METHOD nsTableColGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
     fputs("\n", out);
   }
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {

@@ -130,14 +130,6 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mFirstChild = aChildList;
-  mChildCount = LengthOf(mFirstChild);
-
-  // XXX TEMP CODE UNTIL nsContainerFrame GOES AWAY...
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  if (nsnull != lastChild) {
-    lastChild->GetContentIndex(mLastContentOffset);
-  }
-
   return NS_OK;
 }
 
@@ -268,36 +260,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
                                                    RowGroupReflowState& aState,
                                                    nsSize*              aMaxElementSize)
 {
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": reflow mapped (childCount=%d) [%d,%d,%c]\n",
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowGroupFrame* flow = (nsTableRowGroupFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowGroupFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
   NS_PRECONDITION(nsnull != mFirstChild, "no children");
-  PRInt32   childCount = 0;
   nsIFrame* prevKidFrame = nsnull;
-
-  // Remember our original mLastContentIsComplete so that if we end up
-  // having to push children, we have the correct value to hand to
-  // PushChildren.
-  PRBool    lastContentIsComplete = mLastContentIsComplete;
-
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
@@ -354,17 +318,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       //
       // Note that if the width is too big that's okay and we allow the
       // child to extend horizontally outside of the reflow area
-
-      // Since we are giving the next-in-flow our last child, we
-      // give it our original mLastContentIsComplete, too (in case we
-      // are pushing into an empty next-in-flow)
-      PushChildren(kidFrame, prevKidFrame, lastContentIsComplete);
-      PRInt32 contentIndex;
-      prevKidFrame->GetContentIndex(contentIndex);
-			SetLastContentOffset(contentIndex);
-
-      // Our mLastContentIsComplete was already set by the last kid we
-      // reflowed reflow's status
+      PushChildren(kidFrame, prevKidFrame, PR_TRUE);
       result = PR_FALSE;
       break;
     }
@@ -378,13 +332,9 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     } else {
       aState.prevMaxPosBottomMargin = bottomMargin;
     }
-    childCount++;
 
 		// Remember where we just were in case we end up pushing children
 		prevKidFrame = kidFrame;
-
-    // Update mLastContentIsComplete now that this kid fits
-    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
 
     /* Row groups should not create continuing frames for rows 
      * unless they absolutely have to!
@@ -398,7 +348,6 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       nsIFrame* kidNextInFlow;
        
       kidFrame->GetNextInFlow(kidNextInFlow);
-			PRBool lastContentIsComplete = mLastContentIsComplete;
       if (nsnull == kidNextInFlow) {
         // No the child isn't complete, and it doesn't have a next in flow so
         // create a continuing frame. This hooks the child into the flow.
@@ -415,12 +364,6 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
         kidFrame->GetNextSibling(nextSib);
         continuingFrame->SetNextSibling(nextSib);
         kidFrame->SetNextSibling(continuingFrame);
-        if (nsnull == nextSib) {
-          // Assume that the continuation frame we just created is
-          // complete, for now. It will get reflowed by our
-          // next-in-flow (we are going to push it now)
-          lastContentIsComplete = PR_TRUE;
-        }
       }
       // We've used up all of our available space so push the remaining
       // children to the next-in-flow
@@ -428,10 +371,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
        
       kidFrame->GetNextSibling(nextSibling);
       if (nsnull != nextSibling) {
-        PushChildren(nextSibling, kidFrame, lastContentIsComplete);
-        PRInt32 contentIndex;
-        prevKidFrame->GetContentIndex(contentIndex);
-        SetLastContentOffset(contentIndex);
+        PushChildren(nextSibling, kidFrame, PR_TRUE);
       }
       result = PR_FALSE;
       break;
@@ -449,40 +389,6 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
   }
 
   // Update the child count
-  mChildCount = childCount;
-
-#ifdef NS_DEBUG
-  NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
-
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  PRInt32   lastIndexInParent;
-
-  lastChild->GetContentIndex(lastIndexInParent);
-	NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
-#endif
-
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": reflow mapped %sok (childCount=%d) [%d,%d,%c]\n",
-         (result ? "" : "NOT "),
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowGroupFrame* flow = (nsTableRowGroupFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowGroupFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
   return result;
 }
 
@@ -498,43 +404,11 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
                                             RowGroupReflowState& aState,
                                             nsSize*              aMaxElementSize)
 {
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": pullup (childCount=%d) [%d,%d,%c]\n",
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowGroupFrame* flow = (nsTableRowGroupFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowGroupFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
   nsTableRowGroupFrame* nextInFlow = (nsTableRowGroupFrame*)mNextInFlow;
   nsSize         kidMaxElementSize;
   nsSize*        pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
-#ifdef NS_DEBUG
-  PRInt32        kidIndex = NextChildOffset();
-#endif
   nsIFrame*      prevKidFrame = LastFrame(mFirstChild);
-   
-  // This will hold the prevKidFrame's mLastContentIsComplete
-  // status. If we have to push the frame that follows prevKidFrame
-  // then this will become our mLastContentIsComplete state. Since
-  // prevKidFrame is initially our last frame, it's completion status
-  // is our mLastContentIsComplete value.
-  PRBool        prevLastContentIsComplete = mLastContentIsComplete;
-
-  PRBool        result = PR_TRUE;
+  PRBool         result = PR_TRUE;
 
   while (nsnull != nextInFlow) {
     nsReflowMetrics kidSize(pKidMaxElementSize);
@@ -571,7 +445,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     if ((kidFrameSize.height > aState.availSize.height) &&
         NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
       result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
     nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
@@ -584,7 +457,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       // The child is too wide to fit in the available space, and it's
       // not our first child
       result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
 
@@ -597,13 +469,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
     // Remove the frame from its current parent
     kidFrame->GetNextSibling(nextInFlow->mFirstChild);
-    nextInFlow->mChildCount--;
-    // Update the next-in-flows first content offset
-    if (nsnull != nextInFlow->mFirstChild) {
-      PRInt32 contentIndex;
-      nextInFlow->mFirstChild->GetContentIndex(contentIndex);
-      nextInFlow->SetFirstContentOffset(contentIndex);
-    }
 
     // Link the frame into our list of children
     kidFrame->SetGeometricParent(this);
@@ -615,21 +480,15 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
     if (nsnull == prevKidFrame) {
       mFirstChild = kidFrame;
-      PRInt32 contentIndex;
-      kidFrame->GetContentIndex(contentIndex);
-      SetFirstContentOffset(contentIndex);
     } else {
       prevKidFrame->SetNextSibling(kidFrame);
     }
     kidFrame->SetNextSibling(nsnull);
-    mChildCount++;
 
     // Remember where we just were in case we end up pushing children
     prevKidFrame = kidFrame;
-    prevLastContentIsComplete = mLastContentIsComplete;
 
     // Is the child we just pulled up complete?
-    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
     if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // No the child isn't complete
       nsIFrame* kidNextInFlow;
@@ -651,16 +510,10 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
         // it to the next-in-flow. This ensures the next-in-flow's
         // content offsets and child count are set properly. Note that
         // we can safely assume that the continuation is complete so
-        // we pass PR_TRUE into PushChidren in case our next-in-flow
-        // was just drained and now needs to know it's
-        // mLastContentIsComplete state.
+        // we pass PR_TRUE into PushChidren
         kidFrame->SetNextSibling(continuingFrame);
 
         PushChildren(continuingFrame, kidFrame, PR_TRUE);
-
-        // After we push the continuation frame we don't need to fuss
-        // with mLastContentIsComplete beause the continuation frame
-        // is no longer on *our* list.
       }
 
       // If the child isn't complete then it means that we've used up
@@ -673,9 +526,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
   // Update our last content offset
   if (nsnull != prevKidFrame) {
     NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-    PRInt32 contentIndex;
-    prevKidFrame->GetContentIndex(contentIndex);
-    SetLastContentOffset(contentIndex);
   }
 
   // We need to make sure the first content offset is correct for any empty
@@ -700,29 +550,6 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
   }
 
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": pullup %sok (childCount=%d) [%d,%d,%c]\n",
-         (result ? "" : "NOT "),
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowGroupFrame* flow = (nsTableRowGroupFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowGroupFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
   return result;
 }
 
@@ -1134,7 +961,7 @@ NS_METHOD nsTableRowGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
   }
 
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {

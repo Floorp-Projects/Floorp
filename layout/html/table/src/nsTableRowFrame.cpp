@@ -100,7 +100,6 @@ NS_IMETHODIMP
 nsTableRowFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mFirstChild = aChildList;
-  mChildCount = LengthOf(mFirstChild);
   return NS_OK;
 }
 
@@ -1027,7 +1026,7 @@ NS_METHOD nsTableRowFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilt
     fputs("\n", out);
   }
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
