@@ -347,28 +347,23 @@ void nsMessengerWinIntegration::FillToolTipInfo()
       GetStringBundle(getter_AddRefs(bundle));
       if (bundle)
       { 
-        nsXPIDLString messageText;
         nsAutoString numNewMsgsText;
         nsAutoString uniUsername;
       
         uniUsername.AssignWithConversion(userName); 
         numNewMsgsText.AppendInt(numNewMessages);
 
-        // fetch the message vs. messages string
-        if (numNewMessages == 1)
-          bundle->GetStringFromName(NS_LITERAL_STRING("message").get(), getter_Copies(messageText));
-        else
-          bundle->GetStringFromName(NS_LITERAL_STRING("messages").get(), getter_Copies(messageText));
-
         const PRUnichar *formatStrings[] =
         {
           uniUsername.get(),
-          numNewMsgsText.get(), 
-          messageText         
+          numNewMsgsText.get(),       
         };
        
         nsXPIDLString finalText; 
-        bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification").get(), formatStrings, 3, getter_Copies(finalText));
+        if (numNewMessages == 1)
+          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_message").get(), formatStrings, 2, getter_Copies(finalText));
+        else
+          bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_messages").get(), formatStrings, 2, getter_Copies(finalText));
 
         // only add this new string if it will fit without truncation....
         if ((sizeof mBiffIconData.szTip - 1) >= toolTipText.Length() + finalText.Length() + 2)
