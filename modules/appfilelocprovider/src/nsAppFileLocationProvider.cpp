@@ -450,7 +450,7 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 // GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
 //
 // UNIX   : ~/.mozilla/
-// WIN    : Program Files\Netscape\Users50\  
+// WIN    : <Application Data folder on user's machine>\Mozilla\Users50 
 // Mac    : :Documents:Mozilla:Users50:
 //----------------------------------------------------------------------------------------
 static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
@@ -496,10 +496,10 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
       NS_ENSURE_SUCCESS(rv, rv);
     }
 #elif defined(XP_PC)
-    rv = GetWindowsFolder(CSIDL_PROGRAMS, aLocalFile);
+    rv = GetWindowsFolder(CSIDL_APPDATA, aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath("Netscape");
+    pLocalFile->AppendRelativePath("Mozilla");
     rv = pLocalFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!exists) {
