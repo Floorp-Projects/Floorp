@@ -215,15 +215,6 @@ typedef PRUint32 nsresult;
   #define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
-  /* until we get an autoconf test for this, we'll assume it's on (since we're using it already) */
-#define HAVE_CPP_TYPENAME
-
-  /* waiting to find out if OS/2 VisualAge participates in autoconf */
-#if defined(XP_OS2_VACPP) || defined(AIX_XLC_364) || (defined(IRIX) && !defined(__GNUC__))
-  #undef HAVE_CPP_TYPENAME
-#endif
-
-
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
   /* For now, don't use wchar_t on Unix because it breaks the Netscape
