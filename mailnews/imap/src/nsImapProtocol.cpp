@@ -3897,7 +3897,10 @@ void
 nsImapProtocol::NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key)
 {
     if (m_imapMessageSink)
+    {
+      if (m_imapAction != nsIImapUrl::nsImapMsgFetch || (flags & ~kImapMsgRecentFlag) != kImapMsgSeenFlag)
         m_imapMessageSink->NotifyMessageFlags(flags, key);
+    }
 }
 
 void
@@ -4995,7 +4998,7 @@ void nsImapProtocol::OnEnsureExistsFolder(const char * aSourceMailbox)
 
   if (exists)
   {
-      Subscribe(aSourceMailbox);
+    Subscribe(aSourceMailbox);
   }
   else
   {
@@ -6336,11 +6339,11 @@ void nsImapProtocol::List(const char *mailboxPattern, PRBool addDirectoryIfNeces
 
 void nsImapProtocol::Subscribe(const char *mailboxName)
 {
-    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_SUBSCRIBE_TO_MAILBOX, mailboxName);
+  ProgressEventFunctionUsingIdWithString (IMAP_STATUS_SUBSCRIBE_TO_MAILBOX, mailboxName);
 
-    IncrementCommandTagNumber();
+  IncrementCommandTagNumber();
     
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
 
   nsCString command (GetServerCommandTag());
   command += " subscribe \"";
@@ -6349,8 +6352,8 @@ void nsImapProtocol::Subscribe(const char *mailboxName)
     nsMemory::Free(escapedName);
 
   nsresult rv = SendData(command.get());  
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  if (NS_SUCCEEDED(rv))
+    ParseIMAPandCheckForNewMail();
 }
 
 void nsImapProtocol::Unsubscribe(const char *mailboxName)
