@@ -176,18 +176,22 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
           if (NS_SUCCEEDED(aKeyEvent->GetCharCode(&character)))
           {
             key += character;
-            mEditor->InsertText(key);
+            if (0!=character)
+              mEditor->InsertText(key);
           }
 #else
           char character;
           // XXX Replace with x-platform NS-virtkeycode transform.
           if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
-            nsAutoString key;
-            key += character;
-            if (!isShift) {
-              key.ToLowerCase();
+            if (0!=character)
+            {
+              nsAutoString key;
+              key += character;
+              if (!isShift) {
+                key.ToLowerCase();
+              }
+              mEditor->InsertText(key);
             }
-            mEditor->InsertText(key);
           }
 #endif
         }
