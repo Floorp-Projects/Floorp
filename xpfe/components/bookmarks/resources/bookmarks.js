@@ -507,7 +507,7 @@ var BookmarksCommand = {
   {
     var rv = { selectedFolder: null };      
     openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-               "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
+               "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, null, null, "selectFolder", rv);
     if (!rv.target)
       return;
     
