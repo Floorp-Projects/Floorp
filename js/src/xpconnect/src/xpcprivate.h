@@ -1163,7 +1163,6 @@ public:
 private:
     void ctorCommon(XPCContext::LangType type)
     {
-        NS_WARN_IF_FALSE(mXPCContext,"bad context in AutoPushCallingLangType");
         if(mXPCContext)
             mOldCallingLangType = mXPCContext->SetCallingLangType(type);
 #ifdef DEBUG
