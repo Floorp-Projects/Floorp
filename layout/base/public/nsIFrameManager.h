@@ -26,6 +26,7 @@ class nsIContent;
 class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
+class nsIStyleSet;
 
 #define NS_IFRAMEMANAGER_IID     \
 { 0xa6cf9107, 0x15b3, 0x11d2, \
@@ -44,7 +45,7 @@ public:
   static const nsIID& GetIID() {static nsIID iid = NS_IFRAMEMANAGER_IID; return iid;}
 
   // Initialization
-  NS_IMETHOD Init(nsIPresShell* aPresShell) = 0;
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet) = 0;
 
   // Primary frame functions
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aPrimaryFrame) = 0;
@@ -82,6 +83,14 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame) = 0;
+
+  // Notification that we were unable to render a replaced element
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame) = 0;
+
+  // Notification that a frame is about to be destroyed. This allows any outstanding
+  // references to the frame to be cleaned up
+  NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 };
 
 /**

@@ -23,12 +23,12 @@
 #include "nsIStyleSet.h"
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIStyleContext.h"
+#include "nsIServiceManager.h"
 #include "nsFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "prlog.h"
-#include "prthread.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
@@ -47,8 +47,6 @@
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
-#include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
 #include "nsICaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
@@ -85,7 +83,6 @@ static PRBool gsNoisyRefs = PR_FALSE;
 //----------------------------------------------------------------------
 
 // Class IID's
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
 
@@ -101,7 +98,6 @@ static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIDomSelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -110,8 +106,6 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-
-struct CantRenderReplacedElementEvent;
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
@@ -253,9 +247,6 @@ public:
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-  // implementation
-  void HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEvent* aEvent);
-
 protected:
   virtual ~PresShell();
 
@@ -299,14 +290,9 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
-  CantRenderReplacedElementEvent* mPostedEvents;
   nsIFrameManager*              mFrameManager;  // we hold a reference
 
 private:
-  void RevokePostedEvents();
-  CantRenderReplacedElementEvent** FindPostedEventFor(nsIFrame* aFrame);
-  void DequeuePostedEventFor(nsIFrame* aFrame);
-
   //helper funcs for disabing autoscrolling
   void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
   void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
@@ -466,8 +452,6 @@ PresShell::~PresShell()
     // Disable paints during tear down of the frame tree
     mViewManager->DisableRefresh();
   }
-  // Revoke any events posted to the event queue that we haven't processed yet
-  RevokePostedEvents();
   // Destroy the frame manager before destroying the frame hierarchy. That way
   // we won't waste time removing content->frame mappings for frames being
   // destroyed
@@ -477,11 +461,6 @@ PresShell::~PresShell()
   if (mDocument)
     mDocument->DeleteShell(this);
   mRefCnt = 0;
-#ifdef DEBUG_troy
-  if (mPrimaryFrameMap) {
-    mPrimaryFrameMap->Dump(stdout);
-  }
-#endif
 }
 
 /**
@@ -528,7 +507,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_FAILED(result)) {
     return result;
   }
-  mFrameManager->Init(this);
+  mFrameManager->Init(this, mStyleSet);
 
   nsCOMPtr<nsIDOMSelection> domSelection;
   mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
@@ -566,32 +545,6 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   return NS_OK;
-}
-
-void
-PresShell::RevokePostedEvents()
-{
-  if (mPostedEvents) {
-    mPostedEvents = nsnull;
-
-    // Revoke any events in the event queue that are owned by us
-    nsIEventQueueService* eventService;
-    nsresult              rv;
-
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
-                                      (nsISupports **)&eventService);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIEventQueue> eventQueue;
-      rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
-                                             getter_AddRefs(eventQueue));
-      nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
-
-      if (NS_SUCCEEDED(rv) && eventQueue) {
-        eventQueue->RevokeEvents(this);
-      }
-    }
-  }
 }
 
 NS_IMETHODIMP
@@ -945,8 +898,11 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   // Cancel any pending reflow commands targeted at this frame
   CancelReflowCommand(aFrame);
 
-  // Dequeue and destroy and posted events for this frame
-  DequeuePostedEventFor(aFrame);
+  // Notify the frame manager
+  if (mFrameManager) {
+    mFrameManager->NotifyDestroyingFrame(aFrame);
+  }
+
   return NS_OK;
 }
 
@@ -1332,146 +1288,15 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   return rv;
 }
 
-struct CantRenderReplacedElementEvent : public PLEvent {
-  CantRenderReplacedElementEvent(PresShell* aShell, nsIFrame* aFrame);
-
-  nsIFrame*  mFrame;                     // the frame that can't be rendered
-  CantRenderReplacedElementEvent* mNext; // next event in the list
-};
-
-CantRenderReplacedElementEvent**
-PresShell::FindPostedEventFor(nsIFrame* aFrame)
-{
-  CantRenderReplacedElementEvent** event = &mPostedEvents;
-
-  while (*event) {
-    if ((*event)->mFrame == aFrame) {
-      return event;
-    }
-    event = &(*event)->mNext;
-  }
-
-  return event;
-}
-
-void
-PresShell::DequeuePostedEventFor(nsIFrame* aFrame)
-{
-  // If there's a posted event for this frame, then remove it
-  CantRenderReplacedElementEvent** event = FindPostedEventFor(aFrame);
-  if (*event) {
-    CantRenderReplacedElementEvent* tmp = *event;
-
-    // Remove it from our linked list of posted events
-    *event = (*event)->mNext;
-    
-    // Dequeue it from the event queue
-    nsIEventQueueService* eventService;
-    nsresult              rv;
-
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
-                                      (nsISupports **)&eventService);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIEventQueue> eventQueue;
-      rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
-                                             getter_AddRefs(eventQueue));
-      nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
-
-      if (NS_SUCCEEDED(rv) && eventQueue) {
-        PLEventQueue* plqueue;
-
-        eventQueue->GetPLEventQueue(&plqueue);
-        if (plqueue) {
-          // Removes the event and destroys it
-          PL_DequeueEvent(tmp, plqueue);
-        }
-      }
-    }
-  }
-}
-
-void
-PresShell::HandleCantRenderReplacedElementEvent(CantRenderReplacedElementEvent* aEvent)
-{
-  // Remove the posted event from our linked list
-  CantRenderReplacedElementEvent** events = &mPostedEvents;
-  while (*events) {
-    if (*events == aEvent) {
-      *events = (*events)->mNext;
-      break;
-    } else {
-      events = &(*events)->mNext;
-    }
-  }
-
-  // Notify the style system and then process any reflow commands that
-  // are generated
-  mStyleSet->CantRenderReplacedElement(mPresContext, aEvent->mFrame);
-  ProcessReflowCommands();
-}
-
-static void PR_CALLBACK
-HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
-{
-  PresShell*  shell = (PresShell*)aEvent->owner;
-  shell->HandleCantRenderReplacedElementEvent(aEvent);
-}
-
-static void PR_CALLBACK
-DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
-{
-  delete aEvent;
-}
-
-CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aShell,
-                                                               nsIFrame*  aFrame)
-{
-  // Note: because the pres shell owns us we don't hold a reference to the
-  // pres shell
-  PL_InitEvent(this, aShell, (PLHandleEventProc)::HandlePLEvent,
-               (PLDestroyEventProc)::DestroyPLEvent);
-  mFrame = aFrame;
-}
-
 NS_IMETHODIMP
 PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
-  nsIEventQueueService* eventService;
-  nsresult              rv;
-
-  // We need to notify the style stystem, but post the notification so it
-  // doesn't happen now
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **)&eventService);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
-                                           getter_AddRefs(eventQueue));
-    nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
-
-    if (NS_SUCCEEDED(rv) && eventQueue) {
-#ifdef NS_DEBUG
-      // Verify that there isn't already a posted event associated with
-      // this frame
-      NS_ASSERTION(!*FindPostedEventFor(aFrame), "frame already has posted event");
-#endif
-      CantRenderReplacedElementEvent* ev;
-
-      // Create a new event
-      ev = new CantRenderReplacedElementEvent(this, aFrame);
-
-      // Add the event to our linked list of posted events
-      ev->mNext = mPostedEvents;
-      mPostedEvents = ev;
-
-      // Post the event
-      eventQueue->PostEvent(ev);
-    }
+  if (mFrameManager) {
+    return mFrameManager->CantRenderReplacedElement(aPresContext, aFrame);
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
