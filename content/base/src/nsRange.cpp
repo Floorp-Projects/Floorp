@@ -2103,12 +2103,12 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
       if (theRange->mStartParent == domNode)
       {
         // if child inserted before start, move start offset right one
-        if (aOffset <= theRange->mStartOffset) theRange->mStartOffset++;
+        if (aOffset < theRange->mStartOffset) theRange->mStartOffset++;
       }
       if (theRange->mEndParent == domNode)
       {
         // if child inserted before end, move end offset right one
-        if (aOffset <= theRange->mEndOffset) theRange->mEndOffset++;
+        if (aOffset < theRange->mEndOffset) theRange->mEndOffset++;
       }
       NS_PRECONDITION(NS_SUCCEEDED(res), "error updating range list");
     }
