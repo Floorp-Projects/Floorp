@@ -1345,28 +1345,25 @@ nsFtpConnectionThread::R_pasv() {
         // (xxx,xxx,xxx,xxx,ppp,ppp) or
         //  xxx,xxx,xxx,xxx,ppp,ppp (without parens)
         PRInt32 h0, h1, h2, h3, p0, p1;
-        while (*ptr++) {
+        while (*ptr) {
             if (*ptr == '(') {
                 // move just beyond the open paren
                 ptr++;
                 break;
             }
             if (*ptr == ',') {
-                ptr--;
                 // backup to the start of the digits
-                while ( (*ptr >= '0') && (*ptr <= '9'))
+                do {
                     ptr--;
+                } while ((ptr >=response) && (*ptr >= '0') && (*ptr <= '9'));
                 ptr++; // get back onto the numbers
                 break;
             }
+            ptr++;
         } // end while
 
         PRInt32 fields = PR_sscanf(ptr, 
-#ifdef __alpha
-            "%d,%d,%d,%d,%d,%d",
-#else
             "%ld,%ld,%ld,%ld,%ld,%ld",
-#endif
             &h0, &h1, &h2, &h3, &p0, &p1);
 
         if (fields < 6) {
