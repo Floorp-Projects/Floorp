@@ -113,6 +113,18 @@ public:
   nsFontXlib*  FindFont(PRUnichar aChar);
   static  int GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
                        PRUint32 aLength);
+
+#ifdef MOZ_MATHML
+  // bounding metrics for a string 
+  // remember returned values are not in app units 
+  // - to emulate GetWidth () above
+  static nsresult
+  GetBoundingMetrics(nsFontXlib*         aFont,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
   static void DrawString(nsDrawingSurfaceXlib* aSurface, nsFontXlib* aFont,
                          nscoord aX, nscoord aY, const PRUnichar* aString,
                          PRUint32 aLength);

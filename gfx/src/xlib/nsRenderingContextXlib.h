@@ -157,6 +157,23 @@ class nsRenderingContextXlib : public nsIRenderingContext
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+#ifdef MOZ_MATHML
+  /**
+   * Returns metrics (in app units) of an 8-bit character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const char*        aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics);
+ 
+  /**
+   * Returns metrics (in app units) of a Unicode character string
+   */
+  NS_IMETHOD GetBoundingMetrics(const PRUnichar*   aString,
+                                PRUint32           aLength,
+                                nsBoundingMetrics& aBoundingMetrics,
+                                PRInt32*           aFontID = nsnull);
+#endif /* MOZ_MATHML */
+
   // this is a common init function for both of the init functions.
   nsresult CommonInit(void);
 
