@@ -58,6 +58,7 @@ PL_strncpy(char *dest, const char *src, PRUint32 max)
         ;
 
 #ifdef JLRU
+    /* XXX I (wtc) think the -- and ++ operators should be postfix. */
     while( --max )
         *++dest = '\0';
 #endif /* JLRU */

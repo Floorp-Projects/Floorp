@@ -51,20 +51,20 @@ PR_IMPLEMENT(char *)
 PL_strrstr(const char *big, const char *little)
 {
     const char *p;
-    PRUint32 ll;
-    PRUint32 bl;
+    size_t ll;
+    size_t bl;
 
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
-    bl = PL_strlen(big);
+    ll = strlen(little);
+    bl = strlen(big);
     if( bl < ll ) return (char *)0;
     p = &big[ bl - ll ];
 
     for( ; p >= big; p-- )
         if( *little == *p )
-            if( 0 == PL_strncmp(p, little, ll) )
+            if( 0 == strncmp(p, little, ll) )
                 return (char *)p;
 
     return (char *)0;
@@ -73,19 +73,19 @@ PL_strrstr(const char *big, const char *little)
 PR_IMPLEMENT(char *)
 PL_strnstr(const char *big, const char *little, PRUint32 max)
 {
-    PRUint32 ll;
+    size_t ll;
 
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
-    if( ll > max ) return (char *)0;
-    max -= ll;
+    ll = strlen(little);
+    if( ll > (size_t)max ) return (char *)0;
+    max -= (PRUint32)ll;
     max++;
 
     for( ; max && *big; big++, max-- )
         if( *little == *big )
-            if( 0 == PL_strncmp(big, little, ll) )
+            if( 0 == strncmp(big, little, ll) )
                 return (char *)big;
 
     return (char *)0;
@@ -95,12 +95,12 @@ PR_IMPLEMENT(char *)
 PL_strnrstr(const char *big, const char *little, PRUint32 max)
 {
     const char *p;
-    PRUint32 ll;
+    size_t ll;
 
     if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
     if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
 
-    ll = PL_strlen(little);
+    ll = strlen(little);
 
     for( p = big; max && *p; p++, max-- )
         ;
@@ -110,7 +110,7 @@ PL_strnrstr(const char *big, const char *little, PRUint32 max)
 
     for( ; p >= big; p-- )
         if( *little == *p )
-            if( 0 == PL_strncmp(p, little, ll) )
+            if( 0 == strncmp(p, little, ll) )
                 return (char *)p;
 
     return (char *)0;
