@@ -28,60 +28,11 @@
  * of the interface nsISample.
  *
  */
-#include "nsIAllocator.h"
 #include "plstr.h"
 #include "stdio.h"
 
 #include "nsSample.h"
-
-
-////////////////////////////////////////////////////////////////////////
-
-/**
- * This is the static constructor for the sample component.  Notice that
- * the prototype for this function is included in the {C++ ... } section
- * of nsISample.idl.  This prototype is not actually part of the nsISample
- * interface, it only gets included, verbatim, in nsISample.h.
- * This is so that the factory for this class (nsSampleFactory.cpp)
- * can create a nsSample object.  Normally you would expect to use
- * "nsSampleImpl s = new nsSampleImpl();" to create the object, the catch here
- * is that nsSampleImpl is not declared anywhere except in this file, so the
- * factory has no idea what a nsSampleImpl is.  Instead, this static function's
- * prototype is declared in in nsISample.h (generated from nsISample.idl),
- * which any nsISample factory would require for the declaration of
- * nsISample anyway.
- */
-nsresult
-NS_NewSample(nsISample** aSample)
-{
-    NS_PRECONDITION(aSample != nsnull, "null ptr");
-    if (! aSample)
-        return NS_ERROR_NULL_POINTER;
-
-    *aSample = new nsSampleImpl();
-    if (! *aSample)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    /**
-     * XPCOM automatically frees up memory used by objects when they are
-     * no longer in use.  It determines that an object is no longer in use
-     * by checking how many unique, owning references there are to it.
-     * Unfortunately, there is no automatic procedure for determining
-     * what an owning reference is.  Ownership is determined by conventions,
-     * and you must be very careful to adhere to these conventions, or you
-     * will forever be plagued by circular dependancies, and memory leaks.
-     * The first rule of ownership is, "If You Created It, You Own It"
-     * The other part of this convention is, when you create a new
-     * object, the factory has already added you as an owning reference.
-     * It is the clients responsibility to call Release() when it is finished
-     * using the object.
-     * NS_ADDREF() takes care of calling AddRef on the nsISupports interface
-     * of the object you pass it.
-     */
-    NS_ADDREF(*aSample);
-
-    return NS_OK;
-}
+#include "nsIAllocator.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +49,7 @@ nsSampleImpl::~nsSampleImpl()
 }
 
 /**
- * NS_IMPL_ISUPPORTS expands to a simple implementation of the nsISupports
+ * NS_IMPL_ISUPPORTS1 expands to a simple implementation of the nsISupports
  * interface.  This includes a proper implementation of AddRef, Release,
  * and QueryInterface.  If this class supported more interfaces than just
  * nsISupports, 
@@ -108,7 +59,7 @@ nsSampleImpl::~nsSampleImpl()
  * Notice that the second parameter to the macro is the static IID accessor
  * method, and NOT the #defined IID.
  */
-NS_IMPL_ISUPPORTS(nsSampleImpl, NS_GET_IID(nsISample));
+NS_IMPL_ISUPPORTS1(nsSampleImpl, nsISample);
 
 /**
  * Notice that in the protoype for this function, the NS_IMETHOD macro was
