@@ -121,30 +121,6 @@ public final class OptRuntime extends ScriptRuntime
         return toString(val1).concat((String)val2);
     }
 
-    public static boolean cmp_LT(double d1, Object val2)
-    {
-        double d2 = toNumber(val2);
-        return d1 == d1 && d2 == d2 && d1 < d2;
-    }
-
-    public static boolean cmp_LT(Object val1, double d2)
-    {
-        double d1 = toNumber(val1);
-        return d1 == d1 && d2 == d2 && d1 < d2;
-    }
-
-    public static boolean cmp_LE(double d1, Object val2)
-    {
-        double d2 = toNumber(val2);
-        return d1 == d1 && d2 == d2 && d1 <= d2;
-    }
-
-    public static boolean cmp_LE(Object val1, double d2)
-    {
-        double d1 = toNumber(val1);
-        return d1 == d1 && d2 == d2 && d1 <= d2;
-    }
-
     public static Object callSimple(Context cx, String id, Scriptable scope,
                                     Object[] args)
         throws JavaScriptException

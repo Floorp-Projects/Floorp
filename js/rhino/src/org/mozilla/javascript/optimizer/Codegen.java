@@ -3037,7 +3037,13 @@ class BodyCodegen
                 }
             }
             generateCodeFromNode(child, node);
+            if (childNumberFlag == Node.RIGHT) {
+                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+            }
             generateCodeFromNode(rChild, node);
+            if (childNumberFlag == Node.LEFT) {
+                addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+            }
             if (childNumberFlag == -1) {
                 if (type == Token.GE || type == Token.GT) {
                     cfw.add(ByteCode.SWAP);
@@ -3048,28 +3054,11 @@ class BodyCodegen
                                        "(Ljava/lang/Object;"
                                        +"Ljava/lang/Object;"
                                        +")Z");
+                cfw.add(ByteCode.IFNE, trueGOTO);
+                cfw.add(ByteCode.GOTO, falseGOTO);
             } else {
-                boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                if (type == Token.GE || type == Token.GT) {
-                    if (doubleThenObject) {
-                        cfw.add(ByteCode.DUP_X2);
-                        cfw.add(ByteCode.POP);
-                        doubleThenObject = false;
-                    } else {
-                        cfw.add(ByteCode.DUP2_X1);
-                        cfw.add(ByteCode.POP2);
-                        doubleThenObject = true;
-                    }
-                }
-                String routine = ((type == Token.LT)
-                         || (type == Token.GT)) ? "cmp_LT" : "cmp_LE";
-                if (doubleThenObject)
-                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)Z");
-                else
-                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)Z");
+                genSimpleCompare(type, trueGOTO, falseGOTO);
             }
-            cfw.add(ByteCode.IFNE, trueGOTO);
-            cfw.add(ByteCode.GOTO, falseGOTO);
         }
     }
 
@@ -3094,9 +3083,14 @@ class BodyCodegen
         }
 
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
-        if (childNumberFlag == Node.BOTH) {
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(child.getNext(), node);
+
+        generateCodeFromNode(child, node);
+        if (childNumberFlag == Node.RIGHT) {
+            addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");                 }
+        generateCodeFromNode(child.getNext(), node);
+        if (childNumberFlag == Node.LEFT) {
+            addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");                 }
+        if (childNumberFlag != -1) {
             int trueGOTO = cfw.acquireLabel();
             int skip = cfw.acquireLabel();
             genSimpleCompare(type, trueGOTO, -1);
@@ -3110,38 +3104,15 @@ class BodyCodegen
             cfw.adjustStackTop(-1);   // only have 1 of true/false
         }
         else {
+            if (type == Token.GE || type == Token.GT) {
+                cfw.add(ByteCode.SWAP);
+            }
             String routine = (type == Token.LT || type == Token.GT)
                              ? "cmp_LT" : "cmp_LE";
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(child.getNext(), node);
-            if (childNumberFlag == -1) {
-                if (type == Token.GE || type == Token.GT) {
-                    cfw.add(ByteCode.SWAP);
-                }
-                addScriptRuntimeInvoke(routine,
-                                       "(Ljava/lang/Object;"
-                                       +"Ljava/lang/Object;"
-                                       +")Z");
-            }
-            else {
-                boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                if (type == Token.GE || type == Token.GT) {
-                    if (doubleThenObject) {
-                        cfw.add(ByteCode.DUP_X2);
-                        cfw.add(ByteCode.POP);
-                        doubleThenObject = false;
-                    }
-                    else {
-                        cfw.add(ByteCode.DUP2_X1);
-                        cfw.add(ByteCode.POP2);
-                        doubleThenObject = true;
-                    }
-                }
-                if (doubleThenObject)
-                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)Z");
-                else
-                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)Z");
-            }
+            addScriptRuntimeInvoke(routine,
+                                   "(Ljava/lang/Object;"
+                                   +"Ljava/lang/Object;"
+                                   +")Z");
             addBooleanWrap();
         }
     }
