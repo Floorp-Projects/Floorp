@@ -384,6 +384,14 @@ PL_EventLoop(PLEventQueue* self);
 PR_EXTERN(PRInt32)
 PL_GetEventQueueSelectFD(PLEventQueue* self);
 
+/*
+**  This routine will allow you to check to see if the given eventQueue in
+**  on the current thread.  It will return PR_TRUE if so, else it will return
+**  PR_FALSE
+*/
+PR_EXTERN(PRBool)
+    PL_IsQueueOnCurrentThread( PLEventQueue *queue );
+
 /*******************************************************************************
  * Event Operations
  ******************************************************************************/

@@ -796,6 +796,15 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
 #endif
 }
 
+PR_IMPLEMENT(PRBool)
+PL_IsQueueOnCurrentThread( PLEventQueue *queue )
+{
+    PRThread *me = PR_GetCurrentThread();
+    if ( me == queue->handlerThread )
+        return PR_TRUE;
+    else
+        return PR_FALSE;
+} /* end PL_IsQueueOnCurrentThread() */
 
 #if defined(WIN16) || defined(_WIN32)
 /*
