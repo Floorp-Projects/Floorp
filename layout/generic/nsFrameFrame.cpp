@@ -55,6 +55,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsLayoutAtoms.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIScriptSecurityManager.h"
 
 class nsHTMLFrame;
 
@@ -877,16 +878,29 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
         nsString absURL;
         TempMakeAbsURL(content, url, absURL);
 
-        rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
+        // Check we can load 'absURL'
+        nsCOMPtr<nsIURI> baseURI, newURI;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
         if (NS_SUCCEEDED(rv))
-        { // tell the content viewer that it's an HTML frame
-          nsCOMPtr<nsIContentViewer> cv;
-          mWebShell->GetContentViewer(getter_AddRefs(cv));
-          if (cv) 
-          {
-            nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
-            if (muCV) {
-              muCV->SetIsFrame(PR_TRUE);
+          rv = aPresContext->GetBaseURL(getter_AddRefs(baseURI));
+        if (NS_SUCCEEDED(rv)) 
+          rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);           
+        if (NS_SUCCEEDED(rv)) 
+          rv = securityManager->CheckLoadURI(baseURI, newURI);
+
+        if (NS_SUCCEEDED(rv)) {
+          rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
+          if (NS_SUCCEEDED(rv))
+          { // tell the content viewer that it's an HTML frame
+            nsCOMPtr<nsIContentViewer> cv;
+            mWebShell->GetContentViewer(getter_AddRefs(cv));
+            if (cv) 
+            {
+              nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
+              if (muCV) {
+                muCV->SetIsFrame(PR_TRUE);
+              }
             }
           }
         }
