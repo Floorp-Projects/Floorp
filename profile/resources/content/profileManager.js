@@ -38,9 +38,13 @@ function CreateProfile()
 
 function RenameProfile(w)
 {
+	renameButton = document.getElementById("rename"); 
+	if (renameButton.getAttribute("disabled") == "true") {
+                 return;
+        }  
 	if (!selected)
 	{
-		//dump("Select a profile to rename.\n");
+		alert("Select a profile to rename.");
 		return;
 	}
 
@@ -50,7 +54,7 @@ function RenameProfile(w)
 
 	if (migrate == "true")
 	{
-		//dump("Migrate this profile before renaming it.\n");
+		alert("Migrate this profile before renaming it.");
 		return;
 	}
 
@@ -67,9 +71,13 @@ function RenameProfile(w)
 
 function DeleteProfile(deleteFilesFlag)
 {
+	deleteButton = document.getElementById("delete");
+	if (deleteButton.getAttribute("disabled") == "true") {
+                 return;
+        }  
 	if (!selected)
 	{
-		//dump("Select a profile to delete.\n");
+		alert("Select a profile to delete.");
 		return;
 	}
 
@@ -91,9 +99,13 @@ function DeleteProfile(deleteFilesFlag)
 function StartCommunicator()
 {
 	//dump("************Inside Start Communicator prof\n");
+	startButton = document.getElementById("start");
+	if (startButton.getAttribute("disabled") == "true") {
+                 return;
+        }  
 	if (!selected)
 	{
-		//dump("Select a profile to migrate.\n");
+		alert("Select a profile to start.");
 		return;
 	}
 
@@ -116,7 +128,7 @@ function onExit()
 		profile.forgetCurrentProfile();
 	}
 	catch (ex) {
-		dump("failed to forget current profile.\n");
+		dump("Failed to forget current profile.\n");
 	}
 	ExitApp();
 }
@@ -127,6 +139,18 @@ function ExitApp()
         var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
         appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
         appShell.Quit();
+}
+
+
+function setButtonsDisabledState(state)
+{
+	startButton = document.getElementById("start");
+	deleteButton = document.getElementById("delete");
+	renameButton = document.getElementById("rename"); 
+
+	deleteButton.setAttribute("disabled", state);
+	renameButton.setAttribute("disabled", state);
+	startButton.setAttribute("disabled", state);
 }
 
 function showSelection(node)
@@ -144,6 +168,10 @@ function showSelection(node)
 	//dump("name: "+name+"\n");
 
 	//dump("Selected " + num + " : " + name + "\n");
+
+	// turn on all the buttons that should be on
+	// when something is selected.
+	setButtonsDisabledState("false");
 }
 
 function addTreeItem(num, name, migrate)
@@ -204,14 +232,18 @@ function loadElements()
 
 function openRename()
 {
+	renameButton = document.getElementById("rename"); 
+	if (renameButton.getAttribute("disabled") == "true") {
+                 return;
+        }  
 	if (!selected) {
-		//dump("Select a profile to rename.\n");
+		alert("Select a profile to rename.");
 	}
 	else
 	{
 		var migrate = selected.getAttribute("rowMigrate");
 		if (migrate == "true") {
-			//dump("Migrate the profile before renaming it.\n");
+			alert("Migrate the profile before renaming it.");
 		}
 		else
 			var win = window.openDialog('chrome://profile/content/renameProfile.xul', 'Renamer', 'chrome');
@@ -221,9 +253,13 @@ function openRename()
 
 function ConfirmDelete() 
 {
+	deleteButton = document.getElementById("delete");
+	if (deleteButton.getAttribute("disabled") == "true") {
+                 return;
+        }  
 	if (!selected)
 	{
-		//dump("Select a profile to delete.\n");
+		alert("Select a profile to delete.");
 		return;
 	}
 
@@ -232,7 +268,7 @@ function ConfirmDelete()
 
 	if (migrate == "true")
 	{
-		//dump("Migrate this profile before deleting it.\n");
+		alert("Migrate this profile before deleting it.");
 		return;
 	}
 
