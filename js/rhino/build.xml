@@ -2,14 +2,14 @@
 
 <!-- 
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
-Requires Ant version 1.2
+Requires Ant version 1.2 or later
 -->
 <project name="Rhino" default="default" basedir=".">
 
   <target name="properties">
     <property name="name" value="rhino"/>
     <property name="Name" value="Rhino"/>
-    <property name="version" value="1_5R3"/>
+    <property name="version" value="1_5R4pre"/>
     <property name="rhino.jar" value="js.jar"/>
   
     <property name="debug" value="off"/>
