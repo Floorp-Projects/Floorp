@@ -109,6 +109,11 @@ public:
   
   virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;
+  
+  // This method is used to add a mapping from rule to rule node so that all the rule nodes
+  // in use for a given rule can be accessed efficiently.  This is currently only used
+  // for inline style rules in order to conserve footprint.
+  virtual nsresult AddRuleNodeMapping(nsRuleNode* aRuleNode) = 0;
 
   // The following two methods can be used to tear down and reconstruct a rule tree.  The idea
   // is to first call BeginRuleTreeReconstruct, which will set aside the old rule

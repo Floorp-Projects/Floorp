@@ -579,7 +579,7 @@ public:
   static void CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResult);
 
   nsresult GetBits(PRInt32 aType, PRUint32* aResult);
-  nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
+  nsresult Transition(nsIStyleRule* aRule, PRBool aIsInlineStyle, nsRuleNode** aResult);
   nsRuleNode* GetParent() { return mParent; }
   PRBool IsRoot() { return mParent == nsnull; }
   nsresult GetRule(nsIStyleRule** aResult)
@@ -591,6 +591,10 @@ public:
   nsIStyleRule* Rule() {
     // NOTE:  Does not |AddRef|.
     return mRule;
+  }
+  nsIPresContext* PresContext() {
+    // NOTE: Does not |AddRef|.
+    return mPresContext;
   }
 
   nsresult ClearCachedData(nsIStyleRule* aRule);

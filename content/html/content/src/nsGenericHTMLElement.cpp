@@ -2288,7 +2288,7 @@ nsGenericHTMLElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
   }
 
   if (rule)
-    aRuleWalker->Forward(rule);
+    aRuleWalker->Forward(rule, PR_TRUE);
 
   return result;
 }
