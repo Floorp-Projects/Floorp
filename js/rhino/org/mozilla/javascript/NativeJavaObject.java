@@ -179,9 +179,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                     // Just abandon conversion from JSObject
                 }
             }
-        if (obj instanceof Class)
-            return new NativeJavaClass(scope, (Class)obj);
-            
         return new NativeJavaObject(scope, obj, staticType);
     }
 
