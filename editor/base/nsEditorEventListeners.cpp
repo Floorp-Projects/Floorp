@@ -42,6 +42,7 @@
 #include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIPref.h"
 
 // for repainting hack only
 #include "nsIView.h"
@@ -64,6 +65,8 @@
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //#define DEBUG_IME
 
@@ -488,38 +491,48 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   // middle-mouse click (paste);
   if (button == 2)
   {
-
-    // Set the selection to the point under the mouse cursor:
-      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
-
-      if (!nsuiEvent)
-         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-      nsCOMPtr<nsIDOMNode> parent;
-      if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-      PRInt32 offset = 0;
-      if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
-         return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
-
-      nsCOMPtr<nsIDOMSelection> selection;
-      if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
-         (void)selection->Collapse(parent, offset);
-
-      // If the ctrl key is pressed, we'll do paste as quotation.
-      // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-      mouseEvent = do_QueryInterface(aMouseEvent);
-      PRBool ctrlKey = PR_FALSE;
-      mouseEvent->GetCtrlKey(&ctrlKey);
-
-      if (ctrlKey)
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefService)
+    {
+      PRInt32 doMiddleMousePaste = PR_FALSE;;
+      rv = prefService->GetBoolPref("middlemouse.paste", &doMiddleMousePaste);
+      if (NS_SUCCEEDED(rv) && doMiddleMousePaste)
       {
-         nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
-         if (mailEditor)
-            mailEditor->PasteAsQuotation();
+        // Set the selection to the point under the mouse cursor:
+        nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
+
+        if (!nsuiEvent)
+          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+        nsCOMPtr<nsIDOMNode> parent;
+        if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
+          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+        PRInt32 offset = 0;
+        if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
+          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+
+        nsCOMPtr<nsIDOMSelection> selection;
+        if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
+          (void)selection->Collapse(parent, offset);
+
+        // If the ctrl key is pressed, we'll do paste as quotation.
+        // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+        nsCOMPtr<nsIEditorMailSupport> mailEditor;
+        mouseEvent = do_QueryInterface(aMouseEvent);
+        PRBool ctrlKey = PR_FALSE;
+        mouseEvent->GetCtrlKey(&ctrlKey);
+        if (ctrlKey)
+          mailEditor = do_QueryInterface(mEditor);
+
+        if (mailEditor)
+          mailEditor->PasteAsQuotation();
+        else
+          editor->Paste();
+
+        // We processed the event, whether paste succeeded or not:
+        return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
       }
-      else
-        editor->Paste();
-      return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+    }
    }
    return NS_OK;   // did not process the event
 }
