@@ -71,6 +71,7 @@ class nsIDOMNode;
 class nsHTMLReflowCommand;
 class nsIStyleFrameConstruction;
 class nsIStyleSheet;
+class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -157,12 +158,12 @@ public:
 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet*  StyleSet() { return mStyleSet; }
-#endif
 
-  nsIStyleFrameConstruction* FrameConstructor()
+  nsCSSFrameConstructor* FrameConstructor()
   {
     return mFrameConstructor;
   }
+#endif
 
   NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const = 0;
   nsIFrameManager* GetFrameManager() { return mFrameManager; }
@@ -582,6 +583,11 @@ public:
   virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet) = 0;
 
   /**
+   * Reconstruct frames for all elements in the document
+   */
+  virtual nsresult ReconstructFrames() = 0;
+
+  /**
    * See if reflow verification is enabled. To enable reflow verification add
    * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
@@ -650,7 +656,7 @@ protected:
   nsIDocument*              mDocument;      // [STRONG]
   nsIPresContext*           mPresContext;   // [STRONG]
   nsStyleSet*               mStyleSet;      // [OWNS]
-  nsIStyleFrameConstruction* mFrameConstructor; // [STRONG]
+  nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsIFrameManager*          mFrameManager;  // [STRONG]
 };

@@ -52,7 +52,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLParts.h"
-#include "nsIStyleFrameConstruction.h"
+#include "nsCSSFrameConstructor.h"
 
 #include "nsCellMap.h"//table cell navigation
 

@@ -150,7 +150,6 @@
 #include "nsDefaultPlugin.h"
 #include "nsWeakReference.h"
 #include "nsIDOMElement.h"
-#include "nsIStyleFrameConstruction.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIWebNavigation.h"
@@ -309,21 +308,17 @@ nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
       
       // if this document has a presentation shell, then it has frames and can be reframed
       if (shell) {
-        nsIPresContext *pc = shell->GetPresContext();
-        if (pc) {
-          /**
-           * A reframe will cause a fresh object frame, instance owner, and instance
-           * to be created. Reframing of the entire document is necessary as we may have
-           * recently found new plugins and we want a shot at trying to use them instead
-           * of leaving alternate renderings.
-           * We do not want to completely reload all the documents that had running plugins
-           * because we could possibly trigger a script to run in the unload event handler
-           * which may want to access our defunct plugin and cause us to crash.
-           */
+        /**
+         * A reframe will cause a fresh object frame, instance owner, and instance
+         * to be created. Reframing of the entire document is necessary as we may have
+         * recently found new plugins and we want a shot at trying to use them instead
+         * of leaving alternate renderings.
+         * We do not want to completely reload all the documents that had running plugins
+         * because we could possibly trigger a script to run in the unload event handler
+         * which may want to access our defunct plugin and cause us to crash.
+         */
 
-          shell->FrameConstructor()->
-            ReconstructDocElementHierarchy(pc); // causes reframe of document
-        }
+        shell->ReconstructFrames(); // causes reframe of document
       } else {  // no pres shell --> full-page plugin
         
         NS_NOTREACHED("all plugins should have a pres shell!");

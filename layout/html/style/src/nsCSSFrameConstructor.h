@@ -37,14 +37,9 @@
 #ifndef nsCSSFrameConstructor_h___
 #define nsCSSFrameConstructor_h___
 
-#include "nsICSSFrameConstructor.h"
-#include "nsIStyleFrameConstruction.h"
-#include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
-#include "nsIServiceManager.h"
-#include "nsStyleConsts.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -59,13 +54,21 @@ class nsVoidArray;
 class nsIFrameManager;
 class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
+class nsIPresContext;
+class nsStyleChangeList;
+class nsIFrame;
 
-class nsCSSFrameConstructor : public nsIStyleFrameConstruction,
-                              public nsICSSFrameConstructor
+struct nsFindFrameHint
+{
+  nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
+  nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
+};
+
+class nsCSSFrameConstructor
 {
 public:
-  nsCSSFrameConstructor(void);
-  virtual ~nsCSSFrameConstructor(void);
+  nsCSSFrameConstructor(nsIDocument *aDocument);
+  ~nsCSSFrameConstructor(void) {}
 
   // Maintain global objects - gXBLService
   static nsIXBLService * GetXBLService();
@@ -81,71 +84,107 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy); 
 
 public:
-  NS_DECL_ISUPPORTS
+  nsresult ConstructRootFrame(nsIPresShell*   aPresShell, 
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aDocElement,
+                              nsIFrame*&      aNewFrame);
 
-  // nsICSSFrameConstructor
-  NS_IMETHOD Init(nsIDocument* aDocument);
+  nsresult ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
 
-  // nsIStyleFrameConstruction API
-  NS_IMETHOD ConstructRootFrame(nsIPresShell*   aPresShell, 
-                                nsIPresContext* aPresContext,
-                                nsIContent*     aDocElement,
-                                nsIFrame*&      aNewFrame);
+  nsresult ContentAppended(nsIPresContext* aPresContext,
+                           nsIContent*     aContainer,
+                           PRInt32         aNewIndexInContainer);
 
-  NS_IMETHOD ConstructPageFrame(nsIPresShell*   aPresShell, 
-                                nsIPresContext* aPresContext,
-                                nsIFrame*       aParentFrame,
-                                nsIFrame*       aPrevPageFrame,
-                                nsIFrame*&      aPageFrame,
-                                nsIFrame*&      aPageContentFrame);
+  nsresult ContentInserted(nsIPresContext*        aPresContext,
+                           nsIContent*            aContainer,
+                           nsIFrame*              aContainerFrame,
+                           nsIContent*            aChild,
+                           PRInt32                aIndexInContainer,
+                           nsILayoutHistoryState* aFrameState,
+                           PRBool                 aInContentReplaced);
 
-  NS_IMETHOD ReconstructDocElementHierarchy(nsIPresContext* aPresContext);
+  nsresult ContentReplaced(nsIPresContext* aPresContext,
+                           nsIContent*     aContainer,
+                           nsIContent*     aOldChild,
+                           nsIContent*     aNewChild,
+                           PRInt32         aIndexInContainer);
 
-  NS_IMETHOD ContentAppended(nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             PRInt32         aNewIndexInContainer);
+  nsresult ContentRemoved(nsIPresContext* aPresContext,
+                          nsIContent*     aContainer,
+                          nsIContent*     aChild,
+                          PRInt32         aIndexInContainer,
+                          PRBool          aInContentReplaced);
 
-  NS_IMETHOD ContentInserted(nsIPresContext*        aPresContext,
-                             nsIContent*            aContainer,
-                             nsIFrame*              aContainerFrame,
-                             nsIContent*            aChild,
-                             PRInt32                aIndexInContainer,
-                             nsILayoutHistoryState* aFrameState,
-                             PRBool                 aInContentReplaced);
+  nsresult ContentChanged(nsIPresContext* aPresContext,
+                          nsIContent*     aContent,
+                          nsISupports*    aSubContent);
 
-  NS_IMETHOD ContentReplaced(nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             nsIContent*     aOldChild,
-                             nsIContent*     aNewChild,
-                             PRInt32         aIndexInContainer);
+  nsresult ContentStatesChanged(nsIPresContext* aPresContext, 
+                                nsIContent*     aContent1,
+                                nsIContent*     aContent2,
+                                PRInt32         aStateMask);
 
-  NS_IMETHOD ContentRemoved(nsIPresContext* aPresContext,
-                            nsIContent*     aContainer,
-                            nsIContent*     aChild,
-                            PRInt32         aIndexInContainer,
-                            PRBool          aInContentReplaced);
-
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
+  nsresult AttributeChanged(nsIPresContext* aPresContext,
                             nsIContent*     aContent,
-                            nsISupports*    aSubContent);
+                            PRInt32         aNameSpaceID,
+                            nsIAtom*        aAttribute,
+                            PRInt32         aModType);
 
-  NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
-                                  nsIContent*     aContent1,
-                                  nsIContent*     aContent2,
-                                  PRInt32         aStateMask);
+  nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
+                                 nsIPresContext*    aPresContext);
+
+  // Notification that we were unable to render a replaced element.
+  nsresult CantRenderReplacedElement(nsIPresShell*    aPresShell, 
+                                     nsIPresContext*  aPresContext,
+                                     nsIFrame*        aFrame);
+
+  // Request to create a continuing frame
+  nsresult CreateContinuingFrame(nsIPresContext* aPresContext,
+                                 nsIFrame*       aFrame,
+                                 nsIFrame*       aParentFrame,
+                                 nsIFrame**      aContinuingFrame);
+
+  // Request to find the primary frame associated with a given content object.
+  // This is typically called by the pres shell when there is no mapping in
+  // the pres shell hash table
+  nsresult FindPrimaryFrameFor(nsIPresContext*  aPresContext,
+                               nsIFrameManager* aFrameManager,
+                               nsIContent*      aContent,
+                               nsIFrame**       aFrame,
+                               nsFindFrameHint* aHint);
+
+  // Get the XBL insertion point for a child
+  nsresult GetInsertionPoint(nsIPresShell* aPresShell,
+                             nsIFrame*     aParentFrame,
+                             nsIContent*   aChildContent,
+                             nsIFrame**    aInsertionPoint,
+                             PRBool*       aMultiple = nsnull);
+
+  nsresult CreateListBoxContent(nsIPresContext* aPresContext,
+                                nsIFrame*       aParentFrame,
+                                nsIFrame*       aPrevFrame,
+                                nsIContent*     aChild,
+                                nsIFrame**      aResult,
+                                PRBool          aIsAppend,
+                                PRBool          aIsScrollbar,
+                                nsILayoutHistoryState* aFrameState);
+
+  nsresult RemoveMappingsForFrameSubtree(nsIPresContext*        aParentFrame,
+                                         nsIFrame*              aRemovedFrame,
+                                         nsILayoutHistoryState* aFrameState);
+
+protected:
+
+  nsresult ConstructPageFrame(nsIPresShell*   aPresShell, 
+                              nsIPresContext* aPresContext,
+                              nsIFrame*       aParentFrame,
+                              nsIFrame*       aPrevPageFrame,
+                              nsIFrame*&      aPageFrame,
+                              nsIFrame*&      aPageContentFrame);
 
   void DoContentStateChanged(nsIPresContext* aPresContext,
                              nsIContent*     aContent,
                              PRInt32         aStateMask);
-
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent*     aContent,
-                              PRInt32         aNameSpaceID,
-                              nsIAtom*        aAttribute,
-                              PRInt32         aModType);
-
-  NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
-                                   nsIPresContext*    aPresContext);
 
   void RestyleElement(nsIPresContext* aPresContext,
                       nsIContent*     aContent,
@@ -153,48 +192,6 @@ public:
 
   void RestyleLaterSiblings(nsIPresContext* aPresContext,
                             nsIContent*     aContent);
-
-  // Notification that we were unable to render a replaced element.
-  NS_IMETHOD CantRenderReplacedElement(nsIPresShell*    aPresShell, 
-                                       nsIPresContext*  aPresContext,
-                                       nsIFrame*        aFrame);
-
-  // Request to create a continuing frame
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aFrame,
-                                   nsIFrame*       aParentFrame,
-                                   nsIFrame**      aContinuingFrame);
-
-  // Request to find the primary frame associated with a given content object.
-  // This is typically called by the pres shell when there is no mapping in
-  // the pres shell hash table
-  NS_IMETHOD FindPrimaryFrameFor(nsIPresContext*  aPresContext,
-                                 nsIFrameManager* aFrameManager,
-                                 nsIContent*      aContent,
-                                 nsIFrame**       aFrame,
-                                 nsFindFrameHint* aHint);
-
-  // Get the XBL insertion point for a child
-  NS_IMETHOD GetInsertionPoint(nsIPresShell* aPresShell,
-                               nsIFrame*     aParentFrame,
-                               nsIContent*   aChildContent,
-                               nsIFrame**    aInsertionPoint,
-                               PRBool*       aMultiple = nsnull);
-
-  NS_IMETHOD CreateListBoxContent(nsIPresContext* aPresContext,
-                                  nsIFrame*       aParentFrame,
-                                  nsIFrame*       aPrevFrame,
-                                  nsIContent*     aChild,
-                                  nsIFrame**      aResult,
-                                  PRBool          aIsAppend,
-                                  PRBool          aIsScrollbar,
-                                  nsILayoutHistoryState* aFrameState);
-
-  NS_IMETHOD RemoveMappingsForFrameSubtree(nsIPresContext*        aParentFrame,
-                                           nsIFrame*              aRemovedFrame,
-                                           nsILayoutHistoryState* aFrameState);
-
-protected:
 
   nsresult InitAndRestoreFrame (nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
@@ -747,9 +744,6 @@ protected:
                         PRBool                   aIsFixedPositioned,
                         PRBool                   aCreateBlock);
 
-  // cache the "nglayout.debug.enable_xbl_forms" pref
-  PRBool UseXBLForms();
-
   nsresult MaybeRecreateFramesForContent(nsIPresContext*  aPresContext,
                                          nsIContent*      aContent);
 
@@ -1030,11 +1024,6 @@ protected:
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
-
-  // Cached Prefs
-  PRPackedBool        mGotGfxPrefs;
-  PRPackedBool        mGotXBLFormPrefs;
-  PRPackedBool        mUseXBLForms;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 

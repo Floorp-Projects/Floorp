@@ -1154,6 +1154,9 @@ public:
   NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
+
+  virtual nsresult ReconstructFrames(void);
+
 #ifdef IBMBIDI
   NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel);
   NS_IMETHOD GetCaretBidiLevel(PRUint8 *aOutLevel);
@@ -1249,7 +1252,6 @@ protected:
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest(void);
 
-  nsresult ReconstructFrames(void);
   nsresult WillCauseReflow();
   nsresult DidCauseReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
@@ -1600,6 +1602,8 @@ PresShell::~PresShell()
                mLastCallbackEventRequest == nsnull,
                "post-reflow queues not empty.  This means we're leaking");
 
+  delete mFrameConstructor;
+
   NS_IF_RELEASE(mCurrentEventContent);
 
   // if we allocated any stack memory free it.
@@ -1637,10 +1641,8 @@ PresShell::Init(nsIDocument* aDocument,
   mViewManager = aViewManager;
 
   // Create our frame constructor.
-  nsCSSFrameConstructor* fc = new nsCSSFrameConstructor();
-  NS_ENSURE_TRUE(fc, NS_ERROR_OUT_OF_MEMORY);
-  fc->Init(mDocument);
-  CallQueryInterface(fc, &mFrameConstructor);
+  mFrameConstructor = new nsCSSFrameConstructor(mDocument);
+  NS_ENSURE_TRUE(mFrameConstructor, NS_ERROR_OUT_OF_MEMORY);
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetViewObserver(this);
@@ -1843,8 +1845,6 @@ PresShell::Destroy()
   mStyleSet->Shutdown(mPresContext);
   delete mStyleSet;
   mStyleSet = nsnull;
-
-  NS_RELEASE(mFrameConstructor);
 
   // We hold a reference to the pres context, and it holds a weak link back
   // to us. To avoid the pres context having a dangling reference, set its 
