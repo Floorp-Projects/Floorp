@@ -4758,8 +4758,11 @@ PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 
 	privSlot = int_slot; /* The private key has a new home */
 	newPrivKey = pk11_loadPrivKey(privSlot,privKey,NULL,PR_FALSE,PR_FALSE);
+	/* newPrivKey has allocated its own reference to the slot, so it's
+	 * safe until we destroy newPrivkey.
+	 */
+	PK11_FreeSlot(int_slot);
 	if (newPrivKey == NULL) {
-	    PK11_FreeSlot (int_slot);
 	    return SECFailure;
 	}
 	privKey = newPrivKey;
