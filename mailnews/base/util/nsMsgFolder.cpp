@@ -35,9 +35,11 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIAllocator.h"
+#include "nsIURL.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 
 
@@ -471,7 +473,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 			if (folderName && nsCRT::strcasecmp(folderName, name)==0)
 			{
 				*aChild = folder;
-				NS_ADDREF( *aChild);
+				NS_ADDREF(*aChild);
 				delete[] folderName;
 				return NS_OK;
 			}
@@ -479,6 +481,34 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 		}
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::CreateFolderInDatasource(const char *uri, nsIMsgFolder ** child)
+{
+	nsresult rv;
+
+	// does this work with a non-top level folder 
+	// imap://sspitzer@tintin/Sent works, but what about imap://sspitzer@tintin/Foo/Bar ?
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	if(NS_FAILED(rv)) return rv;
+       
+	nsCOMPtr<nsIRDFResource> res;
+        rv = rdf->GetResource(uri, getter_AddRefs(res));
+        if (NS_FAILED(rv)) return rv; 
+
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+        if (NS_FAILED(rv)) return rv; 
+
+	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
+        NS_ASSERTION(supports, "couldn't get isupports for msg folder");
+
+	if (supports)
+		mSubFolders->AppendElement(supports);
+
+	folder->SetParent(this);
+        *child = folder;
+        NS_IF_ADDREF(*child);
+        return rv;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** child)
@@ -502,8 +532,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 		{
 			char *folderURI;
 			rv = folderResource->GetValue(&folderURI);
-			if(NS_FAILED(rv))
-				return rv;
+			if(NS_FAILED(rv)) return rv;
 
 			// case-insensitive compare is probably LCD across OS filesystems
 			PRBool equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);
@@ -525,6 +554,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			}
 		}
   }
+
   return NS_OK;
 }
 

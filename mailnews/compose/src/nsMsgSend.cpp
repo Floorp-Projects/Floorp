@@ -3307,7 +3307,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
       break;
     case nsMsgDeliverNow:
     default:
-      status = NS_MSG_COULDNT_OPEN_FCC_FILE;
+      status = NS_MSG_COULDNT_OPEN_FCC_FOLDER;
       break;
     }
     delete tFileSpec;
@@ -3345,8 +3345,9 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // the file for parsing...
   //
   turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
-  folderIsLocal = MessageFolderIsLocal(mUserIdentity, mode, turi);
+  status = MessageFolderIsLocal(mUserIdentity, mode, turi, &folderIsLocal);
   PR_FREEIF(turi);
+  if (NS_FAILED(status)) { goto FAIL; }
 
   if ( (envelopeLine) && (folderIsLocal) )
   {

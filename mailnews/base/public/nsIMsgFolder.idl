@@ -165,6 +165,7 @@ interface nsIMsgFolder : nsIFolder {
 	void MarkMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
 
 	nsIMsgFolder GetChildWithURI(in string uri, in boolean deep);
+	nsIMsgFolder CreateFolderInDatasource(in string uri);
 };
 
 

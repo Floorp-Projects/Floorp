@@ -115,8 +115,9 @@ nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity,
                                        nsMsgDeliverMode aFolderType,
                                        const char       *aSaveURI);
 
-PRBool            MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
+nsresult	MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
-                                       const char       *aSaveURI);
+                                       const char       *aSaveURI,
+				       PRBool		*aResult);
 
 #endif /* _nsMsgCopy_H_ */

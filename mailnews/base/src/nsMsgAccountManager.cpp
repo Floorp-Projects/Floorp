@@ -1827,6 +1827,9 @@ nsMsgAccountManager::MigrateOldPopPrefs(nsIMsgIncomingServer * server, const cha
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_REMEMBER_PASSWORD,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_PASSWORD,server,SetPassword)
+#else
+  rv = server->SetPassword(nsnull);
+  if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_CHECK_NEW_MAIL,server,SetDoBiff)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_CHECK_TIME,server,SetBiffMinutes)
@@ -1984,6 +1987,9 @@ nsMsgAccountManager::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_BOOL_PREF("mail.imap.server.%s.remember_password",hostname,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_STR_PREF("mail.imap.server.%s.password",hostname,server,SetPassword)
+#else 
+  rv = server->SetPassword(nsnull);
+  if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
   // upgrade the imap incoming server specific prefs
   MIGRATE_BOOL_PREF("mail.imap.server.%s.check_new_mail",hostname,server,SetDoBiff)
@@ -2324,6 +2330,9 @@ nsMsgAccountManager::MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_STR_PREF("???nntp.server.%s.userName",hostname,server,SetUsername)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   MIGRATE_STR_PREF("???nntp.server.%s.password",hostname,server,SetPassword)
+#else
+  rv = server->SetPassword(nsnull);
+  if (NS_FAILED(rv)) return rv;
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 #endif /* SUPPORT_SNEWS */
 	

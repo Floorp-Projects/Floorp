@@ -51,6 +51,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
   NS_INIT_REFCNT();
   m_serverBusy = PR_FALSE;
+  m_password = "";
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()

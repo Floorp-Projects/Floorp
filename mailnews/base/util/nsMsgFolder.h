@@ -88,8 +88,7 @@ public:
   NS_IMETHOD GetParent(nsIFolder * *aParent);
   NS_IMETHOD SetParent(nsIFolder * aParent);
   NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
-
-
+   
   // nsIMsgFolder methods:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
@@ -302,6 +301,7 @@ public:
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markRead);
 
 	NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** folder);
+	NS_IMETHOD CreateFolderInDatasource(const char *uri, nsIMsgFolder ** folder);
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);

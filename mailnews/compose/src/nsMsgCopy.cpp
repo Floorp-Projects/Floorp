@@ -23,8 +23,20 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
+#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
+#include "nsIURI.h"
+#include "nsIIOService.h" 
+#else
+#include "nsIURL.h"
+#endif /* MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP */
+#include "nsMsgComposeStringBundle.h"
 
-static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
+#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#else
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+#endif /* MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP */
+static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -166,21 +178,33 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   {
     dstFolder = GetUnsentMessagesFolder(aUserIdentity);
     isDraft = PR_FALSE;
+    if (!dstFolder) {
+        return NS_MSG_UNABLE_TO_SEND_LATER;
+    } 
   }
   else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
     dstFolder = GetDraftsFolder(aUserIdentity);
     isDraft = PR_TRUE;
+    if (!dstFolder) {
+	return NS_MSG_UNABLE_TO_SAVE_DRAFT;
+    } 
   }
   else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     dstFolder = GetTemplatesFolder(aUserIdentity);
     isDraft = PR_FALSE;
+    if (!dstFolder) {
+	return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
+    } 
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
   {
     dstFolder = GetSentFolder(aUserIdentity);
     isDraft = PR_FALSE;
+    if (!dstFolder) {
+	return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
+    }
   }
 
   mMode = aMode;
@@ -271,6 +295,9 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (NS_FAILED(rv)) 
     return nsnull;
   
+  // XXX TODO why aren't we just finding the server that matches the URI?
+  // this makes no sense to me.
+
   nsCOMPtr<nsISupportsArray> retval; 
   accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 
   if (!retval) 
@@ -308,7 +335,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     // the following:
     //
     //                  mailbox://rhp@netscape.com/Sent
-    //                  newsgroup://news.mozilla.org/Outbox
+    //                  imap://rhp@nsmail-2/Drafts
+    //                  newsgroup://news.mozilla.org/netscape.test
     //
     if ( (savePref) && (*savePref) )
     {
@@ -364,7 +392,13 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     //
     if ( (aFolderURI) && (*aFolderURI) )
     {
-      rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE, &msgFolder);
+      rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE /* deep */, &msgFolder);
+      if (NS_SUCCEEDED(rv) && (msgFolder)) 
+        break;
+
+      /* we failed to find the folder, so we create it in the datasource so
+         we have something to return to pass into DoCopy */
+      rv = rootFolder->CreateFolderInDatasource(aFolderURI, &msgFolder);
       if (NS_SUCCEEDED(rv) && (msgFolder)) 
         break;
     }
@@ -407,34 +441,46 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 // Figure out if a folder is local or not and return a boolean to 
 // say so.
 //
-PRBool
+nsresult
 MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                      nsMsgDeliverMode aFolderType,
-                     const char       *aFolderURI)
+                     const char       *aFolderURI,
+		     PRBool 	      *aResult)
 {
-  nsresult                        rv;
-  nsXPIDLCString                  aType;
-  nsCOMPtr<nsIMsgFolder>          dstFolder = nsnull;
-  nsCOMPtr<nsIMsgIncomingServer>  dstServer = nsnull;
+  nsresult rv;
+  nsXPIDLCString scheme;
 
-  dstFolder = LocateMessageFolder(userIdentity, aFolderType, aFolderURI);
-  if (!dstFolder)
-    return PR_TRUE;
+  if (!aFolderURI) return NS_ERROR_NULL_POINTER;
 
-  rv = dstFolder->GetServer(getter_AddRefs(dstServer));
-  if (NS_FAILED(rv))
-    return PR_TRUE;
+  /* nsImapService::NewURI() isn't implemented yet... */
+#ifdef MSCOTT_IMPLEMENTED_NEWURI_FOR_IMAP
+  nsCOMPtr <nsIURI> uri;
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = pNetService->NewURI(aFolderURI, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(rv)) return rv;
 
-  rv = dstServer->GetType(getter_Copies(aType));
-  if (NS_FAILED(rv) || !(const char*)aType)
-    return PR_TRUE;
+  rv = uri->GetScheme(getter_Copies(scheme));
+  if (NS_FAILED(rv)) return rv;
+#else
+  nsCOMPtr <nsIURL> url;
+  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
 
-  if ((aType) && (*(const char*)aType))
-  {
-    if (PL_strcasecmp(aType, "POP3") == 0)
-      return PR_TRUE;
+  rv = url->SetSpec(aFolderURI);
+  if (NS_FAILED(rv)) return rv;
+ 
+  rv = url->GetScheme(getter_Copies(scheme));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  /* mailbox:/ means its local (on disk) */
+  if (PL_strcmp("mailbox", (const char *)scheme) == 0) {
+	*aResult = PR_TRUE;
   }
-
-  return PR_FALSE;
+  else {
+	*aResult = PR_FALSE;
+  }
+  return NS_OK;
 }
 

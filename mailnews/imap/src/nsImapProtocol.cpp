@@ -5972,10 +5972,6 @@ void nsImapProtocol::Check()
 
 PRBool nsImapProtocol::TryToLogon()
 {
-
-	// mscott - for right now, I'm assuming the user name and password are in the
-	// incoming server...no prompt for password dialog yet...
-
 	PRInt32 logonTries = 0;
 	PRBool loginSucceeded = PR_FALSE;
 	char * password = nsnull;
