@@ -638,6 +638,11 @@ public:
   NS_IMETHOD Back(nsIWebShell * prev);
 
   /**
+   * Reload the current history entry
+   */
+  NS_IMETHOD Reload(nsURLReloadType aReloadType);
+  
+  /**
    * whether you can go forward in History
    */
   NS_IMETHOD canForward(PRBool &aResult);
@@ -1234,7 +1239,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev)
    mHistoryEntryInLoad = hCurrentEntry;
 
   //Load the page
-   PRUnichar * url=nsnull;
+   const PRUnichar * url;
    hCurrentEntry->GetURL(&url);
    nsString  urlString(url);
    if (APP_DEBUG) printf("nsSessionHistory::Goto, Trying to load URL %s\n", urlString.ToNewCString());
@@ -1260,6 +1265,14 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev)
 
    mHistoryCurrentIndex = aGotoIndex;
 
+}
+
+NS_IMETHODIMP
+nsSessionHistory::Reload(nsURLReloadType aReloadType)
+{
+  printf("fix me!\n");
+  NS_ASSERTION(0,"fix me!\n");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
