@@ -47,20 +47,9 @@ NSGETMODULE(_name) (nsIComponentManager* aCompMgr,             \
 }
 
 // NSGetModule entry points
-DECL_NSGETMODULE(UcharUtil)
 DECL_NSGETMODULE(nsUConvModule)
-DECL_NSGETMODULE(nsUCvJAModule)
-DECL_NSGETMODULE(nsUCvCnModule)
-DECL_NSGETMODULE(nsUCvLatinModule)
-DECL_NSGETMODULE(nsUCvTWModule)
-DECL_NSGETMODULE(nsUCvTW2Module)
-DECL_NSGETMODULE(nsUCvKoModule)
-DECL_NSGETMODULE(nsLocaleModule)
-DECL_NSGETMODULE(nsStringBundleModule)
-DECL_NSGETMODULE(nsLWBrkModule)
-DECL_NSGETMODULE(nsCharDetModule)
+DECL_NSGETMODULE(nsI18nModule)
 DECL_NSGETMODULE(xpconnect)
-DECL_NSGETMODULE(cacheservice)
 DECL_NSGETMODULE(necko_core_and_primary_protocols)
 DECL_NSGETMODULE(necko_secondary_protocols)
 DECL_NSGETMODULE(nsURILoaderModule)
@@ -71,14 +60,9 @@ DECL_NSGETMODULE(nsChromeModule)
 DECL_NSGETMODULE(nsRDFModule)
 DECL_NSGETMODULE(nsParserModule)
 DECL_NSGETMODULE(nsGfxMacModule)
-DECL_NSGETMODULE(nsGfx2Module)
 DECL_NSGETMODULE(nsImageLib2Module)
-DECL_NSGETMODULE(nsPNGDecoderModule)
-DECL_NSGETMODULE(nsGIFModule2)
-DECL_NSGETMODULE(nsJPEGDecoderModule)
 DECL_NSGETMODULE(nsPluginModule)
 DECL_NSGETMODULE(javascript__protocol)
-DECL_NSGETMODULE(JS_component_loader)
 DECL_NSGETMODULE(DOM_components)
 DECL_NSGETMODULE(nsViewModule)
 DECL_NSGETMODULE(nsWidgetMacModule)
@@ -90,7 +74,6 @@ DECL_NSGETMODULE(embedcomponents)
 DECL_NSGETMODULE(Browser_Embedding_Module)
 DECL_NSGETMODULE(nsEditorModule)
 DECL_NSGETMODULE(nsTransactionManagerModule)
-DECL_NSGETMODULE(nsTextServicesModule)
 DECL_NSGETMODULE(nsProfileModule)
 DECL_NSGETMODULE(Session_History_Module)
 DECL_NSGETMODULE(application)
@@ -106,20 +89,9 @@ DECL_NSGETMODULE(NSS)
  */
 static nsStaticModuleInfo gStaticModuleInfo[] = {
 #define MODULE(_name) { (#_name), NSGETMODULE(_name) }
-MODULE(UcharUtil),
 MODULE(nsUConvModule),
-MODULE(nsUCvJAModule),
-MODULE(nsUCvCnModule),
-MODULE(nsUCvLatinModule),
-MODULE(nsUCvTWModule),
-MODULE(nsUCvTW2Module),
-MODULE(nsUCvKoModule),
-MODULE(nsLocaleModule),
-MODULE(nsStringBundleModule),
-MODULE(nsLWBrkModule),
-MODULE(nsCharDetModule),
+MODULE(nsI18nModule),
 MODULE(xpconnect),
-MODULE(cacheservice),
 MODULE(necko_core_and_primary_protocols),
 MODULE(necko_secondary_protocols),
 MODULE(nsURILoaderModule),
@@ -130,14 +102,9 @@ MODULE(nsChromeModule),
 MODULE(nsRDFModule),
 MODULE(nsParserModule),
 MODULE(nsGfxMacModule),
-MODULE(nsGfx2Module),
 MODULE(nsImageLib2Module),
-MODULE(nsPNGDecoderModule),
-MODULE(nsGIFModule2),
-MODULE(nsJPEGDecoderModule),
 MODULE(nsPluginModule),
 MODULE(javascript__protocol),
-MODULE(JS_component_loader),
 MODULE(DOM_components),
 MODULE(nsViewModule),
 MODULE(nsWidgetMacModule),
@@ -149,7 +116,6 @@ MODULE(embedcomponents),
 MODULE(Browser_Embedding_Module),
 MODULE(nsEditorModule),
 MODULE(nsTransactionManagerModule),
-MODULE(nsTextServicesModule),
 MODULE(nsProfileModule),
 MODULE(Session_History_Module),
 MODULE(application),
