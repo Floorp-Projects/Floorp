@@ -44,19 +44,19 @@ NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 static char *s200ExecutedCommand     = "200 executed command:";
 static char *s500ParseCommand        = "500 command not parsable:";
 static char *s501UnrecognizedCommand = "501 unrecognized command:";
-static char *s502NoWindow            = "502 no appropriate window for:";
+// not used
+//static char *s502NoWindow            = "502 no appropriate window for:";
 static char *s509InternalError       = "509 internal error";
 
 XRemoteService::XRemoteService()
 {
-  printf("XRemoteService\n");
   NS_INIT_ISUPPORTS();
   mNumWindows = 0;
 }
 
 XRemoteService::~XRemoteService()
 {
-  printf("~XRemoteService\n");
+  Shutdown();
 }
 
 NS_IMPL_ISUPPORTS1(XRemoteService, nsIXRemoteService)
@@ -80,7 +80,6 @@ NS_IMETHODIMP
 XRemoteService::ParseCommand(nsIWidget *aWidget,
 			     const char *aCommand, char **aResponse)
 {
-  printf("ParseCommand\n");
   if (!aCommand || !aResponse)
     return NS_ERROR_INVALID_ARG;
 
@@ -98,13 +97,10 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   PRInt32 end_arg = 0;
 
   tempString.Append(aCommand);
-  printf("raw data is %s\n", tempString.get());
   
   // find the () in the command
   begin_arg = tempString.FindChar('(');
   end_arg = tempString.RFindChar(')');
-
-  printf("begin_arg is %d, end_arg is %d\n", begin_arg, end_arg);
 
   // make sure that both were found, the string doesn't start with '('
   // and that the ')' follows the '('
@@ -143,8 +139,6 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
     raiseWindow = PR_FALSE;
   }
 
-  printf("action %s argument %s\n", action.get(), argument.get());
-
   nsresult rv = NS_OK;
   
   // find the DOM window for the passed in parameter
@@ -153,8 +147,6 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   nsIDOMWindowInternal *domWindow = NS_STATIC_CAST(nsIDOMWindowInternal *,
 						   mWindowList.Get(key));
   delete key;
-
-  printf("dom window is %p\n", (void *)domWindow);
 
   /*   
       openURL ( ) 
@@ -165,15 +157,6 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
             Create a new window displaying the the specified document. 
   */
 
-  if (action.Equals("openurl")) {
-    if (argument.Length() == 0) {
-      rv = OpenURLDialog(domWindow);
-    }
-    else {
-      rv = OpenURL(argument, domWindow);
-    }
-  }
-
   /*
       openFile ( ) 
             Prompts for a file with a dialog box. 
@@ -182,12 +165,12 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
 
   */
 
-  else if (action.Equals("openfile")) {
+  if (action.Equals("openurl") || action.Equals("openfile")) {
     if (argument.Length() == 0) {
-      // XXX open file dialog
+      rv = OpenURLDialog(domWindow);
     }
     else {
-      // XXX open file
+      rv = OpenURL(argument, domWindow);
     }
   }
 
@@ -215,7 +198,11 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("mailto")) {
-    // XXX mailto
+    // if you prepend mailto: to the string it will be a mailto: url
+    // and openurl should work fine.
+    nsCString tempArg("mailto:");
+    tempArg.Append(argument);
+    rv = OpenURL(tempArg, domWindow);
   }
 
   /*
@@ -259,7 +246,6 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
 NS_IMETHODIMP
 XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
 {
-  printf("AddBrowserInstance %p\n", (void *)aBrowser);
 
   // get the native window for this instance
   nsCOMPtr<nsIScriptGlobalObject> scriptObject;
@@ -289,8 +275,6 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
     NS_WARNING("Failed to get main widget for browser instance");
     return NS_ERROR_FAILURE;
   }
-
-  printf("widget is %p\n", (void *)mainWidget.get());
 
   // walk up the widget tree and find the toplevel window in the
   // heirarchy
@@ -344,7 +328,6 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
 NS_IMETHODIMP
 XRemoteService::RemoveBrowserInstance(nsIDOMWindowInternal *aBrowser)
 {
-  printf("RemoveBrowserInstance\n");
   mNumWindows--;
   if (mNumWindows == 0)
     CreateProxyWindow();
@@ -514,6 +497,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
     if (lastArgument.EqualsIgnoreCase("noraise"))
       aArgument.Truncate(index);
   }
+
+  // try to fixup the argument passed in
 
   nsString url;
   url.AssignWithConversion(aArgument);
