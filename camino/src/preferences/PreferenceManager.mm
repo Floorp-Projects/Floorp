@@ -303,6 +303,12 @@ static BOOL gMadePrefManager;
       mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
     }
 
+    // previous versions set dom.disable_open_click_delay to block some popups, but
+    // we really shouldn't be doing that (mozilla no longer does). Ensure we clear it out
+    // with authority so that it doesn't bite us later. Yes, this will break someone setting
+    // it manually, but that case is pretty rare.
+    mPrefs->ClearUserPref("dom.disable_open_click_delay");
+    
     [self configureProxies];
 }
 

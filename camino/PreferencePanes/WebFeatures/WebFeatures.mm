@@ -93,14 +93,10 @@
 //
 - (IBAction)clickEnablePopupBlocking:(id)sender
 {
-  if ( [sender state] ) {
+  if ( [sender state] )
     [self setPref:"dom.disable_open_during_load" toBoolean: YES];
-    [self setPref:"dom.disable_open_click_delay" toInt: 1000];
-  }
-  else {
+  else
     [self setPref:"dom.disable_open_during_load" toBoolean: NO];
-    [self setPref:"dom.disable_open_click_delay" toInt: 0];
-  }
   [mEditWhitelist setEnabled:[sender state]];
 }
 

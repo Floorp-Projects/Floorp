@@ -747,10 +747,8 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
       // This is a one-time dialog.
       pref->SetBoolPref("browser.popups.showPopupBlocker", PR_FALSE);
       
-      if (confirm) {
+      if (confirm)
         pref->SetBoolPref("dom.disable_open_during_load", PR_TRUE);
-        pref->SetIntPref("dom.disable_open_click_delay", 1000);
-      }
 
       nsCOMPtr<nsIPrefService> prefService(do_QueryInterface(pref));
       prefService->SavePrefFile(nsnull);
