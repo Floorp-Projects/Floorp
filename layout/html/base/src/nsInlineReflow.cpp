@@ -862,13 +862,13 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
         pfd->mBounds.y = mTopEdge + lineHeight - pfd->mBounds.height;
         break;
       default:
-        pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y -
+        pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
           pfd->mMargin.top;
         break;
       }
     }
     else {
-      pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y -
+      pfd->mBounds.y = topEdge + maxAscent + pfd->mBounds.y +
         pfd->mMargin.top;
     }
     frame->SetRect(pfd->mBounds);
