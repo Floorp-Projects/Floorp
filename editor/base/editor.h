@@ -20,7 +20,12 @@
 #include "nsIContextLoader.h"
 #include "COM_auto_ptr.h"
 #include "editorInterfaces.h"
-#include "nsISelection.h"
+//#include "nsISelection.h"
+
+
+//This is the monitor for the editor.
+PRMonitor *getEditorMonitor();
+
 
 /** implementation of an editor object.  it will be the controler/focal point 
  *  for the main editor services. i.e. the GUIControler, publishing, transaction 
@@ -33,7 +38,7 @@ private:
   COM_auto_ptr<nsIDOMDocument>      mDomInterfaceP;
   COM_auto_ptr<nsIDOMEventListener> mKeyListenerP;
   COM_auto_ptr<nsIDOMEventListener> mMouseListenerP;
-  COM_auto_ptr<nsISelection>        mSelectionP;
+//  COM_auto_ptr<nsISelection>        mSelectionP;
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
