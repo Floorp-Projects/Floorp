@@ -277,7 +277,8 @@ nsDiskCacheDevice::Init()
     nsresult rv;
 
     NS_ENSURE_TRUE(!mInitialized, NS_ERROR_FAILURE);
-    
+   
+    if (!mCacheDirectory) return NS_ERROR_FAILURE;
     rv = mBindery.Init();
     if (NS_FAILED(rv)) return rv;
     
