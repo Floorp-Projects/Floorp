@@ -1349,12 +1349,15 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
     }
-    else {
-      // \r is an illegal character in the dom, so get rid of them:
-      nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
-    }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
+      // \r is an illegal character in the dom, but people use them,
+      // so convert windows and mac platform linebreaks to \n:
+      // Unfortunately aValue is declared const, so we have to copy
+      // in order to do this substitution.
+      currentValue = aValue;
+      nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
+
       nsCOMPtr<nsIDOMDocument>domDoc;
       result = mEditor->GetDocument(getter_AddRefs(domDoc));
 			if (NS_FAILED(result)) return;
@@ -1373,8 +1376,8 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 			mEditor->SetFlags(flags);
       mEditor->SelectAll();
       mEditor->DeleteSelection(nsIEditor::eNone);
-      htmlEditor->InsertText(aValue);
-			mEditor->SetFlags(savedFlags);
+      htmlEditor->InsertText(currentValue);
+      mEditor->SetFlags(savedFlags);
     }
   }
   else {
