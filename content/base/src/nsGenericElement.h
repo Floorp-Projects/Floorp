@@ -414,6 +414,23 @@ public:
   NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                     PRInt32 aModType, 
                                     nsChangeHint& aHint) const;
+  /*
+   * Attribute Mapping Helpers
+   */
+  struct AttributeDependenceEntry {
+    nsIAtom** attribute;
+  };
+  
+  /**
+   * A common method where you can just pass in a list of maps to check
+   * for attribute dependence. Most implementations of
+   * HasAttributeDependentStyle should use this function as a default
+   * handler.
+   */
+  static PRBool
+  FindAttributeDependence(const nsIAtom* aAttribute,
+                          const AttributeDependenceEntry* const aMaps[],
+                          PRUint32 aMapCount);
 
   // nsIXMLContent interface methods
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);

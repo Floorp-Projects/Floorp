@@ -51,24 +51,12 @@ class nsSVGDocument : public nsXMLDocument,
   nsSVGDocument();
   virtual ~nsSVGDocument();
 
-  // Most methods will just fall through to the XMLDocument
-
-  virtual nsresult StartDocumentLoad(const char* aCommand,
-                                     nsIChannel* aChannel,
-                                     nsILoadGroup* aLoadGroup,
-                                     nsISupports* aContainer,
-                                     nsIStreamListener **aDocListener,
-                                     PRBool aReset = PR_TRUE,
-                                     nsIContentSink* aSink = nsnull);
-
   NS_DECL_NSIDOMSVGDOCUMENT
   NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)
   NS_FORWARD_NSIDOMNODE(nsXMLDocument::)
   NS_FORWARD_NSIDOMDOCUMENTEVENT(nsXMLDocument::)
   NS_DECL_ISUPPORTS_INHERITED
 
-protected:
-  nsString mReferrer;
 };
 
 #endif

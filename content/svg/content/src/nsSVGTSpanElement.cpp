@@ -73,9 +73,9 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTSpanElementBase::)
 
-  // nsISVGContent interface
-  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval);
-    
+  // nsIStyledContent interface
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+
 protected:
 
   virtual void ParentChainChanged();
@@ -341,64 +341,20 @@ NS_IMETHODIMP nsSVGTSpanElement::SelectSubString(PRUint32 charnum, PRUint32 ncha
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsIStyledContent methods
 
-NS_IMETHODIMP
-nsSVGTSpanElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+NS_IMETHODIMP_(PRBool)
+nsSVGTSpanElement::HasAttributeDependentStyle(const nsIAtom* name) const
 {
-  if (
-      // PresentationAttributes-FillStroke
-      name==nsSVGAtoms::fill              ||
-      name==nsSVGAtoms::fill_opacity      ||
-      name==nsSVGAtoms::fill_rule         ||
-      name==nsSVGAtoms::stroke            ||
-      name==nsSVGAtoms::stroke_dasharray  ||
-      name==nsSVGAtoms::stroke_dashoffset ||
-      name==nsSVGAtoms::stroke_linecap    ||
-      name==nsSVGAtoms::stroke_linejoin   ||
-      name==nsSVGAtoms::stroke_miterlimit ||
-      name==nsSVGAtoms::stroke_opacity    ||
-      name==nsSVGAtoms::stroke_width      ||
-      // PresentationAttributes-Graphics
-      name==nsSVGAtoms::clip_path         ||
-      name==nsSVGAtoms::clip_rule         ||
-      name==nsSVGAtoms::cursor            ||
-      name==nsSVGAtoms::display           ||
-      name==nsSVGAtoms::filter            ||
-      name==nsSVGAtoms::image_rendering   ||
-      name==nsSVGAtoms::mask              ||
-      name==nsSVGAtoms::opacity           ||
-      name==nsSVGAtoms::pointer_events    ||
-      name==nsSVGAtoms::shape_rendering   ||
-      name==nsSVGAtoms::text_rendering    ||
-      name==nsSVGAtoms::visibility        ||
-      // PresentationAttributes-TextContentElements
-      name==nsSVGAtoms::alignment_baseline ||
-      name==nsSVGAtoms::baseline_shift    ||
-      name==nsSVGAtoms::direction         ||
-      name==nsSVGAtoms::dominant_baseline ||
-      name==nsSVGAtoms::glyph_orientation_horizontal ||
-      name==nsSVGAtoms::glyph_orientation_vertical ||
-      name==nsSVGAtoms::kerning           ||
-      name==nsSVGAtoms::letter_spacing    ||
-      name==nsSVGAtoms::text_anchor       ||
-      name==nsSVGAtoms::text_decoration   ||
-      name==nsSVGAtoms::unicode_bidi      ||
-      name==nsSVGAtoms::word_spacing      ||
-      // PresentationAttributes-FontSpecification
-      name==nsSVGAtoms::font_family       ||
-      name==nsSVGAtoms::font_size         ||
-      name==nsSVGAtoms::font_size_adjust  ||
-      name==nsSVGAtoms::font_stretch      ||
-      name==nsSVGAtoms::font_style        ||
-      name==nsSVGAtoms::font_variant      ||
-      name==nsSVGAtoms::font_weight      
-      ) {
-    *retval = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    return nsSVGTSpanElementBase::IsPresentationAttribute(name, retval);
+  static const AttributeDependenceEntry* const map[] = {
+    sFillStrokeMap,
+    sGraphicsMap,
+    sTextContentElementsMap,
+    sFontSpecificationMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGTSpanElementBase::HasAttributeDependentStyle(name);
 }
 
 //----------------------------------------------------------------------

@@ -58,8 +58,8 @@ public:
   NS_DECL_NSIDOMSVGLOCATABLE
   NS_DECL_NSIDOMSVGTRANSFORMABLE
 
-  // nsISVGContent interface
-  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval);
+  // nsIStyledContent interface
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   
 protected:
   

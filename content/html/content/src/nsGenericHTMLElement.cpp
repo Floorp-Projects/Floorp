@@ -3077,7 +3077,7 @@ nsGenericHTMLElement::sCommonAttributeMap[] = {
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
   { &nsHTMLAtoms::width },
   { &nsHTMLAtoms::height },
@@ -3086,54 +3086,36 @@ nsGenericHTMLElement::sImageMarginSizeAttributeMap[] = {
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sImageAlignAttributeMap[] = {
   { &nsHTMLAtoms::align },
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sDivAlignAttributeMap[] = {
   { &nsHTMLAtoms::align },
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sImageBorderAttributeMap[] = {
   { &nsHTMLAtoms::border },
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sBackgroundAttributeMap[] = {
   { &nsHTMLAtoms::background },
   { &nsHTMLAtoms::bgcolor },
   { nsnull }
 };
 
-/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::AttributeDependenceEntry
 nsGenericHTMLElement::sScrollingAttributeMap[] = {
   { &nsHTMLAtoms::scrolling },
   { nsnull }
 };
-
-PRBool
-nsGenericHTMLElement::FindAttributeDependence(const nsIAtom* aAttribute,
-                                              const AttributeDependenceEntry* const aMaps[],
-                                              PRUint32 aMapCount)
-{
-  for (PRUint32 mapindex = 0; mapindex < aMapCount; ++mapindex) {
-    for (const AttributeDependenceEntry* map = aMaps[mapindex];
-         map->attribute; ++map) {
-      if (aAttribute == *map->attribute) {
-        return PR_TRUE;
-      }
-    }
-  }
-
-  return PR_FALSE;
-}
-
 
 void
 nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
