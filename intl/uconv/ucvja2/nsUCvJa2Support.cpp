@@ -19,6 +19,7 @@
 
 #include "pratom.h"
 #include "nsIComponentManager.h"
+#include "nsICharRepresentable.h"
 #include "nsUCvJa2Support.h"
 #include "nsUCVJA2Dll.h"
 
@@ -492,8 +493,13 @@ nsresult nsEncoderSupport::QueryInterface(REFNSIID aIID,
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
+  if (aIID.Equals(nsICharRepresentable::GetIID())) {                                          
+    *aInstancePtr = (void*) ((nsICharRepresentable*)this); 
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
   if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)this);
+    *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
@@ -630,6 +636,20 @@ nsTableEncoderSupport::~nsTableEncoderSupport()
   NS_IF_RELEASE(mHelper);
 }
 
+NS_IMETHODIMP nsTableEncoderSupport::FillInfo(PRUint32 *aInfo) 
+{
+  nsresult res;
+
+  if (mHelper == nsnull) {
+    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
+        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+    
+    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
+  }
+
+  res = mHelper->FillInfo(aInfo, mMappingTable);
+  return res;
+}
 //----------------------------------------------------------------------
 // Subclassing of nsEncoderSupport class [implementation]
 
@@ -673,6 +693,20 @@ nsMultiTableEncoderSupport::~nsMultiTableEncoderSupport()
   NS_IF_RELEASE(mHelper);
 }
 
+NS_IMETHODIMP nsMultiTableEncoderSupport::FillInfo(PRUint32 *aInfo) 
+{
+  nsresult res;
+
+  if (mHelper == nsnull) {
+    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
+        kIUnicodeEncodeHelperIID, (void**) & mHelper);
+    
+    if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
+  }
+
+  res = mHelper->FillInfo(aInfo,mTableCount, mMappingTable);
+  return res;
+}
 //----------------------------------------------------------------------
 // Subclassing of nsEncoderSupport class [implementation]
 

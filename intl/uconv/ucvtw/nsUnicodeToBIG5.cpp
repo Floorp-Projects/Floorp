@@ -43,8 +43,12 @@ nsUnicodeToBIG5::nsUnicodeToBIG5()
 
 nsresult nsUnicodeToBIG5::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToBIG5();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToBIG5();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------

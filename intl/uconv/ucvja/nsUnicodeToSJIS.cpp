@@ -45,8 +45,12 @@ nsUnicodeToSJIS::nsUnicodeToSJIS()
 
 nsresult nsUnicodeToSJIS::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToSJIS();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToSJIS();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------

@@ -24,6 +24,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsIUnicodeDecodeHelper.h"
+#include "nsICharRepresentable.h"
 
 #define ONE_BYTE_TABLE_SIZE 256
 
@@ -264,7 +265,7 @@ protected:
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEncoderSupport : public nsIUnicodeEncoder
+class nsEncoderSupport : public nsIUnicodeEncoder, public nsICharRepresentable
 {
   NS_DECL_ISUPPORTS
 
@@ -330,6 +331,10 @@ public:
   NS_IMETHOD Reset();
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
       nsIUnicharEncoder * aEncoder, PRUnichar aChar);
+
+  //--------------------------------------------------------------------
+  // Interface nsICharRepresentable [declaration]
+  NS_IMETHOD FillInfo(PRUint32 *aInfo) = 0;
 };
 
 //----------------------------------------------------------------------
@@ -355,6 +360,7 @@ public:
    * Class destructor.
    */
   virtual ~nsTableEncoderSupport();
+  NS_IMETHOD FillInfo( PRUint32 *aInfo);
 
 protected:
 
@@ -392,6 +398,7 @@ public:
    * Class destructor.
    */
   virtual ~nsMultiTableEncoderSupport();
+  NS_IMETHOD FillInfo( PRUint32 *aInfo);
 
 protected:
 

@@ -64,8 +64,12 @@ nsUnicodeToEUCJP::nsUnicodeToEUCJP()
 
 nsresult nsUnicodeToEUCJP::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsUnicodeToEUCJP();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  nsIUnicodeEncoder *p = new nsUnicodeToEUCJP();
+  if(p) {
+   *aResult = p;
+   return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------
