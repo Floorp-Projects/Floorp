@@ -581,6 +581,417 @@
     </orderedlist>
   </section>
   
+ <section id="flags">
+   <title>Flags</title>
+   
+   <para>
+     Flags are a way to attach a specific status to a bug or attachment, 
+     either <quote>+</quote> or <quote>-</quote>. The meaning of these symbols depends on the text
+     the flag itself, but contextually they could mean pass/fail, 
+     accept/reject, approved/denied, or even a simple yes/no. If your site
+     allows requestable flags, then users may set a flag to <quote>?</quote> as a 
+     request to another user that they look at the bug/attachment, and set
+     the flag to its correct status.
+   </para>
+
+   <section id="flags-simpleexample">
+     <title>A Simple Example</title>
+
+     <para>
+       A developer might want to ask their manager, 
+       <quote>Should we fix this bug before we release version 2.0?</quote> 
+       They might want to do this for a <emphasis>lot</emphasis> of bugs,
+       so it would be nice to streamline the process...
+     </para>
+     <para>
+       In Bugzilla, it would work this way:
+       <orderedlist>
+         <listitem>
+           <para>
+             The Bugzilla administrator creates a flag type called 
+             <quote>blocking2.0</quote> that shows up on all bugs in 
+             your product.
+           </para>
+ 
+           <para>
+             It shows up on the <quote>Show Bug</quote> screen
+             as the text <quote>blocking2.0</quote> with a drop-down box next
+             to it. The drop-down box contains four values: an empty space,
+             <quote>?</quote>, <quote>-</quote>, and <quote>+</quote>.
+           </para>
+         </listitem>
+         <listitem>
+           <para>The developer sets the flag to <quote>?</quote>.</para>
+         </listitem>
+         <listitem>
+           <para>
+             The manager sees the <computeroutput>blocking2.0</computeroutput>
+             flag with a <quote>?</quote> value.
+           </para>
+         </listitem>
+         <listitem>
+           <para>
+             If the manager thinks the feature should go into the product
+	     before version 2.0 can be released, he sets the flag to 
+	     <quote>+</quote>. Otherwise, he sets it to <quote>-</quote>.
+           </para>
+         </listitem>
+         <listitem>
+           <para>
+             Now, every Bugzilla user who looks at the bug knows whether or 
+             not the bug needs to be fixed before release of version 2.0.
+           </para>
+         </listitem>
+       </orderedlist>
+     </para>
+
+   </section>
+
+   <section id="flags-about">
+     <title>About Flags</title>
+
+     <section id="flag-values">
+       <title>Values</title>
+       <para>
+         Flags can have three values:
+         <variablelist>
+           <varlistentry>
+             <term><computeroutput>?</computeroutput></term>
+             <listitem><simpara>
+               A user is requesting that a status be set. (Think of it as 'A question is being asked'.)
+             </simpara></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term><computeroutput>-</computeroutput></term>
+             <listitem><simpara>
+	       The status has been set negatively. (The question has been answered <quote>no</quote>.)
+             </simpara></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term><computeroutput>+</computeroutput></term>
+             <listitem><simpara>
+	       The status has been set positively. (The question has been answered <quote>yes</quote>.)
+	     </simpara></listitem>
+           </varlistentry>
+         </variablelist>
+       </para>
+       <para>
+         Actually, there's a fourth value a flag can have -- 
+         <quote>unset</quote> -- which shows up as a blank space. This 
+         just means that nobody has expressed an opinion (or asked
+	 someone else to express an opinion) about this bug or attachment.
+       </para>
+     </section>
+   </section>
+
+   <section id="flag-askto">
+     <title>Using flag requests</title>
+     <para>
+       If a flag has been defined as 'requestable', 
+       users are allowed to set the flag's status to <quote>?</quote>.
+       This status indicates that someone (aka <quote>the requester</quote> is asking
+       for someone else to set the flag to either <quote>+</quote> or <quote>-</quote>.
+     </para>
+     <para>
+       If a flag has been defined as 'specifically requestable', 
+       a text box will appear next to the flag into which the requester may
+       enter a Bugzilla username. That named person (aka <quote>the requestee</quote>)
+       will receive an email notifying them of the request, and pointing them
+       to the bug/attachment in question.
+     </para>
+     <para>
+       If a flag has <emphasis>not</emphasis> been defined as 'specifically requestable',
+       then no such text-box will appear. A request to set this flag cannot be made of
+       any specific individual, but must be asked <quote>to the wind</quote>.
+       A requester may <quote>ask the wind</quote> on any flag simply by leaving the text-box blank.
+     </para>
+   </section>
+
+   <section id="flag-types">
+     <title>Two Types of Flags</title>
+    
+     <para>
+       Flags can go in two places: on an attachment, or on a bug.
+     </para>
+
+     <section id="flag-type-attachment">
+       <title>Attachment Flags</title>
+      
+       <para>
+         Attachment flags are used to ask a question about a specific 
+         attachment on a bug.
+       </para>
+       <para>
+         Many Bugzilla installations use this to 
+         request that one developer <quote>review</quote> another 
+         developer's code before they check it in. They attach the code to
+         a bug report, and then set a flag on that attachment called
+         <quote>review</quote> to 
+         <computeroutput>review?boss@domain.com</computeroutput>.
+         boss@domain.com is then notified by email that
+         he has to check out that attachment and approve it or deny it.
+       </para>
+
+       <para>
+         For a Bugzilla user, attachment flags show up in two 
+         places:
+         <orderedlist>
+           <listitem>
+             <para>
+               On the list of attachments in the <quote>Show Bug</quote>
+               screen, you can see the current state of any flags that
+               have been set to ?, +, or -. You can see who asked about 
+               the flag (the requester), and who is being asked (the 
+               requestee).
+             </para>
+           </listitem>
+           <listitem>
+             <para>
+              When you <quote>Edit</quote> an attachment, you can 
+              see any settable flag, along with any flags that have 
+              already been set. This <quote>Edit Attachment</quote> 
+              screen is where you set flags to ?, -, +, or unset them.
+             </para>
+           </listitem>
+         </orderedlist>
+       </para>
+
+     </section>
+
+     <section id="flag-type-bug">
+       <title>Bug Flags</title>
+
+       <para>
+         Bug flags are used to set a status on the bug itself. You can 
+         see Bug Flags in the <quote>Show Bug</quote> screen 
+         (<filename>editbug.cgi</filename>).
+       </para>
+       <para>
+         Only users with the ability to edit the bug may 
+         set flags on bugs. This includes the owner, reporter, and 
+         any user with the <computeroutput>editbugs</computeroutput> 
+         permission.
+       </para>
+     </section>
+
+   </section>
+
+   <section id="flags-admin">
+     <title>Administering Flags</title>
+
+     <para>
+       If you have the <quote>editcomponents</quote> permission, you will
+       have <quote>Edit: ... | Flags | ...</quote> in your page footer.
+       Clicking on that link will bring you to the <quote>Administer 
+       Flag Types</quote> page. Here, you can select whether you want 
+       to create (or edit) a Bug flag, or an Attachment flag.
+     </para>
+     <para>
+       No matter which you choose, the interface is the same, so we'll 
+       just go over it once.
+     </para>
+
+     <section id="flags-create">
+       <title>Creating a Flag</title>
+       
+        <para>
+          When you click on the <quote>Create a Flag Type for...</quote>
+          link, you will be presented with a form. Here is what the felds in 
+          the form mean:
+        </para>
+
+        <section id="flags-create-field-name">
+          <title>Name</title>
+          <para>
+            This is the name of the flag. This will be displayed 
+            to Bugzilla users who are looking at or setting the flag. 
+            The name may consist of any valid Unicode character. 
+          </para>
+        </section>
+
+        <section id="flags-create-field-description">
+          <title>Description</title>
+          <para>
+            This describes the flag in more detail. At present, this doesn't
+            whos up anywhere helpful; ideally, it would be nice to have
+	    it show up as a tooltip. This field 
+            can be as long as you like, and can contain any character you want.
+          </para>
+        </section>
+
+        <section id="flags-create-field-category">
+          <title>Category</title>
+
+          <para>
+            Default behaviour for a newly-created flag is to appear on
+	    products and all components, which is why <quote>__Any__:__Any__</quote>
+	    is already entered in the <quote>Inclusions</quote> box.
+	    If this is not your desired behaviour, you must either set some
+	    exclusions (for products on which you don't want the flag to appear),
+	    or you must remove <quote>__Any__:__Any__</quote> from the Inclusions box
+	    and define products/components specifically for this flag.
+          </para>
+
+          <para>
+            To create an Inclusion, select a Product from the top drop-down box.
+	    You may also select a specific component from the bottom drop-down box.
+	    (Setting <quote>__Any__</quote> for Product translates to, 
+	    <quote>all the products in this Bugzilla</quote>.
+	    Selecting  <quote>__Any__</quote> in the Component field means
+            <quote>all components in the selected product.</quote>) 
+	    Selections made, press <quote>Include</quote>, and your
+	    Product/Component pairing will show up in the <quote>Inclusions</quote> box on the right.
+	  </para>
+
+          <para>
+            To create an Exclusion, the process is the same; select a Product from the
+	    top drop-down box, select a specific component if you want one, and press
+	    <quote>Exclude</quote>. The Product/Component pairing will show up in the 
+	    <quote>Exclusions</quote> box on the right.
+	  </para>
+
+          <para>
+	    This flag <emphasis>will</emphasis> and <emphasis>can</emphasis> be set for any
+	    products/components that appearing in the <quote>Inclusions</quote> box 
+	    (or which fall under the appropriate <quote>__Any__</quote>). 
+	    This flag <emphasis>will not</emphasis> appear (and therefore cannot be set) on
+	    any products appearing in the <quote>Exclusions</quote> box.
+	    <emphasis> IMPORTANT: Exclusions override inclusions.</emphasis>
+          </para>
+
+	  <para>
+	    You may select a Product without selecting a specific Component,
+	    but it is illegal to select a Component without a Product, or to select a
+	    Component that does not belong to the named Product. Doing so as of
+	    this writing (2.18rc3) will raise an error... even if all your products
+	    have a component by that name.
+          </para>
+
+          <para><emphasis>Example:</emphasis> Let's say you have a product called 
+            <quote>Jet Plane</quote> that has thousands of components. You want
+             to be able to ask if a problem should be fixed in the next model of 
+             plane you release. We'll call the flag <quote>fixInNext</quote>.
+             But, there's one component in <quote>Jet Plane,</quote> 
+             called <quote>Pilot.</quote> It doesn't make sense to release a 
+             new pilot, so you don't want to have the flag show up in that component.
+             So, you include <quote>Jet Plane:__Any__</quote> and you exclude 
+             <quote>Jet Plane:Pilot</quote>.
+          </para>
+        </section>
+
+        <section id="flags-create-field-sortkey">
+          <title>Sort Key</title>
+          <para>
+            Flags normally show up in alphabetical order. If you want them to 
+            show up in a different order, you can use this key set the order on each flag. 
+            Flags with a lower sort key will appear before flags with a higher
+            sort key. Flags that have the same sort key will be sorted alphabetically,
+            but they will still be after flags with a lower sort key, and before flags
+            with a higher sort key.
+          </para>
+          <para>
+            <emphasis>Example:</emphasis> I have AFlag (Sort Key 100), BFlag (Sort Key 10), 
+            CFlag (Sort Key 10), and DFlag (Sort Key 1). These show up in
+            the order: DFlag, BFlag, CFlag, AFlag.
+          </para>
+        </section>
+
+        <section id="flags-create-field-active">
+          <title>Active</title>
+          <para>
+            Sometimes, you might want to keep old flag information in the 
+            Bugzilla database, but stop users from setting any new flags of this type.
+            To do this, uncheck <quote>active</quote>. Deactivated
+            flags will still show up in the UI if they are ?, +, or -, but they
+	    may only be cleared (unset), and cannot be changed to a new value.
+            Once a deactivated flag is cleared, it will completely disappear from a 
+            bug/attachment, and cannot be set again.
+          </para>
+        </section>
+
+       <section id="flags-create-field-requestable">
+         <title>Requestable</title>
+         <para>
+           New flags are, by default, <quote>requestable</quote>, meaning that they
+	   offer users the <quote>?</quote> option, as well as <quote>+</quote> and <quote>-</quote>.
+           To remove the ? option, uncheck <quote>requestable</quote>.
+         </para>
+       </section>
+
+       <section id="flags-create-field-cclist">
+         <title>CC List</title>
+
+         <para>
+           If you want certain users to be notified every time this flag is 
+           set to ?, -, +, or unset, add them here. This is a comma-separated 
+           list of email addresses that need not be restricted to Bugzilla usernames..
+         </para>
+       </section>
+
+       <section id="flags-create-field-specific">
+         <title>Specifically Requestable</title>
+         <para>
+	   By default this box is checked for new flags, meaning that users may make
+	   flag requests of specific individuals. Unchecking this box will remove the
+	   text box next to a flag; if it is still requestable, then requests may
+	   only be made <quote>to the wind.</quote> Removing this after specific
+	   requests have been made will not remove those requests; that data will
+	   stay in the database (though it will no longer appear to the user).
+         </para>
+       </section>
+
+       <section id="flags-create-field-multiplicable">
+         <title>Multiplicable</title>
+         <para>
+	   Any flag with <quote>Multiplicable</quote> set (default for new flags is 'on')
+	   may be set more than once. After being set once, an unset flag
+           of the same type will appear below it with <quote>addl.</quote> (short for 
+           <quote>additional</quote>) before the name. There is no limit to the number of
+	   times a Multiplicable flags may be set on the same bug/attachment.
+         </para>
+       </section>
+
+     </section> <!-- flags-create -->
+
+     <section id="flags-delete">
+       <title>Deleting a Flag</title>
+
+       <para>
+         When you are at the <quote>Administer Flag Types</quote> screen,
+         you will be presented with a list of Bug flags and a list of Attachment
+         Flags.
+       </para>
+       <para>
+         To delete a flag, click on the <quote>Delete</quote> link next to
+         the flag description.
+       </para>
+       <warning>
+         <para>
+           Once you delete a flag, it is <emphasis>gone</emphasis> from
+	   your Bugzilla. All the data for that flag will be deleted.
+	   Everywhere that flag was set, it will disappear,
+	   and you cannot get that data back. If you want to keep flag data,
+	   but don't want anybody to set any new flags or change current flags,
+	   unset <quote>active</quote> in the flag Edit form.
+         </para>
+       </warning>
+     </section>
+
+     <section id="flags-edit">
+       <title>Editing a Flag</title>
+       <para>
+         To edit a flag's properties, just click on the <quote>Edit</quote>
+         link next to the flag's description. That will take you to the same
+         form described in the <quote>Creating a Flag</quote> section.
+       </para>
+     </section>
+
+   </section> <!-- flags-admin -->
+
+   <!-- XXX We should add a "Uses of Flags" section, here, with examples. -->
+
+ </section> <!-- flags -->
+   
   <section id="voting">
     <title>Voting</title>
 
