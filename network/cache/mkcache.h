@@ -35,6 +35,11 @@ PR_BEGIN_EXTERN_C
 /* public accessor function for netcaster */
 extern PRBool NET_CacheStore(net_CacheObject *cacheObject, URL_Struct *url_s, PRBool accept_partial_files);
 #endif /* NU_CACHE */
+
+PUBLIC int NET_FirstCacheObject(DBT *key, DBT *data);
+PUBLIC int NET_NextCacheObject(DBT *key, DBT *data);
+PUBLIC int32 NET_GetMaxDiskCacheSize();
+
 PR_END_EXTERN_C
 
 #endif /* MKCACHE_H */
