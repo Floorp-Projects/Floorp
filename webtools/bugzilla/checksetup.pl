@@ -1653,8 +1653,9 @@ sub AddGroup {
     
     print "Adding group $name ...\n";
     my $sth = $dbh->prepare('INSERT INTO groups
-                          (name, description, userregexp, isbuggroup)
-                          VALUES (?, ?, ?, ?)');
+                          (name, description, userregexp, isbuggroup,
+                           last_changed)
+                          VALUES (?, ?, ?, ?, NOW())');
     $sth->execute($name, $desc, $userregexp, 0);
 
     my $last = $dbh->bz_last_key('groups', 'id');
@@ -3696,10 +3697,14 @@ if (!GroupDoesExist('bz_canusewhines')) {
     my $whineatothers_group = AddGroup('bz_canusewhineatothers',
                                        'Can configure whine reports for ' .
                                        'other users');
-    $dbh->do("INSERT IGNORE INTO group_group_map " .
+    my $group_exists = $dbh->selectrow_array(
+        q{SELECT 1 FROM group_group_map 
+           WHERE member_id = ? AND grantor_id = ? AND grant_type = ?},
+        undef, $whineatothers_group, $whine_group, GROUP_MEMBERSHIP);
+    $dbh->do("INSERT INTO group_group_map " .
              "(member_id, grantor_id, grant_type) " .
              "VALUES (${whineatothers_group}, ${whine_group}, " .
-             GROUP_MEMBERSHIP . ")");
+             GROUP_MEMBERSHIP . ")") unless $group_exists;
 }
 
 ###########################################################################
@@ -3813,10 +3818,9 @@ if ($sth->rows == 0) {
                 $login = "";
             }
         }
-        $login = $dbh->quote($login);
         $sth = $dbh->prepare("SELECT login_name FROM profiles " .
-                              "WHERE login_name=$login");
-        $sth->execute;
+                              "WHERE login_name = ?");
+        $sth->execute($login);
         if ($sth->rows > 0) {
             print "$login already has an account.\n";
             print "Make this user the administrator? [Y/n] ";
@@ -3909,24 +3913,17 @@ if ($sth->rows == 0) {
         $SIG{QUIT} = 'DEFAULT';
         $SIG{TERM} = 'DEFAULT';
 
-        $realname = $dbh->quote($realname);
-        $cryptedpassword = $dbh->quote($cryptedpassword);
-
-        # Set default email flags for the Admin, same as for users
-        my $defaultflagstring = 
-          $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS);
-    
         $dbh->do(
-          "INSERT " .
-           " INTO profiles (login_name, realname, cryptpassword, emailflags) " .
-          "VALUES ($login, $realname, $cryptedpassword, $defaultflagstring)");
+          q{INSERT INTO profiles (login_name, realname, cryptpassword, 
+                                  emailflags, disabledtext, refreshed_when)
+            VALUES (?, ?, ?, ?, ?, ?)},
+            undef, $login, $realname, $cryptedpassword, 
+            Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS, '', '1900-01-01 00:00:00');
     }
 
     # Put the admin in each group if not already    
-    my $query = "select userid from profiles where login_name = $login";    
-    $sth = $dbh->prepare($query); 
-    $sth->execute();
-    my ($userid) = $sth->fetchrow_array();
+    my $userid = $dbh->selectrow_array(
+        "SELECT userid FROM profiles WHERE login_name = ?", undef, $login); 
    
     # Admins get explicit membership and bless capability for the admin group
     my ($admingroupid) = $dbh->selectrow_array("SELECT id FROM groups 
