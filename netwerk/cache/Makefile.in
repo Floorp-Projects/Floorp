@@ -26,12 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= \
+DIRS	= \
         public \
         memcache \
         filecache \
         mgr \
-		$(NULL)
+	$(NULL)
+
+ifdef MOZ_NEW_CACHE
+DIRS    += src
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -36,7 +36,19 @@ XPIDLSRCS	= \
 		nsINetDataCacheRecord.idl     \
 	        nsINetDataDiskCache.idl       \
 		nsIStreamAsFile.idl           \
+		$(NULL)
+
+
+ifdef MOZ_NEW_CACHE
+XPIDLSRCS	+= \
+		nsICache.idl		      \
+		nsICacheEntryDescriptor.idl   \
+		nsICacheListener.idl	      \
+		nsICacheService.idl           \
+		nsICacheSession.idl           \
+		nsICacheVisitor.idl           \
 	        $(NULL)
+endif
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
