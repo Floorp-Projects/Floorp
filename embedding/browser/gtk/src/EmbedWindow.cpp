@@ -25,6 +25,7 @@
 
 #include "EmbedWindow.h"
 #include "EmbedPrivate.h"
+#include "EmbedPrompter.h"
 
 GtkWidget *EmbedWindow::sTipWindow = nsnull;
 
@@ -380,7 +381,12 @@ EmbedWindow::OnHideTooltip(void)
 NS_IMETHODIMP
 EmbedWindow::Alert(const PRUnichar *aDialogTitle, const PRUnichar *aText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetMessageText(aText);
+  prompter.Create(EmbedPrompter::TYPE_ALERT);
+  prompter.Run();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -388,14 +394,28 @@ EmbedWindow::AlertCheck(const PRUnichar *aDialogTitle,
 			const PRUnichar *aText,
 			const PRUnichar *aCheckMsg, PRBool *aCheckValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetMessageText(aText);
+  prompter.SetCheckMessage(aCheckMsg);
+  prompter.SetCheckValue(*aCheckValue);
+  prompter.Create(EmbedPrompter::TYPE_ALERT_CHECK);
+  prompter.Run();
+  prompter.GetCheckValue(aCheckValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::Confirm(const PRUnichar *aDialogTitle, const PRUnichar *aText,
 		     PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetMessageText(aText);
+  prompter.Create(EmbedPrompter::TYPE_CONFIRM);
+  prompter.Run();
+  prompter.GetConfirmValue(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -403,7 +423,17 @@ EmbedWindow::ConfirmCheck(const PRUnichar *aDialogTitle,
 			  const PRUnichar *aText, const PRUnichar *aCheckMsg,
 			  PRBool *aCheckValue, PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetMessageText(aText);
+  prompter.SetCheckMessage(aCheckMsg);
+  prompter.SetCheckValue(*aCheckValue);
+  prompter.Create(EmbedPrompter::TYPE_CONFIRM);
+  prompter.Run();
+  prompter.GetConfirmValue(_retval);
+  if (*_retval)
+    prompter.GetCheckValue(aCheckValue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -412,7 +442,16 @@ EmbedWindow::Prompt(const PRUnichar *aDialogTitle, const PRUnichar *aText,
 		    const PRUnichar *aDefaultText, PRUnichar **result,
 		    PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetMessageText(aText);
+  prompter.SetDefaultText(aDefaultText);
+  prompter.Create(EmbedPrompter::TYPE_PROMPT);
+  prompter.Run();
+  prompter.GetConfirmValue(_retval);
+  if (*_retval)
+    prompter.GetTextValue(result);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -423,7 +462,17 @@ EmbedWindow::PromptUsernameAndPassword(const PRUnichar *aDialogTitle,
 				       PRUnichar **aUser, PRUnichar **aPwd,
 				       PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetPassRealm(aText);
+  prompter.Create(EmbedPrompter::TYPE_PROMPT_USER_PASS);
+  prompter.Run();
+  prompter.GetConfirmValue(_retval);
+  if (*_retval) {
+    prompter.GetUser(aUser);
+    prompter.GetPassword(aPwd);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -433,7 +482,16 @@ EmbedWindow::PromptPassword(const PRUnichar *aDialogTitle,
 			    PRUint32 aSavePassword, PRUnichar **aPwd,
 			    PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  EmbedPrompter prompter;
+  prompter.SetTitle(aDialogTitle);
+  prompter.SetPassRealm(aText);
+  prompter.Create(EmbedPrompter::TYPE_PROMPT_PASS);
+  prompter.Run();
+  prompter.GetConfirmValue(_retval);
+  if (*_retval) {
+    prompter.GetPassword(aPwd);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
