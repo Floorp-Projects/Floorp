@@ -130,7 +130,9 @@ NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsHTMLDocument* doc = new nsHTMLDocument();
-  return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
+  if(doc)
+    return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsHTMLDocument::nsHTMLDocument()
@@ -2329,24 +2331,27 @@ void BlockText::ClearBlock()
 //----------------------------
 void BlockText::AddSubText(nsIDOMNode * aNode, nsString & aStr, PRInt32 aDirection, PRInt32 & aOffset) 
 {
-  SubText * subTxt     = new SubText();
-  subTxt->mContentNode = aNode;
-  subTxt->mLength      = aStr.Length();
-  if (aDirection == kForward) {
-    subTxt->mOffset = mText.Length();
-    mText.Append(aStr);
-    mSubTexts[mNumSubTexts++] = subTxt;
-  } else {
-    subTxt->mOffset = 0;
-    // Shift them all down one slot
-    PRInt32 i;
-    for (i=mNumSubTexts;i>0;i--) {
-      mSubTexts[i] = mSubTexts[i-1];
-      mSubTexts[i]->mOffset += aStr.Length();
+  SubText* subTxt     = new SubText();
+  if(subTxt) {
+    subTxt->mContentNode = aNode;
+    subTxt->mLength      = aStr.Length();
+    if (aDirection == kForward) {
+      subTxt->mOffset = mText.Length();
+      mText.Append(aStr);
+      mSubTexts[mNumSubTexts++] = subTxt;
+    } 
+    else {
+      subTxt->mOffset = 0;
+      // Shift them all down one slot
+      PRInt32 i;
+      for (i=mNumSubTexts;i>0;i--) {
+        mSubTexts[i] = mSubTexts[i-1];
+        mSubTexts[i]->mOffset += aStr.Length();
+      }
+      mNumSubTexts++;
+      mText.Insert(aStr, 0, aStr.Length());
+      mSubTexts[0] = subTxt;
     }
-    mNumSubTexts++;
-    mText.Insert(aStr, 0, aStr.Length());
-    mSubTexts[0] = subTxt;
   }
 }
 
