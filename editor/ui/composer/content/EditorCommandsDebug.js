@@ -75,7 +75,8 @@ function EditorTestSelection()
   }
 
   dump("Selection contains:\n");
-  dump(selection.toString() + "\n");
+  // 3rd param = column to wrap
+  dump(selection.toString("text/plain", gOutputFormatted & gOutputSelectionOnly, 0) + "\n");
 
   var output;
 
