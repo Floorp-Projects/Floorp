@@ -142,3 +142,18 @@ nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame,
     }
     return NS_OK;
 }    
+
+NS_IMETHODIMP
+nsInspectorCSSUtils::IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
+                                             PRBool *aIsSignificant)
+{
+  NS_PRECONDITION(aStyleContext, "We'd better have a style context!");
+  NS_PRECONDITION(aStyleContext, "We'd better have an out pointer!");
+
+  const nsStyleText* text = nsnull;
+  ::GetStyleData(aStyleContext, &text);
+  NS_ASSERTION(text, "Could not get a style struct!");
+
+  *aIsSignificant = text->WhiteSpaceIsSignificant();
+  return NS_OK;
+}
