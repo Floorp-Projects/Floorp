@@ -639,6 +639,15 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
             filterAction->GetLabel(&filterLabel);
             m_curFolder->SetLabelForMessages(m_searchHitHdrs, filterLabel);
         }
+      case nsMsgFilterAction::JunkScore:
+      {
+        nsCAutoString junkScoreStr;
+        PRInt32 junkScore;
+        filterAction->GetJunkScore(&junkScore);
+        junkScoreStr.AppendInt(junkScore);
+        m_curFolder->SetJunkScoreForMessages(m_searchHitHdrs, junkScoreStr.get());
+        break;
+      }
       default:
         break;
       }

@@ -4285,6 +4285,32 @@ nsMsgDBFolder::SetLabelForMessages(nsISupportsArray *aMessages, nsMsgLabelValue 
 }
 
 NS_IMETHODIMP
+nsMsgDBFolder::SetJunkScoreForMessages(nsISupportsArray *aMessages, const char *junkScore)
+{
+  nsresult rv = NS_OK;
+  GetDatabase(nsnull);
+  if (mDatabase)
+  {
+    PRUint32 count;
+    NS_ENSURE_ARG(aMessages);
+    nsresult rv = aMessages->Count(&count);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for(PRUint32 i = 0; i < count; i++)
+    {
+      nsMsgKey msgKey;
+      nsCOMPtr<nsIMsgDBHdr> message = do_QueryElementAt(aMessages, i, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      (void) message->GetMessageKey(&msgKey);
+
+      mDatabase->SetStringProperty(msgKey, "junkscore", junkScore);
+      mDatabase->SetStringProperty(msgKey, "junkscoreorigin", /* ### should this be plugin? */"plugin");
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMsgDBFolder::DeleteMessages(nsISupportsArray *messages,
                               nsIMsgWindow *msgWindow,
                               PRBool deleteStorage,

@@ -6135,17 +6135,17 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
 
 nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB)
 {
-	nsIMsgOfflineImapOperation *returnOp = nsnull;
+  nsIMsgOfflineImapOperation *returnOp = nsnull;
   nsOfflineImapOperationType opType;
   op->GetOperation(&opType);
   NS_ASSERTION(opType & nsIMsgOfflineImapOperation::kMoveResult, "not an offline move op");
-	
-	nsXPIDLCString sourceFolderURI;
-	op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
-	
+  
+  nsXPIDLCString sourceFolderURI;
+  op->GetSourceFolderURI(getter_Copies(sourceFolderURI));
+  
   nsCOMPtr<nsIRDFResource> res;
   nsresult rv;
-
+  
   nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) 
     return rv; 
@@ -6155,30 +6155,30 @@ nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, 
     nsCOMPtr<nsIMsgFolder> sourceFolder(do_QueryInterface(res, &rv));
     if (NS_SUCCEEDED(rv) && sourceFolder)
     {
-	    if (sourceFolder)
-	    {
+      if (sourceFolder)
+      {
         nsCOMPtr <nsIDBFolderInfo> folderInfo;
         sourceFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), originalDB);
-		    if (*originalDB)
-		    {
+        if (*originalDB)
+        {
           nsMsgKey originalKey;
           op->GetMessageKey(&originalKey);
           rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
-			    if (NS_SUCCEEDED(rv) && returnOp)
-			    {
-				    nsXPIDLCString moveDestination;
+          if (NS_SUCCEEDED(rv) && returnOp)
+          {
+            nsXPIDLCString moveDestination;
             nsXPIDLCString thisFolderURI;
-
+            
             GetURI(getter_Copies(thisFolderURI));
-
-				    returnOp->GetDestinationFolderURI(getter_Copies(moveDestination));
+            
+            returnOp->GetDestinationFolderURI(getter_Copies(moveDestination));
             if (!nsCRT::strcmp(moveDestination, thisFolderURI))
-					    returnOp->ClearOperation(nsIMsgOfflineImapOperation::kMoveResult);
-			    }
-		    }
+              returnOp->ClearOperation(nsIMsgOfflineImapOperation::kMoveResult);
+          }
+        }
       }
     }
-	}
+  }
   NS_IF_ADDREF(returnOp);
   *originalOp = returnOp;
   return rv;
@@ -7959,6 +7959,26 @@ nsImapMailFolder::PlaybackCoalescedOperations()
     return m_moveCoalescer->PlaybackMoves();
   }
   return NS_OK; // must not be any coalesced operations
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::SetJunkScoreForMessages(nsISupportsArray *aMessages, const char *aJunkScore)
+{
+  NS_ENSURE_ARG(aMessages);
+
+  nsresult rv = nsMsgDBFolder::SetJunkScoreForMessages(aMessages, aJunkScore);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCAutoString messageIds;
+    nsMsgKeyArray keys;
+    nsresult rv = BuildIdsAndKeyArray(aMessages, messageIds, keys);
+    NS_ENSURE_SUCCESS(rv, rv);
+    StoreCustomKeywords(nsnull, aJunkScore, "", keys.GetArray(), 
+      keys.GetSize(), nsnull);
+    if (mDatabase)
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
