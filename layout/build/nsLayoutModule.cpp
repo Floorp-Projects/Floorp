@@ -47,7 +47,6 @@
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#include "nsBulletinBoardLayout.h"
 #include "nsRepeatService.h"
 #include "nsSprocketLayout.h"
 #include "nsStackLayout.h"
@@ -116,7 +115,6 @@ Shutdown(nsIModule* self)
   gInitialized = PR_FALSE;
 
 #ifdef INCLUDE_XUL
-  nsBulletinBoardLayout::Shutdown();
   nsRepeatService::Shutdown();
   nsSprocketLayout::Shutdown();
   nsStackLayout::Shutdown();
