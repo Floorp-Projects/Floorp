@@ -79,12 +79,14 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
                                
-  NS_METHOD Paint(nsPresContext*       aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  const nsRect&        aDirtyRect,
-                  nsFramePaintLayer    aWhichLayer,
-                  PRUint32             aFlags);
+  NS_IMETHOD Paint(nsPresContext*       aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer,
+                   PRUint32             aFlags);
 
+  virtual PRBool CanPaintBackground();
+  
   NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
                           nsIPresShell&  aPresShell,
                           nsIAtom*       aListName,
@@ -295,6 +297,13 @@ nsFieldSetFrame::Paint(nsPresContext*       aPresContext,
   return NS_OK;
 }
 
+PRBool
+nsFieldSetFrame::CanPaintBackground()
+{
+  // If we have a legend, we won't be painting our background across our whole
+  // rect.  So return false here, since we'll usually have a legend.
+  return PR_FALSE;
+}
 
 NS_IMETHODIMP 
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
