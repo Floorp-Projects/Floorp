@@ -839,25 +839,17 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 	PRBool		isVisible = PR_TRUE;
 
 #ifdef	XP_MAC
-
-	FSSpec		fss = file;
+	CInfoPBRec	cInfo;
 	OSErr		err;
 
-	CInfoPBRec	cInfo;
-
-	cInfo.hFileInfo.ioCompletion = NULL;
-	cInfo.hFileInfo.ioVRefNum = fss.vRefNum;
-	cInfo.hFileInfo.ioDirID = fss.parID;
-	cInfo.hFileInfo.ioNamePtr = (StringPtr)fss.name;
-	cInfo.hFileInfo.ioFVersNum = 0;
-	if (!(err = PBGetCatInfoSync(&cInfo)))
+	nsFileSpec	fileSpec(file);
+	if (!(err = fileSpec.GetCatInfo(cInfo)))
 	{
 		if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
 		{
 			isVisible = PR_FALSE;
 		}
 	}
-
 #else
 	char		*basename = file.GetLeafName();
 	if (nsnull != basename)
