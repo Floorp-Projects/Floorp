@@ -509,7 +509,8 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
     
     NS_ASSERTION(m_outFileStream->eof(), "we are not writing to end-of-file");
     
-    m_outFileStream->seek(PR_SEEK_END, 0);
+    if (!m_outFileStream->eof())
+      m_outFileStream->seek(PR_SEEK_END, 0);
     PRInt32 bytes = m_outFileStream->write(buffer,bufferLen);
     if (bytes != bufferLen) return NS_ERROR_FAILURE;
   }
