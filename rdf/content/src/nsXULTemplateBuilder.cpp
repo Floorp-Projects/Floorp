@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -31,6 +31,11 @@
      important in the case where content streams in; e.g., gets added
      in the OnAssert() method as opposed to the CreateContents()
      method.
+
+  3) I really _really_ need to figure out how to factor the logic in
+     OnAssert, OnUnassert, OnMove, and OnChange. These all mostly
+     kinda do the same sort of thing. It atrocious how much code is
+     cut-n-pasted.
 
  */
 
@@ -117,7 +122,7 @@ nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 
 nsIAtom* RDFGenericBuilderImpl::kSubcontainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kRootcontainmentAtom;
-nsIAtom* RDFGenericBuilderImpl::kTreeTemplateAtom;
+nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kTextAtom;
@@ -166,7 +171,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
         kSubcontainmentAtom  = NS_NewAtom("subcontainment");
         kRootcontainmentAtom = NS_NewAtom("rootcontainment");
-        kTreeTemplateAtom    = NS_NewAtom("template");
+        kTemplateAtom    = NS_NewAtom("template");
         kRuleAtom            = NS_NewAtom("rule");
 
         kTextAtom            = NS_NewAtom("text");
@@ -252,7 +257,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 
         NS_RELEASE(kSubcontainmentAtom);
         NS_RELEASE(kRootcontainmentAtom);
-        NS_RELEASE(kTreeTemplateAtom);
+        NS_RELEASE(kTemplateAtom);
         NS_RELEASE(kRuleAtom);
         NS_RELEASE(kTreeContentsGeneratedAtom);
         NS_RELEASE(kTextAtom);
@@ -854,7 +859,7 @@ RDFGenericBuilderImpl::FindTemplateForResource(nsIRDFResource *aNode, nsIContent
 		nsCOMPtr<nsIAtom>	tag;
 		if (NS_FAILED(rv = aTemplate->GetTag(*getter_AddRefs(tag))))
 			continue;
-		if (tag.get() != kTreeTemplateAtom)
+		if (tag.get() != kTemplateAtom)
 			continue;
 
 /*
@@ -969,7 +974,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				// save a reference (its ID) to the template node that was used
 				nsAutoString	templateID("");
 				aTemplateKid->GetAttribute(kNameSpaceID_None, kIdAtom, templateID);
-				treeGrandchild->SetAttribute(kNameSpaceID_None, kTreeTemplateAtom, templateID, PR_FALSE);
+				treeGrandchild->SetAttribute(kNameSpaceID_None, kTemplateAtom, templateID, PR_FALSE);
 			}
 			else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
 			{
@@ -1266,134 +1271,13 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 }
 
 
-NS_IMETHODIMP
-RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
-                                nsIRDFResource* aPredicate,
-                                nsIRDFNode* aObject)
-{
-	// Just silently fail, because this can happen "normally" as part
-	// of tear-down code. (Bug 9098)
-    if (! mDocument)
-        return NS_OK;
-
-    nsresult rv;
-
-    nsCOMPtr<nsISupportsArray> elements;
-    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create new ISupportsArray");
-        return rv;
-    }
-
-    // Find all the elements in the content model that correspond to
-    // aSubject: for each, we'll try to build XUL children if
-    // appropriate.
-    if (NS_FAILED(rv = mDocument->GetElementsForResource(aSubject, elements))) {
-        NS_ERROR("unable to retrieve elements from resource");
-        return rv;
-    }
-
-    PRUint32 cnt = 0;
-    rv = elements->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRInt32 i = cnt - 1; i >= 0; --i) {
-		nsISupports* isupports = elements->ElementAt(i);
-        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
-		NS_IF_RELEASE(isupports);
-        
-        // XXX somehow figure out if building XUL kids on this
-        // particular element makes any sense whatsoever.
-
-        // We'll start by making sure that the element at least has
-        // the same parent has the content model builder's root
-        if (!IsElementInWidget(element))
-            continue;
-        
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_SUCCEEDED(aObject->QueryInterface(kIRDFResourceIID,
-                                                 (void**) getter_AddRefs(resource)))
-            && IsContainmentProperty(element, aPredicate)) {
-            // Okay, the object _is_ a resource, and the predicate is
-            // a containment property. So this'll be a new item in the widget
-            // control.
-
-            // But if the contents of aElement _haven't_ yet been
-            // generated, then just ignore the assertion. We do this
-            // because we know that _eventually_ the contents will be
-            // generated (via CreateContents()) when somebody asks for
-            // them later.
-            nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kItemContentsGeneratedAtom,
-                                                     contentsGenerated))) {
-                NS_ERROR("severe problem trying to get attribute");
-                return rv;
-            }
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
-                contentsGenerated.EqualsIgnoreCase("true")) {
-                // Okay, it's a "live" element, so go ahead and append the new
-                // child to this node.
-#ifdef XUL_TEMPLATES
-                rv = CreateWidgetItem(element, aPredicate, resource, 0);
-#else
-                rv = AddWidgetItem(element, aPredicate, resource, 0);
-#endif
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-        else {
-            // Either the object of the assertion is not a resource,
-            // or the object is a resource and the predicate is not a
-            // tree property. So this won't be a new row in the
-            // table. See if we can use it to set a cell value on the
-            // current element.
-            nsCOMPtr<nsIRDFNode> target;
-            rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
-            if (NS_FAILED(rv)) return rv;
-
-#ifdef XUL_TEMPLATES_ASSERTIONS
-		nsAutoString	templateID;
-		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
-			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-		{
-			nsCOMPtr<nsIDocument> doc;
-			if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc))))
-			{
-				nsCOMPtr<nsIDOMElement>		domElement;
-				nsCOMPtr<nsIDOMXULDocument>	xulDoc;
-				nsCOMPtr<nsIContent>		templateNode;
-
-				xulDoc = do_QueryInterface(doc);
-				if (xulDoc)
-				{
-					xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-					if (domElement)
-					{
-						templateNode = do_QueryInterface(domElement);
-						if (templateNode)
-						{
-							// this node was created by a XUL template, so update it accordingly
-							rv = UpdateWidgetItemAttribute(templateNode, element, PR_TRUE, aPredicate, target);
-						}
-					}
-				}
-			}
-			return(rv);
-		}
-#endif
-            // fall through if node wasn't created by a XUL template
-            return SetWidgetAttribute(element, aPredicate, target);
-        }
-    }
-    return NS_OK;
-}
-
-
 
 nsresult
-RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
-	nsIContent* aTreeItemElement, PRBool truth, nsIRDFResource* aProperty, nsIRDFNode* aValue)
+RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent* aTemplateNode,
+                                                 nsIContent* aTreeItemElement,
+                                                 eUpdateAction aAction,
+                                                 nsIRDFResource* aProperty,
+                                                 nsIRDFNode* aValue)
 {
 	nsresult		rv = NS_OK;
 	PRInt32			nameSpaceID;
@@ -1401,6 +1285,8 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
 	rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag));
 	if (NS_FAILED(rv))	return(rv);
 
+#define ALL_PROPERTIES_AS_ATTRIBUTES
+#ifdef ALL_PROPERTIES_AS_ATTRIBUTES
 	// check whether this item is a containment item for aValue 
 	nsAutoString	idValue;
 	if (NS_SUCCEEDED(rv = aTemplateNode->GetAttribute(kNameSpaceID_None,
@@ -1412,17 +1298,16 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
 			nsAutoString		idNodeValue("");
 			if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, idNodeValue)))
 			{
-				if (truth)
-				{
+                if (aAction == eSet) {
 					rv = aTreeItemElement->SetAttribute(nameSpaceID, tag, idNodeValue, PR_TRUE);
-				}
-				else
-				{
+                }
+                else {
 					rv = aTreeItemElement->UnsetAttribute(nameSpaceID, tag, PR_TRUE);
-				}
+                }
 			}
 		}
 	}
+#endif
 
 	// check all attributes on the template node; if they reference a resource,
 	// update the equivalent attribute on the content node
@@ -1458,7 +1343,7 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
 							nsAutoString		text("");
 							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, text)))
 							{
-								if ((text.Length() > 0) && (truth))
+								if ((text.Length() > 0) && (aAction == eSet))
 								{
 									aTreeItemElement->SetAttribute(attribNameSpaceID,
 										attribName, text, PR_TRUE);
@@ -1487,17 +1372,16 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
 		nsCOMPtr<nsIContent>	aTreeItemKid;
 		if (NS_FAILED(rv = aTreeItemElement->ChildAt(loop, *getter_AddRefs(aTreeItemKid))))
 			continue;
-		rv = UpdateWidgetItemAttribute(aTemplateKid, aTreeItemKid, truth, aProperty, aValue);
+		rv = UpdateWidgetItemAttribute(aTemplateKid, aTreeItemKid, aAction, aProperty, aValue);
 	}
 	return(rv);
 }
 
 
-
 NS_IMETHODIMP
-RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
-                                  nsIRDFResource* aPredicate,
-                                  nsIRDFNode* aObject)
+RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
+                                nsIRDFResource* aProperty,
+                                nsIRDFNode* aTarget)
 {
 	// Just silently fail, because this can happen "normally" as part
 	// of tear-down code. (Bug 9098)
@@ -1507,22 +1391,129 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
     nsresult rv;
 
     nsCOMPtr<nsISupportsArray> elements;
-    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create new ISupportsArray");
-        return rv;
-    }
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
+	if (NS_FAILED(rv)) return rv;
 
     // Find all the elements in the content model that correspond to
-    // aSubject: for each, we'll try to build XUL children if
+    // aSource: for each, we'll try to build XUL children if
     // appropriate.
-    if (NS_FAILED(rv = mDocument->GetElementsForResource(aSubject, elements))) {
-        NS_ERROR("unable to retrieve elements from resource");
-        return rv;
-    }
+    rv = mDocument->GetElementsForResource(aSource, elements);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+	if (NS_FAILED(rv)) return rv;
 
-    PRUint32 cnt = 0;
+    PRUint32 cnt;
     rv = elements->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
+		nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
+		NS_IF_RELEASE(isupports);
+
+        // XXX somehow figure out if building XUL kids on this
+        // particular element makes any sense whatsoever.
+
+        // We'll start by making sure that the element at least has
+        // the same parent has the content model builder's root
+        if (!IsElementInWidget(element))
+            continue;
+        
+        nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
+        if (resource && IsContainmentProperty(element, aProperty)) {
+            // Okay, the target  _is_ a resource, and the property is
+            // a containment property. So this'll be a new item in the widget
+            // control.
+
+            // But if the contents of aElement _haven't_ yet been
+            // generated, then just ignore the assertion. We do this
+            // because we know that _eventually_ the contents will be
+            // generated (via CreateContents()) when somebody asks for
+            // them later.
+            nsAutoString contentsGenerated;
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kItemContentsGeneratedAtom,
+                                       contentsGenerated);
+			if (NS_FAILED(rv)) return rv;
+
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+                return NS_OK;
+
+            // Okay, it's a "live" element, so go ahead and append the new
+            // child to this node.
+            rv = CreateWidgetItem(element, aProperty, resource, 0);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
+            if (NS_FAILED(rv)) return rv;
+        }
+        else {
+            // Either the target of the assertion is not a resource,
+            // or the object is a resource and the predicate is not a
+            // containment property. So this won't be a new item in
+            // the widget. See if we can use it to set a some
+            // substructure on the current element.
+            nsAutoString templateID;
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kTemplateAtom,
+                                       templateID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                nsCOMPtr<nsIDOMXULDocument>	xulDoc;
+                xulDoc = do_QueryInterface(mDocument);
+                if (! xulDoc)
+                    return NS_ERROR_UNEXPECTED;
+
+                nsCOMPtr<nsIDOMElement>	domElement;
+                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
+                if (NS_FAILED(rv)) return rv;
+
+                nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
+                if (! templateNode)
+                    return NS_ERROR_UNEXPECTED;
+
+                // this node was created by a XUL template, so update it accordingly
+                rv = UpdateWidgetItemAttribute(templateNode, element, eSet, aProperty, aTarget);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                // fall through if node wasn't created by a XUL template
+                rv = SetWidgetAttribute(element, aProperty, aTarget);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFNode* aTarget)
+{
+	// Just silently fail, because this can happen "normally" as part
+	// of tear-down code. (Bug 9098)
+    if (! mDocument)
+        return NS_OK;
+
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
+	if (NS_FAILED(rv)) return rv;
+
+    // Find all the elements in the content model that correspond to
+    // aSource: for each, we'll try to build XUL children if
+    // appropriate.
+    rv = mDocument->GetElementsForResource(aSource, elements);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+	if (NS_FAILED(rv)) return rv;
+
+    PRUint32 cnt;
+    rv = elements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
     for (PRInt32 i = cnt - 1; i >= 0; --i) {
 		nsISupports* isupports = elements->ElementAt(i);
         nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
@@ -1536,82 +1527,64 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
         if (!IsElementInWidget(element))
             continue;
         
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_SUCCEEDED(aObject->QueryInterface(kIRDFResourceIID,
-                                                 (void**) getter_AddRefs(resource)))
-            && IsContainmentProperty(element, aPredicate)) {
+        nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget);
+        if (resource && IsContainmentProperty(element, aProperty)) {
             // Okay, the object _is_ a resource, and the predicate is
-            // a containment property. So this'll be a new item in the widget
-            // control.
+            // a containment property. So we'll need to remove this
+            // item from the widget.
 
             // But if the contents of aElement _haven't_ yet been
             // generated, then just ignore the unassertion: nothing is
             // in the content model to remove.
             nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kItemContentsGeneratedAtom,
-                                                     contentsGenerated))) {
-                NS_ERROR("severe problem trying to get attribute");
-                return rv;
-            }
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
-                contentsGenerated.EqualsIgnoreCase("true")) {
-                // Okay, it's a "live" element, so go ahead and append the new
-                // child to this node.
-                if (NS_FAILED(rv = RemoveWidgetItem(element, aPredicate, resource))) {
-                    NS_ERROR("unable to create new widget item");
-                    return rv;
-                }
-            }
-        }
-        else {
-            // Either the object of the assertion is not a resource,
-            // or the object is a resource and the predicate is not a
-            // tree property. So this won't be a new row in the
-            // table. See if we can use it to set a cell value on the
-            // current element.
-            nsCOMPtr<nsIRDFNode> target;
-            rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kItemContentsGeneratedAtom,
+                                       contentsGenerated);
             if (NS_FAILED(rv)) return rv;
 
-#ifdef XUL_TEMPLATES_ASSERTIONS
-		nsAutoString	templateID;
-		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
-			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-		{
-			nsCOMPtr<nsIDocument> doc;
-			if (NS_SUCCEEDED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc))))
-			{
-				nsCOMPtr<nsIDOMElement>		domElement;
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+                return NS_OK;
+
+            // Okay, it's a "live" element, so go ahead and remove the
+            // child from this node.
+            rv = RemoveWidgetItem(element, aProperty, resource);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
+            if (NS_FAILED(rv)) return rv;
+        }
+        else {
+            // Either the target of the assertion is not a resource,
+            // or the target is a resource and the property is not a
+            // containment property. So this won't be an item in the
+            // widget. See if we need to tear down some substructure
+            // on the current element.
+            nsAutoString templateID;
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kTemplateAtom,
+                                       templateID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
 				nsCOMPtr<nsIDOMXULDocument>	xulDoc;
-				nsCOMPtr<nsIContent>		templateNode;
+				xulDoc = do_QueryInterface(mDocument);
+                if (! xulDoc)
+                    return NS_ERROR_UNEXPECTED;
 
-				xulDoc = do_QueryInterface(doc);
-				if (xulDoc)
-				{
-					xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
-					if (domElement)
-					{
-						templateNode = do_QueryInterface(domElement);
-						if (templateNode)
-						{
-							// this node was created by a XUL template, so update it accordingly
-							rv = UpdateWidgetItemAttribute(templateNode, element, PR_FALSE, aPredicate, target);
-						}
-					}
-				}
-			}
-			return(rv);
-		}
-#endif
+				nsCOMPtr<nsIDOMElement>	domElement;
+                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
+                if (NS_FAILED(rv)) return rv;
 
-            // fall through if node wasn't created by a XUL template
-            if (rv == NS_RDF_NO_VALUE) {
-                return UnsetWidgetAttribute(element, aPredicate, aObject);
+				nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
+                if (! templateNode)
+                    return NS_ERROR_UNEXPECTED;
+
+                // this node was created by a XUL template, so update it accordingly
+                rv = UpdateWidgetItemAttribute(templateNode, element, eClear, aProperty, aTarget);
+                if (NS_FAILED(rv)) return rv;
             }
             else {
-                return SetWidgetAttribute(element, aPredicate, target);
+                rv = UnsetWidgetAttribute(element, aProperty, aTarget);
+                if (NS_FAILED(rv)) return rv;
             }
         }
     }
@@ -1625,8 +1598,115 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
 								nsIRDFNode* aOldTarget,
 								nsIRDFNode* aNewTarget)
 {
-	NS_NOTYETIMPLEMENTED("write me");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	// Just silently fail, because this can happen "normally" as part
+	// of tear-down code. (Bug 9098)
+    if (! mDocument)
+        return NS_OK;
+
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    rv = NS_NewISupportsArray(getter_AddRefs(elements));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
+	if (NS_FAILED(rv)) return rv;
+
+    // Find all the elements in the content model that correspond to
+    // aSource: for each, we'll try to build XUL children if
+    // appropriate.
+    rv = mDocument->GetElementsForResource(aSource, elements);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
+	if (NS_FAILED(rv)) return rv;
+
+    PRUint32 cnt;
+    rv = elements->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = cnt - 1; i >= 0; --i) {
+		nsISupports* isupports = elements->ElementAt(i);
+        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
+		NS_IF_RELEASE(isupports);
+        
+        // XXX somehow figure out if building XUL kids on this
+        // particular element makes any sense whatsoever.
+
+        // We'll start by making sure that the element at least has
+        // the same parent has the content model builder's root
+        if (!IsElementInWidget(element))
+            continue;
+        
+        nsCOMPtr<nsIRDFResource> oldresource = do_QueryInterface(aOldTarget);
+        if (oldresource && IsContainmentProperty(element, aProperty)) {
+            // Okay, the object _is_ a resource, and the predicate is
+            // a containment property. So we'll need to remove the old
+            // item from the widget, and then add the new one.
+
+            // But if the contents of aElement _haven't_ yet been
+            // generated, then just ignore: nothing is in the content
+            // model to remove.
+            nsAutoString contentsGenerated;
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kItemContentsGeneratedAtom,
+                                       contentsGenerated);
+            if (NS_FAILED(rv)) return rv;
+
+            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || !contentsGenerated.EqualsIgnoreCase("true"))
+                return NS_OK;
+
+            // Okay, it's a "live" element, so go ahead and remove the
+            // child from this node.
+            rv = RemoveWidgetItem(element, aProperty, oldresource);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFResource> newresource = do_QueryInterface(aNewTarget);
+
+            // XXX Tough. We don't handle the case where they've
+            // changed a resource to a literal. But this is
+            // bizarre anyway.
+            if (! newresource)
+                return NS_OK;
+
+            rv = CreateWidgetItem(element, aProperty, newresource, 0);
+            if (NS_FAILED(rv)) return rv;
+        }
+        else {
+            // Either the target of the assertion is not a resource,
+            // or the target is a resource and the property is not a
+            // containment property. So this won't be an item in the
+            // widget. See if we need to tear down some substructure
+            // on the current element.
+            nsAutoString templateID;
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kTemplateAtom,
+                                       templateID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+				nsCOMPtr<nsIDOMXULDocument>	xulDoc;
+				xulDoc = do_QueryInterface(mDocument);
+                if (! xulDoc)
+                    return NS_ERROR_UNEXPECTED;
+
+				nsCOMPtr<nsIDOMElement>	domElement;
+                rv = xulDoc->GetElementById(templateID, getter_AddRefs(domElement));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find template node");
+                if (NS_FAILED(rv)) return rv;
+
+				nsCOMPtr<nsIContent> templateNode = do_QueryInterface(domElement);
+                if (! templateNode)
+                    return NS_ERROR_UNEXPECTED;
+
+                // this node was created by a XUL template, so update it accordingly
+                rv = UpdateWidgetItemAttribute(templateNode, element, eSet, aProperty, aNewTarget);
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                rv = SetWidgetAttribute(element, aProperty, aNewTarget);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+    }
+    return NS_OK;
 }
 
 
