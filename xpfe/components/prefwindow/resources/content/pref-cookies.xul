@@ -48,7 +48,7 @@
   function viewTutorial() 
   {
     window.openDialog
-      ("chrome://communicator/locale/wallet/privacy.html","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
+      ("chrome://communicator/content/wallet/privacy.xul","","modal=yes,chrome,resizable=yes,height=400,width=600", 0);
   }  
 
  
