@@ -30,6 +30,7 @@
 #include "nsSOAPResponse.h"
 #include "nsISOAPCallCompletion.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMSerializer.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
@@ -42,6 +43,20 @@ nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
 
 NS_IMPL_ISUPPORTS1(nsHTTPSOAPTransport, nsISOAPTransport)
 
+#ifdef DEBUG
+#define DEBUG_DUMP_DOCUMENT(message,doc) \
+  { \
+	  nsXPIDLString serial;\
+	  nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));\
+	  if (NS_FAILED(rv)) return rv;  \
+	  rv = serializer->SerializeToString(doc, getter_Copies(serial));\
+	  if (NS_FAILED(rv)) return rv;\
+	  nsAutoString result(serial);\
+	  printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
+  }
+#else
+#define DEBUG_DUMP_DOCUMENT(message,doc)
+#endif
 /* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
 NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse *aResponse)
 {
@@ -54,6 +69,8 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv)) return rv;
   if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+
+  DEBUG_DUMP_DOCUMENT("Synchronous Request", messageDocument)
 
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -80,6 +97,7 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
   if (NS_FAILED(rv)) return rv;
 
+
   rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
 
@@ -94,6 +112,9 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
     nsCOMPtr<nsIDOMDocument> response;
     rv = request->GetResponseXML(getter_AddRefs(response));
     if (NS_FAILED(rv)) return rv;
+    if (response) {
+        DEBUG_DUMP_DOCUMENT("Asynchronous Response", response)
+    }
     rv = aResponse->SetMessage(response);
     if (NS_FAILED(rv)) return rv;
   }
@@ -176,6 +197,7 @@ nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
       rv = mRequest->GetResponseXML(getter_AddRefs(document));
       if (NS_SUCCEEDED(rv) && document) {
         rv = mResponse->SetMessage(document);
+        DEBUG_DUMP_DOCUMENT("Asynchronous Response", document)
       }
       else {
         mResponse = nsnull;
@@ -204,6 +226,8 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
   rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv)) return rv;
   if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+
+  DEBUG_DUMP_DOCUMENT("Asynchronous Request", messageDocument)
 
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
