@@ -72,7 +72,7 @@ nsresult NS_NewMsgSendLater(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ISUPPORTS(nsMsgSendLater, nsIMsgSendLater::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgSendLater, nsCOMTypeInfo<nsIMsgSendLater>::GetIID())
 
 nsMsgSendLater::nsMsgSendLater()
 {
@@ -300,7 +300,7 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(SendOperationListener, nsIMsgSendListener::GetIID());
+NS_IMPL_ISUPPORTS(SendOperationListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID());
 
 SendOperationListener::SendOperationListener(void) 
 { 
@@ -433,7 +433,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   	mMessage->GetCCList(ccList);
 
   // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsIMsgCompFields::GetIID(), 
+  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
                                                     (void **) getter_AddRefs(compFields)); 
   if (NS_FAILED(res) || !compFields)
   {
@@ -441,7 +441,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   }
 
   // Get the message send interface
-  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsIMsgSend::GetIID(), 
+  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsCOMTypeInfo<nsIMsgSend>::GetIID(), 
                                           (void **) getter_AddRefs(pMsgSend)); 
   if (NS_FAILED(res) || !pMsgSend)
   {
@@ -685,7 +685,7 @@ nsMsgSendLater::DeleteCurrentMessage()
   nsCOMPtr<nsISupportsArray>  msgArray;
 
   // Get the composition fields interface
-  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, nsISupportsArray::GetIID(), 
+  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, nsCOMTypeInfo<nsISupportsArray>::GetIID(), 
                                                     (void **) getter_AddRefs(msgArray)); 
   if (NS_FAILED(res) || !msgArray)
   {

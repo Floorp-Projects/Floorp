@@ -24,10 +24,6 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
@@ -47,7 +43,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
     m_search = nsnull;
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) getter_AddRefs(m_urlListeners));
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID(), (void **) getter_AddRefs(m_urlListeners));
  
     m_container = nsnull;
 }
@@ -73,17 +69,17 @@ nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER;
     }
-    if (aIID.Equals(nsIURI::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID())) {
         *aInstancePtr = (void*) ((nsIURI*)this);
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(nsINetlibURL::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsINetlibURL>::GetIID())) {
         *aInstancePtr = (void*) ((nsINetlibURL*)this);
         AddRef();
         return NS_OK;
     }
-	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
+	if (aIID.Equals(nsCOMTypeInfo<nsIMsgMailNewsUrl>::GetIID()))
 	{
 		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
 		AddRef();
@@ -396,7 +392,7 @@ PRBool nsMsgMailNewsUrl::Equals(const nsIURI* aURL) const
     NS_LOCK_INSTANCE();
 	// for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURI*)aURL)->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void**)&other) == NS_OK) {
+    if (((nsIURI*)aURL)->QueryInterface(nsCOMTypeInfo<nsIMsgMailNewsUrl>::GetIID(), (void**)&other) == NS_OK) {
         bIsEqual = other == (nsIMsgMailNewsUrl *) this; // compare the pointers...
     }
     else

@@ -1441,7 +1441,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 //
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, nsIMsgSend::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, nsCOMTypeInfo<nsIMsgSend>::GetIID());
 
 void 
 nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)

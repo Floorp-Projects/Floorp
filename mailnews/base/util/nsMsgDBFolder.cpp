@@ -30,7 +30,7 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIDBChangeListener::GetIID()))
+	if (aIID.Equals(nsCOMTypeInfo<nsIDBChangeListener>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
 	}              

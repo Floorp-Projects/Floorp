@@ -43,7 +43,7 @@ int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size)
   nsIMimeConverter *converter;
   PRInt32 written = 0;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-    nsIMimeConverter::GetIID(), (void **)&converter);
+    nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
     res = converter->EncoderWrite(data, buffer, size, &written);
     NS_RELEASE(converter);
@@ -544,7 +544,7 @@ int nsMsgSendPart::Write()
       char                      *tmp = NULL;
       
       int res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
-        NULL, nsIMimeURLUtils::GetIID(), 
+        NULL, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
         (void **) getter_AddRefs(myURLUtil)); 
       if (!NS_SUCCEEDED(res))
         goto FAIL;

@@ -60,7 +60,7 @@ int main() {
   nsIMsgAccountManager *accountManager;
   rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
                                           nsnull,
-                                          nsIMsgAccountManager::GetIID(),
+                                          nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
                                           (void **)&accountManager);
 
   if (NS_FAILED(rv)) {

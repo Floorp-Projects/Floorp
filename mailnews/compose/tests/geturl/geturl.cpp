@@ -153,7 +153,7 @@ public:
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsIOutputStream::GetIID());
+NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF CONSUMER STREAM
 ////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
     return NS_ERROR_NULL_POINTER;
   
   nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
                                              (nsISupports **)&inet);
   if (rv != NS_OK) 
     return rv;

@@ -513,7 +513,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		nsCOMPtr<nsIMsgHeaderParser> parser;
          nsComponentManager::CreateInstance(kHeaderParserCID,
                                             nsnull,
-                                            nsIMsgHeaderParser::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
                                             getter_AddRefs(parser));
 
 		 char * s = nsnull;
@@ -1245,7 +1245,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 			nsCOMPtr<nsIMsgHeaderParser> parser;
             rv = nsComponentManager::CreateInstance(kHeaderParserCID,
                                                nsnull,
-                                               nsIMsgHeaderParser::GetIID(),
+                                               nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
                                                getter_AddRefs(parser));
 
 			m_runningURL->GetAllRecipients(&addresses);

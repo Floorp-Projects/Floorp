@@ -33,7 +33,7 @@ MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closu
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           nsIMimeConverter::GetIID(), (void **)&converter);
+                                           nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->B64EncoderInit(output_fn, closure, &returnEncoderData);
@@ -48,7 +48,7 @@ MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closur
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           nsIMimeConverter::GetIID(), (void **)&converter);
+                                           nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->QPEncoderInit(output_fn, closure, &returnEncoderData);
@@ -63,7 +63,7 @@ MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 si
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           nsIMimeConverter::GetIID(), (void **)&converter);
+                                           nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->UUEncoderInit(filename, output_fn, closure, &returnEncoderData);
@@ -78,7 +78,7 @@ MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p)
   //MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                           nsIMimeConverter::GetIID(), (void **)&converter);
+                                           nsCOMTypeInfo<nsIMimeConverter>::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) 
   {
     res = converter->EncoderDestroy(data, abort_p);

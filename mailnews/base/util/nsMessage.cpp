@@ -38,7 +38,7 @@ NS_IMETHODIMP nsMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIMessage::GetIID()) || aIID.Equals(nsIDBMessage::GetIID()))
+	if (aIID.Equals(nsCOMTypeInfo<nsIMessage>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsIDBMessage>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIDBMessage*, this);
 	}              

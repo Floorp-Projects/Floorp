@@ -63,7 +63,7 @@ nsMsgQuote::~nsMsgQuote()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgQuote, nsIMsgQuote::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgQuote, nsCOMTypeInfo<nsIMsgQuote>::GetIID());
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult 
@@ -166,7 +166,7 @@ FileInputStreamImpl::PumpFileStream()
     return NS_BASE_STREAM_EOF;
 }
 
-NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsIInputStream::GetIID());
+NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsCOMTypeInfo<nsIInputStream>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End of FileInputStreamImpl()
@@ -201,7 +201,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   // Create a mime parser (nsIStreamConverter)!
   nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsIStreamConverter::GetIID(), 
+                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {

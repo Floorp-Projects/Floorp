@@ -24,7 +24,7 @@
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_IMPL_ISUPPORTS(nsMsgIdentity, nsIMsgIdentity::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgIdentity, nsCOMTypeInfo<nsIMsgIdentity>::GetIID());
 
 
 nsMsgIdentity::nsMsgIdentity():
@@ -139,7 +139,7 @@ nsMsgIdentity::SetKey(char* identityKey)
   // in order to actually make use of the key, we need the prefs
   if (!m_prefs)
     rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsIPref::GetIID(),
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
                                       (nsISupports**)&m_prefs);
   
   m_identityKey = PL_strdup(identityKey);

@@ -227,7 +227,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	InitializeTestDriver(); // prompts user for initialization information...
 
 	m_smtpService = nsnull;
-	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(),
+	nsServiceManager::GetService(kSmtpServiceCID, nsCOMTypeInfo<nsISmtpService>::GetIID(),
                                  (nsISupports **)&m_smtpService); // XXX probably need shutdown listener here
 }
 
@@ -238,7 +238,7 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService); // XXX probably need shutdown listener here
 }
 
-NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsIUrlListener::GetIID())
+NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsCOMTypeInfo<nsIUrlListener>::GetIID())
 
 nsresult nsSmtpTestDriver::RunDriver()
 {

@@ -163,7 +163,7 @@ private:
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(SendOperationListener, nsIMsgSendListener::GetIID());
+NS_IMPL_ISUPPORTS(SendOperationListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID());
 
 SendOperationListener::SendOperationListener(void) 
 { 
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
   }  
 
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
-                                           nsIMsgCompFields::GetIID(), (void **) &pMsgCompFields);   
+                                           nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &pMsgCompFields);   
   if (rv == NS_OK && pMsgCompFields) { 
     printf("We succesfully obtained a nsIMsgCompFields interface....\n");
     printf("Releasing the interface now...\n");

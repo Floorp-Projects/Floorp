@@ -52,7 +52,7 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService(progID.GetBuffer(), nsIMsgMessageService::GetIID(),
+		rv = nsServiceManager::GetService(progID.GetBuffer(), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -72,7 +72,7 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 }
 
 
-NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
 
 nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
 															 nsIMsgFolder *folder)

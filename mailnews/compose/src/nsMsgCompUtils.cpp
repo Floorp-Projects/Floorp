@@ -1331,7 +1331,7 @@ mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_p)
 		nsIMsgHeaderParser * pHeader;
 		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                                NULL, 
-                                               nsIMsgHeaderParser::GetIID(), 
+                                               nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(), 
                                                (void **) &pHeader);
 		if (NS_SUCCEEDED(rv)) {
 			char *n;
@@ -1985,7 +1985,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
     return NS_ERROR_NULL_POINTER;
   
   nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
                                              (nsISupports **)&inet);
   if (rv != NS_OK) 
     return rv;
@@ -2043,7 +2043,7 @@ nsMsgParseURL(const char *url, int part)
   char                        *retVal = nsnull;
   
   nsresult res = nsComponentManager::CreateInstance(kMimeURLUtilsCID, 
-                                                    nsnull, nsIMimeURLUtils::GetIID(), 
+                                                    nsnull, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
                                                     (void **) getter_AddRefs(utilPtr)); 
   if (NS_FAILED(res) || !utilPtr)
     return nsnull;

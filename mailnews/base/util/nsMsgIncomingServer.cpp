@@ -57,7 +57,7 @@ nsMsgIncomingServer::SetKey(char * serverKey)
     // in order to actually make use of the key, we need the prefs
     if (!m_prefs)
         rv = nsServiceManager::GetService(kPrefServiceCID,
-                                          nsIPref::GetIID(),
+                                          nsCOMTypeInfo<nsIPref>::GetIID(),
                                           (nsISupports**)&m_prefs);
 
     PR_FREEIF(m_serverKey);

@@ -57,7 +57,7 @@ nsMsgComposeService::~nsMsgComposeService()
 
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeService, nsMsgComposeService::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgComposeService, nsCOMTypeInfo<nsMsgComposeService>::GetIID());
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
@@ -114,7 +114,7 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar
 	nsIMsgCompose * msgCompose = nsnull;
 	
 	rv = nsComponentManager::CreateInstance(kMsgComposeCID, nsnull,
-	                                        nsIMsgCompose::GetIID(),
+	                                        nsCOMTypeInfo<nsIMsgCompose>::GetIID(),
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{

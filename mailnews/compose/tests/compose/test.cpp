@@ -141,7 +141,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
     return NS_ERROR_NULL_POINTER;
   
   nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
                                              (nsISupports **)&inet);
   if (rv != NS_OK) 
     return rv;
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
   OnIdentityCheck();
 
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
-                                           nsIMsgCompFields::GetIID(), (void **) &pMsgCompFields);   
+                                           nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &pMsgCompFields);   
   if (rv == NS_OK && pMsgCompFields) { 
     printf("We succesfully obtained a nsIMsgCompFields interface....\n");
     printf("Releasing the interface now...\n");

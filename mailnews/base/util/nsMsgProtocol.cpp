@@ -23,7 +23,7 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsMsgProtocol, nsIStreamListener::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgProtocol, nsCOMTypeInfo<nsIStreamListener>::GetIID())
 
 nsMsgProtocol::nsMsgProtocol()
 {

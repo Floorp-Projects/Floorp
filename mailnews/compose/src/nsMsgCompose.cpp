@@ -96,7 +96,7 @@ nsMsgCompose::~nsMsgCompose()
 
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, nsMsgCompose::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
 
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI,
@@ -201,7 +201,7 @@ nsresult nsMsgCompose::LoadFields()
 				if ((NS_SUCCEEDED(rv)) && node)
 				{
 					nsString value;
-					rv = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
+					rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLInputElement>::GetIID(), getter_AddRefs(inputElement));
 					if ((NS_SUCCEEDED(rv)) && inputElement)
 					{
 						nsString id;
@@ -276,7 +276,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 					if ((NS_SUCCEEDED(rv)) && node)
 					{
 						nsString value;
-						rv = node->QueryInterface(nsIDOMHTMLInputElement::GetIID(), getter_AddRefs(inputElement));
+						rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLInputElement>::GetIID(), getter_AddRefs(inputElement));
 						if ((NS_SUCCEEDED(rv)) && inputElement)
 						{
 							nsString id;
@@ -511,7 +511,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
  	if (object)
  	{
 		nsCOMPtr<nsIMessage> message;
-		rv = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+		rv = object->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message));
 		if ((NS_SUCCEEDED(rv)) && message)
 		{
 			nsString aString = "";
@@ -694,7 +694,7 @@ QuotingOutputStreamImpl::SetComposeObj(nsMsgCompose *obj)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(QuotingOutputStreamImpl, nsIOutputStream::GetIID());
+NS_IMPL_ISUPPORTS(QuotingOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING CONSUMER STREAM
 ////////////////////////////////////////////////////////////////////////////////////
@@ -745,7 +745,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   // Create a mime parser (nsIStreamConverter)!
   rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
-                                          NULL, nsIMsgQuote::GetIID(), 
+                                          NULL, nsCOMTypeInfo<nsIMsgQuote>::GetIID(), 
                                           (void **) getter_AddRefs(mQuote)); 
   if (NS_FAILED(rv) || !mQuote)
     return NS_ERROR_FAILURE;

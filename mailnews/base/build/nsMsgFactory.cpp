@@ -162,7 +162,7 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   // we support two interfaces....nsISupports and nsFactory.....
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
     *aResult = (void *)NS_STATIC_CAST(nsISupports*,this);
-  else if (aIID.Equals(nsIFactory::GetIID()))   
+  else if (aIID.Equals(nsCOMTypeInfo<nsIFactory>::GetIID()))   
     *aResult = (void *)NS_STATIC_CAST(nsIFactory*,this);
 
   if (*aResult == NULL)
@@ -320,7 +320,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /*aServMgr */,
 
   *aFactory = new nsMsgFactory(aClass, aClassName, aProgID);
   if (aFactory)
-    return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
+    return (*aFactory)->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(),
                                        (void**)aFactory);
   else
     return NS_ERROR_OUT_OF_MEMORY;

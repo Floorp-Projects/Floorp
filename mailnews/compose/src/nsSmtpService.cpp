@@ -48,7 +48,7 @@ nsSmtpService::nsSmtpService()
 nsSmtpService::~nsSmtpService()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsISmtpService::GetIID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsCOMTypeInfo<nsISmtpService>::GetIID());
 
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
@@ -114,7 +114,7 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 	
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsISmtpUrl> smtpUrl;
-	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, nsISmtpUrl::GetIID(), getter_AddRefs(smtpUrl));
+	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, nsCOMTypeInfo<nsISmtpUrl>::GetIID(), getter_AddRefs(smtpUrl));
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
@@ -135,7 +135,7 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
-		rv = smtpUrl->QueryInterface(nsIURI::GetIID(), (void **) aUrl);
+		rv = smtpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void **) aUrl);
 	 }
 
 	 return rv;

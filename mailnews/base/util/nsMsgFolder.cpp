@@ -38,10 +38,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(),
@@ -96,7 +92,7 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIMsgFolder::GetIID()) || aIID.Equals(nsIFolder::GetIID()))
+	if (aIID.Equals(nsCOMTypeInfo<nsIMsgFolder>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsIFolder>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgFolder*, this);
 	}              
@@ -1283,7 +1279,7 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
 		PRUint32 oldBiffState = mBiffState;
 		mBiffState = aBiffState;
 		nsCOMPtr<nsISupports> supports;
-		if(NS_SUCCEEDED(QueryInterface(kISupportsIID, getter_AddRefs(supports))))
+		if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
 			NotifyPropertyFlagChanged(supports, "BiffState", oldBiffState, mBiffState);
 	}
 	return NS_OK;
@@ -1360,7 +1356,7 @@ NS_IMETHODIMP nsMsgFolder::GetRootFolder(nsIMsgFolder * *aRootFolder)
 	if(NS_FAILED(rv) || !aRoot)
 		return rv;
 
-	return aRoot->QueryInterface(nsIMsgFolder::GetIID(), (void**)aRootFolder);
+	return aRoot->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), (void**)aRootFolder);
 }
 
 NS_IMETHODIMP
@@ -1397,7 +1393,7 @@ nsMsgFolder::CopyFileMessage(nsIFileSpec* fileSpec,
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
-	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, getter_AddRefs(supports))))
+	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
 	{
 		PRInt32 i;
 		for(i = 0; i < mListeners->Count(); i++)
