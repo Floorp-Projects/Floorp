@@ -28,13 +28,19 @@ function enabling()
       editButton.setAttribute("disabled", true);
       break;
     case "1":
-      // if the pref is locked, we'll need to avoid enabling the elements
-      if (overrideGlobalPref.getAttribute("disabled") != "true") {
         directoriesList.removeAttribute("disabled");
         directoriesListPopup.removeAttribute("disabled");
         editButton.removeAttribute("disabled");
-      }
       break;      
+  }
+  var attrVal=overrideGlobalPref.getAttribute("disabled");
+  document.getElementById("ldapAutocomplete").disabled=attrVal;
+
+  // if the pref is locked, we'll need to disable the elements
+  if (overrideGlobalPref.getAttribute("disabled") == "true") {
+    directoriesList.setAttribute("disabled", true);
+    directoriesListPopup.setAttribute("disabled", true);
+    editButton.setAttribute("disabled", true);
   }
   gFromGlobalPref = false;
   LoadDirectories(directoriesListPopup);

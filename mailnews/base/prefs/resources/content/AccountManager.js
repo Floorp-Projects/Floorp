@@ -723,16 +723,15 @@ function restorePage(pageId, serverId) {
         var vals = pageElements[i].id.split(".");
         var type = vals[0];
         var slot = vals[1];
-      // buttons are lockable, but don't have any data so we skip that part.
-      // elements that do have data, we get the values at poke them in.
-      if (pageElements[i].localName != "button") {
-        var value = getAccountValue(account, accountValues, type, slot);
-        setFormElementValue(pageElements[i], value);
-      }
+        // buttons are lockable, but don't have any data so we skip that part.
+        // elements that do have data, we get the values at poke them in.
+        if (pageElements[i].localName != "button") {
+          var value = getAccountValue(account, accountValues, type, slot);
+          setFormElementValue(pageElements[i], value);
+        }
         updateElementWithKeys(account,pageElements[i],type);
         var isLocked = getAccountValueIsLocked(pageElements[i]);
-        if (isLocked)
-          setEnabled(pageElements[i],false);
+        setEnabled(pageElements[i],!isLocked);
       }
   }
 

@@ -59,7 +59,6 @@ function onInit() {
                      tmplAccountPickerId, 
                      "identity.stationeryFolder", 
                      tmplFolderPickerId);
-
     initBccSelf();
     setupFccItems();
     gMessengerBundle = document.getElementById("bundle_messenger");
@@ -107,12 +106,24 @@ function SetFolderDisplay(pickerMode, disableMode,
 {
     if (!pickerMode)
         pickerMode = gDefaultPickerMode;
+
+    var selectAccountRadioId = radioElemPrefix + "_selectAccount";
+    var selectAccountRadioElem = document.getElementById(selectAccountRadioId);
+    var selectFolderRadioId = radioElemPrefix + "_selectFolder";
+    var selectFolderRadioElem = document.getElementById(selectFolderRadioId);
+
     switch (pickerMode) 
     {
         case "0" :
-            var radioElemId = radioElemPrefix + "_selectAccount";
-            var radioGroupElement = document.getElementById(radioElemId);
-            radioGroupElement.setAttribute("checked", "true");
+            selectAccountRadioElem.setAttribute("checked", "true");
+            selectFolderRadioElem.setAttribute("checked", "false");
+            if (disableMode) {
+              selectAccountRadioElem.setAttribute("disabled","true");
+              selectFolderRadioElem.setAttribute("disabled","true");
+            } else {
+              selectAccountRadioElem.removeAttribute("disabled");
+              selectFolderRadioElem.removeAttribute("disabled");
+            }
 
             var folderPickedElement = document.getElementById(folderPickedField);
             var uri = folderPickedElement.getAttribute("value");
@@ -122,9 +133,16 @@ function SetFolderDisplay(pickerMode, disableMode,
             break;
 
         case "1"  :
-            var radioElemId = radioElemPrefix + "_selectFolder";
-            var radioGroupElement = document.getElementById(radioElemId);
-            radioGroupElement.setAttribute("checked", "true");
+            selectFolderRadioElem.setAttribute("checked", "true");
+            selectAccountRadioElem.setAttribute("checked", "false");
+
+            if (disableMode) {
+              selectAccountRadioElem.setAttribute("disabled","true");
+              selectFolderRadioElem.setAttribute("disabled","true");
+            } else {
+              selectAccountRadioElem.removeAttribute("disabled");
+              selectFolderRadioElem.removeAttribute("disabled");
+            }
 		    	
             InitFolderDisplay(folderPickedField, folderPickerId);
             SetPickerEnabling(folderPickerId, accountPickerId);
@@ -132,19 +150,6 @@ function SetFolderDisplay(pickerMode, disableMode,
         default :
             dump("Error in setting initial folder display on pickers\n");
             break;
-    }
-    if (disableMode) {
-        var radioId = radioElemPrefix + "_selectAccount";
-        var radioElement = document.getElementById(radioId);
-        radioElement.setAttribute("disabled", "true");
-        radioId = radioElemPrefix + "_selectFolder";
-        radioElement = document.getElementById(radioId);
-        radioElement.setAttribute("disabled", "true");
-
-        var picker = document.getElementById(folderPickerId);
-        picker.setAttribute("disabled", "true");
-        picker = document.getElementById(accountPickerId);
-        picker.setAttribute("disabled", "true");
     }
 }
 
