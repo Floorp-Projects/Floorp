@@ -46,6 +46,11 @@ public:
   NS_IMETHOD  GetScriptContext(nsIScriptContext **aContext) = 0;
 
   /**
+   * Returns the script global object
+   */
+  NS_IMETHOD  GetScriptGlobalObject(nsIScriptGlobalObject **aGlobal) = 0;
+
+  /**
    * Called to indicate that the script context is no longer needed.
    * The caller should <B>not</B> also call the context's Release()
    * method.

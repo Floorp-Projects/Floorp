@@ -21,9 +21,12 @@
 
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
+#include "nsGUIEvent.h"
 
 class nsIScriptContext;
 class nsIDOMDocument;
+class nsIDOMEvent;
+class nsIPresContext;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
 { 0x2b16fc80, 0xfa41, 0x11d1,  \
@@ -38,6 +41,12 @@ class nsIScriptGlobalObject : public nsISupports {
 public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
+
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                            nsEvent* aEvent, 
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus)=0;
 };
 
 extern "C" NS_DOM nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
