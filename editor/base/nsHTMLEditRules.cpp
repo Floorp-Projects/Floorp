@@ -153,8 +153,10 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     
     if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
     {
+      // dont let any txns in here move the selection around behind our back.
+      // Note that this won't prevent explicit selection setting from working.
       nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
-      
+     
       // expand the "changed doc range" as needed
       res = PromoteRange(mDocChangeRange, action);
       if (NS_FAILED(res)) return res;
