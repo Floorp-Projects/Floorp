@@ -29,9 +29,9 @@
 
 #include "ExprResult.h"
 #include "FunctionLib.h"
+#include "nsReadableUtils.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
-#include "nsReadableUtils.h"
 #include "txStringUtils.h"
 
 /**

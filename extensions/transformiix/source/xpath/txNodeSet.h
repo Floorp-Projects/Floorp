@@ -39,33 +39,33 @@
 
 class Node;
 
-class NodeSet : public txAExprResult
+class txNodeSet : public txAExprResult
 {
 
 public:
 
-    NodeSet(); // Not to be implemented
+    txNodeSet(); // Not to be implemented
 
     /*
      * Creates a new empty NodeSet
      */
-    NodeSet(txResultRecycler* aRecycler);
+    txNodeSet(txResultRecycler* aRecycler);
 
     /*
      * Creates a new NodeSet containing the supplied node
      */
-    NodeSet(Node* aNode, txResultRecycler* aRecycler);
+    txNodeSet(Node* aNode, txResultRecycler* aRecycler);
 
     /*
      * Creates a new NodeSet, copying the Node references from the source
      * NodeSet
      */
-    NodeSet(const NodeSet& aSource, txResultRecycler* aRecycler);
+    txNodeSet(const txNodeSet& aSource, txResultRecycler* aRecycler);
 
     /*
      * Destructor for NodeSet, will not delete referenced Nodes
      */
-    virtual ~NodeSet()
+    virtual ~txNodeSet()
     {
         delete [] mElements;
     }
@@ -85,7 +85,7 @@ public:
      * @param  aNodes the NodeSet to add, must be in document order.
      * @return errorcode.
      */
-    nsresult add(const NodeSet* aNodes);
+    nsresult add(const txNodeSet* aNodes);
 
     /*
      * Append API
@@ -109,7 +109,7 @@ public:
      * @param  aNodes the NodeSet to append to the NodeSet
      * @return errorcode.
      */
-    nsresult append(const NodeSet* aNodes);
+    nsresult append(const txNodeSet* aNodes);
 
     /*
      * Reverse the order of the nodes.

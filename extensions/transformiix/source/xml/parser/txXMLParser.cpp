@@ -89,6 +89,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     rv = NS_NewChannel(getter_AddRefs(channel), documentURI, nsnull,
                        loadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
     if (http) {
         nsCOMPtr<nsIURI> refUri;
@@ -102,9 +103,11 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
 
 
     }
+
     nsCOMPtr<nsISyncLoadDOMService> loader =
       do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+
     rv = loader->LoadDocumentAsXML(channel, loaderUri, getter_AddRefs(theDocument));
     if (NS_FAILED(rv) || !theDocument) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
@@ -116,6 +119,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     if (!*aResult) {
         return NS_ERROR_FAILURE;
     }
+
     return NS_OK;
 #else
     istream* xslInput = URIUtils::getInputStream(aHref, aErrMsg);

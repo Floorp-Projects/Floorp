@@ -30,7 +30,7 @@
  *
  */
 
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "dom.h"
 #include "XMLDOMUtils.h"
 #include <string.h>
@@ -45,7 +45,7 @@ static const int kTxNodeSetGrowFactor = 2;
 /*
  * Creates a new empty NodeSet
  */
-NodeSet::NodeSet(txResultRecycler* aRecycler)
+txNodeSet::txNodeSet(txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
       mElements(0),
       mBufferSize(0),
@@ -56,13 +56,13 @@ NodeSet::NodeSet(txResultRecycler* aRecycler)
 /*
  * Creates a new NodeSet containing the supplied Node
  */
-NodeSet::NodeSet(Node* aNode, txResultRecycler* aRecycler)
+txNodeSet::txNodeSet(Node* aNode, txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
       mElements(new Node*[1]),
       mBufferSize(1),
       mElementCount(1)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::NodeSet");
+    NS_ASSERTION(aNode, "missing node to txNodeSet::txNodeSet");
     if (!mElements) {
         NS_ASSERTION(0, "out of memory");
         mBufferSize = 0;
@@ -77,7 +77,7 @@ NodeSet::NodeSet(Node* aNode, txResultRecycler* aRecycler)
  * Creates a new NodeSet, copying the Node references from the source
  * NodeSet
  */
-NodeSet::NodeSet(const NodeSet& aSource, txResultRecycler* aRecycler)
+txNodeSet::txNodeSet(const txNodeSet& aSource, txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
       mElements(0),
       mBufferSize(0),
@@ -92,9 +92,9 @@ NodeSet::NodeSet(const NodeSet& aSource, txResultRecycler* aRecycler)
  * @param  aNode the Node to add to the NodeSet
  * @return errorcode.
  */
-nsresult NodeSet::add(Node* aNode)
+nsresult txNodeSet::add(Node* aNode)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::add");
+    NS_ASSERTION(aNode, "missing node to txNodeSet::add");
     if (!aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -154,9 +154,9 @@ nsresult NodeSet::add(Node* aNode)
  * We might therefor end up with some blanks in the bigining of the resulting
  * nodeset, which we simply fix by moving all the nodes one step down.
  */
-nsresult NodeSet::add(const NodeSet* aNodes)
+nsresult txNodeSet::add(const txNodeSet* aNodes)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::add");
+    NS_ASSERTION(aNodes, "missing nodeset to txNodeSet::add");
     if (!aNodes)
         return NS_ERROR_NULL_POINTER;
 
@@ -269,9 +269,9 @@ nsresult NodeSet::add(const NodeSet* aNodes)
  * @param  aNode the Node to append to the NodeSet
  * @return true on success. false on failure.
  */
-nsresult NodeSet::append(Node* aNode)
+nsresult txNodeSet::append(Node* aNode)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::append");
+    NS_ASSERTION(aNode, "missing node to txNodeSet::append");
     if (!aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -288,9 +288,9 @@ nsresult NodeSet::append(Node* aNode)
  * @param  aNodes the NodeSet to append to the NodeSet
  * @return true on success. false on failure.
  */
-nsresult NodeSet::append(const NodeSet* aNodes)
+nsresult txNodeSet::append(const txNodeSet* aNodes)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::append");
+    NS_ASSERTION(aNodes, "missing nodeset to txNodeSet::append");
     if (!aNodes)
         return NS_ERROR_NULL_POINTER;
 
@@ -308,7 +308,7 @@ nsresult NodeSet::append(const NodeSet* aNodes)
 /*
  * Reverse the order of the nodes.
  */
-void NodeSet::reverse()
+void txNodeSet::reverse()
 {
     int i;
     for (i = 0; i < mElementCount / 2; ++i) {
@@ -325,7 +325,7 @@ void NodeSet::reverse()
  * @param  aNode the Node to get the index for
  * @return index of specified node or -1 if the node does not exist
  */
-int NodeSet::indexOf(Node* aNode) const
+int txNodeSet::indexOf(Node* aNode) const
 {
     // XXX this doesn't fully work since attribute-nodes are broken
     // and can't be pointer-compared. However it's the best we can
@@ -343,10 +343,10 @@ int NodeSet::indexOf(Node* aNode) const
  * @param  aIndex the position of the Node to return
  * @return Node at specified position
  */
-Node* NodeSet::get(int aIndex) const
+Node* txNodeSet::get(int aIndex) const
 {
     NS_ASSERTION(aIndex >= 0 && aIndex < mElementCount,
-                 "invalid index in NodeSet::get");
+                 "invalid index in txNodeSet::get");
     if (aIndex < 0 || aIndex >= mElementCount)
         return 0;
 
@@ -357,7 +357,7 @@ Node* NodeSet::get(int aIndex) const
  * Returns the type of ExprResult represented
  * @return the type of ExprResult represented
  */
-short NodeSet::getResultType()
+short txNodeSet::getResultType()
 {
     return txAExprResult::NODESET;
 }
@@ -366,7 +366,7 @@ short NodeSet::getResultType()
  * Converts this ExprResult to a Boolean (MBool) value
  * @return the Boolean value
  */
-MBool NodeSet::booleanValue()
+MBool txNodeSet::booleanValue()
 {
     return mElementCount > 0;
 }
@@ -375,7 +375,7 @@ MBool NodeSet::booleanValue()
  * Converts this ExprResult to a Number (double) value
  * @return the Number value
  */
-double NodeSet::numberValue()
+double txNodeSet::numberValue()
 {
     nsAutoString str;
     stringValue(str);
@@ -386,14 +386,14 @@ double NodeSet::numberValue()
  * Creates a String representation of this ExprResult
  * @param aStr the destination string to append the String representation to.
  */
-void NodeSet::stringValue(nsAString& aStr)
+void txNodeSet::stringValue(nsAString& aStr)
 {
     if (mElementCount > 0)
         XMLDOMUtils::getNodeValue(get(0), aStr);
 }
 
 nsAString*
-NodeSet::stringValuePointer()
+txNodeSet::stringValuePointer()
 {
     return nsnull;
 }
@@ -405,7 +405,7 @@ NodeSet::stringValuePointer()
  * @param  aSize requested number of elements
  * @return true if allocation succeded, false on out of memory
  */
-MBool NodeSet::ensureSize(int aSize)
+MBool txNodeSet::ensureSize(int aSize)
 {
     if (aSize <= mBufferSize)
         return MB_TRUE;
@@ -445,12 +445,12 @@ MBool NodeSet::ensureSize(int aSize)
  *                 always >= aFirst and <= aLast + 1. This value is always
  *                 set, even if aNode already exists in the NodeSet
  */
-int NodeSet::findPosition(Node* aNode, int aFirst,
+int txNodeSet::findPosition(Node* aNode, int aFirst,
                           int aLast, MBool& aNonDup) const
 {
-    NS_ASSERTION(aNode, "missing node in NodeSet::findPosition");
+    NS_ASSERTION(aNode, "missing node in txNodeSet::findPosition");
     NS_ASSERTION(aFirst <= aLast+1 && aLast < mElementCount,
-                 "bad position in NodeSet::findPosition");
+                 "bad position in txNodeSet::findPosition");
 
     if (aLast - aFirst <= 1) {
         // If we search 2 nodes or less there is no point in further divides

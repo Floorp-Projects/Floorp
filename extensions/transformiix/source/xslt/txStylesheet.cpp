@@ -191,11 +191,10 @@ txStylesheet::findTemplate(Node* aNode,
     }
 
 #ifdef PR_LOGGING
-    nsAutoString mode;
+    nsAutoString mode, nodeName;
     if (aMode.mLocalName) {
         aMode.mLocalName->ToString(mode);
     }
-    nsAutoString nodeName;
     aNode->getNodeName(nodeName);
     if (matchTemplate) {
         nsAutoString matchAttr;
@@ -218,18 +217,22 @@ txStylesheet::findTemplate(Node* aNode,
         switch(aNode->getNodeType()) {
             case Node::ELEMENT_NODE :
             case Node::DOCUMENT_NODE :
+            {
                 matchTemplate = mContainerTemplate;
                 break;
-
+            }
             case Node::ATTRIBUTE_NODE :
             case Node::TEXT_NODE :
             case Node::CDATA_SECTION_NODE :
+            {
                 matchTemplate = mCharactersTemplate;
                 break;
-
+            }
             default:
+            {
                 matchTemplate = mEmptyTemplate;
                 break;
+            }
         }
     }
 
@@ -277,7 +280,7 @@ txStylesheet::isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext)
 {
     PRInt32 frameCount = mStripSpaceTests.Count();
     if (!aNode || frameCount == 0) {
-        return MB_FALSE;
+        return PR_FALSE;
     }
 
     switch (aNode->getNodeType()) {
@@ -306,7 +309,8 @@ txStylesheet::isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext)
             return isStripSpaceAllowed(aNode->getParentNode(), aContext);
         }
     }
-    return MB_FALSE;
+
+    return PR_FALSE;
 }
 
 nsresult

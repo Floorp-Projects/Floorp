@@ -300,7 +300,8 @@ MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
         }
         parent = parent->getParentNode();
     }
-    return MB_FALSE;
+
+    return PR_FALSE;
 }
 
 // macros for inclusion of char range headers
