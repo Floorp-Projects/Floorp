@@ -44,12 +44,15 @@
 #include "math.h"
 #include "htrdf.h"
 
-
+#ifdef	SMART_MAIL
+#include "pm2rdf.h"
+#endif
 
 /* HT data structures and defines */
 
 #define ITEM_LIST_SIZE			500		/* XXX ITEM_LIST_SIZE should be dynamic */
 #define ITEM_LIST_ELEMENT_SIZE		20
+
 #define NUM_MENU_CMDS           	40
 
 #define RDF_SITEMAP			1

@@ -24,46 +24,24 @@
 
 #ifdef SMART_MAIL
 
-#include "net.h"
-#include "rdf-int.h"
-#include <stdio.h>
+#include "pm2rdf.h"
 
-extern	MWContext	*FE_GetRDFContext(void);
-extern char*  profileDirURL;
 
-struct MailFolder {
-  FILE *sfile;
-  FILE *mfile;
-  struct MailMessage* msg;
-  struct MailMessage* tail;
-  struct MailMessage* add;
-  RDF_Resource top;
-  int32 status;
-  RDFT rdf;
-  char* trash;
-};
 
-typedef struct MailFolder* MF;
+extern	char		*profileDirURL;
 
-struct MailMessage {
-  char* subject;
-  char* from;
-  char* date;
-  int32 offset;
-  char* flags;
-  int32 summOffset;
-  RDF_Resource r;
-  struct MailMessage *next;
-};
 
-typedef struct MailMessage* MM;
 
 void
-Pop_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx) {
+Pop_GetUrlExitFunc (URL_Struct *urls, int status, MWContext *cx)
+{
 }
 
+
+
 void 
-GetPopToRDF (RDFT rdf) {
+GetPopToRDF (RDFT rdf)
+{
   MF folder = (MF) rdf->pdata;
   if (endsWith("/inbox", rdf->url)) {
     char* popurl = getMem(100);
@@ -80,29 +58,43 @@ GetPopToRDF (RDFT rdf) {
     urls = NET_CreateURLStruct(popurl, NET_DONT_RELOAD);
     if (urls != NULL)  {
       urls->fe_data = rdf;
-      NET_GetURL(urls, FO_PRESENT, FE_GetRDFContext(), Pop_GetUrlExitFunc);
+      NET_GetURL(urls, FO_PRESENT, gRDFMWContext(), Pop_GetUrlExitFunc);
     }
   }
 }
 
 
-void PopGetNewMail (RDF_Resource r) {
+
+void
+PopGetNewMail (RDF_Resource r)
+{
   if (containerp(r) && (resourceType(r) == PM_RT)) {
     MF folder = (MF) r->pdata;
     GetPopToRDF(folder->rdf);
   }
 }
 
-char* stripCopy (char* str) {
+
+
+char *
+stripCopy (char* str)
+{
   return copyString(XP_StripLine(str)); 
 }
 
-PRBool msgDeletedp (MM msg) {
+
+
+PRBool
+msgDeletedp (MM msg)
+{
   return (msg && (msg->flags) && (msg->flags[4] == '8'));
 }
 
 
-FILE *openPMFile (char* path) {
+
+FILE *
+openPMFile (char* path)
+{
 	FILE* ans = fopen(path, "r+");
 	if (!ans) {
 		ans = fopen(path, "w");
@@ -113,7 +105,10 @@ FILE *openPMFile (char* path) {
 }
 
 
-void addMsgToFolder (MF folder, MM msg) {
+
+void
+addMsgToFolder (MF folder, MM msg)
+{
   if (!folder->tail) {
     folder->msg = folder->tail = msg;
   } else {
@@ -122,8 +117,11 @@ void addMsgToFolder (MF folder, MM msg) {
   }
 }
 
+
+
 void 
-RDF_StartMessageDelivery (RDFT rdf) {
+RDF_StartMessageDelivery (RDFT rdf)
+{
   MF folder = (MF) rdf->pdata;
   MM msg    = (MM) getMem(sizeof(struct MailMessage));
   char* nurl = getMem(100);
@@ -141,7 +139,10 @@ RDF_StartMessageDelivery (RDFT rdf) {
 }
 
 
-char* MIW1 (const char* block, int32 len) {
+
+char *
+MIW1 (const char* block, int32 len)
+{
   char* blk = XP_ALLOC(len +1);
   int32 n = 0;
   int32 m = 0;
@@ -163,8 +164,11 @@ char* MIW1 (const char* block, int32 len) {
   return blk;
 }
 
+
+
 void 
-RDF_AddMessageLine (RDFT rdf, char* block, int32 length) {
+RDF_AddMessageLine (RDFT rdf, char* block, int32 length)
+{
   MF folder = (MF) rdf->pdata;
   MM msg    = folder->add;
   char* temp = getMem(length+1);
@@ -181,8 +185,11 @@ RDF_AddMessageLine (RDFT rdf, char* block, int32 length) {
   freeMem(temp);
 }
 
-#define TON(s) ((s == NULL) ? "" : s)  
-void writeMsgSum (MF folder, MM msg) {
+
+
+void
+writeMsgSum (MF folder, MM msg)
+{
   if (!msg->flags) msg->flags = getMem(4);
   if (msg->summOffset == -1) {
     fseek(folder->sfile, 0L, SEEK_END);
@@ -194,9 +201,12 @@ void writeMsgSum (MF folder, MM msg) {
           msg->flags, ftell(folder->sfile), 
           TON(msg->from), TON(msg->subject), TON(msg->date), msg->offset );
 }
-      
+
+
+
 void 
-RDF_FinishMessageDelivery (RDFT rdf) {
+RDF_FinishMessageDelivery (RDFT rdf)
+{
   MF folder = (MF) rdf->pdata;
   MM msg    = folder->add;
   folder->add = NULL;
@@ -211,8 +221,11 @@ RDF_FinishMessageDelivery (RDFT rdf) {
                      RDF_RESOURCE_TYPE, 1);       
 }
 
+
+
 void 
-setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag) {
+setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag)
+{
   MF folder = (MF) rdf->pdata;
   MM msg    = (MM)r->pdata;
   fseek(folder->sfile, msg->summOffset+9, SEEK_SET);
@@ -220,10 +233,16 @@ setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag) {
   /* need to mark the flag in the message file */
   fflush(folder->sfile);
 }
+
+
+
 #define BUFF_SIZE 100000 
 
+
+
 PRBool
-MoveMessage (char* to, char* from, MM message) {
+MoveMessage (char* to, char* from, MM message)
+{
   RDFT todb = getTranslator(to);
   RDFT fromdb = getTranslator(from);
   MF tom = todb->pdata;
@@ -237,11 +256,15 @@ MoveMessage (char* to, char* from, MM message) {
   while (fgets(buffer, BUFF_SIZE, fom->mfile) && strncmp("From ", buffer, 5)) {
     fputs(buffer, tom->mfile);
   }
+  freeMem(buffer);
   return 1;
 }
-  
-          
-void readSummaryFile (RDFT rdf) {
+
+
+
+void
+readSummaryFile (RDFT rdf)
+{
   if (startsWith("mailbox://", rdf->url)) {
     char* url = rdf->url;
     char* folderURL = &url[10];
@@ -269,9 +292,6 @@ void readSummaryFile (RDFT rdf) {
     folder->rdf = rdf;
     folder->sfile = f;
     folder->mfile = mf;
-
-    
-    
 
     while (f && fgets(buff, BUFF_SIZE, f)) {
       if (startsWith("Status:", buff)) {
@@ -334,9 +354,12 @@ void readSummaryFile (RDFT rdf) {
   }
 }
 
+
+
 void *
 pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, 
-                PRBool inversep,  PRBool tv) {
+                PRBool inversep,  PRBool tv)
+{
   if ((resourceType(u) == PM_RT) && tv && (!inversep) && (type == RDF_STRING_TYPE) && (u->pdata)) {
     MM msg = (MM) u->pdata;
     if (s == gNavCenter->from) {
@@ -349,10 +372,12 @@ pmGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
   } else return NULL;
 }
 
-        
+
+
 RDF_Cursor
 pmGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, 
-                 PRBool inversep,  PRBool tv) {
+                 PRBool inversep,  PRBool tv)
+{
   if ((resourceType(u) == PM_RT) && tv && (inversep) && (type == RDF_RESOURCE_TYPE)
       && (s == gCoreVocab->RDF_parent)) {
     MF folder = (MF)rdf->pdata;
@@ -371,6 +396,7 @@ pmGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
 }
 
 
+
 void *
 pmNextValue (RDFT rdf, RDF_Cursor c)
 {
@@ -387,6 +413,7 @@ pmNextValue (RDFT rdf, RDF_Cursor c)
 }
 
 
+
 RDF_Error
 pmDisposeCursor (RDFT mcf, RDF_Cursor c)
 {
@@ -394,10 +421,15 @@ pmDisposeCursor (RDFT mcf, RDF_Cursor c)
   return noRDFErr;
 }
 
-FILE *getPopMBox (RDFT db) {
+
+
+FILE *
+getPopMBox (RDFT db)
+{
   MF folder = (MF)db->pdata;
   return folder->mfile;
 }
+
 
 
 PRBool
@@ -408,9 +440,10 @@ pmHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType
 }
 
 
+
 PRBool
-pmRemove (RDFT rdf, RDF_Resource u, RDF_Resource s,
-                   void* v, RDF_ValueType type) {
+pmRemove (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
+{
   if ((startsWith("mailbox://", rdf->url)) && (resourceType(u) == PM_RT) && (s == gCoreVocab->RDF_parent)
       && (type == RDF_RESOURCE_TYPE)) {
     RDF_Resource mbox = (RDF_Resource) v;
@@ -424,6 +457,8 @@ pmRemove (RDFT rdf, RDF_Resource u, RDF_Resource s,
     }
   } else return false;
 }
+
+
 
 RDFT
 MakePopDB (char* url)
@@ -459,10 +494,12 @@ MakePopDB (char* url)
         return NULL;
       }
     } 
+    else return NULL;
   } else return NULL;
 }
-      
-    
+
+
+
 RDFT
 MakeMailAccountDB (char* url)
 {
@@ -478,7 +515,7 @@ MakeMailAccountDB (char* url)
     if (dir == NULL) {
       if ( CallPRMkDirUsingFileURL(fileurl, 00700) > -1) dir = OpenDir(fileurl);
     }
-    while (dir && (de = PR_ReadDir(dir, n++))) {
+    while ((dir != NULL) && ((de = PR_ReadDir(dir, (PRDirFlags)(n++))) != NULL)) {
       if ((!endsWith(".ssf", de->name)) && (!endsWith(".dat", de->name)) && 
           (!endsWith(".snm", de->name)) && (!endsWith("~", de->name))) {
         RDF_Resource r;
@@ -496,8 +533,3 @@ MakeMailAccountDB (char* url)
 }
 
 #endif  
-    
-    
-    
-    
-

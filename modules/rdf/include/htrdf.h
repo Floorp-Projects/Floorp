@@ -254,7 +254,7 @@ PR_PUBLIC_API(uint32)	HT_GetViewListCount(HT_Pane pane);
 /*
  * HT_GetNthItem / HT_GetNodeIndex
  * get the nth resource in a view (or NULL if not in view),
- * or find a resource's index in a view (or -1 if not in view)
+ * or find a resource's index in a view
  */
 PR_PUBLIC_API(HT_Resource)  HT_GetNthItem (HT_View view, uint32 theIndex);
 PR_PUBLIC_API(uint32)	HT_GetNodeIndex(HT_View view, HT_Resource node);
@@ -267,14 +267,13 @@ PR_PUBLIC_API(uint16)	HT_GetItemIndentation(HT_Resource r);
 PR_PUBLIC_API(HT_Resource)  HT_GetParent (HT_Resource node);
 
 /*
- * HT_NodeDisplayString (XXX needs work)
+ * HT_NodeDisplayString/HT_ViewDisplayString (obsolete)
  * obtain the name of a node
  */
 PR_PUBLIC_API(HT_Error)     HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen);	/* obsolete! */
 PR_PUBLIC_API(HT_Error)     HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen);		/* obsolete! */
 
-PR_PUBLIC_API(PRBool)
-HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData);
+PR_PUBLIC_API(PRBool)	HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData);
 PR_PUBLIC_API(PRBool)	HT_GetNodeData (HT_Resource node, void *token,
 					uint32 tokenType, void **data);
 PR_PUBLIC_API(PRBool)	HT_IsNodeDataEditable(HT_Resource node,
@@ -353,7 +352,8 @@ enum    _HT_MenuCmd     {
 	HT_CMD_REFRESH, HT_CMD_EXPORT, HT_CMD_REMOVE_BOOKMARK_MENU,
 	HT_CMD_REMOVE_BOOKMARK_FOLDER, HT_CMD_SET_PASSWORD, HT_CMD_REMOVE_PASSWORD,
 	HT_CMD_EXPORTALL, HT_CMD_UNDO, HT_CMD_NEW_WORKSPACE, HT_CMD_RENAME, HT_CMD_FIND,
-    HT_CMD_GET_NEW_MAIL};
+	HT_CMD_GET_NEW_MAIL
+	};
 
 typedef enum    _HT_MenuCmd     HT_MenuCmd;
 
@@ -449,6 +449,8 @@ PR_PUBLIC_API(HT_Error)	HT_SetEnabledState(HT_Resource node, PRBool isEnabled);
 
 PR_PUBLIC_API(PRBool)	HT_Launch(HT_Resource node, MWContext *context);
 PR_PUBLIC_API(PRBool)	HT_LaunchURL(HT_Pane pane, char *url, MWContext *context);
+
+PR_PUBLIC_API(void)	HT_TypeTo(HT_Pane pane, char *typed);
 
 /*
  * HT_NewCursor, HT_GetNextItem, HT_DeleteCursor

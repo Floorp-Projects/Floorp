@@ -37,12 +37,15 @@
 #include "ht.h"
 #include "utils.h"
 
-	/* globals */
-RDFL		gAllDBs = 0;
-
 #ifdef DEBUG_guha
 #define SMART_MAIL 1
 #endif
+
+
+	/* globals */
+RDFL		gAllDBs = 0;
+
+
 
 RDFT
 getTranslator (char* url)

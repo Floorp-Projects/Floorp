@@ -58,7 +58,7 @@ char *			gNavCenterDataSources1[15] = {
 #ifdef	XP_MAC
 			"rdf:appletalk",
 #endif
-			"rdf:lfs",  "rdf:ht",
+			"rdf:lfs", "rdf:ht",
 			"rdf:columns",  "rdf:find", NULL
 			};
 
@@ -8555,6 +8555,37 @@ HT_GetPane (HT_View view)
 		pane = view->pane;
 	}
 	return(pane);
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_TypeTo(HT_Pane pane, char *typed)
+{
+	HT_Resource	node;
+	HT_View		view;
+	uint32		count, loop;
+	char		*name;
+
+	XP_ASSERT(pane != NULL);
+	XP_ASSERT(typed != NULL);
+
+	if ((pane == NULL) || (typed == NULL))	return;
+	if ((view = HT_GetSelectedView(pane)) == NULL)	return;
+	count = HT_GetItemListCount(view);
+	for (loop=0; loop<count; loop++)
+	{
+		if ((node = HT_GetNthItem(view, loop)) == NULL)	break;
+		if ((name = HT_GetNodeName(node)) != NULL)
+		{
+			if (compareStrings(typed, name) >= 0)
+			{
+				HT_SetSelection(node);
+				sendNotification(node, HT_EVENT_NODE_SCROLLTO);
+				break;
+			}
+		}
+	}
 }
 
 
