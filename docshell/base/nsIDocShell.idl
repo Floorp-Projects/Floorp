@@ -54,24 +54,11 @@ interface nsIDocShell : nsISupports
 	loading.
 
 	@param uri - The URI to load.
+	@param referrer - The referrer of this load.
 	@param presContext - Presentation Context to use for the new URL.  This
 		may be null.
 	*/
-	[noscript]void loadURI(in nsIURI uri, in nsIPresContext presContext);
-
-	/*
-	Loads a given URI through the specified adapter.  This will give priority
-	to loading the requested URI in the object implementing this interface.
-	If it can't be loaded here	however, the URL dispatcher will go through its
-	normal process of content loading.
-
-	@param uri - The URI to load.
-	@param presContext - Presentation Context to use for the new URL.  This
-		may be null.
-	@param adapterBinding - The local IP address of the adapter to bind to.
-	*/
-	[noscript]void loadURIVia(in nsIURI uri, in nsIPresContext presContext, 
-		in unsigned long adapterBinding);
+	[noscript]void loadURI(in nsIURI uri, in nsIURI referrer);
 
 	/*
 	Stops a current load.  This simply stops the network portion of the load.
