@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 DIRS = build
 
 CPPSRCS		= \
+		nsAppFileLocProviderProxy.cpp \
 		nsJavaInterfaces.cpp \
 		nsJavaWrapper.cpp \
 		nsJavaXPTCStub.cpp \
@@ -65,6 +66,7 @@ JAVA_SRCS = \
 		XPCOM.java \
 		XPCOMException.java \
 		GeckoEmbed.java \
+		AppFileLocProvider.java \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)

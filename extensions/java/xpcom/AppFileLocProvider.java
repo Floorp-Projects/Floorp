@@ -39,9 +39,8 @@ package org.mozilla.xpcom;
 
 import java.io.*;
 
-public final class GeckoEmbed {
+public interface AppFileLocProvider {
 
-  public static native void initEmbedding(File aMozBinDirectory, AppFileLocProvider aAppFileLocProvider);
-  public static native void termEmbedding();
+  public File getFile(String prop, boolean[] persistent);
 
 }
