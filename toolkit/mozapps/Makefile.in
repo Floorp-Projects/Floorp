@@ -51,7 +51,7 @@ ifdef MOZ_THUNDERBIRD
 DIRS    += pref/skin downloads/skin
 else
 # Use Pinstripe on MacOS X
-DIRS	+= pref/skin/mac downloads/skin/mac
+DIRS	+= pref/skin/mac downloads/skin/mac 
 endif
 else
 # Use Qute on Windows and Linux
