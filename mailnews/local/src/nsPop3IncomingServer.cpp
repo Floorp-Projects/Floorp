@@ -195,7 +195,19 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
         PRBool downloadOnBiff = PR_FALSE;
         rv = GetDownloadOnBiff(&downloadOnBiff);
         if (downloadOnBiff)
-            rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
+        {
+            nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
+            PRBool parsingInbox;
+            if (localInbox && NS_SUCCEEDED(rv))
+            {
+              rv = localInbox->GetParsingInbox(&parsingInbox);
+              NS_ENSURE_SUCCESS(rv,rv);
+              if (!parsingInbox)
+                rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
+              else
+                rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+            }
+        }
         else
             rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
                                               nsnull);
