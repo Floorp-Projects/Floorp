@@ -47,7 +47,7 @@ CPPSRCS		= \
 		nsUCvMathModule.cpp \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 CPPSRCS		+= \
 		nsUnicodeToTeXCMRttf.cpp \
 		nsUnicodeToTeXCMMIttf.cpp \
