@@ -24,6 +24,7 @@
   {
     min-width             : 0px;
     margin                : 8px 0px 8px 6px;
+    vertical-align        : middle;
   }
 
 #bookmarks-button,
@@ -137,25 +138,31 @@
 /*all the urlbar stuff*/
 #page-proxy-button
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
-	  cursor                : grab;
+    list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
+    cursor                : grab;
     margin                : 2px 4px 2px 2px;
   } 
 
 #page-proxy-button[pageproxystate="valid"]:hover
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/location-hover.gif");
   }
   
 #page-proxy-button[pageproxystate="valid"]:hover:active
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
   }
 
 #page-proxy-button[pageproxystate="invalid"] 
   {
     cursor                  : default;
-	  list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
+    list-style-image        : url("chrome://communicator/skin/bookmarks/location-disabled.gif");
+  }
+
+#ubhist-keyword-popup 
+  {
+    margin                : 2px 3px 3px 0px !important;
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif"); 
   }
 
 #content-frame 
@@ -167,8 +174,8 @@
 #nav-bar-inner
   {
     -moz-binding          : url("chrome://global/skin/classicBindings.xml#autostretch-never");
-    min-width			        : 0px;
-    margin				        : 8px 0px 8px 6px;
+    min-width             : 0px;
+    margin                : 8px 0px 8px 6px;
   }
 
 #search-button
