@@ -121,7 +121,7 @@ nsHTMLEntities::ReleaseTable(void)
 {
   if (0 == --gTableRefCount) {
     if (gEntityArray) {
-      delete gEntityArray;
+      delete[] gEntityArray;
       gEntityArray = nsnull;
     }
     if (gEntityToCodeTree) {
