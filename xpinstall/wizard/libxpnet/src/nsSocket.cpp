@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 /* Platform-specific headers for socket functionality */
 #if defined(__unix) || defined(__unix__)
@@ -60,6 +61,10 @@ const int kTimeoutSelectUsecs = 100000;
 const int kKilobyte = 1024;
 const int kReadBufSize = 1024;
 
+#ifdef _WINDOWS
+static int sbWinSockInited = FALSE;
+#endif
+
 nsSocket::nsSocket(char *aHost, int aPort) :
     mHost(aHost),
     mPort(aPort),
@@ -83,33 +88,38 @@ nsSocket::Open()
     WSADATA wsaData;
     WORD wVersionRequested;
     
-    /* We don't care which version we get because we're not
-     * doing any specific to a particular winsock version. */
-    /* Request for version 2.2 */
-    wVersionRequested = MAKEWORD(2, 2);
-    err = WSAStartup(wVersionRequested, &wsaData);
-    if (err == WSAVERNOTSUPPORTED)
+    if (!sbWinSockInited)
     {
-        /* Request for version 1.1 */
-        wVersionRequested = MAKEWORD(1, 1);
+        /* We don't care which version we get because we're not
+         * doing any specific to a particular winsock version. */
+        /* Request for version 2.2 */
+        wVersionRequested = MAKEWORD(2, 2);
         err = WSAStartup(wVersionRequested, &wsaData);
         if (err == WSAVERNOTSUPPORTED)
         {
-            /* Request for version 1.0 */
-            wVersionRequested = MAKEWORD(0, 1);
+            /* Request for version 1.1 */
+            wVersionRequested = MAKEWORD(1, 1);
             err = WSAStartup(wVersionRequested, &wsaData);
             if (err == WSAVERNOTSUPPORTED)
             {
-                /* Request for version 0.4 */
-                wVersionRequested = MAKEWORD(4, 0);
+                /* Request for version 1.0 */
+                wVersionRequested = MAKEWORD(0, 1);
                 err = WSAStartup(wVersionRequested, &wsaData);
+                if (err == WSAVERNOTSUPPORTED)
+                {
+                    /* Request for version 0.4 */
+                    wVersionRequested = MAKEWORD(4, 0);
+                    err = WSAStartup(wVersionRequested, &wsaData);
+                }
             }
         }
-    }
 
-    if (err != 0)
-    {
-        return E_WINSOCK;
+        if (err != 0)
+        {
+            return E_WINSOCK;
+        }
+        else
+            sbWinSockInited = TRUE;
     }
 #endif
 
@@ -129,8 +139,21 @@ nsSocket::Open()
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(mPort);
 
-    if ( (hptr = gethostbyname(mHost)) == NULL )
-        return E_INVALID_HOST;
+    if ((hptr = gethostbyname(mHost)) == NULL )
+    {
+        if (IsIPAddress(mHost) == OK)
+        {
+            unsigned long netAddr;
+
+            netAddr = inet_addr(mHost);
+            if ((hptr = gethostbyaddr((const char *)&netAddr, sizeof(unsigned long), AF_INET)) == NULL )
+                return E_INVALID_HOST;
+        }
+        else
+        {
+            return E_INVALID_HOST;
+        }
+    }
 
     memcpy(&servaddr.sin_addr, (struct in_addr **) hptr->h_addr_list[0],
            sizeof(struct in_addr));
@@ -346,9 +369,14 @@ nsSocket::Close()
 
 /* funky windows shutdown of winsock */
 #ifdef _WINDOWS
-    int wsaErr = WSACleanup();
-    if (wsaErr != 0)
-        rv = wsaErr;
+    if (sbWinSockInited)
+    {
+        int wsaErr = WSACleanup();
+        if (wsaErr != 0)
+            rv = wsaErr;
+
+        sbWinSockInited = FALSE;
+    }
 #endif
 
     return rv;
@@ -387,6 +415,39 @@ nsSocket::GetHostPortString(char **aHostPort)
       (int)((char*)&servaddr.sin_port)[1] & 0xFF);
 
     return rv;    
+}
+
+int
+nsSocket::IsIPAddress(char *aAddress)
+{
+    int addr[4];
+    int numDots = 0;
+    
+    for (unsigned int i=0; i < strlen(aAddress); ++i)
+    {
+        if (isspace(aAddress[i]))
+            return E_INVALID_ADDR;
+        if (aAddress[i] == '.')
+        {
+            ++numDots;
+            if (numDots > 3)
+                return E_INVALID_ADDR;
+        }
+        else if (!isdigit(aAddress[i]))
+            return E_INVALID_ADDR;
+    }
+
+    if (sscanf(aAddress, "%d.%d.%d.%d", 
+        &addr[0], &addr[1], &addr[2], &addr[3]) != 4)
+        return E_INVALID_ADDR;
+
+    if ((addr[0] > 255) || 
+        (addr[1] > 255) || 
+        (addr[2] > 255) || 
+        (addr[3] > 255))
+        return E_INVALID_ADDR;
+
+    return OK;
 }
 
 float

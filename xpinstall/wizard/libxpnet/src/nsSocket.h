@@ -56,7 +56,8 @@ public:
         E_LISTEN        = -1014,
         E_ACCEPT        = -1015,
         E_GETSOCKNAME   = -1016,
-				E_WINSOCK       = -1017
+        E_WINSOCK       = -1017,
+        E_INVALID_ADDR  = -1018
     };
 
 //----------------------------------------------------------------------
@@ -79,6 +80,8 @@ private:
     int   mPort;
     int   mFd; // connected socket
     int   mListenFd; // listening socket (only if SrvOpen() was called)
+
+    int   IsIPAddress(char *aAddress);
 };
 
 //----------------------------------------------------------------------
