@@ -60,6 +60,19 @@ sub current_directory()
 	return $current_directory;
 }
 
+# Uses the "compile script" extension to compile a script.
+sub compile_script($;$) {
+	my($scriptPath, $outputPath) = @_;
+	
+	#// generate a script to compile a script file.
+	my $script = <<END_OF_APPLESCRIPT;
+	store script (compile script (alias "$scriptPath")) in (file "$outputPath") replacing yes
+END_OF_APPLESCRIPT
+
+	#// run the script.
+	MacPerl::DoAppleScript($script);
+}
+
 # _useMANIFESTOLib()
 # returns 1 on success
 # Search the include path for the file called MANIFESTOLib
@@ -67,31 +80,34 @@ sub _useMANIFESTOLib()
 {
 	unless ( defined($MANIFESTOLib) )
 	{
-		my($libname) = "MANIFESTOLib";
-# try the directory we were run from
-		my($c) = dirname($0) . ":" . $libname;
-		if ( -e $c)
-		{
-			$MANIFESTOLib = $c;
+		my($scriptName) = "MANIFESTOLib.script";
+		my($libName) = "MANIFESTOLib";
+		# try the directory we were run from
+		my($scriptPath) = dirname($0) . ":" . $scriptName;
+		my($libPath) = dirname($0) . ":" . $libName;
+		# make sure that the compiled script is up to date with the textual script.
+		unless (-e $libPath && getModificationDate($libPath) >= getModificationDate($scriptPath)) {
+			print "# Recompiling MANIFESTOLib.script.\n";
+			compile_script($scriptPath, $libPath);
 		}
-		else
-		{
-	# now search the include directories
+		if ( -e $libPath) {
+			$MANIFESTOLib = $libPath;
+		} else {
+			# now search the include directories
 			foreach (@INC)
 			{
 				unless ( m/^Dev:Pseudo/ )	# This is some bizarre MacPerl special-case directory
 				{
-					$c = $_ . $libname;
-					if (-e $c)
+					$libPath = $_ . $libName;
+					if (-e $libPath)
 					{
-						$MANIFESTOLib = $c;
+						$MANIFESTOLib = $libPath;
 						last;
 					}
 				}
 			}
 		}
-		if (! (-e $MANIFESTOLib))
-		{
+		if (! (-e $MANIFESTOLib)) {
 			print STDERR "MANIFESTOLib lib could not be found! $MANIFESTOLib";
 			return 0;
 		}
@@ -121,7 +137,7 @@ sub setExtension($;$;$) {
 
 sub ReconcileProject($;$) {
 	#// turn this feature on by removing the following line.
-	return 0;
+	return 1;
 
 	my($projectPath, $manifestoPath) = @_;
 	my($sourceTree) = current_directory();
