@@ -46,7 +46,10 @@ void CreateHelpMenu (void)
 
 		Hlp <<jsprefname<<"\n";
 	}
-	Hlp <<"     <RDF:li resource=\"urn:helpmenu:customizedHelp\" />\n";
+
+	Hlp << "	<menuitem label=\"" << HelpMenuName << "\"\n"; 
+	Hlp << "	 position=\"6\"\n"; 
+	Hlp << "	 oncommand=\"openTopWin('" << HelpMenuUrl << "');\" />\n";
 
 //	Hlp <<"<menuitem position=\"7\" value=\""<<HelpMenuName<<"\"\n\t";
 //	Hlp <<"oncommand=\"openTopWin('"<<HelpMenuUrl<<"')\" /> \n\t";
@@ -60,14 +63,6 @@ void CreateHelpMenu (void)
 		help2.getline(jsprefname,200);
 		Hlp <<jsprefname<<"\n";
 	}
-
-	Hlp <<"<RDF:Description about=\"urn:helpmenu:customizedHelp\">\n";
-	Hlp	<<"	<NC:level>1</NC:level> \n";
-	Hlp <<"	<NC:title>"<<HelpMenuName<<"</NC:title> \n";
-	Hlp <<"	<NC:content>openTopWin('"<<HelpMenuUrl<<"')</NC:content>\n";
-	Hlp <<"</RDF:Description>\n";
-	Hlp <<"</RDF:RDF>\n";
-
 
 	Hlp.close();
 }

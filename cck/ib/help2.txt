@@ -1,58 +1,55 @@
-  </RDF:Seq>
-<!-- root end    -->
+    <menuitem id="releaseUrl" hidden="true" />
+  </menupopup>
+</menu>
 
-<!-- Description -->
-<!-- help contents -->
 
-<RDF:Description about="urn:helpmenu:separator">
-    <NC:sep>y</NC:sep>
-</RDF:Description>
+<!-- hide/show elements from pref-navigator.xul -->
+<!-- 
+::::: there is a mapping from the name of the pref to the id of the element in xul 
+::::: browser.toolbars.showbutton.XXX maps to an element with an ID of XXX-button
+::::: so if you wanted to hide an element with ID of foobar-button you'd have a pref with 
+::::: browser.toolbars.showbutton.foobar
+::::: you also need to add a default start pref in mozilla tree at:
+::::: /modules/libpref/src/init/all.js
+-->
+  <titledbox id="prefShowButtons">
+     <box orient="vertical">
+          <checkbox allowevents="true"
+                        id="myNetscapeButton"
+                        label="&myNetscapeButton.label;"
+                        pref="true"
+                        preftype="bool"
+                        prefstring="browser.toolbars.showbutton.mynetscape"
+                        prefattribute = "checked"/>
 
-<RDF:Description about="urn:helpmenu:separator2">
-    <NC:sep>y</NC:sep>
-</RDF:Description>
+          <checkbox allowevents="true"
+                    id="net2phoneButton"
+                    label="&net2phoneButton.label;"
+                    pref="true"
+                    preftype="bool"
+                    prefstring="browser.toolbars.showbutton.net2phone"
+                    prefattribute = "checked"/>
 
-<RDF:Description about="urn:helpmenu:help-contents">
-    <NC:level>1</NC:level>
-    <NC:title>&helpContentCmd.label;</NC:title>
-    <NC:content>toOpenWindowByType('help:main', 'chrome://communicator/content/help/help_main.xul')</NC:content>
-</RDF:Description>
+          <checkbox allowevents="true"
+                    id="netscapeShopButton"
+                    label="&netscapeShopButton.label;"
+                    pref="true"
+                    preftype="bool"
+                    prefstring="browser.toolbars.showbutton.netscapeshop"
+                    prefattribute = "checked"/>
+   </box>
+  </titledbox>
 
- 
+      <box id="prefShowButtonsbox">
+          <checkbox allowevents="true"
+                    id="netscapeSearchButton"
+                    label="&netscapeSearchButton.label;"
+                    pref="true"
+                    preftype="bool"
+                    prefstring="browser.toolbars.showbutton.netscapesearch"
+                    prefattribute = "checked"
+                    insertafter="searchButton"/>
+      </box>
 
-  <RDF:Description about="urn:helpmenu:whatsnew">
-    <NC:level>1</NC:level>
-    <NC:title>&whatNewCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:whatsnew')</NC:content>
-  </RDF:Description>
-
-  <RDF:Description about="urn:helpmenu:newnet">
-    <NC:level>1</NC:level>
-    <NC:title>&newNetCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:newnethelp')</NC:content>
-  </RDF:Description>
-
-  <RDF:Description about="urn:helpmenu:support">
-    <NC:level>1</NC:level>
-    <NC:title>&supportChannelCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:supporthelp')</NC:content>
-  </RDF:Description>
-
-  <RDF:Description about="urn:helpmenu:security">
-    <NC:level>1</NC:level>
-    <NC:title>&secCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:security')</NC:content>
-  </RDF:Description>
-
-  <RDF:Description about="urn:helpmenu:intl">
-    <NC:level>1</NC:level>
-    <NC:title>&interUsersCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:intlusers')</NC:content>
-  </RDF:Description>
-
-  <RDF:Description about="urn:helpmenu:feedback">
-    <NC:level>1</NC:level>
-    <NC:title>&feedBackCmd.label;</NC:title> 
-    <NC:content>openTopWin('urn:clienturl:help:feedback')</NC:content>
-  </RDF:Description>
+</overlay>
 

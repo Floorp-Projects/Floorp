@@ -14,7 +14,7 @@ replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/bookmarks.html,%CustomBookma
 replaceXPI(regus.xpi,no.jar,bin/defaults/profile/US/bookmarks.html,%CustomBookmarkFile%)
 replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/panels.rdf,%SidebarPath%)
 replaceXPI(regus.xpi,no.jar,bin/defaults/profile/US/panels.rdf,%SidebarPath%)
-replaceXPI(regus.xpi,bin/chrome/US.jar,locale/US/communicator-region/helpMenu.rdf,%HlpRDF%)
+replaceXPI(browser.xpi,bin/chrome/comm.jar,content/communicator/communicatorOverlay.xul,%HlpRDF%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/navigator/mainWindow.dtd,mainWindow.titlemodifier,%CompanyName%)
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/navigator-region/region.properties,browser.startup.homepage,%HomePageURL%)
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/navigator-region/region.properties,browser.throbber.url,%AnimatedLogoURL%)
