@@ -52,6 +52,7 @@
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
 #include "nsLayoutAtoms.h"
+#include "nsIFontMetrics.h"
 
 #include "nsISelectElement.h"
 
@@ -533,9 +534,19 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     mIsScrollbarVisible = PR_FALSE; // XXX temp code
   }
 
-  if (visibleHeight < scrollbarHeight) {
-    visibleHeight  = scrollbarHeight;
-    mMaxHeight     = scrollbarHeight;
+  // The visible height is zero, this could be a select with no options
+  // or a select with a single option that has no content or no label
+  //
+  // So this may not be the best solution, but we get the height of the font
+  // for the list frame and use that as the max/minimum size for the contents
+  if (visibleHeight == 0) {
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+    if (fontMet) {
+      aReflowState.rendContext->SetFont(fontMet);
+      fontMet->GetHeight(visibleHeight);
+      mMaxHeight = visibleHeight;
+    }
   }
 
    // Do a second reflow with the adjusted width and height settings
@@ -2409,7 +2420,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   }
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->mVisible) {
+  if (disp->mVisible != NS_STYLE_VISIBILITY_VISIBLE) {
     return NS_OK;
   }
 
