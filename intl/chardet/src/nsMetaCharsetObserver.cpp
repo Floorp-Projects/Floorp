@@ -307,6 +307,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                         }
                      } // if(NS_SUCCEEDED(res)
                  }
+             }
+             else {
+               res = NS_HTMLPARSER_VALID_META_CHARSET;
              } // if EqualIgnoreCase 
          } // if !newCharset.IsEmpty()
       } // if
