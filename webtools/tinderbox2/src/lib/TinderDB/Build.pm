@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.28 $ 
-# $Date: 2002/04/25 00:13:48 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/04/25 00:31:30 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -805,13 +805,18 @@ sub apply_db_updates {
           ($different_builds) && 
           ($separation < $safe_separation) 
           ) {
+
           print LOG (
                      "Not enough separation between builds. ".
                      "separation: $separation tree: $tree build: $build \n".
                      "");
+
+          # Remove old entry
           shift @{ $DATABASE{$tree}{$build}{'recs'} };          
       }
 
+
+    } 
     # Is this report for the same build as the [0] entry? If so we do not
     # want two entries for the same build. Must throw out either
     # update or record in the database.
