@@ -169,7 +169,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 // Print error dialog
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
-#include "nsIStringBundle.h"
 
 // Printing 
 #include "nsPrintEngine.h"
@@ -193,10 +192,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 //paint forcing
 #include "prenv.h"
 #include <stdio.h>
-
-static const char kDOMStringBundleURL[] =
-  "chrome://communicator/locale/dom/dom.properties";
-
 
 #ifdef NS_DEBUG
 
@@ -989,21 +984,16 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsCOMPtr<nsIPrompt> prompt(do_GetInterface(mContainer));
 
     if (prompt) {
-      nsCOMPtr<nsIStringBundleService>
-        stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-      NS_ENSURE_TRUE(stringService, NS_OK);
-
-      nsCOMPtr<nsIStringBundle> bundle;
-      stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
-      NS_ENSURE_TRUE(bundle, NS_OK);
-
-      nsXPIDLString preMsg, postMsg;
-      nsresult rv;
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("OnBeforeUnloadPreMessage").get(), getter_Copies(preMsg));
-      rv |= bundle->GetStringFromName(NS_LITERAL_STRING("OnBeforeUnloadPostMessage").get(), getter_Copies(postMsg));
+      nsString preMsg, postMsg;
+      rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                              "OnBeforeUnloadPreMessage",
+                                              preMsg);
+      rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                               "OnBeforeUnloadPostMessage",
+                                               postMsg);
 
       // GetStringFromName can succeed, yet give NULL strings back.
-      if (NS_FAILED(rv) || !preMsg || !postMsg) {
+      if (NS_FAILED(rv) || preMsg.IsEmpty() || postMsg.IsEmpty()) {
         NS_ERROR("Failed to get strings from dom.properties!");
         return NS_OK;
       }

@@ -52,6 +52,7 @@
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsContentUtils.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 
@@ -284,23 +285,25 @@ else {
 nsresult
 nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString) 
 {
-  const char * propname = nsFormControlHelper::GetHTMLPropertiesFileName();
   nsresult rv = NS_OK;
   PRInt32 type = GetFormControlType();
+  const char *prop;
   if (type == NS_FORM_INPUT_RESET) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Reset").get(), aString);
+    prop = "Reset";
   } 
   else if (type == NS_FORM_INPUT_SUBMIT) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Submit").get(), aString);
+    prop = "Submit";
   } 
   else if (IsFileBrowseButton(type)) {
-    rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Browse").get(), aString);
+    prop = "Browse";
   }
   else {
     aString.Truncate();
-    rv = NS_OK;
+    return NS_OK;
   }
-  return rv;
+
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                            prop, aString);
 }
 
 NS_IMETHODIMP

@@ -79,6 +79,7 @@
 #include "nsContentCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -153,8 +154,9 @@ nsIsIndexFrame::UpdatePromptLabel()
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
     // it might not be the string "This is a searchable index. Enter search keywords: "
-    result = nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                                     NS_LITERAL_STRING("IsIndexPrompt").get(), prompt);
+    result =
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "IsIndexPrompt", prompt);
   }
 
   mTextContent->SetText(prompt, PR_TRUE);

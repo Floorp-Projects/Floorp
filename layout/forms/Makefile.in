@@ -65,6 +65,9 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  unicharutil \
 		  commandhandler \
+		  xpconnect \
+		  js \
+		  pref \
 		  $(NULL)
 
 EXPORTS		= \

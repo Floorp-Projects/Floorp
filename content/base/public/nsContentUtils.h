@@ -469,6 +469,9 @@ public:
     eXBL_PROPERTIES,
     eXUL_PROPERTIES,
     eLAYOUT_PROPERTIES,
+    eFORMS_PROPERTIES,
+    ePRINTING_PROPERTIES,
+    eDOM_PROPERTIES,
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(PropertiesFile aFile,
@@ -482,12 +485,32 @@ public:
                                   PRUint32 aErrorFlags,
                                   const char *aCategory);
 
+  /**
+   * Get the localized string named |aKey| in properties file |aFile|.
+   */
+  static nsresult GetLocalizedString(PropertiesFile aFile,
+                                     const char* aKey,
+                                     nsString& aResult);
+
+  /**
+   * Fill (with the parameters given) the localized string named |aKey| in
+   * properties file |aFile|.
+   */
+  static nsresult FormatLocalizedString(PropertiesFile aFile,
+                                        const char* aKey,
+                                        const PRUnichar **aParams,
+                                        PRUint32 aParamsLength,
+                                        nsString& aResult);
+
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
                                            nsIDocument *aOldDocument,
                                            JSContext *cx,
                                            JSObject *parent_obj);
+
+  static nsresult EnsureStringBundle(PropertiesFile aFile);
 
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
