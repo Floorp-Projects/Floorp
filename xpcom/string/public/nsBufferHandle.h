@@ -79,8 +79,8 @@ class nsStringAllocator
   /**
    * the following two routines must be provided by the client embedding strings
    */
-nsStringAllocator<char>&      StringAllocator_char();
-nsStringAllocator<PRUnichar>& StringAllocator_wchar_t();
+NS_COM nsStringAllocator<char>&      StringAllocator_char();
+NS_COM nsStringAllocator<PRUnichar>& StringAllocator_wchar_t();
 
 
   /**
