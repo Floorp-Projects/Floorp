@@ -573,7 +573,8 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
   if(mDateTimeFormat)
 	  rv = mDateTimeFormat->FormatTMTime(mApplicationLocale, kDateFormatShort, kTimeFormatNoSeconds, 
 		                tmTime, dateString); 
-  else
+  //Ensure that we always have some string for the date.
+  if(!mDateTimeFormat || NS_FAILED(rv))
   {
 	  dateString ="";
 	  rv = NS_OK;
