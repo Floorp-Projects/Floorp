@@ -340,25 +340,34 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
 
   // find host name within list
   PRInt32 hostCount = mPermissionList.Count();
-  for (PRInt32 i = 0; i < hostCount; ++i) {
-    hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(i));
-    NS_ASSERTION(hostStruct, "corrupt permission list");
+  PRUint32 offset = 0;
 
-    if (hostStruct->host.Equals(hostPort)) {
-      // search for type in the permission list for this host
-      PRInt32 typeCount = hostStruct->permissionList.Count();
-      for (PRInt32 typeIndex = 0; typeIndex < typeCount; ++typeIndex) {
-        typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-        NS_ASSERTION(typeStruct, "corrupt permission list");
+  do {
+    nsDependentCSubstring hostTail(hostPort, offset, hostPort.Length() - offset);
+    for (PRInt32 i = 0; i < hostCount; ++i) {
+      hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(i));
+      NS_ASSERTION(hostStruct, "corrupt permission list");
 
-        if (typeStruct->type == aType) {
-          // type found.  Obtain the corresponding permission
-          *aPermission = typeStruct->permission;
-          return NS_OK;
+      if (hostStruct->host.Equals(hostTail)) {
+        // search for type in the permission list for this host
+        PRInt32 typeCount = hostStruct->permissionList.Count();
+        for (PRInt32 typeIndex = 0; typeIndex < typeCount; ++typeIndex) {
+          typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
+          NS_ASSERTION(typeStruct, "corrupt permission list");
+
+          if (typeStruct->type == aType) {
+            // type found.  Obtain the corresponding permission
+            *aPermission = typeStruct->permission;
+            return NS_OK;
+          }
         }
       }
     }
-  }
+    offset = hostPort.FindChar('.', offset) + 1;
+
+  // XXX Only walk up the domaintree for popups for now 
+  // XXX clean this up. bug 199216.
+  } while ((offset > 0) && (aType == nsIPermissionManager::POPUP_TYPE));
 
   return NS_OK;
 }
