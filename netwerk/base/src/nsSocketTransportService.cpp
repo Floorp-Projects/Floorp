@@ -17,7 +17,6 @@
  * Reserved.
  */
 
-#include <string.h>
 #include "nsILoadGroup.h"
 #include "nsSocketTransportService.h"
 #include "nsSocketTransport.h"
