@@ -56,7 +56,7 @@ $::TreeID = 'default'
 
 my $dir = $::FORM{"dir"};
 $dir = "" unless defined $dir;
-$dir = "" if ($dir =~ /^..\/$/);
+$dir = "" if ($dir =~ /^\.\.\/$/);
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
