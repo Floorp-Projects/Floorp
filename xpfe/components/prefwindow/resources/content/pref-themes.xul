@@ -81,10 +81,72 @@
 		<html:div>
 		    <titledbutton class="push dialog" value="Apply Theme"/>
 		    <titledbutton class="push dialog" value="Delete Theme"/>
-			<titledbutton class="push dialog" value="Details"/>
+			<titledbutton class="push dialog" value="View Details"/>
 		</html:div>
 	  </html:fieldset>
 	</box>
+
+	<box flex="1" align="vertical">
+	  <html:fieldset>
+	    <html:legend align="left">
+		  <html:div>Packages</html:div> 
+		</html:legend>
+		<html:div style="height:100px">
+		<tree style="height:100%;width:100%;">
+			<treecol/>
+			<treechildren>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Global"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Navigator"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Messenger"/>
+				</treerow>
+			  </treeitem>
+			</treechildren>
+		  </tree>
+		</html:div>
+	</html:fieldset>
+	  <spring style="width: 2px"/>
+	  <html:fieldset>
+	    <html:legend align="left">
+		  <html:div>Selected Package: Messenger</html:div> 
+		</html:legend>
+		<html:div>Author: Mozilla.org</html:div>
+		<html:div>Version: 1.0</html:div>
+		<html:div>Site: <html:a href="http://www.mozilla.org">http://www.mozilla.org</html:a></html:div>
+		<html:div style="height:100px">
+		    <tree style="height:80px;width:100%">
+			  <treecol/>
+			  <treechildren>
+			  <treeitem selected="true">
+				<treerow>
+				  <treecell value="That 70's Chrome"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Star Trek"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Candy Land"/>
+				</treerow>
+			  </treeitem>
+			  </treechildren>
+		    </tree>
+		</html:div>
+	  </html:fieldset>
+	</box>
+
   </tabpanel>
 </tabcontrol>
 
