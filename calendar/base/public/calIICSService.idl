@@ -114,10 +114,15 @@ interface calIIcalComponent : nsISupports
                       [array,size_is(count),retval] out string attendees);
     void setAttendees(in PRUint32 count,
                       [array,size_is(count)] in string attendees);
+
+    AUTF8String serializeToICS();
+
+    void addSubcomponent(in calIIcalComponent comp);
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
 interface calIICSService : nsISupports
 {
     calIIcalComponent parseICS(in AUTF8String serialized);
+    calIIcalComponent createIcalComponent(in PRUint32 kind);
 };

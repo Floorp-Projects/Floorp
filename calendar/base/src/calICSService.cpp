@@ -310,6 +310,40 @@ calIcalComponent::SetAttendees(PRUint32 count, const char **attendees)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+calIcalComponent::SerializeToICS(nsACString &serialized)
+{
+    char *icalstr = icalcomponent_as_ical_string(mComponent);
+    if (!icalstr) {
+#ifdef DEBUG
+        fprintf(stderr, "Error serializing: %d (%s)\n",
+                icalerrno, icalerror_strerror(icalerrno));
+#endif
+        return NS_ERROR_FAILURE;
+    }
+
+    serialized.Assign(icalstr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calIcalComponent::AddSubcomponent(calIIcalComponent *comp)
+{
+    /* XXX mildly unsafe assumption here.
+     * To fix it, I will:
+     * - check the object's classinfo to find out if I have one of my
+     *   own objects, and if not
+     * - use comp->serializeToICS and reparse to create a copy.
+     *
+     * I should probably also return the new/reused component so that the
+     * caller has something it can poke at all live-like.
+     */
+    calIcalComponent *ical = NS_STATIC_CAST(calIcalComponent *, comp);
+    icalcomponent_add_component(mComponent, ical->mComponent);
+    ical->mParent = this;
+    return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS1(calICSService, calIICSService)
 
 NS_IMETHODIMP
@@ -332,5 +366,22 @@ calICSService::ParseICS(const nsACString& serialized,
         return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(*component = comp);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calICSService::CreateIcalComponent(PRUint32 kind, calIIcalComponent **comp)
+{
+    icalcomponent *ical = icalcomponent_new((icalcomponent_kind)kind);
+    if (!ical)
+        return NS_ERROR_OUT_OF_MEMORY; // XXX translate
+
+    *comp = new calIcalComponent(ical, nsnull);
+    if (!*comp) {
+        icalcomponent_free(ical);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    NS_ADDREF(*comp);
     return NS_OK;
 }
