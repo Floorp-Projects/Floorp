@@ -14,7 +14,6 @@
 
 * {
   display: block;
-  -moz-user-select: none;
 }
 
 *, *[disabled="true"] {
