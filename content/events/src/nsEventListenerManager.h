@@ -194,6 +194,7 @@ protected:
                                        nsISupports *aObject,
                                        nsIAtom *aName,
                                        nsListenerStruct *aListenerStruct,
+                                       nsIDOMEventTarget* aCurrentTarget,
                                        PRUint32 aSubType);
   nsListenerStruct* FindJSEventListener(EventArrayType aType);
   nsresult SetJSEventListener(nsIScriptContext *aContext,
