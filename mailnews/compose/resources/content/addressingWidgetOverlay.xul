@@ -30,7 +30,7 @@ Rights Reserved.
   <!-- Addressing Widget -->
   <tree id="addressingWidgetTree"
     class="addressingWidget inset" multiple="true"
-    onkeypress="awKeyPress(event, this);"
+    onkeydown="awKeyDown(event, this)"
     onclick="awClickEmptySpace(event.originalTarget, true)"
     ondragover="return DragOverTree(event);"
     ondragdrop="return DropOnAddressingWidgetTree(event);">
@@ -65,6 +65,7 @@ Rights Reserved.
                        class="plain textfield-addressingWidget"
                        style="width:0px;" allowevents="true"
                        onkeypress="awRecipientKeyPress(event, this)"
+                       onkeydown="awRecipientKeyDown(event, this)"
                        autocomplete="true" timeout="300"
                        searchSessionType="addrbook" displayMenu="true"/>
     			</treecell>

@@ -25,6 +25,13 @@ var inputElementType = "";
 var selectElementType = "";
 var selectElementIndexTable = null;
 
+var test_addresses_sequence = false;
+if (prefs)
+	try {
+		test_addresses_sequence = prefs.GetBoolPref("mail.debug.test_addresses_sequence");
+	}
+	catch (ex) {}
+
 function awInputElementName()
 {
     if (inputElementType == "")
@@ -245,6 +252,45 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
   }
 }
 
+function awTestRowSequence()
+{
+  /*
+    This function is for debug and testing purpose only, normal user should not run it!
+    
+    Everytime we insert or delete a row, we must be sure we didn't break the ID sequence of
+    the addressing widget rows. This function will run a quick test to see if the sequence still ok
+    
+    You need to define the pref mail.debug.test_addresses_sequence to true in order to activate it
+  */
+  
+	if (! test_addresses_sequence)
+	  return true;
+ 
+  /* debug code to verify the sequence still good */
+	var body = document.getElementById('addressWidgetBody');
+	var treeitems = body.getElementsByTagName('treeitem');
+	if (treeitems.length == top.MAX_RECIPIENTS )
+	{
+	  for (var i = 1; i <= treeitems.length; i ++)
+	  {
+			var item = treeitems[i - 1];
+      var inputID = item.getElementsByTagName(awInputElementName())[0].getAttribute("id").split("#")[1];
+      var popupID = item.getElementsByTagName(awSelectElementName())[0].getAttribute("id").split("#")[1];
+      if (inputID != i || popupID != i)
+      {
+	      dump("#ERROR: sequence broken at row " + i + ", inputID=" + inputID + ", popupID=" + popupID + "\n");
+	      break;
+	    }
+		}
+    dump("---SEQUENCE OK---\n");
+    return true;		
+	}
+	else
+	  dump("#ERROR: treeitems.length(" + treeitems.length + ") != top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
+
+	return false;
+}
+
 function awCleanupRows()
 {
   var maxRecipients = top.MAX_RECIPIENTS;
@@ -262,6 +308,26 @@ function awCleanupRows()
       rowID ++;
     }
   }
+
+  awTestRowSequence();
+}
+
+function awDeleteRow(rowToDelete)
+{
+  /* When we delete a row, we must reset the id of others row in order to not break the sequence */
+  var maxRecipients = top.MAX_RECIPIENTS;
+  var rowID = rowToDelete;
+  
+  awRemoveRow(rowToDelete);
+
+  for (var row = rowToDelete + 1; row <= maxRecipients; row ++)
+  {
+    awGetInputElement(row).setAttribute("id", "msgRecipient#" + rowID);
+  	awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
+  	rowID ++;
+  }
+
+  awTestRowSequence();
 }
 
 function awClickEmptySpace(targ, setFocus)
@@ -296,19 +362,24 @@ function awReturnHit(inputElement)
 function awDeleteHit(inputElement)
 {
   var row = awGetRowByInputElement(inputElement);
-  var nextRow = awGetInputElement(row+1);
-  var index = 1;
-  if (!nextRow) {
-    nextRow = awGetInputElement(row-1);
-    index = -1;
-  }
-  if (nextRow) {
-    awSetFocus(row+index, nextRow)
-    if (row)
-      awCleanupRows(row);
-  }
-  else
+  
+  /* 1. don't delete the row if it's the last one remaining, just reset it! */
+  if (top.MAX_RECIPIENTS <= 1)
+  {
     inputElement.value = "";
+    return;
+  }
+
+  /* 2. Set the focus to the previous field if possible */
+  if (row > 1)
+    awSetFocus(row - 1, awGetInputElement(row - 1))
+  else
+    awSetFocus(1, awGetInputElement(2))   /* We have to cheat a little bit because the focus will */
+                                          /* be set asynchronusly after we delete the current row, */
+                                          /* therefore the row number still the same! */
+                                                
+  /* 3. Delete the row */
+  awDeleteRow(row);
 }
 
 function awInputChanged(inputElement)
@@ -633,31 +704,35 @@ function awRecipientKeyPress(event, element)
   case 9:
     awTabFromRecipient(element, event);
     break;
-  case 46:
-  case 8:
-    if (!element.value && !this.lastVal)
-      awDeleteHit(element);
-    break;
   }
-  this.lastVal = element.value;
 }
 
-function awKeyPress(event, treeElement)
+function awRecipientKeyDown(event, element)
 {
   switch(event.keyCode) {
   case 46:
   case 8:
+    if (!element.value)
+      awDeleteHit(element);
+    event.preventBubble();  //We need to stop the event else the tree will receive it and the function
+                            //awKeyDown will be executed!
+    break;
+  }
+}
+
+function awKeyDown(event, treeElement)
+{
+  switch(event.keyCode) {
+  case 46:
+  case 8:
+    /* Warning, the treeElement.selectedItems will change everytime we delete a row */
     var selItems = treeElement.selectedItems;
-    var kids = document.getElementById("addressWidgetBody");
-    for (var i = 0; i < selItems.length; i++) {
-      // must not delete the last item
-      if (kids.childNodes.length > 1)
-        kids.removeChild(selItems[i]);
-      else
-        selItems[i].firstChild.lastChild.childNodes[1].value = "";
-      top.MAX_RECIPIENTS--;
+    var length = treeElement.selectedItems.length;
+    for (var i = 1; i <= length; i++) {
+      var inputs = treeElement.selectedItems[0].getElementsByTagName(awInputElementName());
+      if (inputs && inputs.length == 1)
+        awDeleteHit(inputs[0]);
     }
     break;   
   }
 }
-
