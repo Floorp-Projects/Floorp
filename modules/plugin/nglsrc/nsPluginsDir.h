@@ -45,6 +45,8 @@ public:
 	 * Locates the plugins directory in a platform-dependent manner.
 	 */
 	nsPluginsDir(PRUint16 location = PLUGINS_DIR_LOCATION_AUTO);
+  nsPluginsDir(nsFileSpec plugDir) :
+     nsFileSpec(plugDir) {  }
 	virtual ~nsPluginsDir();
 
 	/**
