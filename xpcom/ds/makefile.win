@@ -74,6 +74,7 @@ XPIDLSRCS =                            \
 	.\nsITimelineService.idl       \
 	.\nsIProperties.idl            \
 	.\nsISerializable.idl          \
+        .\nsISimpleEnumerator.idl      \
 	.\nsIStopwatch.idl             \
 	.\nsISupportsArray.idl         \
 	.\nsISupportsIterators.idl     \
