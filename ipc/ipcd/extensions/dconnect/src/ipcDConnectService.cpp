@@ -71,6 +71,10 @@ static const nsID kDConnectTargetID = DCONNECT_IPC_TARGETID;
 
 #define DCON_WAIT_TIMEOUT PR_INTERVAL_NO_TIMEOUT
 
+// used elsewhere like nsAtomTable to safely represent the integral value
+// of an address.
+typedef unsigned long PtrBits;
+
 //-----------------------------------------------------------------------------
 
 //
@@ -656,44 +660,6 @@ DeserializeResult(ipcMessageReader &reader, const nsXPTType &t, nsXPTCMiniVarian
   return NS_OK;
 }
 
-static nsresult
-SerializeInterfaceParam(ipcMessageWriter &writer,
-                        PRUint32 peer, const nsID &iid,
-                        const nsXPTType &type, const nsXPTCMiniVariant &v,
-                        nsVoidArray &wrappers)
-{
-  // we create an instance wrapper, and assume that the other side will send a
-  // RELEASE message when it no longer needs the instance wrapper.  that will
-  // usually happen after the call returns.
-  //
-  // XXX a lazy scheme might be better, but for now simplicity wins.
-
-  nsCOMPtr<nsIInterfaceInfo> iinfo;
-  nsresult rv = gDConnect->GetInterfaceInfo(iid, getter_AddRefs(iinfo));
-  if (NS_FAILED(rv))
-    return rv;
-
-  DConnectInstance *wrapper = nsnull;
-
-  if (v.val.p)
-  {
-    wrapper = new DConnectInstance(peer, iinfo, (nsISupports *) v.val.p);
-    if (!wrapper)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (!wrappers.AppendElement(wrapper))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = gDConnect->StoreInstance(wrapper);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // send address of the instance wrapper
-  writer.PutBytes(&wrapper, sizeof(wrapper));
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 
 static PRUint32
@@ -773,6 +739,15 @@ private:
 
 //-----------------------------------------------------------------------------
 
+#define DCONNECT_STUB_ID                           \
+{ /* 132c1f14-5442-49cb-8fe6-e60214bbf1db */       \
+  0x132c1f14,                                      \
+  0x5442,                                          \
+  0x49cb,                                          \
+  {0x8f, 0xe6, 0xe6, 0x02, 0x14, 0xbb, 0xf1, 0xdb} \
+}
+static NS_DEFINE_IID(kDConnectStubID, DCONNECT_STUB_ID);
+
 // this class represents the non-local object instance.
 
 class DConnectStub : public nsXPTCStubBase
@@ -797,6 +772,9 @@ public:
   NS_IMETHOD CallMethod(PRUint16 aMethodIndex,
                         const nsXPTMethodInfo *aInfo,
                         nsXPTCMiniVariant *aParams);
+
+  DConAddr Instance() { return mInstance; }
+  PRUint32 PeerID()   { return mPeerID; }
 
 private:
   NS_HIDDEN ~DConnectStub();
@@ -842,6 +820,76 @@ CreateStub(const nsID &iid, PRUint32 peer, DConAddr instance, DConnectStub **res
   }
 
   return rv;
+}
+
+static nsresult
+SerializeInterfaceParam(ipcMessageWriter &writer,
+                        PRUint32 peer, const nsID &iid,
+                        const nsXPTType &type, const nsXPTCMiniVariant &v,
+                        nsVoidArray &wrappers)
+{
+  // we create an instance wrapper, and assume that the other side will send a
+  // RELEASE message when it no longer needs the instance wrapper.  that will
+  // usually happen after the call returns.
+  //
+  // XXX a lazy scheme might be better, but for now simplicity wins.
+
+  // if the interface pointer references a DConnectStub corresponding
+  // to an object in the address space of the peer, then no need to
+  // create a new wrapper.
+
+  nsISupports *obj = (nsISupports *) v.val.p;
+  if (!obj)
+  {
+    // write null address
+    writer.PutBytes(&obj, sizeof(obj));
+  }
+  else
+  {
+    DConnectStub *stub = nsnull;
+    nsresult rv = obj->QueryInterface(kDConnectStubID, (void **) &stub);
+    if (NS_SUCCEEDED(rv) && (stub->PeerID() == peer))
+    {
+      void *p = stub->Instance();
+      writer.PutBytes(&p, sizeof(p));
+    }
+    else
+    {
+      // create instance wrapper
+
+      nsCOMPtr<nsIInterfaceInfo> iinfo;
+      rv = gDConnect->GetInterfaceInfo(iid, getter_AddRefs(iinfo));
+      if (NS_FAILED(rv))
+        return rv;
+
+      DConnectInstance *wrapper = nsnull;
+
+      wrapper = new DConnectInstance(peer, iinfo, obj);
+      if (!wrapper)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      if (!wrappers.AppendElement(wrapper))
+      {
+        delete wrapper;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      rv = gDConnect->StoreInstance(wrapper);
+      if (NS_FAILED(rv))
+      {
+        wrappers.RemoveElement(wrapper);
+        delete wrapper;
+        return rv;
+      }
+
+      // send address of the instance wrapper, and set the low bit
+      // to indicate that this is an instance wrapper.
+      PtrBits bits = ((PtrBits) wrapper) | 0x1;
+      writer.PutBytes(&bits, sizeof(bits));
+    }
+    NS_IF_RELEASE(stub);
+  }
+  return NS_OK;
 }
 
 DConnectStub::~DConnectStub()
@@ -917,6 +965,14 @@ DConnectStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   {
     *aInstancePtr = master;
     NS_ADDREF(master);
+    return NS_OK;
+  }
+
+  // used to discover if this is a DConnectStub instance.
+  if (aIID.Equals(kDConnectStubID))
+  {
+    *aInstancePtr = this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
 
@@ -1091,16 +1147,29 @@ DConnectStub::CallMethod(PRUint16 aMethodIndex,
         const nsXPTType &type = paramInfo.GetType();
         if (type.IsInterfacePointer())
         {
-          nsID iid;
-          rv = gDConnect->GetIIDForMethodParam(mIInfo, aInfo, paramInfo, type,
-                                               aMethodIndex, i, aParams, iid);
-          if (NS_SUCCEEDED(rv))
+          PtrBits bits = (PtrBits) *((void **) aParams[i].val.p);
+          if (bits & 0x1)
           {
-            DConnectStub *stub;
-            void **pptr = (void **) aParams[i].val.p;
-            rv = CreateStub(iid, mPeerID, (DConAddr) *pptr, &stub);
+            *((void **) aParams[i].val.p) = (void *) (bits & ~0x1);
+
+            nsID iid;
+            rv = gDConnect->GetIIDForMethodParam(mIInfo, aInfo, paramInfo, type,
+                                                 aMethodIndex, i, aParams, iid);
             if (NS_SUCCEEDED(rv))
-              *((nsISupports **) aParams[i].val.p) = stub;
+            {
+              DConnectStub *stub;
+              void **pptr = (void **) aParams[i].val.p;
+              rv = CreateStub(iid, mPeerID, (DConAddr) *pptr, &stub);
+              if (NS_SUCCEEDED(rv))
+                *((nsISupports **) aParams[i].val.p) = stub;
+            }
+          }
+          else
+          {
+            // pointer is to one of our instance wrappers.
+
+            DConnectInstance *wrapper = (DConnectInstance *) aParams[i].val.p;
+            *((void **) aParams[i].val.p) = wrapper->RealInstance();
           }
         }
       }
@@ -1595,18 +1664,33 @@ ipcDConnectService::OnInvoke(PRUint32 peer, const DConnectInvoke *invoke, PRUint
 
     if (paramInfo.IsIn() && type.IsInterfacePointer())
     {
-      nsID iid;
-      rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, type,
-                                invoke->method_index, i, params, iid);
-      if (NS_SUCCEEDED(rv))
+      PtrBits bits = (PtrBits) params[i].ptr;
+      if (bits & 0x1)
       {
-        DConnectStub *stub;
-        rv = CreateStub(iid, peer, (DConAddr) params[i].ptr, &stub);
+        // pointer is to a remote object.  we need to build a stub.
+        params[i].ptr = (void *) (bits & ~0x1);
+
+        nsID iid;
+        rv = GetIIDForMethodParam(iinfo, methodInfo, paramInfo, type,
+                                  invoke->method_index, i, params, iid);
         if (NS_SUCCEEDED(rv))
         {
-          params[i].val.p = params[i].ptr = stub;
-          params[i].SetValIsInterface();
+          DConnectStub *stub;
+          rv = CreateStub(iid, peer, (DConAddr) params[i].ptr, &stub);
+          if (NS_SUCCEEDED(rv))
+          {
+            params[i].val.p = params[i].ptr = stub;
+            params[i].SetValIsInterface();
+          }
         }
+      }
+      else
+      {
+        // pointer is to one of our instance wrappers.
+
+        DConnectInstance *wrapper = (DConnectInstance *) params[i].ptr;
+        params[i].val.p = params[i].ptr = wrapper->RealInstance();
+        params[i].SetValIsInterface();
       }
     }
   }
