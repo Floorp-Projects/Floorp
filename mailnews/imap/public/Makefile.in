@@ -32,11 +32,11 @@ EXPORTS		= \
 		nsIIMAPHostSessionList.h \
 		nsIImapExtensionSink.h \
 		nsIImapMiscellaneousSink.h \
-		nsIImapService.h \
 		$(NULL)
 
 XPIDLSRCS	= \
 		nsIImapUrl.idl	      \
+		nsIImapService.idl    \
 		nsIImapServerSink.idl \
 		nsIImapMessageSink.idl \
 		nsIImapIncomingServer.idl \
