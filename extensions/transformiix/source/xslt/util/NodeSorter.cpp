@@ -20,7 +20,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NodeSorter.cpp,v 1.1 2000/04/12 10:55:52 kvisco%ziplink.net Exp $
+ * $Id: NodeSorter.cpp,v 1.2 2000/04/13 10:37:49 kvisco%ziplink.net Exp $
  */
 
 
@@ -68,7 +68,7 @@ void NodeSorter::sort
 
     ExprParser exprParser;  //-- I'll make this static soon
     Expr* selectExpr = ps->getExpr(xslSort->getAttribute(SELECT_ATTR));
-        
+
     //avt = exprParser.createAttributeValueTemplate(attValue);
     //ExprResult* exprResult = avt->evaluate(context,ps);
     //exprResult->stringValue(result);
@@ -101,10 +101,16 @@ void NodeSorter::sort
      // if (avt) dataType = avt.evaluate(context, pState);
 
      MBool ascending = order.isEqual(ASCENDING_ORDER);
-        
+
      NodeSet noKeyBucket;
+
+
+     //-- fix, declare "i" here since some compiler's can't local
+     //-- scope inside the for-declaration
+     int i = 0;
+
      // Build hash table of sort keys
-     for (int i = 0; i < nodes->size(); i++) {
+     for ( ; i < nodes->size(); i++) {
          Node* node = nodes->get(i);
          String* sortKey = new String();
          exprResult = selectExpr->evaluate(node, ps);
@@ -136,7 +142,7 @@ void NodeSorter::sort
 
         delete exprResult;
     }
-        
+
     // Return sorted Nodes
     StringList* list = keyHash.keys();
     int nbrKeys = list->getLength();
@@ -152,14 +158,14 @@ void NodeSorter::sort
     sortKeys(keys, nbrKeys, ascending, datatype, lang);
 
     nodes->clear();
-        
+
     // add all nodes that had no Key (using document order)
-    for (int i = 0; i < noKeyBucket.size(); i++) {
+    for (i = 0; i < noKeyBucket.size(); i++) {
        nodes->add(noKeyBucket.get(i));
     }
 
     // Add All nodes with sorted keys
-    for (int i = 0; i < nbrKeys; i++) {
+    for (i = 0; i < nbrKeys; i++) {
 
        NodeSet* bucket = (NodeSet*) keyHash.remove(*keys[i]);
 
@@ -171,7 +177,8 @@ void NodeSorter::sort
        //if (bucket.size() > 1) {
        //    bucket = sort(bucket,newSortElements,context,pState);
        //}
-       for (int j = 0; j < bucket->size(); j++) {
+       int j;
+       for (j = 0; j < bucket->size(); j++) {
            nodes->add(bucket->get(j));
        }
        delete bucket;
@@ -185,7 +192,7 @@ void NodeSorter::sort
 } //-- sort
 
 
-    
+
 /**
  * Sorts the given String[]
 **/
@@ -201,6 +208,8 @@ void NodeSorter::sortKeys
 
     int nbrSorted = 0;
 
+    int i = 0;
+
     while (nbrSorted < length) {
 
         int next = 0;
@@ -208,7 +217,7 @@ void NodeSorter::sortKeys
         while (!keys[next]) ++next;
 
         //-- find smallest
-        for (int i = next+1; i < length; i++) {
+        for (i = next+1; i < length; i++) {
 
             if (!keys[i]) continue;
 
@@ -225,7 +234,7 @@ void NodeSorter::sortKeys
     }
 
     //-- swap
-    for (int i = 0; i < length; i++) {
+    for (i = 0; i < length; i++) {
         keys[i] = sorted[i];
         sorted[i] = 0;
     }
@@ -244,7 +253,7 @@ private static String[] sortAsNumbers
     (String[] strings, MBool ascending, String lang)
 {
     if (strings.length == 0) return new String[0];
-        
+
         List sorted = new List(strings.length);
         sorted.add(strings[0]);
         String key;
@@ -254,7 +263,7 @@ private static String[] sortAsNumbers
             key = strings[i];
             for (int j = 0; j < sorted.size(); j++) {
                 comp = compareAsNumbers(key, (String)sorted.get(j));
-                
+
                 // Ascending
                 if (ascending) {
                     if (comp < 0) {
@@ -280,21 +289,21 @@ private static String[] sortAsNumbers
             } //-- end for each sorted key
         }
         return (String[]) sorted.toArray(new String[sorted.size()]);
-        
+
     } //-- sortAsNumbers
-    
+
 
     private static int compareAsNumbers(String strA, String strB) {
         double dblA, dblB;
-        
+
         try { dblA = (Double.valueOf(strA)).doubleValue(); }
         catch(NumberFormatException nfe) { dblA = 0; }
         try { dblB = (Double.valueOf(strB)).doubleValue(); }
         catch(NumberFormatException nfe) { dblB = 0; }
-        
+
         if (dblA < dblB) return -1;
         else if (dblA == dblB) return 0;
         else return 1;
     } //-- compareAsNumbers
-    
+
 */
