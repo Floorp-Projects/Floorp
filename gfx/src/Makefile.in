@@ -27,8 +27,6 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE      = gfx
-EXPORTS         = nsFontList.h \
-                  nsRegion.h
 LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
 GRE_MODULE	= 1

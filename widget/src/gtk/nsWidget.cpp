@@ -52,7 +52,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDragSessionGTK.h"
 #include "nsIDragService.h"
-#include "nsFontMetricsGTK.h"
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
