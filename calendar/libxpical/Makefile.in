@@ -59,6 +59,6 @@ CPPSRCS		= \
 		oeICalImpl.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += -lical -licalss
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lical -licalss
 
 include $(topsrcdir)/config/rules.mk
