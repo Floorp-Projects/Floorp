@@ -82,6 +82,8 @@
 <!ENTITY pref.weekstarts.friday    "Fredag" >
 <!ENTITY pref.weekstarts.saturday  "Lördag" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Antal visade veckor som standard:" >
 <!ENTITY pref.numberofweeks.0      "Inga" >
 <!ENTITY pref.numberofweeks.1      "1 Vecka" >

@@ -255,8 +255,8 @@
 <!ENTITY calendar.weekview.button.label         "Week View" >
 <!ENTITY calendar.monthview.button.label        "Month View" >
 <!ENTITY calendar.multiweekview.button.label        "Multiweek" >
-<!ENTITY calendar.onlyworkday.checkbox.label    "Monday-Friday Only" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
+<!ENTITY calendar.onlyworkday.checkbox.label    "Workweek days only" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "r" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
 <!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
 

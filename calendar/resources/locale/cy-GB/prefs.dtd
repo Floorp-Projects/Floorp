@@ -81,6 +81,8 @@
 <!ENTITY pref.weekstarts.friday    "Dydd Gwener" >
 <!ENTITY pref.weekstarts.saturday  "Dydd Sadwrn" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Cyfanswm nifer rhagosodedig o Wythnosau:" >
 <!ENTITY pref.numberofweeks.0      "Dim" >
 <!ENTITY pref.numberofweeks.1      "1 Wythnos" >

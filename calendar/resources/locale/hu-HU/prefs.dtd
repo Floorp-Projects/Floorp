@@ -83,6 +83,8 @@
 <!ENTITY pref.weekstarts.friday    "Péntek" >
 <!ENTITY pref.weekstarts.saturday  "Szombat" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Alapértelmezett összes hetek száma" >
 <!ENTITY pref.numberofweeks.0      "Nincs" >
 <!ENTITY pref.numberofweeks.1      "1 hét" >

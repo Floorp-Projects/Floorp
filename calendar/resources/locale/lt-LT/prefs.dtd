@@ -81,6 +81,8 @@
 <!ENTITY pref.weekstarts.friday    "Penktadienis" >
 <!ENTITY pref.weekstarts.saturday  "Šeštadienis" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Numatytasis savaičių skaičius:" >
 <!ENTITY pref.numberofweeks.0      "nėra" >
 <!ENTITY pref.numberofweeks.1      "1 savaitė" >

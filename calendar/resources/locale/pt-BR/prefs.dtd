@@ -82,6 +82,8 @@
 <!ENTITY pref.weekstarts.friday    "Sexta" >
 <!ENTITY pref.weekstarts.saturday  "S&#xE1;bado" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "N&#xFA;mero total padr&#xE3;o de Semanas:" >
 <!ENTITY pref.numberofweeks.0      "Nenhum" >
 <!ENTITY pref.numberofweeks.1      "1 Semana" >

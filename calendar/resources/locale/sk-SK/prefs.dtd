@@ -81,6 +81,8 @@
 <!ENTITY pref.weekstarts.friday    "Piatok" >
 <!ENTITY pref.weekstarts.saturday  "Sobota" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Východzí počet týždňov:" >
 <!ENTITY pref.numberofweeks.0      "Žiadny" >
 <!ENTITY pref.numberofweeks.1      "1 týždeň" >

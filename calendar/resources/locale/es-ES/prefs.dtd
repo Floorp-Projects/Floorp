@@ -79,6 +79,8 @@
 <!ENTITY pref.weekstarts.friday    "Viernes" >
 <!ENTITY pref.weekstarts.saturday  "Sábado" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Número predeterminado total de semanas:" >
 <!ENTITY pref.numberofweeks.0      "Ninguna" >
 <!ENTITY pref.numberofweeks.1      "1 semana" >

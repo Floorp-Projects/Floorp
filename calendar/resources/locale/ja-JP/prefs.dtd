@@ -84,6 +84,8 @@
 <!ENTITY pref.weekstarts.friday    "金曜" >
 <!ENTITY pref.weekstarts.saturday  "土曜" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "週の総数(デフォルト):" >
 <!ENTITY pref.numberofweeks.0      "なし" >
 <!ENTITY pref.numberofweeks.1      "1 週間" >

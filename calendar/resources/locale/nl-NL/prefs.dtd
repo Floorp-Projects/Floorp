@@ -81,6 +81,8 @@
 <!ENTITY pref.weekstarts.friday    "Vrijdag" >
 <!ENTITY pref.weekstarts.saturday  "Zaterdag" >
 
+<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+
 <!ENTITY pref.numberofweeks.label     "Standaard aantal weken:" >
 <!ENTITY pref.numberofweeks.0      "Geen" >
 <!ENTITY pref.numberofweeks.1      "1 Week" >
