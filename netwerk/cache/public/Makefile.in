@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 MODULE		= nkcache
 XPIDL_MODULE	= necko_cache
+GRE_MODULE	= 1
 
 include $(DEPTH)/config/autoconf.mk
 

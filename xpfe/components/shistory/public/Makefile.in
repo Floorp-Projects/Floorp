@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= shistory
+GRE_MODULE	= 1
 
 SDK_XPIDLSRCS   = \
                   nsIHistoryEntry.idl \

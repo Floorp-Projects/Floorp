@@ -43,6 +43,8 @@ include $(topsrcdir)/config/insure.mk
 endif
 endif
 
+GRE_DIST	= $(DIST)/gre
+
 #
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
 # Since the longest of these is 5 characters without the suffix,

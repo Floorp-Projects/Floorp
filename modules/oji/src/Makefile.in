@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= oji
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCJVMManagerModule
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  liveconnect \

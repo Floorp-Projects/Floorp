@@ -32,14 +32,15 @@
 # GPL.
 # 
 
-MODULE = pippki
-
 DEPTH           = ../../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+MODULE = pippki
+GRE_MODULE	= 1
 
 XPIDLSRCS = \
     nsIPKIParamBlock.idl \

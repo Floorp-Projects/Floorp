@@ -33,6 +33,7 @@ else
 XPIDL_MODULE	= xpcom_threads
 endif
 LIBRARY_NAME	= xpcomthreads_s
+GRE_MODULE	= 1
 REQUIRES	= string \
 		  $(NULL)
 

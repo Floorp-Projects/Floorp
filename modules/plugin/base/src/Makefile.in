@@ -32,6 +32,8 @@ LIBRARY_NAME	= gkplugin
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsPluginModule
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  xpconnect \
 		  string \

@@ -40,6 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 XPIDL_MODULE	= dom_traversal
+GRE_MODULE	= 1
 
 XPIDLSRCS =					\
 	nsIDOMDocumentTraversal.idl		\

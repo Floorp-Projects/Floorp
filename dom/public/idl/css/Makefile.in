@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 XPIDL_MODULE	= dom_css
+GRE_MODULE	= 1
 
 XPIDLSRCS =					\
 	nsIDOMCSS2Properties.idl		\

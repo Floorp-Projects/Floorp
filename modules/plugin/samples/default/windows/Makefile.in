@@ -30,6 +30,8 @@ MODULE		= plugin
 LIBRARY_NAME	= npnul32
 RESFILE		= npnul32.res
 DEFFILE		= $(srcdir)/npnul32.def
+GRE_MODULE	= 1
+
 REQUIRES	= java \
 		  xpcom \
 		  pref \

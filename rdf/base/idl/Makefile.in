@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdf
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsIRDFCompositeDataSource.idl \

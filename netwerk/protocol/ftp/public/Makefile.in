@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko2
 XPIDL_MODULE	= necko_ftp
+GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 	nsIFTPChannel.idl \

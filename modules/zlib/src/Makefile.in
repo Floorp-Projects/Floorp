@@ -29,6 +29,7 @@ include $(srcdir)/objs.mk
 
 MODULE		= zlib
 LIBRARY_NAME	= mozz
+GRE_MODULE	= 1
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map

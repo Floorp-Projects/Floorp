@@ -521,6 +521,14 @@ OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
 endif # VACPP
 
+ifdef GRE_MODULE
+ifndef DISABLE_DIST_GRE
+ifdef GRE_DIRS_ONLY
+_SKIP_OLD_GRE_INSTALL=1
+endif
+endif
+endif
+
 ################################################################################
 
 all:: 
@@ -593,9 +601,7 @@ libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY)
 ifndef NO_DIST_INSTALL
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
-ifdef IS_COMPONENT
-	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
-else
+ifndef IS_COMPONENT
 	$(INSTALL) $(IFLAGS1) $(LIBRARY) $(DIST)/lib
 endif
 endif # LIBRARY
@@ -605,31 +611,57 @@ ifdef MAPS
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
-ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
-else
+ifdef GRE_MODULE
+ifndef DISABLE_DIST_GRE
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)/$(COMPONENTS_PATH)
+	$(ELF_DYNSTR_GC) $(GRE_DIST)/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
+ifdef BEOS_ADDON_WORKAROUND
+	( cd $(GRE_DIST)/$(COMPONENTS_PATH) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+endif
+endif
+endif # GRE_MODULE
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/$(COMPONENTS_PATH)
 	$(ELF_DYNSTR_GC) $(DIST)/lib/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
 endif
+ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/$(COMPONENTS_PATH)
 	$(ELF_DYNSTR_GC) $(DIST)/bin/$(COMPONENTS_PATH)/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
-	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+	( cd $(DIST)/bin/$(COMPONENTS_PATH) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
+endif # ! _SKIP_OLD_GRE_INSTALL
 else # ! IS_COMPONENT
+ifdef GRE_MODULE
+ifndef DISABLE_DIST_GRE
+	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)
+ifdef BEOS_ADDON_WORKAROUND
+	( cd $(GRE_DIST) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
+endif
+endif
+endif # GRE_MODULE
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
+ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(DIST)/bin && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
+endif # ! _SKIP_OLD_GRE_INSTALL
 endif # IS_COMPONENT
 endif # SHARED_LIBRARY
 ifdef PROGRAM
+ifdef GRE_MODULE
+ifndef DISABLE_DIST_GRE
+	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(GRE_DIST)
+endif
+endif
+ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DIST)/bin
+endif
 endif
 ifdef SIMPLE_PROGRAMS
 	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DIST)/bin
@@ -1258,7 +1290,14 @@ $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
+ifdef GRE_MODULE
+ifndef DISABLE_DIST_GRE
+	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(GRE_DIST)/$(COMPONENTS_PATH)
+endif
+endif
+ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
+endif
 endif
 
 install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt

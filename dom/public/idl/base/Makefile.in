@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 XPIDL_MODULE	= dom_base
+GRE_MODULE	= 1
 
 SDK_XPIDLSRCS =                                 \
 	nsIDOMBarProp.idl			\

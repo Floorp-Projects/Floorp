@@ -31,6 +31,8 @@ LIBRARY_NAME	= necko2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= necko_secondary_protocols
+GRE_MODULE	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  necko \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= widget
 XPIDL_MODULE	= widget
+GRE_MODULE	= 1
 
 EXPORTS		= \
 		nsIMenuBar.h \
