@@ -714,6 +714,9 @@ public:
                             PRInt32 aWordLength,
                             nsTextDimensions* aDimensionsResult);
 
+  PRUint32 EstimateNumChars(PRUint32 aAvailableWidth,
+                            PRUint32 aAverageCharWidth);
+
   nsReflowStatus MeasureText(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsTextTransformer&       aTx,
@@ -4600,7 +4603,22 @@ TransformTextToUnicode(char* aText, PRInt32 aNumChars)
     *cp2-- = PRUnichar(*cp1--);
   }
 }
-  
+ 
+PRUint32
+nsTextFrame::EstimateNumChars(PRUint32 aAvailableWidth,
+                              PRUint32 aAverageCharWidth)
+{
+  // Estimate the number of characters that will fit. Use 105% of the available
+  // width divided by the average character width.
+  // If mAveCharWidth is zero, we can fit the entire line.
+  if (aAverageCharWidth == 0) {
+    return PR_UINT32_MAX;
+  }
+
+  PRUint32 estimatedNumChars = aAvailableWidth / aAverageCharWidth;
+  return estimatedNumChars + estimatedNumChars / 20;
+}
+
 nsReflowStatus
 nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
@@ -4639,12 +4657,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   // it also doesn't work if we are not word-wrapping (bug 42832)
 #endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
   TextRun textRun;
-  PRInt32 estimatedNumChars;
-   
-  // Estimate the number of characters that will fit. Use 105% of the available
-  // width divided by the average character width
-  estimatedNumChars = (maxWidth - aTextData.mX) / aTs.mAveCharWidth;
-  estimatedNumChars += estimatedNumChars / 20;
+  PRUint32 estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
+                                                aTs.mAveCharWidth);
+
 #ifdef IBMBIDI
   nsTextFrame* nextBidi = nsnull;
   PRInt32      start = -1, end;
@@ -5047,9 +5062,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     textRun.Reset();
 
     // Estimate the remaining number of characters we think will fit
-    estimatedNumChars = (maxWidth - aTextData.mX) / aTs.mAveCharWidth;
-    estimatedNumChars += estimatedNumChars / 20;
-    }
+    estimatedNumChars = EstimateNumChars(maxWidth - aTextData.mX,
+                                         aTs.mAveCharWidth);
+  }
 #else /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
     int unused = -1;
 #endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
