@@ -66,6 +66,7 @@ LIBS += \
 	-lexpat \
 	-lxmltok \
 	-ljsdom		\
+	-lcaps      \
 	-ljsurl		\
 	-lsecfree	\
 	-l$(MOZ_LIB_JS_PREFIX)js		\
