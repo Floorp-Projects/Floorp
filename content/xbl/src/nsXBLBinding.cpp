@@ -574,6 +574,22 @@ nsXBLBinding::GenerateAnonymousContent()
     // See if there's an includes attribute.
     nsAutoString includes;
     content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+    
+#ifdef DEBUG
+    if (!includes.IsEmpty()) {
+      nsCAutoString id;
+      mPrototypeBinding->GetID(id);
+      nsCAutoString message("An XBL Binding with an id of ");
+      message += id;
+      message += " and found in the file ";
+      nsCAutoString uri;
+      mPrototypeBinding->GetDocURI(uri);
+      message += uri;
+      message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
+      NS_WARNING(message);
+    }
+#endif
+
     if (includes != NS_LITERAL_STRING("*")) {
       PRInt32 childCount;
       mBoundElement->ChildCount(childCount);
@@ -676,11 +692,7 @@ nsXBLBinding::GenerateAnonymousContent()
               insertionPoint = nsnull;
             }
 
-            if (!insertionPoint) {
-              NS_ERROR("Filtered insertion point wasn't properly constructed.\n");
-              return NS_ERROR_FAILURE;
-            }
-            else 
+            if (insertionPoint) 
               insertionPoint->AddChild(content);
           }
         }

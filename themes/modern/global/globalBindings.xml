@@ -177,7 +177,7 @@
   </binding>
 
   <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
-  	<content includes="menupopup">
+  	<content>
       <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
         <xul:spring class="menulist-left-top" inherits="disabled"/>
         <xul:spring class="menulist-left-mid" inherits="disabled" flex="1"/>
@@ -205,6 +205,8 @@
         </xul:box>
         <xul:spring class="menulist-right-btm" inherits="disabled"/>
       </xul:box>
+
+	  <children includes="menupopup"/>
     </content>
   </binding>
 
