@@ -665,7 +665,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     state.dispatch = emitter->dispatch_table;
 
     if (strcmp(outname, "-")) {
-        // don't open file if the mode is "java"
+        /* don't open file if the mode is "java" */
         if (strcmp(mode->mode, "java")) {
             const char *fopen_mode;
             mode_outname = g_strdup_printf("%s.%s", outname, mode->suffix);

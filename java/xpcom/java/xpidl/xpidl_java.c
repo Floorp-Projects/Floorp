@@ -428,7 +428,7 @@ xpcom_to_java_type (TreeState *state)
                     state->tree = orig_tree;
                 }
                 else {
-                    fputs(subscriptIdentifier(state, ident_str), FILENAME(state));
+                    fputs(subscriptIdentifier(state, (char*) ident_str), FILENAME(state));
                 }
             }
         }
@@ -730,7 +730,7 @@ constant_declaration(TreeState *state)
 
         fprintf(FILENAME(state), "    public static final %s %s = %d;\n",
                 (isshort ? "short" : "int"),
-                subscriptIdentifier(state, name),
+                subscriptIdentifier(state, (char*) name),
                 (int) IDL_INTEGER(declaration->const_exp).value);
     } else {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
@@ -852,7 +852,7 @@ enum_declaration(TreeState *state)
 static gboolean
 module_declaration(TreeState *state)
 {
-    // do not use modules yet    
+    /* do not use modules yet */
 #if 0
     IDL_tree scope =
         IDL_tree_get_scope(state->tree);
