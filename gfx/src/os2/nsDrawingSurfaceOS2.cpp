@@ -323,9 +323,9 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
 
    rc = GFX (::GpiQueryBitmapBits (mPS, mYPels, mScans, (PBYTE)mBits,
                                    (PBITMAPINFO2)mInfoHeader), GPI_ALTERROR);
-   if( rc != mInfoHeader->cy) PMERROR( "GpiQueryBitmapBits");
 
 #ifdef DEBUG
+   if( rc != mInfoHeader->cy) PMERROR( "GpiQueryBitmapBits");
    printf( "Lock, requested %d x %d and got %d x %d\n",
            aWidth, aHeight, (int) mInfoHeader->cx, aHeight);
 #endif
