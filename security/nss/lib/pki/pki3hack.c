@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.67 $ $Date: 2002/09/24 18:47:33 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.68 $ $Date: 2002/09/27 15:55:01 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -945,6 +945,37 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	                                   nssTrust->clientAuth,
 	                                   nssTrust->codeSigning,
 	                                   nssTrust->emailProtection, PR_TRUE);
+	/* If the selected token can't handle trust, dump the trust on 
+	 * the internal token */
+	if (!newInstance && !PK11_IsInternal(tok->pk11slot)) {
+	    PK11SlotInfo *slot = PK11_GetInternalKeySlot();
+	    NSSUTF8 *nickname = nssCertificate_GetNickname(c, NULL);
+	    NSSASCII7 *email = c->email;
+	    tok = PK11Slot_GetNSSToken(slot);
+	    PK11_FreeSlot(slot);
+	
+	    newInstance = nssToken_ImportCertificate(tok, NULL,
+	                                             NSSCertificateType_PKIX,
+	                                             &c->id,
+	                                             nickname,
+	                                             &c->encoding,
+	                                             &c->issuer,
+	                                             &c->subject,
+	                                             &c->serial,
+						     email,
+	                                             PR_TRUE);
+	    if (!newInstance) {
+		nssrv = PR_FAILURE;
+		goto done;
+	    }
+	    nssPKIObject_AddInstance(&c->object, newInstance);
+	    newInstance = nssToken_ImportTrust(tok, NULL, &c->encoding,
+	                                   &c->issuer, &c->serial,
+	                                   nssTrust->serverAuth,
+	                                   nssTrust->clientAuth,
+	                                   nssTrust->codeSigning,
+	                                   nssTrust->emailProtection, PR_TRUE);
+	}
 	if (newInstance) {
 	    nssCryptokiObject_Destroy(newInstance);
 	    nssrv = PR_SUCCESS;
