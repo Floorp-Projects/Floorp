@@ -181,8 +181,6 @@ nsXMLHttpRequest::AddEventListener(const nsAString& type,
   NS_ENSURE_ARG(listener);
   nsresult rv;
 
-  // I know, I know - strcmp's. But it's only for a couple of 
-  // cases...and they are short strings. :-)
   if (type.Equals(LOADSTR)) {
     if (!mLoadEventListeners) {
       rv = NS_NewISupportsArray(getter_AddRefs(mLoadEventListeners));
@@ -784,23 +782,25 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
   // Copy for our own use
   xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  // Give the same data to the parser.
+  if (xmlHttpRequest->mParseResponseBody) {
+    // Give the same data to the parser.
 
-  // We need to wrap the data in a new lightweight stream and pass that
-  // to the parser, because calling ReadSegments() recursively on the same
-  // stream is not supported.
-  nsCOMPtr<nsISupports> supportsStream;
-  rv = NS_NewByteInputStream(getter_AddRefs(supportsStream),fromRawSegment,count);
+    // We need to wrap the data in a new lightweight stream and pass that
+    // to the parser, because calling ReadSegments() recursively on the same
+    // stream is not supported.
+    nsCOMPtr<nsISupports> supportsStream;
+    rv = NS_NewByteInputStream(getter_AddRefs(supportsStream),fromRawSegment,count);
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIInputStream> copyStream(do_QueryInterface(supportsStream));
-    if (copyStream) {
-      rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,copyStream,toOffset,count);
-    } else {
-      NS_ERROR("NS_NewByteInputStream did not give out nsIInputStream!");
-      rv = NS_ERROR_UNEXPECTED;
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIInputStream> copyStream(do_QueryInterface(supportsStream));
+      if (copyStream) {
+        rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,copyStream,toOffset,count);
+      } else {
+        NS_ERROR("NS_NewByteInputStream did not give out nsIInputStream!");
+        rv = NS_ERROR_UNEXPECTED;
+      }
     }
   }
 
@@ -833,8 +833,22 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   mReadRequest = request;
   mContext = ctxt;
+  mParseResponseBody = PR_TRUE;
   ChangeState(XML_HTTP_REQUEST_LOADED);
-  if (!mOverrideMimeType.IsEmpty()) {
+  if (mOverrideMimeType.IsEmpty()) {
+    // If we are not overriding the mime type, we can gain a huge performance
+    // win by not even trying to parse non-XML data. This also protects us
+    // from the situation where we have an XML document and sink, but HTML (or other)
+    // parser, which can produce unreliable results.
+    nsCAutoString type;
+    mChannel->GetContentType(type);
+    nsACString::const_iterator start, end;
+    type.BeginReading(start);
+    type.EndReading(end);
+    if (!FindInReadable(NS_LITERAL_CSTRING("xml"), start, end)) {
+      mParseResponseBody = PR_FALSE;
+    }
+  } else {
     nsresult status;
     request->GetStatus(&status);
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -842,7 +856,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       channel->SetContentType(mOverrideMimeType);
     }
   }
-  return mXMLParserStreamListener->OnStartRequest(request,ctxt);
+
+  return mParseResponseBody ? mXMLParserStreamListener->OnStartRequest(request,ctxt) : NS_OK;
 }
 
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
@@ -852,7 +867,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   nsCOMPtr<nsIParser> parser(do_QueryInterface(mXMLParserStreamListener));
   NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
 
-  nsresult rv = mXMLParserStreamListener->OnStopRequest(request,ctxt,status);
+  nsresult rv = mParseResponseBody ? mXMLParserStreamListener->OnStopRequest(request,ctxt,status) : NS_OK;
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
@@ -1043,6 +1058,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           }
         }
       }
+      break;
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
       // Makes us act as if !aBody, don't upload anything
