@@ -176,6 +176,17 @@ treechildren:-moz-tree-image(Name, container, group) {
 
 /* ::::: primary toolbar buttons ::::: */
 
+.toolbarbutton-menubutton-stack,
+.toolbarbutton-menubutton-button,
+.toolbarbutton-menubutton-stack:hover,
+.toolbarbutton-menubutton-button:hover,
+.toolbarbutton-menubutton-stack:hover:active,
+.toolbarbutton-menubutton-button:hover:active {
+  border: 0px;
+  padding: 0px;
+  margin: 0px;
+}
+
 .toolbarbutton-menubutton-dropmarker {
   list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
   -moz-box-align: center;
@@ -203,20 +214,13 @@ toolbarbutton[open="true"] > stack > .toolbarbutton-menubutton-dropmarker {
 #back-button > .toolbarbutton-menubutton-stack
     > .toolbarbutton-menubutton-dropmarker,
 #forward-button > .toolbarbutton-menubutton-stack
-    > .toolbarbutton-menubutton-dropmarker
-{
-  margin-left: 34px;
-  margin-top: 26px;
-}
-
+    > .toolbarbutton-menubutton-dropmarker,
 #print-button > .toolbarbutton-menubutton-stack
     > .toolbarbutton-menubutton-dropmarker
 {
-  margin-left: 34px;
-  margin-top: 26px;
+  margin-left: 38px;
+  margin-top: 16px;
 }
-
-
 
 .toolbarbutton-1 {
   min-width: 0px;
@@ -239,11 +243,13 @@ menubutton:not([disabled="true"]):hover:active {
 }
 
 #back-button {
+  -moz-binding: url('chrome://browser/skin/browser.xml#toolbar-menu-button');
   list-style-image: url("chrome://browser/skin/back-large.png");
   -moz-image-region: rect(0px 46px 42px 0px);
   width: 47 !important;
   min-width: 47;
   border: 0px !important;
+  -moz-box-orient: vertical;
 }
 
 #back-button[buttonover="true"] {
@@ -263,11 +269,13 @@ menubutton:not([disabled="true"]):hover:active {
 
 
 #forward-button {
+  -moz-binding: url('chrome://browser/skin/browser.xml#toolbar-menu-button');
   list-style-image: url("chrome://browser/skin/forward-large.png");
   -moz-image-region: rect(0px 46px 42px 0px);
   min-width: 47;
   width: 47;
   border: 0px !important;
+  -moz-box-orient: vertical;
 }
 
 #forward-button[buttonover="true"] {
