@@ -38,6 +38,7 @@ CPPSRCS=    nsMsgCompFields.cpp \
 			nsComposeAppCore.cpp	\
 			nsComposer.cpp \
 			nsComposerNameSet.cpp \
+			nsMsgCompPrefs.cpp \
             $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
@@ -52,6 +53,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
 			.\$(OBJDIR)\nsComposeAppCore.obj	\
 			.\$(OBJDIR)\nsComposer.obj	\
 			.\$(OBJDIR)\nsComposerNameSet.obj	\
+			.\$(OBJDIR)\nsMsgCompPrefs.obj \
             $(NULL)
 
 
@@ -60,6 +62,7 @@ EXPORTS=    nsSmtpUrl.h             \
 			nsSmtpService.h			\
 			nsComposeAppCore.h		\
 			nsComposer.h			\
+			nsMsgCompPrefs.h		\
             $(NULL)
 
 LINCS=								\
@@ -68,6 +71,7 @@ LINCS=								\
 			-I$(PUBLIC)\raptor		\
 			-I$(PUBLIC)\netlib		\
 			-I$(PUBLIC)\security	\
+			-I$(PUBLIC)\pref		\
 			-I$(PUBLIC)\rdf			\
 			-I$(PUBLIC)\js			\
 			-I$(PUBLIC)\dom			\

@@ -31,6 +31,7 @@ EXPORTS = \
 	nsSmtpService.h \
 	nsComposeAppCore.h \
 	nsComposer.h \
+	nsMsgCompPrefs.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -46,6 +47,7 @@ CPPSRCS = \
 	nsComposeAppCore.cpp \
 	nsComposer.cpp \
 	nsComposerNameSet.cpp \
+	nsMsgCompPrefs.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
