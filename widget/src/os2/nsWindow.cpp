@@ -2261,7 +2261,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
   {
-    POINTL ptl = { SHORT1FROMMP( mp1), SHORT2FROMMP( mp1) };
+    POINTL ptl = { (SHORT)SHORT1FROMMP( mp1), (SHORT)SHORT2FROMMP( mp1) };
     PM2NS( ptl);
     nsPoint pt( ptl.x, ptl.y);
     InitEvent( event, aEventType, &pt);
