@@ -360,6 +360,7 @@ InsertCompList(int instChoice)
 		for(i=0; i<kMaxComponents; i++)
 		{
 			if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+				 (!gControls->cfg->comp[i].invisible) &&
 				 (compsDone < gControls->cfg->st[instChoice].numComps) )
 			{
 				currComp = gControls->cfg->comp[i];

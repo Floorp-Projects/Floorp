@@ -27,16 +27,15 @@ C2=Component2
 Message0=Please select the components you wish to install:
 
 [Component0]
-Description Short= XPCOM
+Description Short=XPCOM
 Description Long=Installer technology software
-Archive=install.xpi
+Archive=xpcom.xpi
 URL0=http://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
-URL1=http://dolfin.mcom.com/nsinstall/mac/xpiengine/debug/
-Install Size=<#install_size>
+Install Size=<#xpcom_size>
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
-Description Short= Navigator
+Description Short=Navigator
 Description Long=Web browser software
 Archive=browser.xpi
 Install Size=<#browser_size>
@@ -44,7 +43,7 @@ URL0=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Component2]
-Description Short= Mail & News
+Description Short=Mail & News
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 Install Size=<#mail_size>
@@ -56,7 +55,7 @@ Message0=Click the Install button to download and install the selected component
 
 
 [SmartDownload-Netscape Install]
-core_file=install.xpi
+core_file=xpcom.xpi
 no_ads=true
 silent=false
 execution=false
@@ -69,5 +68,5 @@ Target Document=:Mozilla Folder:Mozilla Installer
 
 [LegacyCheck0]
 Filename=:Mozilla Folder:Mozilla
-Version=5.0.0b.14
+Version=5.0.0a.13
 Message=An older installation of Mozilla has been detected in the folder selected. You may select another folder or continue.

@@ -39,6 +39,7 @@ PullDownConfig(void *unused)
 	Str255			pIDIfname;
 
 	ERR_CHECK_RET(GetCWD(&dirID, &vRefNum), (void*)0);
+	// XXX if we ever use this we need to pull down to "Installer Modules" now
 	
 	GetIndString(pIDIfname, rStringList, sConfigIDIName);
 	
@@ -80,7 +81,7 @@ ParseConfig(void)
 	ERR_CHECK(PopulateIDIKeys(cfgText));
 	ERR_CHECK(PopulateMiscKeys(cfgText));
 	
-	ERR_CHECK(MapDependencies());
+	ERR_CHECK(MapDependees());
     
     if (cfgText)
 	    DisposePtr(cfgText);
@@ -89,17 +90,23 @@ ParseConfig(void)
 Boolean
 ReadConfigFile(char **text)
 {
-    Boolean				bSuccess = false;
+    Boolean				bSuccess = false, isDir = false;
 	OSErr 				err;
 	FSSpec 				cfgFile;
-	long				dirID, dataSize;
+	long				cwdDirID, dirID, dataSize;
 	short				vRefNum, fileRefNum;
-	Str255 				fname;
+	Str255 				fname, pModulesDir;
 	
 	*text = nil;
 	
-	ERR_CHECK_RET(GetCWD(&dirID, &vRefNum), false);
+	ERR_CHECK_RET(GetCWD(&cwdDirID, &vRefNum), false);
 	
+	/* get the "Installer Modules" relative subdir */
+	GetIndString(pModulesDir, rStringList, sInstModules);
+	GetDirectoryID(vRefNum, cwdDirID, pModulesDir, &dirID, &isDir);
+	if (!isDir)		/* bail if we can't find the "Installer Modules" dir */
+		return false;
+		
 	/* open config.ini file */
 	GetIndString(fname, rStringList, sConfigFName);
 	if ((err = FSMakeFSSpec(vRefNum, dirID, fname, &cfgFile)) != noErr )
@@ -330,9 +337,15 @@ PopulateCompWinKeys(char *cfgText)
 			if (randomPercent != 0) /* idiot proof for those giving 0 as the rand percent */
 			{
 				if (RandomSelect(randomPercent))
+				{
 					gControls->cfg->comp[i].selected = true;
+					gControls->cfg->comp[i].refcnt = 1;
+				}
 				else
+				{
 					gControls->cfg->comp[i].selected = false;
+					gControls->cfg->comp[i].refcnt = 0;
+				}
 			}
 			else
 				bRandomSet = false;
@@ -358,9 +371,15 @@ PopulateCompWinKeys(char *cfgText)
 			if (!bRandomSet) /* when random key specified then selected attr is overriden */
 			{
 				if (NULL != strstr(*attrValH, attrType))
+				{
 					gControls->cfg->comp[i].selected = true;
+					gControls->cfg->comp[i].refcnt = 1;
+				}
 				else
+				{
 					gControls->cfg->comp[i].selected = false;
+					gControls->cfg->comp[i].refcnt = 0;
+				}
 			}
 			if (attrType)
 				DisposePtr(attrType);
@@ -419,13 +438,13 @@ PopulateCompWinKeys(char *cfgText)
 				DisposePtr(currKeyBuf);
 		}
 		
-		/* dependencies on other components */
+		/* dependees for other components */
 		gControls->cfg->comp[i].numDeps = 0;
-		GetIndString(pkey, rParseKeys, sDependency);
+		GetIndString(pkey, rParseKeys, sDependee);
 		currKeyBuf = PascalToC(pkey);
 		for (j=0; j<kMaxComponents; j++)
 		{
-			// currKey = "Dependency<j>"
+			// currKey = "Dependee<j>"
 			currDepNum = ltoa(j);
 			currKey = NewPtrClear(strlen(currKeyBuf) + strlen(currDepNum));
 			strncpy(currKey, currKeyBuf, strlen(currKeyBuf));
@@ -714,28 +733,29 @@ PopulateMiscKeys(char *cfgText)
 #pragma mark - 
 
 OSErr
-MapDependencies()
+MapDependees()
 {
 	OSErr	err = noErr;
 	int 	i, j, compIdx;
 	
 	for (i=0; i<gControls->cfg->numComps; i++)
 	{
+		// init all deps to off
 		for (j=0; j<kMaxComponents; j++)
 		{
-			gControls->cfg->comp[i].dep[j] = kDependencyOff;
+			gControls->cfg->comp[i].dep[j] = kDependeeOff;
 		}
 		
+		// loop through turning on deps
 		for(j=0; j<gControls->cfg->comp[i].numDeps; j++)
 		{
 			compIdx = GetComponentIndex(gControls->cfg->comp[i].depName[j]);
 			if (compIdx != kInvalidCompIdx)
 			{
-				gControls->cfg->comp[i].dep[compIdx] = kDependencyOn;
+				gControls->cfg->comp[i].dep[compIdx] = kDependeeOn;
 				
-				// turn on dependencies
-				if (gControls->cfg->comp[i].selected == kSelected)
-					gControls->cfg->comp[compIdx].selected = kSelected;
+				// we deal with making it selected and mucking with the ref count
+				// in the components win code (see ComponentsWin.c:{SetOptInfo(), ResolveDependees()}
 			}
 		}
 	}
@@ -769,7 +789,7 @@ GetComponentIndex(Handle compName)
 	for (i=0; i<gControls->cfg->numComps; i++)
 	{
 		HLock(gControls->cfg->comp[i].shortDesc);
-		if (0==strncmp(*gControls->cfg->comp[i].shortDesc, *compName, strlen(*gControls->cfg->comp[i].shortDesc)))
+		if (0==strcmp(*gControls->cfg->comp[i].shortDesc, *compName))
 		{
 			compIdx = i;			
 			HUnlock(gControls->cfg->comp[i].shortDesc);

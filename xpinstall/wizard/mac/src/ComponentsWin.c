@@ -35,6 +35,7 @@
 			
 static int rowToComp[kMaxComponents];
 static int numRows = 0;			
+static Boolean bFirstDraw = true;
 
 void 
 ShowComponentsWin(void)
@@ -137,7 +138,7 @@ ShowComponentsWin(void)
 	FrameRect(&listBoxFrame);
 	ShowNavButtons( back, next);
 	if (bCellSelected)
-		SetOptInfo(NULL);
+		SetOptInfo(true);
 	else
 		DrawDiskSpaceMsgs( gControls->opt->vRefNum );
 
@@ -261,7 +262,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 			}
 		}
 		
-		SetOptInfo(evt);
+		SetOptInfo(false);
 	}
 	
 	/* Mouse Down */
@@ -447,53 +448,51 @@ UpdateRowHighlight(Point localPt)
 }
 
 void
-UpdateDependencies(int row, EventRecord* evt)
+ResolveDependees(int compIdx, int beingSelected)
 {
-	int 	i;
-	short	currRow;
-	Cell	currCell;
-	Rect	currCellRect;
-	Point	currCellPt;
-	GrafPtr	oldPort;
+	int i;
 	
-	GetPort(&oldPort);
-	if (gWPtr)
-		SetPort(gWPtr);
-		
-	// if row is selected
-	if (gControls->cfg->comp[rowToComp[row]].selected)
+	// assume we are toggling and update this component's ref count
+	if (beingSelected == kSelected)
+		gControls->cfg->comp[compIdx].refcnt = 1;
+	else
+		gControls->cfg->comp[compIdx].refcnt = 0;
+	UpdateRefCount(compIdx, beingSelected);
+	
+	// resolve selected value based on updated ref counts
+	gControls->opt->numCompSelected = 0;
+	for (i = 0; i < gControls->cfg->numComps; i++)
 	{
-		// loop through all components numComps
-		for (i=0; i<gControls->cfg->numComps; i++)
+		if (gControls->cfg->comp[i].refcnt > 0)
 		{
-			// if kDependencyOn for curr dep component --> comp[rowToComp[row]].dep[i]
-			if (gControls->cfg->comp[rowToComp[row]].dep[i] == kDependencyOn)
-			{
-				// if curr dep component isn't on
-				if (gControls->cfg->comp[i].selected == kNotSelected)
-				{
-					// set curr dep comp to kSelected
-					gControls->cfg->comp[i].selected = kSelected;
-					
-					// if curr dep comp is in currently displayed comps
-					currRow = GetCompRow(i);
-					if (currRow != kInvalidCompIdx)
-					{
-						// LClick the row to check curr dep comp's checkbox
-						SetPt(&currCell, 0, currRow);
-						LRect(&currCellRect, currCell, gControls->cw->compList);
-						SetPt(&currCellPt, currCellRect.left+1, currCellRect.top+1);
-						LClick(currCellPt, evt->modifiers, gControls->cw->compList);
-					}
-					
-					// resolve its dependencies
-					UpdateDependencies(currRow, evt);
-				}
-			}
+			gControls->cfg->comp[i].selected = kSelected;
+			gControls->opt->numCompSelected++;
+		}
+		else
+		{
+			gControls->cfg->comp[i].refcnt = 0;  // prevent sub-zero
+			gControls->cfg->comp[i].selected = kNotSelected;
 		}
 	}
+}
+
+void
+UpdateRefCount(int compIdx, int beingSelected)
+{
+	int i;
 	
-	SetPort(oldPort);
+	// loop through all components
+	for (i = 0; i < gControls->cfg->numComps; i++)
+	{
+		// if the curr comp has currently toggled comp in its dep list
+		if (gControls->cfg->comp[i].dep[compIdx] == kDependeeOn)
+		{
+			if (beingSelected == kSelected)
+				gControls->cfg->comp[i].refcnt++;
+			else
+				gControls->cfg->comp[i].refcnt--;
+		}
+	}
 }
 
 short
@@ -511,39 +510,55 @@ GetCompRow(int compIdx)
 }
 
 void
-SetOptInfo(EventRecord* evt)
+SetOptInfo(Boolean bDrawingWindow)
 {
-	Boolean		isCellSelected;
 	Cell		currCell;
-	int			i;
+	int			row, beingSelected;
+	Boolean 	setSelected;
 	
-	for(i=0; i<numRows; i++)
+	// if we are drawing window *and* doing so for the first time
+	// we need to go through each cell and resolve its dependees
+	// only turning them on
+	/*
+	if (bDrawingWindow && bFirstDraw)
 	{
-		if (gControls->cfg->comp[rowToComp[i]].invisible)
-			continue;
-		SetPt(&currCell, 0, i);
-		if ( (isCellSelected = LGetSelect( false, &currCell, gControls->cw->compList)) == true)
+		for (row = 0; row < numRows; row++)
 		{
-			if (gControls->cfg->comp[rowToComp[i]].selected == false)
-			{
-				gControls->cfg->comp[rowToComp[i]].selected = true;
-				gControls->opt->numCompSelected++;
-				
-				if (evt)
-					UpdateDependencies(i, evt);
-			}
-			
-			if (!gControls->cw->compDescBox)
-			{
-				ErrorHandler();
-				return;
-			}
+			SetPt(&currCell, 0, row);
+			if (LGetSelect(false, &currCell, gControls->cw->compList))
+				ResolveDependees(rowToComp[row], kSelected);
 		}
-		else if (gControls->cfg->comp[rowToComp[i]].selected == true)
-		{
-			gControls->cfg->comp[rowToComp[i]].selected = false;
-			gControls->opt->numCompSelected--;
-		}
+		
+		bFirstDraw = false;
+	}
+	*/
+	
+	// else we are responding to a click 
+	// so we must determine the row clicked and resolve its dependees
+	// bumping up their ref counts if this row is selected
+	// and down if this row is unselected
+	if (!bDrawingWindow)
+	{
+		currCell = LLastClick(gControls->cw->compList);
+		row = currCell.v;
+		
+		// toggle from on to off or vice versa
+		if (gControls->cfg->comp[rowToComp[row]].selected)
+			beingSelected = kNotSelected;
+		else
+			beingSelected = kSelected;
+		ResolveDependees(rowToComp[row], beingSelected); 
+	}
+	
+	// then update the UI
+	for (row = 0; row < numRows; row++)
+	{
+		SetPt(&currCell, 0, row);
+		if (gControls->cfg->comp[rowToComp[row]].selected == kSelected)
+			setSelected = true;
+		else
+			setSelected = false;
+		LSetSelect(setSelected, currCell, gControls->cw->compList);
 	}
 	
 	ClearDiskSpaceMsgs();
