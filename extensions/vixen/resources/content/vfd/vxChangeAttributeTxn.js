@@ -57,18 +57,14 @@ function vxChangeAttributeTxn(aElement, aAttribute, aValue, aRemoveFlag)
 } 
 
 vxChangeAttributeTxn.prototype = {
-  init: function ()
-  {
-    this.mID += generateID();
-  },
-  
+  __proto__: vxBaseTxn.prototype,
+
   doTransaction: function ()
   {
-    if (!this.mElementCreated) 
+    if (!this.mElementCreated)
       return;
       
     for (var i = 0; i < this.mAttributes.length; i++) {
-      _ddf("changing attribute", this.mAttributes[i]);
       this.mUndoValues[i] = this.mElement.getAttribute(this.mAttributes[i]);
       if (!this.mRemoveFlags[i])
         this.mElement.setAttribute(this.mAttributes[i], this.mValues[i]);
@@ -113,16 +109,18 @@ vxChangeAttributeTxn.prototype = {
    */
   didDo: function (aTransactionManager, aTransaction, aInterrupt) 
   {
-    _ddf("aTransaction is a", aTransaction.commandString);
-    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0) {
-      var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
-      _ddf("the transaction ahead of us is", createElementTxn.commandString);
-      _ddf("and its element is", createElementTxn.mLocalName);
-      if (createElementTxn.commandString.indexOf("create-element") >= 0) {
-        this.mElement = createElementTxn.mElement;
-        this.mElementCreated = true;
-        this.doTransaction();
-      }
+    var prevTxn = null;
+    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0)
+      prevTxn = aTransaction.mTransactionList[this.mElementTxnID];
+    else 
+      prevTxn = aTransaction;
+
+    if (prevTxn.commandString.indexOf("create-element") >= 0) {
+      _ddf("did create element of", prevTxn.mLocalName);
+      this.mElement = prevTxn.mElement;
+      this.mElementCreated = true;
+      _ddf("going to actually do this transaction now", this.mAttributes);
+      this.doTransaction();
     }
   }
 };

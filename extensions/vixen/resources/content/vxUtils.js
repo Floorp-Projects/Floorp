@@ -45,16 +45,6 @@ var vxUtils = {
 };
 
 /** 
- * Generate a unique identifier for a transaction
- */
-function generateID()
-{
-  var val = ((new Date()).getUTCMilliseconds())*Math.random()*100000;
-  _ddf("value", val);
-  return val;
-}
-
-/** 
  * dumps the DOM tree under a given node.
  */
 function dumpDOM(aNode)
@@ -64,3 +54,25 @@ function dumpDOM(aNode)
     dumpDOM(aNode.childNodes[i]);
 }
 
+/** 
+ * Converts a regular js array into an nsISimpleEnumerator
+ */
+function ArrayEnumerator(aArray)
+{
+  this.mArray = aArray;
+  this.mIndex = 0;
+}
+
+ArrayEnumerator.prototype = {
+  getNext: function ()
+  {
+    return this.mArray[this.mIndex++];
+  },
+  
+  hasMoreElements: function ()
+  {
+    if (this.mIndex < this.mArray.length)
+      return true;
+    return false;
+  }
+};

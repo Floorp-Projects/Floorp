@@ -36,33 +36,41 @@ function vxAggregateTxn (aTransactionList)
     this.mTransactionList[aTransactionList[i].mID] = aTransactionList[i];
   
   this.mID = "aggregate-txn::";
+  
+  this.mTransactionListeners = [];
 } 
  
 vxAggregateTxn.prototype = {
-  init: function ()
-  {
-    this.mID += generateID();
-  },
+  __proto__: vxBaseTxn.prototype,
   
   doTransaction: function ()
   {
-    _dd("vxAggregateTxn::doTransaction");
-    for (var i in this.mTransactionList)
+    for (var i in this.mTransactionList) {
+      var irq = { };
+      this.notifyListeners("willDo", this.mTransactionList[i], irq);
       this.mTransactionList[i].doTransaction();
+      this.notifyListeners("didDo", this.mTransactionList[i], irq);
+    }
   },
 
   undoTransaction: function ()
   {
-    _dd("vxAggregateTxn::undoTransaction");
-    for (var i in this.mTransactionList)
+    for (var i in this.mTransactionList) {
+      var irq = { };
+      this.notifyListeners("willUndo", this.mTransactionList[i], irq);
       this.mTransactionList[i].undoTransaction();
+      this.notifyListeners("didUndo", this.mTransactionList[i], irq);
+    }
   },
   
   redoTransaction: function ()
   {
-    _dd("vxAggregateTxn::redoTransaction");
-    for (var i in this.mTransactionList)
+    for (var i in this.mTransactionList) {
+      var irq = { };
+      this.notifyListeners("willRedo", this.mTransactionList[i], irq);
       this.mTransactionList[i].redoTransaction();
+      this.notifyListeners("didRedo", this.mTransactionList[i], irq);
+    }
   },
 
   get commandString()
