@@ -45,7 +45,7 @@
 #ifndef __nsScriptablePeer_h__
 #define __nsScriptablePeer_h__
 
-#include "nsISimplePlugin.h"
+#include "nsIDebugPlugin.h"
 #include "nsIClassInfo.h"
 
 class nsPluginInstance;
@@ -78,7 +78,7 @@ class nsClassInfoMixin : public nsIClassInfo
     {return NS_ERROR_NOT_IMPLEMENTED;}
 };
 
-class nsScriptablePeer : public nsISimplePlugin,
+class nsScriptablePeer : public nsIDebugPlugin,
                          public nsClassInfoMixin
 {
 public:
@@ -96,7 +96,7 @@ protected:
 
 public:
   // native methods callable from JavaScript
-  NS_DECL_NSISIMPLEPLUGIN
+  NS_DECL_NSIDEBUGPLUGIN
 
 protected:
   nsPluginInstance* mPlugin;

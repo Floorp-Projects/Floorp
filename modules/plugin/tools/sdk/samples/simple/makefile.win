@@ -19,22 +19,39 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
+DEPTH=..\..\..
+MODULE = npdebug
+REQUIRES=   xpcom \
+			      dom \
+            necko\
+            string \
+            widget \
+            locale \
+            view \
+            pref \
+            gfx2 \
+            imglib2 \
+            unicharutil \
+            java \
+            debug \
+            $(NULL)
+
 include <$(DEPTH)\config\config.mak>
 
-MODULE = npsimple
+
+
 
 XPIDLSRCS = 				      \
-	.\nsISimplePlugin.idl    \
+	.\nsIDebugPlugin.idl    \
 	$(NULL)
 
 MAKE_OBJ_TYPE	= DLL
-DLLNAME = npsimple
-RESFILE = npsimple.res
-DEFFILE = npsimple.def
+DLLNAME = npdebug
+RESFILE = npdebug.res
+DEFFILE = npdebug.def
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-CFLAGS = $(CFLAGS) -I..\include -I..\..\include
+CFLAGS = $(CFLAGS) -I.\include 
 
 OBJS = \
   .\$(OBJDIR)\plugin.obj \
@@ -42,7 +59,8 @@ OBJS = \
   $(NULL)
 
 LLIBS = \
-  ..\common\$(OBJDIR)\plugingate.lib \
+  .\common\$(OBJDIR)\plugingate.lib \
+  $(DIST)\lib\xpcom.lib	                \
   $(NULL)
 
 WIN_LIBS = version.lib
@@ -51,13 +69,15 @@ include <$(DEPTH)\config\rules.mak>
 
 # don't forget to remove files exported by default
 libs:: $(DLL)
-  $(RM) $(XPDIST)\idl\nsISimplePlugin.idl 
-  $(RM) $(XPDIST)\include\nsISimplePlugin.h 
-  $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
+  $(RM) $(XPDIST)\idl\nsIDebugPlugin.idl 
+  $(RM) $(XPDIST)\include\nsIDebugPlugin.h 
+#  $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
+
 
 clobber::
 	$(RM) *.sbr
-  $(RM) $(XPDIST)\idl\nsISimplePlugin.idl 
-  $(RM) $(XPDIST)\include\nsISimplePlugin.h 
+  $(RM) $(XPDIST)\idl\nsIDebugPlugin.idl 
+  $(RM) $(XPDIST)\include\nsIDebugPlugin.h 
   $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
   $(RM) $(DIST)\bin\plugins\$(DLLNAME).dll 

@@ -1,11 +1,11 @@
 <HTML>
 <HEAD>
-<TITLE>Simple Plug-in Test</TITLE>
+<TITLE>Debug Plug-in Test</TITLE>
 </HEAD>
 <BODY>
 
 <center>
-<h1> XPConnect Scriptable Sample Plug-in </h1>
+<h1> XPConnect Scriptable Debug Plug-in </h1>
 </center>
 
 This page contains a testcase which demonstrates the work of scriptable 
@@ -19,20 +19,33 @@ in the alert box.
 
 <center>
 
-<embed type="application/simple-plugin" width=1 height=1 hidden="true"><br>
+<embed type="application/debug-plugin" width=1 height=1 hidden="true"><br>
 
 <script>
 var embed = document.embeds[0];
 
-function ShowVersion()
+function DumpFrames()
 {
-  alert(embed.version);
+
+  var filedirectory = "file:///S|/mozilla/layout/html/tests/block";
+  embed.StartDirectorySearch(filedirectory);
+  do {
+    filename=embed.GetNextFileInDirectory();
+    alert(filename);
+    outputfilename = filename.replace (".html",".tst"); 
+    alert(outputfilename);
+
+
+    //var thewindow = window.open(filetopen);
+    //embed.DumpLayout(thewindow,"s:/tests","filename");
+  } while (filename!=null)
+
 }
 </script>
 
 <br>
 <form name="formname">
-<input type=button value="Show Version" onclick='ShowVersion()'>
+<input type=button value="DumpFrames" onclick='DumpFrames()'>
 </form>
 
 </center>

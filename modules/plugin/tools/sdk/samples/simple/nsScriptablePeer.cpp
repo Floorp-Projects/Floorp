@@ -47,7 +47,7 @@
 //
 #include "plugin.h"
 
-static NS_DEFINE_IID(kISimplePluginIID, NS_ISIMPLEPLUGIN_IID);
+static NS_DEFINE_IID(kIDebugPluginIID, NS_IDEBUGPLUGIN_IID);
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -86,8 +86,8 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   if(!aInstancePtr) 
     return NS_ERROR_NULL_POINTER; 
 
-  if(aIID.Equals(kISimplePluginIID)) {
-    *aInstancePtr = static_cast<nsISimplePlugin*>(this); 
+  if(aIID.Equals(kIDebugPluginIID)) {
+    *aInstancePtr = static_cast<nsIDebugPlugin*>(this); 
     AddRef();
     return NS_OK;
   }
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   }
 
   if(aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsISimplePlugin*>(this)); 
+    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsIDebugPlugin*>(this)); 
     AddRef();
     return NS_OK;
   }
@@ -114,5 +114,40 @@ NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
 {
   if (mPlugin)
     mPlugin->getVersion(aVersion);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName)
+{
+
+  if (mPlugin)
+    mPlugin->DumpLayout(aWindow,aFilePath,aFileName);
+
+
+  return NS_OK;
+}
+
+
+//
+// the following method will be callable from JavaScript
+//
+NS_IMETHODIMP nsScriptablePeer::StartDirectorySearch(const char *aFilePath)
+{
+
+  if (mPlugin)
+    mPlugin->StartDirectorySearch(aFilePath);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsScriptablePeer::GetNextFileInDirectory(char **aFilePath)
+{
+
+  if (mPlugin)
+    mPlugin->GetNextFileInDirectory(aFilePath);
+
+
   return NS_OK;
 }
