@@ -213,7 +213,9 @@ gtk_mozilla_get_type (void)
 
     //printf("Initializing NetService.\n");
 
+#ifndef NECKO
     NS_InitINetService();
+#endif
 
     gdk_input_add(EQueue->GetEventQueueSelectFD(),
                   GDK_INPUT_READ,
@@ -367,7 +369,7 @@ gtk_mozilla_stream_start(GtkMozilla *moz,
   class GtkMozillaContainer *moz_container;
   
   moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
-  return moz_container->StartStream(base_url, action, content_type);
+//  return moz_container->StartStream(base_url, action, content_type);
 }
 
 gint
@@ -380,6 +382,7 @@ gtk_mozilla_stream_start_html(GtkMozilla *moz,
 gint
 gtk_mozilla_stream_write(GtkMozilla *moz,
                          const char *data,
+                         gint offset,
                          gint len)
 {
   class GtkMozillaContainer *moz_container;
@@ -387,7 +390,7 @@ gtk_mozilla_stream_write(GtkMozilla *moz,
   moz_container = (class GtkMozillaContainer *)moz->mozilla_container;
 
   // Returns the number of bytes written!
-  return moz_container->WriteStream(data, len);
+  return moz_container->WriteStream(data, offset, len);
 }
 
 void

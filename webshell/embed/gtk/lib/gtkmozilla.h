@@ -89,7 +89,9 @@ extern gint gtk_mozilla_stream_start(GtkMozilla *moz,
                                      const char *content_type);
 extern gint gtk_mozilla_stream_start_html(GtkMozilla *moz,
                                           const char *base_url);
-extern gint gtk_mozilla_stream_write(GtkMozilla *moz, const char *data,
+extern gint gtk_mozilla_stream_write(GtkMozilla *moz, 
+                                     const char *data,
+                                     gint offset,
                                      gint len);
 extern void gtk_mozilla_stream_end(GtkMozilla *moz);
 

@@ -38,8 +38,12 @@ GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz)
   mWebShell = nsnull;
   width = height = 0;
   mStream = nsnull;
+
+  mChannel = nsnull;
+  mContext = nsnull;
   
   mozilla = moz;
+
   gtk_widget_set_app_paintable(GTK_WIDGET(moz), PR_TRUE);
 }
 
@@ -118,7 +122,11 @@ GtkMozillaContainer::Stop()
 void
 GtkMozillaContainer::Reload(GtkMozillaReloadType type)
 {
+#ifdef NECKO
+ mWebShell->Reload((nsLoadFlags)type);
+#else
  mWebShell->Reload((nsURLReloadType)type);
+#endif
 }
 
 gint
@@ -270,7 +278,8 @@ GtkMozillaContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 
 NS_IMETHODIMP
 GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
-                                const PRUnichar* aURL, PRInt32 aStatus)
+                                const PRUnichar* aURL, 
+                                nsresult aStatus)
 {
   char *url = simple_unicode_to_char(aURL);
   gtk_signal_emit_by_name(GTK_OBJECT(mozilla), "end_load_url",
@@ -282,9 +291,10 @@ GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
 
 
 nsresult
-GtkMozillaContainer::CreateContentViewer(nsIURI* aURL, 
+GtkMozillaContainer::CreateContentViewer(const char *aCommand,
+                                         nsIChannel * aChannel,
+                                         nsILoadGroup * aLoadGroup, 
                                          const char* aContentType, 
-                                         const char *aCommand,
                                          nsIContentViewerContainer* aContainer,
                                          nsISupports* aExtraInfo,
                                          nsIStreamListener** aDocListenerResult,
@@ -311,9 +321,15 @@ GtkMozillaContainer::CreateContentViewer(nsIURI* aURL,
     }
 
     // Now create an instance of the content viewer
-    rv = factory->CreateInstance(aURL, aContentType, aCommand, aContainer,
-                                 aExtraInfo, aDocListenerResult,
+    rv = factory->CreateInstance(aCommand, 
+                                 aChannel,
+                                 aLoadGroup, 
+                                 aContentType, 
+                                 aContainer,
+                                 aExtraInfo, 
+                                 aDocListenerResult,
                                  aDocViewerResult);
+
     NS_RELEASE(factory);
     return rv;
 }
@@ -399,9 +415,12 @@ GtkMozillaContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocu
 }
 
 gint
-GtkMozillaContainer::StartStream(const char *base_url, const char *action,
-                                 const char *content_type)
+GtkMozillaContainer::StartStream(const char *base_url, 
+                                 const char *action,
+								 nsISupports * ctxt)
+  // const char *content_type
 {
+#if 0
   nsresult rv = NS_OK;
   nsString url_str(base_url);
   nsIURI* url = nsnull;
@@ -451,7 +470,11 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
   }
 
   mStream = new GtkMozillaInputStream();
-  mStreamURL = url;
+
+  mChannel = url;
+
+  mContext = ctxt;
+
   mListener = listener;
   
  done:
@@ -461,21 +484,29 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
     return 0;
   else
     return -1;
+#endif
 }
 
 gint
-GtkMozillaContainer::WriteStream(const char *data, gint len)
+GtkMozillaContainer::WriteStream(const char *data, 
+								 gint offset,
+								 gint len)
 {
   nsresult rv = NS_OK;
   PRUint32 Count;
   
   mStream->Fill(data, len);
     
-  rv = mListener->OnDataAvailable(mStreamURL, mStream, len);
+  rv = mListener->OnDataAvailable(mChannel, 
+								  mContext,
+								  mStream, 
+								  offset,
+								  len);
   if (NS_FAILED(rv))
     return 0;
   
-  rv = mListener->OnProgress(mStreamURL, len, len+1);
+// Busted in NECKO
+//   rv = mListener->OnProgress(mChannel, len, len+1);
   if (NS_FAILED(rv))
     return 0;
 
@@ -491,19 +522,27 @@ GtkMozillaContainer::EndStream(void)
   
   mStream->Fill(NULL, 0);
     
-  rv = mListener->OnDataAvailable(mStreamURL, mStream, 0);
+  rv = mListener->OnDataAvailable(mChannel, 
+								  mContext,
+								  mStream, 
+								  0,
+								  0);
   if (NS_FAILED(rv))
     return;
   
-  rv = mListener->OnStopRequest(mStreamURL, NS_OK, NULL);
+  rv = mListener->OnStopRequest(mChannel,
+								mContext,
+								NS_OK, 
+								NULL);
   if (NS_FAILED(rv))
     return;
   
-  rv = mListener->OnProgress(mStreamURL, 10, 10);
+// Busted in NECKO
+//   rv = mListener->OnProgress(mChannel, 10, 10);
   if (NS_FAILED(rv))
     return;
   
-  NS_IF_RELEASE(mStreamURL);
+  NS_IF_RELEASE(mChannel);
   NS_IF_RELEASE(mListener);
   NS_IF_RELEASE(mStream);
 }

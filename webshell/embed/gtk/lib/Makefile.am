@@ -22,59 +22,27 @@ MOZ_LIB_UTIL_PREFIX=moz
 
 ZLIB_LIBS = -lz
 
-TIMER_LIBS -ltimer_gtk_s
+TIMER_LIBS = -ltimer_s
 
 BASE_LIBS =          \
-        -lpref       \
-        $(ZLIB_LIBS) \
         -lmozreg        \
-        -l$(MOZ_LIB_JS_PREFIX)js             \
+        -lmozjs \
 		$(TIMER_LIBS) \
         -lxpcom      \
-        -lsecfree    \
-        -l$(MOZ_LIB_UTIL_PREFIX)util    \
+        -lmozutil \
         $(NULL)
 
-MOZ_WIDGET_TOOLKIT_LDFLAGS=-lwidget_gtk
-
-GECKO_LIBS =                  \
-        -lraptorwebwidget     \
-		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
-		-lraptorgfx 	\
-        -lraptorhtmlpars      \
-        -lexpat \
-        -lxmltok \
-        -ljsdom               \
-        $(NULL)
-
-JPEG_LIBS=-ljpeg
-PNG_LIBS=-lpng
+GECKO_LIBS =\
+		-lraptorgfx \
+		-ljsdom \
+		-ljsurl \
+		$(NULL)
 
 IMGLIB_LIBS =        \
         -limg        \
-        $(JPEG_LIBS) \
-        $(PNG_LIBS)  \
         $(NULL)
-MOZ_LIB_DBM_PREFIX=moz
 
-NETLIB_LIBS =         \
-        -labouturl    \
-        -lfileurl     \
-        -lftpurl      \
-        -lgophurl     \
-        -lhttpurl     \
-        -lremoturl    \
-        -lsockstuburl \
-        -lmimetype    \
-        -lnetcache    \
-        -lnetcnvts    \
-        -lnetlib      \
-        -lnetwork     \
-        -lxp          \
-        -ljsurl       \
-        -l$(MOZ_LIB_DBM_PREFIX)dbm      \
-        -lpwcac       \
-        $(NULL)
+NETLIB_LIBS=-lneckoutil_s
 
 JSJ_LIB =
 TK_LIBS = 
@@ -94,7 +62,7 @@ MOZILLA_LIBS=-L$(MOZILLA_DIR)/dist/lib  \
 
 INCLUDES = $(MOZILLA_INCLUDES) @GTK_CFLAGS@ @DEBUG_FLAGS@
 
-CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\"
+CPPFLAGS = -DXP_UNIX -DMOZ_DLL_SUFFIX=\".so\" -DNECKO
 
 libgtkmozilla_la_LIBADD = $(MOZILLA_LIBS) @GTK_LIBS@
 
