@@ -124,7 +124,6 @@
   </toolbox>
   
  <!-- msg header view -->
-<vbox id="messagesBox" flex="1">
   <vbox id="messagepanebox" flex="3" persist="collapsed"
         ondragover="nsDragAndDrop.dragOver(event, messagepaneObserver);"
         ondragdrop="nsDragAndDrop.drop(event, messagepaneObserver);"
@@ -136,11 +135,10 @@
 
     <!-- message view -->
     <browser id="messagepane" context="messagePaneContext" 
-      style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
-      disablesecurity="true" disablehistory="true" type="content-primary" 
-      src="about:blank" onclick="contentAreaClick(event);" autofind="false"/>
+             style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
+             disablesecurity="true" disablehistory="true" type="content-primary" 
+             src="about:blank" onclick="contentAreaClick(event);" autofind="false"/>
   </vbox>  
-</vbox>
 
   <statusbar class="chromeclass-status" id="status-bar"/>
 

@@ -147,25 +147,20 @@
       <tree id="folderTree" flex="1" style="min-width: 100px;" context="folderPaneContext" persist="collapsed width height"/>
     </vbox>
       
-    <splitter id="gray_vertical_splitter" collapse="before" persist="state">
-      <grippy/>
-    </splitter>
+    <splitter id="gray_vertical_splitter" collapse="before" persist="state"/>
     
     <vbox id="messengerBox" flex="1" persist="width">
       <!-- collapse this box.  since we are loading on a timeout, the user will see it "jump" if it isn't collapsed" -->
       <vbox id="accountCentralBox" flex="1" collapsed="true">
         <iframe name="accountCentralPane" flex="1" src="about:blank"/>
       </vbox>
-      <vbox id="messagesBox" flex="1">
       <hbox id="searchBox"/>
-      <tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
+      <tree id="threadTree" flex="2" persist="height" context="threadPaneContext"/>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 
 		onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"
-                id="threadpane-splitter">
-        <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
-      </splitter>
+                id="threadpane-splitter"/>
       
       <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
 
@@ -177,9 +172,8 @@
                  style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
                  disablehistory="true" type="content-primary" src="about:blank"
                  disablesecurity="true" autofind="false"/>
-       </vbox>  
-     </vbox>
-   </vbox>             
+      </vbox>  
+    </vbox>             
   </hbox>
 
   <statusbar id="status-bar" class="chromeclass-status mailwindow-statusbar">

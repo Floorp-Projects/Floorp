@@ -21,7 +21,7 @@
 #   Jan Varga <varga@utcru.sk>
 #   Håkan Waara (hwaara@chello.se)
 
- //This file stores variables common to mail windows
+//This file stores variables common to mail windows
 var messengerContractID        = "@mozilla.org/messenger;1";
 var statusFeedbackContractID   = "@mozilla.org/messenger/statusfeedback;1";
 var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
@@ -56,9 +56,11 @@ var folderDSContractID         = datasourceContractIDPrefix + "mailnewsfolders";
 var accountManagerDataSource;
 var folderDataSource;
 
-var messagesBox = null;
 var accountCentralBox = null;
 var gSearchBox = null;
+var gThreadPane = null;
+var gThreadPaneSplitter = null;
+var gMessagePaneBox = null;
 var gAccountCentralLoaded = false;
 var gFakeAccountPageLoaded = false;
 var gPaneConfig = null;
@@ -184,9 +186,11 @@ function CreateMailWindowGlobals()
   accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
   folderDataSource         = Components.classes[folderDSContractID].createInstance();
 
-  messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
+  gThreadPane = document.getElementById("threadTree");
+  gThreadPaneSplitter = document.getElementById("threadpane-splitter");
+  gMessagePaneBox = document.getElementById("messagepanebox");
   gPaneConfig = pref.getIntPref("mail.pane_config");
 }
 
@@ -492,30 +496,24 @@ function loadStartPage() {
 // Load iframe in the AccountCentral box with corresponding page
 function ShowAccountCentral()
 {
+    var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
+                                               Components.interfaces.nsIPrefLocalizedString).data;
+    gSearchBox.setAttribute("collapsed", "true");
+    gThreadPane.setAttribute("collapsed", "true");
+    gMessagePaneBox.setAttribute("collapsed", "true");
+    accountCentralBox.removeAttribute("collapsed");
+    window.frames["accountCentralPane"].location = acctCentralPage;
+    gAccountCentralLoaded = true;
+
     try
     {
-        var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
-                                                   Components.interfaces.nsIPrefLocalizedString).data;
         switch (gPaneConfig)
         {
             case 0:
-                messagesBox.setAttribute("collapsed", "true");
-                gSearchBox.setAttribute("collapsed", "true");
-                accountCentralBox.removeAttribute("collapsed");
-                window.frames["accountCentralPane"].location = acctCentralPage;
-                gAccountCentralLoaded = true;
                 break;
 
             case 1:
-                var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.setAttribute("collapsed", "true");
-                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
-                searchAndThreadPaneBox.setAttribute("collapsed", "true");
-                var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.setAttribute("collapsed", "true");
-                accountCentralBox.removeAttribute("collapsed");
-                window.frames["accountCentralPane"].location = acctCentralPage;
-                gAccountCentralLoaded = true;
+                gThreadPaneSplitter.setAttribute("collapsed", "true");
                 break;
         }
     }
@@ -531,32 +529,22 @@ function ShowAccountCentral()
 // box and display message box.
 function HideAccountCentral()
 {
+    gSearchBox.removeAttribute("collapsed");
+    gThreadPane.removeAttribute("collapsed");
+    gMessagePaneBox.removeAttribute("collapsed");
+    accountCentralBox.setAttribute("collapsed", "true");
+    window.frames["accountCentralPane"].location = "about:blank";
+    gAccountCentralLoaded = false;
+
     try
     {
         switch (gPaneConfig)
         {
             case 0:
-                window.frames["accountCentralPane"].location = "about:blank";
-                accountCentralBox.setAttribute("collapsed", "true");
-                gSearchBox.removeAttribute("collapsed");
-                messagesBox.removeAttribute("collapsed");
-                gAccountCentralLoaded = false;
                 break;
 
             case 1:
-                window.frames["accountCentralPane"].location = "about:blank";
-                accountCentralBox.setAttribute("collapsed", "true");
-                // XXX todo
-                // the code below that always removes the collapsed attribute
-                // makes it so in this pane config, you can't keep the message pane hidden
-                // see bug #188393
-                var messagePaneBox = document.getElementById("messagepanebox");
-                messagePaneBox.removeAttribute("collapsed");
-                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
-                searchAndThreadPaneBox.removeAttribute("collapsed");
-                var threadPaneSplitter = document.getElementById("threadpane-splitter");
-                threadPaneSplitter.removeAttribute("collapsed");
-                gAccountCentralLoaded = false;
+                gThreadPaneSplitter.removeAttribute("collapsed");
                 break;
         }
     }

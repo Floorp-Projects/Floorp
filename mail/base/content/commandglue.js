@@ -681,17 +681,6 @@ function OnMouseUpThreadAndMessagePaneSplitter()
   NotifyChangedMessagePaneVisibility(now_hidden);
 }
 
-function OnClickThreadAndMessagePaneSplitterGrippy()
-{
-  // the collapsed state is the state when we clicked on the grippy
-  // not when afterwards, so we need to reverse this value
-  var now_hidden = !IsThreadAndMessagePaneSplitterCollapsed();
-  if (gDBView) {
-    gDBView.suppressMsgDisplay = now_hidden;
-  }
-  NotifyChangedMessagePaneVisibility(now_hidden);
-}
-
 function FolderPaneSelectionChange()
 {
     var folderTree = GetFolderTree();

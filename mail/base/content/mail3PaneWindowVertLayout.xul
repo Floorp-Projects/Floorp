@@ -148,29 +148,19 @@
           <tree id="folderTree" flex="1" style="min-width: 100px;" context="folderPaneContext" persist="collapsed width height"/>
         </vbox>
 
-        <splitter id="gray_vertical_splitter" collapse="before" persist="state">
-          <grippy/>
-        </splitter>
+        <splitter id="gray_vertical_splitter" collapse="before" persist="state"/>
 
-        <hbox id="messengerBox" persist="collapsed width" flex="2">
-          <vbox id="searchAndthreadpaneBox" persist="width" flex ="1">
-           <vbox id="messagesBox" flex="1">
-            <hbox id="searchBox"/>
-            <vbox id="threadpaneBox" flex="1" persist="width">
-              <tree id="threadTree" flex="1" persist="width" style="width:0px" context="threadPaneContext"/>
-            </vbox>
-           </vbox>
+        <vbox id="messengerBox" persist="collapsed width" flex="2">
+          <hbox id="searchBox"/>
+          <tree id="threadTree" flex="1" persist="width" context="threadPaneContext"/>
+          <vbox id="accountCentralBox" flex="1" persist="width"> 
+            <iframe name="accountCentralPane" flex="1" src="about:blank"/>
           </vbox>
-          <hbox id="accountCentralBox" flex="1" persist="width"> 
-            <iframe name="accountCentralPane" style="width:0px;" flex="1" src="about:blank"/>
-          </hbox>
-        </hbox>
+        </vbox>
       </hbox>
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter id="threadpane-splitter" collapse="after" persist="state"
-	 onmouseup="OnMouseUpThreadAndMessagePaneSplitter()">
-        <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
-      </splitter>
+                onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"/>
       <!-- msg header view -->
       <vbox id="messagepanebox" flex="4" persist="collapsed height">
         <hbox id="junkBar"/>
