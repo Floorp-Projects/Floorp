@@ -58,6 +58,7 @@
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMWindow.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsITypeAheadFind.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
@@ -130,8 +131,10 @@ protected:
   nsresult HandleChar(PRUnichar aChar);
   PRBool HandleBackspace();
   void SaveFind();
-  void GetTopContentPresShell(nsIDOMWindow *aWindow, nsIPresShell **aPresShell);
-  nsresult GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind);
+  void GetTopContentPresShell(nsIDocShellTreeItem *aTreeItem, 
+                              nsIPresShell **aPresShell);
+  nsresult GetWebBrowserFind(nsIDOMWindow *aDOMWin,
+                             nsIWebBrowserFind **aWebBrowserFind);
   void StartTimeout();
   nsresult Init();
   nsresult UseInWindow(nsIDOMWindow *aDomWin);

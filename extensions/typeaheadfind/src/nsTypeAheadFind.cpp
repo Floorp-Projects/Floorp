@@ -860,11 +860,11 @@ nsTypeAheadFind::SaveFind()
   mFindNextBuffer = mTypeAheadBuffer;
 
   nsCOMPtr<nsIWebBrowserFind> webBrowserFind;
-  GetWebBrowserFind(getter_AddRefs(webBrowserFind));
+  GetWebBrowserFind(mFocusedWindow, getter_AddRefs(webBrowserFind));
   if (webBrowserFind) {
     webBrowserFind->SetSearchString(PromiseFlatString(mTypeAheadBuffer).get());
   }
-  
+
   if (!mFindService) {
     mFindService = do_GetService("@mozilla.org/find/find_service;1");
   }
@@ -1506,19 +1506,37 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aC
   }
 
   // Compare the top level content pres shell of typeaheadfind
-  // with the top level content prs shell window where find next is happening
+  // with the top level content pres shell window where find next is happening
   // If they're different, exit so that webbrowswerfind can handle FindNext()
 
-  nsCOMPtr<nsIPresShell> typeAheadPresShell, callerPresShell;
-  GetTopContentPresShell(mFocusedWindow, getter_AddRefs(typeAheadPresShell));
+  nsCOMPtr<nsIPresShell> typeAheadPresShell(do_QueryReferent(mFocusedWeakShell));
+  NS_ENSURE_TRUE(typeAheadPresShell, NS_OK);
+
+  nsCOMPtr<nsIPresContext> presContext;
+  typeAheadPresShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_OK);
+
+  nsCOMPtr<nsISupports> container;
+  presContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+  NS_ENSURE_TRUE(treeItem, NS_OK);
+
+  // Reget typeAheadPresShell to make sure we're 
+  // comparing with the top content presshell
+  GetTopContentPresShell(treeItem, getter_AddRefs(typeAheadPresShell));
   NS_ENSURE_TRUE(typeAheadPresShell, NS_OK);
 
   nsCOMPtr<nsISupports> callerWindowSupports;
   aCallerWindowSupports->GetData(getter_AddRefs(callerWindowSupports));
-  nsCOMPtr<nsIDOMWindow> callerWin(do_QueryInterface(callerWindowSupports));
-  NS_ENSURE_TRUE(callerWin, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(callerWindowSupports));
+  NS_ENSURE_TRUE(ifreq, NS_ERROR_FAILURE);
 
-  GetTopContentPresShell(callerWin, getter_AddRefs(callerPresShell));
+  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
+  treeItem = do_QueryInterface(webNav);
+  NS_ENSURE_TRUE(treeItem, NS_OK);
+
+  nsCOMPtr<nsIPresShell> callerPresShell;
+  GetTopContentPresShell(treeItem, getter_AddRefs(callerPresShell));
   NS_ENSURE_TRUE(callerPresShell, NS_OK);
 
   if (callerPresShell != typeAheadPresShell) {
@@ -1528,8 +1546,11 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aC
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMWindow> callerWin(do_QueryInterface(callerWindowSupports));
+  NS_ENSURE_TRUE(callerWin, NS_OK);
+
   nsCOMPtr<nsIWebBrowserFind> webBrowserFind;
-  GetWebBrowserFind(getter_AddRefs(webBrowserFind));
+  GetWebBrowserFind(callerWin, getter_AddRefs(webBrowserFind));
   NS_ENSURE_TRUE(webBrowserFind, NS_ERROR_FAILURE);
 
   nsXPIDLString webBrowserFindString;
@@ -1771,17 +1792,13 @@ nsTypeAheadFind::CancelFind()
 // ------- Helper Methods ---------------
 
 void 
-nsTypeAheadFind::GetTopContentPresShell(nsIDOMWindow *aWindow, nsIPresShell **aPresShell)
+nsTypeAheadFind::GetTopContentPresShell(nsIDocShellTreeItem *aDocShellTreeItem, 
+                                        nsIPresShell **aPresShell)
 {
   *aPresShell = nsnull;
-  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aWindow));
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
-  nsCOMPtr<nsIDocShellTreeItem> topContentTreeItem, treeItem(do_QueryInterface(webNav));
 
-  if (!treeItem)
-    return;
-
-  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(topContentTreeItem));
+  nsCOMPtr<nsIDocShellTreeItem> topContentTreeItem;
+  aDocShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(topContentTreeItem));
   nsCOMPtr<nsIDocShell> topContentDocShell(do_QueryInterface(topContentTreeItem));
 
   if (!topContentDocShell)
@@ -1792,11 +1809,12 @@ nsTypeAheadFind::GetTopContentPresShell(nsIDOMWindow *aWindow, nsIPresShell **aP
 
 
 nsresult
-nsTypeAheadFind::GetWebBrowserFind(nsIWebBrowserFind **aWebBrowserFind)
+nsTypeAheadFind::GetWebBrowserFind(nsIDOMWindow *aWin, 
+                                   nsIWebBrowserFind **aWebBrowserFind)
 {
   *aWebBrowserFind = nsnull;
 
-  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(mFocusedWindow));
+  nsCOMPtr<nsIInterfaceRequestor> ifreq(do_QueryInterface(aWin));
   NS_ENSURE_TRUE(ifreq, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(ifreq));
