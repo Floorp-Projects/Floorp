@@ -2035,9 +2035,6 @@ NS_IMETHODIMP nsOutlinerImageListener::OnStopFrame(imgIRequest *aRequest, nsISup
 
 NS_IMETHODIMP nsOutlinerImageListener::OnStopContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
 {
-  // XXX This invalidate can go away once libpr0n starts properly firing an onDataAvailable
-  // to me for cached images.
-  Invalidate();
   return NS_OK;
 }
 
