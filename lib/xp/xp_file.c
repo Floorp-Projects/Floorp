@@ -86,6 +86,12 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 		 it's really important.
 	   */
 	case xpHTTPCookie:
+#if defined(CookieManagement)
+	case xpHTTPCookiePermission:
+#endif
+#if defined(SingleSignon)
+	case xpHTTPSingleSignon:
+#endif
 	case xpKeyChain:
 	case xpSignedAppletDB:
     case xpSARCache:
@@ -643,6 +649,31 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		name = buf;
 		break;
 	  }
+#if defined(CookieManagement)
+	case xpHTTPCookiePermission:
+	  {
+#ifndef OLD_UNIX_FILES
+                sprintf (buf, "%.900s/cookperm", conf_dir);
+#else  /* OLD_UNIX_FILES */
+                sprintf (buf, "%.900s/.netscape-cookperm", conf_dir);
+#endif /* OLD_UNIX_FILES */
+		name = buf;
+		break;
+	  }
+#endif
+
+#if defined(SingleSignon)
+	case xpHTTPSingleSignon:
+	  {
+#ifndef OLD_UNIX_FILES
+                sprintf (buf, "%.900s/signon", conf_dir);
+#else  /* OLD_UNIX_FILES */
+                sprintf (buf, "%.900s/.netscape-signon", conf_dir);
+#endif /* OLD_UNIX_FILES */
+		name = buf;
+		break;
+	  }
+#endif
 	case xpRegistry:
 	  {
 		if ( name == NULL || *name == '\0' ) {
