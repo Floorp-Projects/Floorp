@@ -255,51 +255,31 @@ PageGrabber::Grab(const nsAFlatCString& aURL)
   rv = ioService->NewChannelFromURI(url, &channel);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool error = PR_FALSE;
-
   // Start the URL load...
   StreamToFile* copier = new StreamToFile(fp);
-  if(copier) {
-    NS_ADDREF(copier);
+  if (!copier)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = channel->AsyncOpen(copier, nsnull);
+  NS_ADDREF(copier);
 
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(copier);
-      return rv;
-    }
-        
-    // Enter the message pump to allow the URL load to proceed.
-  #ifdef XP_WIN
-    MSG msg;
-    while ( !copier->IsDone() ) {
-      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-    }
-  #endif
-  #ifdef XP_OS2
-    QMSG qmsg;
-    while ( !copier->IsDone() ) {
-      if (WinPeekMsg(0, &qmsg, NULL, 0, 0, PM_REMOVE)) {
-        WinDispatchMsg(0, &qmsg);
-      }
-    }
-  #endif
-  #ifdef XP_UNIX
-    while ( !copier->IsDone() ) {
-      PLEvent *gEvent;
-      gEventQ->WaitForEvent(&gEvent);
-      gEventQ->HandleEvent(gEvent);
-    }
-  #endif
+  rv = channel->AsyncOpen(copier, nsnull);
 
-    error = copier->HaveError();
+  if (NS_FAILED(rv)) {
     NS_RELEASE(copier);
+    return rv;
+  }
+    
+  // Enter the message pump to allow the URL load to proceed.
+  while ( !copier->IsDone() ) {
+    PLEvent *gEvent;
+    gEventQ->WaitForEvent(&gEvent);
+    gEventQ->HandleEvent(gEvent);
   }
 
-  return error ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  rv = copier->HaveError() ? NS_ERROR_FAILURE : NS_OK;
+  NS_RELEASE(copier);
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
