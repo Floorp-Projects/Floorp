@@ -49,7 +49,6 @@
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
 #include "nsTransferable.h"
-#include "nsDataFlavor.h"
 #include "nsXIFFormatConverter.h"
 
 // #include "nsDragService.h"
@@ -246,9 +245,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
-    }
-    else if (mClassID.Equals(kCDataFlavor)) {
-        inst = (nsISupports*)new nsDataFlavor();
     }
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();

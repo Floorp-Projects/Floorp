@@ -68,9 +68,7 @@ EXPORTS = \
 	nsIImageButtonListener.h \
 	nsIContentConnector.h \
 	nsIClipboard.h \
-	nsIDataFlavor.h \
 	nsITransferable.h \
-	nsIGenericTransferable.h \
 	nsIDragService.h \
 	nsIDragSession.h \
 	nsIClipboardOwner.h \
