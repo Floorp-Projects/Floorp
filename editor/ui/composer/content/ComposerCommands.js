@@ -838,7 +838,8 @@ function IsInTableCell()
 
 function IsSelectionInOneCell()
 {
-  var selection = window.editorShell.selection;
+  var selection = window.editorShell.editorSelection;
+
   if (selection && selection.rangeCount == 1)
   {
     // We have a "normal" single-range selection
@@ -848,7 +849,7 @@ function IsSelectionInOneCell()
       // Check if both nodes are within the same cell
       var anchorCell = window.editorShell.GetElementOrParentByTagName("td", selection.anchorNode);
       var focusCell = window.editorShell.GetElementOrParentByTagName("td", selection.focusNode);
-      return (focusCell && anchorCell && focusCell == anchorCell);
+      return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
     }
     // Collapsed selection or anchor == focus (thus must be in 1 cell)
     return true;
