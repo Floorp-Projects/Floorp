@@ -42,6 +42,7 @@
 #include "nsMsgKeyArray.h"
 #include "nsIMsgDatabase.h"
 #include "nsIMsgHdr.h"
+#include "nsMsgDBView.h"
 
 class nsMsgGroupView;
 
@@ -59,10 +60,11 @@ public:
 
 protected:
   void      Init();
+  nsresult  AddChildFromGroupView(nsIMsgDBHdr *child, nsMsgDBView *view);
   nsresult  RemoveChild(nsMsgKey msgKey);
   nsresult  RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr *oldRoot, nsIDBChangeAnnouncer *announcer);
 
-  nsresult AddMsgHdrInDateOrder(nsIMsgDBHdr *child);
+  nsresult AddMsgHdrInDateOrder(nsIMsgDBHdr *child, nsMsgDBView *view);
   nsresult ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
                                                             nsIDBChangeAnnouncer *announcer);
 

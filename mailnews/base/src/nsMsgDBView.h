@@ -104,6 +104,8 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
 
+  nsMsgViewIndex GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyArray *keys,
+                                        nsMsgViewSortOrderValue sortOrder);
 protected:
   static nsrefcnt gInstanceCount;
   // atoms used for styling the view. we're going to have a lot of
@@ -280,10 +282,10 @@ protected:
 
   // for sorting
   nsresult GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType, PRUint16 *pMaxLen, eFieldType *pFieldType);
-  nsresult GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, PRUint32 *len);
+  nsresult GetCollationKey(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, PRUint32 *len);
   nsresult GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint32 *result);
-  nsresult GetStatusSortValue(nsIMsgHdr *msgHdr, PRUint32 *result);
-  nsresult GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint32 *len);
+  nsresult GetStatusSortValue(nsIMsgDBHdr *msgHdr, PRUint32 *result);
+  nsresult GetLocationCollationKey(nsIMsgDBHdr *msgHdr, PRUint8 **result, PRUint32 *len);
 
   // for view navigation
   nsresult NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgViewIndex startIndex, nsMsgKey *pResultKey, 

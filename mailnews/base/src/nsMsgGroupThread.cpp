@@ -38,6 +38,7 @@
 
 #include "msgCore.h"
 #include "nsMsgGroupThread.h"
+#include "nsMsgDBView.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgGroupThread, nsIMsgThread)
 
@@ -160,51 +161,43 @@ nsresult nsMsgGroupThread::RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgD
   return rv;
 }
 #endif
-nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child)
+
+NS_IMETHODIMP nsMsgGroupThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, 
+                                    nsIDBChangeAnnouncer *announcer)
+{
+  NS_ASSERTION(PR_FALSE, "shouldn't call this");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child, nsMsgDBView *view)
 {
   nsresult ret = NS_OK;
   PRBool keyAdded = PR_FALSE;
   nsMsgKey newHdrKey;
   child->GetMessageKey(&newHdrKey);
+  PRUint32 insertIndex = 0;
   // since we're sorted by date, we could do a binary search for the 
   // insert point. Or, we could start at the end...
   if (m_keys.GetSize() > 0)
   {
-    nsCOMPtr <nsIMsgDBHdr> topLevelHdr;
-    PRTime newHdrDate;
-    PRBool done = PR_FALSE;
+    nsMsgViewSortTypeValue  sortType;
+    nsMsgViewSortOrderValue sortOrder;
+    (void) view->GetSortType(&sortType);
+    (void) view->GetSortOrder(&sortOrder);
+    nsMsgViewSortOrderValue threadSortOrder = 
+      (sortType == nsMsgViewSortType::byDate
+        && sortOrder == nsMsgViewSortOrder::descending) ? 
+          nsMsgViewSortOrder::descending : nsMsgViewSortOrder::ascending;
 
-    child->GetDate(&newHdrDate);
-    nsCOMPtr <nsIMsgDBHdr> curHdr;
-    for (PRUint32 childIndex = m_keys.GetSize() - 1; !done && !keyAdded; childIndex--)
-    {
-      PRTime curHdrDate;
-      
-      ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
-      if (NS_SUCCEEDED(ret) && curHdr)
-      {
-        curHdr->GetDate(&curHdrDate);
-        if (LL_CMP(newHdrDate, >, curHdrDate))
-        {
-          m_keys.InsertAt(childIndex + 1, newHdrKey);
-          keyAdded = PR_TRUE;
-          break;
-        }
-      }
-      done = !childIndex;
-    }
+    insertIndex = view->GetInsertIndexHelper(child, &m_keys, threadSortOrder);
   }
-  if (!keyAdded)
-  {
-    m_keys.InsertAt(0, newHdrKey);
+  m_keys.InsertAt(insertIndex, newHdrKey);
+  if (!insertIndex)
     m_threadRootKey = newHdrKey;
-  }
   return ret;
 }
 
-// if threadInThread is false, we're doing a non-thread grouping (e.g., by age or sender)
-NS_IMETHODIMP nsMsgGroupThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread, 
-                                    nsIDBChangeAnnouncer *announcer)
+nsresult nsMsgGroupThread::AddChildFromGroupView(nsIMsgDBHdr *child, nsMsgDBView *view)
 {
   nsresult ret = NS_OK;
   PRUint32 newHdrFlags = 0;
@@ -218,12 +211,6 @@ NS_IMETHODIMP nsMsgGroupThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inRepl
   child->GetDateInSeconds(&msgDate);
   if (msgDate > m_newestMsgDate)
     SetNewestMsgDate(msgDate);
-
-  if (threadInThread && newHdrFlags & MSG_FLAG_IGNORED)
-    SetFlags(m_flags | MSG_FLAG_IGNORED);
-
-  if (threadInThread && newHdrFlags & MSG_FLAG_WATCHED)
-    SetFlags(m_flags | MSG_FLAG_WATCHED);
 
   child->AndFlags(~(MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newHdrFlags);
   PRUint32 numChildren;
@@ -239,102 +226,7 @@ NS_IMETHODIMP nsMsgGroupThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inRepl
   if (! (newHdrFlags & MSG_FLAG_READ))
     ChangeUnreadChildCount(1);
 
-  if (!threadInThread)
-    return AddMsgHdrInDateOrder(child);
-#if 0
-  // we can't diddle the msg hdr structures for threading, because that will
-  // affect the persistent db. We'll need to store the threading info in the thread object
-  // somehow...perhaps by using a levels array.
-  if (inReplyTo)
-  {
-    nsMsgKey parentKey;
-    inReplyTo->GetMessageKey(&parentKey);
-    child->SetThreadParent(parentKey);
-    parentKeyNeedsSetting = PR_FALSE;
-  }
-  // check if this header is a parent of one of the messages in this thread
-  
-  nsCOMPtr <nsIMsgDBHdr> curHdr;
-  for (childIndex = 0; childIndex < numChildren; childIndex++)
-  {
-    nsMsgKey msgKey;
-    
-    ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
-    if (NS_SUCCEEDED(ret) && curHdr)
-    {
-      if (child->IsParentOf(curHdr))
-      {
-        nsMsgKey oldThreadParent;
-        // move this hdr before the current header.
-        m_keys.InsertAt(childIndex, newHdrKey);
-        hdrAddedToThread = PR_TRUE;
-        curHdr->GetThreadParent(&oldThreadParent);
-        curHdr->GetMessageKey(&msgKey);
-        if (msgKey == m_threadRootKey)
-        {
-          RerootThread(child, curHdr, announcer);
-          parentKeyNeedsSetting = PR_FALSE;
-        }
-        curHdr->SetThreadParent(newHdrKey);
-        if (msgKey == newHdrKey)
-          parentKeyNeedsSetting = PR_FALSE;
-        
-        // OK, this is a reparenting - need to send notification
-        if (announcer)
-          announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newHdrKey, nsnull);
-#ifdef DEBUG_bienvenu1
-        if (newHdrKey != m_threadKey)
-          printf("adding second level child\n");
-#endif
-        // If this hdr was the root, then the new hdr is the root (or its ancestor, if it has any)
-        break;
-      }
-    }
-  }
-  // If this header is not a reply to a header in the thread, and isn't a parent
-  // check to see if it starts with Re: - if not, and the first header does start
-  // with re, should we make this header the top level header?
-  // If it's date is less (or it's ID?), then yes.
-  if (numChildren > 0 && !(newHdrFlags & MSG_FLAG_HAS_RE) && !inReplyTo)
-  {
-    PRTime newHdrDate;
-    PRTime topLevelHdrDate;
-    
-    nsCOMPtr <nsIMsgDBHdr> topLevelHdr;
-    ret = GetRootHdr(nsnull, getter_AddRefs(topLevelHdr));
-    if (NS_SUCCEEDED(ret) && topLevelHdr)
-    {
-      child->GetDate(&newHdrDate);
-      topLevelHdr->GetDate(&topLevelHdrDate);
-      if (LL_CMP(newHdrDate, <, topLevelHdrDate))
-      {
-        RerootThread(child, topLevelHdr, announcer);
-        mdb_pos outPos;
-        m_keys.Remove(newHdrKey);
-        m_keys.InsertAt(0, newHdrKey);
-        hdrAddedToThread = PR_TRUE;
-        topLevelHdr->SetThreadParent(newHdrKey);
-        parentKeyNeedsSetting = PR_FALSE;
-        // ### need to get ancestor of new hdr here too.
-        m_threadRootKey = newHdrKey;
-        child->SetThreadParent(nsMsgKey_None);
-        // argh, here we'd need to adjust all the headers that listed 
-        // the demoted header as their thread parent, but only because
-        // of subject threading. Adjust them to point to the new parent,
-        // that is.
-        ReparentNonReferenceChildrenOf(topLevelHdr, newHdrKey, announcer);
-      }
-    }
-  }
-  // OK, check to see if we added this header, and didn't parent it.
-  
-  if (numChildren > 0 && parentKeyNeedsSetting)
-    child->SetThreadParent(m_threadRootKey);
-  
-  if (!hdrAddedToThread)
-    m_keys.Add(newHdrKey);
-#endif
-  return ret;
+  return AddMsgHdrInDateOrder(child, view);
 }
 
 nsresult nsMsgGroupThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,

@@ -3268,7 +3268,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
 
 #define MSG_STATUS_MASK (MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED)
 
-nsresult nsMsgDBView::GetStatusSortValue(nsIMsgHdr *msgHdr, PRUint32 *result)
+nsresult nsMsgDBView::GetStatusSortValue(nsIMsgDBHdr *msgHdr, PRUint32 *result)
 {
   NS_ENSURE_ARG_POINTER(msgHdr);
   NS_ENSURE_ARG_POINTER(result);
@@ -3392,7 +3392,7 @@ nsresult nsMsgDBView::GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue s
 
 
 nsresult 
-nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, PRUint32 *len)
+nsMsgDBView::GetCollationKey(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue sortType, PRUint8 **result, PRUint32 *len)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(msgHdr);
@@ -3444,7 +3444,7 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
 // As the location collation key is created getting folder from the msgHdr,
 // it is defined in this file and not from the db.
 nsresult 
-nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint32 *len)
+nsMsgDBView::GetLocationCollationKey(nsIMsgDBHdr *msgHdr, PRUint8 **result, PRUint32 *len)
 {
     nsCOMPtr <nsIMsgFolder> folder;
 
@@ -3843,7 +3843,7 @@ nsMsgViewIndex	nsMsgDBView::FindKey(nsMsgKey key, PRBool expand)
   retIndex = (nsMsgViewIndex) (m_keys.FindIndex(key));
   // for dummy headers, try to expand if the caller says so. And if the thread is
   // expanded, ignore the dummy header and return the real header index.
-  if (retIndex != nsMsgViewIndex_None && m_flags[retIndex] & MSG_VIEW_FLAG_DUMMY && !expand && !(m_flags[retIndex] & MSG_FLAG_ELIDED))
+  if (retIndex != nsMsgViewIndex_None && m_flags[retIndex] & MSG_VIEW_FLAG_DUMMY &&  !(m_flags[retIndex] & MSG_FLAG_ELIDED))
     return (nsMsgViewIndex) m_keys.FindIndex(key, retIndex + 1);
   if (key != nsMsgKey_None && (retIndex == nsMsgViewIndex_None || m_flags[retIndex] & MSG_VIEW_FLAG_DUMMY)
     && expand && m_db)
@@ -4220,20 +4220,10 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
   return retIndex;
 }
 
-
-nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
+nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyArray *keys, 
+                                                 nsMsgViewSortOrderValue sortOrder)
 {
-  nsMsgViewIndex highIndex = GetSize();
-  if (highIndex == 0)
-    return highIndex;
-
-  if ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0
-    && !(m_viewFlags & nsMsgViewFlagsType::kGroupBySort)
-    && m_sortOrder != nsMsgViewSortType::byId)
-  {
-    return GetIndexForThread(msgHdr);
-  }
-
+  nsMsgViewIndex highIndex = keys->GetSize();
   nsMsgViewIndex lowIndex = 0;
   IdKeyPtr EntryInfo1, EntryInfo2;
   EntryInfo1.key = nsnull;
@@ -4272,7 +4262,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
   while (highIndex > lowIndex)
   {
     nsMsgViewIndex tryIndex = (lowIndex + highIndex - 1) / 2;
-    EntryInfo2.id = GetAt(tryIndex);
+    EntryInfo2.id = keys->GetAt(tryIndex);
     nsCOMPtr <nsIMsgDBHdr> tryHdr;
     rv = m_db->GetMsgHdrForKey(EntryInfo2.id, getter_AddRefs(tryHdr));
     if (!tryHdr)
@@ -4298,7 +4288,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
       highIndex = tryIndex;
       break;
     }
-    if (m_sortOrder == nsMsgViewSortOrder::descending)	//switch retStatus based on sort order
+    if (sortOrder == nsMsgViewSortOrder::descending)	//switch retStatus based on sort order
       retStatus = ~retStatus;
     
     if (retStatus < 0)
@@ -4314,6 +4304,19 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
   PR_Free(EntryInfo1.key);
   PR_Free(EntryInfo2.key);
   return highIndex;
+}
+
+nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
+{
+  if (!GetSize())
+    return 0;
+
+  if ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0
+        && !(m_viewFlags & nsMsgViewFlagsType::kGroupBySort)
+        && m_sortOrder != nsMsgViewSortType::byId)
+    return GetIndexForThread(msgHdr);
+
+  return GetInsertIndexHelper(msgHdr, &m_keys, m_sortOrder);
 }
 
 nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
