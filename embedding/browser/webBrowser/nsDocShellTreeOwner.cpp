@@ -126,9 +126,8 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
                mAuthPrompter = new nsNonPersistAuthPrompt;
                NS_ENSURE_TRUE(mAuthPrompter, NS_ERROR_OUT_OF_MEMORY);
             }
-            if (NS_FAILED(rv)) return rv;
             
-            nsCOMPtr<nsISingleSignOnPrompt> siPrompt(do_QueryInterface(mAuthPrompter));
+            nsCOMPtr<nsISingleSignOnPrompt> siPrompt(do_QueryInterface(mAuthPrompter, &rv));
             if (NS_FAILED(rv)) return rv;
             siPrompt->SetPromptDialogs(prompt);
          }
