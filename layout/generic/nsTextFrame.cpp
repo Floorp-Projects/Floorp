@@ -3501,7 +3501,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRBool  justDidFirstLetter = PR_FALSE;
 #ifdef _WIN32
   PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
-                            !aTs.mSmallCaps && (0 == aTs.mWordSpacing);
+                            !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing;
 #else
   PRBool  measureTextRuns = PR_FALSE;
 #endif
