@@ -3513,7 +3513,18 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 {
     nsCOMPtr<nsIURI> uri;
-    aChannel->GetOriginalURI(getter_AddRefs(uri));
+    // If this a redirect, use the final url (uri)
+    // else use the original url
+    //
+    // The better way would be to trust the OnRedirect() that necko gives us.
+    // But this notification happen after the necko notification and hence
+    // overrides it. Until OnRedirect() gets settles out, let us do this.
+    nsLoadFlags loadFlags = 0;
+    aChannel->GetLoadAttributes(&loadFlags);
+    if (loadFlags & nsIChannel::LOAD_REPLACE)
+        aChannel->GetURI(getter_AddRefs(uri));
+    else
+        aChannel->GetOriginalURI(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
     OnNewURI(uri, aChannel, mLoadType);
