@@ -101,7 +101,7 @@ my $defaultEmailFlagString =
 
         'emailVoterRemoveme~'        . 'on~' .
         'emailVoterComments~'        . 'on~' .
-        'emailVoterAttachemnts~'     . 'on~' .
+        'emailVoterAttachments~'     . 'on~' .
         'emailVoterStatus~'          . 'on~' .
         'emailVoterResolved~'        . 'on~' .
         'emailVoterKeywords~'        . 'on~' .
