@@ -682,13 +682,17 @@
               tooltiptext="&AlignPopupButton.tooltip;">
     <menupopup id="AlignPopup">
       <menuitem id="AlignLeftItem" class="menuitem-iconic" label="&alignLeft.label;"
-                oncommand="doStatefulCommand('cmd_align', 'left')"/>
+                oncommand="doStatefulCommand('cmd_align', 'left')"
+                tooltiptext="&alignLeftButton.tooltip;"    />
       <menuitem id="AlignCenterItem" class="menuitem-iconic" label="&alignCenter.label;"
-                oncommand="doStatefulCommand('cmd_align', 'center')"/>
+                oncommand="doStatefulCommand('cmd_align', 'center')"
+                tooltiptext="&alignCenterButton.tooltip;"  />
       <menuitem id="AlignRightItem" class="menuitem-iconic" label="&alignRight.label;"
-                oncommand="doStatefulCommand('cmd_align', 'right')"/>
+                oncommand="doStatefulCommand('cmd_align', 'right')"
+                tooltiptext="&alignRightButton.tooltip;"   />
       <menuitem id="AlignJustifyItem" class="menuitem-iconic" label="&alignJustify.label;"
-                oncommand="doStatefulCommand('cmd_align', 'justify')"/>
+                oncommand="doStatefulCommand('cmd_align', 'justify')"
+                tooltiptext="&alignjustifyButton.tooltip;" />
     </menupopup>
   </toolbarbutton>
 
@@ -697,15 +701,20 @@
               tooltiptext="&InsertPopupButton.tooltip;">
     <menupopup id="InsertPopup">
       <menuitem id="InsertLinkItem" class="menuitem-iconic" observes="cmd_link"
-                oncommand="goDoCommand('cmd_link')" label="&linkToolbarCmd.label;"/>
+                oncommand="goDoCommand('cmd_link')" label="&linkToolbarCmd.label;"
+                tooltiptext="&linkToolbarCmd.tooltip;"   />
       <menuitem id="InsertAnchorItem" class="menuitem-iconic" observes="cmd_anchor"
-                oncommand="goDoCommand('cmd_anchor')" label="&anchorToolbarCmd.label;"/>
+                oncommand="goDoCommand('cmd_anchor')" label="&anchorToolbarCmd.label;"
+                tooltiptext="&anchorToolbarCmd.tooltip;" />
       <menuitem id="InsertImageItem"  class="menuitem-iconic" observes="cmd_image"
-                oncommand="goDoCommand('cmd_image')" label="&imageToolbarCmd.label;"/>
+                oncommand="goDoCommand('cmd_image')" label="&imageToolbarCmd.label;"
+                tooltiptext="&imageToolbarCmd.tooltip;"  />
       <menuitem id="InsertHRuleItem"  class="menuitem-iconic" observes="cmd_hline"
-                oncommand="goDoCommand('cmd_hline')" label="&hruleToolbarCmd.label;"/>
+                oncommand="goDoCommand('cmd_hline')" label="&hruleToolbarCmd.label;"
+                tooltiptext="&hruleToolbarCmd.tooltip;"  />
       <menuitem id="InsertTableItem"  class="menuitem-iconic" observes="cmd_table"
-                oncommand="goDoCommand('cmd_table')" label="&tableToolbarCmd.label;"/>
+                oncommand="goDoCommand('cmd_table')" label="&tableToolbarCmd.label;"
+                tooltiptext="&tableToolbarCmd.tooltip;"  />
     </menupopup>
   </toolbarbutton>
 

@@ -41,35 +41,51 @@
 
 <!ENTITY smiley1Cmd.label "Smile">
 <!ENTITY smiley1Cmd.accesskey "S">
+<!ENTITY smiley1Cmd.tooltip "Insert a smiley face">
 <!ENTITY smiley2Cmd.label "Frown">
 <!ENTITY smiley2Cmd.accesskey "F">
+<!ENTITY smiley2Cmd.tooltip "Insert a frown face">
 <!ENTITY smiley3Cmd.label "Wink">
 <!ENTITY smiley3Cmd.accesskey "W">
+<!ENTITY smiley3Cmd.tooltip "Insert a wink face">
 <!ENTITY smiley4Cmd.label "Tongue-out">
 <!ENTITY smiley4Cmd.accesskey "T">
+<!ENTITY smiley4Cmd.tooltip "Insert a tongue-out face">
 <!ENTITY smiley5Cmd.label "Laughing">
 <!ENTITY smiley5Cmd.accesskey "L">
+<!ENTITY smiley5Cmd.tooltip "Insert a laughing face">
 <!ENTITY smiley6Cmd.label "Embarrassed">
 <!ENTITY smiley6Cmd.accesskey "E">
+<!ENTITY smiley6Cmd.tooltip "Insert an embarrassed face">
 <!ENTITY smiley7Cmd.label "Undecided">
 <!ENTITY smiley7Cmd.accesskey "U">
+<!ENTITY smiley7Cmd.tooltip "Insert an undecided face">
 <!ENTITY smiley8Cmd.label "Surprise">
 <!ENTITY smiley8Cmd.accesskey "p">
+<!ENTITY smiley8Cmd.tooltip "Insert a surprised face">
 <!ENTITY smiley9Cmd.label "Kiss">
 <!ENTITY smiley9Cmd.accesskey "K">
+<!ENTITY smiley9Cmd.tooltip "Insert a kiss face">
 <!ENTITY smiley10Cmd.label "Yell">
 <!ENTITY smiley10Cmd.accesskey "Y">
+<!ENTITY smiley10Cmd.tooltip "Insert a yelling face">
 <!ENTITY smiley11Cmd.label "Cool">
 <!ENTITY smiley11Cmd.accesskey "C">
+<!ENTITY smiley11Cmd.tooltip "Insert a cool face">
 <!ENTITY smiley12Cmd.label "Money-Mouth">
 <!ENTITY smiley12Cmd.accesskey "M">
+<!ENTITY smiley12Cmd.tooltip "Insert a money-mouth face">
 <!ENTITY smiley13Cmd.label "Foot-in-Mouth">
 <!ENTITY smiley13Cmd.accesskey "o">
+<!ENTITY smiley13Cmd.tooltip "Insert a foot-in-mouth face">
 <!ENTITY smiley14Cmd.label "Innocent">
 <!ENTITY smiley14Cmd.accesskey "I">
+<!ENTITY smiley14Cmd.tooltip "Insert an innocent face">
 <!ENTITY smiley15Cmd.label "Cry">
 <!ENTITY smiley15Cmd.accesskey "r">
+<!ENTITY smiley15Cmd.tooltip "Insert a crying face">
 <!ENTITY smiley16Cmd.label "Lips-are-Sealed">
 <!ENTITY smiley16Cmd.accesskey "a">
+<!ENTITY smiley16Cmd.tooltip "Insert a lips-are-sealed face">
 <!ENTITY SmileButton.tooltip "Insert a smiley face">
 
