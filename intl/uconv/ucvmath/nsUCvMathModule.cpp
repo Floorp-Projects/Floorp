@@ -78,25 +78,29 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 #define DECODER_NAME_BASE "Unicode Decoder-"
 #define ENCODER_NAME_BASE "Unicode Encoder-"
 
-NS_IMPL_NSUCONVERTERREGSELF
+NS_CONVERTER_REGISTRY_START
 
 #if defined(XP_PC) || defined(XP_MAC)
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMRttf,  "Unicode", "x-ttf-cmr",   NS_UNICODETOTEXCMRTTF_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMMIttf, "Unicode", "x-ttf-cmmi",  NS_UNICODETOTEXCMMITTF_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMSYttf, "Unicode", "x-ttf-cmsy",  NS_UNICODETOTEXCMSYTTF_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMEXttf, "Unicode", "x-ttf-cmex",  NS_UNICODETOTEXCMEXTTF_CID);
+NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmr",   NS_UNICODETOTEXCMRTTF_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmmi",  NS_UNICODETOTEXCMMITTF_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmsy",  NS_UNICODETOTEXCMSYTTF_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-ttf-cmex",  NS_UNICODETOTEXCMEXTTF_CID)
 #else
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMRt1,  "Unicode", "x-t1-cmr",   NS_UNICODETOTEXCMRT1_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMMIt1, "Unicode", "x-t1-cmmi",  NS_UNICODETOTEXCMMIT1_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMSYt1, "Unicode", "x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToTeXCMEXt1, "Unicode", "x-t1-cmex",  NS_UNICODETOTEXCMEXT1_CID);
+NS_UCONV_REG_UNREG("Unicode", "x-t1-cmr",   NS_UNICODETOTEXCMRT1_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-t1-cmmi",  NS_UNICODETOTEXCMMIT1_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-t1-cmsy",  NS_UNICODETOTEXCMSYT1_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-t1-cmex",  NS_UNICODETOTEXCMEXT1_CID)
 #endif
-NS_UCONV_REG_UNREG(nsUnicodeToMathematica1, "Unicode", "x-mathematica1",  NS_UNICODETOMATHEMATICA1_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMathematica2, "Unicode", "x-mathematica2",  NS_UNICODETOMATHEMATICA2_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMathematica3, "Unicode", "x-mathematica3",  NS_UNICODETOMATHEMATICA3_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMathematica4, "Unicode", "x-mathematica4",  NS_UNICODETOMATHEMATICA4_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMathematica5, "Unicode", "x-mathematica5",  NS_UNICODETOMATHEMATICA5_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToMTExtra, "Unicode", "x-mtextra",  NS_UNICODETOMTEXTRA_CID);
+NS_UCONV_REG_UNREG("Unicode", "x-mathematica1",  NS_UNICODETOMATHEMATICA1_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mathematica2",  NS_UNICODETOMATHEMATICA2_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mathematica3",  NS_UNICODETOMATHEMATICA3_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mathematica4",  NS_UNICODETOMATHEMATICA4_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mathematica5",  NS_UNICODETOMATHEMATICA5_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-mtextra",  NS_UNICODETOMTEXTRA_CID)
+
+NS_CONVERTER_REGISTRY_END
+
+NS_IMPL_NSUCONVERTERREGSELF
 
 #if defined(XP_PC) || defined(XP_MAC)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTeXCMRttf);
@@ -129,81 +133,69 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-ttf-cmmi" , NS_UNICODETOTEXCMMITTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmmi",
     nsUnicodeToTeXCMMIttfConstructor, 
-    nsUnicodeToTeXCMMIttfRegSelf, nsUnicodeToTeXCMMIttfUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-ttf-cmsy" , NS_UNICODETOTEXCMSYTTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmsy",
     nsUnicodeToTeXCMSYttfConstructor, 
-    nsUnicodeToTeXCMSYttfRegSelf, nsUnicodeToTeXCMSYttfUnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-ttf-cmex" , NS_UNICODETOTEXCMEXTTF_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-ttf-cmex",
     nsUnicodeToTeXCMEXttfConstructor, 
-    nsUnicodeToTeXCMEXttfRegSelf, nsUnicodeToTeXCMEXttfUnRegSelf
   },
 #else
   { 
     ENCODER_NAME_BASE "x-t1-cmr" , NS_UNICODETOTEXCMRT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmr",
     nsUnicodeToTeXCMRt1Constructor, 
-    nsUnicodeToTeXCMRt1RegSelf, nsUnicodeToTeXCMRt1UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-t1-cmmi" , NS_UNICODETOTEXCMMIT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmmi",
     nsUnicodeToTeXCMMIt1Constructor, 
-    nsUnicodeToTeXCMMIt1RegSelf, nsUnicodeToTeXCMMIt1UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-t1-cmsy" , NS_UNICODETOTEXCMSYT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmsy",
     nsUnicodeToTeXCMSYt1Constructor, 
-    nsUnicodeToTeXCMSYt1RegSelf, nsUnicodeToTeXCMSYt1UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-t1-cmex" , NS_UNICODETOTEXCMEXT1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-t1-cmex",
     nsUnicodeToTeXCMEXt1Constructor, 
-    nsUnicodeToTeXCMEXt1RegSelf, nsUnicodeToTeXCMEXt1UnRegSelf
   },
 #endif
   { 
     ENCODER_NAME_BASE "x-mathematica1" , NS_UNICODETOMATHEMATICA1_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica1",
     nsUnicodeToMathematica1Constructor, 
-    nsUnicodeToMathematica1RegSelf, nsUnicodeToMathematica1UnRegSelf
+    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     ENCODER_NAME_BASE "x-mathematica2" , NS_UNICODETOMATHEMATICA2_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica2",
     nsUnicodeToMathematica2Constructor, 
-    nsUnicodeToMathematica2RegSelf, nsUnicodeToMathematica2UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-mathematica3" , NS_UNICODETOMATHEMATICA3_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica3",
     nsUnicodeToMathematica3Constructor, 
-    nsUnicodeToMathematica3RegSelf, nsUnicodeToMathematica3UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-mathematica4" , NS_UNICODETOMATHEMATICA4_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica4",
     nsUnicodeToMathematica4Constructor, 
-    nsUnicodeToMathematica4RegSelf, nsUnicodeToMathematica4UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-mathematica5" , NS_UNICODETOMATHEMATICA5_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mathematica5",
     nsUnicodeToMathematica5Constructor, 
-    nsUnicodeToMathematica5RegSelf, nsUnicodeToMathematica5UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "x-mtextra" , NS_UNICODETOMTEXTRA_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mtextra",
     nsUnicodeToMTExtraConstructor, 
-    nsUnicodeToMTExtraRegSelf, nsUnicodeToMTExtraUnRegSelf
   }
 };
 
