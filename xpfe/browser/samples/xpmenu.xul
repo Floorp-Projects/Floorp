@@ -132,12 +132,7 @@ Contributor(s): ______________________________________. -->
     </xpmenubar>
   </toolbox>
 
-<html:div style="height: 400px; width: 400 px; color: white; background: url(resource:/res/samples/rock_gra.gif);">
-Sample text underneath.
-</html:div>
-
-<!--  <html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>
--->
+<html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>
 
 
 </window>
