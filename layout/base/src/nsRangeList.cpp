@@ -1412,7 +1412,12 @@ nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
 {
   InvalidateDesiredX();
   mHint = HINT(aHint);
-  return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+  
+  // Don't take focus when dragging off of a table
+  if (!mSelectingTableCells)
+    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
