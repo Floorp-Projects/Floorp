@@ -126,7 +126,27 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 nsresult
 XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  PRUint32 button;
 
+  switch (popupType) {
+    case eXULPopupType_popup:
+      // Check for left mouse button down
+      aMouseEvent->GetButton(&button);
+      if (button == 1) {
+        // Time to launch a popup menu.
+        printf("Popup menu launching now!\n");
+      }
+      break;
+    case eXULPopupType_context:
+      // Check for right mouse button down
+      aMouseEvent->GetButton(&button);
+      // XXX: Handle Mac 
+      if (button == 2) {
+        // Time to launch a context menu.
+        printf("Context menu launching now!\n");
+      }
+      break;
+  }
   return NS_OK;
 }
 
