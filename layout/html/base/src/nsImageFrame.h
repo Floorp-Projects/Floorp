@@ -74,6 +74,15 @@ private:
   nsImageFrame *mFrame;
 };
 
+
+struct ImageLoad {
+  ImageLoad() : mIntrinsicSize(0,0) { }
+  nsCOMPtr<imgIRequest> mRequest;
+  nsSize mIntrinsicSize;
+
+  nsTransform2D mTransform;
+};
+
 #define ImageFrameSuper nsLeafFrame
 
 class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
@@ -192,7 +201,7 @@ protected:
                     nsRect& aInnerArea) const;
 
 
-  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest **aRequest);
+  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
 
   inline PRBool CanLoadImage(nsIURI *aURI);
 
@@ -204,17 +213,25 @@ protected:
 
   void FireDOMEvent(PRUint32 aMessage);
 
-  nsImageMap*         mImageMap;
 
-  nsCOMPtr<imgIRequest> mImageRequest;
-  nsCOMPtr<imgIRequest> mLowImageRequest;
+private:
+  inline int GetImageLoad(imgIRequest *aRequest);
+
+
+  nsImageMap*         mImageMap;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
 
+  /**
+   * 0 is the current image being displayed on the screen.
+   * 1 is for the lowsrc image if any.
+   * 2 is for attribute changed images.
+   * when the load from 2 completes, it will replace 0.
+   */
+  struct ImageLoad mLoads[3];
+
   nsSize mComputedSize;
   nsSize mIntrinsicSize;
-
-  nsTransform2D mTransform;
 
   PRPackedBool        mSizeConstrained;
   PRPackedBool        mGotInitialReflow;

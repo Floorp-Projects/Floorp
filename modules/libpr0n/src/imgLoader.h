@@ -52,7 +52,8 @@ public:
 private:
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver, nsISupports *cx,
-                                    nsLoadFlags aLoadFlags, imgIRequest **_retval);
+                                    nsLoadFlags aLoadFlags, imgIRequest *aRequestProxy,
+                                    imgIRequest **_retval);
 };
 
 

@@ -287,7 +287,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-  il->LoadImage(srcURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, getter_AddRefs(mImageRequest));
+  il->LoadImage(srcURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
   aResize = PR_TRUE;
 

@@ -52,13 +52,9 @@ static nsModuleComponentInfo components[] =
     NS_IMGLOADER_CID,
     "@mozilla.org/image/loader;1",
     imgLoaderConstructor, },
-  { "image request",
-    NS_IMGREQUEST_CID,
-    "@mozilla.org/image/request/real;1",
-    imgRequestConstructor, },
   { "image request proxy",
     NS_IMGREQUESTPROXY_CID,
-    "@mozilla.org/image/request/proxy;1",
+    "@mozilla.org/image/request;1",
     imgRequestProxyConstructor, },
 };
 

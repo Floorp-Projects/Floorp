@@ -68,14 +68,3 @@ interface imgIRequest : nsIRequest
   readonly attribute imgIDecoderObserver decoderObserver;
 };
 
-%{C++
-
-/**
- * imagelib specific nsresult success and error codes
- */
-#define NS_IMAGELIB_SUCCESS_LOAD_FINISHED   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_IMGLIB, 0)
-
-#define NS_IMAGELIB_ERROR_FAILURE           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 5)
-#define NS_IMAGELIB_ERROR_NO_DECODER        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_IMGLIB, 6)
-
-%}

@@ -1336,7 +1336,7 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
 
       nsresult rv;
       nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-      il->LoadImage(srcURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, getter_AddRefs(imageRequest));
+      il->LoadImage(srcURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
 
       if (!mImageCache) {
         mImageCache = new nsSupportsHashtable(32);
