@@ -19,6 +19,7 @@
 #include "nspr.h"
 #include "nsCRT.h"
 #include "nscore.h"
+#include "netCore.h"
 #include "nsIStreamListener.h"
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
@@ -329,7 +330,7 @@ nsresult nsSocketTransport::doResolveHost(void)
 //    NS_OK
 //    NS_BASE_STREAM_WOULD_BLOCK
 //
-//    NS_ERROR_CONNECTION_REFUSED (XXX: Not yet defined)
+//    NS_ERROR_CONNECTION_REFUSED
 //    NS_ERROR_FAILURE
 //    NS_ERROR_OUT_OF_MEMORY
 //
@@ -403,8 +404,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       //
       else {
         // Connection refused...
-        // XXX: Should be NS_ERROR_CONNECTION_REFUSED
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_CONNECTION_REFUSED;
       }
     }
   }
@@ -414,8 +414,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
   //
   else if (NS_SUCCEEDED(rv) && aSelectFlags) {
     if (PR_POLL_EXCEPT & aSelectFlags) {
-      // XXX: Should be NS_ERROR_CONNECTION_REFUSED
-      rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_CONNECTION_REFUSED;
     }
     //
     // The connection was successful...
