@@ -48,6 +48,11 @@ DLL_SUFFIX   = dll
 OUT_NAME     = -out:
 ARCHIVE_SUFFIX = _s
 
+ifdef RCFILE
+RCFILE       := $(RCFILE).rc
+RESFILE      = $(OBJDIR)/$(RCFILE:.rc=.res)
+endif
+
 OS_LIBS = gdi32.lib kernel32.lib advapi32.lib user32.lib
 
 GUI_LIBS = 
@@ -76,7 +81,7 @@ else
 	#OPTIMIZER += -Zi -Fd$(OBJDIR)/ -Od
 	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG
 	DLLFLAGS   += -DEBUG -DEBUGTYPE:CV -OUT:"$@"
-	LDFLAGS    += -DEBUG -DEBUGTYPE:BOTH /SUBSYSTEM:CONSOLE /NOLOGO
+	LDFLAGS    += -DEBUG -DEBUGTYPE:BOTH  /SUBSYSTEM:WINDOWS /NOLOGO
 endif
 
 # XXX FIXME: I doubt we use this.  It is redundant with

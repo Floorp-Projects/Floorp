@@ -207,7 +207,11 @@ alltags:
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs ctags -a
 
-$(PROGRAM): $(OBJS)
+$(RESFILE):	
+	echo Creating Resource file: $(RESFILE)
+	$(RC) $(RCFLAGS) -r -Fo$(RESFILE) $(RCFILE)
+
+$(PROGRAM): $(OBJS) $(RESFILE)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(OS_TARGET),WIN16)
@@ -225,7 +229,7 @@ ifeq ($(OS_TARGET),WIN16)
 	$(LINK) @w16link.
 	rm w16link
 else
-	$(LINK_EXE) $(MAP) $(PDB) $(IMP) $(OBJS) $(OUT_NAME)$(PROGRAM) $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(LINK_EXE) $(MAP) $(PDB) $(IMP) $(OBJS) $(OUT_NAME)$(PROGRAM) $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(RESFILE)
 endif
 else
 	$(LINK_PROGRAM) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS)

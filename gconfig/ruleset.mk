@@ -139,6 +139,10 @@ ifdef PROGRAM
 	PROGRAM := $(addprefix $(OBJDIR)/, $(PROGRAM)$(PROG_SUFFIX))
 endif
 
+#ifdef RCFILE
+#	RCFILE := $(addprefix $(OBJDIR)/, $(RCFILE)$(RC_SUFFIX))
+#	endif
+
 ifndef LIBRARY
 	ifdef LIBRARY_NAME
 		LIBRARY = lib$(LIBRARY_NAME).$(LIB_SUFFIX)

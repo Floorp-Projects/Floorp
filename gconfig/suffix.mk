@@ -30,6 +30,20 @@ ifndef OBJ_SUFFIX
 endif
 
 #
+# Resource suffixes
+#
+
+ifndef RC_SUFFIX
+	ifeq ($(OS_ARCH), WINNT)
+		RC_SUFFIX = .rc
+		RES_SUFFIX = .res
+	else
+		RC_SUFFIX =
+		RES_SUFFIX =
+	endif
+endif
+
+#
 # Library suffixes
 #
 
