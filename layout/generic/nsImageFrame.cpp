@@ -359,13 +359,6 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
-{
-  aContinueTextRun = PR_TRUE;
-  return NS_OK;
-}
-
 // Computes the width of the specified string. aMaxWidth specifies the maximum
 // width available. Once this limit is reached no more characters are measured.
 // The number of characters that fit within the maximum width are returned in
