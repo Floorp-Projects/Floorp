@@ -1415,6 +1415,12 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::CloseContainer", aNode, mStackPos-1, mSink);
 
+  NS_WARN_IF_FALSE(mStackPos > 0,"stack out of bounds. wrong context probably!");
+
+  if(mStackPos<=0) {
+    return NS_OK; // Fix crash - Ref. bug 45975 or 45007
+  }
+
   --mStackPos;
   nsHTMLTag nodeType = mStack[mStackPos].mType;
   nsIHTMLContent* content = mStack[mStackPos].mContent;
