@@ -158,7 +158,7 @@ void
 nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   SetProperty(nsHTMLAtoms::checked, "1");
-
+  
   if (mFormFrame) {
      // The form frame will determine which radio button needs
      // to be turned off and will call SetChecked on the
@@ -194,7 +194,8 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
  if (PR_TRUE == aValue)
     SetProperty(nsHTMLAtoms::checked, "1");
   else
-    SetProperty(nsHTMLAtoms::checked, "0");   
+    SetProperty(nsHTMLAtoms::checked, "0");  
+  
 }
 
 
@@ -398,6 +399,8 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
       mChecked = PR_TRUE;
     else
       mChecked = PR_FALSE;
+
+    nsFormControlHelper::ForceDrawFrame(this);
   }
 }         
 

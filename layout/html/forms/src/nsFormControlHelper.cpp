@@ -82,6 +82,28 @@ nsFormControlHelper::~nsFormControlHelper()
 {
 }
 
+void nsFormControlHelper::ForceDrawFrame(nsIFrame * aFrame)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(pnt, view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view != nsnull) {
+    nsIViewManager * viewMgr;
+    view->GetViewManager(viewMgr);
+    if (viewMgr != nsnull) {
+      viewMgr->UpdateView(view, rect, 0);
+      NS_RELEASE(viewMgr);
+    }
+  }
+}
+
 
 /*nscoord 
 nsFormControlHelper::GetScrollbarWidth(float aPixToTwip)
