@@ -120,6 +120,7 @@
               }
               this.mSessions[name] = session;
               this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+              this.mLastResults[name] = null;
               ++this.sessionCount;
             }
           }
@@ -202,11 +203,11 @@
 
       <!-- =================== PRIVATE PROPERTIES =================== -->
 
-      <property name="mSessions"/>
-      <property name="mListeners"/>
-      <property name="mLastResults"/>
-      <property name="mLastKeyCode"/>
-      <property name="mInputFilter"/>
+      <property name="mSessions">null</property>
+      <property name="mListeners">null</property>
+      <property name="mLastResults">null</property>
+      <property name="mLastKeyCode">null</property>
+      <property name="mInputFilter">null</property>
       <property name="mAutoCompleteTimer">0</property>
       <property name="mMenuOpen">false</property>
       <property name="mFinishAfterSearch">false</property>
@@ -214,11 +215,12 @@
       <property name="mNeedToFinish">false</property>
       <property name="mNeedToComplete">false</property>
       <property name="mView">null</property>
-      <property name="currentSearchString"/>
-      <property name="currentSearchStringPreFilter"/>
-      <property name="oninit"/>
-      <property name="ontextcommand"/>
-      <property name="ontextrevert"/>
+      <property name="currentSearchString">null</property>
+      <property name="currentSearchStringPreFilter">null</property>
+      <property name="ignoreInputEvent">false</property>
+      <property name="oninit">null</property>
+      <property name="ontextcommand">null</property>
+      <property name="ontextrevert">null</property>
 
       <property name="mAutoCompleteListener"><![CDATA[
         var listener = function(aSession) { this.sessionName = aSession };
@@ -334,6 +336,7 @@
           var name = "anon_"+this.sessionCount;
           this.mSessions[name] = aSession;
           this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+          this.mLastResults[name] = null;
         ]]></body>
       </method>
 
@@ -345,6 +348,7 @@
             if (this.mSessions[name] == aSession) {
               delete this.mSessions[name];
               delete this.mListeners[name];
+              delete this.mLastResults[name];
               --this.sessionCount;
               break;
             }
@@ -360,9 +364,11 @@
           this.sessionCount = aCopyFrom.sessionCount;
           this.mSessions = {};
           this.mListeners = {};
+          this.mLastResults = {};
           for (var name in aCopyFrom.mSessions) {
             this.mSessions[name] = aCopyFrom.mSessions[name];
             this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+            this.mLastResults[name] = null;
           }
         ]]></body>
       </method>
@@ -817,7 +823,7 @@
                 this.resultsPopup.setAttribute("width", w);
             }
             
-            //dump("open popup\n");
+            dump("open popup\n");
             this.resultsPopup.openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
@@ -1184,6 +1190,7 @@
             // do nothing - occasionally timer-related js errors happen here
             // e.g. "this.selectedIndex has no properties", when you type fast and hit a
             // navigation key before this popup has opened
+            return null;
           }
         ]]></body>
       </method>
