@@ -62,7 +62,7 @@ private:
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
   
   nsBaseHashtableET(KeyTypePointer aKey);
-  nsBaseHashtableET(const nsBaseHashtableET<KeyClass,DataType>& toCopy);
+  nsBaseHashtableET(nsBaseHashtableET<KeyClass,DataType>& toCopy);
   ~nsBaseHashtableET();
 };
 
@@ -305,7 +305,7 @@ nsBaseHashtableET<KeyClass,DataType>::nsBaseHashtableET(KeyTypePointer aKey) :
 
 template<class KeyClass,class DataType>
 nsBaseHashtableET<KeyClass,DataType>::nsBaseHashtableET
-  (const nsBaseHashtableET<KeyClass,DataType>& toCopy) :
+  (nsBaseHashtableET<KeyClass,DataType>& toCopy) :
   KeyClass(toCopy),
   mData(toCopy.mData)
 { }

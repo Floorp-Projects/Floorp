@@ -387,9 +387,12 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable          *table,
                                      const PLDHashEntryHdr *from,
                                      PLDHashEntryHdr       *to)
 {
-  new(to) EntryType(* NS_REINTERPRET_CAST(const EntryType*,from));
+  EntryType* fromEntry =
+    NS_CONST_CAST(EntryType*, NS_REINTERPRET_CAST(const EntryType*, from));
 
-  NS_CONST_CAST(EntryType*,NS_REINTERPRET_CAST(const EntryType*,from))->~EntryType();
+  new(to) EntryType(*fromEntry);
+
+  fromEntry->~EntryType();
 }
 
 template<class EntryType>
