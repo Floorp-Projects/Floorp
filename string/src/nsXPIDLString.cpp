@@ -45,7 +45,7 @@ class nsImportedStringHandle
     public:
       nsImportedStringHandle() : nsFlexBufferHandle<CharT>(0, 0, 0, 0) { }
 
-      CharT** AddressOfDataStart() { return &mDataStart; }
+      CharT** AddressOfDataStart() { return &(this->mDataStart); }
       void RecalculateBoundaries() const;
   };
 
@@ -57,7 +57,7 @@ nsImportedStringHandle<CharT>::RecalculateBoundaries() const
     size_t data_length = 0;
     size_t storage_length = 0;
 
-    CharT* data_start = NS_CONST_CAST(CharT*, DataStart());
+    CharT* data_start = NS_CONST_CAST(CharT*, this->DataStart());
     if ( data_start )
       {
         data_length = nsCharTraits<CharT>::length(data_start);
@@ -103,7 +103,7 @@ nsXPIDLString::GetSharedBufferHandle() const
   {
     const nsImportedStringHandle<PRUnichar>* answer = NS_STATIC_CAST(const nsImportedStringHandle<PRUnichar>*, mBuffer.get());
     
-    if ( !answer->DataEnd() )
+    if ( answer && !answer->DataEnd() )
       answer->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
@@ -158,7 +158,7 @@ nsXPIDLCString::GetSharedBufferHandle() const
   {
     const nsImportedStringHandle<char>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char>*, mBuffer.get());
     
-    if ( !answer->DataEnd() )
+    if ( answer && !answer->DataEnd() )
       answer->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
