@@ -70,7 +70,7 @@ export::
 endif
 
 libs::
-	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE)
+	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE) USE_GCC3=YES CC="$(CC)" CPLUSPLUS="$(CXX)"
 
 clean clobber::
 	rm -rf build
