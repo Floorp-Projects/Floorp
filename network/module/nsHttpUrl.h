@@ -19,6 +19,7 @@
 #ifndef nsHttpUrl_h__
 #define nsHttpUrl_h__
 
+#include "nsNetStream.h"
 #include "nsIURL.h"
 #include "nsINetlibURL.h"
 #include "nsIHttpURL.h"
