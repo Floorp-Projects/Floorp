@@ -284,7 +284,7 @@ PR_IMPLEMENT(PRCounterHandle)
 )
 {
     const char    *qn, *rn, *desc;
-    PRCounterHandle     qh, rh;
+    PRCounterHandle     qh, rh = NULL;
     RName   *rnp = NULL;
 
     PR_LOG( lm, PR_LOG_DEBUG, ("PR_Counter: GetCounterHandleFromName:\n\t"

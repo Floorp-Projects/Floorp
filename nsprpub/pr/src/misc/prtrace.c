@@ -569,7 +569,7 @@ PR_IMPLEMENT(PRTraceHandle)
 )
 {
     const char    *qn, *rn, *desc;
-    PRTraceHandle     qh, rh;
+    PRTraceHandle     qh, rh = NULL;
     RName   *rnp = NULL;
 
     PR_LOG( lm, PR_LOG_DEBUG, ("PRTrace: GetTraceHandleFromName:\n\t"
