@@ -57,6 +57,7 @@ textbox {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
+.autocomplete-history-dropmarker:hover:active,
 .autocomplete-history-dropmarker[open="true"] {
   -moz-border-top-colors: ThreeDShadow ThreeDFace;
   -moz-border-right-colors: ThreeDShadow ThreeDFace;
