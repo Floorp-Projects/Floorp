@@ -90,25 +90,38 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  // Create a block frame and set its style context
-  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, mFlags);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mChildCount = 1;
-  nsIStyleContext* pseudoStyleContext =
-   aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
-  mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
-  NS_RELEASE(pseudoStyleContext);
+  if (nsnull == mPrevInFlow) {
+    // Create a block frame and set its style context
+    nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, mFlags);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    mChildCount = 1;
+    nsIStyleContext* pseudoStyleContext =
+     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::columnPseudo, mStyleContext);
+    mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
+    NS_RELEASE(pseudoStyleContext);
+  
+    // Set the geometric and content parent for each of the child frames
+    for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+      frame->SetGeometricParent(mFirstChild);
+      frame->SetContentParent(mFirstChild);
+    }
+  
+    // Queue up the frames for the block frame
+    return mFirstChild->Init(aPresContext, aChildList);
 
-  // Set the geometric and content parent for each of the child frames
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetGeometricParent(mFirstChild);
-    frame->SetContentParent(mFirstChild);
-  }
+  } else {
+    // We have a prev-in-flow, so create a continuing block frame
+    nsBodyFrame*     prevBodyFrame = (nsBodyFrame*)mPrevInFlow;
+    nsIStyleContext* blockStyleContext;
 
-  // Queue up the frames for the block frame
-  return mFirstChild->Init(aPresContext, aChildList);
+    prevBodyFrame->mFirstChild->GetStyleContext(blockStyleContext);
+    prevBodyFrame->mFirstChild->CreateContinuingFrame(aPresContext, this,
+                                                      blockStyleContext, mFirstChild);
+    NS_RELEASE(blockStyleContext);
+    return mFirstChild->Init(aPresContext, nsnull);
+  }
 }
 
 #ifdef NS_DEBUG
@@ -478,6 +491,7 @@ nsBodyFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, nsnull);
   aContinuingFrame = cf;
   return NS_OK;
 }
