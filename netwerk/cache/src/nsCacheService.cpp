@@ -833,11 +833,6 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     } else {
         ++mCacheMisses;
     }
-    if (!entry && !(request->AccessRequested() & nsICache::ACCESS_WRITE)) {
-        // this is a READ-ONLY request
-        rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
-        goto error;
-    }
 
     if (entry &&
         ((request->AccessRequested() == nsICache::ACCESS_WRITE) ||
@@ -854,6 +849,12 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     }
 
     if (!entry) {
+		if (! (request->AccessRequested() & nsICache::ACCESS_WRITE)) {
+			// this is a READ-ONLY request
+		    rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
+			goto error;
+		}
+
         entry = new nsCacheEntry(request->mKey,
                                  request->IsStreamBased(),
                                  request->StoragePolicy());
