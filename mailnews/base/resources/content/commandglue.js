@@ -678,6 +678,7 @@ function FolderPaneSelectionChange()
                   viewFlags = dbFolderInfo.viewFlags;
                   viewType = dbFolderInfo.viewType;
                   msgDatabase = null;
+                  dbFolderInfo = null;
                 }
               }
               catch (ex)

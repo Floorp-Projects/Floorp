@@ -314,6 +314,7 @@ function HandleCompactCompleted (folder)
           sortOrder = dbFolderInfo.sortOrder;
           viewFlags = dbFolderInfo.viewFlags;
           viewType = dbFolderInfo.viewType;
+          dbFolderInfo = null;
         }
         RerootFolder(uri, msgFolder, viewType, viewFlags, sortType, sortOrder);
         SetFocusThreadPane();
