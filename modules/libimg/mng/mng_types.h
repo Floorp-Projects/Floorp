@@ -170,17 +170,17 @@
 
 /* ************************************************************************** */
 
-#if USHRT_MAX == 0xffffffff                      /* get the proper 32-bit width !!! */
+#if USHRT_MAX == 0xffffffffU                     /* get the proper 32-bit width !!! */
 typedef unsigned short mng_uint32;               
 typedef signed   short mng_int32;
-#elif UINT_MAX == 0xffffffff
+#elif UINT_MAX == 0xffffffffU
 typedef unsigned int   mng_uint32;
 typedef signed   int   mng_int32;
-#elif ULONG_MAX == 0xffffffff
+#elif ULONG_MAX == 0xffffffffU
 typedef unsigned long  mng_uint32;
 typedef signed   long  mng_int32;
 #else
-#error Sorry, I can't find any 32-bit integers on this platform.
+#error "Sorry, I can't find any 32-bit integers on this platform."
 #endif
 
 typedef signed   short mng_int16;                /* other basic integers */
