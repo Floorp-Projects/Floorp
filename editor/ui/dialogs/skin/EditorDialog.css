@@ -33,6 +33,12 @@ select.combobox {
   border-style: outset;
 }
 
+select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
+  width: 20em;
+  border-style: inset;
+	background-color: #CCCCCC; /* not working on Macintosh */ 
+}
+
 .checkboxtext {
   margin-top: -9px;
   margin-left: 3px;
@@ -56,7 +62,8 @@ tree  {
 tr, TR { vertical-align: top }
 
 /* FOR DEBUG PURPOSE -- use border-width: 1px */
-td, table { border-width: 0px; }
+/* BORDER STYLE NOT WORKING 5/12/99 */
+td, table { border: 0px;}
 
 p, br, td {
   font-family: Sans-Serif;

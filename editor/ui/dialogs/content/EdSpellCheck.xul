@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window width="380" height="265" title="Check Spelling"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
+    onload = "Startup()">
+
+  <script language="JavaScript" src="chrome://editordlgs/content/EdSpellCheck.js">
+  </script>
+  <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
+  <xul:broadcaster id="args" value=""/>
+
+  <table>
+    <tr>
+      <td colspan="3">
+        Word<br/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" class="SpellCheckWord" id="Word" size="10"/>
+      </td>
+      <td>
+        <button width="30" id="CheckWord" onclick="CheckWord()">Check word</button>
+      </td>
+      <td>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="3">
+        Suggestions:
+      </td>
+    </tr>
+    <tr>
+      <td rowspan="5">
+        <select class="SpellCheckList" id="SuggestedList" size="6" onchange="SelectSuggestedWord()">
+          <option>Sample contents 1</option>
+          <option>Sample contents 2</option>
+          <option>Sample contents 3</option>
+        </select>
+      </td>
+      <!-- THIS IS A BOGUS HACK TO COMPENSATE FOR A DISPLAY BUG -->
+      <td colspan="2">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button width="30" id="Ignore" onclick="Ignore()">Ignore</button>
+      </td>
+      <td>
+        <button width="30"  id="IgnoreAll" onclick="IgnoreAll()">Ignore All</button>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button width="30"  id="Replace" onclick="Replace()">Change</button>
+      </td>
+      <td>
+        <button width="30"  id="ReplaceAll" onclick="ReplaceAll()">Change All</button>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        User Dictionary:
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button width="30" id="AddToDictionary" onclick="AddToDictionary()">Add</button>
+      </td>
+      <td>
+        <button width="30" id="EditDictionary" onclick="EditDictionary()">Edit</button>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="3">
+        Language:
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
+          <option>English
+          </option>
+        </select>
+      </td>
+      <td>
+        <button id="Close" onclick="Close()">Close</button>
+      </td>
+      <td>
+        <button id="Help" onclick="Help()">Help</button>
+      </td>
+    </tr>
+  </table>
+</xul:window>

@@ -346,6 +346,25 @@ function EditorPrintPreview() {
   }
 }
 
+function CheckSpelling()
+{
+  if (appCore && toolkitCore) {
+    dump("Check Spelling starting...\n");
+    // Start the spell checker module. Return is first misspelled word
+    word = appCore.startSpellChecking();
+    dump(word+"\n");
+    if( word == "")
+    {
+      dump("THERE IS NO MISSPELLED WORD!\n");
+      // TODO: PUT UP A MESSAGE BOX TO TELL THE USER
+      appCore.CloseSpellChecking();
+    } else {
+      dump("We found a MISSPELLED WORD\n");
+      toolkitCore.ShowWindowWithArgs("chrome://editordlgs/content/EdSpellCheck.xul", window, editorName);
+    }
+  }
+}
+  
 // --------------------------- Debug stuff ---------------------------
 
 function EditorTestSelection()
@@ -365,7 +384,12 @@ function EditorTestSelection()
     }
   }
   
-  }
+  function EditorExit()
+  {
+    if (appCore) {
+	    dump("Exiting\n");
+      appCore.exit();
+    }
 }
 
 function EditorTestDocument()
@@ -386,7 +410,6 @@ function EditorTestDocument()
     }
   }
 }
-
 
 // --------------------------- Callbacks ---------------------------
 function OpenFile(url)
@@ -421,7 +444,6 @@ function onBoldChange()
     else {
       button.setAttribute( "disabled", true );
     }
-
   }
   else
   {
