@@ -118,8 +118,8 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD);
 void
 JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b);
 
-#define SSL_POLICY_DOMESTIC org_mozilla_jss_ssl_SSLSocket_SSL_POLICY_DOMESTIC
-#define SSL_POLICY_EXPORT org_mozilla_jss_ssl_SSLSocket_SSL_POLICY_EXPORT
-#define SSL_POLICY_FRANCE org_mozilla_jss_ssl_SSLSocket_SSL_POLICY_FRANCE
+#define SSL_POLICY_DOMESTIC 0
+#define SSL_POLICY_EXPORT 1
+#define SSL_POLICY_FRANCE 2
 
 #endif

@@ -37,8 +37,7 @@ import java.net.*;
 import java.net.SocketException;
 import java.io.*;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.ListIterator;
+import java.util.Vector;
 
 public class SSLSocket extends java.net.Socket {
 
@@ -259,15 +258,15 @@ public class SSLSocket extends java.net.Socket {
     ////////////////////////////////////////////////////////////////////
     // SSL-specific stuff
     ////////////////////////////////////////////////////////////////////
-    private LinkedList handshakeCompletedListeners = new LinkedList();
+    private Vector handshakeCompletedListeners = new Vector();
 
     public void addHandshakeCompletedListener(SSLHandshakeCompletedListener l) {
-        handshakeCompletedListeners.add(l);
+        handshakeCompletedListeners.addElement(l);
     }
 
     public void removeHandshakeCompletedListener(
             SSLHandshakeCompletedListener l) {
-        handshakeCompletedListeners.remove(l);
+        handshakeCompletedListeners.removeElement(l);
     }
 
     private void notifyAllHandshakeListeners() {
@@ -275,11 +274,11 @@ public class SSLSocket extends java.net.Socket {
             new SSLHandshakeCompletedEvent(this);
 
         /* XXX NOT THREAD SAFE */
-        ListIterator iter = handshakeCompletedListeners.listIterator(0);
-        while( iter.hasNext() ) {
+        int i;
+        for( i=0; i < handshakeCompletedListeners.size(); ++i) {
             SSLHandshakeCompletedListener l =
-                (SSLHandshakeCompletedListener) iter.next();
-
+                (SSLHandshakeCompletedListener)
+                 handshakeCompletedListeners.elementAt(i);
             l.handshakeCompleted(event);
         }
     }
