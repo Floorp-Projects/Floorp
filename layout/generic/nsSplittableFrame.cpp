@@ -180,3 +180,17 @@ nsIFrame * nsSplittableFrame::GetNextInFlow()
 {
    return mNextInFlow;
 } 
+
+void
+nsSplittableFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
+{
+  nsFrame::DumpBaseRegressionData(out, aIndent);
+  if (nsnull != mNextInFlow) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<next-in-flow addr=\"%p\"/>\n", mNextInFlow);
+  }
+  if (nsnull != mPrevInFlow) {
+    IndentBy(out, aIndent);
+    fprintf(out, "<prev-in-flow addr=\"%p\"/>\n", mPrevInFlow);
+  }
+}

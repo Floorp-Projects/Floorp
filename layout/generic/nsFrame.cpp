@@ -1567,19 +1567,20 @@ nsresult
 nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
 {
   aResult = aType;
-  aResult.Append("(");
   if (nsnull != mContent) {
     nsIAtom* tag;
     mContent->GetTag(tag);
     if (tag != nsnull) {
+      aResult.Append("(");
       nsAutoString buf;
       tag->ToString(buf);
       aResult.Append(buf);
       NS_RELEASE(tag);
+      aResult.Append(")");
     }
   }
   char buf[40];
-  PR_snprintf(buf, sizeof(buf), ")(%d)", ContentIndexInContainer(this));
+  PR_snprintf(buf, sizeof(buf), "(%d)", ContentIndexInContainer(this));
   aResult.Append(buf);
   return NS_OK;
 }
