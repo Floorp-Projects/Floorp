@@ -2282,7 +2282,11 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   // we only want to pass in the window target name if it isn't something like _new or _blank....
   // i.e. only real names like "my window", etc...
   const char * windowTarget = aWindowTarget;
-  if (!aWindowTarget || !nsCRT::strcasecmp(aWindowTarget, "_new") || !nsCRT::strcasecmp(aWindowTarget, "_blank"))
+  if (!aWindowTarget || !nsCRT::strcasecmp(aWindowTarget, "_new") ||
+                        !nsCRT::strcasecmp(aWindowTarget, "_blank") ||
+                        !nsCRT::strcasecmp(aWindowTarget, "_top") ||
+                        !nsCRT::strcasecmp(aWindowTarget, "_parent") ||
+                        !nsCRT::strcasecmp(aWindowTarget, "_content"))
     windowTarget = "";
 
   argv = JS_PushArguments(jsContext, &mark, "Ws", value.GetUnicode(), windowTarget);
