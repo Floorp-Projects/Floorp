@@ -2060,8 +2060,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsGfxTextControlFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));
-  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
+  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     mPresContext = aPresContext;
@@ -2335,6 +2335,20 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #endif
       docShellWin->SetPositionAndSize(subBoundsInPixels.x, subBoundsInPixels.y,
          subBoundsInPixels.width, subBoundsInPixels.height, PR_FALSE);
+      nsCOMPtr<nsIPresShell> presShell;
+      rv = aPresContext->GetShell(getter_AddRefs(presShell));     
+      if (NS_FAILED(rv)) { return rv; }
+      nsIView *view;
+      GetView(aPresContext, &view);
+      if (view)
+      {
+        nsCOMPtr<nsIViewManager> viewMan;
+        presShell->GetViewManager(getter_AddRefs(viewMan));  
+        nsIView* parView;
+        nsPoint origin;
+        GetOffsetFromView(aPresContext, origin, &parView);  
+        viewMan->MoveViewTo(view, origin.x, origin.y);
+      }
     }
     else
     {
