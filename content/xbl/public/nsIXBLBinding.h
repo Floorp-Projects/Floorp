@@ -102,6 +102,7 @@ public:
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
   NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)=0;
+  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, PRBool* aAffects)=0;
 
   NS_IMETHOD MarkForDeath()=0;
   NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;

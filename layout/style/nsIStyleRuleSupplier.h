@@ -20,6 +20,9 @@ class nsIStyleRuleSupplier : public nsISupports {
                        nsISupportsArrayEnumFunc aFunc, void* aData,
                        nsIContent* aContent)=0;
   NS_IMETHOD MatchesScopedRoot(nsIContent* aContent, PRBool* aResult)=0;
+
+  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, nsIContent* aContent,
+                                   PRBool* aAffects)=0;
 };
 
 #endif /* _nsIStyleRuleSupplier_h */
