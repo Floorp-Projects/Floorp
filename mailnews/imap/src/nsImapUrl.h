@@ -63,6 +63,7 @@ public:
     NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous);
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
+	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState);
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsINetlibURL interface
@@ -155,7 +156,6 @@ protected:
 	void		ParseMsgFlags();
 	void		ParseListofMessageIds();
 
-
     char        *m_sourceCanonicalFolderPathSubString;
     char        *m_destinationCanonicalFolderPathSubString;
     char		*m_tokenPlaceHolder;
@@ -170,6 +170,7 @@ protected:
 	PRBool					m_allowContentChange;	// if FALSE, we can't use Mime parts on demand
 	PRInt32					m_discoveryDepth;
 
+	// event sinks
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
 	nsIImapLog  * m_imapLog;
