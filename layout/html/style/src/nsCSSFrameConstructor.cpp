@@ -6218,7 +6218,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       aState.PushAbsoluteContainingBlock(aPresContext, scrolledFrame, absoluteSaveState);
     }
      
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, scrolledFrame, PR_TRUE,
                     childItems, PR_TRUE);
 
     nsCOMPtr<nsIAtom> tag;
