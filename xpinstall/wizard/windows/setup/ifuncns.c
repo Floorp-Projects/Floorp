@@ -988,11 +988,11 @@ void UpdateJSProxyInfo()
       {
         if(diDownloadOptions.dwUseProtocol == UP_FTP)
           wsprintf(szBuf,
-                   "user_pref(\"network.proxy.ftp\", \"%s\");\n",
+                   "pref(\"network.proxy.ftp\", \"%s\");\n",
                    diAdvancedSettings.szProxyServer);
         else
           wsprintf(szBuf,
-                   "user_pref(\"network.proxy.http\", \"%s\");\n",
+                   "pref(\"network.proxy.http\", \"%s\");\n",
                    diAdvancedSettings.szProxyServer);
       }
 
@@ -1000,15 +1000,15 @@ void UpdateJSProxyInfo()
       {
         if(diDownloadOptions.dwUseProtocol == UP_FTP)
           wsprintf(szBuf,
-                   "user_pref(\"network.proxy.ftp_port\", %s);\n",
+                   "pref(\"network.proxy.ftp_port\", %s);\n",
                    diAdvancedSettings.szProxyPort);
         else
           wsprintf(szBuf,
-                   "user_pref(\"network.proxy.http_port\", %s);\n",
+                   "pref(\"network.proxy.http_port\", %s);\n",
                    diAdvancedSettings.szProxyPort);
       }
 
-      lstrcat(szBuf, "user_pref(\"network.proxy.type\", 1);\n");
+      lstrcat(szBuf, "pref(\"network.proxy.type\", 1);\n");
 
       fwrite(szBuf, sizeof(char), lstrlen(szBuf), fJSFile);
       fclose(fJSFile);
