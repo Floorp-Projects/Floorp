@@ -266,7 +266,24 @@ function MsgLoadFirstDraft()
 function MsgUpdateMsgCount() {}
 function MsgRenameFolder() {}
 function MsgEmptyTrash() {}
-function MsgCompactFolders() {}
+function MsgRenameFolder() {}
+function MsgCompactFolder() 
+{
+	//get the selected elements
+	var tree = GetFolderTree();
+	var folderList = tree.getElementsByAttribute("selected", "true");
+	var i;
+	var folder;
+	for(i = 0; i < folderList.length; i++)
+	{
+		folder = folderList[i];
+	    folderuri = folder.getAttribute('id');
+		dump(folderuri);
+		dump("folder = " + folder.nodeName + "\n"); 
+		messenger.CompactFolder(tree.database, folder);
+	}
+}
+
 function MsgImport() {}
 function MsgWorkOffline() {}
 function MsgSynchronize() {}
