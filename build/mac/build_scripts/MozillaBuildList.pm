@@ -1432,7 +1432,8 @@ sub BuildBrowserUtilsProjects()
 
     BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",           "Cookie$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",           "Wallet$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    
+    BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",    "WalletViewers$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
     EndBuildModule("browserutils");
