@@ -205,8 +205,8 @@ public:
   nsILabel       * mLabel;
 
   //for creating more instances
-  nsIAppShell* mAppShell;   //not addref'ed!
-  nsIPref* mPrefs;          //not addref'ed!
+  nsIAppShell* mAppShell;
+  nsIPref* mPrefs;
   PRBool mAllowPlugins;
 
   // Global window collection

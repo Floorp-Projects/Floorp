@@ -936,13 +936,11 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 		      PRBool aAllowPlugins)
 {
   mChromeMask = aChromeMask;
-  mAllowPlugins = aAllowPlugins;
-
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
-
   mPrefs = aPrefs;
   NS_IF_ADDREF(mPrefs);
+  mAllowPlugins = aAllowPlugins;
 
   // Create top level window
   nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
@@ -1015,7 +1013,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 {
   mChromeMask = aChromeMask;
   mAppShell = aAppShell;
+  NS_IF_ADDREF(mAppShell);
   mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
   mAllowPlugins = aAllowPlugins;
 
   // Create top level window
