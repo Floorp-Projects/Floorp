@@ -40,6 +40,8 @@
 #endif
 #include "nsSpecialSystemDirectory.h"
 
+#include "rsrcids.h"
+
 #include "nsPSMMutex.h"
 #include "nsPSMShimLayer.h"
 #include "nsPSMUICallbacks.h"
@@ -61,6 +63,7 @@
 
 
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 
 nsPSMComponent* nsPSMComponent::mInstance = nsnull;
@@ -145,7 +148,6 @@ static void get_pack_bool_pref(nsIPref *prefManager, char* key, CMTSetPrefElemen
 
     return;
 }
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static void SaveAllPrefs(int number, CMTSetPrefElement* list)
 {
@@ -197,8 +199,8 @@ static void SaveAllPrefs(int number, CMTSetPrefElement* list)
     return;
 }
 
-nsresult 
-nsPSMComponent::PassAllPrefs()
+NS_IMETHODIMP
+nsPSMComponent::PassPrefs()
 {
     int i;
     nsresult rv = NS_ERROR_FAILURE;
@@ -520,7 +522,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
             goto failure;
         }
         
-        if (NS_FAILED(PassAllPrefs()))
+        if (NS_FAILED(PassPrefs()))
         {  
             PR_FREEIF(profileName);       
             goto failure;
@@ -533,9 +535,10 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
     }
 
 failure:
-
+#ifdef DEBUG
     printf("*** Failure setting up Cartman! \n");
-    
+#endif
+
     if (mControl)
     {
         CMT_CloseControlConnection(mControl);
@@ -549,11 +552,11 @@ failure:
 }
 
 NS_IMETHODIMP
-nsPSMComponent::DisplaySecurityAdvisor()
+nsPSMComponent::DisplaySecurityAdvisor(const char *pickledStatus, const char *hostName)
 {
     CMT_CONTROL *controlConnection;
     GetControlConnection( &controlConnection );
-    if (DisplayPSMUIDialog(controlConnection, nsnull) == PR_SUCCESS)
+    if (DisplayPSMUIDialog(controlConnection, pickledStatus, hostName) == PR_SUCCESS)
         return NS_OK;
     return NS_ERROR_FAILURE;
 }

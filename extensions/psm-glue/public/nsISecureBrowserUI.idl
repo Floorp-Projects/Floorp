@@ -31,6 +31,7 @@ interface nsIDOMElement;
 interface nsSecureBrowserUI : nsISupports
 {
 	void init(in nsIDOMWindow window, in nsIDOMElement button);
+    void displayPageInfoUI();
 };
 
 %{C++

@@ -25,14 +25,16 @@
 #include "nsProxiedService.h"
 #include "nsIEventQueueService.h"
 #include "nsPSMUICallbacks.h"
-
 #include "nsINetSupportDialogService.h"
 #include "nsIFileSpecWithUI.h"
 
-
-
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
+#include "prmem.h"
+
+#include "nsSSLIOLayer.h" // for SSMSTRING_PADDED_LENGTH
+#include "ssmdefs.h"
+#include "rsrcids.h"
 
 // Interfaces Needed
 #include "nsIAppShellService.h"
@@ -199,7 +201,7 @@ PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
     return PR_SUCCESS;
 }
 
-PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, void *arg)
+PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char *pickledStatus, const char *hostName)
 {
     CMUint32 advRID = 0;
     CMInt32 width = 0;
@@ -211,6 +213,35 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, void *arg)
 
     CMTSecurityAdvisorData data;
     memset(&data, '\0', sizeof(CMTSecurityAdvisorData));
+    
+
+    data.infoContext = SSM_BROWSER;
+    data.hostname    = (char*) hostName;
+
+    if (pickledStatus)
+    {
+        CMTItem pickledResource = {0, NULL, 0};
+        CMUint32 socketStatus = 0;
+    
+        pickledResource.len = *(int*)(pickledStatus);
+        pickledResource.data = (unsigned char*) PR_Malloc(SSMSTRING_PADDED_LENGTH(pickledResource.len));
+        
+        if (! pickledResource.data) return PR_FAILURE;
+
+        memcpy(pickledResource.data, pickledStatus+sizeof(int), pickledResource.len);
+        
+        /* Unpickle the SSL Socket Status */
+        if (CMT_UnpickleResource( control, 
+                                  SSM_RESTYPE_SSL_SOCKET_STATUS,
+                                  pickledResource, 
+                                  &socketStatus) == CMTSuccess)
+        {
+            data.infoContext = SSM_BROWSER;    
+            data.resID = socketStatus;
+        }
+
+        PR_FREEIF(pickledResource.data);
+    }
 
     /* Create a Security Advisor context object. */
     rv = CMT_SecurityAdvisor(control, &data, &advRID);
@@ -242,7 +273,11 @@ PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, void *arg)
         return PR_FAILURE;
 
     /* Fire the URL up in a window of its own. */
-    pwin = CartmanUIHandler(advRID, arg, width, height, (char*)urlItem.data, NULL);
+    pwin = CartmanUIHandler(advRID, nsnull, width, height, (char*)urlItem.data, NULL);
+    
+    //allocated by cmt, we can free with free:
+    free(urlItem.data);
+    
     return PR_SUCCESS;
 }
 

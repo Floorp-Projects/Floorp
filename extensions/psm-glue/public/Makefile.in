@@ -34,6 +34,7 @@ XPIDLSRCS = \
 	nsIPSMComponent.idl \
 	nsIPSMUIHandler.idl \
 	nsISecureBrowserUI.idl \
+    nsIPSMSocketInfo.idl \
 	nsISSLSocketProvider.idl \
 	$(NULL)
 

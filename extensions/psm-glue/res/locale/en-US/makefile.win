@@ -23,10 +23,14 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
+GLOBAL_DIST=$(DIST)\bin\chrome\global\locale\en-US
+NAV_DIST=$(DIST)\bin\chrome\navigator\locale\en-US
+
 
 install::
-	$(MAKE_INSTALL) PSMTaskMenu.dtd $(DISTBROWSER)
-  
+	$(MAKE_INSTALL) PSMTaskMenu.dtd $(GLOBAL_DIST)
+	$(MAKE_INSTALL) security.properties $(NAV_DIST)
+
 clobber::
   rm -f $(DIST)\bin\chrome\global\locale\en-US\PSMTaskMenu.dtd
+  rm -f $(DIST)\bin\chrome\navigator\locale\en-US\security.properties

@@ -27,7 +27,7 @@
 
 #define NS_PSMCOMPONENT_CID {0xddcae170, 0x5412, 0x11d3, {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}}
 
-// Implementation of the PSM app shell component interface.
+// Implementation of the PSM component interface.
 class nsPSMComponent : public nsIPSMComponent
 {
 public:
@@ -48,5 +48,4 @@ private:
   
   nsCOMPtr<nsISupports> mSecureBrowserIU;
   static nsPSMComponent* mInstance;
-  nsresult PassAllPrefs();
 }; 

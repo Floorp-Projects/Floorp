@@ -33,9 +33,7 @@ PRStatus
 nsPSMMutexInit()
 {
   if (!_nsPSMMutexVar)
-    _nsPSMMutexVar = PR_NewMonitor();
-  else
-    printf("PSMMutex warning got called twice\n");
+      _nsPSMMutexVar = PR_NewMonitor();
 
   return _nsPSMMutexVar ? PR_SUCCESS : PR_FAILURE;
 }

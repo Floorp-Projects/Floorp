@@ -26,17 +26,13 @@
 #define _NSPSMUICALLBACKS_H
 
 #include "prtypes.h"
+#include "cmtcmn.h"
+
 #include "nsIPSMUIHandler.h"
 
-PR_BEGIN_EXTERN_C
-
-#include "cmtcmn.h"  /* fix */
-#include "cmtjs.h"
-
 PRStatus InitPSMUICallbacks(PCMT_CONTROL gControl);
-PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, void *arg);
+PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char* pickledStatus, const char *hostName);
 
-PR_END_EXTERN_C
 
 #define NS_PSMUIHANDLER_CID {0x15944e30, 0x601e, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
 

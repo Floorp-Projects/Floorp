@@ -24,7 +24,7 @@
 
 #include "nsISecureBrowserUI.h"
 #include "nsSecureBrowserUIImpl.h"
-
+#include "nsIPSMComponent.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 
@@ -41,6 +41,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIChannel.h"
+#include "nsIPSMSocketInfo.h"
 
 #include "nsIURI.h"
 
@@ -48,63 +49,74 @@
 
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
+#include "nsICommonDialogs.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
 
+#define STRING_BUNDLE_URL "chrome://navigator/locale/security.properties"
 
-nsSecureBrowserUIImpl* nsSecureBrowserUIImpl::mInstance = nsnull;
+
+ 
+NS_IMETHODIMP                                                            
+nsSecureBrowserUIImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
+{                                                                               
+    nsresult rv;                                                                
+                                                                                
+    nsSecureBrowserUIImpl * inst;                                                      
+                                                                                
+    if (NULL == aResult) {                                                      
+        rv = NS_ERROR_NULL_POINTER;                                             
+        return rv;                                                              
+    }                                                                           
+    *aResult = NULL;                                                            
+    if (NULL != aOuter) {                                                       
+        rv = NS_ERROR_NO_AGGREGATION;                                           
+        return rv;                                                              
+    }                                                                           
+                                                                                
+    NS_NEWXPCOM(inst, nsSecureBrowserUIImpl);                                          
+    if (NULL == inst) {                                                         
+        rv = NS_ERROR_OUT_OF_MEMORY;                                            
+        return rv;                                                              
+    }                                                                           
+    NS_ADDREF(inst);                                                            
+    rv = inst->QueryInterface(aIID, aResult);                                   
+    NS_RELEASE(inst);                                                           
+                                                                                
+    return rv;                                                                  
+}                                                                               
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
-    NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
+
+	mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
+    mLastPSMStatus    = nsnull;
+    mHost             = nsnull;
+    mSecurityButton   = nsnull;
 }
 
 nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
+    PR_FREEIF(mLastPSMStatus);
+    PR_FREEIF(mHost);
 }
 
-NS_IMPL_ISUPPORTS1(nsSecureBrowserUIImpl, nsSecureBrowserUI); 
+NS_IMPL_ISUPPORTS2(nsSecureBrowserUIImpl, nsIDocumentLoaderObserver, nsSecureBrowserUI); 
 
-NS_IMETHODIMP      
-nsSecureBrowserUIImpl::CreateSecureBrowserUI(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{                                                                  
-    if (!aResult) {                                                
-        return NS_ERROR_INVALID_POINTER;                           
-    }                                                              
-    if (aOuter) {                                                  
-        *aResult = nsnull;                                         
-        return NS_ERROR_NO_AGGREGATION;                              
-    }                                                                
-    
-    if (mInstance == nsnull) 
-    {
-        mInstance = new nsSecureBrowserUIImpl();
-    }
-
-    if (mInstance == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsresult rv = mInstance->QueryInterface(aIID, aResult);                        
-    if (NS_FAILED(rv)) 
-    {                                             
-        *aResult = nsnull;                                           
-    }                                                                
-    return rv;                                                       
-}
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 {
-	
-	nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
 	if (sgo)
 	{
       nsCOMPtr<nsIDocShell> docShell;
@@ -112,128 +124,163 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 		sgo->GetDocShell(getter_AddRefs(docShell));
 		if (docShell)
 		{
-			nsCOMPtr<nsSecureBrowserObserver> sbo = new nsSecureBrowserObserver();
-			if (sbo)
-			{
-				// sbo->Init has the docShell addref sbo
-				return sbo->Init(button, docShell); // does the window delete us when it close?
-			}
-		}
+			mSecurityButton = button;
+            mWindow         = window;
+
+			docShell->GetDocLoaderObserver(getter_AddRefs(mOldWebShellObserver));
+	        docShell->SetDocLoaderObserver(this);
+        
+            nsresult rv = nsServiceManager::GetService( kPrefCID, 
+                                                        NS_GET_IID(nsIPref), 
+                                                        getter_AddRefs(mPref));  
+
+
+            if (NS_FAILED(rv)) return rv;
+
+            NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            
+            nsILocale* locale = nsnull;
+            rv = service->CreateBundle(STRING_BUNDLE_URL, locale, getter_AddRefs(mStringBundle));
+            if (NS_FAILED(rv)) return rv;
+        }
 	}
-	return NS_OK;
-}
-
-
-nsSecureBrowserObserver::nsSecureBrowserObserver()
-{
-	NS_INIT_REFCNT();
-	mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
-
-}
-
-nsSecureBrowserObserver::~nsSecureBrowserObserver()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsSecureBrowserObserver, nsIDocumentLoaderObserver); 
-
-
-nsresult
-nsSecureBrowserObserver::Init(nsIDOMElement *button, nsIDocShell* content)
-{
-	if (!button || !content)
-		return NS_ERROR_NULL_POINTER;
-
-	mSecurityButton = button;
-	content->GetDocLoaderObserver(getter_AddRefs(mOldWebShellObserver));
-	content->SetDocLoaderObserver(this);
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnStartDocumentLoad(nsIDocumentLoader* aLoader, 
+nsSecureBrowserUIImpl::DisplayPageInfoUI()
+{
+    nsresult res;
+    NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+	if (NS_FAILED(res)) 
+		return res;
+
+    return psm->DisplaySecurityAdvisor(mLastPSMStatus, mHost);
+}
+
+
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::OnStartDocumentLoad(nsIDocumentLoader* aLoader, 
                                        nsIURI* aURL, 
                                        const char* aCommand)
 {
 	nsresult res;
-	
-	if (mOldWebShellObserver)
-	{
-		mOldWebShellObserver->OnStartDocumentLoad(aLoader, aURL, aCommand);
-	}
-	
-	
-	if (!mSecurityButton)
-		return NS_OK;
     
-	if (!aURL || !aLoader)
-		return NS_ERROR_NULL_POINTER;
+    PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
+    PR_FREEIF(mHost); mHost = nsnull;
+    
+    aURL->GetHost(&mHost);
 
+    mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
+
+    if (!aURL || !aLoader || !mSecurityButton || !mPref)
+		return NS_ERROR_NULL_POINTER;	
+
+    // lets call the old webshell observer.
+	if (mOldWebShellObserver)
+    {
+	    res = mOldWebShellObserver->OnStartDocumentLoad(aLoader, aURL, aCommand);
+        if (NS_FAILED(res)) return res;
+    }
+
+	//  Check to see if the URL that the current page was 
+    //  loaded by https://.  
+    PRBool isOldSchemeSecure;
+	nsCOMPtr<nsIURI> uri;
+	res = GetURIFromDocumentLoader(aLoader, getter_AddRefs(uri));
+    
+    if (NS_FAILED(res)) 
+		return res;
 	
-	mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
-	  
-    // check to see that we are going to load the same 
-	// kind of URL (scheme) as we just loaded.
-	
-	
-	PRBool isOldSchemeSecure;
-	res	= IsSecureDocumentLoad(aLoader, &isOldSchemeSecure);
+    //  passing false means we only care about https
+    res = IsSecureUrl(PR_FALSE, uri, &isOldSchemeSecure);
+
 	if (NS_FAILED(res)) 
-		return NS_OK;
-	
-	PRBool isNewSchemeSecure; 
+		return res;
+    
+    //    check to see if the new url to load is a 
+    //    secure url.
+
+    PRBool isNewSchemeSecure; 
 	res	= IsSecureUrl(PR_FALSE, aURL, &isNewSchemeSecure);
 	if (NS_FAILED(res)) 
-		return NS_OK;
-
-#if DEBUG_dougt
-	printf("[StartPageLoad]  isOldSchemeSecure = %d isNewSchemeSecure = %d\n", isOldSchemeSecure, isNewSchemeSecure);
-#endif
-	// if we are going from a secure page to and insecure page
+		return res;
+    
+    PRBool boolpref;
+    // Check to see if we are going from a secure page to and insecure page
 	if ( !isNewSchemeSecure && isOldSchemeSecure)
 	{
-#if DEBUG_dougt
-		printf("change lock icon to unlock - new document\n");
-#endif
 		mSecurityButton->RemoveAttribute( "level" );
-		
-		
-		PRBool boolpref;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
-		if (NS_FAILED(res)) 
-			return res;
 	
-		if ((prefs->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
+        if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
 			boolpref = PR_TRUE;
 		
 		if (boolpref) 
 		{
-			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+			NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
 			if (NS_FAILED(res)) 
 				return res;
+            
+            nsAutoString windowTitle, message, dontShowAgain;
+            
+            GetBundleString("Title", windowTitle);
+            GetBundleString("LeaveSiteMessage", message);
+            GetBundleString("DontShowAgain", dontShowAgain);
 
-			dialog->Alert(nsString("You are leaving a secure document").GetUnicode());  // fix localize!
-		}
+            PRBool outCheckValue = PR_FALSE;
+			dialog->AlertCheck(mWindow, 
+                               windowTitle.GetUnicode(), 
+                               message.GetUnicode(), 
+                               dontShowAgain.GetUnicode(), 
+                               &outCheckValue);
+            
+            if (outCheckValue)
+            {
+                mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
+		        NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+            	if (NS_FAILED(res)) 
+		            return res;
+                psm->PassPrefs();
+            }
+        }
 	}
-	// if we are going from an insecure page to a secure one.
+	// check to see if we are going from an insecure page to a secure one.
 	else if (isNewSchemeSecure && !isOldSchemeSecure)
 	{
-		PRBool boolpref;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
-		if (NS_FAILED(res)) 
-			return res;
-
-		if ((prefs->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
+    
+		if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
 			boolpref = PR_TRUE;
 		
 		if (boolpref) 
 		{
-			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
 			if (NS_FAILED(res)) 
 				return res;
+            
+            nsAutoString windowTitle, message, dontShowAgain;
+            
+            GetBundleString("Title", windowTitle);
+            GetBundleString("EnterSiteMessage", message);
+            GetBundleString("DontShowAgain", dontShowAgain);
 
-			dialog->Alert(nsString("You are entering a secure document").GetUnicode());  // fix localize!
+            PRBool outCheckValue = PR_FALSE;
+			dialog->AlertCheck(mWindow, 
+                               windowTitle.GetUnicode(), 
+                               message.GetUnicode(), 
+                               dontShowAgain.GetUnicode(), 
+                               &outCheckValue);
+            
+            if (outCheckValue)
+            {
+                mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+            	if (NS_FAILED(res)) 
+		            return res;
+                psm->PassPrefs();
+            }
 		}
 	}
 
@@ -243,7 +290,7 @@ nsSecureBrowserObserver::OnStartDocumentLoad(nsIDocumentLoader* aLoader,
 }
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnEndDocumentLoad(nsIDocumentLoader* aLoader, 
+nsSecureBrowserUIImpl::OnEndDocumentLoad(nsIDocumentLoader* aLoader, 
                                      nsIChannel* channel, 
                                      nsresult aStatus)
 {
@@ -251,156 +298,217 @@ nsSecureBrowserObserver::OnEndDocumentLoad(nsIDocumentLoader* aLoader,
 	
 	if (mOldWebShellObserver)
 	{
-		mOldWebShellObserver->OnEndDocumentLoad(aLoader, channel, aStatus);
+		rv = mOldWebShellObserver->OnEndDocumentLoad(aLoader, channel, aStatus);
 	}
-
-	if (!mIsSecureDocument)
-		return NS_OK;
-	
-	if (!mSecurityButton)
+  
+    if (! mIsSecureDocument)
+        return rv;
+    
+    if (!mSecurityButton || !channel || !mIsSecureDocument)
         return NS_ERROR_NULL_POINTER;
-
-#if DEBUG_dougt
-	printf("[EndPageLoad]  mIsSecureDocument = %d aStatus = %d mIsDocumentBroken = %d\n", mIsSecureDocument, aStatus, mIsDocumentBroken);
-#endif
-	
-	if ( NS_SUCCEEDED(aStatus) && !mIsDocumentBroken )
+    
+    // check for an error from the above OnEndDocumentLoad().
+    if (NS_FAILED(rv)) 
     {
-#if DEBUG_dougt
-        printf("change lock icon to secure \n");
-#endif
-        rv = mSecurityButton->SetAttribute( "level", nsString("high") );
-		mIsSecureDocument = PR_TRUE;
-	}
-    else
-    {
-#if DEBUG_dougt
-        printf("change lock icon to broken\n");
-#endif
-        rv = mSecurityButton->SetAttribute( "level", nsString("broken") );
-		mIsSecureDocument = PR_FALSE;            
+         mIsDocumentBroken = PR_TRUE;
+         mSecurityButton->SetAttribute( "level", nsString("broken") );
+         return rv;
     }
 
-    return rv;
+    if (NS_SUCCEEDED(aStatus) && !mIsDocumentBroken)
+    {
+        // qi for the psm information about this channel load.
+        nsCOMPtr<nsISupports> info;
+	    channel->GetSecurityInfo(getter_AddRefs(info));
+	    nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &rv);
+        if ( psmInfo )
+        {
+            // Everything looks okay.  Lets stash the picked status.
+            PR_FREEIF(mLastPSMStatus);
+            rv = psmInfo->GetPickledStatus(&mLastPSMStatus);
+    
+            if (NS_SUCCEEDED(rv))
+            {
+                return mSecurityButton->SetAttribute( "level", nsString("high") );
+            }
+	    }
+    }
+    return mSecurityButton->SetAttribute( "level", nsString("broken") );
 }
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnStartURLLoad(nsIDocumentLoader* loader, 
+nsSecureBrowserUIImpl::OnStartURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel)
 {
+    nsresult rv; 
+
 	if (mOldWebShellObserver)
 	{
-		mOldWebShellObserver->OnStartURLLoad(loader, channel);
+		rv = mOldWebShellObserver->OnStartURLLoad(loader, channel);
 	}
 	
-#if DEBUG_dougt
-	printf("[StartURLLoad]  mIsSecureDocument = %d\n", mIsSecureDocument);
-#endif
+    if (! mIsSecureDocument)
+        return rv;
 
+    if (!channel || !loader || !mSecurityButton)
+	    return NS_ERROR_NULL_POINTER;
+
+    // check for an error from the above OnStartURLLoad().
+    if (NS_FAILED(rv)) 
+    {
+         mIsDocumentBroken = PR_TRUE;
+         mSecurityButton->SetAttribute( "level", nsString("broken") );
+         return rv;
+    }
+
+    // check to see if the URL that we are about to load 
+    // is a secure.  We do this by checking the scheme
 	PRBool secure;
-	nsresult rv = IsSecureChannelLoad(channel, &secure);
-	if (NS_FAILED(rv)) 
-		return rv;
+	nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
+	if (NS_FAILED(rv))
+	    return rv;
 
-	if (mIsSecureDocument && !secure)
+    rv = IsSecureUrl(PR_TRUE, uri, &secure);
+    if (NS_FAILED(rv))
+	    return rv;
+
+    if (!secure)
 	{
 		mIsDocumentBroken = PR_TRUE;
+        mSecurityButton->SetAttribute( "level", nsString("broken") );
 
-//		nsCOMPtr<nsIURI> uri;
-//		channel->GetURI(getter_AddRefs(uri));
-
-//		uri->SetSpec("chrome://navigator/skin/insecureLink.gif");  //fix
+        // if we were going to block unsecure links, this is where
+        // we would try to do it:
+        //		nsCOMPtr<nsIURI> uri;
+        //		channel->GetURI(getter_AddRefs(uri));
+        //		uri->SetSpec("chrome://navigator/skin/insecureLink.gif");  //fix
 
 		nsresult res;  
 
-		PRBool boolpref;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
-		if (NS_FAILED(res)) 
-			return res;
-
-		if ((prefs->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
+		if (!mPref) return NS_ERROR_NULL_POINTER;
+	
+        PRBool boolpref;
+		if ((mPref->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
 			boolpref = PR_TRUE;
 
 		if (boolpref && !mMixContentAlertShown) 
 		{
-			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+			NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
 			if (NS_FAILED(res)) 
 				return res;
+            
+            nsAutoString windowTitle, message, dontShowAgain;
 
-			dialog->Alert(nsString("There is mixed content on this page").GetUnicode());  // fix localize!
-			mMixContentAlertShown = PR_TRUE;
+            GetBundleString("Title", windowTitle);
+            GetBundleString("MixedContentMessage", message);
+            GetBundleString("DontShowAgain", dontShowAgain);
+
+            PRBool outCheckValue = PR_FALSE;
+			
+            dialog->AlertCheck(mWindow, 
+                               windowTitle.GetUnicode(), 
+                               message.GetUnicode(), 
+                               dontShowAgain.GetUnicode(), 
+                               &outCheckValue);
+            
+            if (outCheckValue)
+            {
+                mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+            	if (NS_FAILED(res)) 
+		            return res;
+                psm->PassPrefs();
+            }
+            
+            
+            mMixContentAlertShown = PR_TRUE;
 		}
 	}
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnProgressURLLoad(nsIDocumentLoader* loader, 
+nsSecureBrowserUIImpl::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                      nsIChannel* channel, 
                                      PRUint32 aProgress, 
                                      PRUint32 aProgressMax)
 {
 	if (mOldWebShellObserver)
 	{
-		mOldWebShellObserver->OnProgressURLLoad(loader, channel, aProgress, aProgressMax);
+		return mOldWebShellObserver->OnProgressURLLoad(loader, channel, aProgress, aProgressMax);
 	}
-	return NS_OK;
+
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnStatusURLLoad(nsIDocumentLoader* loader, 
+nsSecureBrowserUIImpl::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                    nsIChannel* channel, 
                                    nsString& aMsg)
 {
 	if (mOldWebShellObserver)
 	{
-		mOldWebShellObserver->OnStatusURLLoad(loader, channel, aMsg);
+		return mOldWebShellObserver->OnStatusURLLoad(loader, channel, aMsg);
 	}
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
-nsSecureBrowserObserver::OnEndURLLoad(nsIDocumentLoader* loader, 
+nsSecureBrowserUIImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
                                 nsIChannel* channel, 
                                 nsresult aStatus)
 {
+    nsresult rv;
     if (mOldWebShellObserver)
 	{
-		mOldWebShellObserver->OnEndURLLoad(loader, channel, aStatus);
+		rv = mOldWebShellObserver->OnEndURLLoad(loader, channel, aStatus);
 	}
 
-#if DEBUG_dougt
-	printf("[OnEndURLLoad]  mIsSecureDocument = %d aStatus = %d\n", mIsSecureDocument, aStatus);
-#endif
+    if (!mIsSecureDocument)
+        return rv;
+   
+    if (!channel || !loader || !mSecurityButton)
+		return NS_ERROR_NULL_POINTER;
+    
+    // check for an error from the above OnStartURLLoad().
+    if (NS_FAILED(rv)) 
+    {
+        mIsDocumentBroken = PR_TRUE;
+        mSecurityButton->SetAttribute( "level", nsString("broken") );
+        return rv;
+    }
 
-	if ( mIsSecureDocument && NS_FAILED(aStatus))
-	{
-#if DEBUG_dougt
-		printf("change lock icon to broken\n");
-#endif
-		mSecurityButton->SetAttribute( "level", nsString("broken") );
-		mIsDocumentBroken = PR_TRUE;
-	}
+    if (NS_SUCCEEDED(aStatus) && !mIsDocumentBroken)
+    {
+        nsCOMPtr<nsISupports> info;
+	    channel->GetSecurityInfo(getter_AddRefs(info));
+	    nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &rv);
+        
+        // qi for the psm information about this channel load.
+        if ( psmInfo )
+        {
+            return NS_OK;    
+	    }
+    }
+
+    mSecurityButton->SetAttribute( "level", nsString("broken") );
+	mIsDocumentBroken = PR_TRUE;
+	
 	return NS_OK;
 }
 
 // fileSecure flag determines if we should include file: and other local protocols.
 nsresult
-nsSecureBrowserObserver::IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool* value)
+nsSecureBrowserUIImpl::IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool* value)
 {
 	*value = PR_FALSE;
 
 	if (!aURL)
 		return NS_ERROR_NULL_POINTER;
-#if DEBUG_dougt
-	char* string;
-	aURL->GetSpec(&string);
-	printf("[ensuring channel]: %s\n", string);
-	nsAllocator::Free(string);
-#endif
 
-	char* scheme;
+    char* scheme;
 	aURL->GetScheme(&scheme);
 
 	if (scheme == nsnull)
@@ -413,39 +521,11 @@ nsSecureBrowserObserver::IsSecureUrl(PRBool fileSecure, nsIURI* aURL, PRBool* va
 	
 	nsAllocator::Free(scheme);
 	return NS_OK;
-    
 }
 
-
-nsresult nsSecureBrowserObserver::IsSecureDocumentLoad(nsIDocumentLoader* loader, PRBool *value)
-{
-	if (!loader)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCOMPtr<nsIURI> uri;
-	nsresult rv = GetURIFromDocumentLoader(loader, getter_AddRefs(uri));
-	
-	if (NS_FAILED(rv))
-		return rv;
-
-	return IsSecureUrl(PR_FALSE, uri, value);
-}
-
-nsresult nsSecureBrowserObserver::IsSecureChannelLoad(nsIChannel* channel, PRBool *value)
-{
-	if (!channel)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCOMPtr<nsIURI> uri;
-	nsresult rv = channel->GetURI(getter_AddRefs(uri));
-	if (NS_FAILED(rv))
-		return rv;
-
-	return IsSecureUrl(PR_TRUE, uri, value);
-}
 
 nsresult 
-nsSecureBrowserObserver::GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, nsIURI** uri)
+nsSecureBrowserUIImpl::GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, nsIURI** uri)
 {	
 	nsresult rv;
 
@@ -478,4 +558,23 @@ nsSecureBrowserObserver::GetURIFromDocumentLoader(nsIDocumentLoader* aLoader, ns
         return NS_ERROR_NULL_POINTER;
     
 	return NS_OK;
+}
+
+
+void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outString)
+{
+  if (mStringBundle && name.Length() > 0)
+  {
+    PRUnichar *ptrv = nsnull;
+    if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
+      outString = ptrv;
+    else
+      outString = "";
+    
+    nsAllocator::Free(ptrv);
+  }
+  else
+  {
+    outString = "";
+  }
 }

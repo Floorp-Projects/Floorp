@@ -53,14 +53,14 @@ static nsModuleComponentInfo components[] =
         NS_SECURE_BROWSER_UI_CLASSNAME, 
         NS_SECURE_BROWSER_UI_CID, 
         NS_SECURE_BROWSER_UI_PROGID, 
-        nsSecureBrowserUIImpl::CreateSecureBrowserUI 
+        nsSecureBrowserUIImpl::Create 
     },
 
     { 
         NS_SECURE_BROWSER_DOCOBSERVER_CLASSNAME, 
         NS_SECURE_BROWSER_DOCOBSERVER_CID, 
         NS_SECURE_BROWSER_DOCOBSERVER_PROGID, 
-        nsSecureBrowserUIImpl::CreateSecureBrowserUI 
+        nsSecureBrowserUIImpl::Create
     },
 
     { 

@@ -34,5 +34,4 @@ clobber::
     rm $(DIST)\bin\chrome\navigator\content\default\NavSecurityOverlay.xul
     rm $(DIST)\bin\chrome\navigator\content\default\NavSecurityUI.js
     rm $(DIST)\bin\chrome\global\content\default\PSMTaskMenu.xul
-    rm $(DIST)\bin\chrome\global\content\default\psm.js
 
