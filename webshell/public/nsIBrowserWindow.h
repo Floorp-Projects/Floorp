@@ -72,7 +72,4 @@ public:
   // XXX event control: enable/disable window close box, stick to glass, modal
 };
 
-extern "C" NS_WEB nsresult
-NS_NewBrowserWindowFactory(nsIFactory** aFactory);
-
 #endif /* nsIBrowserWindow_h___ */
