@@ -1266,7 +1266,13 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 
     newSpec->GetFileSpec(&newProfDir);
     newProfDir += profileName;
-
+	newProfDir.MakeUnique();
+    if (newProfDir.Exists()) {
+#ifdef DEBUG_profile
+    	printf("directory already exists\n");
+#endif
+    	return NS_ERROR_FAILURE;
+    }
 
     // Call migration service to do the work.
     nsCOMPtr <nsIPrefMigration> pPrefMigrator;
