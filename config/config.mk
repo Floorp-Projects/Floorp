@@ -430,6 +430,11 @@ XPDIST		= $(DEPTH)/dist
 DIST		= $(DEPTH)/dist/$(OBJDIR_NAME)
 endif
 
+# We need to know where to find the libraries we
+# put on the link line for binaries, and should
+# we link statically or dynamic?  Assuming dynamic for now.
+LIBS_DIR = -L$(DIST)/bin
+
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/public
 
