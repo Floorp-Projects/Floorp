@@ -22,6 +22,7 @@
    -   Ryan Cassin (rcassin@supernova.org)
    -   Daniel Glazman (glazman@netscape.com)
    -   Aaron Kaluszka (ask@swva.net)
+   -   Stephen Donner (technutz@netscape.net)
 -->
 
 <!DOCTYPE overlay SYSTEM "chrome://editor/locale/editorOverlay.dtd">
@@ -859,11 +860,13 @@
               onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'justify')"/>
   </toolbarbutton>
   
-  <toolbarbutton id="absolutePositionButton" type="checkbox" observes="cmd_absPos">
+  <toolbarbutton id="absolutePositionButton" type="checkbox" tooltiptext="&layer.tooltip;" observes="cmd_absPos">
     <observes element="cmd_absPos" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_absPos', 'absolute')"/>
   </toolbarbutton>
-  <toolbarbutton id="decreaseZIndexButton" observes="cmd_decreaseZIndex"/>
-  <toolbarbutton id="increaseZIndexButton" observes="cmd_increaseZIndex"/>
+  <toolbarbutton id="decreaseZIndexButton" observes="cmd_decreaseZIndex"
+                 tooltiptext="&layerSendToBack.tooltip;"/>
+  <toolbarbutton id="increaseZIndexButton" observes="cmd_increaseZIndex"
+                 tooltiptext="&layerBringToFront.tooltip;"/>
 
   <!-- Edit Mode toolbar -->
   <tab id="NormalModeButton"   class="tab-bottom edit-mode _plain" type="text" selected="1" label="&NormalModeTab.label;"  oncommand="goDoCommand('cmd_NormalMode');"
