@@ -343,8 +343,8 @@ PR_IMPLEMENT(PrefResult) PREF_ReadLIJSFile(const char *filename)
 
     if (filename)
     {
-    	free(gLIFileName);
-    	gLIFileName = strdup(filename);
+    	PL_strfree(gLIFileName);
+    	gLIFileName = PL_strdup(filename);
     }
 
 	ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
