@@ -293,15 +293,13 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
   
     // Place and size the child. Make sure the child is at least as
     // tall as our max size (the containing window)
-    if (nsnull != mFirstChild) {
-      if (aDesiredSize.height < aReflowState.maxSize.height) {
-        aDesiredSize.height = aReflowState.maxSize.height;
-      }
-  
-      nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-      mFirstChild->SetRect(rect);
-      mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    if (aDesiredSize.height < aReflowState.maxSize.height) {
+      aDesiredSize.height = aReflowState.maxSize.height;
     }
+  
+    nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+    mFirstChild->SetRect(rect);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   } else {
     // Do we have any children?
@@ -324,16 +322,19 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
           // Reflow the page
           nsReflowStatus  status;
 
-          kidFrame->WillReflow(*aPresContext);
-          status = ReflowChild(kidFrame, aPresContext, kidSize, reflowState);
-  
           // Place and size the page. If the page is narrower than our max width then
           // center it horizontally
           nsIDeviceContext *dx = aPresContext->GetDeviceContext();
           PRInt32 extra = aReflowState.maxSize.width - kidSize.width -
                           NS_TO_INT_ROUND(dx->GetScrollBarWidth());
           NS_RELEASE(dx);
-          kidFrame->SetRect(nsRect(extra > 0 ? extra / 2 : 0, y, kidSize.width, kidSize.height));
+          nscoord         x = extra > 0 ? extra / 2 : 0;
+
+          kidFrame->WillReflow(*aPresContext);
+          kidFrame->MoveTo(x, y);
+          status = ReflowChild(kidFrame, aPresContext, kidSize, reflowState);
+  
+          kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));
           kidFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
           y += kidSize.height;
   
