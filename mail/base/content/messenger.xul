@@ -42,8 +42,6 @@
         titlemenuseparator="&titleSeparator.label;"
         onload="OnLoadMessenger()"
         onunload="OnUnloadMessenger()"
-        width="750"
-        height="500"
         screenX="10" screenY="10"
         persist="width height screenX screenY sizemode"
         windowtype="mail:3pane">

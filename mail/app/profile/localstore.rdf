@@ -35,11 +35,5 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#threadOutliner"/>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#messengerWindow">
-    <screenX>4</screenX>
-    <screenY>4</screenY>
-    <width>800</width>
-    <height>565</height>
-  </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#threadOutliner" height="94" />
 </RDF:RDF>

@@ -721,6 +721,27 @@ function OnLoadMessenger()
   // in delayedOnLoadMessenger...
   UpdateMailPaneConfig(false);
 
+  // Set a sane starting width/height for all resolutions on new profiles. Do this before the window loads
+  if (!document.documentElement.hasAttribute("width")) 
+  {
+    var defaultWidth, defaultHeight;
+    if (screen.availHeight <= 600) 
+    { 
+      document.documentElement.setAttribute("sizemode", "maximized");
+      defaultWidth = 800;
+      defaultHeight = 565;
+    }
+    else // for higher resolution displays, use larger values for height and width
+    {
+      defaultWidth = screen.availWidth * .8;
+      defaultHeight = screen.availHeight * .8; 
+    }
+
+    document.documentElement.setAttribute("width", defaultWidth);
+    document.documentElement.setAttribute("height", defaultHeight);
+  }
+
+
   setTimeout(delayedOnLoadMessenger, 0); // when debugging, set this to 5000, so you can see what happens after the window comes up.
 }
 
