@@ -3698,12 +3698,16 @@ nsExtensionsDataSource.prototype = {
     for (var i = 0; i < singleProps.length; ++i) {
       var property = this._emR(singleProps[i]);
       var literal = aSourceDS.GetTarget(sourceRes, property, true);
-      if (!literal)
+      if (!literal) {
+        var oldValue = targetDS.GetTarget(targetRes, property, true);
+        if (oldValue)
+          targetDS.Unassert(targetRes, property, oldValue);
         continue; // extension didn't specify this property, no big deal, continue.
+      }
         
       var val = literal.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
       
-      var oldValue = targetDS.GetTarget(targetRes, property, true);
+      oldValue = targetDS.GetTarget(targetRes, property, true);
       if (!oldValue)
         targetDS.Assert(targetRes, property, literal, true);
       else
