@@ -26,7 +26,7 @@
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">
 <!ENTITY cookies.label "Cookies">
-<!ENTITY wallet.label "Autofill">
+<!ENTITY wallet.label "Password Manager">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Software Installation">

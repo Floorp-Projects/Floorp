@@ -1,6 +1,6 @@
-<!ENTITY window.title "Wallet">
-<!ENTITY lHeader "Autofill">
-<!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
+<!ENTITY window.title "Password Manager">
+<!ENTITY lHeader "Password Manager">
+<!ENTITY remSignCheck.label "Manage stored passwords and user names">
 <!ENTITY capFormsCheck.label "Enable prefilling of forms">
 <!ENTITY rHeader "Manage stored data about yourself">
 <!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
@@ -10,6 +10,7 @@
 <!ENTITY walletDetails "Wallet stores personal information so that filling out forms on webpages is easier.">
 <!ENTITY viewWallet.label "View Wallet Entries">
 
-<!ENTITY signonHeader "Single Signon">
-<!ENTITY signonDetails "Mozilla can store usernames and passwords for sites that require you to log in.">
-<!ENTITY viewSignons.label "View Signons">
+<!ENTITY signonHeader "Password Manager">
+<!ENTITY signonDetails "Password Manager stores your usernames and passwords for web sites that require you to log in, and enters them for you automatically when you visit those sites.">
+<!ENTITY viewSignons.label "View Stored Passwords">
+<!ENTITY signonEnabledCheck.label "Enable Password Manager">

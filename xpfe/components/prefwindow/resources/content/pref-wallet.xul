@@ -47,7 +47,9 @@
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
 	</box>
  
-  <titledbox orient="vertical" id="walletArea">
+  <titledbox orient="vertical" id="walletArea" style="display: none;">
+  	<!--not shown for beta 1 only, therefore style 'display: none' here in XUL
+	so we don't have to introduce a new CSS file just for this temporary measure-->
     <title><text value="&walletHeader;"/></title>
     <html:div >&walletDetails;</html:div>
     <spring class="vgap"/>
@@ -66,10 +68,13 @@
     </box>
   </titledbox>
 
-  <titledbox orient="vertical">
+  <titledbox orient="vertical" id="signonArea">
     <title><text value="&signonHeader;"/></title>
-    <html:div >&signonDetails;</html:div>
-    <box align="horizontal">
+    <html:div>&signonDetails;</html:div>
+	<spring class="vgap"/>
+    <box align="horizontal" vertical-align="baseline" >
+		<html:input type="checkbox" id="signonEnabledCheck" checked="true" disabled="true"/>
+		<html:label for="signonEnabledCheck">&signonEnabledCheck.label;</html:label>
       <spring flex="1"/>
       <titledbutton value="&viewSignons.label;" class="dialog push" onclick="viewSignons();"/>
     </box>

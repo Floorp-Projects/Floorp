@@ -84,8 +84,8 @@
   			</box>		
 			</box>		
 		</titledbox>  
-
-		<titledbox  orient="vertical">
+<!-- commenting out for beta -->
+		<titledbox  orient="vertical"  style="display: none;">
 			<title><text value="&header3.label;"/></title>
       <box orient="vertical" flex="1">
 			  <html:div>&historyPages;</html:div>	
@@ -99,8 +99,8 @@
         </box>
       </box>
 		</titledbox>  
-
-		<titledbox  orient="vertical">
+<!-- commenting out for beta -->
+		<titledbox  orient="vertical"  style="display: none;">
 			<title><html:div>&header4.label;</html:div></title>
       <box orient="horizontal" flex="1" autostretch="never" style="vertical-align: middle">
         <html:label style="padding: 0px;">&clearBar;</html:label>
