@@ -47,6 +47,7 @@ public:
   NS_IMETHOD SetIncludeOverflow(PRBool aInclude);
   NS_IMETHOD GetOverflow(nsSize& aOverflow);
   NS_IMETHOD NeedsRecalc();
+  NS_IMETHOD SetParentBox(nsIBox* aParent);
 
   NS_IMETHOD Recycle(nsIPresShell* aPresShell);
 
@@ -94,6 +95,7 @@ protected:
   PRBool mSizeSet;
   nsSize mOverflow;
   PRBool mIncludeOverflow;
+  nsCOMPtr<nsIPresShell> mPresShell;
 };
 
 #endif
