@@ -45,7 +45,7 @@
 #include "logger.h"
 
 CLogger * pLogger = NULL;
-static char szTarget[] = "_npapi_Log";
+static char szTarget[] = LOGGER_DEFAULT_TARGET;
 
 NPNetscapeFuncs NPNFuncs;
 

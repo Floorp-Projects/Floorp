@@ -59,7 +59,8 @@ CLogger::CLogger(LPSTR szTarget) :
   m_bBlockLogToFrame(FALSE),
   m_pStream(NULL),
   m_dwStartTime(0xFFFFFFFF),
-  m_iStringDataWrap(LOGGER_DEFAULT_STRING_WRAP)
+  m_iStringDataWrap(LOGGER_DEFAULT_STRING_WRAP),
+  m_bStale(FALSE)
 {
   if(szTarget != NULL)
     strcpy(m_szTarget, szTarget);
@@ -328,4 +329,14 @@ void CLogger::blockDumpToFile(BOOL bBlock)
 void CLogger::blockDumpToFrame(BOOL bBlock)
 {
   m_bBlockLogToFrame = bBlock;
+}
+
+void CLogger::markStale()
+{
+  m_bStale = TRUE;
+}
+
+BOOL CLogger::isStale()
+{
+  return m_bStale;
 }
