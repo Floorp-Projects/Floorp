@@ -217,7 +217,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           break;
         case NS_VK_PAGE_DOWN: 
         case NS_VK_PAGE_UP:
-        case NS_VK_SPACE:
           if (!mCurrentFocus) {
             nsIScrollableView* sv = GetNearestScrollingView(aView);
             if (sv) {
@@ -256,6 +255,21 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
+  case NS_KEY_PRESS:
+    if (nsEventStatus_eConsumeNoDefault != aStatus) {
+      //Handle key commands from keys with char representation here, not on KeyDown
+      nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+
+      //Spacebar
+      if (keyEvent->charCode == 0x20) {
+        if (!mCurrentFocus) {
+          nsIScrollableView* sv = GetNearestScrollingView(aView);
+          if (sv) {
+            sv->ScrollByPages(1);
+          }
+        }
+      }
+    }
   }
   return ret;
 }
