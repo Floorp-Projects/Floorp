@@ -203,6 +203,7 @@ bin/chrome/sidebar/*
 bin/chrome/wallet/*
 bin/chrome/xpinstall/*
 bin/chrome/xul.css
+bin/chrome/xulBindings.xml
 bin/defaults/pref/editor.js
 bin/defaults/pref/all.js
 bin/defaults/pref/config.js

@@ -185,6 +185,7 @@ bin\chrome\wallet\*
 bin\chrome\xpinstall\*
 bin\chrome\registry.rdf
 bin\chrome\xul.css
+bin\chrome\xulBindings.xml
 bin\chrome\search\*
 bin\defaults\pref\all.js
 bin\defaults\pref\config.js
