@@ -44,10 +44,8 @@ var gGlobalHistory;
 var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
-var gHistoryStatus;
 var gSearchBox;
 var gHistoryGrouping = "";
-var gWindowManager = null;
 
 function HistoryCommonInit()
 {
@@ -89,13 +87,7 @@ function historyOnSelect()
 
         if (match && match.length>1)
             gLastHostname = match[3];
-      
-        if (gHistoryStatus)
-            gHistoryStatus.label = url;
-    }
-    else {
-        if (gHistoryStatus)
-            gHistoryStatus.label = "";
+     
     }
 
     if (gLastHostname) {
@@ -339,7 +331,8 @@ function updateItems()
     var currentIndex = gHistoryTree.currentIndex;
     if (isContainer(gHistoryTree, currentIndex)) {
         openItem.setAttribute("hidden", "true");
-        openItem.removeAttribute("default");
+        openItemInNewWindow.setAttribute("hidden", "true");
+        openItem.removeAttribute("default");        
         collapseExpandItem.removeAttribute("hidden");
         collapseExpandItem.setAttribute("default", "true");
         bookmarkItem.setAttribute("hidden", "true");
@@ -351,23 +344,14 @@ function updateItems()
           collapseExpandItem.setAttribute("label", gHistoryBundle.getString("expandLabel"));
         return true;
     }
-    collapseExpandItem.setAttribute("hidden", "true");
-    bookmarkItem.removeAttribute("hidden");
-    copyLocationItem.removeAttribute("hidden");
-    sep1.removeAttribute("hidden");
-    if (!gWindowManager) {
-      gWindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-      gWindowManager = gWindowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-    }
-    var topWindowOfType = gWindowManager.getMostRecentWindow("navigator:browser");
-    if (!topWindowOfType) {
-        openItem.setAttribute("hidden", "true");
-        openItem.removeAttribute("default");
-        openItemInNewWindow.setAttribute("default", "true");
-    }
     else {
+      collapseExpandItem.setAttribute("hidden", "true");
+      bookmarkItem.removeAttribute("hidden");
+      copyLocationItem.removeAttribute("hidden");
+      sep1.removeAttribute("hidden");
       openItem.removeAttribute("hidden");
-      if (!openItem.getAttribute("default"))
+      openItemInNewWindow.removeAttribute("hidden");
+      if (!openItem.hasAttribute("default"))
         openItem.setAttribute("default", "true");
       openItemInNewWindow.removeAttribute("default");
     }
