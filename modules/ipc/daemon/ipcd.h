@@ -119,4 +119,20 @@ IPC_API ipcClient *IPC_GetClients(PRUintn *count);
 //
 IPC_API ipcModule *IPC_GetModuleByID(const nsID &moduleID);
 
+//-----------------------------------------------------------------------------
+// inline helpers
+//-----------------------------------------------------------------------------
+
+static inline PRStatus
+IPC_SendMsg(PRUint32 clientID, ipcMessage *msg)
+{
+    PRStatus rv;
+    ipcClient *client = IPC_GetClientByID(clientID);
+    if (client)
+        rv = IPC_SendMsg(client, msg);
+    else
+        rv = PR_FAILURE;
+    return rv;
+}
+
 #endif // !IPCD_H__
