@@ -682,43 +682,37 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kIDocumentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIDocument*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(kIRDFDocumentIID) ||
              iid.Equals(kIXMLDocumentIID)) {
         *result = NS_STATIC_CAST(nsIRDFDocument*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(nsIDOMXULDocument::IID()) ||
              iid.Equals(nsIDOMDocument::IID()) ||
              iid.Equals(nsIDOMNode::IID())) {
         *result = NS_STATIC_CAST(nsIDOMXULDocument*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(kIScriptObjectOwnerIID)) {
         *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(kIHTMLContentContainerIID)) {
         *result = NS_STATIC_CAST(nsIHTMLContentContainer*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(nsIDOMNodeObserver::IID())) {
         *result = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
-    return NS_NOINTERFACE;
+    else if (iid.Equals(nsIDOMElementObserver::IID())) {
+        *result = NS_STATIC_CAST(nsIDOMElementObserver*, this);
+    }
+    else {
+        *result = nsnull;
+        return NS_NOINTERFACE;
+    }
+    NS_ADDREF(this);
+    return NS_OK;
 }
 
 NS_IMPL_ADDREF(XULDocumentImpl);
