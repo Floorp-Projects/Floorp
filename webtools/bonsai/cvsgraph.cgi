@@ -159,6 +159,7 @@ function hideMessage() {
     border-style: solid;
     border-color: #F0A000;
     background-color: #FFFFFF;
+    color: #000000;
     padding: 5;
     position: fixed;
 }
