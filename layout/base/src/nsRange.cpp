@@ -267,7 +267,7 @@ nsIDOMNode* nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
     if (!NS_SUCCEEDED(res))
     {
       NS_NOTREACHED("nsRange::CommonParent");
-      goto errorLabel;
+      return nsnull;
     }
     return theParent;
   }
