@@ -1026,7 +1026,7 @@ function hiddenWindowStartup()
 						 'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll'];
 	for ( id in disabledItems )
 	{
-		dump("disabling "+id+"\n");
+	//	dump("disabling "+disabledItems[id]+"\n");
 		 var broadcaster = document.getElementById( disabledItems[id]);
 		 broadcaster.setAttribute("disabled","true");
 	}
