@@ -43,9 +43,11 @@ CSRCS = jsj.c		  \
 	jsj_field.c	  \
 	jsj_hash.c	  \
 	jsj_method.c	  \
-	jsj_utils.c		\
-    nsCLiveconnect.c          \
-	nsCLiveconnectFactory.c
+	jsj_utils.c		
+
+CPPSRCS = \
+ nsCLiveconnect.cpp          \
+ nsCLiveconnectFactory.cpp
 
 
 LLIBS=$(LIBNSPR) $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
