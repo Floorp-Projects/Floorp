@@ -62,7 +62,7 @@ if( @fl == 0 ){
     print "<h3>No files matched this file name.  It may have been added recently.</h3>";
 }
 elsif( @fl == 1 ){
-    $s = $fl[0];
+    $s = &url_quote($fl[0]);
     print "<head>
     <meta http-equiv=Refresh
       content=\"0; URL=cvsblame.cgi?file=$s&rev=$rev&root=$CVS_ROOT&mark=$mark#$ln\">
@@ -72,6 +72,7 @@ elsif( @fl == 1 ){
 else {
     print "<h3>Pick the file that best matches the one you are looking for:</h3>\n";
     for $s (@fl) {
-        print "<dt><a href=cvsblame.cgi?file=$s&rev=$rev&mark=$mark#$ln>$s</a>";
+        print "<dt><a href=cvsblame.cgi?file=" . &url_quote($s) . 
+            "&rev=$rev&mark=$mark#$ln>$s</a>";
     }
 }

@@ -397,15 +397,20 @@ sub print_ci {
 
     my $log = &html_log($ci->[$::CI_LOG]);
     my $rev = $ci->[$::CI_REV];
-    my $url_who = url_quote($ci->[$::CI_WHO]);
+    my $url_who = &url_quote($ci->[$::CI_WHO]);
+    my $url_dir = &url_quote($ci->[$::CI_DIR]);
+    my $url_file = &url_quote($ci->[$::CI_FILE]);
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
     print "<TD width=2%><a href='$registryurl/who.cgi?email=$url_who'"
           . " onClick=\"return js_who_menu('$url_who','',event);\" >"
           . "$ci->[$::CI_WHO]</a>\n";
-    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=" . url_quote($ci->[$::CI_FILE]) . "\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
-          . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','" . url_quote($ci->[$::CI_FILE]) . "','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
+    print "<TD width=45%><a href='cvsview2.cgi?subdir=$url_dir" .
+        "&files=$url_file\&command=DIRECTORY&branch=$::query_branch" .
+        "&root=$::CVS_ROOT'\n" .
+        " onclick=\"return js_file_menu('$::CVS_ROOT', '$url_dir'," .
+        "'$url_file','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
 #     if( (length $ci->[$::CI_FILE]) + (length $ci->[$::CI_DIR])  > 30 ){
 #         $d = $ci->[$::CI_DIR];
 #         if( (length $ci->[$::CI_DIR]) > 30 ){
@@ -429,9 +434,9 @@ sub print_ci {
     if( $rev ne '' ){
         my $prevrev = &PrevRev( $rev );
         print "<TD width=2%>${sm_font_tag}<a href='cvsview2.cgi?diff_mode=".
-              "context\&whitespace_mode=show\&subdir=".
-              $ci->[$::CI_DIR] . "\&command=DIFF_FRAMESET\&file=" .
-              url_quote($ci->[$::CI_FILE]) . "\&rev1=$prevrev&rev2=$rev&root=$::CVS_ROOT'>$rev</a></font>\n";
+              "context\&whitespace_mode=show\&subdir=$url_dir" .
+              "\&command=DIFF_FRAMESET\&file=$url_file" .
+              "\&rev1=$prevrev&rev2=$rev&root=$::CVS_ROOT'>$rev</a></font>\n";
     }
     else {
         print "<TD width=2%>\&nbsp;\n";
@@ -502,6 +507,7 @@ sub html_log {
     my ( $log ) = @_;
     $log =~ s/&/&amp;/g;
     $log =~ s/</&lt;/g;
+    $log =~ s/>/&gt;/g;
     return $log;
 }
 

@@ -58,8 +58,11 @@ sub sillyness {
 my $request = new CGI;
 
 sub http_die {
+    my ($str) = (@_);
     print $request->header();
-    die (@_);
+    print "\n";
+    print "Content-type: text/html\n\n";
+    die "$str\n";
 }
 
 my $anchor_num = 0;
@@ -134,7 +137,8 @@ my $opt_rev               = &SanitizeRevision($request->param('rev'));
 my $opt_subdir            = $request->param('subdir');
 my $opt_branch            = &SanitizeRevision($request->param('branch'));
 my $opt_command           = $request->param('command');
-my $url_file              = url_quote($opt_file);
+my $url_file              = "";
+my $url_dir               = "";
 
 if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
 
@@ -149,8 +153,9 @@ my $deletion_bg_color = 'LightGreen';
 my $diff_bg_color     = 'White';
 
 # Ensure that necessary arguments are present
-http_die("command not defined in URL\n") if $opt_command eq '';
-http_die("command $opt_command: subdir not defined\n") if $opt_subdir eq '';
+&http_die("command not defined in URL\n") if (!$opt_command);
+&http_die("command $opt_command: subdir not defined\n") if (!$opt_subdir);
+
 if ($opt_command eq 'DIFF'          ||
     $opt_command eq 'DIFF_FRAMESET' ||
     $opt_command eq 'DIFF_LINKS') {
@@ -159,23 +164,16 @@ if ($opt_command eq 'DIFF'          ||
     http_die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
 
 }
-
-# Propagate diff options to created links
-$prefix .= "diff_mode=$opt_diff_mode";
-$prefix .= "&whitespace_mode=$opt_whitespace_mode";
-$prefix .= "&root=$opt_root";
-
-# Create a shorthand for the longest common initial substring of our URL.
-my $magic_url = "$prefix&subdir=$opt_subdir";
-
-# Now that we've munged QUERY_STRING into perl variables, set rcsdiff options.
-my $rcsdiff = "$rcsdiffcommand -f";
-$rcsdiff .= ' -w' if ($opt_whitespace_mode eq 'ignore');
+$opt_subdir = &url_decode($opt_subdir);
+$opt_file = &url_decode($opt_file) if ($opt_file);
+$url_file = &url_quote($opt_file) if ($opt_file);
+$url_dir = &url_quote($opt_subdir);
 
 # Handle the "root" argument
 #
 my $root = $opt_root;
 if (defined $root && $root ne '') {
+    $root = &url_decode($root);
     $root =~ s|/$||;
     &validateRepository($root);
     if (-d $root) {
@@ -185,7 +183,20 @@ if (defined $root && $root ne '') {
         print "</BODY></HTML>\n";
         exit;
     }
+    $opt_root = $root;
 }
+
+# Propagate diff options to created links
+$prefix .= "diff_mode=" . &url_quote($opt_diff_mode);
+$prefix .= "&whitespace_mode=" . &url_quote($opt_whitespace_mode);
+$prefix .= "&root=$opt_root";
+
+# Create a shorthand for the longest common initial substring of our URL.
+my $magic_url = "$prefix&subdir=$url_dir";
+
+# Now that we've munged QUERY_STRING into perl variables, set rcsdiff options.
+my $rcsdiff = "$rcsdiffcommand -f";
+$rcsdiff .= ' -w' if ($opt_whitespace_mode eq 'ignore');
 
 my $found = 0;
 my $dir;
@@ -196,10 +207,11 @@ foreach $root (@SRCROOTS) {
         last;
     }
 }
-if (!$found) {
-    print "<FONT SIZE=5><B>Error:</B> $opt_subdir not found.";
-    exit;
-}
+
+&http_die("Directory " . &html_quote($opt_subdir) . " not found.\n") if (!$found);
+&validateFiles;
+&do_cmd;
+exit;
 
 sub http_lastmod {
     &parse_cvs_file($dir.'/'.$opt_file.',v');
@@ -216,16 +228,14 @@ sub http_lastmod {
 sub do_diff_frameset {
     chdir($dir);
     http_lastmod;
-    print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
+    print "<TITLE>$url_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "<FRAMESET ROWS='*,90' FRAMESPACING=0 BORDER=1>\n";
 
     print "  <FRAME NAME=diff+$url_file+$opt_rev1+$opt_rev2 ",
-          "         SRC=\"$magic_url&command=DIFF";
-    print "&root=$opt_root" if defined($opt_root);
+          "         SRC=\"$magic_url&command=DIFF&root=$opt_root";
     print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
 
-    print "  <FRAME SRC=\"$magic_url&command=DIFF_LINKS";
-    print "&root=$opt_root" if defined($opt_root);
+    print "  <FRAME SRC=\"$magic_url&command=DIFF_LINKS&root=$opt_root";
     print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
     print "</FRAMESET>\n";
 }
@@ -270,12 +280,12 @@ sub do_diff_links {
 # In this case, make the default behavior be that blame revisions match the requested
 # diff version, rather than always showing the tip.
 
-    my $blame_link = "$blame_base?file=$opt_subdir/$url_file&rev=$opt_rev2";
-    $blame_link .= "&root=$opt_root" if defined($opt_root);
+    my $blame_link = "$blame_base?file=$url_dir/$url_file&rev=$opt_rev2";
+    $blame_link .= "&root=$opt_root";
     my $diff_link = "$magic_url&command=DIRECTORY&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2";
-    $diff_link .= "&root=$opt_root" if defined($opt_root);
+    $diff_link .= "&root=$opt_root";
     my $graph_row = Param('cvsgraph') ? <<"--endquote--" : "";
-<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF="cvsgraph.cgi?file=$opt_subdir/$url_file" TARGET="_top"><B>graph:</B></A></TD>
+<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF="cvsgraph.cgi?file=$url_dir/$url_file" TARGET="_top"><B>graph:</B></A></TD>
 <TD NOWRAP>View the revision tree as a graph</TD></TR>
 --endquote--
 
@@ -321,7 +331,7 @@ sub do_diff_links {
         print '&nbsp' x (4 - length($line));
         print "<A TARGET='diff+$url_file+$opt_rev1+$opt_rev2'",
               "       HREF=\"$magic_url&command=DIFF";
-        print "&root=$opt_root" if defined($opt_root);
+        print "&root=$opt_root";
         print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2#$anchor_num\"",
               "       ONCLICK='anchor = $anchor_num'>$line</A> ";
         $anchor_num++;
@@ -352,7 +362,7 @@ sub guess_tab_width {
     my ($found_tab_width) = 0;
     my ($many_tabs, $any_tabs) = (0, 0);
 
-    open(RCSFILE, "$opt_file");
+    open(RCSFILE, $opt_file);
     while (<RCSFILE>) {
         if (/tab-width: (\d)/) {
             $tab_width = $1;
@@ -364,7 +374,8 @@ sub guess_tab_width {
             $any_tabs++;
         }
     }
-    if (!$found_tab_width && $many_tabs > $any_tabs / 2) {
+    if ((!$found_tab_width && $many_tabs > $any_tabs / 2) || 
+        !defined($tab_width) || $tab_width eq '') {
         $tab_width = 4;
     }
     close(RCSFILE);
@@ -375,7 +386,7 @@ sub do_diff {
     http_lastmod;
     print qq|
 <html><head>
-<title>$opt_file: $opt_rev1 vs. $opt_rev2</title>
+<title>$url_file: $opt_rev1 vs. $opt_rev2</title>
 <style type="text/css">
 pre {
     margin: 0;
@@ -402,7 +413,7 @@ link="#0000EE" vlink="#551A8B" alink="#FF0000">
 # Show specified CVS log entry.
 sub do_log {
     http_lastmod;
-    print "<TITLE>$opt_file: $opt_rev CVS log entry</TITLE>\n";
+    print "<TITLE>$url_file: $opt_rev CVS log entry</TITLE>\n";
     print '<PRE>';
 
     CheckHidden("$dir/$opt_file");
@@ -440,7 +451,7 @@ sub do_directory {
     foreach my $path (split('/',$opt_subdir)) {
         $link_path .= $path;
         $output .= "<A HREF='rview.cgi?dir=$link_path";
-        $output .= "&cvsroot=$opt_root" if defined $opt_root;
+        $output .= "&cvsroot=$opt_root";
         $output .= "&rev=$opt_branch" if $opt_branch;
         $output .= "' onmouseover='window.status=\"Browse $link_path\";"
             ." return true;'>$path</A>/ ";
@@ -473,9 +484,9 @@ sub do_directory {
 
         print "<TR><TD NOWRAP><B>";
         print "<A HREF=\"$lxr_link\">$file</A><BR>";
-        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$ufile";
+        print "<A HREF=\"cvslog.cgi?file=$url_dir/$ufile";
         print "&rev=$opt_branch" if $opt_branch;
-        print "&root=$opt_root" if defined($opt_root);
+        print "&root=$opt_root";
         print "\">Change Log</A></B></TD>\n";
         
         my $first_rev;
@@ -497,7 +508,7 @@ sub do_directory {
                 #print '<TD ROWSPAN=2 VALIGN=TOP>';
                 print '<TD VALIGN=TOP>';
                 print "<A HREF=\"$magic_url&command=DIRECTORY";
-                print "&root=$opt_root" if defined($opt_root);
+                print "&root=$opt_root";
                 print "&files=" . url_quote($opt_files) . "&branch=$opt_branch&skip=", $opt_skip + $MAX_REVS, "\"><i>Prior revisions</i></A>", "</TD>\n";
                 last;
             }
@@ -506,7 +517,7 @@ sub do_directory {
             my $href_close = "";
             if ( $prev && $rev ) {
                 $href_open = "<A HREF=\"$magic_url&command=DIFF_FRAMESET";
-                $href_open .= "&root=$opt_root" if defined($opt_root);
+                $href_open .= "&root=$opt_root";
                 $href_open .= "&file=$ufile&rev1=$prev&rev2=$rev\">";
                 $href_close = "</A>";
             }
@@ -524,7 +535,7 @@ sub do_directory {
             next if $skip-- > 0;
             last if !$revs_remaining--;
             print "<TD><A HREF=\"$magic_url&command=LOG";
-            print "root=$opt_root" if defined($opt_root);
+            print "root=$opt_root";
             print "&file=$ufile&rev=$rev\">$::revision_author{$rev}</A>",
             "</TD>\n";
         }
@@ -534,7 +545,7 @@ sub do_directory {
     print "</TABLE><SPACER TYPE=VERTICAL SIZE=20>\n";
     print '<FORM METHOD=get>';
     print '<INPUT TYPE=hidden NAME=command VALUE=DIFF>';
-    print "<INPUT TYPE=hidden NAME=subdir VALUE=$opt_subdir>";
+    print "<INPUT TYPE=hidden NAME=subdir VALUE=$url_dir>";
     print '<FONT SIZE=+1><B>New Query:</B></FONT>';
     print '<UL><TABLE BORDER=1 CELLSPACING=0 CELLPADDING=7><TR><TD>';
 
@@ -552,7 +563,7 @@ sub do_directory {
     print "\n<TABLE CELLPADDING=0 CELLSPACING=0><TR><TD>\n",
           'Filename:',
           '</TD><TD>',
-          '<INPUT TYPE=text NAME=file VALUE="', $file, '" SIZE=40>',
+          '<INPUT TYPE=text NAME=file VALUE="',&url_quote($file), '" SIZE=40>',
           "\n</TD></TR><TR><TD>\n",
 
           'Old version:',
@@ -651,7 +662,7 @@ sub html_diff {
         } else {
             print "</TABLE><FONT SIZE=5 COLOR=#ffffff><B>Internal error:</B>",
                   " unknown command $_",
-                  " at $. in $opt_file $opt_rev1\n";
+                  " at $. in " . &html_quote($opt_file) . " $opt_rev1\n";
             exit;
         }
     }
@@ -779,6 +790,19 @@ sub print_bottom {
 __BOTTOM__
 } # print_bottom
 
+sub validateFiles {
+    my ($file, $fn);
+
+    if ($opt_file) {
+        $file = "$dir/$opt_file";
+        &ChrootFilename($opt_root, $file);
+    } elsif ($opt_files) {
+        foreach $fn (split(/:/,$opt_files)) {
+            $file = "$dir/" . &url_decode($fn);
+            &ChrootFilename($opt_root,$file);
+        }
+    }
+}
 
 sub do_cmd {
     if ($opt_command eq 'DIFF_FRAMESET') { do_diff_frameset; }
@@ -786,8 +810,8 @@ sub do_cmd {
     elsif ($opt_command eq 'DIFF') { do_diff; }
     elsif ($opt_command eq 'LOG') { do_log; }
     elsif ($opt_command eq 'DIRECTORY') { do_directory; }
-    else { print "invalid command \"$opt_command\"."; }
+    else { &http_die("Invalid command.\n"); }
     exit;
 }
 
-do_cmd;
+

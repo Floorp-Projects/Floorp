@@ -106,7 +106,7 @@ sub PutsHeader {
 	$h2 = "";
     }
 
-    print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
+    print "<HTML><HEAD>\n<TITLE>" . &html_quote($title) . "</TITLE>\n";
     print $::Setup_String if (defined($::Setup_String) && $::Setup_String);
     print Param("headerhtml") . "\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";

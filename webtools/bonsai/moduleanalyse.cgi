@@ -86,7 +86,7 @@ if( $inmod  eq 'all' || $inmod eq 'default' || $inmod eq '' ){
 $::TreeID = $Module if (exists($::TreeInfo{$Module}{'repository'}));
 LoadDirList();
 for my $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
-    print "<OPTION value='$k'>$k\n" if ($k ne $Module);
+    print "<OPTION value='" . &url_quote($k) . "'>$k\n" if ($k ne $Module);
 }
 
 print "</SELECT></NOBR>\n";
@@ -100,22 +100,24 @@ print "
 </FORM>";
 
 
-if( $::FORM{module} ne ''  ){
-    my $mod = $::FORM{module};
+if( $inmod ne ''  ){
+    my $mod = $inmod;
     print "<h1>Examining Module '$mod'</h1>\n\n";
 
     for my $i (sort( grep(!/\*$/, @::LegalDirs) ) ){
+        my $j = &url_quote($i);
+        my $k = &html_quote($i);
         if( -d "$CVS_ROOT/$i"){
             print "<dt><tt>Dir:&nbsp;&nbsp;&nbsp;</tt>";
-            print "<a href=rview.cgi?dir=$i&cvsroot=$CVS_ROOT>$i</a>";
+            print "<a href=rview.cgi?dir=$j&cvsroot=$CVS_ROOT>$k</a>";
         }
         elsif ( -r "$CVS_ROOT/$i,v" ){
             print "<dt><font color=blue><tt>File:&nbsp;&nbsp;</tt></font>";
-            print "<a href=cvsblame.cgi?file=$i&root=$CVS_ROOT>$i</a>";
+            print "<a href=cvsblame.cgi?file=$j&root=$CVS_ROOT>$k</a>";
         }
         else {
             print "<dt><font color=red><tt>Error: </tt></font>";
-            print "$i : Not a file or a directory.";
+            print "$k : Not a file or a directory.";
         }
 
 #          if( $mod_map->{$i} == $IS_LOCAL ){

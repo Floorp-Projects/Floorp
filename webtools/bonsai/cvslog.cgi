@@ -129,8 +129,9 @@ unless ($found_rcs_file) {
 
 
 my $rcs_path;
+my $url_rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
-
+$url_rcs_path = &url_quote($rcs_path);
 
 # Parse the rcs file ($::opt_rev is passed as a global)
 #
@@ -213,7 +214,7 @@ foreach my $path (split('/',$rcs_path)) {
     print "<A HREF='$lxr_path'>$path</a>/ ";
 }
 $lxr_path = Fix_LxrLink("$link_path$file_tail");
-print "<A HREF='$lxr_path'>$file_tail</a> ";
+print "<A HREF='$lxr_path'>" . &html_quote($file_tail) . "</a> ";
 
 my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
        </TR><TR>
@@ -246,7 +247,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$url_file_tail&branch=$::opt_rev">diff</A>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$url_rcs_path&files=$url_file_tail&branch=$::opt_rev">diff</A>
         </TD><TD NOWRAP>
          Compare any two version.
         </TD>
@@ -455,11 +456,11 @@ sub revision_link {
     my $link = Param('urlbase') . "cvsview2.cgi";
     if (defined($::prev_revision{$revision})) {
         $link .= "?diff_mode=context&whitespace_mode=show&file=$url_file_tail"
-                 . "&branch=$::opt_rev&root=$root&subdir=$rcs_path"
+                 . "&branch=$::opt_rev&root=$root&subdir=$url_rcs_path"
                  . "&command=DIFF_FRAMESET&rev1=$::prev_revision{$revision}"
                  . "&rev2=$revision";
     } else {
-        $link .= "?files=$url_file_tail&root=$root&subdir=$rcs_path"
+        $link .= "?files=$url_file_tail&root=$root&subdir=$url_rcs_path"
                  . "\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
         $link .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
@@ -513,7 +514,7 @@ sub sprint_author {
 
 
 sub print_top {
-    my ($title_text) = "for $file_tail (";
+    my ($title_text) = "for " . &html_quote($file_tail) . " (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
@@ -606,14 +607,17 @@ sub print_useful_links {
     my ($path) = @_;
     my ($dir, $file) = $path =~ m@(.*/)?(.+)@;
     $dir =~ s@/$@@;
+    my $url_dir = &url_quote($dir);
+    my $url_file = &url_quote($file);
 
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
     my $lxr_path = $path;
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file\&branch=$::opt_rev";
-    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path\&rev=$::opt_rev";
+    my $url_path = &url_quote($path);
+    my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$url_dir\&files=$url_file\&branch=$::opt_rev";
+    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$url_path\&rev=$::opt_rev";
 
 print "<DIV ALIGN=RIGHT>
  <TABLE BORDER CELLPADDING=10 CELLSPACING=0>

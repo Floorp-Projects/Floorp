@@ -48,7 +48,8 @@ if ($cmd eq 'close') {
      change_passwd();
 } else {
      error_screen('Invalid Command',
-                  "<b>Invalid Command '<tt>$cmd</tt>'</b>");
+                  "<b>Invalid Command '<tt>" . &html_quote($cmd) .
+                  "</tt>'</b>");
 }
 
 PutsTrailer();
