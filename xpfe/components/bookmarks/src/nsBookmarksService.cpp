@@ -146,6 +146,7 @@ nsIRDFResource		*kNC_BookmarksRoot;
 nsIRDFResource		*kNC_Description;
 nsIRDFResource		*kNC_Folder;
 nsIRDFResource		*kNC_IEFavorite;
+nsIRDFResource		*kNC_IEFavoriteFolder;
 nsIRDFResource		*kNC_IEFavoritesRoot;
 nsIRDFResource		*kNC_Name;
 nsIRDFResource		*kNC_PersonalToolbarFolder;
@@ -202,6 +203,7 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
 		gRDF->GetResource(NC_NAMESPACE_URI "Folder",              &kNC_Folder);
 		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",          &kNC_IEFavorite);
+		gRDF->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder",    &kNC_IEFavoriteFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
 		gRDF->GetResource(NC_NAMESPACE_URI "ShortcutURL",         &kNC_ShortcutURL);
 		gRDF->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
@@ -256,6 +258,7 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_Description);
 		NS_IF_RELEASE(kNC_Folder);
 		NS_IF_RELEASE(kNC_IEFavorite);
+		NS_IF_RELEASE(kNC_IEFavoriteFolder);
 		NS_IF_RELEASE(kNC_IEFavoritesRoot);
 		NS_IF_RELEASE(kNC_Name);
 		NS_IF_RELEASE(kNC_PersonalToolbarFolder);
@@ -1035,7 +1038,7 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 	if (!lastModifiedDate)
 		lastModifiedDate = lastVisitDate;
 
-	// There was some other cruft here to deal with aliases, but we ignore them thanks for RDF
+	// There was some other cruft here to deal with aliases, but we ignore them thanks to RDF
 
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY; // in case ToNewCString() fails
 
@@ -1201,15 +1204,26 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 		NS_ADDREF(*bookmarkNode);
 	}
 
+	PRBool		isIEFavoriteRoot = PR_FALSE;
+
 	if (nsnull != mIEFavoritesRoot)
 	{
 		if (!PL_strcmp(aURL, mIEFavoritesRoot))
 		{
 			mFoundIEFavoritesRoot = PR_TRUE;
+			isIEFavoriteRoot = PR_TRUE;
 		}
 	}
 
-	rv = mDataSource->Assert(bookmark, kRDF_type, aNodeType, PR_TRUE);
+	if (isIEFavoriteRoot == PR_TRUE)
+	{
+		rv = mDataSource->Assert(bookmark, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
+	}
+	else
+	{
+		rv = mDataSource->Assert(bookmark, kRDF_type, aNodeType, PR_TRUE);
+	}
+
 	if (rv != NS_RDF_ASSERTION_ACCEPTED)
 	{
 		NS_ERROR("unable to add bookmark to data source");
@@ -1359,7 +1373,23 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make new folder as sequence");
 	if (NS_FAILED(rv)) return rv;
 
-	rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
+	PRBool		isIEFavoriteRoot = PR_FALSE;
+	if (nsnull != mIEFavoritesRoot)
+	{
+		if (id.Equals(mIEFavoritesRoot))
+		{
+			isIEFavoriteRoot = PR_TRUE;
+		}
+	}
+
+	if ((isIEFavoriteRoot == PR_TRUE) || (nodeType == kNC_IEFavorite))
+	{
+		rv = mDataSource->Assert(folder, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
+	}
+	else
+	{
+		rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
+	}
 	if (rv != NS_RDF_ASSERTION_ACCEPTED)
 	{
 		NS_ERROR("unable to mark new folder as folder");
@@ -3696,6 +3726,10 @@ nsBookmarksService::ReadBookmarks()
 		if (NS_FAILED(rv)) return rv;
 
 		rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
+		if (NS_FAILED(rv)) return rv;
+
+		// make sure IE Favorites root folder has the proper type		
+		rv = mInner->Assert(kNC_IEFavoritesRoot, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
 		if (NS_FAILED(rv)) return rv;
 	}
 #endif
