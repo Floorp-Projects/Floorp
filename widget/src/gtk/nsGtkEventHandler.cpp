@@ -392,7 +392,13 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 
     if (anEvent.charCode) {
       anEvent.keyCode = 0;
-      anEvent.isShift = PR_FALSE;
+      
+      // if the control, meta, or alt key is down, then we should leave
+      // the isShift flag alone (probably not a printable character)
+      // if none of the other modifier keys are pressed then we need to
+      // clear isShift so the character can be inserted in the editor
+      if (!anEvent.isControl && !anEvent.isAlt && !anEvent.isMeta)
+        anEvent.isShift = PR_FALSE;
     } else
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
