@@ -178,7 +178,7 @@ sub get_dirs_for_module($) {
   my $dirs_string = "";
   my $dirs_string_no_mozilla = "";  # dirs_string, stripping off mozilla/
   
-  my $dirs_cmd = "echo $modules_string | $topsrcdir/config/module2dir\.pl --list-only";
+  my $dirs_cmd = "echo $modules_string | $topsrcdir/config/module2dir\.pl --list-only --mapfile $toolsdir/module2dir\.map";
 
   print "\nGenerating directories list for $root_modules\n" if (!$silence);
   $dirs_string = run_shell_command($dirs_cmd, 0);

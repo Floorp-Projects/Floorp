@@ -17,6 +17,8 @@
 #               you can figure it out.
 #
 
+xpcom                       embedstring
+xpcom                       string
 png                         imglib2
 jpeg                        imglib2
 find                        embedcomponents
