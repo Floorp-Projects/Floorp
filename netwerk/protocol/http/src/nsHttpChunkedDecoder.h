@@ -42,7 +42,8 @@ public:
     // called by the transaction to handle chunked content.
     nsresult HandleChunkedContent(char *buf,
                                   PRUint32 count,
-                                  PRUint32 *countRead);
+                                  PRUint32 *contentRead,
+                                  PRUint32 *bufRead);
 
     nsHttpHeaderArray *Trailers() { return mTrailers; }
 

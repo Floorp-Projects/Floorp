@@ -476,66 +476,68 @@ nsHttpPipeline::OnDataReadable(nsIInputStream *stream)
 
     NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 
-    nsresult rv;
-    nsAutoLock lock(mLock);
+    {
+        nsresult rv = NS_OK;
+        nsAutoLock lock(mLock);
 
-    if (mCurrentReader == -1)
-        mCurrentReader = 0;
+        if (mCurrentReader == -1)
+            mCurrentReader = 0;
 
-    while (1) {
-        nsAHttpTransaction *reader = mTransactionQ[mCurrentReader];
-        // the reader may be NULL if it has already completed.
-        if (!reader || (mTransactionFlags[mCurrentReader] & eTransactionComplete)) {
-            // advance to next reader
-            if (++mCurrentReader == mNumTrans) {
-                mCurrentReader = -1;
-                break;
+        while (1) {
+            nsAHttpTransaction *reader = mTransactionQ[mCurrentReader];
+            // the reader may be NULL if it has already completed.
+            if (!reader || (mTransactionFlags[mCurrentReader] & eTransactionComplete)) {
+                // advance to next reader
+                if (++mCurrentReader == mNumTrans) {
+                    mCurrentReader = -1;
+                    return NS_OK;
+                }
+                continue;
             }
-            continue;
+
+            // remember the index of this reader
+            PRUint32 readerIndex = mCurrentReader;
+            PRUint32 bytesRemaining = 0;
+
+            mTransactionFlags[readerIndex] |= eTransactionReading;
+
+            // cannot hold lock while calling OnDataReadable... must also ensure
+            // that |reader| doesn't dissappear on us.
+            nsCOMPtr<nsISupports> readerDeathGrip(reader);
+            PR_Unlock(mLock);
+
+            rv = reader->OnDataReadable(stream);
+
+            if (NS_SUCCEEDED(rv))
+                rv = stream->Available(&bytesRemaining);
+
+            PR_Lock(mLock);
+
+            if (NS_FAILED(rv))
+                return rv;
+
+            // the reader may have completed...
+            if (mTransactionFlags[readerIndex] & eTransactionComplete) {
+                reader->OnStopTransaction(reader->Status());
+                DropTransaction_Locked(readerIndex);
+            }
+
+            // the pipeline may have completed...
+            if (NS_FAILED(mStatus) || IsDone_Locked())
+                break; // exit lock
+
+            // otherwise, if there is nothing left in the stream, then unwind...
+            if (bytesRemaining == 0)
+                return NS_OK;
+
+            // PushBack may have been called during the call to OnDataReadable, so
+            // we cannot depend on |reader| pointing to |mCurrentReader| anymore.
+            // loop around, and re-acquire |reader|.
         }
-
-        // remember the index of this reader
-        PRUint32 readerIndex = mCurrentReader;
-        PRUint32 bytesRemaining = 0;
-
-        mTransactionFlags[readerIndex] |= eTransactionReading;
-
-        // cannot hold lock while calling OnDataReadable... must also ensure
-        // that |reader| doesn't dissappear on us.
-        nsCOMPtr<nsISupports> readerDeathGrip(reader);
-        PR_Unlock(mLock);
-
-        rv = reader->OnDataReadable(stream);
-
-        if (NS_SUCCEEDED(rv))
-            rv = stream->Available(&bytesRemaining);
-
-        PR_Lock(mLock);
-
-        if (NS_FAILED(rv)) return rv;
-
-        // the reader may have completed...
-        if (mTransactionFlags[readerIndex] & eTransactionComplete) {
-            reader->OnStopTransaction(reader->Status());
-            DropTransaction_Locked(readerIndex);
-        }
-
-        // the pipeline may have completed...
-        if (NS_FAILED(mStatus) || IsDone_Locked()) {
-            NS_ASSERTION(mConnection, "no connection");
-            mConnection->OnTransactionComplete(this, mStatus);
-            return NS_OK;
-        }
-
-        // otherwise, if there is nothing left in the stream, then unwind...
-        if (bytesRemaining == 0)
-            return NS_OK;
-
-        // PushBack may have been called during the call to OnDataReadable, so
-        // we cannot depend on |reader| pointing to |mCurrentReader| anymore.
-        // loop around, and re-acquire |reader|.
     }
 
+    NS_ASSERTION(mConnection, "no connection");
+    mConnection->OnTransactionComplete(this, mStatus);
     return NS_OK;
 }
 
