@@ -15,9 +15,21 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s):  
- * Pierre Phaneuf <pp@ludusdesign.com>
+ * Contributor(s):
  * Henry Sobotka <sobotka@axess.com> Jan. 2000 review and update
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 03/23/2000       IBM Corp.      Fixed InvertRect.
+ *
  */
 
 //#define PROFILE_GSTATE // be noisy about graphicsstate-usage
@@ -974,12 +986,12 @@ nsRenderingContextOS2 :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  mTMatrix.TransformCoord(&aX, &aY, &aWidth, &aHeight);
-  ConditionRect(aX, aY, aWidth, aHeight);
+//  mTMatrix.TransformCoord(&aX, &aY, &aWidth, &aHeight);
+//  ConditionRect(aX, aY, aWidth, aHeight);
   nsRect tr(aX, aY, aWidth, aHeight);
-  //  GpiSetMix(mSurface->mPS, FM_XOR);
+  GpiSetMix(mSurface->mPS, FM_XOR);
   PMDrawRect(tr, FALSE);
-  //  GpiSetMix(mSurface->mPS, FM_DEFAULT);
+  GpiSetMix(mSurface->mPS, FM_DEFAULT);
   return NS_OK;
 }
 
