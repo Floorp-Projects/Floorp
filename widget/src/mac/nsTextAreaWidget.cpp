@@ -22,7 +22,7 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-
+#include <memory>
 
 #define DBG 0
 
@@ -449,10 +449,13 @@ LongRect			macRect;
  */ 
 PRUint32  nsTextAreaWidget::SetText(const nsString& aText, PRUint32& aSize)
 { 
-char 			buffer[256];
-PRInt32 	len;
 PRInt32		offx,offy;
 GrafPtr		theport;
+
+	Size textSize = aText.Length();
+	if ( aSize < textSize )				// truncate to given size
+		textSize = aSize;
+	const unsigned int bufferSize = textSize + 1;	// add 1 for null
 
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
@@ -460,12 +463,14 @@ GrafPtr		theport;
 	//::SetOrigin(-offx,-offy);
  
  	this->RemoveText();
-	aText.ToCString(buffer,255);
-	len = strlen(buffer);
-
-	WEInsert(buffer,len,0,0,mTE_Data);
-
-	aSize = len;
+	auto_ptr<char> buffer ( new char[bufferSize] );
+	if ( buffer.get() ) {
+		aText.ToCString(buffer.get(),bufferSize);
+		WEInsert(buffer.get(),aSize,0,0,mTE_Data);
+	}
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
+	
 	//::SetOrigin(0,0);
 	::SetPort(theport);
   return NS_OK;
