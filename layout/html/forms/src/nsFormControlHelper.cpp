@@ -308,12 +308,14 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   if (PR_TRUE == requiresWidget || eWidgetRendering_Native == mode ||
       type==NS_FORM_INPUT_TEXT || type==NS_FORM_TEXTAREA || type==NS_FORM_INPUT_PASSWORD) 
   {
-    if (!aWidthExplicit && mode == eWidgetRendering_Native) {
+//    if (!aWidthExplicit && mode == eWidgetRendering_Native) {
+	  if (!aWidthExplicit) {
       PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
       aDesiredSize.width += hPadding;
       aMinSize.width += hPadding;
     }
-    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
+//    if (!aHeightExplicit && mode == eWidgetRendering_Native) {
+	  if (!aHeightExplicit) { 
       PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
       aDesiredSize.height += vPadding;
       aMinSize.height += vPadding;
