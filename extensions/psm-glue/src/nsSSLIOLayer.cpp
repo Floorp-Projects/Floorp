@@ -541,7 +541,7 @@ nsPSMSocketInfo::GetPickledStatus(char * *pickledStatusString)
     if (mPickledStatus)
     {
         if (pickledStatusString) {
-            PRInt32 len = *(int*)mPickledStatus;
+            PRInt32 len = *(int*)mPickledStatus + sizeof(int);
             char *out = (char *)nsMemory::Alloc(len);
             memcpy(out, mPickledStatus, len);
             *pickledStatusString = out;
