@@ -625,6 +625,7 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
 {
 #if 1
 	NS_NOTYETIMPLEMENTED("dp checked in all this stuff in the middle of my checkin");
+	return NS_ERROR_FAILURE;
 #else
   if (aIFileSpec == NULL)
     return NS_ERROR_NULL_POINTER;
