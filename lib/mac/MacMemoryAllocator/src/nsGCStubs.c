@@ -59,4 +59,7 @@ void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersiz
 	strncpy(unmangled_name, mangled_name, buffersize);
 }
 
+void GC_trace_object(void* object);
+void GC_trace_object(void* object) {}
+
 #endif
