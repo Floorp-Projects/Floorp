@@ -1412,6 +1412,18 @@ pref("font.size.fixed.zh-TW", 16);
 pref("font.size.variable.zh-HK", 16);
 pref("font.size.fixed.zh-HK", 16);
 
+/**
+ * Set default accelKey to "Alt", which is the default under BeOS.
+ * The generalAccessKey is used for shortcuts on web pages, set to
+ * Ctrl. The menuAccessKey is now the "windows" key.
+ */
+pref("ui.key.accelKey", 18);
+pref("ui.key.generalAccessKey", 17);
+pref("ui.key.menuAccessKey", 17);
+
+// xxx toolkit?
+pref("browser.download.dir", "/boot/home/Downloads");
+
 # BeOS
 #endif
 
