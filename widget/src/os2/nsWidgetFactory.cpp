@@ -29,6 +29,7 @@
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Added support for directory picker dialog.
  * 03/24/2000       IBM Corp.      Updated based on nsWinWidgetFactory.cpp.
+ * 05/31/2000       IBM Corp.      Enabled timer stuff
  */
 
 #include "nsIFactory.h"
@@ -49,8 +50,8 @@
 // OS2TODO #include "nsFontRetrieverService.h"
 #include "nsSound.h"
 
-// OS2TODO #include "nsWindowsTimer.h"
-// OS2TODO #include "nsTimerManager.h"
+#include "nsWindowsTimer.h"
+#include "nsTimerManager.h"
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
@@ -71,8 +72,8 @@ static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCFontRetrieverService, NS_FONTRETRIEVERSERVICE_CID);
 
-// OS2TODO static NS_DEFINE_IID(kCTimer, NS_TIMER_CID);
-// OS2TODO static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
+static NS_DEFINE_IID(kCTimer, NS_TIMER_CID);
+static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
 
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
@@ -226,6 +227,13 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCXIFFormatConverter)) {
         inst = (nsISupports*)new nsXIFFormatConverter();
     }
+    else if (mClassID.Equals(kCTimer)) {
+        inst = (nsISupports*)(nsITimer*) new nsTimer();
+    }
+    else if (mClassID.Equals(kCTimerManager)) {
+        inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
+    }
+
 #if 0 // OS2TODO
     else if (mClassID.Equals(kCClipboard)) {
         inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
@@ -235,12 +243,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCFontRetrieverService)) {
         inst = (nsISupports*)(nsIFontRetrieverService *)new nsFontRetrieverService();
-    }
-    else if (mClassID.Equals(kCTimer)) {
-        inst = (nsISupports*)(nsITimer*) new nsTimer();
-    }
-    else if (mClassID.Equals(kCTimerManager)) {
-        inst = (nsISupports*)(nsITimerQueue*) new nsTimerManager();
     }
 #endif
     if (inst == NULL) {  
