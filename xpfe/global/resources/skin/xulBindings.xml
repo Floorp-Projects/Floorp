@@ -385,6 +385,13 @@
                                   onget="return this.anonymousContent[0].firstChild.size;"/>
       <property name="readonly"   onset="return this.anonymousContent[0].firstChild.readonly = val;"
                                   onget="return this.anonymousContent[0].firstChild.readonly;"/>
+      <method name="setSelectionRange">
+        <argument name="aSelectionStart"/>
+        <argument name="aSelectionEnd"/>
+        <body>
+          this.anonymousContent[0].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
+        </body>
+      </method>
     </interface>
     <handlers>
       <handler type="focus" value="this.setAttribute('focused','true'); this.anonymousContent[0].firstChild.focus(); "/>
