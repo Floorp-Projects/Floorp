@@ -73,20 +73,20 @@
 	<box align="vertical" style="width: 100%;">
 				<html:div>&docCache;</html:div>
 		<html:div>
-    		<html:input type="radio" name="cache" id="pref:0:browser.cache.check_doc_frequency" checked="true"/>
-			<html:label for="pref:0:browser.cache.check_doc_frequency" accesskey="o" tabindex="0">
+    		<html:input name="cacheDocFreq" type="radio" id="pref:0:int:browser.cache.check_doc_frequency" />
+			<html:label for="pref:0:int:browser.cache.check_doc_frequency" accesskey="o" tabindex="0">
 			&oncePsessionRadio.label;
 			</html:label>
 		</html:div>
 		<html:div>
-    		<html:input type="radio" name="cache" id="pref:1:browser.cache.check_doc_frequency" />
-			<html:label for="pref:1:browser.cache.check_doc_frequency" accesskey="e" tabindex="0">
+    		<html:input name="cacheDocFreq" type="radio" id="pref:1:int:browser.cache.check_doc_frequency" />
+			<html:label for="pref:1:int:browser.cache.check_doc_frequency" accesskey="e" tabindex="0">
 			&everyTimeRadio.label;	
 			</html:label>
 		</html:div>
     	<html:div>
-    		<html:input type="radio" name="cache" id="pref:2:browser.cache.check_doc_frequency" />
-			<html:label for="pref:2:browser.cache.check_doc_frequency" accesskey="n" tabindex="0">
+    		<html:input name="cacheDocFreq" type="radio" id="pref:2:int:browser.cache.check_doc_frequency" />
+			<html:label for="pref:2:int:browser.cache.check_doc_frequency" accesskey="n" tabindex="0">
 			&neverRadio.label;	
 			</html:label>
 		</html:div>	
