@@ -4794,7 +4794,15 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 					// output title
 					if (!name.IsEmpty())
-						strm << name.get();
+					{
+						// see bug #65098
+						char *escapedAttrib = nsEscapeHTML(name.get());
+						if (escapedAttrib)
+						{
+							strm << escapedAttrib;
+							nsCRT::free(escapedAttrib);
+						}
+					}
 					strm << "</H3>\n";
 
 					// output description (if one exists)
