@@ -532,7 +532,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
                                            aState.reflowState,
                                            status);
     // Create a child frame -- always an nsTableCell frame
-    nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_TRUE);
+    nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_FALSE);
     nsIContentDelegate* kidDel = cell->GetDelegate(&aPresContext);
     nsIFrame*           kidFrame;
 
