@@ -1479,7 +1479,7 @@ NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
 {
     qDebug("------------> SetModal mWidget=%p",(void*) mWidget);
 
-    MozQWidget *mozWidget = dynamic_cast<MozQWidget*>(mWidget);
+    MozQWidget *mozWidget = qt_cast<MozQWidget*>(mWidget);
     if (mozWidget)
         mozWidget->setModal(aModal);
 
