@@ -216,7 +216,7 @@ Archive=jre122.exe
 $InstallSize$:oji
 $InstallSizeSystem$
 ;Dependency0=Netscape Seamonkey
-Parameter=-a -jdk[WINDISK]\Progra~1\JavaSoft\JRE\1.2.2
+Parameter=-s -a -s
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
