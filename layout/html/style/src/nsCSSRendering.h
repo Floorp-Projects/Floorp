@@ -136,6 +136,14 @@ public:
                                  PRIntn aSkipSides,
                                  nsRect* aGap);
 
+  /**
+   * transform a color to a color that will show up on a printer if needed
+   * aMapColor - color to evaluate
+   * aIsPrinter - Is this a printing device
+   * return - the transformed color
+   */
+  static nscolor TransformColor(nscolor  aMapColor,PRBool aNoBackGround);
+
 protected:
   /**
    * Render the border for an element using css rendering rules
@@ -206,6 +214,7 @@ protected:
                            const nsPoint aPoints[],
                            PRInt32 aNumPoints,
                            nsRect* aGap);
+
 };
 
 
