@@ -42,6 +42,13 @@ if ( (!defined $c) || ($c eq '') ) {
 	print "<H2> Hit back, and try again...</H2>";
     exit 0;
 }
+if ($c =~ m/</) {
+	print "Content-type: text/html\n\n";
+	print "<CENTER><H1>For security reasons, support for tags";
+	print " has been turned off in quips.\n</H1>\n";
+	print "<H2> Hit back, and try again...</H2></CENTER>\n";
+    exit 0;
+}
 
 open(COMMENTS, ">>data/comments");
 print COMMENTS $FORM{"comment"} . "\n";
