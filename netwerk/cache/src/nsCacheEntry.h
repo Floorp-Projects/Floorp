@@ -159,10 +159,10 @@ public:
     PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
     PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
     PRBool IsInvalid()         { return (mFlags & eValidMask) == 0; }
-    PRBool IsInUse()           { return !(PR_CLIST_IS_EMPTY(&mRequestQ) &&
+    PRBool IsInUse()           { return IsBinding() ||
+                                        !(PR_CLIST_IS_EMPTY(&mRequestQ) &&
                                           PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
-    PRBool IsNotInUse()        { return (PR_CLIST_IS_EMPTY(&mRequestQ) &&
-                                         PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
+    PRBool IsNotInUse()        { return !IsInUse(); }
 
 
     PRBool IsAllowedInMemory()
