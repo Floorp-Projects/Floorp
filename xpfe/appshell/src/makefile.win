@@ -60,7 +60,7 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\pref                  \
- 	 -I$(PUBLIC)\profile               \
+      -I$(PUBLIC)\profile               \
       -I$(PUBLIC)\appcores              \
 !ifdef NECKO
       -I$(PUBLIC)\necko		\
@@ -68,9 +68,12 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\netlib		\
 !endif
       -I$(PUBLIC)\rdf			\
-	  -I$(PUBLIC)\pics \
-	  -I$(PUBLIC)\xpfe\components \
-	  $(NULL)
+      -I$(PUBLIC)\pics \
+      -I$(PUBLIC)\xpfe\components \
+!ifdef MOZ_FULLCIRCLE
+      -I$(MOZ_TOOLS)\include \
+!endif
+     $(NULL)
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = nsappshell
@@ -95,6 +98,9 @@ LLIBS=                          \
  $(DIST)\lib\jsdombase_s.lib   \
  $(DIST)\lib\jsdomevents_s.lib   \
  $(LIBNSPR)                     \
+!ifdef MOZ_FULLCIRCLE
+ $(MOZ_TOOLS)\lib\fulls32.lib \
+!endif
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -78,7 +78,7 @@ LINCS=  \
   -I$(PUBLIC)\ngprefs \
 !endif
 !ifdef MOZ_FULLCIRCLE
-  -I$(PUBLIC)\fulls32 \
+  -I$(MOZ_TOOLS)\include \
 !endif
   -I$(PUBLIC)\oji \
   -I$(PUBLIC)\caps \
@@ -106,7 +106,7 @@ MYLIBS=                         \
  ole32.lib                      \
 !endif
 !ifdef MOZ_FULLCIRCLE
- $(DIST)\lib\fulls32.lib \
+ $(MOZ_TOOLS)\lib\fulls32.lib \
 !endif
  $(NULL)
 

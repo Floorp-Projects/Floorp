@@ -58,7 +58,11 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\appcores				\
       -I$(PUBLIC)\walletlib             \
       -I$(PUBLIC)\xpfe\components       \
-      -I$(PUBLIC)\oji    
+      -I$(PUBLIC)\oji                   \
+!ifdef MOZ_FULLCIRCLE
+      -I$(MOZ_TOOLS)\include            \
+!endif
+      $(NULL)
 #      -I..\browser
 
 MAKE_OBJ_TYPE = EXE
@@ -78,6 +82,9 @@ LLIBS=                          \
  $(DIST)\lib\neckoutil_s.lib    \
 !else
  $(DIST)\lib\netlib.lib         \
+!endif
+!ifdef MOZ_FULLCIRCLE
+ $(MOZ_TOOLS)\lib\fulls32.lib \
 !endif
  $(LIBNSPR)                     \
  $(NULL)
