@@ -78,7 +78,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.16 $ )[1];
+$VERSION = ( qw $Revision: 1.17 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -88,8 +88,7 @@ $VERSION = ( qw $Revision: 1.16 $ )[1];
 # run entirely without images I suggest you set it to "X".
 # This is used in TinderDB::Notice.pm
 
-$NOTICE_AVAILABLE = "X";
-#$NOTICE_AVAILABLE = "<img src='$FileStructure::IMAGES{star}' border=0>";
+$NOTICE_AVAILABLE = $TinderConfig::NOTICE_AVAILABLE || "X";
 
 
 sub status_table_legend {
@@ -102,14 +101,14 @@ sub status_table_legend {
         <td align=right valign=top>
 	<table $TinderDB::LEGEND_BORDER>
 		<thead><tr>
-			<td align=center>Notices</td>
+			<td align=center>Notes</td>
 		</tr></thead>
 		<tr>
-			<td>Notice posted: </td>
+			<td>Note posted: </td>
 			<td align=center>$NOTICE_AVAILABLE</td>
 		</tr>
 		<tr>
-			<td>No Notice posted: </td>
+			<td>No Note posted: </td>
 			<td align=center>$HTMLPopUp::EMPTY_TABLE_CELL</td>
 		</tr>
 	</table>
@@ -276,7 +275,7 @@ sub render_notice {
                            "</b>]".
                            $localpostedtime.
                            "\n".
-                           "<!-- posted from remote host: $remote_host -->\n".
+                           "<!-- posted from remote host: $remote_host at time : $notice->{'localposttime'} -->\n".
                            "\t\t</p>\n".
                            "\t\t<p>\n".
                            "$note\n".
@@ -298,6 +297,8 @@ sub get_all_rendered_notices {
         $localtime = localtime($time);
         $rendered_notices .= (
                               "\n\n".
+                              # allow us to reference individual
+                              # notices in the file
                               HTMLPopUp::Link(
                                               "name"=>$time,
                                               "href"=>"\#$time",
