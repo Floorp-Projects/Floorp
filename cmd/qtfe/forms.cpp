@@ -1,4 +1,4 @@
-/* $Id: forms.cpp,v 1.1 1998/09/25 18:01:33 ramiro%netscape.com Exp $
+/* $Id: forms.cpp,v 1.2 1998/10/20 02:40:45 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1134,11 +1134,13 @@ void QtContext::getFormElementInfo(LO_FormElementStruct *form)
 }
 
 /* From ./forms.c: */
-void QtContext::getFormElementValue(LO_FormElementStruct *, bool)
+void QtContext::getFormElementValue(LO_FormElementStruct *, bool, bool)
 {
 }
+
+/* XXX - wtf does submit_p do? */
 void QtBrowserContext::getFormElementValue(LO_FormElementStruct *form,
-						 bool delete_p)
+						 bool delete_p, bool submit_p)
 {
     element(form)->getValue();
     if ( delete_p ) {

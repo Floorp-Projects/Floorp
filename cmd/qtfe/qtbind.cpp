@@ -1,4 +1,4 @@
-/* $Id: qtbind.cpp,v 1.2 1998/10/12 07:18:21 jonas.utterstrom%vittran.norrnod.se Exp $
+/* $Id: qtbind.cpp,v 1.3 1998/10/20 02:40:44 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -509,9 +509,9 @@ QTFE_GetFormElementInfo(MWContext* context, LO_FormElementStruct *form)
 extern "C"
 void
 QTFE_GetFormElementValue(MWContext* context, LO_FormElementStruct *form,
-						 XP_Bool delete_p)
+					XP_Bool delete_p, XP_Bool submit_p)
 {
-    QtContext::qt(context)->getFormElementValue(form, delete_p);
+    QtContext::qt(context)->getFormElementValue(form, delete_p, submit_p);
 }
 
 
