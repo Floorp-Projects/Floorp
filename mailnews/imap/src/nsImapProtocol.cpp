@@ -4709,7 +4709,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             m_runningUrl->GetImapAction(&imapAction);
 
             if (GetServerStateParser().LastCommandSuccessful() &&  (
-                imapAction == nsIImapUrl::nsImapAppendDraftFromFile || imapAction == nsIImapUrl::nsImapAppendMsgFromFile ))
+                imapAction == nsIImapUrl::nsImapAppendDraftFromFile ))
             {
               if (GetServerStateParser().GetCapabilityFlag() &
                     kUidplusCapability)
