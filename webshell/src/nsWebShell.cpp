@@ -1083,6 +1083,10 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
   ShowHistory();
 
+  // Stop loading the current document (if any...).  This call may result in
+  // firing an EndLoadURL notification for the old document...
+  Stop();
+
   // Tell web-shell-container we are loading a new url
   if (nsnull != mContainer) {
     rv = mContainer->BeginLoadURL(this, urlSpec);
@@ -1090,8 +1094,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       return rv;
     }
   }
-
-  Stop();
 
   rv = mDocLoader->LoadDocument(urlSpec,       // URL string
                                 nsnull,         // Command
@@ -1185,6 +1187,10 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     mHistoryIndex = aHistoryIndex;
     ShowHistory();
 
+    // Stop loading the current document (if any...).  This call may result in
+    // firing an EndLoadURL notification for the old document...
+    Stop();
+
     // Tell web-shell-container we are loading a new url
     if (nsnull != mContainer) {
       rv = mContainer->BeginLoadURL(this, urlSpec);
@@ -1192,9 +1198,6 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
         return rv;
       }
     }
-
-    // Stop any documents that are currently being loaded...
-    mDocLoader->Stop();
 
     rv = mDocLoader->LoadDocument(urlSpec,        // URL string
                                   nsnull,         // Command
