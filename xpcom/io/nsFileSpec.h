@@ -129,8 +129,8 @@
 #include <Files.h>
 #elif defined(XP_UNIX) || defined (XP_OS2)
 #include <dirent.h>
-#elif 0 // defined(XP_PC)
-#include "winfile.h"
+#elif XP_PC
+#include "prio.h"
 #endif
 
 //========================================================================================
@@ -144,7 +144,7 @@ class nsNativeFileSpec;
 #define kFileURLPrefix "file://"
 #define kFileURLPrefixLength (7)
 
-class nsOutputFileStream;
+class nsBasicOutStream;
 
 //========================================================================================
 class NS_BASE nsNativeFileSpec
@@ -164,6 +164,13 @@ class NS_BASE nsNativeFileSpec
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsNativeFileSpec& inOther);
+
+#ifndef XP_MAC
+                                operator const char* () const { return mPath; }
+                                    // This is the only automatic conversion to const char*
+                                    // that is provided, and it allows the
+                                    // path to be "passed" to NSPR file routines.
+#endif
 
 #ifdef XP_MAC
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
@@ -198,8 +205,8 @@ class NS_BASE nsNativeFileSpec
         bool                    Valid() const { return true; } // Fixme.
 #endif // XP_MAC
 
-        friend                  NS_BASE nsOutputFileStream& operator << (
-                                    nsOutputFileStream& s,
+        friend                  NS_BASE nsBasicOutStream& operator << (
+                                    nsBasicOutStream& s,
                                     const nsNativeFileSpec& spec);
 
         //--------------------------------------------------
@@ -283,8 +290,8 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsNativeFileSpec& inOther);
 
-        friend                  NS_BASE nsOutputFileStream& operator << (
-                                     nsOutputFileStream& s, const nsFileURL& spec);
+        friend                  NS_BASE nsBasicOutStream& operator << (
+                                     nsBasicOutStream& s, const nsFileURL& spec);
 
 #ifdef XP_MAC
                                 // Accessor to allow quick assignment to a mNativeFileSpec
@@ -349,7 +356,7 @@ class NS_BASE nsFilePath
 }; // class nsFilePath
 
 //========================================================================================
-class nsDirectoryIterator
+class NS_BASE nsDirectoryIterator
 //  Example:
 //
 //       nsNativeFileSpec parentDir(...); // directory over whose children we shall iterate
@@ -387,8 +394,10 @@ class nsDirectoryIterator
 	    nsNativeFileSpec        mCurrent;
 	    bool                    mExists;
 	      
-#if defined(XP_UNIX) // || defined(XP_PC) add when ready
+#if defined(XP_UNIX)
         DIR*                    mDir;
+#elif defined(XP_PC)
+        PRDir*                  mDir; // XXX why not use PRDir for Unix & Mac, too?
 #elif defined(XP_MAC)
         OSErr                   SetToIndex();
 	    short                   mIndex;

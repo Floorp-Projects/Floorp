@@ -149,7 +149,9 @@ void nsBasicFileStream::open(
     	return;
 #else
 	//	Platforms other than Macintosh...
-    if ((mFileDesc = PR_Open(inFile, nsprMode, accessMode)) == 0)
+	//  Another bug in NSPR: Mac PR_Open assumes a unix style path, but Win PR_Open assumes
+	//  a windows path.
+    if ((mFileDesc = PR_Open((const char*)nsNativeFileSpec(inFile), nsprMode, accessMode)) == 0)
     	return;
 #endif
      mNSPRMode = nsprMode;
@@ -210,42 +212,36 @@ PRIntn nsBasicFileStream::tell() const
 } // nsBasicFileStream::tell
 
 //========================================================================================
-//          nsInputFileStream
+//          nsBasicInStream
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsInputFileStream::nsInputFileStream(istream* stream)
+nsBasicInStream::nsBasicInStream(nsBasicFileStream& inBasicStream, istream* inStream)
 //----------------------------------------------------------------------------------------
-#ifndef NS_USE_PR_STDIO
-    : nsBasicFileStream(0, kDefaultMode)
-    , mStdStream(stream)
-#else
-    : nsBasicFileStream(PR_STDIN, kDefaultMode)
-    , mStdStream(0)
-#endif
+	: mBase(inBasicStream)
+	, mStdStream(inStream)
 {
 }
-
 //----------------------------------------------------------------------------------------
-void nsInputFileStream::get(char& c)
+void nsBasicInStream::get(char& c)
 //----------------------------------------------------------------------------------------
 {
     read(&c, sizeof(char));
 }
 
 //----------------------------------------------------------------------------------------
-bool nsInputFileStream::readline(char* s, PRInt32 n)
+PRBool nsBasicInStream::readline(char* s, PRInt32 n)
 // This will truncate if the buffer is too small.  Result will always be null-terminated.
 //----------------------------------------------------------------------------------------
 {
-    bool bufferLargeEnough = true; // result
+    PRBool bufferLargeEnough = true; // result
     if (!s || !n)
         return true;
-    PRIntn position = tell();
+    PRIntn position = mBase.tell();
     if (position < 0)
         return false;
     PRInt32 bytesRead = read(s, n - 1);
-    if (mFailed)
+    if (mBase.failed())
         return false;
     s[bytesRead] = '\0'; // always terminate at the end of the buffer
     char* tp = strpbrk(s, "\n\r");
@@ -257,37 +253,37 @@ bool nsInputFileStream::readline(char* s, PRInt32 n)
             tp++; // possibly a pair.
         bytesRead = (tp - s);
     }
-    else if (!eof())
+    else if (!mBase.eof())
         bufferLargeEnough = false;
     position += bytesRead;
-    seek(position);
+    mBase.seek(position);
     return bufferLargeEnough;
-} // nsInputFileStream::getline
+} // nsBasicInStream::getline
 
 //----------------------------------------------------------------------------------------
-PRInt32 nsInputFileStream::read(void* s, PRInt32 n)
+PRInt32 nsBasicInStream::read(void* s, PRInt32 n)
 //----------------------------------------------------------------------------------------
 {
 #ifndef NS_USE_PR_STDIO
     // Calling PR_Read on stdin is sure suicide on Macintosh.
-    if (mStdStream)
+    if (GetStandardStream())
     {
-    	mStdStream->read((char*)s, n);
+    	GetStandardStream()->read((char*)s, n);
     	return n;
     }
 #endif
-    if (!mFileDesc || mFailed)
+    if (!mBase.is_open() || mBase.failed())
         return -1;
-    PRInt32 bytesRead = PR_Read(mFileDesc, s, n);
+    PRInt32 bytesRead = PR_Read(mBase.GetFileDescriptor(), s, n);
     if (bytesRead < 0)
-        mFailed = true;
+        mBase.mFailed = true;
     else if (bytesRead < n)
-        mEOF = true;
+        mBase.mEOF = true;
     return bytesRead;
 }
 
 //----------------------------------------------------------------------------------------
-nsInputFileStream& nsInputFileStream::operator >> (char& c)
+nsBasicInStream& nsBasicInStream::operator >> (char& c)
 //----------------------------------------------------------------------------------------
 {
 	get(c);
@@ -295,31 +291,43 @@ nsInputFileStream& nsInputFileStream::operator >> (char& c)
 }
 
 //========================================================================================
-//          nsOutputFileStream
+//          nsInputFileStream
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream::nsOutputFileStream(ostream* stream)
+nsInputFileStream::nsInputFileStream(istream* stream)
 //----------------------------------------------------------------------------------------
 #ifndef NS_USE_PR_STDIO
     : nsBasicFileStream(0, kDefaultMode)
-    , mStdStream(stream)
+    , nsBasicInStream(*this, stream)
 #else
-    : nsBasicFileStream(PR_STDOUT, kDefaultMode)
-    , mStdStream(0)
+    : nsBasicFileStream(PR_STDIN, kDefaultMode)
+    , nsBasicInStream(*this, 0)
 #endif
 {
 }
 
+//========================================================================================
+//          nsBasicOutStream
+//========================================================================================
+
 //----------------------------------------------------------------------------------------
-void nsOutputFileStream::put(char c)
+nsBasicOutStream::nsBasicOutStream(nsBasicFileStream& inBase, ostream* stream)
+//----------------------------------------------------------------------------------------
+    : mBase(inBase)
+    , mStdStream(stream)
+{
+}
+
+//----------------------------------------------------------------------------------------
+void nsBasicOutStream::put(char c)
 //----------------------------------------------------------------------------------------
 {
     write(&c, sizeof(c));
 }
 
 //----------------------------------------------------------------------------------------
-PRInt32 nsOutputFileStream::write(const void* s, PRInt32 n)
+PRInt32 nsBasicOutStream::write(const void* s, PRInt32 n)
 //----------------------------------------------------------------------------------------
 {
 #ifndef NS_USE_PR_STDIO
@@ -330,16 +338,16 @@ PRInt32 nsOutputFileStream::write(const void* s, PRInt32 n)
         return n;
     }
 #endif
-    if (!mFileDesc || mFailed)
+    if (!mBase.mFileDesc || mBase.failed())
        return -1;
-    PRInt32 bytesWrit = PR_Write(mFileDesc, s, n);
+    PRInt32 bytesWrit = PR_Write(mBase.mFileDesc, s, n);
     if (bytesWrit != n)
-        mFailed = true;
+        mBase.mFailed = true;
     return bytesWrit;
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (char c)
+nsBasicOutStream& nsBasicOutStream::operator << (char c)
 //----------------------------------------------------------------------------------------
 {
 	put(c);
@@ -347,7 +355,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (char c)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (const char* s)
+nsBasicOutStream& nsBasicOutStream::operator << (const char* s)
 //----------------------------------------------------------------------------------------
 {
 	write(s, strlen(s));
@@ -355,7 +363,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (const char* s)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (short val)
+nsBasicOutStream& nsBasicOutStream::operator << (short val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
@@ -364,7 +372,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (short val)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (unsigned short val)
+nsBasicOutStream& nsBasicOutStream::operator << (unsigned short val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
@@ -373,7 +381,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (unsigned short val)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (long val)
+nsBasicOutStream& nsBasicOutStream::operator << (long val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
@@ -382,7 +390,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (long val)
 }
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsOutputFileStream::operator << (unsigned long val)
+nsBasicOutStream& nsBasicOutStream::operator << (unsigned long val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
@@ -391,7 +399,7 @@ nsOutputFileStream& nsOutputFileStream::operator << (unsigned long val)
 }
 
 //----------------------------------------------------------------------------------------
-void nsOutputFileStream::flush()
+void nsBasicOutStream::flush()
 // Must precede the destructor because both are inline.
 //----------------------------------------------------------------------------------------
 {
@@ -402,22 +410,39 @@ void nsOutputFileStream::flush()
         return;
     }
 #endif
-    if (mFileDesc == 0) 
+    if (mBase.mFileDesc == 0) 
         return;
-    bool itFailed = PR_Sync(mFileDesc) != PR_SUCCESS;
+    PRBool itFailed = PR_Sync(mBase.mFileDesc) != PR_SUCCESS;
 #ifdef XP_MAC
     // On unix, it seems to fail always.
     if (itFailed)
-    	mFailed = true;
+    	mBase.mFailed = true;
 #endif
-} // nsOutputFileStream::flush
+} // nsBasicOutStream::flush
+
+//========================================================================================
+//          nsOutputFileStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream::nsOutputFileStream(ostream* stream)
+//----------------------------------------------------------------------------------------
+#ifndef NS_USE_PR_STDIO
+    : nsBasicFileStream(0, kDefaultMode)
+    , nsBasicOutStream(*this, stream)
+#else
+    : nsBasicFileStream(PR_STDOUT, kDefaultMode)
+    , nsBasicOutStream(*this, 0)
+#endif
+{
+}
 
 //========================================================================================
 //        Manipulators
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsOutputFileStream& nsEndl(nsOutputFileStream& os)
+nsBasicOutStream& nsEndl(nsBasicOutStream& os)
 //----------------------------------------------------------------------------------------
 {
 #ifndef NS_USE_PR_STDIO

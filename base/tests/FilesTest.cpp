@@ -1,10 +1,62 @@
+#include "string.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 
-NS_NAMESPACE FilesTest
+struct FilesTest
 {
-	NS_NAMESPACE_PROTOTYPE void WriteStuff(nsOutputFileStream& s);
-} NS_NAMESPACE_END
+	FilesTest() : mConsole() {}
+
+	int RunAllTests();
+	
+	void WriteStuff(nsOutputFileStream& s);
+	int InputStream(const char* relativePath);
+	int OutputStream(const char* relativePath);
+	int IOStream(const char* relativePath);
+	int Parent(const char* relativePath, nsNativeFileSpec& outParent);
+	int Delete(nsNativeFileSpec& victim);
+	int CreateDirectory(nsNativeFileSpec& victim);
+	int IterateDirectoryChildren(nsNativeFileSpec& startChild);
+	int CanonicalPath(const char* relativePath);
+
+	void Banner(const char* bannerString);
+	void Passed();
+	void Failed();
+	void Inspect();
+		
+	nsOutputFileStream mConsole;
+};
+
+//----------------------------------------------------------------------------------------
+void FilesTest::Banner(const char* bannerString)
+//----------------------------------------------------------------------------------------
+{
+	mConsole
+		<< nsEndl
+		<< "---------------------------" << nsEndl
+		<< bannerString << " Test"       << nsEndl
+		<< "---------------------------" << nsEndl;
+}
+
+//----------------------------------------------------------------------------------------
+void FilesTest::Passed()
+//----------------------------------------------------------------------------------------
+{
+	mConsole << "Test passed." << nsEndl;
+}
+
+//----------------------------------------------------------------------------------------
+void FilesTest::Failed()
+//----------------------------------------------------------------------------------------
+{
+	mConsole << "ERROR: Test failed." << nsEndl;
+}
+
+//----------------------------------------------------------------------------------------
+void FilesTest::Inspect()
+//----------------------------------------------------------------------------------------
+{
+	mConsole << nsEndl << "^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS" << nsEndl;
+}
 
 //----------------------------------------------------------------------------------------
 void FilesTest::WriteStuff(nsOutputFileStream& s)
@@ -44,43 +96,18 @@ void FilesTest::WriteStuff(nsOutputFileStream& s)
 } // WriteStuff
 
 //----------------------------------------------------------------------------------------
-int main()
-// For use with DEBUG defined.
+int FilesTest::OutputStream(const char* relativePath)
 //----------------------------------------------------------------------------------------
 {
-
-	// Test of console output
-	
-	nsOutputFileStream nsOut;
-	nsOut << "WRITING TEST OUTPUT TO cout" << nsEndl << nsEndl;
-
-	// Test of nsFileSpec
-	
-	FilesTest::WriteStuff(nsOut);
-	nsOut << nsEndl << nsEndl;
-	
-	// - Test of nsOutputFileStream
-
-	nsFilePath myTextFilePath("mumble/iotest.txt", true); // relative path.
+	nsFilePath myTextFilePath(relativePath, true); // relative path.
 	const char* pathAsString = (const char*)myTextFilePath;
-	if (*pathAsString != '/')
-	{
-		nsOut
-		    << "ERROR: after initializing the path object with a relative path,"
-		    << "\n the path consisted of the string "
-		    << "\n\t" << pathAsString
-		    << "\n which is not a canonical full path!"
-		    << nsEndl;
-		return -1;
-	}
-	
 	nsNativeFileSpec mySpec(myTextFilePath);
 	{
-		nsOut << "WRITING IDENTICAL OUTPUT TO " << pathAsString << nsEndl << nsEndl;
+		mConsole << "WRITING IDENTICAL OUTPUT TO " << pathAsString << nsEndl << nsEndl;
 		nsOutputFileStream testStream(myTextFilePath);
 		if (!testStream.is_open())
 		{
-			nsOut
+			mConsole
 			    << "ERROR: File "
 			    << pathAsString
 			    << " could not be opened for output"
@@ -92,64 +119,123 @@ int main()
 
 	if (!mySpec.Exists() || mySpec.IsDirectory() || !mySpec.IsFile())
 	{
-			nsOut
+			mConsole
 			    << "ERROR: File "
 			    << pathAsString
 			    << " is not a file (cela n'est pas un pipe)"
 			    << nsEndl;
 			return -1;
 	}
-	// - Test of nsInputFileStream
+	Passed();
+	return 0;
+}
 
+//----------------------------------------------------------------------------------------
+int FilesTest::IOStream(const char* relativePath)
+//----------------------------------------------------------------------------------------
+{
+	nsFilePath myTextFilePath(relativePath, true); // relative path.
+	const char* pathAsString = (const char*)myTextFilePath;
+	mConsole
+		<< "Replacing \"path\" by \"ZUUL\" in " << pathAsString << nsEndl << nsEndl;
+	nsIOFileStream testStream(myTextFilePath);
+	if (!testStream.is_open())
 	{
-		nsOut << "READING BACK DATA FROM " << pathAsString << nsEndl << nsEndl;
-		nsInputFileStream testStream2(myTextFilePath);
-		if (!testStream2.is_open())
+		mConsole
+		    << "ERROR: File "
+		    << pathAsString
+		    << " could not be opened for input+output"
+		    << nsEndl;
+		return -1;
+	}
+	char line[1000];
+	testStream.seek(0); // check that the seek compiles
+	while (!testStream.eof())
+	{
+		PRInt32 pos = testStream.tell();
+		testStream.readline(line, sizeof(line));
+		char* replacementSubstring = strstr(line, "path");
+		if (replacementSubstring)
 		{
-			nsOut
-			    << "ERROR: File "
-			    << pathAsString
-			    << " could not be opened for input"
-			    << nsEndl;
-			return -1;
+			testStream.seek(pos + (replacementSubstring - line));
+			testStream << "ZUUL";
+			testStream.seek(pos); // back to the start of the line
 		}
-		char line[1000];
-		
-		testStream2.seek(0); // check that the seek compiles
-		while (!testStream2.eof())
-		{
-			testStream2.readline(line, sizeof(line));
-			nsOut << line << nsEndl;
-		}
-	}	// <-- Scope closes the stream (and the file).
+	}
+	return 0;
+}
 
-	// - Test of GetParent()
+//----------------------------------------------------------------------------------------
+int FilesTest::InputStream(const char* relativePath)
+//----------------------------------------------------------------------------------------
+{
+	nsFilePath myTextFilePath(relativePath, true);
+	const char* pathAsString = (const char*)myTextFilePath;
+	mConsole << "READING BACK DATA FROM " << pathAsString << nsEndl << nsEndl;
+	nsInputFileStream testStream2(myTextFilePath);
+	if (!testStream2.is_open())
+	{
+		mConsole
+		    << "ERROR: File "
+		    << pathAsString
+		    << " could not be opened for input"
+		    << nsEndl;
+		return -1;
+	}
+	char line[1000];
 	
-    nsNativeFileSpec parent;
-    mySpec.GetParent(parent);
-    nsFilePath parentPath(parent);
-	nsOut
+	testStream2.seek(0); // check that the seek compiles
+	while (!testStream2.eof())
+	{
+		testStream2.readline(line, sizeof(line));
+		mConsole << line << nsEndl;
+	}
+	Inspect();
+	return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::Parent(
+	const char* relativePath,
+	nsNativeFileSpec& outParent)
+//----------------------------------------------------------------------------------------
+{
+	nsFilePath myTextFilePath(relativePath, true);
+	const char* pathAsString = (const char*)myTextFilePath;
+	nsNativeFileSpec mySpec(myTextFilePath);
+
+    mySpec.GetParent(outParent);
+    nsFilePath parentPath(outParent);
+	mConsole
 		<< "GetParent() on "
 		<< "\n\t" << pathAsString
 		<< "\n yields "
 		<< "\n\t" << (const char*)parentPath
 		<< nsEndl;
+	Inspect();
+	return 0;
+}
 
+//----------------------------------------------------------------------------------------
+int FilesTest::Delete(nsNativeFileSpec& victim)
+//----------------------------------------------------------------------------------------
+{
 	// - Test of non-recursive delete
 
-	nsOut
+    nsFilePath victimPath(victim);
+	mConsole
 		<< "Attempting to delete "
-		<< "\n\t" << (const char*)parentPath
+		<< "\n\t" << (const char*)victimPath
 		<< "\n without recursive option (should fail)"	
 		<< nsEndl;
-	parent.Delete(false);	
-	if (parent.Exists())
-		nsOut << "Test passed." << nsEndl;
+	victim.Delete(false);	
+	if (victim.Exists())
+		Passed();
 	else
 	{
-		nsOut
+		mConsole
 		    << "ERROR: File "
-		    << "\n\t" << (const char*)parentPath
+		    << "\n\t" << (const char*)victimPath
 		    << "\n has been deleted without the recursion option,"
 		    << "\n and is a nonempty directory!"
 		    << nsEndl;
@@ -158,65 +244,158 @@ int main()
 
 	// - Test of recursive delete
 
-	nsOut
+	mConsole
+		<< nsEndl
 		<< "Deleting "
-		<< "\n\t" << (const char*)parentPath
+		<< "\n\t" << (const char*)victimPath
 		<< "\n with recursive option"
 		<< nsEndl;
-	parent.Delete(true);
-	if (parent.Exists())
+	victim.Delete(true);
+	if (victim.Exists())
 	{
-		nsOut
+		mConsole
 		    << "ERROR: Directory "
-		    << "\n\t" << (const char*)parentPath
+		    << "\n\t" << (const char*)victimPath
 		    << "\n has NOT been deleted despite the recursion option!"
 		    << nsEndl;
 		return -1;
 	}
-	else
-		nsOut << "Test passed." << nsEndl;
 	
-	// - Test of CreateDirectory
+	Passed();
+	return 0;
+}
 
-	nsOut
+//----------------------------------------------------------------------------------------
+int FilesTest::CreateDirectory(nsNativeFileSpec& dirSpec)
+//----------------------------------------------------------------------------------------
+{
+    nsFilePath dirPath(dirSpec);
+	mConsole
 		<< "Testing CreateDirectory() using"
-		<< "\n\t" << (const char*)parentPath
+		<< "\n\t" << (const char*)dirPath
 		<< nsEndl;
 		
-	parent.CreateDirectory();
-	if (parent.Exists())
-		nsOut << "Test passed." << nsEndl;
+	dirSpec.CreateDirectory();
+	if (dirSpec.Exists())
+		Passed();
 	else
 	{
-		nsOut << "ERROR: Test failed." << nsEndl;
+		Failed();
 		return -1;
 	}
-	parent.Delete(true);
+	dirSpec.Delete(true);
+	return 0;
+}
 
-#ifndef XP_PC // uncomment when tested and ready.
-
+//----------------------------------------------------------------------------------------
+int FilesTest::IterateDirectoryChildren(nsNativeFileSpec& startChild)
+//----------------------------------------------------------------------------------------
+{
 	// - Test of directory iterator
 
     nsNativeFileSpec grandparent;
-    parent.GetParent(grandparent); // should be the original default directory.
+    startChild.GetParent(grandparent); // should be the original default directory.
     nsFilePath grandparentPath(grandparent);
     
-    nsOut << "Forwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
+    mConsole << "Forwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
     for (nsDirectoryIterator i(grandparent, +1); i; i++)
     {
     	char* itemName = ((nsNativeFileSpec&)i).GetLeafName();
-    	nsOut << '\t' << itemName << nsEndl;
+    	mConsole << '\t' << itemName << nsEndl;
     	delete [] itemName;
     }
 
-    nsOut << "Backwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
-    for (nsDirectoryIterator i(grandparent, -1); i; i--)
+    mConsole << "Backwards listing of " << (const char*)grandparentPath << ":" << nsEndl;
+    for (nsDirectoryIterator j(grandparent, -1); j; j--)
     {
-    	char* itemName = ((nsNativeFileSpec&)i).GetLeafName();
-    	nsOut << '\t' << itemName << nsEndl;
+    	char* itemName = ((nsNativeFileSpec&)j).GetLeafName();
+    	mConsole << '\t' << itemName << nsEndl;
     	delete [] itemName;
     }
-#endif
+    Inspect();
+	return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::CanonicalPath(
+	const char* relativePath)
+//----------------------------------------------------------------------------------------
+{
+	nsFilePath myTextFilePath(relativePath, true);
+	const char* pathAsString = (const char*)myTextFilePath;
+	if (*pathAsString != '/')
+	{
+		mConsole
+		    << "ERROR: after initializing the path object with a relative path,"
+		    << "\n the path consisted of the string "
+		    << "\n\t" << pathAsString
+		    << "\n which is not a canonical full path!"
+		    << nsEndl;
+		return -1;
+	}
+	Passed();
+	return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int FilesTest::RunAllTests()
+// For use with DEBUG defined.
+//----------------------------------------------------------------------------------------
+{
+	// Test of mConsole output
+	
+	mConsole << "WRITING TEST OUTPUT TO CONSOLE" << nsEndl << nsEndl;
+
+	// Test of nsFileSpec
+	
+	Banner("Interconversion");
+	WriteStuff(mConsole);
+	Inspect();
+		
+	Banner("Canonical Path");
+	if (CanonicalPath("mumble/iotest.txt") != 0)
+		return -1;
+	
+	Banner("OutputStream");
+	if (OutputStream("mumble/iotest.txt") != 0)
+		return -1;
+	
+	Banner("InputStream");
+	if (InputStream("mumble/iotest.txt") != 0)
+		return -1;
+	
+	Banner("IOStream");
+	if (IOStream("mumble/iotest.txt") != 0)
+		return -1;
+	if (InputStream("mumble/iotest.txt") != 0)
+		return -1;
+	
+	Banner("Parent");
+	nsNativeFileSpec parent;
+	if (Parent("mumble/iotest.txt", parent) != 0)
+		return -1;
+		
+	Banner("Delete");
+	if (Delete(parent) != 0)
+		return -1;
+		
+	Banner("CreateDirectory");
+	if (CreateDirectory(parent) != 0)
+		return -1;
+
+	Banner("IterateDirectoryChildren");
+	if (IterateDirectoryChildren(parent) != 0)
+		return -1;
 
     return 0;
+}
+
+//----------------------------------------------------------------------------------------
+int main()
+// For use with DEBUG defined.
+//----------------------------------------------------------------------------------------
+{
+
+	FilesTest tester;
+	return tester.RunAllTests();
 } // main
