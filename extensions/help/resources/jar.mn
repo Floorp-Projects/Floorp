@@ -31,6 +31,7 @@ en-US.jar:
         locale/en-US/help/cs_nav_prefs_advanced.html    (locale/en-US/cs_nav_prefs_advanced.html) 
         locale/en-US/help/cs_nav_prefs_appearance.html  (locale/en-US/cs_nav_prefs_appearance.html) 
         locale/en-US/help/cs_nav_prefs_navigator.html   (locale/en-US/cs_nav_prefs_navigator.html)
+        locale/en-US/help/cs_priv_prefs_popup.html      (locale/en-US/cs_priv_prefs_popup.html)
         locale/en-US/help/page_info_help.html           (locale/en-US/page_info_help.html)  
         locale/en-US/help/passwords_help.html           (locale/en-US/passwords_help.html)
         locale/en-US/help/privacy_help.html             (locale/en-US/privacy_help.html)

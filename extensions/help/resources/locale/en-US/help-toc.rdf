@@ -3115,6 +3115,36 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
+	<rdf:Description ID="images-help-managing" nc:name="Managing Images"
+  		nc:link="chrome://help/locale/using_priv_help.html#managing_images"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups"
+  		nc:link="chrome://help/locale/cs_priv_prefs_popup.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#pop_up_blocking">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="pop_up_blocking_prefs" nc:name="Popup Preferences"
+  		nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_prefs"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
 	<rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences"
   		nc:link="chrome://help/locale/privsec_help.html"/> </rdf:li>
       </rdf:Seq>

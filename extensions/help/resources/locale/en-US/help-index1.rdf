@@ -2275,6 +2275,16 @@
 <rdf:Description about="#Navigator">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Navigator:controlling_popups"
+         nc:name="controlling popups"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#Navigator:controlling_popupsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#Navigator">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
 	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
@@ -2498,6 +2508,36 @@
        <rdf:Description ID="popup_windows:preferences"
          nc:name="preferences"
 	 nc:link="cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_windows"
+         nc:name="popup windows"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="#popup_windows">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_windows:preferences"
+         nc:name="preferences"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_windows:preferencesIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popups"
+         nc:name="popups"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popupsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
