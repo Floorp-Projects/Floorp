@@ -328,7 +328,12 @@ public:
    *  Issue a PS show command, which causes image to be rastered
    *	@update 2/1/99 dwc
    */
-  void show(char* aText, int aLen, char *aAlign);
+  void show(const char* aText, int aLen, char *aAlign);
+  /** ---------------------------------------------------
+   *  This version takes an Unicode string. 
+   *	@update 3/22/2000 yueheng.xu@intel.com
+   */
+  void show(const PRUnichar* aText, int aLen, char *aAlign);
   /** ---------------------------------------------------
    *  set the clipping path to the current path using the winding rule
    *	@update 2/1/99 dwc

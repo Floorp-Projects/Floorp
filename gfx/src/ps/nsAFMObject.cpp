@@ -766,6 +766,12 @@ float     totallen=0.0f;
     asciichar = (*cptr)&0x00ff;
     idx = asciichar-32;
     fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[idx].mW0x);
+    //    if ( (*cptr == 0x0020) || (*cptr == 0x002c) )
+    //   printf("fwidth = %d\n", fwidth);
+    if (*cptr & 0xff00)
+       fwidth = 1056;
+    if ( (*cptr  == 0x0020) || (*cptr == 0x002c) )
+      fwidth = 1056;  // space and comma are half size of a CJK width
     totallen += fwidth;
   }
 

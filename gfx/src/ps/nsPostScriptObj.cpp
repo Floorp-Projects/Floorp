@@ -453,6 +453,44 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "  b4_Inc_state restore\n");
   XP_FilePrintf(f, "} bind def\n");
   XP_FilePrintf(f, "%%%%EndProlog\n");
+
+  //definition of 'show' command to handle unicode
+
+  //  XP_FilePrintf(f, "/cwidth 12 def\n");
+  //  XP_FilePrintf(f, "/cheight 12 def\n");
+
+  XP_FilePrintf(f, "/unicodeshow \n");
+  XP_FilePrintf(f, "{\n");
+  XP_FilePrintf(f, "/cwidth {currentfont /ScaleMatrix get 0 get} def \n");
+  XP_FilePrintf(f, "/cheight cwidth def \n");
+  XP_FilePrintf(f, "	/str exch def\n");
+  XP_FilePrintf(f, "	/i 0 def\n");
+  XP_FilePrintf(f, "	str length /ls exch def\n");
+  XP_FilePrintf(f, "    { i 1 add ls ge {exit} if\n");
+  XP_FilePrintf(f, "	str i get /c1 exch def\n");
+  XP_FilePrintf(f, "	str i 1 add get /c2 exch def\n");
+  XP_FilePrintf(f, "	c2 1 ge \n");
+  XP_FilePrintf(f, "	{	\n");
+  XP_FilePrintf(f, "		gsave\n");
+  XP_FilePrintf(f, "        currentpoint translate\n");
+  XP_FilePrintf(f, "		cwidth 1056 div cheight 1056 div scale\n");
+  XP_FilePrintf(f, "        2 -2 translate \n");
+  XP_FilePrintf(f, "        /c c2 256 mul c1 add def c Unicodedict\n");
+  XP_FilePrintf(f, "		exch get cvx exec	\n");
+  XP_FilePrintf(f, "		grestore\n");
+  XP_FilePrintf(f, "		currentpoint exch cwidth add exch moveto\n");
+  XP_FilePrintf(f, "		/i i 2 add def \n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "      }\n");
+  XP_FilePrintf(f, "	  {\n");
+  XP_FilePrintf(f, "		 str i 1 getinterval show /i i 2 add def\n"); 
+  XP_FilePrintf(f, "	  }\n");
+  XP_FilePrintf(f, "	ifelse\n");
+  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, " }\n");
+  XP_FilePrintf(f, " loop\n");
+  XP_FilePrintf(f, "}  bind def\n");
+
 }
 
 /** ---------------------------------------------------
@@ -529,10 +567,10 @@ nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
+ *	@update 2/1/99 dwc. Updated 3/22/2000 to deal with only non-Unicode chars. yueheng.xu@intel.com
  */
 void 
-nsPostScriptObj::show(char* txt, int len, char *align)
+nsPostScriptObj::show(const char* txt, int len, char *align)
 {
 XP_File f;
 
@@ -547,17 +585,70 @@ XP_File f;
         XP_FilePrintf(f, "\\%c", *txt);
 		    break;
 	    default:
-		    if (*txt < ' ' || (*txt & 0x80)){
-		      XP_FilePrintf(f, "\\%o", *txt & 0xff);
-		    }else{
-		      XP_FilePrintf(f, "%c", *txt);
-        }
-		break;
+            XP_FilePrintf(f, "%c", *txt);     
+		    break;
 	  }
 	  txt++;
   }
   XP_FilePrintf(f, ") %sshow\n", align);
 }
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 3/22/2000 to deal with only unicode chars. yueheng.xu@intel.com
+ */
+void 
+nsPostScriptObj::show(const PRUnichar* txt, int len, char *align)
+{
+XP_File f;
+ unsigned char highbyte, lowbyte;
+ PRUnichar uch;
+
+  f = mPrintContext->prSetup->out;
+  XP_FilePrintf(f, "(");
+
+  while (len-- > 0) {
+    switch (*txt) {
+        case 0x0028:     // '('
+            XP_FilePrintf(f, "\\050\\000");
+		    break;
+        case 0x0029:     // ')' 
+            XP_FilePrintf(f, "\\051\\000");
+		    break;
+        case 0x005c:     // '\\'
+            XP_FilePrintf(f, "\\134\\000");
+		    break;
+	    default:
+          uch = *txt;
+          highbyte = (uch >> 8 ) & 0xff;
+          lowbyte = ( uch & 0xff );
+
+          // we output all unicode chars in the 2x3 digits oct format for easier post-processing
+          // Our 'show' command will always treat the second 3 digit oct as high 8-bits of unicode, independent of Endians
+          if ( lowbyte < 8 )
+		      XP_FilePrintf(f, "\\00%o", lowbyte  & 0xff);
+          else if ( lowbyte < 64  && lowbyte >= 8)
+            XP_FilePrintf(f, "\\0%o", lowbyte & 0xff);
+          else
+             XP_FilePrintf(f, "\\%o", lowbyte & 0xff);      
+
+          if ( highbyte < 8  )
+		      XP_FilePrintf(f, "\\00%o", highbyte & 0xff);
+          else if ( highbyte < 64  && highbyte >= 8)
+            XP_FilePrintf(f, "\\0%o", highbyte & 0xff);
+          else
+             XP_FilePrintf(f, "\\%o", highbyte & 0xff);      
+         
+		break;
+	  }
+	  txt++;
+  }
+  XP_FilePrintf(f, ") %sunicodeshow\n", align);
+}
+
+
+
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h

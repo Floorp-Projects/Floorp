@@ -182,6 +182,10 @@ public:
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing, PRBool aIsUnicode);
 
+  void PostscriptTextOut(const PRUnichar  *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY, PRInt32 aFontID,
+                                    const nscoord* aSpacing, PRBool aIsUnicode);
+
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
