@@ -1,0 +1,346 @@
+<html>
+
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ashish Bhatt <ashishbhatt@netscape.com>
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+  -->
+
+<title>nsIProfile Tets case</title>
+
+<head>
+
+<script type="text/javascript" src="../jslib/bridge.js"></script>
+<script type="text/javascript">
+
+var gPropObject ;
+var buffer ;
+const SHUTDOWN_PERSIST      = 0x00000001;
+const SHUTDOWN_CLEANSE      = 0x00000002;
+
+function getProfileObject()
+{
+
+	if (gPropObject)
+	   return gPropObject ;
+
+	try{
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		var profile = Components.classes["@mozilla.org/profile/manager;1"].getService();
+		gPropObject = profile.QueryInterface(Components.interfaces.nsIProfile);
+
+		return gPropObject ;
+	 }
+	 catch(e){
+		if (isRunningStandalone())
+			alert("Exception: " + e);
+		else
+			WriteResults("Exception: " + e);
+	  }
+
+}
+
+function WritePassFail(aValue,e)
+{
+
+  if( aValue ==  "Pass")
+  {
+	  buffer += "<td>"+ e +"</td>" ;
+	  buffer += "<td>Pass</td>"
+  }
+  else
+  {
+	  buffer += "<td>" +"Exception: " + e + "</td>" ;
+	  buffer += "<td bgcolor='#FF0000'>Fail</td>"
+  }
+
+  buffer += "</tr>"
+
+}
+
+function RunAllTests()
+{
+	// "<td bgcolor='#FF0000'>
+
+	buffer = "<b>Results for <a href='http://lxr.mozilla.org/seamonkey/source/profile/public/nsIProfile.idl'>nsIProfile :</a></b><br><br>"
+	buffer += "<table border cols=4 width='70%'>"
+	buffer += "<tr>"
+	buffer += "<td><b>Property/Method</b></td>"
+	buffer += "<td><b>Params</b></td>"
+	buffer += "<td><b>Output/Bug/Error</b></td>"
+	buffer += "<td><b>Result</b></td>"
+	buffer += "</tr>"
+
+	GetProfileCount();
+	GetCurrentProfile();
+	SetCurrentProfile();
+	GetProfileList();
+	GetProfileExists();
+	CreateNewProfile();
+	CloneProfile();
+	RenameProfile();
+	DeleteProfile();
+	ShutDownCurrentProfile();
+
+
+	buffer += "</table>"
+	if (isRunningStandalone())
+	{
+	   document.clear();
+	   document.write(buffer);
+	}
+	else
+		WriteResults(buffer);
+
+
+
+}
+
+function GetProfileCount()
+{
+
+	var prop = getProfileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>profileCount</td>"
+	buffer += "<td>none</td>"
+
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		var  count = prop.profileCount ;
+		WritePassFail("Pass","Profile Count: " + count);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function GetCurrentProfile()
+{
+   var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>currentProfile(get)</td>"
+	buffer += "<td>none</td>"
+   try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		var currentprofile = prop.currentProfile;
+		WritePassFail("Pass","Current Profile : " + currentprofile);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function SetCurrentProfile()
+{
+	var prop = getProfileObject();
+
+	buffer += "<tr>"
+	buffer += "<td>currentProfile (set)</td>"
+	buffer += "<td>profileName</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		prop.currentProfile = prop.currentProfile;
+		WritePassFail("Pass","");
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+function GetProfileList()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>getProfileList()</td>"
+	buffer += "<td>Name</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+        var length = {value:0};
+
+		var profilelist = prop.getProfileList(length);
+		WritePassFail("Pass","Profile list:" +  profilelist);
+	 }
+	 catch(e){
+		WritePassFail("Fail",e);
+	  }
+}
+
+
+function GetProfileExists()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>profileExists </td>"
+	buffer += "<td>profilename</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		var profileexists  = prop.profileExists("default");
+		WritePassFail("Pass","'default' exists : " + profileexists);
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+
+function CreateNewProfile()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>createNewProfile() </td>"
+	buffer += "<td>profilename</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		prop.createNewProfile("nsIProfileTesting",null,null, true);
+		WritePassFail("Pass","Created new Profile: nsIProfileTesting");
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+function RenameProfile()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>renameProfile()</td>"
+	buffer += "<td>profilename</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		prop.renameProfile("nsIProfileTesting","nsIProfileTestingNew");
+		WritePassFail("Pass","Renamed Profile to: nsIProfileTestingNew");
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+function DeleteProfile()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>deleteProfile()</td>"
+	buffer += "<td>profilename, candeletefiles</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		prop.deleteProfile("nsIProfileTestingNew", true);
+		WritePassFail("Pass","deleted Profile: nsIProfileTestingNew");
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+function CloneProfile()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>cloneProfile()</td>"
+	buffer += "<td>profilename</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		var currentprofile = prop.currentProfile;
+		prop.cloneProfile("nsIProfileTesting");
+		WritePassFail("Pass","Cloned Profile: nsIProfileTesting");
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+function ShutDownCurrentProfile()
+{
+	var prop = getProfileObject();
+	buffer += "<tr>"
+	buffer += "<td>shutDownCurrentProfile()</td>"
+	buffer += "<td>shutDownType</td>"
+	try{
+
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+		netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+		//prop.shutDownCurrentProfile(SHUTDOWN_PERSIST);
+		WritePassFail("Pass","Only works with browsers supporting on the fly profile switching");
+	 }
+	 catch(e){
+			WritePassFail("Fail",e);
+	  }
+}
+
+
+</script>
+
+</head>
+
+<body>
+<script type="text/javascript">
+   RunAllTests();
+</script>
+</body>
+
+</html>
+
