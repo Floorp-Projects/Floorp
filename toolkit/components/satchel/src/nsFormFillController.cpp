@@ -476,8 +476,9 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                 mdbResult,
                                 getter_AddRefs(result));
 
-    NS_IF_RELEASE(history);
+    NS_RELEASE(history);
   }
+  NS_RELEASE(passMgr);
 
   aListener->OnSearchResult(this, result);  
   
