@@ -7,7 +7,7 @@ Parse__4nsIDFPc		# nsID::Parse(char*)
 #Equals__5IDKeyCFPC9nsHashKey		# IDKey::Equals(const nsHashKey*) const
 #Clone__5IDKeyCFv		# IDKey::Clone() const
 #FreeLibraries__12nsRepositoryFv		# nsRepository::FreeLibraries()
-#UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
+UnregisterFactory__12nsRepositoryFRC4nsIDPCc		# nsRepository::UnregisterFactory(const nsID&,const char*)
 UnregisterFactory__12nsRepositoryFRC4nsIDP10nsIFactory		# nsRepository::UnregisterFactory(const nsID&,nsIFactory*)
 RegisterFactory__12nsRepositoryFRC4nsIDPCcii		# nsRepository::RegisterFactory(const nsID&,const char*,int,int)
 RegisterFactory__12nsRepositoryFRC4nsIDP10nsIFactoryi		# nsRepository::RegisterFactory(const nsID&,nsIFactory*,int)
@@ -65,7 +65,7 @@ NS_NewISupportsArray__FPP16nsISupportsArray		# NS_NewISupportsArray(nsISupportsA
 #AddRef__17SupportsArrayImplFv		# SupportsArrayImpl::AddRef()
 #__dt__17SupportsArrayImplFv		# SupportsArrayImpl::~SupportsArrayImpl()
 #__ct__17SupportsArrayImplFv		# SupportsArrayImpl::SupportsArrayImpl()
-PL_VectorAssertValid
+#PL_VectorAssertValid
 PL_VectorRemove
 PL_VectorInsert
 PL_VectorAdd
