@@ -14,6 +14,8 @@ EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
 ALL_OBJS = \
     CurrentFunctionCall.o          \
     DocumentFunctionCall.o         \
+    ElementAvailableFnCall.o       \
+    FunctionAvailableFnCall.o      \
     GenerateIdFunctionCall.o       \
     SystemPropertyFunctionCall.o
 
