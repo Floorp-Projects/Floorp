@@ -58,6 +58,8 @@ nsScreenOS2 :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
   *outWidth = alArray[0];
   *outHeight = alArray[1];
 
+  ::WinReleasePS(hps);
+
   return NS_OK;
   
 } // GetRect
@@ -97,6 +99,9 @@ nsScreenOS2 :: GetPixelDepth(PRInt32 *aPixelDepth)
   GFX (::DevQueryCaps(hdc, CAPS_COLOR_BITCOUNT, 1, &lCap), FALSE);
 
   *aPixelDepth = (PRInt32)lCap;
+
+  
+  ::WinReleasePS(hps);
 
   return NS_OK;
 
