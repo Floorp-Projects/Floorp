@@ -475,7 +475,9 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
 	nsresult rv;
   nsCOMPtr<nsIMsgFolder> folder;
 
-  PRUint32 cnt = aSources->Count();
+  PRUint32 cnt;
+  rv = aSources->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
     nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
 		folder = do_QueryInterface(source, &rv);
@@ -502,7 +504,9 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
   // XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt = aSources->Count();
+  PRUint32 cnt;
+  rv = aSources->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
 		nsCOMPtr<nsISupports> supports = getter_AddRefs((*aSources)[i]);
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
@@ -741,12 +745,14 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
+	PRUint32 itemCount;
+  rv = arguments->Count(&itemCount);
+  if (NS_FAILED(rv)) return rv;
+	
 	nsCOMPtr<nsISupportsArray> messageArray, folderArray;
 	NS_NewISupportsArray(getter_AddRefs(messageArray));
 	NS_NewISupportsArray(getter_AddRefs(folderArray));
 
-	PRUint32 itemCount = arguments->Count();
-	
 	//Split up deleted items into different type arrays to be passed to the folder
 	//for deletion.
 	for(PRUint32 item = 0; item < itemCount; item++)
@@ -763,7 +769,10 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
 			folderArray->AppendElement(deletedFolder);
 		}
 	}
-	if(messageArray->Count() > 0)
+	PRUint32 cnt;
+  rv = messageArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (cnt > 0)
 		rv = folder->DeleteMessages(messageArray);
 
 	return rv;

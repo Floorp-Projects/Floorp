@@ -56,7 +56,9 @@ nsISupportsArray::operator=(const nsISupportsArray& other)
 NS_IMETHODIMP_(nsISupportsArray&) 
 nsSupportsArray::operator=(const nsISupportsArray& aOther)
 {
-  PRUint32 otherCount = ((nsISupportsArray&)aOther).Count();
+  PRUint32 otherCount = 0;
+  nsresult rv = ((nsISupportsArray&)aOther).Count(&otherCount); // XXX bogus cast -- aOther should not be const
+  NS_ASSERTION(NS_SUCCEEDED(rv), "this method should return an error!");
 
   if (otherCount > mArraySize) {
     DeleteArray();

@@ -259,7 +259,10 @@ void StyleSetImpl::RemoveOverrideStyleSheet(nsIStyleSheet* aSheet)
 PRInt32 StyleSetImpl::GetNumberOfOverrideStyleSheets()
 {
   if (nsnull != mOverrideSheets) {
-    return mOverrideSheets->Count();
+    PRUint32 cnt;
+    nsresult rv = mOverrideSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
   }
   return 0;
 }
@@ -282,7 +285,9 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
     mDocSheets->RemoveElement(aSheet);
     // lowest index last
     PRInt32 newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
-    PRUint32 count = mDocSheets->Count();
+    PRUint32 count;
+    nsresult rv = mDocSheets->Count(&count);
+    if (NS_FAILED(rv)) return;  // XXX error?
     PRUint32 index;
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)mDocSheets->ElementAt(index);
@@ -293,7 +298,10 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
       }
       NS_RELEASE(sheet);
     }
-    if (mDocSheets->Count() == count) {  // didn't insert it
+    PRUint32 cnt;
+    rv = mDocSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return;  // XXX error?
+    if (cnt == count) {  // didn't insert it
       mDocSheets->AppendElement(aSheet);
     }
 
@@ -315,7 +323,10 @@ void StyleSetImpl::RemoveDocStyleSheet(nsIStyleSheet* aSheet)
 PRInt32 StyleSetImpl::GetNumberOfDocStyleSheets()
 {
   if (nsnull != mDocSheets) {
-    return mDocSheets->Count();
+    PRUint32 cnt;
+    nsresult rv = mDocSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
   }
   return 0;
 }
@@ -374,7 +385,10 @@ void StyleSetImpl::RemoveBackstopStyleSheet(nsIStyleSheet* aSheet)
 PRInt32 StyleSetImpl::GetNumberOfBackstopStyleSheets()
 {
   if (nsnull != mBackstopSheets) {
-    return mBackstopSheets->Count();
+    PRUint32 cnt;
+    nsresult rv = mBackstopSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
   }
   return 0;
 }
@@ -398,7 +412,10 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
   PRInt32 ruleCount = 0;
 
   if (nsnull != aSheets) {
-    PRInt32 index = aSheets->Count();
+    PRUint32 cnt;
+    nsresult rv = aSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 index = (PRInt32)cnt;
     while (0 < index--) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
       PRBool mediumOK = PR_FALSE;
@@ -472,7 +489,10 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 // XXX for now only works for strength 0 & 1
 static void SortRulesByStrength(nsISupportsArray* aRules, PRInt32& aBackstopRuleCount)
 {
-  PRInt32 count = aRules->Count();
+  PRUint32 cnt;
+  nsresult rv = aRules->Count(&cnt);
+  if (NS_FAILED(rv)) return;    // XXX error?
+  PRInt32 count = (PRInt32)cnt;
 
   if (1 < count) {
     PRInt32 index;
@@ -583,7 +603,10 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
   PRInt32 ruleCount = 0;
 
   if (nsnull != aSheets) {
-    PRInt32 index = aSheets->Count();
+    PRUint32 cnt;
+    nsresult rv = aSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    PRInt32 index = (PRInt32)cnt;
     while (0 < index--) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
       PRBool mediumOK = PR_FALSE;
@@ -887,9 +910,13 @@ StyleSetImpl::CreateContinuingFrame(nsIPresContext* aPresContext,
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
 {
-  PRInt32 count = ((nsnull != aSheets) ? aSheets->Count() : 0);
+  PRUint32 cnt = 0;
+  if (aSheets) {
+    nsresult rv = aSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return;    // XXX error?
+  }
 
-  for (PRInt32 index = 0; index < count; index++) {
+  for (PRInt32 index = 0; index < (PRInt32)cnt; index++) {
     nsIStyleSheet* sheet = (nsIStyleSheet*)aSheets->ElementAt(index);
     sheet->List(out, aIndent);
     fputs("\n", out);

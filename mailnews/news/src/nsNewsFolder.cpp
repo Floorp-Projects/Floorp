@@ -721,7 +721,10 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 
   nsIMsgFolder *folder = nsnull;
 
-  PRUint32 count = mSubFolders->Count();
+  PRUint32 cnt;
+  nsresult rv = mSubFolders->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  PRUint32 count = cnt;
 
   for (PRUint32 i = 0; i < count; i++)
   {

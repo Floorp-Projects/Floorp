@@ -460,7 +460,9 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                              nsISupportsArray* aResults)
 {
   if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
-    if (aResults->Count()) { 
+    PRUint32 cnt;
+    nsresult rv = aResults->Count(&cnt);
+    if (NS_SUCCEEDED(rv) && cnt) { 
       if (nsnull == mFirstLineRule) {
         mFirstLineRule = new CSSFirstLineRule(this);
         if (mFirstLineRule) {
@@ -474,7 +476,9 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     } 
   }
   if (aPseudoTag == nsHTMLAtoms::firstLetterPseudo) {
-    if (aResults->Count()) { 
+    PRUint32 cnt;
+    nsresult rv = aResults->Count(&cnt);
+    if (NS_SUCCEEDED(rv) && cnt) { 
       if (nsnull == mFirstLetterRule) {
         mFirstLetterRule = new CSSFirstLetterRule(this);
         if (mFirstLetterRule) {

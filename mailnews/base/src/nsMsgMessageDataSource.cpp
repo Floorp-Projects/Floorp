@@ -383,7 +383,9 @@ nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* a
   nsCOMPtr<nsIMessage> message;
 	nsresult rv;
 
-  PRUint32 cnt = aSources->Count();
+  PRUint32 cnt;
+  rv = aSources->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
     nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
 		message = do_QueryInterface(source, &rv);
@@ -407,7 +409,9 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
 
   // XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt = aSources->Count();
+  PRUint32 cnt;
+  rv = aSources->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
     nsISupports* source = (*aSources)[i];
     nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);

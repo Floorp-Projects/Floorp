@@ -1394,7 +1394,10 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     }
 
     if (aDeep && mChildren) {
-        for (PRInt32 i = mChildren->Count() - 1; i >= 0; --i) {
+        PRUint32 cnt;
+        nsresult rv = mChildren->Count(&cnt);
+        if (NS_FAILED(rv)) return rv;
+        for (PRInt32 i = cnt - 1; i >= 0; --i) {
             // XXX this entire block could be more rigorous about
             // dealing with failure.
             nsISupports* obj = mChildren->ElementAt(i);
@@ -1445,7 +1448,14 @@ RDFElementImpl::ChildCount(PRInt32& aResult) const
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    aResult = mChildren ? mChildren->Count() : 0;
+    if (mChildren) {
+        PRUint32 cnt;
+        nsresult rv = mChildren->Count(&cnt);
+        if (NS_FAILED(rv)) return rv;
+        aResult = cnt;
+    }
+    else 
+        aResult = 0;
     return NS_OK;
 }
 
@@ -1574,7 +1584,10 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         if (nsnull != doc) {
             aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
-                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, mChildren->Count() - 1);
+                PRUint32 cnt;
+                nsresult rv = mChildren->Count(&cnt);
+                if (NS_FAILED(rv)) return rv;
+                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, cnt - 1);
             }
         }
     }

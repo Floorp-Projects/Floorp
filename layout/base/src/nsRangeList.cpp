@@ -254,7 +254,10 @@ NS_IMETHODIMP
 nsRangeListIterator::Next()
 {
   mIndex++;
-  if (mIndex < (PRInt32)mRangeList->mRangeArray->Count())
+  PRUint32 cnt;
+  nsresult rv = mRangeList->mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (mIndex < (PRInt32)cnt)
     return NS_OK;
   return NS_ERROR_FAILURE;
 }
@@ -288,7 +291,10 @@ nsRangeListIterator::Last()
 {
   if (!mRangeList)
     return NS_ERROR_NULL_POINTER;
-  mIndex = (PRInt32)mRangeList->mRangeArray->Count()-1;
+  PRUint32 cnt;
+  nsresult rv = mRangeList->mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  mIndex = (PRInt32)cnt-1;
   return NS_OK;
 }
 
@@ -299,7 +305,10 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
+  PRUint32 cnt;
+  nsresult rv = mRangeList->mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (mIndex >=0 && mIndex < (PRInt32)cnt){
     *aItem = mRangeList->mRangeArray->ElementAt(mIndex);
     return NS_OK;
   }
@@ -313,7 +322,10 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count()){
+  PRUint32 cnt;
+  nsresult rv = mRangeList->mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (mIndex >=0 && mIndex < (PRInt32)cnt){
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeList->mRangeArray->ElementAt(mIndex));
     return indexIsupports->QueryInterface(nsIDOMRange::GetIID(),(void **)aItem);
   }
@@ -325,7 +337,10 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 NS_IMETHODIMP
 nsRangeListIterator::IsDone()
 {
-  if (mIndex >= 0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count() ) { 
+  PRUint32 cnt;
+  nsresult rv = mRangeList->mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
     return NS_COMFALSE;
   }
   return NS_OK;
@@ -400,7 +415,10 @@ nsRangeList::~nsRangeList()
 {
   if (mRangeArray)
   {
-	  for (PRUint32 i=0;i < mRangeArray->Count(); i++)
+	  PRUint32 cnt;
+    nsresult rv = mRangeArray->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i=0;i < cnt; i++)
 	  {
 	    mRangeArray->RemoveElementAt(i);
 	  }
@@ -408,7 +426,10 @@ nsRangeList::~nsRangeList()
   
   if (mSelectionListeners)
   {
-	  for (PRUint32 i=0;i < mSelectionListeners->Count(); i++)
+	  PRUint32 cnt;
+    nsresult rv = mSelectionListeners->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i=0;i < cnt; i++)
 	  {
 	    mSelectionListeners->RemoveElementAt(i);
 	  }
@@ -530,7 +551,10 @@ NS_METHOD nsRangeList::GetFocusOffset(PRInt32* aFocusOffset)
 
 void nsRangeList::setAnchorFocusRange(PRInt32 index)
 {
-  if (((PRUint32)index) >= mRangeArray->Count() )
+  PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return;    // XXX error?
+  if (((PRUint32)index) >= cnt )
     return;
   if (index < 0) //release all
   {
@@ -608,7 +632,10 @@ nsRangeList::RemoveItem(nsISupports *aItem)
     return NS_ERROR_FAILURE;
   if (!aItem )
     return NS_ERROR_NULL_POINTER;
-  for (PRUint32 i = 0; i < mRangeArray->Count();i++)
+  PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i = 0; i < cnt;i++)
   {
     nsCOMPtr<nsISupports> indexIsupports = dont_AddRef(mRangeArray->ElementAt(i));
 
@@ -630,8 +657,13 @@ nsRangeList::Clear()
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
   // Get an iterator
-  while ( mRangeArray->Count())
+  while (PR_TRUE)
   {
+    PRUint32 cnt;
+    nsresult rv = mRangeArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    if (cnt == 0)
+      break;
     nsCOMPtr<nsIDOMRange> range;
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(0));
     range = do_QueryInterface(isupportsindex);
@@ -801,8 +833,10 @@ if (!aGuiEvent)
 #ifdef DEBUG
 void nsRangeList::printSelection()
 {
+  PRUint32 cnt;
+  (void)mRangeArray->Count(&cnt);
   printf("nsRangeList 0x%lx: %d items\n", (unsigned long)this,
-         mRangeArray ? mRangeArray->Count() : -99);
+         mRangeArray ? cnt : -99);
 
   // Get an iterator
   nsRangeListIterator iter(this);
@@ -936,7 +970,10 @@ nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
     return NS_ERROR_FAILURE;
 
   *aDrawSelected = PR_FALSE;
-  for (PRUint32 i =0; i<mRangeArray->Count() && i < 1; i++){
+  PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i =0; i<cnt && i < 1; i++){
     nsCOMPtr<nsIDOMRange> range;
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
     range = do_QueryInterface(isupportsindex);
@@ -1083,7 +1120,10 @@ nsRangeList::NotifySelectionListeners()
     SetDirty();
     return NS_OK;
   }
-  for (PRUint32 i = 0; i < mSelectionListeners->Count();i++)
+  PRUint32 cnt;
+  nsresult rv = mSelectionListeners->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i = 0; i < cnt;i++)
   {
     nsCOMPtr<nsIDOMSelectionListener> thisListener;
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
@@ -1205,13 +1245,18 @@ nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
 	if (!aIsCollapsed)
 		return NS_ERROR_NULL_POINTER;
 		
-  if (!mRangeArray || (mRangeArray->Count() == 0))
+  PRUint32 cnt = 0;
+  if (mRangeArray) {
+    nsresult rv = mRangeArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+  }
+  if (!mRangeArray || (cnt == 0))
   {
     *aIsCollapsed = PR_TRUE;
     return NS_OK;
   }
   
-  if (mRangeArray->Count() != 1)
+  if (cnt != 1)
   {
     *aIsCollapsed = PR_FALSE;
     return NS_OK;
@@ -1237,7 +1282,10 @@ nsRangeList::GetRangeCount(PRInt32* aRangeCount)
 
 	if (mRangeArray)
 	{
-		*aRangeCount = mRangeArray->Count();
+		PRUint32 cnt;
+    nsresult rv = mRangeArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    *aRangeCount = cnt;
 	}
 	else
 	{
@@ -1256,7 +1304,10 @@ nsRangeList::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 	if (!mRangeArray)
 		return NS_ERROR_INVALID_ARG;
 		
-	if (aIndex < 0 || ((PRUint32)aIndex) >= mRangeArray->Count())
+	PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+	if (aIndex < 0 || ((PRUint32)aIndex) >= cnt)
 		return NS_ERROR_INVALID_ARG;
 
 	// the result of all this is one additional ref on the item, as
@@ -1317,7 +1368,10 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   PRUint32 i;
   PRBool found = PR_FALSE;
-  for (i = 0; i < mRangeArray->Count(); i++)
+  PRUint32 cnt;
+  nsresult rv = mRangeArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (i = 0; i < cnt; i++)
   {
     nsCOMPtr<nsISupports> isupportsindex = dont_AddRef(mRangeArray->ElementAt(i));
     nsCOMPtr<nsIDOMRange> range (do_QueryInterface(isupportsindex));

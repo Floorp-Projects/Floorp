@@ -99,7 +99,11 @@ nsresult nsDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType)
 {
-  if (anArrayTransferables->Count() == 0) {
+  nsresult rv;
+  PRUint32 cnt;
+  rv = anArrayTransferables->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (cnt == 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -108,7 +112,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
 
   IDataObject * dataObj = nsnull;
   PRUint32 i;
-  for (i=0;i<anArrayTransferables->Count();i++) {
+  for (i=0;i<cnt;i++) {
     nsISupports * supports = anArrayTransferables->ElementAt(i);
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     NS_RELEASE(supports);

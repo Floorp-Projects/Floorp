@@ -521,7 +521,10 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 		}
 	}
 	
-	PRInt32 numElements = childArray->Count();
+	PRUint32 cnt = 0;
+    rv = childArray->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    PRInt32 numElements = cnt;
 	if (numElements > 0)
 	{
 		nsIRDFResource ** flatArray = new nsIRDFResource*[numElements];
@@ -624,10 +627,12 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 			flatArray = nsnull;
 		}
 	}
-        for (int i = childArray->Count() - 1; i >= 0; i--)
-        {
-        	childArray->RemoveElementAt(i);
-        }
+    rv = childArray->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (int i = cnt - 1; i >= 0; i--)
+    {
+        childArray->RemoveElementAt(i);
+    }
 	return(NS_OK);
 }
 

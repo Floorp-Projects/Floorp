@@ -114,7 +114,10 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 	PRBool canRunUrl = PR_FALSE;
 	nsCOMPtr<nsIImapProtocol> connection;
 	// iterate through the connection cache for a connection that can handle this url.
-	for (PRUint32 i = 0; i < m_connectionCache->Count() && !canRunUrl; i++) 
+	PRUint32 cnt;
+    rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt && !canRunUrl; i++) 
 	{
         connection = do_QueryInterface(m_connectionCache->ElementAt(i));
 		if (connection)

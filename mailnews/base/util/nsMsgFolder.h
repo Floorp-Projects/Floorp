@@ -45,11 +45,28 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsICollection methods:
-  NS_IMETHOD_(PRUint32) Count(void);
-  NS_IMETHOD AppendElement(nsISupports *aElement);
-  NS_IMETHOD RemoveElement(nsISupports *aElement);
-  NS_IMETHOD Enumerate(nsIEnumerator* *result);
-  NS_IMETHOD Clear(void);
+  NS_IMETHOD Count(PRUint32 *result) {
+    return mSubFolders->Count(result);
+  }
+  NS_IMETHOD GetElementAt(PRUint32 index, nsISupports* *result) {
+    return mSubFolders->GetElementAt(index, result);
+  }
+  NS_IMETHOD SetElementAt(PRUint32 index, nsISupports* value) {
+    return mSubFolders->SetElementAt(index, value);
+  }
+  NS_IMETHOD AppendElement(nsISupports *aElement) {
+    return mSubFolders->AppendElement(aElement);
+  }
+  NS_IMETHOD RemoveElement(nsISupports *aElement) {
+    return mSubFolders->RemoveElement(aElement);
+  }
+  NS_IMETHOD Enumerate(nsIEnumerator* *result) {
+    // nsMsgFolders only have subfolders, no message elements
+    return mSubFolders->Enumerate(result);
+  }
+  NS_IMETHOD Clear(void) {
+    return mSubFolders->Clear();
+  }
 
   // nsIFolder methods:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }

@@ -704,7 +704,9 @@ nsMsgLocalMailFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 
 	nsCOMPtr<nsIMsgFolder> folder;
 
-	PRUint32 count = mSubFolders->Count();
+	PRUint32 count;
+  rv = mSubFolders->Count(&count);
+  if (NS_FAILED(rv)) return rv;
 
 	for (PRUint32 i = 0; i < count; i++)
 	{
@@ -1046,7 +1048,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages)
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
 	{
-		PRUint32 messageCount = messages->Count();
+		PRUint32 messageCount;
+    rv = messages->Count(&messageCount);
+    if (NS_FAILED(rv)) return rv;
 		for(PRUint32 i = 0; i < messageCount; i++)
 		{
 			nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));

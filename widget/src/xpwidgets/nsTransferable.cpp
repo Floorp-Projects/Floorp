@@ -335,7 +335,10 @@ nsTransferable :: FlavorsTransferableCanImport ( nsISupportsArray** outFlavorLis
     converter->GetInputDataFlavors(getter_AddRefs(convertedList));
     if ( convertedList ) {
       PRUint32 i;
-      for (i=0;i<convertedList->Count();i++) {
+      PRUint32 cnt;
+      nsresult rv = convertedList->Count(&cnt);
+      if (NS_FAILED(rv)) return rv;
+      for (i=0;i<cnt;i++) {
   	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
         (*outFlavorList)->AppendElement(temp);    // this addref's for us
       } // foreach flavor that can be converted to
@@ -370,7 +373,10 @@ nsTransferable :: FlavorsTransferableCanExport ( nsISupportsArray** outFlavorLis
     converter->GetOutputDataFlavors(getter_AddRefs(convertedList));
     if ( convertedList ) {
       PRUint32 i;
-      for (i=0;i<convertedList->Count();i++) {
+      PRUint32 cnt;
+      nsresult rv = convertedList->Count(&cnt);
+      if (NS_FAILED(rv)) return rv;
+      for (i=0;i<cnt;i++) {
   	    nsCOMPtr<nsISupports> temp = getter_AddRefs(convertedList->ElementAt(i));
         (*outFlavorList)->AppendElement(temp);    // this addref's for us
       } // foreach flavor that can be converted to

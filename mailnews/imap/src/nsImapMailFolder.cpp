@@ -841,7 +841,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
     }
     if(NS_SUCCEEDED(rv) && trashFolder)
     {
-        PRUint32 count = messages->Count();
+        PRUint32 count = 0;
+        rv = messages->Count(&count);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
         nsString2 messageIds("", eOneByte);
         for (PRUint32 i = 0; i < count; i++)
         {

@@ -619,7 +619,9 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 	//And even more in the future we need to distinguish between the different types of URI's, i.e.
 	//local, imap, and news, and call the appropriate copy function.
 
-	if(resourceArray->Count() > 0)
+	PRUint32 cnt;
+    rv = resourceArray->Count(&cnt);
+    if (NS_SUCCEEDED(rv) && cnt > 0)
 	{
 		nsIRDFResource * firstMessage = (nsIRDFResource*)resourceArray->ElementAt(0);
 		char *uri;

@@ -2012,7 +2012,10 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 #endif
 			
 	if (m_groups == NULL) return result;
-	int n = m_groups->Count();
+	PRUint32 cnt;
+    nsresult rv = m_groups->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    int n = cnt;
 	for (int i=0 ; i<n ; i++) {
         char *groupname = nsnull;
         nsresult rv = NS_OK;
@@ -2119,8 +2122,11 @@ nsNNTPHost::AddGroup(const char *name,
 
 			if (m_groups != nsnull) {
 				// groups are added at end so look there first...
+                PRUint32 cnt;
+                nsresult rv = m_groups->Count(&cnt);
+                if (NS_FAILED(rv)) return rv;
 				newsInfo = (nsINNTPNewsgroup *)
-					(*m_groups)[m_groups->Count() - 1];
+                    (*m_groups)[cnt - 1];
 			}
 			
 			if (!newsInfo) goto DONE;
@@ -2395,7 +2401,10 @@ nsresult
 nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 {
 	if (!m_groups) return NS_ERROR_NOT_INITIALIZED;
-	int num = m_groups->Count();
+	PRUint32 cnt;
+    nsresult rv = m_groups->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    int num = cnt;
 	PRInt32 result = 0;
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
@@ -2418,7 +2427,10 @@ nsresult
 nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 {
 	if (!m_groups) return NS_ERROR_NULL_POINTER;
-	int num = m_groups->Count();
+	PRUint32 cnt;
+    nsresult rv = m_groups->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    int num = cnt;
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
         
@@ -2468,7 +2480,10 @@ void
 nsNNTPHost::SetWantNewTotals(PRBool value)
 {
 	if (!m_groups) return;
-	int n = m_groups->Count();
+	PRUint32 cnt;
+    nsresult rv = m_groups->Count(&cnt);
+    if (NS_FAILED(rv)) return;  // XXX error?
+    int n = cnt;
 	for (int i=0 ; i<n ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		info->SetWantNewTotals(value);
@@ -3401,7 +3416,10 @@ int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *gr
             infoList->First();
 			PRBool	foundIdxInHostInfo = PR_FALSE;
 
-			for (idxInData = 0, idxInView = -1; idxInData < (PRInt32)m_groups->Count(); idxInData++)
+			PRUint32 cnt;
+            nsresult rv = m_groups->Count(&cnt);
+            if (NS_FAILED(rv)) return rv;
+            for (idxInData = 0, idxInView = -1; idxInData < (PRInt32)cnt; idxInData++)
 			{
 				group = (nsIMsgFolder*)(*m_groups)[idxInData];
 
@@ -3491,7 +3509,10 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **retval)
 #endif
 			
 	if (m_newsgrouplists == NULL) return result;
-	int n = m_newsgrouplists->Count();
+	PRUint32 cnt;
+    nsresult rv = m_newsgrouplists->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    int n = cnt;
 	for (int i=0 ; i<n ; i++) {
         char *newsgroupname = nsnull;
         nsresult rv = NS_OK;

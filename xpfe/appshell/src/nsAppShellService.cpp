@@ -411,7 +411,10 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
     mWindowList->RemoveElement(wsc);
     NS_RELEASE(wsc);
   }
-  if (0 == mWindowList->Count())
+  PRUint32 cnt;
+  rv = mWindowList->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (0 == cnt)
     mAppShell->Exit();
   return rv;
 }

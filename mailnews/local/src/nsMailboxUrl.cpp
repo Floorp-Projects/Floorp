@@ -70,7 +70,10 @@ static char *nsMailboxGetURI(char *nativepath)
     // do a char*->fileSpec->char* conversion to normalize the path
     nsFilePath filePath(nativepath);
     
-    PRInt32 count = serverArray->Count();
+    PRUint32 cnt;
+    rv = serverArray->Count(&cnt);
+    if (NS_FAILED(rv)) return nsnull;
+    PRInt32 count = cnt;
     PRInt32 i;
     for (i=0; i<count; i++) {
 

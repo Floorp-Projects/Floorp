@@ -335,7 +335,12 @@ nsThreadPool::GetRequest()
  
     PR_EnterMonitor(mRequestMonitor);
 
-    while (mRequests->Count() == 0) {
+    PRUint32 cnt;
+    while (PR_TRUE) {
+        rv = mRequests->Count(&cnt);
+        if (NS_FAILED(rv) || cnt != 0)
+            break;
+    
         if (mShuttingDown) {
             rv = NS_ERROR_FAILURE;
             break;
@@ -349,7 +354,8 @@ nsThreadPool::GetRequest()
     }
 
     if (NS_SUCCEEDED(rv)) {
-        NS_ASSERTION(mRequests->Count() > 0, "request queue out of sync");
+        NS_ASSERTION((NS_SUCCEEDED(mRequests->Count(&cnt)) && cnt > 0),
+                     "request queue out of sync");
         request = (nsIRunnable*)(*mRequests)[0];
         NS_ASSERTION(request != nsnull, "null runnable");
 
@@ -366,7 +372,12 @@ nsThreadPool::ProcessPendingRequests()
     nsresult rv;
     PR_CEnterMonitor(this);
 
-    while (mRequests->Count() > 0) {
+    while (PR_TRUE) {
+        PRUint32 cnt;
+        rv = mRequests->Count(&cnt);
+        if (NS_FAILED(rv) || cnt == 0)
+            break;
+    
         PRStatus status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
         if (status != PR_SUCCESS) {
             rv = NS_ERROR_FAILURE; // our thread was interrupted!
@@ -382,14 +393,15 @@ NS_IMETHODIMP
 nsThreadPool::Shutdown()
 {
     nsresult rv = NS_OK;
-    PRUint32 count;
+    PRUint32 count = 0;
     PRUint32 i;
 
     mShuttingDown = PR_TRUE;
     ProcessPendingRequests();
     
     // then interrupt the threads and join them
-    count = mThreads->Count();
+    rv = mThreads->Count(&count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     for (i = 0; i < count; i++) {
         nsIThread* thread = (nsIThread*)((*mThreads)[0]);
 

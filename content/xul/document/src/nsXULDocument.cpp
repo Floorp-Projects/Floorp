@@ -839,12 +839,15 @@ XULDocumentImpl::~XULDocumentImpl()
     // to break ownership cycle
     if (mBuilders)
     {
+        PRUint32 cnt = 0;
+        nsresult rv = mBuilders->Count(&cnt);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
 
 #ifdef	DEBUG
-	printf("# of builders: %lu\n", (unsigned long)mBuilders->Count());
+        printf("# of builders: %lu\n", (unsigned long)cnt);
 #endif
 
-	    for (PRUint32 i = 0; i < mBuilders->Count(); ++i)
+	    for (PRUint32 i = 0; i < cnt; ++i)
 	    {
 		// XXX we should QueryInterface() here
 		nsIRDFContentModelBuilder* builder
@@ -2311,7 +2314,10 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
     if (! mBuilders)
         return NS_ERROR_NOT_INITIALIZED;
 
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt = 0;
+    nsresult rv = mBuilders->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i = 0; i < cnt; ++i) {
         // XXX we should QueryInterface() here
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
@@ -2710,8 +2716,11 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
         return rv;
     }
 
-    if (elements->Count() > 0) {
-        if (elements->Count() > 1) {
+    PRUint32 cnt = 0;
+    rv = elements->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    if (cnt > 0) {
+        if (cnt > 1) {
             // This is a scary case that our API doesn't deal with well.
             NS_WARNING("more than one element found with specified ID; returning first");
         }
@@ -3197,7 +3206,10 @@ XULDocumentImpl::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 NS_IMETHODIMP
 XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3217,7 +3229,10 @@ XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
 NS_IMETHODIMP
 XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3237,7 +3252,10 @@ XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
 NS_IMETHODIMP
 XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3257,7 +3275,10 @@ XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3277,7 +3298,10 @@ XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 NS_IMETHODIMP
 XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3300,7 +3324,10 @@ XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 NS_IMETHODIMP
 XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3318,7 +3345,10 @@ XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, 
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3336,7 +3366,10 @@ XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aNam
 NS_IMETHODIMP
 XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
@@ -3354,7 +3387,10 @@ XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAtt
 NS_IMETHODIMP
 XULDocumentImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
 {
-    for (PRUint32 i = 0; i < mBuilders->Count(); ++i) {
+    PRUint32 cnt;
+    nsresult rv = mBuilders->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; ++i) {
         nsIRDFContentModelBuilder* builder
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
