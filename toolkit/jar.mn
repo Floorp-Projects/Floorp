@@ -1,5 +1,6 @@
 toolkit.jar:
 *+       content/global/xul.css                             (content/xul.css)
++        content/global/config.xul                          (content/config.xul)
 +        content/global/globalOverlay.js                    (content/globalOverlay.js)
 *+       content/global/finddialog.xul                      (content/finddialog.xul)
 *+       content/global/finddialog.js                       (content/finddialog.js)
