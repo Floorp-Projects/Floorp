@@ -29,6 +29,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsINntpIncomingServer.h" // need this for the IID
+#include "nsNewsUtils.h"
 
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder
 {
