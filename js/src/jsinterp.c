@@ -530,6 +530,7 @@ have_fun:
     frame.vars = sp;
     frame.down = fp;
     frame.annotation = NULL;
+    frame.scopeChain = NULL;	/* set below for real, after cx->fp is set */
     frame.pc = NULL;
     frame.sp = sp;
     frame.sharpDepth = 0;
@@ -1013,7 +1014,7 @@ js_Interpret(JSContext *cx, jsval *result)
     jschar *chars;
     jsint i, j;
     jsdouble d, d2;
-    JSClass *clasp;
+    JSClass *clasp, *funclasp;
     JSFunction *fun;
     JSType type;
 #ifdef DEBUG
@@ -1992,8 +1993,6 @@ js_Interpret(JSContext *cx, jsval *result)
 		proto = parent = NULL;
 		fun = NULL;
 	    } else {
-                JSClass *cl;
-
 		/* Get the constructor prototype object for this function. */
 		ok = OBJ_GET_PROPERTY(cx, obj2,
 				      (jsid)rt->atomState.classPrototypeAtom,
@@ -2003,10 +2002,10 @@ js_Interpret(JSContext *cx, jsval *result)
 		proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
 		parent = OBJ_GET_PARENT(cx, obj2);
 
-                if ((OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) &&
-                    (cl = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp) != 0)
-                {
-                    clasp = cl;
+                if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
+                    funclasp = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp;
+                    if (funclasp)
+                        clasp = funclasp;
                 }
 	    }
 	    obj = js_NewObject(cx, clasp, proto, parent);
