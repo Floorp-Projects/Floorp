@@ -122,7 +122,7 @@ NS_METHOD nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 
     QString string = buf;
 
-    mWidget->setUpdatesEnabled(PR_FALSE);
+    //mWidget->setUpdatesEnabled(PR_FALSE);
     if (mWidget->isA("nsQLineEdit"))
     {
         ((QLineEdit *)mWidget)->setText(string);
@@ -131,7 +131,7 @@ NS_METHOD nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
     {
         ((QMultiLineEdit *)mWidget)->setText(string);
     }
-    mWidget->setUpdatesEnabled(PR_TRUE);
+    //mWidget->setUpdatesEnabled(PR_TRUE);
     aActualSize = aText.Length();
 
     delete[] buf;
@@ -236,7 +236,14 @@ NS_METHOD nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsTextHelper::SetSelection()\n"));
     if (mWidget->isA("nsQLineEdit"))
     {
-        ((QLineEdit *)mWidget)->setSelection(aStartSel, aEndSel - aStartSel);
+        if (aStartSel || aEndSel)
+        {
+            ((QLineEdit *)mWidget)->setSelection(aStartSel, aEndSel - aStartSel);
+        }
+        else
+        {
+            ((QLineEdit *)mWidget)->deselect();
+        }
     }
     else
     {        
