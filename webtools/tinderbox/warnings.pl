@@ -802,7 +802,7 @@ sub build_url {
 sub file_url {
   my ($file, $linenum) = @_;
 
-  return "http://cvs-mirror.mozilla.org/webtools/bonsai/cvsblame.cgi"
+  return "http://bonsai.mozilla.org/cvsblame.cgi"
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }

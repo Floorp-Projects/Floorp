@@ -6,8 +6,8 @@
 # usage: ./copydata <treeName>
 #
 
-tinderbox_link="http://cvs-mirror.mozilla.org/webtools/tinderbox"
-bonsai_link="http://cvs-mirror.mozilla.org/webtools/bonsai"
+tinderbox_link="http://tinderbox.mozilla.org"
+bonsai_link="http://bonsai.mozilla.org"
 
 if [ $# -lt 1 ]
 then
