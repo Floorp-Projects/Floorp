@@ -20,6 +20,7 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "nsMacMessagePump.h"
 #include "nsToolKit.h"
 #include <Fonts.h>
 #include <TextEdit.h>
@@ -36,17 +37,12 @@
 class nsAppShell : public nsIAppShell
 {
   private:
-    nsDispatchListener*		mDispatchListener;
-    nsToolkit*     				mToolKit;
-    PRBool								mRunning;
-
+    nsDispatchListener		*mDispatchListener;
+    nsToolkit							*mToolKit;
+		nsMacMessenger				*mMessages;
 
 	// CLASS METHODS
-	private:
-		    void			DoMouseDown(EventRecord *aTheEvent);
-		    void			IdleWidgets();
-				void			doKey(EventRecord *aTheEvent);
-		    
+	private:		    
 		    
 		    
   public:
@@ -58,11 +54,8 @@ class nsAppShell : public nsIAppShell
     // nsIAppShellInterface
   
     virtual void            Create(int* argc, char ** argv);
-    virtual nsresult        Run(); 
-    virtual void            Exit();
-    	
-
-
+    virtual nsresult        Run();
+		virtual void						Exit();
     virtual void            SetDispatchListener(nsDispatchListener* aDispatchListener);
 
     virtual void* GetNativeData(PRUint32 aDataType);
