@@ -103,7 +103,7 @@ NS_NewXTFService(nsIXTFService** aResult)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS1(nsXTFService, nsIXTFService);
+NS_IMPL_ISUPPORTS1(nsXTFService, nsIXTFService)
 
 //----------------------------------------------------------------------
 // nsIXTFService methods

@@ -117,7 +117,7 @@ NS_NewXMLContentBuilder(nsIXMLContentBuilder** aResult)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS1(nsXMLContentBuilder, nsIXMLContentBuilder);
+NS_IMPL_ISUPPORTS1(nsXMLContentBuilder, nsIXMLContentBuilder)
 
 //----------------------------------------------------------------------
 // nsIXMLContentBuilder implementation
