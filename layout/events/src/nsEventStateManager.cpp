@@ -585,7 +585,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             //B) Click on it.
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event;
-            event.eventStructType = NS_GUI_EVENT;
+            event.eventStructType = NS_MOUSE_EVENT;
             event.message = NS_MOUSE_LEFT_CLICK;
             event.isShift = PR_FALSE;
             event.isControl = PR_FALSE;

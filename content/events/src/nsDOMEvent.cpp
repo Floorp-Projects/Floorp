@@ -176,12 +176,11 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   
 	*aTarget = nsnull;
 
-  nsIEventStateManager *manager;
-  nsIContent *targetContent;  
+  nsCOMPtr<nsIEventStateManager> manager;
+  nsCOMPtr<nsIContent> targetContent;  
 
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
-    manager->GetEventTargetContent(mEvent, &targetContent);
-    NS_RELEASE(manager);
+  if (NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager)) && manager) {
+    manager->GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
   }
   
   if (targetContent) {    
@@ -189,7 +188,6 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
       *aTarget = mTarget;
       NS_ADDREF(mTarget);
     }
-    NS_RELEASE(targetContent);
   }
   else {
     //Always want a target.  Use document if nothing else.
