@@ -39,6 +39,7 @@
 #define omniwebprofilemigrator___h___
 
 #include "nsIBrowserProfileMigrator.h"
+#include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
 
@@ -54,6 +55,7 @@ public:
 protected:
 
 private:
+  nsCOMPtr<nsIObserverService> mObserverService;
 };
  
 #endif

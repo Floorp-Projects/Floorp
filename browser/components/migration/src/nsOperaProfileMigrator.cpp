@@ -94,16 +94,13 @@ static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 
 NS_IMPL_ISUPPORTS1(nsOperaProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsOperaProfileMigrator::nsOperaProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsOperaProfileMigrator::~nsOperaProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 NS_IMETHODIMP
@@ -960,7 +957,8 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   else
     parentFolder = root;
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
+  printf("*** before CopySmartKeywords\n");
   CopySmartKeywords(bms, bundle, parentFolder);
 #endif
 
@@ -973,7 +971,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   return ParseBookmarksFolder(lineInputStream, parentFolder, toolbar, bms);
 }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
 nsresult
 nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS, 
                                           nsIStringBundle* aBundle, 
@@ -1166,6 +1164,9 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                              nsIRDFResource* aToolbar,
                                              nsIBookmarksService* aBMS)
 {
+  static PRInt32 callCount = 0;
+  printf("*** Entering ParseBookmarksFolder %d\n", ++callCount);
+  nsresult rv;
   PRBool moreData = PR_FALSE;
   nsAutoString buffer;
   EntryType entryType = EntryType_BOOKMARK;
@@ -1173,7 +1174,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   nsCAutoString url;
   PRBool onToolbar = PR_FALSE;
   do {
-    nsresult rv = aStream->ReadLine(buffer, &moreData);
+    rv = aStream->ReadLine(buffer, &moreData);
     if (NS_FAILED(rv)) return rv;
 
     if (!moreData) break;
@@ -1226,7 +1227,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
           url.AssignWithConversion(empty);
           keyword = empty;
           description = empty;
-          if (NS_FAILED(rv)) 
+          if (NS_FAILED(rv))
             continue;
         }
       }
@@ -1239,7 +1240,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
           name = empty;
           if (NS_FAILED(rv)) 
             continue;
-          ParseBookmarksFolder(aStream, itemRes, aToolbar, aBMS);
+          rv = ParseBookmarksFolder(aStream, itemRes, aToolbar, aBMS);
         }
       }
       break;
@@ -1251,7 +1252,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   while (1);
 
 done:
-  return NS_OK;
+  return rv;
 }
 
 void

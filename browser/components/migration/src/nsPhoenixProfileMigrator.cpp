@@ -68,16 +68,13 @@
 
 NS_IMPL_ISUPPORTS1(nsPhoenixProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsPhoenixProfileMigrator::nsPhoenixProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsPhoenixProfileMigrator::~nsPhoenixProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -99,8 +99,6 @@ const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
 const int sHostnameLengthLimit     = 255;
 
-static nsIObserverService* sObserverService = nsnull;
-
 //***********************************************************************
 //*** windows registry to mozilla prefs data type translation functions
 //***********************************************************************
@@ -489,11 +487,11 @@ NS_IMPL_ISUPPORTS1(nsIEProfileMigrator, nsIBrowserProfileMigrator);
 
 nsIEProfileMigrator::nsIEProfileMigrator() 
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
-nsIEProfileMigrator::~nsIEProfileMigrator() {
-  NS_IF_RELEASE(sObserverService);
+nsIEProfileMigrator::~nsIEProfileMigrator() 
+{
 }
 
 nsresult

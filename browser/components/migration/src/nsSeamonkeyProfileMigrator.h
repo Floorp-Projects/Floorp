@@ -40,6 +40,7 @@
 
 #include "nsIBrowserProfileMigrator.h"
 #include "nsILocalFile.h"
+#include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsNetscapeProfileMigratorBase.h"
 #include "nsString.h"
@@ -86,6 +87,7 @@ protected:
 private:
   nsCOMPtr<nsISupportsArray> mProfileNames;
   nsCOMPtr<nsISupportsArray> mProfileLocations;
+  nsCOMPtr<nsIObserverService> mObserverService;
 };
  
 #endif

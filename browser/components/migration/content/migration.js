@@ -208,6 +208,7 @@ var MigrationWizard = {
   
   observe: function (aSubject, aTopic, aData)
   {
+    dump("*** aSubject = " + aSubject + ", aTopic = " + aTopic + ", aData = " + aData + "\n");
     switch (aTopic) {
     case "Migration:Started":
       dump("*** started\n");

@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIBrowserProfileMigrator.h"
+#include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -106,7 +107,7 @@ protected:
                                 nsIRDFResource* aFolder,
                                 nsIRDFResource* aToolbar, 
                                 nsIBookmarksService* aBMS);
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
   nsresult CopySmartKeywords(nsIBookmarksService* aBMS, 
                              nsIStringBundle* aBundle, 
                              nsIRDFResource* aParentFolder);
@@ -117,6 +118,7 @@ protected:
 private:
   nsCOMPtr<nsILocalFile> mOperaProfile;
   nsCOMPtr<nsISupportsArray> mProfiles;
+  nsCOMPtr<nsIObserverService> mObserverService;
 };
 
 class nsOperaCookieMigrator

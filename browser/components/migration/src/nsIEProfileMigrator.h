@@ -44,6 +44,7 @@
 #include <time.h>
 #include <windows.h>
 #include "nsIBrowserProfileMigrator.h"
+#include "nsIObserverService.h"
 #include "nsVoidArray.h"
 
 class nsIFile;
@@ -63,7 +64,7 @@ public:
   nsIEProfileMigrator();
   virtual ~nsIEProfileMigrator();
 
-private:
+protected:
   nsresult CopyPreferences(PRBool aReplace);
   nsresult CopyStyleSheet(PRBool aReplace);
   nsresult CopyCookies(PRBool aReplace);
@@ -97,6 +98,9 @@ private:
   time_t   FileTimeToTimeT(const char *aLowDateIntString,
                            const char *aHighDateIntString);
   void     GetUserStyleSheetFile(nsIFile **aUserFile);
+
+private:
+  nsCOMPtr<nsIObserverService> mObserverService;
 };
 
 #endif
