@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Bill Law <law@netscape.com>
  */
 
 #include "nsExternalHelperAppService.h"
@@ -71,18 +72,12 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
 
 // The following static table lists all of the "default" content type mappings we are going to use.                 
+// These are only the ones handled internally.  These must be listed here so that we can do the
+// proper file-extension to content-type mapping.  These cannot be overridden by user helper app
+// prefs.
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
   { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
-#if defined(VMS)
-  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", 0, 0 },
-#elif defined(XP_MAC) // don't define .bin on the mac...use internet config to look that up...
-  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", 0, 0 },
-#else
-  { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", 0, 0 },
-#endif
-
-
   { TEXT_HTML, "htm,html,shtml,ehtml", "Hyper Text Markup Language", 'TEXT', 'MOSS' },
   { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
@@ -91,10 +86,25 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
   { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
   { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
-  { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
   { IMAGE_GIF, "gif", "GIF Image", 0,0 },
   { IMAGE_JPG, "jpeg,jpg", "JPEG Image", 0, 0 },
   { IMAGE_PNG, "png", "PNG Image", 0, 0 },
+};
+
+// This table lists all of the 'extra" content types that we can deduce from particular
+// file extensions.  These entries also ensure that we provide a good descriptive name
+// when we encounter files with these content types and/or extensions.  These can be
+// overridden by user helper app prefs.
+static nsDefaultMimeTypeEntry extraMimeEntries [] =
+{
+#if defined(VMS)
+  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", 0, 0 },
+#elif defined(XP_MAC) // don't define .bin on the mac...use internet config to look that up...
+  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", 0, 0 },
+#else
+  { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", 0, 0 },
+#endif
+  { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
   { IMAGE_ART, "art", "ART Image", 0, 0 },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
@@ -150,24 +160,28 @@ nsresult nsExternalHelperAppService::InitDataSource()
   mOverRideDataSource = do_QueryInterface(remoteDS);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // Get URI of the mimeTypes.rdf data source.  Do this the same way it's done in
+  // pref-applications-edit.xul, for example, to ensure we get the same data source!
+  // Note that the way it was done previously (using nsIFileSpec) worked better, but it
+  // produced a different uri (it had "file:///C|" instead of "file:///C:".  What can you do?
   nsCOMPtr<nsIFile> mimeTypesFile;
-  nsXPIDLCString pathBuf;
-  nsCOMPtr<nsIFileSpec> mimeTypesFileSpec;
-
   rv = NS_GetSpecialDirectory(NS_APP_USER_MIMETYPES_50_FILE, getter_AddRefs(mimeTypesFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = mimeTypesFile->GetPath(getter_Copies(pathBuf));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewFileSpec(getter_AddRefs(mimeTypesFileSpec));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mimeTypesFileSpec->SetNativePath(pathBuf);
-
-  nsXPIDLCString url;
-  rv = mimeTypesFileSpec->GetURLString(getter_Copies(url));
+  // Now construct a standard (file) url.
+  nsCOMPtr<nsIFileURL> fileURL = do_CreateInstance( "@mozilla.org/network/standard-url;1", &rv );
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = remoteDS->Init(url);
+  // Set to point at same file as the 'special directory."
+  rv = fileURL->SetFile( mimeTypesFile );
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get file url spec to be used to initialize the DS.
+  nsXPIDLCString urlSpec;
+  rv = fileURL->GetSpec(getter_Copies(urlSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = remoteDS->Init(urlSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // for now load synchronously (async seems to be busted)
@@ -214,12 +228,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   // (1) Try to find a mime object by looking the mime type
   GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
 
-  // here's a nifty little trick. If we got a match back for the content type; but the content type is
-  // unknown or octet (both of these are pretty much unhelpful mime objects), then see if the file extension
-  // produces a better mime object...
-  if (((nsCRT::strcmp(aMimeContentType, UNKNOWN_CONTENT_TYPE) == 0) ||
-       (nsCRT::strcmp(aMimeContentType, APPLICATION_OCTET_STREAM) == 0) || 
-       !mimeInfo))
+  if (!mimeInfo)
   {
     // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
     // url itself...
@@ -231,8 +240,20 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
       GetFromExtension(fileExtension, getter_AddRefs(tempMIMEObject));
       // only over write mimeInfo if we got a non-null temp mime info object.
       if (tempMIMEObject)
+      {
         mimeInfo = tempMIMEObject;
+        // The OS might have thought this extension was a different mime type.
+        // We must reset this to match the actual mime type.  Otherwise, we
+        // won't use this MIMEInfo when we see the real mime type next time.
+        mimeInfo->SetMIMEType(aMimeContentType);
+      }
     }
+  }
+
+  // (2) if we don't have a match yet, see if this type is in our list of extras.
+  if (!mimeInfo)
+  {
+      GetMIMEInfoForMimeTypeFromExtras(aMimeContentType, getter_AddRefs(mimeInfo));
   }
 
   // (3) if we STILL don't have a mime object for this content type then give up
@@ -381,20 +402,21 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
 
   // save to disk
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_SaveToDisk, &stringValue);
-  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
+  NS_NAMED_LITERAL_STRING( trueString, "true" );
+  if (trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
   // handle internal
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_HandleInternal, &stringValue);
-  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
+  if (trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
   
   // always ask
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
-  if (stringValue && nsCRT::strcasecmp(stringValue, "false") == 0)
-       aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
+  if (trueString.Equals(stringValue))
+      aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
   else
-    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_TRUE);
+    aMIMEInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
 
 
   // now digest the external application information
@@ -435,22 +457,31 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
   // obsoleting soon...
   if (mOverRideDataSource)
   {
-    nsCOMPtr<nsIRDFNode> target;
-    nsCOMPtr<nsIRDFResource> source;
-    nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
-  
-    nsCString contentTypeNodeName (NC_CONTENT_NODE_PREFIX);
-    contentTypeNodeName.Append(aContentType);
-
+    // Get the RDF service.
     nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
-    // we need a way to determine if this content type resource is really in the graph or not...
-    // every mime type should have a value field so test for that target..
-    mOverRideDataSource->GetTarget(contentTypeNodeResource, kNC_Value, PR_TRUE, getter_AddRefs(target));
+  
+    // Build uri for the mimetype resource.
+    nsCString contentTypeNodeName (NC_CONTENT_NODE_PREFIX);
+    contentTypeNodeName.Append(aContentType);
 
-    if (NS_SUCCEEDED(rv) && target)
+    // Get the mime type resource.
+    nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
+    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // we need a way to determine if this content type resource is really in the graph or not...
+    // ...Test that there's a #value arc from the mimetype resource to the mimetype literal string.
+    nsCOMPtr<nsIRDFLiteral> mimeLiteral;
+    nsAutoString mimeType; mimeType.AssignWithConversion(aContentType);
+    rv = rdf->GetLiteral( mimeType.get(), getter_AddRefs( mimeLiteral ) );
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    PRBool exists = PR_FALSE;
+    rv = mOverRideDataSource->HasAssertion(contentTypeNodeResource, kNC_Value, mimeLiteral, true, &exists );
+
+    if (NS_SUCCEEDED(rv) && exists)
     {
        // create a mime info object and we'll fill it in based on the values from the data source
        nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
@@ -460,11 +491,6 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
 
        *aMIMEInfo = mimeInfo;
        NS_IF_ADDREF(*aMIMEInfo);
-       AddMimeInfoToCache(mimeInfo);
-       
-       // now that we found a mime object for this type, DON'T forget to add it to our hash table
-       // so we won't query the data source for it the next time around...
-
     } // if we have a node in the graph for this content type
     else
       *aMIMEInfo = nsnull;
@@ -826,15 +852,30 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // with it...
     mReceivedDispostionInfo = PR_FALSE; 
 
-    // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
-    nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID ) );
-    if ( dlgService ) 
-      rv = dlgService->Show( this, mWindowContext );
+    // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
+    mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDialog->Show( this, mWindowContext );
 
     // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
   }
   else
+  {
     mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
+
+    // We need to do the save/open immediately, then.
+    PRInt32 action = nsIMIMEInfo::saveToDisk;
+    mMimeInfo->GetPreferredAction( &action );
+    if ( action == nsIMIMEInfo::saveToDisk )
+    {
+        rv = SaveToDisk(nsnull, PR_FALSE);
+    }
+    else
+    {
+        rv = LaunchWithApplication(nsnull, PR_FALSE);
+    }
+  }
 
   mTimeDownloadStarted = PR_Now();
 
@@ -926,25 +967,44 @@ NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExternalAppHandler::GetSource(nsIURI ** aSourceURI)
+{
+  NS_ENSURE_ARG(aSourceURI);
+  *aSourceURI = mSourceUrl;
+  NS_IF_ADDREF(*aSourceURI);
+  return NS_OK;
+}
+
 nsresult nsExternalAppHandler::ShowProgressDialog()
 {
   // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
   // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv));
-  if ( dlgService ) 
-    dlgService->ShowProgressDialog(this, mWindowContext);
+
+  if ( !mDialog ) {
+    // Get helper app launcher dialog.
+    mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDialog->ShowProgressDialog(this, mWindowContext);
 
   return rv;
 }
 
 nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
 {
-  // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
-  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID ) );
+  // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
+  // XXX Convert to use file picker?
   nsresult rv = NS_OK;
-  if ( dlgService ) 
-    rv = dlgService->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension).get(), aNewFile);
+  if (!mDialog)
+  {
+    // Get helper app launcher dialog.
+    mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDialog->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension).get(), aNewFile);
   
   return rv;
 }
@@ -1344,6 +1404,37 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
   if (fileExt.IsEmpty())
 	  return NS_ERROR_FAILURE;    
   return GetTypeFromExtension( fileExt, aContentType );
+}
+
+nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo )
+{
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG( aMIMEInfo );
+
+  *aMIMEInfo = 0;
+
+  // Look for default entry with matching mime type.
+  nsCAutoString MIMEType(aContentType);
+  MIMEType.ToLowerCase();
+  PRInt32 numEntries = sizeof(extraMimeEntries) / sizeof(extraMimeEntries[0]);
+  for (PRInt32 index = 0; !*aMIMEInfo && index < numEntries; index++)
+  {
+      if ( MIMEType == extraMimeEntries[index].mMimeType ) {
+          // This is the one.  Create MIMEInfo object and set attributes appropriately.
+          nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID,&rv));
+          NS_ENSURE_SUCCESS( rv, rv );
+
+          mimeInfo->SetFileExtensions(extraMimeEntries[index].mFileExtensions);
+          mimeInfo->SetMIMEType(extraMimeEntries[index].mMimeType);
+          mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription).get());
+          mimeInfo->SetMacType(extraMimeEntries[index].mMactype);
+          mimeInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
+
+          *aMIMEInfo = mimeInfo;
+      }
+  }
+
+  return rv;
 }
 
 nsresult nsExternalHelperAppService::AddDefaultMimeTypesToCache()

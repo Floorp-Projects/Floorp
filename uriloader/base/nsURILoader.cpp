@@ -46,7 +46,6 @@
 #include "nsString.h"
 
 #include "nsIDOMWindowInternal.h"
-#include "nsIUnkContentTypeHandler.h"
 #include "nsDOMError.h"
 
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service

@@ -33,7 +33,7 @@
 #include <windows.h>
 
 // helper methods: forward declarations...
-BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
+BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
 nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension);
 
@@ -142,7 +142,7 @@ nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFile
    return rv;
 }
 
-BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
+static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
 {
 	LONG	err;
 	DWORD	bufSz;
@@ -155,7 +155,12 @@ BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
 		if (err != ERROR_SUCCESS) {
 			delete [] pBytes;
 			pBytes = NULL;
-		}
+        } else {
+            // Return length if caller wanted it.
+            if ( pLen ) {
+                *pLen = bufSz;
+            }
+        }
 	}
 
 	return( pBytes);
@@ -225,6 +230,60 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   return rv;
 }
 
+// GetMIMEInfoFromRegistry: This function obtains the values of some of the nsIMIMEInfo
+// attributes for the mimeType/extension associated with the input registry key.  The default
+// entry for that key is the name of a registry key under HKEY_CLASSES_ROOT.  The default
+// value for *that* key is the descriptive name of the type.  The EditFlags value is a binary
+// value; the low order bit of the third byte of which indicates that the user does not need
+// to be prompted.
+//
+// This function sets only the Description and AlwaysAskBeforeHandling attributes of the
+// input nsIMIMEInfo.
+static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG( fileType );
+    NS_ENSURE_ARG( pInfo );
+
+    // Get registry key for the pointed-to "file type."
+    HKEY fileTypeKey = 0;
+    LONG rc = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, (const char *)fileType, 0, KEY_QUERY_VALUE, &fileTypeKey );
+    if ( rc == ERROR_SUCCESS )
+    {
+        // OK, the default value here is the description of the type.
+        LPBYTE pDesc = GetValueBytes( fileTypeKey, "" );
+        if ( pDesc )
+        {
+            nsAutoString desc; desc.AssignWithConversion((const char*)pDesc);
+            pInfo->SetDescription( desc.GetUnicode() );
+            delete [] pDesc;
+        }
+
+        // Now get EditFlags.
+        DWORD len = 0;
+        LPBYTE pEditFlags = GetValueBytes( fileTypeKey, "EditFlags", &len );
+        if ( pEditFlags )
+        {
+            // Test "confirm open after download" setting.  Note that this bit is
+            // *on* if that checkbox is unchecked.
+            if ( ( len >= 3 ) && ( pEditFlags[2] & 0x01 ) )
+            {
+                // This means we don't ask.
+                pInfo->SetAlwaysAskBeforeHandling( PR_FALSE );
+            }
+            delete [] pEditFlags;
+        }
+
+    }
+    else
+    {
+        rv = NS_ERROR_FAILURE;
+    }
+
+    return rv;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // nsIMIMEService method over-rides used to gather information from the windows registry for
 // various mime types. 
@@ -278,11 +337,15 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
 
         mimeInfo->SetApplicationDescription(description.GetUnicode());
 
-        // if we got here, then set our return variable and be sure to add this new mime Info object to the hash
-        // table so we don't hit the registry the next time we look up this content type.
+        // Get other nsIMIMEInfo fields from registry, if possible.
+        if ( pFileDescription )
+        {
+            GetMIMEInfoFromRegistry( pFileDescription, mimeInfo );
+        }
+
+        // if we got here, then set our return variable
         *_retval = mimeInfo;
         NS_ADDREF(*_retval);
-        AddMimeInfoToCache(mimeInfo);
       }
       else
         rv = NS_ERROR_FAILURE; // we failed to really find an entry in the registry

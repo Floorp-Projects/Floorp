@@ -27,6 +27,7 @@
 #include "nsIExternalProtocolService.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
+#include "nsIHelperAppLauncherDialog.h"
 
 #include "nsIMIMEInfo.h"
 #include "nsIMIMEService.h"
@@ -107,6 +108,7 @@ protected:
   // used to add entries to the mime info cache
   virtual nsresult AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo);
   virtual nsresult AddDefaultMimeTypesToCache();
+  virtual nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
 
 };
 
@@ -206,6 +208,7 @@ protected:
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; // in the case of a redirect, this will be the pre-redirect channel.
+  nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 };
 
 #endif // nsExternalHelperAppService_h__
