@@ -9,3 +9,5 @@ config-defs.h
 .mozconfig.mk
 .mozconfig.out
 a.out
+unallmakefiles
+nss
