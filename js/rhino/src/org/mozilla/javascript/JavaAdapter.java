@@ -313,7 +313,7 @@ public class JavaAdapter extends ScriptableObject {
         }
             
         SecuritySupport ss = cx.getSecuritySupport();
-        if (ss != null)  {
+        if (ss != null) {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
             Class result = ss.defineClass(adapterName, bytes, securityDomain);
             if (result != null)
