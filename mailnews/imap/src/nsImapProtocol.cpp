@@ -6546,7 +6546,7 @@ PRBool nsImapProtocol::TryToLogon()
     // we are in the imap thread so *NEVER* try to extract the password with UI
     // if logon redirection has changed the password, use the cookie as the password
     if (m_overRideUrlConnectionInfo)
-      password.Assign(m_logonCookie);
+      password.Adopt(ToNewCString(m_logonCookie));
     else
       rv = server->GetPassword(getter_Copies(password));
     rv = server->GetRealUsername(&userName);
