@@ -32,7 +32,6 @@ EXPORTS		= \
 		nsIWebShellWindow.h \
 		nsAppShellCIDs.h \
 		nsBuildID.h \
-		nsIXULWindowCallbacks.h \
 		nsFileLocations.h \
 		nsIDOMXPConnectFactory.h \
 		nsINetSupportDialogService.h \
