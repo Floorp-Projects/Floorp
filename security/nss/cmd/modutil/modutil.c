@@ -659,6 +659,7 @@ usage()
 "-create                          Create a new set of security databases\n"
 "-default MODULE                  Make the given module a default provider\n"
 "   -mechanisms MECHANISM_LIST    of the given mechanisms\n"
+"   [-slot SLOT]                  limit change to only the given slot\n"
 "-delete MODULE                   Remove the named module from the module\n"
 "                                 database\n"
 "-disable MODULE                  Disable the named module\n"
@@ -679,6 +680,7 @@ usage()
 "                                 or about all modules if none is specified\n"
 "-undefault MODULE                The given module is NOT a default provider\n"
 "   -mechanisms MECHANISM_LIST    of the listed mechanisms\n"
+"   [-slot SLOT]                  limit change to only the given slot\n"
 "---------------------------------------------------------------------------\n"
 "\n"
 "                             OPTIONS\n"
@@ -689,7 +691,8 @@ usage()
 "---------------------------------------------------------------------------\n"
 "\n"
 "Mechanism lists are colon-separated.  The following mechanisms are recognized:\n"
-"RSA, DSA, RC2, RC4, RC5, DES, DH, FORTEZZA, SHA1, MD5, MD2, RANDOM, FRIENDLY\n"
+"RSA, DSA, RC2, RC4, RC5, DES, DH, FORTEZZA, SHA1, MD5, MD2, SSL, TLS, RANDOM,\n"
+" FRIENDLY\n"
 "\n"
 "Cipher lists are colon-separated.  The following ciphers are recognized:\n"
 "FORTEZZA\n"
@@ -774,7 +777,7 @@ main(int argc, char *argv[])
 		/* The work was already done in init_crypto() */
 		break;
 	case DEFAULT_COMMAND:
-		errcode = SetDefaultModule(moduleName, mechanisms);
+		errcode = SetDefaultModule(moduleName, slotName, mechanisms);
 		break;
 	case DELETE_COMMAND:
 		errcode = DeleteModule(moduleName);
@@ -801,7 +804,7 @@ main(int argc, char *argv[])
 		}
 		break;
 	case UNDEFAULT_COMMAND:
-		errcode = UnsetDefaultModule(moduleName, mechanisms);
+		errcode = UnsetDefaultModule(moduleName, slotName, mechanisms);
 		break;
 	default:
 		PR_fprintf(PR_STDERR, "This command is not supported yet.\n");
