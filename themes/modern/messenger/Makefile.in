@@ -27,7 +27,7 @@ THEME       = modern
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/$(THEME)/skin
+SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/messenger/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 		messenger.css \
