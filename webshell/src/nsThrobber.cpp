@@ -238,10 +238,13 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
         cx->SetColor(NS_RGB(255, 255, 255));
         cx->SetFont(tfont);
         met = cx->GetFontMetrics();
-        met->GetWidth(str, w);
-        met->GetHeight(h);
-        cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
-        NS_RELEASE(met);
+        if (nsnull != met)
+        {
+          met->GetWidth(str, w);
+          met->GetHeight(h);
+          cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
+          NS_RELEASE(met);
+        }
       }
       else
       {
