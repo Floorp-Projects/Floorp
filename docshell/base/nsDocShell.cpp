@@ -2768,10 +2768,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 {
   mURIResultedInDocument = PR_FALSE; // reset the clock...
     // Check to see if the new URI is an anchor in the existing document.
-  if (aLoadType == nsIDocShellLoadInfo::loadNormal ||
-    aLoadType == nsIDocShellLoadInfo::loadNormalReplace ||
-    aLoadType == nsIDocShellLoadInfo::loadHistory ||
-    aLoadType == nsIDocShellLoadInfo::loadLink)
+  if ((aLoadType == nsIDocShellLoadInfo::loadNormal ||
+       aLoadType == nsIDocShellLoadInfo::loadNormalReplace ||
+       aLoadType == nsIDocShellLoadInfo::loadHistory ||
+       aLoadType == nsIDocShellLoadInfo::loadLink) && (aPostData == nsnull))
     {
         PRBool wasAnchor = PR_FALSE;
         NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
