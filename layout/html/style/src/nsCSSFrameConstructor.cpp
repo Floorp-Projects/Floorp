@@ -1816,10 +1816,9 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treecolgroup    == tag.get())  ||
         (nsXULAtoms::treefoot        == tag.get())  ||
         (nsXULAtoms::treepusher      == tag.get())  ||
-        (nsXULAtoms::menu            == tag.get())  ||
-        (nsXULAtoms::menuitem        == tag.get())  ||
-        (nsXULAtoms::menubar         == tag.get())  ||
-        (nsXULAtoms::menubutton      == tag.get())  ||
+        (nsXULAtoms::xpmenu            == tag.get())  ||
+        (nsXULAtoms::xpmenubar         == tag.get())  ||
+        (nsXULAtoms::xpmenubutton      == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::toolbaritem     == tag.get())  ||
@@ -2765,7 +2764,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       aTag !=  nsHTMLAtoms::combobox &&
       aTag !=  nsXULAtoms::slider &&
       aTag !=  nsXULAtoms::splitter &&
-      aTag !=  nsXULAtoms::scrollbar 
+      aTag !=  nsXULAtoms::scrollbar &&
+      aTag !=  nsXULAtoms::xpmenu
      ) {
      return NS_OK;
 
@@ -3017,28 +3017,26 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     }
     // End of PROGRESS METER CONSTRUCTION logic
 
-#ifdef XP_MENUS
     // Menu Construction    
-    else if (aTag == nsXULAtoms::menu || aTag == nsXULAtoms::menuitem) {
+    else if (aTag == nsXULAtoms::xpmenu) {
       // XXX Will eventually make a derived class box frame
-      // that has custom reflow to prevent menuchildren
+      // that has custom reflow to prevent menu children
       // from becoming part of the flow.
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
       rv = NS_NewBoxFrame(&newFrame);
     }
-    else if (aTag == nsXULAtoms::menubar) {
+    else if (aTag == nsXULAtoms::xpmenubar) {
       // XXX Will be a derived class toolbar frame.
       processChildren = PR_TRUE;
       rv = NS_NewToolbarFrame(&newFrame);
     }
-    else if (aTag == nsXULAtoms::menubutton) {
+    else if (aTag == nsXULAtoms::xpmenubutton) {
       // XXX Will be a derived class titledbutton frame
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(&newFrame);
     }
-#endif // XP_MENUS
 
     // BOX CONSTRUCTION
     else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || 
