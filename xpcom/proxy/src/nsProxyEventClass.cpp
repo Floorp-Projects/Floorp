@@ -196,8 +196,9 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
     var[0].val.p     = (void*)&aIID;
     var[1].val.p     = (void*)aInstancePtr;
 
-    nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
-    
+    nsCOMPtr<nsIInterfaceInfoManager> iim = getter_AddRefs(XPTI_GetInterfaceInfoManager());
+        
+
 	if (iim == nsnull) 
 		return NS_NOINTERFACE;
 
