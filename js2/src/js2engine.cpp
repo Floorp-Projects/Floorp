@@ -471,7 +471,6 @@ namespace MetaData {
         case eBracketDelete:
             return -1;      // pop base and index, push boolean result
 
-        case eStop:
         case eReturnVoid:
         case eBranch:
             return 0;

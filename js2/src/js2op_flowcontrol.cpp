@@ -143,18 +143,18 @@
 
     case eCallFinally:
         {
+            int32 finallyOffset = BytecodeContainer::getOffset(pc);
+            uint8 *tgt = pc + finallyOffset;
+            pc += sizeof(int32);
+            finallyStack.push(pc);
+            pc = tgt;
         }
         break;
 
     case eReturnFinally:
         {
-        }
-        break;
-
-    case eStop:
-        {
-
-            return retval;
+            pc = finallyStack.top();
+            finallyStack.pop();
         }
         break;
     

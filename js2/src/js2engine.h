@@ -111,7 +111,6 @@ enum JS2Op {
     eBracketWriteRef,
     eBracketDelete,
 
-    eStop,
     eReturn,
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
@@ -280,7 +279,7 @@ public:
     };
 
     std::stack<HandlerData *> mTryStack;
-    std::stack<uint8 *> mSubStack;
+    std::stack<uint8 *> finallyStack;
 
     void pushHandler(uint8 *pc);
     void popHandler();
