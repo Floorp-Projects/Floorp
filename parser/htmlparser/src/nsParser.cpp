@@ -1138,6 +1138,15 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
       if(mParserFilter)
          mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
 
+      // XXX Hack --- NULL character(s) is(are) seen in the middle of the buffer!!!
+      // For now, I'm conditioning the raw buffer by removing the unwanted null chars.
+      // Problem could be NECKO related
+
+      for(PRUint32 i=0;i<theNumRead;i++) {
+        if(mParserContext->mTransferBuffer[i]==kNullCh)
+          mParserContext->mTransferBuffer[i]=kSpace;
+      }
+
 #ifdef  NS_DEBUG
       int index=0;
       for(index=0;index<10;index++)
