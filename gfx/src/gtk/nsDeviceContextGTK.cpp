@@ -30,9 +30,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-#define RESERVED_SIZE 0
-#define COLOR_CUBE_SIZE 216 
-
 #define NS_TO_X_RED(a)   (((NS_GET_R(a) >> (8 - mRedBits)) << mRedOffset) & mRedMask)
 #define NS_TO_X_GREEN(a) (((NS_GET_G(a) >> (8 - mGreenBits)) << mGreenOffset) & mGreenMask)
 #define NS_TO_X_BLUE(a)  (((NS_GET_B(a) >> (8 - mBlueBits)) << mBlueOffset) & mBlueMask)
@@ -77,6 +74,8 @@ NS_IMPL_RELEASE(nsDeviceContextGTK)
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
+  GdkVisual *vis;
+
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
   
@@ -88,6 +87,19 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
             (float)NSIntPointsToTwips(72));
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+  vis = gdk_rgb_get_visual();
+  mRedMask = vis->red_mask;
+  mGreenMask = vis->green_mask;
+  mBlueMask = vis->blue_mask;
+  mRedBits = vis->bits_per_rgb;
+  mGreenBits = vis->bits_per_rgb;
+  mBlueBits = vis->bits_per_rgb;
+  mRedOffset = vis->red_shift;
+  mGreenOffset = vis->green_shift;
+  mBlueOffset = vis->blue_shift;
+  mDepth = vis->depth;
+
   return NS_OK;
 }
 
@@ -122,8 +134,9 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContex
 NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {
-  ::gdk_rgb_init ();
-  aPixel = ::gdk_rgb_xpixel_from_rgb ((guint32)aColor);
+//  ::gdk_rgb_init ();
+//  aPixel = ::gdk_rgb_xpixel_from_rgb ((guint32)aColor);
+  aPixel = ::gdk_rgb_xpixel_from_rgb ((PRUint32)NS_TO_X(aColor));
 
   return NS_OK;
 }
