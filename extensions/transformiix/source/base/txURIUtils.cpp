@@ -349,6 +349,10 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
     aNewDoc->Reset(channel, loadGroup);
     aNewDoc->SetBaseURL(sourceDoc->GetBaseURL());
 
+    // Copy charset
+    aNewDoc->SetDocumentCharacterSet(sourceDoc->GetDocumentCharacterSet());
+    aNewDoc->SetDocumentCharacterSetSource(
+          sourceDoc->GetDocumentCharacterSetSource());
 }
 
 #endif /* TX_EXE */

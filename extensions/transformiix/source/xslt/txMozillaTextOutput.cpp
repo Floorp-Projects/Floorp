@@ -48,6 +48,7 @@
 #include "nsIDocumentTransformer.h"
 #include "nsNetUtil.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIParser.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -181,6 +182,18 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     }
     doc->Reset(channel, loadGroup);
     doc->SetBaseURL(sourceDoc->GetBaseURL());
+
+    // Set the charset
+    if (!mOutputFormat.mEncoding.IsEmpty()) {
+        doc->SetDocumentCharacterSet(
+            NS_LossyConvertUTF16toASCII(mOutputFormat.mEncoding));
+        doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+    }
+    else {
+        doc->SetDocumentCharacterSet(sourceDoc->GetDocumentCharacterSet());
+        doc->SetDocumentCharacterSetSource(
+            sourceDoc->GetDocumentCharacterSetSource());
+    }
 
     // Notify the contentsink that the document is created
     nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
