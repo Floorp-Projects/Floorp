@@ -146,6 +146,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           }
           else
           {
+			      printf("-- Paint cell (%d %d)\n", GetRowIndex(), GetColIndex());
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                              aDirtyRect, rect, &mBorderEdges, skipSides);
           }
@@ -444,12 +445,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   }
   if (0==kidSize.width)
   {
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
-    kidSize.width=NSIntPixelsToTwips(4, p2t);
-    if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
-          pMaxElementSize->width=NSIntPixelsToTwips(4, p2t);
-    if (gsDebug) printf ("setting child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
+    if (eReflowReason_Initial == aReflowState.reason) 
+    {
+      float p2t;
+      aPresContext.GetScaledPixelsToTwips(p2t);
+      kidSize.width=NSIntPixelsToTwips(4, p2t);
+      if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
+            pMaxElementSize->width=NSIntPixelsToTwips(4, p2t);
+      if (gsDebug) printf ("setting initial child width from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
+    }
+    else  // empty content has to be forced to the assigned width for resize or incremental reflow
+      kidSize.width = kidReflowState.maxSize.width;
   }
   if (0==kidSize.height)
   {
