@@ -3931,7 +3931,7 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
 PRBool 
 HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
 {
-  if (eHTMLTag_tr == aTag) {
+  if (eHTMLTag_tr == aTag || eHTMLTag_select == aTag) {
     return PR_TRUE;
   }
   else {
