@@ -93,6 +93,29 @@ public:
   static PRInt32 FindStretchyOperator(PRUnichar aOperator);
   static nsStretchDirection GetStretchyDirectionAt(PRInt32 aIndex);
   static void DisableStretchyOperatorAt(PRInt32 aIndex);
+
+
+  // Style invariant chararacters (chars have their own intrinsic predefined style)
+  enum eMATHVARIANT {
+    eMATHVARIANT_NONE = -1,
+    eMATHVARIANT_normal = 0,
+    eMATHVARIANT_bold,
+    eMATHVARIANT_italic,
+    eMATHVARIANT_bold_italic,
+    eMATHVARIANT_sans_serif,
+    eMATHVARIANT_bold_sans_serif,
+    eMATHVARIANT_sans_serif_italic,
+    eMATHVARIANT_sans_serif_bold_italic,
+    eMATHVARIANT_monospace,
+    eMATHVARIANT_script,
+    eMATHVARIANT_bold_script,
+    eMATHVARIANT_fraktur,
+    eMATHVARIANT_bold_fraktur,
+    eMATHVARIANT_double_struck,
+    eMATHVARIANT_COUNT
+  };
+  static PRBool LookupInvariantChar(PRUnichar     aChar,
+                                    eMATHVARIANT* aType = nsnull);
 };
 
 

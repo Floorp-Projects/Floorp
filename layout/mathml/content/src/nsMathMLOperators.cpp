@@ -76,12 +76,30 @@ static PRInt32         gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
 static nsVoidArray*    gStretchyOperatorArray = nsnull;
+static nsStringArray*  gInvariantChar = nsnull;
 static PRBool          gInitialized   = PR_FALSE;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
 static const PRUnichar kDashCh  = PRUnichar('#');
 static const PRUnichar kEqualCh = PRUnichar('=');
 static const PRUnichar kColonCh = PRUnichar(':');
+
+static const char* const kMathVariant_name[] = {
+  "normal",
+  "bold",
+  "italic",
+  "bold-italic",
+  "sans-serif",
+  "bold-sans-serif",
+  "sans-serif-italic",
+  "sans-serif-bold-italic",
+  "monospace",
+  "script",
+  "bold-script",
+  "fraktur",
+  "bold-fraktur",
+  "double-struck"
+};
 
 void
 SetProperty(OperatorData* aOperatorData,
@@ -291,6 +309,15 @@ InitOperators(void)
   rv = mathfontProp->Load(in);
   if NS_FAILED(rv) return rv;
 
+  // Get the list of invariant chars
+  for (PRInt32 i = 0; i < nsMathMLOperators::eMATHVARIANT_COUNT; ++i) {
+    nsAutoString key, value;
+    key.Assign(NS_LITERAL_STRING("mathvariant."));
+    key.AppendWithConversion(kMathVariant_name[i]);
+    mathfontProp->GetStringProperty(key, value);
+    gInvariantChar->AppendString(value); // i.e., gInvariantChar[i] holds this list
+  }
+
   // Parse the Operator Dictionary in two passes.
   // The first pass is to count the number of operators; the second pass is to
   // allocate the necessary space for them and to add them in the hash table.
@@ -359,14 +386,19 @@ InitGlobals()
 {
   gInitialized = PR_TRUE;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+  gInvariantChar = new nsStringArray();
   gStretchyOperatorArray = new nsVoidArray();
-  if (gStretchyOperatorArray) {
+  if (gInvariantChar && gStretchyOperatorArray) {
     gOperatorTable = new nsHashtable();
     if (gOperatorTable) {
       rv = InitOperators();
     }
   }
   if (NS_FAILED(rv)) {
+    if (gInvariantChar) {
+      delete gInvariantChar;
+      gInvariantChar = nsnull;
+    }
     if (gOperatorArray) {
       delete[] gOperatorArray;
       gOperatorArray = nsnull;
@@ -565,4 +597,25 @@ nsMathMLOperators::DisableStretchyOperatorAt(PRInt32 aIndex)
     NS_ASSERTION(aIndex < gStretchyOperatorArray->Count(), "invalid call");
     gStretchyOperatorArray->ReplaceElementAt(nsnull, aIndex);
   }
+}
+
+PRBool
+nsMathMLOperators::LookupInvariantChar(PRUnichar     aChar,
+                                       eMATHVARIANT* aType)
+{
+  if (!gInitialized) {
+    InitGlobals();
+  }
+  if (aType) *aType = eMATHVARIANT_NONE;
+  if (gInvariantChar) {
+    for (PRInt32 i = 0; i < gInvariantChar->Count(); ++i) {
+      nsAutoString list;
+      gInvariantChar->StringAt(i, list);
+      if (kNotFound != list.FindChar(aChar)) {
+         if (aType) *aType = eMATHVARIANT(i);
+         return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
 }
