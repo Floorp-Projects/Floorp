@@ -32,6 +32,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIFileStream.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
@@ -1299,6 +1300,12 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
         nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
         if (seekable)
             seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+        else {
+            // try nsIRandomAccessStore
+            nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mUploadStream);
+            if (ras)
+                ras->Seek(PR_SEEK_SET, 0);
+        }
     }
 
     rv = nsHttpHandler::get()->InitiateTransaction(mTransaction, mConnectionInfo);

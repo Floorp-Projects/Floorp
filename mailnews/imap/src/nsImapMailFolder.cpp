@@ -4850,29 +4850,29 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
 {
   nsCOMPtr<nsIOutputStream> outputStream;
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(outputStream));
-  nsCOMPtr <nsISeekableStream> seekable;
-  PRUint32 curStorePos;
+  nsCOMPtr <nsIRandomAccessStore> randomStore;
+  PRInt32 curStorePos;
 
-  seekable = do_QueryInterface(outputStream);
+  randomStore = do_QueryInterface(outputStream);
 
-  if (seekable)
+  if (randomStore)
   {
     nsMsgKey messageOffset;
     PRUint32 messageSize;
     origHdr->GetMessageOffset(&messageOffset);
     origHdr->GetOfflineMessageSize(&messageSize);
 
-    seekable->Tell(&curStorePos);
+    randomStore->Tell(&curStorePos);
     destHdr->SetMessageOffset(curStorePos);
     nsCOMPtr <nsIInputStream> offlineStoreInputStream;
     rv = srcFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
     if (NS_SUCCEEDED(rv) && offlineStoreInputStream)
     {
-      nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(offlineStoreInputStream);
+      nsCOMPtr<nsIRandomAccessStore> seekStream = do_QueryInterface(offlineStoreInputStream);
       NS_ASSERTION(seekStream, "non seekable stream - can't read from offline msg");
       if (seekStream)
       {
-        rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, messageOffset);
+        rv = seekStream->Seek(PR_SEEK_SET, messageOffset);
         if (NS_SUCCEEDED(rv))
         {
           // now, copy the dest folder offline store msg to the temp file
@@ -5661,9 +5661,9 @@ nsresult nsImapMailFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputS
           rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
           supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
 
-          nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(supports);
-          if (seekable)
-            seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
+          nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(supports);
+          if (randomStore)
+            randomStore->Seek(PR_SEEK_END, 0);
         }
         return rv;
       }

@@ -82,7 +82,6 @@
 #include "nsIInputStream.h"
 #include "nsICopyMsgStreamListener.h"
 #include "nsIFileStream.h"
-#include "nsISeekableStream.h"
 #include "nsIMsgParseMailMsgState.h"
 #include "nsMsgLineBuffer.h"
 #include "nsMsgLocalCID.h"
@@ -2142,10 +2141,10 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
 
       if (NS_SUCCEEDED(rv) && offlineStore)
       {
-        PRUint32 curOfflineStorePos = 0;
-        nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(offlineStore);
-        if (seekable)
-          seekable->Tell(&curOfflineStorePos);
+        PRInt32 curOfflineStorePos = 0;
+        nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(offlineStore);
+        if (randomStore)
+          randomStore->Tell(&curOfflineStorePos);
         else
         {
           NS_ASSERTION(PR_FALSE, "needs to be a random store!");

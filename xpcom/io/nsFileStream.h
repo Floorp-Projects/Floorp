@@ -107,7 +107,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIFileStream.h"
-#include "nsISeekableStream.h"
 
 // Defined elsewhere
 class nsFileSpec;
@@ -184,6 +183,7 @@ class NS_COM nsInputStream
 public:
                                       nsInputStream(nsIInputStream* inStream)
                                       :   mInputStream(do_QueryInterface(inStream))
+                                      ,   mEOF(PR_FALSE)
                                       {}
     virtual                           ~nsInputStream();
  
@@ -191,7 +191,7 @@ public:
                                       {
                                           return mInputStream;
                                       }
-    PRBool                            eof() { return at_eof(); }
+    PRBool                            eof() const { return get_at_eof(); }
     char                              get();
     nsresult                          close()
                                       {
@@ -217,9 +217,14 @@ protected:
 
    // These certainly need to be overridden, they give the best shot we can at detecting
    // eof in a simple nsIInputStream.
-   virtual void                       set_eof() { }
-   virtual PRBool                     at_eof() { return PR_FALSE; }
-
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                         mEOF = atEnd;
+                                      }
+   virtual PRBool                     get_at_eof() const
+                                      {
+                                          return mEOF;
+                                      }
 private:
 
     nsInputStream&                    operator >> (char* buf); // TOO DANGEROUS. DON'T DEFINE.
@@ -231,6 +236,7 @@ private:
 // DATA
 protected:
     nsCOMPtr<nsIInputStream>          mInputStream;
+    PRBool                            mEOF;
 }; // class nsInputStream
 
 typedef nsInputStream nsBasicInStream; // historic support for this name
@@ -376,7 +382,7 @@ public:
                                       nsRandomAccessStoreClient() // for delayed opening
                                       {
                                       }
-                                      nsRandomAccessStoreClient(const nsCOMPtr<nsISeekableStream>& inStore)
+                                      nsRandomAccessStoreClient(const nsCOMPtr<nsIRandomAccessStore>& inStore)
                                       :   mStore(do_QueryInterface(inStore))
                                       {
                                       }
@@ -389,12 +395,13 @@ public:
 
     void                              seek(PRSeekWhence whence, PRInt32 offset)
                                       {
+                                          set_at_eof(PR_FALSE);
                                           if (mStore)
                                               mResult = mStore->Seek(whence, offset);
                                       }
-    PRUint32                          tell()
+    PRIntn                            tell()
                                       {
-                                          PRUint32 result = 0;
+                                          PRIntn result = -1;
                                           if (mStore)
                                               mResult = mStore->Tell(&result);
                                           return result;
@@ -402,10 +409,18 @@ public:
 
 protected:
 
-   virtual void                       set_eof()
+   virtual PRBool                     get_at_eof() const
+                                      {
+                                          PRBool result = PR_TRUE;
+                                          if (mStore)
+                                              mStore->GetAtEOF(&result);
+                                          return result;
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
                                       {
                                           if (mStore)
-                                              mStore->SetEOF();
+                                              mStore->SetAtEOF(atEnd);
                                       }
 
 private:
@@ -416,7 +431,7 @@ private:
 
 // DATA
 protected:
-    nsCOMPtr<nsISeekableStream>    mStore;
+    nsCOMPtr<nsIRandomAccessStore>    mStore;
 }; // class nsRandomAccessStoreClient
 
 //========================================================================================
@@ -450,9 +465,14 @@ protected:
                                       {
                                       }
 
-   virtual void                       set_eof()
+   virtual PRBool                     get_at_eof() const
                                       {
-                                          nsRandomAccessStoreClient::set_eof();
+                                          return nsRandomAccessStoreClient::get_at_eof();
+                                      }
+
+   virtual void                       set_at_eof(PRBool atEnd)
+                                      {
+                                          nsRandomAccessStoreClient::set_at_eof(atEnd);
                                       }
 
 private:

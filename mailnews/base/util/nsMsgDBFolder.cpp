@@ -50,7 +50,6 @@
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 #include "nsLocalFolderSummarySpec.h"
-#include "nsISeekableStream.h"
 #include "nsIFileStream.h"
 #include "nsIChannel.h"
 #include "nsITransport.h"
@@ -590,9 +589,9 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outpu
     rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
     supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
 
-    nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(supports);
-    if (seekable)
-      seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
+    nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(supports);
+    if (randomStore)
+      randomStore->Seek(PR_SEEK_END, 0);
   }
   return rv;
 }
@@ -1302,23 +1301,23 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
   result += ct;
   result += MSG_LINEBREAK;
   
-  nsCOMPtr <nsISeekableStream> seekable;
-  PRUint32 curStorePos;
+  nsCOMPtr <nsIRandomAccessStore> randomStore;
+  PRInt32 curStorePos;
 
   if (m_offlineHeader)
-    seekable = do_QueryInterface(m_tempMessageStream);
+    randomStore = do_QueryInterface(m_tempMessageStream);
 
-  if (seekable)
+  if (randomStore)
   {
-    seekable->Tell(&curStorePos);
+    randomStore->Tell(&curStorePos);
     m_offlineHeader->SetMessageOffset(curStorePos);
   }
   m_tempMessageStream->Write(result.get(), result.Length(),
                              &writeCount);
-  if (seekable)
+  if (randomStore)
   {
     m_tempMessageStream->Flush();
-    seekable->Tell(&curStorePos);
+    randomStore->Tell(&curStorePos);
     m_offlineHeader->SetStatusOffset(curStorePos);
   }
 
@@ -1343,21 +1342,21 @@ nsresult nsMsgDBFolder::StartNewOfflineMessage()
 
 nsresult nsMsgDBFolder::EndNewOfflineMessage()
 {
-  nsCOMPtr <nsISeekableStream> seekable;
-  PRUint32 curStorePos;
+  nsCOMPtr <nsIRandomAccessStore> randomStore;
+  PRInt32 curStorePos;
   PRUint32 messageOffset;
   nsMsgKey messageKey;
 
   m_offlineHeader->GetMessageKey(&messageKey);
   if (m_tempMessageStream)
-    seekable = do_QueryInterface(m_tempMessageStream);
+    randomStore = do_QueryInterface(m_tempMessageStream);
 
   mDatabase->MarkOffline(messageKey, PR_TRUE, nsnull);
-  if (seekable)
+  if (randomStore)
   {
     m_tempMessageStream->Flush();
 
-    seekable->Tell(&curStorePos);
+    randomStore->Tell(&curStorePos);
     m_offlineHeader->GetMessageOffset(&messageOffset);
     m_offlineHeader->SetOfflineMessageSize(curStorePos - messageOffset);
     m_offlineHeader->SetLineCount(m_numOfflineMsgLines);

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIFileStream.h"
-#include "nsISeekableStream.h"
 #include "nsFileSpec.h"
 #include "nsCOMPtr.h"
 
@@ -58,7 +57,7 @@
 
 //========================================================================================
 class FileImpl
-    : public nsISeekableStream
+    : public nsIRandomAccessStore
     , public nsIFileSpecOutputStream
     , public nsIFileSpecInputStream
     , public nsIOpenFile
@@ -75,9 +74,9 @@ class FileImpl
         // nsIOpenFile interface
         NS_IMETHOD                      Open(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode);
         NS_IMETHOD                      Close();
+        NS_IMETHOD                      Seek(PRSeekWhence whence, PRInt32 offset);
         NS_IMETHOD                      GetIsOpen(PRBool* outOpen);
-
-        NS_DECL_NSISEEKABLESTREAM
+        NS_IMETHOD                      Tell(PRIntn* outWhere);
 
         // nsIInputStream interface
         NS_IMETHOD                      Available(PRUint32 *aLength);
@@ -95,6 +94,8 @@ class FileImpl
         NS_IMETHOD                      SetNonBlocking(PRBool aNonBlocking);
         NS_IMETHOD                      GetObserver(nsIOutputStreamObserver * *aObserver);
         NS_IMETHOD                      SetObserver(nsIOutputStreamObserver * aObserver);
+        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
+        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
 
     protected:
     
@@ -123,7 +124,7 @@ NS_IMPL_ADDREF(FileImpl)
 
 NS_IMPL_QUERY_HEAD(FileImpl)
   NS_IMPL_QUERY_BODY(nsIOpenFile)
-  NS_IMPL_QUERY_BODY(nsISeekableStream)
+  NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
   NS_IMPL_QUERY_BODY(nsIOutputStream)
   NS_IMPL_QUERY_BODY(nsIInputStream)
   NS_IMPL_QUERY_BODY(nsIFileSpecInputStream)
@@ -277,7 +278,7 @@ NS_IMETHODIMP FileImpl::Open(
     err = FSpOpenDF(&spec, perm, &refnum);
 
     if (err == noErr && (nsprMode & PR_TRUNCATE))
-        err = ::SetEOF(refnum, 0);
+        err = SetEOF(refnum, 0);
     if (err == noErr && (nsprMode & PR_APPEND))
         err = SetFPos(refnum, fsFromLEOF, 0);
     if (err != noErr)
@@ -320,7 +321,7 @@ NS_IMETHODIMP FileImpl::GetIsOpen(PRBool* outOpen)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt32 offset)
+NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
 //----------------------------------------------------------------------------------------
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
@@ -529,7 +530,7 @@ FileImpl::SetObserver(nsIOutputStreamObserver * aObserver)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP FileImpl::Tell(PRUint32* outWhere)
+NS_IMETHODIMP FileImpl::Tell(PRIntn* outWhere)
 //----------------------------------------------------------------------------------------
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
@@ -603,11 +604,20 @@ NS_IMETHODIMP FileImpl::Flush()
 
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP FileImpl::SetEOF()
+NS_IMETHODIMP FileImpl::GetAtEOF(PRBool* outAtEOF)
 //----------------------------------------------------------------------------------------
 {
-    NS_NOTYETIMPLEMENTED("FileImpl::SetEOF");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *outAtEOF = mEOF;
+  return NS_OK;
+}
+
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::SetAtEOF(PRBool inAtEOF)
+//----------------------------------------------------------------------------------------
+{
+    mEOF = inAtEOF;
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
