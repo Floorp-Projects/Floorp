@@ -516,7 +516,7 @@ rdf_ContainerAddElement(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = rdf_ContainerGetNextValue(ds, container, &nextVal)))
         goto done;
 
-    if (rv = rdf_Assert(ds, container, nextVal, element))
+    if (NS_FAILED(rv = rdf_Assert(ds, container, nextVal, element)))
         goto done;
 
 done:
