@@ -78,7 +78,8 @@ public:
   static nsresult SetInt(void* aTransform, nsIPrefBranch* aBranch);
 
 protected:
-  nsresult CreateTemplateProfile(const PRUnichar* aSuggestedName);
+  void     GetTargetProfile(const PRUnichar* aSuggestedName, PRBool aReplace);
+  void     CreateTemplateProfile(const PRUnichar* aSuggestedName);
   void     GetUniqueProfileName(nsIFile* aProfilesDir, const PRUnichar* aSuggestedName, PRUnichar** aUniqueName);
 
   nsresult CopyFile(const nsAString& aSourceFileName, const nsAString& aTargetFileName);

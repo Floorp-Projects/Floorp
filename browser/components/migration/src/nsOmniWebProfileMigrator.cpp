@@ -77,6 +77,21 @@ nsOmniWebProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
 }
 
 NS_IMETHODIMP
+nsOmniWebProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  *aResult = 0; // XXXben implement me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOmniWebProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  *aResult = PR_FALSE; // XXXben implement me
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsOmniWebProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
   *aResult = PR_FALSE;

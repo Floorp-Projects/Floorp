@@ -77,6 +77,21 @@ nsICabProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar
 }
 
 NS_IMETHODIMP
+nsICabProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  *aResult = 0; // XXXben implement me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsICabProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  *aResult = PR_FALSE; // XXXben implement me
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsICabProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
   *aResult = PR_FALSE;
