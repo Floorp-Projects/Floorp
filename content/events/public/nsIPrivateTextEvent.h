@@ -35,7 +35,7 @@ public:
 
 	NS_IMETHOD GetText(nsString& aText) = 0;
 	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange) = 0;
-	NS_IMETHOD GetEventReply(nsTextEventReply** aReply) = 0;
+	NS_IMETHOD GetEventReply(struct nsTextEventReply** aReply) = 0;
 };
 
 #endif // nsIPrivateTextEvent_h__
