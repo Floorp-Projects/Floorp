@@ -294,14 +294,38 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 	    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
 	  }
 	  else 
+    {
+      nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+      if (NS_SUCCEEDED(rv) && aStreamListener)
+      {
+        nsCOMPtr<nsIChannel> aChannel;
+        nsCOMPtr<nsILoadGroup> aLoadGroup;
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(url, &rv);
+        if (NS_SUCCEEDED(rv) && mailnewsUrl)
+        {
+          if (aMsgWindow)
+            mailnewsUrl->SetMsgWindow(aMsgWindow);
+          mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+        }
+        rv = NewChannel(url, getter_AddRefs(aChannel));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = aChannel->SetLoadGroup(aLoadGroup);
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
+        //  now try to open the channel passing in our display consumer as the listener 
+        rv = aChannel->AsyncOpen(aStreamListener, aCtxt);
+      }
+      else
 		rv = RunNewsUrl(url, aMsgWindow, aDisplayConsumer);
 	  }
+  }
 
   if (aURL) {
 	  *aURL = url;
 	  NS_IF_ADDREF(*aURL);
   }
-
   return rv;
 }
 
