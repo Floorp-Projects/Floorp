@@ -126,7 +126,7 @@
                accesskey="&animLoopAsSpecified.accesskey;"/>
         <radio group="imageLooping" value="once" label="&animLoopOnce.label;"
                accesskey="&animLoopOnce.accesskey;"/>
-        <radio group="imageLooping" value="never" label="&animLoopNever.label;"
+        <radio group="imageLooping" value="none" label="&animLoopNever.label;"
                accesskey="&animLoopNever.accesskey;"/>
     </radiogroup>
   </titledbox>
