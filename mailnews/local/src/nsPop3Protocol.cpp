@@ -28,6 +28,7 @@
 #include "nsString2.h"
 
 #include "nsINetService.h"
+#include "nsIMsgIncomingServer.h"
 
 #if 0
 #include "nsINetSupportDialogService.h"
@@ -106,13 +107,14 @@ net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
 	return HT_ENUMERATE_NEXT;		/* XP_Maphash will continue traversing the hash */
 }
 
+#if 0
 static int
 uidl_cmp (const void *obj1, const void *obj2)
 {
   PR_ASSERT (obj1 && obj2);
   return PL_strcmp ((char *) obj1, (char *) obj2);
 }
-
+#endif
 
 static void
 put_hash(Pop3UidlHost* host, PLHashTable* table, const char* key, char value)
@@ -582,10 +584,13 @@ nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
 
 
     m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
-    popServer->GetRootFolderPath(&mailDirectory);
+
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(popServer);
+    if (server)
+        server->GetLocalPath(&mailDirectory);
 
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
-    PR_FREEIF(mailDirectory);
+    PL_strfree(mailDirectory);
 
 	m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
 
@@ -729,7 +734,7 @@ PRInt32
 nsPop3Protocol::SendCommand(const char * command)
 {
     PRUint32 write_count = 0;
-    nsresult rv = 0;
+    nsresult rv = NS_OK;
 
     PR_ASSERT(command && m_outputStream && m_outputConsumer);
 
@@ -1991,7 +1996,6 @@ PRInt32
 nsPop3Protocol::RetrResponse(nsIInputStream* inputStream, 
                              PRUint32 length)
 {
-    char *buffer;
     PRUint32 buffer_size;
     PRInt32 flags = 0;
     char *uidl = NULL;
@@ -2367,15 +2371,28 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
         m_pop3ConData->uidlinfo->hash = m_pop3ConData->newuidl;
         m_pop3ConData->newuidl = NULL;
     }
+    
     if (!m_pop3ConData->only_check_for_new_mail) {
+        nsresult rv;
         char* mailDirectory = 0;
-        nsIPop3IncomingServer *popServer = nsnull;
-        m_nsIPop3Sink->GetPopServer(&popServer);
-        popServer->GetRootFolderPath(&mailDirectory);
-        NS_IF_RELEASE(popServer);
+
+        // get the mail directory
+        nsCOMPtr<nsIPop3IncomingServer> popServer;
+        rv = m_nsIPop3Sink->GetPopServer(getter_AddRefs(popServer));
+        if (NS_FAILED(rv)) return -1;
         
-        net_pop3_write_state(m_pop3ConData->uidlinfo, mailDirectory);
-        PR_Free(mailDirectory);
+        nsCOMPtr<nsIMsgIncomingServer> server =
+            do_QueryInterface(popServer, &rv);
+        if (NS_FAILED(rv)) return -1;
+                
+        rv = server->GetLocalPath(&mailDirectory);
+        if (NS_FAILED(rv)) return -1;
+
+        // write the state in the mail directory
+        net_pop3_write_state(m_pop3ConData->uidlinfo,
+                             mailDirectory);
+        PL_strfree(mailDirectory);
+        
     }
     return 0;
 }
