@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   L. David Baron <dbaron@fas.harvard.edu>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,65 +42,21 @@
 
  */
 
-#include "nsEmptyEnumerator.h"
+#include "nsIEnumerator.h"
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(EmptyEnumeratorImpl)
-
-EmptyEnumeratorImpl::EmptyEnumeratorImpl(void)
+class EmptyEnumeratorImpl : public nsISimpleEnumerator
 {
-    MOZ_COUNT_CTOR(EmptyEnumeratorImpl);
-}
+public:
+    EmptyEnumeratorImpl(void);
+    virtual ~EmptyEnumeratorImpl(void);
 
-/* virtual */ EmptyEnumeratorImpl::~EmptyEnumeratorImpl(void)
-{
-    MOZ_COUNT_DTOR(EmptyEnumeratorImpl);
-}
+    // nsISupports interface
+    NS_DECL_ISUPPORTS_INHERITED  // not really inherited, but no mRefCnt
 
-// nsISupports interface
-NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::AddRef(void)
-{
-    return 2;
-}
+    // nsISimpleEnumerator
+    NS_DECL_NSISIMPLEENUMERATOR
 
-NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::Release(void)
-{
-    return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE1(EmptyEnumeratorImpl, nsISimpleEnumerator)
-
-
-// nsISimpleEnumerator interface
-NS_IMETHODIMP EmptyEnumeratorImpl::HasMoreElements(PRBool* aResult)
-{
-    *aResult = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP EmptyEnumeratorImpl::GetNext(nsISupports** aResult)
-{
-    return NS_ERROR_UNEXPECTED;
-}
-
-static EmptyEnumeratorImpl* gEmptyEnumerator = nsnull;
-
-extern "C" NS_COM nsresult
-NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult)
-{
-    nsresult rv = NS_OK;
-    if (!gEmptyEnumerator) {
-        gEmptyEnumerator = new EmptyEnumeratorImpl();
-        if (!gEmptyEnumerator)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    *aResult = gEmptyEnumerator;
-    return rv;
-}
-
-/* static */ void
-EmptyEnumeratorImpl::Shutdown()
-{
-    delete gEmptyEnumerator;
-}
+    static void Shutdown();
+};

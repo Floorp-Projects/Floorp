@@ -78,6 +78,7 @@
 
 #include "nsFileSpecImpl.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsEmptyEnumerator.h"
 
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
@@ -533,6 +534,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     ShutdownSpecialSystemDirectory();
     
+    EmptyEnumeratorImpl::Shutdown();
     nsMemoryImpl::Shutdown();
     nsThread::Shutdown();
     NS_PurgeAtomTable();
