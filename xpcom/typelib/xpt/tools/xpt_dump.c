@@ -119,7 +119,7 @@ XPT_DumpHeader(XPTHeader *header, const int indent)
     for (i=0; i<header->num_interfaces; i++) {
         fprintf(stderr, "%*sInterface #%d:\n", indent*2, " ", i);
 
-        if (!XPT_DumpInterfaceDirectoryEntry(header->interface_directory[i],
+        if (!XPT_DumpInterfaceDirectoryEntry(&header->interface_directory[i],
                                              indent*3))
             return PR_FALSE;
     }
@@ -182,7 +182,7 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, const int inden
             indent, " ", ide->interface_descriptor);
 
     fprintf(stderr, "%sDescriptor:\n", indent);
-    if (!XPT_DumpInterfaceDescriptor(ide->interface_descriptor, new_indent))
+    if (!XPT_DumpInterfaceDescriptor(&ide->interface_descriptor, new_indent))
         return PR_FALSE;
 
     return PR_TRUE;

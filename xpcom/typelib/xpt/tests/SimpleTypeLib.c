@@ -38,17 +38,6 @@
 #define TRY(msg, cond)		TRY_(msg, cond, 0)
 #define TRY_Q(msg, cond)	TRY_(msg, cond, 1);
 
-#define INDENT        "   "
-#define DOUBLE_INDENT "      "
-#define TRIPLE_INDENT "         "
-#define QUAD_INDENT   "            "
-#define QUINT_INDENT  "               "
-#define SEXT_INDENT   "                  "
-#define SEPT_INDENT   "                     "
-#define OCT_INDENT    "                        "
-#define NONA_INDENT   "                           "
-#define DECA_INDENT   "                              "
-
 struct nsID iid = {
     0x00112233,
     0x4455,
