@@ -197,12 +197,12 @@ public:
                                   const nsString& aValue,
                                   REFNSIID aIID);
 
-  void TriggerLink(nsIPresContext* aPresContext,
-                   nsLinkVerb aVerb,
-                   nsIURI* aBaseURL,
-                   const nsString& aURLSpec,
-                   const nsString& aTargetSpec,
-                   PRBool aClick);
+  nsresult TriggerLink(nsIPresContext* aPresContext,
+                       nsLinkVerb aVerb,
+                       nsIURI* aBaseURL,
+                       const nsString& aURLSpec,
+                       const nsString& aTargetSpec,
+                       PRBool aClick);
 
   nsresult JoinTextNodes(nsIContent* aFirst,
                          nsIContent* aSecond);

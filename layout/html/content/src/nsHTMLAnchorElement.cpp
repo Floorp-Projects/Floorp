@@ -385,8 +385,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
-            mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                               baseURL, href, target, PR_TRUE);
+            ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                                     baseURL, href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
             *aEventStatus = nsEventStatus_eConsumeDoDefault;
           }
@@ -413,8 +413,8 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
         if (target.Length() == 0) {
           GetBaseTarget(target);
         }
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                           baseURL, href, target, PR_FALSE);
+        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
+                                 baseURL, href, target, PR_FALSE);
         NS_IF_RELEASE(baseURL);
         *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
@@ -429,7 +429,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
 
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
+        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
         *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
