@@ -410,30 +410,6 @@ sub ValidateNewUser {
     return 1;
 }
 
-sub InsertNewUser {
-    my ($username, $realname) = (@_);
-
-    # Generate a new random password for the user.
-    my $password = GenerateRandomPassword();
-    my $cryptpassword = bz_crypt($password);
-
-
-    my $defaultflagstring = SqlQuote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS); 
-
-    # Insert the new user record into the database.            
-    $username = SqlQuote($username);
-    $realname = SqlQuote($realname);
-    $cryptpassword = SqlQuote($cryptpassword);
-    PushGlobalSQLState();
-    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, emailflags) 
-             VALUES ($username, $realname, $cryptpassword, $defaultflagstring)");
-    PopGlobalSQLState();
-
-    # Return the password to the calling code so it can be included 
-    # in an email sent to the user.
-    return $password;
-}
-
 sub GenerateRandomPassword {
     my $size = (shift or 10); # default to 10 chars if nothing specified
     return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));

@@ -30,6 +30,8 @@ use lib qw(.);
 
 require "CGI.pl";
 
+use Bugzilla::User qw(insert_new_user);
+
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
   $template
@@ -74,7 +76,7 @@ if (defined($login)) {
     }
     
     # Create account
-    my $password = InsertNewUser($login, $realname);
+    my $password = insert_new_user($login, $realname);
     MailPassword($login, $password);
     
     $template->process("account/created.html.tmpl", $vars)

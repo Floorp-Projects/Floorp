@@ -37,6 +37,10 @@ use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;
+use Bugzilla::Auth;
+
+use Exporter qw(import);
+@Bugzilla::User::EXPORT_OK = qw(insert_new_user);
 
 ################################################################################
 # Functions
@@ -929,6 +933,31 @@ sub get_userlist {
     return $self->{'userlist'};
 }
 
+sub insert_new_user ($$) {
+    my ($username, $realname) = (@_);
+    my $dbh = Bugzilla->dbh;
+
+    # Generate a new random password for the user.
+    my $password = &::GenerateRandomPassword();
+    my $cryptpassword = bz_crypt($password);
+
+    # XXX - These should be moved into ValidateNewUser or CheckEmailSyntax
+    #       At the least, they shouldn't be here. They're safe for now, though.
+    trick_taint($username);
+    trick_taint($realname);
+
+    # Insert the new user record into the database.
+    $dbh->do("INSERT INTO profiles 
+                          (login_name, realname, cryptpassword, emailflags) 
+                   VALUES (?, ?, ?, ?)",
+             undef, 
+             ($username, $realname, $cryptpassword, DEFAULT_EMAIL_SETTINGS));
+
+    # Return the password to the calling code so it can be included
+    # in an email sent to the user.
+    return $password;
+}
+
 1;
 
 __END__
@@ -942,6 +971,9 @@ Bugzilla::User - Object for a Bugzilla user
   use Bugzilla::User;
 
   my $user = new Bugzilla::User($id);
+
+  # Class Functions
+  $random_password = insert_new_user($username, $realname);
 
 =head1 DESCRIPTION
 
@@ -1132,6 +1164,24 @@ will be set to the specified value.
 
 C<get_flag> is called with a single key name, which returns the associated
 value.
+
+=back
+
+=head1 CLASS FUNCTIONS
+
+=over4
+
+These are functions that are not called on a User object, but instead are
+called "statically," just like a normal procedural function.
+
+=item C<insert_new_user>
+
+Creates a new user in the database with a random password.
+
+Params: $username (scalar, string) - The login name for the new user.
+        $realname (scalar, string) - The full name for the new user.
+
+Returns: The password that we randomly generated for this user, in plain text.
 
 =back
 

@@ -33,6 +33,7 @@ use strict;
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
+use Bugzilla::User qw(insert_new_user);
 
 use Net::LDAP;
 
@@ -149,7 +150,7 @@ sub authenticate {
         if($userRealName eq "") {
             $userRealName = $user_entry->get_value("cn");
         }
-        &::InsertNewUser($username, $userRealName);
+        insert_new_user($username, $userRealName);
 
         ($userid, $disabledtext) = $dbh->selectrow_array($sth,
                                                          undef,
