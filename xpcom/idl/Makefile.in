@@ -32,6 +32,7 @@ IDLSRCS = \
 	nsICollection.idl \
 	nsIEnumerator.idl \
 	nsID.idl	\
+	nsrootidl.idl	\
 	$(NULL)
 
 # for testing purposes
