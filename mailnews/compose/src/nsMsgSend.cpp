@@ -2523,14 +2523,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
   }
   else {
     body_is_us_ascii = mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length);
-    if (!body_is_us_ascii && !PL_strcasecmp(m_fields->GetCharacterSet(), "us-ascii")) {
-      // got 8 bit, re-label to Latin1
-      m_fields->SetCharacterSet("iso-8859-1", NULL);
-    }
-  }
-  if (body_is_us_ascii && PL_strcasecmp(m_fields->GetCharacterSet(), "us-ascii")) {
-    // 7 bit only, re-label to us-ascii
-    m_fields->SetCharacterSet("us-ascii", NULL);
   }
 
 	if (INTL_stateful_charset(m_fields->GetCharacterSet()) ||
