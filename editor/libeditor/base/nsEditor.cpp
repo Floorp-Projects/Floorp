@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "nsVector.h"
 #include "nsVoidArray.h"
 
 #include "nsIDOMDocument.h"
@@ -64,11 +63,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsLayoutCID.h"
-
-#ifdef ENABLE_JS_EDITOR_LOG
-#include "nsJSEditorLog.h"
-#include "nsJSTxnLog.h"
-#endif // ENABLE_JS_EDITOR_LOG
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -156,10 +150,6 @@ nsEditor::nsEditor()
 ,  mDoc(nsnull)
 ,  mPrefs(nsnull)
 ,  mDocCharset("ISO-8859-1")
-#ifdef ENABLE_JS_EDITOR_LOG
-,  mJSEditorLog(nsnull)
-,  mJSTxnLog(nsnull)
-#endif // ENABLE_JS_EDITOR_LOG
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -187,12 +177,6 @@ nsEditor::~nsEditor()
     delete mActionListeners;
     mActionListeners = 0;
   }
-
-#ifdef ENABLE_JS_EDITOR_LOG
-
-  StopLogging();
-
-#endif // ENABLE_JS_EDITOR_LOG
 
   // Release service pointers
   if (mPrefs)
@@ -228,11 +212,6 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(nsIEditorIMESupport::GetIID())) {
     *aInstancePtr = (void*)(nsIEditorIMESupport*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsIEditorLogging::GetIID())) {
-    *aInstancePtr = (void*)(nsIEditorLogging*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -444,13 +423,6 @@ NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
 
 NS_IMETHODIMP nsEditor::Save()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Save();
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult rv = SaveDocument(PR_FALSE, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
@@ -461,13 +433,6 @@ NS_IMETHODIMP nsEditor::Save()
 
 NS_IMETHODIMP nsEditor::SaveAs(PRBool aSavingCopy)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SaveAs(aSavingCopy);
-#endif // ENABLE_JS_EDITOR_LOG
-
   return SaveDocument(PR_TRUE, aSavingCopy);
 }
 
@@ -536,13 +501,6 @@ nsEditor::EnableUndo(PRBool aEnable)
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Undo(aCount);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
   nsresult result = NS_OK;
 
@@ -588,13 +546,6 @@ NS_IMETHODIMP nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Redo(aCount);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) { printf("Editor::Redo ----------\n"); }
   nsresult result = NS_OK;
 
@@ -640,13 +591,6 @@ NS_IMETHODIMP nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 NS_IMETHODIMP 
 nsEditor::BeginTransaction()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->BeginTransaction();
-#endif // ENABLE_JS_EDITOR_LOG
-
   BeginUpdateViewBatch();
 
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
@@ -660,13 +604,6 @@ nsEditor::BeginTransaction()
 NS_IMETHODIMP 
 nsEditor::EndTransaction()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->EndTransaction();
-#endif // ENABLE_JS_EDITOR_LOG
-
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->EndBatch();
@@ -680,13 +617,6 @@ nsEditor::EndTransaction()
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SelectAll();
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -700,13 +630,6 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::BeginningOfDocument()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->BeginningOfDocument();
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -740,13 +663,6 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
 
 NS_IMETHODIMP nsEditor::EndOfDocument()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->EndOfDocument();
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -1322,67 +1238,6 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
 	return result;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark --- nsIEditorLogging ---
-#pragma mark -
-#endif
-
-
-NS_IMETHODIMP
-nsEditor::StartLogging(nsIFileSpec *aLogFile)
-{
-#ifdef ENABLE_JS_EDITOR_LOG
-
-  mJSEditorLog = new nsJSEditorLog(this, aLogFile);
-
-  if (!mJSEditorLog)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (mTxnMgr)
-  {
-    mJSTxnLog = new nsJSTxnLog(mJSEditorLog);
-
-    if (mJSTxnLog)
-    {
-      NS_ADDREF(mJSTxnLog);
-      mTxnMgr->AddListener(mJSTxnLog);
-    }
-    else
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-#endif // ENABLE_JS_EDITOR_LOG
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEditor::StopLogging()
-{
-#ifdef ENABLE_JS_EDITOR_LOG
-
-  if (mTxnMgr && mJSTxnLog)
-    mTxnMgr->RemoveListener(mJSTxnLog);
-
-  if (mJSTxnLog)
-  {
-    NS_RELEASE(mJSTxnLog);
-    mJSTxnLog = 0;
-  }
-
-  if (mJSEditorLog)
-  {
-    delete mJSEditorLog;
-    mJSEditorLog = 0;
-  }
-
-#endif // ENABLE_JS_EDITOR_LOG
-
-  return NS_OK;
-}
-
-
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1541,14 +1396,6 @@ nsString& nsEditor::GetTextNodeTag()
 
 NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertText(aStringToInsert);
-
-#endif // ENABLE_JS_EDITOR_LOG
-
   EditAggregateTxn *aggTxn = nsnull;
   // Create the "delete current selection" txn
   nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, &aggTxn);
@@ -3844,13 +3691,6 @@ nsresult nsEditor::EndUpdateViewBatch()
 NS_IMETHODIMP 
 nsEditor::DeleteSelectionImpl(ESelectionCollapseDirection aAction)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->DeleteSelection(aAction);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult result;
 
   EditAggregateTxn *txn;

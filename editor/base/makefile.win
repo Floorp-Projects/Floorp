@@ -101,18 +101,21 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = ender
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-!if defined(ENABLE_JS_EDITOR_LOG)
-CPPSRCS +=                   \
-      nsJSEditorLog.cpp      \
-      nsJSTxnLog.cpp         \
-	$(NULL)
+# Enable Editor API Logging!
+ENABLE_EDITOR_API_LOG=1
 
-CPP_OBJS +=                  \
-  .\$(OBJDIR)\nsJSEditorLog.obj       \
-  .\$(OBJDIR)\nsJSTxnLog.obj          \
-	$(NULL)
+!if defined(ENABLE_EDITOR_API_LOG)
+CPPSRCS = $(CPPSRCS)          \
+          nsHTMLEditorLog.cpp \
+          nsEditorTxnLog.cpp  \
+	  $(NULL)
 
-DEFINES = -DENABLE_JS_EDITOR_LOG $(DEFINES)
+CPP_OBJS = $(CPP_OBJS)                     \
+           .\$(OBJDIR)\nsHTMLEditorLog.obj \
+           .\$(OBJDIR)\nsEditorTxnLog.obj  \
+	   $(NULL)
+
+DEFINES = -DENABLE_EDITOR_API_LOG $(DEFINES)
 
 !endif
 

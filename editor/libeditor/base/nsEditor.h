@@ -24,7 +24,6 @@
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
-#include "nsIEditorLogging.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
@@ -69,11 +68,6 @@ class IMETextTxn;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 
-#ifdef ENABLE_JS_EDITOR_LOG
-class nsJSEditorLog;
-class nsJSTxnLog;
-#endif // ENABLE_JS_EDITOR_LOG
-
 //This is the monitor for the editor.
 PRMonitor *GetEditorMonitor();
 
@@ -84,8 +78,7 @@ PRMonitor *GetEditorMonitor();
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
 class nsEditor : public nsIEditor,
-                 public nsIEditorIMESupport,
-                 public nsIEditorLogging
+                 public nsIEditorIMESupport
 {
 public:
 
@@ -207,11 +200,6 @@ public:
   NS_IMETHOD BeginComposition(void);
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
   NS_IMETHOD EndComposition(void);
-
-  /* ------------ nsIEditorLogging methods -------------- */
-
-  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
-  NS_IMETHOD StopLogging();
 
 public:
 
@@ -623,12 +611,6 @@ protected:
 
   //Document 'SaveAs' charset
   nsString						mDocCharset;
-
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsJSEditorLog *mJSEditorLog;
-  nsJSTxnLog *mJSTxnLog;
-#endif // ENABLE_JS_EDITOR_LOG
-
   static PRInt32 gInstanceCount;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);

@@ -85,10 +85,6 @@
 
 const unsigned char nbsp = 160;
 
-#ifdef ENABLE_JS_EDITOR_LOG
-#include "nsJSEditorLog.h"
-#endif // ENABLE_JS_EDITOR_LOG
-
 // HACK - CID for NavDTD until we can get at dtd via the document
 // {a6cf9107-15b3-11d2-932e-00805f8add32}
 #define NS_CNAVDTD_CID \
@@ -408,13 +404,6 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
                                             const nsString *aAttribute,
                                             const nsString *aValue)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SetTextProperty(aProperty, aAttribute, aValue);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -667,14 +656,6 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 
 NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
-
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->RemoveTextProperty(aProperty, aAttribute);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!aProperty) { return NS_ERROR_NULL_POINTER; }
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -783,13 +764,6 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
 
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirection aAction)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->DeleteSelection(aAction);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -818,13 +792,6 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ESelectionCollapseDirecti
 
 NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertText(aStringToInsert);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
@@ -857,13 +824,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertHTML(aInputString);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoEditBatch beginBatching(this);
 
   nsresult res;
@@ -964,13 +924,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertBreak();
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1042,13 +995,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 NS_IMETHODIMP
 nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertElement(aElement, aDeleteSelection);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   
   if (!aElement)
@@ -1211,13 +1157,6 @@ nsHTMLEditor::DeleteSelectionAndCreateNode(const nsString& aTag,
 NS_IMETHODIMP
 nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SelectElement(aElement);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Must be sure that element is contained in the document body
@@ -1250,13 +1189,6 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SetCaretAfterElement(aElement);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res = NS_ERROR_NULL_POINTER;
 
   // Be sure the element is contained in the document body
@@ -1306,13 +1238,6 @@ NS_IMETHODIMP nsHTMLEditor::GetParagraphFormat(nsString& aParagraphFormat)
 
 NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SetParagraphFormat(aParagraphFormat);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   //Kinda sad to waste memory just to force lower case
   nsAutoString tag = aParagraphFormat;
@@ -1403,13 +1328,6 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
 NS_IMETHODIMP 
 nsHTMLEditor::AddBlockParent(nsString& aParentTag)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->AddBlockParent(aParentTag);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) 
   { 
     char *tag = aParentTag.ToNewCString();
@@ -1454,13 +1372,6 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
 NS_IMETHODIMP 
 nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->ReplaceBlockParent(aParentTag);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) 
   { 
     char *tag = aParentTag.ToNewCString();
@@ -1501,13 +1412,6 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParagraphStyle()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->RemoveParagraphStyle();
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) { 
     printf("---------- nsHTMLEditor::RemoveParagraphStyle ----------\n"); 
   }
@@ -1539,13 +1443,6 @@ nsHTMLEditor::RemoveParagraphStyle()
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->RemoveParent(aParentTag);
-#endif // ENABLE_JS_EDITOR_LOG
-
   if (gNoisy) { 
     printf("---------- nsHTMLEditor::RemoveParent ----------\n"); 
   }
@@ -1577,13 +1474,6 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 NS_IMETHODIMP
 nsHTMLEditor::InsertList(const nsString& aListType)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertList(aListType);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1668,13 +1558,6 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 NS_IMETHODIMP
 nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertBasicBlock(aBlockType);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1753,13 +1636,6 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
 NS_IMETHODIMP
 nsHTMLEditor::Indent(const nsString& aIndent)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Indent(aIndent);
-#endif // ENABLE_JS_EDITOR_LOG
-  
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -1839,13 +1715,6 @@ nsHTMLEditor::Indent(const nsString& aIndent)
 NS_IMETHODIMP
 nsHTMLEditor::Align(const nsString& aAlignType)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Align(aAlignType);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> node;
   PRBool cancel= PR_FALSE;
@@ -2312,13 +2181,6 @@ nsHTMLEditor::SaveHLineSettings(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertLinkAroundSelection(aAnchorElement);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res=NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMSelection> selection;
 
@@ -2375,15 +2237,6 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
   // For initial testing, just set the background on the BODY tag (the document's background)
 
-// Do this only if setting a table or cell background
-// It will be called in nsTextEditor::SetBackgroundColor for the page background
-#if 0 //def ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SetBackgroundColor(aColor);
-#endif // ENABLE_JS_EDITOR_LOG
-  
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
   // For initial testing, just set the background on the BODY tag (the document's background)
 
@@ -2401,14 +2254,6 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)
 {
-
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->SetBodyAttribute(aAttribute, aValue);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsresult res;
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
 
@@ -2564,13 +2409,6 @@ nsHTMLEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
 
 NS_IMETHODIMP nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->ApplyStyleSheet(aURL);
-#endif // ENABLE_JS_EDITOR_LOG
-
   // XXX: Note that this is not an undo-able action yet!
 
   nsresult rv   = NS_OK;
@@ -2740,26 +2578,12 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 //
 NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->PasteAsQuotation();
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoString citation("");
   return PasteAsCitedQuotation(citation);
 }
 
 NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->PasteAsCitedQuotation(aCitation);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("blockquote");
@@ -2803,13 +2627,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 //
 NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->PasteAsQuotation();
-#endif // ENABLE_JS_EDITOR_LOG
-
   // Get Clipboard Service
   nsIClipboard* clipboard;
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
@@ -2850,13 +2667,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
 
 NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertAsQuotation(aQuotedText);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoString citation ("");
   return InsertAsCitedQuotation(aQuotedText, citation);
 }
@@ -2864,13 +2674,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText)
 // text insert.
 NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertAsQuotation(aQuotedText);
-#endif // ENABLE_JS_EDITOR_LOG
-
   // Now we have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
   nsCOMPtr<nsIPref> prefs;
@@ -2908,13 +2711,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
 NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
                                                    const nsString& aCitation)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->InsertAsCitedQuotation(aQuotedText, aCitation);
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("blockquote");
@@ -3020,13 +2816,6 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Cut();
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsCOMPtr<nsIDOMSelection> selection;
   nsresult res = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
@@ -3044,13 +2833,6 @@ NS_IMETHODIMP nsHTMLEditor::Cut()
 
 NS_IMETHODIMP nsHTMLEditor::Copy()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Copy();
-#endif // ENABLE_JS_EDITOR_LOG
-
   //printf("nsEditor::Copy\n");
 
   return mPresShell->DoCopy();
@@ -3058,13 +2840,6 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
-#ifdef ENABLE_JS_EDITOR_LOG
-  nsAutoJSEditorLogLock logLock(mJSEditorLog);
-
-  if (mJSEditorLog)
-    mJSEditorLog->Paste();
-#endif // ENABLE_JS_EDITOR_LOG
-
   nsString stuffToPaste;
 
   // Get Clipboard Service

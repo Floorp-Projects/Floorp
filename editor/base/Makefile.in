@@ -62,19 +62,22 @@ CPPSRCS =                       \
     IMECommitTxn.cpp            \
     $(NULL)
 
-ifdef ENABLE_JS_EDITOR_LOG
-DEFINES += -DENABLE_JS_EDITOR_LOG
-CPPSRCS +=                       \
-    nsJSEditorLog.cpp           \
-    nsJSTxnLog.cpp              \
+# Enable Editor API Logging!
+ENABLE_EDITOR_API_LOG = 1
+
+ifdef ENABLE_EDITOR_API_LOG
+DEFINES += -DENABLE_EDITOR_API_LOG
+CPPSRCS +=              \
+    nsHTMLEditorLog.cpp \
+    nsEditorTxnLog.cpp  \
     $(NULL)
 endif
 
 MODULE = editor
 
-EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/lib -lneckoutil_s \
-				$(NULL)
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib \
+                   -lneckoutil_s \
+                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
