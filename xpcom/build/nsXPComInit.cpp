@@ -31,8 +31,6 @@
 #include "nsSupportsArray.h"
 #include "nsUnicharBuffer.h"
 
-#include "nsByteBufferInputStream.h"
-
 #include "nsComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsGenericFactory.h"
@@ -56,7 +54,6 @@ static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
 // io
-static NS_DEFINE_CID(kByteBufferInputStreamCID, NS_BYTEBUFFERINPUTSTREAM_CID);
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 // components
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
