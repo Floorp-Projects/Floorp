@@ -103,6 +103,22 @@ namespace JavaScript
             virtual size_type copy(void* newObject, void* oldObject) = 0;
         };
         
+        template<class T>
+        class Owner : public ObjectOwner {
+        public:
+            virtual size_type scan(Collector* collector, void* object)
+            {
+                T* t = reinterpret_cast<T*>(object);
+                return t->scan(collector);
+            }
+            
+            virtual size_type copy(void* newObject, void* oldObject)
+            {
+                memcpy(newObject, oldObject, sizeof(T));
+                return sizeof(T);
+            }
+        };
+        
  /* private: */
         void* copy(void* object, size_type size = 0);
         
