@@ -83,6 +83,9 @@ interface nsIMsgFilter : nsISupports {
     // target folder.. throws an exception if the action is not move to folder
     attribute string actionTargetFolderUri;
 
+    // target label. throws an exception if the action is not label
+    attribute nsMsgLabelValue actionLabel;
+
     // marking noscript because "headers" is actually a null-seperated
     // list of headers, which is not scriptable
     [noscript] void MatchHdr(in nsIMsgDBHdr msgHdr, in nsIMsgFolder folder,

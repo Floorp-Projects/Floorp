@@ -210,9 +210,9 @@ NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
-	*aResult = m_scope;
+    *aResult = m_scope;
     NS_IF_ADDREF(*aResult);
-	return NS_OK;
+    return NS_OK;
 }
 
 
@@ -248,12 +248,20 @@ NS_IMETHODIMP
     return rv;
 }
 
+NS_IMETHODIMP nsMsgFilter::SetActionLabel(nsMsgLabelValue aLabel)
+{
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
+                   NS_ERROR_ILLEGAL_VALUE);
+    m_action.m_label = aLabel;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgFilter::GetAction(nsMsgRuleActionType *type)
 {
-    NS_ENSURE_ARG_POINTER(type);
-	*type = m_action.m_type;
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(type);
+  *type = m_action.m_type;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -274,6 +282,16 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
                    NS_ERROR_ILLEGAL_VALUE);
     if (m_action.m_folderUri)
       *aResult = ToNewCString(m_action.m_folderUri);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilter::GetActionLabel(nsMsgLabelValue *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
+                   NS_ERROR_ILLEGAL_VALUE);
+    *aResult = m_action.m_label;
     return NS_OK;
 }
 
@@ -503,88 +521,91 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *aStream)
 {
-	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.get(), aStream);
-	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
-	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description, aStream);
-	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type, aStream);
-	if (IsScript())
-		err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName, aStream);
-	else
-		err = SaveRule(aStream);
-	return err;
+  nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.get(), aStream);
+  err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
+  err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description, aStream);
+  err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type, aStream);
+  if (IsScript())
+    err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName, aStream);
+  else
+    err = SaveRule(aStream);
+  return err;
 }
 
 nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
 {
-	nsresult err = NS_OK;
-	nsCOMPtr<nsIMsgFilterList> filterList;
-    GetFilterList(getter_AddRefs(filterList));
-	nsCAutoString	actionFilingStr;
-
-	GetActionFilingStr(m_action.m_type, actionFilingStr);
-
-	err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr, aStream);
-    NS_ENSURE_SUCCESS(err, err);
-
-	switch(m_action.m_type)
-	{
-	case nsMsgFilterAction::MoveToFolder:
-		{
-		nsCAutoString imapTargetString(m_action.m_folderUri);
-		err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString, aStream);
-		}
-		break;
-	case nsMsgFilterAction::ChangePriority:
-		{
-			nsAutoString priority;
-			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
+  nsresult err = NS_OK;
+  nsCOMPtr<nsIMsgFilterList> filterList;
+  GetFilterList(getter_AddRefs(filterList));
+  nsCAutoString	actionFilingStr;
+  
+  GetActionFilingStr(m_action.m_type, actionFilingStr);
+  
+  err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr, aStream);
+  NS_ENSURE_SUCCESS(err, err);
+  
+  switch(m_action.m_type)
+  {
+  case nsMsgFilterAction::MoveToFolder:
+    {
+      nsCAutoString imapTargetString(m_action.m_folderUri);
+      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString, aStream);
+    }
+    break;
+  case nsMsgFilterAction::ChangePriority:
+    {
+      nsAutoString priority;
+      NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
       nsCAutoString cStr;
       cStr.AssignWithConversion(priority);
-			err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr, aStream);
-		}
-		break;
-	default:
-		break;
-	}
-	// and here the fun begins - file out term list...
-	PRUint32 searchIndex;
-	nsCAutoString  condition;
-    PRUint32 count;
-    m_termList->Count(&count);
-	for (searchIndex = 0; searchIndex < count && NS_SUCCEEDED(err);
-			searchIndex++)
-	{
-		nsCAutoString	stream;
-
-        nsCOMPtr<nsIMsgSearchTerm> term;
-        m_termList->QueryElementAt(searchIndex, NS_GET_IID(nsIMsgSearchTerm),
-                                   (void **)getter_AddRefs(term));
-		if (!term)
-			continue;
-		
-		if (condition.Length() > 1)
-			condition += ' ';
-
-        PRBool booleanAnd;
-        term->GetBooleanAnd(&booleanAnd);
-		if (booleanAnd)
-			condition += "AND (";
-		else
-			condition += "OR (";
-
-		nsresult searchError = term->EnStreamNew(stream);
-		if (!NS_SUCCEEDED(searchError))
-		{
-			err = searchError;
-			break;
-		}
-		
-		condition += stream;
-		condition += ')';
-	}
-	if (NS_SUCCEEDED(err))
-		err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition, aStream);
-	return err;
+      err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr, aStream);
+    }
+    break;
+  case nsMsgFilterAction::Label:
+      err = filterList->WriteIntAttr(nsIMsgFilterList::attribActionValue, m_action.m_label, aStream);
+      break;
+  default:
+    break;
+  }
+  // and here the fun begins - file out term list...
+  PRUint32 searchIndex;
+  nsCAutoString  condition;
+  PRUint32 count;
+  m_termList->Count(&count);
+  for (searchIndex = 0; searchIndex < count && NS_SUCCEEDED(err);
+  searchIndex++)
+  {
+    nsCAutoString	stream;
+    
+    nsCOMPtr<nsIMsgSearchTerm> term;
+    m_termList->QueryElementAt(searchIndex, NS_GET_IID(nsIMsgSearchTerm),
+      (void **)getter_AddRefs(term));
+    if (!term)
+      continue;
+    
+    if (condition.Length() > 1)
+      condition += ' ';
+    
+    PRBool booleanAnd;
+    term->GetBooleanAnd(&booleanAnd);
+    if (booleanAnd)
+      condition += "AND (";
+    else
+      condition += "OR (";
+    
+    nsresult searchError = term->EnStreamNew(stream);
+    if (!NS_SUCCEEDED(searchError))
+    {
+      err = searchError;
+      break;
+    }
+    
+    condition += stream;
+    condition += ')';
+  }
+  if (NS_SUCCEEDED(err))
+    err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition, aStream);
+  return err;
 }
 
 // for each action, this table encodes the filterTypes that support the action.
@@ -606,34 +627,34 @@ static struct RuleActionsTableEntry ruleActionsTable[] =
   { nsMsgFilterAction::MarkRead,        nsMsgFilterType::All,   0, /*XP_FILTER_MARK_READ */       "Mark read"},
   { nsMsgFilterAction::KillThread,      nsMsgFilterType::All,   0, /*XP_FILTER_KILL_THREAD */     "Ignore thread"},
   { nsMsgFilterAction::WatchThread,     nsMsgFilterType::All,   0, /*XP_FILTER_WATCH_THREAD */    "Watch thread"},
-  { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0, /*XP_FILTER_MARK_FLAGGED */    "Mark flagged"}
+  { nsMsgFilterAction::MarkFlagged,     nsMsgFilterType::All,   0, /*XP_FILTER_MARK_FLAGGED */    "Mark flagged"},
+  { nsMsgFilterAction::Label,           nsMsgFilterType::All,   0, /*XP_FILTER_LABEL */           "Label"}
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
 {
-	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
-
-	for (int i = 0; i < numActions; i++)
-	{
-		// ### TODO use string bundle
-		if (action == ruleActionsTable[i].action)
-			return ruleActionsTable[i].actionFilingStr; // XP_GetString(ruleActionsTable[i].xp_strIndex);
-	}
-	return "";
+  int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
+  
+  for (int i = 0; i < numActions; i++)
+  {
+    if (action == ruleActionsTable[i].action)
+      return ruleActionsTable[i].actionFilingStr; // XP_GetString(ruleActionsTable[i].xp_strIndex);
+  }
+  return "";
 }
 /*static */nsresult nsMsgFilter::GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr)
 {
-	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
-
-	for (int i = 0; i < numActions; i++)
-	{
-		if (action == ruleActionsTable[i].action)
-		{
-			actionStr = ruleActionsTable[i].actionFilingStr;
-			return NS_OK;
-		}
-	}
-	return NS_ERROR_INVALID_ARG;
+  int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
+  
+  for (int i = 0; i < numActions; i++)
+  {
+    if (action == ruleActionsTable[i].action)
+    {
+      actionStr = ruleActionsTable[i].actionFilingStr;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 

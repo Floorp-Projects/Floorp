@@ -551,6 +551,16 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
                 else
                   NS_ASSERTION(PR_FALSE, "invalid priority in filter file");
               }
+              else if (m_curFilter->m_action.m_type == nsMsgFilterAction::Label)
+              {
+                PRInt32 res;
+                PRInt32 labelInt = value.ToInteger(&res, 10);
+                if (res == 0)
+                {
+                  m_curFilter->SetAction(m_curFilter->m_action.m_type);
+                  m_curFilter->SetActionLabel((nsMsgLabelValue) labelInt);
+                }
+              }
             }
             break;
 		case nsIMsgFilterList::attribCondition:
