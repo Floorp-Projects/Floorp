@@ -20,6 +20,8 @@
 #define nsISmtpUrl_h___
 
 #include "nscore.h"
+#include "nsFileSpec.h"
+
 #include "nsIURL.h"
 
 #include "nsISupports.h"
@@ -79,8 +81,8 @@ public:
 
 	// the message can be stored in a file....allow accessors for getting and setting
 	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(const char * aFileName) = 0;
-	NS_IMETHOD GetPostMessageFile(const char ** aFileName) = 0;
+	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName) = 0;
+	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// SMTP Url instance specific getters and setters --> info the protocol needs
@@ -95,10 +97,15 @@ public:
 	// mscott -- when we have identities it would be nice to just have an identity 
 	// interface here that would encapsulte things like username, domain, password,
 	// etc...
+
+	// mscott - I found getting the user email address very cumbersome to use with an nsString -->
+	// particularly when it came to parsing the user name and extracting the domain.....so I'm going to
+	// change the get value to a const char **...
 	NS_IMETHOD GetUserEmailAddress(const char ** aUserName) = 0;
-	NS_IMETHOD SetUserEmailAddress(const char * aUserName) = 0;
-	NS_IMETHOD GetUserPassword(const char ** aUserPassword) = 0;
-	NS_IMETHOD SetUserPassword(const char * aUserPassword) = 0;
+	NS_IMETHOD SetUserEmailAddress(const nsString& aUserName) = 0;
+
+	NS_IMETHOD GetUserPassword(const nsString ** aUserPassword) = 0;
+	NS_IMETHOD SetUserPassword(const nsString& aUserPassword) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the smtp specific event sinks to bind to to your url
