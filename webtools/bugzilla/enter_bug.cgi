@@ -43,9 +43,9 @@ if (!defined $::FORM{'product'}) {
         print "a bug.</H2>\n";
         print "<table>";
         foreach my $p (sort (@prodlist)) {
-            print "<TR><TH ALIGN=\"RIGHT\" VALIGN=\"TOP\"><A HREF=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</A>:</TH>\n";
+            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
-                print "<TD VALIGN=\"TOP\">$::proddesc{$p}</TD>\n";
+                print "<td valign=top>$::proddesc{$p}</td>\n";
             }
             print "</tr>";
         }
@@ -55,7 +55,7 @@ if (!defined $::FORM{'product'}) {
     $::FORM{'product'} = $prodlist[0];
 }
 
-my $product = url_decode($::FORM{'product'});
+my $product = $::FORM{'product'};
 
 confirm_login();
 
@@ -149,7 +149,7 @@ GetVersionTable();
 
 my $assign_element = GeneratePersonInput('assigned_to', 1,
                                          formvalue('assigned_to'));
-my $cc_element = GeneratePeopleInput('cc', 45, formvalue('cc'));
+my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
 
 
 my $priority_popup = make_popup('priority', \@::legal_priority,

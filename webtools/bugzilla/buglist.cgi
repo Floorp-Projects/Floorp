@@ -24,17 +24,12 @@ use strict;
 
 require "CGI.pl";
 
-my $serverpush = 0;
+my $serverpush = 1;
 
-# Internet explorer and Lynx don't seem to understand server push.  What fun.
-# Carefully coded to cope with the fact that MSIE puts both "MSIE" and
-# "Mozilla" in its user agent string.
-
-$_ = $ENV{'HTTP_USER_AGENT'};
-if ($_ =~/Mozilla/ && $_ !~ /MSIE/) {
-    $serverpush = 1;
+if ($ENV{'HTTP_USER_AGENT'} =~ /MSIE/) {
+    # Internet explorer doesn't seem to understand server push.  What fun.
+    $serverpush = 0;
 }
-
 
 if ($serverpush) {
     print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
@@ -68,47 +63,46 @@ if (!defined $::FORM{'cmdtype'}) {
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
         $::buffer = $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
-        ProcessFormFields($::buffer);
+        ProcessFormFields $::buffer;
         last CMD;
     };
     /^editnamed$/ && do {
 	my $url = "query.cgi?" . $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
         print "Content-type: text/html
-Refresh: 0; URL=$url\n\n";
+Refresh: 0; URL=$url
 
-PutHeader("What a hack.");
-print "
+<TITLE>What a hack.</TITLE>
 Loading your query named <B>$::FORM{'namedcmd'}</B>...";
         exit;
     };
     /^forgetnamed$/ && do {
         print "Set-Cookie: QUERY_" . $::FORM{'namedcmd'} . "= ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
+Content-type: text/html
 
-PutHeader("Forget what?");
-print "
+<HTML>
+<TITLE>Forget what?</TITLE>
 OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
 <P>
-<A HREF=\"query.cgi\">Go back to the query page.</A>
-";
+<A HREF=query.cgi>Go back to the query page.</A>";
         exit;
     };
     /^asnamed$/ && do {
         if ($::FORM{'newqueryname'} =~ /^[a-zA-Z0-9_ ]+$/) {
     print "Set-Cookie: QUERY_" . $::FORM{'newqueryname'} . "=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
+Content-type: text/html
 
-PutHeader("OK, done.");
-print "
+<HTML>
+<TITLE>OK, done.</TITLE>
 OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
-<P>
-<A HREF=\"query.cgi\">Go back to the query page.</A>
-";
-        } else {
-            print "Content-type: text/html\n\n";
 
-PutHeader("Picky, picky.");
-print "
+<P>
+
+<A HREF=query.cgi>Go back to the query page.</A>";
+        } else {
+            print "Content-type: text/html
+
+<HTML>
+<TITLE>Picky, picky.</TITLE>
 Query names can only have letters, digits, spaces, or underbars.  You entered 
 \"<B>$::FORM{'newqueryname'}</B>\", which doesn't cut it.
 <P>
@@ -118,15 +112,15 @@ Click the <B>Back</B> button and type in a valid name for this query.";
     };
     /^asdefault$/ && do {
         print "Set-Cookie: DEFAULTQUERY=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html\n\n";
+Content-type: text/html
 
-PutHeader("OK, default is set.");
-print "
+<HTML>
+<TITLE>OK, default is set.</TITLE>
 OK, you now have a new default query.
 
 <P>
 
-<A HREF=\"query.cgi\">Go back to the query page, using the new default.</A>";
+<A HREF=query.cgi>Go back to the query page, using the new default.</A>";
         exit;
     };
 }
@@ -231,8 +225,7 @@ if (defined $::FORM{'sql'}) {
               }
           } else {
               my $ref = $::MFORM{$field};
-              foreach my $vv (@$ref) {
-                  my $v = url_decode($vv);
+              foreach my $v (@$ref) {
                   if ($v eq "(empty)") {
                       $query .= "\t\t${or}bugs.$field is null\n";
                   } else {
@@ -335,20 +328,20 @@ if (defined $::FORM{'order'}) {
 }
 
 if ($dotweak) {
-    pnl "<FORM NAME=\"changeform\" METHOD=\"POST\" ACTION=\"process_bug.cgi\">";
+    pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">";
 }
 
-my $tablestart = "<TABLE CELLSPACING=\"0\" CELLPADDING=\"2\">
-<TR ALIGN=\"LEFT\"><TH>
+my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=2>
+<TR ALIGN=LEFT><TH>
 <A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
 
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
         if ($::needquote{$c}) {
-            $tablestart .= "<TH WIDTH=\"100%\" valigh=\"left\">";
+            $tablestart .= "<TH WIDTH=100% valigh=left>";
         } else {
-            $tablestart .= "<TH valign=\"left\">";
+            $tablestart .= "<TH valign=left>";
         }
         if (defined $::sortkey{$c}) {
             $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=$::sortkey{$c}$oldorder\">$::title{$c}</A>";
@@ -377,9 +370,9 @@ while (@row = FetchSQLData()) {
             pnl "</TABLE>$tablestart";
         }
         push @bugarray, $bug_id;
-        pnl "<TR VALIGN=\"TOP\" ALIGN=\"LEFT\"><TD>";
+        pnl "<TR VALIGN=TOP ALIGN=LEFT><TD>";
         if ($dotweak) {
-            pnl "<input type=\"checkbox\" name=\"id_$bug_id\">";
+            pnl "<input type=checkbox name=id_$bug_id>";
         }
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A> ";
@@ -455,9 +448,9 @@ if (open (COMMENTS, "<data/comments")) {
 }
         
 
-print "<HR><I><A HREF=\"newquip.html\">$quip\n";
+print "<HR><I><A HREF=newquip.html>$quip\n";
 print "</I></A></CENTER>\n";
-print "<HR SIZE=\"10\">$tablestart\n";
+print "<HR SIZE=10>$tablestart\n";
 print $::bugl;
 print "</TABLE>\n";
 
@@ -480,7 +473,7 @@ function SetCheckboxes(value) {
         item.checked = value;
     }
 }
-document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=\\\"button\\\" value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
+document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=button value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
 </SCRIPT>";
     my $resolution_popup = make_options(\@::legal_resolution_no_dup, "FIXED");
     my @prod_list = keys %prodhash;
@@ -504,52 +497,52 @@ document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\
 <hr>
 <TABLE>
 <TR>
-    <TD ALIGN=\"RIGHT\"><B>Product:</B></TD>
-    <TD><SELECT NAME=\"product\">$product_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B>Version:</B></TD>
-    <TD><SELECT NAME=\"version\">$version_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B>Product:</B></TD>
+    <TD><SELECT NAME=product>$product_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B>Version:</B></TD>
+    <TD><SELECT NAME=version>$version_popup</SELECT></TD>
 <TR>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=\"rep_platform\">$platform_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-    <TD><SELECT NAME=\"priority\">$priority_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
+    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
+    <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
 </TR>
 <TR>
-    <TD ALIGN=\"RIGHT\"><B>Component:</B></TD>
-    <TD><SELECT NAME=\"component\">$component_popup</SELECT></TD>
-    <TD ALIGN=\"RIGHT\"><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-    <TD><SELECT NAME=\"bug_severity\">$sev_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B>Component:</B></TD>
+    <TD><SELECT NAME=component>$component_popup</SELECT></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
+    <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
 </TR>
 </TABLE>
 
-<INPUT NAME=\"multiupdate\" value=\"Y\" TYPE=\"hidden\">
+<INPUT NAME=multiupdate value=Y TYPE=hidden>
 
 <B>Additional Comments:</B>
 <BR>
-<TEXTAREA WRAP=\"HARD\" NAME=\"comment\" ROWS=\"5\" COLS=\"80\"></TEXTAREA><BR>";
+<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
     # knum is which knob number we're generating, in javascript terms.
 
     my $knum = 0;
     print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"none\" CHECKED>
+<INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
         Do nothing else<br>";
     $knum++;
     print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"accept\">
+<INPUT TYPE=radio NAME=knob VALUE=accept>
         Accept bugs (change status to <b>ASSIGNED</b>)<br>";
     $knum++;
     if (!defined $statushash{'CLOSED'} &&
         !defined $statushash{'VERIFIED'} &&
         !defined $statushash{'RESOLVED'}) {
         print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"clearresolution\">
+<INPUT TYPE=radio NAME=knob VALUE=clearresolution>
         Clear the resolution<br>";
         $knum++;
         print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"resolve\">
+<INPUT TYPE=radio NAME=knob VALUE=resolve>
         Resolve bugs, changing <A HREF=\"bug_status.html\">resolution</A> to
-        <SELECT NAME=\"resolution\"
+        <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>";
         $knum++;
@@ -558,38 +551,38 @@ document.write(\" <input type=\\\"button\\\" value=\\\"Uncheck All\\\" onclick=\
         !defined $statushash{'ASSIGNED'} &&
         !defined $statushash{'REOPENED'}) {
         print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reopen\"> Reopen bugs<br>";
+<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bugs<br>";
         $knum++;
     }
     my @statuskeys = keys %statushash;
     if ($#statuskeys == 1) {
         if (defined $statushash{'RESOLVED'}) {
             print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"verify\">
+<INPUT TYPE=radio NAME=knob VALUE=verify>
         Mark bugs as <b>VERIFIED</b><br>";
             $knum++;
         }
         if (defined $statushash{'VERIFIED'}) {
             print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"close\">
+<INPUT TYPE=radio NAME=knob VALUE=close>
         Mark bugs as <b>CLOSED</b><br>";
             $knum++;
         }
     }
     print "
-<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reassign\"> 
+<INPUT TYPE=radio NAME=knob VALUE=reassign> 
         <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
-        <INPUT NAME=\"assigned_to\" SIZE=\"32\"
+        <INPUT NAME=assigned_to SIZE=32
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
           VALUE=\"$::COOKIE{'Bugzilla_login'}\"><br>";
     $knum++;
-    print "<INPUT TYPE=\"radio\" NAME=\"knob\" VALUE=\"reassignbycomponent\">
+    print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
           Reassign bugs to owner of selected component<br>";
     $knum++;
 
     print "
 <p>
-<font size=\"-1\">
+<font size=-1>
 To make changes to a bunch of bugs at once:
 <ol>
 <li> Put check boxes next to the bugs you want to change.
@@ -597,15 +590,15 @@ To make changes to a bunch of bugs at once:
      comment explaining what you're doing.)
 <li> Click the below \"Commit\" button.
 </ol></font>
-<INPUT TYPE=\"SUBMIT\" VALUE=\"Commit\">
+<INPUT TYPE=SUBMIT VALUE=Commit>
 </FORM><hr>\n";
 }
 
 
 if ($count > 0) {
-    print "<FORM METHOD=\"POST\" ACTION=\"long_list.cgi\">
-<INPUT TYPE=\"HIDDEN\" NAME=\"buglist\" VALUE=\"$buglist\">
-<INPUT TYPE=\"SUBMIT\" VALUE=\"Long Format\">
+    print "<FORM METHOD=POST ACTION=\"long_list.cgi\">
+<INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
+<INPUT TYPE=SUBMIT VALUE=\"Long Format\">
 <A HREF=\"query.cgi\">Query Page</A>
 <A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
 </FORM>";

@@ -39,7 +39,7 @@ select
         short_desc,
         date_format(creation_ts,'Y-m-d')
 from bugs
-where bug_id = '" . $::FORM{'id'} . "'";
+where bug_id = $::FORM{'id'}";
 
 SendSQL($query);
 my %bug;

@@ -70,6 +70,6 @@ foreach my $i (@::param_list) {
 WriteParams();
 
 print "OK, done.<p>\n";
-print "<A HREF=\"editparams.cgi\">Edit the params some more.</A>\n<P>\n";
-print "<A HREF=\"query.cgi\">Go back to the query page.</A>\n";
+print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";
+print "<a href=query.cgi>Go back to the query page.</a>\n";
     

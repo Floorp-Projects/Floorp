@@ -49,23 +49,23 @@ print "Be careful!\n";
 print "<p>\n";
 print "Any item you check Reset on will get reset to its default value.\n";
 
-print "<FORM METHOD=\"POST\" ACTION=\"doeditparams.cgi\">\n<TABLE>\n";
+print "<form method=post action=doeditparams.cgi><table>\n";
 
-my $rowbreak = "<TR><TD COLSPAN=\"2\"><HR></TD></TR>";
+my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
 print $rowbreak;
 
 foreach my $i (@::param_list) {
-    print "<TR><TH ALIGN=\"RIGHT\" VALIGN=\"TOP\">$i:</TH><TD>$::param_desc{$i}</TD></TR>\n";
-    print "<TR><TD VALIGN=\"TOP\"><INPUT TYPE=\"checkbox\" NAME=\"reset-$i\">Reset</TD><TD>\n";
+    print "<tr><th align=right valign=top>$i:</th><td>$::param_desc{$i}</td></tr>\n";
+    print "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>\n";
     my $value = Param($i);
     SWITCH: for ($::param_type{$i}) {
 	/^t$/ && do {
-            print "<INPUT SIZE=\"80\" NAME=\"$i\" VALUE=\"" .
+            print "<input size=80 name=$i value=\"" .
                 value_quote($value) . '">\n';
             last SWITCH;
 	};
 	/^l$/ && do {
-            print "<TEXTAREA WRAP=\"HARD\" NAME=\"$i\" ROWS=\"10\" COLS=\"80\">" .
+            print "<textarea wrap=hard name=$i rows=10 cols=80>" .
                 value_quote($value) . "</textarea>\n";
             last SWITCH;
 	};
@@ -79,18 +79,18 @@ foreach my $i (@::param_list) {
                 $on = "";
                 $off = "checked";
             }
-            print "<INPUT TYPE=\"radio\" NAME=\"$i\" VALUE=\"1\" $on>On\n";
-            print "<INPUT TYPE=\"radio\" NAME=\"$i\" VALUE=\"0\" $off>Off\n";
+            print "<input type=radio name=$i value=1 $on>On\n";
+            print "<input type=radio name=$i value=0 $off>Off\n";
             last SWITCH;
         };
         # DEFAULT
-        print "<FONT COLOR=\"red\"><BLINK>Unknown param type $::param_type{$i}!!!</BLINK></FONT>\n";
+        print "<font color=red><blink>Unknown param type $::param_type{$i}!!!</blink></font>\n";
     }
     print "</td></tr>\n";
     print $rowbreak;
 }
 
-print "<TR><TH ALIGN=\"RIGHT\" VALIGN=\"TOP\">version:</TH><TD>
+print "<tr><th align=right valign=top>version:</th><td>
 What version of Bugzilla this is.  This can't be modified here, but
 <tt>%version%</tt> can be used as a parameter in places that understand
 such parameters</td></tr>
@@ -98,9 +98,9 @@ such parameters</td></tr>
 
 print "</table>\n";
 
-print "<INPUT TYPE=\"reset\" VALUE=\"Reset form\"><BR>\n";
-print "<INPUT TYPE=\"submit\" VALUE=\"Submit changes\">\n";
+print "<input type=reset value=\"Reset form\"><br>\n";
+print "<input type=submit value=\"Submit changes\">\n";
 
 print "</form>\n";
 
-print "<P><A HREF=\"query.cgi\">Skip all this, and go back to the query page</A>\n";
+print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";

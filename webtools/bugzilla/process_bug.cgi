@@ -37,14 +37,11 @@ print "Content-type: text/html\n\n";
 GetVersionTable();
 
 if ($::FORM{'product'} ne $::dontchange) {
-    my $prod = url_decode($::FORM{'product'});
-    my $version = url_decode($::FORM{'version'});
-    my $component = url_decode($::FORM{'component'});
-    my $vok = lsearch($::versions{$prod}, $version) >= 0;
-    my $cok = lsearch($::components{$prod}, $component) >= 0;
+    my $prod = $::FORM{'product'};
+    my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
+    my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
     if (!$vok || !$cok) {
         print "<H1>Changing product means changing version and component.</H1>\n";
-
         print "You have chosen a new product, and now the version and/or\n";
         print "component fields are not correct.  (Or, possibly, the bug did\n";
         print "not have a valid component or version field in the first place.)\n";
@@ -52,26 +49,26 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "<form>\n";
         print "<table>\n";
         print "<tr>\n";
-        print "<td align=\"right\"><b>Product:</b></td>\n";
+        print "<td align=right><b>Product:</b></td>\n";
         print "<td>$prod</td>\n";
         print "</tr><tr>\n";
-        print "<td align=\"right\"><b>Version:</b></td>\n";
-        print "<td>" . Version_element($version, $prod) . "</td>\n";
+        print "<td align=right><b>Version:</b></td>\n";
+        print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
         print "</tr><tr>\n";
-        print "<td align=\"right\"><b>Component:</b></td>\n";
-        print "<td>" . Component_element($component, $prod) . "</td>\n";
+        print "<td align=right><b>Component:</b></td>\n";
+        print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
         print "</tr>\n";
         print "</table>\n";
         foreach my $i (keys %::FORM) {
             if ($i ne 'version' && $i ne 'component') {
-                print "<input type=\"hidden\" name=\"$i\" value=\"" .
+                print "<input type=hidden name=$i value=\"" .
                 value_quote($::FORM{$i}) . "\">\n";
             }
         }
-        print "<input type=\"submit\" value=\"Commit\">\n";
+        print "<input type=submit value=Commit>\n";
         print "</form>\n";
         print "</hr>\n";
-        print "<A HREF=\"query.cgi\">Cancel all this and go back to the query page.</A>\n";
+        print "<a href=query.cgi>Cancel all this and go back to the query page.</a>\n";
         exit;
     }
 }
@@ -92,6 +89,11 @@ if (!defined $::FORM{'who'}) {
     $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
 
+print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
+if (defined $::FORM{'id'}) {
+    navigation_header();
+}
+print "<HR>\n";
 $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
@@ -117,7 +119,6 @@ sub ChangeResolution {
     }
 }
 
-ConnectToDatabase();
 
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
@@ -125,10 +126,14 @@ foreach my $field ("rep_platform", "priority", "bug_severity", "url",
     if (defined $::FORM{$field}) {
         if ($::FORM{$field} ne $::dontchange) {
             DoComma();
-            $::query .= "$field = " . SqlQuote(url_decode($::FORM{$field}));
+            $::query .= "$field = " . SqlQuote($::FORM{$field});
         }
     }
 }
+
+
+
+ConnectToDatabase();
 
 SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
@@ -162,8 +167,8 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         ChangeStatus('NEW');
         SendSQL("select initialowner from components where program=" .
-                SqlQuote(url_decode($::FORM{'product'})) . " and value=" .
-                SqlQuote(url_decode($::FORM{'component'})));
+                SqlQuote($::FORM{'product'}) . " and value=" .
+                SqlQuote($::FORM{'component'}));
         my $newname = FetchOneColumn();
         my $newid = DBNameToIdAndCheck($newname, 1);
         DoComma();
@@ -172,7 +177,6 @@ SWITCH: for ($::FORM{'knob'}) {
     };   
     /^reopen$/ && do {
         ChangeStatus('REOPENED');
-        ChangeResolution('');
         last SWITCH;
     };
     /^verify$/ && do {
@@ -193,8 +197,7 @@ SWITCH: for ($::FORM{'knob'}) {
             exit;
         }
         if ($::FORM{'dup_id'} == $::FORM{'id'}) {
-	    PutHeader("Nice try.");
-            print "But it doesn't really make sense to mark a\n";
+            print "Nice try.  But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             exit;
         }
@@ -210,7 +213,6 @@ SWITCH: for ($::FORM{'knob'}) {
 
 
 if ($#idlist < 0) {
-    PutHeader("Nothing to modify");
     print "You apparently didn't choose any bugs to modify.\n";
     print "<p>Click <b>Back</b> and try again.\n";
     exit;
@@ -229,7 +231,7 @@ my $basequery = $::query;
 sub SnapShotBug {
     my ($id) = (@_);
     SendSQL("select " . join(',', @::log_columns) .
-            " from bugs where bug_id = '" . $id . "'");
+            " from bugs where bug_id = $id");
     return FetchSQLData();
 }
 
@@ -238,7 +240,7 @@ foreach my $id (@idlist) {
     SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write");
     my @oldvalues = SnapShotBug($id);
 
-    my $query = "$basequery\nwhere bug_id = '" . $id . "'";
+    my $query = "$basequery\nwhere bug_id = $id";
     
 # print "<PRE>$query</PRE>\n";
 
@@ -259,7 +261,7 @@ foreach my $id (@idlist) {
             }
         }
         
-        SendSQL("delete from cc where bug_id = '" . $id . "'");
+        SendSQL("delete from cc where bug_id = $id");
         foreach my $ccid (keys %ccids) {
             SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
         }
@@ -274,8 +276,7 @@ foreach my $id (@idlist) {
         if ($old ne $new) {
             if (!defined $whoid) {
                 $whoid = DBNameToIdAndCheck($::FORM{'who'});
-                $query = "select delta_ts from bugs where bug_id = '" . $id . "'";
-                SendSQL($query);
+                SendSQL("select delta_ts from bugs where bug_id = $id");
                 $timestamp = FetchOneColumn();
             }
             if ($col eq 'assigned_to') {
@@ -286,21 +287,13 @@ foreach my $id (@idlist) {
             $old = SqlQuote($old);
             $new = SqlQuote($new);
             my $q = "insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
-            # print "<pre>$q</pre>";
+            # puts "<pre>$q</pre>"
             SendSQL($q);
         }
     }
     
-
-    PutHeader("Changes submitted for bug $::FORM{'id'}", 
-	"Changes Submitted", $::FORM{'id'});
-    if (defined $::FORM{'id'}) {
-        navigation_header();
-    }
-    print "<HR>\n<P>\n";
-    print "<A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A>\n";
-    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
-    print "<BR><A HREF=\"enter_bug.cgi\">Enter a new bug</A>\n";
+    print "<TABLE BORDER=1><TD><H1>Changes Submitted</H1>\n";
+    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
     SendSQL("unlock tables");
 

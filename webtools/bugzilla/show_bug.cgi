@@ -22,19 +22,16 @@
 use diagnostics;
 use strict;
 
-use vars @::FORM;
+print "Content-type: text/html\n";
+print "\n";
 
 require "CGI.pl";
 
-confirm_login();
-
-print "Content-type: text/html\n\n";
-
-if (!defined $::FORM{'id'} || $::FORM{'id'} eq "") {
-    PutHeader("Search By Bug Number", "Search By Bug Number", "");
-    print "<FORM METHOD=\"GET\" ACTION=\"show_bug.cgi\">\n";
+if (!defined $::FORM{'id'}) {
+    print "<H2>Search By Bug Number</H2>\n";
+    print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
     print "You may find a single bug by entering its bug id here: \n";
-    print "<INPUT NAME=\"id\">\n";
+    print "<INPUT NAME=id>\n";
     print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
     print "</FORM>\n";
     exit;
