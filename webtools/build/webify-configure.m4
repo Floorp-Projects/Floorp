@@ -33,37 +33,41 @@ dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 define(field_separator,<<fs>>)
 
-dnl MOZ_ARG_PRINT(TYPE, NAME, HELP)
+dnl MOZ_ARG_PRINT(TYPE, PRENAME, NAME, HELP)
 define(MOZ_ARG_PRINT,
 [divert(0)dnl
-[$1]field_separator[$2]field_separator[$3]
+[$1]field_separator[$2]field_separator[$3]field_separator[$4]
 divert(-1)])
 
 dnl MOZ_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
 define(MOZ_ARG_ENABLE_BOOL, 
-[MOZ_ARG_PRINT(enable,[$1],[$2])])
+[MOZ_ARG_PRINT(bool,enable,[$1],[$2])])
 
 dnl MOZ_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
 define(MOZ_ARG_DISABLE_BOOL,
-[MOZ_ARG_PRINT(disable,[$1],[$2])])
+[MOZ_ARG_PRINT(bool,disable,[$1],[$2])])
 
 dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
 define(MOZ_ARG_ENABLE_STRING,
-[MOZ_ARG_PRINT(enable_string,[$1],[$2])])
+[MOZ_ARG_PRINT(string,enable,[$1],[$2])])
 
 dnl MOZ_ARG_ENABLE_BOOL_OR_STRING(NAME, HELP, IF-YES, IF-NO, IF-SET[, ELSE]]])
 define(MOZ_ARG_ENABLE_BOOL_OR_STRING,
-[MOZ_ARG_PRINT(enable_bool_or_string,[$1],[$2])])
+[MOZ_ARG_PRINT(bool_or_string,enable,[$1],[$2])])
 
 dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
 define(MOZ_ARG_WITH_BOOL,
-[MOZ_ARG_PRINT(with,[$1],[$2])])
+[MOZ_ARG_PRINT(bool,with,[$1],[$2])])
 
 dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
 define(MOZ_ARG_WITHOUT_BOOL,
-[MOZ_ARG_PRINT(without,[$1],[$2])])
+[MOZ_ARG_PRINT(bool,without,[$1],[$2])])
 
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
 define(MOZ_ARG_WITH_STRING,
-[MOZ_ARG_PRINT(with_string,[$1],[$2])])
+[MOZ_ARG_PRINT(string,with,[$1],[$2])])
 
+dnl MOZ_ARG_HEADER(Comment)
+dnl This is used by webconfig to group options
+define(MOZ_ARG_HEADER,
+[MOZ_ARG_PRINT(header,,,[$1])])
