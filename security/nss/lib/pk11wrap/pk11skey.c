@@ -67,7 +67,7 @@ static const SECItem pk11_null_params = { 0 };
 static PK11SymKey *pk11_DeriveWithTemplate(PK11SymKey *baseKey, 
 	CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target, 
 	CK_ATTRIBUTE_TYPE operation, int keySize, CK_ATTRIBUTE *userAttr, 
-	unsigned int numAttrs);
+	unsigned int numAttrs, PRBool isPerm);
 
 #ifdef NSS_ENABLE_ECC
 extern int SECKEY_ECParams2KeySize(SECItem *params);
@@ -129,13 +129,11 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 	SECStatus rv = SECSuccess;
 
 	rwsession = session;
-	if (rwsession == CK_INVALID_SESSION) {
-	    if (token) {
-		rwsession =  PK11_GetRWSession(slot);
-	    } else { 
-		rwsession =  slot->session;
-		PK11_EnterSlotMonitor(slot);
-	    }
+	if (token) {
+	    rwsession =  PK11_GetRWSession(slot);
+	} else if (rwsession == CK_INVALID_SESSION) {
+	    rwsession =  slot->session;
+	    PK11_EnterSlotMonitor(slot);
 	}
 	crv = PK11_GETTAB(slot)->C_CreateObject(rwsession, theTemplate,
 							count,objectID);
@@ -143,13 +141,10 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 	    PORT_SetError( PK11_MapError(crv) );
 	    rv = SECFailure;
 	}
-
-	if (session == CK_INVALID_SESSION) {
-	    if (token) {
-		PK11_RestoreROSession(slot, rwsession);
-	    } else {
-		PK11_ExitSlotMonitor(slot);
-	    }
+	if (token) {
+	    PK11_RestoreROSession(slot, rwsession);
+	} else if (session == CK_INVALID_SESSION) {
+	    PK11_ExitSlotMonitor(slot);
         }
 
 	return rv;
@@ -410,7 +405,7 @@ pk11_FlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
 
 static PK11SymKey *
 pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-                  PK11Origin origin, CK_ATTRIBUTE *keyTemplate, 
+                  PK11Origin origin, PRBool isToken, CK_ATTRIBUTE *keyTemplate,
 		  unsigned int templateCount, SECItem *key, void *wincx)
 {
     PK11SymKey *    symKey;
@@ -435,7 +430,7 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 
     /* import the keys */
     rv = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
-		 	templateCount, PR_FALSE, &symKey->objectID);
+		 	templateCount, isToken, &symKey->objectID);
     if ( rv != SECSuccess) {
 	PK11_FreeSymKey(symKey);
 	return NULL;
@@ -466,8 +461,8 @@ PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PR_ASSERT(templateCount+1 <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
 
     keyType = PK11_GetKeyType(type,key->len);
-    symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
-    					templateCount, key, wincx);
+    symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, PR_FALSE, 
+				keyTemplate, templateCount, key, wincx);
     return symKey;
 }
 
@@ -491,15 +486,22 @@ PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
     PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
     if (isPerm) {
-	PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(keyType) ); attrs++;
+	PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue) ); attrs++;
+	/* sigh some tokens think CKA_PRIVATE = false is a reasonable 
+	 * default for secret keys */
+	PK11_SETATTRS(attrs, CKA_PRIVATE, &cktrue, sizeof(cktrue) ); attrs++;
+    }
+    attrs += pk11_FlagsToAttributes(flags, attrs, &cktrue);
+    if ((operation != CKA_FLAGS_ONLY) &&
+    	 !pk11_FindAttrInTemplate(keyTemplate, attrs-keyTemplate, operation)) {
+        PK11_SETATTRS(attrs, operation, &cktrue, sizeof(cktrue)); attrs++;
     }
     templateCount = attrs - keyTemplate;
-    templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
     PR_ASSERT(templateCount+1 <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
 
     keyType = PK11_GetKeyType(type,key->len);
-    symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
-    					templateCount, key, wincx);
+    symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, isPerm,
+				 keyTemplate, templateCount, key, wincx);
     if (symKey && isPerm) {
 	symKey->owner = PR_FALSE;
     }
@@ -1343,16 +1345,19 @@ PK11_CopyKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE srcObject)
 
 PK11SymKey *
 pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
-		 	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey);
+		 	CK_ATTRIBUTE_TYPE operation, CK_FLAGS flags, 
+					PRBool perm, PK11SymKey *symKey);
+
 
 /*
- * The next two utilities are to deal with the fact that a given operation
+ * The next three utilities are to deal with the fact that a given operation
  * may be a multi-slot affair. This creates a new key object that is copied
  * into the new slot.
  */
 PK11SymKey *
-pk11_CopyToSlot(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
-		 	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey)
+pk11_CopyToSlotPerm(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
+	 	CK_ATTRIBUTE_TYPE operation, CK_FLAGS flags, 
+		PRBool isPerm, PK11SymKey *symKey)
 {
     SECStatus rv;
     PK11SymKey *newKey = NULL;
@@ -1362,13 +1367,24 @@ pk11_CopyToSlot(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	rv = PK11_ExtractKeyValue(symKey);
 	/* KEY is sensitive, we're try key exchanging it. */
 	if (rv != SECSuccess) {
-	    return pk11_KeyExchange(slot, type, operation, symKey);
+	    return pk11_KeyExchange(slot, type, operation, 
+						flags, isPerm, symKey);
 	}
     }
-    newKey = PK11_ImportSymKey(slot, type, symKey->origin, operation, 
-						&symKey->data, symKey->cx);
-    if (newKey == NULL) newKey = pk11_KeyExchange(slot,type,operation,symKey);
+
+    newKey = PK11_ImportSymKeyWithFlags(slot,  type, symKey->origin,
+	operation, &symKey->data, flags, isPerm, symKey->cx);
+    if (newKey == NULL) {
+	newKey = pk11_KeyExchange(slot, type, operation, flags, isPerm, symKey);
+    }
     return newKey;
+}
+
+PK11SymKey *
+pk11_CopyToSlot(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
+	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey)
+{
+   return pk11_CopyToSlotPerm(slot, type, operation, 0, PR_FALSE, symKey);
 }
 
 /*
@@ -1392,6 +1408,23 @@ pk11_ForceSlot(PK11SymKey *symKey,CK_MECHANISM_TYPE type,
     }
     return newKey;
 }
+
+PK11SymKey *
+PK11_MoveKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
+			CK_FLAGS flags, PRBool  perm, PK11SymKey *symKey)
+{
+    if (symKey->slot == slot) {
+	if (perm) {
+	   return PK11_ConvertSessionSymKeyToTokenSymKey(symKey,symKey->cx);
+	} else {
+	   return PK11_ReferenceSymKey(symKey);
+	}
+    }
+    
+    return pk11_CopyToSlotPerm(slot, symKey->type, 
+					operation, flags, perm, symKey);
+}
+
 
 /*
  * Use the token to Generate a key. keySize must be 'zero' for fixed key
@@ -2563,7 +2596,7 @@ PK11_Derive( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, SECItem *param,
 	     int keySize)
 {
     return pk11_DeriveWithTemplate(baseKey, derive, param, target, operation, 
-				   keySize, NULL, 0);
+				   keySize, NULL, 0, PR_FALSE);
 }
 
 
@@ -2578,7 +2611,27 @@ PK11_DeriveWithFlags( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
 
     templateCount = pk11_FlagsToAttributes(flags, keyTemplate, &ckTrue);
     return pk11_DeriveWithTemplate(baseKey, derive, param, target, operation, 
-				   keySize, keyTemplate, templateCount);
+		  keySize, keyTemplate, templateCount, PR_FALSE);
+}
+
+PK11SymKey *
+PK11_DeriveWithFlagsPerm( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, 
+	SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
+	int keySize, CK_FLAGS flags, PRBool isPerm)
+{
+    CK_BBOOL        cktrue	= CK_TRUE; 
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS+1];
+    CK_ATTRIBUTE    *attrs;
+    unsigned int    templateCount = 0;
+
+    attrs = keyTemplate;
+    if (isPerm) {
+        PK11_SETATTRS(attrs, CKA_TOKEN,  &cktrue, sizeof(CK_BBOOL)); attrs++;
+    }
+    templateCount = attrs - keyTemplate;
+    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+    return pk11_DeriveWithTemplate(baseKey, derive, param, target, operation, 
+				   keySize, keyTemplate, templateCount, isPerm);
 }
 
 static PRBool
@@ -2596,7 +2649,8 @@ pk11_FindAttrInTemplate(CK_ATTRIBUTE *    attr,
 static PK11SymKey *
 pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, 
 	SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
-	int keySize, CK_ATTRIBUTE *userAttr, unsigned int numAttrs)
+	int keySize, CK_ATTRIBUTE *userAttr, unsigned int numAttrs,
+							 PRBool isPerm)
 {
     PK11SlotInfo *  slot	= baseKey->slot;
     PK11SymKey *    symKey;
@@ -2609,6 +2663,7 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
     CK_RV           crv;
     CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
     CK_ATTRIBUTE *  attrs	= keyTemplate;
+    CK_SESSION_HANDLE session;
     unsigned int    templateCount;
 
     if (numAttrs > MAX_TEMPL_ATTRS) {
@@ -2638,7 +2693,8 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
 	PK11_SETATTRS(attrs, CKA_VALUE_LEN, &valueLen, sizeof valueLen); 
 	attrs++;
     }
-    if (!pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
+    if ((operation != CKA_FLAGS_ONLY) &&
+	  !pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
 	PK11_SETATTRS(attrs, operation, &cktrue, sizeof cktrue); attrs++;
     }
 
@@ -2679,10 +2735,19 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
     }
     symKey->origin=PK11_OriginDerive;
 
-    pk11_EnterKeyMonitor(symKey);
-    crv = PK11_GETTAB(slot)->C_DeriveKey(symKey->session, &mechanism,
+    if (isPerm) {
+	session =  PK11_GetRWSession(slot);
+    } else {
+        pk11_EnterKeyMonitor(symKey);
+	session = symKey->session;
+    }
+    crv = PK11_GETTAB(slot)->C_DeriveKey(session, &mechanism,
 	     baseKey->objectID, keyTemplate, templateCount, &symKey->objectID);
-    pk11_ExitKeyMonitor(symKey);
+    if (isPerm) {
+	PK11_RestoreROSession(slot, session);
+    } else {
+       pk11_ExitKeyMonitor(symKey);
+    }
 
     if (newBaseKey) PK11_FreeSymKey(newBaseKey);
     if (crv != CKR_OK) {
@@ -3025,7 +3090,7 @@ static PK11SymKey *
 pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
                 CK_MECHANISM *mech, SECItem *inKey, CK_MECHANISM_TYPE target, 
 		CK_ATTRIBUTE *keyTemplate, unsigned int templateCount, 
-		int key_size, void * wincx, CK_RV *crvp)
+		int key_size, void * wincx, CK_RV *crvp, PRBool isPerm)
 {
     CK_ULONG len;
     SECItem outKey;
@@ -3077,8 +3142,8 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 
     if (PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
-	                                    keyTemplate, templateCount, 
-					    &outKey, wincx);
+	                                    isPerm, keyTemplate, 
+					    templateCount, &outKey, wincx);
     } else {
 	slot = PK11_GetBestSlot(target,wincx);
 	if (slot == NULL) {
@@ -3088,8 +3153,8 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	    return NULL;
 	}
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
-	                                    keyTemplate, templateCount, 
-					    &outKey, wincx);
+	                                    isPerm, keyTemplate,
+					    templateCount, &outKey, wincx);
 	PK11_FreeSlot(slot);
     }
     PORT_Free(outKey.data);
@@ -3107,7 +3172,7 @@ static PK11SymKey *
 pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     CK_MECHANISM_TYPE wrapType, SECItem *param, SECItem *wrappedKey, 
     CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize, 
-    void *wincx, CK_ATTRIBUTE *userAttr, unsigned int numAttrs)
+    void *wincx, CK_ATTRIBUTE *userAttr, unsigned int numAttrs, PRBool isPerm)
 {
     PK11SymKey *    symKey;
     SECItem *       param_free	= NULL;
@@ -3116,6 +3181,7 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     CK_KEY_TYPE     keyType	= CKK_GENERIC_SECRET;
     CK_ULONG        valueLen	= 0;
     CK_MECHANISM    mechanism;
+    CK_SESSION_HANDLE rwsession;
     CK_RV           crv;
     CK_MECHANISM_INFO mechanism_info;
     CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
@@ -3143,7 +3209,8 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	PK11_SETATTRS(attrs, CKA_KEY_TYPE,  &keyType,  sizeof keyType ); 
 	attrs++;
     }
-    if (!pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
+    if ((operation != CKA_FLAGS_ONLY) &&
+	  !pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
 	PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
     }
 
@@ -3195,7 +3262,7 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 				&& !PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
-				 wincx, &crv);
+				 wincx, &crv, isPerm);
 	if (symKey) {
 	    if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
 	    return symKey;
@@ -3220,18 +3287,27 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     symKey->size = keySize;
     symKey->origin = PK11_OriginUnwrap;
 
-    pk11_EnterKeyMonitor(symKey);
-    crv = PK11_GETTAB(slot)->C_UnwrapKey(symKey->session,&mechanism,wrappingKey,
+    if (isPerm) {
+	rwsession = PK11_GetRWSession(slot);
+    } else {
+        pk11_EnterKeyMonitor(symKey);
+	rwsession = symKey->session;
+    }
+    crv = PK11_GETTAB(slot)->C_UnwrapKey(rwsession,&mechanism,wrappingKey,
 		wrappedKey->data, wrappedKey->len, keyTemplate, templateCount, 
 							  &symKey->objectID);
-    pk11_ExitKeyMonitor(symKey);
+    if (isPerm) {
+	PK11_RestoreROSession(slot, rwsession);
+    } else {
+        pk11_ExitKeyMonitor(symKey);
+    }
     if (param_free) SECITEM_FreeItem(param_free,PR_TRUE);
     if ((crv != CKR_OK) && (crv != CKR_DEVICE_ERROR)) {
 	/* try hand Unwrapping */
 	PK11_FreeSymKey(symKey);
 	symKey = pk11_HandUnwrap(slot, wrappingKey, &mechanism, wrappedKey, 
 	                         target, keyTemplate, templateCount, keySize, 
-				 wincx, NULL);
+				 wincx, NULL, isPerm);
    }
 
    return symKey;
@@ -3246,7 +3322,7 @@ PK11_UnwrapSymKey( PK11SymKey *wrappingKey, CK_MECHANISM_TYPE wrapType,
 {
     return pk11_AnyUnwrapKey(wrappingKey->slot, wrappingKey->objectID,
 		    wrapType, param, wrappedKey, target, operation, keySize, 
-		    wrappingKey->cx, NULL, 0);
+		    wrappingKey->cx, NULL, 0, PR_FALSE);
 }
 
 /* use a symetric key to unwrap another symetric key */
@@ -3263,7 +3339,31 @@ PK11_UnwrapSymKeyWithFlags(PK11SymKey *wrappingKey, CK_MECHANISM_TYPE wrapType,
     templateCount = pk11_FlagsToAttributes(flags, keyTemplate, &ckTrue);
     return pk11_AnyUnwrapKey(wrappingKey->slot, wrappingKey->objectID,
 		    wrapType, param, wrappedKey, target, operation, keySize, 
-		    wrappingKey->cx, keyTemplate, templateCount);
+		    wrappingKey->cx, keyTemplate, templateCount, PR_FALSE);
+}
+
+PK11SymKey *
+PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey, 
+		   CK_MECHANISM_TYPE wrapType,
+                   SECItem *param, SECItem *wrappedKey, 
+		   CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
+		   int keySize, CK_FLAGS flags, PRBool isPerm)
+{
+    CK_BBOOL        cktrue	= CK_TRUE; 
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+    CK_ATTRIBUTE    *attrs;
+    unsigned int    templateCount;
+
+    attrs = keyTemplate;
+    if (isPerm) {
+        PK11_SETATTRS(attrs, CKA_TOKEN,  &cktrue, sizeof(CK_BBOOL)); attrs++;
+    }
+    templateCount = attrs-keyTemplate;
+    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+
+    return pk11_AnyUnwrapKey(wrappingKey->slot, wrappingKey->objectID,
+		    wrapType, param, wrappedKey, target, operation, keySize, 
+		    wrappingKey->cx, keyTemplate, templateCount, PR_TRUE);
 }
 
 
@@ -3278,7 +3378,7 @@ PK11_PubUnwrapSymKey(SECKEYPrivateKey *wrappingKey, SECItem *wrappedKey,
     
     return pk11_AnyUnwrapKey(wrappingKey->pkcs11Slot, wrappingKey->pkcs11ID,
 	wrapType, NULL, wrappedKey, target, operation, keySize, 
-	wrappingKey->wincx, NULL, 0);
+	wrappingKey->wincx, NULL, 0, PR_FALSE);
 }
 
 /* unwrap a symetric key with a private key. */
@@ -3298,7 +3398,34 @@ PK11_PubUnwrapSymKeyWithFlags(SECKEYPrivateKey *wrappingKey,
     
     return pk11_AnyUnwrapKey(wrappingKey->pkcs11Slot, wrappingKey->pkcs11ID,
 	wrapType, NULL, wrappedKey, target, operation, keySize, 
-	wrappingKey->wincx, keyTemplate, templateCount);
+	wrappingKey->wincx, keyTemplate, templateCount, PR_FALSE);
+}
+
+PK11SymKey *
+PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey, 
+	  SECItem *wrappedKey, CK_MECHANISM_TYPE target, 
+	  CK_ATTRIBUTE_TYPE operation, int keySize,
+	  CK_FLAGS flags, PRBool isPerm)
+{
+    CK_MECHANISM_TYPE wrapType = pk11_mapWrapKeyType(wrappingKey->keyType);
+    CK_BBOOL        cktrue	= CK_TRUE; 
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+    CK_ATTRIBUTE    *attrs;
+    unsigned int    templateCount;
+
+    attrs = keyTemplate;
+    if (isPerm) {
+        PK11_SETATTRS(attrs, CKA_TOKEN,  &cktrue, sizeof(CK_BBOOL)); attrs++;
+    }
+    templateCount = attrs-keyTemplate;
+
+    templateCount += pk11_FlagsToAttributes(flags, keyTemplate, &cktrue);
+
+    PK11_HandlePasswordCheck(wrappingKey->pkcs11Slot,wrappingKey->wincx);
+    
+    return pk11_AnyUnwrapKey(wrappingKey->pkcs11Slot, wrappingKey->pkcs11ID,
+	wrapType, NULL, wrappedKey, target, operation, keySize, 
+	wrappingKey->wincx, keyTemplate, templateCount, isPerm);
 }
 
 /*
@@ -5507,7 +5634,6 @@ PK11_ConvertSessionPrivKeyToTokenPrivKey(SECKEYPrivateKey *privk, void* wincx)
     CK_BBOOL cktrue = CK_TRUE;
     CK_RV crv;
     CK_OBJECT_HANDLE newKeyID;
-    SECKEYPrivateKey *newKey=NULL;
     CK_SESSION_HANDLE rwsession;
 
     PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue)); attrs++;
@@ -5536,7 +5662,6 @@ PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk, void *wincx)
     CK_BBOOL cktrue = CK_TRUE;
     CK_RV crv;
     CK_OBJECT_HANDLE newKeyID;
-    PK11SymKey *newKey=NULL;
     CK_SESSION_HANDLE rwsession;
 
     PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue)); attrs++;

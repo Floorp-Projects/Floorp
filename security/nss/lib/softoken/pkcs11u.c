@@ -697,9 +697,9 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_VERIFY:
     case CKA_WRAP:
     case CKA_UNWRAP:
+    case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
     case CKA_NEVER_EXTRACTABLE:
-    case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
     case CKA_LABEL:
         label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
