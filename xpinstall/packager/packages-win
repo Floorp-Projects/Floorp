@@ -100,10 +100,12 @@ bin\components\jsd3250.dll
 bin\components\jsdservice.xpt
 bin\components\evntloop.dll
 bin\components\find.xpt
+bin\components\content_base.xpt
 bin\components\content_html.xpt
 bin\components\content_htmldoc.xpt
 bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
+bin\components\content_xtf.xpt
 bin\components\xultmpl.xpt
 bin\components\chardet.xpt
 bin\components\jsconsole-clhandler.js
