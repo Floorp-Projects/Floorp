@@ -393,6 +393,8 @@ object, embed, applet {
 frameset {
   display: block ! important;
   overflow: -moz-hidden-unscrollable;
+  position: static ! important;
+  float: none ! important;
 }
 
 frame {
@@ -406,6 +408,11 @@ iframe {
 
 noframes {
   display: none;
+}
+
+spacer {
+  position: static ! important;
+  float: none ! important;
 }
 
 /* focusable content: anything w/ tabindex >=0 is focusable */

@@ -58,6 +58,8 @@ legend {
   padding-left: 2px;
   padding-right: 2px;
   border: none;
+  position: static ! important;
+  float: none ! important;
 }
 
 fieldset {
