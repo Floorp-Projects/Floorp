@@ -27,6 +27,7 @@
 #include "nsIWebShell.h"
 #include "nsIPresShell.h"
 #include "nsDOMTextRange.h"
+#include "nsIDocument.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -146,20 +147,36 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   }
   
   nsIEventStateManager *manager;
-  nsIFrame *targetFrame;
   nsIContent *targetContent;
 
   if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
-    manager->GetEventTarget(&targetFrame);
+    manager->GetEventTargetContent(&targetContent);
     NS_RELEASE(manager);
   }
   
-  if (NS_OK == targetFrame->GetContent(&targetContent) && nsnull != targetContent) {    
+  if (targetContent) {    
     if (NS_OK == targetContent->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
       *aTarget = mTarget;
       NS_ADDREF(mTarget);
     }
     NS_RELEASE(targetContent);
+  }
+  else {
+    //Always want a target.  Use document if nothing else.
+    nsIPresShell* presShell;
+    nsIDocument* doc;
+    if (NS_SUCCEEDED(mPresContext->GetShell(&presShell))) {
+      presShell->GetDocument(&doc);
+      NS_RELEASE(presShell);
+    }
+
+    if (doc) {
+      if (NS_OK == doc->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
+        *aTarget = mTarget;
+        NS_ADDREF(mTarget);
+      }      
+      NS_RELEASE(doc);
+    }
   }
 
   return NS_OK;
