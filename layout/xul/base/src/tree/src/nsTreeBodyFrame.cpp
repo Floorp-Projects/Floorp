@@ -3565,8 +3565,6 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
 NS_IMETHODIMP
 nsTreeBodyFrame::OnDragDrop (nsIDOMEvent* aEvent)
 {
-  mView->Drop(mDropRow, mDropOrient);
-
   // Remove the drop folder and all its parents from the array.
   PRInt32 parentIndex;
   mView->GetParentIndex(mDropRow, &parentIndex);
@@ -3574,6 +3572,8 @@ nsTreeBodyFrame::OnDragDrop (nsIDOMEvent* aEvent)
     mValueArray.RemoveValue(parentIndex);
     mView->GetParentIndex(parentIndex, &parentIndex);
   }
+
+  mView->Drop(mDropRow, mDropOrient);
 
   return NS_OK;
 } // OnDragDrop
