@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.4 2001/01/05 21:14:47 wtc%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.5 2001/02/06 01:05:21 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -160,7 +160,7 @@ main (int argc, char **argv)
      */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    rv = NSS_Init(certDir);
+    rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) goto prdone;
 
     /* Convert value into an item */
