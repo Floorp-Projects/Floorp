@@ -254,7 +254,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
         else if (current > max)
             current = max;
 
-        // set the new position but don't notify anyone. We already know
+        // set the new position and notify observers
         nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
         if (scrollbarFrame) {
           nsCOMPtr<nsIScrollbarMediator> mediator;
@@ -266,7 +266,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
 
         nsAutoString currentStr;
         currentStr.AppendInt(current);
-        scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_FALSE);
+        scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
       }
   }
 
