@@ -5383,8 +5383,8 @@ nsBlockFrame::PaintChildren(nsIPresContext*      aPresContext,
                             PRUint32             aFlags)
 {
   PRInt32 drawnLines; // Will only be used if set (gLamePaintMetrics).
-#ifdef DEBUG
   PRInt32 depth = 0;
+#ifdef DEBUG
   if (gNoisyDamageRepair) {
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
       depth = GetDepth();
