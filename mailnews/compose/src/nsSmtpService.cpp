@@ -22,7 +22,6 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
-#include "nsINetService.h"
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -73,7 +72,7 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 			const char * senderName = nsnull;
 
 			identity->GetSmtpServer(&hostName);
-			identity->GetUserName(&senderName);
+			identity->GetSmtpName(&senderName);
 			rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
 			if (NS_SUCCEEDED(rv) && urlToRun)
 			{	
@@ -136,8 +135,6 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 	 return rv;
 }
 
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-
 nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 {
 	// mscott: this function is pretty clumsy right now...eventually all of the dispatching
@@ -146,7 +143,6 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 
 	// for now, assume the url is a news url and load it....
 	nsISmtpUrl		*smtpUrl = nsnull;
-	nsITransport	*transport = nsnull;
 	nsSmtpProtocol	*smtpProtocol = nsnull;
 	nsresult rv = NS_OK;
 
@@ -160,35 +156,15 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
       const nsFilePath * fileName = nsnull;
       smtpUrl->GetPostMessageFile(&fileName);
 
-      // okay now create a transport to run the url in...
-      const char * hostName = nsnull;
-      PRUint32 port = 25;
+      // almost there...now create a nntp protocol instance to run the url in...
+      smtpProtocol = new nsSmtpProtocol(smtpUrl);
+      if (smtpProtocol == nsnull)
+		  rv = NS_ERROR_OUT_OF_MEMORY;
+	  else
+		  smtpProtocol->LoadURL(smtpUrl); // protocol will get destroyed when url is completed...
+	}
 
-      smtpUrl->GetHost(&hostName);
-      smtpUrl->GetHostPort(&port);
-
-      nsINetService* pNetService;
-      rv = nsServiceManager::GetService(kNetServiceCID,
-                                        nsINetService::GetIID(),
-                                        (nsISupports**)&pNetService);
-      if (NS_SUCCEEDED(rv)) {
-        pNetService->CreateSocketTransport(&transport, port, hostName);
-        if (NS_SUCCEEDED(rv) && transport)
-        {
-          // almost there...now create a nntp protocol instance to run the url in...
-          smtpProtocol = new nsSmtpProtocol(smtpUrl, transport);
-          if (smtpProtocol == nsnull)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-          else {
-            NS_ADDREF(smtpProtocol);
-            smtpProtocol->LoadURL(smtpUrl);
-          }
-        }
-        (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
-      }
-
-      NS_RELEASE(smtpUrl);
-    } // if nntpUrl
+    NS_IF_RELEASE(smtpUrl);
 	
 	return rv;
 }
