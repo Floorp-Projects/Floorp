@@ -483,7 +483,7 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
-  
+ 
   //if (nsnull != mMenuListener)
   //	aStatus = mMenuListener->MenuSelected(*event);
   if (nsnull != mEventCallback) {
@@ -861,7 +861,11 @@ NS_METHOD nsWindow::Show(PRBool bState)
 {
     if (mWnd) {
         if (bState) {
-            ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+          DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
+          if (mWindowType == eWindowType_popup) {
+            flags |= SWP_NOACTIVATE;
+          }
+            ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }
         else
             ::ShowWindow(mWnd, SW_HIDE);
