@@ -41,11 +41,12 @@
 /* ::::: file/directory items ::::: */
 
 treechildren:-moz-tree-image(FilenameColumn, directory) {
-  list-style-image: url("chrome://global/skin/filepicker/dir-closed.gif");
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren:-moz-tree-image(FilenameColumn, file) {
-  list-style-image: url("chrome://global/skin/filepicker/blank.gif");
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
 /* ::::: focus rules ::::: */

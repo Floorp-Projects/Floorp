@@ -132,7 +132,7 @@ menuitem.bookmark-item {
 /* ::::: bookmark items ::::: */
 
 .bookmark-item  {
-  list-style-image: url("chrome://global/skin/icons/Folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px)
 }
 
@@ -478,7 +478,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 }
 
 #page-proxy-button {
-  list-style-image: url("chrome://global/skin/icons/Folder-item.png") !important;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);}
 
 #page-proxy-button[pageproxystate="invalid"] {
