@@ -3,7 +3,7 @@
 <!ENTITY loginTitle.label "Name and Password">
 <!ENTITY usernameDesc.label "Enter your user name given to you by your email provider.">
 <!-- LOCALIZATION NOTE (usernameExample.label) : do not translate "&quot;jsmith&quot;" in below line -->
-<!ENTITY usernameExample.label "(for example, &quot;jsmith&quot;)">
+<!ENTITY usernameExample.label "(For example, &quot;jsmith&quot;)">
 <!ENTITY usernameLabel.label "User Name:">
 
 <!ENTITY passwordTitle.label "Password Storage">
@@ -11,5 +11,5 @@
 <!ENTITY savePasswordLabel.label "If you want Mozilla Mail to save your password, check the box below.">
 <!ENTITY savePasswordCheckbox.label "Save my password">
 
-<!ENTITY passwordDesc.label "Enter the password given to you by your email provider">
+<!ENTITY passwordDesc.label "Enter the password given to you by your email provider.">
 <!ENTITY passwordLabel.label "Password:">
