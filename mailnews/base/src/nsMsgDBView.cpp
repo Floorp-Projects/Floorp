@@ -1023,9 +1023,9 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
   case 'f': // flagged column
     // toggle the flagged status of the element at row.
     if (m_flags[row] & MSG_FLAG_MARKED)
-      SetFlaggedByIndex(row, PR_FALSE);
+      ApplyCommandToIndices(nsMsgViewCommandType::unflagMessages, (nsMsgViewIndex *) &row, 1);
     else
-      SetFlaggedByIndex(row, PR_TRUE);
+      ApplyCommandToIndices(nsMsgViewCommandType::flagMessages, (nsMsgViewIndex *) &row, 1);
     break;
   default:
     break;
