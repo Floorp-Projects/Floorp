@@ -218,6 +218,7 @@ sub create {
 sub handle {
     my $self = shift;
     my($exception) = @_;
+    my $reraise = undef;
     handler: while (1) {
         if (defined($exception)) {
             foreach my $handler (@{$self->{'handlers'}}) {
@@ -228,11 +229,15 @@ sub handle {
                         not $result->isa('PLIF::Exception::Internal::Unhandled')) {
                         last handler;
                     }
+                    # else, it's the result of an "unhandled" function call
                     $result->{'resolved'} = 1;
                 }
             }
             if (defined($self->{'except'})) {
                 &{$self->{'except'}}($exception);
+            } else {
+                # unhandled exception
+                $reraise = $exception;
             }
         }
         last;
@@ -241,7 +246,9 @@ sub handle {
         &{$self->{'finally'}}();
     }
     $self->{'resolved'} = 1;
-    return defined($exception);
+    if (defined($reraise)) {
+        $reraise->raise();
+    }
 }
 
 sub DESTROY {
