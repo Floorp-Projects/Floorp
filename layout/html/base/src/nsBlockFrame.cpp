@@ -3813,8 +3813,8 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
         // Mark next line dirty in case SplitLine didn't end up
         // pushing any frames.
-        nsLineBox* next = aLine.next();
-        if ((nsnull != next) && !next->IsBlock()) {
+        nsLineList_iterator next = aLine.next();
+        if (next != end_lines() && !next->IsBlock()) {
           next->MarkDirty();
         }
       }
