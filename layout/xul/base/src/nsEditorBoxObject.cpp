@@ -42,6 +42,7 @@
 #include "nsIFrame.h"
 #include "nsIEditorShell.h"
 #include "nsIComponentManager.h"
+#include "nsIDocShell.h"
 
 class nsEditorBoxObject : public nsIEditorBoxObject, public nsBoxObject
 {
@@ -106,7 +107,6 @@ NS_IMETHODIMP nsEditorBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresS
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
 {
   NS_ASSERTION(mEditorShell, "Editor box object not initted");
@@ -114,6 +114,20 @@ NS_IMETHODIMP nsEditorBoxObject::GetEditorShell(nsIEditorShell** aResult)
   *aResult = mEditorShell;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsEditorBoxObject::GetDocShell(nsIDocShell** aResult)
+{
+  *aResult = nsnull;
+  if (!mPresShell)
+    return NS_OK;
+
+  nsCOMPtr<nsISupports> subShell;
+  mPresShell->GetSubShellFor(mContent, getter_AddRefs(subShell));
+  if(!subShell)
+    return NS_OK;
+
+  return CallQueryInterface(subShell, aResult); //Addref happens here.
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
