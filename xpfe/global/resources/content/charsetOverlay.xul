@@ -29,7 +29,7 @@
             </rule>
         </template>
 
-        <menupopup>
+        <menupopup id="composerCharsetMenuPopup">
         <menu value="&charsetMenuMore1.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
             <template>
                 <rule>
