@@ -103,18 +103,18 @@ ifdef PROGRAMS
 endif
 
 tests::
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_ALL_DIRS)
 
 clean clobber::
 	rm -rf $(ALL_TRASH)
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_ALL_DIRS)
 
 realclean clobber_all::
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_ALL_DIRS)
 
 depend::
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_LIBS_DIRS)
 
 #ifdef ALL_PLATFORMS
 #all_platforms:: $(NFSPWD)
@@ -793,13 +793,10 @@ dependclean::
 
 else
 depend::
-ifdef DODEPEND
 	@$(MAKE_OBJDIR)
 	$(GDEPTH)/gconfig/makedep.exe -s -O $(OBJDIR)/make.dp $(INCLUDES) $(OBJS)
-endif
-
--include $(OBJDIR)/make.dp
-
+#	@touch $(OBJDIR)/make.dp
+#	$(GDEPTH)/gconfig/mkdepend/$(OBJDIR)/mkdepend.exe -p$(OBJDIR) -o'.obj' -f$(OBJDIR)/make.dp $(INCLUDES) $(OBJS)
 endif
 
 ################################################################################
@@ -823,4 +820,8 @@ endif
 # name already exists.
 #
 .PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean release $(OBJDIR) $(DIRS)
+
+-include $(OBJDIR)/make.dp
+
+
 

@@ -55,7 +55,7 @@
 
 LOOP_DIRS_LIBS = $(DIRS_LIBS) $(DIRS)
 LOOP_DIRS_EXPORT = $(DIRS_EXPORT) $(DIRS)
-
+LOOP_DIRS_ALL    = $(DIRS) $(DIRS_EXPORT) $(DIRS_LIBS)
 #
 #  At this time, the CPU_TAG value is actually assigned.
 #
@@ -400,6 +400,50 @@ ifdef DIRS
 endif
 endif
 
+ifdef DIRS
+	LOOP_OVER_ALL_DIRS		=						\
+		@for directory in $(LOOP_DIRS_ALL); do					\
+			if test -d $$directory; then				\
+				set $(EXIT_ON_ERROR);				\
+				echo "cd $$directory; $(MAKE) $@";		\
+				$(MAKE) -C $$directory $@;			\
+				set +e;						\
+			else							\
+				echo "Skipping non-directory $$directory...";	\
+			fi;							\
+			$(CLICK_STOPWATCH);					\
+		done
+else
+ifdef DIRS_EXPORT
+	LOOP_OVER_ALL_DIRS		=						\
+		@for directory in $(LOOP_DIRS_ALL); do					\
+			if test -d $$directory; then				\
+				set $(EXIT_ON_ERROR);				\
+				echo "cd $$directory; $(MAKE) $@";		\
+				$(MAKE) -C $$directory $@;			\
+				set +e;						\
+			else							\
+				echo "Skipping non-directory $$directory...";	\
+			fi;							\
+			$(CLICK_STOPWATCH);					\
+		done
+else
+ifdef DIRS_LIBS
+	LOOP_OVER_ALL_DIRS		=						\
+		@for directory in $(LOOP_DIRS_ALL); do					\
+			if test -d $$directory; then				\
+				set $(EXIT_ON_ERROR);				\
+				echo "cd $$directory; $(MAKE) $@";		\
+				$(MAKE) -C $$directory $@;			\
+				set +e;						\
+			else							\
+				echo "Skipping non-directory $$directory...";	\
+			fi;							\
+			$(CLICK_STOPWATCH);					\
+		done
+endif
+endif
+endif
 
 
 
