@@ -9790,19 +9790,6 @@ if test ! -z "$MISSING_MOTIF"; then
 fi
 fi # $no_x
 
-# netlib stuff
-MODULAR_NETLIB=1
-cat >> confdefs.h <<\EOF
-#define MODULAR_NETLIB 1
-EOF
-
-
-if test !"$MODULAR_NETLIB"; then
-  cat >> confdefs.h <<\EOF
-#define CookieManagement 1
-EOF
-
-fi
 
 if test "$OS_TARGET" = "OS2"; then
   cat >> confdefs.h <<\EOF
@@ -10308,7 +10295,6 @@ s%@DSO_LDOPTS@%$DSO_LDOPTS%g
 s%@DLL_SUFFIX@%$DLL_SUFFIX%g
 s%@LIB_SUFFIX@%$LIB_SUFFIX%g
 s%@OBJ_SUFFIX@%$OBJ_SUFFIX%g
-s%@MODULAR_NETLIB@%$MODULAR_NETLIB%g
 s%@LIBS_PATH@%$LIBS_PATH%g
 s%@MOZ_RPM_NSPR_OPTIMIZE@%$MOZ_RPM_NSPR_OPTIMIZE%g
 s%@MOZ_RPM_PREFIX@%$MOZ_RPM_PREFIX%g
