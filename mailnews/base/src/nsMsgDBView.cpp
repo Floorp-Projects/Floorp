@@ -4244,63 +4244,50 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
 
 PRInt32 nsMsgDBView::GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex)
 {
-  PRBool done = PR_FALSE;
-  PRInt32 levelToAdd = 1;
   nsCOMPtr <nsIMsgDBHdr> curMsgHdr = msgHdr;
 
   // look through the ancestors of the passed in msgHdr in turn, looking for them in the view, up to the start of
   // the thread. If we find an ancestor, then our level is one greater than the level of the ancestor.
-  while (!done)
+  while (curMsgHdr)
   {
     nsMsgKey parentKey;
     curMsgHdr->GetThreadParent(&parentKey);
-    if (parentKey != nsMsgKey_None)
+    if (parentKey == nsMsgKey_None)
+      break;
+
+    // scan up to find view index of ancestor, if any
+    for (nsMsgViewIndex indexToTry = viewIndex; indexToTry && indexToTry-- >= startOfThread;)
     {
-      nsMsgViewIndex parentIndexInView = nsMsgViewIndex_None;
-        // scan up to find view index of ancestor, if any
-      for (nsMsgViewIndex indexToTry = viewIndex - 1; indexToTry >= startOfThread; indexToTry--)
-      {
-        if (m_keys[indexToTry] == parentKey)
-        {
-          parentIndexInView = indexToTry;
-          break;
-        }
-        if (indexToTry == 0)
-          break;
-      }
-      if (parentIndexInView != nsMsgViewIndex_None)
-      {
-        levelToAdd = m_levels[parentIndexInView] + 1;
-        break;
-      }
+      if (m_keys[indexToTry] == parentKey)
+        return m_levels[indexToTry] + 1;
     }
-    else
-      break;
-    m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr));
-    if (curMsgHdr == nsnull)
-      break;
+
+    if (NS_FAILED(m_db->GetMsgHdrForKey(parentKey, getter_AddRefs(curMsgHdr))))
+    {
+      NS_ERROR("GetMsgHdrForKey failed, this used to be an infinte loop condition");
+      curMsgHdr = nsnull;
+    }
   }
-  return levelToAdd;
+  return 1;
 }
 
-nsresult	nsMsgDBView::ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
+nsresult nsMsgDBView::ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
 {
   NS_ENSURE_ARG(threadHdr);
-	// these children ids should be in thread order.
+  // these children ids should be in thread order.
   nsMsgViewIndex viewIndex = startOfThreadViewIndex + 1;
-	*pNumListed = 0;
-  nsUint8Array levelStack;
+  *pNumListed = 0;
   nsMsgKey topLevelMsgKey = m_keys[startOfThreadViewIndex];
 
   PRUint32 numChildren;
   threadHdr->GetNumChildren(&numChildren);
-	PRUint32 i;
-	for (i = 0; i < numChildren; i++)
-	{
-		nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  PRUint32 i;
+  for (i = 0; i < numChildren; i++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
     threadHdr->GetChildHdrAt(i, getter_AddRefs(msgHdr));
-		if (msgHdr != nsnull)
-		{
+    if (msgHdr != nsnull)
+    {
       nsMsgKey msgKey;
       PRUint32 msgFlags;
       msgHdr->GetMessageKey(&msgKey);
@@ -4310,38 +4297,24 @@ nsresult	nsMsgDBView::ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIn
       // level in the db anymore. It will mean looking up the view for each of the
       // ancestors of the current msg until we find one in the view. I guess we could
       // check each ancestor to see if it's unread before looking for it in the view.
-#if 0
-			// if the current header's level is <= to the top of the level stack,
-			// pop off the top of the stack.
-			while (levelStack.GetSize() > 1 && 
-						msgHdr->GetLevel()  <= levelStack.GetAt(levelStack.GetSize() - 1))
-			{
-				levelStack.RemoveAt(levelStack.GetSize() - 1);
-			}
-#endif
-			if (!isRead)
-			{
-				PRUint8 levelToAdd;
-				// just make sure flag is right in db.
-				m_db->MarkHdrRead(msgHdr, PR_FALSE, nsnull);
+      if (!isRead)
+      {
+        PRUint8 levelToAdd;
+        // just make sure flag is right in db.
+        m_db->MarkHdrRead(msgHdr, PR_FALSE, nsnull);
         if (msgKey != topLevelMsgKey)
         {
-				  m_keys.InsertAt(viewIndex, msgKey);
+          m_keys.InsertAt(viewIndex, msgKey);
           m_flags.InsertAt(viewIndex, msgFlags);
-  //					pLevels[i] = msgHdr->GetLevel();
           levelToAdd = GetLevelInUnreadView(msgHdr, startOfThreadViewIndex, viewIndex);
           m_levels.InsertAt(viewIndex, levelToAdd);
-#ifdef DEBUG_bienvenu
-//					XP_Trace("added at level %d\n", levelToAdd);
-#endif
-				  levelStack.Add(levelToAdd);
           viewIndex++;
-				  (*pNumListed)++;
+          (*pNumListed)++;
         }
-			}
-		}
-	}
-	return NS_OK;
+      }
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBView::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, 
@@ -4447,14 +4420,14 @@ void nsMsgDBView::ClearHdrCache()
   m_cachedMsgKey = nsMsgKey_None;
 }
 
-void	nsMsgDBView::EnableChangeUpdates()
+void nsMsgDBView::EnableChangeUpdates()
 {
 }
-void	nsMsgDBView::DisableChangeUpdates()
+void nsMsgDBView::DisableChangeUpdates()
 {
 }
-void	nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged, 
-							 nsMsgViewNotificationCodeValue changeType)
+void nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged, 
+                             nsMsgViewNotificationCodeValue changeType)
 {
   if (mTree)
   {
@@ -4477,12 +4450,12 @@ void	nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged
   }
 }
 
-void	nsMsgDBView::NoteStartChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
-							 nsMsgViewNotificationCodeValue changeType)
+void nsMsgDBView::NoteStartChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+                                  nsMsgViewNotificationCodeValue changeType)
 {
 }
-void	nsMsgDBView::NoteEndChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
-							 nsMsgViewNotificationCodeValue changeType)
+void nsMsgDBView::NoteEndChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+                                nsMsgViewNotificationCodeValue changeType)
 {
   // send the notification now.
   NoteChange(firstlineChanged, numChanged, changeType);
@@ -4568,7 +4541,7 @@ nsresult nsMsgDBView::MarkThreadRead(nsIMsgThread *threadHdr, nsMsgViewIndex thr
         m_db->IsRead(hdrMsgId, &isRead);
 
         if (isRead != bRead) {
-	    // MarkHdrRead will change the unread count on the thread
+            // MarkHdrRead will change the unread count on the thread
             m_db->MarkHdrRead(msgHdr, bRead, nsnull);
             // insert at the front.  should we insert at the end?
             idsMarkedRead.InsertAt(0, hdrMsgId);
@@ -5434,7 +5407,7 @@ nsresult nsMsgDBView::GetFolders(nsISupportsArray **aFolders)
 {
     NS_ENSURE_ARG_POINTER(aFolders);
     *aFolders = nsnull;
-	
+
     return NS_OK;
 }
 
