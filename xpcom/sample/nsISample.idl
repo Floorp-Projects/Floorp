@@ -1,0 +1,43 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+  A sample of XPConnect. This file contains a sample interface.
+
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(7CB5B7A1-07D7-11d3-BDE2-000064657374)]
+interface nsISample : nsISupports
+{
+    attribute string Value;
+    void WriteValue(in string aPrefix);
+    void Poke(in string aValue);
+};
+
+
+%{ C++
+// {7CB5B7A0-07D7-11d3-BDE2-000064657374}
+#define NS_SAMPLE_CID \
+{ 0x7cb5b7a0, 0x7d7, 0x11d3, { 0xbd, 0xe2, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
+extern nsresult
+NS_NewSample(nsISample** aSample);
+%}
