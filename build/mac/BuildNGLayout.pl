@@ -43,6 +43,7 @@ $build{all} = 1;				# turn off to do individual builds
 $build{dist} = 0;
 $build{stubs} = 0;
 $build{common} = 0;
+$build{intl} = 0;
 $build{nglayout} = 0;
 $build{resources} = 0;
 $build{editor} = 0;
@@ -75,7 +76,17 @@ if ($build{all})
 chdir("::::");
 $MOZ_SRC = cwd();
 
-OpenErrorLog("NGLayoutBuildLog");
+#Use timestamped names so that you don't clobber your previous log file!
+my $now = localtime();
+while ($now =~ s@:@.@) {} # replace all colons by periods
+my $logdir = ":Build Logs:";
+if (!stat($logdir))
+{
+        print "Creating directory $logdir\n";
+        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+}
+
+OpenErrorLog("$logdir$now");
 #OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
 
 Moz::StopForErrors();
