@@ -396,6 +396,8 @@ function mmgr_addtb (parentNode, beforeNode, commandName, attribs)
     var id = parentNode.getAttribute("id") + ":" + commandName;
     tbitem.setAttribute ("id", id);
     tbitem.setAttribute ("class", "toolbarbutton-1");
+    if (command.tip)
+        tbitem.setAttribute ("tooltiptext", command.tip);
     tbitem.setAttribute ("label", command.label.replace("&", ""));
     tbitem.setAttribute ("oncommand",
                          "dispatch('" + commandName + "');");

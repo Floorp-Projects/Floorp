@@ -132,7 +132,8 @@
       </menubar>  
 
       <!-- Debug toolbar -->
-      <toolbar id="maintoolbar-outer" collapsed="true">
+      <toolbar id="maintoolbar-outer" collapsed="true"
+        grippytooltiptext="&DebugBar.tooltip;">
         <hbox id="maintoolbar">
         </hbox>
     <!--

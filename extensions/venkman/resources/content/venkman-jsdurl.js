@@ -897,8 +897,8 @@ function svc_source (response, parsedURL)
         if (status != Components.results.NS_OK)
         {
             response.start();
-            response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
-                                                        status]));
+            response.append(getMsg(MSN_JSDURL_ERRPAGE,
+                                   [safeHTML(parsedURL.spec), status]));
             response.end();
             display (getMsg (MSN_ERR_SOURCE_LOAD_FAILED,
                              [parsedURL.spec, status]),

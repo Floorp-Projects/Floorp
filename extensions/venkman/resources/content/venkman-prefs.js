@@ -54,6 +54,7 @@ function initPrefs()
          ["menubarInFloaters", navigator.platform.indexOf ("Mac") != -1],
          ["permitStartupHit", true],
          ["prettyprint", false],
+         ["rememberPrettyprint", false],
          ["saveSettingsOnExit", false],
          ["settingsFile", defaultSettingsFile],
          ["startupCount", 0],

@@ -148,7 +148,7 @@ function vmrg_endmm()
                 var window = this.windows[w];
                 var container = 
                     window.document.getElementById(VMGR_DEFAULT_CONTAINER);
-                if (container.viewCount == 0)
+                if (container && container.viewCount == 0)
                     window.close();
             }
         }
@@ -1072,6 +1072,9 @@ function vmgr_grouttab (viewManager, container)
         content = nextContent;
     }
 
+    if (container.parentNode.localName == "viewcontainer")
+        viewManager.groutContainer(container.parentNode);
+
     if (container.viewCount == 0)
     {
         //dd ("tab container is empty, hiding");
@@ -1090,9 +1093,6 @@ function vmgr_grouttab (viewManager, container)
     
     //dd ("unhiding tab container");
     container.removeAttribute("collapsed");
-
-    if (container.parentNode.localName == "viewcontainer")
-        viewManager.groutContainer(container.parentNode);
 
     if (container.viewCount == 1 && !viewManager.multiMoveDepth)
     {

@@ -39,6 +39,7 @@ const SIS_CTRID       = "@mozilla.org/scriptableinputstream;1"
 const nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
 const nsIChannel      = Components.interfaces.nsIChannel;
 const nsIInputStream  = Components.interfaces.nsIInputStream;
+const nsIRequest      = Components.interfaces.nsIRequest;
 
 function _getChannelForURL (url)
 {
@@ -53,7 +54,7 @@ function _getChannelForURL (url)
 function loadURLNow (url)
 {
     var chan = _getChannelForURL (url);
-
+    chan.loadFlags |= nsIRequest.LOAD_BYPASS_CACHE;
     var instream = 
         Components.classes[SIS_CTRID].createInstance(nsIScriptableInputStream);
     instream.init (chan.open());
@@ -64,6 +65,7 @@ function loadURLNow (url)
 function loadURLAsync (url, observer)
 {
     var chan = _getChannelForURL (url);
+    chan.loadFlags |= nsIRequest.LOAD_BYPASS_CACHE;
     return chan.asyncOpen (new StreamListener (url, observer), null);
 }
     

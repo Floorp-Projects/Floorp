@@ -171,12 +171,33 @@ function pickSaveAs (title, typeList, defaultFile, defaultDir)
     picker.init (window, title ? title : futils.MSG_SAVE_AS,
                  Components.interfaces.nsIFilePicker.modeSave);
 
-    var rv = picker.show();
+    var reason;
     
-    if (rv != PICK_CANCEL)
+    try
+    {
+        reason = picker.show();
+    }
+    catch (ex)
+    {
+        dd ("caught exception from file picker: " + ex);
+    }
+    
+    var obj = new Object();
+    
+    obj.reason = reason;
+    obj.picker = picker;
+    
+    if (reason != PICK_CANCEL)
+    {
+        obj.file = picker.file;
         futils.lastSaveAsDir = picker.file.parent;
+    }
+    else
+    {
+        obj.file = null;
+    }
 
-    return {reason: rv, file: picker.file, picker: picker};
+    return obj;
 }
 
 function pickOpen (title, typeList, defaultFile, defaultDir)

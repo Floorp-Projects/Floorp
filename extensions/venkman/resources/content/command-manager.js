@@ -29,7 +29,7 @@ function getAccessKey (str)
     return str[i + 1];
 }
 
-function CommandRecord (name, func, usage, help, label, flags, keystr)
+function CommandRecord (name, func, usage, help, label, flags, keystr, tip)
 {
     this.name = name;
     this.func = func;
@@ -38,6 +38,7 @@ function CommandRecord (name, func, usage, help, label, flags, keystr)
     this.help = help;
     this.label = label ? label : name;
     this.labelstr = label.replace ("&", "");
+    this.tip = tip;
     this.flags = flags;
     this._enabled = true;
     this.keyNodes = new Array();
@@ -195,8 +196,9 @@ function cmgr_defcmds (cmdary)
         var help  = getMsgFrom(bundle, "cmd." + name + ".help", null,
                                helpDefault);
         var keystr = getMsgFrom (bundle, "cmd." + name + ".key", null, "");
+        var tip = getMsgFrom (bundle, "cmd." + name + ".tip", null, "");
         var command = new CommandRecord (name, func, usage, help, label, flags,
-                                         keystr);
+                                         keystr, tip);
         if (aliasFor)
             command.aliasFor = aliasFor;
         this.addCommand(command);

@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.67";
+const __vnk_version        = "0.9.75";
 const __vnk_requiredLocale = "0.9.51+";
 var   __vnk_versionSuffix  = "";
 
@@ -562,7 +562,10 @@ function init()
     if (console.prefs["sessionView.requireSlash"])
         display (MSG_TIP3_HELP);
 
-    dispatch ("pprint", { toggle: console.prefs["prettyprint"] });
+    if (console.prefs["rememberPrettyprint"])
+        dispatch ("pprint", { toggle: console.prefs["prettyprint"] });
+    else
+        dispatch ("pprint", { toggle: false });
 
     if (MSG_LOCALE_VERSION != __vnk_requiredLocale)
     {
@@ -689,7 +692,7 @@ function hookScriptSealed (e)
     for (var fbp in console.fbreaks)
     {
         if (console.fbreaks[fbp].enabled &&
-            e.scriptInstance.url.search(console.fbreaks[fbp].url) != -1)
+            e.scriptInstance.url.indexOf(console.fbreaks[fbp].url) != -1)
         {
             e.scriptInstance.setBreakpoint(console.fbreaks[fbp].lineNumber,
                                            console.fbreaks[fbp]);
@@ -1027,13 +1030,14 @@ function st_reloadsrc (cb)
     this.isLoaded = false;
     this.lines = new Array();
     delete this.markup;
+    delete this.charset;
     this.loadSource(reloadCB);
 }
 
 SourceText.prototype.onSourceLoaded =
 function st_oncomplete (data, url, status)
 {
-    dd ("source loaded " + url + ", " + status);
+    //dd ("source loaded " + url + ", " + status);
     
     var sourceText = this;
     
@@ -1061,7 +1065,7 @@ function st_oncomplete (data, url, status)
 
     var matchResult;
     
-    // Check before split because xml declarlation may contain newline.
+    // search for xml charset
     if (data.substring(0, 5) == "<?xml" && !("charset" in this))
     {
         var s = data.substring(6, data.indexOf("?>"));
@@ -1069,33 +1073,50 @@ function st_oncomplete (data, url, status)
         if (matchResult)
             this.charset = matchResult[2];
     }
-    
-    var ary = data.split(/\r\n|\n|\r/m);
-    var charsetRE =
-        /meta\s+http-equiv\s+content-type\s+charset=([^\;\"\'\s]+)/i;
 
-    for (var i = 0; i < ary.length; ++i)
+    // kill control characters, except \t, \r, and \n
+    data = data.replace(/[\x00-\x08]|[\x0B\x0C]|[\x0E-\x1F]/g, "?");
+
+    // check for a html style charset declaration
+    if (!("charset" in this))
     {
-        /*
-         * The replace() strips control characters, we leave the tabs in
-         * so we can expand them to a per-file width before actually
-         * displaying them.
-         */
-        ary[i] = ary[i].replace(/[\x00-\x08]|[\x0A-\x1F]/g, "?");
-        if (!("charset" in this))
-        {
-            matchResult = ary[i].match(charsetRE);
-            if (matchResult)
-                this.charset = matchResult[1];
-        }
+        matchResult =
+            data.match(/meta\s+http-equiv.*content-type.*charset\s*=\s*([^\;\"\'\s]+)/i);
+        if (matchResult)
+            this.charset = matchResult[1];
     }
 
+    // look for an emacs mode line
+    matchResult = data.match (/-\*-.*tab-width\:\s*(\d+).*-\*-/);
+    if (matchResult)
+        this.tabWidth = matchResult[1];
+
+    // replace tabs
+    data = data.replace(/\x09/g, leftPadString ("", this.tabWidth, " "));
+    
+    var ary = data.split(/\r\n|\n|\r/m);        
+
+    if (0)
+    {
+        for (var i = 0; i < ary.length; ++i)
+        {
+            /*
+             * The replace() strips control characters, we leave the tabs in
+             * so we can expand them to a per-file width before actually
+             * displaying them.
+             */
+            ary[i] = ary[i].replace(/[\x00-\x08]|[\x0A-\x1F]/g, "?");
+            if (!("charset" in this))
+            {
+                matchResult = ary[i].match(charsetRE);
+                if (matchResult)
+                    this.charset = matchResult[1];
+            }
+        }
+    }
+    
     this.lines = ary;
 
-    ary = ary[0].match (/tab-?width*:\s*(\d+)/i);
-    if (ary)
-        this.tabWidth = ary[1];
-    
     if ("scriptInstance" in this)
     {
         this.scriptInstance.guessFunctionNames(sourceText);

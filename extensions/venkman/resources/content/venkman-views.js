@@ -1179,7 +1179,8 @@ function scv_oninput (event)
 
     function onTimeout ()
     {
-        var textbox = getChildById(scriptsView.currentContent, "scripts-search");
+        var textbox = getChildById(scriptsView.currentContent,
+                                   "scripts-search");
         dispatch ("search-scripts", { pattern: textbox.value });
     };
     
@@ -2306,7 +2307,9 @@ function cmdSaveTab (e)
 
     if (source2View.tabs && e.index == null)
     {
-        e.index = source2View.tabs.selectedIndex;    
+        e.index = source2View.tabs.selectedIndex;
+        if (!(e.index in source2View.sourceTabList))
+            return;
     }
     else if (!source2View.tabs || e.index < 0 ||
              e.index > source2View.sourceTabList.length - 1)
@@ -3763,7 +3766,6 @@ function sv_dsource (sourceText, skipScrollRestore)
     
     this.childData = sourceText;
     this.rowCount = sourceText.lines.length;
-    this.tabString = leftPadString ("", sourceText.tabWidth, " ");
     //var hdr = document.getElementById("source-line-text");
     //hdr.setAttribute ("label", sourceText.fileName);
 
@@ -3980,7 +3982,7 @@ function sv_getcelltext (row, colID)
     switch (colID)
     {
         case "col-2":
-            return this.childData.lines[row].replace(/\t/g, this.tabString);
+            return this.childData.lines[row];
 
         case "col-1":
             return row + 1;

@@ -41,8 +41,8 @@ function initProfiler ()
          ["profile.template.html", "chrome://venkman/locale/profile.html.tpl"],
          ["profile.template.csv", "chrome://venkman/locale/profile.csv.tpl"],
          ["profile.template.txt", "chrome://venkman/locale/profile.txt.tpl"],
-         ["profile.ranges.default", "1000000, 5000, 2500, 1000, 750, 500, 250," +
-          "100, 75, 50, 25, 10, 7.5, 5, 2.5, 1, 0.75, 0.5, 0.25"]
+         ["profile.ranges.default", "1000000, 5000, 2500, 1000, 750, 500, " +
+          "250, 100, 75, 50, 25, 10, 7.5, 5, 2.5, 1, 0.75, 0.5, 0.25"]
         ];
 
     console.prefManager.addPrefs(prefs);

@@ -115,8 +115,8 @@ function bov_scrollto (line, align)
     }
     else if (align > 0)
     {
-        if (line < viz) /* underscroll, can't put a row from the first page at */
-            line = 0;   /* the bottom. */
+        if (line < viz) /* underscroll, can't put a row from the first page */
+            line = 0;   /* at the bottom. */
         else
             line = line - viz + headerRows;
         
@@ -411,9 +411,9 @@ function bov_pactcell (action)
 }
 
 /*
- * record for the XULTreeView.  these things take care of keeping the XULTreeView
- * properly informed of changes in value and child count.  you shouldn't have
- * to maintain tree state at all.
+ * record for the XULTreeView.  these things take care of keeping the
+ * XULTreeView properly informed of changes in value and child count.  you 
+ * shouldn't have to maintain tree state at all.
  *
  * |share| should be an otherwise empty object to store cache data.
  * you should use the same object as the |share| for the XULTreeView that you
@@ -788,12 +788,6 @@ function xtvr_remchild (index)
     
     if (!orphan.isHidden && "isContainerOpen" in this && this.isContainerOpen)
     {
-        //XXX why would we need to resort on a remove?
-        //if (this.calculateVisualRow() >= 0)
-        //{
-        //    this.resort(true); /* resort, don't invalidate.  we're going to do
-        //                        * that in the onVisualFootprintChanged call. */
-        // }
         this.onVisualFootprintChanged (changeStart, fpDelta);
     }
 }
@@ -834,8 +828,8 @@ function xtvr_uhide ()
 }
 
 /*
- * open this record, exposing it's children.  DONT call this method if the record
- * has no children.
+ * open this record, exposing it's children.  DONT call this method if the
+ * record has no children.
  */
 XULTreeViewRecord.prototype.open =
 function xtvr_open ()
@@ -859,9 +853,10 @@ function xtvr_open ()
     this.visualFootprint += delta;
     if ("parentRecord" in this)
     {
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(), 0);
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
-                                                   delta);
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(),
+                                                   0);
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() +
+                                                   1, delta);
     }
 }
 
@@ -880,9 +875,10 @@ function xtvr_close ()
     this.visualFootprint += delta;
     if ("parentRecord" in this)
     {
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(), 0);
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
-                                                   delta);
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(),
+                                                   0);
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() +
+                                                   1, delta);
     }
 
     if ("onPostClose" in this)
@@ -964,7 +960,6 @@ function xtvr_calcrow ()
     this._share.lastIndexOwner = this;
     this._share.lastComputedIndex = vrow;
 
-    //@DEBUG-cvr dd ("cvr: returning " + vrow);
     return vrow;
 }
 
@@ -978,24 +973,6 @@ function xtvr_find (targetRow, myRow)
 {
     if (targetRow in this._share.rowCache)
         return this._share.rowCache[targetRow];
-
-    else if (0) {
-        /* XXX take this out later */
-        if (typeof myRow == "undefined")
-            myRow = this.calculateVisualRow();
-        else
-        {
-            ASSERT (myRow == this.calculateVisualRow(), "someone lied to me, " +
-                    myRow + " != " + this.calculateVisualRow());
-        }
-    
-        if (targetRow < myRow || targetRow > myRow + this.visualFootprint)
-        {
-            ASSERT (0, "I don't contain visual row " + targetRow + ", only " +
-                    myRow + "..." + (myRow + this.visualFootprint));
-            return null;
-        }
-    }
 
     /* if this is true, we *are* the index */
     if (targetRow == myRow)
@@ -1027,12 +1004,6 @@ function xtvr_find (targetRow, myRow)
         childStart += child.visualFootprint;
     }
 
-    if (0) {
-    /* XXX take this out later */
-    ASSERT (0, "locateChildByVisualRow() failed.  Asked for row " + targetRow +
-            ", record only contains " + myRow + "..." +
-            (myRow + this.visualFootprint));
-    }
     return null;
 }   
 
@@ -1070,8 +1041,8 @@ function tolr_getshare()
     return null;
 }
 
-/* XTRootRecord is used internally by XULTreeView, you probably don't need to make
- * any of these */ 
+/* XTRootRecord is used internally by XULTreeView, you probably don't need to 
+ * make any of these */ 
 function XTRootRecord (tree, share)
 {
     this._share = share;
@@ -1101,7 +1072,8 @@ function torr_calcrow ()
 XTRootRecord.prototype.resort =
 function torr_resort ()
 {
-    if ("_treeView" in this && this._treeView.frozen) {
+    if ("_treeView" in this && this._treeView.frozen)
+    {
         this._treeView.needsResort = true;
         return;
     }
@@ -1479,7 +1451,7 @@ function xtv_getprgmode (index, colID)
 XULTreeView.prototype.getCellValue =
 function xtv_getcellval (index, colID)
 {
- }
+}
 
 XULTreeView.prototype.getCellText =
 function xtv_getcelltxt (index, colID)
@@ -1664,7 +1636,7 @@ function xtv_rkeypress (event)
     }
 }
 
-/*******************************************************************************/
+/******************************************************************************/
 
 function xtv_formatRecord (rec, indent)
 {

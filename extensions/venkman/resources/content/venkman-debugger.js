@@ -591,6 +591,7 @@ function ScriptInstance (manager)
     this.creationDate = new Date();
     this.topLevel = null;
     this.functions = new Object();
+    this.nestLevel = 0;
     this.isSealed = false;
     this.scriptCount = 0;
     this.breakpointCount = 0;
@@ -1253,6 +1254,9 @@ function bi_getCondEnabled ()
 BreakInstance.prototype.__defineSetter__ ("conditionEnabled", bi_setCondEnabled);
 function bi_setCondEnabled (state)
 {
+    if (this.parentBP)
+        return this.parentBP.conditionEnabled = state;
+    
     return this._conditionEnabled = state;
 }
 
@@ -1271,6 +1275,9 @@ function bi_getCondition ()
 BreakInstance.prototype.__defineSetter__ ("condition", bi_setCondition);
 function bi_setCondition (value)
 {
+    if (this.parentBP)
+        return this.parentBP.condition = value;
+    
     return this._condition = value;
 }
 
@@ -1290,6 +1297,9 @@ function bi_getException ()
 BreakInstance.prototype.__defineSetter__ ("passExceptions", bi_setException);
 function bi_setException (state)
 {
+    if (this.parentBP)
+        return this.parentBP.passExceptions = state;
+    
     return this._passExceptions = state;
 }
 
@@ -1309,6 +1319,9 @@ function bi_getLogResult ()
 BreakInstance.prototype.__defineSetter__ ("logResult", bi_setLogResult);
 function bi_setLogResult (state)
 {
+    if (this.parentBP)
+        return this.parentBP.logResult = state;
+    
     return this._logResult = state;
 }
 
@@ -1328,6 +1341,9 @@ function bi_getResultAction ()
 BreakInstance.prototype.__defineSetter__ ("resultAction", bi_setResultAction);
 function bi_setResultAction (state)
 {
+    if (this.parentBP)
+        return this.parentBP.resultAction = state;
+    
     return this._resultAction = state;
 }
 
@@ -1396,7 +1412,7 @@ function fb_reseti ()
 {
     for (var url in console.scriptManagers)
     {
-        if (url.search(this.url) != -1)
+        if (url.indexOf(this.url) != -1)
             console.scriptManagers[url].setBreakpoint(this.lineNumber);
     }
 }
@@ -1406,7 +1422,7 @@ function fb_cleari ()
 {
     for (var url in console.scriptManagers)
     {
-        if (url.search(this.url) != -1)
+        if (url.indexOf(this.url) != -1)
             console.scriptManagers[url].clearBreakpoint(this.lineNumber);
     }
 }
@@ -1988,7 +2004,7 @@ function clearFutureBreakpoint (urlPattern, lineNumber)
     
     for (url in console.scriptManagers)
     {
-        if (url.search(urlPattern) != -1)
+        if (url.indexOf(urlPattern) != -1)
             console.scriptManagers[url].noteFutureBreakpoint(lineNumber, false);
     }
 

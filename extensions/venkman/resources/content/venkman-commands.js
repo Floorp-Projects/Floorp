@@ -315,11 +315,11 @@ function cmdChangeContainer(e)
         return;
     }
 
-    var view = console.views[e.viewIs];
+    var view = console.views[e.viewId];
     
     if (!view.currentContent)
     {
-        display(getMsg(MSN_ERR_INVALID_PARAM, ["<view-name>", e.viewId]),
+        display(getMsg(MSN_ERR_INVALID_PARAM, ["<view-id>", e.viewId]),
                 MT_ERROR);
         return;
     }
