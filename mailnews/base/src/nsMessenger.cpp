@@ -921,7 +921,7 @@ nsresult
 nsMessenger::Alert(const char *stringName)
 {
     nsresult rv = NS_OK;
-    nsString errorMessage(GetString(NS_ConvertASCIItoUCS2(stringName)));
+    nsString errorMessage(GetString(NS_ConvertASCIItoUCS2(stringName).get()));
     if (mDocShell)
     {
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
