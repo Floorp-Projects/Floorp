@@ -29,17 +29,17 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 nsFontMetricsMac :: nsFontMetricsMac()
 {
   NS_INIT_REFCNT();
-  //mFont = nsnull;
+  mFont = nsnull;//еее
   //mFontHandle = nsnull;
 }
   
 nsFontMetricsMac :: ~nsFontMetricsMac()
 {
-  /*if (nsnull != mFont)
+  if (nsnull != mFont)
   {
     delete mFont;
     mFont = nsnull;
-  }*/
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID)
@@ -160,7 +160,15 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 
   PR_Free(wildstring);*/
 
+  mFont = new nsFont(aFont);//еее
+  mContext = aCX;
+
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: Destroy()
+{
 }
 
 /*char * nsFontMetricsMac::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
@@ -265,7 +273,9 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(char ch, nscoord &aWidth)
   //if (ch < 256)
   //  return mCharWidths[ch];
   //else
-    aWidth = 0; //XXX
+
+	aWidth = ::CharWidth(ch)*20;//еее
+    return NS_OK;//еее
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -274,7 +284,8 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(PRUnichar ch, nscoord &aWidth)
   //if (ch < 256)
   //  return mCharWidths[PRUint8(ch)];
  // else
-    aWidth = 0;/* XXX */
+	aWidth = ::CharWidth(ch)*20;//еее
+    return NS_OK;//еее
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -292,6 +303,8 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const char *aString, nscoord &aWidth)
   rc = (PRInt32) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
 
   return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));*/
+	aWidth = ::TextWidth(aString, 0, strlen(aString))*20;//еее
+    return NS_OK;//еее
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -318,6 +331,7 @@ nsFontMetricsMac :: GetWidth(const char* aString,
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 
   aWidth = nscoord(float(size.cx) * dev2app);*/
+	aWidth = ::TextWidth(aString, 0, aLength)*20;//еее
   return NS_OK;
 }
 
@@ -347,44 +361,57 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aL
 
   //return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
    
-  aWidth = width;
+	PRUint32 i;//еее
+	for (i = 0; i < aLength; i ++)
+		width += ::CharWidth(aString[i]);
+	aWidth = width*20;
+    return NS_OK;//еее
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// XXX this needs to be implemented correctly
-NS_IMETHODIMP nsFontMetricsMac:: GetWidth(nsIDeviceContext *aContext,
-                                          const nsString& aString,
-                                          nscoord &aWidth)
+NS_IMETHODIMP  nsFontMetricsMac :: GetWidth(nsIDeviceContext *aContext, const nsString& aString, nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetHeight(nscoord &aHeight)
 {
   //return mHeight;
+  FontInfo fInfo;//еее
+  ::GetFontInfo(&fInfo);
+  aHeight = (fInfo.ascent + fInfo.descent + fInfo.leading)*20;
+    return NS_OK;//еее
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetLeading(nscoord &aLeading)
 {
+aLeading = 18*20;//еее
+return NS_OK;
   //return mLeading;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetMaxAscent(nscoord &aAscent)
 {
+aAscent = 18*20;//еее
+return NS_OK;
   //return mMaxAscent;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetMaxDescent(nscoord &aDescent)
 {
+aDescent = 2*20;//еее
+return NS_OK;
   //return mMaxDescent;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetMaxAdvance(nscoord &aAdvance)
 {
+aAdvance = 0*20;//еее
+return NS_OK;
   //return mMaxAdvance;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -397,6 +424,9 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidths(const nscoord *&aWidths)
 
 NS_IMETHODIMP nsFontMetricsMac :: GetFont(const nsFont *&aFont)
 {
+	aFont = mFont;//еее
+	return NS_ERROR_NOT_IMPLEMENTED;//еее
+
   //return *mFont;
   //return nsnull;
   aFont = nsnull;

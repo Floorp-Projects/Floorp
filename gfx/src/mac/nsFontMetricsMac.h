@@ -82,6 +82,9 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;*/
+
+  nsFont            *mFont;
+  nsIDeviceContext  *mContext;
 };
 
 #endif
