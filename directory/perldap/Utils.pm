@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Utils.pm,v 1.8 1998/08/09 01:16:55 leif Exp $
+# $Id: Utils.pm,v 1.9 1998/08/13 11:02:56 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -11,7 +11,7 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is PerlDAP. The Initial Developer of the Original
+# The Original Code is PerLDAP. The Initial Developer of the Original
 # Code is Netscape Communications Corp. and Clayton Donley. Portions
 # created by Netscape are Copyright (C) Netscape Communications
 # Corp., portions created by Clayton Donley are Copyright (C) Clayton
@@ -90,8 +90,8 @@ sub printEntry
   my $attr;
   local $_;
 
-  print "dn: ", $entry->{dn},"\n";
-  foreach $attr (@{$entry->{_oc_order_}})
+  print "dn: ", $entry->{"dn"},"\n";
+  foreach $attr (@{$entry->{"_oc_order_"}})
     {
       next if ($attr =~ /^_.+_$/);
       next if $entry->{"_${attr}_deleted_"};
@@ -209,20 +209,21 @@ sub askPassword
 sub ldapArgs
 {
   my ($bind, $base) = @_;
-  my (%ld);
+  my %ld;
 
-  $main::opt_v = $main::opt_n if $main::opt_n;
-  $main::opt_p = LDAPS_PORT unless ($main::opt_p || ($main::opt_P eq ""));
+  $main::opt_v = $main::opt_n if defined($main::opt_n);
+  $main::opt_p = LDAPS_PORT unless (defined($main::opt_p) ||
+				    ($main::opt_p eq ""));
 
-  $ld{host} = $main::opt_h || "ldap";
-  $ld{port} = $main::opt_p || LDAP_PORT;
-  $ld{root} = $main::opt_b || $base || $ENV{'LDAP_BASEDN'};
-  $ld{bind} = $main::opt_D || $bind || "";
-  $ld{pswd} = $main::opt_w || "";
-  $ld{cert} = $main::opt_P || "";
-  $ld{scope} = $main::opt_s || LDAP_SCOPE_SUBTREE;
+  $ld{"host"} = $main::opt_h || "ldap";
+  $ld{"port"} = $main::opt_p || LDAP_PORT;
+  $ld{"root"} = $main::opt_b || $base || $ENV{'LDAP_BASEDN'};
+  $ld{"bind"} = $main::opt_D || $bind || "";
+  $ld{"pswd"} = $main::opt_w || "";
+  $ld{"cert"} = $main::opt_P || "";
+  $ld{"scope"} = $main::opt_s || LDAP_SCOPE_SUBTREE;
 
-  if (($ld{bind} ne "") && ($ld{pswd} eq ""))
+  if (($ld{"bind"} ne "") && ($ld{"pswd"} eq ""))
     {
       print "LDAP password: ";
       $ld{pswd} = askPassword();
@@ -256,24 +257,24 @@ sub userCredentials
   my ($ld) = @_;
   my ($conn, $entry, $pswd);
 
-  if ($ld->{bind} eq "")
+  if ($ld->{"bind"} eq "")
     {
       $conn = new Mozilla::LDAP::Conn($ld);
-      die "Could't connect to LDAP server $ld->{host}" unless $conn;
+      die "Could't connect to LDAP server " . $ld->{"host"} unless $conn;
 
       $search = "(&(objectclass=inetOrgPerson)(uid=$ENV{USER}))";
-      $entry = $conn->search($ld->{root}, "subtree", $search, 0, ("uid"));
+      $entry = $conn->search($ld->{"root"}, "subtree", $search, 0, ("uid"));
       return 0 if (!$entry || $conn->nextEntry());
 
       $conn->close();
-      $ld->{bind} = $entry->getDN();
-      print "Binding as $ld->{bind}\n\n" if $main::opt_v;
+      $ld->{"bind"} = $entry->getDN();
+      print "Binding as ", $ld->{"bind"}, "\n\n" if $main::opt_v;
     }
 
-  if ($ld->{pswd} eq "")
+  if ($ld->{"pswd"} eq "")
     {
       print "Enter bind password: ";
-      $ld->{pswd} = Mozilla::LDAP::Utils::askPassword();
+      $ld->{"pswd"} = Mozilla::LDAP::Utils::askPassword();
     }
 }
 
@@ -339,13 +340,13 @@ package. See the installation procedures which are part of this package.
 
 This package can be retrieved from a number of places, including:
 
-    http://www.mozilla.org/
+    http://www.mozilla.org/directory/
     Your local CPAN server
 
 =head1 AUTHOR INFORMATION
 
-Address bug reports and comments to:
-xxx@netscape.com
+Address bug reports and comments to the Netscape DevEdge newsgroups at:
+nntps://secnews.netscape.com/netscape.dev.directory.
 
 =head1 CREDITS
 
