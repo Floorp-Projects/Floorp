@@ -98,7 +98,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsIProtocolHandler.h"
-#include "nsIHTTPProtocolHandler.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 #include "nsLinebreakConverter.h"
@@ -926,17 +925,22 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID));
         if (serv && multipartDataFile) {
 
+          multipartDataFile->GetInputStream(getter_AddRefs(postDataStream));
+
+          // XXX NewEncodeStream does nothing
+#if 0
           nsCOMPtr<nsIProtocolHandler> pHandler;
           serv->GetProtocolHandler("http", getter_AddRefs(pHandler));
-          nsCOMPtr<nsIHTTPProtocolHandler> http(do_QueryInterface(pHandler));
+          nsCOMPtr<nsIHttpProtocolHandler> http(do_QueryInterface(pHandler));
 
           nsCOMPtr<nsIInputStream> rawStream;
           multipartDataFile->GetInputStream(getter_AddRefs(rawStream));
 
           if (http && rawStream) {
-            http->NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL,
+            http->NewEncodeStream(rawStream, nsIHttpProtocolHandler::ENCODE_NORMAL,
                                   getter_AddRefs(postDataStream));
           }
+#endif
         }
       }
     }    

@@ -24,7 +24,6 @@
 #define nsCookieHTTPNotify_h___
 
 #include "nsIHttpNotify.h"
-#include "nsIAtom.h"
 #include "nsICookieService.h"
 #include "nsIComponentManager.h"
 
@@ -37,7 +36,7 @@
 
 struct nsModuleComponentInfo;   // forward declaration
 
-class nsCookieHTTPNotify : public nsIHTTPNotify {
+class nsCookieHTTPNotify : public nsIHttpNotify {
 public:
 
   // nsISupports
@@ -47,8 +46,7 @@ public:
   NS_IMETHOD Init();
 
   // nsIHttpNotify methods:
-  NS_IMETHOD ModifyRequest(nsISupports *aContext);
-  NS_IMETHOD AsyncExamineResponse(nsISupports *aContext);
+  NS_DECL_NSIHTTPNOTIFY
    
   // nsCookieHTTPNotify methods:
   nsCookieHTTPNotify();
@@ -66,9 +64,6 @@ public:
                                   const nsModuleComponentInfo *info);
 
 private:
-    nsCOMPtr<nsIAtom> mCookieHeader;
-    nsCOMPtr<nsIAtom> mSetCookieHeader;
-    nsCOMPtr<nsIAtom> mExpiresHeader;
     nsCOMPtr<nsICookieService> mCookieService;
 
     NS_IMETHOD SetupCookieService();

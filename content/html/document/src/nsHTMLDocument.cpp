@@ -89,7 +89,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"
 #include "nsISelectElement.h"
@@ -439,19 +439,16 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsAutoString lastModified;
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
 
   PRBool bTryCache = PR_FALSE;
   PRUint32 cacheFlags = 0;
 
   if (httpChannel) {
     nsXPIDLCString lastModHeader;
-    nsIAtom* lastModKey = NS_NewAtom("last-modified");
-
-    rv = httpChannel->GetResponseHeader(lastModKey, 
+    rv = httpChannel->GetResponseHeader("last-modified", 
                                         getter_Copies(lastModHeader));
 
-    NS_RELEASE(lastModKey);
     if (NS_SUCCEEDED(rv)) {
       lastModified.AssignWithConversion(NS_STATIC_CAST(const char*,
                                                        lastModHeader));
@@ -461,9 +458,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     nsXPIDLCString referrerHeader;
     nsAutoString referrer;
     // The misspelled key 'referer' is as per the HTTP spec
-    nsCOMPtr<nsIAtom> referrerKey(dont_AddRef(NS_NewAtom("referer")));
-
-    rv = httpChannel->GetRequestHeader(referrerKey, 
+    rv = httpChannel->GetRequestHeader("referer", 
                                        getter_Copies(referrerHeader));
 
     if (NS_SUCCEEDED(rv)) {
@@ -473,11 +468,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     if(kCharsetFromHTTPHeader > charsetSource) {
-      nsCOMPtr<nsIAtom>
-        contentTypeKey(dont_AddRef(NS_NewAtom("content-type")));
-
       nsXPIDLCString contenttypeheader;
-      rv = httpChannel->GetResponseHeader(contentTypeKey,
+      rv = httpChannel->GetResponseHeader("content-type",
                                           getter_Copies(contenttypeheader));
 
       if (NS_SUCCEEDED(rv)) {

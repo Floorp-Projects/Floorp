@@ -26,6 +26,7 @@
 #include "nsDocLoader.h"
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
@@ -43,6 +44,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStringBundle.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -196,7 +198,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIHTTPEventSink)
+   NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
 NS_INTERFACE_MAP_END
 
@@ -1233,16 +1235,27 @@ void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
   *aMax = max;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnHeadersAvailable(nsISupports * aContext)
-{
-  // right now I don't think we need to do anything special for this case...
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
+NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
 {
   if (aOldChannel)
   {
+    nsresult rv;
+    nsCOMPtr<nsIURI> oldURI, newURI;
+
+    rv = aOldChannel->GetOriginalURI(getter_AddRefs(oldURI));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+    if (NS_FAILED(rv)) return rv;
+
+    // verify that this is a legal redirect
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = securityManager->CheckLoadURI(oldURI, newURI,
+                                       nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
+    if (NS_FAILED(rv)) return rv;
+
     nsLoadFlags loadFlags = 0;
     PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
                          nsIWebProgressListener::STATE_IS_REQUEST;
@@ -1265,7 +1278,6 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIChannel *aOldChannel, nsIChannel *a
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
                                                 PRInt32 state)

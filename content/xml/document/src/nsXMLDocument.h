@@ -27,7 +27,7 @@
 #include "nsIXMLDocument.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -38,7 +38,7 @@ class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
                       public nsIHTMLContentContainer,
                       public nsIInterfaceRequestor,
-                      public nsIHTTPEventSink
+                      public nsIHttpEventSink
 {
 public:
   nsXMLDocument();

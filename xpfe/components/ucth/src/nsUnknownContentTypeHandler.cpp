@@ -29,7 +29,7 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIRequestObserver.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIExternalHelperAppService.h"
@@ -93,16 +93,13 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIRequest *request,
         channel = do_QueryInterface( aChannel );
 
         // Try to get HTTP channel.
-        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
         if ( httpChannel ) {
             // Get content-disposition response header.
-            nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom( "content-disposition" ));
-            if ( atom ) {
-                nsXPIDLCString disp; 
-                rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
-                if ( NS_SUCCEEDED( rv ) && disp ) {
-                    contentDisp = disp; // Save the response header to pass to dialog.
-                }
+            nsXPIDLCString disp; 
+            rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
+            if ( NS_SUCCEEDED( rv ) && disp ) {
+                contentDisp = disp; // Save the response header to pass to dialog.
             }
         }
 

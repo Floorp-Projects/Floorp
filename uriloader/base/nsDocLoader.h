@@ -38,7 +38,7 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsCOMPtr.h"
 
@@ -54,7 +54,7 @@ class nsDocLoaderImpl : public nsIDocumentLoader,
                         public nsIProgressEventSink,
                         public nsIWebProgress,
                         public nsIInterfaceRequestor,
-                        public nsIHTTPEventSink,
+                        public nsIHttpEventSink,
                         public nsISecurityEventSink
 {
 public:

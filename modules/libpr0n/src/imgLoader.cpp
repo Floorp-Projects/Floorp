@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIProxyObjectManager.h"
@@ -149,7 +149,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     NS_ADDREF(pl);
 
     // set the referrer if this is an HTTP request
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(newChannel));
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(newChannel));
     if (aLoadGroup && httpChannel) {
       nsresult rv;
       // Get the defloadRequest from the loadgroup
@@ -165,8 +165,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
           rv = reqChannel->GetURI(getter_AddRefs(referrer));
           if (NS_SUCCEEDED(rv)) {
             // Set the referrer
-            httpChannel->SetReferrer(referrer,
-                                     nsIHTTPChannel::REFERRER_INLINES);
+            httpChannel->SetReferrer(referrer, nsIHttpChannel::REFERRER_INLINES);
           }   
         }
       }

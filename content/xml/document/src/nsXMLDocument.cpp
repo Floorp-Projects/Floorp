@@ -55,8 +55,8 @@
 #include "nsICSSLoader.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsIHttpChannel.h"
 #include "nsIURI.h"
-#include "nsIHTTPChannel.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetAlias.h"
 #include "nsIPref.h"
@@ -223,7 +223,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRY(nsIHTTPEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Document)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
@@ -278,15 +278,9 @@ nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 
-// nsIHTTPEventSink
+// nsIHttpEventSink
 NS_IMETHODIMP
-nsXMLDocument::OnHeadersAvailable(nsISupports *aContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLDocument::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
+nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 {
   nsresult rv;
 
@@ -305,7 +299,6 @@ nsXMLDocument::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
   nsCOMPtr<nsIPrincipal> newCodebase;
   rv = securityManager->GetCodebasePrincipal(newLocation,
                                              getter_AddRefs(newCodebase));
-
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -412,14 +405,12 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     aContentType = nsnull;
   }
 
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if(httpChannel) {
-     nsIAtom* contentTypeKey = NS_NewAtom("content-type");
      nsXPIDLCString contenttypeheader;
-     rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+     rv = httpChannel->GetResponseHeader("content-type", getter_Copies(contenttypeheader));
 
 
-     NS_RELEASE(contentTypeKey);
      if (NS_SUCCEEDED(rv)) {
 	nsAutoString contentType;
 	contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );

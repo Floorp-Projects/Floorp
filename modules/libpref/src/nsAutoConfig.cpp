@@ -24,7 +24,7 @@
 
 #include "nsAutoConfig.h"
 #include "nsIURI.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIFileStreams.h"
 #include "nsDirectoryServiceDefs.h"
 #include "prmem.h"
@@ -129,7 +129,7 @@ nsAutoConfig::OnStopRequest(nsIRequest* request, nsISupports* context,
     }
 
     //Checking for the http response, if failure go read the failover file.
-    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(request));
+    nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
         PRUint32 httpStatus;
         pHTTPCon->GetResponseStatus(&httpStatus);

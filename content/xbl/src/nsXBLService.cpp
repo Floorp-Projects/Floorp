@@ -37,7 +37,6 @@
 #include "nsIDOMElement.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"

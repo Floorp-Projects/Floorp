@@ -37,7 +37,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsWeakReference.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -223,7 +223,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
   //   content handler.  Just return.  This causes the request to be
   //   ignored.
   //
-  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(request, &rv));
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request, &rv));
 
   if (NS_SUCCEEDED(rv)) {
     PRUint32 responseCode = 0;
