@@ -60,6 +60,8 @@ function initHandlers()
     node.active = false;
 
     window.onkeypress = onWindowKeyPress;
+    
+    client.inputPopup = null;
 }
 
 function onClose()
@@ -108,7 +110,7 @@ function onTabClick (e, id)
 function onMessageViewClick(e)
 {
     if ((e.which != 1) && (e.which != 2))
-        return;
+        return true;
     
     var cx = getMessagesContext(null, e.target);
     var command;
@@ -539,6 +541,7 @@ function onInputKeypressCallback (el)
         if (popup)
         {
             var box = el.boxObject;
+            var pos;
             if (!box)
                 box = el.ownerDocument.getBoxObjectFor(el);
             if (el.nodeName == "textbox")

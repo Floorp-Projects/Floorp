@@ -139,7 +139,8 @@
 
   <!-- Statusbar (hey, it's /almost/ a menu) -->
   <overlaytarget id="statusbar-overlay-target">
-    <statusbar class="chromeclass-status" id="status-bar" flex="1">
+    <statusbar class="chromeclass-status" id="status-bar" 
+        persist="collapsed" flex="1">
       <statusbarpanel id="component-bar"/>
       <statusbarpanel id="status-text" label="" flex="1"
         crop="right"/>

@@ -2545,9 +2545,8 @@ function net_display (message, msgtype, sourceObj, destObj)
 {
     var o = getObjectDetails(client.currentObject);
 
-    if (client.SLOPPY_NETWORKS && client.currentObject != client &&
-        client.currentObject != this && o.network == this &&
-        o.server.isConnected)
+    if (client.SLOPPY_NETWORKS && client.currentObject != this &&
+        o.network == this && o.server && o.server.isConnected)
     {
         client.currentObject.display (message, msgtype, sourceObj, destObj);
     }
@@ -2567,7 +2566,7 @@ function usr_display(message, msgtype, sourceObj, destObj)
     else
     {
         var o = getObjectDetails(client.currentObject);
-        if (o.server.isConnected &&
+        if (o.server && o.server.isConnected &&
             o.network == this.parent.parent &&
             client.currentObject.TYPE != "IRCUser")
             client.currentObject.display (message, msgtype, sourceObj, destObj);
@@ -2809,7 +2808,7 @@ function __display(message, msgtype, sourceObj, destObj)
             }
             else /* msg from user to channel */
             {
-                if (typeof (message == "string") && me)
+                if ((typeof message == "string") && me)
                 {
                     isImportant = msgIsImportant (message, nick, o.network);
                     if (isImportant)

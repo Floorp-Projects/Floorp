@@ -225,7 +225,7 @@ function ecmaEscape(str)
 {
     function replaceNonPrintables(ch)
     {
-        rv = ch.charCodeAt().toString(16);
+        var rv = ch.charCodeAt().toString(16);
         if (rv.length == 1)
             rv = "0" + rv;
         else if (rv.length == 3)
@@ -252,6 +252,7 @@ function ecmaUnescape(str)
         if (!ary)
             return "<ERROR>";
 
+        var rv;
         if (ary[1])
         {
             // two digit escape, possibly with cruft after

@@ -1264,7 +1264,7 @@ function cmdList(e)
 {
     e.network.list = new Array();
     e.network.list.regexp = null;
-    if (!e.channelName)
+    if (!e.channelName || !e.inputData)
         e.channelName = "";
     e.server.sendData("LIST " + e.channelName + "\n");
 }
@@ -1633,9 +1633,9 @@ function cmdAlias(e)
     {
         for (var i = 0; i < aliasDefs.length; ++i)
         {
-            var ary = aliasDefs[i].split(/\s*=\s*/);
-            if (ary[0] == commandName)
-                return [i, ary[1]];
+            var ary = aliasDefs[i].match(/^(.*?)\s*=\s*(.*)$/);
+            if (ary[1] == commandName)
+                return [i, ary[2]];
         }
 
         return null;
@@ -1654,7 +1654,7 @@ function cmdAlias(e)
         }
         
         delete client.commandManager.commands[e.aliasName];
-        arrayRemoveAt(aliasDefs, ary[1]);
+        arrayRemoveAt(aliasDefs, ary[0]);
         aliasDefs.update();
 
         feedback(e, getMsg(MSG_ALIAS_REMOVED, e.aliasName));
@@ -1684,8 +1684,8 @@ function cmdAlias(e)
         {
             for (var i = 0; i < aliasDefs.length; ++i)
             {
-                ary = aliasDefs[i].split(/\s*=\s*/);
-                display(getMsg(MSG_FMT_ALIAS, [ary[0], ary[1]]));
+                ary = aliasDefs[i].match(/^(.*?)\s*=\s*(.*)$/);
+                display(getMsg(MSG_FMT_ALIAS, [ary[1], ary[2]]));
             }
         }
     }
@@ -1904,9 +1904,10 @@ function cmdInvite(e)
 
 function cmdKick(e) 
 {
-    var cuser = e.channel.getUser(e.nickname);
-
-    if (!cuser)
+    if (!e.user)
+        e.user = e.channel.getUser(e.nickname);
+    
+    if (!e.user)
     {
         display(getMsg(MSG_ERR_UNKNOWN_USER, e.nickname), MT_ERROR);
         return;
@@ -1919,7 +1920,7 @@ function cmdKick(e)
                           e.user.name + "@" + hostmask + "\n");
     }
     
-    cuser.kick(e.reason);
+    e.user.kick(e.reason);
 }
 
 function cmdClient(e)

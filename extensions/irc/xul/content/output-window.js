@@ -207,7 +207,7 @@ function changeCSS(url, id)
     if (!node)
     {
         node = document.createElement("link");
-        node.setAttribute("id", "main-css");
+        node.setAttribute("id", id);
         node.setAttribute("rel", "stylesheet");
         node.setAttribute("type", "text/css");
         var head = document.getElementsByTagName("head")[0];

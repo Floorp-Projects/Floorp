@@ -17,4 +17,10 @@
       label="&czButton.label;" tooltiptext="&czButton.label;"/>
 </toolbarpalette>
 
+<menupopup id="menu_ToolsPopup">
+  <menuitem id="tb-chatzilla-menu" oncommand="toIRC()" 
+      insertafter="javascriptConsole,devToolsSeparator"
+      label="&czMenu.label;" accesskey="&czMenu.accesskey;"/>
+</menupopup>
+
 </overlay>

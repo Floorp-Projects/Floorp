@@ -978,10 +978,11 @@ function serv_005 (e)
     //   PREFIX (--> userModes[{mode,symbol}]), 
     //   CHANMODES (--> channelModes{a:[], b:[], c:[], d:[]}).
     
+    var m;
     if ("chantypes" in this.supports)
     {
         this.channelTypes = [];
-        for (var m = 0; m < this.supports.chantypes.length; m++)
+        for (m = 0; m < this.supports.chantypes.length; m++)
             this.channelTypes[this.supports.chantypes[m]] = true;
     }
     
@@ -995,7 +996,7 @@ function serv_005 (e)
         else
         {
             this.userModes = [];
-            for (var m = 0; m < mlist[1].length; m++)
+            for (m = 0; m < mlist[1].length; m++)
                 this.userModes.push( { mode: mlist[1][m], 
                                                    symbol: mlist[2][m] } );
         }

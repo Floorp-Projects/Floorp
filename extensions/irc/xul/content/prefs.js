@@ -578,9 +578,9 @@ function initAliases()
 
     for (var i = 0; i < aliasDefs.length; ++i)
     {
-        var ary = aliasDefs[i].split(/\s*=\s*/);
-        var name = ary[0];
-        var list = ary[1];
+        var ary = aliasDefs[i].match(/^(.*?)\s*=\s*(.*)$/);
+        var name = ary[1];
+        var list = ary[2];
         
         client.commandManager.defineCommand(name, list);
     }
