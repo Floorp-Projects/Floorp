@@ -1386,17 +1386,20 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	if (!PK11_IsFriendly(slot)) {
 	    if (PK11_Authenticate(slot, PR_TRUE, wincx) != SECSuccess) {
 		PK11_FreeSlot(slot);
+    		if (nickCopy) PORT_Free(nickCopy);
 		return NULL;
 	    }
 	}
 	collection = nssCertificateCollection_Create(defaultTD, NULL);
 	if (!collection) {
 	    PK11_FreeSlot(slot);
+	    if (nickCopy) PORT_Free(nickCopy);
 	    return NULL;
 	}
 	nameList = nssList_Create(NULL, PR_FALSE);
 	if (!nameList) {
 	    PK11_FreeSlot(slot);
+	    if (nickCopy) PORT_Free(nickCopy);
 	    return NULL;
 	}
 	(void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD,
