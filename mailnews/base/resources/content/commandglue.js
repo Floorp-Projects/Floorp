@@ -292,6 +292,8 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection, viewTyp
   SetTemplateTreeItemOpen(false);
   folder.builder.rebuild();
 
+  SetUpToolbarButtons(uri);
+
   folder.setAttribute('ref', uri);
     msgNavigationService.EnsureDocumentIsLoaded(document);
 
