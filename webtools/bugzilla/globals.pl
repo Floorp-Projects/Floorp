@@ -68,7 +68,7 @@ use DBI;
 
 use Date::Format;               # For time2str().
 use Date::Parse;               # For str2time().
-use Carp;                       # for confess
+#use Carp;                       # for confess
 use RelationSet;
 
 # $ENV{PATH} is not taint safe
@@ -87,12 +87,12 @@ $::dbwritesallowed = 1;
 # Joe Robins, 7/5/00
 $::superusergroupset = "9223372036854775807";
 
-sub die_with_dignity {
-    my ($err_msg) = @_;
-    print $err_msg;
-    confess($err_msg);
-}
-$::SIG{__DIE__} = \&die_with_dignity;
+#sub die_with_dignity {
+#    my ($err_msg) = @_;
+#    print $err_msg;
+#    confess($err_msg);
+#}
+#$::SIG{__DIE__} = \&die_with_dignity;
 
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
