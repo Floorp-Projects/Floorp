@@ -40,7 +40,7 @@ sub make_filenames_list {
 
 # Print out a list of testnames in db directory
 sub print_testnames {
-  my ($testname) = @_;
+  my ($tbox) = @_;
 
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
@@ -55,7 +55,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -93,7 +93,7 @@ sub show_graph {
 
   print "<body>\n";
 
-  print "<table>\n";
+  print "<table cellspacing=10>\n";
   print "<tr>\n";
 
   print "<td>\n";
@@ -132,17 +132,31 @@ sub show_graph {
 
   print "</tr>\n";
   print "</table>\n";
-
   print "<br>\n";
-  
+
   # graph
   print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\" alt=\"$TBOX $TESTNAME graph\">";
+
+  print "<br>\n";
+  print "<br>\n";
+
+  # Other machines
+  print "<li>\n";
+  print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">Other machines running the $TESTNAME test</a>";
+  print "</li>\n";
+
+  print "<li>\n";
+  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\">Other tests that $TBOX is running</a>";
+  print "</li>\n";
+
+
+  
 
   print "</body>\n";
 }
 
 if(!$TESTNAME) {
-  print_testnames();
+  print_testnames($TBOX);
 } elsif(!$TBOX) {
   print_machines($TESTNAME);
 } else {
