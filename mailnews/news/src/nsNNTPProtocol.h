@@ -37,8 +37,8 @@
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
-#define ARTICLE_PATH  "d:\\mozilla\\mozilla\\mailnews\\news\\tempArticle.eml"
-#define ARTICLE_PATH_URL "D|/mozilla/mozilla/mailnews/news/tempArticle.eml"
+#define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
+#define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
