@@ -57,6 +57,8 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIFileChannel.h"
+#include "nsIWyciwygChannel.h"
+#include "nsIFTPChannel.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
@@ -87,10 +89,11 @@ PRLogModuleInfo* gSecureDocLog = nsnull;
 
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
-  : mMixContentAlertShown(PR_FALSE),
-    mSecurityState(STATE_IS_INSECURE)
+  : mIsViewSource(PR_FALSE),
+    mPreviousSecurityState(lis_no_security)
 {
   NS_INIT_ISUPPORTS();
+  ResetStateTracking();
   
 #if defined(PR_LOGGING)
   if (!gSecureDocLog)
@@ -120,6 +123,9 @@ NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 {
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: Init\n", this));
+
   nsresult rv = NS_OK;
   mWindow = window;
 
@@ -130,9 +136,6 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
                              getter_AddRefs(mStringBundle));
   if (NS_FAILED(rv)) return rv;
   
-  GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
-                  mTooltipText);
-
   // hook up to the form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (NS_SUCCEEDED(rv)) {
@@ -160,14 +163,49 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(PRInt32* aState)
 {
-  *aState = mSecurityState;
+  NS_ENSURE_ARG(aState);
+  
+  switch (mPreviousSecurityState)
+  {
+    case lis_broken_security:
+      *aState = STATE_IS_BROKEN;
+      break;
+
+    case lis_mixed_security:
+      *aState = STATE_IS_BROKEN;
+      break;
+
+    case lis_low_security:
+      *aState = STATE_IS_SECURE | STATE_SECURE_LOW;
+      break;
+
+    case lis_high_security:
+      *aState = STATE_IS_SECURE | STATE_SECURE_HIGH;
+      break;
+
+    default:
+    case lis_no_security:
+      *aState = STATE_IS_INSECURE;
+      break;
+
+  }
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
 {
-  aText = mTooltipText;
+  if (!mInfoTooltip.IsEmpty())
+  {
+    aText = mInfoTooltip;
+  }
+  else
+  {
+    GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
+                    aText);
+  }
+
   return NS_OK;
 }
 
@@ -277,129 +315,653 @@ nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
+void nsSecureBrowserUIImpl::ResetStateTracking()
+{
+  mNewToplevelSecurityState = STATE_IS_INSECURE;
+  mInfoTooltip.Truncate();
+  mDocumentRequestsInProgress = 0;
+  mSubRequestsInProgress = 0;
+  mSubRequestsHighSecurity = 0;
+  mSubRequestsLowSecurity = 0;
+  mSubRequestsBrokenSecurity = 0;
+  mSubRequestsNoSecurity = 0;
+}
+
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                      nsIRequest* aRequest,
                                      PRInt32 aProgressStateFlags,
                                      nsresult aStatus)
 {
+  /*
+    All discussion, unless otherwise mentioned, only refers to
+    http, https, file or wyciwig requests.
+
+
+    Redirects are evil, well, some of them.
+    There are mutliple forms of redirects.
+
+    Redirects caused by http refresh content are ok, because experiments show,
+    with those redirects, the old page contents and their requests will come to STOP
+    completely, before any progress from new refreshed page content is reported.
+    So we can safely treat them as separate page loading transactions.
+
+    Evil are redirects at the http protocol level, like code 302.
+
+    If the toplevel documents gets replaced, i.e. redirected with 302, we do not care for the 
+    security state of the initial transaction, which has now been redirected, 
+    we only care for the new page load.
+    
+    For the implementation of the security UI, we make an assumption, that is hopefully true.
+    
+    Imagine, the received page that was delivered with the 302 redirection answer,
+    also delivered html content.
+
+    What happens if the parser starts to analyze the content and tries to load contained sub objects?
+    
+    In that case we would see start and stop requests for subdocuments, some for the previous document,
+    some for the new target document. And only those for the new toplevel document may be
+    taken into consideration, when deciding about the security state of the next toplevel document.
+    
+    Because security state is being looked at, when loading stops for (sub)documents, this 
+    could cause real confusion, because we have to decide, whether an incoming progress 
+    belongs to the new toplevel page, or the previous, already redirected page.
+    
+    Can we simplify here?
+    
+    If a redirect at the http protocol level is seen, can we safely assume, its html content
+    will not be parsed, anylzed, and no embedded objects will get loaded (css, js, images),
+    because the redirect is already happening?
+    
+    If we can assume that, this really simplify things. Because we will never see notification
+    for sub requests that need to get ignored.
+    
+    I would like to make this assumption for now, but please let me (kaie) know if I'm wrong.
+    
+    Excurse:
+      If my assumption is wrong, then we would require more tracking information.
+      We need to keep lists of all pointers to request object that had been seen since the
+      last toplevel start event.
+      If the start for a redirected page is seen, the list of releveant object must be cleared,
+      and only progress for requests which start after it must be analyzed.
+      All other events must be ignored, as they belong to now irrelevant previous top level documents.
+
+
+    Frames are also evil.
+
+    First we need a decision.
+    kaie thinks: 
+      Only if the toplevel frame is secure, we should try to display secure lock icons.
+      If some of the inner contents are insecure, we display mixed mode.
+      
+      But if the top level frame is not secure, why indicate a mixed lock icon at all?
+      I think we should always display an open lock icon, if the top level frameset is insecure.
+      
+      That's the way Netscape Communicator behaves, and I think we should do the same.
+      
+      The user will not know which parts are secure and which are not,
+      and any certificate information, displayed in the tooltip or in the "page info"
+      will only be relevant for some subframe(s), and the user will not know which ones,
+      so we shouldn't display it as a general attribute of the displayed page.
+
+    Why are frames evil?
+    
+    Because the progress for the toplevel frame document is not easily distinguishable
+    from subframes. The same STATE bits are reported.
+
+    While at first sight, when a new page load happens,
+    the toplevel frameset document has also the STATE_IS_NETWORK bit in it.
+    But this can't really be used. Because in case that document causes a http 302 redirect, 
+    the real top level frameset will no longer have that bit.
+    
+    But we need some way to distinguish top level frames from inner frames.
+    
+    I saw that the web progress we get delivered has a reference to the toplevel DOM window.
+    
+    I suggest, we look at all incoming requests.
+    If a request is NOT for the toplevel DOM window, we will always treat it as a subdocument request,
+    regardless of whether the load flags indicate a top level document.
+  */
+
+  nsCOMPtr<nsIDOMWindow> windowForProgress;
+  aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
+
+  const PRBool isToplevelProgress = (windowForProgress.get() == mWindow.get());
+  
+#ifdef PR_LOGGING
+  if (windowForProgress)
+  {
+    if (isToplevelProgress)
+    {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: progress: for toplevel\n", this));
+    }
+    else
+    {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: progress: for something else\n", this));
+    }
+  }
+  else
+  {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: progress: no window known\n", this));
+  }
+#endif
+
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnStateChange\n", this));
+
+  if (mIsViewSource)
+    return NS_OK;
+
   nsresult res = NS_OK;
 
   if (!aRequest)
+  {
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange with null request\n", this));
     return NS_ERROR_NULL_POINTER;
-  
+  }
+
+#ifdef PR_LOGGING
+  nsXPIDLCString reqname;
+  aRequest->GetName(reqname);
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnStateChange %x %s\n", this, aProgressStateFlags, reqname.get()));
+#endif
+
   // Get the channel from the request...
   // If the request is not network based, then ignore it.
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest, &res));
   if (NS_FAILED(res))
-    return NS_OK;
-
-  // We are only interested in HTTP and file requests.
-  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
-  nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
-  if (!httpRequest && !fileRequest) {
+  {
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: no channel\n", this));
     return NS_OK;
   }
+
+  // We are only interested in requests that load in the browser window...
+  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(channel));
+  if (!httpRequest) {
+    nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(channel));
+    if (!fileRequest) {
+      nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(channel));
+      if (!wyciwygRequest) {
+        nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(channel));
+        if (!ftpRequest) {
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+                 ("SecureUI:%p: OnStateChange: not a relevant request\n", this));
+          return NS_OK;
+        }
+      }
+    }
+  }
   
-  nsCOMPtr<nsIInterfaceRequestor> requestor;
-  nsCOMPtr<nsISecurityEventSink> eventSink;
-  channel->GetNotificationCallbacks(getter_AddRefs(requestor));
-  if (requestor)
-    eventSink = do_GetInterface(requestor);
-  
+  PRUint32 loadFlags = 0;
+  aRequest->GetLoadFlags(&loadFlags);
+
 #if defined(DEBUG)
-  nsCOMPtr<nsIURI> loadingURI;
-  res = channel->GetURI(getter_AddRefs(loadingURI));
-  NS_ASSERTION(NS_SUCCEEDED(res), "GetURI failed");
-  if (loadingURI) {
-    nsCAutoString temp;
-    loadingURI->GetSpec(temp);
+  nsCString info2;
+  PRUint32 testFlags = loadFlags;
+
+  if (testFlags & nsIChannel::LOAD_DOCUMENT_URI)
+  {
+    testFlags -= nsIChannel::LOAD_DOCUMENT_URI;
+    info2.Append("LOAD_DOCUMENT_URI ");
+  }
+  if (testFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
+  {
+    testFlags -= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
+    info2.Append("LOAD_RETARGETED_DOCUMENT_URI ");
+  }
+  if (testFlags & nsIChannel::LOAD_REPLACE)
+  {
+    testFlags -= nsIChannel::LOAD_REPLACE;
+    info2.Append("LOAD_REPLACE ");
+  }
+
+  const char *_status = NS_SUCCEEDED(aStatus) ? "1" : "0";
+
+  nsCString info;
+  PRInt32 f = aProgressStateFlags;
+  if (f & nsIWebProgressListener::STATE_START)
+  {
+    f -= nsIWebProgressListener::STATE_START;
+    info.Append("START ");
+  }
+  if (f & nsIWebProgressListener::STATE_REDIRECTING)
+  {
+    f -= nsIWebProgressListener::STATE_REDIRECTING;
+    info.Append("REDIRECTING ");
+  }
+  if (f & nsIWebProgressListener::STATE_TRANSFERRING)
+  {
+    f -= nsIWebProgressListener::STATE_TRANSFERRING;
+    info.Append("TRANSFERRING ");
+  }
+  if (f & nsIWebProgressListener::STATE_NEGOTIATING)
+  {
+    f -= nsIWebProgressListener::STATE_NEGOTIATING;
+    info.Append("NEGOTIATING ");
+  }
+  if (f & nsIWebProgressListener::STATE_STOP)
+  {
+    f -= nsIWebProgressListener::STATE_STOP;
+    info.Append("STOP ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_REQUEST)
+  {
+    f -= nsIWebProgressListener::STATE_IS_REQUEST;
+    info.Append("IS_REQUEST ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_DOCUMENT)
+  {
+    f -= nsIWebProgressListener::STATE_IS_DOCUMENT;
+    info.Append("IS_DOCUMENT ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_NETWORK)
+  {
+    f -= nsIWebProgressListener::STATE_IS_NETWORK;
+    info.Append("IS_NETWORK ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_WINDOW)
+  {
+    f -= nsIWebProgressListener::STATE_IS_WINDOW;
+    info.Append("IS_WINDOW ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_INSECURE)
+  {
+    f -= nsIWebProgressListener::STATE_IS_INSECURE;
+    info.Append("IS_INSECURE ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_BROKEN)
+  {
+    f -= nsIWebProgressListener::STATE_IS_BROKEN;
+    info.Append("IS_BROKEN ");
+  }
+  if (f & nsIWebProgressListener::STATE_IS_SECURE)
+  {
+    f -= nsIWebProgressListener::STATE_IS_SECURE;
+    info.Append("IS_SECURE ");
+  }
+  if (f & nsIWebProgressListener::STATE_SECURE_HIGH)
+  {
+    f -= nsIWebProgressListener::STATE_SECURE_HIGH;
+    info.Append("SECURE_HIGH ");
+  }
+  if (f & nsIWebProgressListener::STATE_SECURE_MED)
+  {
+    f -= nsIWebProgressListener::STATE_SECURE_MED;
+    info.Append("SECURE_MED ");
+  }
+  if (f & nsIWebProgressListener::STATE_SECURE_LOW)
+  {
+    f -= nsIWebProgressListener::STATE_SECURE_LOW;
+    info.Append("SECURE_LOW ");
+  }
+
+  if (f > 0)
+  {
+    info.Append("f contains unknown flag!");
+  }
+
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnStateChange: %s %s -- %s\n", this, _status, 
+          info.get(), info2.get()));
+
+  if (aProgressStateFlags & STATE_STOP)
+  {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: OnStateChange: %x :%s\n", this,
-            aProgressStateFlags,temp.get()));
+           ("SecureUI:%p: OnStateChange: seeing STOP with security state: %d\n", this,
+            GetSecurityStateFromChannel(channel)
+            ));
   }
 #endif
 
-  // First event when loading doc
-  if (aProgressStateFlags & STATE_START) {
-    if (aProgressStateFlags & STATE_IS_NETWORK) {
-      // Reset state variables used per doc loading
-      mMixContentAlertShown = PR_FALSE;
-      mFirstRequest = PR_TRUE;
-      mSSLStatus = nsnull;
-      mRedirecting = PR_FALSE;
-    }
-  }
+  if (aProgressStateFlags & STATE_START
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST
+      &&
+      isToplevelProgress
+      &&
+      loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
+  {
+    if (!mDocumentRequestsInProgress)
+    {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: start for toplevel document\n", this
+              ));
 
-  // We need to keep track of redirects. This tells us that the current request is going 
-  // to be redirected after it finishes loading.
-  if ((aProgressStateFlags & STATE_IS_REQUEST) && (aProgressStateFlags & STATE_REDIRECTING)) {
-    mRedirecting = PR_TRUE;
-  }
-
-  // Request has completed.
-  if ((aProgressStateFlags & (STATE_STOP)) &&
-      (aProgressStateFlags & STATE_IS_REQUEST)) {
-
-    // work-around for bug 48515.
-    nsCOMPtr<nsIURI> aURI;
-    channel->GetURI(getter_AddRefs(aURI));
-
-    // Sometimes URI is null, so ignore.
-    if (aURI == nsnull) {
-      return NS_OK;
+      ResetStateTracking();
     }
 
-    // The document is going to be redirected. 
-    // We must reset our state and start again because the new document may have different security.
-    if (mRedirecting) {
-      mMixContentAlertShown = PR_FALSE;
-      mFirstRequest = PR_TRUE;
-      mSSLStatus = nsnull;
-      mRedirecting = PR_FALSE;
-      return NS_OK;
+    // By using a counter, this code also works when the toplevel
+    // document get's redirected, but the STOP request for the 
+    // previous toplevel document has not yet have been received.
+
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: ++mDocumentRequestsInProgress\n", this
+            ));
+
+    ++mDocumentRequestsInProgress;
+    
+    return NS_OK;
+  }
+
+  if (aProgressStateFlags & STATE_START
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST)
+  {
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: ++mSubRequestsInProgress\n", this
+            ));
+    
+    ++mSubRequestsInProgress;
+    return NS_OK;
+  }
+
+  if (aProgressStateFlags & STATE_STOP
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST
+      &&
+      isToplevelProgress
+      &&
+      loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
+  {
+    NS_ASSERTION(mDocumentRequestsInProgress > 0, "Oops? We see more STOPs than STARTs...");
+
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: --mDocumentRequestsInProgress\n", this
+            ));
+
+    if (!mToplevelEventSink)
+    {
+      nsCOMPtr<nsIInterfaceRequestor> requestor;
+      channel->GetNotificationCallbacks(getter_AddRefs(requestor));
+      if (requestor)
+        mToplevelEventSink = do_GetInterface(requestor);
+    }
+
+    if (!--mDocumentRequestsInProgress)
+    {
+      // we are arriving at zero, all STOPs for toplevel documents
+      // have been received
+      
+      mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
+
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
+              mNewToplevelSecurityState));
+
+      // Get SSL Status information if possible
+      nsCOMPtr<nsISupports> info;
+      channel->GetSecurityInfo(getter_AddRefs(info));
+      nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
+      if (sp) {
+        // Ignore result
+        sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
+      }
+
+      if (info) {
+        nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
+        if (secInfo) {
+            secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+        }
+      }
+
+      if (!mSubRequestsInProgress)
+      {
+        return FinishedLoadingStateChange(aRequest);
+      }
     }
     
-    // If this is the first request, then do a protocol check
-    if (mFirstRequest) {
-      mFirstRequest = PR_FALSE;
-      return CheckProtocolContextSwitch(eventSink, aRequest, channel);
+    return NS_OK;
+  }
+  
+  if (aProgressStateFlags & STATE_STOP
+      &&
+      aProgressStateFlags & STATE_IS_REQUEST)
+  {
+    // if we arrive here, LOAD_DOCUMENT_URI is not set
+    
+    NS_ASSERTION(mSubRequestsInProgress > 0, "Oops? We see more STOPs than STARTs...");
+
+    PRInt32 aState = GetSecurityStateFromChannel(channel);
+    
+    if (aState & STATE_IS_SECURE)
+    {
+      if (aState & STATE_SECURE_LOW || aState & STATE_SECURE_MED)
+      {
+        ++mSubRequestsLowSecurity;
+      }
+      else
+      {
+        ++mSubRequestsHighSecurity;
+      }
     }
-    // Check that the request does not have mixed content.
-    return CheckMixedContext(eventSink, aRequest, channel);
+    else if (aState & STATE_IS_BROKEN)
+    {
+      ++ mSubRequestsBrokenSecurity;
+    }
+    else
+    {
+      ++mSubRequestsNoSecurity;
+    }
+    
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: OnStateChange: --mSubRequestsInProgress\n", this
+            ));
+
+    if (!--mSubRequestsInProgress)
+    {
+      // we are arriving at zero, all STOPs for currently known sub requests
+      // have been received
+      
+      if (!mDocumentRequestsInProgress)
+      {
+        return FinishedLoadingStateChange(aRequest);
+      }
+    }
+    
+    return NS_OK;
   }
 
-  // A document has finished loading
-  if ((aProgressStateFlags & STATE_STOP) &&
-    (aProgressStateFlags & STATE_IS_NETWORK)) {
+  return NS_OK;
+}
 
-    // Get SSL Status information if possible
-    nsCOMPtr<nsISupports> info;
-    channel->GetSecurityInfo(getter_AddRefs(info));
-    nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
-    if (sp) {
-      // Ignore result
-      sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
+nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
+{
+  lockIconState newSecurityState;
+
+  if (mNewToplevelSecurityState & STATE_IS_SECURE)
+  {
+    if (mNewToplevelSecurityState & STATE_SECURE_LOW
+        ||
+        mNewToplevelSecurityState & STATE_SECURE_MED)
+    {
+      if (mSubRequestsBrokenSecurity
+          ||
+          mSubRequestsNoSecurity)
+      {
+        newSecurityState = lis_mixed_security;
+      }
+      else
+      {
+        newSecurityState = lis_low_security;
+      }
     }
+    else
+    {
+      // high
 
-    // update the tooltip text so it can be read
-    // when we do the security change notification
-    if (info) {
-      nsXPIDLString tooltip;
-      nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
-      if (secInfo &&
-          NS_SUCCEEDED(secInfo->GetShortSecurityDescription(getter_Copies(tooltip))) &&
-          tooltip) {
-        mTooltipText = tooltip;
+      if (mSubRequestsLowSecurity
+          ||
+          mSubRequestsBrokenSecurity
+          ||
+          mSubRequestsNoSecurity)
+      {
+        newSecurityState = lis_mixed_security;
+      }
+      else
+      {
+        newSecurityState = lis_high_security;
+      }
+    }
+  }
+  else
+  if (mNewToplevelSecurityState & STATE_IS_BROKEN)
+  {
+    // indicating BROKEN is more important than MIXED.
+  
+    newSecurityState = lis_broken_security;
+  }
+  else
+  {
+    newSecurityState = lis_no_security;
+  }
+
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: FinishedLoadingStateChange:  old-new  %d - %d\n", this,
+         mPreviousSecurityState, newSecurityState
+          ));
+
+  if (mPreviousSecurityState != newSecurityState)
+  {
+    // must show alert
+    
+    // we'll treat "broken" exactly like "insecure",
+    // i.e. we do not show alerts when switching between broken and insecure
+
+    /*
+      from                 to           shows alert
+    ------------------------------     ---------------
+
+    no or broken -> no or broken    => <NOTHING SHOWN>
+
+    no or broken -> mixed           => mixed alert
+    no or broken -> low             => low alert
+    no or broken -> high            => high alert
+    
+    mixed, high, low -> no, broken  => leaving secure
+
+    mixed        -> low             => low alert
+    mixed        -> high            => high alert
+
+    high         -> low             => low alert
+    high         -> mixed           => mixed
+    
+    low          -> high            => high
+    low          -> mixed           => mixed
+
+
+      security    icon
+      ----------------
+    
+      no          open
+      mixed       broken
+      broken      broken
+      low         low
+      high        high
+    */
+
+    PRBool showWarning = PR_TRUE;
+    
+    switch (mPreviousSecurityState)
+    {
+      case lis_no_security:
+      case lis_broken_security:
+        switch (newSecurityState)
+        {
+          case lis_no_security:
+          case lis_broken_security:
+            showWarning = PR_FALSE;
+            break;
+          
+          default:
+            break;
+        }
+      
+      default:
+        break;
+    }
+    
+    if (showWarning)
+    {
+      switch (newSecurityState)
+      {
+        case lis_no_security:
+        case lis_broken_security:
+          AlertLeavingSecure();
+          break;
+
+        case lis_mixed_security:
+          AlertMixedMode();
+          break;
+
+        case lis_low_security:
+          AlertEnteringWeak();
+          break;
+
+        case lis_high_security:
+          AlertEnteringSecure();
+          break;
       }
     }
 
-    if (eventSink)
-      eventSink->OnSecurityChange(aRequest, mSecurityState);
+    mPreviousSecurityState = newSecurityState;
 
+    if (lis_no_security == newSecurityState)
+    {
+      mSSLStatus = nsnull;
+      mInfoTooltip.Truncate();
+    }
+
+    if (mToplevelEventSink)
+    {
+      PRInt32 newState = STATE_IS_INSECURE;
+
+      switch (newSecurityState)
+      {
+        case lis_broken_security:
+          newState = STATE_IS_BROKEN;
+          break;
+
+        case lis_mixed_security:
+          newState = STATE_IS_BROKEN;
+          break;
+
+        case lis_low_security:
+          newState = STATE_IS_SECURE | STATE_SECURE_LOW;
+          break;
+
+        case lis_high_security:
+          newState = STATE_IS_SECURE | STATE_SECURE_HIGH;
+          break;
+
+        default:
+        case lis_no_security:
+          newState = STATE_IS_INSECURE;
+          break;
+        
+      }
+
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: FinishedLoadingStateChange: calling OnSecurityChange\n", this
+              ));
+
+      mToplevelEventSink->OnSecurityChange(aRequest, newState);
+    }
+    else
+    {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: FinishedLoadingStateChange: NO mToplevelEventSink!\n", this
+              ));
+
+    }
   }
 
-  return res;
+  return NS_OK; 
 }
 
 NS_IMETHODIMP
@@ -408,6 +970,20 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIURI* aLocation)
 {
   mCurrentURI = aLocation;
+
+  if (mCurrentURI)
+  {
+    PRBool vs;
+    
+    if (NS_SUCCEEDED(mCurrentURI->SchemeIs("view-source", &vs)) && vs)
+    {
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+             ("SecureUI:%p: OnLocationChange: view-source\n", this));
+
+      mIsViewSource = PR_TRUE;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -427,17 +1003,19 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 {
   nsresult res = NS_OK;
 
-#if defined(DEBUG_dougt)
+#if defined(DEBUG)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (!channel)
     return NS_ERROR_FAILURE;
-  
+
   nsCOMPtr<nsIURI> aURI;
   channel->GetURI(getter_AddRefs(aURI));
   
   nsCAutoString temp;
   aURI->GetSpec(temp);
-  printf("OnSecurityChange: (%x) %s\n", state, temp.get());
+  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+         ("SecureUI:%p: OnSecurityChange: (%x) %s\n", this,
+          state, temp.get()));
 #endif
 
   return res;
@@ -479,7 +1057,7 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
 
 void
 nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
-                                       nsString &outString)
+                                       nsAString &outString)
 {
   if (mStringBundle && name) {
     PRUnichar *ptrv = nsnull;
@@ -494,86 +1072,6 @@ nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
   } else {
     outString.SetLength(0);
   }
-}
-
-nsresult 
-nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSink,
-                                                  nsIRequest* aRequest,
-                                                  nsIChannel* aChannel)
-{
-  PRInt32 newSecurityState, oldSecurityState = mSecurityState;
-  
-  newSecurityState = GetSecurityStateFromChannel(aChannel);
-  mSecurityState = newSecurityState;
-
-  // Check to see if we are going from a secure page to an insecure page
-  if (newSecurityState == STATE_IS_INSECURE &&
-      (IS_SECURE(oldSecurityState) ||
-       oldSecurityState == STATE_IS_BROKEN)) {
-
-    SetBrokenLockIcon(eventSink, aRequest, PR_TRUE);
-
-    AlertLeavingSecure();
-
-  }
-  // check to see if we are going from an insecure page to a secure one.
-  else if ((newSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH) ||
-            newSecurityState == STATE_IS_BROKEN) &&
-           oldSecurityState == STATE_IS_INSECURE) {
-    AlertEnteringSecure();
-  }
-  // check to see if we are going from a strong or insecure page to a
-  // weak one.
-  else if ((IS_SECURE(newSecurityState) &&
-            newSecurityState != (STATE_IS_SECURE|STATE_SECURE_HIGH)) &&
-           (oldSecurityState == STATE_IS_INSECURE ||
-            oldSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH))) {
-
-    AlertEnteringWeak();
-  }
-  
-  mSecurityState = newSecurityState;
-  return NS_OK;
-}
-
-nsresult
-nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
-                                         nsIRequest* aRequest, nsIChannel* aChannel)
-{
-  PRInt32 newSecurityState;
-
-  newSecurityState = GetSecurityStateFromChannel(aChannel);
-
-  if ((newSecurityState == STATE_IS_INSECURE ||
-       newSecurityState == STATE_IS_BROKEN) &&
-      IS_SECURE(mSecurityState)) {
-    
-    // work-around for bug 48515
-    nsCOMPtr<nsIURI> aURI;
-    aChannel->GetURI(getter_AddRefs(aURI));
-
-    nsCAutoString temp;
-    aURI->GetSpec(temp);
-
-    if (!strncmp(temp.get(), "file:", 5) ||
-        !strcmp(temp.get(), "about:layout-dummy-request")) {
-      return NS_OK;
-    }
-
-    mSecurityState = STATE_IS_BROKEN;
-    SetBrokenLockIcon(eventSink, aRequest);
-
-    // Show alert to user (first time only)
-    // NOTE: doesn't mSecurityState provide the correct
-    // one-time checking?? Why have mMixContentAlertShown
-    // as well?
-    if (!mMixContentAlertShown) {
-      AlertMixedMode();
-      mMixContentAlertShown = PR_TRUE;
-    }
-  }
-  
-  return NS_OK;
 }
 
 nsresult
@@ -600,27 +1098,6 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, PRBool *oka
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
-  }
-  
-  return NS_OK;
-}
-
-nsresult
-nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
-                                         nsIRequest* aRequest,
-                                         PRBool removeValue)
-{
-  // update the tooltip text so it can be read
-  // when we do the security change notification
-  GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
-                  mTooltipText);
-
-  if (removeValue) {
-    if (eventSink)
-      (void) eventSink->OnSecurityChange(aRequest, STATE_IS_INSECURE);
-  } else {
-    if (eventSink)
-      (void) eventSink->OnSecurityChange(aRequest, (STATE_IS_BROKEN));
   }
   
   return NS_OK;

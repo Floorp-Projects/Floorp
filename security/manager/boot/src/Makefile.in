@@ -64,6 +64,7 @@ REQUIRES	= nspr \
 		  xpcom \
 		  string \
 		  necko \
+		  necko2 \
 		  uriloader \
 		  caps \
 		  dom \

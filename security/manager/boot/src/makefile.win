@@ -57,6 +57,7 @@ REQUIRES = \
 	locale \
 	windowwatcher \
 	necko \
+	necko2 \
 	pipnss \
 	layout \
 	layout_xul \
