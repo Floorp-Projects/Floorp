@@ -910,13 +910,15 @@
             if (selected != null) {
               if (this.getSessionStatusAt(selected) == 
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
-                this.value = this.currentSearchString;
+                if (this.currentSearchString)
+                  this.value = this.currentSearchString;
               } else {
                 this.value = this.getResultValueAt(selected);
               }
               this.mTransientValue = true;
             } else {
-              this.value = this.currentSearchString;
+              if (this.currentSearchString)
+                this.value = this.currentSearchString;
               this.mTransientValue = false;
             }
             
