@@ -748,7 +748,7 @@ function MsgGetMessagesForAllServers(defaultServer)
             {
                 if (defaultServer && defaultServer.equals(currentServer) && 
                   !defaultServer.isDeferredTo &&
-                  defaultServer.msgFolder == defaultServer.rootMsgFolder)
+                  defaultServer.rootFolder == defaultServer.rootMsgFolder)
                 {
                     dump(currentServer.serverURI + "...skipping, already opened\n");
                 }
