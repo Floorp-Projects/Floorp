@@ -2484,7 +2484,6 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
           nsWritingIterator<PRUnichar> start;
           aResult.BeginWriting(start);
 
-          
           *start.get() = nsCRT::ToUpper((char)*start);
         }
         return PR_TRUE;
