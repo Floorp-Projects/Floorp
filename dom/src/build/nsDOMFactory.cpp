@@ -132,6 +132,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsIDOMMediaList.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
@@ -730,7 +731,8 @@ void XXXDomNeverCalled()
     NS_NewScriptSelectionListener(0, 0, 0, 0);
     NS_NewScriptHTMLFormControlList(0, 0, 0, 0);
     NS_InitDocumentClass(nsnull, nsnull);
-	NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
+    NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
+    NS_NewScriptMediaList(0, 0, 0, 0);
   }
 }
 
