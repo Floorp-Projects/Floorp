@@ -67,6 +67,7 @@ public:
 
   NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
   NS_IMETHOD GetChildListName(nsIAtom*& aListName) const;
+  NS_IMETHOD SetChildListName(nsIAtom* aListName);
   NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
 
 protected:
@@ -79,6 +80,7 @@ private:
   nsIFrame*       mChildFrame;
   nsIFrame*       mPrevSiblingFrame;
   nsIAtom*        mAttribute;
+  nsIAtom*        mListName;
   nsVoidArray     mPath;
 };
 

@@ -341,6 +341,30 @@ nsImageFrame::DeleteFrame(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
+nsImageFrame::Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aGeometricParent,
+                   nsIFrame*        aContentParent,
+                   nsIStyleContext* aContext)
+{
+  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aGeometricParent,
+                                   aContentParent, aContext);
+
+  // Set the image loader's source URL and base URL
+  nsAutoString src, base;
+  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
+      (src.Length() > 0)) {
+    mImageLoader.SetURL(src);
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
+      mImageLoader.SetBaseHREF(base);
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsImageFrame::SizeOf(nsISizeOfHandler* aHandler) const
 {
   aHandler->Add(sizeof(*this));
@@ -419,20 +443,6 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
                   aReflowState.maxSize.width, aReflowState.maxSize.height));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
-
-  // If this is the initial reflow then set the image loader's
-  // source URL and base URL
-  if (eReflowReason_Initial == aReflowState.reason) {
-    nsAutoString src, base;
-    if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) &&
-        (src.Length() > 0)) {
-      mImageLoader.SetURL(src);
-      if (NS_CONTENT_ATTR_HAS_VALUE ==
-          mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
-        mImageLoader.SetBaseHREF(base);
-      }
-    }
-  }
 
   GetDesiredSize(&aPresContext, aReflowState, aMetrics);
   AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, mBorderPadding);

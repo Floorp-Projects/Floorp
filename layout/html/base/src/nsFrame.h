@@ -113,7 +113,8 @@ public:
   // nsIFrame
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
-                   nsIFrame*        aParent,
+                   nsIFrame*        aGeometricParent,
+                   nsIFrame*        aContentParent,
                    nsIStyleContext* aContext);
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,

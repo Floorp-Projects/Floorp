@@ -73,7 +73,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          nsIFrame*  aChildFrame,
                                          nsIAtom*   aAttribute)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mAttribute(aAttribute), mPrevSiblingFrame(nsnull)
+    mAttribute(aAttribute), mPrevSiblingFrame(nsnull), mListName(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   if (nsnull!=mAttribute)
@@ -85,7 +85,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          nsIFrame*  aChildFrame,
                                          nsIFrame*  aPrevSiblingFrame)
   : mType(FrameInserted), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mPrevSiblingFrame(aPrevSiblingFrame), mAttribute(nsnull)
+    mPrevSiblingFrame(aPrevSiblingFrame), mAttribute(nsnull), mListName(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   NS_INIT_REFCNT();
@@ -94,6 +94,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
 nsHTMLReflowCommand::~nsHTMLReflowCommand()
 {
   NS_IF_RELEASE(mAttribute);
+  NS_IF_RELEASE(mListName);
 }
 
 NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
@@ -210,7 +211,15 @@ NS_IMETHODIMP nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
 
 NS_IMETHODIMP nsHTMLReflowCommand::GetChildListName(nsIAtom*& aListName) const
 {
-  aListName = nsnull;
+  aListName = mListName;
+  NS_IF_ADDREF(aListName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLReflowCommand::SetChildListName(nsIAtom* aListName)
+{
+  mListName = aListName;
+  NS_IF_ADDREF(mListName);
   return NS_OK;
 }
 

@@ -88,10 +88,9 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE);
 
-  NS_IMETHOD ConstructFrame(nsIPresContext* aPresContext,
-                            nsIContent*     aContent,
-                            nsIFrame*       aParentFrame,
-                            nsIFrame*&      aFrameSubTree);
+  NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
+                                nsIContent*     aContent,
+                                nsIFrame*&      aFrameSubTree);
   NS_IMETHOD ReconstructFrames(nsIPresContext* aPresContext,
                                nsIContent*     aContent,
                                nsIFrame*       aParentFrame,
@@ -716,13 +715,12 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   return result;
 }
 
-NS_IMETHODIMP StyleSetImpl::ConstructFrame(nsIPresContext* aPresContext,
-                                           nsIContent*     aContent,
-                                           nsIFrame*       aParentFrame,
-                                           nsIFrame*&      aFrameSubTree)
+NS_IMETHODIMP StyleSetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
+                                               nsIContent*     aDocElement,
+                                               nsIFrame*&      aFrameSubTree)
 {
-  return mFrameConstructor->ConstructFrame(aPresContext, aContent,
-                                           aParentFrame, aFrameSubTree);
+  return mFrameConstructor->ConstructRootFrame(aPresContext, aDocElement,
+                                               aFrameSubTree);
 }
 
 NS_IMETHODIMP   

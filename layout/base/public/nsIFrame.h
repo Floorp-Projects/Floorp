@@ -145,12 +145,14 @@ public:
    * now.
    *
    * @param   aContent the content object associated with the frame
-   * @param   aParent  the parent frame
+   * @param   aGeometricParent  the geometric parent frame
+   * @param   aContentParent  the content parent frame
    * @param   aContext the style context associated with the frame
    */
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
-                   nsIFrame*        aParent,
+                   nsIFrame*        aGeometricParent,
+                   nsIFrame*        aContentParent,
                    nsIStyleContext* aContext) = 0;
 
   /**

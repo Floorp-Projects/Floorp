@@ -19,7 +19,6 @@
 #define nsAreaFrame_h___
 
 #include "nsBlockFrame.h"
-#include "nsIAbsoluteItems.h"
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 
@@ -40,17 +39,17 @@ struct nsStylePosition;
  *
  * @see nsLayoutAtoms::absoluteList
  */
-class nsAreaFrame : public nsBlockFrame,
-                    public nsIAbsoluteItems
+class nsAreaFrame : public nsBlockFrame
 {
 public:
   friend nsresult NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags);
   
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
   // nsIFrame
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom*& aListName) const;
@@ -77,10 +76,6 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter* aFilter) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  // nsIAbsoluteItems
-  NS_IMETHOD  AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
-  NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
-
 protected:
   nsAreaFrame();
   virtual ~nsAreaFrame();
@@ -90,17 +85,16 @@ protected:
 
   void TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const;
 
-  void ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFrame,
+  void ComputeAbsoluteFrameBounds(nsIPresContext&          aPresContext,
+                                  nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aState,
                                   const nsStylePosition*   aPosition,
                                   nsRect&                  aRect) const;
 
   void AddAbsoluteFrame(nsIFrame* aFrame);
-  PRBool IsAbsoluteFrame(nsIFrame* aFrame);
 
 private:
   nsSpaceManager* mSpaceManager;
-  nsVoidArray     mAbsoluteItems;
   nsIFrame*       mAbsoluteFrames;  // additional named child list
 
 #ifdef NS_DEBUG

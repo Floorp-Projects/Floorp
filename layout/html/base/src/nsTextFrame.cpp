@@ -481,7 +481,7 @@ TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aCX, mContent, aParent, aStyleContext);
+  cf->Init(aCX, mContent, aParent, mContentParent, aStyleContext);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;

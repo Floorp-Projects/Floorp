@@ -31,7 +31,6 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #include "nsIPtr.h"
-#include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
@@ -90,29 +89,8 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
 
   nsPlaceholderFrame* placeholder;
   NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
-  placeholder->Init(aPresContext, content, this, kidSC);
+  placeholder->Init(aPresContext, content, this, this, kidSC);
   placeholder->SetAnchoredItem(aFloatedFrame);
-  NS_IF_RELEASE(content);
-  NS_RELEASE(kidSC);
-  
-  return placeholder;
-}
-
-nsAbsoluteFrame*
-nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
-                                                     nsIFrame*       aAbsoluteFrame)
-{
-  nsIContent* content;
-  aAbsoluteFrame->GetContent(content);
-
-  // Let the placeholder share the same style context as the floated element
-  nsIStyleContext*  kidSC;
-  aAbsoluteFrame->GetStyleContext(kidSC);
-
-  nsAbsoluteFrame* placeholder;
-  NS_NewAbsoluteFrame((nsIFrame**)&placeholder);
-  placeholder->Init(aPresContext, content, this, kidSC);
-  placeholder->SetAbsoluteFrame(aAbsoluteFrame);
   NS_IF_RELEASE(content);
   NS_RELEASE(kidSC);
   
@@ -134,9 +112,8 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
   PRBool  isFloated =
     (NS_STYLE_FLOAT_LEFT == aDisplay->mFloats) ||
     (NS_STYLE_FLOAT_RIGHT == aDisplay->mFloats);
-  PRBool  isAbsolute = NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition;
 
-  if (isFloated || isAbsolute) {
+  if (isFloated) {
     nsIFrame* nextSibling;
 
     // Set aFrame's next sibling to nsnull, and remember the current next
@@ -144,21 +121,9 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
     aFrame->GetNextSibling(nextSibling);
     aFrame->SetNextSibling(nsnull);
 
-    nsIFrame* frameToWrapWithAView = aFrame;
-    if (isFloated) {
-      // Create a placeholder frame that will serve as the anchor point.
-      nsPlaceholderFrame* placeholder =
-        CreatePlaceholderFrame(aPresContext, aFrame);
-  
-      aPlaceholderFrame = placeholder;
-
-    } else {
-      // Create a placeholder frame that will serve as the anchor point.
-      nsAbsoluteFrame* placeholder =
-        CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
-  
-      aPlaceholderFrame = placeholder;
-    }
+    // Create a placeholder frame that will serve as the anchor point.
+    nsPlaceholderFrame* placeholder = CreatePlaceholderFrame(aPresContext, aFrame);
+    aPlaceholderFrame = placeholder;
 
     // Set the placeholder's next sibling to what aFrame's next sibling was
     aPlaceholderFrame->SetNextSibling(nextSibling);

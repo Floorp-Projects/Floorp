@@ -359,7 +359,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo, mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   // Set the geometric and content parent for each of the child frames

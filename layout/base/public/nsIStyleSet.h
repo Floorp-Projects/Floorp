@@ -90,13 +90,10 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE) = 0;
 
-  // Handles association of elements in the content model to frames. Finds the
-  // applicable construction rule, applies the action, and produces a sub-tree
-  // of frame objects. Can return nsnull.
-  NS_IMETHOD  ConstructFrame(nsIPresContext* aPresContext,
-                             nsIContent*     aContent,
-                             nsIFrame*       aParentFrame,
-                             nsIFrame*&      aFrameSubTree) = 0;
+  // Create frames for the root content element and its child content
+  NS_IMETHOD  ConstructRootFrame(nsIPresContext* aPresContext,
+                                 nsIContent*     aDocElement,
+                                 nsIFrame*&      aFrameSubTree) = 0;
 
   // Causes reconstruction of a frame hierarchy rooted by the
   // frame aFrameSubTree. This is often called when radical style

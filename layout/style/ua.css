@@ -500,8 +500,8 @@ NOFRAMES {
 
 :SCROLLBAR-LOOK {
   background-color: #c0c0c0;
-  //border-color: inherit;
-  //border: 2px outset #c0c0c0;
+  /* border-color: inherit; */
+  /* border: 2px outset #c0c0c0; */
 }
 
 :SCROLLBAR-ARROW-LOOK {
@@ -524,6 +524,12 @@ NOFRAMES {
 
 :WRAPPED-FRAME {
   display: inherit;
+}
+
+:PLACEHOLDER-FRAME {
+  display: inline;
+  width: 0;
+  height: 0;
 }
 
 :ROOT {

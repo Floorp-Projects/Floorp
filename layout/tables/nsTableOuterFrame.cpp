@@ -17,7 +17,6 @@
  */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
-#include "nsBodyFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -1142,7 +1141,7 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
   cf->AppendToFlow(this);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);

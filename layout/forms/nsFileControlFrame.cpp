@@ -196,7 +196,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
       text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
     }
     NS_NewTextControlFrame(childFrame);
-    childFrame->Init(aPresContext, text, this, mStyleContext);
+    childFrame->Init(aPresContext, text, this, this, mStyleContext);
     mTextFrame = (nsTextControlFrame*)childFrame;
     mFirstChild = childFrame;
 
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     NS_NewButtonControlFrame(childFrame);
     ((nsButtonControlFrame*)childFrame)->SetFileControlFrame(this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
-    childFrame->Init(aPresContext, browse, this, mStyleContext);
+    childFrame->Init(aPresContext, browse, this, this, mStyleContext);
 
     mFirstChild->SetNextSibling(childFrame);
 

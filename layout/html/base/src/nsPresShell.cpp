@@ -51,7 +51,6 @@
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
 
-#if 0
 static PLHashNumber
 HashKey(nsIFrame* key)
 {
@@ -87,7 +86,6 @@ FrameHashTable::FrameHashTable()
 
 FrameHashTable::~FrameHashTable()
 {
-  // XXX if debugging then we should assert that the table is empty
   PL_HashTableDestroy(mTable);
 }
 
@@ -143,7 +141,6 @@ FrameHashTable::Remove(nsIFrame* aKey)
   }
   return oldValue;
 }
-#endif
 
 //----------------------------------------------------------------------
 
@@ -244,6 +241,10 @@ public:
   virtual nsIFrame* GetRootFrame();
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame);
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
+  NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
+                                    nsIFrame*& aPlaceholderFrame) const;
+  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
+                                    nsIFrame* aPlaceholderFrame);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
   virtual void ClearFrameRefs(nsIFrame*);
@@ -288,6 +289,7 @@ protected:
   nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
   nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
   nsISelection *mSelection;
+  FrameHashTable* mPlaceholderMap;
 };
 
 #ifdef NS_DEBUG
@@ -429,6 +431,7 @@ PresShell::~PresShell()
   }
   NS_IF_RELEASE(mSelection);
   mRefCnt = 0;
+  delete mPlaceholderMap;
 }
 
 /**
@@ -598,7 +601,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       if (nsnull != root) {
         // Have style sheet processor construct a frame for the
         // root content object
-        mStyleSet->ConstructFrame(mPresContext, root, nsnull, mRootFrame);
+        mStyleSet->ConstructRootFrame(mPresContext, root, mRootFrame);
         NS_RELEASE(root);
       }
     }
@@ -1187,6 +1190,38 @@ PresShell::FindFrameWithContent(nsIContent* aContent)
   // For the time being do a brute force depth-first search of
   // the frame tree
   return ::FindFrameWithContent(mRootFrame, aContent);
+}
+
+NS_IMETHODIMP
+PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
+                                  nsIFrame*& aPlaceholderFrame) const
+{
+  NS_PRECONDITION(nsnull != aFrame, "no frame");
+
+  if (nsnull == mPlaceholderMap) {
+    aPlaceholderFrame = nsnull;
+  } else {
+    aPlaceholderFrame = (nsIFrame*)mPlaceholderMap->Get(aFrame);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
+                                  nsIFrame* aPlaceholderFrame)
+{
+  NS_PRECONDITION(nsnull != aFrame, "no frame");
+
+  if (nsnull == mPlaceholderMap) {
+    mPlaceholderMap = new FrameHashTable;
+    if (nsnull == mPlaceholderMap) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  mPlaceholderMap->Put(aFrame, (void*)aPlaceholderFrame);
+  return NS_OK;
 }
 
 //nsIViewObserver
