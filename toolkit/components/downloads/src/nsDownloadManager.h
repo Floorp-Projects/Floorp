@@ -57,6 +57,7 @@
 #include "nsIRequest.h"
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
@@ -99,6 +100,11 @@ protected:
   nsresult PauseResumeDownload(const PRUnichar* aPath, PRBool aPause);
   nsresult RemoveDownload(nsIRDFResource* aDownload);
   nsresult ValidateDownloadsContainer();
+
+  void     ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCancelDownloads,
+                                  const PRUnichar* aTitle, 
+                                  const PRUnichar* aCancelMessageMultiple, 
+                                  const PRUnichar* aCancelMessageSingle);
 
   static void     OpenTimerCallback(nsITimer* aTimer, void* aClosure);
   static nsresult OpenDownloadManager(PRBool aShouldFocus, nsIDownload* aDownload, nsIDOMWindow* aParent);
