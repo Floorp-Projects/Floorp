@@ -220,7 +220,7 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
     }
 
     // Find out if we're a container or not.
-    PRBool markAsContainer = IsContainer(aElement, aValue);
+    PRBool markAsContainer = IsContainer(aElement, aValue) && !IsEmpty(aElement, aValue);
     nsCOMPtr<nsIAtom> itemAtom;
     
     // Figure out what atom to use based on whether or not we're a container
