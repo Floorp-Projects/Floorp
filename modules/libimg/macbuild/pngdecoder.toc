@@ -1,0 +1,6 @@
+# target: libimgDebug.shlb
+mozilla/modules/libimg/pngcom/ipng.cpp
+mozilla/modules/libimg/pngcom/png_png.cpp
+mozilla/modules/libimg/pngcom/nsPNGDecoder.cpp
+mozilla/modules/libimg/pngcom/nsPNGCallback.cpp
+mozilla/modules/libimg/pngcom/dllcompat.cpp
