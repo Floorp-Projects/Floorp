@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Igor Bukanov
  * David C. Navas
  * Ted Neward
  *
@@ -555,13 +556,10 @@ public class FunctionObject extends NativeFunction {
     private final Object doInvoke(Object thisObj, Object[] args) 
         throws IllegalAccessException, InvocationTargetException
     {
-        if (classLoader != null) {
+        Invoker master = invokerMaster;
+		if (master != null) {
             if (invoker == null) {
-                invoker = (Invoker) invokersCache.get(method);
-                if (invoker == null) {
-                    invoker = Invoker.createInvoker(method, types, classLoader);
-                    invokersCache.put(method, invoker);
-                }
+                invoker = master.createInvoker(method, types);
             }
             try {
                 return invoker.invoke(thisObj, args);
@@ -617,23 +615,33 @@ public class FunctionObject extends NativeFunction {
     static void setCachingEnabled(boolean enabled) {
         if (!enabled) {
             methodsCache = null;
-            classLoader = null;
-            invokersCache = null;
-        } else if (classLoader == null) {
-            classLoader = JavaAdapter.createDefiningClassLoader();
-            invokersCache = new Hashtable();
+            invokerMaster = null;
+        } else if (invokerMaster == null) {
+            invokerMaster = newInvokerMaster();
         }
     }
 
+	/** Get default master implementation or null if not available */
+	private static Invoker newInvokerMaster() {
+		try {
+			Class cl = Class.forName(INVOKER_MASTER_CLASS);
+			return (Invoker)cl.newInstance();
+		}
+		catch (Exception ex) {}
+		return null;
+	}
+
+	private static final String 
+		INVOKER_MASTER_CLASS = "org.mozilla.javascript.optimizer.InvokerImpl";
+
+	static Invoker invokerMaster = newInvokerMaster();
+	
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
     
     private static boolean sawSecurityException;
 
     static Method[] methodsCache;
-    static Hashtable invokersCache = new Hashtable();
-    static JavaAdapter.DefiningClassLoader classLoader 
-        = JavaAdapter.createDefiningClassLoader();
 
     Method method;
     Constructor ctor;

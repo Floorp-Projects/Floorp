@@ -47,7 +47,7 @@ import java.util.*;
 
 public class JavaAdapter extends ScriptableObject {
     public boolean equals(Object obj) {
-    	return super.equals(obj);
+        return super.equals(obj);
     }
     
     public String getClassName() {
@@ -167,7 +167,7 @@ public class JavaAdapter extends ScriptableObject {
         for (int i = 0; i < interfacesCount; i++) {
             Method[] methods = interfaces[i].getMethods();
             for (int j = 0; j < methods.length; j++) {
-            	Method method = methods[j];
+                Method method = methods[j];
                 int mods = method.getModifiers();
                 if (Modifier.isStatic(mods) || Modifier.isFinal(mods) ||
                     jsObj == null)
@@ -189,8 +189,8 @@ public class JavaAdapter extends ScriptableObject {
                 // make sure to generate only one instance of a particular 
                 // method/signature.
                 String methodName = method.getName();
-            	String methodKey = methodName + getMethodSignature(method);
-            	if (! generatedOverrides.containsKey(methodKey)) {
+                String methodKey = methodName + getMethodSignature(method);
+                if (! generatedOverrides.containsKey(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
                                    method.getParameterTypes(),
                                    method.getReturnType());
@@ -321,15 +321,6 @@ public class JavaAdapter extends ScriptableObject {
         classLoader.defineClass(adapterName, bytes);
         return classLoader.loadClass(adapterName, true);
     }
-    
-    public static DefiningClassLoader createDefiningClassLoader() {
-        try {
-            return new JavaAdapter.DefiningClassLoader();
-        } catch (Throwable t) {
-            // most likely a security exception; just skip this optimization
-            return null;
-        }
-    }        
     
     /**
      * Utility method which dynamically binds a Context to the current thread, 
@@ -595,7 +586,7 @@ public class JavaAdapter extends ScriptableObject {
     {
         StringBuffer sb = new StringBuffer();
         sb.append('(');
-        short arrayLocal = 1;	// includes this.
+        short arrayLocal = 1;    // includes this.
         for (int i = 0; i < parms.length; i++) {
             Class type = parms[i];
             appendTypeString(sb, type);
@@ -753,11 +744,11 @@ public class JavaAdapter extends ScriptableObject {
         }
     }
 
-	/**
-	 * Generates a method called "super$methodName()" which can be called
-	 * from JavaScript that is equivalent to calling "super.methodName()"
-	 * from Java. Eventually, this may be supported directly in JavaScript.
-	 */
+    /**
+     * Generates a method called "super$methodName()" which can be called
+     * from JavaScript that is equivalent to calling "super.methodName()"
+     * from Java. Eventually, this may be supported directly in JavaScript.
+     */
     private static void generateSuper(ClassFileWriter cfw,
                                       String genName, String superName,
                                       String methodName, String methodSignature,
@@ -766,10 +757,10 @@ public class JavaAdapter extends ScriptableObject {
         cfw.startMethod("super$" + methodName, methodSignature, 
                         ClassFileWriter.ACC_PUBLIC);
         
-		// push "this"
+        // push "this"
         cfw.add(ByteCode.ALOAD, 0);
 
-		// push the rest of the parameters.
+        // push the rest of the parameters.
         int paramOffset = 1;
         for (int i = 0; i < parms.length; i++) {
             if (parms[i].isPrimitive()) {
@@ -789,12 +780,12 @@ public class JavaAdapter extends ScriptableObject {
                 methodSignature.substring(0, rightParen + 1),
                 methodSignature.substring(rightParen + 1));
 
-		// now, handle the return type appropriately.        
+        // now, handle the return type appropriately.        
         Class retType = returnType;
         if (!retType.equals(Void.TYPE)) {
             generatePopResult(cfw, retType);
         } else {
-        	cfw.add(ByteCode.RETURN);
+            cfw.add(ByteCode.RETURN);
         }
         cfw.stopMethod((short)(paramOffset + 1), null);
     }
@@ -839,41 +830,6 @@ public class JavaAdapter extends ScriptableObject {
         return sb;
     }
     
-    static final class DefiningClassLoader extends ClassLoader {
-        public Class defineClass(String name, byte data[]) {
-            ClassLoader loader = getClass().getClassLoader();
-            if (loader != null) {
-                Class clazz = ClassManager.defineClass(loader, name, data);
-                if (clazz != null)
-                    return clazz;
-            }
-            return super.defineClass(name, data, 0, data.length);
-        }
-
-        protected Class loadClass(String name, boolean resolve)
-            throws ClassNotFoundException
-        {
-            Class clazz;
-            ClassLoader loader = getClass().getClassLoader();
-            if (loader != null) {
-                clazz = ClassManager.loadClass(loader, name, resolve);
-                if (clazz != null)
-                    return clazz;
-            }
-            clazz = findLoadedClass(name);
-            if (clazz == null) {
-                try {
-                    clazz = findSystemClass(name);
-                } catch (ClassNotFoundException e) {
-                    return ScriptRuntime.loadClassName(name);
-                }
-            }
-            if (resolve)
-                resolveClass(clazz);
-            return clazz;
-        }
-    }
-
     /**
      * Provides a key with which to distinguish previously generated
      * adapter classes stored in a hash table.

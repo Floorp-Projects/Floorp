@@ -79,7 +79,7 @@ public class Codegen extends Interpreter {
         
         Exception e = null;
         Class result = null;
-        JavaScriptClassLoader classLoader = new JavaScriptClassLoader();
+        DefiningClassLoader classLoader = new DefiningClassLoader();
 
         try {
             if (cx.getOptimizationLevel() > 0) {
