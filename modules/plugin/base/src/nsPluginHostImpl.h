@@ -408,6 +408,8 @@ public:
   NS_IMETHOD
   AddUnusedLibrary(PRLibrary * aLibrary);
 
+  static nsresult GetPluginTempDir(nsIFile **aDir);
+
 private:
   NS_IMETHOD
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -507,8 +509,10 @@ private:
   nsCOMPtr<nsIFile>                    mPluginRegFile;
   nsCOMPtr<nsIPrefBranch>              mPrefService;
   nsRefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
-  
+
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
+
+  static nsIFile *sPluginTempDir;
 };
 
 #endif
