@@ -38,6 +38,8 @@
 
   <html>&skinIntro.label;</html>
   
+  <html>&installedThemes.label;</html>
+  
   <tree class="inset" id="skinsTree" datasources="rdf:chrome" 
          ref="urn:mozilla:skin:root" flex="1">
     <treecolgroup>
@@ -84,7 +86,7 @@
    
   <box autostretch="never">
     <button value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="selectSkin();"/>
-    <button value="&deselectSkin.label;" accesskey="&deselectSkin.accesskey;" oncommand="deselectSkin();"/>
+    <spring flex="1"/>
     <button value="&installSkin.label;" accesskey="&installSkin.accesskey;" oncommand="installSkin();"/>
   </box>
   
