@@ -36,8 +36,8 @@
  * may choose to override this behavior or set runtime flags for desired results.
  */
 
-#ifndef  NS_HTMLCONTENTSINK_STREAM
-#define  NS_HTMLCONTENTSINK_STREAM
+#ifndef  NS_TXTCONTENTSINK_STREAM
+#define  NS_TXTCONTENTSINK_STREAM
 
 #include "nsIParserNode.h"
 #include "nsIHTMLContentSink.h"
@@ -60,7 +60,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    * Standard constructor
    * @update	gess7/7/98
    */
-  nsHTMLContentSinkStream(); 
+  nsHTMLContentSinkStream(PRBool aDoFormat = PR_TRUE, PRBool aDoHeader = PR_TRUE); 
 
   /**
    * Constructor with associated stream. If you use this, it means that you want
@@ -68,7 +68,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    * @update	gess7/7/98
    * @param		aStream -- ref to stream where you want output sent
    */
-  nsHTMLContentSinkStream(ostream& aStream); 
+  nsHTMLContentSinkStream(ostream& aStream,PRBool aDoFormat = PR_TRUE, PRBool aDoHeader = PR_TRUE); 
 
   /**
    * virtual destructor
@@ -76,7 +76,7 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
    */
   virtual ~nsHTMLContentSinkStream();
 
-  void SetOutputStream(ostream& aStream);
+  NS_IMETHOD_(void) SetOutputStream(ostream& aStream);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -123,78 +123,10 @@ protected:
     void WriteAttributes(const nsIParserNode& aNode,ostream& aStream);
     void AddStartTag(const nsIParserNode& aNode, ostream& aStream);
     void AddEndTag(const nsIParserNode& aNode, ostream& aStream);
-
-    PRBool IsInline(eHTMLTags aTag) const;
-    PRBool IsBlockLevel(eHTMLTags aTag) const;
-
     void AddIndent(ostream& aStream);
 
 
-    /**
-      * Desired line break state before the open tag.
-      */
-    PRInt32 BreakBeforeOpen(eHTMLTags aTag) const;
 
-    /**
-      * Desired line break state after the open tag.
-      */
-    PRInt32 BreakAfterOpen(eHTMLTags aTag) const;
-
-    /**
-      * Desired line break state before the close tag.
-      */
-    PRInt32 BreakBeforeClose(eHTMLTags aTag) const;
-
-    /**
-      * Desired line break state after the close tag.
-      */
-    PRInt32 BreakAfterClose(eHTMLTags aTag) const;
-
-    /**
-      * Indent/outdent when the open/close tags are encountered.
-      * This implies that breakAfterOpen() and breakBeforeClose()
-      * are PR_TRUE no matter what those methods return.
-      */
-    PRBool IndentChildren(eHTMLTags aTag) const;
-
-    /**
-      * All tags after this tag and before the closing tag will be output with no
-      * formatting.
-      */
-    PRBool PreformattedChildren(eHTMLTags aTag) const;
-
-    /**
-      * Eat the close tag.  Pretty much just for <P*>.
-      */
-    PRBool EatOpen(eHTMLTags aTag) const;
-
-    /**
-      * Eat the close tag.  Pretty much just for </P>.
-      */
-    PRBool EatClose(eHTMLTags aTag) const;
-
-    /**
-      * Are we allowed to insert new white space before the open tag.
-      *
-      * Returning PR_FALSE does not prevent inserting WS
-      * before the tag if WS insertion is allowed for another reason,
-      * e.g. there is already WS there or we are after a tag that
-      * has PermitWSAfter*().
-      */
-    PRBool PermitWSBeforeOpen(eHTMLTags aTag) const;
-
-    /** @see PermitWSBeforeOpen */
-    PRBool PermitWSAfterOpen(eHTMLTags aTag) const;
-
-    /** @see PermitWSBeforeOpen */
-    PRBool PermitWSBeforeClose(eHTMLTags aTag) const;
-
-    /** @see PermitWSBeforeOpen */
-    PRBool PermitWSAfterClose(eHTMLTags aTag) const;
-
-    /** Certain structures allow us to ignore the whitespace from the source 
-      * document */
-    PRBool IgnoreWS(eHTMLTags aTag) const;
 
 
 protected:
@@ -207,11 +139,14 @@ protected:
     eHTMLTags mHTMLTagStack[1024];  // warning: hard-coded nesting level
     PRInt32   mColPos;
 
-
+    PRBool    mDoFormat;
+    PRBool    mDoHeader;
 };
 
 extern NS_HTMLPARS nsresult
-NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult);
+NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
+                              PRBool aDoFormat = PR_TRUE,
+                              PRBool aDoHeader = PR_TRUE);
 
 
 #endif
