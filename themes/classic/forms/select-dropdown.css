@@ -43,7 +43,7 @@
  **/
 
 select, select[size="1"] {
-  -moz-appearance: menulist;
+  /*-moz-appearance: menulist;*/
   margin: 2px 4px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
@@ -62,7 +62,7 @@ xul|*.select-label-box {
 }
 
 xul|*.select-dropmarker {
-  -moz-appearance: menulist-button;
+  /*-moz-appearance: menulist-button;*/
   min-width: 17px;
   -moz-box-align: center;
   -moz-box-pack: center;

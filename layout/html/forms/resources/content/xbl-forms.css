@@ -79,6 +79,11 @@ xul|*.select-scrollbar[disabled="true"] {
   visibility: hidden;
 }
 
+xul|*.select-menupopup {
+  background-color: inherit !important; 
+  display:-moz-popup!important;
+}
+
 input[type="checkbox"] {
   -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
   display: -moz-box;
