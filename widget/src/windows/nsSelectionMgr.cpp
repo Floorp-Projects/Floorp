@@ -25,7 +25,7 @@
 // XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
 // has a way of registering instances
 // (see http://bugzilla.mozilla.org/show_bug.cgi?id=3509 ).
-static nsISelectionMgr* theSelectionMgr = 0;
+nsISelectionMgr* theSelectionMgr = 0;
 // BWEEP BWEEP
 
 /**
