@@ -1260,6 +1260,16 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
       <filename>index.htm</filename>, and so forth. </para>
     </section>
 
+    <section id="mod_perl" xreflabel="Bugzilla and mod_perl">
+      <title>
+      Bugzilla and <filename>mod_perl</filename>
+      </title>
+      <para>Bugzilla is unsupported under mod_perl.  Effort is underway
+      to make it work cleanly in a mod_perl environment, but it is
+      slow going.
+      </para>
+    </section>
+
     <section id="mod-throttle"
     xreflabel="Using mod_throttle to prevent Denial of Service attacks">
       <title>
