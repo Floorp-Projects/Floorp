@@ -35,6 +35,9 @@
 
 #include <Xm/Xm.h>			// For XmString
 
+// An rdf private symbol which is used all over the FE - how very bad...
+extern "C" RDF_NCVocab  gNavCenter;
+
 class XFE_RDFUtils
 {
 public:
