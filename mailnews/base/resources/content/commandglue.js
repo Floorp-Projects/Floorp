@@ -173,7 +173,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   }
 
   //if it's a server, clear the threadpane and don't bother trying to load.
-  if(msgfolder.isServer) {
+  if (msgfolder.isServer) {
     msgWindow.openFolder = null;
 
     ClearThreadPane();
@@ -238,8 +238,8 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     }
     catch(ex)
     {
-          SetBusyCursor(window, false);
-          dump("Error loading with many headers to download: " + ex + "\n");
+      SetBusyCursor(window, false);
+      dump("Error loading with many headers to download: " + ex + "\n");
     }
   }
   else
@@ -262,8 +262,6 @@ function isNewsURI(uri)
 
 function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 {
-  //dump("In reroot folder, sortType = " +  sortType + "\n");
-
   // workaround for #39655
   gFolderJustSwitched = true;
 

@@ -133,7 +133,7 @@ function folderPropsOnLoad()
   // this hex value come from nsMsgFolderFlags.h
   var folderResource = RDF.GetResource(gPreselectedFolderURI);
     
-  if(folderResource)
+  if (folderResource)
     gMsgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
   if (!gMsgFolder)
     dump("no gMsgFolder preselectfolder uri = "+gPreselectedFolderURI+'\n');

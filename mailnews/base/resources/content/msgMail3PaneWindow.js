@@ -111,11 +111,11 @@ var folderListener = {
        if (eventType == "FolderLoaded") {
          if (folder) {
            var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-           if(resource) {
+           if (resource) {
              var uri = resource.Value;
-             if(uri == gCurrentFolderToReroot) {
+             if (uri == gCurrentFolderToReroot) {
                gQSViewIsDirty = true;
-               gCurrentFolderToReroot="";
+               gCurrentFolderToReroot = null;
                var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if(msgFolder) {
                  msgFolder.endFolderLoading();
@@ -157,7 +157,7 @@ var folderListener = {
                    gStartMsgKey = -1;
 
                    // now scroll to it
-	           var indicies = GetSelectedIndices(gDBView);
+                   var indicies = GetSelectedIndices(gDBView);
                    EnsureRowInThreadTreeIsVisible(indicies[0]);
                    scrolled = true;
                  }
@@ -170,7 +170,7 @@ var folderListener = {
                  }
                }
              }
-             if(uri == gCurrentLoadingFolderURI) {
+             if (uri == gCurrentLoadingFolderURI) {
                gCurrentLoadingFolderURI = "";
                //Now let's select the first new message if there is one
                if (!scrolled) {

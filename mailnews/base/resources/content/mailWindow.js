@@ -409,7 +409,6 @@ nsMsgWindowCommands.prototype =
   SelectFolder: function(folderUri)
   {
     SelectFolder(folderUri);
-
   },
   SelectMessage: function(messageUri)
   {
