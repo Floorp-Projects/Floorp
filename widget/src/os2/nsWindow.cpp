@@ -2927,7 +2927,7 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
          rc = 0;
       }
       else if( !(flags & KC_CHAR) || isNumPadScanCode(CHAR4FROMMP(mp1)) ||
-          (vk == VK_BACKSPACE) || (vk == VK_TAB) || 
+          (vk == VK_BACKSPACE) || (vk == VK_TAB) || (vk == VK_BACKTAB)
           (vk == VK_ENTER) || (vk == VK_NEWLINE) || (vk == VK_SPACE) )
       {
          if( vk >= VK_F1 && vk <= VK_F24)
