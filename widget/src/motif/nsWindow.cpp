@@ -212,11 +212,12 @@ void nsWindow::Create(nsIWidget *aParent,
 				    XmNheight, aRect.height,
 				    nsnull);
 
+  mWidget = frame ;
+
   if (!aParent) {
     XmMainWindowSetAreas (mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
   }
 
-  mWidget = frame ;
     
   if (aParent) {
     aParent->AddChild(this);
@@ -418,17 +419,34 @@ void nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 void nsWindow::GetBounds(nsRect &aRect)
 {
-  XWindowAttributes attrs ;
+  Window w = nsnull;
 
-  Display * d = ::XtDisplay(mWidget);
-  Window w = ::XtWindow(mWidget);
+  if (mWidget)
+    w = ::XtWindow(mWidget);
+  
+  if (mWidget && w) {
+    
+    XWindowAttributes attrs ;
+    
+    Display * d = ::XtDisplay(mWidget);
+    
+    XGetWindowAttributes(d, w, &attrs);
+    
+    aRect.x = attrs.x ;
+    aRect.y = attrs.y ;
+    aRect.width = attrs.width ;
+    aRect.height = attrs.height;
+    
+ } else {
 
-  XGetWindowAttributes(d, w, &attrs);
+   // XXX If this code gets hit, one should question why and how
+   // and fix it there.
+    aRect.x = 0 ;
+    aRect.y =  0;
+    aRect.width =  0;
+    aRect.height = 0;
 
-  aRect.x = attrs.x ;
-  aRect.y = attrs.y ;
-  aRect.width = attrs.width ;
-  aRect.height = attrs.height;
+ }
   
 }
 
