@@ -39,7 +39,7 @@ class nsIPresShell;
 class nsBoxSizeListNodeImpl : public nsBoxSizeList
 {
 public:
-    virtual nsBoxSize GetBoxSize(nsBoxLayoutState& aState)   { return mBoxSize; }
+    virtual nsBoxSize GetBoxSize(nsBoxLayoutState& aState);
     virtual nsBoxSizeList* GetFirst()          { return nsnull; }
     virtual nsBoxSizeList* GetLast()           { return nsnull; }
     virtual nsBoxSizeList* GetNext()           { return mNext;  }
@@ -63,7 +63,6 @@ public:
 
     nsBoxSizeList* mNext;
     nsBoxSizeList* mParent;
-    nsBoxSize mBoxSize;
     nsIBox* mBox;
     PRInt32 mRefCount;
     PRBool mIsSet;
@@ -85,6 +84,7 @@ public:
     nsBoxSizeList* mFirst;
     nsBoxSizeList* mLast;
     PRInt32 mCount;
+    nsBoxSize mBoxSize;
 };
 
 class nsMonumentLayout : public nsSprocketLayout,
@@ -101,7 +101,7 @@ public:
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList);
   //NS_IMETHOD CountMonuments(PRInt32& aCount);
   NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
-  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument);
+  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument);
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
 
   //virtual void SetHorizontal(PRBool aIsHorizontal);

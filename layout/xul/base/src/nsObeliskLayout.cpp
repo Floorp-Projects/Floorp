@@ -80,6 +80,7 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
 
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
+  nscoord totalWidth = 0;
 
   // for each info
   while(node)
@@ -95,8 +96,14 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
     if (s > s2)
       s2 = s;
 
+    totalWidth += size.pref;
+
     node = node->GetNext();
   }
+
+  nscoord& width = GET_WIDTH(aSize, isHorizontal);
+  if (totalWidth > width)
+    width = totalWidth;
 
   return NS_OK;
 }
@@ -199,7 +206,7 @@ nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
                                    nsBoxLayoutState& aState, 
                                    nscoord& aGivenSize, 
                                    nsBoxSize* aBoxSizes, 
-                                   nsComputedBoxSize* aComputedBoxSizes)
+                                   nsComputedBoxSize*& aComputedBoxSizes)
 {
   nsTempleLayout* temple = nsnull;
   nsIBox* aTempleBox = nsnull;
@@ -209,10 +216,16 @@ nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
      nsBoxSize* first = nsnull;
      nsBoxSize* last = nsnull;
      temple->BuildBoxSizeList(aTempleBox, aState, first, last);
-     aBoxSizes = first;
+     nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, first, aComputedBoxSizes);  
+     while(first)
+     {
+       nsBoxSize* toDelete = first;
+       first = first->next;
+       delete toDelete;
+     }
+  } else {
+    nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes); 
   }
-
-  nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);  
 }
 
 
