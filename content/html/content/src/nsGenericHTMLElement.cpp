@@ -360,6 +360,9 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl,
 nsresult 
 nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
 {
+  NS_ENSURE_ARG_POINTER(aParent);
+  *aParent = nsnull;
+
   if (nsnull != mContent) {
     return mContent->QueryInterface(kISupportsIID, (void **)aParent);
   }
