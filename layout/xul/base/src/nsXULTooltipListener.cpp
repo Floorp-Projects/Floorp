@@ -435,6 +435,8 @@ nsXULTooltipListener::ShowTooltip()
 }
 
 #ifdef MOZ_XUL
+// XXX: "This stuff inside DEBUG_crap could be used to make tree tooltips work
+//       in the future."
 #ifdef DEBUG_crap
 static void
 GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
