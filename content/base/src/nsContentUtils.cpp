@@ -46,6 +46,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
+#include "nsReadableUtils.h"
 
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
@@ -554,3 +555,50 @@ nsContentUtils::IsCallerChrome()
   return PR_TRUE;
 }
 
+inline PRBool
+IsCharInSet(const char* aSet,
+            const PRUnichar aChar)
+{
+  PRUnichar ch;
+  while ((ch = *aSet)) {
+    if (aChar == PRUnichar(ch)) {
+      return PR_TRUE;
+    }
+    ++aSet;
+  }
+  return PR_FALSE;
+}
+
+/**
+ * This method strips leading/trailing chars, in given set, from string.
+ */
+const nsDependentSubstring
+nsContentUtils::TrimCharsInSet(const char* aSet,
+                               const nsAString& aValue)
+{
+  nsAString::const_iterator valueCurrent, valueEnd;
+
+  aValue.BeginReading(valueCurrent);
+  aValue.EndReading(valueEnd);
+
+  // Skip charaters in the beginning
+  while (valueCurrent != valueEnd) {
+    if (!IsCharInSet(aSet, *valueCurrent)) {
+      break;
+    }
+    ++valueCurrent;
+  }
+
+  if (valueCurrent != valueEnd) {
+    for (;;) {
+      --valueEnd;
+      if (!IsCharInSet(aSet, *valueEnd)) {
+        break;
+      }
+    }
+    ++valueEnd; // Step beyond the last character we want in the value.
+  }
+
+  // valueEnd should point to the char after the last to copy
+  return Substring(valueCurrent, valueEnd);
+}
