@@ -682,7 +682,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           //by forcefully recycling any tokens we might find there.
 
         CToken* theToken=0;
-        while(theToken=(CToken*)mMisplacedContent.Pop()) {
+        while((theToken=(CToken*)mMisplacedContent.Pop())) {
           mTokenRecycler->RecycleToken(theToken);
         }
 
@@ -757,8 +757,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       switch(theTag) {
         case eHTMLTag_html:
         case eHTMLTag_comment:
-        case eHTMLTag_newline:
-        case eHTMLTag_whitespace:
         case eHTMLTag_script:
         case eHTMLTag_markupDecl:
         case eHTMLTag_userdefined:
@@ -1446,7 +1444,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
           break;
 
-        case eHTMLTag_userdefined:
+        //case eHTMLTag_userdefined:
         case eHTMLTag_noscript:     //HACK XXX! Throw noscript on the floor for now.
           isTokenHandled=PR_TRUE;
           break;
