@@ -42,6 +42,8 @@
 use diagnostics;
 use strict;
 
+use CGI;
+
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 
@@ -54,7 +56,6 @@ sub sillyness {
     $zz = %::timestamp;
 }
 
-my $opt_command;
 my $anchor_num = 0;
 my $font_tag = "";
 # Figure out which directory bonsai is in by looking at argv[0]
@@ -84,12 +85,6 @@ NEXTTREE: foreach my $i (@::TreeList) {
     push @SRCROOTS, $r;
 }
 
-my $opt_rev1 = '';
-my $opt_rev2 = '';
-my $opt_root = '';
-my $opt_files = '';
-my $opt_branch = '';
-my $opt_skip = 0;
 my $debug = 0;
 
 
@@ -369,41 +364,31 @@ sub map_tag_to_revision {
 #
 # Print HTTP content-type header and the header-delimiting extra newline.
 #
-print "Content-type: text/html\n\n";
+my $request = new CGI;
+print $request->header();
 
-my $request_method = $ENV{'REQUEST_METHOD'};       # e.g., "GET", "POST", etc.
+my $request_method = $request->request_method(); # e.g., "GET", "POST", etc.
 my $script_name = $ENV{'SCRIPT_NAME'};
 my $prefix = $script_name . '?'; # prefix for HREF= entries
 $prefix = $script_name . $ENV{PATH_INFO} . '?' if (exists($ENV{PATH_INFO}));
-my $query_string = $ENV{QUERY_STRING};
 
-# Undo % URL-encoding
-while ($query_string =~ /(.*)\%([0-9a-fA-F][0-9a-fA-F])(.*)/) {
-    # XXX - inefficient
-    $query_string = $1 . pack('c', hex($2)) . $3;
-}
-
-die("REQUEST_METHOD 'GET' expected: got '$request_method'\n")
-    if ($request_method ne 'GET');
-
-# Default option values
-my $opt_diff_mode         = 'context';
-my $opt_whitespace_mode   = 'show';
-
-my $opt_file;
-my $opt_rev;
-my $opt_subdir;
 
 # Parse options in URL.  For example,
 # http://w3/cgi/cvsview.pl?subdir=foo&file=bar would assign
 #   $opt_subdir = foo and $opt_file = bar.
-foreach my $option (split(/&/, $query_string)) {
-    die("command $opt_command: garbled option $option\n")
-        if ($option !~ /^([^=]+)=(.*)/);
-    ${"opt_$1"} = SqlQuote($2);
-    die("bogus characters in options")
-        if ($option !~ /^[\w\-\.\+\/\,\:\=]+$/ );
-}
+
+my $opt_rev1              = $request->param('rev1');
+my $opt_rev2              = $request->param('rev2');
+my $opt_root              = $request->param('root');
+my $opt_files             = $request->param('files');
+my $opt_skip              = $request->param('skip') || 0;
+my $opt_diff_mode         = $request->param('diff_mode') || 'context';
+my $opt_whitespace_mode   = $request->param('whitespace_mode') || 'show';
+my $opt_file              = $request->param('file');
+my $opt_rev               = $request->param('diff_mode');
+my $opt_subdir            = $request->param('subdir');
+my $opt_branch            = $request->param('branch');
+my $opt_command           = $request->param('command');
 
 if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
 
