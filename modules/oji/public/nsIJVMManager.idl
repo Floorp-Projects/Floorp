@@ -89,4 +89,12 @@ interface nsIJVMManager : nsISupports {
 
 	void ShowJavaConsole();
 
+    /**
+	 * IsAllPermissionGranted
+	 */
+
+    void IsAllPermissionGranted(in string lastFingerprint,in string lastCommonName,
+	                            in string rootFingerprint,in string rootCommonName,
+                                out boolean isGranted);
+
 };
