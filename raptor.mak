@@ -324,22 +324,18 @@ TARBALL_ZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.zip
 
 tarballs: tarball_zip tarball_gz
 
-tarball: prepare_for_tarballing
-    @echo Making $(TARBALL)
-    cd $(MOZ_SRC)\.
-    rm -f $(TARBALL)
-    $(TAR) cf $(TARBALL) ns
-
 tarball_zip: prepare_for_tarballing
     @echo Making $(TARBALL_ZIP)
     cd $(MOZ_SRC)\.
     rm -f $(TARBALL_ZIP)
     $(ZIP) -9 -r -q $(TARBALL_ZIP) ns
 
-tarball_gz: $(TARBALL)
-    @echo Making gzip of $(TARBALL)
+tarball_gz: prepare_for_tarballing
+    @echo Making $(TARBALL)
     cd $(MOZ_SRC)\.
-    rm -f $(TARBALL).gz
+    rm -f $(TARBALL) $(TARBALL).gz
+    $(TAR) cf $(TARBALL) ns
+    @echo Making gzip of $(TARBALL)
     $(GZIP) -9 -q $(TARBALL)
 
 prepare_for_tarballing:
