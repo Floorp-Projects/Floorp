@@ -549,7 +549,7 @@ MimeDecoderDestroy (MimeDecoderData *data, PRBool abort_p)
 
 
 static MimeDecoderData *
-mime_decoder_init (enum mime_encoding which,
+mime_decoder_init (mime_encoding which,
 				   int (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
@@ -1055,7 +1055,7 @@ MimeEncoderDestroy (MimeEncoderData *data, PRBool abort_p)
 
 
 static MimeEncoderData *
-mime_encoder_init (enum mime_encoding which,
+mime_encoder_init (mime_encoding which,
 				   int (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
