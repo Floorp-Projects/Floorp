@@ -422,55 +422,49 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, buffer));
 
-    // get the response code out.
-    if (!mControlReadContinue && !mControlReadBrokenLine) {
-        PR_sscanf(buffer, "%d", &mResponseCode);
-        if (buffer[3] == '-') {
-            mControlReadContinue = PR_TRUE;
-        } else {
-            mControlReadBrokenLine = !PL_strstr(buffer, CRLF);
+    // Sometimes we can get two responses in the same packet, eg from LIST.
+    // So we need to parse the response line by line
+    // See bug 110241
+    char* currLine = buffer;
+    while (currLine < (buffer+aCount)) {
+        char* eol = strstr(currLine, CRLF);
+        if (!eol) {
+            mControlReadBrokenLine = PR_TRUE;
+            mControlReadCarryOverBuf += currLine;
+            break;
         }
-    }
 
-    // see if we're handling a multi-line response.
-    if (mControlReadContinue) {
-        // yup, multi-line response, start appending
-        char *tmpBuffer = nsnull, *crlf = nsnull;
-        
-        // if we have data from our last round be sure
-        // to prepend it.
-        char *cleanup = nsnull;
-        if (!mControlReadCarryOverBuf.IsEmpty() ) {
-            mControlReadCarryOverBuf += buffer;
-            cleanup = tmpBuffer = ToNewCString(mControlReadCarryOverBuf);
-            mControlReadCarryOverBuf.Truncate(0);
-            if (!tmpBuffer) return NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            cleanup = tmpBuffer = buffer;
+        mControlReadBrokenLine = PR_FALSE;
+
+        // Append the current segment
+        mControlReadCarryOverBuf.Append(currLine, eol - currLine + 1);
+
+        if (mResponseMsg.IsEmpty()) {
+            // If we get here, then we know that we have a complete line, and
+            // that it is the first one
+
+            NS_ASSERTION(mControlReadCarryOverBuf.Length() > 4,
+                         "Read buffer doesn't include response code");
+            
+            // I can't use Substring + PromiseFlatCString - see bug 122727
+            //mResponseCode = atoi(PromiseFlatCString(Substring(mResponseReadCarryOverBuf,0,3)).get());
+
+            char buf[4];
+            buf[3] = 0;
+            memcpy(buf, mControlReadCarryOverBuf.get(), 3);
+            mResponseCode = atoi(buf);
         }
-        
-        PRBool lastLine = PR_FALSE;
-        while ( (crlf = PL_strstr(tmpBuffer, CRLF)) ) {
-            char tmpChar = crlf[2];
-            crlf[2] = '\0'; 
-            // see if this is the last line
-            if (tmpBuffer[3] != '-' &&
-                nsCRT::IsAsciiDigit(tmpBuffer[0]) &&
-                nsCRT::IsAsciiDigit(tmpBuffer[1]) &&
-                nsCRT::IsAsciiDigit(tmpBuffer[2]) ) {
-                lastLine = PR_TRUE;
-            }
-            mResponseMsg += tmpBuffer+4; // skip over the code and '-'
-            crlf[2] = tmpChar;
-            tmpBuffer = crlf+2;
-        }
-        if (*tmpBuffer)
-            mControlReadCarryOverBuf = tmpBuffer;
-        
-        if (cleanup) nsMemory::Free(cleanup);
-        
-        // see if this was the last line
-        if (lastLine) {
+
+        // Is this the last line for this response?
+        mControlReadContinue = (mControlReadCarryOverBuf.get()[3] == '-');
+
+        // Append this line, but remove the response code
+        mResponseMsg.Append(Substring(mControlReadCarryOverBuf,
+                                      4,
+                                      mControlReadCarryOverBuf.Length()-4));
+        mControlReadCarryOverBuf.Truncate();
+
+        if (!mControlReadContinue) {
             // yup. last line, let's move on.
             if (mState == mNextState) {
                 NS_ASSERTION(0, "ftp read state mixup");
@@ -479,35 +473,18 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
             } else {
                 mState = mNextState;
             }
-            mControlReadContinue = PR_FALSE;
-        } else {
-            // don't increment state, we need to read more.
-            mControlReadContinue = PR_TRUE;
-        }
-    }
-    else
-    {
-        NS_ASSERTION(mState != mNextState, "ftp read state mixup");
-    
-        // get the rest of the line
-        if (mControlReadBrokenLine) {
-            mResponseMsg += buffer;
-            mControlReadBrokenLine = !PL_strstr(buffer, CRLF);
-            if (!mControlReadBrokenLine)
-                mState = mNextState;
-        } else {
-            mResponseMsg = buffer+4;
-            mState = mNextState;
-        }
-    }
-    
-    if (!mControlReadContinue)
-        {
+
             if (mFTPEventSink)
                 mFTPEventSink->OnFTPControlLog(PR_TRUE, mResponseMsg.get());
-
-        return Process();
+            
+            rv = Process();
+            mResponseMsg.Truncate();
+            if (NS_FAILED(rv)) return rv;
         }
+
+        currLine = eol+2; // CR+LF
+    }
+
     return NS_OK;
 }
 
