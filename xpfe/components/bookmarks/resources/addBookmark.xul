@@ -41,7 +41,10 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         orient="vertical" class="dialog"
-        onload="Startup();">
+        onload="Startup();"
+        persist="screenX screenY width height"
+        screenX="24" screenY="24">
+   
   
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
@@ -82,58 +85,49 @@
 
   <separator id="createinseparator"/>
 
-  <box id="folderbox" orient="vertical" flex="1">
+  <vbox id="folderbox" flex="1">
     <separator/>
-    <box autostretch="never" valign="top">
-          <text id="createinlabel" class="label" value="&createin.label;"/>
-          <box autostretch="never" valign="top" flex="1">
-            <tree id="folders" flex="1" style="height: 12em; width: 0px"
-                  class="inset" ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
-                  template="file-bookmarks-template"
-                  onselect="onTreeSelect();" onkeypress="event.preventBubble();">
-              <treecolgroup>
-                <treecol flex="1"/>
-              </treecolgroup>
-        
-              <template id="file-bookmarks-template">
-                <rule iscontainer="true">
-                  <treechildren>
-                    <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-                      <treerow>
-                        <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
-                                  class="treecell-indent treecell-editable" editable="true"
-                                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                                  rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                                  loading="rdf:http://home.netscape.com/NC-rdf#loading"/>
-                      </treerow>
-                    </treeitem>
-                  </treechildren>
-                </rule>
-              </template>
-              <treechildren id="folderKids" flex="1"/>
-            </tree>
-            <box orient="vertical">
-              <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
-                      oncommand="createNewFolder();"/>
-              <button label="&button.defaultfolder.label;" 
-                      accesskey="&button.defaultfolder.accesskey;"
-                      oncommand="useDefaultFolder();"/>
-            </box>
-          </box>
-    </box>
+    <hbox flex="1">
+      <text id="createinlabel" class="label" value="&createin.label;"/>
+      <hbox flex="1">
+        <tree id="folders" flex="1" style="height: 12em; width: 0px"
+              class="inset" ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
+              template="file-bookmarks-template"
+              onselect="onTreeSelect();" onkeypress="event.preventBubble();">
+          <treecolgroup>
+            <treecol flex="1"/>
+          </treecolgroup>
+    
+          <template id="file-bookmarks-template">
+            <rule iscontainer="true">
+              <treechildren>
+                <treeitem uri="rdf:*" persist="open" class="bookmark-item"
+                          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+                  <treerow>
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
+                              class="treecell-indent treecell-editable" editable="true"
+                              src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                              loading="rdf:http://home.netscape.com/NC-rdf#loading"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
+          </template>
+          <treechildren id="folderKids" flex="1"/>
+        </tree>
+        <vbox>
+          <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
+                  oncommand="createNewFolder();"/>
+          <button label="&button.defaultfolder.label;" 
+                  accesskey="&button.defaultfolder.accesskey;"
+                  oncommand="useDefaultFolder();"/>
+        </vbox>
+      </hbox>
+    </hbox>
     <separator/>
-  </box>
+  </vbox>
 
-  <!-- XXX - todo - remove all the create-in code -->  
-  <box valign="bottom">
-    <box autostretch="never">
-      <checkbox id="dontaskagain" 
-                label="&alwayscreateinfolder.label;"
-                accesskey="&alwayscreateinfolder.accesskey;"/>
-    </box>
-    <spring flex="1"/>  
-    <box id="okCancelButtonsRight"/>
-  </box>
+  <box id="okCancelButtonsRight"/>
   
 </window>        
