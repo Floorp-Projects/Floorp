@@ -67,7 +67,6 @@
       window._content && window._content.document) {
       var DocCharset = window._content.document.characterSet;
       var charsetArg = "charset="+DocCharset;
-      dump("*** Current document charset: " + DocCharset + "\n");
  
       //we should "inherit" the charset menu setting in a new window
       newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg );

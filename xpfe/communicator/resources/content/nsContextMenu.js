@@ -33,7 +33,6 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 function nsContextMenu( xulMenu ) {
-dump("... entering nsContextMenu constructor in nsContextMenu.js\n");
     this.target     = null;
     this.menu       = null;
     this.onTextInput = false;
@@ -50,7 +49,6 @@ dump("... entering nsContextMenu constructor in nsContextMenu.js\n");
 
     // Initialize new menu.
     this.initMenu( xulMenu );
-dump("... leaving nsContextMenu constructor in nsContextMenu.js\n");
 }
 
 // Prototype for nsContextMenu "class."
@@ -210,7 +208,6 @@ nsContextMenu.prototype = {
                         // Search child <area>s for a match.
                         var areas = map.childNodes;
                         //XXX Client side image maps are too hard for now!
-                        dump( "Client side image maps not supported yet, sorry!\n" );
                         areas.length = 0;
                         for ( var i = 0; i < areas.length && !this.onLink; i++ ) {
                             var area = areas[i];
@@ -404,10 +401,10 @@ nsContextMenu.prototype = {
                         this.target.ownerDocument.location.href);
     },
     viewInfo : function () {
-        dump( "nsContextMenu.viewInfo not implemented yet\n" );
+      // XXX not implemented
     },
     viewFrameInfo : function () {
-        dump( "nsContextMenu.viewFrameInfo not implemented yet\n" );
+      // XXX not implemented
     },
     // Open new window with the URL of the image.
     viewImage : function () {
@@ -816,7 +813,6 @@ nsContextMenu.prototype = {
             xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData );
         } catch( exception ) {
             // Failed (or cancelled), give them another chance.
-            dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );
         }
         return;
     },

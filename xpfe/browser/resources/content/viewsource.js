@@ -15,7 +15,6 @@ function viewSource(url)
     createBrowserInstance();
     if (appCore == null) {
     // Give up.
-    dump("Giving up...\n");
     window.close();
     return false;
     }
@@ -25,7 +24,6 @@ function viewSource(url)
   }
 
   catch(ex) {
-    dump("Failed to create and initialiaze the AppCore...\n");
   }
 
   var docShellElement = document.getElementById("content-frame");
@@ -38,7 +36,6 @@ function viewSource(url)
           if (window.arguments[1].indexOf('charset=') != -1) {
               var arrayArgComponents = window.arguments[1].split('=');
               if (arrayArgComponents) {
-                dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
                 appCore.SetDocumentCharset(arrayArgComponents[1]);
               } 
           }
@@ -46,7 +43,6 @@ function viewSource(url)
   }
 
   catch(ex) {
-   dump("*** Failed to SetDocumentCharset...\n");
   }
 
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -59,9 +55,6 @@ function createBrowserInstance()
   appCore = Components
     .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
     .createInstance( Components.interfaces.nsIBrowserInstance );
-  if ( !appCore ) {
-    dump("Error creating browser instance\n");
-  }
 }
 
 function BrowserClose()
@@ -71,20 +64,14 @@ function BrowserClose()
 
 function BrowserFind()
 {
-  if (appCore) {
-    appCore.find();      
-  } else {
-    dump("BrowserAppCore has not been created!\n");
-  }
+  if (appCore)
+    appCore.find();
 }
 
 
 function BrowserFindAgain()
 {
-  if (appCore) {
+  if (appCore)
     appCore.findNext();      
-  } else {
-    dump("BrowserAppCore has not been created!\n");
-  }
 }
 

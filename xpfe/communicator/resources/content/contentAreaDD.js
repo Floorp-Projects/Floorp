@@ -54,7 +54,6 @@ var contentAreaDNDObserver = {
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(draggedNode,false))
         {
-          dump("Dragging the selection..\n");
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
@@ -65,11 +64,9 @@ var contentAreaDNDObserver = {
             // how are we going to get the URL, if any? Scan the selection
             // for the first anchor? See bug #58315
           }
-          dump("we cool?");
         }
       else 
         {
-          //dump("Dragging DOM node: <" + draggedNode.localName + ">\n");
           if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
           switch (draggedNode.localName.toUpperCase())
@@ -113,7 +110,6 @@ var contentAreaDNDObserver = {
                     this.normalizeSelection(linkNode, domselection);
                   } catch (ex) {
                     // non-fatal, so catch & ignore
-                    dump("Couldn't normalize selection: " + ex + "\n");
                   }
                 }
                 else {
@@ -204,7 +200,6 @@ var contentAreaDNDObserver = {
     }
 
     if (index >= nodelist.length) {
-      dump("BAD: Could not find our position in the parent\n");
       throw Components.results.NS_ERROR_FAILURE;
     }
 
