@@ -584,51 +584,51 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 
 nsresult
 nsAbDirectoryDataSource::createDirectoryIsRemoteNode(nsIAbDirectory* directory,
-                                                  nsIRDFNode **target)
+                                                     nsIRDFNode **target)
 {
-	PRBool isRemote;
-	nsresult rv = directory->GetIsRemote(&isRemote);
-	NS_ENSURE_SUCCESS(rv, rv);
-
+  PRBool isRemote;
+  nsresult rv = directory->GetIsRemote(&isRemote);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   NS_IF_ADDREF(*target = (isRemote ? kTrueLiteral : kFalseLiteral));
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsAbDirectoryDataSource::createDirectoryIsSecureNode(nsIAbDirectory* directory,
-                                                  nsIRDFNode **target)
+                                                     nsIRDFNode **target)
 {
-	PRBool IsSecure;
-	nsresult rv = directory->GetIsSecure(&IsSecure);
-	NS_ENSURE_SUCCESS(rv, rv);
-
+  PRBool IsSecure;
+  nsresult rv = directory->GetIsSecure(&IsSecure);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   NS_IF_ADDREF(*target = (IsSecure ? kTrueLiteral : kFalseLiteral));
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsAbDirectoryDataSource::createDirectoryIsWriteableNode(nsIAbDirectory* directory,
-                                                  nsIRDFNode **target)
+                                                        nsIRDFNode **target)
 {
-	PRBool isWriteable;
-	nsresult rv = directory->GetOperations(&isWriteable);
-	NS_ENSURE_SUCCESS(rv, rv);
-
+  PRBool isWriteable;
+  nsresult rv = directory->GetOperations(&isWriteable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   NS_IF_ADDREF(*target = ((isWriteable & nsIAbDirectory::opWrite) ? kTrueLiteral : kFalseLiteral));
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult
 nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory,
-                                                  nsIRDFNode **target)
+                                                       nsIRDFNode **target)
 {
-	nsresult rv;
-	PRBool isMailList;
-	rv = directory->GetIsMailList(&isMailList);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	NS_IF_ADDREF(*target = (isMailList ? kTrueLiteral : kFalseLiteral));
-	return NS_OK;
+  nsresult rv;
+  PRBool isMailList;
+  rv = directory->GetIsMailList(&isMailList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  NS_IF_ADDREF(*target = (isMailList ? kTrueLiteral : kFalseLiteral));
+  return NS_OK;
 }
 
 nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parentDirs, nsISupportsArray *delDirs)
