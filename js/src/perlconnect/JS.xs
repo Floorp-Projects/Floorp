@@ -38,7 +38,7 @@
     }
 #endif
 
-#include "jsapi.h"
+#include "../jsapi.h"
 #include "jsperlpvt.h"
 
 static

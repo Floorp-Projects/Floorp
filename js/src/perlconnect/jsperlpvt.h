@@ -29,8 +29,8 @@
     This and the following function are used to convert
     between Perl's "SV*" and JS's "jsval" types.
 */
-extern SV*
+JS_EXTERN_API(SV*)
 JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv);
 
-extern JSBool
+JS_EXTERN_API(JSBool)
 SVToJSVAL(JSContext *cx, JSObject *obj, SV *ref, jsval *rval);
