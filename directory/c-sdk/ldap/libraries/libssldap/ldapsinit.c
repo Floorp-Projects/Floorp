@@ -86,7 +86,7 @@ typedef struct ldapssl_session_info {
     PRBool		lssei_ssl_option_value[LDAPSSL_MAX_SSL_OPTION+1];
     PRBool		lssei_ssl_option_isset[LDAPSSL_MAX_SSL_OPTION+1];
     char		*lssei_certnickname;
-    char        	*lssei_keypasswd;
+    char        	*lssei_keypasswd;	/* if NULL, assume pre-auth. */
     LDAPSSLStdFunctions	lssei_std_functions;
     CERTCertDBHandle	*lssei_certdbh;
 } LDAPSSLSessionInfo;
@@ -121,6 +121,7 @@ static int set_ssl_options( PRFileDesc *sslfd, PRBool *optval,
 	PRBool *optisset );
 static void ldapssl_free_session_info( LDAPSSLSessionInfo **ssipp );
 static void ldapssl_free_socket_info( LDAPSSLSocketInfo **soipp );
+static char *ldapssl_libldap_compat_strdup(const char *s1);
 
 
 /*
@@ -480,10 +481,26 @@ ldapssl_enable_clientauth( LDAP *ld, char *keynickname,
     PRLDAPSessionInfo		sei;
 
     /*
-     * Check parameters
+     * Retrieve current I/O functions and check parameters
      */
-    if ( certnickname == NULL || keypasswd == NULL ) {
-	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
+    memset( &iofns, 0, sizeof(iofns));
+    iofns.lextiof_size = LDAP_X_EXTIO_FNS_SIZE;
+    if ( ldap_get_option( ld, LDAP_X_OPT_EXTIO_FN_PTRS, (void *)&iofns )
+		!= 0 ) {
+	return( -1 );
+    }
+    if ( iofns.lextiof_connect != ldapssl_connect ) {
+	/* standard SSL setup has not done */
+	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL,
+		ldapssl_libldap_compat_strdup(
+		"An SSL-ready LDAP session handle is required" ));
+	return( -1 );
+    }
+
+    if ( certnickname == NULL ) {
+	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL,
+		ldapssl_libldap_compat_strdup(
+		"A non-NULL certnickname is required" ));
 	return( -1 );
     }
 
@@ -500,35 +517,27 @@ ldapssl_enable_clientauth( LDAP *ld, char *keynickname,
 	return( -1 );
     }
     ssip->lssei_certnickname = PL_strdup( certnickname );
-    ssip->lssei_keypasswd = PL_strdup( keypasswd );
+    if ( NULL != keypasswd ) {
+	ssip->lssei_keypasswd = PL_strdup( keypasswd );
+    } else {
+	ssip->lssei_keypasswd = NULL;	/* assume pre-authenticated */
+    }
 
-    if ( NULL == ssip->lssei_certnickname || NULL == ssip->lssei_keypasswd ) {
+    if ( NULL == ssip->lssei_certnickname ||
+		( NULL != keypasswd && NULL == ssip->lssei_keypasswd )) {
 	ldap_set_lderrno( ld, LDAP_NO_MEMORY, NULL, NULL );
 	return( -1 );
     }
 
     if ( check_clientauth_nicknames_and_passwd( ld, ssip ) != SECSuccess ) {
+	/* LDAP errno is set by check_clientauth_nicknames_and_passwd() */
 	return( -1 );
     }
 
     /*
      * replace standard SSL CONNECT function with client auth aware one
      */
-    memset( &iofns, 0, sizeof(iofns));
-    iofns.lextiof_size = LDAP_X_EXTIO_FNS_SIZE;
-    if ( ldap_get_option( ld, LDAP_X_OPT_EXTIO_FN_PTRS, (void *)&iofns )
-		!= 0 ) {
-	return( -1 );
-    }
-
-    if ( iofns.lextiof_connect != ldapssl_connect ) {
-	/* standard SSL setup has not done */
-	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, NULL );
-	return( -1 );
-    }
-
     iofns.lextiof_connect = ldapssl_clientauth_connect;
-
     if ( ldap_set_option( ld, LDAP_X_OPT_EXTIO_FN_PTRS, (void *)&iofns )
 		!= 0 ) {
 	return( -1 );
@@ -882,8 +891,11 @@ get_keyandcert( LDAPSSLSessionInfo *ssip,
 	return( SECFailure );
     }
 
-    if (!ssip->lssei_using_pcks_fns)
-    {
+    if (!ssip->lssei_using_pcks_fns && NULL != ssip->lssei_keypasswd) {
+	/*
+	 * XXX: This function should be called only once, and probably
+	 *      in one of the ldapssl_.*_init() calls.
+	 */
 	PK11_SetPasswordFunc( get_keypassword );
     }
     
@@ -918,7 +930,7 @@ get_keypassword( PK11SlotInfo *slot, PRBool retry, void *sessionarg )
       return (NULL);
 
     ssip = (LDAPSSLSessionInfo *)sessionarg;
-    if ( NULL == ssip ) {
+    if ( NULL == ssip || NULL == ssip->lssei_keypasswd ) {
 	return( NULL );
     }
 
@@ -946,7 +958,7 @@ check_clientauth_nicknames_and_passwd( LDAP *ld, LDAPSSLSessionInfo *ssip )
 
     if ( rv != SECSuccess ) {
     	if ( errmsg != NULL ) {
-	    errmsg = strdup( errmsg );
+	    errmsg = ldapssl_libldap_compat_strdup( errmsg );
 	}
 	ldap_set_lderrno( ld, LDAP_PARAM_ERROR, NULL, errmsg );
 	return( rv );
@@ -960,6 +972,29 @@ check_clientauth_nicknames_and_passwd( LDAP *ld, LDAPSSLSessionInfo *ssip )
     }
     return( SECSuccess );
 }
+
+
+/*
+ * A strdup() work-alike that uses libldap's memory allocator.
+ */
+static char *
+ldapssl_libldap_compat_strdup(const char *s1)
+{
+    char	*s2;
+
+    if ( NULL == s1 ) {
+	s2 = NULL;
+    } else {
+	size_t	len = strlen( s1 );
+
+	if ( NULL != ( s2 = (char *)ldap_x_malloc( len + 1 ))) {
+	    strcpy( s2, s1 );
+	}
+    }
+
+    return s2;
+}
+
 
 
 /* there are patches and kludges.  this is both.  force some linkers to 
