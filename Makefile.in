@@ -22,15 +22,20 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-NSPRDIR		= nsprpub
+NSPRDIR		= $(topsrcdir)/nsprpub
+NSPRDIR_AC	= nsprpub
 NSPR20		= 1
-MOZILLA_CLIENT	= 1
+NSPR_MAKE_ARGS	= -C $(NSPRDIR) DIST=`pwd`/dist CC=$(CC) CCC=$(CXX) MOZILLA_CLIENT=$(MOZILLA_CLIENT) MOZ_DEBUG=$(MOZ_DEBUG) USE_PTHREADS=$(USE_PTHREADS) BUILD_OPT=$(BUILD_OPT) $@
 
 ifndef NO_MOCHA
 DIRS_JS		= js
 endif
 
-DIRS		= config coreconf $(NSPRDIR) dbm xpcom base network caps
+DIRS		= config coreconf 
+ifdef NSPR_AUTOCONF
+DIRS		+= $(NSPRDIR_AC)
+endif
+DIRS		+= dbm xpcom base network caps
 
 ifndef MOZ_NATIVE_JPEG
 DIRS		+= jpeg
@@ -55,7 +60,7 @@ DIRS		+= privacy
 DIRS		+= modules lib l10n cmd
 
 ifeq ($(STAND_ALONE_JAVA),1)
-DIRS		= config lib/xp $(NSPRDIR) sun-java ifc js ifc/tools sun-java/java
+DIRS		= config lib/xp sun-java ifc js ifc/tools sun-java/java
 ifndef MOZ_NATIVE_JPEG
 DIRS		+= jpeg
 endif
@@ -64,9 +69,31 @@ DIRS		+= modules/zlib
 endif
 endif
 
-include $(topsrcdir)/config/rules.mk
-
+ifndef NSPR_AUTOCONF
 export:: envirocheck $(OBJS)
+	$(MAKE) $(NSPR_MAKE_ARGS)
+
+libs::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+               
+install::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+               
+clean::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+               
+realclean::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+
+clobber::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+               
+clobber_all::
+	$(MAKE) $(NSPR_MAKE_ARGS)
+
+endif # !NSPR_AUTOCONF
+	
+include $(topsrcdir)/config/rules.mk
 
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the
