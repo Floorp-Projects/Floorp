@@ -37,6 +37,8 @@
 #include "nsCarbonHelpers.h"
 
 #include "nsFilePicker.h"
+#include "nsMacWindow.h"
+#include "nsMacMessageSink.h"
 
 
 
@@ -160,25 +162,26 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 //
 // FileDialogEventHandlerProc
 //
-// An event filter proc for NavServices so the dialogs will be movable-modals. However,
-// this doesn't seem to work as of yet...I'll play around with it some more.
+// An event filter proc for NavServices so the dialogs will be movable-modals.
 //
-//-------------------------------------------------------------------------
 static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
 	switch ( msg ) {
 	case kNavCBEvent:
 		switch ( cbRec->eventData.eventDataParms.event->what ) {
 		case updateEvt:
-        	WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
-		    if (window) {
-    			::BeginUpdate(window);
-	    		::EndUpdate(window);
-	        }
+      WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
+      nsMacWindow* macWindow = nsMacMessageSink::GetNSWindowFromMacWindow(window);
+      ::BeginUpdate(window);
+      if (macWindow) {
+        EventRecord   theEvent = *cbRec->eventData.eventDataParms.event;
+        macWindow->HandleOSEvent(theEvent);
+      }        
+      ::EndUpdate(window);	        
 			break;
 		}
 		break;
@@ -192,8 +195,9 @@ static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg, NavC
 // Check our |mTypeLists| list to see if the given type is in there.
 //
 Boolean
-nsFilePicker :: IsFileInFilterList ( ResType inType )
+nsFilePicker :: IsTypeInFilterList ( ResType inType )
 {
+return false;
   for ( int i = 0; i < mFilters.Count(); ++i ) {
     for ( int j = 0; j < mTypeLists[i]->osTypeCount; ++j ) {
       if ( mTypeLists[i]->osType[j] == inType ) 
@@ -204,6 +208,30 @@ nsFilePicker :: IsFileInFilterList ( ResType inType )
   return false;
   
 } // IsFileInFilterList
+
+
+Boolean
+nsFilePicker :: IsExtensionInFilterList ( StrFileName & inFileName )
+{
+  char extension[256];
+  
+  // determine the extension from the file name
+  unsigned char* curr = &inFileName[inFileName[0]];
+  while ( curr != inFileName && *curr-- != '.' ) ;
+  if ( curr == inFileName )                         // no '.' in string, fails this check
+    return false;
+  ++curr;                                           // we took one too many steps back
+  short extensionLen = (inFileName + inFileName[0]) - curr + 1;
+  strncpy ( extension, (char*)curr, extensionLen);
+  extension[extensionLen] = '\0';
+  
+  // see if it is in our list
+  for ( int i = 0; i < mFlatFilters.Count(); ++i ) {
+    if ( *mFlatFilters[i] == extension )
+      return true;
+  }
+  return false;
+}
 
 
 //
@@ -223,9 +251,13 @@ nsFilePicker :: FileDialogFilterProc ( AEDesc* theItem, void* theInfo,
     if ( theItem->descriptorType == typeFSS ) {
       NavFileOrFolderInfo* info = NS_REINTERPRET_CAST ( NavFileOrFolderInfo*, theInfo );
       if ( !info->isFolder ) {
-        // check it against our list
-        if ( ! self->IsFileInFilterList(info->fileAndFolder.fileInfo.finderInfo.fdType) )
-          shouldDisplay = false;
+        // check it against our list. If that fails, check the extension directly
+        if ( ! self->IsTypeInFilterList(info->fileAndFolder.fileInfo.finderInfo.fdType) ) {
+          FSSpec fileSpec;
+          if ( ::AEGetDescData(theItem, &fileSpec, sizeof(FSSpec)) == noErr )
+            if ( ! self->IsExtensionInFilterList(fileSpec.name) )
+              shouldDisplay = false;
+        }
       } // if file isn't a folder
     } // if the item is an FSSpec
   }
@@ -233,6 +265,8 @@ nsFilePicker :: FileDialogFilterProc ( AEDesc* theItem, void* theInfo,
   return shouldDisplay;
   
 } // FileDialogFilterProc                                        
+
+
 
 
 //-------------------------------------------------------------------------
@@ -512,6 +546,12 @@ nsFilePicker :: MapFilterToFileTypes ( )
 	  				typeTemp[typeTempIndex] = 0;                // turn it into a pString 
 	  				typeTemp[0] = typeTempIndex - 1;
 	  				
+	  				// to make it easier to match file extensions while we're filtering, flatten
+	  				// out the list. Ignore filters that are just "*" and also remove the
+	  				// leading "*" from filters we do add.
+	  				if ( typeTemp[0] > 1 )
+	  				  mFlatFilters.AppendCString ( nsCString((char*)&typeTemp[2]) );  // cut out the "*"
+	  				
 	  				// ask IC if it's not "all files" (designated by "*")
 	  				if ( !(typeTemp[0] == 1 && typeTemp[1] == '*') ) {
 	  				  mAllFilesDisplayed = PR_FALSE;
@@ -541,7 +581,9 @@ nsFilePicker :: MapFilterToFileTypes ( )
 	  			}
 	  			else
 	  			{
-	  				typeTemp[typeTempIndex++] = tempChar;
+	  			  // strip out whitespace as we goe
+	  			  if ( tempChar != ' ' )
+	  				  typeTemp[typeTempIndex++] = tempChar;
 	  			}
 	  			
 	  			filterIndex++;

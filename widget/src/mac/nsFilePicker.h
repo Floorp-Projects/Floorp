@@ -66,7 +66,8 @@ protected:
   PRInt16 GetLocalFolder(Str255 & inTitle, FSSpec* outFileSpec);
 
   void MapFilterToFileTypes ( ) ;
-  Boolean IsFileInFilterList ( ResType inType ) ;
+  Boolean IsTypeInFilterList ( ResType inType ) ;
+  Boolean IsExtensionInFilterList ( StrFileName & inFileName ) ;
   
     // filter routine for file types
   static pascal Boolean FileDialogFilterProc ( AEDesc* theItem, void* info,
@@ -83,6 +84,7 @@ protected:
 
   nsStringArray          mFilters; 
   nsStringArray          mTitles;
+  nsCStringArray         mFlatFilters;        // all the filters from mFilters, but one per string
   
   NavTypeListPtr         mTypeLists[kMaxTypeListCount];
 
