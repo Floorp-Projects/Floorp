@@ -318,21 +318,19 @@ public:
   virtual nsresult GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
   virtual nsresult EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
-  virtual nsresult AppendValue(const char* aProperty, const nsCSSValue& aValue) = 0;
   virtual nsresult AppendValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
-  virtual nsresult SetValueImportant(const char* aProperty) = 0;
   virtual nsresult SetValueImportant(PRInt32 aProperty) = 0;
   virtual nsresult AppendComment(const nsString& aComment) = 0;
 
 // XXX make nscolor a struct to avoid type conflicts
-  virtual nsresult GetValue(const char* aProperty, nsCSSValue& aValue) = 0;
   virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
 
   virtual nsresult GetValue(PRInt32 aProperty, nsString& aValue) = 0;
   virtual nsresult GetValue(const nsString& aProperty, nsString& aValue) = 0;
 
   virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
-  virtual nsresult GetValueIsImportant(const char *aProperty, PRBool& aIsImportant) = 0;
+  virtual nsresult GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant) = 0;
+  virtual nsresult GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant) = 0;
 
   virtual nsresult Count(PRUint32* aCount) = 0;
   virtual nsresult GetNthProperty(PRUint32 aIndex, nsString& aReturn) = 0;
