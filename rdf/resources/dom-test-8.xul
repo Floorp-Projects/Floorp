@@ -33,7 +33,18 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical">
 
-  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;">
+  <html:script>
+  function FindBeetle()
+  {
+    var beetle = document.getElementById('beetle');
+    dump('beetle = ' + beetle + '\n');
+  }
+  </html:script>
+
+  <titledbutton onclick="FindBeetle();" value="Find Beetle" />
+
+<!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
+  <tree id="tree" flex="100%" style="height:100%;">
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
          <treeitem uri="...">
@@ -68,28 +79,37 @@
     </treehead>
 
     <treechildren>
-      <treeitem id="treeroot" ref="NC:BookmarksRoot" open="true">
+      <treeitem id="treeroot" ref="NC:BookmarksRoot">
         <treerow>
           <treecell>Bookmarks</treecell>
           <treecell></treecell>
         </treerow>
-<!--
+
         <treechildren>
-          <treeitem>
+          <treeitem id="beetle">
             <treerow>
-              <treecell>XUL Child #1</treecell>
+              <treecell><treeindentation/>XUL Child #1</treecell>
               <treecell></treecell>
             </treerow>
+
+            <treechildren>
+              <treeitem>
+                <treerow>
+                  <treecell><treeindentation/>XUL Child #1.1</treecell>
+                  <treecell></treecell>
+                </treerow>
+              </treeitem>
+            </treechildren>
           </treeitem>
 
           <treeitem>
             <treerow>
-              <treecell>XUL Child #2</treecell>
+              <treecell><treeindentation/>XUL Child #2</treecell>
               <treecell></treecell>
             </treerow>
           </treeitem>
+
         </treechildren>
--->
       </treeitem>
     </treechildren>
   </tree>
