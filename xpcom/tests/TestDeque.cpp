@@ -108,7 +108,6 @@ nsresult _TestDeque::OriginalTest() {
 
 nsresult _TestDeque::OriginalFlaw() {
   int ints[200];
-  int count=sizeof(ints)/sizeof(int);
   int i=0;
   int* temp;
   nsDeque secondDeque(new _Dealloc);
@@ -146,9 +145,6 @@ nsresult _TestDeque::OriginalFlaw() {
 }
 
 nsresult _TestDeque::AssignFlaw() {
-  int ints[200];
-  int count=sizeof(ints)/sizeof(int);
-  int i=0;
   nsDeque src(new _Dealloc),dest(new _Dealloc);
   return NS_OK;
 }
