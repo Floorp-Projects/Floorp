@@ -85,7 +85,8 @@ nsAbMDBDirectory::~nsAbMDBDirectory(void)
   if (mSubDirectories)
   {
     PRUint32 count;
-    nsresult rv = mSubDirectories->Count(&count);
+    nsresult rv;
+    rv = mSubDirectories->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     PRInt32 i;
     for (i = count - 1; i >= 0; i--)
@@ -315,7 +316,8 @@ NS_IMETHODIMP nsAbMDBDirectory::RemoveElementsFromAddressList()
   if (m_AddressList)
   {
     PRUint32 count;
-    nsresult rv = m_AddressList->Count(&count);
+    nsresult rv;
+    rv = m_AddressList->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     PRInt32 i;
     for (i = count - 1; i >= 0; i--)

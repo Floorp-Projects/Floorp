@@ -125,8 +125,11 @@ Rights Reserved.
 <!ENTITY showSidebarMenu.label ".SideBar">
 <!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
+
+<!-- showSearchToolbarCmd is also used by addressbook -->
 <!ENTITY showSearchToolbarCmd.label		"Search Bar">
 <!ENTITY showSearchToolbarCmd.accesskey	"e">
+
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey "L">
 <!ENTITY showMessageCmd.label "Message">
@@ -255,8 +258,10 @@ Rights Reserved.
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 
 <!-- Search Menu -->
+<!-- searchMenu is also used by addressbook -->
 <!ENTITY searchMenu.label "Search">
 <!ENTITY searchMenu.accesskey "S">
+
 <!ENTITY findCmd.label "Find in This Message...">
 <!ENTITY findCmd.accesskey "F">
 <!ENTITY findCmd.key "f">
@@ -272,8 +277,15 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (searchParentParentCmd.label) : Do not translate "&lt;" and "&gt;" in below line. -->
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchParentParentCmd.accesskey "">
+
+<!-- searchInternetCmd is also used by addressbook -->
 <!ENTITY searchInternetCmd.label "Search the Web">
 <!ENTITY searchInternetCmd.accesskey "W">
+
+<!-- searchAddressesCmd is also used by addressbook -->
+<!ENTITY searchAddressesCmd.label                       "Search Addresses">
+<!ENTITY searchAddressesCmd.accesskey                   "A">
+
 <!ENTITY searchMailCmd.label "Search Messages...">
 <!ENTITY searchMailCmd.accesskey "M">
 <!ENTITY searchMailCmd.key "f">
@@ -511,5 +523,7 @@ Rights Reserved.
 <!ENTITY printEngine.title "Printing...">
 
 <!---SearchBar-->
+<!-- also used by addressbook -->
 <!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
+<!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY advancedButton.label "Advanced...">

@@ -41,8 +41,10 @@
 var cvPrefs = 0;
 var addressbook = 0;
 var gAddressBookBundle;
-
-var gTotalCardsElement = null;
+var gSearchTimer = null;
+var gStatusText = null;
+var gQueryURIFormat = null;
+var gSearchInput;
 
 // Constants that correspond to choices
 // in Address Book->View -->Show Name as
@@ -87,7 +89,7 @@ var gAddressBookAbViewListener = {
     ResultsPaneSelectionChanged();
   },
   onCountChanged: function(total) {
-    SetTotalCardStatus(gAbView.directory.dirName, total);
+    SetStatusText(total);
   }
 };
 
@@ -125,6 +127,8 @@ function RemovePrefObservers()
 function OnLoadAddressBook()
 {
   gAddressBookBundle = document.getElementById("bundle_addressBook");
+  gSearchInput = document.getElementById("searchInput");
+
   verifyAccounts(null); 	// this will do migration, if we need to.
 
   top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
@@ -244,11 +248,11 @@ function AbNewAddressBook()
 
 function AbCreateNewAddressBook(name)
 {
-	var prefsAttr = new Array;
-	var prefsValue = new Array;
-	prefsAttr[0]  = "description";
-	prefsValue[0]  = name;  
-	top.addressbook.newAddressBook(dirTree.database, 1, prefsAttr, prefsValue);
+  var prefsAttr = new Array;
+  var prefsValue = new Array;
+  prefsAttr[0]  = "description";
+  prefsValue[0]  = name;  
+  top.addressbook.newAddressBook(dirTree.database, 1, prefsAttr, prefsValue);
 }
 
 function AbPrintCard()
@@ -403,36 +407,84 @@ function AbDeleteDirectory()
     SelectFirstAddressBook();
 }
 
-function GetTotalCardCountElement()
+function SetStatusText(total)
 {
-  if (gTotalCardsElement) 
-    return gTotalCardsElement;
+  if (!gStatusText)
+    gStatusText = document.getElementById('statusText');
 
-  var totalCardCountElement = document.getElementById('statusText');
-  gTotalCardsElement = totalCardCountElement;
-  return gTotalCardsElement;
-}
+  try {
+    var statusText;
 
-function SetTotalCardStatus(name, total)
-{
-  var totalElement = GetTotalCardCountElement();
-  if (totalElement)
-  {
-    try 
-    {
-      var numTotal = gAddressBookBundle.getFormattedString("totalCardStatus", [name, total]);   
-      totalElement.setAttribute("label", numTotal);
-    }
-    catch(ex)
-    {
-      dump("Fail to set total cards in status\n");
-    }
+    if (gSearchInput.value) 
+      statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);   
+    else
+      statusText = gAddressBookBundle.getFormattedString("totalCardStatus", [gAbView.directory.dirName, total]);   
+
+    gStatusText.setAttribute("label", statusText);
   }
-  else
-      dump("Can't find status bar\n");
+  catch(ex) {
+    dump("failed to set status text:  " + ex + "\n");
+  }
 }
 
 function AbResultsPaneDoubleClick(card)
 {
   AbEditCard(card);
 }
+
+function onAdvancedAbSearch()
+{
+  dump("XXX onAdvancedAbSearch\n");
+}
+
+function onEnterInSearchBar()
+{
+  ClearCardViewPane();
+
+  var selectedItems = dirTree.selectedItems;
+  if (selectedItems.length != 1)
+    return;
+
+  if (!gQueryURIFormat) {
+    gQueryURIFormat = gPrefs.getCharPref("mail.addr_book.quicksearchquery.format");
+  }
+
+  var selectedNode = selectedItems[0];
+  var sortColumn = selectedNode.getAttribute("sortColumn");
+  var sortDirection = selectedNode.getAttribute("sortDirection");
+  var searchURI = selectedNode.getAttribute("id");
+
+  /*
+   XXX todo, handle the case where the LDAP url
+   already has a query, like 
+   moz-abldapdirectory://nsdirectory.netscape.com:389/ou=People,dc=netscape,dc=com?(or(Department,=,Applications))
+  */
+  if (gSearchInput.value != "") {
+    // replace all instances of @V with the escaped version
+    // of what the user typed in the quick search text input
+    searchURI += gQueryURIFormat.replace(/@V/g, escape(gSearchInput.value));
+  }
+
+  SetAbView(searchURI, sortColumn, sortDirection);
+  
+  // XXX todo 
+  // this works for synchronous searches of local addressbooks, 
+  // but not for LDAP searches
+  SelectFirstCard();
+}
+
+function onAbSearchInput(event)
+{
+  if (gSearchTimer) {
+    clearTimeout(gSearchTimer);
+    gSearchTimer = null;
+  }
+
+  if (event && event.keyCode == 13) {
+    onEnterInSearchBar();
+  }
+  else {
+    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
+  }
+}
+

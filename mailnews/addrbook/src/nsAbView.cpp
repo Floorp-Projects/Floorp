@@ -79,7 +79,8 @@ nsAbView::nsAbView()
 nsAbView::~nsAbView()
 {
   if (mDirectory) {
-    nsresult rv = Close();
+    nsresult rv;
+    rv = Close();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to close view");
   }
 }

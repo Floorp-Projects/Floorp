@@ -114,156 +114,173 @@ Contributor(s):
 <popup id="sidebarPopup"/>
 
 <toolbox class="toolbox-top">
-	<menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
-		<menu id="menu_File">
-			<menupopup id="menu_FilePopup">
+    <menubar id="ab-menubar" grippytooltiptext="&menuBar.tooltip;">
+        <menu id="menu_File">
+            <menupopup id="menu_FilePopup">
         <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
-				<menu id="menu_New">
-					<menupopup id="menu_NewPopup">
+                <menu id="menu_New">
+                    <menupopup id="menu_NewPopup">
             <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
             <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
-						<menuseparator/>
-						<menuitem id="menu_newNavigator"/>
-  					<menuitem id="menu_newEditor"/>
-					</menupopup>
-				</menu>
-				<menuseparator/>
-				<menuitem id="menu_close"/>
-				<menuseparator/>
+                        <menuseparator/>
+                        <menuitem id="menu_newNavigator"/>
+                      <menuitem id="menu_newEditor"/>
+                    </menupopup>
+                </menu>
+                <menuseparator/>
+                <menuitem id="menu_close"/>
+                <menuseparator/>
         <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
         <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
-				<menuseparator/>
+                <menuseparator/>
         <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
-			</menupopup>
-		</menu>
-		
-		<menu id="menu_Edit">
-		  <menupopup>
-			<menuitem id="menu_delete" observes="button_delete"/>
-			<menuseparator/>
-			<menuitem id="menu_selectAll"/>
-			<menuseparator/>
+            </menupopup>
+        </menu>
+        
+        <menu id="menu_Edit">
+          <menupopup>
+            <menuitem id="menu_delete" observes="button_delete"/>
+            <menuseparator/>
+            <menuitem id="menu_selectAll"/>
+            <menuseparator/>
       <menuitem label="&propertiesCmd.label;"
-			          accesskey="&propertiesCmd.accesskey;"
-				  key="key_properties"
+                      accesskey="&propertiesCmd.accesskey;"
+                  key="key_properties"
           command="cmd_properties"/>
-			<menuseparator id="menu_PrefsSeparator"/>
-			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
-		  </menupopup>
-		</menu>
-	    
-		<menu id="menu_View">
-		    <menupopup id="menu_View_Popup">
-				<menu id="menu_Toolbars">
-					<menupopup>
-						<menuitem id="menu_showAbToolbar"
-                  label="&showAbToolbarCmd.label;"
-								  accesskey="&showAbToolbarCmd.accesskey;"
-								  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
-								  checked="true" type="checkbox"/>
-            <menuitem id="menu_showCardPane"
-                  label="&showCardPane.label;"
-								  accesskey="&showCardPane.accesskey;"
-								  oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
-								  checked="true" type="checkbox"/>
-						<menuitem id="menu_showTaskbar" type="checkbox"/>
-					</menupopup>
-				</menu>
-				<menuseparator/>
-				<menu label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
-					<menupopup>
-						<menuitem type="radio" name="shownameas"
-								  id="firstLastCmd"
+            <menuseparator id="menu_PrefsSeparator"/>
+            <menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
+          </menupopup>
+        </menu>
+            <menu label="&searchMenu.label;"
+                  accesskey="&searchMenu.accesskey;">
+                  <menupopup>
+                    <menuitem label="&searchAddressesCmd.label;" 
+                              accesskey="&searchAddressesCmd.accesskey;"
+                              id="menu_search_addresses" 
+                              oncommand="onAdvancedAbSearch();"/>
+                    <menuitem label="&searchInternetCmd.label;" 
+                              accesskey="&searchInternetCmd.accesskey;" 
+                              oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
+                  </menupopup>
+                </menu>
+        <menu id="menu_View">
+            <menupopup id="menu_View_Popup">
+                <menu id="menu_Toolbars">
+                    <menupopup>
+                        <menuitem id="menu_showAbToolbar"
+                                  label="&showAbToolbarCmd.label;"
+                                  accesskey="&showAbToolbarCmd.accesskey;"
+                                  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
+                                  checked="true" type="checkbox"/>
+                        <menuitem label="&showSearchToolbarCmd.label;"
+                                  accesskey="&showSearchToolbarCmd.accesskey;" 
+                                  oncommand="goToggleToolbar('searchBox','menu_showSearchToolbar')"
+                                  checked="true" type="checkbox"/>
+                        <menuitem id="menu_showTaskbar" 
+                                  type="checkbox"/>
+                        <menuseparator/>
+                        <menuitem id="menu_showCardPane"
+                                  label="&showCardPane.label;"
+                                  accesskey="&showCardPane.accesskey;"
+                                  oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
+                                  checked="true" type="checkbox"/>
+                    </menupopup>
+                </menu>
+                <menuseparator/>
+                <menu label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
+                    <menupopup>
+                        <menuitem type="radio" name="shownameas"
+                                  id="firstLastCmd"
                   label="&firstLastCmd.label;"
-								  accesskey="&firstLastCmd.accesskey;"
-								  oncommand="SetNameColumn('firstLastCmd')"/>
-						<menuitem type="radio" name="shownameas"
-								  id="lastFirstCmd"
+                                  accesskey="&firstLastCmd.accesskey;"
+                                  oncommand="SetNameColumn('firstLastCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="lastFirstCmd"
                   label="&lastFirstCmd.label;"
-								  accesskey="&lastFirstCmd.accesskey;"
-								  oncommand="SetNameColumn('lastFirstCmd')"/>
-						<menuitem type="radio" name="shownameas"
-								  id="displayNameCmd"
+                                  accesskey="&lastFirstCmd.accesskey;"
+                                  oncommand="SetNameColumn('lastFirstCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="displayNameCmd"
                   label="&displayNameCmd.label;"
-								  accesskey="&displayNameCmd.accesskey;"
-								  oncommand="SetNameColumn('displayNameCmd')"/>
-					</menupopup>
-				</menu>
+                                  accesskey="&displayNameCmd.accesskey;"
+                                  oncommand="SetNameColumn('displayNameCmd')"/>
+                    </menupopup>
+                </menu>
         <menu label="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
-				    <menupopup id="sortMenuPopup" onpopupshowing="InitViewSortByMenu()">
+                    <menupopup id="sortMenuPopup" onpopupshowing="InitViewSortByMenu()">
             <menuitem label="&GeneratedName.label;" 
-								  id="cmd_SortByGeneratedName"
-								  accesskey="&GeneratedName.accesskey;"
-								  oncommand="SortResultPane('GeneratedName');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByGeneratedName"
+                                  accesskey="&GeneratedName.accesskey;"
+                                  oncommand="SortResultPane('GeneratedName');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&PrimaryEmail.label;"
-								  id="cmd_SortByPrimaryEmail"
-								  accesskey="&PrimaryEmail.accesskey;"
-								  oncommand="SortResultPane('PrimaryEmail');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByPrimaryEmail"
+                                  accesskey="&PrimaryEmail.accesskey;"
+                                  oncommand="SortResultPane('PrimaryEmail');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&Company.label;"
-								  id="cmd_SortByCompany"
-								  accesskey="&Company.accesskey;"
-								  oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByCompany"
+                                  accesskey="&Company.accesskey;"
+                                  oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&NickName.label;"
-								  id="cmd_SortByNickName"
-								  accesskey="&NickName.accesskey;"
-								  oncommand="SortResultPane('NickName');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByNickName"
+                                  accesskey="&NickName.accesskey;"
+                                  oncommand="SortResultPane('NickName');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&SecondEmail.label;"
-								  id="cmd_SortBySecondEmail"
-								  accesskey="&SecondEmail.accesskey;"
-								  oncommand="SortResultPane('SecondEmail');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortBySecondEmail"
+                                  accesskey="&SecondEmail.accesskey;"
+                                  oncommand="SortResultPane('SecondEmail');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&Department.label;"
-								  id="cmd_SortByDepartment"
-								  accesskey="&Department.accesskey;"
-								  oncommand="SortResultPane('Department');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByDepartment"
+                                  accesskey="&Department.accesskey;"
+                                  oncommand="SortResultPane('Department');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&JobTitle.label;"
-								  id="cmd_SortByJobTitle"
-								  accesskey="&JobTitle.accesskey;"
-								  oncommand="SortResultPane('JobTitle');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByJobTitle"
+                                  accesskey="&JobTitle.accesskey;"
+                                  oncommand="SortResultPane('JobTitle');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&CellularNumber.label;"
-								  id="cmd_SortByCellularNumber"
-								  accesskey="&CellularNumber.accesskey;"
-								  oncommand="SortResultPane('CellularNumber');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByCellularNumber"
+                                  accesskey="&CellularNumber.accesskey;"
+                                  oncommand="SortResultPane('CellularNumber');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&PagerNumber.label;"
-								  id="cmd_SortByPagerNumber"
-								  accesskey="&PagerNumber.accesskey;"
-								  oncommand="SortResultPane('PagerNumber');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByPagerNumber"
+                                  accesskey="&PagerNumber.accesskey;"
+                                  oncommand="SortResultPane('PagerNumber');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&FaxNumber.label;"
-								  id="cmd_SortByFaxNumber"
-								  accesskey="&FaxNumber.accesskey;"
-								  oncommand="SortResultPane('FaxNumber');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByFaxNumber"
+                                  accesskey="&FaxNumber.accesskey;"
+                                  oncommand="SortResultPane('FaxNumber');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&HomePhone.label;"
-								  id="cmd_SortByHomePhone"
-								  accesskey="&HomePhone.accesskey;"
-								  oncommand="SortResultPane('HomePhone');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByHomePhone"
+                                  accesskey="&HomePhone.accesskey;"
+                                  oncommand="SortResultPane('HomePhone');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&WorkPhone.label;"
-								  id="cmd_SortByWorkPhone"
-								  accesskey="&WorkPhone.accesskey;"
-								  oncommand="SortResultPane('WorkPhone');" name="sortas" type="radio" checked="true"/>
+                                  id="cmd_SortByWorkPhone"
+                                  accesskey="&WorkPhone.accesskey;"
+                                  oncommand="SortResultPane('WorkPhone');" name="sortas" type="radio" checked="true"/>
             <menuseparator/>
             <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="AbSortAscending()"/>
             <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="AbSortDescending()"/>
-					</menupopup>
-				</menu>
-			</menupopup>
-		</menu>
-	    
-		<menu id="tasksMenu"/>
-		<menu id="menu_Help"/>
-		<spacer flex="100%"/>
-	</menubar>
-	
-	<!-- toolbar -->
-		<toolbar class="chromeclass-toolbar toolbar-primary" id="abToolbar" persist="collapsed" grippytooltiptext="&addressbookToolbar.tooltip;">
-			<hbox id="toolbar_button_box">
+                    </menupopup>
+                </menu>
+            </menupopup>
+        </menu>
+        
+        <menu id="tasksMenu"/>
+        <menu id="menu_Help"/>
+        <spacer flex="1"/>
+    </menubar>
+    
+    <!-- toolbar -->
+        <toolbar class="chromeclass-toolbar toolbar-primary" id="abToolbar" persist="collapsed" grippytooltiptext="&addressbookToolbar.tooltip;">
+            <hbox id="toolbar_button_box">
         <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
-            	<toolbarseparator class="toolbarseparator-primary"/>
+        <toolbarseparator class="toolbarseparator-primary"/>
         <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
         <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
-        <vbox flex="100%">
+        <vbox flex="1">
           <spacer flex="1"/> 
           <!--html id="searchlabel">&showNames.label;</html>
           <textbox id="searchtext" type="text" align="bottom"/> 
@@ -288,16 +305,22 @@ Contributor(s):
     <vbox id="sidebar-box">
         <sidebarheader type="box" class="sidebarheader-main" label="&addressbook-sidebar-header.label;"/>
       
-      <tree id="dirTree" flex="1000"/>
+      <tree id="dirTree" flex="1"/>
     </vbox>
     <splitter id="sidebar-splitter" collapse="before" persist="state"/>
     
-    <vbox flex="100%" style="min-width:100px">
+    <vbox flex="1" style="min-width:100px">
+
+      <hbox id="searchBox" persist="collapsed" align="center">
+        <label id="searchCriteria" value="&SearchNameOrEmail.label;"/>
+        <textbox id="searchInput" flex="1" oninput="onAbSearchInput(event);"/>
+        <button id="advancedButton" label="&advancedButton.label;" 
+                tooltiptext="&advancedButton.tooltip;" 
+                oncommand="onAdvancedAbSearch();"/>
+      </hbox>
 
       <!-- results pane -->
-      <vbox id="results_box" flex="1">
-        <outliner id="abResultsOutliner" flex="2" persist="height" />
-      </vbox>
+      <outliner id="abResultsOutliner" flex="1" persist="height"/>
       
       <splitter id="results-splitter" collapse="after" persist="state">
         <grippy/>

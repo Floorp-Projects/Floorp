@@ -17,8 +17,10 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
+ * Original Author:
  *   Paul Hangas <hangas@netscape.com>
+ *
+ * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
  */
@@ -29,6 +31,8 @@ var gPrefs = Components.classes["@mozilla.org/preferences-service;1"];
 gPrefs = gPrefs.getService();
 gPrefs = gPrefs.QueryInterface(Components.interfaces.nsIPrefBranch);
 	
+var gMapItURLFormat = gPrefs.getCharPref("mail.addr_book.mapit_url.format");
+
 var gAddrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
 
 var zName;
@@ -370,11 +374,10 @@ function MapIt(id)
 
 function CreateMapItURL(address1, address2, city, state, zip, country)
 {
-  var urlFormat = gPrefs.getCharPref("mail.addr_book.mapit_url.format");
-  if (!urlFormat)
+  if (!gMapItURLFormat)
     return null;
 
-  urlFormat = urlFormat.replace("@A1", escape(address1));
+  var urlFormat = gMapItURLFormat.replace("@A1", escape(address1));
   urlFormat = urlFormat.replace("@A2", escape(address2));
   urlFormat = urlFormat.replace("@CO", escape(country));
   urlFormat = urlFormat.replace("@CI", escape(city));

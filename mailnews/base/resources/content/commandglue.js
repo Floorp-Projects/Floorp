@@ -700,7 +700,8 @@ function FolderPaneSelectionChange()
             {
               gDBView.isSearchView = false;  //reset the search input on folder switch
               var searchInput = document.getElementById("searchInput");
-              if (searchInput) searchInput.value = "";
+              if (searchInput) 
+                searchInput.value = "";
             }
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }

@@ -57,10 +57,10 @@ Rights Reserved.
 <!ENTITY propertiesCmd.key                          "i">  
 
 <!-- View Menu -->
-<!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar">  
-<!-- LOCALIZATION NOTE (showAbToolbarCmd.accesskey) : DONT_TRANSLATE -->  
+<!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar"> 
 <!ENTITY showAbToolbarCmd.accesskey                     "o">  
-<!ENTITY showCardPane.label                             "Card Summary">
+
+<!ENTITY showCardPane.label                             "Card Summary Pane">
 <!ENTITY showCardPane.accesskey                         "C">
   
 <!ENTITY menu_ShowNameAs.label                          "Show Name As"> 
@@ -72,6 +72,7 @@ Rights Reserved.
 <!ENTITY displayNameCmd.label				"Display Name">  
 <!ENTITY displayNameCmd.accesskey			"d"> 
 <!ENTITY sortMenu.label                                 "Sort by"> 
+
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
 <!-- Toolbar items -->  

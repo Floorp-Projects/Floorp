@@ -96,7 +96,9 @@ function removeListeners()
   
 function onEnterInSearchBar()
 {
-   if (!gDBView) return;
+   if (!gDBView) 
+     return;
+
    ClearThreadPaneSelection();
    ClearMessagePane();
    if (!gSearchSession)
@@ -111,7 +113,7 @@ function onEnterInSearchBar()
      if (gSearchInProgress)
      {
        onSearchStop();
-       gSearchInProgress =false;
+       gSearchInProgress = false;
      }
      removeListeners();
    }
@@ -220,14 +222,14 @@ function onAdvancedSearch()
 
 function onSearchStop() 
 {
-    gSearchSession.interruptSearch();
+  gSearchSession.interruptSearch();
 }
 
 function onSearchInput(event)
 {
   if (gSearchTimer) {
     clearTimeout(gSearchTimer); 
-    gSearchTimer=null;
+    gSearchTimer = null;
   }
 
   if (event && event.keyCode == 13) {

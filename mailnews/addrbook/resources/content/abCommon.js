@@ -42,12 +42,15 @@ var gResultsOutliner = 0;
 var dirTree = 0;
 var gAbView = null;
 
-const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
-const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
-
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+
+const kDefaultSortColumn = "GeneratedName";
+const kDefaultAscending = "ascending";
+const kDefaultDescending = "descending";
+const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
+const kCollectedAddressbookURI = "moz-abmdbdirectory://history.mab";
 
 // Controller object for Results Pane
 var ResultsPaneController =
@@ -481,6 +484,22 @@ function SelectFirstCard()
   }
 }
 
+function DirPaneClick(event)
+{
+  // we only care about left button events
+  if (event.button != 0)
+    return;
+
+  var searchInput = document.getElementById("searchInput");
+  // if there is a searchInput element, and it's not blank 
+  // then we need to act like the user cleared the
+  // search text
+  if (searchInput && searchInput.value) {
+    searchInput.value = "";
+    onEnterInSearchBar();
+  }
+}
+
 function DirPaneDoubleClick()
 {
   if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
@@ -525,6 +544,12 @@ function SetAbView(uri, sortColumn, sortDirection)
 {
   CloseAbView();
 
+  if (!sortColumn)
+    sortColumn = kDefaultSortColumn;
+
+  if (!sortDirection)
+    sortDirection = kDefaultAscending;
+
   gAbView = Components.classes["@mozilla.org/addressbook/abview;1"].createInstance(Components.interfaces.nsIAbView);
 
   var actualSortColumn = gAbView.init(uri, GetAbViewListener(), sortColumn, sortDirection);
@@ -533,10 +558,6 @@ function SetAbView(uri, sortColumn, sortDirection)
   boxObject.view = gAbView.QueryInterface(Components.interfaces.nsIOutlinerView);
   return actualSortColumn;
 }
-
-const kDefaultSortColumn = "GeneratedName";
-const kDefaultAscending = "ascending";
-const kDefaultDescending = "descending";
 
 function GetAbView()
 {
@@ -564,12 +585,6 @@ function ChangeDirectoryByDOMNode(dirNode)
   var sortColumn = dirNode.getAttribute("sortColumn");
   var sortDirection = dirNode.getAttribute("sortDirection");
   
-  if (!sortColumn)
-    sortColumn = kDefaultSortColumn;
-
-  if (!sortDirection)
-    sortDirection = kDefaultAscending;
-
   var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
 
   UpdateSortIndicators(actualSortColumn, sortDirection);
@@ -577,7 +592,7 @@ function ChangeDirectoryByDOMNode(dirNode)
   // only select the first card if there is a first card
   if (gAbView && gAbView.getCardFromRow(0)) {
     SelectFirstCard();
-    }
+  }
   else {
     // the selection changes if we were switching directories.
     ResultsPaneSelectionChanged()
@@ -795,3 +810,4 @@ function GetParentDirectoryFromMailingListURI(abURI)
 
   return null;
 } 
+
