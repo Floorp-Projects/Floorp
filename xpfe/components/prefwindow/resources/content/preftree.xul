@@ -216,7 +216,7 @@
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://pref/content/pref-smartupdate.html"><treeindentation/>&smart.label;</treecell>
+            <treecell name="chrome://pref/content/pref-smartupdate.xul"><treeindentation/>&smart.label;</treecell>
           </treerow>
         </treeitem>
       </treechildren>
