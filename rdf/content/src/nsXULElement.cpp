@@ -2821,9 +2821,7 @@ nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
         for (PRInt32 i = 0; i < count; i++) {
             nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(i));
             nsINodeInfo *ni = attr->GetNodeInfo();
-            if ((ni->NamespaceEquals(aNameSpaceID) ||
-                 (aNameSpaceID == kNameSpaceID_Unknown) ||
-                 (aNameSpaceID == kNameSpaceID_None)) && ni->Equals(aName)) {
+            if (ni->Equals(aName, aNameSpaceID)) {
                 ni->GetPrefixAtom(aPrefix);
                 attr->GetValue(aResult);
                 rv = aResult.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
@@ -2836,9 +2834,7 @@ nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
         for (PRInt32 i = 0; i < count; i++) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
             nsINodeInfo *ni = attr->mNodeInfo;
-            if ((ni->NamespaceEquals(aNameSpaceID) ||
-                 (aNameSpaceID == kNameSpaceID_Unknown) ||
-                 (aNameSpaceID == kNameSpaceID_None)) && ni->Equals(aName)) {
+            if (ni->Equals(aName, aNameSpaceID)) {
                 ni->GetPrefixAtom(aPrefix);
                 aResult.Assign(attr->mValue);
                 rv = aResult.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;

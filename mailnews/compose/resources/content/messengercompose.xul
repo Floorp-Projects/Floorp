@@ -339,7 +339,7 @@
               <menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" id="highest"/>
             </menupopup>
           </menu>
-          <menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+          <menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" ignore="http://home.netscape.com/NC-rdf#MessageChild">
             <menupopup/>
             <template> 
               <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">

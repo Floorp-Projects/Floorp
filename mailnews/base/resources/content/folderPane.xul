@@ -85,7 +85,7 @@
 	  </template>
 
     <treecolgroup>
-	  <treecol persist="width" width="3*" flex="1" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
+	  <treecol persist="width" width="3*" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
     </treecolgroup>
 
           <treehead>

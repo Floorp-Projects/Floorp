@@ -274,14 +274,14 @@ function SetSentFolderColumns(isSentFolder)
 		senderColumn.setAttribute("value", Bundle.GetStringFromName("recipientColumnHeader"));
 		senderColumn.setAttribute("onclick", "return top.MsgSortByRecipient();");
 		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Recipient");
-		authorColumnHeader.setAttributeNS(gRDFNamespace, "resource", "http://home.netscape.com/NC-rdf#Recipient");
+		authorColumnHeader.setAttribute("resource", "http://home.netscape.com/NC-rdf#Recipient");
 	}
 	else
 	{
 		senderColumn.setAttribute("value", Bundle.GetStringFromName("senderColumnHeader"));
 		senderColumn.setAttribute("onclick", "return top.MsgSortBySender();");
 		senderColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Sender");
-		authorColumnHeader.setAttributeNS(gRDFNamespace, "resource", "http://home.netscape.com/NC-rdf#Sender");
+		authorColumnHeader.setAttribute("resource", "http://home.netscape.com/NC-rdf#Sender");
 	}
 
 
@@ -571,7 +571,7 @@ function SortColumn(node, sortKey, secondarySortKey, direction)
 			try
 			{
 				if(secondarySortKey)
-					node.setAttributeNS(gRDFNamespace, 'resource2', secondarySortKey);
+					node.setAttribute('resource2', secondarySortKey);
 				xulSortService.Sort(node, sortKey, sortDirection);
 			}
 			catch(e)

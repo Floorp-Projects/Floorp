@@ -56,13 +56,13 @@ Rights Reserved.
 		</template>
 
 		<treecolgroup id="theColumns">
-			<treecol persist="hidden width"  flex="2" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+			<treecol persist="hidden width"  flex="2" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
 			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width" flex="3" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+			<treecol persist="hidden width" flex="3" id="EmailColumn" resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
 			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width"  flex="2" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+			<treecol persist="hidden width"  flex="2" id="WorkPhoneColumn" resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
 			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width"  flex="2" id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Company"/>
+			<treecol persist="hidden width"  flex="2" id="OrganizationColumn" resource="http://home.netscape.com/NC-rdf#Company"/>
 		</treecolgroup>
 		
 		<treehead>

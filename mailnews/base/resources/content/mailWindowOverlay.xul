@@ -29,7 +29,6 @@ Rights Reserved.
 %navigatorDTD;
 ]>  
 <overlay
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -187,7 +186,7 @@ Rights Reserved.
 			  value="&contextMoveMsgMenu.label;"
 			  accesskey="&contextMoveMsgMenu.accesskey;"
 			  datasources="rdf:null"
-			  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -239,7 +238,7 @@ Rights Reserved.
 			value="&contextCopyMsgMenu.label;"
 			accesskey="&contextCopyMsgMenu.accesskey;"
 			datasources="rdf:null" 
-			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -392,7 +391,7 @@ Rights Reserved.
 			  value="&contextMoveMsgMenu.label;"
 			  accesskey="&contextMoveMsgMenu.accesskey;"
 			  datasources="rdf:null"
-			  rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -444,7 +443,7 @@ Rights Reserved.
 			value="&contextCopyMsgMenu.label;"
 			accesskey="&contextCopyMsgMenu.accesskey;"
 			datasources="rdf:null" 
-			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -763,7 +762,7 @@ Rights Reserved.
 		<menuitem value="&editMsgAsNewCmd.label;" accesskey="&editMsgAsNewCmd.accesskey;" observes="cmd_editAsNew"/>
 		<menuseparator/>
 		<menu value="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
-		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -812,7 +811,7 @@ Rights Reserved.
 			</template>
 		</menu>
 		<menu value="&copyMsgMenu.label;" accesskey="&copyMsgMenu.accesskey;" id="copyMenu" datasources="rdf:null"
-		 rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
@@ -889,7 +888,7 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" onclick="MsgReplyToAllMessage(event)"/>
 			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" onclick="MsgForwardMessage(event)"/>
 			<toolbarseparator/>
-			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild">
 				<button class="button-toolbar-2 top" observes="cmd_file" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
 				<template> 
 					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">

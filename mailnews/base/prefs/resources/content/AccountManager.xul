@@ -6,7 +6,6 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 <window	id="account-manager" 
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
         orient="vertical"
         class="dialog"
@@ -22,8 +21,8 @@
 
 	<box flex="1">
     <box orient="vertical" flex="1">
-      <tree rdf:datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
-            rdf:containment="http://home.netscape.com/NC-rdf#Settings"
+      <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
+            containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
             class="inset"
             sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"

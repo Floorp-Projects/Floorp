@@ -30,8 +30,8 @@ Rights Reserved.
 		  class="abDirectory" 
 		  ref="abdirectory://"
 		  datasources="rdf:addressdirectory"
-		  rdf:containment="http://home.netscape.com/NC-rdf#child"
-		  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
+		  containment="http://home.netscape.com/NC-rdf#child"
+		  ignore="http://home.netscape.com/NC-rdf#CardChild"
 		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
 		  allownegativeassertions="false"
@@ -56,7 +56,7 @@ Rights Reserved.
 		</template>
 
                 <treecolgroup>
-		  <treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
+		  <treecol resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
                 </treecolgroup>
 
 		<treechildren id="dirTreeBody" flex="1">

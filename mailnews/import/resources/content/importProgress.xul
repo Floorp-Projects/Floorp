@@ -27,8 +27,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/importDialog.dtd">
 
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         onload="OnLoadProgressDialog()"
         orient="vertical">

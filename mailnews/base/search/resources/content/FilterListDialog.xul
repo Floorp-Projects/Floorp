@@ -24,7 +24,6 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd" >
 <window class="dialog"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
@@ -53,8 +52,8 @@ Rights Reserved.
       </row>
       <row>
         <menulist oncommand="onServerClick(event);" id="serverMenu">
-          <menupopup rdf:datasources="rdf:msgaccountmanager"
-                     rdf:containment="http://home.netscape.com/NC-rdf#child"
+          <menupopup datasources="rdf:msgaccountmanager"
+                     containment="http://home.netscape.com/NC-rdf#child"
                      ref="msgaccounts:/">
             <template>
               <rule nc:SupportsFilters="true">
@@ -76,8 +75,8 @@ Rights Reserved.
           <html>&filterHeader.label;</html>
           <tree id="filterTree" class="inset" flex="1"
                 onselect="onFilterSelect(event);"
-                rdf:datasources="rdf:msgfilters rdf:msgaccountmanager "
-                rdf:containment="http://home.netscape.com/NC-rdf#child">
+                datasources="rdf:msgfilters rdf:msgaccountmanager "
+                containment="http://home.netscape.com/NC-rdf#child">
 
             <treehead>
               <treerow>
@@ -106,7 +105,7 @@ Rights Reserved.
             </template>
           
             <treecolgroup>
-              <treecol style="width: 0px" flex="1" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
+              <treecol style="width: 0px" flex="1" resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
               <treecol id="activeColumn"/>
             </treecolgroup>
           

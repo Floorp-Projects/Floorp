@@ -27,8 +27,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    		xmlns:NC="http://home.netscape.com/NC-rdf#"	
+<window xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
 		    class="dialog"
@@ -59,9 +58,9 @@ Rights Reserved.
             <row>
               <text class="label" value="&server.label;" for="serverMenu"/>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
-                        rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-                        rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-                        rdf:containment="http://home.netscape.com/NC-rdf#child"
+                        datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                        ignore="http://home.netscape.com/NC-rdf#MessageChild"
+                        containment="http://home.netscape.com/NC-rdf#child"
                         ref="msgaccounts:/" flex="1">
                 <template>
                   <rule NC:CanSubscribe="true">
@@ -104,11 +103,11 @@ Rights Reserved.
           </template>
     
           <treecolgroup id="theSubscribeColumns">
-            <treecol flex="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+            <treecol flex="7*" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
             <splitter class="tree-splitter"/>
-            <treecol flex="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+            <treecol flex="1*" id="SubscribedColumn" resource="http://home.netscape.com/NC-rdf#Subscribed"/>
             <splitter class="tree-splitter"/>
-            <treecol flex="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+            <treecol flex="1*" id="TotalMessagesColumn" resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
           </treecolgroup>
     
           <treehead>	
