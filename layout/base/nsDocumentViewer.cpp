@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 0 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1008,18 +1008,23 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
     mPresContext->SetContainer(mContainer);
     mPresContext->SetLinkHandler(linkHandler);
 
-    // Set script-context-owner in the document
-    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-    requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-       getter_AddRefs(owner));
-    if (nsnull != owner) {
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
-      if (NS_SUCCEEDED(rv) && (nsnull != global)) {
-        mDocument->SetScriptGlobalObject(global);
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
-        if (nsnull != domdoc) {
-          global->SetNewDocument(domdoc, PR_TRUE);
+    if (!mIsDoingPrintPreview) {
+      // Set script-context-owner in the document
+      nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+      requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+                              getter_AddRefs(owner));
+
+      if (owner) {
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        owner->GetScriptGlobalObject(getter_AddRefs(global));
+
+        if (global) {
+          mDocument->SetScriptGlobalObject(global);
+          nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
+
+          if (domdoc) {
+            global->SetNewDocument(domdoc, PR_TRUE);
+          }
         }
       }
     }
