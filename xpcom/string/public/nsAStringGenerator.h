@@ -39,7 +39,7 @@
 class nsAString;
 class nsACString;
 
-class nsAStringGenerator
+class NS_COM nsAStringGenerator
   {
     public:
       virtual ~nsAStringGenerator() { }
@@ -50,7 +50,7 @@ class nsAStringGenerator
       virtual PRBool IsDependentOn( const nsAString& ) const = 0;
   };
 
-class nsACStringGenerator
+class NS_COM nsACStringGenerator
   {
     public:
       virtual ~nsACStringGenerator() { }

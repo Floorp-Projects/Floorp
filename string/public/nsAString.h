@@ -80,6 +80,8 @@ class NS_COM nsAString
       inline PRBool Equals( const self_type& ) const;
       PRBool Equals( const char_type* ) const;
 
+      virtual PRBool IsVoid() const;
+      virtual void SetIsVoid( PRBool );
       
         /**
          * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
