@@ -80,14 +80,6 @@ public:
     return mMaxElementSize;
   }
 
-  static void CollapseMargins(const nsMargin& aMargin,
-                              nscoord aCarriedOutTopMargin,
-                              nscoord aCarriedOutBottomMargin,
-                              nscoord aFrameHeight,
-                              nscoord aPrevBottomMargin,
-                              nscoord& aTopMarginResult,
-                              nscoord& aBottomMarginResult);
-
   // Compute the largest of two adjacent vertical margins, as per the
   // CSS2 spec section 8.3.1
   static nscoord MaxMargin(nscoord a, nscoord b) {
@@ -106,6 +98,9 @@ public:
   }
 
   static PRBool IsHTMLParagraph(nsIFrame* aFrame);
+
+  static nscoord ComputeCollapsedTopMargin(nsIPresContext& aPresContext,
+                                           nsHTMLReflowState& aRS);
 
 protected:
   nsStyleUnit GetRealMarginLeftUnit();
@@ -127,12 +122,6 @@ protected:
   nscoord mTopMargin;
   nsSize mMaxElementSize;
   PRBool mIsTable;
-
-#ifdef DEBUG
-  PRInt32 mIndent;
-#endif
-
-  nscoord ComputeCollapsedTopMargin(nsHTMLReflowState& aRS);
 };
 
 #endif /* nsBlockReflowContext_h___ */
