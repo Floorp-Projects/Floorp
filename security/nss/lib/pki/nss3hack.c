@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.3 $ $Date: 2001/10/19 18:16:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: nss3hack.c,v $ $Revision: 1.4 $ $Date: 2001/10/19 20:06:28 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -443,6 +443,7 @@ traverse_certificates_by_template
 	    return PR_FAILURE;
 	}
     }
+    nssListIterator_Finish(td->tokens);
     return PR_SUCCESS;
 }
 

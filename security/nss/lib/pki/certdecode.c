@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.2 $ $Date: 2001/10/19 20:06:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -134,9 +134,19 @@ NSSTime_Now
   NSSTime *timeOpt
 )
 {
+    return NSSTime_SetPRTime(timeOpt, PR_Now());
+}
+
+NSS_IMPLEMENT NSSTime *
+NSSTime_SetPRTime
+(
+  NSSTime *timeOpt,
+  PRTime prTime
+)
+{
     NSSTime *rvTime;
     rvTime = (timeOpt) ? timeOpt : nss_ZNEW(NULL, NSSTime);
-    rvTime->prTime = PR_Now();
+    rvTime->prTime = prTime;
     return rvTime;
 }
 
