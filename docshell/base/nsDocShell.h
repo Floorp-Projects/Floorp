@@ -145,6 +145,7 @@ protected:
 
    // Session History
    NS_IMETHOD ShouldAddToSessionHistory(nsIURI* aURI, PRBool* aShouldAdd);
+   NS_IMETHOD ShouldPersistInSessionHistory(nsIURI* aURI, PRBool* aShouldPersist);
    NS_IMETHOD AddToSessionHistory(nsIURI* aURI);
    NS_IMETHOD UpdateCurrentSessionHistory();
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
