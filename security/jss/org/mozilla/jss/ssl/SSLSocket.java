@@ -740,8 +740,8 @@ public class SSLSocket extends java.net.Socket {
     public final static int SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA= 0x001d;
     public final static int SSL3_FORTEZZA_DMS_WITH_RC4_128_SHA     = 0x001e;
 
-    public final static int SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA     = 0xffe0;
-    public final static int SSL_RSA_FIPS_WITH_DES_CBC_SHA          = 0xffe1;
+    public final static int SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA     = 0xfeff;
+    public final static int SSL_RSA_FIPS_WITH_DES_CBC_SHA          = 0xfefe;
 
     public final static int TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA    = 0x0062;
     public final static int TLS_RSA_EXPORT1024_WITH_RC4_56_SHA     = 0x0064;
