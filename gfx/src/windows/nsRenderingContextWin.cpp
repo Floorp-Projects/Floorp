@@ -1969,7 +1969,8 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
       return NS_ERROR_UNEXPECTED;
     }
     else {
-      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
@@ -1985,7 +1986,8 @@ nsRenderingContextWin::GetBoundingMetrics(const char*        aString,
           return NS_ERROR_UNEXPECTED;
         }
         else {
-          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+          // flip sign of descent for cross-platform compatibility
+          descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
           if (aBoundingMetrics.descent > descent)

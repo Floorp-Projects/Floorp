@@ -1956,7 +1956,8 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
       return NS_ERROR_UNEXPECTED;
     }
     else {
-      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
@@ -1972,10 +1973,11 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
           return NS_ERROR_UNEXPECTED;
         }
         else {
-          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+          // flip sign of descent for cross-platform compatibility
+          descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-          if (aBoundingMetrics.descent > descent)
+          if (aBoundingMetrics.descent < descent)
             aBoundingMetrics.descent = descent;
         }
       }
@@ -2102,7 +2104,8 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
       return NS_ERROR_UNEXPECTED;
     }
     else {
-      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
@@ -2118,10 +2121,11 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
           return NS_ERROR_UNEXPECTED;
         }
         else {
-          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+          // flip sign of descent for cross-platform compatibility
+          descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-          if (aBoundingMetrics.descent > descent)
+          if (aBoundingMetrics.descent < descent)
             aBoundingMetrics.descent = descent;
         }
       }
@@ -2733,7 +2737,7 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
   if (aString && 0 < aLength) {
     char str[CHAR_BUFFER_SIZE];
     char* pstr = str;
-    // Get number of bytes to needed for the conversion
+    // Get number of bytes needed for the conversion
     int nb;
     nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
                              pstr, 0, nsnull, nsnull);
@@ -2766,7 +2770,8 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
       return NS_ERROR_UNEXPECTED;
     }
     else {
-      descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
       aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
       aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
       aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
@@ -2782,7 +2787,8 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
           return NS_ERROR_UNEXPECTED;
         }
         else {
-          descent = nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY);
+          // flip sign of descent for cross-platform compatibility
+          descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
           if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
             aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
           if (aBoundingMetrics.descent > descent)

@@ -2272,14 +2272,14 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
 // bounding metrics for a string 
 // remember returned values are not in app units
 nsresult
-nsFontMetricsXlib::GetBoundingMetrics (nsFontXlib*         aFont, 
+nsFontMetricsXlib::GetBoundingMetrics (nsFontXlib*        aFont, 
                                        const PRUnichar*   aString,
                                        PRUint32           aLength,
                                        nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();               
 
-  if (0 < aLength) {
+  if (aString && 0 < aLength) {
     XChar2b buf[512]; // XXX watch buffer length !!!
     int len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
                                             (char*) buf, sizeof(buf));
@@ -2300,7 +2300,7 @@ nsFontMetricsXlib::GetBoundingMetrics (nsFontXlib*         aFont,
     aBoundingMetrics.rightBearing =  overall.rbearing;
     aBoundingMetrics.width        =  overall.width;
     aBoundingMetrics.ascent       =  overall.ascent;
-    aBoundingMetrics.descent      = -overall.descent;
+    aBoundingMetrics.descent      =  overall.descent;
 
     unsigned long pr = 0;
     if (::XGetFontProperty(font_struct, XA_ITALIC_ANGLE, &pr)) {
