@@ -90,6 +90,7 @@ nsresult nsExternalHelperAppService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewFileSpec(getter_AddRefs(mimeTypesFileSpec));
   NS_ENSURE_SUCCESS(rv, rv);
+  mimeTypesFileSpec->SetNativePath(pathBuf);
 
   nsXPIDLCString url;
   rv = mimeTypesFileSpec->GetURLString(getter_Copies(url));
