@@ -71,3 +71,8 @@
   {
     display               : none;
   }
+  
+/* hide goto menu bug #47633 */ 
+#taskbarGotoMenuBox{
+	display:none;	
+}   

@@ -63,3 +63,8 @@
     min-width             : 0.3em;
     width                 : 1em;
   }
+  
+/* hide goto menu bug #47633 */ 
+#taskbarGotoMenuBox{
+	display:none;	
+}   

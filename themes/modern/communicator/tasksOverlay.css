@@ -109,3 +109,8 @@
 	width				  : 6px;
 	height				  : 17px;
   }
+  
+/* hide goto menu bug #47633 */ 
+#taskbarGotoMenuBox{
+	display:none;	
+}  
