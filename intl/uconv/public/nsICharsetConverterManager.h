@@ -64,8 +64,8 @@
 /**
  * Interface for a Manager of Charset Converters.
  * 
- * This Manager's data is a caching of Registry available stuff. But the access 
- * methods are also doing all the work to get it and provide it.
+ * This Manager's data is a cacheing of Registry available stuff. But the 
+ * access methods are also doing all the work to get it and provide it.
  * 
  * Note: The term "Charset" used in the classes, interfaces and file names 
  * should be read as "Coded Character Set". I am saying "charset" only for 
@@ -96,6 +96,7 @@ public:
       nsString ** aResult) = 0;
   NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
       nsString ** aResult) = 0;
+  NS_IMETHOD GetCharsetTitle(nsString * aCharset, nsString ** aResult) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */
