@@ -46,18 +46,15 @@ void nsNewsSummarySpec::SetFolderName(const char *folderPath)
 	*this = folderPath;
 }
 
-void nsNewsSummarySpec::	CreateSummaryFileName()
+void nsNewsSummarySpec::CreateSummaryFileName()
 {
 	char *leafName = GetLeafName();
-
 	nsString fullLeafName(leafName);
 
 	// Append .msf (message summary file) 
+	fullLeafName += ".msf";	
 
-	fullLeafName += ".msf";				// message summary file
-	char *cLeafName = fullLeafName.ToNewCString();
-	SetLeafName(cLeafName);
-	delete [] cLeafName;	// ###use nsCString when it's available!@
+	SetLeafName(nsAutoCString(fullLeafName));
 	PL_strfree(leafName);
 }
 
