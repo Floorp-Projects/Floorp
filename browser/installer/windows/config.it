@@ -187,23 +187,23 @@ Title=$ProductName$ Setup
 ;*** LOCALIZE ME BABY ***
 MessageWelcome=Welcome to %s.
 ;*** LOCALIZE ME BABY ***
-Message0=You are about to install %s 0.8.
+Message0=You are about to install %s $Version$.
 ;*** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
 ;*** LOCALIZE ME BABY ***
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 ;*** LOCALIZE ME BABY ***
-Message3=Click Next to continue installing %s 0.8.
+Message3=Click Next to continue installing %s $Version$.
 
 [Dialog License]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Software License Agreement
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben Blah Blah Software License Agreement
+Sub Title=Terms and conditions for using this software.
 License File=license.txt
 ;*** LOCALIZE ME BABY ***
-Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
+Message0=Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
 RadioAccept=I Accept the terms of the License Agreement
 ;*** LOCALIZE ME BABY ***
@@ -214,7 +214,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Setup Type
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben blah blah Setup Type blah.
+Sub Title=Choose setup options.
 ;*** LOCALIZE ME BABY ***
 Message0=Choose the type of Setup you prefer, then click Next.
 
@@ -265,7 +265,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Select Components
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben Blah Blah Additional Components
+Sub Title=Additional components that enhance $ProductName$.
 ;*** LOCALIZE ME BABY ***
 Message0=Choose additional components you want to install, then click Next.
 
@@ -274,7 +274,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Install Folder
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben blah blah install path
+Sub Title=Where $ProductName$ will be installed.
 ;*** LOCALIZE ME BABY ***
 Message0=$ProductName$ will be installed into the following folder:
 
@@ -284,7 +284,7 @@ Show In Easy Install=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=Upgrade
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben blah blah Upgrade path
+Sub Title=Upgrades an existing $ProductName$ installation.
 ;*** LOCALIZE ME BABY ***
 Message Cleanup=A previous $ProductNameInternal$ installation has been found in the chosen folder.
 ;*** LOCALIZE ME BABY ***
@@ -408,7 +408,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Summary
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben Summary Blah Blah Summary. 
+Sub Title=Ready to start installing $ProductName$.
 ;*** LOCALIZE ME BABY ***
 Message Install=Setup will now install the following components:
 ;*** LOCALIZE ME BABY ***
@@ -421,7 +421,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Downloading
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben Downloading Blah Blah Downloading. 
+Sub Title=Downloading required components...
 ;*** LOCALIZE ME BABY ***
 Blurb=Setup is downloading the files required to install $ProductName$.
 ;*** LOCALIZE ME BABY ***
@@ -434,7 +434,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Installing
 ;*** LOCALIZE ME BABY ***
-Sub Title=XXXben Installing Blah Blah Installing. 
+Sub Title=Installing $ProductName$...
 ;*** LOCALIZE ME BABY ***
 Blurb=Setup is installing application files. 
 ;*** LOCALIZE ME BABY ***
@@ -449,11 +449,11 @@ Title=Install Complete
 ;*** LOCALIZE ME BABY ***
 MessageHeader=Install Complete
 ;*** LOCALIZE ME BABY ***
-Message0=%s was successfully installed.
+Message0=%s $Version$ was successfully installed.
 ;*** LOCALIZE ME BABY ***
 Message1=Click Finish to complete Setup. 
 ;*** LOCALIZE ME BABY ***
-Launch App=Launch %s now.
+Launch App=Launch %s $Version$ now.
 Launch App Checked=TRUE
 
 [Dialog Download]
@@ -653,7 +653,7 @@ Description Long=Additional tools including mouse-gesture navigation, a site nav
 Archive=abe.xpi
 $InstallSize$:abe
 $InstallSizeArchive$:abe.xpi
-Attributes=SELECTED|VISIBLE
+Attributes=VISIBLE|DISABLED
 FileCount=$FileCount$
 
 [Component ADT]
@@ -663,7 +663,7 @@ Description Long=Tools for web developers including an error console, the Docume
 Archive=adt.xpi
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
-Attributes=FORCE_UPGRADE|VISIBLE
+Attributes=FORCE_UPGRADE|VISIBLE|DISABLED
 Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 Force Upgrade File1=[SETUP PATH]\chrome\inspector.jar
 FileCount=$FileCount$
