@@ -67,6 +67,8 @@
 
 @implementation BookmarkToolbar
 
+static const int kBMBarScanningStep = 5;
+
 - (id)initWithFrame:(NSRect)frame
 {
   if ( (self = [super initWithFrame:frame]) )
@@ -392,21 +394,19 @@
 
   mDragInsertionButton = nil;
   mDragInsertionPosition = CHInsertAfter;
-
-  static const int kScanningIncrement = 5;
   
   // check for a button at current location to use as an anchor
   if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
   // otherwise see if there's a view around it to use as an anchor point
-  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kScanningIncrement * -1)]) return;
-  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kScanningIncrement]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kBMBarScanningStep * -1)]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kBMBarScanningStep]) return;
   
   // if neither worked, it's probably the dead zone between lines.
   // treat that zone as the line above, and try everything again
-  superviewLoc.y += kScanningIncrement;
+  superviewLoc.y += kBMBarScanningStep;
   if ([self anchorFoundAtPoint:superviewLoc forButton:sourceButton]) return;
-  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kScanningIncrement * -1)]) return;
-  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kScanningIncrement]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:(kBMBarScanningStep * -1)]) return;
+  if ([self anchorFoundScanningFromPoint:superviewLoc withStep:kBMBarScanningStep]) return;
   
   // if nothing works, just throw it in at the end
   mDragInsertionButton = ([mButtons count] > 0) ? [mButtons objectAtIndex:[mButtons count] - 1] : 0;
