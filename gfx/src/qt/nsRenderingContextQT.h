@@ -205,6 +205,7 @@ protected:
     Qt::RasterOp	 mFunction;
     QPainter             *mGC;
     QPaintDevice         *mPaintDev;
+    PRUint32             mID;
 };
 
 #endif /* nsRenderingContextQT_h___ */
