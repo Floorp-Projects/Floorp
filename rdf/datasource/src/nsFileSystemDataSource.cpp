@@ -1264,9 +1264,8 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		fullURI.Append(leaf);
 
 		PRBool			dirFlag = PR_FALSE;
-		if (NS_FAILED(rv = aFile->IsDirectory(&dirFlag)))
-			break;
-		if (dirFlag == PR_TRUE)
+		rv = aFile->IsDirectory(&dirFlag);
+		if (NS_SUCCEEDED(rv) && (dirFlag == PR_TRUE))
 		{
 			// XXX hmmm, causes problems getting name,
 			// so comment it out for the short term
