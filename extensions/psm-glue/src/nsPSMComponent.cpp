@@ -60,6 +60,8 @@
 #include "nsXPIDLString.h"
 #include "nsCURILoader.h"
 
+#include "nsIDOMWindow.h"
+
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
 #ifdef WIN32
@@ -476,7 +478,36 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         // Try to see if it is open already
         mControl = CMT_ControlConnect(&nsPSMMutexTbl, &nsPSMShimTbl);
         
-        // Find the one in the bin directory
+        // Look for PSM in the current directory
+        if (mControl == nsnull)
+        {
+            nsCOMPtr<nsILocalFile> psmAppFile;
+            NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
+                                   NS_GET_IID(nsIFile), 
+                                   getter_AddRefs(psmAppFile));
+
+            if (psmAppFile)
+            {
+              psmAppFile->Append(PSM_FILE_NAME);
+        
+              PRBool isExecutable, exists;
+              psmAppFile->Exists(&exists);
+              psmAppFile->IsExecutable(&isExecutable);
+              if (exists && isExecutable)
+              {
+                  nsXPIDLCString path;
+                  psmAppFile->GetPath(getter_Copies(path));
+                  // FIX THIS.  using a file path is totally wrong here.  
+                  mControl = CMT_EstablishControlConnection((char*)(const char*)path, &nsPSMShimTbl, &nsPSMMutexTbl);
+
+              }
+            }
+        }
+
+        // Look for PSM in the subdirectory named PSM under the current directory
         if (mControl == nsnull)
         {
             nsCOMPtr<nsILocalFile> psmAppFile;
@@ -603,11 +634,11 @@ failure:
 }
 
 NS_IMETHODIMP
-nsPSMComponent::DisplaySecurityAdvisor(const char *pickledStatus, const char *hostName)
+nsPSMComponent::DisplaySecurityAdvisor(const char *pickledStatus, const char *hostName, nsIDOMWindow * window)
 {
     CMT_CONTROL *controlConnection;
     GetControlConnection( &controlConnection );
-    if (DisplayPSMUIDialog(controlConnection, pickledStatus, hostName) == PR_SUCCESS)
+    if (controlConnection && (DisplayPSMUIDialog(controlConnection, pickledStatus, hostName, window) == PR_SUCCESS))
         return NS_OK;
     return NS_ERROR_FAILURE;
 }
@@ -722,17 +753,24 @@ CertDownloader::OnStopRequest(nsIChannel* channel,
 
     }
 
-    CMT_CONTROL *controlConnection;
+    CMT_CONTROL *controlConnection = NULL;
+    unsigned int certID = 0;
+
     psm->GetControlConnection( &controlConnection );
-    unsigned int certID;
-                    
+	if (!controlConnection) {
+		goto loser;
+	}
+               
     certID = CMT_DecodeAndCreateTempCert(controlConnection, mByteData, 
                                          mBufferOffset, mType);
 
     if (certID)
         CMT_DestroyResource(controlConnection, certID, SSM_RESTYPE_CERTIFICATE);
 
-  return NS_OK;
+	return NS_OK;
+
+loser:
+	return NS_ERROR_FAILURE;
 }
 
 
