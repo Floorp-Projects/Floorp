@@ -53,13 +53,13 @@ interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
            attribute DOMString             data;
            attribute boolean               declare;
            attribute DOMString             height;
-           attribute DOMString             hspace;
+           attribute long                  hspace;
            attribute DOMString             name;
            attribute DOMString             standby;
            attribute long                  tabIndex;
            attribute DOMString             type;
            attribute DOMString             useMap;
-           attribute DOMString             vspace;
+           attribute long                  vspace;
            attribute DOMString             width;
   // Introduced in DOM Level 2:
            attribute nsIDOMDocument        contentDocument;

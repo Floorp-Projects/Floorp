@@ -49,9 +49,9 @@ interface nsIDOMHTMLAppletElement : nsIDOMHTMLElement
            attribute DOMString        code;
            attribute DOMString        codeBase;
            attribute DOMString        height;
-           attribute DOMString        hspace;
+           attribute long             hspace;
            attribute DOMString        name;
            attribute DOMString        object;
-           attribute DOMString        vspace;
+           attribute long             vspace;
            attribute DOMString        width;
 };

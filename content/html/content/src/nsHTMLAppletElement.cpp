@@ -176,10 +176,10 @@ NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Archive, archive)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Code, code)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, CodeBase, codebase)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Height, height)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Hspace, hspace)
+NS_IMPL_PIXEL_ATTR(nsHTMLAppletElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object)
-NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Vspace, vspace)
+NS_IMPL_PIXEL_ATTR(nsHTMLAppletElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
 
 NS_IMETHODIMP

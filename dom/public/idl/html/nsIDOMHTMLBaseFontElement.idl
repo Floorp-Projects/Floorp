@@ -45,5 +45,5 @@ interface nsIDOMHTMLBaseFontElement : nsIDOMHTMLElement
 {
            attribute DOMString        color;
            attribute DOMString        face;
-           attribute DOMString        size;
+           attribute long             size;
 };
