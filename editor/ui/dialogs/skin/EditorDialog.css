@@ -11,26 +11,23 @@ window{
 
 }
 
-titledbutton {
+titledbutton.popup {
 
-	width:			auto;
-	height:			auto;
+	list-style-image:	url(resource:/res/toolbar/TB_popup.gif);
   	display: 		inline;
+        text-decoration:        none; 
   	color:			black;
-  	border: 		1px outset white;
-  	padding: 		2px;
-  	margin: 		2px;
-  	text-align: 		center;
-  	font: 			inherit; 
-  	background-color:	inherit;
-  	background-image: 	inherit;
+	border: 		1px outset white;
+  	font: 			inherit;
 }
 
 
-titledbutton:active {
+titledbutton.popup:active {
    
   	text-decoration:	none;
-  	border: 		1px inset;
+  	border: 		1px 	inset;
+  	color:			none;
+        color:                  black; 
   	padding-left: 		3px;
   	padding-right: 		1px;
   	padding-top: 		3px;
@@ -38,16 +35,42 @@ titledbutton:active {
 
 }  
 
+
+titledbutton.popup[disabled="true"] {
+        background-color:	inherit;
+        background-image: 	inherit;
+        border : 		1px solid #999999;
+        color: 			#999999;
+        text-decoration: 	none;
+}
+
+titledbutton.popup[disabled="true"]:hover {
+        background-color:	inherit;
+        background-image: 	inherit;
+        border : 		1px solid #999999;
+        color: 			#999999;
+        text-decoration: 	none;
+}
+
+titledbutton.popup[disabled="true"]:active {
+        background-color:	inherit;
+        background-image: 	inherit;
+        border : 		1px solid #999999;
+        color: 			#999999;
+        text-decoration: 	none;
+}
+
+
 /* Don't mess with top and bottom margin! */
 titledbutton[class=~spaced] { 
-  margin-left: 5px;
-  margin-right: 5px;
+  	margin-left: 		5px;
+  	margin-right: 		5px;
 }
 
 /* This assumes 1px is shifted to the border
 titledbutton[class=~hspaced]:hover { 
-  margin-left: 4px;
-  margin-right: 4px;
+  	margin-left: 		4px;
+  	margin-right: 		4px;
 }
 */
 
@@ -55,44 +78,44 @@ titledbutton[class=~hspaced]:hover {
    Must have some default space around text in buttons */
 titledbutton {
   /* top+bot, left+right */
-  padding: 2px 5px;
+  	padding: 		2px 5px;
 }
 
 /* overriding XUL.CSS to prevent relayout upon hover */
 titledbutton:hover {
-  padding: 2px 5px;
+  	padding: 2px 5px;
 }
  
 titledbutton:active {
-  padding-left: 6px;
-  padding-right: 4px;
-  padding-top: 3px;
-  padding-bottom: 1px;
+  	padding-left: 		6px;
+  	padding-right: 		4px;
+  	padding-top: 		  3px;
+  	padding-bottom: 	1px;
 }
 
 /* If a button looks depressed because it is "toggled",
    using outset seems odd. Use a flat border instead? */
 titledbutton[toggled="1"]:hover {
-  border: 1px solid white;
+  	border: 1px solid white;
 }
 
 titledbutton[toggled="1"] {
-  border: 1px white inset;
-  padding: 2px 5px;
+  	border: 		1px white inset;
+  	padding: 		2px 5px;
 }
 
 titledbutton.SizeToParent {
-  width: 100%;
+  	width: 100%;
 }
 
 titledbutton.CloseButton {
-  width: 100%;
-  margin-top: 10px;
+  	width: 			100%;
+  	margin-top: 10px;
 }
 
 titledbutton.MsgButton {
-  min-width: 6em;
-  margin: 5px;
+  	min-width:	6em;
+  	margin: 		5px;
 }
 
 
@@ -106,48 +129,48 @@ menupopup {
 
 tristatecheckbox {
  /* DOESN'T WORK! */
-  margin-top: 3px;
-  margin-bottom:3px;
-  margin-left: 2px;
-  margin-right: 2px;
-  border-style: inset;
-  background-color: #ffffff;
-  valign: center;
-  align: center
+  	margin-top: 		3px;
+  	margin-bottom:	3px;
+  	margin-left: 		2px;
+  	margin-right: 	2px;
+  	border-style: 	inset;
+  	background-color: #ffffff;
+  	valign: 		    center;
+  	align: 			    center
 }
 
 
 select.combobox {
-  font-family: Sans-Serif;
-  font-size: 8pt;
-  border-top: 2px;
-  border-left: 4px;
-  border-right: 2px;
-  border-style: outset;
+  	font-family: 	Sans-Serif;
+  	font-size: 		8pt;
+  	border-top: 	2px;
+  	border-left: 	4px;
+  	border-right: 2px;
+  	border-style: outset;
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
-  width: 20em;
-  border-style: inset;
-	background-color: #CCCCCC; /* not working on Macintosh */ 
+  	width: 			      20em;
+  	border-style: 		inset;
+    background-color: #CCCCCC; /* not working on Macintosh */ 
 }
 
 .checkboxtext {
-  margin-top: -9px;
-  margin-left: 3px;
-  margin-right: 5px;
-  margin-bottom: 2px;
+  	margin-top: 		-9px;
+  	margin-left: 		3px;
+  	margin-right: 		5px;
+  	margin-bottom: 		2px;
 }
 
 radio { margin: 5px 3px }
 
 tree  {
-	display: table;
-	background-color: #000000;
-	border: none;
-	border-spacing: 0px;
-	border-collapse: collapse;
-	width: 100%;
+	display: 		table;
+	background-color: 	#000000;
+	border: 		none;
+	border-spacing: 	0px;
+	border-collapse: 	collapse;
+	width: 			100%;
 }
 
 /* HTML ELEMENTS */
@@ -155,18 +178,27 @@ table { cell-spacing: 5px; }
 td, table { border: 0px;}
 
 /* Force all rows to line up cell contents at the top */
-tr { vertical-align: top }
+tr { 
+	vertical-align: 	top;
+}
 
 /* Use this to override the default vertical centering */
-.vcenter { vertical-align: middle }
+.vcenter { 
+	vertical-align: 	middle;
+}
 
-tr[show=0] { display: none }
-tr[show=1] { display: table-row }
+tr[show=0] { 
+	display: 		none;
+}
+
+tr[show=1] { 
+	display: 		table-row;
+}
 
 
 p, br {
-  margin-top: 4px;
-  margin-bottom: 4px
+  	margin-top: 		4px;
+  	margin-bottom: 	4px
 }
 
 button {
@@ -189,6 +221,36 @@ button {
 }
 
 button:active {
+
+  	text-decoration:	none;
+  	border: 		1px inset;
+  	padding-left: 		3px;
+  	padding-right: 		1px;
+  	padding-top: 		3px;
+  	padding-bottom: 	1px;
+
+}
+
+button[class="enabled"] {
+
+  	display: 		inline;
+  	background-color: 	inherit;
+  	background-image: 	inherit;
+  	width: 			70px;
+  	max-width: 		80px;
+  	height: 		15px;
+  	border: 		1px outset white;
+  	padding: 		2px;
+  	margin: 		2px;
+  	text-align: 		center;
+  	font: 			inherit;
+  	color:			black;
+  	text-decoration: 	none;
+  	border-style: 		3D;
+
+}
+
+button:active[class="enabled"] {
 
   	text-decoration:	none;
   	border: 		1px inset;
@@ -242,14 +304,37 @@ fieldset {
         /* WAS */
         /* override XUL.css margin */
 /*
-  margin: 0px;
-	border: 2px groove white;
-  padding: 5px;
-  text-align: left;
+  	margin: 		0px;
+	  border: 		2px groove white;
+  	padding: 		5px;
+  	text-align: left;
 */
 /* BUG: If this is set, border is chopped off at the right */
-/*  margin: 5px; */
+/*  	margin: 5px; */
         
+}
+
+legend[class="enabled"] {
+
+        border: 		    none;
+	      color:			    black;
+        margin-bottom: 	5px;
+        margin-top: 		0px;
+        margin-left:		4px;
+        margin-right: 	3px;
+        padding: 		    2px;
+}
+
+legend[class="disabled"] {
+
+        border: 	    	none;
+	      color:		    	gray;
+        margin-bottom: 	5px;
+        margin-top: 		0px;
+        margin-left:		4px;
+        margin-right: 	3px;
+        padding: 		    2px;
+
 }
 
 legend {
@@ -262,13 +347,14 @@ legend {
         padding: 		2px;
         /* WAS */
 /*
-  margin-left: 3px;
-  text-align: left;
+  	margin-left: 		3px;
+  	text-align: 		left;
 */        
 }
 
 label {
   	display: 		inline;
+  	color: 			black;
   	padding-bottom: 	4px;
   	background-color: 	inherit;
   	background-color:	#CCCCDD;
@@ -277,68 +363,83 @@ label {
 
 
 label[class="enabled"] {
-  color: black;
-  margin-bottom: 2px
+  	color: 		        black;
+  	margin-bottom: 		2px
 }
 
 label[class="disabled"] {
-  color: gray;
-  margin-bottom: 2px
+
+  	color: 			      gray;
+  	margin-bottom: 		2px
+  	background-color: blue;
+
 }
 
 /* CLASSES */
 /* Use these primarily with TD to create 3D "panels" */
-.GrooveBorder { border: 2px groove; padding: 5px }
+.GrooveBorder { 
+	border: 		2px groove; 
+	padding: 		5px 
+}
 
-.RidgeBorder { border: 2px ridge; padding: 5px  }
+.RidgeBorder { 
+	border: 		2px ridge; 
+	padding: 		5px  
+}
 
-.OutsetBorder { border: 1px outset; padding: 5px  }
+.OutsetBorder { 
+	border: 		1px outset; 
+	padding: 		5px  
+}
 
-.InsetBorder { border: 1px inset; padding: 5px  }
+.InsetBorder { 
+	border: 		1px inset; 	
+	padding: 		5px  
+}
 
 
 button.spaced { 
 /* BUG - Setting size doesn't work?
-  width: 80px;
-  height: 20px;
+  	width: 			80px;
+  	height: 		20px;
 */
-  margin: 5px;
+  	margin: 		5px;
 }
 
 button.ChooseFile {
-  margin-left: 5px;
-  margin-bottom: 3px;
-  margin-right: 5px;
-  width: 5px;
-  height 5px;
-  background-color: #cccccc;
+  	margin-left: 		  5px;
+  	margin-bottom: 		3px;
+  	margin-right: 		5px;
+  	width: 			      5px;
+  	height: 			    5px;
+  	background-color: #cccccc;
 }
 
 .tableCenterAlign {
-  vertical-align: middle;
+  	vertical-align: 	middle;
 }
 
 .genericbutton {
-  width: 80px;
-  height: 20px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  	width: 			    80px;
+  	height: 		    20px;
+  	margin-top: 		5px;
+  	margin-bottom: 	5px;
 }
 
 .spacedtext {
-  margin-top: 0px;
-  margin-left: 3px;
-  margin-right: 5px;
-  margin-bottom: 2px;
+  	margin-top: 		0px;
+  	margin-left: 		3px;
+  	margin-right: 		5px;
+  	margin-bottom: 		2px;
 }
 
 input[type="file"] {
-  font-family: Sans-Serif;
-  font-size: 8pt;
+  	font-family: 		Sans-Serif;
+  	font-size: 		  8pt;
 }
 
 hr {
-  height: 2px;
+  	height: 		2px;
 }
 
 /* Messenger uses this -- IT SHOULD BE IN XUL.CSS */
