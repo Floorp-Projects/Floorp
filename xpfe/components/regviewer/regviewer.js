@@ -26,13 +26,11 @@
 function OnLoad()
 {
     var registry = Components.classes['component://netscape/registry-viewer'].createInstance();
-    registry = registry.QueryInterface(Components.interfaces.nsIRegistryViewer);
+    registry = registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
     registry.openWellKnownRegistry(1); // application component registry
-    dump('registry opened\n');
 
     var datasource = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    dump('datasource = ' + datasource + '\n');
 
     var tree = document.getElementById('tree');
     tree.database.AddDataSource(datasource);
