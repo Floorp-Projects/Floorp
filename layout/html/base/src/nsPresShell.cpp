@@ -95,6 +95,17 @@
 #include "prtime.h"
 #include "prlong.h"
 
+// local management of the style watch:
+//  aCtlValue should be set to all actions desired (bitwise OR'd together)
+//  aStyleSet cannot be null
+// NOTE: implementation is noop unless MOZ_PERF_METRICS is defined
+static nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet);
+#define kStyleWatchEnable  1
+#define kStyleWatchDisable 2
+#define kStyleWatchPrint   4
+#define kStyleWatchStart   8
+#define kStyleWatchStop    16
+#define kStyleWatchReset   32
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
@@ -1119,6 +1130,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
+    CtlStyleWatch(kStyleWatchEnable,mStyleSet);
 
     if (!rootFrame) {
       // Have style sheet processor construct a frame for the
@@ -1134,6 +1146,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_STOP(mFrameCreationWatch);
+    CtlStyleWatch(kStyleWatchDisable,mStyleSet);
   }
 
   if (rootFrame) {
@@ -1653,12 +1666,9 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 {  
 #ifdef MOZ_PERF_METRICS
   // Reset style resolution stopwatch maintained by style set
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
-  if (NS_SUCCEEDED(rv) && watch) {
-    MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", this));
-    watch->ResetTimer(NS_TIMER_STYLE_RESOLUTION);
-  }
+  MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", this));
+  CtlStyleWatch(kStyleWatchReset,mStyleSet);
+
 #endif
 
   mDocumentIsLoading = PR_TRUE;
@@ -1695,14 +1705,11 @@ PresShell::EndLoad(nsIDocument *aDocument)
   MOZ_TIMER_PRINT(mFrameCreationWatch);
 
   // Print style resolution stopwatch maintained by style set
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
-  if (NS_SUCCEEDED(rv) && watch) {
-    MOZ_TIMER_DEBUGLOG(("Stop: Style Resolution: PresShell::EndLoad(), this=%p\n", this));
-    watch->StopTimer(NS_TIMER_STYLE_RESOLUTION);
-    MOZ_TIMER_LOG(("Style resolution time (this=%p): ", this));
-    watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);    
-  }
+  MOZ_TIMER_DEBUGLOG(("Stop: Style Resolution: PresShell::EndLoad(), this=%p\n", this));
+  CtlStyleWatch(kStyleWatchStop|kStyleWatchDisable, mStyleSet);
+  MOZ_TIMER_LOG(("Style resolution time (this=%p): ", this));
+  CtlStyleWatch(kStyleWatchPrint, mStyleSet);
+
 #endif
   
   mDocumentIsLoading = PR_FALSE;
@@ -2506,6 +2513,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   EnterReflowLock();
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
+  CtlStyleWatch(kStyleWatchEnable,mStyleSet);
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
 
@@ -2521,6 +2529,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
+  CtlStyleWatch(kStyleWatchDisable,mStyleSet);
   ExitReflowLock(PR_TRUE);
   return rv;
 }
@@ -3485,3 +3494,38 @@ PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
 {
   return RestoreCaretVisibility();
 }
+
+// Enable, Disable and Print, Start, Stop and/or Reset the StyleSet watch
+/*static*/
+nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
+{
+  NS_ASSERTION(aStyleSet!=nsnull,"aStyleSet cannot be null in CtlStyleWatch");
+  nsresult rv = NS_OK;
+#ifdef MOZ_PERF_METRICS
+  if (aStyleSet != nsnull){
+    nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(aStyleSet, &rv);
+    if (NS_SUCCEEDED(rv) && watch) {
+      if (aCtlValue & kStyleWatchEnable){
+        watch->EnableTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+      if (aCtlValue & kStyleWatchDisable){
+        watch->DisableTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+      if (aCtlValue & kStyleWatchPrint){
+        watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+      if (aCtlValue & kStyleWatchStart){
+        watch->StartTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+      if (aCtlValue & kStyleWatchStop){
+        watch->StopTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+      if (aCtlValue & kStyleWatchReset){
+        watch->ResetTimer(NS_TIMER_STYLE_RESOLUTION);
+      }
+    }
+  }
+#endif
+  return rv;  
+}
+
