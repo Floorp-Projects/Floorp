@@ -59,6 +59,39 @@ static int gKeepRunning = 0;
 static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
 
+class URLLoadInfo : public nsISupports
+{
+public:
+
+  URLLoadInfo(const char* aUrl);
+  virtual ~URLLoadInfo();
+
+  // ISupports interface...
+  NS_DECL_ISUPPORTS
+
+  const char* Name() { return mURLString.GetBuffer(); }
+  PRInt32   mBytesRead;
+  PRTime    mTotalTime;
+  PRTime    mConnectTime;
+  nsString  mURLString;
+};
+
+URLLoadInfo::URLLoadInfo(const char *aUrl) : mURLString(aUrl, eOneByte)
+{
+  NS_INIT_REFCNT();
+
+  mBytesRead = 0;
+  mConnectTime = mTotalTime = PR_Now();
+}
+
+URLLoadInfo::~URLLoadInfo()
+{
+}
+
+
+NS_IMPL_ISUPPORTS(URLLoadInfo,nsISupports::GetIID());
+
+
 class TestHTTPEventSink : public nsIHTTPEventSink
 {
 public:
@@ -81,25 +114,6 @@ public:
   // OnRedirect gets fired only if you have set FollowRedirects on the handler!
   NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
                              nsIURI* i_NewLocation);
-/*
-  // IStreamListener interface...
-  NS_IMETHOD OnStartBinding(nsISupports* context) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
-
-  NS_IMETHOD OnDataAvailable(nsISupports* context,
-                             nsIBufferInputStream *aIStream, 
-                             PRUint32 aSourceOffset,
-                             PRUint32 aLength) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
-
-  NS_IMETHOD OnStopBinding(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
-
-  NS_IMETHOD OnStartRequest(nsISupports* context) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
-
-  NS_IMETHOD OnStopRequest(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg) { NS_ERROR("bad..."); return NS_ERROR_FAILURE; }
-*/
 };
 
 TestHTTPEventSink::TestHTTPEventSink()
@@ -124,17 +138,18 @@ TestHTTPEventSink::OnAwaitingInput(nsISupports* context)
 NS_IMETHODIMP
 TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 {
-    printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
-    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
-    if (pHTTPCon)
-    {
-      char* type;
-      //optimize later TODO allow atoms here...! intead of just the header strings
-      pHTTPCon->GetResponseHeader("Content-type", &type);
-      if (type) {
-        printf("\nRecieving ... %s\n", type);
-        nsCRT::free(type);
-      }
+    if (gVerbose) {
+        printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
+        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
+        if (pHTTPCon) {
+            char* type;
+            //optimize later TODO allow atoms here...! intead of just the header strings
+            pHTTPCon->GetResponseHeader("Content-type", &type);
+            if (type) {
+                printf("\nRecieving ... %s\n", type);
+                nsCRT::free(type);
+            }
+        }
     }
     return NS_OK;
 }
@@ -205,6 +220,15 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,nsIStreamListener::GetIID());
 NS_IMETHODIMP
 InputTestConsumer::OnStartBinding(nsISupports* context)
 {
+  URLLoadInfo* info = (URLLoadInfo*)context;
+  if (info) {
+    info->mConnectTime = PR_Now() - info->mConnectTime;
+  }
+
+  if (gVerbose) {
+    printf("\nStarted loading: %s\n", info ? info->Name() : "UNKNOWN URL");
+  }
+/*
   nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
   char* location = nsnull;
 
@@ -216,7 +240,7 @@ InputTestConsumer::OnStartBinding(nsISupports* context)
   if (location) {
     nsCRT::free(location);
   }
-
+*/
   return NS_OK;
 }
 
@@ -230,6 +254,7 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
   char buf[1025];
   PRUint32 amt;
   nsresult rv;
+  URLLoadInfo* info = (URLLoadInfo*)context;
 
   do {
     rv = aIStream->Read(buf, 1024, &amt);
@@ -238,6 +263,9 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
     if (gVerbose) {
       buf[amt] = '\0';
       puts(buf);
+    }
+    if (info) {
+      info->mBytesRead += amt;
     }
   } while (amt);
 
@@ -250,6 +278,22 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {
+  URLLoadInfo* info = (URLLoadInfo*)context;
+  PRTime loadTime;
+
+  if (info) {
+    info->mTotalTime = PR_Now() - info->mTotalTime;
+    loadTime = info->mTotalTime - info->mConnectTime;
+
+    printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
+    printf("\tRead: %d bytes.\n", info->mBytesRead);
+    printf("\tTime to connect: %f seconds\n", (info->mConnectTime/1000UL)/1000.0);
+    printf("\tTime to read: %f seconds.\n", (loadTime/1000UL)/1000.0);
+    printf("\tThroughput: %d bps.\n", (info->mBytesRead*8)/((loadTime/1000UL)/1000UL));
+  } else {
+    printf("\nFinished loading: UNKNOWN URL. Status Code: %x\n", aStatus);
+  }
+/*
   nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
   char* location = nsnull;
 
@@ -257,12 +301,12 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
     pURI->GetSpec(&location);
   }
 
-  printf("\nFinished loading: %s.  Status Code: %x\n", location ? location : "UNKNOWN URL", aStatus);
+  printf("\nFinished loading: %s  Status Code: %x\n", location ? location : "UNKNOWN URL", aStatus);
 
   if (location) {
     nsCRT::free(location);
   }
-
+*/
   gKeepRunning -= 1;
   return NS_OK;
 }
@@ -312,7 +356,7 @@ nsresult StartLoadingURL(const char* aUrlString)
 
         rv = pService->NewURI(aUrlString, nsnull, getter_AddRefs(pURL));
         if (NS_FAILED(rv)) {
-            NS_ERROR("NewURI failed!");
+            printf("ERROR: NewURI failed for %s\n", aUrlString);
             return rv;
         }
         nsCOMPtr<nsIChannel> pChannel;
@@ -329,7 +373,7 @@ nsresult StartLoadingURL(const char* aUrlString)
         rv = pService->NewChannelFromURI("load", pURL, pMySink, 
                                          getter_AddRefs(pChannel));
         if (NS_FAILED(rv)) {
-            NS_ERROR("NewChannelFromURI failed!");
+            printf("ERROR: NewChannelFromURI failed for %s\n", aUrlString);
             return rv;
         }
         NS_RELEASE(pMySink);
@@ -356,18 +400,75 @@ nsresult StartLoadingURL(const char* aUrlString)
             return NS_ERROR_OUT_OF_MEMORY;;
         }
 
+        URLLoadInfo* info;
+        info = new URLLoadInfo(aUrlString);
+        NS_IF_ADDREF(info);
+        if (!info) {
+            NS_ERROR("Failed to create a load info!");
+            return NS_ERROR_OUT_OF_MEMORY;;
+        }
+        
 
         rv = pChannel->AsyncRead(0,         // staring position
                                  -1,        // number of bytes to read
-                                 pURL,      // ISupports context
+                                 info,      // ISupports context
                                  gEventQ,   // nsIEventQ for marshalling
                                  listener); // IStreamListener consumer
-
+        if (NS_SUCCEEDED(rv)) {
+            gKeepRunning += 1;
+        }
         NS_RELEASE(listener);
+        NS_RELEASE(info);
     }
 
     return rv;
 }
+
+
+nsresult LoadURLsFromFile(char *aFileName)
+{
+    nsresult rv = NS_OK;
+    PRInt32 len, offset;
+    PRFileDesc* fd;
+    char buffer[1024];
+    nsString fileBuffer(eOneByte);
+    nsAutoString urlString(eOneByte);
+
+    fd = PR_Open(aFileName, PR_RDONLY, 777);
+    if (!fd) {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Keep reading the file until EOF (or an error) is reached...        
+    do {
+        len = PR_Read(fd, buffer, sizeof(buffer));
+        if (len>0) {
+            fileBuffer.Append(buffer, len);
+            // Treat each line as a URL...
+            while ((offset = fileBuffer.Find('\n')) != -1) {
+                fileBuffer.Left(urlString, offset);
+                fileBuffer.Cut(0, offset+1);
+
+                urlString.StripChars("\r");
+                if (urlString.Length()) {
+                    printf("\t%s\n", urlString.GetBuffer());
+                    rv = StartLoadingURL(urlString.GetBuffer());
+                }
+            }
+        }
+    } while (len>0);
+
+    // If anything is left in the fileBuffer, treat it as a URL...
+    fileBuffer.StripChars("\r");
+    if (fileBuffer.Length()) {
+        printf("\t%s\n", fileBuffer.GetBuffer());
+        StartLoadingURL(fileBuffer.GetBuffer());
+    }
+    
+    PR_Close(fd);
+    return NS_OK;
+}
+
 
 nsresult NS_AutoregisterComponents()
 {
@@ -380,7 +481,7 @@ main(int argc, char* argv[])
 {
     nsresult rv= -1;
     if (argc < 2) {
-        printf("usage: %s <url> \n", argv[0]);
+        printf("usage: %s [-verbose] [-file <name>] <url> <url> ... \n", argv[0]);
         return -1;
     }
 
@@ -412,17 +513,22 @@ main(int argc, char* argv[])
 #endif // 0
 
     int i;
+    printf("\nTrying to load:\n");
     for (i=1; i<argc; i++) {
-        // Turn on netlib tracing...
+        // Turn on verbose printing...
         if (PL_strcasecmp(argv[i], "-verbose") == 0) {
             gVerbose = PR_TRUE;
             continue;
         } 
 
+        // Turn on netlib tracing...
+        if (PL_strcasecmp(argv[i], "-file") == 0) {
+            LoadURLsFromFile(argv[++i]);
+            continue;
+        } 
 
+        printf("\t%s\n", argv[i]);
         rv = StartLoadingURL(argv[i]);
-        if (NS_FAILED(rv)) return rv;
-        gKeepRunning += 1;
     }
 
   // Enter the message pump to allow the URL load to proceed.
