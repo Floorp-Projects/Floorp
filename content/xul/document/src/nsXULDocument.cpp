@@ -4571,10 +4571,13 @@ XULDocumentImpl::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, 
         rv = literal->GetValueConst(&value);
         if (NS_FAILED(rv)) return rv;
 
+        PRInt32 len = nsCRT::strlen(value);
+        CBufDescriptor wrapper(value, PR_TRUE, len + 1, len);
+
         PRUint32 cnt;
         rv = aElements->Count(&cnt);
         if (NS_FAILED(rv)) return rv;
-            
+           
         for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
             nsISupports* isupports2 = aElements->ElementAt(i);
             if (! isupports2)
@@ -4583,7 +4586,6 @@ XULDocumentImpl::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, 
             nsCOMPtr<nsIContent> element = do_QueryInterface(isupports2);
             NS_RELEASE(isupports2);
 
-            CBufDescriptor wrapper(value, PR_TRUE, 0, -1);
             rv = element->SetAttribute(/* XXX */ kNameSpaceID_None,
                                        attr,
                                        nsAutoString(wrapper),
