@@ -285,13 +285,16 @@ nsresult nsSelectionMgr::PasteTextBlocking(nsString *aPastedText)
 #endif
 
   // Now we need to wait until the callback comes in ...
-  // i is in case we get a runaway.
+  // i is in case we get a runaway (yuck).
   for (int i=0; mBlocking == PR_TRUE && i < 10000; ++i)
   {
     gtk_main_iteration_do(TRUE);
   }
 
   mBlocking = PR_FALSE;
+
+  if (!mSelectionData.data)
+    return NS_ERROR_NOT_AVAILABLE;
 
   *aPastedText = (char*)(mSelectionData.data);
   g_free(mSelectionData.data);
@@ -314,6 +317,9 @@ void
 nsSelectionMgr::SelectionReceiver (GtkWidget *aWidget,
                                    GtkSelectionData *data)
 {
+  mBlocking = PR_FALSE;
+  mSelectionData.data = nsnull;
+
   if (data->length < 0)
   {
 #ifdef DEBUG_akkana
@@ -329,7 +335,6 @@ nsSelectionMgr::SelectionReceiver (GtkWidget *aWidget,
       mSelectionData.data = g_new(guchar, data->length + 1);
       memcpy(mSelectionData.data, data->data, data->length);
       mSelectionData.data[data->length] = '\0';
-      mBlocking = PR_FALSE;
       return;
 
     default:
