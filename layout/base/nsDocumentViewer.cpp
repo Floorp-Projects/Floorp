@@ -85,6 +85,9 @@
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
+#ifdef MOZ_XSL
+#include "nsITransformMediator.h"
+#endif
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
@@ -212,6 +215,9 @@ public:
   NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult);
+#ifdef MOZ_XSL
+  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
+#endif
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -262,6 +268,9 @@ protected:
 
   // the following six items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
+#ifdef MOZ_XSL
+  nsCOMPtr<nsITransformMediator> mTransformMediator;
+#endif
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
   nsCOMPtr<nsIViewManager> mViewManager;
@@ -299,7 +308,6 @@ protected:
   nsString mHintCharset;
   nsCharsetSource mHintCharsetSource;
   nsString mForceCharacterSet;
-
 };
 
 // Class IDs
@@ -414,7 +422,7 @@ DocumentViewerImpl::~DocumentViewerImpl()
       rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
       if(NS_SUCCEEDED(rv) && erP)
         erP->RemoveEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
-  }
+    }
  }
 
   if (mPresContext) {
@@ -659,7 +667,70 @@ DocumentViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 {
-  return NS_ERROR_FAILURE;
+  // Assumptions:
+  //
+  // 1) this document viewer has been initialized with a call to Init().
+  // 2) the stylesheets associated with the document have been added to the document.
+
+  // XXX Right now, this method assumes that the layout of the current document
+  // hasn't started yet.  More cleanup will probably be necessary to make this
+  // method work for the case when layout *has* occurred for the current document.
+  // That work can happen when and if it is needed.
+  
+  nsresult rv;
+  if (nsnull == aDocument)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // 0) Replace the old document with the new one
+  mDocument = newDoc;
+
+  // 1) Set the script global object on the new document
+  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
+  if (requestor) {
+    nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+    requestor->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+       getter_AddRefs(owner));
+    if (nsnull != owner) {
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      rv = owner->GetScriptGlobalObject(getter_AddRefs(global));
+      if (NS_SUCCEEDED(rv) && (nsnull != global)) {
+        mDocument->SetScriptGlobalObject(global);
+        global->SetNewDocument(aDocument);
+      }
+    }
+  }  
+
+  // 2) Create a new style set for the document
+  nsCOMPtr<nsIStyleSet> styleSet;
+  rv = CreateStyleSet(mDocument, getter_AddRefs(styleSet));
+  if (NS_FAILED(rv)) return rv;
+
+  // 3) Replace the current pres shell with a new shell for the new document 
+  mPresShell->EndObservingDocument();
+
+  mPresShell = nsnull;
+  rv = newDoc->CreateShell(mPresContext, mViewManager, styleSet,
+                           getter_AddRefs(mPresShell));
+  if (NS_FAILED(rv)) return rv;
+
+  mPresShell->BeginObservingDocument();
+
+  // 4) Register the focus listener on the new document
+  if(mDocument)
+  {    
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+    if(NS_FAILED(rv) || !erP)
+      return rv ? rv : NS_ERROR_FAILURE;
+
+    rv = erP->AddEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1190,6 +1261,17 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     NS_RELEASE(mPrintDC);
   }
 }
+
+#ifdef MOZ_XSL
+NS_IMETHODIMP 
+DocumentViewerImpl::SetTransformMediator(nsITransformMediator* aMediator)
+{
+  NS_ASSERTION(nsnull == mTransformMediator, "nsXMLDocument::SetTransformMediator(): \
+    Cannot set a second transform mediator\n");
+  mTransformMediator = aMediator;
+  return NS_OK;
+}
+#endif
 
 #ifdef XP_MAC
 #pragma mark -
