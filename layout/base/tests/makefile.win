@@ -20,7 +20,8 @@ IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestContainerFrame.exe
-PROGRAMS = $(PROG1)
+PROG2 = .\$(OBJDIR)\TestSpaceManager.exe
+PROGRAMS = $(PROG1) $(PROG2)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\src
 LLIBS=				\
@@ -36,6 +37,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin
+	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
 
 # Move this into config/obj.inc when it's allowed
 .cpp{.\$(OBJDIR)\}.exe:
@@ -54,3 +56,4 @@ install:: $(PROGRAMS)
 <<KEEP
 
 $(PROG1): $(OBJDIR) TestContainerFrame.cpp
+$(PROG2): $(OBJDIR) TestSpaceManager.cpp
