@@ -52,9 +52,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgAccount.h"
 #include "nsIMsgAccount.h"
-#include "nsIMsgFolderCache.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIMsgMailSession.h"
 
 NS_IMPL_ISUPPORTS1(nsMsgAccount, nsIMsgAccount)
 
@@ -130,21 +128,6 @@ nsMsgAccount::createIncomingServer()
   printf("\t%s's server: %s\n", (const char*)m_accountKey, (const char*)serverKey);
 #endif
 
-  // get the servertype
-  // ex) mail.server.myserver.type = imap
-  nsCAutoString serverTypePref("mail.server.");
-  serverTypePref.Append(serverKey);
-  serverTypePref += ".type";
-  
-  nsXPIDLCString serverType;
-  rv = m_prefs->GetCharPref(serverTypePref.get(), getter_Copies(serverType));
-
-  // the server type doesn't exist, use "generic"
-  if (NS_FAILED(rv)) {
-    serverType.Adopt(nsCRT::strdup("generic"));
-  }
-    
-    
   // get the server from the account manager
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -465,13 +448,11 @@ nsMsgAccount::SetKey(const char *accountKey)
 {
   if (!accountKey) return NS_ERROR_NULL_POINTER;
 
-  nsresult rv=NS_OK;
-
   // need the prefs service to do anything
-  rv = getPrefService();
+  nsresult rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
 
-  *(char**)getter_Copies(m_accountKey) = PL_strdup(accountKey);
+  m_accountKey.Assign(accountKey);
   
   return Init();
 }
@@ -479,9 +460,10 @@ nsMsgAccount::SetKey(const char *accountKey)
 NS_IMETHODIMP
 nsMsgAccount::ToString(PRUnichar **aResult)
 {
-  nsAutoString val(NS_LITERAL_STRING("[nsIMsgAccount: "));
-  val.AppendWithConversion(m_accountKey);
-  val.AppendLiteral("]");
+  nsAutoString val;
+  val.AssignLiteral("[nsIMsgAccount: ");
+  AppendASCIItoUTF16(m_accountKey, val);
+  val.Append(']');
   *aResult = ToNewUnicode(val);
   return NS_OK;
 }
