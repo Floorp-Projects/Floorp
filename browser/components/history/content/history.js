@@ -182,6 +182,7 @@ function GroupBy(groupingType)
         gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
+    gSearchBox.value = "";
 }
 
 function historyAddBookmarks()
