@@ -22,6 +22,6 @@
 #include "Monitor.h"
 #include "FieldOrMethod.h"
 
-#define GetPassedException(E) __asm__("mov %%ecx, %0" : : "g"(E))
+#define GetPassedException(E) abort();
 
 #endif // _X86_LINUX_THREAD_H_
