@@ -70,6 +70,12 @@
 #include "nsLoggingSink.h"
 #endif
 
+/*
+ * Ignore kFontStyle and kPhrase tags when the stack is deep, bug 58917.
+ */
+#define FONTSTYLE_IGNORE_DEPTH (MAX_REFLOW_DEPTH*80/100)
+#define PHRASE_IGNORE_DEPTH    (MAX_REFLOW_DEPTH*90/100)
+  
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
@@ -1305,6 +1311,19 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
     }
   }
 
+  PRInt32 stackDepth = mBodyContext->GetCount();
+  if (stackDepth >= FONTSTYLE_IGNORE_DEPTH &&
+      gHTMLElements[aTag].IsMemberOf(kFontStyle)) {
+    // Prevent bug 58917 by tossing the new kFontStyle start tag
+    return kHierarchyTooDeep;
+  }
+
+  if (stackDepth >= PHRASE_IGNORE_DEPTH &&
+      gHTMLElements[aTag].IsMemberOf(kPhrase)) {
+    // Prevent bug 58917 by tossing the new kPhrase start tag
+    return kHierarchyTooDeep;
+  }
+
     /**************************************************************************************
      *
      * Now a little code to deal with bug #49687 (crash when layout stack gets too deep)
@@ -1314,7 +1333,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
      *
      **************************************************************************************/
   
-  PRInt32 stackDepth = mBodyContext->GetCount();
   if (stackDepth > MAX_REFLOW_DEPTH) {
     if (nsHTMLElement::IsContainer(aTag) &&
         !gHTMLElements[aTag].HasSpecialProperty(kHandleStrayTag)) {
@@ -2735,6 +2753,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
       for(;theLevel<theCount;++theLevel){
         nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
         if(theStack){
+          // Don't open transient styles if it makes the stack deep, bug 58917.
+          if (theCount + theStack->mCount >= FONTSTYLE_IGNORE_DEPTH) {
+            break;
+          }
 
           PRInt32 sindex=0;
 
