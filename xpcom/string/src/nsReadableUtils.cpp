@@ -120,6 +120,8 @@ class LossyConvertEncoding
       typedef FromCharT input_type;
       typedef ToCharT   output_type;
 
+      typedef nsCharTraits<FromCharT>::unsigned_char_type unsigned_input_type;
+
     public:
       LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
 
@@ -128,7 +130,7 @@ class LossyConvertEncoding
         {
           const input_type* done_writing = aSource + aSourceLength;
           while ( aSource < done_writing )
-            *mDestination++ = (output_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
+            *mDestination++ = (output_type)(unsigned_input_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
           return aSourceLength;
         }
 

@@ -68,6 +68,7 @@ template <class CharT>
 struct nsCharTraits
   {
     typedef CharT     char_type;
+    typedef CharT     unsigned_char_type;
     typedef char      incompatible_char_type;
 
     static
@@ -232,8 +233,9 @@ struct nsCharTraits
 NS_SPECIALIZE_TEMPLATE
 struct nsCharTraits<char>
   {
-    typedef char        char_type;
-    typedef PRUnichar   incompatible_char_type;
+    typedef char           char_type;
+    typedef unsigned char  unsigned_char_type;
+    typedef PRUnichar      incompatible_char_type;
 
     static
     void
@@ -360,6 +362,12 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharTraits<wchar_t>
   {
     typedef wchar_t     char_type;
+    /* we need to put these here for real if/when we use 
+     * this specialized template.
+     *
+     * typedef wchar_t     unsigned_char_type;
+     * typedef char        incompatible_char_type;
+     */
 
     static
     void
