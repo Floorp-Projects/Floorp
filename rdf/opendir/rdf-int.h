@@ -78,9 +78,12 @@ typedef struct _RDF_CursorStruct {
   void *value;
   void* pdata;
   void* pdata1;
+  RDF_Resource* pdata2;
   int inversep;
   RDF_ValueType type;
-  int count;
+  size_t count;
+  size_t off;
+  size_t off1;
   RDFT db;
   QueryType queryType;
   char* searchString;

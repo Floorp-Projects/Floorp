@@ -47,13 +47,21 @@ typedef TrieTargetStruct* TTS;
 
 static TNS gRootNode = 0;
 
-void addTarget (RDFT db, TNS node, RDF_Resource label, RDF_Resource targetNode) {
-    TTS target = (TTS) fgetMem(sizeof(TrieTargetStruct));
-    target->next = node->targets;
-    node->targets = target;
-    target->label = label;
-    target->target = targetNode;
-    target->db = db;
+int 
+addTarget (RDFT db, TNS node, RDF_Resource label, RDF_Resource targetNode) {
+  TTS target ;
+  int n = 0;
+  /*  for (target = node->targets; target != null; target = target->next) {
+    if (target->target == targetNode) return 0;
+    n++;
+  } */
+  target = (TTS) fgetMem(sizeof(TrieTargetStruct));
+  target->next = node->targets;
+  node->targets = target;
+  target->label = label;
+  target->target = targetNode;
+  target->db = db;
+  return n;
 }
 
 TNS
@@ -74,8 +82,7 @@ findChildOfString (TNS node, char* str) {
   while (n < size) {
     char c = str[n++];
     node = findChildOfChar(node, c);
-    if (!node) 
-		return 0;
+    if (!node) return 0;
   }
   return node;
 }
@@ -83,6 +90,7 @@ findChildOfString (TNS node, char* str) {
 void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resource target) {
     size_t size = strlen(string);
     size_t n    = 0;
+    char* stk = 0;
     TNS    prev, next;
     if (!gRootNode) gRootNode = (TNS) getMem(sizeof(TrieNodeStruct));
     prev = gRootNode;
@@ -90,7 +98,7 @@ void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resour
     while (n < size) {
 	char c = string[n++]; 
 	if (!wsCharp(c) && (c != '/')) {
-		char* str = &string[n-1];
+          if (!stk) stk = &string[n-1];
 	    next = (TNS) findChildOfChar(prev, c);
             if (!next) {
               next = (TNS)fgetMem(sizeof(TrieNodeStruct));
@@ -100,7 +108,8 @@ void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resour
             }
             prev = next;            
 	} else if (next) {
-	    addTarget(db, next, label, target);
+	    int n = addTarget(db, next, label, target);
+            stk = 0;
 	    prev = gRootNode;
         next = 0;
 	}
@@ -113,12 +122,14 @@ void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resour
 }    
 
 void
-countChildren (TNS node, size_t *n) {
+countChildren (TNS node, size_t *n, size_t *m) {
   TNS ch;
+  TTS tg ;
   if (node->targets) (*n)++;
+  for (tg = node->targets; tg; tg = tg->next)  (*m)++;
   ch = node->child;
   while (ch) {
-    countChildren(ch, n);
+    countChildren(ch, n, m);
     ch = ch->next;
   }
 }
@@ -138,39 +149,62 @@ fillUpChildren (RDF_Cursor c, TNS node) {
 RDF_Cursor RDFGS_Search (RDFT db, char* searchString, RDF_Resource label) {
     RDF_Cursor c = (RDF_Cursor) getMem(sizeof(RDF_CursorStruct));
     size_t n = 0;
+    size_t m = 0;
     c->searchString = searchString;
     c->s = label;
     c->db = db;
     c->pdata = findChildOfString(gRootNode, searchString);
-    countChildren((TNS)c->pdata, &n);
+    if (!c->pdata) return c;
+    countChildren((TNS)c->pdata, &n, &m);
+    c->pdata2 = (RDF_Resource*) getMem(sizeof(RDF_Resource) * (m+1)); 
+    c->off1 = m;
     if (n > 0) {
       c->count = 0;
-      c->pdata1 = getMem(n+1);
+      c->pdata1 = getMem(sizeof(TTS) * (n+1));
       fillUpChildren(c, (TNS)c->pdata);
       c->count = 1;
     }
-	if (c->pdata) c->pdata = ((TNS)c->pdata)->targets;
+    if (c->pdata) c->pdata = ((TNS)c->pdata)->targets;
+
     return c;
 }
 
 void RDFGS_DisposeCursor (RDF_Cursor c) {
-    freeMem(c);
+  if (c->pdata1) freeMem(c->pdata1);
+  if (c->pdata2) freeMem(c->pdata2);
+  freeMem(c);
+}
+
+int
+alreadyAdded(RDF_Resource node, RDF_Cursor c) {
+  int n =0;
+  while (c->pdata2[n] && (n < c->off)) {
+    if (c->pdata2[n] == node) return 1;
+    n++;
+  }
+  return 0;
 }
     
 RDF_Resource RDFGS_NextValue (RDF_Cursor c) { 
-  TTS currentTTS = (TTS) c->pdata;
-  if (!currentTTS) {
+  if (!c->pdata) {
     return 0;
   } else  {
+    TTS currentTTS = (TTS) c->pdata;
     while (currentTTS) {
-      if ((!c->s) || (c->s == currentTTS->label)) {
-        RDF_Resource ans =currentTTS->target;
+      if (((!c->s) || (c->s == currentTTS->label)) && 
+          (!alreadyAdded(currentTTS->target, c))) {
+        RDF_Resource ans = currentTTS->target;
         c->pdata = currentTTS = currentTTS->next;
-		 if (!currentTTS)  c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];   
+        if (!currentTTS && (c->pdata1)) { 
+          c->pdata =  ((TTS*)c->pdata1)[c->count++];  
+        }
+        if (c->off < c->off1) c->pdata2[c->off++] = ans; 
         return ans;
-      } 
+      }       
       c->pdata = currentTTS =  currentTTS->next;
-	  if (!currentTTS)  c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];  
+      if (!currentTTS  && (c->pdata1)) {
+        c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];  
+      }
     }
   }
   return 0;

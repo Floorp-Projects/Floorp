@@ -29,8 +29,8 @@ WriteClient (void* obj, char* buffer) {
   WAIWriteClient((ServerSession_t)obj, (const unsigned char *) buffer, len);
 }
 
-void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
-void  AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query) ;
+void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query, char* cookie);
+void  AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query, char* cookie) ;
 
 #define PREFIX "<html><body><a href=\"/\"><center><img src=\"http://directory.mozilla.org/img/opendir.gif\" width=396 height=79 border=\"0\"></center></a>"
 
@@ -41,9 +41,12 @@ Run(ServerSession_t obj)
 {
   char* query = (char*) malloc(300);
   char* val;
+  char* cookie;
+  WAIgetRequestInfo(obj, "QUERY",  &query);  
+  WAIgetCookie(obj, &cookie); 
 
-  WAIgetRequestInfo(obj, "QUERY",  &query);
   if (!query) return 0;
+  printf("Query = %s. Cookie = %s\n", query, cookie);
   val = strchr(query, '=');
   if (!val) return 0;
   val++;
@@ -52,9 +55,9 @@ Run(ServerSession_t obj)
   WriteClient(obj, PREFIX);
   
   if (strcmp(query, "browse") == 0) {
-    AnswerOpenDirQuery(WriteClient, obj, val);
+    AnswerOpenDirQuery(WriteClient, obj, val, cookie);
   } else if (strcmp(query, "search") == 0) {
-    AnswerSearchQuery(WriteClient, obj, val);
+    AnswerSearchQuery(WriteClient, obj, val, cookie);
   }
   WriteClient(obj, POSTFIX);
   return 0;
@@ -126,7 +129,7 @@ int main(int argc, char **argv)
 	WAIregisterService(obj, host);
         RDF_Initialize();
         printf("RDF Initialized!\n");
-        RDF_ReadFile("two_level");
+        RDF_ReadFile(argv[2]);
  
         printf("done");
 
