@@ -3818,9 +3818,14 @@ public:
   DOMMimeTypeImpl(nsPluginTag* aPluginTag, PRUint32 aMimeTypeIndex)
   {
     NS_INIT_ISUPPORTS();
-    mDescription.AssignWithConversion(aPluginTag->mMimeDescriptionArray[aMimeTypeIndex]);
-    mSuffixes.AssignWithConversion(aPluginTag->mExtensionsArray[aMimeTypeIndex]);
-    mType.AssignWithConversion(aPluginTag->mMimeTypeArray[aMimeTypeIndex]);
+    if (aPluginTag) {
+      if (aPluginTag->mMimeDescriptionArray)
+        mDescription.AssignWithConversion(aPluginTag->mMimeDescriptionArray[aMimeTypeIndex]);
+      if (aPluginTag->mExtensionsArray)
+        mSuffixes.AssignWithConversion(aPluginTag->mExtensionsArray[aMimeTypeIndex]);
+      if (aPluginTag->mMimeTypeArray)
+        mType.AssignWithConversion(aPluginTag->mMimeTypeArray[aMimeTypeIndex]);
+    }
   }
   
   virtual ~DOMMimeTypeImpl() {
