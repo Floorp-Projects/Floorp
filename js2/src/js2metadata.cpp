@@ -3178,7 +3178,7 @@ doUnary:
             LocalBindingEntry &lbe = *bi;
             lbe.clear();
         }
-        for (LocalBindingIterator bi2(pluralFrame->localBindings); bi; ++bi) {
+        for (LocalBindingIterator bi2(pluralFrame->localBindings); bi2; ++bi2) {
             LocalBindingEntry &lbe = *bi2;
             LocalBindingEntry *new_lbe = &singularFrame->localBindings.insert(lbe.name);
 

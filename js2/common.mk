@@ -6,7 +6,7 @@ WFLAGS = -Wmissing-prototypes -Wstrict-prototypes -Wunused \
          -Wswitch -Wall -Wconversion
 
 if DEBUG
-CXXFLAGS = -DXP_UNIX -g -DDEBUG $(WFLAGS) -Iregexp/
+CXXFLAGS = -DXP_UNIX -g -DDEBUG -DTRACE_DEBUG $(WFLAGS) -Iregexp/
 JS1x_BINDIR = Linux_All_DBG.OBJ
 else
 CXXFLAGS = -DXP_UNIX -O2 -Wuninitialized $(WFLAGS) -Iregexp/

@@ -406,7 +406,7 @@ static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, JS2Re
         result.capturesCount = toUInt32(match->parenCount);
         if (match->parenCount) {
             result.captures = new js2val[match->parenCount];
-            for (int32 i = 0; i < match->parenCount; i++) {
+            for (uint32 i = 0; i < match->parenCount; i++) {
                 if (match->parens[i].index != -1)
                     result.captures[i] = meta->engine->allocString(S->substr((uint32)(match->parens[i].index + q), 
                                                                     (uint32)(match->parens[i].length)));
