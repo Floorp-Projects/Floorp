@@ -482,12 +482,11 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 nsresult
 nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 {
-    // Cannot reinit a NATIVE entry with a FACTORY_ONLY entry
-    NS_ENSURE_TRUE(typeIndex != NS_COMPONENT_TYPE_NATIVE, NS_ERROR_INVALID_ARG);
     // cids has to match
     // SERVICE_ONLY entries can be promoted to an entry of another type
     NS_ENSURE_TRUE((typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY || cid.Equals(aClass)),
                    NS_ERROR_INVALID_ARG);
+    // We are going to let native component be overridden by a factory.
     factory = aFactory;
     typeIndex = NS_COMPONENT_TYPE_FACTORY_ONLY;
     return NS_OK;
