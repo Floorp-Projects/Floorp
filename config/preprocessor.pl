@@ -111,7 +111,7 @@ sub include {
     open(FILE, $filename) or die "Couldn't open $filename: $!\n";
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
-        s/[\x0D\x0A]+$/\n/os if $^O eq 'cygwin';
+        s/[\x0D\x0A]+$/\n/os if ($^O eq 'cygwin' || "$^O" eq "MSWin32");
         $stack->newline;
         if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
