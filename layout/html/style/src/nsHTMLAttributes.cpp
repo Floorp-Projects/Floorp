@@ -181,7 +181,7 @@ class HTMLAttributesImpl: public nsIHTMLAttributes, public nsIStyleRule {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr);
+  void operator delete(void* ptr, size_t size);
 
   HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, nsMapAttributesFunc aMapFunc);
   HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
@@ -282,12 +282,12 @@ void* HTMLAttributesImpl::operator new(size_t size, nsIArena* aArena)
   return (void*) rv;
 }
 
-void HTMLAttributesImpl::operator delete(void* ptr)
+void HTMLAttributesImpl::operator delete(void* ptr, size_t size)
 {
   HTMLAttributesImpl* attr = (HTMLAttributesImpl*) ptr;
   if (nsnull != attr) {
     if (attr->mInHeap) {
-      ::delete ptr;
+      ::operator delete(ptr);
     }
   }
 }

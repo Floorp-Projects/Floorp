@@ -225,7 +225,7 @@ class HTMLStyleSheetImpl : public nsIHTMLStyleSheet {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr);
+  void operator delete(void* ptr, size_t size);
 
   HTMLStyleSheetImpl(void);
 
@@ -335,12 +335,12 @@ void* HTMLStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
   return (void*) rv;
 }
 
-void HTMLStyleSheetImpl::operator delete(void* ptr)
+void HTMLStyleSheetImpl::operator delete(void* ptr, size_t size)
 {
   HTMLStyleSheetImpl* sheet = (HTMLStyleSheetImpl*) ptr;
   if (nsnull != sheet) {
     if (sheet->mInHeap) {
-      ::delete ptr;
+      ::operator delete(ptr);
     }
   }
 }

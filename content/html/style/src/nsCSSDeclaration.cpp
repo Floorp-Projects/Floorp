@@ -619,6 +619,8 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
 class CSSDeclarationImpl : public nsICSSDeclaration {
 public:
   void* operator new(size_t size);
+
+  void operator delete(void* ptr, size_t size);
   
   CSSDeclarationImpl(void);
   virtual ~CSSDeclarationImpl(void);
@@ -685,10 +687,16 @@ static PRInt32 gInstanceCount;
 
 void* CSSDeclarationImpl::operator new(size_t size)
 {
-  void* result = new char[size];
-
-  nsCRT::zero(result, size);
+  void* result = ::operator new(size);
+  if (result) {
+    nsCRT::zero(result, size);
+  }
   return result;
+}
+
+void CSSDeclarationImpl::operator delete(void* ptr, size_t size)
+{
+  ::operator delete(ptr);
 }
 
 CSSDeclarationImpl::CSSDeclarationImpl(void)
