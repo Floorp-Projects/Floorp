@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.76 2004/10/09 20:49:42 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.77 2004/10/24 23:54:37 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1476,53 +1476,22 @@ C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
       <section id="win32-code-changes">
         <title>Code changes required to run on win32</title>
 
-        <para>As Bugzilla still doesn't run "out of the box" on
-        Windows, code has to be modified. This section lists the required 
-        changes.
-        </para>
+        <para>Bugzilla on win32 is mostly supported out of the box; one remaining issue is
+        related to bug email. To make bug email work on Win32 (until
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=84876">bug
+        84876</ulink> lands), the
+        simplest way is to have the Net::SMTP Perl module installed and 
+        change this line in the file Bugzilla/Bugmail.pm:</para>
 
-        <section id="win32-code-checksetup">
-          <title>Changes to <filename>checksetup.pl</filename></title>
-
-          <para>In <filename>checksetup.pl</filename>, the line reading:</para>
-
-          <programlisting>
-my $mysql_binaries = `which mysql`;
-          </programlisting>
-          <para>to</para>
-          <programlisting>
-my $mysql_binaries = "D:\\mysql\\bin\\mysql";
-          </programlisting>
-
-          <para>And you'll also need to change:</para>
-
-          <programlisting>
-my $webservergid = getgrnam($my_webservergroup)
-          </programlisting>
-          <para>to</para>
-          <programlisting>
-my $webservergid = '8'
-          </programlisting>
-        </section>
-
-        <section id="win32-code-bugmail">
-          <title>Changes to <filename>BugMail.pm</filename></title>
-
-          <para>To make bug email work on Win32 (until
-          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=84876">bug
-          84876</ulink> lands), the
-          simplest way is to have the Net::SMTP Perl module installed and 
-          change this:</para>
-
-          <programlisting>
+        <programlisting>
 open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
   die "Can't open sendmail";
 
 print SENDMAIL trim($msg) . "\n";
 close SENDMAIL;
-          </programlisting>
-          <para>to</para>
-          <programlisting>
+        </programlisting>
+        <para>to</para>
+        <programlisting>
 use Net::SMTP;
 my $smtp_server = 'smtp.mycompany.com';  # change this
 
@@ -1537,14 +1506,11 @@ $smtp->data();
 $smtp->datasend($msg);
 $smtp->dataend();
 $smtp->quit;
-          </programlisting>
+        </programlisting>
 
-          <para>Don't forget to change the name of your SMTP server and the
-          domain of the sending email address (after the '@') in the above
-          lines of code.</para>
-
-        </section>
-        
+        <para>Don't forget to change the name of your SMTP server and the
+        domain of the sending email address (after the '@') in the above
+        lines of code.</para>
       </section>
 
       <section id="win32-http">
