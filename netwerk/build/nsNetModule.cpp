@@ -218,7 +218,6 @@ UnregisterBuiltInURLParsers(nsIComponentManager *aCompMgr,
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
 #include "nsAboutCache.h"
-#include "nsAboutConfig.h"
 #include "nsAboutRedirector.h"
 #include "nsKeywordProtocolHandler.h"
 
