@@ -147,3 +147,6 @@ void PSFE_DisplayBuiltin() {}
 
 void TXFE_FreeBuiltinElement() {}
 void PSFE_FreeBuiltinElement() {}
+
+void PSFE_CheckConfirm() {}
+void PSFE_SelectDialog() {}
