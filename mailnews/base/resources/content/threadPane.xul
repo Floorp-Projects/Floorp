@@ -60,13 +60,13 @@ Rights Reserved.
 	</rule>
   </template>
 
-  <treecol width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
+  <treecol fixed="true" width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
   <treecol width="7*" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol width="4*" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
-  <treecol width="20" id="UnreadButtonColumn"/>
+  <treecol fixed="true" width="20" id="UnreadButtonColumn"/>
   <treecol width="2*" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
   <treecol width="1*" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
-  <treecol width="20" id="FlaggedButtonColumn"/>
+  <treecol fixed="true" width="20" id="FlaggedButtonColumn"/>
   <treecol width="1*" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treecol width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
   <treecol width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
