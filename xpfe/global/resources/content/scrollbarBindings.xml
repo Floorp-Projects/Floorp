@@ -40,7 +40,6 @@
               }
             }
             catch ( x ) {
-              throw "Scrollbars in this skin are not properly supporting mac smart-scrolling prefs!";
             }
           ]]>
         </body>
