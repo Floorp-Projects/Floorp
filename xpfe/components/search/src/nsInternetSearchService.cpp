@@ -521,6 +521,8 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 		if (gRDFService)
 		{
+			gRDFService->UnregisterDataSource(this);
+
 			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 			gRDFService = nsnull;
 		}
