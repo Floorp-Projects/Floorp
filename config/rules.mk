@@ -1057,10 +1057,12 @@ endif
 ################################################################################
 # Copy each element of EXPORTS to $(PUBLIC)
 
-ifneq ($(EXPORTS),)
+ifneq ($(EXPORTS)$(XPIDLSRCS),)
 $(PUBLIC)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+endif
 
+ifneq ($(EXPORTS),)
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
 endif 
