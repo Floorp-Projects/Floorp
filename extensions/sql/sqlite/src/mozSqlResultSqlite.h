@@ -34,49 +34,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "mozSqlService.h"
-#ifdef MOZ_ENABLE_PGSQL
-#include "mozSqlConnectionPgsql.h"
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-#include "mozSqlConnectionSqlite.h"
-#endif
+#ifndef mozSqlResultSqlite_h
+#define mozSqlResultSqlite_h                                                  
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSqlService, Init)
-#ifdef MOZ_ENABLE_PGSQL
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionPgsql)
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionSqlite)
-#endif
+#include "sqlite3.h"
+#include "mozSqlResult.h"
+#include "mozISqlResultSqlite.h"
 
-static nsModuleComponentInfo components[] =
+class mozSqlResultSqlite : public mozSqlResult,
+                          public mozISqlResultSqlite
 {
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLSERVICE_CONTRACTID,
-    mozSqlServiceConstructor
-  },
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLDATASOURCE_CONTRACTID,
-    mozSqlServiceConstructor
-  }
-#ifdef MOZ_ENABLE_PGSQL
-  ,{ MOZ_SQLCONNECTIONPGSQL_CLASSNAME,
-    MOZ_SQLCONNECTIONPGSQL_CID,
-    MOZ_SQLCONNECTIONPGSQL_CONTRACTID,
-    mozSqlConnectionPgsqlConstructor
-  }
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-  ,{ MOZ_SQLCONNECTIONSQLITE_CLASSNAME,
-    MOZ_SQLCONNECTIONSQLITE_CID,
-    MOZ_SQLCONNECTIONSQLITE_CONTRACTID,
-    mozSqlConnectionSqliteConstructor
-  }
-#endif
+  public:
+    mozSqlResultSqlite(mozISqlConnection* aConnection, const nsAString& aQuery);
+    void SetResult(char** aResult, PRInt32 nrow, PRInt32 ncolumn,
+                   PRBool aWritable);
+    virtual ~mozSqlResultSqlite();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_MOZISQLRESULTSQLITE 
+
+  protected:
+    PRInt32 GetColType(PRInt32 aColumnIndex);
+
+    virtual nsresult BuildColumnInfo();
+    virtual nsresult BuildRows();
+    virtual void ClearNativeResult();
+
+    virtual nsresult CanInsert(PRBool* _retval);
+    virtual nsresult CanUpdate(PRBool* _retval);
+    virtual nsresult CanDelete(PRBool* _retval);
+
+  private:
+    char**   	 mResult;
+    PRInt32      mColumnCount;
+    PRInt32	 mRowCount;
+    PRInt32	 mWritable;
 };
 
-NS_IMPL_NSGETMODULE("mozSqlModule", components)
+#endif // mozSqlResultSqlite_h

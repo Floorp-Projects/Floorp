@@ -34,49 +34,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "mozSqlService.h"
-#ifdef MOZ_ENABLE_PGSQL
-#include "mozSqlConnectionPgsql.h"
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-#include "mozSqlConnectionSqlite.h"
-#endif
+#ifndef mozSqlConnectionSqlite_h
+#define mozSqlConnectionSqlite_h                                                  
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSqlService, Init)
-#ifdef MOZ_ENABLE_PGSQL
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionPgsql)
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionSqlite)
-#endif
+#include "sqlite3.h"
+#include "mozSqlConnection.h"
+#include "mozISqlConnectionSqlite.h"
 
-static nsModuleComponentInfo components[] =
+#define MOZ_SQLCONNECTIONSQLITE_CLASSNAME "SQLite SQL Connection"
+#define MOZ_SQLCONNECTIONSQLITE_CID \
+{0xb00f42b4, 0x8902, 0x428c, {0xab, 0x13, 0x9d, 0x06, 0x6f, 0xf1, 0x5a, 0xed }}
+
+#define MOZ_SQLCONNECTIONSQLITE_CONTRACTID "@mozilla.org/sql/connection;1?type=sqlite"
+
+#define SERVER_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+
+class mozSqlConnectionSqlite : public mozSqlConnection,
+                               public mozISqlConnectionSqlite
 {
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLSERVICE_CONTRACTID,
-    mozSqlServiceConstructor
-  },
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLDATASOURCE_CONTRACTID,
-    mozSqlServiceConstructor
-  }
-#ifdef MOZ_ENABLE_PGSQL
-  ,{ MOZ_SQLCONNECTIONPGSQL_CLASSNAME,
-    MOZ_SQLCONNECTIONPGSQL_CID,
-    MOZ_SQLCONNECTIONPGSQL_CONTRACTID,
-    mozSqlConnectionPgsqlConstructor
-  }
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-  ,{ MOZ_SQLCONNECTIONSQLITE_CLASSNAME,
-    MOZ_SQLCONNECTIONSQLITE_CID,
-    MOZ_SQLCONNECTIONSQLITE_CONTRACTID,
-    mozSqlConnectionSqliteConstructor
-  }
-#endif
+  public:
+    mozSqlConnectionSqlite();
+    virtual ~mozSqlConnectionSqlite();
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Init(const nsAString& aHost, PRInt32 aPort,
+                    const nsAString& aDatabase, const nsAString& aUsername,
+                    const nsAString& aPassword);
+
+    NS_IMETHOD GetPrimaryKeys(const nsAString& aSchema, const nsAString& aTable,
+                              mozISqlResult** _retval);
+
+    NS_DECL_MOZISQLCONNECTIONSQLITE
+
+  protected:
+    nsresult Setup();
+
+    virtual nsresult RealExec(const nsAString& aQuery, mozISqlResult** aResult,
+                              PRInt32* aAffectedRows);
+
+    virtual nsresult CancelExec();
+
+    virtual nsresult GetIDName(nsAString& aIDName);
+
+  private:
+    sqlite3*            mConnection;
+    PRInt32             mVersion;
+    PRBool              mWritable;
 };
 
-NS_IMPL_NSGETMODULE("mozSqlModule", components)
+#endif // mozSqlConnectionSqlite_h

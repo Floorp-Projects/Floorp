@@ -18,6 +18,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Valia Vaneeva <fattie@altlinux.ru>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,5 +53,6 @@ xpi:
 	cd $(DIST); zip -r $(XPI_FILE) \
 	bin/components/sql.xpt \
 	bin/components/sqlpgsql.xpt \
+	bin/components/sqlsqlite.xpt \
 	bin/components/$(LIB_PREFIX)sql$(DLL_SUFFIX) \
 	bin/chrome/sql.jar

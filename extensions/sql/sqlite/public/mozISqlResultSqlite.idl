@@ -34,49 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "mozSqlService.h"
-#ifdef MOZ_ENABLE_PGSQL
-#include "mozSqlConnectionPgsql.h"
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-#include "mozSqlConnectionSqlite.h"
-#endif
+#include "nsISupports.idl"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSqlService, Init)
-#ifdef MOZ_ENABLE_PGSQL
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionPgsql)
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionSqlite)
-#endif
+[scriptable, uuid(96d1248b-608c-4b63-a718-b214200e4738)]
 
-static nsModuleComponentInfo components[] =
+interface mozISqlResultSqlite : nsISupports
 {
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLSERVICE_CONTRACTID,
-    mozSqlServiceConstructor
-  },
-  { MOZ_SQLSERVICE_CLASSNAME,
-    MOZ_SQLSERVICE_CID,
-    MOZ_SQLDATASOURCE_CONTRACTID,
-    mozSqlServiceConstructor
-  }
-#ifdef MOZ_ENABLE_PGSQL
-  ,{ MOZ_SQLCONNECTIONPGSQL_CLASSNAME,
-    MOZ_SQLCONNECTIONPGSQL_CID,
-    MOZ_SQLCONNECTIONPGSQL_CONTRACTID,
-    mozSqlConnectionPgsqlConstructor
-  }
-#endif
-#ifdef MOZ_ENABLE_SQLITE
-  ,{ MOZ_SQLCONNECTIONSQLITE_CLASSNAME,
-    MOZ_SQLCONNECTIONSQLITE_CID,
-    MOZ_SQLCONNECTIONSQLITE_CONTRACTID,
-    mozSqlConnectionSqliteConstructor
-  }
-#endif
-};
 
-NS_IMPL_NSGETMODULE("mozSqlModule", components)
+};

@@ -18,7 +18,6 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Valia Vaneeva <fattie@altlinux.ru>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,27 +33,13 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH           = ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
-
-DIRS            = base
-
-ifdef MOZ_ENABLE_PGSQL
-DIRS		+= pgsql
-endif
-
-ifdef MOZ_ENABLE_SQLITE
-DIRS            += sqlite
-endif
-
-DIRS		+= build
-
-ifdef ENABLE_TESTS
-DIRS		+= sqltest tests
-endif
+DIRS            = \
+		  public \
+		  src
 
 include $(topsrcdir)/config/rules.mk
