@@ -25,8 +25,6 @@
 { 0x18032ad4, 0xb265, 0x11d2, \
 { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }       
 
-class nsIRadioGroup;
-
 /**
  * RadioButton widget. Can show itself in a checked or unchecked state. 
  * The RadioButton widget automatically shows itself checked or unchecked when clicked on.

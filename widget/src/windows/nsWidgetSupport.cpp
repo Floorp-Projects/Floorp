@@ -30,7 +30,6 @@
 #include "nsIListWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIMouseListener.h"
-#include "nsIRadioGroup.h"
 #include "nsITabWidget.h"
 #include "nsIToolkit.h"
 #include "nsIWidget.h"
