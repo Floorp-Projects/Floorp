@@ -3786,57 +3786,78 @@ char* normalizeMTs (char* mt) {
 	} else return mt;
 }
 
+void
+ShowMailFolder (NET_StreamClass *stream, char* url) {
+  char* buff = XP_ALLOC(2000);
+  /* this really sucks. The right way is to have some javascript on the page that
+     spits this out. Then it will be really customizable */
+  sprintf(buff, "<html>\n<body marginwidth=0 marginheight=0>\n<object  target=\"messages\" width=100%% height=100%% type=builtin/tree data=\"mailbox://%s\">\n<param name=\"title\" value=\"Summary\">\n<param name=\"Column\" value=\"mail:From\">\n<param name=\"Column\" value=\"mail:Subject\">\n<param name=\"Column\" value=\"mail:Date\">\n</object>", &url[17]);
+  (*stream->put_block)(stream, buff, strlen(buff));
+  sprintf(buff, "</body>\n</html>\n\n");
+  (*stream->put_block)(stream, buff, strlen(buff));
+  XP_FREE(buff);
+    (*stream->complete)(stream);
+}
 
 PRIVATE int32
 net_MBoxLoad (ActiveEntry * ce)
 {
   /* displaying mailbox items */
-	MBoxConData  *cd = (MBoxConData *)XP_NEW(MBoxConData);
     void* db;
-    char* mbox = XP_ALLOC(100);
-	PRBool mimeTypeSet = 0;
-	char* offset = strchr(ce->URL_s->address, '?') + 1;
-	memset(mbox, '\0', 100);
-	memcpy(mbox, ce->URL_s->address, offset-(ce->URL_s->address+1));
-    sscanf(offset, "%d",&cd->offset);
-    db = getTranslator(mbox);
-    cd->mbox = getPopMBox(db);
-    cd->status = 1; 
-	 cd->buff = XP_ALLOC(100000);
+	char* offset = strchr(ce->URL_s->address, '?') ;
+    if (!offset) {
+      NET_StreamClass *stream;
+      	StrAllocCopy(ce->URL_s->content_type, TEXT_HTML);
+        stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
+        ShowMailFolder(stream, ce->URL_s->address);
+        return -1;
+    } else {
+      MBoxConData  *cd = (MBoxConData *)XP_NEW(MBoxConData);
+      char* mbox = XP_ALLOC(100);
+      PRBool mimeTypeSet = 0;
+      memset(mbox, '\0', 100);
+	  offset = offset+1;
+      memcpy(mbox, ce->URL_s->address, offset-(ce->URL_s->address+1));
+      sscanf(offset, "%d",&cd->offset);
+      db = getTranslator(mbox);
+      cd->mbox = getPopMBox(db);
+      cd->status = 1; 
+      cd->buff = XP_ALLOC(100000);
 	 memset(cd->buff, '\0', 100000);
-	fseek(cd->mbox, cd->offset, SEEK_SET); 
-	
-	while (fgets(cd->buff, 100000, cd->mbox)) {
-	  cd->offset = ftell(cd->mbox);
-      if (startsWith("From ", cd->buff) || startsWith("Content-Length:", cd->buff) || 
-		  startsWith("\n", cd->buff) || startsWith("\r", cd->buff)) break;
-	  if (startsWith("Content-Type:", cd->buff)) {
-		  char* enc = strchr(&cd->buff[13], ';');
-		  char* mt  = XP_ALLOC(50);
-		  memset(mt, '\0', 50);
+     fseek(cd->mbox, cd->offset, SEEK_SET); 
+     
+     while (fgets(cd->buff, 100000, cd->mbox)) {
+       cd->offset = ftell(cd->mbox);
+       if (startsWith("From ", cd->buff) || startsWith("Content-Length:", cd->buff) || 
+           startsWith("\n", cd->buff) || startsWith("\r", cd->buff)) break;
+       if (startsWith("Content-Type:", cd->buff)) {
+         char* enc = strchr(&cd->buff[13], ';');
+         char* mt  = XP_ALLOC(50);
+         memset(mt, '\0', 50);
 		  if (enc) {
 			memcpy(mt, &cd->buff[14], enc-&cd->buff[14]);
 		  } else {
 			int n = 0;
 			while ((cd->buff[14+n] != ' ') && (cd->buff[14+n] != '\n') && (cd->buff[14+n] != '\r')) {
-				mt[n] = cd->buff[14+n];
-				n++;
+              mt[n] = cd->buff[14+n];
+              n++;
 			}
 		  }
-		    /* need libmime */
-			StrAllocCopy(ce->URL_s->content_type, normalizeMTs(mt));
-			mimeTypeSet = 1;
-		   
-	  } 
+          /* need libmime */
+          StrAllocCopy(ce->URL_s->content_type, normalizeMTs(mt));
+          mimeTypeSet = 1;
+          
+       } 
 	  memset(cd->buff, '\0', 100000);
 	  fseek(cd->mbox, cd->offset, SEEK_SET); 
-	}
-	if (!mimeTypeSet) StrAllocCopy(ce->URL_s->content_type, TEXT_PLAIN);
-    cd->stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
-	ce->con_data = cd;
-    
-    XP_FREE(mbox);
-    return net_ProcessMBox(ce);
+     }
+     if (!mimeTypeSet) StrAllocCopy(ce->URL_s->content_type, TEXT_PLAIN);
+     cd->stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
+     ce->con_data = cd;
+     
+     XP_FREE(mbox);
+     return net_ProcessMBox(ce);
+    }
 }
 
 
