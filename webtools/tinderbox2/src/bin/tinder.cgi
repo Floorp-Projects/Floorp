@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.29 $ 
-# $Date: 2002/05/07 20:37:43 $ 
+# $Revision: 1.30 $ 
+# $Date: 2002/05/10 21:22:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -39,7 +39,6 @@
 
 # Standard perl libraries
 use File::Basename;
-use Sys::Syslog;
 use Sys::Hostname;
 use Time::Local;
 
