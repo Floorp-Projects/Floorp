@@ -384,10 +384,14 @@ int main(int argc, char **argv)
                     AllocationNode *target = (AllocationNode*)
                         PL_HashTableLookup(memory_map, *(void**)(e->data + d));
                     if (target) {
-                        printf("        <a href=\"#o%d\">0x%08X</a> &lt;%s&gt;\n",
+                        printf("        <a href=\"#o%d\">0x%08X</a> &lt;%s&gt;",
                                target - nodes,
                                *(unsigned int*)(e->data + d),
                                target->entry->type);
+                        if (target->index != n->index) {
+                            printf(", component %d", target->index);
+                        }
+                        printf("\n");
                     } else {
                         printf("        0x%08X\n",
                                *(unsigned int*)(e->data + d));
@@ -403,6 +407,9 @@ int main(int argc, char **argv)
                         const ADLog::Entry *te = t->entry;
                         printf("    <a href=\"#o%d\">%s</a> (Object %d, ",
                                t - nodes, te->type, t - nodes);
+                        if (t->index != n->index) {
+                            printf("component %d, ", t->index);
+                        }
                         if (t == n) {
                             printf("self)\n");
                         } else {
