@@ -1645,6 +1645,7 @@ GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
   NS_IF_RELEASE(aTimeout->timer);
   PR_FREEIF(aTimeout->filename);
   NS_IF_RELEASE(aTimeout->window);
+  NS_IF_RELEASE(aTimeout->principal);
   PR_DELETE(aTimeout);
 }
 
@@ -1874,11 +1875,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
-  nsIPrincipal * principal;
 
-  if (NS_FAILED(GetPrincipal(&principal))) {
-    return NS_ERROR_FAILURE;
-  }
   if (argc < 2) {
     JS_ReportError(cx, "Function %s requires at least 2 parameters",
                    aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
@@ -1953,7 +1950,16 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
       timeout->argc++;
     }
   }
-  timeout->principal = principal;
+
+  // Get principal of currently executing code, save for execution of timeout
+  nsresult rv;  
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  if (NS_FAILED(securityManager->GetSubjectPrincipal(&timeout->principal)))
+    return NS_ERROR_FAILURE;
+
   LL_I2L(now, PR_IntervalNow());
   LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
   LL_ADD(timeout->when, now, delta);
