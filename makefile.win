@@ -93,6 +93,10 @@ DIRS =                         \
   xpinstall                    \
   extensions                   \
   themes \
+!if defined(ENABLE_LDAP)       
+  directory\c-sdk              \
+  directory\xpcom              \
+!endif
   l10n                     \
 !if !defined(DISABLE_MAILNEWS)
   mailnews                     \
