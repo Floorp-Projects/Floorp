@@ -184,7 +184,7 @@ nsPrefObserver::Observe(nsISupports *subject,
                 PRBool val;
                 if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_ESCAPEUTF8, &val)))
                     gEscapeUTF8 = val;
-                printf("escape UTF-8 %s\n", gEscapeUTF8 ? "enabled" : "disabled");
+                LOG(("escape UTF-8 %s\n", gEscapeUTF8 ? "enabled" : "disabled"));
             }
             else if (!nsCRT::strcmp(data, NS_LITERAL_STRING(NS_NET_PREF_ENABLEIDN).get())) {
                 PRBool val;
@@ -194,7 +194,7 @@ nsPrefObserver::Observe(nsISupports *subject,
                     if (serv)
                         NS_ADDREF(gIDNService = serv.get());
                 }
-                printf("IDN support %s\n", gIDNService ? "enabled" : "disabled");
+                LOG(("IDN support %s\n", gIDNService ? "enabled" : "disabled"));
             }
         } 
     }
