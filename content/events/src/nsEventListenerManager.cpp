@@ -771,7 +771,8 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
     AddEventListener(aListener, arrayType, subType, nsnull, aFlags);
   }
   else {
-    nsStringKey key(aType);
+    const nsPromiseFlatString& flatString = PromiseFlatString(aType); 
+    nsStringKey key(flatString);
     AddEventListener(aListener, eEventArrayType_Hash, NS_EVENT_BITS_NONE, &key, aFlags);
   }
 
@@ -792,7 +793,8 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
     RemoveEventListener(aListener, arrayType, subType, nsnull, aFlags);
   }
   else {
-    nsStringKey key(aType);
+    const nsPromiseFlatString& flatString = PromiseFlatString(aType); 
+    nsStringKey key(flatString);
     RemoveEventListener(aListener, eEventArrayType_Hash, NS_EVENT_BITS_NONE, &key, aFlags);
   }
 

@@ -152,7 +152,8 @@ void NS_NameSpaceManagerShutdown()
 static PRInt32 FindNameSpaceID(const nsAString& aURI)
 {
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
-  nsStringKey key(aURI);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aURI); 
+  nsStringKey key(flatString);
   void* value = gURIToIDTable->Get(&key);
   if (nsnull != value) {
     return NS_PTR_TO_INT32(value);

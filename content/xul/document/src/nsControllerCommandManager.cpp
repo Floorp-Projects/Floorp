@@ -66,7 +66,8 @@ NS_IMPL_ISUPPORTS2(nsControllerCommandManager, nsIControllerCommandManager, nsIS
 NS_IMETHODIMP
 nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(aCommandName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aCommandName);   
+  nsStringKey commandKey(flatString);
   
   if (mCommandsTable.Put (&commandKey, aCommand))
   {
@@ -79,11 +80,13 @@ nsControllerCommandManager::RegisterCommand(const nsAString & aCommandName, nsIC
   return NS_OK;
 }
 
+#error
 
 NS_IMETHODIMP
 nsControllerCommandManager::UnregisterCommand(const nsAString & aCommandName, nsIControllerCommand *aCommand)
 {
-  nsStringKey commandKey(aCommandName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+  nsStringKey commandKey(flatString);
 
   PRBool any_object_actually_removed_p = mCommandsTable.Remove (&commandKey);
   return any_object_actually_removed_p? NS_OK : NS_ERROR_FAILURE;
@@ -97,7 +100,8 @@ nsControllerCommandManager::FindCommandHandler(const nsAString & aCommandName, n
   
   *outCommand = NULL;
   
-  nsStringKey commandKey(aCommandName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aCommandName);   
+  nsStringKey commandKey(flatString);
   nsISupports* foundCommand = mCommandsTable.Get(&commandKey);   // this does the addref
   if (!foundCommand) return NS_ERROR_FAILURE;
   
