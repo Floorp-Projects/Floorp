@@ -114,6 +114,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsXULAtoms.h"
+#include "nsITreeBoxObject.h"
 
 // Used for the temporary DOM Level2 hack
 #include "nsIPref.h"
@@ -2506,14 +2507,17 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     // the possibility exists that some of the items in the removed subtree
     // are selected (and therefore need to be deselected). We need to account for this.
     nsCOMPtr<nsIAtom> tag;
+    nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+    nsCOMPtr<nsITreeBoxObject> treeBox;
+    PRInt32 newSelectIndex = -1;
+    PRBool fireSelectionHandler = PR_FALSE;
+
     oldKid->GetTag(*getter_AddRefs(tag));
     if (tag && (tag.get() == nsXULAtoms::treechildren || tag.get() == nsXULAtoms::treeitem ||
                 tag.get() == nsXULAtoms::treecell)) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
-      nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-
       // Check first whether this element IS the tree
       treeElement = do_QueryInterface((nsIDOMXULElement*)this);
 
@@ -2525,7 +2529,6 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         treeElement->GetSelectedItems(getter_AddRefs(itemList));
 
         nsCOMPtr<nsIDOMNode> parentKid = do_QueryInterface(oldKid);
-        PRBool fireSelectionHandler = PR_FALSE;
         if (itemList) {
           // Iterate over all of the items and find out if they are contained inside
           // the removed subtree.
@@ -2542,13 +2545,22 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
               fireSelectionHandler = PR_TRUE;
             }
           }
-        }
+		}
 
-        if (fireSelectionHandler) {
-          nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
-          if (tree) {
-            tree->FireOnSelectHandler();
-          }
+        nsCOMPtr<nsIDOMXULElement> curItem;
+        treeElement->GetCurrentItem(getter_AddRefs(curItem));
+        nsCOMPtr<nsIDOMNode> curNode = do_QueryInterface(curItem);
+        if (IsAncestor(parentKid, curNode)) {
+	        // Current item going away
+            nsCOMPtr<nsIBoxObject> box;
+            treeElement->GetBoxObject(getter_AddRefs(box));
+            treeBox = do_QueryInterface(box);
+            if (treeBox) {
+                nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parentKid);
+                if (domElem) {
+                    treeBox->GetIndexOfItem(domElem, &newSelectIndex);
+                }
+            }
         }
       }
     }
@@ -2559,6 +2571,23 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
         if (aNotify && removeOk && mDocument) {
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
+        }
+
+        if (newSelectIndex != -1) {
+            nsCOMPtr<nsIDOMElement> newSelectItem;
+            treeBox->GetItemAtIndex(newSelectIndex, getter_AddRefs(newSelectItem));
+            if (newSelectItem) {
+                nsCOMPtr<nsIDOMXULElement> xulSelItem = do_QueryInterface(newSelectItem);
+                if (xulSelItem)
+                    treeElement->SetCurrentItem(xulSelItem);
+            }
+        }
+
+        if (fireSelectionHandler) {
+          nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
+          if (tree) {
+            tree->FireOnSelectHandler();
+          }
         }
 
         // This will cause the script object to be unrooted for each
