@@ -41,6 +41,9 @@ public:
 	nsMacTSMMessagePump();
 	~nsMacTSMMessagePump();
 
+	static nsMacTSMMessagePump* GetSingleton();
+	void Shutdown();
+	
 private:
 	static pascal OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
 	static pascal OSErr OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
@@ -48,6 +51,8 @@ private:
 	static AEEventHandlerUPP mPos2OffsetUPP;
 	static AEEventHandlerUPP mOffset2PosUPP;
 	static AEEventHandlerUPP mUpdateUPP;
+	
+	static nsMacTSMMessagePump* gSingleton;
 
 };
 
