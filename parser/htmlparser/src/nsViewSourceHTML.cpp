@@ -491,8 +491,20 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
   else mDocType=aParserContext.mDocType;
 
   mLineNumber = 1;
-  result = mSink->WillBuildModel(); 
-
+  // Munge the DTD mode so that the document will be in standards mode even if
+  // the original source was quirks.  The CONST_CAST is evil, but the other
+  // options seem to be:
+  // 1) Change the WillBuildModel signature to take an nsIParser so that we can
+  //    push a new parser context right here.
+  // 2) Make some assumptions about the exact class of mSink and get at the
+  //    document that way.
+  // #1 doesn't seem worth it, and #2 is even more evil, since we plan to reset
+  // the DTD mode right back to what it was before, let's risk this.
+  CParserContext& parserContext = NS_CONST_CAST(CParserContext&, aParserContext);
+  parserContext.mDTDMode = eDTDMode_full_standards;
+  result = mSink->WillBuildModel();
+  // And reset the DTD mode back to the right one
+  parserContext.mDTDMode = mDTDMode;
   START_TIMER();
   return result;
 }
