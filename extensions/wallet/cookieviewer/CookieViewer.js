@@ -252,7 +252,7 @@ function DeleteCookieSelected() {
   for(var k = 0; k < rows.length; k++) 
   {
     var row = document.getElementById(rows[k]);
-    row.setAttribute("label","");
+    row.setAttribute("value","");
   }
   if( !document.getElementById("cookietree").selectedItems.length ) {
     if( !document.getElementById("removeCookies").disabled ) {
@@ -274,7 +274,7 @@ function DeleteAllCookies() {
   for(var k = 0; k < rows.length; k++) 
   {
     var row = document.getElementById(rows[k]);
-    row.setAttribute("label","");
+    row.setAttribute("value","");
   }
   if( !document.getElementById("removeCookies").disabled ) {
     document.getElementById("removeCookies").setAttribute("disabled", "true")
