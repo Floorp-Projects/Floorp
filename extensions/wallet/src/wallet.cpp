@@ -2781,6 +2781,9 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
    * were being called from javascript in this case.  So to avoid the problem, the 
    * fetchTables parameter was added and it is set to PR_FALSE in the case of the
    * wallet editor and PR_TRUE in all other cases
+   *
+   * Similar problem applies to changing password.  Don't need tables in that case and
+   * fetching them was causing a hang -- see bug 28148 and bug 28145.
    */
   if (!wallet_tablesInitialized) {
 #ifdef DEBUG
@@ -2878,7 +2881,7 @@ void WLLT_ChangePassword() {
   SI_RemoveAllSignonData();
 
   /* read in user data using old key */
-  wallet_Initialize(PR_TRUE);
+  wallet_Initialize(PR_FALSE);
   if (!Wallet_IsKeySet()) {
     return;
   }
