@@ -44,6 +44,10 @@ XFE_BuiltinTreeView::XFE_BuiltinTreeView(XFE_Component *toplevel_component,
 {
 	printf("XFE_BuiltinTreeView::XFE_BuiltinTreeView()\n");
 
+	createTree();
+
+	doAttachments();
+
 	// Hunt the builtin_struct.
 	classId = LO_GetBuiltInAttribute(builtin_struct, "classid");
 	url     = LO_GetBuiltInAttribute(builtin_struct, "data");

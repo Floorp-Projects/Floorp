@@ -182,23 +182,10 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 
 	setBaseWidget(rdfMainForm);
 
-    createTree();
-    doAttachments();
+//     createTree();
 
-	init_pixmaps();
+//     doAttachments();
 	
-	XtAddCallback(_tree, XmNexpandCallback, expand_row_cb, this);
-	XtAddCallback(_tree, XmNcollapseCallback, collapse_row_cb, this);
-	XtAddCallback(_tree, XmNdeleteCallback, delete_cb, NULL);
-	XtAddCallback(_tree, XmNactivateCallback, activate_cb, this);
-	XtAddCallback(_tree, XmNresizeCallback, resize_cb, this);
-	XtAddCallback(_tree, XmNeditCallback, edit_cell_cb, this);
-	XtAddCallback(_tree, XmNselectCallback, select_cb, this);
-	XtAddCallback(_tree, XmNdeselectCallback, deselect_cb, this);
-	XtAddCallback(_tree, XmNpopupCallback, popup_cb, this);
-	
-    XtManageChild(_tree);
-
 	//fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -212,14 +199,14 @@ XFE_RDFTreeView::~XFE_RDFTreeView()
     XFE_RDFImage::removeListener(this);
 }
 //////////////////////////////////////////////////////////////////////////
-void
+/* virtual */ void
 XFE_RDFTreeView::createTree()
 {
 	// Create the tree widget
 	_tree = 
 		XtVaCreateWidget(TREE_NAME,
 						 xmlTreeWidgetClass,
-						 getBaseWidget(),
+						 getTreeParent(),
 						 XmNshadowThickness,		0,
 						 XmNhorizontalSizePolicy,	XmRESIZE_IF_POSSIBLE,
 						 XmNallowColumnResize,		True,
@@ -235,24 +222,47 @@ XFE_RDFTreeView::createTree()
 				  XmNcellDefaults, True,
 				  XmNcellAlignment, XmALIGNMENT_LEFT,
 				  NULL);
+
+	init_pixmaps();
 	
+	XtAddCallback(_tree, XmNexpandCallback, expand_row_cb, this);
+	XtAddCallback(_tree, XmNcollapseCallback, collapse_row_cb, this);
+	XtAddCallback(_tree, XmNdeleteCallback, delete_cb, NULL);
+	XtAddCallback(_tree, XmNactivateCallback, activate_cb, this);
+	XtAddCallback(_tree, XmNresizeCallback, resize_cb, this);
+	XtAddCallback(_tree, XmNeditCallback, edit_cell_cb, this);
+	XtAddCallback(_tree, XmNselectCallback, select_cb, this);
+	XtAddCallback(_tree, XmNdeselectCallback, deselect_cb, this);
+	XtAddCallback(_tree, XmNpopupCallback, popup_cb, this);
+	
+    XtManageChild(_tree);
 }
 //////////////////////////////////////////////////////////////////////////
-void
+/* virtual */ Widget
+XFE_RDFTreeView::getTreeParent() 
+{
+	return getBaseWidget();
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
 XFE_RDFTreeView::doAttachments()
 {
-    XtVaSetValues(_tree,
-                  XmNtopAttachment,		XmATTACH_FORM,
-                  XmNrightAttachment,	XmATTACH_FORM,
-                  XmNleftAttachment,	XmATTACH_FORM,
-                  XmNbottomAttachment,	XmATTACH_FORM,
-                  NULL);
-                  
+	if (XfeIsAlive(_tree))
+	{
+		XtVaSetValues(_tree,
+					  XmNtopAttachment,		XmATTACH_FORM,
+					  XmNrightAttachment,	XmATTACH_FORM,
+					  XmNleftAttachment,	XmATTACH_FORM,
+					  XmNbottomAttachment,	XmATTACH_FORM,
+					  NULL);
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFTreeView::init_pixmaps(void)
 {
+	XP_ASSERT( XfeIsAlive(_tree) );
+
     Pixel bg_pixel;
     
     XtVaGetValues(_tree, XmNbackground, &bg_pixel, 0);

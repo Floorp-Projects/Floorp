@@ -421,9 +421,10 @@ XFE_NavCenterView::createTree()
 {
   _rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
                                        this, m_contextData);
+
   _rdftree->setStandAloneState(_isStandalone);
 
-//  _rdftree->setHtmlPaneHeight(50);
+  // _rdftree->setHtmlPaneHeight(50);
 }
 //////////////////////////////////////////////////////////////////////////
 void

@@ -91,6 +91,10 @@ protected:
     // The XmL tree widget
     Widget                  _tree;
 
+	virtual Widget	getTreeParent	();
+	virtual void	doAttachments	();
+	virtual void	createTree		();
+
 private:
 
 	// The popup menu
@@ -107,8 +111,6 @@ private:
   static fe_icon openedFolder;
   static fe_icon closedFolder;
 
-  void createTree();
-  void doAttachments();
 
   void init_pixmaps();
 
