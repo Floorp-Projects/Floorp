@@ -204,7 +204,7 @@ EmbedWindow::SaveURI(nsIURI *uri, char *fname)
     nsCOMPtr<nsILocalFile> file;
     NS_NewNativeLocalFile(nsDependentCString(fname), PR_TRUE, getter_AddRefs(file));
     persist->SetProgressListener((nsIWebProgressListener*) w->EmbedRef->mProgress);
-    persist->SaveURI(uri, nsnull, file);
+    persist->SaveURI(uri, nsnull, nsnull, nsnull, nsnull, file);
     return (0);
   }
   return 1;

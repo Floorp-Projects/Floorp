@@ -5455,6 +5455,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     // add the value as a header to the nsIHttpChannel
     //
 
+    const char *kWhitespace = "\b\t\r\n ";
     while (PR_TRUE) {
         crlf = headersString.Find("\r\n", PR_TRUE);
         if (-1 == crlf) {
@@ -5462,7 +5463,6 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
         }
         headersString.Mid(oneHeader, 0, crlf);
         headersString.Cut(0, crlf + 2);
-        oneHeader.StripWhitespace();
         colon = oneHeader.Find(":");
         if (-1 == colon) {
             return NS_ERROR_NULL_POINTER;
@@ -5470,6 +5470,8 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
         oneHeader.Left(headerName, colon);
         colon++;
         oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
+        headerName.Trim(kWhitespace);
+        headerValue.Trim(kWhitespace);
 
         //
         // FINALLY: we can set the header!

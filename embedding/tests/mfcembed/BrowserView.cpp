@@ -690,7 +690,7 @@ void CBrowserView::OnFileSaveAs()
             if(bSaveAll)
                 persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
             else
-                persist->SaveURI(nsnull, nsnull, file);
+                persist->SaveURI(nsnull, nsnull, nsnull, nsnull, nsnull, file);
         }
     }
 }
@@ -826,7 +826,7 @@ void CBrowserView::OnSaveLinkAs()
         {
             nsCOMPtr<nsILocalFile> file;
             NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
-            persist->SaveURI(linkURI, nsnull, file);
+            persist->SaveURI(linkURI, nsnull, nsnull, nsnull, nsnull, file);
         }
     }
 }
@@ -872,7 +872,7 @@ void CBrowserView::OnSaveImageAs()
         {
             nsCOMPtr<nsILocalFile> file;
             NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
-            persist->SaveURI(linkURI, nsnull, file);
+            persist->SaveURI(linkURI, nsnull, nsnull, nsnull, nsnull, file);
         }
     }
 }

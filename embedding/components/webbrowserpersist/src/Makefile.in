@@ -38,6 +38,8 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  intl \
 		  unicharutil \
+		  docshell \
+		  shistory \
 		  $(NULL)
 
 CPPSRCS		= nsWebBrowserPersist.cpp \

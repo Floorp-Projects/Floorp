@@ -74,7 +74,8 @@ protected:
     nsresult CloneNodeWithFixedUpURIAttributes(
         nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
-        nsIURI *aURI, nsIInputStream *aPostData, nsIURI *aFile,
+        nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
+        nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
         PRBool aCalcFileExt);
     nsresult SaveDocumentInternal(
         nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);

@@ -33,7 +33,7 @@ interface nsILocalFile;
  */
 
 /**
- * Interface for persisting DOM documents and URIs to local storage.
+ * Interface for persisting DOM documents and URIs to local or remote storage.
  */
 [scriptable, uuid(814ba433-a816-4785-9f95-ad3ba0a43dab)]
 interface nsIWebBrowserPersist : nsISupports
@@ -63,7 +63,11 @@ interface nsIWebBrowserPersist : nsISupports
   /** Force serialization of output (one file at a time; not concurrent) */
   const unsigned long PERSIST_FLAGS_SERIALIZE_OUTPUT = 1024;
 
-  /** Flags governing how data is fetched from the network. */
+  /**
+   * Flags governing how data is fetched and saved from the network. 
+   * It is best to set this value explicitly unless you are prepared
+   * to accept the default values.
+   */
   attribute unsigned long persistFlags;
     
   /** Persister is ready to save data */
@@ -105,17 +109,28 @@ interface nsIWebBrowserPersist : nsISupports
    * @param aURI       URI to save to file. Some implementations of this interface
    *                   may also support <CODE>nsnull</CODE> to imply the currently
    *                   loaded URI.
-   * @param aPostData  Data to pass with in an HTTP request or nsnull.
-   * @param aFile      Target local file. This may be a nsILocalFile object or an
-   *                   nsIURI object with a file scheme.
+   * @param aCacheKey  An object representing the URI in the cache or
+   *                   <CODE>nsnull</CODE>.
+   * @param aReferrer  The referrer URI to pass with an HTTP request or
+   *                   <CODE>nsnull</CODE>.
+   * @param aPostData  Post data to pass with an HTTP request or
+   *                   <CODE>nsnull</CODE>.
+   * @param aExtraHeaders Additional headers to supply with an HTTP request
+   *                   or <CODE>nsnull</CODE>.
+   * @param aFile      Target file. This may be a nsILocalFile object or an
+   *                   nsIURI object with a file scheme or a scheme that
+   *                   supports uploading (e.g. ftp).
    *
    * @see nsILocalFile
    * @see nsIURI
+   * @see nsIInputStream
    *
    * @return NS_OK Operation has been started.
    * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in nsISupports aFile);
+  void saveURI(in nsIURI aURI, in nsISupports aCacheKey,
+      in nsIURI aReferrer, in nsIInputStream aPostData,
+      in string aExtraHeaders, in nsISupports aFile);
 
   /** Output only the current selection as opposed to the whole document. */
   const unsigned long ENCODE_FLAGS_SELECTION_ONLY = 1;
@@ -197,7 +212,8 @@ interface nsIWebBrowserPersist : nsISupports
    *                           this interface may also support <CODE>nsnull</CODE>
    *                           to imply the currently loaded document.
    * @param aFile              Target local file. This may be a nsILocalFile object or an
-   *                           nsIURI object with a file scheme.
+   *                           nsIURI object with a file scheme or a scheme that
+   *                           supports uploading (e.g. ftp).
    * @param aDataPath          Path to directory where URIs linked to the document
    *                           are saved or nsnull if no linked URIs should be saved.
    *                           This may be a nsILocalFile object or an nsIURI object

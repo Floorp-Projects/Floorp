@@ -404,7 +404,7 @@ nsresult CHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsILocalFil
     
   if (sourceURI)
   {
-    rv = webPersist->SaveURI(sourceURI, mPostData, inDestFile);
+    rv = webPersist->SaveURI(sourceURI, nsnull, nsnull, mPostData, nsnull, inDestFile);
   }
   else
   {

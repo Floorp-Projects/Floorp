@@ -890,8 +890,12 @@ NS_IMETHODIMP nsWebBrowser::SetProgressListener(nsIWebProgressListener * aProgre
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in nsISupports aFile); */
-NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsISupports *aFile)
+/* void saveURI (in nsIURI aURI, in nsIURI aReferrer,
+   in nsISupports aCacheKey, in nsIInputStream aPostData, in wstring aExtraHeaders,
+   in nsISupports aFile); */
+NS_IMETHODIMP nsWebBrowser::SaveURI(
+    nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer, nsIInputStream *aPostData,
+    const char *aExtraHeaders, nsISupports *aFile)
 {
     if (mPersist)
     {
@@ -929,7 +933,7 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsI
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
-    rv = mPersist->SaveURI(uri, aPostData, aFile);
+    rv = mPersist->SaveURI(uri, aCacheKey, aReferrer, aPostData, aExtraHeaders, aFile);
     if (NS_FAILED(rv))
     {
         mPersist = nsnull;

@@ -394,7 +394,7 @@ function onLoad() {
       
       try {
         var uri = persistArgs.source.QueryInterface(Components.interfaces.nsIURI);
-        webBrowserPersist.saveURI(uri, persistArgs.postData, targetFile);
+        webBrowserPersist.saveURI(uri, null, null, persistArgs.postData, null, targetFile);
       }
       catch (e) {
         // Saving a Document, not a URI:
