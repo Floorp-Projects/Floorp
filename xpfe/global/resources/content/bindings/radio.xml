@@ -142,7 +142,6 @@
         <![CDATA[
           var currentElement = this.focusedItem;
           // If focused item isn't a radio button, do nothing!
-          // (This allows textbox to work inside a radiogroup)
           if (!currentElement)
             return;
           var index, i;
@@ -279,7 +278,7 @@
            using the arrow keys. Accessing previous or following radio buttons
            is done solely through the arrow keys and not the tab button. Tab
            takes you to the next widget in the tab order -->
-      <handler event="keypress" key=" ">
+      <handler event="keypress" key=" " phase="target">
          this.selectedItem = this.focusedItem;
          this.selectedItem.doCommand();
       </handler>
@@ -305,11 +304,9 @@
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
       <handler event="focus" phase="target">
-        if (event.target == this) {
-          this.setAttribute("focused", "true");
-          if (!this.focusedItem)
-            this.focusedItem = this.selectedItem;
-        }
+        this.setAttribute("focused", "true");
+        if (!this.focusedItem)
+          this.focusedItem = this.selectedItem;
       </handler>
       <handler event="blur" phase="target">
         this.removeAttribute("focused");
