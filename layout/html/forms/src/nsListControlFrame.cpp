@@ -26,7 +26,6 @@
 #include "nsLineBox.h"
 
 #include "nsLineLayout.h"
-#include "nsInlineReflow.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
