@@ -1452,7 +1452,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 							PR_FREEIF (attribName);
 							return status;
 						}
-						status = WriteLineToStream (obj, attribName, PR_TRUE);
+						status = WriteLineToStream (obj, attribName, PR_FALSE);
 						if (status < 0) {
 							PR_FREEIF (attribName);
 							return status;
