@@ -14,5 +14,6 @@
 <!ENTITY  links "Links">
 <!ENTITY  unvisit "Unvisited Links:">
 <!ENTITY  visit "Visited Links:">
-<!ENTITY  someProvColors "Many documents provide their own colors and background.">
-<!ENTITY  alwaysOverCheck.label "Always use my colors, overriding document">
+<!ENTITY  someProvColors "When a webpage provides its own colors and background:">
+<!ENTITY  alwaysUseDocColors.label "use the colors and background supplied by the webpage">
+<!ENTITY  ignoreDocColors.label "use my chosen colors, ignoring the colors provided">
