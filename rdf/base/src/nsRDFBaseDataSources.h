@@ -29,9 +29,13 @@
 class nsIRDFDataSource;
 class nsIRDFDataBase;
 
+#ifdef _WIN32
 // in nsMemoryDataSource.cpp
 nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
-
+#else
+// in nsMemoryDataSource.cpp
+nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
+#endif
 // in nsSimpleDataBase.cpp
 nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
 
