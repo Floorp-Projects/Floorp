@@ -3502,13 +3502,13 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
         aContentOffset = indx + mContentOffset;
         //reusing wordBufMem
         PRInt32 i;
-        for (i = 0;i <= mContentLength; i ++){
+        for (i = 0; i < mContentLength; i ++){
           if ((ip[i] >= aContentOffset) && //reverse mapping
               (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset]))) {
-              aContentOffset = i + mContentOffset;
               break;
           }
         }
+        aContentOffset = i + mContentOffset;
 #ifdef IBMBIDI
         PRInt32 bidiStopOffset = mContentOffset + mContentLength;
 
