@@ -5,11 +5,7 @@ var recordNum = 0;
 var amAtEnd = false;
 var addInterface = null;
 var dialogResult = null;
-var dragStart = false;
-var dragData = null;
-
-var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
+var gListbox;
 
 function OnLoadFieldMapImport()
 {
@@ -32,35 +28,13 @@ function OnLoadFieldMapImport()
 
   doSetOKCancel( FieldImportOKButton, 0);
 
+  gListbox = document.getElementById("fieldList");
   ListFields();
   OnNextRecord();
+
+  // childNodes includes the listcols and listhead
+  gListbox.selectedItem = gListbox.childNodes[2];
 }
-
-function SetDivText(id, text)
-{
-  var div = document.getElementById(id);
-
-  if ( div )
-  {
-    if ( div.childNodes.length == 0 )
-    {
-      var textNode = document.createTextNode(text);
-      div.appendChild(textNode);
-    }
-    else if ( div.childNodes.length == 1 )
-      div.childNodes[0].nodeValue = text;
-  }
-}
-
-
-function FieldSelectionChanged()
-{
-  var tree = document.getElementById('fieldList');
-  if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
-  {
-  }
-}
-
 
 function IndexInMap( index)
 {
@@ -78,346 +52,158 @@ function ListFields() {
   if (top.fieldMap == null)
     return;
 
-  var body = document.getElementById("fieldBody");
   var count = top.fieldMap.mapSize;
   var index;
   var i;
   for (i = 0; i < count; i++) {
     index = top.fieldMap.GetFieldMap( i);
-    AddFieldToList( body, top.fieldMap.GetFieldDescription( index), index, top.fieldMap.GetFieldActive( i));
+    AddFieldToList( gListbox, top.fieldMap.GetFieldDescription( index), index, top.fieldMap.GetFieldActive( i));
   }
 
   count = top.fieldMap.numMozFields;
   for (i = 0; i < count; i++) {
     if (!IndexInMap( i))
-      AddFieldToList( body, top.fieldMap.GetFieldDescription( i), i, false);
+      AddFieldToList( gListbox, top.fieldMap.GetFieldDescription( i), i, false);
   }
 }
 
-
-function CreateField( name, index, on, cBoxIndex)
+function CreateField( name, index, on)
 {
-  var item = document.createElement('treeitem');
-  var row = document.createElement('treerow');
-  var cell = document.createElement('treecell');
-  cell.setAttribute('label', name);
+  var item = document.createElement('listitem');
   item.setAttribute('field-index', index);
-
-  var cCell = document.createElement( 'treecell');
-  var cBox = document.createElement( 'checkbox');
+  var cell = document.createElement('listcell');
+  var cCell = document.createElement( 'listcell');  
+  cCell.setAttribute('type', "checkbox");
+  cCell.setAttribute( 'label', name);
   if (on == true)
-    cBox.setAttribute( 'checked', "true");
-  cBox.setAttribute( 'label', name);
-
-  cCell.appendChild( cBox);
-  cCell.setAttribute( 'allowevents', "true");
-
-  row.appendChild( cCell);
-  /* row.appendChild(cell); */
-
-  cell = document.createElement( 'treecell');
+    cCell.setAttribute( 'checked', "true");
+  item.appendChild( cCell);
   cell.setAttribute( "class", "importsampledata");
   cell.setAttribute( 'label', " ");
-  cell.setAttribute( 'noDrag', "true");
-
-  row.appendChild( cell);
-
-  item.appendChild(row);
-
+  item.appendChild( cell);
   return( item);
 }
 
-function AddFieldToList(body, name, index, on)
+function AddFieldToList(list, name, index, on)
 {
-  var item = CreateField( name, index, on, body.childNodes.length);
-  body.appendChild(item);
+  var item = CreateField(name, index, on);
+  list.appendChild(item);
 }
 
-function BeginDrag( event)
+function itemSelected()
 {
-  top.dragStart = false;
-
-  var tree = document.getElementById("fieldList");
-  if ( event.target == tree ) {
-    return( true);          // continue propagating the event
-  }
-
-  if (!tree) {
-    return false;
-  }
-
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
-  trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-  
-  var genData = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
-  if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
-  if (!genData) {
-    return false;
-  }
-
-    // trans.addDataFlavor( "text/unicode");
-    trans.addDataFlavor( top.transferType);
-
-  // the index is on the <treeitem> which is two levels above the <treecell> which is
-  // the target of the event.
-  if (event.target.getAttribute( 'noDrag') == "true") {
-    return( false);
-  }
-
-  var index = event.target.parentNode.parentNode.getAttribute("field-index");
-  if (!index)
-    index = event.target.parentNode.parentNode.parentNode.getAttribute( "field-index");
-  if (!index)
-    return( false);
-
-  var indexStr = ("" + index);
-  genData.data = indexStr;
-
-  // trans.setTransferData ( "text/unicode", genData, indexStr.length * 2);
-  trans.setTransferData ( top.transferType, genData, indexStr.length * 2);
-
-  var transArray = Components.classes["@mozilla.org/supports-array;1"].createInstance();
-  if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
-  if ( !transArray )  {
-    return false;
-  }
-
-  // put it into the transferable as an |nsISupports|
-  var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-  transArray.AppendElement(genTrans);
-
-  var nsIDragService = Components.interfaces.nsIDragService;
-  top.dragStart = true;
-
-  gDragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_MOVE);
-
-  return( false);  // don't propagate the event if a drag has begun
+  if (gListbox.selectedIndex < 0)
+    return;
+  var on = gListbox.selectedItem.firstChild.getAttribute('checked');
+  if (on == "true")
+    gListbox.selectedItem.firstChild.setAttribute('checked', "false");
+  else
+    gListbox.selectedItem.firstChild.setAttribute('checked', "true");
 }
 
+// the "Move Up/Move Down" buttons should move the items in the left column
+// up/down but the values in the right column should not change.
 
-function SetRow( row, dstIndex, dstBox, dstField)
+function moveUpListItem()
 {
-  row.setAttribute( 'field-index', dstIndex);
-  if (dstBox == true) {
-    row.firstChild.firstChild.firstChild.checked = true;
+
+  // childNodes and removeItem includes the listcols and listhead
+  // while the selectedIndex and ensureIndexIsVisible doesnot.
+  var selectedIndex = gListbox.selectedIndex;
+  if (selectedIndex < 1)
+    return;
+
+  // get the attributes of the selectedItem and remove it.
+  var name = gListbox.selectedItem.firstChild.getAttribute('label');
+  var selectedItemValue = gListbox.selectedItem.childNodes[1].getAttribute('label');
+  var index = gListbox.selectedItem.getAttribute('field-index');
+  var on = gListbox.selectedItem.firstChild.getAttribute('checked');
+  gListbox.removeItemAt(selectedIndex + 2);
+
+  // create a new item with the left column fields set.
+  var item;
+  if (on == "true")
+    item = CreateField(name, index, true);
+  else
+    item = CreateField(name, index, false);
+
+  // previousItem is the item above the selectedItem.
+  // the index of the previous item is selectedIndex+1 instead of 
+  // selectedIndex-1 because, the childNodes include listcols and listhead
+  // which makes it selectedIndex -1 + 2 = selectedIndex+1
+  // Insert the newly created item before the previousItem.
+  var previousItem = gListbox.childNodes[selectedIndex+1];
+  var previousItemValue = previousItem.childNodes[1].getAttribute('label');
+  gListbox.insertBefore(item, previousItem);
+
+  // set the selectedItem and make sure it is visible.
+  gListbox.ensureIndexIsVisible(selectedIndex-1);
+  gListbox.selectedItem = gListbox.childNodes[selectedIndex+1];
+
+  // set the values in the right column such that the selectedItem has the value at that index.
+  gListbox.childNodes[selectedIndex+2].childNodes[1].setAttribute('label', selectedItemValue);
+  gListbox.selectedItem.childNodes[1].setAttribute('label', previousItemValue);
+}
+
+function moveDownListItem()
+{
+  // childNodes and removeItem includes the listcols and listhead
+  // while the selectedIndex and ensureIndexIsVisible doesnot.
+  var selectedIndex = gListbox.selectedIndex;
+  if (selectedIndex < 0 || (selectedIndex > (gListbox.childNodes.length - 4)))
+    return;
+
+  // get the attributes of the selectedItem and remove it.
+  var name = gListbox.selectedItem.firstChild.getAttribute('label');
+  var selectedItemName = gListbox.selectedItem.childNodes[1].getAttribute('label');
+  var index = gListbox.selectedItem.getAttribute('field-index');
+  var on = gListbox.selectedItem.firstChild.getAttribute('checked');
+  gListbox.removeItemAt(selectedIndex + 2);
+
+  // create a new item with the left column fields set.
+  var item;
+  if (on == "true")
+    item = CreateField(name, index, true);
+  else
+    item = CreateField(name, index, false);
+
+  // nextItemValue is the value of the item below the selectedItem.
+  // the index of the nextitem is selectedIndex+2 instead of 
+  // selectedIndex+1 because, the childNodes include listcols and listhead 
+  // which makes it selectedIndex + 3 and we removed the  selected item
+  // which make it selectedIndex + 2
+  var nextItemValue = gListbox.childNodes[selectedIndex+2].childNodes[1].getAttribute('label');
+
+  // now we need to insert the newly created item after the selectedIndex+2
+  // i.e. before selectedIndex+3
+  // Check if the item we are trying to move down is last but one item
+  // then append the item at the end.
+  if (selectedIndex > gListbox.childNodes.length-4) {
+    gListbox.appendChild(item);
   }
   else {
-    row.firstChild.firstChild.firstChild.checked = false;
+    gListbox.insertBefore(item, gListbox.childNodes[selectedIndex+3]);
   }
 
-  /* row.firstChild.childNodes[1].setAttribute( "label", dstField); */
+  // set the selectedItem and make sure it is visible.
+  gListbox.ensureIndexIsVisible(selectedIndex+1);
+  gListbox.selectedItem = gListbox.childNodes[selectedIndex+3];
 
-  row.firstChild.firstChild.firstChild.setAttribute( 'label', dstField);
-}
-
-
-function AssignRow( toRow, fromRow)
-{
-  /*
-  SetRow( toRow,  fromRow.getAttribute( 'field-index'),
-          fromRow.firstChild.firstChild.firstChild.checked,
-          fromRow.firstChild.childNodes[1].getAttribute( "label"));
-  */
-  SetRow( toRow,  fromRow.getAttribute( 'field-index'),
-          fromRow.firstChild.firstChild.firstChild.checked,
-          fromRow.firstChild.firstChild.firstChild.getAttribute( "label"));
-}
-
-
-function FindRowFromIndex( body, index)
-{
-  for (var i = 0; i < body.childNodes.length; i++) {
-    if (body.childNodes[i].getAttribute( 'field-index') == index)
-      return( i);
-  }
-
-  return( -1);
-}
-
-function FindRowFromItem( body, item)
-{
-  for (var i = 0; i < body.childNodes.length; i++) {
-    if (body.childNodes[i] == item)
-      return( i);
-  }
-
-  return( -1);
-}
-
-function DropOnTree( event)
-{
-
-  var treeRoot = document.getElementById("fieldList");
-  if (!treeRoot)  return false;
-
-  // target is the <treecell>, and the <treeitem> is two levels above
-  var treeItem = event.target.parentNode.parentNode;
-  if (!treeItem)  return false;
-
-  // get drop hint attributes
-  var dropBefore = treeItem.getAttribute("dd-droplocation");
-  var dropOn = treeItem.getAttribute("dd-dropon");
-
-  // calculate drop action
-  var dropAction;
-  if (dropBefore == "true") dropAction = "before";
-  else if (dropOn == "true")  dropAction = "on";
-  else        dropAction = "after";
-
-  dump( "DropAction: " + dropAction + "\n");
-
-  // calculate parent container node
-  /* bookmarks.js uses this, not sure what it's for???
-  var containerItem = treeItem;
-  if (dropAction != "on")
-    containerItem = treeItem.parentNode.parentNode;
-  */
-
-  var dragSession = gDragService.getCurrentSession();
- 
-  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance();
-  if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
-  if ( !trans )   return false;
-  trans.addDataFlavor( top.transferType);
-  // trans.addDataFlavor( "text/unicode");
-
-  var body = document.getElementById( "fieldBody");
-  if (!body)
-    return( false);
-
-  for ( var i = 0; i < dragSession.numDropItems; ++i )
-  {
-    dragSession.getData ( trans, i );
-    var dataObj = new Object();
-    var bestFlavor = new Object();
-    var len = new Object();
-    try {
-      trans.getAnyTransferData( bestFlavor, dataObj, len);
-      if ( dataObj )  {
-        dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-      }
-      if ( !dataObj ) {
-        continue;
-      }
-
-      var fIndex = parseInt( dataObj.data);
-
-      dump( "Source row: " + fIndex + "\n");
-
-      // so now what, move the given row to the new position!
-      // find the source row index
-      var srcRow = FindRowFromIndex( body, fIndex);
-      if (srcRow < 0) {
-        dump( "*** Error finding source row\n");
-        continue;
-      }
-      var dstRow = FindRowFromItem( body, treeItem);
-      if (dstRow < 0) {
-        dump( "*** Error finding destination row\n");
-        continue;
-      }
-
-      // always do before unless we can't
-      if (dropAction == "on" || dropAction == "after") {
-        dstRow++;
-        if (dstRow >= body.childNodes.length) {
-          if (srcRow == (body.childNodes.length - 1))
-            continue;
-          dstRow = -1;
-        }
-      }
-
-      var maxIndex = body.childNodes.length - 1;
-      var dstBox = body.childNodes[srcRow].firstChild.firstChild.firstChild.checked;
-      var dstField = body.childNodes[srcRow].firstChild.firstChild.firstChild.getAttribute( 'label');
-      var dstIndex = body.childNodes[srcRow].getAttribute( 'field-index');
-
-      dump( "FieldDrag from " + srcRow + " to " + dstRow + "\n");
-
-      if (dstRow < 0) {
-        // remove the row and append it to the end!
-        // Move srcRow to the end!
-        while (srcRow < maxIndex) {
-          AssignRow( body.childNodes[srcRow], body.childNodes[srcRow + 1]);
-          srcRow++;
-        }
-
-        SetRow( body.childNodes[maxIndex], dstIndex, dstBox, dstField);
-      }
-      else {
-        if (dstRow == srcRow)
-          continue;
-        if (srcRow < dstRow)
-          dstRow--;
-        if (dstRow == srcRow)
-          continue;
-
-        if (dstRow < srcRow) {
-          // move dstRow down to srcRow
-          while (dstRow < srcRow) {
-            AssignRow( body.childNodes[srcRow], body.childNodes[srcRow - 1]);
-            srcRow--;
-          }
-        }
-        else {
-          // move dstRow up to srcRow
-          while (srcRow < dstRow) {
-            AssignRow( body.childNodes[srcRow], body.childNodes[srcRow + 1]);
-            srcRow++;
-          }
-        }
-        SetRow( body.childNodes[dstRow], dstIndex, dstBox, dstField);
-      }
-
-    }
-    catch( ex) {
-      dump( "Caught drag exception in DropOnTree\n");
-      dump( ex);
-      dump( "\n");
-    }
-  }
-
-  return false;
-}
-
-
-function DragOverTree(event)
-{
-  if (!top.dragStart)
-    return;
-
-  var validFlavor = false;
-
-  var dragSession = gDragService.getCurrentSession();
-
-  if ( dragSession.isDataFlavorSupported( top.transferType) ) 
-    validFlavor = true;
- 
-  if (event.target == document.getElementById( "fieldBody")) 
-    return;
-    
-  // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
-  if ( validFlavor )
-  {
-    //XXX this is really slow and likes to refresh N times per second.
-    var rowGroup = event.target.parentNode.parentNode;
-    rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
-    dragSession.canDrop = true;
-  }
+  // set the values in the right column such that the selectedItem has the value at that index.
+  gListbox.childNodes[selectedIndex+2].childNodes[1].setAttribute('label', selectedItemName);
+  gListbox.selectedItem.childNodes[1].setAttribute('label', nextItemValue);
 }
 
 function ShowSampleData( data)
 {
-  var fBody = document.getElementById( "fieldBody");
   var fields = data.split( "\n");
-  for (var i = 0; i < fBody.childNodes.length; i++) {
+  // childNodes includes the listcols and listhead
+  for (var i = 0; i < gListbox.childNodes.length - 2; i++) {
     if (i < fields.length) {
-      // fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'label', fields[i]);
-      fBody.childNodes[i].firstChild.childNodes[1].setAttribute( 'label', fields[i]);
+      gListbox.childNodes[i+2].childNodes[1].setAttribute( 'label', fields[i]);
     }
     else {
-      // fBody.childNodes[i].firstChild.childNodes[2].setAttribute( 'label', " ");
-      fBody.childNodes[i].firstChild.childNodes[1].setAttribute( 'label', " ");
+      gListbox.childNodes[i+2].childNodes[1].setAttribute( 'label', " ");
     }
   }
 
@@ -470,15 +256,15 @@ function OnNextRecord()
 
 function FieldImportOKButton()
 {
-  var body = document.getElementById( "fieldBody");
-  var max = body.childNodes.length;
+  // childNodes includes the listcols and listhead
+  var max = gListbox.childNodes.length - 2;
   var fIndex;
   var on;
   for (var i = 0; i < max; i++) {
-    fIndex = body.childNodes[i].getAttribute( 'field-index');
-    on = body.childNodes[i].firstChild.firstChild.firstChild.checked;
+    fIndex = gListbox.childNodes[i+2].getAttribute( 'field-index');
+    on = gListbox.childNodes[i+2].firstChild.getAttribute('checked');
     top.fieldMap.SetFieldMap( i, fIndex);
-    if (on == true)
+    if (on == "true")
       top.fieldMap.SetFieldActive( i, true);
     else
       top.fieldMap.SetFieldActive( i, false);

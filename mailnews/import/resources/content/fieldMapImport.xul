@@ -31,51 +31,58 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&fieldMapImport.title;"
         class="dialog"
+        width="&fieldMapImport.width;"
+        height="&fieldMapImport.height;"
         onload="OnLoadFieldMapImport()">
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
   <keyset id="dialogKeys"/>
 
-  <!-- field list -->
-  <vbox id="fieldList-box">
-    <tree id="fieldList" flex="1"
-        ondragover="DragOverTree(event);"
-        ondraggesture="BeginDrag(event);"
-        ondragdrop="DropOnTree(event);">
-      <treecolgroup>
-        <treecol flex="35" style="width:0px"/>
-        <treecol flex="65" id="dataColumn" style="width:0px"/>
-      </treecolgroup>
-
-      <treehead>
-        <treerow id="headRow">
-          <treecell id="fieldNameHeader" label="&fieldMapImport.fieldListTitle;"/>
-          <treecell id="sampleDataHeader" label="&fieldMapImport.dataTitle;"/>
-        </treerow>
-      </treehead>
-
-      <treechildren id="fieldBody" flex="1"/>
-    </tree>
-  </vbox>
-  
-  <spacer style="height: .5em"/>
-
   <hbox>
-    <spacer flex="50%"/>
-    <button id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
-    <spacer style="width: 2em"/>
     <label value="&fieldMapImport.recordNumber;"/>
-    <spacer style="width: 1em"/>
     <label id="recordNumber"/>
-    <spacer style="width: 2em"/>
-    <button id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
-    <spacer flex="50%"/>    
+    <spacer flex="1"/>
+    <button id="previous" oncommand="OnPreviousRecord()"
+            label="&fieldMapImport.previous;"
+            accesskey="&fieldMapImport.previous.accesskey;"/>
+    <button id="next" oncommand="OnNextRecord()" 
+            label="&fieldMapImport.next;"
+            accesskey="&fieldMapImport.next.accesskey;"/>      
   </hbox>
 
-  <spacer style="height: 2em"/>
+  <separator class="thin"/>
+  <description>&fieldMapImport.text;</description>
+  <separator class="thin"/>
 
+  <!-- field list -->
+  <hbox>
+    <vbox>
+      <spacer flex="50%"/>
+      <button id="upButton" label="&fieldMapImport.up;"
+              accesskey="&fieldMapImport.up.accesskey;"
+              oncommand="moveUpListItem();"/>
+      <button id="downButton" label="&fieldMapImport.down;"
+              accesskey="&fieldMapImport.down.accesskey;"
+              oncommand="moveDownListItem();"/>
+      <spacer flex="50%"/>
+    </vbox>
+    <listbox id="fieldList" flex="1" onclick="itemSelected();">
+      <listcols>
+        <listcol flex="35%"/>
+        <listcol flex="65%"/>
+      </listcols>
+
+      <listhead>
+        <listheader id="fieldNameHeader" label="&fieldMapImport.fieldListTitle;"/>
+        <listheader id="sampleDataHeader" label="&fieldMapImport.dataTitle;"/>
+      </listhead>
+    </listbox>
+  </hbox>
+  
+  <separator/>
+  
   <!-- OK & Cancel buttons -->
-  <hbox id="okCancelButtons"/>
+  <hbox id="okCancelButtonsRight"/>
 
 </window>

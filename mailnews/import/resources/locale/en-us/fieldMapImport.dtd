@@ -19,9 +19,19 @@ Rights Reserved.
 --> 
 
 <!ENTITY fieldMapImport.title "Import Address Book">
-<!ENTITY fieldMapImport.recordNumber "Record:">
+<!ENTITY fieldMapImport.width "440">
+<!ENTITY fieldMapImport.height "360">
+<!ENTITY fieldMapImport.recordNumber "Imported data for Record: ">
 <!ENTITY fieldMapImport.next "Next">
+<!ENTITY fieldMapImport.next.accesskey "N">
 <!ENTITY fieldMapImport.previous "Previous">
-<!ENTITY fieldMapImport.fieldListTitle "Address Book fields:">
-<!ENTITY fieldMapImport.dataTitle "Record data to import:">
+<!ENTITY fieldMapImport.previous.accesskey "P">
+<!ENTITY fieldMapImport.text "Use Move Up and Move Down to match the address book fields on the left to the correct data for import on the right. Uncheck items you do not want to import.">
+<!ENTITY fieldMapImport.up "Move Up">
+<!ENTITY fieldMapImport.up.accesskey "M">
+<!ENTITY fieldMapImport.down "Move Down">
+<!ENTITY fieldMapImport.down.accesskey "o">
+<!ENTITY fieldMapImport.fieldListTitle "Address Book fields">
+<!ENTITY fieldMapImport.dataTitle "Record data to import">
+
 
