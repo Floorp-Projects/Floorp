@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/07/20 19:04:55 $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/07/27 20:42:56 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -127,10 +127,19 @@ $VERSION = '#tinder_version#';
 # perl code.
 
 # module: Although VC_CVS ignores this variable you should still set
-# it because it is clearer (a tree is supposed to map to a module) and
-# for practical reasons (the VC_Display may use it an CVS may allow
-# proper use in the future).
+# it because it is clearer (a tree is supposed to map to a module and
+# branch) and for practical reasons (the VC_Display may use it an CVS
+# may allow proper use in the future).
 
+
+#------------------------------------------------------------------
+
+# Bonsai specific information.
+
+# Bonsai designates one tree to be the default tree and stores its
+# state (open/closed) in a different directory.  We note this tree by
+# adding an elment to the hash 'is_bonsai_default' which is set for
+# this tree.
 
 #------------------------------------------------------------------
 
@@ -155,7 +164,9 @@ $VERSION = '#tinder_version#';
 #
 #			  module => 'SeaMonkeyAll',
 #			  branch => 'main',
-#                          dir_pattern => '^/mozilla',
+#                         dir_pattern => '^/mozilla',
+#                         is_bonsai_default => 1,
+
 #			 },
 
 	    # these are dummy trees for testing.	    
