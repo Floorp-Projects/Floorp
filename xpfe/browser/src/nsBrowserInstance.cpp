@@ -196,7 +196,6 @@ nsBrowserAppCore::nsBrowserAppCore() : mIsClosed(PR_FALSE)
   mContentAreaWebShell  = nsnull;
   mContentAreaDocLoader = nsnull;
   mSHistory             = nsnull;
-  mIsViewSource         = PR_FALSE;
   mIsLoadingHistory     = PR_FALSE;
   NS_INIT_REFCNT();
 }
@@ -917,13 +916,10 @@ nsBrowserAppCore::LoadUrl(const PRUnichar * urlToLoad)
      SetLoadingFlag(PR_FALSE);
   }
   /* Ask nsWebShell to load the URl */
-  if ( mIsViewSource ) {
-    // Viewing source, load with "view-source" command.
-    rv = mContentAreaWebShell->LoadURL( urlToLoad, "view-source", nsnull, PR_FALSE );
-  } else {
-    // Normal browser.
-    rv = mContentAreaWebShell->LoadURL( urlToLoad );
-  }
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaWebShell));
+    
+  // Normal browser.
+  rv = webNav->LoadURI( urlToLoad );
 
   return rv;
 }
@@ -2275,24 +2271,6 @@ nsBrowserAppCore::SelectAll()
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsBrowserInstance::GetIsViewSource(PRBool *aBool) {
-    nsresult rv = NS_OK;
-    if ( aBool ) {
-        *aBool = mIsViewSource;
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsBrowserInstance::SetIsViewSource(PRBool aBool) {
-    nsresult rv = NS_OK;
-    mIsViewSource = aBool;
-    return rv;
 }
 
 // nsIURIContentListener support
