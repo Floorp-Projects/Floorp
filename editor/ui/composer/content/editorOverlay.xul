@@ -49,13 +49,11 @@
     <key id="cutkb"         disabled="false" xulkey="true" key="x" observes="Editor:Cut" />
     <key id="copykb"        disabled="false" xulkey="true" key="c" observes="Editor:Copy" />
     <key id="pastekb"       disabled="false" xulkey="true" key="v" observes="Editor:Paste" />
-    <key id="pastequotationkb" disabled="false" xulkey="true" alt="true" key="v" observes="Editor:PasteQuote" />
+    <key id="pastequotationkb" disabled="false" xulkey="true" shift="true" key="v" observes="Editor:PasteQuote" />
     <key id="selectallkb"   disabled="false" xulkey="true" key="a" observes="Editor:SelectAll" />
     <key id="findkb"        disabled="false" xulkey="true" key="f" observes="Editor:Find" />
     <key id="findnextkb"    disabled="false" xulkey="true" key="g" observes="Editor:FindNext" />
     <key id="checkspellingkb" disabled="false" xulkey="true" key="k" observes="Editor:CheckSpelling" />
-
-    <key id="inserthtmlkb"  disabled="false" xulkey="true" alt="true"  key="i" observes="Editor:InsertHTML"/>
 
     <key id="boldkb"        disabled="false" xulkey="true" key="b" observes="Editor:Bold"/>
     <key id="italickb"      disabled="false" xulkey="true" key="i" observes="Editor:Italic"/>
