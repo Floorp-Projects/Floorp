@@ -227,6 +227,7 @@ public:
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEOpenState(PRBool aState);
     NS_IMETHOD GetIMEOpenState(PRBool* aState);
+    NS_IMETHOD CancelIMEComposition();
 
 protected:
 

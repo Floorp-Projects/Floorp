@@ -2355,6 +2355,10 @@ NS_IMETHODIMP nsWidget::GetIMEOpenState(PRBool* aState) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsWidget::CancelIMEComposition() {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* virtual */
 GtkWindow *nsWidget::GetTopLevelWindow(void)
 {

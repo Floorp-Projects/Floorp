@@ -2104,29 +2104,34 @@ nsEditor::NotifyIMEOnFocus()
 {
   mNeedRecoverIMEOpenState = PR_FALSE;
 
-  if(gDontCareForIMEOnFocusPassword
-      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
-    return NS_OK;
-
   nsCOMPtr<nsIKBStateControl> kb;
   nsresult res = GetKBStateControl(getter_AddRefs(kb));
   if (NS_FAILED(res))
     return res;
 
-  if (kb) {
-    PRBool isOpen;
-    res = kb->GetIMEOpenState(&isOpen);
+  if (!kb)
+    return NS_OK;
+
+  res = kb->CancelIMEComposition();
+  if (NS_FAILED(res))
+    kb->ResetInputState();
+
+  if(gDontCareForIMEOnFocusPassword
+      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
+    return NS_OK;
+
+  PRBool isOpen;
+  res = kb->GetIMEOpenState(&isOpen);
+  if (NS_FAILED(res)) 
+    return res;
+
+  if (isOpen) {
+    res = kb->SetIMEOpenState(PR_FALSE);
     if (NS_FAILED(res)) 
       return res;
-
-    if (isOpen) {
-      res = kb->SetIMEOpenState(PR_FALSE);
-      if (NS_FAILED(res)) 
-        return res;
-    }
-
-    mNeedRecoverIMEOpenState = isOpen;
   }
+
+  mNeedRecoverIMEOpenState = isOpen;
 
   return NS_OK;
 }

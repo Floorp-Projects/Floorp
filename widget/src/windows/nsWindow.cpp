@@ -6554,7 +6554,7 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState)
 {
 #ifdef DEBUG_KBSTATE
-  printf("SetImeOpenState %s\n", (aState ? "Open" : "Close"));
+  printf("SetIMEOpenState %s\n", (aState ? "Open" : "Close"));
 #endif 
   HIMC hIMC;
   NS_IMM_GETCONTEXT(mWnd, hIMC);
@@ -6577,6 +6577,22 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
     NS_IMM_RELEASECONTEXT(mWnd, hIMC);
   } else 
     *aState = PR_FALSE;
+  return NS_OK;
+}
+
+//==========================================================================
+NS_IMETHODIMP nsWindow::CancelIMEComposition()
+{
+#ifdef DEBUG_KBSTATE
+  printf("CancelIMEComposition\n");
+#endif 
+  HIMC hIMC;
+  NS_IMM_GETCONTEXT(mWnd, hIMC);
+  if (hIMC) {
+    BOOL ret = FALSE;
+    NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_CANCEL, NULL, ret);
+    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
+  }
   return NS_OK;
 }
 
