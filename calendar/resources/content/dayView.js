@@ -164,7 +164,9 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
       dayEventList[i].NumberOfSameTimeEvents = 0;
       if( dayEventList[i].event.allDay != true )
       {
-         var ThisLowestStartHour = dayEventList[0].displayDate.getHours();
+         var displayDateObject = new Date( dayEventList[i].displayDate );
+         var ThisLowestStartHour = displayDateObject.getHours();
+         
          if( ThisLowestStartHour < LowestStartHour ) 
             LowestStartHour = ThisLowestStartHour;
          
@@ -203,14 +205,14 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
             thisCalendarEventDisplay = dayEventList[j];
    
             //if this event overlaps with another event...
-            if ( ( ( thisCalendarEventDisplay.event.displayDate >= calendarEventDisplay.event.displayDate &&
-                 thisCalendarEventDisplay.event.displayDate < calendarEventDisplay.event.end.getTime() ) ||
+            if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
+                 thisCalendarEventDisplay.displayDate < calendarEventDisplay.event.end.getTime() ) ||
                   ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
-                 calendarEventDisplay.event.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
+                 calendarEventDisplay.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
                  calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id &&
                  thisCalendarEventDisplay.event.allDay != true )
             {
-                  //get the spot that this event will go in.
+               //get the spot that this event will go in.
                var ThisSpot = thisCalendarEventDisplay.CurrentSpot;
                
                calendarEventDisplay.OtherSpotArray.push( ThisSpot );
@@ -308,8 +310,9 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
 */
 DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay )
 {
-   var startHour = calendarEventDisplay.displayDate.getHours();
-   var startMinutes = calendarEventDisplay.displayDate.getMinutes();
+   var displayDateObject = new Date( calendarEventDisplay.displayDate );
+   var startHour = displayDateObject.getHours();
+   var startMinutes = displayDateObject.getMinutes();
 
    var eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
    

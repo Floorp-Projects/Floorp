@@ -270,8 +270,8 @@ CalendarEventDataSource.prototype.getEventsForDay = function calEvent_getEventsF
       
       EventObject.event = tmpevent.event;
       
-      EventObject.displayDate = new Date( tmpevent.displayDate );
-      EventObject.displayEndDate = new Date( tmpevent.displayEndDate );
+      EventObject.displayDate = tmpevent.displayDate;
+      EventObject.displayEndDate = tmpevent.displayEndDate;
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
@@ -308,8 +308,8 @@ CalendarEventDataSource.prototype.getEventsForWeek = function calEvent_getEvents
       
       EventObject.event = tmpevent.event;
       
-      EventObject.displayDate = new Date( tmpevent.displayDate );
-      EventObject.displayEndDate = new Date( tmpevent.displayEndDate );
+      EventObject.displayDate = tmpevent.displayDate;
+      EventObject.displayEndDate = tmpevent.displayEndDate;
 
       eventDisplays[ eventDisplays.length ] = EventObject;
    }

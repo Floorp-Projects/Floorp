@@ -179,7 +179,7 @@ WeekView.prototype.refreshEvents = function( )
 	      dayEventList[i].NumberOfSameTimeEvents = 0;
 	      if( dayEventList[i].event.allDay != true )
 	      {
-	         var ThisLowestStartHour = new Date( dayEventList[i].displayDate.getTime() );
+	         var ThisLowestStartHour = new Date( dayEventList[i].displayDate );
 	         if( ThisLowestStartHour.getHours() < LowestStartHour ) 
 	            LowestStartHour = ThisLowestStartHour.getHours();
 	         
@@ -267,10 +267,10 @@ WeekView.prototype.refreshEvents = function( )
                var thisCalendarEventDisplay = dayEventList[j];
    
                //if this event overlaps with another event...
-               if ( ( ( thisCalendarEventDisplay.event.displayDate >= calendarEventDisplay.event.displayDate &&
-                    thisCalendarEventDisplay.event.displayDate < calendarEventDisplay.event.end.getTime() ) ||
-                     ( calendarEventDisplay.event.displayDate >= thisCalendarEventDisplay.event.displayDate &&
-                    calendarEventDisplay.event.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
+               if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
+                    thisCalendarEventDisplay.displayDate < calendarEventDisplay.event.end.getTime() ) ||
+                     ( calendarEventDisplay.displayDate >= thisCalendarEventDisplay.displayDate &&
+                    calendarEventDisplay.displayDate < thisCalendarEventDisplay.event.end.getTime() ) ) &&
                     calendarEventDisplay.event.id != thisCalendarEventDisplay.event.id &&
                     thisCalendarEventDisplay.event.allDay != true )
                {
@@ -406,9 +406,9 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    // build up the text to show for this event
 
    var eventText = calendarEventDisplay.event.title;
-      
-   var startHour = calendarEventDisplay.displayDate.getHours();
-   var startMinutes = calendarEventDisplay.displayDate.getMinutes();
+   var displayDateObject = new Date( calendarEventDisplay.displayDate );
+   var startHour = displayDateObject.getHours();
+   var startMinutes = displayDateObject.getMinutes();
 
    var eventDuration = ( ( calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate ) / (60 * 60 * 1000) );
    
@@ -419,7 +419,9 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    //alert("boxLeftOffset: "+boxLeftOffset);
    var Height = ( eventDuration * document.getElementById("week-tree-day-0-item-"+startHour).boxObject.height );
    eventBox.setAttribute( "height", Height );
-   eventBox.setAttribute( "width", document.getElementById("week-tree-day-0-item-"+startHour).boxObject.width );
+   
+   var Width = Math.round( ( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.width ) / calendarEventDisplay.NumberOfSameTimeEvents );
+   eventBox.setAttribute( "width", Width );
    
    var top = eval( document.getElementById("week-tree-day-0-item-"+startHour).boxObject.y + ( ( startMinutes/60 ) * Height ) );
 
@@ -428,11 +430,15 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "top", top );
    var dayIndex = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
    
-   var index = calendarEventDisplay.displayDate.getDay( ) - dayIndex.getDay( );
+   var index = displayDateObject.getDay( ) - dayIndex.getDay( );
    if( index < 0 )
       index = index + 7;
 
-   eventBox.setAttribute( "left", document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - document.getElementById( "week-view-content-box" ).boxObject.x );
+   eventBox.setAttribute( "left", ( document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
+                                    document.getElementById( "week-view-content-box" ).boxObject.x + 
+                                    ( Width * ( calendarEventDisplay.CurrentSpot - 1 ) ) 
+                                  ) 
+                        );
    
    eventBox.setAttribute( "class", "week-view-event-class" );
    eventBox.setAttribute( "eventbox", "weekview" );
