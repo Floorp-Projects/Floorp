@@ -932,7 +932,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         for (i = 0; i < count; i++)
         {
             nsCOMPtr<nsISupports> msgSupports =
-                do_QueryInterface(messages->ElementAt(i));
+                getter_AddRefs(messages->ElementAt(i));
             nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
             if (message)
             {
@@ -978,7 +978,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 for (i = 0; i < count; i++)
                 {
                     nsCOMPtr<nsISupports> msgSupports =
-                        do_QueryInterface(messages->ElementAt(i));
+                        getter_AddRefs(messages->ElementAt(i));
                     nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
                     if (message)
                     {
