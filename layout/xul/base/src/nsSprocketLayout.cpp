@@ -944,6 +944,16 @@ nsSprocketLayout::InvalidateComputedSizes(nsComputedBoxSize* aComputedBoxSizes)
   }
 }
 
+PRInt32 
+nsSprocketLayout::Round(PRInt32 aCoord, PRInt32 aOnePixel)
+{
+  PRInt32 newCoordPx = aCoord/aOnePixel;
+  PRInt32 diff = aCoord - (newCoordPx*aOnePixel);
+  if (diff > aOnePixel/2)
+     newCoordPx++;
+
+  return newCoordPx*aOnePixel;
+}
 
 void
 nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
@@ -952,6 +962,11 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
                            nsBoxSize* aBoxSizes, 
                            nsComputedBoxSize*& aComputedBoxSizes)
 {  
+
+  float p2t;
+  aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
   PRInt32 sizeRemaining            = aGivenSize;
   PRInt32 springConstantsRemaining = 0;
 
@@ -1035,7 +1050,8 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
           // ----- look at our min and max limits make sure we aren't too small or too big -----
           if (!computedBoxSizes->valid) {
-            PRInt32 newSize = pref + (sizeRemaining*flex/springConstantsRemaining);
+            PRInt32 newSize = Round(pref + (sizeRemaining*flex/springConstantsRemaining), onePixel);
+
             if (newSize<=min) {
               computedBoxSizes->size = min;
               computedBoxSizes->valid = PR_TRUE;
@@ -1076,7 +1092,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
       flex = boxSizes->flex;
 
       if (!computedBoxSizes->valid) {
-        computedBoxSizes->size = pref + flex*sizeRemaining/springConstantsRemaining;
+        computedBoxSizes->size = Round(pref + flex*sizeRemaining/springConstantsRemaining,onePixel);
         computedBoxSizes->valid = PR_TRUE;
       }
 
