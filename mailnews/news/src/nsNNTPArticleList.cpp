@@ -34,13 +34,13 @@ public:
 	nsNNTPArticleList(const nsINNTPHost * newshost,
                       const nsINNTPNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
-        virtual ~nsNNTPArticleList();
-
+    virtual ~nsNNTPArticleList();
+    static void operator delete(void *);
     NS_DECL_ISUPPORTS
   
     // nsINNTPArticleKeysState
-    NS_METHOD Initialize(const nsINNTPHost *newsHost,
-                          const nsINNTPNewsgroup *newsgroup);
+    NS_METHOD Init(const nsINNTPHost *newsHost,
+                   const nsINNTPNewsgroup *newsgroup);
 	NS_IMETHOD AddArticleKey(PRInt32 key);
 	NS_IMETHOD FinishAddingArticleKeys();
 
@@ -73,11 +73,11 @@ nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
                                      const nsINNTPNewsgroup* newsgroup)
 {
     NS_INIT_REFCNT();
-    Initialize(newsHost, newsgroup);
+    Init(newsHost, newsgroup);
 }
 
 nsresult
-nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
+nsNNTPArticleList::Init(const nsINNTPHost * newsHost,
                               const nsINNTPNewsgroup* newsgroup)
 {
 	m_host = newsHost;
@@ -159,3 +159,13 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 	return 0;
 }
 
+nsresult
+NS_NewArticleList(nsINNTPArticleList **articleList,
+                  const nsINNTPHost* newsHost,
+                  const nsINNTPNewsgroup* newsgroup)
+{
+    nsNNTPArticleList* aArticleList =
+        new nsNNTPArticleList(newsHost, newsgroup);
+    return aArticleList->QueryInterface(nsINNTPArticleList::IID(),
+                                        (void **)articleList);
+}
