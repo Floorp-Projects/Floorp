@@ -1326,8 +1326,6 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
 
-  mRangeUpdater.SelAdjDeleteNode(aElement, parent, offset);
-  
   if (mActionListeners)
   {
     for (i = 0; i < mActionListeners->Count(); i++)
@@ -2650,8 +2648,6 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
     
     result = Do(txn); 
     
-    mRangeUpdater.SelAdjDeleteText(aElement, aOffset, aLength);
-
     // let listeners know what happened
     if (mActionListeners)
     {
@@ -2679,7 +2675,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   {
     result = TransactionFactory::GetNewTransaction(DeleteTextTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
-      result = (*aTxn)->Init(this, aElement, aOffset, aLength);
+      result = (*aTxn)->Init(this, aElement, aOffset, aLength, &mRangeUpdater);
     }
   }
   return result;
@@ -4641,7 +4637,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   {
     result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result)) {
-      result = (*aTxn)->Init(aElement);
+      result = (*aTxn)->Init(aElement, &mRangeUpdater);
     }
   }
   return result;
@@ -4786,7 +4782,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
             result = TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(), (EditTxn **)&txn);
             if ((NS_SUCCEEDED(result)) && (nsnull!=txn))
             {
-              txn->Init(this, range);
+              txn->Init(this, range, &mRangeUpdater);
               (*aTxn)->AppendChild(txn);
               NS_RELEASE(txn);
             }
@@ -4814,10 +4810,9 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior are not implemented
 NS_IMETHODIMP
-nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                           nsIEditor::EDirection
-                                             aAction,
-                                           EditAggregateTxn    *aTxn)
+nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange, 
+                                           nsIEditor::EDirection aAction,
+                                           EditAggregateTxn     *aTxn)
 {
   nsCOMPtr<nsIDOMNode> node;
   PRBool isFirst;
@@ -4852,8 +4847,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   isFirst = (0==offset);
   isLast  = (count==(PRUint32)offset);
 
-// XXX: if isFirst && isLast, then we'll need to delete the node 
-  //    as well as the 1 child
+  // XXX: if isFirst && isLast, then we'll need to delete the node 
+  //      as well as the 1 child
 
   // build a transaction for deleting the appropriate data
   // XXX: this has to come from rule section

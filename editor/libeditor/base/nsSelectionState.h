@@ -94,9 +94,6 @@ class nsRangeUpdater
     nsRangeUpdater();
     ~nsRangeUpdater();
   
-    void* RegisterRange(nsIDOMRange *aRange);
-    nsCOMPtr<nsIDOMRange> ReclaimRange(void *aCookie);
-    void DropRange(void *aCookie);
     void RegisterRangeItem(nsRangeStore *aRangeItem);
     void DropRangeItem(nsRangeStore *aRangeItem);
     nsresult RegisterSelectionState(nsSelectionState &aSelState);
@@ -109,7 +106,7 @@ class nsRangeUpdater
     // which is not what you want if you know you are reinserting it.
     nsresult SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition);
     nsresult SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition);
-    nsresult SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
+    nsresult SelAdjDeleteNode(nsIDOMNode *aNode);
     nsresult SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode);
     nsresult SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
                              nsIDOMNode *aRightNode, 

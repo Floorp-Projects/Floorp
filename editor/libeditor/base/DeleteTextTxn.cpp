@@ -39,6 +39,7 @@
 #include "DeleteTextTxn.h"
 #include "nsIDOMCharacterData.h"
 #include "nsISelection.h"
+#include "nsSelectionState.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -47,7 +48,13 @@ static const PRBool gNoisy = PR_FALSE;
 #endif
 
 DeleteTextTxn::DeleteTextTxn()
-  : EditTxn()
+: EditTxn()
+,mEditor(nsnull)
+,mElement()
+,mOffset(0)
+,mNumCharsToDelete(0)
+,mDeletedText(0)
+,mRangeUpdater(nsnull)
 {
 }
 
@@ -58,7 +65,8 @@ DeleteTextTxn::~DeleteTextTxn()
 NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                                   nsIDOMCharacterData *aElement,
                                   PRUint32 aOffset,
-                                  PRUint32 aNumCharsToDelete)
+                                  PRUint32 aNumCharsToDelete,
+                                  nsRangeUpdater *aRangeUpdater)
 {
   NS_ASSERTION(aEditor&&aElement, "bad arg");
   if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
@@ -73,6 +81,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
   NS_ASSERTION(count>=aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
   NS_ASSERTION(count>=aOffset+aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
   mDeletedText.SetLength(0);
+  mRangeUpdater = aRangeUpdater;
   return NS_OK;
 }
 
@@ -86,6 +95,9 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
   NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
   result = mElement->DeleteData(mOffset, mNumCharsToDelete);
   if (NS_FAILED(result)) return result;
+
+  if (mRangeUpdater) 
+    mRangeUpdater->SelAdjDeleteText(mElement, mOffset, mNumCharsToDelete);
 
   // only set selection to deletion point if editor gives permission
   PRBool bAdjustSelection;

@@ -576,6 +576,7 @@ protected:
   friend class nsAutoTxnsConserveSelection;
   friend class nsAutoSelectionReset;
   friend class nsAutoRules;
+  friend class nsRangeUpdater;
 };
 
 

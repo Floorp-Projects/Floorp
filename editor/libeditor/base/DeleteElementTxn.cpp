@@ -40,6 +40,7 @@
 #include "nsCRT.h"
 
 #include "DeleteElementTxn.h"
+#include "nsSelectionState.h"
 #ifdef NS_DEBUG
 #include "nsIDOMElement.h"
 #endif
@@ -52,17 +53,20 @@ static const PRBool gNoisy = PR_FALSE;
 
 
 DeleteElementTxn::DeleteElementTxn()
-  : EditTxn()
+: EditTxn()
+,mElement()
+,mParent()
+,mRefNode()
+,mRangeUpdater(nsnull)
 {
 }
 
-NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement)
+NS_IMETHODIMP DeleteElementTxn::Init(nsIDOMNode *aElement,
+                                     nsRangeUpdater *aRangeUpdater)
 {
-  if (nsnull!=aElement)  {
-    mElement = do_QueryInterface(aElement);
-  }
-  else 
-    return NS_ERROR_NULL_POINTER;
+  if (!aElement) return NS_ERROR_NULL_POINTER;
+  mElement = do_QueryInterface(aElement);
+  mRangeUpdater = aRangeUpdater;
   return NS_OK;
 }
 
@@ -108,8 +112,14 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   // remember which child mElement was (by remembering which child was next)
   result = mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
 
+  // give range updater a chance.  SelAdjDeleteNode() needs to be called *before*
+  // we do the action, unlike some of the other nsRangeStore update methods.
+  if (mRangeUpdater) 
+    mRangeUpdater->SelAdjDeleteNode(mElement);
+
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
+
   return result;
 }
 
@@ -154,6 +164,9 @@ NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
   if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
+
+  if (mRangeUpdater) 
+    mRangeUpdater->SelAdjDeleteNode(mElement);
 
   nsCOMPtr<nsIDOMNode> resultNode;
   nsresult result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));

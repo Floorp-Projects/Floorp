@@ -54,6 +54,7 @@ class nsIDOMDocument;
 
 class nsIDOMRange;
 class nsIEditor;
+class nsRangeUpdater;
 
 /**
  * A transaction that deletes an entire range in the content tree
@@ -68,7 +69,9 @@ public:
     * @param aEditor the object providing basic editing operations
     * @param aRange  the range to delete
     */
-  NS_IMETHOD Init(nsIEditor *aEditor, nsIDOMRange *aRange);
+  NS_IMETHOD Init(nsIEditor *aEditor, 
+                  nsIDOMRange *aRange,
+                  nsRangeUpdater *aRangeUpdater);
 
 private:
   DeleteRangeTxn();
@@ -122,6 +125,9 @@ protected:
   /** the editor for this transaction */
   nsIEditor* mEditor;
 
+  /** range updater object */
+  nsRangeUpdater *mRangeUpdater;
+  
   friend class TransactionFactory;
 
 };

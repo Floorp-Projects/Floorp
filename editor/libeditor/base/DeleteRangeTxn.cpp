@@ -61,17 +61,28 @@ static const PRBool gNoisy = PR_FALSE;
 
 // note that aEditor is not refcounted
 DeleteRangeTxn::DeleteRangeTxn()
-  : EditAggregateTxn()
+: EditAggregateTxn()
+,mRange()
+,mStartParent()
+,mStartOffset(0)
+,mEndParent()
+,mCommonParent()
+,mEndOffset(0)
+,mEditor(nsnull)
+,mRangeUpdater(nsnull)
 {
 }
 
-NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
+NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, 
+                                   nsIDOMRange *aRange,
+                                   nsRangeUpdater *aRangeUpdater)
 {
   NS_ASSERTION(aEditor && aRange, "bad state");
   if (!aEditor || !aRange) { return NS_ERROR_NOT_INITIALIZED; }
 
   mEditor = aEditor;
   mRange  = do_QueryInterface(aRange);
+  mRangeUpdater = aRangeUpdater;
   
   nsresult result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
@@ -235,7 +246,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
       numToDel = 1;
     else
       numToDel = aEndOffset-aStartOffset;
-    txn->Init(mEditor, textNode, aStartOffset, numToDel);
+    txn->Init(mEditor, textNode, aStartOffset, numToDel, mRangeUpdater);
     AppendChild(txn);
     NS_RELEASE(txn);
   }
@@ -262,7 +273,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
       if (NS_FAILED(result)) return result;
       if (!txn) return NS_ERROR_NULL_POINTER;
 
-      txn->Init(child);
+      txn->Init(child, mRangeUpdater);
       AppendChild(txn);
       NS_RELEASE(txn);
     }
@@ -300,7 +311,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
       if (NS_FAILED(result)) return result;
       if (!txn) return NS_ERROR_NULL_POINTER;
 
-      txn->Init(mEditor, textNode, start, numToDelete);
+      txn->Init(mEditor, textNode, start, numToDelete, mRangeUpdater);
       AppendChild(txn);
       NS_RELEASE(txn);
     }
@@ -341,7 +352,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
     if (NS_FAILED(result)) return result;
     if (!txn) return NS_ERROR_NULL_POINTER;
 
-    txn->Init(node);
+    txn->Init(node, mRangeUpdater);
     AppendChild(txn);
     NS_RELEASE(txn);
     iter->Next();

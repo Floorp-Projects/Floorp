@@ -49,6 +49,8 @@
 0x4d3a2720, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
+class nsRangeUpdater;
+
 /**
  * A transaction that removes text from a content node. 
  */
@@ -67,7 +69,8 @@ public:
   NS_IMETHOD Init(nsIEditor *aEditor,
                   nsIDOMCharacterData *aElement,
                   PRUint32 aOffset,
-                  PRUint32 aNumCharsToDelete);
+                  PRUint32 aNumCharsToDelete,
+                  nsRangeUpdater *aRangeUpdater);
 
 private:
   DeleteTextTxn();
@@ -100,6 +103,9 @@ protected:
   /** the text that was deleted */
   nsString mDeletedText;
 
+  /** range updater object */
+  nsRangeUpdater *mRangeUpdater;
+  
   friend class TransactionFactory;
 
 };
