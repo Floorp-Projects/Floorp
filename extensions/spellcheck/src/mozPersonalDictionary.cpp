@@ -55,8 +55,6 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 const int kMaxWordLen=256;
-#define spellchecker_savePref "spellchecker.savePDEverySession"
-static PRBool SessionSave=PR_FALSE;
 
 /**
  * This is the most braindead implementation of a personal dictionary possible.
@@ -89,27 +87,9 @@ nsresult mozPersonalDictionary::Init()
   nsresult rv;
   nsCOMPtr<nsIObserverService> svc = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv) && svc) {
-    // Register as an observer of shutdown
-    rv = svc->AddObserver(this,   NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-    // Register as an observer of profile changes
-    if (NS_SUCCEEDED(rv))
-      rv = svc->AddObserver(this, "profile-before-change", PR_TRUE);
-    if (NS_SUCCEEDED(rv))
-      rv = svc->AddObserver(this, "profile-do-change", PR_TRUE);
-  }
-  if (NS_FAILED(rv)) return rv;
    
-  nsCOMPtr<nsIPrefBranchInternal> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_FAILED(prefs->GetBoolPref(spellchecker_savePref, &SessionSave))){
-      SessionSave = PR_TRUE;
-    }
-    prefs->AddObserver(spellchecker_savePref, this, PR_TRUE);
-  }
-  else {
-    SessionSave = PR_FALSE;
-  }
+  if (NS_SUCCEEDED(rv) && svc) 
+    rv = svc->AddObserver(this, "profile-do-change", PR_TRUE); // we want to reload the dictionary if the profile switches
 
   if (NS_FAILED(rv)) return rv;
 
@@ -271,9 +251,7 @@ NS_IMETHODIMP mozPersonalDictionary::IgnoreWord(const PRUnichar *aWord)
 /* void EndSession (); */
 NS_IMETHODIMP mozPersonalDictionary::EndSession()
 {
-  if (SessionSave)
-    Save();
-
+  Save(); // save any custom words at the end of a spell check session
   mIgnoreTable.Clear();
   return NS_OK;
 }
@@ -299,18 +277,8 @@ NS_IMETHODIMP mozPersonalDictionary::GetCorrection(const PRUnichar *word, PRUnic
 /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP mozPersonalDictionary::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aTopic, "profile-before-change") || !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    Save();
-    mDictionaryTable.Clear();
-    mIgnoreTable.Clear();
-  }
-  else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject));
-    if(prefs)
-      prefs->GetBoolPref(spellchecker_savePref, &SessionSave);
-  }
   if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
-    Load();
+    Load();  // load automatically clears out the existing dictionary table
   }
 
   return NS_OK;
