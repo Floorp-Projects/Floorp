@@ -194,7 +194,6 @@ XFE_RDFChromeTreeView::createHtmlPane()
 	XP_ASSERT( _htmlPane == NULL );
     MWContext *     context = NULL;
     XFE_Frame *  frame = fe_getFrameFromContext(getContext());
-    char * url = getenv("HTMLPANEURL");
 
 
 
@@ -451,7 +450,7 @@ htmlPaneExposeEH(Widget w, XtPointer clientData, XEvent * event, Boolean* contin
     MWContext *  context = htmlview->getContext();
     char * url = getenv("HTMLPANEURL");
     if (!url)
-      url = "http://people.netscape.com/radha/sony/images/tweetee.gif";
+      url = "http://www.mozilla.org";
 
     if (event && (event->type == MapNotify))
 	{
