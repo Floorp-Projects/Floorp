@@ -89,6 +89,8 @@ protected:
     Pixmap _dragIconPixmapMask;
     unsigned int _dragIconWidth;
     unsigned int _dragIconHeight;
+    unsigned int _dragHotX;
+    unsigned int _dragHotY;
 
     // drag methods
     void dragInitialize();

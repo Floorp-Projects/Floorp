@@ -382,6 +382,8 @@ XFE_DragBase::XFE_DragBase(Widget widget)
     _dragIconPixmapMask=None;
     _dragIconWidth=0;
     _dragIconHeight=0;
+    _dragHotX=0;
+    _dragHotY=0;
 
     InitializeDisplayInfo(widget);
 
@@ -515,6 +517,8 @@ void XFE_DragBase::dragInitialize()
         XtSetArg(args[n],XmNwidth,_dragIconData->width);n++;
         XtSetArg(args[n],XmNheight,_dragIconData->height);n++;
         XtSetArg(args[n],XmNpixmap,_dragIconPixmap);n++;
+        XtSetArg(args[n],XmNhotX,_dragHotX);n++;
+        XtSetArg(args[n],XmNhotY,_dragHotY);n++;
         if (_dragIconPixmapMask) {
             XtSetArg(args[n],XmNmask,_dragIconPixmapMask);n++;
         }

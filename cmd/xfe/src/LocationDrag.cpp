@@ -78,6 +78,9 @@ int XFE_LocationDrag::dragStart(int,int)
     if (isFileURL(_dragDataURL))
         dragFilesAsLinks(TRUE);
 
+    // Move the hot spot down to the pointy part of the icon.
+    _dragHotY = 10;  
+
     setDragIcon(&LocationProxy);
 
     return TRUE;
