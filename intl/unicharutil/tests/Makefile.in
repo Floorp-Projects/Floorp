@@ -23,28 +23,17 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= UnicharSelfTest.cpp 
 
-include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
 #DEFINES		+= -DUSE_NSREG
 INCLUDES	+= -I$(srcdir)/../public -I$(DIST)/include
 
-EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
-		  $(NULL)
+LIBS	= \
+	-lxpcom \
+	-lreg \
+	$(NSPR_LIBS) \
+	$(NULL)
 
-PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+PROGRAM		= UnicharSelfTest
 
-TARGETS		= $(PROGS)
-
-ifeq ($(OS_ARCH),Rhapsody)
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-else
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-endif
-
-install:: $(PROGS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+include $(topsrcdir)/config/rules.mk
