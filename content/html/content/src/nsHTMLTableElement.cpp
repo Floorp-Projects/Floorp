@@ -1505,36 +1505,33 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                              nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::layout, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cellpadding, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cellspacing, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::cols, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::border, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::frame, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::hspace, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::vspace, NS_STYLE_HINT_REFLOW },
-    
-    { &nsHTMLAtoms::bordercolor, NS_STYLE_HINT_VISUAL },
-    
-    // Changing to rules will force border-collapse. Unfortunately, if
-    // border-collapse was already in effect, then a frame change is
-    // not necessary.
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::rules, NS_STYLE_HINT_FRAMECHANGE },
-    { nsnull, NS_STYLE_HINT_NONE }
-  };
+  if ((aAttribute == nsHTMLAtoms::layout) ||
+      (aAttribute == nsHTMLAtoms::cellpadding) ||
+      (aAttribute == nsHTMLAtoms::cellspacing) ||
+      (aAttribute == nsHTMLAtoms::cols) ||
+      (aAttribute == nsHTMLAtoms::border) ||
+      (aAttribute == nsHTMLAtoms::frame) ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height) ||
+      (aAttribute == nsHTMLAtoms::hspace) ||
+      (aAttribute == nsHTMLAtoms::vspace)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (aAttribute == nsHTMLAtoms::bordercolor) {
+    aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if ((aAttribute == nsHTMLAtoms::align) || 
+           (aAttribute == nsHTMLAtoms::rules)) {
+           // Changing to rules will force border-collapse. Unfortunately, if border-collapse was 
+           // already in effect, then a frame change is not necessary.
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
 
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-    sBackgroundAttributeMap,
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
   return NS_OK;
 }
 

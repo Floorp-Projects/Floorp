@@ -2565,12 +2565,10 @@ nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                                PRInt32 aModType,
                                                nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry* const map[] = {
-    sCommonAttributeMap
-  };
-  
-  FindAttributeImpact(aAttribute, aHint,
-                map, NS_ARRAY_LENGTH(map));
+  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
   return NS_OK;
 }
 
@@ -3167,67 +3165,38 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
   }
 }
 
-
-
-const nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sCommonAttributeMap[] = {
-  { &nsHTMLAtoms::dir, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::lang, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::_baseHref, NS_STYLE_HINT_VISUAL },
-  { nsnull, NS_STYLE_HINT_NONE }
-};
-
-const
-nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sImageAttributeMap[] = {
-  { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::hspace, NS_STYLE_HINT_REFLOW },
-  { &nsHTMLAtoms::vspace, NS_STYLE_HINT_REFLOW },
-  { nsnull, NS_STYLE_HINT_NONE }
-};
-
-const nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sImageAlignAttributeMap[] = {
-  { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-  { nsnull, NS_STYLE_HINT_NONE }
-};
-
-const nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sImageBorderAttributeMap[] = {
-  { &nsHTMLAtoms::border, NS_STYLE_HINT_REFLOW },
-  { nsnull, NS_STYLE_HINT_NONE }
-};
-
-
-const nsGenericHTMLElement::AttributeImpactEntry
-nsGenericHTMLElement::sBackgroundAttributeMap[] = {
-  { &nsHTMLAtoms::background, NS_STYLE_HINT_VISUAL },
-  { &nsHTMLAtoms::bgcolor, NS_STYLE_HINT_VISUAL },
-  { nsnull, NS_STYLE_HINT_NONE }
-};
-
-void
-nsGenericHTMLElement::FindAttributeImpact(const nsIAtom* aAttribute,
-                                          nsChangeHint& aHint,
-                                          const AttributeImpactEntry* const aMaps[],
-                                          PRUint32 aMapCount)
+PRBool
+nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
+                                                      nsChangeHint& aHint)
 {
-  for (PRUint32 mapindex = 0; mapindex < aMapCount; ++mapindex) {
-    const AttributeImpactEntry* map = aMaps[mapindex];
-    while (map->attribute) {
-      if (aAttribute == *map->attribute) {
-        aHint = map->hint;
-        return;
-      }
-      map++;
-    }
+  if (nsHTMLAtoms::dir == aAttribute) {
+    aHint = NS_STYLE_HINT_REFLOW;  // XXX really? possibly FRAMECHANGE?
+    return PR_TRUE;
   }
-
-  // fall-through
-  aHint = NS_STYLE_HINT_CONTENT;
+  else if (nsHTMLAtoms::lang == aAttribute) {
+    aHint = NS_STYLE_HINT_REFLOW; // LANG attribute affects font selection
+    return PR_TRUE;
+  }
+  else if (nsHTMLAtoms::_baseHref == aAttribute) {
+    aHint = NS_STYLE_HINT_VISUAL; // at a minimum, elements may need to override
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
+PRBool
+nsGenericHTMLElement::GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
+                                                     nsChangeHint& aHint)
+{
+  if ((nsHTMLAtoms::width == aAttribute) ||
+      (nsHTMLAtoms::height == aAttribute) ||
+      (nsHTMLAtoms::hspace == aAttribute) ||
+      (nsHTMLAtoms::vspace == aAttribute)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
 
 void
 nsGenericHTMLElement::MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
@@ -3273,6 +3242,16 @@ nsGenericHTMLElement::MapDivAlignAttributeInto(const nsIHTMLMappedAttributes* aA
   }
 }
 
+PRBool
+nsGenericHTMLElement::GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
+                                                   nsChangeHint& aHint)
+{
+  if ((nsHTMLAtoms::align == aAttribute)) {
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
 
 void
 nsGenericHTMLElement::MapImageMarginAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
@@ -3394,6 +3373,18 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
     borderColor->mBottom.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
 }
 
+PRBool
+nsGenericHTMLElement::GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
+                                                    nsChangeHint& aHint)
+{
+  if ((nsHTMLAtoms::border == aAttribute)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
 void
 nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
@@ -3452,6 +3443,19 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
       aData->mColorData->mBackColor.SetColorValue(value.GetColorValue());
   }
 }
+
+PRBool
+nsGenericHTMLElement::GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
+                                                    nsChangeHint& aHint)
+{
+  if ((nsHTMLAtoms::background == aAttribute) ||
+      (nsHTMLAtoms::bgcolor == aAttribute)) {
+    aHint = NS_STYLE_HINT_VISUAL;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 
 //----------------------------------------------------------------------
 

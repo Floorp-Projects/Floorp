@@ -255,21 +255,16 @@ NS_IMETHODIMP
 nsHTMLPreElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                            nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::variable, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::wrap, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::cols, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::tabstop, NS_STYLE_HINT_REFLOW},
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
-  
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  if ((aAttribute == nsHTMLAtoms::variable) || 
+      (aAttribute == nsHTMLAtoms::wrap) ||
+      (aAttribute == nsHTMLAtoms::cols) ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::tabstop)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
 
   return NS_OK;
 }

@@ -554,21 +554,18 @@ nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32 aModType,
                                              nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::usemap, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::ismap, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
-
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-    sImageAttributeMap,
-    sImageBorderAttributeMap
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  if ((aAttribute == nsHTMLAtoms::usemap) ||
+      (aAttribute == nsHTMLAtoms::ismap)  ||
+      (aAttribute == nsHTMLAtoms::align)) {
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
+        aHint = NS_STYLE_HINT_CONTENT;
+      }
+    }
+  }
 
   return NS_OK;
 }
