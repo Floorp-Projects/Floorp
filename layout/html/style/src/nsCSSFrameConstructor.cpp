@@ -5035,6 +5035,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         rv = NS_NewLabelFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
         processChildren = PR_TRUE;
       }
+      else if (nsHTMLAtoms::isindex == aTag) {
+        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
+        }
+        isReplaced = PR_TRUE;
+        rv = NS_NewIsIndexFrame(aPresShell, &newFrame);
+      }
     }
   }
 
@@ -5403,6 +5410,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
+      aTag !=  nsHTMLAtoms::isindex &&
       aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar
      ) {
