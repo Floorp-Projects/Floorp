@@ -128,3 +128,8 @@ pref("editor.always_show_publish_dialog",    false);
  */
 //pref("editor.encode_entity",                 "html");
 
+#ifdef XP_UNIX
+pref("editor.disable_spell_checker", false);
+pref("editor.dont_lock_spell_files", true);
+#endif
+
