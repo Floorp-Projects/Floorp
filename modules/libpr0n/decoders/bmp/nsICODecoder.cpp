@@ -304,7 +304,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (!mRow)
       return NS_ERROR_OUT_OF_MEMORY;
     
-    rv = mFrame->Init(0, 0, mDirEntry.mWidth, mDirEntry.mWidth, GFXFORMATALPHA);
+    rv = mFrame->Init(0, 0, mDirEntry.mWidth, mDirEntry.mHeight, GFXFORMATALPHA);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mImage->AppendFrame(mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
