@@ -933,9 +933,9 @@ struct MessageWindow {
                  }
 
              }
-             nsCOMPtr<nsIOSHooks> osHooksService ( do_GetService( NS_IOSHOOKS_CONTRACTID, &rv ) );
+             nsCOMPtr<nsIWindowsHooks> winHooksService ( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID, &rv ) );
              if ( NS_SUCCEEDED( rv ) )
-                 osHooksService->StartupRemoveOption("-turbo");
+                 winHooksService->StartupRemoveOption("-turbo");
 
              nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
              if ( NS_SUCCEEDED( rv ) ) {
@@ -1083,10 +1083,10 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
 static PRBool handlingHTTP() {
     PRBool result = PR_FALSE; // Answer no if an error occurs.
     // See if we're the "default browser" (i.e., handling http Internet shortcuts)        
-    nsCOMPtr<nsIOSHooks> oshooks( do_GetService( NS_IOSHOOKS_CONTRACTID ) );
-    if ( oshooks ) {
-        nsCOMPtr<nsIOSHooksSettings> settings;
-        nsresult rv = oshooks->GetSettings( getter_AddRefs( settings ) );
+    nsCOMPtr<nsIWindowsHooks> winhooks( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID ) );
+    if ( winhooks ) {
+        nsCOMPtr<nsIWindowsHooksSettings> settings;
+        nsresult rv = winhooks->GetSettings( getter_AddRefs( settings ) );
         if ( NS_SUCCEEDED( rv ) ) {
             settings->GetIsHandlingHTTP( &result );
             if ( result ) {
