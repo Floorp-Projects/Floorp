@@ -80,6 +80,11 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE);
 
+  NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
+                                  nsIStyleContext* aStyleContext, 
+                                  nsIStyleContext* aNewParentContext,
+                                  nsIStyleContext** aNewStyleContext);
+
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
                                      nsIContent*     aContent);
 
@@ -723,6 +728,64 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     }
   }
 
+  return result;
+}
+
+
+NS_IMETHODIMP
+StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aStyleContext, 
+                                   nsIStyleContext* aNewParentContext,
+                                   nsIStyleContext** aNewStyleContext)
+{
+  NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(aPresContext, "must have pres context");
+
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  if (aPresContext && aStyleContext && aNewStyleContext) {
+    nsIStyleContext* oldParent = aStyleContext->GetParent();
+
+    if (oldParent == aNewParentContext) {
+      result = NS_OK;
+      NS_ADDREF(aStyleContext);   // for return
+      *aNewStyleContext = aStyleContext;
+    }
+    else {  // really a new parent
+      nsIStyleContext*  newChild = nsnull;
+      nsIAtom*  pseudoTag = nsnull;
+      aStyleContext->GetPseudoType(pseudoTag);
+      nsISupportsArray* rules = aStyleContext->GetStyleRules();
+      if (aNewParentContext) {
+        result = aNewParentContext->FindChildWithRules(pseudoTag, rules, newChild);
+      }
+      if (newChild) { // new parent already has one
+        *aNewStyleContext = newChild;
+      }
+      else {  // need to make one in the new parent
+        nsISupportsArray*  newRules = nsnull;
+        if (rules) {
+          newRules = mRecycler;
+          mRecycler = nsnull;
+          if (! newRules) {
+            result = NS_NewISupportsArray(&newRules);
+          }
+          if (newRules) {
+            newRules->AppendElements(rules);
+          }
+        }
+        result = NS_NewStyleContext(aNewStyleContext, aNewParentContext, pseudoTag,
+                                    newRules, aPresContext);
+        NS_IF_RELEASE(newRules);
+      }
+
+      NS_IF_RELEASE(rules);
+      NS_IF_RELEASE(pseudoTag);
+    }
+
+    NS_IF_RELEASE(oldParent);
+  }
   return result;
 }
 

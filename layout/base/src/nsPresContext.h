@@ -64,6 +64,8 @@ public:
                                         nsIStyleContext* aParentContext,
                                         PRBool aForceUnique,
                                         nsIStyleContext** aResult);
+  NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
+                                  nsIStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   NS_IMETHOD GetDefaultFont(nsFont& aResult);
   NS_IMETHOD SetDefaultFont(nsFont& aFont);

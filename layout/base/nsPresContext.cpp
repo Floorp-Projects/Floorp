@@ -22,6 +22,7 @@
 #include "nsILinkHandler.h"
 #include "nsIStyleSet.h"
 #include "nsFrameImageLoader.h"
+#include "nsIFrameManager.h"
 #include "nsIImageGroup.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
@@ -453,6 +454,24 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
   *aResult = result;
   return rv;
 }
+
+NS_IMETHODIMP
+nsPresContext::ReParentStyleContext(nsIFrame* aFrame, 
+                                    nsIStyleContext* aNewParentContext)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+  if (! aFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIFrameManager> manager;
+  nsresult rv = mShell->GetFrameManager(getter_AddRefs(manager));
+  if (NS_SUCCEEDED(rv) && manager) {
+    rv = manager->ReParentStyleContext(*this, aFrame, aNewParentContext);
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)

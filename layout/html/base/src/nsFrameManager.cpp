@@ -20,6 +20,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
+#include "nsIStyleContext.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -137,9 +138,12 @@ public:
 
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
 
+  NS_IMETHOD ReParentStyleContext(nsIPresContext& aPresContext,
+                                  nsIFrame* aFrame, 
+                                  nsIStyleContext* aNewParentContext);
+
   NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
   NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
-
 
 private:
   nsIPresShell*                   mPresShell;  // weak link, because the pres shell owns us
@@ -565,6 +569,71 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
+                                   nsIFrame* aFrame, 
+                                   nsIStyleContext* aNewParentContext)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aFrame) {
+    nsIStyleContext* oldContext = nsnull;
+    aFrame->GetStyleContext(&oldContext);
+
+    if (oldContext) {
+      nsIStyleContext* newContext = nsnull;
+      result = mStyleSet->ReParentStyleContext(&aPresContext, 
+                                               oldContext, aNewParentContext,
+                                               &newContext);
+      if (NS_SUCCEEDED(result) && newContext) {
+        if (newContext != oldContext) {
+          PRInt32 listIndex = 0;
+          nsIAtom* childList = nsnull;
+          nsIFrame* child;
+
+          do {
+            child = nsnull;
+            result = aFrame->FirstChild(childList, &child);
+            while ((NS_SUCCEEDED(result)) && child) {
+              result = ReParentStyleContext(aPresContext, child, newContext);
+              child->GetNextSibling(&child);
+            }
+
+            NS_IF_RELEASE(childList);
+            aFrame->GetAdditionalChildListName(listIndex++, &childList);
+          } while (childList);
+          
+          aFrame->SetStyleContext(&aPresContext, newContext);
+
+          // do additional contexts 
+          PRInt32 contextIndex = -1;
+          while (1 == 1) {
+            nsIStyleContext* oldExtraContext = nsnull;
+            aFrame->GetAdditionalStyleContext(++contextIndex, &oldExtraContext);
+            if (oldExtraContext) {
+              nsIStyleContext* newExtraContext = nsnull;
+              result = mStyleSet->ReParentStyleContext(&aPresContext,
+                                                       oldExtraContext, newContext,
+                                                       &newExtraContext);
+              if (NS_SUCCEEDED(result) && newExtraContext) {
+                aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
+                NS_RELEASE(newExtraContext);
+              }
+              NS_RELEASE(oldExtraContext);
+            }
+            else {
+              break;
+            }
+          }
+        }
+        NS_RELEASE(newContext);
+      }
+      NS_RELEASE(oldContext);
+    }
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP
 FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
@@ -598,6 +667,7 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
   // XXX We are only going through the principal child list right now.
   // Need to talk to Troy to find out about other kinds of
   // child lists and whether they will contain stateful frames.
+  // (psl) YES, you need to iterate ALL child lists
 
   // Capture frame state for the first child 
   nsIFrame* child = nsnull;
@@ -649,6 +719,7 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
   // XXX We are only going through the principal child list right now.
   // Need to talk to Troy to find out about other kinds of
   // child lists and whether they will contain stateful frames.
+  // (psl) YES, you need to iterate ALL child lists
 
   // Capture frame state for the first child 
   nsIFrame* child = nsnull;

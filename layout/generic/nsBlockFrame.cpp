@@ -4308,10 +4308,8 @@ nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
     aFrame->SetParent(this);
     if (this != oldParent) {
       nsHTMLContainerFrame::ReparentFrameView(aFrame, oldParent, this);
+      aPresContext->ReParentStyleContext(aFrame, mStyleContext);
     }
-    aFrame->ReResolveStyleContext(aPresContext, mStyleContext, 
-                                  NS_STYLE_HINT_REFLOW,
-                                  nsnull, nsnull);
     aFrame->GetNextSibling(&aFrame);
   }
 }

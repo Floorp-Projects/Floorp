@@ -27,6 +27,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
 class nsIStyleSet;
+class nsIStyleContext;
 class nsILayoutHistoryState;
 
 #define NS_IFRAMEMANAGER_IID     \
@@ -92,6 +93,12 @@ public:
   // Notification that a frame is about to be destroyed. This allows any outstanding
   // references to the frame to be cleaned up
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+
+  // reparent the style contexts of this frame sub tree to live under the
+  // new given parent style context
+  NS_IMETHOD ReParentStyleContext(nsIPresContext& aPresContext, 
+                                  nsIFrame* aFrame, 
+                                  nsIStyleContext* aNewParentContext) = 0;
 
   /**
    * Capture/restore frame state for the frame subtree rooted at aFrame.
