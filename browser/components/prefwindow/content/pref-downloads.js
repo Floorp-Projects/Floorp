@@ -157,6 +157,14 @@ function Startup()
   var showFolder = document.getElementById("showFolder");
   showFolder.parentNode.insertBefore(downloadFolderList, showFolder);
   downloadFolderList.hidden = false;
+  
+  setTimeout("postStart()", 0);
+}
+
+function postStart()
+{
+  var downloadFolderList = document.getElementById("downloadFolderList");
+  downloadFolderList.label = downloadFolderList.selectedItem.label;
 }
 
 function uninit()
@@ -262,13 +270,12 @@ function showFolder()
     folder = getDownloadsFolder("Downloads");
     break;
   case 2:
-    var path = folderList.selectedItem.getAttribute("path");
+    var path = document.getElementById("downloadFolder").getAttribute("path");
     folder = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-    folder.path = path;
+    folder.initWithPath(path);
     break;
   }
-  
-  folder.QueryInterface(Components.interfaces.nsILocalFile);
+
   folder.reveal();
 }
 
