@@ -54,13 +54,17 @@ nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
 
 nsresult InsertTextTxn::Do(void)
 {
-  nsresult res = mElement->InsertData(mOffset, mStringToInsert);
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
-  res = mPresShell->GetSelection(getter_AddRefs(selection));
+  nsresult res = mPresShell->GetSelection(getter_AddRefs(selection));
+  selection->StartBatchChanges();
+  res = mElement->InsertData(mOffset, mStringToInsert);
   if (NS_SUCCEEDED(res)) {
     res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
   }
+  else
+    NS_ASSERTION(PR_FALSE,"Could not get selection in InsertTextTxn::Do\n");
+  selection->EndBatchChanges();
   return res;
 }
 
