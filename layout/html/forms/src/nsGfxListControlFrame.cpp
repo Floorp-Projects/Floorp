@@ -3041,7 +3041,7 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       mouseEvent->clickCount = 1;
     } else {
       // the click was out side of the select or its dropdown
-      mouseEvent->clickCount = 0;
+      mouseEvent->clickCount = IsClickingInCombobox(aMouseEvent)?1:0;
     }
   } else if (mButtonDown) {
     mButtonDown = PR_FALSE;
