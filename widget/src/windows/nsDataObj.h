@@ -15,7 +15,7 @@
 
 #include "OLEIDL.H"
 
-#include "Ddforw.h"
+//#include "Ddforw.h"
 #include "nsString.h"
 
 #define MAX_FORMATS 32
