@@ -41,10 +41,11 @@ LLIBS=\
 	$(DIST)\lib\msgcore.lib			\
 	$(DIST)\lib\msgcoreutil.lib		\
 	$(DIST)\lib\msgimap.lib			\
-    $(LIBNSPR)						\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\raptorbase.lib		\
     $(DIST)\lib\rdfutil_s.lib		\
+	$(DIST)\lib\msglocal.lib		\
+    $(LIBNSPR)						\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
