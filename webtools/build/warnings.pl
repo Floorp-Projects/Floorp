@@ -8,11 +8,53 @@ $cvsroot = '/u/slamm/tt/cvsroot/mozilla';
 @ignore = ( 'long long', '__cmsg_data' );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
-$fh = new FileHandle "</u/slamm/tt/buildlog";
-&gcc_parser($fh, $tree);
+for $build_record (last_successful_builds($tree)) {
+  print "hey\n";
+  next unless $build_record->{errorparser} eq 'unix';
+  next unless $build_record->{buildname} =~ /\b(Clobber|Clbr)\b/;
+
+  print "log is $tree/$builld_record->{logfile}\n";
+  exit;
+  $fh = new FileHandle "gunzip $tree/$builld_record->{logfile} |";
+  &gcc_parser($fh, $tree);
+
+  last;
+}
+
 #&dump_warning_data;
 &build_blame;
 &print_warnings_as_html;
+
+# end of main
+# ===================================================================
+
+sub last_successful_builds {
+  my $tree = shift;
+  my @build_records = ();
+  my $br;
+
+  # tinderbox/globals.pl uses many shameful globals
+  $form{tree} = $tree;
+
+  $maxdate = time;
+  $mindate = $maxdate - 8*60*60; # Go back 8 hours
+  
+  print STDERR "Loading build data...";
+  use Cwd
+  chdir '../tinderbox';
+  require 'globals.pl';
+  &load_data;
+  chdir '../build';
+  print STDERR "done\n";
+  
+  for (my $ii=1; $ii <= $name_count; $ii++) {
+    for (my $tt=1; $tt <= $time_count; $tt++) {
+      if (defined($br = $build_table->[$tt][$build_index])
+          and $br->{buildstatus} eq 'success') {
+        push @build_records, $br;
+  } } }
+  return @build_records;
+}
 
 sub gcc_parser {
   my ($fh, $tree) = @_;
@@ -139,7 +181,7 @@ sub print_warnings_as_html {
         print "<li>";
         # File link
         print "<a target='_other' href='"
-              .file_url($warn_rec->{fullpath},$linenum)."'>";
+              .file_url($file,$linenum)."'>";
         print   "$file:$linenum";
         print "</a> ";
         print "<br>";
