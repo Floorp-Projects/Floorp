@@ -593,7 +593,7 @@ toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #history-button {
-  list-style-image: url("chrome://browser/skin/history-small.png") !important;
+  list-style-image: url("chrome://browser/skin/small-base.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #history-button:hover {
