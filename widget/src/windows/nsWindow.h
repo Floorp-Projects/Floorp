@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #ifndef Window_h__
@@ -294,9 +295,9 @@ public:
 
 protected:
 
-    static  BOOL            DealWithPopups ( UINT inMsg, LRESULT* outResult ) ;
+    static  BOOL            DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult ) ;
 
-    static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+    static  PRBool          EventIsInsideWindow(UINT Msg, nsWindow* aWindow); 
 
     static  nsWindow *      GetNSWindowPtr(HWND aWnd);
     static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);

@@ -22,6 +22,7 @@
  *   Peter Bajusz <hyp-x@inf.bme.hu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *   
  */
 
@@ -757,21 +758,22 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 PRBool 
-nsWindow::EventIsInsideWindow(nsWindow* aWindow) 
+nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow) 
 {
   RECT r;
+
+  if (Msg == WM_ACTIVATE)
+    // don't care about activation/deactivation
+    return PR_FALSE;
+
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
   POINT mp;
   mp.x = LOWORD(pos);
   mp.y = HIWORD(pos);
-  // now make sure that it wasn't one of our children
-  if (mp.x < r.left || mp.x > r.right ||
-      mp.y < r.top || mp.y > r.bottom) {
-    return PR_FALSE;
-  } 
 
-  return PR_TRUE;
+  // was the event inside this window?
+  return (PRBool) PtInRect(&r, mp);
 }
 
 static LPCTSTR GetNSWindowPropName() {
@@ -805,7 +807,7 @@ BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
 // Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
 //
 BOOL
-nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
+nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
 {
   if ( gRollupListener && gRollupWidget) {
 
@@ -815,7 +817,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
       inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL)
     {
       // Rollup if the event is outside the popup.
-      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
+      PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
 
       if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL)) 
       {
@@ -839,7 +841,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
               nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
               if ( widget ) {
                 nsIWidget* temp = widget.get();
-                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp) ) {
+                if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)temp) ) {
                   rollup = PR_FALSE;
                   break;
                 }
@@ -857,6 +859,24 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
         if (!rollup) {
           *outResult = MA_NOACTIVATE;
           return TRUE;
+        }
+        else
+        {
+          UINT uMsg = HIWORD(inLParam);
+          if (uMsg == WM_MOUSEMOVE)
+          {
+            // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
+            // must be enabled in Windows.
+            // Assume that if the popup doesn't roll up on mouse wheel events,
+            // then it shouldn't roll up on this event either.  This allows the
+            // menu to stay open when it's activated by X-Mouse.
+            gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+            if (!rollup)
+            {
+              *outResult = MA_NOACTIVATE;
+              return true;
+            }
+          }
         }
       }
 
@@ -889,7 +909,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT popupHandlingResult;
-    if ( DealWithPopups(msg, &popupHandlingResult) )
+    if ( DealWithPopups(msg, wParam, lParam, &popupHandlingResult) )
       return popupHandlingResult;
 
     // Get the window which caused the event and ask it to process the message
