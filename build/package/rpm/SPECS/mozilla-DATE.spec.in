@@ -114,7 +114,7 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--with-default-mozilla-five-home=/usr/lib/mozilla \
 	--enable-strip-libs --disable-tests --disable-short-wchar \
 	--enable-nspr-autoconf --with-extensions --without-mng \
-	--enable-crypto
+	--enable-crypto --disable-xprint
 
 #BUILD_OFFICIAL=1 make -j$CPUS -s export
 #BUILD_OFFICIAL=1 make -j$CPUS -s install
