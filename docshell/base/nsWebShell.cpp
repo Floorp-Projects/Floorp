@@ -87,6 +87,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
 #include "nsIDOMWindow.h"
+#include "nsISocketTransportService.h"
 
 #include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsHTTPEnums.h"
