@@ -40,8 +40,96 @@
 
 package org.mozilla.javascript;
 
+/**
+ * Factory class that Rhino runtime use to create new {@link Context}
+ * instances or to notify about Context execution.
+ * <p>
+ * When Rhino runtime needs to create new {@link Context} instance during
+ * execution of {@link Context.enter()} or {@link Context}, it will call
+ * {@link #makeContext()} of the current global ContextFactory.
+ * See {@lnk #getGlobal()} and {@link #initGlobal(ContextFactory)}.
+ * <p>
+ * It is also possible to use explicit ContextFactory instances for Context
+ * creation. This is useful to have a set of independent Rhino runtime
+ * instances under single JVM. See {@link #call(ContextAction)}.
+ * <p>
+ * The following example demonstrates Context customization to terminate
+ * scripts running more then 10 seconds and to provide better compatibility
+ * with JavaScript code using MSIE-specific features.
+ * <pre>
+ * import org.mozilla.javascript.*;
+ *
+ * class MyFactory extends ContextFactory
+ * {
+ *     static {
+ *         // Initialize GlobalFactory with custom factory
+ *         ContextFactory.initGlobal(new MyFactory());
+ *     }
+ *
+ *     protected Context makeContext()
+ *     {
+ *         MyContext cx = new MyContext();
+ *         // Use pure interpreter mode to allow for
+ *         // {@link Context#observeInstructionCount(int)} to work
+ *         cx.setOptimizationLevel(-1);
+ *         // Make Rhino runtime to call MyContext.observeInstructionCount(int)
+ *         // each 10000 bytecode instructions
+ *         cx.setInstructionObserverThreshold(10000);
+ *         return cx;
+ *     }
+ * }
+ *
+ * class MyContext extends Context
+ * {
+ *     private long creationTime = System.currentTimeMillis();
+ *
+ *     // Override {@Context#observeInstructionCount(int)}
+ *     protected void observeInstructionCount(int instructionCount)
+ *     {
+ *         long currentTime = System.currentTimeMillis();
+ *         if (currentTime - creationTime > 10000) {
+ *             // More then 10 seconds from Context creation time:
+ *             // it is time to stop the script.
+ *             // Throw Error instance to ensure that script will never
+ *             // get control back through catch or finally.
+ *             throw new Error();
+ *         }
+ *     }
+ *
+ *     // Override {@Context#hasFeature(int)}
+ *     public boolean hasFeature(int featureIndex)
+ *     {
+ *         // Turn on maximim compatibility with MSIE scripts
+ *         switch (featureIndex) {
+ *             case Context.FEATURE_NON_ECMA_GET_YEAR:
+ *                 return true;
+ *
+ *             case Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
+ *                 return true;
+ *
+ *             case Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
+ *                 return true;
+ *
+ *             case Context.FEATURE_PARENT_PROTO_PROPRTIES:
+ *                 return false;
+ *         }
+ *         return super.hasFeature(featureIndex);
+ *     }
+ * }
+ * </pre>
+ */
+
 public class ContextFactory
 {
+    private static volatile boolean hasCustomGlobal;
+    private static ContextFactory global = new ContextFactory();
+
+    private volatile boolean sealed;
+
+    private final Object listenersLock = new Object();
+    private volatile Object listeners;
+    private boolean disabledListening;
+
     /**
      * Listener of {@link Context} creation and release events.
      */
@@ -59,14 +147,28 @@ public class ContextFactory
         public void contextReleased(Context cx);
     }
 
-    private static volatile boolean hasCustomGlobal;
-    private static ContextFactory global = new ContextFactory();
+    /**
+     * Get default ContextFactory.
+     */
+    public static ContextFactory getGlobal()
+    {
+        return global;
+    }
 
-    private volatile boolean sealed;
-
-    private final Object listenersLock = new Object();
-    private volatile Object listeners;
-    private boolean disabledListening;
+    /**
+     * Initialize default ContextFactory. The method can only be called once.
+     */
+    public static void initGlobal(ContextFactory factory)
+    {
+        if (factory == null) {
+            throw new IllegalArgumentException();
+        }
+        if (hasCustomGlobal) {
+            throw new IllegalStateException();
+        }
+        hasCustomGlobal = true;
+        global = factory;
+    }
 
     /**
      * Create new {@link Context} instance to be associated with the current
@@ -162,29 +264,6 @@ public class ContextFactory
     protected final void checkNotSealed()
     {
         if (sealed) throw new IllegalStateException();
-    }
-
-    /**
-     * Get default ContextFactory.
-     */
-    public static ContextFactory getGlobal()
-    {
-        return global;
-    }
-
-    /**
-     * Initialize default ContextFactory. The method can only be called once.
-     */
-    public static void initGlobal(ContextFactory factory)
-    {
-        if (factory == null) {
-            throw new IllegalArgumentException();
-        }
-        if (hasCustomGlobal) {
-            throw new IllegalStateException();
-        }
-        hasCustomGlobal = true;
-        global = factory;
     }
 
     /**
