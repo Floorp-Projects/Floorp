@@ -845,7 +845,28 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
     fputs(" ", out);
   }
-  
+
+  nsCOMPtr<nsIRuleNode> ruleNode;
+  GetRuleNode(getter_AddRefs(ruleNode));
+  if (ruleNode) {
+    fputs("{\n", out);
+    while (ruleNode) {
+      nsCOMPtr<nsIStyleRule> styleRule;
+      ruleNode->GetRule(getter_AddRefs(styleRule));
+      if (styleRule) {
+        styleRule->List(out, aIndent + 1);
+      }
+      nsIRuleNode* parent;
+      ruleNode->GetParent(&parent);
+      ruleNode = dont_AddRef(parent);
+    }
+    for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
+    fputs("}\n", out);
+  }
+  else {
+    fputs("{}\n", out);
+  }
+
   if (nsnull != mChild) {
     nsStyleContext* child = mChild;
     do {
