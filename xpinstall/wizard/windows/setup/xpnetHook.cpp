@@ -1166,11 +1166,18 @@ int DownloadFiles(char *szInputIniFile,
         PrintError(szBuf, ERROR_CODE_HIDE);
       }
 
-      /* Set return value and break out of for() loop.
-       * We don't want to continue if there were too
-       * many network errors on any file. */
-      rv = WIZ_TOO_MANY_NETWORK_ERRORS;
-      break;
+      iFileDownloadRetries = 0; // reset the file download retries counter since
+                                // we'll be restarting the download again.
+      bDownloadInitiated = FALSE; // restart the download using new socket connection
+      CloseSocket(szProxyServer, szProxyPort);
+      --giIndex; // Decrement the file index counter because we'll be trying to
+                 // download the same file again.  We don't want to go to the next
+                 // file just yet.
+
+      /* Let's make sure we're in a paused state. */
+      /* The pause state will be unset by DownloadDlgProc(). */
+      gdwDownloadDialogStatus = CS_PAUSE;
+      PauseTheDownload(rv, &iFileDownloadRetries);
     }
     else if(bIgnoreAllNetworkErrors || iIgnoreFileNetworkError)
       rv = nsFTPConn::OK;

@@ -100,8 +100,8 @@ typedef int PRInt32;
 #define PREV_DLG                        2
 #define OTHER_DLG_1                     3
 
-#define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
-#define MAX_FILE_DOWNLOAD_RETRIES       3
+#define MAX_CRC_FAILED_DOWNLOAD_RETRIES 5
+#define MAX_FILE_DOWNLOAD_RETRIES       10
 
 #define STATUS_DISABLED                 0
 #define STATUS_ENABLED                  1
