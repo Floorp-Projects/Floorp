@@ -120,15 +120,12 @@ nsrefcnt nsXMLDocument::Release()
   return nsDocument::Release();
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::StartDocumentLoad(nsIURL *aUrl, 
-                                 nsIContentViewerContainer* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 const char* aCommand)
+nsresult
+nsXMLDocument::Reset(nsIURL* aURL)
 {
-  nsresult rv = nsDocument::StartDocLoad(aUrl, aContainer, aDocListener);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsresult result = nsDocument::Reset(aURL);
+  if (NS_FAILED(result)) {
+    return result;
   }
 
   if (nsnull != mAttrStyleSheet) {
@@ -138,6 +135,33 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
   if (nsnull != mInlineStyleSheet) {
     mInlineStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mInlineStyleSheet);
+  }
+
+  result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
+  if (NS_OK == result) {
+    AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+    
+    result = NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aURL, this);
+    if (NS_OK == result) {
+      AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::StartDocumentLoad(nsIURL *aUrl, 
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener **aDocListener,
+                                 const char* aCommand)
+{
+  nsresult rv = nsDocument::StartDocumentLoad(aUrl, 
+                                              aContainer, 
+                                              aDocListener,
+                                              aCommand);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsIWebShell* webShell;
@@ -156,15 +180,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
     rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
     NS_IF_RELEASE(webShell);
 
-    if (NS_OK == rv) {
-      // For the HTML content within a document
-      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this)) {
-        AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-      }
-      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mInlineStyleSheet, aUrl, this)) {
-        AddStyleSheet(mInlineStyleSheet); // tell the world about our new style sheet
-      }
-      
+    if (NS_OK == rv) {      
       // Set the parser as the stream listener for the document loader...
       static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
       rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);

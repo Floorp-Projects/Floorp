@@ -528,11 +528,7 @@ NS_IMPL_RELEASE(nsDocument)
 nsresult nsDocument::Init()
 {
   nsresult rv = NS_NewHeapArena(&mArena, nsnull);
-  if (NS_OK != rv) {
-    return rv;
-  }
 
-  rv = NS_NewNameSpaceManager(&mNameSpaceManager);
   return rv;
 }
 
@@ -545,12 +541,26 @@ nsIArena* nsDocument::GetArena()
 }
 
 nsresult
-nsDocument::StartDocLoad(nsIURL *aURL, 
-                         nsIContentViewerContainer* aContainer,
-                         nsIStreamListener **aDocListener)
+nsDocument::Reset(nsIURL *aURL)
 {
-  // Delete references to style sheets - this should be done in superclass...
-  PRInt32 index = mStyleSheets.Count();
+  if (nsnull != mDocumentTitle) {
+    delete mDocumentTitle;
+    mDocumentTitle = nsnull;
+  }
+  NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentURLGroup);
+
+  // Delete references to sub-documents
+  PRInt32 index = mSubDocuments.Count();
+  while (--index >= 0) {
+    nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(index);
+    NS_RELEASE(subdoc);
+  }
+
+  NS_IF_RELEASE(mRootContent);
+
+  // Delete references to style sheets
+  index = mStyleSheets.Count();
   while (--index >= 0) {
     nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
     sheet->SetOwningDocument(nsnull);
@@ -558,11 +568,22 @@ nsDocument::StartDocLoad(nsIURL *aURL,
   }
   mStyleSheets.Clear();
 
-  NS_IF_RELEASE(mDocumentURL);
-  NS_IF_RELEASE(mDocumentURLGroup);
-  if (nsnull != mDocumentTitle) {
-    delete mDocumentTitle;
-    mDocumentTitle = nsnull;
+  NS_IF_RELEASE(mListenerManager);
+  NS_IF_RELEASE(mDOMStyleSheets);
+
+  NS_IF_RELEASE(mNameSpaceManager);
+  return NS_NewNameSpaceManager(&mNameSpaceManager);
+}
+
+nsresult
+nsDocument::StartDocumentLoad(nsIURL *aURL, 
+                              nsIContentViewerContainer* aContainer,
+                              nsIStreamListener **aDocListener,
+                              const char* aCommand)
+{
+  nsresult result = Reset(aURL);
+  if (NS_FAILED(result)) {
+    return result;
   }
 
   mDocumentURL = aURL;

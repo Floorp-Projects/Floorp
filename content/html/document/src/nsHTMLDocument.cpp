@@ -202,18 +202,32 @@ nsrefcnt nsHTMLDocument::Release()
   return nsDocument::Release();
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::StartDocumentLoad(nsIURL *aURL, 
-                                  nsIContentViewerContainer* aContainer,
-                                  nsIStreamListener **aDocListener,
-                                  const char* aCommand)
+nsresult 
+nsHTMLDocument::Reset(nsIURL *aURL)
 {
-  nsresult rv = nsDocument::StartDocLoad(aURL, aContainer, aDocListener);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsresult result = nsDocument::Reset(aURL);
+  if (NS_FAILED(result)) {
+    return result;
   }
 
-  nsIWebShell* webShell;
+  PRInt32 i;
+
+  DeleteNamedItems();
+  NS_IF_RELEASE(mImages);
+  NS_IF_RELEASE(mApplets);
+  NS_IF_RELEASE(mEmbeds);
+  NS_IF_RELEASE(mLinks);
+  NS_IF_RELEASE(mAnchors);
+
+  for (i = 0; i < mImageMaps.Count(); i++) {
+    nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
+
+    NS_RELEASE(map);
+  }
+  if (mForms) {
+    mForms->Reset();
+    NS_RELEASE(mForms);
+  }
 
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
@@ -223,6 +237,35 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mStyleAttrStyleSheet);
   }
+
+  result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
+  if (NS_OK == result) {
+    AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+    
+    result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+    if (NS_OK == result) {
+      AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
+                                  nsIContentViewerContainer* aContainer,
+                                  nsIStreamListener **aDocListener,
+                                  const char* aCommand)
+{
+  nsresult rv = nsDocument::StartDocumentLoad(aURL, 
+                                              aContainer, 
+                                              aDocListener,
+                                              aCommand);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsIWebShell* webShell;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -245,13 +288,6 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 #endif
 
     if (NS_OK == rv) {
-      if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this)) {
-        AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-      }
-      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this)) {
-        AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
-      }
-
       // Set the parser as the stream listener for the document loader...
       static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
       rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
@@ -766,7 +802,7 @@ nsHTMLDocument::GetCookie(nsString& aCookie)
   nsresult res = nsServiceManager::GetService(kNetServiceCID,
                                           kINetServiceIID,
                                           (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service) && (nsnull != mDocumentURL)) {
 
     res = service->GetCookieString(mDocumentURL, aCookie);
 
@@ -783,7 +819,7 @@ nsHTMLDocument::SetCookie(const nsString& aCookie)
   nsresult res = nsServiceManager::GetService(kNetServiceCID,
                                           kINetServiceIID,
                                           (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service) && (nsnull != mDocumentURL)) {
 
     res = service->SetCookieString(mDocumentURL, aCookie);
 
@@ -796,40 +832,97 @@ nsHTMLDocument::SetCookie(const nsString& aCookie)
 NS_IMETHODIMP    
 nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult result = NS_OK;
+#if 0
+  // The open occurred after the document finished loading.
+  // So we reset the document and create a new one.
+  if (nsnull == mParser) {
+    nsIURL* blankURL;
+    
+    // XXX Bogus URL since we don't have a real one
+    result = NS_NewURL(&blankURL, "about:blank");
+    
+    if (NS_OK == result) {
+      result = Reset(blankURL);
+      if (NS_OK == result) {
+        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+        result = nsRepository::CreateInstance(kCParserCID, 
+                                              nsnull, 
+                                              kCParserIID, 
+                                              (void **)&mParser);
+        
+        if (NS_OK == result) { 
+          nsIHTMLContentSink* sink;
+          nsIWebShell* webShell = nsnull;
+          
+          nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
+          if (nsnull != shell) {
+            nsIPresContext* cx = shell->GetPresContext();
+            nsISupports* container;
+            if (NS_OK == cx->GetContainer(&container)) {
+              if (nsnull != container) {
+                container->QueryInterface(kIWebShellIID, (void**) &webShell);
+              }
+            }
+          }
+
+          result = NS_NewHTMLContentSink(&sink, this, blankURL, webShell);
+          NS_IF_RELEASE(webShell);
+
+          if (NS_OK == result) {
+            nsIDTD* theDTD=0;
+            NS_NewNavHTMLDTD(&theDTD);
+            mParser->RegisterDTD(theDTD);
+            mParser->SetContentSink(sink); 
+            NS_RELEASE(sink);
+          }
+        }
+      }
+      NS_RELEASE(blankURL);
+    }
+  }
+#endif
+  return result;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::Close()
 {
-  //XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
+nsresult
+nsHTMLDocument::WriteCommon(JSContext *cx, 
+                            jsval *argv, 
+                            PRUint32 argc,
+                            PRBool aNewlineTerminate)
 {
   nsresult result = NS_OK;
 
   // XXX Right now, we only deal with inline document.writes
   if (nsnull == mParser) {
+    result = Open(cx, argv, argc);
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   
   if (argc > 0) {
     PRUint32 index;
     nsAutoString str;
+    str.Truncate();
     for (index = 0; index < argc; index++) {
       JSString *jsstring = JS_ValueToString(cx, argv[index]);
       
       if (nsnull != jsstring) {
         str.Append(JS_GetStringChars(jsstring));
       }
-      else {
-        str.Append("");   // Should this really be null?? 
-      }
     }
+
+    if (aNewlineTerminate) {
+      str.Append('\n');
+    }
+
     result = mParser->Parse(str, PR_TRUE);
     if (NS_OK != result) {
       return result;
@@ -840,22 +933,15 @@ nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
 }
 
 NS_IMETHODIMP    
+nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  return WriteCommon(cx, argv, argc, PR_FALSE);
+}
+
+NS_IMETHODIMP    
 nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  nsAutoString newLine("\n");
-  nsresult result;
-
-  // XXX Right now, we only deal with inline document.writes
-  if (nsnull == mParser) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  
-  result = Write(cx, argv, argc);
-  if (NS_OK == result) {
-    result = mParser->Parse(newLine, PR_TRUE);
-  }
-  
-  return result;
+  return WriteCommon(cx, argv, argc, PR_TRUE);
 }
 
 nsIContent *

@@ -65,6 +65,11 @@ public:
 
   virtual nsIArena* GetArena();
 
+  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                               nsIContentViewerContainer* aContainer,
+                               nsIStreamListener **aDocListener,
+                               const char* aCommand);
+
   /**
    * Return the title of the document. May return null.
    */
@@ -291,12 +296,10 @@ protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
+  virtual nsresult Reset(nsIURL* aURL);
 
 protected:
 
-  virtual nsresult StartDocLoad(nsIURL *aUrl, 
-                                nsIContentViewerContainer* aContainer,
-                                nsIStreamListener **aDocListener);
 
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
 
