@@ -434,13 +434,20 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool first = PR_FALSE;
             nsAutoString color = "COLOR";
             nsAutoString value = "red";
-            mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
+            mEditor->GetTextProperty(nsIEditProperty::font, &color, &value, first, any, all);
+            if (!all) {
+              mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
+            }
+            else {
+              printf("NOOP: all selected text is already red\n");
+            }
           }
         }
         break;
 
-      // hard-coded ChangeTextAttributes test -- font color green
+      // hard-coded ChangeTextAttributes test -- remove font color
       case nsIDOMEvent::VK_2:
+        case nsIDOMEvent::VK_R:
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
@@ -452,8 +459,13 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
             nsAutoString color = "COLOR";
-            nsAutoString value = "green";
-            mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
+            mEditor->GetTextProperty(nsIEditProperty::font, &color, nsnull, first, any, all);
+            if (any) {
+              mEditor->RemoveTextProperty(nsIEditProperty::font, &color);
+            }
+            else {
+              printf("NOOP: no color set\n");
+            }
           }
         }
         break;
@@ -496,7 +508,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-              // hard-coded ChangeTextAttributes test -- font face helvetica
+      // hard-coded ChangeTextAttributes test -- font face helvetica
       case nsIDOMEvent::VK_5:
         if (PR_TRUE==ctrlKey)
         {
@@ -554,7 +566,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         }
         break;
 
-      // hard-coded change structure test -- block H2
+      // hard-coded change structure test -- block blockquote (indent)
       case nsIDOMEvent::VK_8:
         case nsIDOMEvent::VK_W:
         if (PR_TRUE==ctrlKey)
@@ -567,7 +579,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             if (htmlEditor) 
             {
               nsAutoString tag;
-              nsIEditProperty::h2->ToString(tag);
+              nsIEditProperty::blockquote->ToString(tag);
               htmlEditor->AddBlockParent(tag);
             }
           }
@@ -586,6 +598,26 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             htmlEditor = do_QueryInterface(mEditor);
             if (htmlEditor) {
               htmlEditor->RemoveBlockParent();
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- un-BlockQuote
+      case nsIDOMEvent::VK_0:
+        case nsIDOMEvent::VK_G:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) 
+            {
+              nsAutoString tag;
+              nsIEditProperty::blockquote->ToString(tag);
+              htmlEditor->RemoveParent(tag);
             }
           }
         }
