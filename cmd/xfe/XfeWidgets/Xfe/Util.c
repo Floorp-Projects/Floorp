@@ -177,6 +177,42 @@ XfeForeground(Widget w)
 	return _XfemForeground(w);
 }
 /*----------------------------------------------------------------------*/
+/* extern */ Pixel
+XfeBottomShadowColor(Widget w)
+{
+    assert( _XfeIsAlive(w) );
+
+	if (!_XfeIsAlive(w))
+	{
+		return 0;
+	}
+    
+	if (XmIsPrimitive(w))
+	{
+		return _XfeBottomShadowColor(w);
+	}
+
+	return _XfemBottomShadowColor(w);
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Pixel
+XfeTopShadowColor(Widget w)
+{
+    assert( _XfeIsAlive(w) );
+
+	if (!_XfeIsAlive(w))
+	{
+		return 0;
+	}
+    
+	if (XmIsPrimitive(w))
+	{
+		return _XfeTopShadowColor(w);
+	}
+
+	return _XfemTopShadowColor(w);
+}
+/*----------------------------------------------------------------------*/
 /* extern */ String
 XfeClassNameForWidget(Widget w)
 {

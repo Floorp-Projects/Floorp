@@ -260,6 +260,8 @@ extern Colormap		XfeColormap				(Widget w);
 extern Cardinal		XfeDepth				(Widget w);
 extern Pixel		XfeBackground			(Widget w);
 extern Pixel		XfeForeground			(Widget w);
+extern Pixel		XfeTopShadowColor		(Widget w);
+extern Pixel		XfeBottomShadowColor	(Widget w);
 extern Visual *		XfeVisual				(Widget w);
 extern String		XfeClassNameForWidget	(Widget w);
 
