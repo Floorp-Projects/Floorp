@@ -37,13 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsQuoteList.h"
-#include "nsIDOMCharacterData.h"
-#include "nsCSSPseudoElements.h"
-#include "nsLayoutUtils.h"
 #include "nsReadableUtils.h"
 
 const nsString*
-nsQuoteListNode::Text()
+nsQuoteNode::Text()
 {
   NS_ASSERTION(mType == eStyleContentType_OpenQuote ||
                mType == eStyleContentType_CloseQuote,
@@ -72,9 +69,9 @@ nsQuoteListNode::Text()
 }
 
 void
-nsQuoteList::Calc(nsQuoteListNode* aNode)
+nsQuoteList::Calc(nsQuoteNode* aNode)
 {
-  if (aNode == mFirstNode) {
+  if (aNode == FirstNode()) {
     aNode->mDepthBefore = 0;
   } else {
     aNode->mDepthBefore = Prev(aNode)->DepthAfter();
@@ -84,7 +81,7 @@ nsQuoteList::Calc(nsQuoteListNode* aNode)
 void
 nsQuoteList::RecalcAll()
 {
-  nsQuoteListNode *node = mFirstNode;
+  nsQuoteNode *node = FirstNode();
   if (!node)
     return;
 
@@ -97,7 +94,7 @@ nsQuoteList::RecalcAll()
 
     // Next node
     node = Next(node);
-  } while (node != mFirstNode);
+  } while (node != FirstNode());
 }
 
 #ifdef DEBUG
@@ -105,12 +102,12 @@ void
 nsQuoteList::PrintChain()
 {
   printf("Chain: \n");
-  if (!mFirstNode) {
+  if (!FirstNode()) {
     return;
   }
-  nsQuoteListNode* node = mFirstNode;
+  nsQuoteNode* node = FirstNode();
   do {
-    printf("  %p %d - ", node, node->mDepthBefore);
+    printf("  %p %d - ", NS_STATIC_CAST(void*, node), node->mDepthBefore);
     switch(node->mType) {
         case (eStyleContentType_OpenQuote):
           printf("open");
@@ -135,145 +132,6 @@ nsQuoteList::PrintChain()
     }
     printf("\n");
     node = Next(node);
-  } while (node != mFirstNode);
+  } while (node != FirstNode());
 }
 #endif
-
-void
-nsQuoteList::Clear()
-{
-  //Delete entire list
-  if (!mFirstNode)
-    return;
-  for (nsQuoteListNode *node = Next(mFirstNode); node != mFirstNode;
-       node = Next(mFirstNode))
-  {
-    Remove(node);
-    delete node;
-  }
-  delete mFirstNode;
-
-  mFirstNode = nsnull;
-  mSize = 0;
-}
-
-PRBool
-nsQuoteList::DestroyNodesFor(nsIFrame* aFrame)
-{
-  if (!mFirstNode)
-    return PR_FALSE; // list empty
-  nsQuoteListNode* node;
-  PRBool destroyed = PR_FALSE;
-  while (mFirstNode->mPseudoFrame == aFrame) {
-    destroyed = PR_TRUE;
-    node = Next(mFirstNode);
-    if (node == mFirstNode) { // Last link
-      mFirstNode = nsnull;
-      delete node;
-      return PR_TRUE;
-    }
-    else {
-      Remove(mFirstNode);
-      delete mFirstNode;
-      mFirstNode = node;
-    }
-  }
-  node = Next(mFirstNode);
-  while (node != mFirstNode) {
-    if (node->mPseudoFrame == aFrame) {
-      destroyed = PR_TRUE;
-      nsQuoteListNode *nextNode = Next(node);
-      Remove(node);
-      delete node;
-      node = nextNode;
-    } else {
-      node = Next(node);
-    }
-  }
-  return destroyed;
-}
-
-// return -1 for ::before and +1 for ::after
-inline PRBool PseudoCompareType(nsIFrame *aFrame)
-{
-  nsIAtom *pseudo = aFrame->GetStyleContext()->GetPseudoType();
-  NS_ASSERTION(pseudo == nsCSSPseudoElements::before ||
-               pseudo == nsCSSPseudoElements::after,
-               "not a pseudo-element frame");
-  return pseudo == nsCSSPseudoElements::before ? -1 : 1;
-}
-
-static PRBool NodeAfter(nsQuoteListNode* aNode1, nsQuoteListNode* aNode2)
-{
-  nsIFrame *frame1 = aNode1->mPseudoFrame;
-  nsIFrame *frame2 = aNode2->mPseudoFrame;
-  if (frame1 == frame2) {
-    NS_ASSERTION(aNode2->mContentIndex != aNode1->mContentIndex, "identical");
-    return aNode1->mContentIndex > aNode2->mContentIndex;
-  }
-  PRInt32 pseudoType1 = PseudoCompareType(frame1);
-  PRInt32 pseudoType2 = PseudoCompareType(frame2);
-  nsIContent *content1 = frame1->GetContent();
-  nsIContent *content2 = frame2->GetContent();
-  if (content1 == content2) {
-    NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
-    return pseudoType1 == 1;
-  }
-  PRInt32 cmp = nsLayoutUtils::DoCompareTreePosition(content1, content2,
-                                                     pseudoType1, -pseudoType2);
-  NS_ASSERTION(cmp != 0, "same content, different frames");
-  return cmp > 0;
-}
-
-void
-nsQuoteList::Insert(nsQuoteListNode* aNode)
-{
-  if (mFirstNode) {
-    // Check for append.
-    if (NodeAfter(aNode, Prev(mFirstNode))) {
-      PR_INSERT_BEFORE(aNode, mFirstNode);
-    }
-    else {
-      // Binary search.
-
-      // the range of indices at which |aNode| could end up.
-      PRUint32 first = 0, last = mSize - 1;
-
-      // A cursor to avoid walking more than the length of the list.
-      nsQuoteListNode *curNode = Prev(mFirstNode);
-      PRUint32 curIndex = mSize - 1;
-
-      while (first != last) {
-        PRUint32 test = (first + last) / 2;
-        if (last == curIndex) {
-          for ( ; curIndex != test; --curIndex)
-            curNode = Prev(curNode);
-        } else {
-          for ( ; curIndex != test; ++curIndex)
-            curNode = Next(curNode);
-        }
-
-        if (NodeAfter(aNode, curNode)) {
-          first = test + 1;
-          // if we exit the loop, we need curNode to be right
-          ++curIndex;
-          curNode = Next(curNode);
-        } else {
-          last = test;
-        }
-      }
-      PR_INSERT_BEFORE(aNode, curNode);
-      if (curNode == mFirstNode) {
-        mFirstNode = aNode;
-      }
-    }
-  }
-  else {
-    // initialize list with first node
-    PR_INIT_CLIST(aNode);
-    mFirstNode = aNode;
-  }
-  ++mSize;
-
-  Calc(aNode);
-}

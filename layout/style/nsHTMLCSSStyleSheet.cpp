@@ -76,10 +76,19 @@ public:
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
+protected:
+  nsCSSValueList mInheritList;
+  nsCSSQuotes mInheritQuotes;
+  nsCSSCounterData mNoneCounter;
 };
 
 CSSDisablePropsRule::CSSDisablePropsRule()
 {
+  nsCSSValue none(eCSSUnit_None);
+  mNoneCounter.mCounter = none;
+  nsCSSValue inherit(eCSSUnit_Inherit);
+  mInheritList.mValue = inherit;
+  mInheritQuotes.mOpen = inherit;
 }
 
 class CSSFirstLineRule : public CSSDisablePropsRule {
@@ -115,8 +124,9 @@ CSSDisablePropsRule::List(FILE* out, PRInt32 aIndent) const
 /*
  * Note:  These rule mapping functions, unlike practically all others,
  * will overwrite the properties even if they're not |eCSSUnit_Null|.
- * This is only a partial fix for the fact that they should be higher in
- * the cascade (at the very top).
+ * XXX This is only a partial fix for the fact that they should be
+ * higher in the cascade (at the very top).  It doesn't work in the case
+ * where something higher in the cascade fully specifies the struct.
  *
  * XXX This should be cleaned up once we implement eCSSUnit_Initial
  * throughout.
@@ -204,17 +214,15 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   if (aData->mSID == eStyleStruct_Content) {
     // Don't bother resetting 'content'.
 
-    // Don't bother with '-moz-counter-increment' and
-    // '-moz-counter-reset' since they're '-moz-'ed and should be
-    // removed soon.
+    aData->mContentData->mCounterIncrement = &mNoneCounter;
+    aData->mContentData->mCounterReset = &mNoneCounter;
 
     nsCSSValue autovalue(eCSSUnit_Auto);
     aData->mContentData->mMarkerOffset = autovalue;
   }
 
   if (aData->mSID == eStyleStruct_Quotes) {
-    // XXX |mQuotes| is a pain, because we have to have our own cursor
-    // structure allocated.
+    aData->mContentData->mQuotes = &mInheritQuotes;
   }
 
   // Disable everything in the UserInterface struct.
@@ -223,8 +231,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mUserInterfaceData->mUserInput = inherit;
     aData->mUserInterfaceData->mUserModify = inherit;
     aData->mUserInterfaceData->mUserFocus = inherit;
-    // XXX |mCursor| is a pain, because we have to have our own cursor
-    // structure allocated.
+    aData->mUserInterfaceData->mCursor = &mInheritList;
   }
 
   if (aData->mSID == eStyleStruct_UIReset) {

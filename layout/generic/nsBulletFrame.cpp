@@ -249,12 +249,12 @@ nsBulletFrame::Paint(nsPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
 #ifdef IBMBIDI
-      GetListItemText(aPresContext, *myList, text);
+      GetListItemText(*myList, text);
       charType = eCharType_EuropeanNumber;
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-      if (GetListItemText(aPresContext, *myList, text))
+      if (GetListItemText(*myList, text))
         charType = eCharType_ArabicNumber;
       else
         charType = eCharType_EuropeanNumber;
@@ -264,7 +264,7 @@ nsBulletFrame::Paint(nsPresContext*      aPresContext,
       aRenderingContext.GetHints(hints);
       isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
       if (!isBidiSystem) {
-        if (GetListItemText(aPresContext, *myList, text)) {
+        if (GetListItemText(*myList, text)) {
           charType = eCharType_RightToLeft;
           level = 1;
         } else {
@@ -338,7 +338,7 @@ nsBulletFrame::Paint(nsPresContext*      aPresContext,
       // system, we'll be using "decimal"...
       PRBool usedChars =
 #endif // IBMBIDI
-      GetListItemText(aPresContext, *myList, text);
+      GetListItemText(*myList, text);
 #ifdef IBMBIDI
       if (!usedChars)
         charType = eCharType_EuropeanNumber;
@@ -1106,9 +1106,247 @@ static PRBool EthiopicToText(PRInt32 ordinal, nsString& result)
 }
 
 
+/* static */ PRBool
+nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
+                                 PRInt32 aOrdinal,
+                                 nsString& result)
+{
+  PRBool success;
+  
+  switch (aListStyleType) {
+    case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
+      break;
+
+    case NS_STYLE_LIST_STYLE_DISC: // used by counters code only
+      // XXX We really need to do this the same way we do list bullets.
+      result.Append(PRUnichar(0x2022));
+      break;
+
+    case NS_STYLE_LIST_STYLE_CIRCLE: // used by counters code only
+      // XXX We really need to do this the same way we do list bullets.
+      result.Append(PRUnichar(0x25E6));
+      break;
+
+    case NS_STYLE_LIST_STYLE_SQUARE: // used by counters code only
+      // XXX We really need to do this the same way we do list bullets.
+      result.Append(PRUnichar(0x25FE));
+      break;
+
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
+    default: // CSS2 say "A users  agent that does not recognize a numbering system
+      // should use 'decimal'
+      success = DecimalToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+      success = DecimalLeadingZeroToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+      success = RomanToText(aOrdinal, result,
+                            gLowerRomanCharsA, gLowerRomanCharsB);
+      break;
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+      success = RomanToText(aOrdinal, result,
+                            gUpperRomanCharsA, gUpperRomanCharsB);
+      break;
+
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+      success = CharListToText(aOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
+      success = CharListToText(aOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_KATAKANA:
+      success = CharListToText(aOrdinal, result, gKatakanaChars,
+                               KATAKANA_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_HIRAGANA:
+      success = CharListToText(aOrdinal, result, gHiraganaChars,
+                               HIRAGANA_CHARS_SIZE);
+      break;
+    
+    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+      success = CharListToText(aOrdinal, result, gKatakanaIrohaChars,
+                               KATAKANA_IROHA_CHARS_SIZE);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+      success = CharListToText(aOrdinal, result, gHiraganaIrohaChars,
+                               HIRAGANA_IROHA_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
+      success = CharListToText(aOrdinal, result, gLowerGreekChars ,
+                               LOWER_GREEK_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit1);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit1);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit2);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit3,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit2);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
+                                     gCJKIdeographicUnit1,
+                                     gCJKIdeographic10KUnit3);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
+      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
+                                     gCJKIdeographicUnit2,
+                                     gCJKIdeographic10KUnit3);
+      break;
+
+    case NS_STYLE_LIST_STYLE_HEBREW: 
+      success = HebrewToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_ARMENIAN: 
+      success = ArmenianToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_GEORGIAN: 
+      success = GeorgianToText(aOrdinal, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
+      success = OtherDecimalToText(aOrdinal, 0x0660, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
+    case NS_STYLE_LIST_STYLE_MOZ_URDU:
+      success = OtherDecimalToText(aOrdinal, 0x06f0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
+      success = OtherDecimalToText(aOrdinal, 0x0966, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
+      success = OtherDecimalToText(aOrdinal, 0x0a66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
+      success = OtherDecimalToText(aOrdinal, 0x0AE6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
+      success = OtherDecimalToText(aOrdinal, 0x0B66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
+      success = OtherDecimalToText(aOrdinal, 0x0CE6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
+      success = OtherDecimalToText(aOrdinal, 0x0D66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_THAI:
+      success = OtherDecimalToText(aOrdinal, 0x0E50, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_LAO:
+      success = OtherDecimalToText(aOrdinal, 0x0ED0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
+      success = OtherDecimalToText(aOrdinal, 0x1040, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
+      success = OtherDecimalToText(aOrdinal, 0x17E0, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
+      success = OtherDecimalToText(aOrdinal, 0x09E6, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
+      success = OtherDecimalToText(aOrdinal, 0x0C66, result);
+      break;
+ 
+    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
+      success = TamilToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
+      success = CharListToText(aOrdinal, result, gCJKHeavenlyStemChars,
+                               CJK_HEAVENLY_STEM_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
+      success = CharListToText(aOrdinal, result, gCJKEarthlyBranchChars,
+                               CJK_EARTHLY_BRANCH_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
+      success = CharListToText(aOrdinal, result, gHangulChars, HANGUL_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
+      success = CharListToText(aOrdinal, result, gHangulConsonantChars,
+                               HANGUL_CONSONANT_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
+      success = CharListToText(aOrdinal, result, gEthiopicHalehameChars,
+                               ETHIOPIC_HALEHAME_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+      success = EthiopicToText(aOrdinal, result);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
+      success = CharListToText(aOrdinal, result, gEthiopicHalehameAmChars,
+                               ETHIOPIC_HALEHAME_AM_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
+      success = CharListToText(aOrdinal, result, gEthiopicHalehameTiErChars,
+                               ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
+      success = CharListToText(aOrdinal, result, gEthiopicHalehameTiEtChars,
+                               ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
+      break;
+  }
+  return success;
+}
+
 PRBool
-nsBulletFrame::GetListItemText(nsPresContext* aCX,
-                               const nsStyleList& aListStyle,
+nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                                nsString& result)
 {
 #ifdef IBMBIDI
@@ -1121,219 +1359,14 @@ nsBulletFrame::GetListItemText(nsPresContext* aCX,
   }
 #endif // IBMBIDI
 
-  PRBool success = PR_TRUE;
-  
-  switch (aListStyle.mListStyleType) {
-    case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
-    default: // CSS2 say "A users  agent that does not recognize a numbering system
-      // should use 'decimal'
-      success = DecimalToText(mOrdinal, result);
-      break;
+  NS_ASSERTION(aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_NONE &&
+               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_DISC &&
+               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
+               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_SQUARE,
+               "we should be using specialized code for these types");
+  PRBool success =
+    AppendCounterText(aListStyle.mListStyleType, mOrdinal, result);
 
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-      success = DecimalLeadingZeroToText(mOrdinal, result);
-      break;
-
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-      success = RomanToText(mOrdinal, result,
-                            gLowerRomanCharsA, gLowerRomanCharsB);
-      break;
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-      success = RomanToText(mOrdinal, result,
-                            gUpperRomanCharsA, gUpperRomanCharsB);
-      break;
-
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-      success = CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-      success = CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-      success = CharListToText(mOrdinal, result, gKatakanaChars,
-                               KATAKANA_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-      success = CharListToText(mOrdinal, result, gHiraganaChars,
-                               HIRAGANA_CHARS_SIZE);
-      break;
-    
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-      success = CharListToText(mOrdinal, result, gKatakanaIrohaChars,
-                               KATAKANA_IROHA_CHARS_SIZE);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-      success = CharListToText(mOrdinal, result, gHiraganaIrohaChars,
-                               HIRAGANA_IROHA_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-      success = CharListToText(mOrdinal, result, gLowerGreekChars ,
-                               LOWER_GREEK_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit1);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit1);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit2);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit3,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit2);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit3);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
-      success = CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit2,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit3);
-      break;
-
-    case NS_STYLE_LIST_STYLE_HEBREW: 
-      success = HebrewToText(mOrdinal, result);
-      break;
-
-    case NS_STYLE_LIST_STYLE_ARMENIAN: 
-      success = ArmenianToText(mOrdinal, result);
-      break;
-
-    case NS_STYLE_LIST_STYLE_GEORGIAN: 
-      success = GeorgianToText(mOrdinal, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-      success = OtherDecimalToText(mOrdinal, 0x0660, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-    case NS_STYLE_LIST_STYLE_MOZ_URDU:
-      success = OtherDecimalToText(mOrdinal, 0x06f0, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-      success = OtherDecimalToText(mOrdinal, 0x0966, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-      success = OtherDecimalToText(mOrdinal, 0x0a66, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-      success = OtherDecimalToText(mOrdinal, 0x0AE6, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-      success = OtherDecimalToText(mOrdinal, 0x0B66, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-      success = OtherDecimalToText(mOrdinal, 0x0CE6, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-      success = OtherDecimalToText(mOrdinal, 0x0D66, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_THAI:
-      success = OtherDecimalToText(mOrdinal, 0x0E50, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_LAO:
-      success = OtherDecimalToText(mOrdinal, 0x0ED0, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-      success = OtherDecimalToText(mOrdinal, 0x1040, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-      success = OtherDecimalToText(mOrdinal, 0x17E0, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-      success = OtherDecimalToText(mOrdinal, 0x09E6, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-      success = OtherDecimalToText(mOrdinal, 0x0C66, result);
-      break;
- 
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-      success = TamilToText(mOrdinal, result);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-      success = CharListToText(mOrdinal, result, gCJKHeavenlyStemChars,
-                               CJK_HEAVENLY_STEM_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-      success = CharListToText(mOrdinal, result, gCJKEarthlyBranchChars,
-                               CJK_EARTHLY_BRANCH_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-      success = CharListToText(mOrdinal, result, gHangulChars, HANGUL_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-      success = CharListToText(mOrdinal, result, gHangulConsonantChars,
-                               HANGUL_CONSONANT_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-      success = CharListToText(mOrdinal, result, gEthiopicHalehameChars,
-                               ETHIOPIC_HALEHAME_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
-      success = EthiopicToText(mOrdinal, result);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-      success = CharListToText(mOrdinal, result, gEthiopicHalehameAmChars,
-                               ETHIOPIC_HALEHAME_AM_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-      success = CharListToText(mOrdinal, result, gEthiopicHalehameTiErChars,
-                               ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE);
-      break;
-
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      success = CharListToText(mOrdinal, result, gEthiopicHalehameTiEtChars,
-                               ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
-      break;
-  }
   // XXX For some of these systems, "." is wrong!  This should really be
   // pushed up into the cases...
 #ifdef IBMBIDI
@@ -1545,7 +1578,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      GetListItemText(aCX, *myList, text);
+      GetListItemText(*myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);
       aReflowState.rendContext->GetWidth(text, aMetrics.width);

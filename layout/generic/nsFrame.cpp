@@ -648,15 +648,6 @@ nsFrame::Destroy(nsPresContext* aPresContext)
       }
     }
 
-    // If the frame contains generated context, remove it from
-    // the quoteList.
-    if (mState & NS_FRAME_GENERATED_CONTENT) {
-      shell->FrameConstructor()->GeneratedContentFrameRemoved(this);
-    }
-
-    // XXX Rather than always doing this it would be better if it was part of
-    // a frame observer mechanism and the pres shell could register as an
-    // observer of the frame while the reflow command is pending...
     shell->NotifyDestroyingFrame(this);
 
     if ((mState & NS_FRAME_EXTERNAL_REFERENCE) ||

@@ -143,7 +143,6 @@
   padding: inherit;
   display: inherit;
   -moz-box-orient: inherit;
-  -moz-counter-reset: inherit;
   /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
      blocks with overflow: scroll; */
   unicode-bidi: inherit;

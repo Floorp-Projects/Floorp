@@ -53,6 +53,7 @@
 #include "nsCOMArray.h"
 #include "nsIAtom.h"
 #include "nsIURI.h"
+#include "nsCSSValue.h"
 
 class nsIFrame;
 class imgIRequest;
@@ -885,10 +886,10 @@ struct nsStyleContentData {
   union {
     PRUnichar *mString;
     imgIRequest *mImage;
+    nsCSSValue::Array* mCounters;
   } mContent;
 
-  // empty constructor to keep Sun compiler happy
-  nsStyleContentData() {}
+  nsStyleContentData() : mType(nsStyleContentType(0)) { mContent.mString = nsnull; }
   ~nsStyleContentData();
   nsStyleContentData& operator=(const nsStyleContentData& aOther);
   PRBool operator==(const nsStyleContentData& aOther);
@@ -896,6 +897,8 @@ struct nsStyleContentData {
   PRBool operator!=(const nsStyleContentData& aOther) {
     return !(*this == aOther);
   }
+private:
+  nsStyleContentData(const nsStyleContentData&); // not to be implemented
 };
 
 struct nsStyleCounterData {
@@ -1013,13 +1016,9 @@ struct nsStyleContent: public nsStyleStruct {
   nsresult AllocateContents(PRUint32 aCount);
 
   PRUint32  CounterIncrementCount(void) const { return mIncrementCount; }  // [reset]
-  nsresult  GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const {
-    if (aIndex < mIncrementCount) {
-      aCounter = mIncrements[aIndex].mCounter;
-      aIncrement = mIncrements[aIndex].mValue;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+  const nsStyleCounterData* GetCounterIncrementAt(PRUint32 aIndex) const {
+    NS_ASSERTION(aIndex < mIncrementCount, "out of range");
+    return &mIncrements[aIndex];
   }
 
   nsresult  AllocateCounterIncrements(PRUint32 aCount) {
@@ -1047,13 +1046,9 @@ struct nsStyleContent: public nsStyleStruct {
   }
 
   PRUint32  CounterResetCount(void) const { return mResetCount; }  // [reset]
-  nsresult  GetCounterResetAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aValue) const {
-    if (aIndex < mResetCount) {
-      aCounter = mResets[aIndex].mCounter;
-      aValue = mResets[aIndex].mValue;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+  const nsStyleCounterData* GetCounterResetAt(PRUint32 aIndex) const {
+    NS_ASSERTION(aIndex < mResetCount, "out of range");
+    return &mResets[aIndex];
   }
 
   nsresult  AllocateCounterResets(PRUint32 aCount) {

@@ -1889,6 +1889,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mGfxScrollFrame(nsnull)
   , mUpdateCount(0)
   , mQuotesDirty(PR_FALSE)
+  , mCountersDirty(PR_FALSE)
 {
   if (!gGotXBLFormPrefs) {
     gGotXBLFormPrefs = PR_TRUE;
@@ -1968,10 +1969,19 @@ nsIXBLService * nsCSSFrameConstructor::GetXBLService()
 }
 
 void
-nsCSSFrameConstructor::GeneratedContentFrameRemoved(nsIFrame* aFrame)
+nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
-  if (mQuoteList.DestroyNodesFor(aFrame))
-    QuotesDirty();
+  if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
+    if (mQuoteList.DestroyNodesFor(aFrame))
+      QuotesDirty();
+  }
+
+  if (mCounterManager.DestroyNodesFor(aFrame)) {
+    // Technically we don't need to update anything if we destroyed only
+    // USE nodes.  However, this is unlikely to happen in the real world
+    // since USE nodes generally go along with INCREMENT nodes.
+    CountersDirty();
+  }
 }
 
 nsresult
@@ -2043,16 +2053,18 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
 
   } else {
 
-    nsAutoString contentString(data.mContent.mString);
+    nsAutoString contentString;
 
     switch (type) {
     case eStyleContentType_String:
+      contentString = data.mContent.mString;
       break;
   
     case eStyleContentType_Attr:
-      {  
+      {
         nsCOMPtr<nsIAtom> attrName;
         PRInt32 attrNameSpace = kNameSpaceID_None;
+        contentString = data.mContent.mString;
         PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
         if (-1 != barIndex) {
           nsAutoString  nameSpaceVal;
@@ -2100,7 +2112,31 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
   
     case eStyleContentType_Counter:
     case eStyleContentType_Counters:
-      return NS_ERROR_NOT_IMPLEMENTED;  // XXX not supported yet...
+      {
+        nsCSSValue::Array *counters = data.mContent.mCounters;
+        nsCounterList *counterList = mCounterManager.CounterListFor(
+            nsDependentString(counters->Item(0).GetStringBufferValue()));
+        if (!counterList)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsCounterUseNode* node =
+          new nsCounterUseNode(counters, aParentFrame, aContentIndex,
+                               type == eStyleContentType_Counters);
+        if (!node)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        counterList->Insert(node);
+        if (counterList->IsLast(node))
+          node->Calc(counterList);
+        else {
+          counterList->SetDirty();
+          CountersDirty();
+        }
+
+        textPtr = &node->mText; // text node assigned below
+        node->GetText(contentString);
+      }
+      break;
 
     case eStyleContentType_Image:
       NS_NOTREACHED("handled by if above");
@@ -2111,12 +2147,13 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     case eStyleContentType_NoOpenQuote:
     case eStyleContentType_NoCloseQuote:
       {
-        nsQuoteListNode* node =
-          new nsQuoteListNode(type, aParentFrame, aContentIndex);
+        nsQuoteNode* node = new nsQuoteNode(type, aParentFrame, aContentIndex);
         if (!node)
           return NS_ERROR_OUT_OF_MEMORY;
         mQuoteList.Insert(node);
-        if (!mQuoteList.IsLast(node))
+        if (mQuoteList.IsLast(node))
+          mQuoteList.Calc(node);
+        else
           QuotesDirty();
 
         // Don't generate a text node or any text for 'no-open-quote' and
@@ -2124,7 +2161,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         if (node->IsHiddenQuote())
           return NS_OK;
 
-        textPtr = &node->mText; // Delayed storage of text node.
+        textPtr = &node->mText; // text node assigned below
         contentString = *node->Text();
       }
       break;
@@ -2141,8 +2178,10 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         // Set the text
         textContent->SetText(contentString, PR_TRUE);
 
-        if (textPtr)
+        if (textPtr) {
           *textPtr = do_QueryInterface(textContent);
+          NS_ASSERTION(*textPtr, "must implement nsIDOMCharacterData");
+        }
 
         // Set aContent as the parent content so that event handling works.
         textContent->SetParent(aContent);
@@ -2153,6 +2192,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         // Create a text frame and initialize it
         NS_NewTextFrame(mPresShell, &textFrame);
         if (!textFrame) {
+          // XXX The quotes/counters code doesn't like the text pointer
+          // being null in case of dynamic changes!
+          NS_NOTREACHED("this OOM case isn't handled very well");
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -2160,6 +2202,10 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
                         nsnull);
 
         content = textContent;
+      } else {
+        // XXX The quotes/counters code doesn't like the text pointer
+        // being null in case of dynamic changes!
+        NS_NOTREACHED("this OOM case isn't handled very well");
       }
 
       // Return the text frame
@@ -6827,6 +6873,11 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
     aState.mFrameManager->RestoreFrameStateFor(aNewFrame, aState.mFrameState);
   }
 
+  if (!aPrevInFlow &&
+      mCounterManager.AddCounterResetsAndIncrements(aNewFrame)) {
+    CountersDirty();
+  }
+
   return rv;
 }
 
@@ -10481,14 +10532,23 @@ nsCSSFrameConstructor::EndUpdate()
       mQuoteList.RecalcAll();
       mQuotesDirty = PR_FALSE;
     }
+    if (mCountersDirty) {
+      mCounterManager.RecalcAll();
+      mCountersDirty = PR_FALSE;
+    }
   }
 }
 
 void
 nsCSSFrameConstructor::WillDestroyFrameTree()
 {
+#if defined(DEBUG_dbaron_off)
+  mCounterManager.Dump();
+#endif
+
   // Prevent frame tree destruction from being O(N^2)
   mQuoteList.Clear();
+  mCounterManager.Clear();
 
   // Cancel all pending reresolves
   mRestyleEventQueue = nsnull;

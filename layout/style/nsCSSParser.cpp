@@ -79,8 +79,6 @@
 #include "prprf.h"
 #include "math.h"
 
-//#define ENABLE_COUNTERS  // un-comment this to enable counters (bug 15174)
-
 //----------------------------------------------------------------------
 
 // Your basic top-down recursive descent style parser
@@ -166,6 +164,7 @@ protected:
   void SkipRuleSet(nsresult& aErrorCode);
   PRBool SkipAtRule(nsresult& aErrorCode);
   PRBool SkipDeclaration(nsresult& aErrorCode, PRBool aCheckForBraces);
+  PRBool GetNonCloseParenToken(nsresult& aErrorCode, PRBool aSkipWS);
 
   PRBool PushGroup(nsICSSGroupRule* aRule);
   void PopGroup(void);
@@ -284,10 +283,6 @@ protected:
                    nsCSSProperty aPropID);
   PRBool DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode);
   PRBool ParseContent(nsresult& aErrorCode);
-  PRBool SetSingleCounterValue(nsCSSCounterData** aResult,
-                               nsresult& aErrorCode,
-                               nsCSSProperty aPropID,
-                               const nsCSSValue& aValue);
   PRBool ParseCounterData(nsresult& aErrorCode,
                           nsCSSCounterData** aResult,
                           nsCSSProperty aPropID);
@@ -1529,6 +1524,17 @@ void CSSParserImpl::SkipUntil(nsresult& aErrorCode, PRUnichar aStopSymbol)
       }
     }
   }
+}
+
+PRBool CSSParserImpl::GetNonCloseParenToken(nsresult& aErrorCode, PRBool aSkipWS)
+{
+  if (!GetToken(aErrorCode, aSkipWS))
+    return PR_FALSE;
+  if (mToken.mType == eCSSToken_Symbol && mToken.mSymbol == ')') {
+    UngetToken();
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 PRBool
@@ -3598,21 +3604,12 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
       (eCSSToken_Function == tk->mType) &&
       (tk->mIdent.LowerCaseEqualsLiteral("counter") || 
        tk->mIdent.LowerCaseEqualsLiteral("counters"))) {
-#ifdef ENABLE_COUNTERS
-    if (ParseCounter(aErrorCode, aValue)) {
-      return PR_TRUE;
-    }
-#endif
-    return PR_FALSE;
+    return ParseCounter(aErrorCode, aValue);
   }
   if (((aVariantMask & VARIANT_ATTR) != 0) &&
       (eCSSToken_Function == tk->mType) &&
       tk->mIdent.LowerCaseEqualsLiteral("attr")) {
-    
-    if (ParseAttr(aErrorCode, aValue)) {
-      return PR_TRUE;
-    }
-    return PR_FALSE;
+    return ParseAttr(aErrorCode, aValue);
   }
 
   UngetToken();
@@ -3625,59 +3622,66 @@ PRBool CSSParserImpl::ParseCounter(nsresult& aErrorCode, nsCSSValue& aValue)
   nsCSSUnit unit = (mToken.mIdent.LowerCaseEqualsLiteral("counter") ? 
                     eCSSUnit_Counter : eCSSUnit_Counters);
 
-  if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
-    if (GetToken(aErrorCode, PR_TRUE)) {
-      if (eCSSToken_Ident == mToken.mType) {
-        nsAutoString  counter;
-        counter.Append(mToken.mIdent);
+  if (!ExpectSymbol(aErrorCode, '(', PR_FALSE))
+    return PR_FALSE;
 
-        if (eCSSUnit_Counters == unit) {
-          // get mandatory string
-          if (! ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-            return PR_FALSE;
-          }
-          if (GetToken(aErrorCode, PR_TRUE) && (eCSSToken_String == mToken.mType)) {
-            counter.Append(PRUnichar(','));
-            counter.Append(mToken.mSymbol); // quote too
-            counter.Append(mToken.mIdent);
-            counter.Append(mToken.mSymbol); // quote too
-          }
-          else {
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-        // get optional type
-        if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-          if (GetToken(aErrorCode, PR_TRUE) && (eCSSToken_Ident == mToken.mType)) {
-            nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-            PRInt32 dummy;
-            if ((eCSSKeyword_UNKNOWN < keyword) && 
-                nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable, dummy)) {
-              counter.Append(PRUnichar(','));
-              counter.Append(mToken.mIdent);
-            }
-            else {
-              return PR_FALSE;
-            }
-          }
-          else {
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
+  if (!GetNonCloseParenToken(aErrorCode, PR_TRUE) ||
+      eCSSToken_Ident != mToken.mType) {
+    SkipUntil(aErrorCode, ')');
+    return PR_FALSE;
+  }
 
-        if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-          aValue.SetStringValue(counter, unit);
-          return PR_TRUE;
-        }
-      }
-      else {
-        UngetToken();
+  nsRefPtr<nsCSSValue::Array> val =
+    nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
+  if (!val) {
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
+  }
+
+  val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_String);
+
+  if (eCSSUnit_Counters == unit) {
+    // get mandatory separator string
+    if (!ExpectSymbol(aErrorCode, ',', PR_TRUE) ||
+        !(GetNonCloseParenToken(aErrorCode, PR_TRUE) &&
+          eCSSToken_String == mToken.mType)) {
+      SkipUntil(aErrorCode, ')');
+      return PR_FALSE;
+    }
+    val->Item(1).SetStringValue(mToken.mIdent, eCSSUnit_String);
+  }
+
+  // get optional type
+  PRInt32 type = NS_STYLE_LIST_STYLE_DECIMAL;
+  if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+    nsCSSKeyword keyword;
+    PRBool success = GetNonCloseParenToken(aErrorCode, PR_TRUE) &&
+                     eCSSToken_Ident == mToken.mType &&
+                     (keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent)) !=
+                      eCSSKeyword_UNKNOWN;
+    if (success) {
+      if (keyword == eCSSKeyword_none) {
+        type = NS_STYLE_LIST_STYLE_NONE;
+      } else {
+        success = nsCSSProps::FindKeyword(keyword,
+                                          nsCSSProps::kListStyleKTable, type);
       }
     }
+    if (!success) {
+      SkipUntil(aErrorCode, ')');
+      return PR_FALSE;
+    }
   }
-  return PR_FALSE;
+  PRInt32 typeItem = eCSSUnit_Counters == unit ? 2 : 1;
+  val->Item(typeItem).SetIntValue(type, eCSSUnit_Enumerated);
+
+  if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+    SkipUntil(aErrorCode, ')');
+    return PR_FALSE;
+  }
+
+  aValue.SetArrayValue(val, unit);
+  return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
@@ -3993,10 +3997,10 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
                      eCSSProperty_clip);
   case eCSSProperty_content:
     return ParseContent(aErrorCode);
-  case eCSSProperty__moz_counter_increment:
+  case eCSSProperty_counter_increment:
     return ParseCounterData(aErrorCode, &mTempData.mContent.mCounterIncrement,
                             aPropID);
-  case eCSSProperty__moz_counter_reset:
+  case eCSSProperty_counter_reset:
     return ParseCounterData(aErrorCode, &mTempData.mContent.mCounterReset,
                             aPropID);
   case eCSSProperty_cue:
@@ -4144,8 +4148,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty__moz_border_radius:
   case eCSSProperty_clip:
   case eCSSProperty_content:
-  case eCSSProperty__moz_counter_increment:
-  case eCSSProperty__moz_counter_reset:
+  case eCSSProperty_counter_increment:
+  case eCSSProperty_counter_reset:
   case eCSSProperty_cue:
   case eCSSProperty_cursor:
   case eCSSProperty_font:
@@ -5069,6 +5073,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode)
                          VARIANT_KEYWORD)
 PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
 {
+  // XXX Rewrite to make it look more like ParseCursor or ParseCounterData?
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value,
                    VARIANT_CONTENT | VARIANT_INHERIT | VARIANT_NORMAL, 
@@ -5113,22 +5118,10 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
   return PR_FALSE;
 }
 
-PRBool
-CSSParserImpl::SetSingleCounterValue(nsCSSCounterData** aResult,
-                                     nsresult& aErrorCode,
-                                     nsCSSProperty aPropID,
-                                     const nsCSSValue& aValue)
-{
-  nsCSSCounterData* dataHead = new nsCSSCounterData();
-  if (!dataHead) {
-    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-    return PR_FALSE;
-  }
-  dataHead->mCounter = aValue;
-  *aResult = dataHead;
-  mTempData.SetPropertyBit(aPropID);
-  return PR_TRUE;
-}
+struct SingleCounterPropValue {
+  char str[13];
+  nsCSSUnit unit;
+};
 
 PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
                                        nsCSSCounterData** aResult,
@@ -5138,74 +5131,59 @@ PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
   if (nsnull == ident) {
     return PR_FALSE;
   }
-  if (ident->LowerCaseEqualsLiteral("none")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_None));
-    }
-    return PR_FALSE;
-  }
-  else if (ident->LowerCaseEqualsLiteral("inherit")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_Inherit));
-    }
-    return PR_FALSE;
-  }
-  else if (ident->LowerCaseEqualsLiteral("-moz-initial")) {
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_Initial));
-    }
-    return PR_FALSE;
-  }
-  else {
-    nsCSSCounterData* dataHead = new nsCSSCounterData();
-    nsCSSCounterData* data = dataHead;
-    if (nsnull == data) {
-      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-      return PR_FALSE;
-    }
-    data->mCounter.SetStringValue(*ident, eCSSUnit_String);
-
-    while (nsnull != data) {
+  static const SingleCounterPropValue singleValues[] = {
+    { "none", eCSSUnit_None },
+    { "inherit", eCSSUnit_Inherit },
+    { "-moz-initial", eCSSUnit_Initial }
+  };
+  for (const SingleCounterPropValue *sv = singleValues,
+           *sv_end = singleValues + NS_ARRAY_LENGTH(singleValues);
+       sv != sv_end; ++sv) {
+    if (ident->LowerCaseEqualsLiteral(sv->str)) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        mTempData.SetPropertyBit(aPropID);
+        nsCSSCounterData* dataHead = new nsCSSCounterData();
+        if (!dataHead) {
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+          return PR_FALSE;
+        }
+        dataHead->mCounter = nsCSSValue(sv->unit);
         *aResult = dataHead;
-        aErrorCode = NS_OK;
+        mTempData.SetPropertyBit(aPropID);
         return PR_TRUE;
       }
-      if (! GetToken(aErrorCode, PR_TRUE)) {
-        break;
-      }
-      if ((eCSSToken_Number == mToken.mType) && (mToken.mIntegerValid)) {
+      return PR_FALSE;
+    }
+  }
+  UngetToken(); // undo NextIdent
+
+  nsCSSCounterData* dataHead = nsnull;
+  nsCSSCounterData **next = &dataHead;
+  for (;;) {
+    if (!GetToken(aErrorCode, PR_TRUE) || mToken.mType != eCSSToken_Ident) {
+      break;
+    }
+    nsCSSCounterData *data = *next = new nsCSSCounterData();
+    if (!data) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+    next = &data->mNext;
+    data->mCounter.SetStringValue(mToken.mIdent, eCSSUnit_String);
+    if (GetToken(aErrorCode, PR_TRUE)) {
+      if (eCSSToken_Number == mToken.mType && mToken.mIntegerValid) {
         data->mValue.SetIntValue(mToken.mInteger, eCSSUnit_Integer);
-        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          mTempData.SetPropertyBit(aPropID);
-          *aResult = dataHead;
-          aErrorCode = NS_OK;
-          return PR_TRUE;
-        }
-        if (! GetToken(aErrorCode, PR_TRUE)) {
-          break;
-        }
-      }
-      if (eCSSToken_Ident == mToken.mType) {
-        data->mNext = new nsCSSCounterData();
-        data = data->mNext;
-        if (nsnull != data) {
-          data->mCounter.SetStringValue(mToken.mIdent, eCSSUnit_String);
-        }
-        else {
-          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      else {
-        break;
+      } else {
+        UngetToken();
       }
     }
-    delete dataHead;
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      mTempData.SetPropertyBit(aPropID);
+      *aResult = dataHead;
+      aErrorCode = NS_OK;
+      return PR_TRUE;
+    }
   }
+  delete dataHead;
   return PR_FALSE;
 }
 
@@ -5435,7 +5413,7 @@ PRBool CSSParserImpl::ParseFamily(nsresult& aErrorCode, nsCSSValue& aValue)
         family.Append(PRUnichar(','));
       }
       family.Append(tk->mSymbol); // replace the quotes
-      family.Append(tk->mIdent);
+      family.Append(tk->mIdent); // XXX What if it had escaped quotes?
       family.Append(tk->mSymbol);
       firstOne = PR_FALSE;
     } else if (eCSSToken_Symbol == tk->mType) {

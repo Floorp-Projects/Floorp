@@ -301,19 +301,38 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     return PR_FALSE;
   }
 
-  if ((eCSSUnit_String <= unit) && (unit <= eCSSUnit_Counters)) {
-    switch (unit) {
-      case eCSSUnit_Attr:     aResult.AppendLiteral("attr(");
-        break;
-      case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");
-        break;
-      case eCSSUnit_Counters: aResult.AppendLiteral("counters(");
-        break;
-      default:  break;
+  if (eCSSUnit_String <= unit && unit <= eCSSUnit_Attr) {
+    if (unit == eCSSUnit_Attr) {
+      aResult.AppendLiteral("attr(");
     }
     nsAutoString  buffer;
     aValue.GetStringValue(buffer);
     aResult.Append(buffer);
+  }
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Counters) {
+    switch (unit) {
+      case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
+      case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
+      default: break;
+    }
+
+    nsCSSValue::Array *array = aValue.GetArrayValue();
+    PRBool mark = PR_FALSE;
+    for (PRUint16 i = 0, i_end = array->Count(); i < i_end; ++i) {
+      if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
+        if (unit == eCSSUnit_Array)
+          aResult.AppendLiteral(" ");
+        else
+          aResult.AppendLiteral(", ");
+      }
+      nsCSSProperty prop =
+        ((eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) &&
+         i == array->Count() - 1)
+        ? eCSSProperty_list_style_type : aProperty;
+      if (AppendCSSValueToString(prop, array->Item(i), aResult)) {
+        mark = PR_TRUE;
+      }
+    }
   }
   else if (eCSSUnit_Integer == unit) {
     switch (aProperty) {
@@ -440,6 +459,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
     case eCSSUnit_Image:        break;
+    case eCSSUnit_Array:        break;
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;

@@ -41,6 +41,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
 #include "nsQuoteList.h"
+#include "nsCounterManager.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "plevent.h"
@@ -120,7 +121,9 @@ public:
                                 nsIContent*     aContent2,
                                 PRInt32         aStateMask);
 
-  void GeneratedContentFrameRemoved(nsIFrame* aFrame);
+  // Should be called when a frame is going to be destroyed and
+  // WillDestroyFrameTree hasn't been called yet.
+  void NotifyDestroyingFrame(nsIFrame* aFrame);
 
   nsresult AttributeChanged(nsIContent*     aContent,
                             PRInt32         aNameSpaceID,
@@ -943,6 +946,13 @@ private:
       mQuoteList.RecalcAll();
   }
 
+  void CountersDirty() {
+    if (mUpdateCount != 0)
+      mCountersDirty = PR_TRUE;
+    else
+      mCounterManager.RecalcAll();
+  }
+
   inline NS_HIDDEN_(nsresult)
     CreateInsertionPointChildren(nsFrameConstructorState &aState,
                                  nsIFrame *aNewFrame,
@@ -990,8 +1000,10 @@ private:
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
   nsQuoteList         mQuoteList;
+  nsCounterManager    mCounterManager;
   PRUint16            mUpdateCount;
   PRPackedBool        mQuotesDirty;
+  PRPackedBool        mCountersDirty;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 

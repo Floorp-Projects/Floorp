@@ -172,6 +172,7 @@ static void EnsureBlockDisplay(PRUint8& display)
   }
 }
 
+// XXX This should really be done in the CSS parser.
 nsString& Unquote(nsString& aString)
 {
   PRUnichar start = aString.First();
@@ -4192,10 +4193,14 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
             data.mContent.mImage = value.GetImageValue();
             NS_IF_ADDREF(data.mContent.mImage);
           }
-          else if (type < eStyleContentType_OpenQuote) {
+          else if (type <= eStyleContentType_Attr) {
             value.GetStringValue(buffer);
             Unquote(buffer);
             data.mContent.mString = nsCRT::strdup(buffer.get());
+          }
+          else if (type <= eStyleContentType_Counters) {
+            data.mContent.mCounters = value.GetArrayValue();
+            data.mContent.mCounters->AddRef();
           }
           else {
             data.mContent.mString = nsnull;
@@ -4217,10 +4222,10 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       inherited = PR_TRUE;
       count = parentContent->CounterIncrementCount();
       if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
-        PRInt32 increment;
         while (0 < count--) {
-          parentContent->GetCounterIncrementAt(count, buffer, increment);
-          content->SetCounterIncrementAt(count, buffer, increment);
+          const nsStyleCounterData *data =
+            parentContent->GetCounterIncrementAt(count);
+          content->SetCounterIncrementAt(count, data->mCounter, data->mValue);
         }
       }
     }
@@ -4233,8 +4238,8 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
         count = 0;
         ourIncrement = contentData.mCounterIncrement;
-        PRInt32 increment;
         while (ourIncrement) {
+          PRInt32 increment;
           if (eCSSUnit_Integer == ourIncrement->mValue.GetUnit()) {
             increment = ourIncrement->mValue.GetIntValue();
           }
@@ -4260,10 +4265,10 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       inherited = PR_TRUE;
       count = parentContent->CounterResetCount();
       if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
-        PRInt32 reset;
         while (0 < count--) {
-          parentContent->GetCounterResetAt(count, buffer, reset);
-          content->SetCounterResetAt(count, buffer, reset);
+          const nsStyleCounterData *data =
+            parentContent->GetCounterResetAt(count);
+          content->SetCounterResetAt(count, data->mCounter, data->mValue);
         }
       }
     }
@@ -4276,8 +4281,8 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
         count = 0;
         ourReset = contentData.mCounterReset;
-        PRInt32 reset;
         while (ourReset) {
+          PRInt32 reset;
           if (eCSSUnit_Integer == ourReset->mValue.GetUnit()) {
             reset = ourReset->mValue.GetIntValue();
           }

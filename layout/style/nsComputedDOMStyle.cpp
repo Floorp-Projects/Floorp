@@ -610,6 +610,106 @@ nsComputedDOMStyle::GetColumnGap(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetCounterIncrement(nsIFrame *aFrame,
+                                        nsIDOMCSSValue** aValue)
+{
+  const nsStyleContent *content = nsnull;
+  GetStyleData(eStyleStruct_Content, (const nsStyleStruct*&)content, aFrame);
+
+  if (content && content->CounterIncrementCount() == 0) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(nsLayoutAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  if (content) {
+    for (PRUint32 i = 0, i_end = content->CounterIncrementCount(); i < i_end; ++i) {
+      nsROCSSPrimitiveValue* name = GetROCSSPrimitiveValue();
+      if (!name) {
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (!valueList->AppendCSSValue(name)) {
+        delete valueList;
+        delete name;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    
+      nsROCSSPrimitiveValue* value = GetROCSSPrimitiveValue();
+      if (!value) {
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (!valueList->AppendCSSValue(value)) {
+        delete valueList;
+        delete value;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      const nsStyleCounterData *data = content->GetCounterIncrementAt(i);
+      name->SetString(data->mCounter);
+      value->SetNumber(data->mValue); // XXX This should really be integer
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetCounterReset(nsIFrame *aFrame,
+                                    nsIDOMCSSValue** aValue)
+{
+  const nsStyleContent *content = nsnull;
+  GetStyleData(eStyleStruct_Content, (const nsStyleStruct*&)content, aFrame);
+
+  if (content && content->CounterResetCount() == 0) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+    val->SetIdent(nsLayoutAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  if (content) {
+    for (PRUint32 i = 0, i_end = content->CounterResetCount(); i < i_end; ++i) {
+      nsROCSSPrimitiveValue* name = GetROCSSPrimitiveValue();
+      if (!name) {
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (!valueList->AppendCSSValue(name)) {
+        delete valueList;
+        delete name;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    
+      nsROCSSPrimitiveValue* value = GetROCSSPrimitiveValue();
+      if (!value) {
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      if (!valueList->AppendCSSValue(value)) {
+        delete valueList;
+        delete value;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      const nsStyleCounterData *data = content->GetCounterResetAt(i);
+      name->SetString(data->mCounter);
+      value->SetNumber(data->mValue); // XXX This should really be integer
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetFontFamily(nsIFrame *aFrame,
                                   nsIDOMCSSValue** aValue)
 {
@@ -3599,8 +3699,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(clip,                          Clip),
     COMPUTED_STYLE_MAP_ENTRY(color,                         Color),
     // COMPUTED_STYLE_MAP_ENTRY(content,                    Content),
-    // COMPUTED_STYLE_MAP_ENTRY(counter_increment,          CounterIncrement),
-    // COMPUTED_STYLE_MAP_ENTRY(counter_reset,              CounterReset),
+    COMPUTED_STYLE_MAP_ENTRY(counter_increment,             CounterIncrement),
+    COMPUTED_STYLE_MAP_ENTRY(counter_reset,                 CounterReset),
     //// COMPUTED_STYLE_MAP_ENTRY(cue,                      Cue),
     // COMPUTED_STYLE_MAP_ENTRY(cue_after,                  CueAfter),
     // COMPUTED_STYLE_MAP_ENTRY(cue_before,                 CueBefore),
