@@ -251,6 +251,34 @@ catch(e) {
     print("Can't convert arg to Native - passed");
 }    
 
+////////////////////
+// FailInJSTest
+
+var reciever3 = new Object();
+reciever3.SetReciever = function() {};
+reciever3.FailInJSTest = function(fail) {if(fail)throw("");};
+echo.SetReciever(reciever3);
+
+var all_ok = true;
+
+try {
+    echo.FailInJSTest(false);
+}
+catch(e) {
+    print("FailInJSTest - failed");
+    all_ok = false;
+}
+try {
+    echo.FailInJSTest(true);
+    print("FailInJSTest - failed");
+    all_ok = false;
+}
+catch(e) {
+}
+
+if(all_ok)
+    print("FailInJSTest - passed");
+
 
 print(".......................................");
 print("simple speed tests...");

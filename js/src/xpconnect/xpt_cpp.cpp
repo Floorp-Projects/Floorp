@@ -215,7 +215,11 @@ XPTParamDescriptor nsIEcho_ReturnCodeParams[1] = {
     {XPT_PD_IN, {TD_INT32,0}}
 };
 
-XPTMethodDescriptor nsIEchoMethods[10] = {
+XPTParamDescriptor nsIEcho_FailInJSTestParams[1] = {
+    {XPT_PD_IN, {TD_INT32,0}}
+};
+
+XPTMethodDescriptor nsIEchoMethods[11] = {
  {0, "SetReciever",         1, nsIEcho_SetRecieverParams,        ResultParam},
  {0, "SendOneString",       1, nsIEcho_SendOneStringParams,      ResultParam},
  {0, "In2OutOneInt",        2, nsIEcho_In2OutOneIntParams,       ResultParam},
@@ -225,11 +229,12 @@ XPTMethodDescriptor nsIEchoMethods[10] = {
  {0, "SendManyTypes",      16, nsIEcho_SendManyTypesParams,      ResultParam},
  {0, "SendInOutManyTypes", 16, nsIEcho_SendInOutManyTypesParams, ResultParam},
  {0, "MethodWithNative",    2, nsIEcho_MethodWithNativeParams,   ResultParam},
- {0, "ReturnCode",          1, nsIEcho_ReturnCodeParams,         ResultParam}
+ {0, "ReturnCode",          1, nsIEcho_ReturnCodeParams,         ResultParam},
+ {0, "FailInJSTest",        1, nsIEcho_FailInJSTestParams,       ResultParam}
 };
 
 XPTInterfaceDescriptor nsIEchoInterfaceDescriptor =
-    {NULL, 10, nsIEchoMethods, 0, NULL};
+    {NULL, 11, nsIEchoMethods, 0, NULL};
 
 /***************/
 

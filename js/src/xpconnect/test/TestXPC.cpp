@@ -207,6 +207,8 @@ public:
 
     NS_IMETHOD ReturnCode(int code);
 
+    NS_IMETHOD FailInJSTest(int fail);
+
     MyEcho();
 private: 
     nsIEcho* mReciever;
@@ -341,6 +343,14 @@ MyEcho::ReturnCode(int code)
 {
     return (nsresult) code;        
 }
+
+NS_IMETHODIMP 
+MyEcho::FailInJSTest(int fail)
+{
+    if(mReciever)
+        return mReciever->FailInJSTest(fail);
+    return NS_OK;
+}        
 
 /***************************************************************************/
 
