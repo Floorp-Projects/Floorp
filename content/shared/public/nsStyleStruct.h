@@ -1132,6 +1132,27 @@ struct nsStyleXUL : public nsStyleStruct {
   PRUint8       mBoxPack;               // [reset] see nsStyleConsts.h
 };
 
+struct nsStyleColumn : public nsStyleStruct {
+  nsStyleColumn();
+  nsStyleColumn(const nsStyleColumn& aSource);
+  ~nsStyleColumn();
+
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Column)
+  
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
+  void Destroy(nsIPresContext* aContext) {
+    this->~nsStyleColumn();
+    aContext->FreeToShell(sizeof(nsStyleColumn), this);
+  };
+
+  nsChangeHint CalcDifference(const nsStyleColumn& aOther) const;
+
+  PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
+  nsStyleCoord mColumnWidth; // [reset] see nsStyleConsts.h
+};
+
 #ifdef MOZ_SVG
 enum nsStyleSVGPaintType {
   eStyleSVGPaintType_None = 0,

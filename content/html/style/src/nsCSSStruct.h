@@ -507,6 +507,22 @@ struct nsCSSXUL : public nsCSSStruct  {
 struct nsRuleDataXUL : public nsCSSXUL {
 };
 
+struct nsCSSColumn : public nsCSSStruct  {
+  nsCSSColumn(void);
+  nsCSSColumn(const nsCSSColumn& aCopy);
+  ~nsCSSColumn(void);
+
+#ifdef DEBUG
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  nsCSSValue  mColumnCount;
+  nsCSSValue  mColumnWidth;
+};
+
+struct nsRuleDataColumn : public nsCSSColumn {
+};
+
 #ifdef MOZ_SVG
 struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(void);

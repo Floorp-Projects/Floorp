@@ -138,6 +138,7 @@ public:
 #ifdef MOZ_SVG
     nsCSSSVG mSVG;
 #endif
+    nsCSSColumn mColumn;
 
     /**
      * Transfer all of the state from the compressed block to this

@@ -1080,6 +1080,7 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_SVG,
     #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_SVGReset,
     #endif /* defined(MOZ_SVG) */
+    #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Column,
     // This shouldn't matter, but we need something to go here.
     #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) nsStyleStructID(-1),
 
@@ -1109,6 +1110,7 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     #undef CSS_PROP_SVG
     #undef CSS_PROP_SVGRESET
     #endif /* undefd(MOZ_SVG) */
+    #undef CSS_PROP_COLUMN
     #undef CSS_PROP_BACKENDONLY
 };
 

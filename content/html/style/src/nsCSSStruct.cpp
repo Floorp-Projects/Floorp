@@ -1153,6 +1153,37 @@ void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
+// --- nsCSSColumn -----------------
+
+nsCSSColumn::nsCSSColumn(void)
+{
+  MOZ_COUNT_CTOR(nsCSSColumn);
+}
+
+nsCSSColumn::nsCSSColumn(const nsCSSColumn& aCopy)
+  : mColumnCount(aCopy.mColumnCount), mColumnWidth(aCopy.mColumnWidth)
+{
+  MOZ_COUNT_CTOR(nsCSSColumn);
+}
+
+nsCSSColumn::~nsCSSColumn(void)
+{
+  MOZ_COUNT_DTOR(nsCSSColumn);
+}
+
+#ifdef DEBUG
+void nsCSSColumn::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  mColumnWidth.AppendToString(buffer, eCSSProperty__moz_column_width);
+  mColumnCount.AppendToString(buffer, eCSSProperty__moz_column_count);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
+}
+#endif
+
 #ifdef MOZ_SVG
 // --- nsCSSSVG -----------------
 

@@ -133,6 +133,7 @@
 #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
 #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
 #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
+#define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
 #ifdef MOZ_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
 #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_)
@@ -232,6 +233,10 @@
 #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) /* nothing */
 #define DEFINED_CSS_PROP_XUL
 #endif
+#ifndef CSS_PROP_COLUMN
+#define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) /* nothing */
+#define DEFINED_CSS_PROP_COLUMN
+#endif
 #ifdef MOZ_SVG
 #ifndef CSS_PROP_SVG
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) /* nothing */
@@ -325,6 +330,8 @@ CSS_PROP_TABLEBORDER(caption-side, caption_side, CaptionSide, Table, mCaptionSid
 CSS_PROP_DISPLAY(clear, clear, Clear, Display, mClear, eCSSType_Value, PR_FALSE, kClearKTable)
 CSS_PROP_DISPLAY(clip, clip, Clip, Display, mClip, eCSSType_Rect, PR_FALSE, nsnull)
 CSS_PROP_COLOR(color, color, Color, Color, mColor, eCSSType_Value, PR_FALSE, nsnull)
+CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, Column, mColumnCount, eCSSType_Value, PR_FALSE, nsnull)
+CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, Column, mColumnWidth, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_CONTENT(content, content, Content, Content, mContent, eCSSType_ValueList, PR_FALSE, kContentKTable)
 CSS_PROP_NOTIMPLEMENTED(counter-increment, counter_increment, CounterIncrement)
 CSS_PROP_NOTIMPLEMENTED(counter-reset, counter_reset, CounterReset)
@@ -540,6 +547,7 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, PR_FALSE, nsnull)
 #undef CSS_PROP_BORDER
 #undef CSS_PROP_OUTLINE
 #undef CSS_PROP_XUL
+#undef CSS_PROP_COLUMN
 #ifdef MOZ_SVG
 #undef CSS_PROP_SVG
 #undef CSS_PROP_SVGRESET
@@ -630,6 +638,10 @@ CSS_PROP_TABLE(X, X, X, Table, mSpan, eCSSType_Value, PR_FALSE, nsnull)
 #ifdef DEFINED_CSS_PROP_XUL
 #undef CSS_PROP_XUL
 #undef DEFINED_CSS_PROP_XUL
+#endif
+#ifdef DEFINED_CSS_PROP_COLUMN
+#undef CSS_PROP_COLUMN
+#undef DEFINED_CSS_PROP_COLUMN
 #endif
 #ifdef MOZ_SVG
 #ifdef DEFINED_CSS_PROP_SVG

@@ -247,6 +247,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
 #define SETCOORD_AH     (SETCOORD_AUTO | SETCOORD_INHERIT)
+#define SETCOORD_LAH    (SETCOORD_AUTO | SETCOORD_LENGTH | SETCOORD_INHERIT)
 #define SETCOORD_LPH    (SETCOORD_LP | SETCOORD_INHERIT)
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
@@ -797,6 +798,13 @@ static const PropertyCheckData SVGResetCheckProperties[] = {
 };  
 #endif
 
+static const PropertyCheckData ColumnCheckProperties[] = {
+#define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP_COLUMN
+};
+
 #undef CSS_PROP_INCLUDE_NOT_CSS
   
 static const StructCheckData gCheckProperties[] = {
@@ -1187,6 +1195,16 @@ nsRuleNode::GetXULData(nsStyleContext* aContext)
   return WalkRuleTree(eStyleStruct_XUL, aContext, &ruleData, &xulData);
 }
 
+const nsStyleStruct*
+nsRuleNode::GetColumnData(nsStyleContext* aContext)
+{
+  nsRuleDataColumn columnData; // Declare a struct with null CSS values.
+  nsRuleData ruleData(eStyleStruct_Column, mPresContext, aContext);
+  ruleData.mColumnData = &columnData;
+
+  return WalkRuleTree(eStyleStruct_Column, aContext, &ruleData, &columnData);
+}
+
 #ifdef MOZ_SVG
 const nsStyleStruct*
 nsRuleNode::GetSVGData(nsStyleContext* aContext)
@@ -1506,6 +1524,13 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
       aContext->SetStyle(eStyleStruct_XUL, xul);
       return xul;
+    }
+
+    case eStyleStruct_Column:
+    {
+      nsStyleColumn* column = new (mPresContext) nsStyleColumn();
+      aContext->SetStyle(eStyleStruct_Column, column);
+      return column;
     }
 
 #ifdef MOZ_SVG
@@ -4193,6 +4218,65 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
   }
 
   return xul;
+}
+
+const nsStyleStruct* 
+nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
+                              const nsRuleDataStruct& aData, 
+                              nsStyleContext* aContext, 
+                              nsRuleNode* aHighestNode,
+                              const RuleDetail& aRuleDetail, PRBool aInherited)
+{
+  nsStyleContext* parentContext = aContext->GetParent();
+
+  const nsRuleDataColumn& columnData = NS_STATIC_CAST(const nsRuleDataColumn&, aData);
+  nsStyleColumn* column = nsnull;
+  
+  if (aStartStruct)
+    // We only need to compute the delta between this computed data and our
+    // computed data.
+    column = new (mPresContext) nsStyleColumn(*NS_STATIC_CAST(nsStyleColumn*, aStartStruct));
+  else
+    column = new (mPresContext) nsStyleColumn();
+
+  const nsStyleColumn* parent = column;
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
+    parent = parentContext->GetStyleColumn();
+
+  PRBool inherited = aInherited;
+
+  // column-width: length, auto, inherit
+  SetCoord(columnData.mColumnWidth,
+           column->mColumnWidth, parent->mColumnWidth, SETCOORD_LAH,
+           aContext, mPresContext, inherited);
+
+  // column-count: auto, integer, inherit
+  if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit()) {
+    column->mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
+  } else if (eCSSUnit_Integer == columnData.mColumnCount.GetUnit()) {
+    column->mColumnCount = columnData.mColumnCount.GetIntValue();
+  } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
+    inherited = PR_TRUE;
+    column->mColumnCount = parent->mColumnCount;
+  }
+
+  if (inherited)
+    // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
+    // style context.
+    aContext->SetStyle(eStyleStruct_Column, column);
+  else {
+    // We were fully specified and can therefore be cached right on the rule node.
+    if (!aHighestNode->mStyleData.mResetData)
+      aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
+    aHighestNode->mStyleData.mResetData->mColumnData = column;
+    // Propagate the bit down.
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Column), aHighestNode);
+  }
+
+  return column;
 }
 
 #ifdef MOZ_SVG
