@@ -519,7 +519,7 @@ public:
      *      NEUTRAL:  Characters whose cell width is context-dependent:
      *          all characters in the Symbols Area, except those specifically called out above
      *          all characters in the Surrogates Area
-     *          all charcaters in the Private Use Area
+     *          all characters in the Private Use Area
      * <P>
      * For Korean text, this algorithm should work properly with properly normalized Korean
      * text.  Precomposed Hangul syllables and non-combining jamo are all considered full-

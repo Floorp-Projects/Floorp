@@ -69,7 +69,7 @@ nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
 {  
   PRInt32 startOfAttribute = 0;     // Index into aSource where the attribute name starts
   PRInt32 startOfValue = 0;         // Index into aSource where the attribute value starts
-  PRInt32 posnOfValueDelimeter = 0; 
+  PRInt32 posnOfValueDelimiter = 0; 
   nsresult result = NS_ERROR_FAILURE;
 
   // While there are more characters to look at
@@ -82,23 +82,23 @@ nsParserUtils::GetQuotedAttributeValue(nsString& aSource,
       startOfValue = FindWhileSkippingWhitespace(aSource, '=', startOfAttribute + aAttribute.Length());
       // If '=' found
       if (startOfValue != -1) {
-        PRUnichar delimeter = kQuote;
+        PRUnichar delimiter = kQuote;
         // Find the quote or apostrophe while skipping whitespace
-        posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
-        if (posnOfValueDelimeter == -1) {
-          posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
-          delimeter = kApostrophe;
+        posnOfValueDelimiter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
+        if (posnOfValueDelimiter == -1) {
+          posnOfValueDelimiter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
+          delimiter = kApostrophe;
         }
         // If quote or apostrophe found
-        if (posnOfValueDelimeter != -1) {
-          startOfValue = posnOfValueDelimeter + 1;
+        if (posnOfValueDelimiter != -1) {
+          startOfValue = posnOfValueDelimiter + 1;
           // Find the ending quote or apostrophe
-          posnOfValueDelimeter = aSource.FindChar(delimeter, PR_FALSE, startOfValue);
+          posnOfValueDelimiter = aSource.FindChar(delimiter, PR_FALSE, startOfValue);
           // If found
-          if (posnOfValueDelimeter != -1) {
+          if (posnOfValueDelimiter != -1) {
             // Set the value of the attibute and exit the loop
-            // The attribute value starts at startOfValue and ends at (posnOfValueDelimeter - 1)
-            aSource.Mid(aValue, startOfValue, posnOfValueDelimeter - startOfValue);
+            // The attribute value starts at startOfValue and ends at (posnOfValueDelimiter - 1)
+            aSource.Mid(aValue, startOfValue, posnOfValueDelimiter - startOfValue);
             result = NS_OK;
             break;
           }

@@ -45,7 +45,7 @@ interface nsIFileSpec;
 #include "nsIPrefBranch.idl"
 
 /*
- * This entire interface is depricated and should not be used.
+ * This entire interface is deprecated and should not be used.
  * See nsIPrefService and nsIPrefBranch for the new implementations.
  */
 
@@ -216,7 +216,7 @@ interface nsIPref : nsISupports {
 
 
   /*
-   * Finally some depricated methods
+   * Finally some deprecated methods
    */
 
   

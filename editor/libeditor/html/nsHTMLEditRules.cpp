@@ -4832,8 +4832,8 @@ nsHTMLEditRules::LookInsideDivBQandList(nsISupportsArray *aNodeArray)
     }
     else
     {
-      nsCOMPtr<nsISupports> isuports (do_QueryInterface(curNode));
-      res = aNodeArray->AppendElement(isuports);
+      nsCOMPtr<nsISupports> isupports (do_QueryInterface(curNode));
+      res = aNodeArray->AppendElement(isupports);
     }
   }
   return res;

@@ -65,7 +65,7 @@ XPTC_InvokeByIndex:
         jmpl    %l0,%o7             ! call the routine
         mov     %i0,%o0             ! move 'this' pointer to out register
 
-        mov     %o0,%i0             ! propogate return value
+        mov     %o0,%i0             ! propagate return value
         ret
         restore
 

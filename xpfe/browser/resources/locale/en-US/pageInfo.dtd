@@ -1,7 +1,7 @@
 <!ENTITY mainWindow.title "&brandShortName;"> 
 <!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
-<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseperator) : DONT_TRANSLATE -->
-<!ENTITY mainWindow.titlemodifierseperator " - ">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifierseparator " - ">
 <!ENTITY mainWindow.preface "Info for: "> 
 
 <!ENTITY  pageInfo.generalTab    "General">

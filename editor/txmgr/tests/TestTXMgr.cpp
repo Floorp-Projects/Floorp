@@ -2325,7 +2325,7 @@ quick_test(TestTransactionFactory *factory)
   result = mgr->SetMaxTransactionCount(25);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    printf("ERROR: SetMaxTransactionCount(25) failed. (%d)\n", result);
     return result;
   }
 
@@ -2420,7 +2420,7 @@ quick_test(TestTransactionFactory *factory)
   result = mgr->SetMaxTransactionCount(15);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    printf("ERROR: SetMaxTransactionCount(25) failed. (%d)\n", result);
     return result;
   }
 
@@ -2515,7 +2515,7 @@ quick_test(TestTransactionFactory *factory)
   result = mgr->SetMaxTransactionCount(5);
 
   if (NS_FAILED(result)) {
-    printf("ERROR: SetMaxTransacitonCount(25) failed. (%d)\n", result);
+    printf("ERROR: SetMaxTransactionCount(25) failed. (%d)\n", result);
     return result;
   }
 

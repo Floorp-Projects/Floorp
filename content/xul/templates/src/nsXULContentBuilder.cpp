@@ -2207,7 +2207,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
     // XXXwaterson Right now, exactly one <content> condition is
     // required per rule. It creates a nsContentTestNode, binding the
     // content variable to the global content variable that's used
-    // during match propogation. The 'uri' attribute must be set.
+    // during match propagation. The 'uri' attribute must be set.
 
     // uri
     nsAutoString uri;

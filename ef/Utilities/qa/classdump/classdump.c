@@ -372,7 +372,7 @@ void main(int argc, char* argv[])
 		printTab(2);
 		printDec2(getu2(classfile));
 
-		/* u2 atributes_count */
+		/* u2 attributes_count */
 		printf("\n");
 		printTab(1);
 		printf("attributes");
@@ -443,7 +443,7 @@ void main(int argc, char* argv[])
 		printTab(2);
 		printDec2(getu2(classfile));
 
-		/* u2 atributes_count */
+		/* u2 attributes_count */
 		printf("\n");
 		printTab(1);
 		printf("attributes");

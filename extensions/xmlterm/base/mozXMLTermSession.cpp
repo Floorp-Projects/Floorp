@@ -885,7 +885,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
           case DEFAULT_META_COMMAND:
             {
-              // Construct Javascript command to handle default meta comand
+              // Construct Javascript command to handle default meta command
               nsAutoString JSCommand;
 	      JSCommand.Assign(NS_LITERAL_STRING("MetaDefault(\""));
               JSCommand.Append(commandArgs);

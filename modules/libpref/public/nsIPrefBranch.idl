@@ -170,7 +170,7 @@ interface nsIPrefBranch : nsISupports
    *                    - nsILocalFile
    *                    - nsISupportsWString (UniChar)
    *                    - nsIPrefLocalizedString (Localized UniChar)
-   *                    - nsIFileSpec (depricated - to be removed eventually)
+   *                    - nsIFileSpec (deprecated - to be removed eventually)
    * @param aValue    The XPCOM object into which to the complex preference 
    *                  value should be retrieved.
    *
@@ -193,7 +193,7 @@ interface nsIPrefBranch : nsISupports
    *                    - nsILocalFile
    *                    - nsISupportsWString (UniChar)
    *                    - nsIPrefLocalizedString (Localized UniChar)
-   *                    - nsIFileSpec (depricated - to be removed eventually)
+   *                    - nsIFileSpec (deprecated - to be removed eventually)
    * @param aValue    The XPCOM object from which to set the complex preference 
    *                  value.
    *

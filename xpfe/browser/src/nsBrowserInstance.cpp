@@ -307,7 +307,7 @@ public:
 
         // We need to enqueue an event to load the next page,
         // otherwise we'll run the risk of confusing the docshell
-        // (which notifies observers before propogating the
+        // (which notifies observers before propagating the
         // DocumentEndLoad up to parent docshells).
         nsCOMPtr<nsIEventQueueService> eqs
           = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);

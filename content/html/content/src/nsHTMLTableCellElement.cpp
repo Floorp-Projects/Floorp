@@ -92,7 +92,7 @@ public:
 #endif
 
 protected:
-  // This does not retunr a nsresult since all we care about is if we
+  // This does not return a nsresult since all we care about is if we
   // found the row element that this cell is in or not.
   void GetRow(nsIDOMHTMLTableRowElement** aRow);
 

@@ -22,7 +22,7 @@ The current sample code was written for Windows but can be easily
 modified for other platforms.
 
 Important notice: although developers who work on xpcom plugins
-are strongly encouraged to use Nestcape macros for common interface
+are strongly encouraged to use Netscape macros for common interface
 method declarations and implementations, in the present sample we 
 decided to use their manual implementation. This is because the technique
 shown in the sample may be useful for plugins which are supposed to

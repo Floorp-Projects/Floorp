@@ -130,7 +130,7 @@ typedef enum {
     JAVA_SIGNATURE_JAVA_LANG_BOOLEAN,  /* java.lang.Boolean */
     JAVA_SIGNATURE_JAVA_LANG_CLASS,    /* java.lang.Class */
     JAVA_SIGNATURE_JAVA_LANG_DOUBLE,   /* java.lang.Double */
-    JAVA_SIGNATURE_NETSCAPE_JAVASCRIPT_JSOBJECT,  /* nestcape.javascript.JSObject */
+    JAVA_SIGNATURE_NETSCAPE_JAVASCRIPT_JSOBJECT,  /* netscape.javascript.JSObject */
     JAVA_SIGNATURE_JAVA_LANG_OBJECT,   /* java.lang.Object */
     JAVA_SIGNATURE_JAVA_LANG_STRING,   /* java.lang.String */
 

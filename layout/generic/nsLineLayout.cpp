@@ -2238,7 +2238,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // ignored and instead the span must *act* as if it were zero
     // sized. In general, if the span contains any non-compressed
     // text then we don't use this logic.
-    // However, this is not propogated outwards, since (in compatibility
+    // However, this is not propagated outwards, since (in compatibility
     // mode) we don't want big line heights for things like
     // <p><font size="-1">Text</font></p>
     zeroEffectiveSpanBox = PR_TRUE;

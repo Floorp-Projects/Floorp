@@ -3847,7 +3847,7 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       // We ignore any failures from calling EvaluateString() or
       // CallEventHandler() on the context here since we're in a loop
       // where we're likely to be running timeouts whose OS timers
-      // didn't fire in time and we don't wanto not fire those timers
+      // didn't fire in time and we don't want to not fire those timers
       // now just because execution of one timer failed. We can't
       // propagate the error to anyone who cares about it from this
       // point anyway so we just drop it.
@@ -3896,7 +3896,7 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         // entered this method (but the OS timers for those timeouts
         // hadn't fired yet) we don't do an early return here just
         // because we couldn't create a timer for an interval timeout
-        // since we still wanto continue running the timeouts that
+        // since we still want to continue running the timeouts that
         // were due to be handled when we entered this method. This
         // method is never called by code that cares about success or
         // failure any way so dropping the error on the floor here is

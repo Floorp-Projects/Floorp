@@ -82,7 +82,7 @@ sub sendReport {
 
 	# Read the transaction ID from the server.
 	$transID = <F>;
-	print "Transaciton ID: $transID\n";
+	print "Transaction ID: $transID\n";
 
 	# If the test didn't pass, get the result log.
 	if (!($loweredResult =~ /passed/)) {

@@ -1814,7 +1814,7 @@ Sun Oct 25 07:30:10 1998  Tim Janik  <timj@gtk.org>
 	now passed as last parameter. removed `const' qualifier from string
 	array pointer (again).
 	(g_strjoin): new function from sopwith to concatenate strings with
-	an additional seperator.
+	an additional separator.
 	(g_strfreev): renamed from g_str_array_free.
 
 Sat Oct 24 22:23:04 PDT 1998 Manish Singh <yosh@gimp.org>

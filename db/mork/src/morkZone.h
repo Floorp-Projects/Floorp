@@ -201,7 +201,7 @@ public: // typing & errors
 **| of accumulating too much unused, fragmented free space.  This should be a
 **| small multiple of kNewHunkSize, say about two to four times as great, to
 **| allow for no more free hunk space than fits in a handful of new hunks.
-**| This strategy will let us usefully accumulate "some" free space in the
+**| This strategy will let us usefuly accumulate "some" free space in the
 **| free hunk list, but without accumulating "too much" free space that way.
 |*/
 #define morkZone_kMaxFreeVolume (morkZone_kNewHunkSize * 3)

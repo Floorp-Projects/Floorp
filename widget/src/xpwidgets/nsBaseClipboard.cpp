@@ -177,6 +177,6 @@ nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt
 NS_IMETHODIMP
 nsBaseClipboard :: SupportsSelectionClipboard ( PRBool *_retval )
 {
-  *_retval = PR_FALSE;   // we don't suport the selection clipboard by default.
+  *_retval = PR_FALSE;   // we don't support the selection clipboard by default.
   return NS_OK;
 }

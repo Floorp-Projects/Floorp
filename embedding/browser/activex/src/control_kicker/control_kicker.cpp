@@ -213,7 +213,7 @@ static BOOL LoadMozLibraryFromRegistry(BOOL bAskUserToSetPath)
 
                 if (SHGetPathFromIDList(pItemList, szPath))
                 {
-                    // Chop off the end path seperator
+                    // Chop off the end path separator
                     int nPathSize = strlen(szPath);
                     if (nPathSize > 0)
                     {

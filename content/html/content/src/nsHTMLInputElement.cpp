@@ -944,7 +944,7 @@ nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
     return rv;
   }
 
-  // Generate a submit event targetted at the form content
+  // Generate a submit event targeted at the form content
   nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
 
   if (form) {
@@ -1231,7 +1231,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             {
               // Checkbox and Radio try to submit on Enter press
               if (keyEvent->keyCode != NS_VK_SPACE) {
-                // Generate a submit event targetted at the form content
+                // Generate a submit event targeted at the form content
                 nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
 
                 if (form) {

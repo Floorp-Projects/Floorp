@@ -1785,7 +1785,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 
   }
 
-  //Reset target frame to null to avoid mistargetting after reentrant event
+  //Reset target frame to null to avoid mistargeting after reentrant event
   mCurrentTarget = nsnull;
 
   return ret;

@@ -338,7 +338,7 @@ public:
                             nsIContent* aChild,
                             PRInt32 aIndexInContainer) = 0;
 
-  // Observation hooks for style data to propogate notifications
+  // Observation hooks for style data to propagate notifications
   // to document observers
   NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,

@@ -55,7 +55,7 @@
  *    cc/CC compiler/linker.
  *    Typically, gtscc is used in two phases. Phase one is during compilation.
  *    gtscc, the compiler, converts all inline globals to statics, and records
- *    the existance of other globals and how to compile the file in the gtscc
+ *    the existence of other globals and how to compile the file in the gtscc
  *    database file.
  *    During linking, globals dependencies are analyzed, and a list of
  *    "convertable" globals is determined. Globals that are not referenced

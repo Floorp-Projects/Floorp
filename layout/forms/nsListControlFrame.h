@@ -98,7 +98,7 @@ public:
 };
 /******************************************************************************
  * nsListEventListener
- * This class is responsible for propogating events to the nsListControlFrame
+ * This class is responsible for propagating events to the nsListControlFrame
  * becuase it isn't ref-counted
  ******************************************************************************/
 

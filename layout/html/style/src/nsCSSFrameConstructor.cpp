@@ -8717,7 +8717,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     // We are pretty harsh here (and definitely not optimal) -- we
     // wipe out the entire containing block and recreate it from
     // scratch. The reason is that because we know that a special
-    // inline frame has propogated some of its children upward to be
+    // inline frame has propagated some of its children upward to be
     // children of the block and that those frames may need to move
     // around. This logic guarantees a correct answer.
 #ifdef DEBUG
@@ -9437,7 +9437,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
-      // inline frame has propogated some of its children upward to be
+      // inline frame has propagated some of its children upward to be
       // children of the block and that those frames may need to move
       // around. This logic guarantees a correct answer.
 #ifdef DEBUG

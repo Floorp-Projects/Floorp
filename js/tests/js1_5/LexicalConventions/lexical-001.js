@@ -28,7 +28,7 @@
 *     our behaviour a superset of the ECMA numeric grammar.  
 *     We might not always be so permissive, so we warn about it."
 *
-*Thus an expresion 010 will evaluate, as always, as an octal (to 8).
+*Thus an expression 010 will evaluate, as always, as an octal (to 8).
 *However, 018 will evaluate as a decimal, to 18. Even though the
 *user began the expression as an octal, he later used a non-octal
 *digit. We forgive this and assume he intended a decimal. If the

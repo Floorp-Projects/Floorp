@@ -184,7 +184,7 @@ sub GetClass{
   } elsif (( 0xe000 <= $u) && ( $u <= 0xf8ff )  ) {
     return "Co";
   } else {
-    printf "WARNNING !!!! Cannot find General Category for U+%s \n" , $hex;
+    printf "WARNING !!!! Cannot find General Category for U+%s \n" , $hex;
   }
 }
 sub GetDClass{
@@ -206,7 +206,7 @@ sub GetDClass{
   } elsif (( 0xe000 <= $u) && ( $u <= 0xf8ff )  ) {
     return "C";
   } else {
-    printf "WARNNING !!!! Cannot find Detailed General Category for U+%s \n" , $hex;
+    printf "WARNING !!!! Cannot find Detailed General Category for U+%s \n" , $hex;
   }
 }
 sub DecToHex{

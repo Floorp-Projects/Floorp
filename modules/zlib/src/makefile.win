@@ -24,7 +24,7 @@
 
 #//------------------------------------------------------------------------
 #//
-# New build system where zip dll is build indepenant of java stubs.
+# New build system where zip dll is built independently of java stubs.
 #//
 #//------------------------------------------------------------------------
 MODULE = zlib

@@ -377,7 +377,7 @@ NS_IMETHODIMP nsPref::Observe(nsISupports *aSubject, const char *aTopic, const P
 
 
 /*
- * Some temporary support for depricated functions.
+ * Some temporary support for deprecated functions.
  */
 
 /*

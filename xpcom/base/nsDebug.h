@@ -166,7 +166,7 @@ public:
 #ifdef DEBUG
 
 /**
- * Abort the execution of the program if the expresion evaluates to
+ * Abort the execution of the program if the expression evaluates to
  * false.
  *
  * There is no status value returned from the macro.

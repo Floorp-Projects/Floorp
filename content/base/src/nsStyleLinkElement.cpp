@@ -248,7 +248,7 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument,
   nsresult rv = NS_NewURI(getter_AddRefs(uri), url);
 
   if (NS_FAILED(rv)) {
-    return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
+    return NS_OK; // The URL is bad, move along, don't propagate the error (for now)
   }
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
