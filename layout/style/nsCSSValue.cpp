@@ -159,33 +159,9 @@ nsCSSValue::~nsCSSValue()
 
 nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 {
-  Reset();
-  mUnit = aCopy.mUnit;
-  if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
-    if (nsnull != aCopy.mValue.mString) {
-      mValue.mString = nsCRT::strdup(aCopy.mValue.mString);
-    }
-  }
-  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
-    mValue.mInt = aCopy.mValue.mInt;
-  }
-  else if (eCSSUnit_Color == mUnit){
-    mValue.mColor = aCopy.mValue.mColor;
-  }
-  else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
-    mValue.mArray = aCopy.mValue.mArray;
-    mValue.mArray->AddRef();
-  }
-  else if (eCSSUnit_URL == mUnit){
-    mValue.mURL = aCopy.mValue.mURL;
-    mValue.mURL->AddRef();
-  }
-  else if (eCSSUnit_Image == mUnit){
-    mValue.mImage = aCopy.mValue.mImage;
-    mValue.mImage->AddRef();
-  }
-  else {
-    mValue.mFloat = aCopy.mValue.mFloat;
+  if (this != &aCopy) {
+    Reset();
+    new (this) nsCSSValue(aCopy);
   }
   return *this;
 }
