@@ -236,38 +236,18 @@ function EditorOpen()
 function EditorNewPlaintext()
 {
   dump("In EditorNewPlaintext..\n");
- 
-  core = XPAppCoresManager.Find("toolkitCore");
-  if ( !core ) {
-    core = new ToolkitCore();
-    if ( core ) {
-      core.Init("toolkitCore");
-    }
-  }
-  if ( core ) {
-    core.ShowWindowWithArgs( "chrome://editor/content/TextEditorAppShell.xul", window, "chrome://editor/content/EditorInitPagePlain.html" );
-  } else {
-    dump("Error; can't create toolkitCore\n");
-  }
+  window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
+                     "_blank",
+                     "chrome,dialog=no,all",
+                     "chrome://editor/content/EditorInitPagePlain.html" );
 }
 
 function EditorNewBrowser()
 {
   dump("In EditorNewBrowser..\n");
- 
-  core = XPAppCoresManager.Find("toolkitCore");
-  if ( !core ) {
-    core = new ToolkitCore();
-    if ( core ) {
-      core.Init("toolkitCore");
-    }
-  }
-  if ( core ) {
-    core.ShowWindowWithArgs( "chrome://navigator/content/navigator.xul", window, "" );
-  } else {
-    dump("Error; can't create toolkitCore\n");
-  }
+  window.open( "chrome://navigator/content/", "_blank", "chrome" );
 }
+
 
 function EditorSave()
 {
@@ -1185,21 +1165,7 @@ function EditorTestDocument()
 // --------------------------- Callbacks ---------------------------
 function OpenFile(url)
 {
-  // This is invoked from the browser app core.
-  // TODO: REMOVE THIS WHEN WE STOP USING TOOLKIT CORE
-  core = XPAppCoresManager.Find("toolkitCore");
-  if ( !core ) {
-      core = new ToolkitCore();
-      if ( core ) {
-          core.Init("toolkitCore");
-      }
-  }
-  if ( core ) {
-      // TODO: Convert this to use window.open() instead
-      core.ShowWindowWithArgs( "chrome://editor/content/", window, url );
-  } else {
-      dump("Error; can't create toolkitCore\n");
-  }
+    alert( "EditorCommands.js OpenFile should not be called!" );
 }
 
 // --------------------------- Status calls ---------------------------
