@@ -36,13 +36,19 @@ void _MD_EarlyInit(void)
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
+#ifndef _PR_PTHREADS
     if (isCurrent) {
 	(void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
+#else
+    *np = 0;
+    return NULL;
+#endif
 }
 
+#ifndef _PR_PTHREADS
 void
 _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 {
@@ -91,3 +97,4 @@ _MD_CREATE_THREAD(
     PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for BSDI.");
 	return PR_FAILURE;
 }
+#endif /* ! _PR_PTHREADS */

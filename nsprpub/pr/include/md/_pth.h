@@ -49,6 +49,19 @@
  *
  *
  */
+#elif defined(BSDI)
+/*
+ * Mutex and condition attributes are not supported.  The attr
+ * argument to pthread_mutex_init() and pthread_cond_init() must
+ * be passed as NULL.
+ */
+#define PTHREAD_MUTEXATTR_INIT(x)     0
+#define PTHREAD_MUTEXATTR_DESTROY(x)  /* */
+#define PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), NULL)
+#define PTHREAD_MUTEX_IS_LOCKED(m) (EBUSY == pthread_mutex_trylock(&(m)))
+#define PTHREAD_CONDATTR_INIT(x)      0
+#define PTHREAD_CONDATTR_DESTROY(x)   /* */
+#define PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), NULL)
 #else
 #define PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_init
 #define PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_destroy
@@ -71,7 +84,7 @@
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
-	|| defined(NETBSD) || defined(OPENBSD)
+	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI)
 #define PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
 #define PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
 #define PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -130,7 +143,8 @@
  * These platforms don't have sigtimedwait()
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
-	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD)
+	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
+	|| defined(BSDI)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
@@ -172,7 +186,8 @@
  */
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
-#elif defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) /* XXX */
+#elif defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
+	|| defined(BSDI) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else
@@ -204,7 +219,8 @@ extern int (*_PT_aix_yield_fcn)();
         nanosleep(&onemillisec,NULL);			\
     PR_END_MACRO
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
-	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD)
+	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
+	|| defined(BSDI)
 #define PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define PTHREAD_YIELD for this platform"
