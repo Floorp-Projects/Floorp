@@ -809,6 +809,8 @@ static char* pc2name(word pc, char name[], long size)
 extern void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
 extern int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256], UInt32* fileOffset);
 
+#if NFRAMES > 1
+
 void GC_print_callers(struct callinfo info[NFRAMES])
 {
     register int i;
@@ -828,6 +830,35 @@ void GC_print_callers(struct callinfo info[NFRAMES])
      	}
     }
 }
+
+#else
+
+#include "call_tree.h"
+
+void GC_print_callers(struct callinfo info[NFRAMES])
+{
+    register int i;
+    UInt32 file_offset;
+    call_tree* current_tree;
+    static char symbol_name[1024], unmangled_name[1024], file_name[256];
+    
+    current_tree = (call_tree*)info[0].ci_pc;
+    
+    GC_err_printf0("Callers at location:\n");
+    while (current_tree && current_tree->pc) {
+     	if (GC_address_to_source((char*)current_tree->pc, symbol_name, file_name, &file_offset)) {
+	     	MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
+     		GC_err_printf3("%s[%s,%ld]\n", unmangled_name, file_name, file_offset);
+     	} else {
+	     	pc2name((word)current_tree->pc, symbol_name, sizeof(symbol_name));
+	     	MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
+     		GC_err_printf2("%s(%08X)\n", unmangled_name, current_tree->pc);
+     	}
+     	current_tree = current_tree->parent;
+    }
+}
+
+#endif /* NFRAMES > 1 */
 
 #else
 
