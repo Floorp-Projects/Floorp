@@ -1287,7 +1287,9 @@ nsFtpState::R_type() {
 
 nsresult
 nsFtpState::S_cwd() {
-    nsCAutoString cwdStr(mPath);
+    nsCAutoString cwdStr;
+    if (mAction != PUT)
+        cwdStr = mPath;
     if (cwdStr.IsEmpty() || cwdStr.First() != '/')
         cwdStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
@@ -1847,7 +1849,10 @@ nsFtpState::R_pasv() {
             // hold a reference to the copier so we can cancel it if necessary.
             mDPipeRequest = copier;
 
-            return FTP_S_STOR;
+            // update the current working directory before sending the STOR
+            // command.  this is needed since we might be reusing a control
+            // connection.
+            return FTP_S_CWD;
         }
 
         //
