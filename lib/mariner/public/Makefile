@@ -21,6 +21,6 @@ DEPTH	= ../../..
 
 MODULE	= mariner
 
-EXPORTS	= xpform.h xploele.h xptabnav.h
+EXPORTS	= xpform.h xploele.h xptabnav.h xphist.h
 
 include $(DEPTH)/config/rules.mk
