@@ -21,9 +21,9 @@
 
 #include "GtkMozEmbedChrome.h"
 #include "nsCWebBrowser.h"
+#include "nsIURI.h"
 #include "nsCRT.h"
-
-static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
+#include "prlog.h"
 
 // this is a define to make sure that we don't call certain function
 // before the object has been properly initialized
@@ -34,21 +34,29 @@ static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
             return NS_ERROR_NOT_INITIALIZED;           \
         PR_END_MACRO
 
+static PRLogModuleInfo *mozEmbedLm = NULL;
+
 // constructor and destructor
 GtkMozEmbedChrome::GtkMozEmbedChrome()
 {
   NS_INIT_REFCNT();
-  mNewBrowserCB = nsnull;
+  mNewBrowserCB     = nsnull;
   mNewBrowserCBData = nsnull;
-  mDestroyCB = nsnull;
-  mDestroyCBData = nsnull;
-  mVisibilityCB = nsnull;
+  mDestroyCB        = nsnull;
+  mDestroyCBData    = nsnull;
+  mVisibilityCB     = nsnull;
   mVisibilityCBData = nsnull;
-  mBounds.x = 0;
-  mBounds.y = 0;
-  mBounds.width = 0;
-  mBounds.height = 0;
-  mVisibility = PR_FALSE;
+  mBounds.x         = 0;
+  mBounds.y         = 0;
+  mBounds.width     = 0;
+  mBounds.height    = 0;
+  mVisibility       = PR_FALSE;
+  mLinkMessage      = NULL;
+  mJSStatus         = NULL;
+  mLocation         = NULL;
+  mTitle            = NULL;
+  if (!mozEmbedLm)
+    mozEmbedLm = PR_NewLogModule("GtkMozEmbedChrome");
 }
 
 GtkMozEmbedChrome::~GtkMozEmbedChrome()
@@ -74,14 +82,14 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP GtkMozEmbedChrome::Init(GtkWidget *aOwningWidget)
 {
-  g_print("GtkMozEmbedChrome::Init\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Init\n"));
   mOwningGtkWidget = aOwningWidget;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetNewBrowserCallback(GtkMozEmbedChromeCB *aCallback, void *aData)
 {
-  g_print("GtkMozEmbedChrome::SetNewBrowserCallback\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetNewBrowserCallback\n"));
   NS_ENSURE_ARG_POINTER(aCallback);
   // it's ok to pass in null for the data if you want...
   mNewBrowserCB = aCallback;
@@ -91,7 +99,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetNewBrowserCallback(GtkMozEmbedChromeCB *aCal
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetDestroyCallback(GtkMozEmbedDestroyCB *aCallback, void *aData)
 {
-  g_print("GtkMozEmbedChrome::SetDestroyCallback\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetDestroyCallback\n"));
   NS_ENSURE_ARG_POINTER(aCallback);
   mDestroyCB = aCallback;
   mDestroyCBData = aData;
@@ -100,7 +108,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetDestroyCallback(GtkMozEmbedDestroyCB *aCallb
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetVisibilityCallback(GtkMozEmbedVisibilityCB *aCallback, void *aData)
 {
-  g_print("GtkMozEmbedChrome::SetVisibilityCallback\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetVisibilityCallback\n"));
   NS_ENSURE_ARG_POINTER(aCallback);
   mVisibilityCB = aCallback;
   mVisibilityCBData = aData;
@@ -109,18 +117,41 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetVisibilityCallback(GtkMozEmbedVisibilityCB *
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetLinkMessage (const char **retval)
 {
-  g_print("GtkMozEmbedChrome::GetLinkMessage\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLinkMessage\n"));
   NS_ENSURE_ARG_POINTER(retval);
   *retval = mLinkMessage;
   return NS_OK;
 }
 
+NS_IMETHODIMP GtkMozEmbedChrome::GetJSStatus (const char **retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetJSStatus\n"));
+  NS_ENSURE_ARG_POINTER(retval);
+  *retval = mJSStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetLocation (const char **retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLocation\n"));
+  NS_ENSURE_ARG_POINTER(retval);
+  *retval = mLocation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetTitleChar (const char **retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetTitleChar\n"));
+  NS_ENSURE_ARG_POINTER(retval);
+  *retval = mTitle;
+  return NS_OK;
+}
 
 // nsIInterfaceRequestor interface
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-  g_print("GtkMozEmbedChrome::GetInterface\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetInterface\n"));
   return QueryInterface(aIID, aInstancePtr);
 }
 
@@ -128,53 +159,56 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetInterface(const nsIID &aIID, void** aInstanc
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetJSStatus(const PRUnichar *status)
 {
-  g_print("GtkMozEmbedChrome::SetJSStatus\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetJSStatus\n"));
+  nsString jsStatusString(status);
+  mJSStatus = jsStatusString.ToNewCString();
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("js status is %s\n", (const char *)mJSStatus));
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetJSDefaultStatus(const PRUnichar *status)
 {
-  g_print("GtkMozEmbedChrome::SetJSDefaultStatus\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetJSDefaultStatus\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetOverLink(const PRUnichar *link)
 {
-  g_print("GtkMozEmbedChrome::SetOverLink\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetOverLink\n"));
   nsString linkMessageString(link);
   mLinkMessage = linkMessageString.ToNewCString();
-  g_print("message is %s\n", (const char *)mLinkMessage);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("message is %s\n", (const char *)mLinkMessage));
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
-  g_print("GtkMozEmbedChrome::GetWebBrowser\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetWebBrowser\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 {
-  g_print("GtkMozEmbedChrome::SetWebBrowser\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetWebBrowser\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetChromeMask(PRUint32 *aChromeMask)
 {
-  g_print("GtkMozEmbedChrome::GetChromeMask\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetChromeMask\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetChromeMask(PRUint32 aChromeMask)
 {
-  g_print("GtkMozEmbedChrome::SetChromeMask\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetChromeMask\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask, 
 					       nsIWebBrowser **_retval)
 {
-  g_print("GtkMozEmbedChrome::GetNewBrowser\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
   NS_ENSURE_STATE(mNewBrowserCB);
   if (mNewBrowserCB)
   {
@@ -186,19 +220,19 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
 NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
 						      nsIDocShellTreeItem **_retval)
 {
-  g_print("GtkMozEmbedChrome::FindNamedBrowserItem\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::FindNamedBrowserItem\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-  g_print("GtkMozEmbedChrome::SizeBrowserTo\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SizeBrowserTo\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
 {
-  g_print("GtkMozEmbedChrome::ShowAsModal\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ShowAsModal\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -206,13 +240,13 @@ NS_IMETHODIMP GtkMozEmbedChrome::ShowAsModal(void)
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
 {
-  g_print("GtkMozEmbedChrome::OnStartURIOpen\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStartURIOpen\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {
-  g_print("GtkMozEmbedChrome::GetProtocolHandler\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetProtocolHandler\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -220,7 +254,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::DoContent(const char *aContentType, nsURILoadCo
 					   const char *aWindowTarget, nsIChannel *aOpenedChannel,
 					   nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
-  g_print("GtkMozEmbedChrome::DoContent\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::DoContent\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -228,11 +262,11 @@ NS_IMETHODIMP GtkMozEmbedChrome::IsPreferred(const char *aContentType, nsURILoad
 					     const char *aWindowTarget, char **aDesiredContentType,
 					     PRBool *aCanHandleContent)
 {
-  g_print("GtkMozEmbedChrome::IsPreferred\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::IsPreferred\n"));
   NS_ENSURE_ARG_POINTER(aCanHandleContent);
   if (aContentType)
   {
-    g_print("checking content type %s\n", aContentType);
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("checking content type %s\n", aContentType));
     if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
         || nsCRT::strcasecmp(aContentType, "text/xul") == 0
         || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
@@ -255,31 +289,31 @@ NS_IMETHODIMP GtkMozEmbedChrome::CanHandleContent(const char *aContentType, nsUR
 						  const char *aWindowTarget, char **aDesiredContentType,
 						  PRBool *_retval)
 {
-  g_print("GtkMozEmbedChrome::CanHandleContent\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::CanHandleContent\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetLoadCookie(nsISupports * *aLoadCookie)
 {
-  g_print("GtkMozEmbedChrome::GetLoadCookie\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLoadCookie\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetLoadCookie(nsISupports * aLoadCookie)
 {
-  g_print("GtkMozEmbedChrome::SetLoadCookie\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetLoadCookie\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
 {
-  g_print("GtkMozEmbedChrome::GetParentContentListener\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetParentContentListener\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetParentContentListener(nsIURIContentListener * aParentContentListener)
 {
-  g_print("GtkMozEmbedChrome::SetParentContentListener\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetParentContentListener\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -289,16 +323,17 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
 						  PRInt32 maxSelfProgress, PRInt32 curTotalProgress,
 						  PRInt32 maxTotalProgress)
 {
-  g_print("GtkMozEmbedChrome::OnProgressChange\n");
-  g_print("maxTotalProgress is %d and curTotalProgress is %d\n", maxTotalProgress, curTotalProgress);
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnProgressChange\n"));
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("maxTotalProgress is %d and curTotalProgress is %d\n",
+				    maxTotalProgress, curTotalProgress));
   if (maxTotalProgress)
   {
     PRUint32 percentage = (curTotalProgress * 100) / maxTotalProgress;
-    g_print("%d%% percent\n", percentage);
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("%d%% percent\n", percentage));
   }
   else
   {
-    g_print("Unknown percent\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("Unknown percent\n"));
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -306,52 +341,57 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
 NS_IMETHODIMP GtkMozEmbedChrome::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress,
 						       PRInt32 maxChildProgress)
 {
-  g_print("GtkMozEmbedChrome::OnChildProgressChange\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnChildProgressChange\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 aStatus)
 {
-  g_print("GtkMozEmbedChrome::OnStatusChange\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStatusChange\n"));
   if (aStatus & nsIWebProgress::flag_net_start)
-    g_print("flag_net_start\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_start\n"));
   if (aStatus & nsIWebProgress::flag_net_dns)
-    g_print("flag_net_dns\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_dns\n"));
   if (aStatus & nsIWebProgress::flag_net_connecting)
-    g_print("flag_net_connecting\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_connecting\n"));
   if (aStatus & nsIWebProgress::flag_net_redirecting)
-    g_print("flag_net_redirecting\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_redirecting\n"));
   if (aStatus & nsIWebProgress::flag_net_negotiating)
-    g_print("flag_net_negotiating\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_negotiating\n"));
   if (aStatus & nsIWebProgress::flag_net_transferring)
-    g_print("flag_net_transferring\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_transferring\n"));
   if (aStatus & nsIWebProgress::flag_net_failedDNS)
-    g_print("flag_net_failedDNS\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedDNS\n"));
   if (aStatus & nsIWebProgress::flag_net_failedConnect)
-    g_print("flag_net_failedConnect\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedConnect\n"));
   if (aStatus & nsIWebProgress::flag_net_failedTransfer)
-    g_print("flag_net_failedTransfer\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedTransfer\n"));
   if (aStatus & nsIWebProgress::flag_net_failedTimeout)
-    g_print("flag_net_failedTimeout\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_failedTimeout\n"));
   if (aStatus & nsIWebProgress::flag_net_userCancelled)
-    g_print("flag_net_userCancelled\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_net_userCancelled\n"));
   if (aStatus & nsIWebProgress::flag_win_start)
-    g_print("flag_win_start\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_win_start\n"));
   if (aStatus & nsIWebProgress::flag_win_stop)
-    g_print("flag_win_stop\n");
+    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_win_stop\n"));
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
 {
-  g_print("GtkMozEmbedChrome::OnChildStatusChange\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnChildStatusChange\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *location)
+NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *aLocation)
 {
-  g_print("GtkMozEmbedChrome::OnLocationChange\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnLocationChange\n"));
+  char *newURIString = NULL;
+  NS_ENSURE_ARG_POINTER(aLocation);
+  aLocation->GetSpec(&newURIString);
+  mLocation = newURIString;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("new location is %s\n", (const char *)mLocation));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -362,25 +402,25 @@ NS_IMETHODIMP GtkMozEmbedChrome::InitWindow(nativeWindow parentNativeWindow,
 					    PRInt32 x, PRInt32 y,
 					    PRInt32 cx, PRInt32 cy)
 {
-  g_print("GtkMozEmbedChrome::InitWindow\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::InitWindow\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::Create(void)
 {
-  g_print("GtkMozEmbedChrome::Create\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Create\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::Destroy(void)
 {
-  g_print("GtkMozEmbedChrome::Destory\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Destory\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)
 {
-  g_print("GtkMozEmbedChrome::SetPosition\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPosition\n"));
   mBounds.x = x;
   mBounds.y = y;
   return NS_OK;
@@ -388,7 +428,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetPosition(PRInt32 *x, PRInt32 *y)
 {
-  g_print("GtkMozEmbedChrome::GetPosition\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPosition\n"));
   NS_ENSURE_ARG_POINTER(x);
   NS_ENSURE_ARG_POINTER(y);
   *x = mBounds.x;
@@ -398,7 +438,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetPosition(PRInt32 *x, PRInt32 *y)
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-  g_print("GtkMozEmbedChrome::SetSize\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetSize\n"));
   mBounds.width = cx;
   mBounds.height = cy;
   return NS_OK;
@@ -406,7 +446,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetSize(PRInt32 *cx, PRInt32 *cy)
 {
-  g_print("GtkMozEmbedChrome::GetSize\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSize\n"));
   NS_ENSURE_ARG_POINTER(cx);
   NS_ENSURE_ARG_POINTER(cy);
   *cx = mBounds.width;
@@ -418,8 +458,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetPositionAndSize(PRInt32 x, PRInt32 y,
 						    PRInt32 cx, PRInt32 cy,
 						    PRBool fRepaint)
 {
-  g_print("GtkMozEmbedChrome::SetPositionAndSize %d %d %d %d\n",
-	  x, y, cx, cy);
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetPositionAndSize %d %d %d %d\n",
+				    x, y, cx, cy));
   mBounds.x = x;
   mBounds.y = y;
   mBounds.width = cx;
@@ -430,8 +470,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetPositionAndSize(PRInt32 x, PRInt32 y,
 NS_IMETHODIMP GtkMozEmbedChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y,
 						    PRInt32 *cx, PRInt32 *cy)
 {
-  g_print("GtkMozEmbedChrome::GetPositionAndSize %d %d %d %d\n",
-	  mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPositionAndSize %d %d %d %d\n",
+				    mBounds.x, mBounds.y, mBounds.width, mBounds.height));
   NS_ENSURE_ARG_POINTER(x);
   NS_ENSURE_ARG_POINTER(y);
   NS_ENSURE_ARG_POINTER(cx);
@@ -445,37 +485,37 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y,
 
 NS_IMETHODIMP GtkMozEmbedChrome::Repaint(PRBool force)
 {
-  g_print("GtkMozEmbedCHrome::Repaint\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedCHrome::Repaint\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetParentWidget(nsIWidget * *aParentWidget)
 {
-  g_print("GtkMozEmbedChrome::GetParentWidget\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetParentWidget\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetParentWidget(nsIWidget * aParentWidget)
 {
-  g_print("GtkMozEmbedChrome::SetParentWidget\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetParentWidget\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
 {
-  g_print("GtkMozEmbedChrome::GetParentNativeWindow\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetParentNativeWindow\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
 NS_IMETHODIMP GtkMozEmbedChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-  g_print("GtkMozEmbedChrome::SetParentNativeWindow\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetParentNativeWindow\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
 {
-  g_print("GtkMozEmbedChrome::GetVisibility\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetVisibility\n"));
   NS_ENSURE_ARG_POINTER(aVisibility);
   *aVisibility = mVisibility;
   return NS_OK;
@@ -483,7 +523,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
 {
-  g_print("GtkMozEmbedChrome::SetVisibility for %p\n", this);
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetVisibility for %p\n", this));
   if (mVisibilityCB)
     mVisibilityCB(aVisibility, mVisibilityCBData);
   mVisibility = aVisibility;
@@ -492,33 +532,41 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetMainWidget(nsIWidget * *aMainWidget)
 {
-  g_print("GtkMozEmbedChrome::GetMainWidget\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetMainWidget\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::SetFocus(void)
 {
-  g_print("GtkMozEmbedChrome::SetFocus\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetFocus\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus, 
 						PRBool *aTookFocus)
 {
-  g_print("GtkMozEmbedChrome::FocusAvailable\n");
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::FocusAvailable\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::GetTitle(PRUnichar * *aTitle)
 {
-  g_print("GtkMozEmbedChrome::GetTitle\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetTitle\n"));
+  NS_ENSURE_ARG_POINTER(aTitle);
+  *aTitle = nsnull;
+  if (mTitle)
+    *aTitle = mTitleUnicode.ToNewUnicode();
+  return NS_OK;
 }
  
 NS_IMETHODIMP GtkMozEmbedChrome::SetTitle(const PRUnichar * aTitle)
 {
-  g_print("GtkMozEmbedChrome::SetTitle\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetTitle\n"));
+  nsString newTitleString(aTitle);
+  mTitleUnicode = aTitle;
+  mTitle = newTitleString.ToNewCString();
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("title is %s\n", (const char *)mTitle));
+  return NS_OK;
 }
 
 

@@ -60,6 +60,9 @@ public:
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData);
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData);
   NS_IMETHOD GetLinkMessage               (const char **retval);
+  NS_IMETHOD GetJSStatus                  (const char **retval);
+  NS_IMETHOD GetLocation                  (const char **retval);
+  NS_IMETHOD GetTitleChar                 (const char **retval);
 
   NS_DECL_ISUPPORTS
 
@@ -84,6 +87,10 @@ private:
   nsRect                     mBounds;
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;
+  nsXPIDLCString             mJSStatus;
+  nsXPIDLCString             mLocation;
+  nsXPIDLCString             mTitle;
+  nsString                   mTitleUnicode;
 };
 
 #endif /* __GtkMozEmbedChrome_h */

@@ -46,6 +46,9 @@ public:
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData) = 0;
   NS_IMETHOD GetLinkMessage               (const char **retval) = 0;
+  NS_IMETHOD GetJSStatus                  (const char **retval) = 0;
+  NS_IMETHOD GetLocation                  (const char **retval) = 0;
+  NS_IMETHOD GetTitleChar                 (const char **retval) = 0;
 };
 
 #endif /* __nsIGtkEmbed_h__ */
