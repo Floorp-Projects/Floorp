@@ -111,7 +111,8 @@ nsTimerImpl::~nsTimerImpl()
   if (mCallbackType == CALLBACK_TYPE_INTERFACE)
     NS_RELEASE(mCallback.i);
 
-  gThread->RemoveTimer(this);
+  if (gThread)
+    gThread->RemoveTimer(this);
 }
 
 
@@ -150,6 +151,9 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
   mPriority = (PRUint8)aPriority;
   mType = (PRUint8)aType;
 
+  if (!gThread)
+    return NS_ERROR_FAILURE;
+
   gThread->AddTimer(this);
 
   return NS_OK;
@@ -169,6 +173,9 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   mPriority = (PRUint8)aPriority;
   mType = (PRUint8)aType;
 
+  if (!gThread)
+    return NS_ERROR_FAILURE;
+
   gThread->AddTimer(this);
 
   return NS_OK;
@@ -179,14 +186,15 @@ NS_IMETHODIMP_(void) nsTimerImpl::Cancel()
   mCancelled = PR_TRUE;
   mClosure = nsnull;
 
-  gThread->RemoveTimer(this);
+  if (gThread)
+    gThread->RemoveTimer(this);
 }
 
 NS_IMETHODIMP_(void) nsTimerImpl::SetDelay(PRUint32 aDelay)
 {
   SetDelayInternal(aDelay);
 
-  if (!mFiring)
+  if (!mFiring && gThread)
     gThread->TimerDelayChanged(this);
 }
 
@@ -245,7 +253,8 @@ void nsTimerImpl::Process()
 
   if (mType == NS_TYPE_REPEATING_SLACK) {
     SetDelayInternal(mDelay); // force mTimeout to be recomputed.
-    gThread->AddTimer(this);
+    if (gThread)
+      gThread->AddTimer(this);
   }
 }
 
@@ -303,14 +312,16 @@ void nsTimerImpl::Fire()
   // prior to making the callback.
   if (mType == NS_TYPE_REPEATING_PRECISE) {
     SetDelayInternal(mDelay);
-    gThread->AddTimer(this);
+    if (gThread)
+      gThread->AddTimer(this);
   }
 
   PRThread *thread;
   mCallingThread->GetPRThread(&thread);
 
   nsCOMPtr<nsIEventQueue> queue;
-  gThread->mEventQueueService->GetThreadEventQueue(thread, getter_AddRefs(queue));
+  if (gThread)
+    gThread->mEventQueueService->GetThreadEventQueue(thread, getter_AddRefs(queue));
 
   queue->PostEvent(&event->e);
 }
