@@ -136,7 +136,7 @@ fi
 #   Find all relevant files.
 #
 ALLFILES="$MYTMPDIR/allfiles.list"
-grep -v '[\;\[]' < $MANIFEST | grep -v '^$' | sed 's/^/\.\/mozilla\/dist\/bin\//' > $ALLFILES
+grep -v '[\;\[]' < $MANIFEST | grep -v '^$' | sed "s|^|${OBJROOT}/dist/bin/|" > $ALLFILES
 
 
 #
