@@ -19,7 +19,8 @@
  *
  * Contributor(s):
  *  Terry Hayes <thayes@netscape.com>
-*/
+ *  Javier Delgadillo <javi@netscape.com>
+ */
 
 /*
  * Dialog services for PIP.
@@ -40,6 +41,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIX509Cert.h"
 
 #include "nsNSSDialogs.h"
 
@@ -132,7 +134,10 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsNSSDialogs, nsINSSDialogs, nsISecurityWarningDialogs)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSDialogs, nsINSSDialogs, 
+                                            nsITokenPasswordDialogs,
+                                            nsISecurityWarningDialogs,
+                                            nsIBadCertListener)
 
 nsresult
 nsNSSDialogs::Init()
@@ -186,27 +191,80 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
 }
 
 /* boolean unknownIssuer (in nsIChannelSecurityInfo socketInfo,
-                          in nsIX509Cert cert); */
+                          in nsIX509Cert cert, out addType); */
 NS_IMETHODIMP
 nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
-                            nsIX509Cert *cert, PRBool *_retval)
+                            nsIX509Cert *cert, PRInt16 *outAddType,
+                            PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  PRInt32 addType;
+  
+  *_retval = PR_FALSE;
+
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+
+  if (!block)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLString commonName;
+  rv = cert->GetCommonName(getter_Copies(commonName));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = block->SetString(1, commonName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull, 
+                                     "chrome://pippki/content/newserver.xul",
+                                     block);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 status;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv))
+    return rv; 
+
+  if (status == 0) {
+    *_retval = PR_FALSE;
+  } else {
+    // The user wants to continue, let's figure out
+    // what to do with this cert. 
+    rv = block->GetInt(2, &addType);
+    switch (addType) {
+      case 0:
+        *outAddType = ADD_TRUSTED_PERMANENTLY;
+        *_retval    = PR_TRUE;
+        break;
+      case 1:
+        *outAddType = ADD_TRUSTED_FOR_SESSION;
+        *_retval    = PR_TRUE;
+        break;
+      default:
+        *outAddType = UNINIT_ADD_FLAG;
+        *_retval    = PR_FALSE;
+        break;
+    } 
+  }
+
+  return NS_OK; 
 }
 
-/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo,
-                            in nsIX509Cert cert); */
-NS_IMETHODIMP
-nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo,
-                             nsIX509Cert *cert, PRBool *_retval)
+/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo, 
+                           in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo, 
+                             nsIX509Cert *cert, PRBool *_retVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* boolean certExpired (in nsIChannelSecurityInfo socketInfo,
-                         in nsIX509Cert cert); */
-NS_IMETHODIMP
-nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo,
+/* boolean certExpired (in nsIChannelSecurityInfo socketInfo, 
+                        in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo, 
                           nsIX509Cert *cert, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

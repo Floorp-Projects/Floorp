@@ -1,0 +1,27 @@
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - 
+   - Contributor(s):
+   -  Javier Delgadillo <javi@netscape.com>
+   -  Bob Lord <lord@netscape.com>
+  --> 
+
+<!-- Values for newserver.xul -->
+<!ENTITY newserver.title  "Security Error: Unknown CA">
+<!ENTITY newserver.message2  "Although the Certificate Authority is unrecognized, you can choose to explicitly accept the certificate used by this web site.">
+<!ENTITY newserver.message3  "Before accepting this certificate, you should examine this site's certificate carefully.">
+<!ENTITY newserver.acceptperm  "Accept this certificate permanently">
+<!ENTITY newserver.accepttemp  "Accept this certificate temporarily for this session">
+<!ENTITY newserver.reject  "Do not accept this certificate and do not connect to this web site">
+<!ENTITY newserver.helpButton.label  "Help">
+<!ENTITY newserver.okButton.label  "OK">
+<!ENTITY newserver.cancelButton.label  "Cancel">

@@ -43,12 +43,16 @@
 #include "nsIWebProgressListener.h"
 #include "nsIChannel.h"
 #include "nsIBadCertListener.h"
+#include "nsNSSCertificate.h"
+
+#include "nsXPIDLString.h"
 
 #include "nsNSSHelper.h"
 
 #include "ssl.h"
 #include "secerr.h"
 #include "sslerr.h"
+#include "certdb.h"
 
 //#define DEBUG_SSL_VERBOSE
 
@@ -426,6 +430,96 @@ nsCertErrorNeedsDialog(int error)
           (error == SEC_ERROR_EXPIRED_CERTIFICATE));
 }
 
+static char* defaultServerNickname(CERTCertificate* cert)
+{
+  char* nickname = nsnull;
+  int count;
+  PRBool conflict;
+  char* servername = nsnull;
+  
+  servername = CERT_GetCommonName(&cert->subject);
+  if (servername == NULL) {
+    return nsnull;
+  }
+   
+  count = 1;
+  while (1) {
+    if (count == 1) {
+      nickname = PR_smprintf("%s", servername);
+    }
+    else {
+      nickname = PR_smprintf("%s #%d", servername, count);
+    }
+    if (nickname == NULL) {
+      break;
+    }
+
+    conflict = SEC_CertNicknameConflict(nickname, &cert->derSubject,
+                                        cert->dbhandle);
+    if (conflict == PR_SUCCESS) {
+      break;
+    }
+    PR_Free(nickname);
+    count++;
+  }
+  PR_FREEIF(servername);
+  return nickname;
+}
+
+
+
+static nsresult
+addCertToDB(CERTCertificate *peerCert, PRInt16 addType)
+{
+  CERTCertTrust trust;
+  SECStatus rv;
+  nsresult retVal = NS_ERROR_FAILURE;
+  char *nickname;
+  
+  switch (addType) {
+    case nsIBadCertListener::ADD_TRUSTED_PERMANENTLY:
+      nickname = defaultServerNickname(peerCert);
+      if (nsnull == nickname)
+        break;
+      memset((void*)&trust, 0, sizeof(trust));
+      rv = CERT_DecodeTrustString(&trust, "P"); 
+      if (rv != SECSuccess) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = CERT_AddTempCertToPerm(peerCert, nickname, &trust);
+      if (rv == SECSuccess)
+        retVal = NS_OK;
+      PR_Free(nickname);
+      break;
+    case nsIBadCertListener::ADD_TRUSTED_FOR_SESSION:
+      // XXX We need an API from NSS to do this so 
+      //     that we don't have to access the fields 
+      //     in the cert directly.
+      peerCert->keepSession = PR_TRUE;
+      CERTCertTrust *trustPtr;
+      if (!peerCert->trust) {
+        trustPtr = (CERTCertTrust*)PORT_ArenaZAlloc(peerCert->arena,
+                                                    sizeof(CERTCertTrust));
+        if (!trustPtr)
+          break;
+
+        peerCert->trust = trustPtr;
+      } else {
+        trustPtr = peerCert->trust;
+      }
+      rv = CERT_DecodeTrustString(trustPtr, "P");
+      if (rv != SECSuccess)
+        break;
+
+      retVal = NS_OK;      
+      break;
+    default:
+      PR_ASSERT(!"Invalid value for addType passed to addCertDB");
+      break;
+  }
+  return retVal;
+}
+
 static PRBool
 nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
                            PRFileDesc      *sslSocket,
@@ -433,6 +527,9 @@ nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
 {
   PRBool retVal = PR_FALSE;
   nsIBadCertListener *badCertHandler;
+  PRInt16 addType = nsIBadCertListener::UNINIT_ADD_FLAG;
+  nsNSSCertificate *nssCert;
+  CERTCertificate *peerCert;
   nsresult rv;
 
   rv = getNSSDialogs((void**)&badCertHandler, 
@@ -441,24 +538,36 @@ nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
     return PR_FALSE;
   nsIChannelSecurityInfo *csi =  NS_STATIC_CAST(nsIChannelSecurityInfo*,
                                                 infoObject);
-
+  peerCert = SSL_PeerCertificate(sslSocket);
+  nssCert = new nsNSSCertificate(peerCert);
+  CERT_DestroyCertificate(peerCert);  //nssCert gets its own reference
+                                      //to the certificate, so let's
+                                      //not leak one here.
+  if (!nssCert)
+    return PR_FALSE;
+  NS_ADDREF(nssCert);
+  nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   switch (error) {
   case SEC_ERROR_UNKNOWN_ISSUER:
   case SEC_ERROR_CA_CERT_INVALID:
   case SEC_ERROR_UNTRUSTED_ISSUER:
-    rv = badCertHandler->UnknownIssuer(csi, nsnull, &retVal);
+    rv = badCertHandler->UnknownIssuer(csi, callBackCert, &addType, &retVal);
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
-    rv = badCertHandler->MismatchDomain(csi, nsnull, &retVal);
+    rv = badCertHandler->MismatchDomain(csi, callBackCert, &retVal);
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
-    rv = badCertHandler->CertExpired(csi, nsnull, & retVal);
+    rv = badCertHandler->CertExpired(csi, callBackCert, & retVal);
     break;
   default:
     rv = NS_ERROR_FAILURE;
     break;
   }
+  if (retVal && addType != nsIBadCertListener::UNINIT_ADD_FLAG) {
+    addCertToDB(peerCert, addType);
+  }
   NS_RELEASE(badCertHandler);
+  NS_RELEASE(nssCert);
   return NS_FAILED(rv) ? PR_FALSE : retVal;
 }
 

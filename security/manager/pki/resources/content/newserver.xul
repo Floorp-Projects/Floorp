@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   -
+   - Contributor(s):
+   -  Javier Delgadillo <javi@netscape.com>
+   -  Bob Lord <lord@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/newserver.dtd">
+
+
+<window
+  id="ssl_warning" title="&newserver.title;"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  debug="false"
+  height="350"
+  width="400"
+  onload="onLoad();"
+>
+<script src="chrome://global/content/strres.js" />
+<script src="newserver.js" />
+
+<box orient="vertical" style="margin: 5px;" flex="1">
+
+  <html id="message1" />
+  <separator/>
+  <html>&newserver.message2;</html>
+  <separator/>
+  <html>&newserver.message3;</html>
+  <separator/>
+  <html id="message4" />
+
+  <radiogroup id="trustSiteCert" pref="false" orient="vertical">
+    <radio group="trustSiteCert" 
+           value="&newserver.acceptperm;"
+           id="acceptRadio"
+            data="0"/>
+    <radio group="trustSiteCert" 
+           value="&newserver.accepttemp;"
+           id="tmpAcceptRadio"  
+           data="1" checked="true"/>
+    <radio group="trustSiteCert" 
+           id="rejectRadio"
+           value="&newserver.reject;" data="2"/>
+  </radiogroup>
+
+  <!--
+  <box>
+  <button id="examineCert-button" class="dialog" value="Examine Certificate"
+     onclick=""/> 
+  </box>
+  <separator/>
+  -->
+  <box>
+  <button id="ok-button" class="dialog" value="&newserver.okButton.label;"
+     style="width: 8ex" onclick="doOK();" disabled="false"/> 
+  <button id="cancel-button" class="dialog" value="&newserver.cancelButton.label;"
+     style="width: 8ex" onclick="doCancel();" /> 
+  <button id="help-button" class="dialog" value="&newserver.helpButton.label;"
+    style="width: 8ex" onclick="alert('Will bring up help one day');" /> 
+  </box>
+</box>
+</window>

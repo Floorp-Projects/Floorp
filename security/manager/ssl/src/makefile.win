@@ -82,6 +82,7 @@ OBJS = \
     .\$(OBJDIR)\nsTLSSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
     .\$(OBJDIR)\nsPK11TokenDB.obj \
+    .\$(OBJDIR)\nsNSSCertificate.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
