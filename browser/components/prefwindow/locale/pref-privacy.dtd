@@ -53,3 +53,7 @@
 <!ENTITY clearAll.label                    "Clear All">
 <!ENTITY clearAllDescription.label         "Clear all information stored while browsing:">
 
+<!ENTITY acceptNormally.label              "Accept cookies normally">
+<!ENTITY acceptForSession.label            "Accept for current session only">
+<!ENTITY askAboutCookies.label             "Ask for each cookie">
+

@@ -40,8 +40,8 @@
 #define DL_RETAIN_WINDOW 0
 
 var _elementIDs = ["histDay", "browserCacheDiskCache", "cookieBehavior", "enableCookies",
-                   "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                   "enableCookiesButAskFirst", "enableFormFill", "enablePasswords", 
+                   "enableCookiesForOriginatingSiteOnly", "networkCookieLifetime",
+                   "enableFormFill", "enablePasswords", 
                    "downloadsRetentionPolicy"];
 
 function Startup() {
@@ -324,14 +324,16 @@ function updateCookieBroadcaster()
 {
   var broadcaster = document.getElementById("cookieBroadcaster");
   var checkbox    = document.getElementById("enableCookies");
+  var radiogroup  = document.getElementById("networkCookieLifetime");
   if (!checkbox.checked) {
     broadcaster.setAttribute("disabled", "true");
     document.getElementById("enableCookiesForOriginatingSiteOnly").checked = false;
-    document.getElementById("enableCookiesForCurrentSessionOnly").checked = false;
-    document.getElementById("enableCookiesButAskFirst").checked = false;
+    radiogroup.setAttribute("disabled", "true");
   }
-  else
+  else {
     broadcaster.removeAttribute("disabled");
+    radiogroup.removeAttribute("disabled");
+  }
 }
 
 function onPrefsOK()

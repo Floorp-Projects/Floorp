@@ -122,14 +122,13 @@
           <checkbox id="enableCookiesForOriginatingSiteOnly" observes="cookieBroadcaster"
                     label="&forOriginatingSiteOnly.label;" accesskey="&forOriginatingSiteOnly.accesskey;"
                     style="margin-left: 23px;" oncommand="updateCookieBehavior();"/>
-          <checkbox id="enableCookiesForCurrentSessionOnly" observes="cookieBroadcaster"
-                    label="&forCurrentSessionOnly.label;" accesskey="&forCurrentSessionOnly.accesskey;"
-                    prefstring="network.cookie.enableForCurrentSessionOnly"
-                    style="margin-left: 23px;"/>
-          <checkbox id="enableCookiesButAskFirst" observes="cookieBroadcaster"
-                    label="&butAskFirst.label;" accesskey="&butAskFirst.accesskey;"
-                    prefstring="network.cookie.warnAboutCookies"
-                    style="margin-left: 23px;"/>
+          <!-- FIXME: Temp UI to address fallout from bug 233339 -->
+          <radiogroup style="margin-left: 23px;" id="networkCookieLifetime" 
+                      prefstring="network.cookie.lifetimePolicy">
+            <radio value="0" label="&acceptNormally.label;"/>
+            <radio value="2" label="&acceptForSession.label;"/>
+            <radio value="1" label="&askAboutCookies.label;"/>
+          </radiogroup>
         </vbox>
       </vbox>
     </expander>    
