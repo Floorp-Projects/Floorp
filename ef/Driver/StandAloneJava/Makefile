@@ -30,11 +30,7 @@ include $(DEPTH)/config/config.mk
 
 CFLAGS += -DIMPORTING_VM_FILES
 
-ifneq ($(OS_ARCH),WINNT)
-LDFLAGS += -lm
-endif
-
-LDFLAGS += $(EF_LIBS) $(NSPR_LIBS) 
+LDFLAGS += $(NSPR_LIBS) $(EF_LIBS)
 
 include $(DEPTH)/config/rules.mk
 
