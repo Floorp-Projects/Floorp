@@ -43,6 +43,7 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsFormControlAccessible.h"
 #include "nsIAccessibleEditableText.h"
+#include "nsTextAccessible.h"
 
 class nsICheckboxControlFrame;
 
@@ -96,7 +97,8 @@ public:
 class nsIEditor;
 
 class nsHTMLTextFieldAccessible : public nsFormControlAccessible,
-                                  public nsIAccessibleEditableText
+                                  public nsIAccessibleEditableText,
+                                  public nsAccessibleText
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -313,9 +313,36 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAString& _retval)
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsFormControlAccessible(aNode, aShell)
 { 
+  // In nsHTMLTextFieldAccessible, mDOMNode is a nsHTMLInputElement. But we need 
+  // a *true* text node(nsTextNode) for the text operation. It's the first child
+  // of our editor's root element
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell)
+    return;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsIFrame *frame = nsnull;
+  shell->GetPrimaryFrameFor(content, &frame);
+  nsCOMPtr<nsIGfxTextControlFrame2> tframe(do_QueryInterface(frame));
+  if (!tframe)
+    return;
+
+  nsCOMPtr<nsIEditor> editor;
+  tframe->GetEditor(getter_AddRefs(editor));
+  if (!editor)
+    return;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  editor->GetRootElement(getter_AddRefs(rootElement));
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+  if (rootNode) {
+    nsCOMPtr<nsIDOMNode> domNode;
+    rootNode->GetFirstChild(getter_AddRefs(domNode));
+    SetTextNode(domNode);
+  }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsFormControlAccessible, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessible, nsFormControlAccessible, nsIAccessibleEditableText, nsAccessibleText)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
 {
