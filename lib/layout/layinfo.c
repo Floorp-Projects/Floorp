@@ -22,6 +22,7 @@
 #include "layout.h"
 #include "laylayer.h"
 #include "layers.h"
+#include "prmem.h"
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
