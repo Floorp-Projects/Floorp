@@ -331,10 +331,21 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 NEED_BASE_DLL_NAME_ALSO=
 
-OS_TARGET=`uname -s`
-OS_ARCH=`uname -s | sed -e 's|/|_|g'`
-OS_RELEASE=`uname -r`
-OS_TEST=`uname -m`
+if test -n "$CROSS_COMPILE"; then
+    OS_TARGET="${target_os}"
+    OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
+    OS_RELEASE=
+    OS_TEST="${target_cpu}"
+    case "${target_os}" in
+        linux*)       OS_ARCH=Linux ;;
+        solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
+    esac
+else
+    OS_TARGET=`uname -s`
+    OS_ARCH=`uname -s | sed -e 's|/|_|g'`
+    OS_RELEASE=`uname -r`
+    OS_TEST=`uname -m`
+fi
 _COMPILER_PREFIX=
 
 dnl ========================================================
@@ -434,6 +445,7 @@ case "$host" in
 *-osf*)
     HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
     ;;
+
 esac
 
 dnl ========================================================
@@ -729,7 +741,9 @@ alpha*-*-osf*)
 dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
-    if test ! "$GNU_CC"; then
+    HAVE_DEV_ZERO=1
+    TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
+    if test -z "$GNU_CC"; then
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
@@ -762,10 +776,6 @@ dnl the qsort routine under solaris is faulty
     else
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-       if test "$ac_cv_mkshlib_force_and_unforce" != "no"; then
-       MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL=''
-       fi
        DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
@@ -1692,14 +1702,11 @@ AC_MSG_CHECKING("for PR_GetCurrentThread in -lnspr$NSPR_VERSION with thread lib"
 AC_MSG_RESULT("$result")
 fi
 
-if test "$cross_compiling" = "yes"; then
-    NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION $NSPR_LIBS"
-else
-    AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
+AC_CHECK_LIB(plc$NSPR_VERSION, PL_CreateOptState, NSPR_LIBS="-lplc$NSPR_VERSION $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplc$NSPR_VERSION"], $NSPR_LIBS)
-    AC_CHECK_LIB(plds$NSPR_VERSION, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
+AC_CHECK_LIB(plds$NSPR_VERSION, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
 	[MISSING_NSPR="$MISSING_NSPR -lplds$NSPR_VERSION"], $NSPR_LIBS)
-fi
+
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
@@ -1833,7 +1840,7 @@ if test "$HAVE_DEV_ZERO"; then
   AC_DEFINE(HAVE_DEV_ZERO)
   AC_MSG_RESULT(yes)
 else
-if test -r /dev/zero; then
+if test -r /dev/zero && test -z "$CROSS_COMPILE"; then
   AC_DEFINE(HAVE_DEV_ZERO)
   AC_MSG_RESULT(yes)
 else
