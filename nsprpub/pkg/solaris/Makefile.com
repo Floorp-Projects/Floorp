@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.5 2003/02/13 02:03:12 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.com,v 1.6 2003/02/26 15:11:34 wtc%netscape.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -30,6 +30,3 @@ CLOBBERFILES = $(FILES)
 include $(topsrcdir)/config/rules.mk
 
 # vim: ft=make
-
-
-
