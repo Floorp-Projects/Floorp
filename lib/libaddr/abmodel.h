@@ -66,7 +66,7 @@ typedef struct AB_Row AB_Row;
 /* ===== ===== ===== ===== misc temp kludge defines ===== ===== ===== ===== */
 
 // artifacts of supporting an experimental file format with the old format:
-//#define AB_kGromitDbFileName "da5id.0a0"
+#define AB_kGromitDbFileName "da5id.0a0"
 //#define AB_CONFIG_USE_GROMIT_FILE_FORMAT 1
 
 /* ===== ===== ===== ===== forwards ===== ===== ===== ===== */
