@@ -68,10 +68,12 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #undef NOISY_BLINK
 #undef DEBUG_WORD_WRAPPING
 #undef NOISY_REFLOW
+#undef NOISY_TRIM
 #else
 #undef NOISY_BLINK
 #undef DEBUG_WORD_WRAPPING
 #undef NOISY_REFLOW
+#undef NOISY_TRIM
 #endif
 
 // #define DEBUGWORDJUMP
@@ -445,7 +447,6 @@ protected:
   PRInt32 mContentOffset;
   PRInt32 mContentLength;
   PRInt32 mColumn;
-  nscoord mComputedWidth;
 };
 
 // Flag information used by rendering code. This information is
@@ -459,16 +460,17 @@ protected:
 
 #define TEXT_IN_WORD         0x04000000
 
-#define TEXT_TRIMMED_WS      0x08000000
-
 // This bit is set on the first frame in a continuation indicating
 // that it was chopped short because of :first-letter style.
-#define TEXT_FIRST_LETTER    0x10000000
+#define TEXT_FIRST_LETTER    0x08000000
 
 // Bits in mState used for reflow flags
-#define TEXT_REFLOW_FLAGS    0x1F000000
+#define TEXT_REFLOW_FLAGS    0x0F000000
+
+#define TEXT_TRIMMED_WS      0x20000000
 
 #define TEXT_OPTIMIZE_RESIZE 0x40000000
+
 #define TEXT_BLINK_ON        0x80000000
 
 //----------------------------------------------------------------------
@@ -585,9 +587,7 @@ nsTextFrame::Paint(nsIPresContext& aPresContext,
     sc->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) {
     TextStyle ts(&aPresContext, aRenderingContext, mStyleContext);
-    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) ||
-        ((NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign) &&
-         (mRect.width > mComputedWidth))) {
+    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)) {
       PaintTextSlowly(&aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
@@ -1176,7 +1176,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   PRUnichar* bp = bp0;
 
   PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
-    (0 != aTextStyle.mWordSpacing) || (mRect.width > mComputedWidth);
+    (0 != aTextStyle.mWordSpacing);
   nscoord spacingMem[TEXT_BUF_SIZE];
   PRIntn* sp0 = spacingMem; 
   if (spacing && (aLength > TEXT_BUF_SIZE)) {
@@ -1399,23 +1399,6 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
                                              paintBuf, &textLength);
-  if (mRect.width > mComputedWidth) {
-    if (0 != aTextStyle.mNumSpaces) {
-      nscoord extra = mRect.width - mComputedWidth;
-#if XXX
-      nscoord adjustPerSpace =
-        aTextStyle.mExtraSpacePerSpace = extra / aTextStyle.mNumSpaces;
-#endif
-      aTextStyle.mRemainingExtraSpace = extra -
-        (aTextStyle.mExtraSpacePerSpace * aTextStyle.mNumSpaces);
-    }
-    else {
-      // We have no whitespace but were given some extra space. There
-      // are two plausible places to put the extra space: to the left
-      // and to the right. If this is anywhere but the last place on
-      // the line then the correct answer is to the right.
-    }
-  }
 
   PRUnichar* text = paintBuf;
   nsFrameState  frameState;
@@ -2366,6 +2349,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 
   // Clear out the reflow state flags in mState (without destroying
   // the TEXT_BLINK_ON bit).
+  PRBool lastTimeWeSkippedLeadingWS = 0 != (mState & TEXT_SKIP_LEADING_WS);
   mState &= ~TEXT_REFLOW_FLAGS;
   if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
     if (0 == (mState & TEXT_BLINK_ON)) {
@@ -2400,9 +2384,9 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRBool endsInWhitespace = PR_FALSE;
   PRBool endsInNewline = PR_FALSE;
 
+  // Setup text transformer to transform this frames text content
   nsCOMPtr<nsIDocument> doc;
   mContent->GetDocument(*getter_AddRefs(doc));
-  // Setup text transformer to transform this frames text content
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
@@ -2440,18 +2424,24 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // We can avoid actually measuring the text if:
   // - this is a resize reflow
   // - we don't have a next in flow
-  // - the previous reflow successfully reflowed all text in the available space
+  // - the previous reflow successfully reflowed all text in the
+  //   available space
   // - the available width is at least as big as our current frame width
   // - we aren't computing the max element size (that requires we measure
   //   text)
   // - we're not preformatted text or we're at the same column as before (this
   //   is an issue for tabbed text)
   if (eReflowReason_Resize == aReflowState.reason) {
+    nscoord realWidth = mRect.width;
+    if (mState & TEXT_TRIMMED_WS) {
+      realWidth += ts.mSpaceWidth;
+    }
     if (!mNextInFlow && (mState & TEXT_OPTIMIZE_RESIZE) &&
-        (maxWidth >= mRect.width) && !aMetrics.maxElementSize &&
+        (maxWidth >= realWidth) && !aMetrics.maxElementSize &&
+        (lastTimeWeSkippedLeadingWS == skipWhitespace) &&
         (!ts.mPreformatted || (prevColumn == column))) {
-
-      // We can skip measuring of text and use the value from our previous reflow
+      // We can skip measuring of text and use the value from our
+      // previous reflow
       measureText = PR_FALSE;
     }
   }
@@ -2532,11 +2522,11 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     if (measureText) {
       if ((0 != x) && wrapping && (x + width > maxWidth)) {
         // The text will not fit.
-  #ifdef NOISY_REFLOW
+#ifdef NOISY_REFLOW
         ListTag(stdout);
         printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
                offset, x, width, maxWidth);
-  #endif
+#endif
         break;
       }
       x += width;
@@ -2564,7 +2554,12 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // like we did
   if (!measureText) {
     x = mRect.width;
+    if (mState & TEXT_TRIMMED_WS) {
+      // Add back in the width of a space since it was trimmed away last time
+      x += ts.mSpaceWidth;
+    }
   }
+  mState &= ~TEXT_TRIMMED_WS;
 
   // Post processing logic to deal with word-breaking that spans
   // multiple frames.
@@ -2700,7 +2695,6 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 
   // Setup metrics for caller; store final max-element-size information
   aMetrics.width = x;
-  mComputedWidth = x;
   if ((0 == x) && !ts.mPreformatted) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
@@ -2730,8 +2724,6 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     Invalidate(mRect);
   }
-
-  //go to selection and ask if we are selected here. and where!!
 
   nsReflowStatus rs = (offset == contentLength)
     ? NS_FRAME_COMPLETE
@@ -2831,73 +2823,34 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
   nscoord dw = 0;
   const nsStyleText* textStyle = (const nsStyleText*)
     mStyleContext->GetStyleData(eStyleStruct_Text);
-  if ((NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) &&
+  if (mContentLength &&
+      (NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) &&
       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP != textStyle->mWhiteSpace)) {
-    // Get font metrics for a space so we can adjust the width by the
-    // right amount.
-    const nsStyleFont* fontStyle = (const nsStyleFont*)
-      mStyleContext->GetStyleData(eStyleStruct_Font);
-    nscoord spaceWidth;
-    aRC.SetFont(fontStyle->mFont);
-    aRC.GetWidth(' ', spaceWidth);
 
     // Get the text fragments that make up our content
-    const nsTextFragment* frag;
-    PRInt32 numFrags;
-    nsITextContent* tc;
-    if (NS_OK == mContent->QueryInterface(kITextContentIID, (void**) &tc)) {
+    nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
+    if (tc) {
+      const nsTextFragment* frag;
+      PRInt32 numFrags;
       tc->GetText(frag, numFrags);
-      NS_RELEASE(tc);
-
-      // Find fragment that contains the end of the mapped content
-      PRInt32 endIndex = mContentOffset + mContentLength;
-      PRInt32 offset = 0;
-      const nsTextFragment* lastFrag = frag + numFrags;
-      while (frag < lastFrag) {
-        PRInt32 fragLen = frag->GetLength();
-        if (endIndex <= offset + fragLen) {
-          // Look inside the fragments last few characters and see if they
-          // are whitespace. If so, count how much width was supplied by
-          // them.
-          offset = mContentOffset - offset;
-          if (frag->Is2b()) {
-            // XXX If by chance the last content fragment is *all*
-            // whitespace then this won't back up far enough.
-            const PRUnichar* cp = frag->Get2b() + offset;
-            const PRUnichar* end = cp + mContentLength;
-            if (--end >= cp) {
-              PRUnichar ch = *end;
-              if (XP_IS_SPACE(ch)) {
-                dw = spaceWidth;
-              }
-            }
-          }
-          else {
-            const unsigned char* cp =
-              ((const unsigned char*)frag->Get1b()) + offset;
-            const unsigned char* end = cp + mContentLength;
-            if (--end >= cp) {
-              PRUnichar ch = PRUnichar(*end);
-              if (XP_IS_SPACE(ch)) {
-                dw = spaceWidth;
-              }
-            }
-          }
-          break;
+      PRInt32 lastCharIndex = mContentOffset + mContentLength - 1;
+      if (lastCharIndex < frag->GetLength()) {
+        PRUnichar ch = frag->CharAt(lastCharIndex);
+        if (XP_IS_SPACE(ch)) {
+          // Get font metrics for a space so we can adjust the width by the
+          // right amount.
+          const nsStyleFont* fontStyle = (const nsStyleFont*)
+            mStyleContext->GetStyleData(eStyleStruct_Font);
+          aRC.SetFont(fontStyle->mFont);
+          aRC.GetWidth(' ', dw);
         }
-        offset += fragLen;
-        frag++;
       }
     }
-    if (mRect.width > dw) {
-      mRect.width -= dw;
-    }
-    else {
-      dw = mRect.width;
-      mRect.width = 0;
-    }
-    mComputedWidth -= dw;
   }
+#ifdef NOISY_TRIM
+  ListTag(stdout);
+  printf(": trim => %d\n", dw);
+#endif
   if (0 != dw) {
     mState |= TEXT_TRIMMED_WS;
   }
@@ -2970,16 +2923,6 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 #endif
   return aBaseWidth + addedWidth;
 }
-
-#if 0
-nsIStyleContext*
-nsTextFrame::GetCorrectStyleContext(nsIPresContext* aPresContext,
-                                    nsLineLayout& aLineLayout,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsIFrame* aTextFrame)
-{
-}
-#endif
                                     
 nscoord
 nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
@@ -3190,17 +3133,17 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the first/last content offset and prev/next in flow info
   PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
   fprintf(out, "[%d,%d,%c] ", 
-          mContentOffset, mContentOffset+mContentLength-1,
+          mContentOffset, mContentLength,
           isComplete ? 'T':'F');
   
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", mNextSibling);
   }
   if (nsnull != mPrevInFlow) {
-    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
   }
   if (nsnull != mNextInFlow) {
-    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+    fprintf(out, " next-in-flow=%p", mNextInFlow);
   }
 
   // Output the rect and state
@@ -3224,49 +3167,3 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 
   return NS_OK;
 }
-
-
-
-//STORAGE FOR LATER MAYBE
-#if 0
-      nsTextFrame *frame = this;
-      while(frame = (nsTextFrame *)frame->GetPrevInFlow()){
-        result  = NS_OK;
-        nsPoint futurecoord;
-	      frame->GetOffsetFromView(futurecoord, &view);
-	      if (view == nsnull) return NS_ERROR_UNEXPECTED;
-        nscoord x,y;
-	      do {
-		      view->GetPosition(&x, &y);
-		      futurecoord.x += x;
-		      futurecoord.y += y;
-		      view->GetParent(view);
-	      } while (view);
-        if (coord.y > futurecoord.y)
-        {
-          if (coord.x < futurecoord.x)
-          {//keep going back until y is up again or coord.x is greater than future coord.x
-            nsTextFrame *lookahead = nsnull;
-            while(lookahead = (nsTextFrame *)frame->GetPrevInFlow()){
-              result  = NS_OK;
-              nsPoint futurecoord2;
-	            lookahead->GetOffsetFromView(futurecoord2, &view);
-	            if (view == nsnull) return NS_ERROR_UNEXPECTED;
-	            do {
-		            view->GetPosition(&x, &y);
-		            futurecoord2.x += x;
-		            futurecoord2.y += y;
-		            view->GetParent(view);
-	            } while (view);
-              if (futurecoord.y > futurecoord2.y)//gone too far
-                break;
-              frame = lookahead;
-              futurecoord = futurecoord2;
-              if (coord.x >=futurecoord2.x)
-                break;
-            }
-          }
-          //definately this one then
-          nscoord newcoord;
-          newcoord = coord.x ;//- futurecoord.x;
-#endif
