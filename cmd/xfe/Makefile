@@ -699,6 +699,34 @@ OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lS
 endif
 
 ########################################
+# NetBSD
+# Work around linker semantics that will never find our own libutil on 1.3.x
+ifeq ($(OS_ARCH),NetBSD)
+ifeq ($(OS_MINOR),3)
+FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
+endif
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
+# OpenBSD
+# Copied from NetBSD...
+ifeq ($(OS_ARCH),OpenBSD)
+#ifeq ($(OS_MINOR),3)
+#FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
+#DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
+#endif
+ifdef LIBRUNPATH
+OS_LIBS		+= -R$(LIBRUNPATH)
+endif
+OTHER_LIBS	= -L/usr/X11R6/lib -lXm -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
 # BSDI
 ifeq ($(OS_ARCH),BSD_OS)
 OTHER_LIBS	= $(MOTIF)/libXm.a $(LOC_LIB_DIR)/libXt.a $(X11R6LIBS) $(LOC_LIB_DIR)/libXmu.a \

@@ -30,6 +30,9 @@
 #include <Xm/Text.h>
 #include <Xm/DrawnB.h>
 #include <Xm/CutPaste.h>
+#ifndef MOTIF11
+#include <Xm/DropSMgr.h>
+#endif
 #include <X11/StringDefs.h>
 #include <X11/cursorfont.h>
 #include <stdio.h>

@@ -371,7 +371,7 @@ XFE_HTMLView::makeScroller(Widget parent)
   scroller = fe_MakeScrolledWindow (m_contextData, pane, "scroller");
   XtVaSetValues (CONTEXT_DATA (m_contextData)->scrolled,
 				 XmNborderWidth, 0, 
-#if defined(__FreeBSD__)||defined(BSDI)||defined(LINUX)||defined(IRIX)
+#if defined(__FreeBSD__)||defined(BSDI)||defined(LINUX)||defined(IRIX)||defined(__NetBSD__)||defined(__OpenBSD__)
 				 // Allow for resolutions > 1000 pixels.
 				 // This causes the vertical scrollbar not to show
 				 // up on Solaris 2.4, bug in Motif (77998).  
