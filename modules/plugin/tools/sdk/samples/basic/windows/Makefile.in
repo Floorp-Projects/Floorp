@@ -38,7 +38,7 @@ CPPSRCS = plugin.cpp
 
 SHARED_LIBRARY_LIBS = ../../common/plugingate_s.$(LIB_SUFFIX)
 
-DEFFILE = basic.def
+DEFFILE = $(srcdir)/basic.def
 RESFILE = basic.res
 
 include $(topsrcdir)/config/rules.mk
