@@ -97,45 +97,68 @@ Rights Reserved.
 		<separator/>
 		<menuitem name="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-    		<menu name="Character Set">
-    			<menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
-          <separator/>
-    			<menuitem name="Central European (ISO-8859-2)" onclick="SetDocumentCharacterSet('ISO-8859-2');"/>
-          <separator/>
-    			<menuitem name="Esperanto/Maltese (ISO-8859-3)" onclick="SetDocumentCharacterSet('ISO-8859-3');"/>
-          <separator/>
-    			<menuitem name="Baltic (ISO-8859-4)" onclick="SetDocumentCharacterSet('ISO-8859-4');"/>
-          <separator/>
-    			<menuitem name="Turkish (ISO-8859-9)" onclick="SetDocumentCharacterSet('ISO-8859-9');"/>
-          <separator/>
-    			<menuitem name="Northern European (ISO-8859-10)" onclick="SetDocumentCharacterSet('ISO-8859-10');"/>
-          <separator/>
-    			<menuitem name="Celtic (ISO-8859-14)" onclick="SetDocumentCharacterSet('ISO-8859-14');"/>
-          <separator/>
-    			<menuitem name="New Western (ISO-8859-15)" onclick="SetDocumentCharacterSet('ISO-8859-15');"/>
-          <separator/>
-    			<menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
-          <separator/>
-    			<menuitem name="Traditional Chinese (Big5)" onclick="SetDocumentCharacterSet('Big5');"/>
-          <separator/>
-    			<menuitem name="Simplified Chinese (GB2312)" onclick="SetDocumentCharacterSet('GB2312');"/>
-          <separator/>
-    			<menuitem name="Korean (EUC-KR)" onclick="SetDocumentCharacterSet('EUC-KR');"/>
-          <separator/>
-    			<menuitem name="UTF-8" onclick="SetDocumentCharacterSet('UTF-8');"/>
-          <separator/>
-    			<menuitem name="Cyrillic (KOI8-R)" onclick="SetDocumentCharacterSet('KOI8-R');"/>
-          <separator/>
-    			<menuitem name="Ukrainian (KOI8-U)" onclick="SetDocumentCharacterSet('KOI8-U');"/>
-          <separator/>
-    			<menuitem name="Greek (ISO-8859-7)" onclick="SetDocumentCharacterSet('ISO-8859-7');"/>
-          <separator/>
-    			<menuitem name="Vietnamese (VISCII)" onclick="SetDocumentCharacterSet('VISCII');"/>
-          <separator/>
-    			<menuitem name="Thai (TIS-620)" onclick="SetDocumentCharacterSet('TIS-620');"/>
-          <separator/>
-    			<menuitem name="Armenian (ARMSCII-8)" onclick="SetDocumentCharacterSet('ARMSCII-8');"/>
-    		</menu>
+      	<menu name="&dcharMenu.label;">
+			<menuitem name="&dcharIso1Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
+			<menuitem name="&dcharIso2Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-2');"/>
+			<menuitem name="&dcharIso3Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-3');"/>
+			<menuitem name="&dcharIso4Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-4');"/>
+			<menuitem name="&dcharIso9Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-9');"/>
+			<menuitem name="&dcharIso10Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-10');"/>
+			<menuitem name="&dcharIso13Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-13');"/>
+			<menuitem name="&dcharIso14Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-14');"/>
+			<menuitem name="&dcharIso15Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-15');"/>
+			<menuitem name="&dcharWinLat2Cmd.label;" onclick="SetDocumentCharacterSet('windows-1250');"/>
+			<menuitem name="&dcharWinLat1Cmd.label;" onclick="SetDocumentCharacterSet('windows-1252');"/>
+			<menuitem name="&dcharWinLat5Cmd.label;" onclick="SetDocumentCharacterSet('windows-1254');"/>
+			<menuitem name="&dcharWinBalRimCmd.label;" onclick="SetDocumentCharacterSet('windows-1257');"/>
+			<menuitem name="&dcharMacRomCmd.label;" onclick="SetDocumentCharacterSet('x-mac-roman');"/>
+			<menuitem name="&dcharMacCenEuroCmd.label;" onclick="SetDocumentCharacterSet('x-mac-ce');"/>
+			<menuitem name="&dcharMacTurCmd.label;" onclick="SetDocumentCharacterSet('x-mac-turkish');"/>
+			<menuitem name="&dcharMacCroaCmd.label;" onclick="SetDocumentCharacterSet('x-mac-croatian');"/>
+			<menuitem name="&dcharMacRomanianCmd.label;" onclick="SetDocumentCharacterSet('x-mac-romanian');"/>
+			<menuitem name="&dcharMacIceCmd.label;" onclick="SetDocumentCharacterSet('x-mac-icelandic');"/>
+			 <separator />
+			<menuitem name="&dcharJapanCmd.label;" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+			<menuitem name="&dcharJapanShiftjsCmd.label;" onclick="SetDocumentCharacterSet('Shift_JIS');"/>
+			<menuitem name="&dcharJapanEucCmd.label;" onclick="SetDocumentCharacterSet('EUC-JP');"/>
+			 <separator />
+			<menuitem name="&dcharTradChiBigCmd.label;" onclick="SetDocumentCharacterSet('Big5');"/>
+			<menuitem name="&dcharTriChiEucCmd.label;" onclick="SetDocumentCharacterSet('x-euc-tw');"/>
+			<menuitem name="&dcharSimpChiGbCmd.label;" onclick="SetDocumentCharacterSet('GB2312');"/>
+			 <separator />
+			<menuitem name="&dcharKoreanCmd.label;" onclick="SetDocumentCharacterSet('EUC-KR');"/>
+			 <separator />
+			<menuitem name="&dcharUtf7Cmd.label;" onclick="SetDocumentCharacterSet('UTF-7');"/>
+			<menuitem name="&dcharUtf8Cmd.label;" onclick="SetDocumentCharacterSet('UTF-8');"/>
+			 <separator />
+			<menuitem name="&dcharIsoCyrCmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-5');"/>
+			<menuitem name="&dcharEcmaCyrCmd.label;" onclick="SetDocumentCharacterSet('ISO-IR-111');"/>
+			<menuitem name="&dcharWinCyrCmd.label;" onclick="SetDocumentCharacterSet('windows-1251');"/>
+			<menuitem name="&dcharDosCyrCmd.label;" onclick="SetDocumentCharacterSet('IBM866');"/>
+			<menuitem name="&dcharMacCyrCmd.label;" onclick="SetDocumentCharacterSet('x-mac-cyrillic');"/>
+			<menuitem name="&dcharMacUkrCmd.label;" onclick="SetDocumentCharacterSet('x-mac-ukrainian');"/>
+			<menuitem name="&dcharRusCmd.label; " onclick="SetDocumentCharacterSet('KOI8-R');"/>
+			<menuitem name="&dcharUkrCmd.label;" onclick="SetDocumentCharacterSet('KOI8-U');"/>
+			 <separator />
+			<menuitem name="&dcharIsoGreekCmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-7');"/>
+			<menuitem name="&dcharWinGreekCmd.label;" onclick="SetDocumentCharacterSet('windows-1253');"/>
+			<menuitem name="&dcharMacGreekCmd.label;" onclick="SetDocumentCharacterSet('x-mac-greek');"/>
+			 <separator />
+			<menuitem name="&dcharWinVietCmd.label;" onclick="SetDocumentCharacterSet('windows-1258');"/>
+			<menuitem name="&dcharVietTcnCmd.label;" onclick="SetDocumentCharacterSet('x-viet-tcvn5712');"/>
+			<menuitem name="&dcharVietViCmd.label;" onclick="SetDocumentCharacterSet('VISCII');"/>
+			<menuitem name="&dcharVieVpCmd.label;" onclick="SetDocumentCharacterSet('x-viet-vps');"/>
+			 <separator />
+			<menuitem name="&dcharThaiCmd.label;" onclick="SetDocumentCharacterSet('TIS-620');"/>
+			 <separator />
+			<menuitem name="&dcharArmCmd.label;" onclick="SetDocumentCharacterSet('ARMSCII-8');"/>
+			 <separator />
+			<menuitem name="&dcharIso6Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-6');"/>
+			<menuitem name="&dcharCp1256Cmd.label;" onclick="SetDocumentCharacterSet('windows-1256');"/>
+			 <separator />
+			<menuitem name="&dcharIso8Cmd.label;" onclick="SetDocumentCharacterSet('ISO-8859-8');"/>
+			<menuitem name="&dcharCp1255Cmd.label;" onclick="SetDocumentCharacterSet('windows-1255');"/>
+	   </menu>
     </menu>
     <menu name="&insertMenu.label;">
     </menu>
@@ -252,23 +275,25 @@ Rights Reserved.
 				</box>
 			</box>
 			<box align="vertical" flex="40%">
-				<html:div flex="100%">[attachment box]</html:div>
+				<box align="honrizontal" flex="100%">
+					<html:div flex="100%">[attachment box]</html:div>
 <!--
-				<tree id="attachment" flex="100%">
-					<treehead>
-						<treerow>
-							<treecell>Attachment</treecell>
-						</treerow>
-					</treehead>
-					<treechildren id="attachmentTree" open="true">
-						<treeitem> <treerow> <treecell>aaaa</treecell> </treerow> </treeitem>
-						<treeitem> <treerow> <treecell>bbb</treecell> </treerow> </treeitem>
-						<treeitem> <treerow> <treecell>ccc</treecell> </treerow> </treeitem>
-						<treeitem> <treerow> <treecell>dddd</treecell> </treerow> </treeitem>
-						<treeitem> <treerow> <treecell>eeeee</treecell> </treerow> </treeitem>
-					</treechildren>
-				</tree>
+					<tree id="attachment" class="attachment" flex="100%">
+						<treehead>
+							<treerow>
+								<treecell>Attachment</treecell>
+							</treerow>
+						</treehead>
+						<treechildren id="attachmentTree" open="true">
+							<treeitem> <treerow> <treecell>aaaa</treecell> </treerow> </treeitem>
+							<treeitem> <treerow> <treecell>bbb</treecell> </treerow> </treeitem>
+							<treeitem> <treerow> <treecell>ccc</treecell> </treerow> </treeitem>
+							<treeitem> <treerow> <treecell>dddd</treecell> </treerow> </treeitem>
+							<treeitem> <treerow> <treecell>eeeee</treecell> </treerow> </treeitem>
+						</treechildren>
+					</tree>
 -->
+				</box>
 			</box>
 		</box>
 	</toolbar>
