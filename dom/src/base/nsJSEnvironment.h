@@ -41,6 +41,7 @@ public:
   virtual nsresult     AddNamedReference(void *aSlot, void *aScriptObject,
                                          const char *aName);
   virtual nsresult RemoveReference(void *aSlot, void *aScriptObject);
+  virtual nsresult GC();
 };
 
 class nsJSEnvironment {

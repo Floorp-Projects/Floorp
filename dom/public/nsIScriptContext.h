@@ -108,6 +108,13 @@ public:
    */
   virtual nsresult RemoveReference(void *aSlot, void *aScriptObject) = 0;
 
+  /**
+   * For garbage collected systems, do a synchronous collection pass.
+   * May be a no-op on other systems
+   *
+   * @return NS_OK if the method is successful
+   */
+  virtual nsresult GC() = 0;
 };
 
 /**
