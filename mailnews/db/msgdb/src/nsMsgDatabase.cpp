@@ -2580,9 +2580,15 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 
 	if (existingHdr)
 	{
-	    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
+    if (key == nsMsgKey_None)
+      return NS_MSG_MESSAGE_NOT_FOUND;
+
+	  nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
 		nsMsgHdr *destMsgHdr = nsnull;
 		CreateNewHdr(key, (nsIMsgDBHdr **) &destMsgHdr);
+    if (!destMsgHdr)
+      return NS_MSG_MESSAGE_NOT_FOUND;
+
 		nsIMdbRow	*sourceRow = sourceMsgHdr->GetMDBRow() ;
 		nsIMdbRow	*destRow = destMsgHdr->GetMDBRow();
 		err = destRow->SetRow(GetEnv(), sourceRow);
