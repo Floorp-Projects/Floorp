@@ -114,7 +114,9 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
 		return NS_ERROR_OUT_OF_MEMORY;
   ret = filterList->SaveToFile(tmpFileStream);
   tmpFileStream->close();
-
+  delete tmpFileStream;
+  tmpFileStream = nsnull;
+  
   if (NS_SUCCEEDED(ret))
   {
     // can't move across drives
