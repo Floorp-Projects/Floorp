@@ -85,7 +85,6 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	*result = nsnull;
 	if (m_bCacheHeaders && m_cachedHeaders)
 	{
-#ifdef USE_PLD_HASHTABLE
     PLDHashEntryHdr *entry;
     entry = PL_DHashTableOperate(m_cachedHeaders, (const void *) key, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(entry))
@@ -100,16 +99,6 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 		  }
     }    
 
-#else
-		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
-		nsCAutoString strKey;
-		strKey.AppendInt(key, 10);
-		nsCStringKey hashKey(strKey.GetBuffer());
-		// nsSupportsHashtable does an addref
-		*result = (nsIMsgDBHdr *) m_cachedHeaders->Get(&hashKey);
-		if (*result)
-			rv = NS_OK;
-#endif
 	}
 	return rv;
 }
@@ -119,16 +108,13 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	if (m_bCacheHeaders)
 	{
 		if (!m_cachedHeaders)
-#ifdef USE_PLD_HASHTABLE
     m_cachedHeaders = PR_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
-#else
-			m_cachedHeaders = new nsSupportsHashtable;
-#endif
     if (m_cachedHeaders)
     {
-#ifdef USE_PLD_HASHTABLE
 		  if (key == nsMsgKey_None)
 			  hdr->GetMessageKey(&key);
+      if (m_cachedHeaders->entryCount > kMaxHdrsInCache)
+        ClearHdrCache(PR_TRUE);
       PLDHashEntryHdr *entry = PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_ADD);
       if (!entry)
         return NS_ERROR_OUT_OF_MEMORY; // XXX out of memory
@@ -138,17 +124,6 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
       element->mKey = key;
 		  NS_ADDREF(hdr);     // make the cache hold onto the header
       return NS_OK;
-#else
-      nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
-		  if (m_cachedHeaders->Count() > kMaxHdrsInCache)
-			  ClearHdrCache();
-		  // it would be nice if we had an nsISupports hash table that hashed 32 bit int's
-		  nsCAutoString strKey;
-		  strKey.AppendInt(key, 10);
-		  nsCStringKey hashKey(strKey.GetBuffer());
-		  m_cachedHeaders->Put(&hashKey, hdr);
-		  return NS_OK;
-#endif
     }
 	}
 	return NS_ERROR_FAILURE;
@@ -164,18 +139,17 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
   return PL_DHASH_NEXT;
 }
 
-nsresult nsMsgDatabase::ClearHdrCache()
+nsresult nsMsgDatabase::ClearHdrCache(PRBool reInit)
 {
 	if (m_cachedHeaders)
 	{
-#ifdef USE_PLD_HASHTABLE
-  PL_DHashTableEnumerate(m_cachedHeaders, HeaderEnumerator, nsnull);
+    PL_DHashTableEnumerate(m_cachedHeaders, HeaderEnumerator, nsnull);
 
-  PL_DHashTableFinish(m_cachedHeaders);
-  PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
-#else
-		m_cachedHeaders->Reset();
-#endif
+    PL_DHashTableFinish(m_cachedHeaders);
+    if (reInit)
+      PL_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+    else
+      m_cachedHeaders = nsnull;
 	}
 	return NS_OK;
 }
@@ -187,7 +161,6 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
-#ifdef USE_PLD_HASHTABLE
     PLDHashEntryHdr *entry = PL_DHashTableOperate(m_cachedHeaders, (const void *) key, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(entry))
     {
@@ -195,18 +168,6 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
      NS_RELEASE(hdr); // get rid of extra ref the cache was holding.
     }
 
-#else
-		nsCAutoString strKey;
-		strKey.AppendInt(key, 10);
-		nsCStringKey hashKey(strKey.GetBuffer());
-            /*
-             * this does release on the held object, unless you don't
-             * want it to, by passing as third argument a non-null pointer
-             * where to store it; this way you would get the ownership
-             * of the reference held by the table for that object.
-             */
-		m_cachedHeaders->Remove(&hashKey);
-#endif
 	}
 	return NS_OK;
 }
@@ -223,7 +184,6 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 
 	if (m_headersInUse)
 	{
-#ifdef USE_PLD_HASHTABLE
     PLDHashEntryHdr *entry;
     entry = PL_DHashTableOperate(m_headersInUse, (const void *) key, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(entry))
@@ -231,14 +191,6 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
       MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
       *result = element->mHdr;
     }    
-#else
-		// it would be nice if we had a hash table that hashed 32 bit int's
-		nsCAutoString strKey;
-		strKey.AppendInt(key, 10);
-		nsCStringKey hashKey(strKey.GetBuffer());
-		// nsHashtable doesn't do an addref
-		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
-#endif // USE_PLD_HASHTABLE
 		if (*result)
 		{
 			NS_ADDREF(*result);
@@ -248,7 +200,6 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	return rv;
 }
 
-#ifdef USE_PLD_HASHTABLE
 PLDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
 {
   PL_DHashAllocTable,
@@ -309,11 +260,9 @@ PL_DHashStringKey(PLDHashTable *table, const void *key);
 extern void CRT_CALL
 PL_DHashFinalizeStub(PLDHashTable *table);
 
-#endif // USE_PLD_HASHTABLE
 
 nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key) 
 {
-#ifdef USE_PLD_HASHTABLE
   if (!m_headersInUse)
   {
     mdb_count numHdrs = MSG_HASH_SIZE;
@@ -338,24 +287,6 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
     return NS_OK;
   }
 
-#else
-	if (!m_headersInUse)
-		m_headersInUse = new nsHashtable;
-	if (m_headersInUse)
-	{
-		nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
-		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
-		nsCAutoString strKey;
-		strKey.AppendInt(key, 10);
-		nsCStringKey hashKey(strKey.GetBuffer());
-		m_headersInUse->Put(&hashKey, hdr);
-		NS_ADDREF(hdr);
-		// the hash table won't add ref, we'll do it ourselves
-		// stand for the addref that CreateMsgHdr normally does.
-
-		return NS_OK;
-	}
-#endif // USE_PLD_HASHTABLE
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -363,12 +294,8 @@ nsresult nsMsgDatabase::ClearUseHdrCache()
 {
 	if (m_headersInUse)
 	{
-#ifdef USE_PLD_HASHTABLE
-  PL_DHashTableFinish(m_headersInUse);
-  PL_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
-#else
-		m_headersInUse->Reset();
-#endif // USE_PLD_HASHTABLE
+    PL_DHashTableFinish(m_headersInUse);
+    PL_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
 	}
 	return NS_OK;
 }
@@ -380,14 +307,7 @@ nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
-#ifdef USE_PLD_HASHTABLE
    PL_DHashTableOperate(m_headersInUse, (void *) key, PL_DHASH_REMOVE);
-#else
-		nsCAutoString strKey;
-		strKey.AppendInt(key, 10);
-		nsCStringKey hashKey(strKey.GetBuffer());
-		m_headersInUse->Remove(&hashKey); 
-#endif
 	}
 	return NS_OK;
 }
@@ -705,7 +625,7 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
-	ClearHdrCache();
+	ClearHdrCache(PR_FALSE);
 #ifdef DEBUG_bienvenu1
   NS_ASSERTION(!m_headersInUse || m_headersInUse->Count() == 0, "leaking headers");
 #endif
@@ -1023,20 +943,12 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	m_dbFolderInfo = nsnull;
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
-	ClearHdrCache();
+	ClearHdrCache(PR_FALSE);
 #ifdef DEBUG_bienvenu
-#ifdef USE_PLD_HASHTABLE
   if (m_headersInUse && m_headersInUse->entryCount > 0)
-#else
-  if (m_headersInUse && m_headersInUse->Count() > 0)
-#endif
   {
 //    NS_ASSERTION(PR_FALSE, "leaking headers");
-#ifdef USE_PLD_HASHTABLE
     printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
-#else
-    printf("leaking %d headers in %s\n", m_headersInUse->Count(), (const char *) m_dbName);
-#endif
   }
 #endif
 	ClearUseHdrCache();

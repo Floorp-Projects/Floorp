@@ -23,8 +23,6 @@
 #ifndef _nsMsgDatabase_H_
 #define _nsMsgDatabase_H_
 
-#define USE_PLD_HASHTABLE
-
 #include "nsIMsgDatabase.h"
 #include "nsMsgHdr.h"
 #include "nsVoidArray.h"
@@ -39,9 +37,7 @@
 #include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
-#ifdef USE_PLD_HASHTABLE
 #include "pldhash.h"
-#endif
 class ListContext;
 class nsMsgKeyArray;
 class nsMsgKeySet;
@@ -352,7 +348,7 @@ protected:
 	// header caching stuff - MRU headers, keeps them around in memory
 	nsresult			GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result);
 	nsresult			AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key);
-	nsresult			ClearHdrCache();
+	nsresult			ClearHdrCache(PRBool reInit);
 	nsresult			RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 	// all headers currently instantiated, doesn't hold refs
 	// these get added when msg hdrs get constructed, and removed when they get destroyed.
@@ -362,7 +358,6 @@ protected:
 	nsresult			RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
 	// all instantiated headers, but doesn't hold refs. 
-#ifdef USE_PLD_HASHTABLE
   PLDHashTable  *m_headersInUse;
   static const void* CRT_CALL GetKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
   static PLDHashNumber CRT_CALL HashKey(PLDHashTable* aTable, const void* aKey);
@@ -378,10 +373,6 @@ protected:
     nsIMsgDBHdr     *mHdr;
   };
   PLDHashTable  *m_cachedHeaders;
-#else
-	nsSupportsHashtable	*m_cachedHeaders; // keeps MRU headers around
-	nsHashtable			*m_headersInUse;  
-#endif // USE_PLD_HASHTABLE
 	PRBool				m_bCacheHeaders;
 
 };
