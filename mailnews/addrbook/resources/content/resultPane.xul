@@ -16,7 +16,7 @@
 		align="vertical">
 
 
-	<tree class="abResults" flex="100%" id="resultTree"
+	<tree class="abResults" id="resultTree"
 			rdf:datasources="rdf:addressdirectory rdf:addresscard"
 			onchange="top.ResultsPaneSelectionChange()" rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
 

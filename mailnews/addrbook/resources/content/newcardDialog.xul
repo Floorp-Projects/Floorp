@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
@@ -14,7 +15,8 @@
 		title="&editcardWindow.title;"
 		onload="OnLoadNewCard()"
 		class="dialog"
-		width="400" style="height:100%; padding:0px"
+		width="400" height="600"
+		style="width:100%; height:100%; padding:0px"
 		align="vertical">
 
 	<html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>

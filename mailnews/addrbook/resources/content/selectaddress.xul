@@ -38,7 +38,7 @@ Rights Reserved.
 	<!ENTITY viewButton.label	".View"> 
 	<!ENTITY removeButton.label	"Remove"> 
 	<!ENTITY okButton.label		".OK"> 
-	<!ENTITY cancelButton.label	".Cancel"> 
+	<!ENTITY cancelButton.label	"Cancel"> 
 	<!ENTITY helpButton.label	".Help"> 
 
 <!-- Directory Pane -->
@@ -56,6 +56,7 @@ Rights Reserved.
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
         class="dialog"
+        width="640" height="480"
         style="width:100%; height:100%; padding:0px"
         align="vertical">
 
@@ -65,7 +66,7 @@ Rights Reserved.
 <html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
 	<!-- Thin box across top, show names containing & stop, search buttons -->
-	<box align="horizontal" style="width:100%; padding: 0.5em; padding-top: 0px;">
+	<box align="horizontal" style="width:100%; padding:0.5em; padding-top:0px;">
 		<html:div style="vertical-align: middle;">
 			<html:label for="searchtext" tabindex="0">&search.label;</html:label>
 			<html:input type="text" id="searchtext" flex="100%"/>
