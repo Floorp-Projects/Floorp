@@ -40,7 +40,7 @@ public:
     /**
      * Add the specified item to bookmarks
      */
-    NS_IMETHOD AddBookmark (const char *aURI, const char *optionalTitle) = 0;
+    NS_IMETHOD AddBookmark (const char *aURI, const PRUnichar *aOptionalTitle) = 0;
     NS_IMETHOD FindBookmarkShortcut (const char *userInput, char **shortcutURL /* out */) = 0;
 };
 

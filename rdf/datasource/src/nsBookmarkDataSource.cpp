@@ -188,7 +188,7 @@ public:
 
     nsresult Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource);
     nsresult Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType);
-    nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
+    nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const PRUnichar *aOptionalTitle,
 			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
 			const char *shortcutURL, nsIRDFResource *nodeType);
     nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
@@ -418,12 +418,10 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 	char *cURL = url.ToNewCString();
 	if (cURL)
 	{
-		char *cName = name.ToNewCString();
 		char *cShortcutURL = shortcut.ToNewCString();
-		nsresult rv = AddBookmark(aContainer, cURL, cName, addDate,
+		nsresult rv = AddBookmark(aContainer, cURL, name, addDate,
 			lastVisitDate, lastModifiedDate, cShortcutURL, nodeType);
 		delete [] cURL;
-		if (cName)		delete [] cName;
 		if (cShortcutURL)	delete [] cShortcutURL;
 	}
 	return(NS_OK);
@@ -433,7 +431,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer,
 
     // Now create the bookmark
 nsresult
-BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
+BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const PRUnichar *aOptionalTitle,
 		PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate, const char *shortcutURL,
 		nsIRDFResource *nodeType)
 {
@@ -470,10 +468,10 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		return rv;
 	}
 
-	if ((nsnull != optionalTitle) && (*optionalTitle != '\0'))
+	if ((nsnull != aOptionalTitle) && (*aOptionalTitle != PRUnichar('\0')))
 	{
 		nsCOMPtr<nsIRDFLiteral> literal;
-		if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(optionalTitle).GetUnicode(), getter_AddRefs(literal))))
+		if (NS_FAILED(rv = gRDFService->GetLiteral(aOptionalTitle, getter_AddRefs(literal))))
 		{
 			NS_ERROR("unable to create literal for bookmark name");
 			return rv;
@@ -736,12 +734,12 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFBookmarkDataSource
-    NS_IMETHOD AddBookmark(const char *uri, const char *optionalTitle)
+    NS_IMETHOD AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle)
     {
     	// XXX for the moment, just add it as a child of BookmarksRoot
 	BookmarkParser parser;
 	parser.Init(nsnull, NS_STATIC_CAST(nsIRDFDataSource *, this));
-	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, uri, optionalTitle,
+	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, aURI, aOptionalTitle,
 					0L, 0L, 0L, nsnull, kNC_Bookmark);
 	if (NS_SUCCEEDED(rv))
 	{
