@@ -21,4 +21,5 @@
 <!ENTITY debug.label  "Debug">
 <!ENTITY debug1.label "Events">
 <!ENTITY debug2.label "Networking">
+<!ENTITY download.label "Downloads">
 <!ENTITY scriptsAndWindows.label "Scripts &amp; Plugins">
