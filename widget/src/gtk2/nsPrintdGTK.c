@@ -416,7 +416,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
         	GTK_SIGNAL_FUNC (DoPrint), prOps );
         gtk_box_pack_start (GTK_BOX (hbox), button, PR_TRUE, PR_FALSE, 0);
 
-	GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
+	GTK_WIDGET_FLAGS (button) |= GTK_CAN_DEFAULT;
 	gtk_widget_grab_default (button);
 
 	button = gtk_button_new_with_label ("Cancel");
