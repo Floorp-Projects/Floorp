@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  content \
 		  layout \
+		  imglib2 \
 		  $(NULL)
 
 # Sun's Complex Text Layout support
@@ -121,6 +122,7 @@ ifdef MOZ_ENABLE_GTK
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR) \
 		-lgkgfx \
+		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		-lgtksuperwin \
 		$(MOZ_COMPONENT_LIBS) \
@@ -131,6 +133,7 @@ endif
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
@@ -170,6 +173,7 @@ endif
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
 		-I$(srcdir)/../x11shared \
 		$(NULL)
 
