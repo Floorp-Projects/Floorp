@@ -1551,7 +1551,6 @@ var BookmarksUtils = {
 
   getBrowserTargetFromEvent: function (aEvent)
   {
-    // note: modifier keys are ignored in menuitems (bug 126189)
     var button = aEvent.type == "command" || aEvent.type == "keypress"? 0:aEvent.button;
     if (button == 2)
       return "";
