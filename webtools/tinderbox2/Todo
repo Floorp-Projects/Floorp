@@ -1,29 +1,7 @@
-I did not code a warnings system with all the warning pages (see
-tinderbox1). I am not sure this belongs in Tinderbox proper.  I think
-that a separate webscript running a version of "lint" would be a
-better choice.  This web script would be a tinderbox "build".  This
-would totally decouple the warning system from the tinderbox error
-parser and provide more robust warnings then a traditional
-compiler. IF we need to put it in Tinderbox we should create a special
-library which is called every time the error parser detects a warning.
 
-I need a Javascript expert to look over the current versions of CVS
-Blame and Tinderbox1 and ensure that I have the best features of these
-javascript programs in tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm.
-Please keep the code neat and nicely indented.
-
-I need to allow the VC system to have a daemon gather the VC
-information and pass it to tinderbox via the same update methods which
-Builds uses. Then both the tinder.cgi and this new cvs process could
-be run out of cron periodically and the webpages would not be delayed
-if CVS takes a long time to respond this might improve the response
-time of the web updates.  Also the OS process scheduler could do a
-better job of scheduling if there were two different processes one
-which was IO bound and one which was CPU bound.  
-
-It would be really nice if CVS could mail tinderbox the updates which
-apply to the branches of interest, then tinderbox would not have to
-poll and it would get the branch information which it needs.
+It would be really nice if CVS/Bonsai could mail tinderbox the updates
+which apply to the branches of interest, then tinderbox would not have
+to poll and it would get the branch information which it needs.
 
 I would be interested in a module VCDisplay module to work with this
 bonsai work alike tool http://viewcvs.sourceforge.net/ but I do not
