@@ -900,7 +900,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 		nsCOMPtr<nsIMessage> message(do_QueryInterface(supports));
 		if (message)
 		{
-			messageArray->AppendElement(message);
+			messageArray->AppendElement(supports);
 		}
 
 	}

@@ -130,7 +130,9 @@ static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
 	{
 		nsCOMPtr<nsISupportsArray> messageArray;
 		NS_NewISupportsArray(getter_AddRefs(messageArray));
-		messageArray->AppendElement(message);
+		nsCOMPtr<nsISupports> messageSupports(do_QueryInterface(message));
+		if(messageSupports)
+			messageArray->AppendElement(messageSupports);
 		rv = srcFolder->DeleteMessages(messageArray, nsnull, PR_TRUE);
 	}
 	return rv;

@@ -41,7 +41,7 @@ public:
     nsCopySource();
     nsCopySource(nsIMsgFolder* srcFolder);
     ~nsCopySource();
-    void AddMessage(nsIMessage* aMsg) { m_messageArray->AppendElement(aMsg); };
+    void AddMessage(nsIMessage* aMsg);
 
     nsCOMPtr<nsIMsgFolder> m_msgFolder;
     nsCOMPtr<nsISupportsArray> m_messageArray;
@@ -129,6 +129,13 @@ nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
 
 nsCopySource::~nsCopySource()
 {
+}
+
+void nsCopySource::AddMessage(nsIMessage* aMsg)
+{
+	nsCOMPtr<nsISupports> supports(do_QueryInterface(aMsg));
+	if(supports)
+		m_messageArray->AppendElement(supports);
 }
 
 // ************ nsCopyRequest *****************
