@@ -115,7 +115,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
-    nsCOMPtr<nsIInputStream> mPostData; // Post data for current page.
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
