@@ -868,7 +868,7 @@ nsresult nsMsgProtocol::DoNtlmStep1(const char *username, const char *password, 
     if (NS_FAILED(rv) || !m_authModule)
         return rv;
 
-    m_authModule->Init(nsnull, NS_ConvertUTF8toUCS2(username).get(),
+    m_authModule->Init(nsnull, 0, nsnull, NS_ConvertUTF8toUCS2(username).get(),
                        NS_ConvertUTF8toUCS2(password).get());
 
     void *outBuf;

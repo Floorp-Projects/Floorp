@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,20 +38,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <string.h>
-#include "nsIGenericFactory.h"
-#include "nsHttpGssapiAuth.h"
+#ifndef nsHttpNegotiateAuth_h__
+#define nsHttpNegotiateAuth_h__
 
-// macro expansion defines our factory constructor method
-// used by the components[] array below.
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpGssapiAuth)
+#include "nsIHttpAuthenticator.h"
+#include "nsIURI.h"
+#include "nsSubstring.h"
 
-static nsModuleComponentInfo components[] = {
-  { "nsHttpGssapiAuth", 
-    NS_HTTPGSSAPIAUTH_CID,
-    NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate",
-    nsHttpGssapiAuthConstructor,
-  },
+#define NS_HTTPNEGOTIATEAUTH_CID \
+{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */         \
+    0x75c80fd0,                                      \
+    0xaccb,                                          \
+    0x432c,                                          \
+    {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
+}
+
+// The nsGssapiAuth class provides responses for the GSS-API Negotiate method
+// as specified by Microsoft in draft-brezak-spnego-http-04.txt
+
+class nsHttpNegotiateAuth : public nsIHttpAuthenticator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIHTTPAUTHENTICATOR
+
+private:
+    // returns true if URI is accepted by the list of hosts in the pref
+    PRBool TestPref(nsIURI *, const char *pref);
+
+    PRBool MatchesBaseURI(const nsCSubstring &scheme,
+                          const nsCSubstring &host,
+                          PRInt32             port,
+                          const char         *baseStart,
+                          const char         *baseEnd);
 };
-
-NS_IMPL_NSGETMODULE(nsHttpGssapiAuthModule, components)
+#endif /* nsHttpNegotiateAuth_h__ */

@@ -38,40 +38,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHttpGssapiAuth_h__
-#define nsHttpGssapiAuth_h__
+#ifndef nsGssapiAuth_h__
+#define nsGssapiAuth_h__
 
-#include "nsIHttpAuthenticator.h"
-#include "nsIURI.h"
-#include "nsSubstring.h"
+#include "nsIAuthModule.h"
+#include "nsString.h"
 
-#define NS_HTTPGSSAPIAUTH_CID \
-{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */         \
-    0x75c80fd0,                                      \
-    0xaccb,                                          \
-    0x432c,                                          \
-    {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
+#if defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#elif defined(HAVE_GSSAPI_GSSAPI_H)
+#include <gssapi/gssapi.h>
+#endif
+
+#if defined(HAVE_GSSAPI_GENERIC_H)
+#include <gssapi_generic.h>
+#elif defined(HAVE_GSSAPI_GSSAPI_GENERIC_H)
+#include <gssapi/gssapi_generic.h> 
+#endif
+
+#define NS_NEGOTIATEAUTH_CID                         \
+{ /* 96ec4163-efc8-407a-8735-007fb26be4e8 */         \
+    0x96ec4163,                                      \
+    0xefc8,                                          \
+    0x407a,                                          \
+    {0x87, 0x35, 0x00, 0x7f, 0xb2, 0x6b, 0xe4, 0xe8} \
 }
 
-// The nsGssapiAuth class provides responses for the GSS-API Negotiate method
+// The nsNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
-class nsHttpGssapiAuth : public nsIHttpAuthenticator
+class nsNegotiateAuth : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIHTTPAUTHENTICATOR
+    NS_DECL_NSIAUTHMODULE
 
-    nsHttpGssapiAuth();
+    nsNegotiateAuth();
 
 private:
-    // returns true if channel is accepted by the list of hosts in the pref
-    PRBool TestPref(nsIHttpChannel *, const char *pref);
+    ~nsNegotiateAuth() { Reset(); }
 
-    PRBool MatchesBaseURI(const nsCSubstring &scheme,
-                          const nsCSubstring &host,
-                          PRInt32             port,
-                          const char         *baseStart,
-                          const char         *baseEnd);
+    void    Reset();
+    gss_OID GetOID() { return mMechOID; }
+
+private:
+    gss_ctx_id_t mCtx;
+    gss_OID      mMechOID;
+    nsCString    mServiceName;
+    PRUint32     mServiceFlags;
 };
-#endif /* nsHttpGssapiAuth_h__ */
+
+#endif /* nsGssapiAuth_h__ */
