@@ -765,10 +765,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     if (contentType && !nsCRT::strcasecmp(contentType, APPLICATION_APPLEFILE))
     {
       nsCOMPtr<nsIOutputStream> appleFileDecoder;
-      NS_NEWXPCOM(appleFileDecoder, nsAppleFileDecoder);
+      NS_NEWXPCOM(appleFileDecoder, nsDecodeAppleFile);
       if (appleFileDecoder)
       {
-        NS_STATIC_CAST(nsAppleFileDecoder*, NS_STATIC_CAST(nsIOutputStream*, appleFileDecoder))->Initialize(mOutStream, mTempFile);
+        NS_STATIC_CAST(nsDecodeAppleFile*, NS_STATIC_CAST(nsIOutputStream*, appleFileDecoder))->Initialize(mOutStream, mTempFile);
         mOutStream = appleFileDecoder;
       }
     }

@@ -92,14 +92,14 @@ enum {
 };
 
 
-class nsAppleFileDecoder : public nsIOutputStream
+class nsDecodeAppleFile : public nsIOutputStream
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
   
-  nsAppleFileDecoder();
-  virtual ~nsAppleFileDecoder();
+  nsDecodeAppleFile();
+  virtual ~nsDecodeAppleFile();
   
   nsresult Initialize(nsIOutputStream *output, nsIFile *file);
   
