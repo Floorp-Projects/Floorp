@@ -1025,16 +1025,16 @@ done:
     return status;
 }
 
-static void* 
+static PRFuncPtr
 pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 {
-    void *f = NULL;
+    PRFuncPtr f = NULL;
 
     if (lm->staticTable != NULL) {
     const PRStaticLinkTable* tp;
     for (tp = lm->staticTable; tp->name; tp++) {
         if (strcmp(name, tp->name) == 0) {
-        return (void*) tp->fp;
+        return (PRFuncPtr) tp->fp;
         }
     }
         /* 
@@ -1043,7 +1043,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         */
 #if !defined(WIN16) && !defined(XP_BEOS)
         PR_SetError(PR_FIND_SYMBOL_ERROR, 0);
-        return (void*)NULL;
+        return (PRFuncPtr)NULL;
 #endif
     }
     
@@ -1052,7 +1052,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 #endif  /* XP_OS2 */
 
 #if defined(WIN32) || defined(WIN16)
-    f = GetProcAddress(lm->dlh, name);
+    f = (PRFuncPtr) GetProcAddress(lm->dlh, name);
 #endif  /* WIN32 || WIN16 */
 
 #ifdef XP_MAC
@@ -1063,12 +1063,13 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
             
         PStrFromCStr(name, pName);    
         
-        f = (NSFindSymbol(lm->dlh, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
+        f = (PRFuncPtr) (NSFindSymbol(lm->dlh, pName, &symAddr, &symClass)
+										== noErr) ? symAddr : NULL;
     }
 #endif /* XP_MAC */
 
 #ifdef XP_BEOS
-    if( B_NO_ERROR != get_image_symbol( (image_id)lm->dlh, name, B_SYMBOL_TYPE_TEXT, &f ) ) {
+    if( B_NO_ERROR != get_image_symbol( (image_id)lm->dlh, name, B_SYMBOL_TYPE_TEXT, (void *) &f ) ) {
 
 	f = NULL;
     }
@@ -1077,9 +1078,9 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 #ifdef XP_UNIX
 #ifdef HAVE_DLL
 #ifdef USE_DLFCN
-    f = dlsym(lm->dlh, name);
+    f = (PRFuncPtr) dlsym(lm->dlh, name);
 #elif defined(USE_HPSHL)
-    if (shl_findsym(&lm->dlh, name, TYPE_PROCEDURE, &f) == -1) {
+    if (shl_findsym(&lm->dlh, name, TYPE_PROCEDURE, (void *) &f) == -1) {
         f = NULL;
     }
 #elif defined(USE_MACH_DYLD)
@@ -1087,7 +1088,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         NSSymbol symbol;
         symbol = NSLookupSymbolInModule(lm->dlh, name);
         if (symbol != NULL)
-            f = NSAddressOfSymbol(symbol);
+            f = (PRFuncPtr) NSAddressOfSymbol(symbol);
         else
             f = NULL;
     }
@@ -1107,7 +1108,16 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 PR_IMPLEMENT(void*) 
 PR_FindSymbol(PRLibrary *lib, const char *raw_name)
 {
-    void *f = NULL;
+    return ((void *) PR_FindFunctionSymbol(lib, raw_name));
+}
+
+/*
+** Return the address of the function 'raw_name' in the library 'lib'
+*/
+PR_IMPLEMENT(PRFuncPtr) 
+PR_FindFunctionSymbol(PRLibrary *lib, const char *raw_name)
+{
+    PRFuncPtr f = NULL;
 #if defined(NEED_LEADING_UNDERSCORE)
     char *name;
 #else
@@ -1145,7 +1155,13 @@ PR_FindSymbol(PRLibrary *lib, const char *raw_name)
 PR_IMPLEMENT(void*) 
 PR_FindSymbolAndLibrary(const char *raw_name, PRLibrary* *lib)
 {
-    void *f = NULL;
+	return ((void *) PR_FindFunctionSymbolAndLibrary(raw_name, lib));
+}
+
+PR_IMPLEMENT(PRFuncPtr) 
+PR_FindFunctionSymbolAndLibrary(const char *raw_name, PRLibrary* *lib)
+{
+    PRFuncPtr f = NULL;
 #if defined(NEED_LEADING_UNDERSCORE)
     char *name;
 #else

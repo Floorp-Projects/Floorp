@@ -175,6 +175,17 @@ NSPR_API(PRStatus) PR_UnloadLibrary(PRLibrary *lib);
 NSPR_API(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 
 /*
+** Similar to PR_FindSymbol, except that the return value is a pointer to
+** a function, and not a pointer to void. Casting between a data pointer
+** and a function pointer is not portable according to the C standard.
+** Any function pointer can be cast to any other function pointer.
+**
+** This function does not modify the reference count of the library.
+*/
+typedef void (*PRFuncPtr)(void);
+NSPR_API(PRFuncPtr) PR_FindFunctionSymbol(PRLibrary *lib, const char *name);
+
+/*
 ** Finds a symbol in one of the currently loaded libraries. Given the
 ** name of a procedure, return the address of the function that
 ** implements the procedure, and return the library that contains that
@@ -185,6 +196,17 @@ NSPR_API(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 ** This increments the reference count of the library.
 */
 NSPR_API(void*) PR_FindSymbolAndLibrary(const char *name,
+						      PRLibrary* *lib);
+
+/*
+** Similar to PR_FindSymbolAndLibrary, except that the return value is
+** a pointer to a function, and not a pointer to void. Casting between a
+** data pointer and a function pointer is not portable according to the C
+** standard. Any function pointer can be cast to any other function pointer.
+**
+** This increments the reference count of the library.
+*/
+NSPR_API(PRFuncPtr) PR_FindFunctionSymbolAndLibrary(const char *name,
 						      PRLibrary* *lib);
 
 /*

@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         if (!debug_mode) failed_already=1;
     }
     getFcn = (GetFcnType) PR_FindSymbol(lib, "My_GetValue");
-    setFcn = (SetFcnType) PR_FindSymbol(lib, "My_SetValue");
+    setFcn = (SetFcnType) PR_FindFunctionSymbol(lib, "My_SetValue");
     (*setFcn)(888);
     value = (*getFcn)();
     if (value != 888) {
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
         if (!debug_mode) failed_already=1;
         goto exit_now;
     }
-    getFcn = (GetFcnType) PR_FindSymbol(lib2, "My_GetValue");
+    getFcn = (GetFcnType) PR_FindFunctionSymbol(lib2, "My_GetValue");
     setFcn = (SetFcnType) PR_FindSymbol(lib2, "My_SetValue");
     (*setFcn)(666);
     value = (*getFcn)();
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
         if (!debug_mode) failed_already=1;
         goto exit_now;
     }
-    getFcn = (GetFcnType) PR_FindSymbolAndLibrary("My_GetValue", &lib2);
+    getFcn = (GetFcnType) PR_FindFunctionSymbolAndLibrary("My_GetValue", &lib2);
     if (NULL != getFcn) {
         fprintf(stderr, "Test 4 failed: how can we find a symbol "
             "in an already unloaded library?\n");
