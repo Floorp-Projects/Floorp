@@ -791,7 +791,7 @@ nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **resul
 	for (childIndex = 0; childIndex < numChildren; childIndex++)
 	{
 		rv = GetChildHdrAt(childIndex, result);
-		if (NS_SUCCEEDED(rv) && result)
+		if (NS_SUCCEEDED(rv) && *result)
 		{
 			nsMsgKey msgKey;
 			// we're only doing one level of threading, so check if caller is
