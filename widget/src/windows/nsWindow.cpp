@@ -36,6 +36,8 @@ BOOL nsWindow::sIsRegistered = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
 
+#define IS_VK_DOWN(a) (PRBool)(((GetKeyState(a) & 0x80)) ? (PR_TRUE) : (PR_FALSE))
+
 // Global variable 
 //     g_hinst - handle of the application instance 
 extern HINSTANCE g_hinst; 
@@ -1494,28 +1496,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_KEYUP: 
-            if (wParam == NS_VK_SHIFT) {
-              mIsShiftDown = PR_FALSE;
-            }
-            if (wParam == NS_VK_CONTROL) {
-              mIsControlDown = PR_FALSE;
-            }
-            if (wParam == NS_VK_ALT) {
-              mIsAltDown = PR_FALSE;
-            }
+
+            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+
             result = OnKey(NS_KEY_UP, wParam);
             break;
 
         case WM_KEYDOWN:
-            if (wParam == NS_VK_SHIFT) {
-              mIsShiftDown = PR_TRUE;
-            }
-            if (wParam == NS_VK_CONTROL) {
-              mIsControlDown = PR_TRUE;
-            }
-            if (wParam == NS_VK_ALT) {
-              mIsAltDown = PR_TRUE;
-            }
+
+            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+
             result = OnKey(NS_KEY_DOWN, wParam);
             break;
 
