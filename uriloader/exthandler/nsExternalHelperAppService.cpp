@@ -885,6 +885,8 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   if (mCanceled)
     return NS_OK;
 
+  mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+
   if (!aNewFileLocation)
   {
     nsXPIDLString leafName;
@@ -945,6 +947,8 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 {
   if (mCanceled)
     return NS_OK;
+
+  mMimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
 
   // user has chosen to launch using an application, fire any refresh tags now...
   ProcessAnyRefreshTags(); 
