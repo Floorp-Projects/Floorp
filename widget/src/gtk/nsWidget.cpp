@@ -417,17 +417,9 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_WIDGET:
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
-        {
-	      void *res;
-	      if (mGC) {
-		      res = mGC;
-	      } else {
-          NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
-          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-	      }
-	      NS_ASSERTION(res, "unable to return NS_NATIVE_GRAPHIC");
-	      return res;
-	  }
+        if (mGC)
+	  return (void *)mGC;
+	break;
       default:
         g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
 	break;
