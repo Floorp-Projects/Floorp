@@ -82,6 +82,11 @@
             return null;
         ]]></getter>
       </property>
+
+      <property name="disableKeyNavigation"
+                onget="return this.hasAttribute('disableKeyNavigation');"
+                onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
+                       else this.removeAttribute('disableKeyNavigation'); return val;"/>
       
       <field name="_columnsDirty">true</field>
 
@@ -102,6 +107,8 @@
         })
       ]]>
       </field>
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
 
       <method name="_ensureColumnOrder">
         <body><![CDATA[
@@ -589,6 +596,39 @@
            if (!this.treeBoxObject.selection.isSelected(c))
              this.treeBoxObject.selection.toggleSelect(c);
          }
+         else if (!this.disableKeyNavigation && event.charCode > 0) {
+           var key = String.fromCharCode(event.charCode);
+           key = key.toLowerCase();
+           if (event.timeStamp - this._lastKeyTime > 1000)
+             this._incrementalString = key;
+           else {
+             if (this._incrementalString.length != 1 || this._incrementalString.charAt(0) != key.charAt(0))
+               this._incrementalString += key;
+           }
+           this._lastKeyTime = event.timeStamp;
+           
+           var primarycol = this.treeBoxObject.getKeyColumnIndex();
+           var colID = this.treeBoxObject.getColumnID(primarycol);
+           var c = this.currentIndex;
+           var rowCount = this.treeBoxObject.view.rowCount;
+           var start = 1;
+           
+           if (this._incrementalString.length > 1)
+             start = 0;
+
+           for (var i = 0; i < rowCount; i++) {
+             var l = (i + start + c) % rowCount;
+             var cellText = this.treeBoxObject.view.getCellText(l, colID);
+             cellText = cellText.toLowerCase();
+             if (cellText.search(this._incrementalString) == 0) {
+               this.selectionHead = -1;
+               this.selectionTail = -1;
+               this.treeBoxObject.selection.timedSelect(l, 500);
+               this.treeBoxObject.ensureRowIsVisible(l);
+               break;
+             }
+           }
+          }
          ]]>
       </handler>
     </handlers>    
