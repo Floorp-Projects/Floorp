@@ -20,6 +20,6 @@
 
 DEPTH=..\..
 
-DIRS=winEmbed
+DIRS=winEmbed mfcembed
 
 include <$(DEPTH)\config\rules.mak>
