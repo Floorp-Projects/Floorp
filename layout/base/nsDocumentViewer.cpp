@@ -1501,6 +1501,9 @@ DocumentViewerImpl::Stop(void)
     mDocument->StopDocumentLoad();
   }
 
+  if ((mLoaded || mStopped) && mPresContext)
+    mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+
   mStopped = PR_TRUE;
 
   if (!mLoaded && mPresShell) {
