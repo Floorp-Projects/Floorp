@@ -166,8 +166,8 @@ function CanDropOnFolderTree(index, orientation)
         //first check these conditions then proceed further
         debugDump("***isFolderFlavor == true \n");
 
-        // no copy for folder drag
-        if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
+        // no copy for folder drag within a server
+        if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_COPY && sourceServer == targetServer)
             return false;
 
         var canCreateSubfolders = GetFolderAttribute(folderTree, targetResource, "CanCreateSubfolders");
