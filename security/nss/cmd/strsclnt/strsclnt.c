@@ -70,19 +70,6 @@
 
 #define RD_BUF_SIZE (60 * 1024)
 
-int cipherSuites[] = {
-    SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,
-    SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,
-    SSL_RSA_WITH_RC4_128_MD5,
-    SSL_RSA_WITH_3DES_EDE_CBC_SHA,
-    SSL_RSA_WITH_DES_CBC_SHA,
-    SSL_RSA_EXPORT_WITH_RC4_40_MD5,
-    SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
-    SSL_FORTEZZA_DMS_WITH_NULL_SHA,
-    SSL_RSA_WITH_NULL_MD5,
-    0
-};
-
 /* Include these cipher suite arrays to re-use tstclnt's 
  * cipher selection code.
  */
@@ -109,6 +96,8 @@ int ssl3CipherSuites[] = {
     SSL_RSA_WITH_NULL_MD5,                      /* i */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,         /* j */
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,              /* k */
+    TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, 	/* l */
+    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,		/* m */
     0
 };
 
@@ -118,6 +107,7 @@ int ssl3CipherSuites[] = {
 
 const char *cipherString;
 
+int certsTested;
 int MakeCertOK;
 
 void
@@ -127,7 +117,13 @@ disableSSL2Ciphers(void)
 
     /* disable all the SSL2 cipher suites */
     for (i = 0; ssl2CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
+	SECStatus rv;
+        rv = SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
+	if (rv != SECSuccess) {
+	    fprintf(stderr, "SSL_EnableCipher failed with value 0x%04x\n",
+		    ssl2CipherSuites[i]);
+	    exit(1);
+	}
     }
 }
 
@@ -138,7 +134,13 @@ disableSSL3Ciphers(void)
 
     /* disable all the SSL3 cipher suites */
     for (i = 0; ssl3CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
+	SECStatus rv;
+        rv = SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
+	if (rv != SECSuccess) {
+	    fprintf(stderr, "SSL_EnableCipher failed with value 0x%04x\n",
+		    ssl3CipherSuites[i]);
+	    exit(1);
+	}
     }
 }
 
@@ -273,8 +275,9 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     /* invoke the "default" AuthCert handler. */
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
+    ++certsTested;
     if (rv == SECSuccess) {
-	fputs("-- SSL3: Server Certificate Validated.\n", stderr);
+	fputs("-- SSL: Server Certificate Validated.\n", stderr);
     } 
     /* error, if any, will be displayed by the Bad Cert Handler. */
     return rv;  
@@ -327,7 +330,7 @@ printSecurityInfo(PRFileDesc *fd)
 	       "issuer  DN: %s\n", cp, kp1, kp0, op, sp, ip);
 #else
 	PRINTF("bulk cipher %s, %d secret key bits, %d key bits, status: %d\n",
-	       cp, kp1, kp0, op, sp, ip);
+	       cp, kp1, kp0, op);
 #endif
 	PR_Free(cp);
 	PR_Free(ip);
@@ -742,7 +745,8 @@ retry:
     prStatus = PR_Connect(tcp_sock, addr, PR_INTERVAL_NO_TIMEOUT);
     if (prStatus != PR_SUCCESS) {
 	PRErrorCode err = PR_GetError();
-	if (err == PR_CONNECT_REFUSED_ERROR) {
+	if ((err == PR_CONNECT_REFUSED_ERROR) || 
+	    (err == PR_CONNECT_RESET_ERROR)      ) {
 	    PR_Close(tcp_sock);
 	    PR_Sleep(PR_MillisecondsToInterval(10));
 	    goto retry;
@@ -851,7 +855,14 @@ client_main(
             for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
                 /* do nothing */;
             if (cipher) {
-                SSL_EnableCipher(cipher, SSL_ALLOWED);
+		SECStatus rv;
+                rv = SSL_EnableCipher(cipher, SSL_ALLOWED);
+		if (rv != SECSuccess) {
+		    fprintf(stderr, 
+			    "SSL_EnableCipher failed with value 0x%04x\n",
+			    cipher);
+		    exit(1);
+		}
             }
         }
     }
@@ -1089,12 +1100,19 @@ main(int argc, char **argv)
     client_main(port, connections, privKey, cert, hostName, nickName);
 
     /* some final stats. */
-    printf("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
-    	ssl3_hsh_sid_cache_hits, 
-	ssl3_hsh_sid_cache_misses,
-	ssl3_hsh_sid_cache_not_ok);
-    exitVal = (ssl3_hsh_sid_cache_misses != 1) ||
-              (ssl3_hsh_sid_cache_not_ok != 0);
+    if (ssl3_hsh_sid_cache_hits + ssl3_hsh_sid_cache_misses +
+        ssl3_hsh_sid_cache_not_ok == 0) {
+	/* presumably we were testing SSL2. */
+	printf("%d server certificates tested.\n", certsTested);
+    } else {
+	printf("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
+	    ssl3_hsh_sid_cache_hits, 
+	    ssl3_hsh_sid_cache_misses,
+	    ssl3_hsh_sid_cache_not_ok);
+    }
+    exitVal = (ssl3_hsh_sid_cache_misses > 1) ||
+              (ssl3_hsh_sid_cache_not_ok != 0) ||
+	      (certsTested > 1);
 
     NSS_Shutdown();
     PR_Cleanup();
