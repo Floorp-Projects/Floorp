@@ -6,6 +6,9 @@
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "t">
 
+<!ENTITY  typefaces.label                         "Typeface">
+<!ENTITY  sizes.label                             "Size (pixels)">
+
 <!ENTITY  proportional.label                      "Proportional:">
 <!ENTITY  proportional.accesskey                  "p">
 

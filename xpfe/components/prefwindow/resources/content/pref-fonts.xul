@@ -72,6 +72,8 @@
       </menulist>
     </label>
     
+    <separator class="thin"/>
+    
     <grid>
       <columns>
         <column/>
@@ -81,7 +83,21 @@
       
       <rows>
         <row align="center">
-          <hbox align="center">
+          <spacer/>
+          <hbox align="center" pack="center">
+            <text value="&typefaces.label;"/>
+          </hbox>  
+          <hbox align="center" pack="center">
+            <text value="&sizes.label;"/>
+          </hbox>  
+        </row>
+
+        <row>
+          <separator class="thin"/>
+        </row>
+
+        <row align="center">
+          <hbox align="center" pack="end">
             <text class="label small-margin" 
                   value="&proportional.label;" 
                   accesskey="&proportional.accesskey;" 
