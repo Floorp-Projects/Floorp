@@ -43,11 +43,11 @@ public:
   NS_IMETHOD Init (Drawable aDrawable, GC aGC);
   NS_IMETHOD Init (GC aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
   GC         GetGC(void) { return mGC; }
-  Drawable   GetDrawable(void) { return mPixmap; }  
+  Drawable   GetDrawable(void) { return (mDrawable); }  
 
 private:
   GC mGC;
-  Pixmap mPixmap;
+  Drawable mDrawable;
   XImage *mImage;
   nsPixelFormat mPixFormat;
   PRUint8 mDepth;
@@ -63,6 +63,7 @@ private:
   PRUint32 mHeight;
   // are we offscreen
   PRBool mIsOffscreen;
+  PRBool mDestroyDrawable;
 };
 
 #endif

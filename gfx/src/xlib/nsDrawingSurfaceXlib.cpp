@@ -48,7 +48,8 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 {
   NS_INIT_REFCNT();
   printf("nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()\n");
-  mPixmap = 0;
+  mDrawable = 0;
+  mDestroyDrawable = PR_FALSE;
   mImage = nsnull;
   mGC = 0;
   // set up lock info
@@ -80,8 +81,9 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
 {
   printf("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n");
-  if (mPixmap && (mIsOffscreen == PR_TRUE)) {
-    XFreePixmap(gDisplay, mPixmap);
+  // if it's been labeled as destroy, it's a pixmap.
+  if (mDestroyDrawable) {
+    XFreePixmap(gDisplay, mDrawable);
   }
   if (mImage) {
     XDestroyImage(mImage);
@@ -96,10 +98,11 @@ NS_IMETHODIMP
 nsDrawingSurfaceXlib::Init(Drawable aDrawable, GC aGC) {
   printf("nsDrawingSurfaceXlib::Init()\n");
   mGC = aGC;
-  mPixmap = aDrawable;
+  mDrawable = aDrawable;
   mIsOffscreen = PR_FALSE;
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Init (GC aGC,
                             PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags) {
@@ -110,11 +113,10 @@ nsDrawingSurfaceXlib::Init (GC aGC,
 
   mIsOffscreen = PR_TRUE;
   
-  mPixmap = XCreatePixmap(gDisplay, RootWindow(gDisplay, gScreenNum),
-                          mWidth, mHeight, gDepth);
+  mDrawable = XCreatePixmap(gDisplay, RootWindow(gDisplay, gScreenNum),
+                            mWidth, mHeight, gDepth);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
@@ -136,7 +138,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
-  mImage = XGetImage(gDisplay, mPixmap,
+  mImage = XGetImage(gDisplay, mDrawable,
                      mLockX, mLockY,
                      mLockWidth, mLockHeight,
                      0xFFFFFFFF,
@@ -161,7 +163,7 @@ nsDrawingSurfaceXlib::Unlock(void)
   
   // If the lock was not read only, put the bits back on the pixmap
   if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY)) {
-    XPutImage(gDisplay, mPixmap, mGC, mImage,
+    XPutImage(gDisplay, mDrawable, mGC, mImage,
               0, 0, mLockX, mLockY,
               mLockWidth, mLockHeight);
   }
