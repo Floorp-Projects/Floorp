@@ -584,6 +584,11 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     mMenuOpen = PR_TRUE;
 
     if (menuPopup) {
+      // inherit whether or not we're a context menu from the parent
+      PRBool parentIsContextMenu = PR_FALSE;
+      mMenuParent->GetIsContextMenu(parentIsContextMenu);
+      menuPopup->SetIsContextMenu(parentIsContextMenu);
+
       // Install a keyboard navigation listener if we're the root of the menu chain.
       PRBool onMenuBar = PR_TRUE;
       if (mMenuParent)
