@@ -50,24 +50,17 @@ struct PrefPaneID
 	#ifdef MOZ_MAIL_NEWS
 	,	eMailNews_Messages						= 12058
 	,	eMailNews_HTMLFormatting				= 12072
-	,	eMailNews_Outgoing						= 12073		
+	,	eMailNews_Outgoing						= 12073		//<-еее Current max.  Please move as nec.!
 	,	eMailNews_MailServer					= 12059
 	,	eMailNews_NewsServer					= 12060
 	,	eMailNews_Directory						= 12061
 	,	eMailNews_Receipts						= 12070
-	,	eMailNews_Addressing					= 12071
+	,	eMailNews_SpecialFolders				= 12071
 	#endif // MOZ_MAIL_NEWS
-	
 	#ifdef EDITOR
 	,	eEditor_Main							= 12062
 	,	eEditor_Publish							= 12063
 	#endif // EDITOR
-	#ifdef MOZ_LOC_INDEP
-	,	eLocationIndependence					= 12074
-	,	eLocationIndependence_Server			= 12075
-	,	eLocationIndependence_File				= 12076 //<-еее Current max.  Please move as nec.!
-	#endif // MOZ_LOC_INDEP
-
 	#ifdef MOZ_MAIL_NEWS
 	,	eOffline_Main							= 12064
 	,	eOffline_News							= 12065

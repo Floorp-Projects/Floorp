@@ -67,8 +67,10 @@ class CPrefsDialog
 		#ifdef MOZ_MAIL_NEWS
 		, eExpandOffline = PrefPaneID::eOffline_Main
 		#endif
+		#ifdef EDITOR
 		, eExpandAdvanced = PrefPaneID::eAdvanced_Main
-		, eExpandAll = PrefPaneID::eNoPaneSpecified
+		#endif
+		
 	};
 
 	enum Selection_T
@@ -126,9 +128,7 @@ class CPrefsDialog
 		static	void	CheckForVCard();
 				void	Finished();
 
-		static	CPrefsDialog			*sThis;
-
-		static PrefPaneID::ID			sLastPrefPane;
+		static	CPrefsDialog		*sThis;
 
 		LWindow							*mWindow;
 		CPrefsMediator					*mCurrentMediator;

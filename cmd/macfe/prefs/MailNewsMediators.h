@@ -21,7 +21,6 @@
 #include "CPrefsMediator.h"
 
 #include "MPreference.h"
-#include "UNewFolderDialog.h"
 
 #include <LGADialogBox.h>
 
@@ -30,8 +29,6 @@ class LGACheckbox;
 class MSG_IMAPHost;
 class MSG_Host;
 class CDragOrderTextList;
-class StDialogHandler;
-
 
 //======================================
 #pragma mark
@@ -49,8 +46,8 @@ class CMailNewsIdentityMediator : public CPrefsMediator
 
 		virtual void	ListenToMessage(MessageT inMessage, void *ioParam);
 
-		virtual	void	UpdateFromIC();	
-		
+//		virtual	void	UpdateFromIC();	// don't need this because the IC checkbox is on
+										// this pane
 		virtual	void	LoadPrefs();
 };
 
@@ -92,16 +89,8 @@ class CMailNewsOutgoingMediator : public CPrefsMediator
 		virtual	void	WritePrefs();
 		virtual void	ListenToMessage(MessageT inMessage, void* ioParam);
 	protected:
-		void			FixCaptionNameForFCC(UFolderDialogs::FolderKind kind, const char* mailOrNews);
-		void			FixCaptionNameForFCC(UFolderDialogs::FolderKind kind, const char* mailOrNews,
-											 Boolean onServer);
-
-	protected:
-		char*			mFolderURL[UFolderDialogs::num_kinds];
-						// indexed by UFolderDialogs::FolderKind
-#ifdef HORRIBLE_HACK
-		Boolean			mFolderIsDefault[UFolderDialogs::num_kinds]; // HACK
-#endif // HORRIBLE_HACK
+#define kNumFolderKinds 4
+		char*			mFolderURL[kNumFolderKinds];
 }; // class CMailNewsOutgoingMediator
 
 //======================================
@@ -118,54 +107,28 @@ protected:
 	,	mServersDirty(false)
  	{}
 
-		// note that if you add members to this in inheriting classes,
-		// you need to change the constructor resources to increase the
-		// list data size
 		struct CellContents
 		{
-			CellContents(const char* inName = nil)
-			: 	description(inName) {}
-
-			CStr255				description;
+			CellContents(const char* inName = nil);
+			Str255			description;
 		};
 
-			Boolean 	GetHostFromRow(
-							TableIndexT 		inRow,
-							CellContents& 		outCellData,
-							UInt32 				inDataSize) const;
-			Boolean 	GetHostFromSelectedRow(
-							CellContents& 		outCellData,
-							UInt32 				inDataSize) const;
-			Boolean 	HostExistsElsewhereInTable(
-							const CStr255& 		inHostName,
-							TableIndexT 		&outFoundRow) const;
-			void 		SetHostDataForRow(
-							TableIndexT 		inRow,
-							const CellContents&	inCellData,
-							UInt32 				inDataSize) const;
-			void 		AppendNewRow(
-							const CellContents	&inCellData,
-							Uint32 				inDataSize,
-							Boolean 			inRefresh = true);
-			void 		DeleteSelectedRow(
-							Boolean 			inRefresh = true);
-			void		UpdateSelectedRow(	
-							const CellContents	&inCellData,
-							Uint32 				inDataSize,
-							Boolean 			inRefresh = true);
-		
-		virtual TableIndexT	CountRows();
-		virtual	void		UpdateButtons();
-		virtual	void		AddButton() = 0;
-		virtual	void		EditButton() = 0;
-		virtual	void		DeleteButton() = 0;
-				void		ClearList();
-		virtual	void		LoadList() = 0;
-		virtual	void		WriteList() = 0;
-		virtual Boolean		Listen(MessageT inMessage, void *ioParam);
-				void		LoadMainPane();
-
-		static Boolean		ServerIsInCommaSeparatedList(const char *inServerName, const char *inServerList);
+				Boolean GetHostFromRow(
+							TableIndexT inRow,
+							CellContents& outCellData,
+							UInt32 inDataSize) const;
+				Boolean GetHostFromSelectedRow(
+							CellContents& outCellData,
+							UInt32 inDataSize) const;
+		virtual	void	UpdateButtons();
+		virtual	void	AddButton() = 0;
+		virtual	void	EditButton() = 0;
+		virtual	void	DeleteButton() = 0;
+				void	ClearList();
+		virtual	void	LoadList() = 0;
+		virtual	void	WriteList() = 0;
+		virtual Boolean	Listen(MessageT inMessage, void *ioParam);
+				void	LoadMainPane();
 
 	CPrefsMediator* 	mMediatorSelf;
 	CDragOrderTextList*	mServerTable;
@@ -206,8 +169,7 @@ class CMailNewsMailServerMediator
 		virtual	void	LoadPrefs();
 		virtual	void	WritePrefs();
 
-		static Boolean 	NoAtSignValidationFunc(CValidEditField *noAtSign);
-		static Boolean	ValidateServerName(const CStr255& inServerName, Boolean inNewServer, const CServerListMediator* inServerList);
+		static Boolean NoAtSignValidationFunc(CValidEditField *noAtSign);
 
 	private:
 		enum ServerType
@@ -216,18 +178,10 @@ class CMailNewsMailServerMediator
 			ePOPServer = 0,
 			eIMAPServer = 1
 		};
-		Boolean			UsingPop() const; // Hope this goes away.
-		void			NoteServerChanges(Boolean inPOP, const CStr255& inServerName);
-		void			SetPOPServerName(const CStr255& inName);
-		void			GetPOPServerName(CStr255& outName) const;
+				MSG_IMAPHost*	FindMSG_Host(const char* inHostName);
+				Boolean	UsingPop() const; // Hope this goes away.
 
 	// MServerListMediatorMixin overrides
-		struct CellContents : public MServerListMediatorMixin::CellContents
-		{
-			CellContents() {}
-			CellContents(const char* inName)
-			:	MServerListMediatorMixin::CellContents(inName) {}
-		};
 		virtual	void	AddButton();
 		virtual	void	EditButton();
 		virtual	void	DeleteButton();
@@ -237,13 +191,11 @@ class CMailNewsMailServerMediator
 	// Data
 	protected:
 		ServerType		mServerType;
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
 		char*			mPopServerName;
-#endif
 }; // class CMailNewsMailServerMediator
 
-//======================================
 #pragma mark
+//======================================
 class CMailNewsNewsServerMediator
 //======================================
 :	public CServerListMediator
@@ -269,7 +221,7 @@ class CMailNewsNewsServerMediator
 			CellContents(const char* inName, MSG_Host* inHost)
 			:	MServerListMediatorMixin::CellContents(inName)
 			,	serverData(inHost) {}
-			MSG_Host*				serverData;
+			MSG_Host*	serverData;
 		};
 		virtual	void	AddButton();
 		virtual	void	EditButton();
@@ -315,7 +267,7 @@ class CMailNewsDirectoryMediator
 		virtual	void	AddButton();
 		virtual	void	EditButton();
 		virtual	void	DeleteButton();
-		virtual	void	LoadList();			// only call this once, on creating the list for the first time
+		virtual	void	LoadList();
 		virtual	void	WriteList();
 
 		virtual	void	UpdateButtons();
@@ -346,42 +298,10 @@ class COfflineNewsMediator : public CPrefsMediator
 		virtual	~COfflineNewsMediator() {};
 
 		virtual	void	LoadMainPane();
-//		virtual	void	WritePrefs();
-		virtual void	ListenToMessage(
-							MessageT		inMessage,
-							void			*ioParam);
+		virtual	void	WritePrefs();
 
 		static Boolean	SinceDaysValidationFunc(CValidEditField *sinceDays);
 }; // class COfflineNewsMediator
-
-#ifdef MOZ_MAIL_NEWS
-//======================================
-#pragma mark
-class CMailNewsAddressingMediator
-//======================================
-:	public CPrefsMediator
-{
-	private:
-		typedef CPrefsMediator Inherited;
-		
-	public:
-
-		enum { class_ID = PrefPaneID::eMailNews_Addressing, eDirectoryPopup = 'DrPu' };
-	
-		CMailNewsAddressingMediator(LStream* ): CPrefsMediator( class_ID  ), mLDAPList(NULL) {};
-
-		virtual	~CMailNewsAddressingMediator()
-		{
-			if( mLDAPList )
-				XP_ListDestroy( mLDAPList );
-		};
-		virtual void 	LoadPrefs();
-		virtual void     WritePrefs();
-	protected:
-		XP_List* mLDAPList;
-};
-#endif // MOZ_MAIL_NEWS
-
 
 //======================================
 class CLDAPServerPropDialog : public LGADialogBox

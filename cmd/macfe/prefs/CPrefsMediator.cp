@@ -319,8 +319,8 @@ void CPrefsMediator::ListenToMessage(MessageT inMessage, void */*ioParam*/)
 	switch (inMessage)
 	{
 		case eCommitPrefs:
-			MPreferenceBase::SetWriteOnDestroy(true);
 			WritePrefs();
+			MPreferenceBase::SetWriteOnDestroy(true);
 			break;
 		case eCancelPrefs:
 			Canceled();
@@ -615,7 +615,22 @@ void CPrefsMediator::SetPrefWithFolderPopup(	const char *prefName,
 		if (!folderName || !*folderName)
 			return;
 
-		PREF_SetPathPref(prefName, folderName, FALSE);
+		// make alias
+		FSSpec	fileSpec;
+		OSErr	iErr = CFileMgr::FSSpecFromLocalUnixPath(folderName, &fileSpec);
+
+		if (!iErr)
+		{
+			AliasHandle	aliasH;
+			iErr = NewAlias(nil, &fileSpec, &aliasH);
+			if (!iErr)
+			{
+				Size	lByteCnt = GetHandleSize((Handle)aliasH);
+				HLock((Handle)aliasH);
+				PREF_SetBinaryPref(prefName, *aliasH, lByteCnt);
+				DisposeHandle((Handle)aliasH);
+			}
+		}
 	}
 }
 #endif // MOZ_MAIL_NEWS
@@ -753,3 +768,4 @@ void CPrefsMediator::RegisterViewClasses()
 	RegisterClass_( CControlExtension);
 	RegisterClass_(CDragOrderTextList);
 }
+

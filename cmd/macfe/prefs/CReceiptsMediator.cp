@@ -93,34 +93,16 @@ void CReceiptsMediator::DoCustomDialog()
 		}
 		dialog->Show();
 		dialog->Select();
-		Int32 popupValue[3];
-		// Store the dialog popup values in case cancel is hit
-		for (int32 i =0; i<3; i++ )
-		{
-			LGAPopup* popup = dynamic_cast<LGAPopup*>( dialog->FindPaneByID( i+ 1) );
-			XP_ASSERT( popup );
-			popupValue[i] = popup->GetValue();
-		}
 
 		MessageT message = msg_Nothing;
 		do {
 			message = mCustomDialogHandler->DoDialog();
-		} while (message != msg_OK && message != msg_Cancel); 
+		} while (message != msg_OK && message != msg_Cancel); // actually, there's no cancel.
 		
 		// Use the result.
 		if (message == msg_OK)
 		{
 			// Nothing to do, the prefs are written out when the dialog is destroyed.
-		}
-		else if ( message == msg_Cancel )
-		{
-			// Restore values from when the dialog was first put up
-			for ( int32 i =0; i<3; i++ )
-			{
-				LGAPopup* popup = dynamic_cast<LGAPopup*>( dialog->FindPaneByID( i+ 1) );
-				XP_ASSERT( popup );
-				popup->SetValue(popupValue[i]);
-			}
 		}
 	}
 	catch(...)

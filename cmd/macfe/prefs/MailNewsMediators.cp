@@ -39,13 +39,13 @@ extern "C"
 #include "InternetConfig.h"
 #include "CTSMEditField.h"
 #include "MailNewsAddressBook.h"
+#include "UNewFolderDialog.h"
 #include "CMessageFolder.h"
 #include "PrefControls.h"
 #include "CMailNewsContext.h"
 #include "StGetInfoHandler.h"
 #include "CNewsSubscriber.h"
-#include "COfflinePicker.h"
-#include "UMenuUtils.h"
+
 //3P
 #include <ICAPI.h>
 #include <ICKeys.h>
@@ -57,7 +57,8 @@ extern "C"
 #include <LGARadioButton.h>
 #include <LGACheckbox.h>
 
-#ifdef MOZ_MAIL_NEWS
+#ifndef MOZ_LITE
+#pragma mark ---CLDAPServerPropDialog---
 
 //----------------------------------------------------------------------------------------
 CLDAPServerPropDialog::CLDAPServerPropDialog( LStream* inStream )
@@ -333,7 +334,7 @@ Boolean CLDAPServerPropDialog::MaxHitsValidationFunc(CValidEditField *maxHits)
 	}
 	return result;
 }
-#endif // MOZ_MAIL_NEWS
+#endif // MOZ_LITE
 
 enum
 {
@@ -348,8 +349,6 @@ enum
 	eInternetConfigBox,
 	eLaunchInternetConfig	// currently only used in (MOZ_LITE)
 };
-
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 CMailNewsIdentityMediator::CMailNewsIdentityMediator(LStream*)
@@ -382,9 +381,6 @@ void CMailNewsIdentityMediator::ListenToMessage(MessageT inMessage, void *ioPara
 #endif // MOZ_LITE
 #ifndef MOZ_LITE
 		case eUseSigFileBox:
-			// if IC is being used don't bring up the file picker
-			if( UseIC() )
-				return;
 			CFilePicker *fPicker =
 					(CFilePicker *)FindPaneByID(eSigFilePicker);
 			XP_ASSERT(fPicker);
@@ -425,34 +421,11 @@ void CMailNewsIdentityMediator::ListenToMessage(MessageT inMessage, void *ioPara
 		case eInternetConfigBox:
 			Boolean	useIC = *(Int32 *)ioParam;
 			UseIC(useIC);
-			UpdateFromIC();
-			#ifndef MOZ_MAIL_NEWS
-				LButton *button =
-						(LButton *)FindPaneByID(eLaunchInternetConfig);
-				XP_ASSERT(button);
-				if (UseIC())
-					button->Enable();
-				else
-					button->Disable();
-			#endif // MOZ_MAIL_NEWS
-		
-			break;
-		default:
-			Inherited::ListenToMessage(inMessage, ioParam);
-			break;
-	}
-} // CMailNewsIdentityMediator::ListenToMessage
-
-//----------------------------------------------------------------------------------------
-void CMailNewsIdentityMediator::UpdateFromIC()
-//----------------------------------------------------------------------------------------
-{
-	Boolean useIC = UseIC();
-	#ifdef MOZ_LITE
+#ifdef MOZ_LITE
 			LButton *button =
 					(LButton *)FindPaneByID(eLaunchInternetConfig);
 			XP_ASSERT(button);
-			if ( useIC )
+			if (UseIC())
 				button->Enable();
 			else
 				button->Disable();
@@ -472,31 +445,12 @@ void CMailNewsIdentityMediator::UpdateFromIC()
 #endif // MOZ_LITE
 			SetEditFieldsWithICPref(kICOrganization,
 									eOrgField);
-									
-			CFilePicker *picker =
-					(CFilePicker *)FindPaneByID(eSigFilePicker);
-			
-			LCaption* caption = nil;
-			if( picker )
-				caption = (LCaption*)picker->FindPaneByID( 1 );
-			
-			if( picker && caption )
-			{
-				if ( useIC )
-				{
-					picker->Disable();
-					LStr255 exampleString(12057, 1 );
-					caption->SetDescriptor( exampleString);
-				}
-				else
-				{
-					picker->Enable();
-					picker->SetCaptionForPath( caption, picker->GetFSSpec()  );
-				}
-			}
-}
-
-
+			break;
+		default:
+			Inherited::ListenToMessage(inMessage, ioParam);
+			break;
+	}
+} // CMailNewsIdentityMediator::ListenToMessage
 
 //----------------------------------------------------------------------------------------
 void CMailNewsIdentityMediator::LoadPrefs()
@@ -510,7 +464,7 @@ void CMailNewsIdentityMediator::LoadPrefs()
 	}
 } // CMailNewsIdentityMediator::LoadPrefs
 
-#ifdef MOZ_MAIL_NEWS
+#ifndef MOZ_LITE
 
 enum
 {
@@ -572,167 +526,47 @@ void CMailNewsMessagesMediator::LoadMainPane()
 	SetValidationFunction(eWrapLengthIntegerField, WrapLinesValidationFunc);
 }
 
-#pragma mark -
-
+#pragma mark ---CMailNewsOutgoingMediator---
 //----------------------------------------------------------------------------------------
 CMailNewsOutgoingMediator::CMailNewsOutgoingMediator(LStream*)
 //----------------------------------------------------------------------------------------
 :	CPrefsMediator(class_ID)
 {
-	char** p = &mFolderURL[0];
-	for (int i = 0; i < UFolderDialogs::num_kinds; i++,p++)
-	{
-		*p = nil;
-	}
-#ifdef HORRIBLE_HACK
-	Boolean* isDefault = &mFolderIsDefault[0];
-	for (int i = 0; i < UFolderDialogs::num_kinds; i++,isDefault++)
-		*isDefault = false;
-#endif // HORRIBLE_HACK
+	Assert_(kNumFolderKinds == UFolderDialogs::num_kinds);
+	char**p = &mFolderURL[0];
+	for (int i = 0; i < kNumFolderKinds; i++)
+		*p++ = nil;
 }
 
 //----------------------------------------------------------------------------------------
 CMailNewsOutgoingMediator::~CMailNewsOutgoingMediator()
 //----------------------------------------------------------------------------------------
 {
-	char** p = &mFolderURL[0];
-	for (int i = 0; i < UFolderDialogs::num_kinds; i++,p++)
-		XP_FREEIF(*p); // BEWARE. The macro XP_FREEIF(*p++) increments three times!
+	char**p = &mFolderURL[0];
+	for (int i = 0; i < kNumFolderKinds; i++)
+		XP_FREEIF(*p++);
 }
-
-//----------------------------------------------------------------------------------------
-void CMailNewsOutgoingMediator::FixCaptionNameForFCC(UFolderDialogs::FolderKind kind, const char* mailOrNews)
-// For mail/news_fcc, depending on a stupid boolean flag (blah.use_imap_sentmail),
-// the prefname changes.  This overload figures out the server/local status using the saved pref,
-// and calls the other overload, below.
-//----------------------------------------------------------------------------------------
-{
-	// Check the boolean pref that determines the pref name to be used.
-	CStr255 prefname = "^0.use_imap_sentmail";
-	StringParamText(prefname, mailOrNews);
-	XP_Bool onServer;
-	PREF_GetBoolPref(prefname, &onServer);
-	FixCaptionNameForFCC(kind, mailOrNews, onServer);
-} // CMailNewsOutgoingMediator::FixCaptionNameForFCC
-
-//----------------------------------------------------------------------------------------
-void CMailNewsOutgoingMediator::FixCaptionNameForFCC(UFolderDialogs::FolderKind kind, const char* mailOrNews, Boolean onServer)
-// For mail/news_fcc, depending on a stupid boolean flag (blah.use_imap_sentmail),
-// the prefname changes. This overload is for the case where the prefs are not saved, and the
-// onServer parameter is passed in by the caller.
-//----------------------------------------------------------------------------------------
-{
-	// Work out which checkbox we have to fix up, and which string to use.  This only
-	// applies to mail_fcc and news_fcc.
-	PaneIDT checkboxPaneID;
-	if (kind == UFolderDialogs::mail_fcc)
-		checkboxPaneID = 'DoMF';
-	else if (kind ==  UFolderDialogs::news_fcc)
-		checkboxPaneID = 'DoNF';
-	else
-		return;
-	
-	// Set the caption pref name of the checkbox accordingly.
-	CStr255 prefname;
-	if (onServer)
-		prefname = "^0.imap_sentmail_path";
-	else
-		prefname = "^0.default_fcc";
-	StringParamText(prefname, mailOrNews);
-	LControl* pb = dynamic_cast<LControl*>(FindPaneByID(checkboxPaneID));
-	SignalIf_(!pb);
-	if (pb)
-		UPrefControls::NoteSpecialFolderChanged(pb, prefname);
-} // CMailNewsOutgoingMediator::FixCaptionNameForFCC
 
 //----------------------------------------------------------------------------------------
 void CMailNewsOutgoingMediator::LoadPrefs()
 //----------------------------------------------------------------------------------------
 {
-	FixCaptionNameForFCC(UFolderDialogs::news_fcc, "news");
-	FixCaptionNameForFCC(UFolderDialogs::mail_fcc, "mail");	
-	
-	LControl* control = dynamic_cast<LControl*>(FindPaneByID(eMailMailSelfBox) ); 
-	XP_ASSERT( control );
-	CStr255 caption;
-	control->GetDescriptor( caption );
-	CStr255 email = FE_UsersMailAddress();
-	StringParamText(caption, email);
-	control->SetDescriptor( caption );
-	control = dynamic_cast<LControl*>(FindPaneByID(eMailNewsSelfBox) );
-	XP_ASSERT( control );
-	control->SetDescriptor( caption );
 } // CMailNewsOutgoingMediator::LoadPrefs
 
 //----------------------------------------------------------------------------------------
 void CMailNewsOutgoingMediator::WritePrefs()
 //----------------------------------------------------------------------------------------
 {
-	char** p = &mFolderURL[0];
-#ifdef HORRIBLE_HACK
-	Boolean* isDefault = &mFolderIsDefault[0];
-#endif // HORRIBLE_HACK
+	char**p = &mFolderURL[0];
 	CStr255 prefName;
-	for (int i = 0; i < UFolderDialogs::num_kinds; i++,p++)
+	for (int i = 0; i < kNumFolderKinds; i++,p++)
 	{
-		UFolderDialogs::FolderKind kind = (UFolderDialogs::FolderKind)i;
 		if (*p)
 		{
-			// For fcc, we must write out the IMAP/Local pref first, so that the prefs name
-			// will be set correctly in BuildPrefName(), below.
-			XP_Bool onServer = (XP_Bool)(NET_URL_Type(*p) == IMAP_TYPE_URL);
-			if (kind == UFolderDialogs::news_fcc)
-				PREF_SetBoolPref("news.use_imap_sentmail", onServer);
-			else if (kind == UFolderDialogs::mail_fcc)
-				PREF_SetBoolPref("mail.use_imap_sentmail", onServer);
-			Boolean saveAsAlias;
-			UFolderDialogs::BuildPrefName(kind, prefName, saveAsAlias);
-#ifdef HORRIBLE_HACK
-			if (*isDefault++) 
-			{
-				// Hack-to-work-around-backend-design-mess #23339: if it's a local folder and it's
-				// the server, then it's supposed to mean the default folder.  But the backend
-				// doesn't deal with this properly.  So append the path here.
-				CStr255 defaultFolderName;
-				if (UFolderDialogs::GetDefaultFolderName(kind, defaultFolderName))
-				{
-					StrAllocCat(*p, "/");
-					StrAllocCat(*p, (const char*)defaultFolderName);
-				}
-			}
-#endif // HORRIBLE_HACK
-#if DEBUG
-			if (kind == UFolderDialogs::news_fcc || kind == UFolderDialogs::mail_fcc)
-			{
-				Assert_(saveAsAlias == !onServer);
-			}
-			else
-			{
-				Assert_(!saveAsAlias);
-			}
-#endif
-			if (saveAsAlias)
-			{
-				// For backward compatibility with 4.0x, we have to save this as a path,
-				// and not a URL in these two cases.
-				if (kind == UFolderDialogs::news_fcc || kind == UFolderDialogs::mail_fcc)
-				{
-					Boolean isURL = NET_URL_Type(*p) == MAILBOX_TYPE_URL;
-					Assert_(isURL);
-					if (isURL)
-					{
-						char* temp = NET_ParseURL(*p, GET_PATH_PART);
-						if (temp)
-						{
-							XP_FREE(*p);
-							*p = temp;
-						}
-					}
-				}
-				PREF_SetPathPref(prefName, *p, FALSE);
-			}
-			else
-				PREF_SetCharPref(prefName, *p);
+			UFolderDialogs::BuildPrefName(
+				(UFolderDialogs::FolderKind)i,
+				prefName);
+			PREF_SetCharPref(prefName, *p);
 		}
 	}
 } // CMailNewsOutgoingMediator::WritePrefs
@@ -742,28 +576,19 @@ void CMailNewsOutgoingMediator::ListenToMessage(MessageT inMessage, void* ioPara
 //----------------------------------------------------------------------------------------
 {
 	UFolderDialogs::FolderKind kind;
-	PaneIDT descriptionPaneID; // ID of the checkbox or caption corresponding to the button
-	const char* mailOrNews = nil; // substitution string for the caption prefname.
-	// We handle the four "choose folder" buttons here.
 	switch (inMessage)
 	{
 		case 'ChMF':
 			kind = UFolderDialogs::mail_fcc;
-			descriptionPaneID = 'DoMF'; // a checkbox
-			mailOrNews = "mail";
 			break;
 		case 'ChNF':
 			kind = UFolderDialogs::news_fcc;
-			descriptionPaneID = 'DoNF'; // a checkbox
-			mailOrNews = "news";
 			break;
 		case 'ChDF':
 			kind = UFolderDialogs::drafts;
-			descriptionPaneID = 'Drft'; // a caption
 			break;
 		case 'ChTF':
 			kind = UFolderDialogs::templates;
-			descriptionPaneID = 'Tmpl'; // a caption
 			break;
 		default:
 			Inherited::ListenToMessage(inMessage, ioParam);
@@ -773,43 +598,39 @@ void CMailNewsOutgoingMediator::ListenToMessage(MessageT inMessage, void* ioPara
 	const char* curURL = mFolderURL[kind];
 	if (curURL)
 		curFolder.SetFolderInfo(
-			::MSG_GetFolderInfoFromURL(CMailNewsContext::GetMailMaster(), curURL, false));
+			::MSG_GetFolderInfoFromURL(CMailNewsContext::GetMailMaster(), curURL));
 	CMessageFolder folder = UFolderDialogs::ConductSpecialFolderDialog(kind, curFolder);
 	if (folder.GetFolderInfo() != nil)
 	{
 		URL_Struct* ustruct = ::MSG_ConstructUrlForFolder(nil, folder);
-		// Set the cached URL string for this folder (used in WritePrefs), and update
-		// the text on the corresponding special folder checkbox.
 		if (ustruct)
 		{
 			char* newURL = XP_STRDUP(ustruct->address);
 			NET_FreeURLStruct(ustruct);
-#ifdef HORRIBLE_HACK
-			if (folder.IsMailServer() && !folder.IsIMAPMailFolder()) 
-			{
-				// Hack-to-work-around-backend-design-mess #23339: if it's a local folder and it's
-				// the server, then it's supposed to mean the default folder.  But the backend
-				// doesn't deal with this properly.
-				mFolderIsDefault[kind] = true; // so we append the folder name when we write it out.
-			}
-#endif // HORRIBLE_HACK
 			XP_FREEIF(mFolderURL[kind]);
 			mFolderURL[kind] = newURL;
 			
-			LPane* paneShowingFolderText = FindPaneByID(descriptionPaneID);
-			// If it's one of the fcc preferences, we have to make sure the caption is changed
-			// because the server/local cases are different.  The checkbox will update to show
-			// the folder currently saved for that pref name.
-			if (mailOrNews)
-				FixCaptionNameForFCC(kind, mailOrNews, folder.IsIMAPMailFolder());
-			// Then we have to update the checkbox caption to reflect the actual folder the
-			// user has just selected..
-			UPrefControls::NoteSpecialFolderChanged(paneShowingFolderText, kind, folder);
+			PaneIDT ckID;
+			switch (inMessage)
+			{
+				case 'ChMF':
+					ckID = 12807;
+					break;
+				case 'ChNF':
+					ckID = 12809;
+					break;
+				case 'ChDF':
+					ckID = 'Drft';
+					break;
+				case 'ChTF':
+					ckID = 'Tmpl';
+					break;
+			}
+			LGACheckbox* checkbox = dynamic_cast<LGACheckbox*>(FindPaneByID(ckID));
+			UPrefControls::NoteSpecialFolderChanged(checkbox, kind, folder);
 		}
 	}
 } // CMailNewsOutgoingMediator::ListenToMessage
-
-#pragma mark -
 
 enum
 {
@@ -867,20 +688,6 @@ Boolean MServerListMediatorMixin::GetHostFromRow(
 } // CMailNewsMailServerMediator::GetHostFromRow
 
 //----------------------------------------------------------------------------------------
-void MServerListMediatorMixin::SetHostDataForRow(TableIndexT inRow, const CellContents& inCellData, UInt32 inDataSize) const
-//----------------------------------------------------------------------------------------
-{
-	TableIndexT rowCount, colCount;
-	mServerTable->GetTableSize(rowCount, colCount);
-	Assert_(inRow >0 && inRow <= rowCount);
-	STableCell cell(inRow, 1);
-	Uint32 cellDataSize = inDataSize;
-	mServerTable->SetCellData(cell, &inCellData, cellDataSize);
-	Assert_(cellDataSize >= inDataSize);
-} // CMailNewsMailServerMediator::GetHostFromRow
-
-
-//----------------------------------------------------------------------------------------
 Boolean MServerListMediatorMixin::GetHostFromSelectedRow(
 	CellContents& outCellData,
 	UInt32 inDataSize) const
@@ -891,90 +698,6 @@ Boolean MServerListMediatorMixin::GetHostFromSelectedRow(
 		return GetHostFromRow(currentCell.row, outCellData, inDataSize);
 	return false;
 } // CMailNewsMailServerMediator::GetHostFromRow
-
-
-//----------------------------------------------------------------------------------------
-Boolean MServerListMediatorMixin::HostExistsElsewhereInTable(const CStr255& inHostName, TableIndexT &ioHostRow) const
-//----------------------------------------------------------------------------------------
-{
-	Boolean		result = false;
-	
-	// Is this server name duplicated?
-	TableIndexT	rows, cols;
-	mServerTable->GetTableSize(rows, cols);
-
-	TableIndexT		ignoreRow = ioHostRow;
-	
-	for (STableCell cell(1, 1); cell.row <= rows; ++cell.row)
-	{
-		if (cell.row == ignoreRow)
-			continue;
-			
-		CellContents 	contents;
-		Uint32 			cellSize = sizeof(contents);
-		mServerTable->GetCellData(cell, &contents, cellSize);
-		
-		XP_ASSERT(sizeof(CellContents) <= cellSize);	// size in PPob is too small!
-		
-		if ( inHostName == contents.description )		// we have a duplicate server name.
-														// Uses CStr == operator, which is case insensitive
-		{
-			result = true;
-			ioHostRow = cell.row;
-			break;
-		}
-	}
-	
-	return result;
-
-} // CMailNewsMailServerMediator::GetHostFromRow
-
-//----------------------------------------------------------------------------------------
-void MServerListMediatorMixin::DeleteSelectedRow(Boolean inRefresh)
-//----------------------------------------------------------------------------------------
-{
-	STableCell currentCell = mServerTable->GetFirstSelectedCell();
-	if (currentCell.row)
-		mServerTable->RemoveRows(1, currentCell.row, inRefresh);
-		
-} // CMailNewsMailServerMediator::GetHostFromRow
-
-//----------------------------------------------------------------------------------------
-void MServerListMediatorMixin::UpdateSelectedRow(const CellContents& inCellData,
-										Uint32 inDataSize, Boolean inRefresh)
-//----------------------------------------------------------------------------------------
-{
-	STableCell currentCell = mServerTable->GetFirstSelectedCell();
-	if (currentCell.row)
-		SetHostDataForRow(currentCell.row, inCellData, inDataSize);
-	
-	if (inRefresh)
-		mServerTable->Refresh();
-		
-} // CMailNewsMailServerMediator::GetHostFromRow
-
-
-//----------------------------------------------------------------------------------------
-void MServerListMediatorMixin::AppendNewRow(const CellContents& inCellData,
-										Uint32 inDataSize, Boolean inRefresh)
-//----------------------------------------------------------------------------------------
-{
-	mServerTable->InsertRows(1, LArray::index_Last, &inCellData, inDataSize, inRefresh);
-		
-} // CMailNewsMailServerMediator::GetHostFromRow
-
-//----------------------------------------------------------------------------------------
-TableIndexT MServerListMediatorMixin::CountRows()
-//----------------------------------------------------------------------------------------
-{
-	TableIndexT		numRows, numCols;
-	
-	mServerTable->GetTableSize(numRows, numCols);
-	
-	return numRows;
-		
-} // CMailNewsMailServerMediator::GetHostFromRow
-
 
 //----------------------------------------------------------------------------------------
 void MServerListMediatorMixin::LoadMainPane()
@@ -1046,41 +769,11 @@ Boolean MServerListMediatorMixin::Listen(MessageT inMessage, void *ioParam)
 }
 
 //----------------------------------------------------------------------------------------
-/*static */Boolean MServerListMediatorMixin::ServerIsInCommaSeparatedList(
-					const char *inServerName, const char *inServerList)
+MServerListMediatorMixin::CellContents::CellContents(const char* inName)
 //----------------------------------------------------------------------------------------
 {
-	char	*listCopy;
-	char	*curToken;
-	Boolean	result = false;
-	
-	if (inServerList == NULL) return false;
-	
-	listCopy = XP_STRDUP(inServerList);		// since strtok modifies it
-	ThrowIfNil_(listCopy);
-	
-	curToken = XP_STRTOK(listCopy, ",");
-	
-	while (curToken != NULL)
-	{
-		// skip white space
-		while (*curToken && *curToken == ' ')
-			curToken ++;
-			
-		if (XP_STRCMP(inServerName, curToken) == 0)
-		{
-			result = true;
-			break;
-		}
-		
-		curToken = XP_STRTOK(NULL, ",");
-	}
-	
-	XP_FREE(listCopy);
-	return result;
+	*(CStr255*)&description[0] = inName;
 }
-
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 CServerListMediator::CServerListMediator(PaneIDT inMainPaneID)
@@ -1106,8 +799,6 @@ void CServerListMediator::ListenToMessage(MessageT inMessage, void *ioParam)
 		CPrefsMediator::ListenToMessage(inMessage, ioParam);
 }
 
-#pragma mark -
-
 enum
 {
 	POP3_PORT = 110,				/* the iana port for pop3 */
@@ -1120,53 +811,16 @@ CMailNewsMailServerMediator::CMailNewsMailServerMediator(LStream*)
 //----------------------------------------------------------------------------------------
 :	CServerListMediator(class_ID)
 ,	mServerType(eUnknownServerType)
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-,	mPOPServerName(nil)
-#endif
+,	mPopServerName(nil)
 {
-} // CMailNewsMailServerMediator::CMailNewsMailServerMediator
+}
 
 //----------------------------------------------------------------------------------------
 CMailNewsMailServerMediator::~CMailNewsMailServerMediator()
 //----------------------------------------------------------------------------------------
 {
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-	XP_FREEIF(mPOPServerName);
-#endif
+	XP_FREEIF(mPopServerName);
 }
-
-//----------------------------------------------------------------------------------------
-void CMailNewsMailServerMediator::SetPOPServerName(const CStr255& inName)
-//----------------------------------------------------------------------------------------
-{
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-	XP_FREEIF(mPOPServerName);
-	if (inName.Length() != 0)
-		mPOPServerName = XP_STRDUP(inName);
-#else // Now:
-	LEditField* editField = dynamic_cast<LEditField*>(FindPaneByID('SNAM'));
-	Assert_(editField);
-	if (editField)
-		editField->SetDescriptor(inName);
-#endif
-} // CMailNewsMailServerMediator::SetPOPServerName
-
-//----------------------------------------------------------------------------------------
-void CMailNewsMailServerMediator::GetPOPServerName(CStr255& outName) const
-//----------------------------------------------------------------------------------------
-{
-	outName[0] = 0;
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-	if (mPOPServerName)
-		outName = mPOPServerName;
-#else // Now:
-	LEditField* editField = dynamic_cast<LEditField*>(FindPaneByID('SNAM'));
-	Assert_(editField);
-	if (!editField)
-		return;
-	editField->GetDescriptor(outName);
-#endif
-} // CMailNewsMailServerMediator::GetPOPServerName
 
 //----------------------------------------------------------------------------------------
 Boolean CMailNewsMailServerMediator::NoAtSignValidationFunc(CValidEditField *noAtSign)
@@ -1176,6 +830,7 @@ Boolean CMailNewsMailServerMediator::NoAtSignValidationFunc(CValidEditField *noA
 	noAtSign->GetDescriptor(value);
 	unsigned char atPos = value.Pos("@");
 	if (atPos)
+	// еее FIX ME l10n. Why?  This is an email address
 	{
 		value.Delete(atPos, 256);		// if there is an at sign delete it
 		noAtSign->SetDescriptor(value);	// and anything after it
@@ -1185,29 +840,6 @@ Boolean CMailNewsMailServerMediator::NoAtSignValidationFunc(CValidEditField *noA
 	}
 	return true;
 } // CMailNewsMailServerMediator::NoAtSignValidationFunc
-
-//----------------------------------------------------------------------------------------
-/* static */ Boolean CMailNewsMailServerMediator::ValidateServerName(const CStr255& inServerName,
-							Boolean inNewServer, const CServerListMediator* inServerList)
-//----------------------------------------------------------------------------------------
-{
-	if (inServerName.IsEmpty())
-		return false;
-	
-	const CMailNewsMailServerMediator *theMediator = dynamic_cast<const CMailNewsMailServerMediator *>(inServerList);
-	ThrowIfNil_(theMediator);
-	
-	TableIndexT	foundRow = LArray::index_Bad;
-	
-	// Is this server name duplicated?
-	if (!inNewServer)
-	{
-		STableCell 	currentCell = theMediator->mServerTable->GetFirstSelectedCell();	// this must be the server we are editing
-		foundRow = currentCell.row;
-	}
-		
-	return ! theMediator->HostExistsElsewhereInTable(inServerName, foundRow);
-}
 
 //----------------------------------------------------------------------------------------
 void CMailNewsMailServerMediator::LoadMainPane()
@@ -1221,44 +853,21 @@ void CMailNewsMailServerMediator::LoadMainPane()
 void CMailNewsMailServerMediator::LoadPrefs()
 //----------------------------------------------------------------------------------------
 {
-	// Check whether this is the first call on entry (we call LoadPrefs more than once).
-	if (mServerType == eUnknownServerType)
-	{
-		int32 serverType = eUnknownServerType;
-		int32 prefResult = PREF_GetIntPref("mail.server_type", &serverType);
-		ThrowIf_(prefResult != PREF_NOERROR);
-		mServerType = (ServerType)serverType;
-	}
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
+	int32 serverType = eUnknownServerType;
+	int32 prefResult = PREF_GetIntPref("mail.server_type", &serverType);
+	mServerType = (ServerType)serverType;	
 	if (mServerType == ePOPServer)
 	{
 		char* value = nil;
-		int32 prefResult = PREF_CopyCharPref("network.hosts.pop_server", &value);
+		int	prefResult = PREF_CopyCharPref("network.hosts.pop_server", &value);
 		if (prefResult == PREF_NOERROR && value)
 			if (*value)
-				mPOPServerName = value;
+				mPopServerName = value;
 			else
 				XP_FREE(value);
 	}
-#endif
 	mServersLocked = PREF_PrefIsLocked("network.hosts.pop_server")
-					|| PREF_PrefIsLocked("mail.server_type")
-					|| PREF_PrefIsLocked("mail.server_type_on_restart");
-
-	// Make sure there's a default value
-	Boolean userNameLocked = PaneHasLockedPref(eMailServerUserNameField);
-	LEditField* popUserNameField =
-			dynamic_cast<LEditField*>(FindPaneByID(eMailServerUserNameField));
-	if (popUserNameField && !userNameLocked)
-	{
-		CStr255 username;
-		popUserNameField->GetDescriptor(username);
-		if (username.Length() == 0)
-		{
-			UGetInfo::GetDefaultUserName(username);
-			popUserNameField->SetDescriptor(username);
-		}
-	}
+					|| PREF_PrefIsLocked("mail.server_type");
 
 	LoadList();
 } // CMailNewsMailServerMediator::LoadPrefs
@@ -1274,22 +883,18 @@ void CMailNewsMailServerMediator::WritePrefs()
 void CMailNewsMailServerMediator::UpdateFromIC()
 //----------------------------------------------------------------------------------------
 {
-	
 	SetEditFieldsWithICPref(kICSMTPHost, eSMTPServerField, true);
 	Boolean userNameLocked = PaneHasLockedPref(eMailServerUserNameField);
 
-	LEditField* popUserNameField = (LEditField*)FindPaneByID(eMailServerUserNameField);
-	Assert_(popUserNameField);
-	
 	if ((userNameLocked && mServersLocked) || !UseIC())
-	{
-		popUserNameField->Enable();
 		return;
-	}
 
-	Str255	s;
-	long	port = POP3_PORT;		// port is only returned if the user has a
-									// :port after the server name in IC. Use POP as default
+	LEditField* popUserNameField =
+			(LEditField*)FindPaneByID(eMailServerUserNameField);
+	Assert_(popUserNameField);
+
+	Str255 s;
+	long port;
 	CInternetConfigInterface::GetInternetConfigString(	kICMailAccount,
 														s,
 														&port);
@@ -1309,7 +914,7 @@ void CMailNewsMailServerMediator::UpdateFromIC()
 	if (server)
 	{
 		server[0] = s[0] - i+1;
-		s[0] =  i-2 ;
+		s[0] = s[0] - i-1;
 		user = s;
 	}
 	else
@@ -1320,58 +925,22 @@ void CMailNewsMailServerMediator::UpdateFromIC()
 		popUserNameField->SetDescriptor(user);
 		popUserNameField->SelectAll();
 	}
-	
 	popUserNameField->Disable();
-	
 	if (!mServersLocked)
 	{
-		
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-		XP_FREEIF(mPOPServerName);
-#endif
-
+		ClearList();
+		XP_FREEIF(mPopServerName);
 		if (port == POP3_PORT)
 		{
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-			mPOPServerName = XP_STRDUP((const char*)(CStr255)server);
-#endif
-
-			// If there is just one server, and there is no inbox yet,
-			// then set up that server from IC
-			if (CountRows() <= 1 && CMailNewsContext::UserHasNoLocalInbox())
-			{
-				SetPOPServerName(server);
-				mServerType = ePOPServer;
-				
-				CStr255			serverName(server);
-				CellContents	cellData(serverName);
-				
-				if (CountRows() == 0)
-					AppendNewRow(cellData, sizeof(CellContents));
-				else
-					SetHostDataForRow(1, cellData, sizeof(CellContents));
-			}
-			
+			mPopServerName = XP_STRDUP((const char*)(CStr255)server);
+			mServerType = ePOPServer;
 		}
 		else
 		{
-			// Only change the IMAP server settings if this is a new profile
-			//	Change the cell data to show the new server name, and refresh.
-		
-			if (CountRows() <= 1 && CMailNewsContext::UserHasNoLocalInbox())
-			{
-				CStr255			serverName(server);
-				CellContents	cellData(serverName);
-				
-				if (CountRows() == 0)
-					AppendNewRow(cellData, sizeof(CellContents));
-				else
-					SetHostDataForRow(1, cellData, sizeof(CellContents));
-					
-				mServerType = eIMAPServer;
-			}
-			
+			PREF_SetCharPref("network.hosts.imap_servers", (const char*)(CStr255)server);
+			mServerType = eIMAPServer;
 		}
+		LoadList(); // rebuild the list, which will now show the new server.
 	}
 } // CMailNewsMailServerMediator::UpdateFromIC
 
@@ -1399,53 +968,63 @@ void CMailNewsMailServerMediator::AddButton()
 		ErrorManager::PlainAlert(GetPString(MK_POP3_ONLY_ONE + RES_OFFSET));
 		return;
 	}
-	
-	CStr255 	serverName; // constructor sets to empty string.
-	Boolean		allowServerTypeEdit = CountRows() == 0;
-	Boolean		usePop = CountRows() == 0;
-	
-	// Pass this in as the super commander, because we want to defer the destruction
-	// of the get info dialog. This is because we don't want to commit its prefs unless the
-	// user OKs the whole prefs dialog.
-	if (UGetInfo::ConductMailServerInfoDialog(serverName, usePop, true, true,
-					allowServerTypeEdit, UGetInfo::kSubDialogOfPrefs, ValidateServerName, this, this))
-	{
-		NoteServerChanges(usePop, serverName);
+	CStr255 serverName; // constructor sets to empty string.
+#ifdef PRELIMINARY_DIALOG
+	{ 	// <-----Start scope for name/type dialog
+		// Put up the dialog to get the name and type...
+		// If
+		MPreferenceBase::StWriteOnDestroy setter2(false);
+		StDialogHandler handler(12011, nil);
+		LWindow* dialog = handler.GetDialog();
+		LGAEditField* nameField = (LGAEditField*)dialog->FindPaneByID('NAME');
+		SignalIf_(!nameField);
+		if (!nameField)
+			return;
+		LGARadioButton* popButton = (LGARadioButton*)dialog->FindPaneByID('POP3');
+		SignalIf_(!popButton);
+		if (!popButton)
+			return;
+		if (rows == 0)
+		{
+			// default for first server is POP
+			popButton->SetValue(1);
+		}
+		else
+		{
+			// If they already have a server (and to get here, it must be IMAP) then
+			// the POP button must be disabled (it is off and enabled by default
+			// in the resource).
+			popButton->Disable();
+		}
 		
-		CellContents	cellData(serverName);
-		AppendNewRow(cellData, sizeof(CellContents));
-	}
-	
-} // CMailNewsMailServerMediator::AddButton
-
-//----------------------------------------------------------------------------------------
-void CMailNewsMailServerMediator::NoteServerChanges(Boolean inPOP, const CStr255& inServerName)
-//----------------------------------------------------------------------------------------
-{
-	mServerType = inPOP ?  ePOPServer : eIMAPServer;
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-	// Since the server info dialog writes out the new stuff immediately, for consistency
-	// we should make these prefs take effect immediately also.  This means that "cancel"
-	// doesn't, even more.
-	if (inPOP && inServerName.Length() > 0)
+		// Run the dialog
+		MessageT message = msg_Nothing;
+		dialog->Show();
+		do {
+			message = handler.DoDialog();
+		} while (message != msg_OK && message != msg_Cancel);
+		if (message == msg_Cancel)
+			return;
+		nameField->GetDescriptor(serverName);
+		mServerType = popButton->GetValue() ? ePOPServer : eIMAPServer;
+	} // <-----End scope for name/type dialog
+#endif // PRELIMINARY_DIALOG
+	Boolean usePOP = (mServerType == ePOPServer);
+	if (UGetInfo::ConductMailServerInfoDialog(
+		serverName,
+		usePOP,
+		true))
 	{
-		SetPOPServerName(inServerName);
-		int32 prefResult = PREF_SetCharPref("network.hosts.pop_server", inServerName);
-		ThrowIf_(prefResult < PREF_NOERROR); // PREF_VALUECHANGED = 1 is expected!
+		mServerType = usePOP ?  ePOPServer : eIMAPServer;
+		if (usePOP)
+		{
+			XP_FREEIF(mPopServerName);
+			mPopServerName = XP_STRDUP(serverName);
+		}
+		LoadPrefs();
+		mServerTable->Refresh();
 	}
-	int32 prefResult = PREF_SetIntPref("mail.server_type_on_restart", mServerType);
-	ThrowIf_(prefResult < PREF_NOERROR); // PREF_VALUECHANGED = 1 is expected!
-	// In Nova, we are attempting to make "convert immediately" work! so here goes:
-	prefResult = PREF_SetIntPref("mail.server_type", mServerType);
-	ThrowIf_(prefResult < PREF_NOERROR);
-#else
-	// Now.
-	// Because of historic XP code, you have to have a POP server name, even for IMAP.  So
-	// we might as well always set it to be the same as the IMAP server name.
-	if (! inServerName.IsEmpty())
-		SetPOPServerName(inServerName); // set the invisible server name field.
-#endif
-}
+} // CMailNewsMailServerMediator::AddButton
 
 //----------------------------------------------------------------------------------------
 void CMailNewsMailServerMediator::EditButton()
@@ -1453,129 +1032,121 @@ void CMailNewsMailServerMediator::EditButton()
 // item and pop up a dialog to edit this server. The OK/Cancel is handled in ObeyCommand().
 //----------------------------------------------------------------------------------------
 {
-	CellContents	contents;
+	CellContents contents;
 	GetHostFromSelectedRow(contents, sizeof(CellContents));
 	Boolean usePOP = (mServerType == ePOPServer);
-	
-	// Allow them to edit the server name the first time through after setup.
-	// Use the doCreate parameter for this.
-	Boolean isNewServer = false;
-	Boolean	allowServerNameEdit = (usePOP || CMailNewsContext::UserHasNoLocalInbox());
-	Boolean	allowServerTypeEdit = allowServerNameEdit || (CountRows() == 1);
-	
 	if (UGetInfo::ConductMailServerInfoDialog(
-			contents.description,
+			(CStr255&)contents.description,
 			usePOP,
-			isNewServer,
-			allowServerNameEdit,
-			allowServerTypeEdit,
-			UGetInfo::kSubDialogOfPrefs,
-			(allowServerTypeEdit) ? ValidateServerName : nil,
-			(allowServerTypeEdit) ? this : nil,
-			this))
+			false))
 	{
-		NoteServerChanges(usePOP, contents.description);
+		mServerType = usePOP ?  ePOPServer : eIMAPServer;
 	}
-	
-	// Update the cell contents to save the handler
-	UpdateSelectedRow(contents, sizeof(CellContents));
-		
-	
 } // CMailNewsMailServerMediator::EditButton
 
 //----------------------------------------------------------------------------------------
 void CMailNewsMailServerMediator::DeleteButton()
 //----------------------------------------------------------------------------------------
 {
-	CellContents	cellData;
-	UInt32			dataSize = sizeof(CellContents);
-	Boolean			showWarning = false;
-	
-	GetHostFromSelectedRow(cellData, dataSize);
-	Assert_(dataSize <= sizeof(CellContents));
-	if (! UsingPop())
+	CellContents contents;
+	GetHostFromSelectedRow(contents, sizeof(CellContents));
+	if (UStdDialogs::AskOkCancel(
+		GetPString(MK_MSG_REMOVE_MAILHOST_CONFIRM + RES_OFFSET)))
 	{
-		char 	*curServerList = nil;
-		PREF_CopyCharPref("network.hosts.imap_servers", &curServerList);
-		
-		showWarning = ServerIsInCommaSeparatedList(cellData.description, curServerList);
-		XP_FREEIF(curServerList);
+		if (UsingPop())
+		{
+			XP_FREEIF(mPopServerName);
+		}
+		else
+		{
+			::MSG_DeleteIMAPHost(
+				CMailNewsContext::GetMailMaster(),
+				FindMSG_Host((const char*)(CStr255)contents.description));
+		}
+		LoadList();
+		mServerTable->Refresh();
+		UpdateButtons();
 	}
-	
-	if (showWarning && !UStdDialogs::AskOkCancel(GetPString(MK_MSG_REMOVE_MAILHOST_CONFIRM + RES_OFFSET)))
-		return;
-
-	if (UsingPop())
-		SetPOPServerName("mail");
-		
-	DeleteSelectedRow();
-
-	UpdateButtons();
-	
 } // CMailNewsMailServerMediator::DeleteButton
 
 //----------------------------------------------------------------------------------------
+MSG_IMAPHost* CMailNewsMailServerMediator::FindMSG_Host(const char* inHostName)
+// Back end will match only on the name, so pass garbage for all the other
+// parameters.
+//----------------------------------------------------------------------------------------
+{
+	return ::MSG_CreateIMAPHost(
+							CMailNewsContext::GetMailMaster(),
+							inHostName,
+							false, // XP_Bool isSecure,
+							nil, //const char *userName,
+							false, // XP_Bool checkNewMail,
+							0, // int	biffInterval,
+							false, // XP_Bool rememberPassword,
+							false, // XP_Bool usingSubscription,
+							false, //XP_Bool overrideNamespaces,
+							nil, // const char *personalOnlineDir,
+							nil, // const char *publicOnlineDir,
+							nil //const char *otherUsersOnlineDir
+							);
+}
+
+//----------------------------------------------------------------------------------------
 void CMailNewsMailServerMediator::LoadList()
-// This should only be called once when loading the prefs now
 //----------------------------------------------------------------------------------------
 {
 	ClearList();
 	if (UsingPop())
 	{
-		CStr255 serverName;
-		GetPOPServerName(serverName);
-		
-		// set empty server name to something useful
-		Assert_( ! serverName.IsEmpty() );
-		
-		if (! serverName.IsEmpty())
+		if (mPopServerName)
 		{
-			CellContents contents(serverName);
+			CellContents contents(mPopServerName);
 			mServerTable->InsertRows(
 				1, LArray::index_Last,
 				&contents, sizeof(CellContents), false);
 		}
+		return;
 	}
-	else
+	char *serverList = nil;
+	PREF_CopyCharPref("network.hosts.imap_servers", &serverList);
+	if (serverList)
 	{
-		char *serverList = nil;
-		PREF_CopyCharPref("network.hosts.imap_servers", &serverList);
-		if (serverList)
+		char *serverPtr = serverList;
+		while (serverPtr)
 		{
-			char *serverPtr = serverList;
-			while (serverPtr)
-			{
-				char *endPtr = XP_STRCHR(serverPtr, ',');
-				if (endPtr)
-					*endPtr++ = '\0';
-				CellContents cell(serverPtr);
-				mServerTable->InsertRows(1, LArray::index_Last, &cell, sizeof(CellContents), false);
-				serverPtr = endPtr;
-			}
-			XP_FREE(serverList);
+			char *endPtr = XP_STRCHR(serverPtr, ',');
+			if (endPtr)
+				*endPtr++ = '\0';
+			CellContents cell(serverPtr);
+			mServerTable->InsertRows(1, LArray::index_Last, &cell, sizeof(CellContents), false);
+			serverPtr = endPtr;
 		}
+		XP_FREE(serverList);
 	}
-	// Refreshing is redundant the first time, but necessary when called after a server info dlg.
-	mServerTable->Refresh();
 } // CMailNewsMailServerMediator::LoadList
 
 //----------------------------------------------------------------------------------------
 void CMailNewsMailServerMediator::WriteList()
+// Here's what we're doing currently.  We're allowing the properties dialogs to write out
+// their preferences each time they are dismissed.  The bad thing about this is that "Cancel"
+// on the prefs window will not cancel the results of all the properties dialogs that have
+// been made.  Instead, we write out the list of IMAP servers.  Some of the properties dialogs
+// may be orphaned by this, in the sense that we will have written out preferences for servers
+// that are not currently on the server list.  I think this might be acceptable, since these
+// servers will not be used by the back end.  Their properties will remain dormant till
+// the server is again added to the list.
 //----------------------------------------------------------------------------------------
 {
 	TableIndexT	rows, cols;
 	mServerTable->GetTableSize(rows, cols);
-	if (mServersLocked)
+	if (rows == 0 || mServersLocked)
 		return;
-	
-	StSpinningBeachBallCursor		beachBall;		// because making new servers can take some time
-
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-	if (mServerType == ePOPServer && mPOPServerName && *mPOPServerName)
-	CStr255 serverName;
-	GetPOPServerName(serverName);
-	NoteServerChanges(mServerType, serverName);
-#endif
+	PREF_SetIntPref("mail.server_type", mServerType);
+	if (mServerType == ePOPServer)
+	{
+		PREF_SetCharPref("network.hosts.pop_server", mPopServerName);
+		return;
+	}
 #if 0
 	// There may be no need to do this. The back end updates the list after every
 	// add and delete.
@@ -1585,169 +1156,13 @@ void CMailNewsMailServerMediator::WriteList()
 		CellContents contents;
 		Uint32 cellSize = sizeof(contents);
 		mServerTable->GetCellData(cell, &contents, cellSize);
-		XP_ASSERT(sizeof(CellContents) == cellSize);
+		XP_ASSERT(sizeof(cell) == cellSize);
 		if (cell.row > 1)
-			StrAllocCat(serverList, ",");
+			StrAllocCat(serverList, ",");		
 		StrAllocCat(serverList, (const char*)(CStr255)contents.description);
 	}
 	PREF_SetCharPref("network.hosts.imap_servers", serverList);
 #endif // 0
-
-	
-	char	*newServerList = XP_STRDUP("");
-	char 	*oldServerList = nil;
-	PREF_CopyCharPref("network.hosts.imap_servers", &oldServerList);	
-	
-	if ( UsingPop() )
-	{
-		// the invisible POP server name field in the prefs dialog writes itself out,
-		// so we have nothing to do but to remove deleted IMAP servers
-	}
-	else		// IMAP
-	{
-		// Here is where we actually write out the changed mail server prefs.
-		// The strategy is:		Get the string of servers from the (old) prefs
-		// 						For each server in the string, see if it's in our list
-		//							If not, delete it
-		//							If yes, we need do nothing.
-		//	Servers in our list which are not in the prefs are added.
-
-#ifdef BEFORE_INVISIBLE_POPSERVER_NAME_EDITFIELD_TRICK_WAS_THOUGHT_OF
-		// nothing
-#else
-		// Make sure the pop_server does not write out when using IMAP
-		MPreferenceBase::SetPaneWritePref(sWindow, 'SNAM', false);
-#endif
-	
-		// The backend has a callback on mail.server_type, which will get called
-		// when we write out the temp prefs buffer on closing the prefs dialog.
-		// So, to avoid duplicate hosts being created by this callback, we need
-		// to set the mail.server_type pref here if necessary.
-		
-		if (!oldServerList || !*oldServerList)	// no IMAP servers at the moment
-		{
-			int	prefError = PREF_SetIntPref("mail.server_type", eIMAPServer);
-			Assert_(prefError == PREF_NOERROR || prefError == PREF_VALUECHANGED);
-			
-			// double check
-			PREF_CopyCharPref("network.hosts.imap_servers", &oldServerList);
-		}
-
-		for (STableCell cell(1, 1); cell.row <= rows; ++cell.row)
-		{
-			CellContents 	contents;
-			Uint32 			cellSize = sizeof(CellContents);
-			
-			mServerTable->GetCellData(cell, &contents, cellSize);
-			Assert_(sizeof(CellContents) <= cellSize);
-			
-			// skip cells with empty text
-			if (contents.description.Length() == 0)
-				continue;
-			
-			// If the host does not exist, create it
-			if ( ! ServerIsInCommaSeparatedList(contents.description, oldServerList) )
-			{
-				const char* 	userNameString = XP_STRDUP("");		// its filled in when the prefs are saved
-				const char* 	serverNameString = XP_STRDUP(contents.description);
-				
-				// get user name from internet config if necessary
-				if (UseIC())
-				{
-					CStr255		userAtHostString;
-					long		port;
-					
-					CInternetConfigInterface::GetInternetConfigString(	kICMailAccount,
-														userAtHostString,
-														&port);
-					if ( !userAtHostString.IsEmpty() )
-					{
-						unsigned char atPos = userAtHostString.Pos("@");
-						
-						if (atPos > 0)
-						{
-							userAtHostString[0] = atPos - 1;
-							
-							XP_FREEIF(const_cast<char *>(userNameString));
-							userNameString = XP_STRDUP(userAtHostString);
-						}
-					}
-				}
-			
-				try
-				{
-					ThrowIfNil_(userNameString);
-					ThrowIfNil_(serverNameString);
-					
-					if (::MSG_GetIMAPHostByName(CMailNewsContext::GetMailMaster(), serverNameString))
-						Assert_(false);
-					else
-						::MSG_CreateIMAPHost(
-							CMailNewsContext::GetMailMaster(),
-							serverNameString,
-							false,				// XP_Bool isSecure,
-							userNameString,		// const char *userName,
-							false,			// XP_Bool checkNewMail,
-							0,				// int	biffInterval,
-							false,			// XP_Bool rememberPassword,
-							true,			// XP_Bool usingSubscription,
-							false,			// XP_Bool overrideNamespaces,
-							nil,			// const char *personalOnlineDir,
-							nil,			// const char *publicOnlineDir,
-							nil				// const char *otherUsersOnlineDir
-							);
-				}
-				catch (...)
-				{
-				}
-				XP_FREEIF(const_cast<char*>(userNameString));
-				XP_FREEIF(const_cast<char*>(serverNameString));
-			}
-			
-			// save the name in the new servers list
-			if (cell.row > 1)
-				StrAllocCat(newServerList, ",");
-				
-			StrAllocCat(newServerList, (const char*)(CStr255)contents.description);
-		}
-	}		// using IMAP
-	
-	// Now handle deleted servers, which are in the old list but not the new
-	if (oldServerList)
-	{
-		char *serverPtr = oldServerList;
-		while (serverPtr)
-		{
-			
-			char *endPtr = XP_STRCHR(serverPtr, ',');
-			if (endPtr)
-				*endPtr++ = '\0';
-			
-			if ( (*newServerList == 0) || !ServerIsInCommaSeparatedList(serverPtr, newServerList) )
-			{
-				// delete the server
-				::MSG_DeleteIMAPHostByName(CMailNewsContext::GetMailMaster(), serverPtr);
-			}
-
-			serverPtr = endPtr;
-		}
-	}
-	
-	XP_FREEIF(oldServerList);
-	XP_FREEIF(newServerList);
-	
-	// Did the user delete all their servers? Silly thing, let's make amends
-	if (rows == 0)
-	{
-		// set the pop server name back to the default
-		SetPOPServerName("mail");
-		
-		// just to make damn sure
-		MPreferenceBase::SetPaneWritePref(sWindow, 'SNAM', true);
-		::PREF_SetIntPref("mail.server_type", ePOPServer);
-	}
-
-	
 } // CMailNewsMailServerMediator::WriteList
 
 enum
@@ -1758,8 +1173,6 @@ enum
 	eNotifyLargeDownloadBox,
 	eNotifyLargeDownloadEditField
 };
-
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 CMailNewsNewsServerMediator::CMailNewsNewsServerMediator(LStream*)
@@ -1823,16 +1236,11 @@ void CMailNewsNewsServerMediator::UpdateFromIC()
 		CInternetConfigInterface::GetInternetConfigString(kICNNTPHost, serverName, &port);
 		
 		// Create or find the host
-		char* cserverName = XP_STRDUP(serverName);
-		if (cserverName)
-		{
-			MSG_NewsHost* host = ::MSG_CreateNewsHost(
+		MSG_NewsHost* host = ::MSG_CreateNewsHost(
 								CMailNewsContext::GetMailMaster(),
 								serverName,
 								port == eNNTPSecurePort,
 								port);
-			XP_FREE(cserverName);
-		}
 		// Stick it in the list by rebuilding the list
 		LoadList();
 	}
@@ -1852,8 +1260,6 @@ void CMailNewsNewsServerMediator::AddButton()
 // OK/Cancel is handled in ObeyCommand().
 //----------------------------------------------------------------------------------------
 {
-	// This creates the host in the BE straight away. This needs to be re-written so
-	// that host changes are only committed when the user OKs the prefs dialog
 	CNewsSubscriber::DoAddNewsHost();
 	LoadPrefs();
 	mServerTable->Refresh();
@@ -1867,16 +1273,7 @@ void CMailNewsNewsServerMediator::EditButton()
 {
 	CellContents contents;
 	GetHostFromSelectedRow(contents, sizeof(CellContents));
-	
-	StDialogHandler		*dialogHandler = nil;
-	
-	if (UGetInfo::ConductNewsServerInfoDialog(contents.serverData, this))
-	{
-		// Fix me. News server changes take place right away, so are not handled like
-		// the rest of the prefs. See CMailNewsMailServerMediator for the way it
-		// should work
-	}
-	
+	UGetInfo::ConductNewsServerInfoDialog(contents.serverData);
 } // CMailNewsNewsServerMediator::EditButton
 
 //----------------------------------------------------------------------------------------
@@ -1885,15 +1282,11 @@ void CMailNewsNewsServerMediator::DeleteButton()
 {
 	CellContents contents;
 	GetHostFromSelectedRow(contents, sizeof(CellContents));
-	
-	// This deletes the host in the BE straight away. This needs to be re-written so
-	// that host changes are only committed when the user OKs the prefs dialog
-
 	::MSG_DeleteNewsHost(CMailNewsContext::GetMailMaster(),
 				MSG_GetNewsHostFromMSGHost(contents.serverData));
 	LoadList();
+	mServerTable->Refresh();
 	UpdateButtons();
-	
 } // CMailNewsNewsServerMediator::DeleteButton
 
 //----------------------------------------------------------------------------------------
@@ -1970,8 +1363,6 @@ void CMailNewsNewsServerMediator::LoadList()
 		CellContents contents(name, host);
 		mServerTable->InsertRows(1, LArray::index_Last, &contents, sizeof(CellContents), false);
 	}
-	// Refreshing is redundant the first time, but necessary when called after a server info dlg.
-	mServerTable->Refresh();
 } // CMailNewsNewsServerMediator::LoadList
 
 //----------------------------------------------------------------------------------------
@@ -1990,8 +1381,6 @@ enum
 	eFirstLastRButton = 13107,
 	eLastFirstRButton = 13108
 };
-
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 CMailNewsDirectoryMediator::CMailNewsDirectoryMediator(LStream*)
@@ -2024,13 +1413,11 @@ void CMailNewsDirectoryMediator::EditButton()
 //----------------------------------------------------------------------------------------
 {
 	// get the data
-	STableCell 		currentCell;
-	CellContents 	cell;
-	
+	STableCell currentCell;
+	CellContents cell;
 	currentCell = mServerTable->GetFirstSelectedCell();
 	XP_ASSERT(currentCell.row);
-	
-	Uint32 			cellDataSize = sizeof(CellContents);
+	Uint32 cellDataSize = sizeof(CellContents);
 	mServerTable->GetCellData(currentCell, &cell, cellDataSize);
 	XP_ASSERT(cellDataSize == sizeof(CellContents));
 
@@ -2174,7 +1561,8 @@ Boolean CMailNewsDirectoryMediator::ObeyCommand( CommandT inCommand, void* ioPar
 				DIR_DeleteServer(cell.serverData);
 				
 				// ...then add the new one
-				cell.description = newServer->description;
+				cell.description[0] = strlen(newServer->description);
+				strcpy((char *)&(cell.description[1]), newServer->description);
 				cell.serverData = newServer;
 				mServerTable->SetCellData(currentCell, &cell, cellDataSize);
 			}
@@ -2277,11 +1665,8 @@ enum
 	eIncrementMenu,
 	eDaysRButton,
 	eDaysEditField,
-	eSelectMessageButton
-//	eSelectMessageFolderPopup
+	eSelectMessageFolderPopup
 };
-
-#pragma mark -
 
 //----------------------------------------------------------------------------------------
 COfflineNewsMediator::COfflineNewsMediator(LStream*)
@@ -2346,74 +1731,14 @@ void COfflineNewsMediator::LoadMainPane()
 }
 
 //----------------------------------------------------------------------------------------
-//void COfflineNewsMediator::WritePrefs()
-//----------------------------------------------------------------------------------------
-//{
-//	CSelectFolderMenu* selectPopup =
-//		(CSelectFolderMenu*)FindPaneByID(eSelectMessageFolderPopup);
-//	XP_ASSERT(selectPopup);
-//	selectPopup->CommitCurrentSelections();
-//}
-
-//----------------------------------------------------------------------------------------
-void	COfflineNewsMediator::ListenToMessage(MessageT inMessage, void *ioParam)
+void COfflineNewsMediator::WritePrefs()
 //----------------------------------------------------------------------------------------
 {
-	switch (inMessage)
-	{
-		case eSelectMessageButton:
-			COfflinePickerWindow::DisplayDialog();
-			break;
-
-		default:
-			Inherited::ListenToMessage(inMessage, ioParam);
-			break;
-	}
+	CSelectFolderMenu* selectPopup =
+		(CSelectFolderMenu*)FindPaneByID(eSelectMessageFolderPopup);
+	XP_ASSERT(selectPopup);
+	selectPopup->CommitCurrentSelections();
 }
 
-#pragma mark -
+#endif // MOZ_LITE
 
-//----------------------------------------------------------------------------------------
-void CMailNewsAddressingMediator::LoadPrefs()
-//----------------------------------------------------------------------------------------
-{
-	
-	// Build popup menu and data
-	LGAPopup* popup = dynamic_cast<LGAPopup*>(FindPaneByID( eDirectoryPopup ) );
-	Assert_( popup );
-	MenuHandle menu = popup->GetMacMenuH();
-	mLDAPList = XP_ListNew();
-	XP_List	*directories = CAddressBookManager::GetDirServerList();
-	
-	DIR_GetLdapServers( directories, mLDAPList )	;
-	int16 selected = 0;
-	int32 i = 0;
-	if (XP_ListCount(mLDAPList))
-	{
-		DIR_Server	*server;
-		XP_List*  listIterator = mLDAPList;
-		while ( (server = (DIR_Server *)XP_ListNextObject(listIterator) ) != 0 )
-		{
-
-			CStr255 description(server->description);
-			
-			Int16 index =  UMenuUtils::AppendMenuItem( menu, description, true);
-			if(  DIR_TestFlag( server, DIR_AUTO_COMPLETE_ENABLED) )
-				selected = index;
-		}
-	}
-	popup->SetPopupMinMaxValues();
-	popup->SetValue( selected );
-}
-
-//----------------------------------------------------------------------------------------
-void CMailNewsAddressingMediator::WritePrefs()
-//----------------------------------------------------------------------------------------
-{
-	LGAPopup* popup = dynamic_cast<LGAPopup*>(FindPaneByID( eDirectoryPopup ));
-	Int32 index = popup->GetValue();
-	DIR_Server* server  = (DIR_Server*)XP_ListGetObjectNum( mLDAPList, index );
-	if ( server )
-		DIR_SetAutoCompleteEnabled( mLDAPList, server, true );
-} 
-#endif // MOZ_MAIL_NEWS

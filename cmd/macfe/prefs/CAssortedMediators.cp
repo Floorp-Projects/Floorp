@@ -85,8 +85,1281 @@ extern "C"
 	#include "CMailNewsContext.h"
 	#include "CMailProgressWindow.h"
 #endif
-#endif
+#endif // MOZ_MAIL_NEWS
 
+#pragma mark ---CMIMEListPane---
+//======================================
+class CMIMEListPane : public LTable, public LCommander, public LBroadcaster
+//======================================
+{
+public:
+
+	enum
+	{
+		class_ID = 'MmLP',
+		msg_SelectionChanged = 'Sel∆',	// ioparam = this
+		msg_DoubleClick = '2Clk'		// ioparam = this
+	};
+
+	class PrefCellInfo
+	{
+		public:
+					PrefCellInfo();
+					PrefCellInfo(CMimeMapper* mapper, CApplicationIconInfo* iconInfo); 
+
+		CMimeMapper*	fMapper;			// The mapper from the preference MIME list
+		CApplicationIconInfo* fIconInfo;	// Information about icon to draw
+	};
+
+	// •• Constructors/destructors/access
+
+						CMIMEListPane(LStream *inStream);
+	void				FinishCreateSelf();
+	void 				BindCellToApplication(TableIndexT row, CMimeMapper * mapper);
+	CApplicationIconInfo* GetAppInfo(CMimeMapper* mapper);
+	
+	// •• access
+//#if defined(QAP_BUILD)
+//	virtual void			QapGetContents(PWCINFO pwc, short *pCount, short max);
+//	virtual void			QapGetListInfo(PQAPLISTINFO pInfo);
+//	virtual short			QapGetListContents(Ptr pBuf, short index);
+//#endif	
+
+//	void				SetContainer( CPrefHelpersContain* container) { fContainer = container; }
+	void				GetCellInfo(PrefCellInfo& cellInfo, int row);
+	void				FreeMappers();
+	Boolean				MimeTypeExists(CMimeMapper* mapper);
+
+	// •• Cell selection
+	void				DrawCell( const TableCellT& inCell );
+	void				SelectCell( const TableCellT& inCell );
+	virtual	void		ClickCell(	const TableCellT& inCell,
+									const SMouseDownEvent& inMouseDown);
+
+	// Drawing
+	virtual void		DrawSelf();
+	virtual void		HiliteCell(const TableCellT &inCell);
+	virtual void		UnhiliteCell(const TableCellT &inCell);
+			void 		ScrollCellIntoFrame(const TableCellT& inCell);
+	virtual	void		ActivateSelf();
+
+	// Events
+	virtual Boolean		HandleKeyPress(const EventRecord &inKeyEvent);
+
+protected:
+	CApplicationList			mApplList;		// List of application and their icons
+//	CPrefHelpersContain*		fContainer;		// Containing view
+	Handle						mNetscapeIcon;	// Icon for Netscape
+	Handle						mPluginIcon;	// Icon for plug-ins
+}; // class CMIMEListPane
+
+
+#define msg_LaunchRadio		300		// Launch option changed
+#define msg_BrowseApp		301		// Pick a new application
+#define msg_FileTypePopup 	302		// New file type picked
+//msg_EditField						// User typed in a field
+#define msg_NewMimeType		303		// New Mime type
+#define msg_NewMimeTypeOK	305		// Sent by newMimeType dialog window
+//#define msg_ClearCell		306
+#define msg_EditMimeType	307		// Edit Mime type
+#define msg_DeleteMimeType	308		// Delete Mime type
+#define msg_PluginPopup		309		// Pick a plug-in
+
+//-----------------------------------
+CMIMEListPane::CMIMEListPane(LStream *inStream)
+//-----------------------------------
+:
+//fContainer(nil),
+mNetscapeIcon(nil),
+mPluginIcon(nil),
+LTable(inStream)
+{
+}
+
+//-----------------------------------
+void CMIMEListPane::FinishCreateSelf()
+//-----------------------------------
+{
+	SetCellDataSize(sizeof(PrefCellInfo));
+	
+	for (TableIndexT i = 1; i <= CPrefs::sMimeTypes.GetCount(); i++)	// Insert a row for each mime type
+	{
+		CMimeMapper * mime;
+		CPrefs::sMimeTypes.FetchItemAt(i, &mime);
+		ThrowIfNil_(mime);
+		if (!mime->IsTemporary())
+		{
+			CMimeMapper * duplicate = new CMimeMapper(*mime);
+			PrefCellInfo cellInfo;
+			InsertRows(1, i, &cellInfo);
+			BindCellToApplication(i, duplicate);
+		}
+	}
+	
+	// Cache a handle to the Navigator application icon
+	CApplicationIconInfo* netscapeInfo = mApplList.GetAppInfo(emSignature);
+	ThrowIfNil_(netscapeInfo);
+	ThrowIfNil_(netscapeInfo->fDocumentIcons);
+	mNetscapeIcon = netscapeInfo->fApplicationIcon;
+	
+	// Cache a handle to the standard plug-in icon
+	LArrayIterator iterator(*(netscapeInfo->fDocumentIcons));
+	CFileType* fileInfo;
+	while (iterator.Next(&fileInfo))
+	{
+		if (fileInfo->fIconSig == emPluginFile)	
+		{
+			mPluginIcon = fileInfo->fIcon;
+			break;	
+		}
+	}
+
+	LTable::FinishCreateSelf();
+
+	// Set latent subcommander of supercommander of supercommander, which is the
+	// view that contains the scroller of this table, to table
+//	if( GetSuperCommander()->GetSuperCommander() )
+//		(GetSuperCommander()->GetSuperCommander())->SetLatentSub(this);
+	LCommander::SwitchTarget(this);
+}
+
+
+CApplicationIconInfo* CMIMEListPane::GetAppInfo(CMimeMapper* mapper)
+{
+	return mApplList.GetAppInfo(mapper->GetAppSig(), mapper);
+}
+
+/*
+#if defined(QAP_BUILD)
+void
+CMIMEListPane::QapGetContents(PWCINFO pwc, short *pCount, short max)
+{
+	QapAddViewItem(pwc, pCount, WT_ASSIST_ITEM, WC_LIST_BOX);
+}
+
+void
+CMIMEListPane::QapGetListInfo(PQAPLISTINFO pInfo)
+{
+	TableIndexT		outRows, outCols;
+	ControlHandle	ctlHandle;
+	LScroller		*scroller;
+	LStdControl		*VSBar;
+	ControlHandle	ctlhVSBar;
+	
+	if (pInfo == nil)
+		return;
+		
+	scroller 	= (LScroller *)((this->GetSuperView())->GetSuperView())->FindPaneByID(12501);
+	VSBar		= scroller->GetVScrollbar();
+	ctlhVSBar	= VSBar->GetMacControl();
+		
+	GetTableSize(outRows, outCols);
+	
+	pInfo->itemCount	= (short)outRows;
+	pInfo->topIndex 	= (mFrameLocation.v - mImageLocation.v) / mRowHeight;
+	pInfo->itemHeight 	= mRowHeight;
+	pInfo->visibleCount = 8;
+	pInfo->vScroll 		= nil;
+	pInfo->isMultiSel 	= false;
+	pInfo->isExtendSel 	= false;
+	pInfo->hasText 		= true;
+}
+
+short
+CMIMEListPane::QapGetListContents(Ptr pBuf, short index)
+{
+	TableCellT		sTblCell, currentCell;
+	PrefCellInfo	theData;
+	Ptr				pLimit;
+	char 			str[256];
+	short			count = 0, len = 0;
+	Uint32			uiSize;
+
+	pLimit = pBuf + *(long *)pBuf;
+
+	switch (index)
+		{
+		case QAP_INDEX_ALL:
+			sTblCell.row = 1;
+			sTblCell.col = 1;
+			do
+			{
+				GetCellData(sTblCell, (void *)&theData);
+				
+				CStr255 description = theData.fMapper->GetDescription();
+				if (description.IsEmpty())
+					description = theData.fMapper->GetMimeName();
+			
+				if (pBuf + 3 >= pLimit)
+					break;
+				
+				count++;
+
+				*(unsigned short *)pBuf = sTblCell.row - 1;
+
+				GetSelectedCell(currentCell);
+				
+				if (currentCell.row == sTblCell.row)
+					*(unsigned short *)pBuf |= 0x8000;
+
+				pBuf += sizeof(short);
+		
+				strcpy(str, (char *)description);
+				len = strlen(str) + 1;
+	
+				if (pBuf + len >= pLimit)
+					break;
+		
+				strcpy(pBuf, str);
+				pBuf += len;
+				sTblCell.row++;
+			}
+			while (sTblCell.row <= mRows);
+			
+			break;
+			
+		case QAP_INDEX_SELECTED:
+			GetSelectedCell(sTblCell);
+			if (sTblCell.row <= mRows)
+			{
+				GetCellData(sTblCell, (void *)&theData);
+			
+				CStr255 description = theData.fMapper->GetDescription();
+				if (description.IsEmpty())
+					description = theData.fMapper->GetMimeName();
+			
+				if (pBuf + 3 >= pLimit)
+					break;
+				
+				count++;
+
+				*(unsigned short *)pBuf = (sTblCell.row - 1) | 0x8000;
+
+				pBuf += sizeof(short);
+		
+				strcpy(str, (char *)description);
+				len = strlen(str) + 1;
+	
+				if (pBuf + len >= pLimit)
+					break;
+		
+				strcpy(pBuf, str);
+				pBuf += len;
+			}
+			break;
+			
+		default:
+			sTblCell.row = index + 1;
+			sTblCell.col = 1;
+			
+			if (sTblCell.row <= mRows)
+			{
+				GetCellData(sTblCell, (void *)&theData);
+				
+				CStr255 description = theData.fMapper->GetDescription();
+				if (description.IsEmpty())
+					description = theData.fMapper->GetMimeName();
+				
+				if (pBuf + 3 >= pLimit)
+					break;
+					
+				count++;
+
+				*(unsigned short *)pBuf = sTblCell.row - 1;
+
+
+				GetSelectedCell(currentCell);
+					
+				if (currentCell.row == sTblCell.row)
+					*(unsigned short *)pBuf |= 0x8000;
+
+
+				pBuf += sizeof(short);
+		
+				strcpy(str, (char *)description);
+				len = strlen(str) + 1;
+		
+				if (pBuf + len >= pLimit)
+					break;
+			
+				strcpy(pBuf, str);
+			}
+			break;
+		}
+	return count;
+}
+#endif
+*/
+
+// Sets cell data to values of the mapper
+void
+CMIMEListPane::BindCellToApplication(TableIndexT row, CMimeMapper* mapper)
+{
+	CApplicationIconInfo* appInfo = GetAppInfo(mapper);
+	
+	// Now figure out the extensions from the netlib
+	PrefCellInfo cellInfo(mapper, appInfo);
+	TableCellT cell;
+	cell.row = row;
+	cell.col = 1;
+	SetCellData(cell, &cellInfo);
+}
+
+void
+CMIMEListPane::ActivateSelf()
+{
+	if (triState_On == mVisible)
+	{
+		LTable::ActivateSelf();
+	}
+}
+
+
+void
+CMIMEListPane::DrawSelf()
+{
+	RgnHandle localUpdateRgnH = GetLocalUpdateRgn();
+	Rect updateRect = (**localUpdateRgnH).rgnBBox;
+	DisposeRgn(localUpdateRgnH);
+	
+	{
+		StColorState saveTheColor;
+		RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF};
+		RGBBackColor(&white);
+		EraseRect(&updateRect);
+	}
+	
+	LTable::DrawSelf();
+}
+
+
+void CMIMEListPane::HiliteCell(const TableCellT &inCell)
+{
+	if (triState_On == mVisible)
+	{
+		StColorState saveTheColor;
+		RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF};
+		RGBBackColor(&white);
+	
+		LTable::HiliteCell(inCell);
+	}
+}
+
+
+void CMIMEListPane::UnhiliteCell(const TableCellT &inCell)
+{
+	if (triState_On == mVisible)
+	{
+		StColorState saveTheColor;
+		RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF};
+		RGBBackColor(&white);
+	
+		LTable::UnhiliteCell(inCell);
+	}
+}
+
+
+
+#define offsetTable			7
+#define offsetTextTop		15
+#define offsetMimeType		(offsetTable + 0)
+#define offsetIcon			(offsetTable + 166)
+#define offsetHandler		(offsetIcon + 24)
+#define widthMimeType		(offsetIcon - offsetMimeType - 5)
+
+void CMIMEListPane::DrawCell(const TableCellT	&inCell)
+{
+	Rect cellFrame;
+	
+	if (FetchLocalCellFrame(inCell, cellFrame))
+	{
+		::PenPat( &(UQDGlobals::GetQDGlobals()->gray) );
+		::MoveTo(cellFrame.left, cellFrame.bottom-1);
+		::LineTo(cellFrame.right, cellFrame.bottom-1);
+		::PenPat( &(UQDGlobals::GetQDGlobals()->black) );
+		
+		PrefCellInfo cellInfo;
+		GetCellData(inCell, &cellInfo);
+		UTextTraits::SetPortTextTraits(10000);	// HACK
+		
+		// Draw mime type
+		CStr255 description = cellInfo.fMapper->GetDescription();
+		if (description.IsEmpty())
+			description = cellInfo.fMapper->GetMimeName();
+		short result = ::TruncString(widthMimeType, description, smTruncMiddle);
+		::MoveTo(offsetMimeType, cellFrame.top+offsetTextTop);
+		::DrawString(description);
+			
+		// Draw the icon
+		CMimeMapper::LoadAction loadAction = cellInfo.fMapper->GetLoadAction();
+		if (loadAction == CMimeMapper::Launch || loadAction == CMimeMapper::Plugin || loadAction == CMimeMapper::Internal)
+		{
+			Rect r;
+			r.left = offsetIcon;
+			r.top = cellFrame.top + 2;
+			r.right = r.left + 16;
+			r.bottom = r.top + 16;
+			
+			Handle iconHandle;
+			if (loadAction == CMimeMapper::Plugin)
+				iconHandle = mPluginIcon;
+			else if (loadAction == CMimeMapper::Internal)
+				iconHandle = mNetscapeIcon;
+			else
+				iconHandle = cellInfo.fIconInfo->fApplicationIcon;
+			XP_ASSERT(iconHandle);
+			
+			if (iconHandle)
+			{
+				if (loadAction == CMimeMapper::Launch && !(cellInfo.fIconInfo->fApplicationFound))
+					::PlotIconSuite(&r, atHorizontalCenter, ttDisabled, iconHandle);
+				else
+					::PlotIconSuite(&r, atHorizontalCenter, ttNone, iconHandle);
+			}
+		}
+			
+		// Draw the handler name
+		::MoveTo(offsetHandler, cellFrame.top+offsetTextTop);
+		switch (loadAction)
+		{
+			case CMimeMapper::Save:
+				::DrawString(*GetString(SAVE_RESID));
+				break;
+			case CMimeMapper::Unknown:
+				::DrawString(*GetString(UNKNOWN_RESID));
+				break;
+			case CMimeMapper::Internal:
+				::DrawString(*GetString(INTERNAL_RESID));
+				break;
+			case CMimeMapper::Launch:
+				::DrawString(cellInfo.fMapper->GetAppName());
+				break;
+			case CMimeMapper::Plugin:
+				::DrawString(cellInfo.fMapper->GetPluginName());
+				break;
+		}
+	}
+}
+
+
+// Returns PrefCellInfo for the given cell
+void CMIMEListPane::GetCellInfo(PrefCellInfo& cellInfo, int row)
+{
+	TableCellT	cell;
+	cell.row = row;
+	cell.col = 1;
+	GetCellData(cell, &cellInfo);
+}
+
+void CMIMEListPane::FreeMappers()
+{
+	TableCellT	cell;
+	cell.col = 1;
+	PrefCellInfo cellInfo;
+	for (int i=1; i<= mRows; i++)
+	{
+		cell.row = i;
+		GetCellData(cell, &cellInfo);
+		delete cellInfo.fMapper;
+	}
+}
+
+Boolean CMIMEListPane::MimeTypeExists(CMimeMapper* mapper)
+{
+	TableCellT	cell;
+	cell.col = 1;
+	PrefCellInfo cellInfo;
+	for (int i=1; i<= mRows; i++)
+	{
+		cell.row = i;
+		GetCellData(cell, &cellInfo);
+		if (cellInfo.fMapper != mapper &&
+			cellInfo.fMapper->GetMimeName() == mapper->GetMimeName())
+			return true;
+	}
+	return false;
+}
+
+//
+// Scroll the view as little as possible to move the specified cell
+// entirely within the frame.  Currently we only handle scrolling
+// up or down a single line (when the selection moves because of
+// and arrow key press).
+//
+void CMIMEListPane::ScrollCellIntoFrame(const TableCellT& inCell)
+{
+	// Compute bounds of specified cell in image coordinates
+	Int32 cellLeft = 0;
+	Int32 cellRight = 1;
+	Int32 cellBottom = inCell.row * mRowHeight - 2;
+	Int32 cellTop = cellBottom - mRowHeight + 2;
+
+	if (ImagePointIsInFrame(cellLeft, cellTop) &&
+		ImagePointIsInFrame(cellRight, cellBottom))
+	{
+		return;				// Cell is already within Frame
+	}
+	else
+	{
+		if (cellTop + mImageLocation.v < mFrameLocation.v)		
+			ScrollImageTo(cellLeft, cellTop, true);				// Scroll up					
+		else								
+			ScrollPinnedImageBy(0, mRowHeight, true);			// Scroll down
+	}
+}
+
+Boolean	CMIMEListPane::HandleKeyPress(const EventRecord &inKeyEvent)
+{
+	Char16 theChar = inKeyEvent.message & charCodeMask;
+	Boolean handled = false;
+	
+	TableIndexT tableRows;
+	TableIndexT tableCols;
+	TableCellT currentCell;
+	GetSelectedCell(currentCell);
+	GetTableSize(tableRows, tableCols);
+	
+	switch (theChar)
+	{
+		case char_UpArrow:
+			currentCell.row--;
+			if (currentCell.row >= 1)
+			{
+				SelectCell(currentCell);
+				ScrollCellIntoFrame(currentCell);
+			}
+			handled = true;
+			break;
+
+		case char_DownArrow:
+			currentCell.row++;
+			if (currentCell.row <= tableRows)
+			{
+				SelectCell(currentCell);
+				ScrollCellIntoFrame(currentCell);
+			}
+			handled = true;
+			break;
+			
+		case char_PageUp:
+		case char_PageDown:
+		case char_Home:
+		case char_End:
+		default:
+			handled = LCommander::HandleKeyPress(inKeyEvent);
+	}
+	
+	return handled;
+}
+
+// called by table
+void CMIMEListPane::SelectCell(const TableCellT &inCell)
+{
+//	fContainer->SelectCell(inCell);
+	LTable::SelectCell(inCell);
+	BroadcastMessage(msg_SelectionChanged, this);
+}
+
+void
+CMIMEListPane::ClickCell(const TableCellT &inCell, const SMouseDownEvent& inMouseDown)
+{
+	LTable::ClickCell(inCell, inMouseDown);
+	if (GetClickCount() > 1)
+	{
+		BroadcastMessage(msg_DoubleClick, this);
+	}
+}
+
+
+CMIMEListPane::PrefCellInfo::PrefCellInfo(CMimeMapper * mapper, CApplicationIconInfo * iconInfo)
+{
+	fMapper = mapper; 
+	fIconInfo = iconInfo;
+}
+
+CMIMEListPane::PrefCellInfo::PrefCellInfo()
+{
+	fMapper = NULL;
+	fIconInfo = NULL;
+}
+
+#pragma mark ---CEditMIMEWindow---
+//======================================
+class CEditMIMEWindow : public LGADialogBox
+//======================================
+{
+public:
+	enum { class_ID = 'EMMW' };
+	
+								CEditMIMEWindow(LStream* inStream);
+	virtual 					~CEditMIMEWindow();
+
+	virtual void				ListenToMessage(MessageT inMessage, void* ioParam);
+			
+			void				SetCellInfo(CMIMEListPane::PrefCellInfo&);
+			void				SetMimeTable(CMIMEListPane* table)		{ mMIMETable = table; }
+			CMIMEListPane::PrefCellInfo&
+								GetCellInfo()						{ return mCellInfo;   }
+			Boolean				Modified()							{ return mModified;   }
+
+protected:
+	virtual void				FinishCreateSelf();
+	
+private:
+			void				SyncAllControls();
+			void				SyncTextControls();
+			void				SyncRadioControlValues();
+			void				SyncInternalControl();
+			void				SyncApplicationControls(Boolean mimeTypeChanged);
+			void				SyncPluginControls(Boolean mimeTypeChanged);
+			void				BuildPluginMenu();
+			void				BuildPluginList();
+			void				DeletePluginList();
+			void				BuildFileTypeMenu();
+
+			Boolean				mInitialized;		// Initialized with fCellInfo yet?
+			Boolean				mModified;			// Have any MIMEs been modified?
+			CMIMEListPane		*mMIMETable;			// Scrolling table of MIME types
+			CMIMEListPane::PrefCellInfo
+								mCellInfo;			// Data for selected item
+			char**				mPluginList;		// Null-terminated array of plug-in names
+			uint32				mPluginCount;		// Number of plug-ins in array
+
+			LGAPopup			*mFileTypePopup;
+			LGAPopup			*mPluginPopup;
+			CGAEditBroadcaster	*mDescriptionEditField;
+			CGAEditBroadcaster	*mTypeEditField;
+			CGAEditBroadcaster	*mExtensionEditField;
+			LGARadioButton		*mRadioSave;
+			LGARadioButton		*mRadioLaunch;
+			LGARadioButton		*mRadioInternal;
+			LGARadioButton		*mRadioUnknown;
+			LGARadioButton		*mRadioPlugin;
+//			CFilePicker			*mAppPicker;
+			LCaption			*mAppName;
+			LButton				*mAppButton;
+//			LCaption			*mAppMenuLabel;
+}; // class CEditMIMEWindow
+enum
+{
+	eNormalTextTraits = 12003,
+	eGrayTextTraits = 12008,
+	eDescriptionField = 12507,
+	eMIMETypeField,
+	eSuffixes,
+	eCommunicatorRButton,
+	ePluginRButton,
+	ePluginPopupMenu,
+	eApplicationRButton,
+	eApplicationNameCaption,
+	eChooseApplicationButton,
+	eFileTypePopupMenu,
+	eSaveRButton,
+	eUnknownRButton
+};
+
+//-----------------------------------
+CEditMIMEWindow::CEditMIMEWindow(LStream* inStream):
+//-----------------------------------
+	LGADialogBox(inStream),
+	mMIMETable(nil),
+	mModified(false),
+	mInitialized(false),
+	mPluginList(nil),
+	mPluginCount(0)
+{
+}
+ 
+ 
+//-----------------------------------
+CEditMIMEWindow::~CEditMIMEWindow()
+//-----------------------------------
+{
+	DeletePluginList();
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::FinishCreateSelf:
+// Fiddle around with a few of our subviews once they've been created.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::FinishCreateSelf()
+{
+	// Cache pointers to all the controls
+	mFileTypePopup = (LGAPopup *)FindPaneByID(eFileTypePopupMenu);
+	XP_ASSERT(mFileTypePopup);
+
+	mPluginPopup = (LGAPopup *)FindPaneByID(ePluginPopupMenu);
+	XP_ASSERT(mPluginPopup);
+
+	mDescriptionEditField = (CGAEditBroadcaster *)FindPaneByID(eDescriptionField);
+	XP_ASSERT(mDescriptionEditField);
+
+	mTypeEditField = (CGAEditBroadcaster *)FindPaneByID(eMIMETypeField);
+	XP_ASSERT(mTypeEditField);
+
+	mExtensionEditField = (CGAEditBroadcaster *)FindPaneByID(eSuffixes);
+	XP_ASSERT(mExtensionEditField);
+
+	mRadioSave = (LGARadioButton *)FindPaneByID(eSaveRButton);
+	XP_ASSERT(mRadioSave);
+
+	mRadioLaunch = (LGARadioButton *)FindPaneByID(eApplicationRButton);
+	XP_ASSERT(mRadioLaunch);
+
+	mRadioInternal = (LGARadioButton *)FindPaneByID(eCommunicatorRButton);
+	XP_ASSERT(mRadioInternal);
+
+	mRadioUnknown = (LGARadioButton *)FindPaneByID(eUnknownRButton);
+	XP_ASSERT(mRadioUnknown);
+
+	mRadioPlugin = (LGARadioButton *)FindPaneByID(ePluginRButton);
+	XP_ASSERT(mRadioPlugin);
+
+//	mAppPicker = (CFilePicker *)FindPaneByID(eApplicationFilePicker);
+//	XP_ASSERT(mAppPicker);
+
+	mAppName = (LCaption *)FindPaneByID(eApplicationNameCaption);		
+	XP_ASSERT(mAppName);
+
+	mAppButton = (LButton *)FindPaneByID(eChooseApplicationButton); 
+	XP_ASSERT(mAppButton);
+
+//	mAppMenuLabel = (LCaption *)FindPaneByID(pref8AppMenuLabel);
+//	XP_ASSERT(mAppMenuLabel);
+
+	// Text fields cannot become broadcasters automatically because
+	// LinkListenerToControls expects fields to be descendants of LControl
+	// C++ vtable gets messed up
+	mDescriptionEditField->AddListener(this);
+	mTypeEditField->AddListener(this);
+	mExtensionEditField->AddListener(this);
+
+	LGADialogBox::FinishCreateSelf();
+}
+
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SetCellInfo:
+// After the CPrefHelpersContain creates us it calls this method to provide
+// us with the info for the selected cell, which we copy.  We can then 
+// synchronize our controls to the data they display.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SetCellInfo(CMIMEListPane::PrefCellInfo& cellInfo)
+{
+	mCellInfo = cellInfo;
+	SyncAllControls();
+	mInitialized = true;
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::DeletePluginList:
+// Delete the list of plug-ins.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::DeletePluginList()
+{
+	if (mPluginList)
+	{	
+		uint32 index = 0;
+		
+		while (mPluginList[index++])
+		{
+			free(mPluginList[index]);
+		}
+		free(mPluginList);
+		mPluginList = nil;
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::BuildPluginList:
+// Build a list of plug-ins for this MIME type.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::BuildPluginList()
+{
+	// Delete the old list
+	DeletePluginList();
+	
+	// Get the new list from XP code
+	mPluginList = NPL_FindPluginsForType(mCellInfo.fMapper->GetMimeName());
+
+	// Count how many are in the list
+	mPluginCount = 0;
+	if (mPluginList)
+	{
+		while (mPluginList[mPluginCount])
+			mPluginCount++;
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::BuildPluginMenu:
+// Build the plug-in menu from the list of plug-ins available for the current
+// MIME type.  We need to redraw the popup if the plug-in list used to be non-
+// empty or is non-empty now.  (It's too expensive to try to detect the case
+// of the plug-in list getting rebuilt but still containing the same items.)
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::BuildPluginMenu()
+{
+	uint32 oldCount = mPluginCount;
+	
+	BuildPluginList();
+	
+	if (oldCount || mPluginCount)
+	{
+		SetMenuSizeForLGAPopup(mPluginPopup, mPluginCount);
+
+		MenuHandle menuH = mPluginPopup->GetMacMenuH();
+		uint32 index = 0;
+		uint32 desiredValue = 1;		// Default desired value is first item
+		while (mPluginList[index])
+		{
+			SetMenuItemText(menuH, index+1, CStr255(mPluginList[index]));
+			::EnableItem(menuH, index+1);
+			if (mCellInfo.fMapper->GetPluginName() == mPluginList[index])
+			{
+				desiredValue = index + 1;
+			}
+			index++;
+		}
+		
+		//
+		// If the previously-selected plug-in name is in this list,
+		// select it; otherwise just select the first item.
+		// If we didn't change the control value, make sure it
+		// redraws since the contents of the list have changed.
+		//
+		uint32 previousValue = mPluginPopup->GetValue();
+		if (desiredValue != previousValue)
+		{
+			mPluginPopup->SetValue(desiredValue);
+		}
+		else
+		{
+			mPluginPopup->Refresh();
+		}
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::BuildFileTypeMenu:
+// Build the file-type menu from the list file types in the application info.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::BuildFileTypeMenu()
+{
+	CApplicationIconInfo* appInfo = mCellInfo.fIconInfo;
+	uint32 count = appInfo->GetFileTypeArraySize();
+	
+	if (count)
+	{
+		SetMenuSizeForLGAPopup(mFileTypePopup, count);
+
+		MenuHandle menuH = mFileTypePopup->GetMacMenuH();
+		uint32 index;
+		uint32 desiredValue = 1;
+		for (index = 1; index <= count; index++)
+		{
+			CFileType* fileType = appInfo->GetFileType(index);
+			SetMenuItemText(menuH, index, CStr255(fileType->fIconSig));
+			if (fileType->fIconSig == mCellInfo.fMapper->GetDocType())
+			{
+				desiredValue = index;
+			}
+		}
+		
+		//
+		// If the previously-selected file type is in this list,
+		// select it; otherwise just select the first item.
+		// If we didn't change the control value, make sure it
+		// redraws since the contents of the list have changed.
+		//
+		uint32 previousValue = mFileTypePopup->GetValue();
+		if (desiredValue != previousValue)
+		{
+			mFileTypePopup->SetValue(desiredValue);
+		}
+		else
+		{
+			mFileTypePopup->Refresh();
+		}
+	}
+}
+
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SyncTextControls:
+// Sync the edit text fields with their actual values (only called when
+// the window is first created).
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SyncTextControls()
+{
+	XP_ASSERT(mCellInfo.fMapper != nil);
+
+	// MIME type
+	CStr255 newValue = mCellInfo.fMapper->GetDescription();
+	mDescriptionEditField->SetDescriptor(newValue);
+
+	// MIME type
+	newValue = mCellInfo.fMapper->GetMimeName();
+	mTypeEditField->SetDescriptor(newValue);
+	
+	// Extensions
+	newValue = mCellInfo.fMapper->GetExtensions();
+	mExtensionEditField->SetDescriptor(newValue);
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SyncRadioControlValues:
+// Sync the radio buttons with their actual values (only called when
+// the window is first created).
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SyncRadioControlValues()
+{
+	switch (mCellInfo.fMapper->GetLoadAction())
+	{
+		case CMimeMapper::Save:
+			if (mRadioSave->GetValue() == 0)
+			{
+				mRadioSave->SetValue(1);
+			}
+			break;
+		case CMimeMapper::Launch:
+			if (mRadioLaunch->GetValue() == 0)
+			{
+				mRadioLaunch->SetValue(1);
+			}
+			break;
+		case CMimeMapper::Internal:
+			if (mRadioInternal->GetValue() == 0)
+			{
+				mRadioInternal->SetValue(1);
+			}
+			break;
+		case CMimeMapper::Unknown:
+			if (mRadioUnknown->GetValue() == 0)
+			{
+				mRadioUnknown->SetValue(1);
+			}
+			break;
+		case CMimeMapper::Plugin:
+			if (mRadioPlugin->GetValue() == 0)
+			{
+				mRadioPlugin->SetValue(1);
+			}
+			break;
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SyncInternalControl:
+// Sync up the "Use Netscape" radio button when the MIME type changes.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SyncInternalControl()
+{
+	if (CMimeMapper::NetscapeCanHandle(mCellInfo.fMapper->GetMimeName()))
+	{
+		mRadioInternal->Enable();
+	}
+	else
+	{
+		mRadioInternal->Disable();
+		if (mRadioInternal->GetValue() == 1)
+		{
+			mRadioInternal->SetValue(0);
+			mRadioUnknown->SetValue(1);
+		}
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SyncApplicationControls:
+// Sync up the application-related controls when the "Use application" radio
+// button changes state, etc.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SyncApplicationControls(Boolean applicationChanged)
+{
+	if (applicationChanged)
+	{
+		BuildFileTypeMenu();
+	}
+	Boolean enableAppControls = (mCellInfo.fMapper->GetLoadAction() == CMimeMapper::Launch);
+
+	//
+	// Application name
+	//
+	ResIDT oldTraits = mAppName->GetTextTraitsID();
+	if (enableAppControls)
+	{
+		mAppName->SetTextTraitsID(eNormalTextTraits);			// Normal
+	}
+	else	
+	{
+		mAppName->SetTextTraitsID(eGrayTextTraits);			// Dimmed
+	}
+	if (applicationChanged)
+	{
+		mAppName->SetDescriptor(mCellInfo.fMapper->GetAppName());
+	}
+	else if (oldTraits != mAppName->GetTextTraitsID())
+	{
+		mAppName->Refresh();
+	}
+	//
+	// Application pick button
+	//
+	if (enableAppControls)
+	{
+		mAppButton->Enable();
+	}
+	else
+	{
+		mAppButton->Disable();
+	}
+	//
+	// Popup label
+	//
+//	oldTraits = mAppMenuLabel->GetTextTraitsID();
+//	if (enableAppControls)
+//	{
+//		mAppMenuLabel->SetTextTraitsID(10000);		// Normal
+//	}
+//	else
+//	{
+//		mAppMenuLabel->SetTextTraitsID(10003);		// Dimmed
+//	}
+//	if (oldTraits != mAppMenuLabel->GetTextTraitsID())
+//	{
+//		mAppMenuLabel->Refresh();
+//	}
+	//
+	// Popup enabled state
+	//
+	if (enableAppControls && mCellInfo.fIconInfo->GetFileTypeArraySize() > 0)
+	{
+		mFileTypePopup->Enable();
+	}
+	else
+	{
+		mFileTypePopup->Disable();
+	}
+	//
+	// File type
+	//
+	if (mRadioLaunch->GetValue() == 1)
+	{
+		uint32 item = mFileTypePopup->GetValue();
+		XP_ASSERT(item > 0);
+		CFileType* fileType = mCellInfo.fIconInfo->GetFileType(item);
+		if (fileType)
+		{
+			mCellInfo.fMapper->SetDocType(fileType->fIconSig);
+		}
+	}
+}
+
+
+// ---------------------------------------------------------------------------
+// CEditMIMEWindow::SyncPluginControls:
+// Sync up the plugin-related controls when the "Use plugin" radio
+// button changes state or the MIME type changes.
+// ---------------------------------------------------------------------------
+void CEditMIMEWindow::SyncPluginControls(Boolean mimeTypeChanged)
+{
+	if (mimeTypeChanged)
+	{
+		BuildPluginMenu();
+	}
+	//
+	// Plug-in radio button enabled state
+	//
+	if (mPluginCount > 0)
+	{
+		mRadioPlugin->Enable();
+	}
+	else
+	{
+		mRadioPlugin->Disable();
+		if (mRadioPlugin->GetValue() == 1)
+		{
+//			mRadioPlugin->SetValue(0);
+			mRadioUnknown->SetValue(1);
+			mCellInfo.fMapper->SetLoadAction(CMimeMapper::Unknown);
+			mModified = true;
+		}
+	}
+
+	//
+	// Plug-in popup control enabled state
+	//
+	CMimeMapper* mapper = mCellInfo.fMapper;
+	CMimeMapper::LoadAction loadAction = mapper->GetLoadAction();
+	if (loadAction == CMimeMapper::Plugin && mPluginCount > 0)
+//	if (fCellInfo.fMapper->GetLoadAction() == CMimeMapper::Plugin && fPluginCount > 0)
+	{
+		mPluginPopup->Enable();
+	}
+	else
+	{
+		mPluginPopup->Disable();
+	}	
+	//
+	// Plug-in name
+	//
+	if (mRadioPlugin->GetValue() == 1)
+	{
+		uint32 item = mPluginPopup->GetValue();	
+		XP_ASSERT(item > 0);	
+		if (mPluginList && item > 0 && item <= mPluginCount)
+		{
+			char* plugin = mPluginList[item - 1];		// Menu is 1-based, list is 0-based
+			if (plugin)
+				mCellInfo.fMapper->SetPluginName(plugin);
+		}
+	}
+	
+}
+
+//-----------------------------------
+void CEditMIMEWindow::SyncAllControls()
+// Set up the controls in the dialog box (before it's visible) with the
+// information from the currently selected cell.
+//-----------------------------------
+{
+	SyncTextControls();
+	SyncRadioControlValues();
+	SyncInternalControl();
+	SyncApplicationControls(true);
+	SyncPluginControls(true);
+}
+
+
+//-----------------------------------
+void CEditMIMEWindow::ListenToMessage(MessageT inMessage, void */*ioParam*/)
+// Process a message from the MIME types dialog
+//-----------------------------------
+{
+	if (!mInitialized)
+	{
+		return;
+	}	
+	switch (inMessage)
+	{
+		// Pick a handler
+		case eSaveRButton:
+			if (mRadioSave->GetValue() == 1)
+			{
+				mCellInfo.fMapper->SetLoadAction(CMimeMapper::Save);
+			}
+			mModified = TRUE;
+			break;
+		case eApplicationRButton:
+			if (mRadioLaunch->GetValue() == 1)
+			{
+				mCellInfo.fMapper->SetLoadAction(CMimeMapper::Launch);
+			}
+			SyncApplicationControls(false);
+			mModified = TRUE;
+			break;
+		case eCommunicatorRButton:
+			if (mRadioInternal->GetValue() == 1)
+			{
+				mCellInfo.fMapper->SetLoadAction(CMimeMapper::Internal);
+			}
+			mModified = TRUE;
+			break;
+		case eUnknownRButton:
+			if (mRadioUnknown->GetValue() == 1)
+			{
+				mCellInfo.fMapper->SetLoadAction(CMimeMapper::Unknown);
+			}
+			mModified = TRUE;
+			break;
+		case ePluginRButton:
+			if (mRadioPlugin->GetValue() == 1)
+			{
+				mCellInfo.fMapper->SetLoadAction(CMimeMapper::Plugin);
+			}
+			SyncPluginControls(false);
+			mModified = TRUE;
+			break;
+		// Pick a new application
+		case eChooseApplicationButton:	
+		{		
+			StandardFileReply reply;
+			CFilePicker::DoCustomGetFile(reply, CFilePicker::Applications, FALSE);	// Pick app
+			if (reply.sfGood)
+			{
+				// set mappers properties from the app
+				FInfo finderInfo;
+				OSErr err = FSpGetFInfo(&reply.sfFile, &finderInfo);	
+				mCellInfo.fMapper->SetAppSig(finderInfo.fdCreator);
+				mCellInfo.fMapper->SetAppName(reply.sfFile.name);
+				mCellInfo.fIconInfo = mMIMETable->GetAppInfo(mCellInfo.fMapper);
+				SyncApplicationControls(true);		// App changed
+				mModified = TRUE;
+			}
+			break;
+		}
+
+		// Change the file type
+		case eFileTypePopupMenu:	
+		{
+			SyncApplicationControls(false);
+			mModified = TRUE;		
+			break;
+		}
+
+		// Change the plug-in
+		case ePluginPopupMenu:
+		{
+			SyncPluginControls(false);
+			mModified = TRUE;		
+			break;
+		}
+
+		// Edit some text
+		case msg_EditField:
+		{
+			CStr255 newText;
+
+			// Commit description
+			mDescriptionEditField->GetDescriptor(newText);
+			mCellInfo.fMapper->SetDescription(newText);
+			
+			// Commit type
+			mTypeEditField->GetDescriptor(newText);
+			if (newText != mCellInfo.fMapper->GetMimeName())
+			{
+				mCellInfo.fMapper->SetMimeType(newText);
+				SyncPluginControls(true);		// Plug-in choices depend on MIME type
+				SyncInternalControl();			// "Use Netscape" radio depends on MIME type
+			}
+			
+			// Commit the extensions
+			mExtensionEditField->GetDescriptor(newText);
+			mCellInfo.fMapper->SetExtensions(newText);
+
+			mModified = TRUE;
+			break;
+		}
+
+		case msg_OK:
+			break;
+		case msg_Cancel:
+			break;
+		default:
+			break;
+	}	
+}
 
 #pragma mark ---CEditFieldControl---
 //======================================
@@ -618,11 +1891,6 @@ enum
 	eUseCurrentButton
 };
 
-enum 
-{
-	eExpireLinksDialog = 1060,
-	eClearDiskCacheDialog = 1065
-};
 
 CBrowserMainMediator::CBrowserMainMediator(LStream*)
 :	CPrefsMediator(class_ID)
@@ -668,7 +1936,7 @@ void
 CBrowserMainMediator::ExpireNow()
 {
 	StPrepareForDialog	prepare;
-	short	response = ::CautionAlert(eExpireLinksDialog, NULL);
+	short	response = ::CautionAlert(eExpireNowButton, NULL);
 	if (1 == response)
 	{
 		GH_ClearGlobalHistory();
@@ -1267,7 +2535,255 @@ void CBrowserLanguagesMediator::WritePrefs()
 							mLanguagesLocked);
 }
 
+enum
+{
+	eEditTypeDialogResID = 12008,
+	eHelperScroller = 12501,
+	eHelperTable,
+	eHelperNewButton,
+	eHelperEditButton,
+	eHelperDeleteButton,
+	eDownloadFilePicker
+};
 
+CBrowserApplicationsMediator::CBrowserApplicationsMediator(LStream*)
+:	CPrefsMediator(class_ID)
+,	mModified(false)
+,	mMIMETable(nil)
+{
+}
+
+void
+CBrowserApplicationsMediator::EditMimeEntry()
+{
+//	StBlockingDialogHandler	theHandler(eEditTypeDialogResID, this);
+	StDialogHandler	theHandler(eEditTypeDialogResID, sWindow->GetSuperCommander());
+	CEditMIMEWindow* theDialog = (CEditMIMEWindow*)theHandler.GetDialog();
+	XP_ASSERT(theDialog);
+	UReanimator::LinkListenerToControls(theDialog, theDialog, eEditTypeDialogResID);
+	theDialog->SetMimeTable(mMIMETable);
+	
+	// Get the info that the dialog should display
+	CMIMEListPane::PrefCellInfo cellInfo;
+	TableCellT	cellToEdit;
+	mMIMETable->GetSelectedCell(cellToEdit);
+	mMIMETable->GetCellData(cellToEdit, &cellInfo);
+	
+	// Make a copy of the info to edit
+	CMIMEListPane::PrefCellInfo newInfo;
+	newInfo.fMapper = new CMimeMapper(*cellInfo.fMapper); 
+	newInfo.fIconInfo = cellInfo.fIconInfo;
+	theDialog->SetCellInfo(newInfo);
+
+	// Let the user have at it...
+	theDialog->Show();
+	MessageT theMessage = msg_Nothing;	
+	while ((theMessage != msg_Cancel) && (theMessage != msg_OK))
+	{
+		theMessage = theHandler.DoDialog();
+		
+		if (theMessage == msg_OK &&
+			cellInfo.fMapper->GetMimeName() != newInfo.fMapper->GetMimeName() &&
+			mMIMETable->MimeTypeExists(newInfo.fMapper))
+		{
+			ErrorManager::PlainAlert(mPREFS_DUPLICATE_MIME);
+			theMessage = msg_Nothing;
+		}
+		// The CEditMIMEWindow will handle all other messages
+	}
+	
+	// Process the munged data as appropriate
+	if (theMessage == msg_OK && theDialog->Modified())
+	{
+		delete cellInfo.fMapper;							// Delete the old mapper
+		newInfo = theDialog->GetCellInfo();					// Get the edited info
+		mMIMETable->SetCellData(cellToEdit, &newInfo);		// Write the edited info into the table
+		mModified = TRUE;									// Remember that something changed
+		mMIMETable->Refresh();								// Let table sync to the new data
+	}
+	else
+	{
+		delete newInfo.fMapper;								// Delete the changed but discarded mapper
+		newInfo.fMapper = NULL;
+	}	
+}
+
+void
+CBrowserApplicationsMediator::NewMimeEntry()
+{
+//	StBlockingDialogHandler	theHandler(eEditTypeDialogResID, this);
+	StDialogHandler	theHandler(eEditTypeDialogResID, sWindow->GetSuperCommander());
+	CEditMIMEWindow* theDialog = (CEditMIMEWindow *)theHandler.GetDialog();
+	XP_ASSERT(theDialog);
+	UReanimator::LinkListenerToControls(theDialog, theDialog, eEditTypeDialogResID);
+	theDialog->SetMimeTable(mMIMETable);
+	
+	// Create a new default mapper and put it in the table
+	CStr255 emptyType = "";
+	CMimeMapper* newMapper = CPrefs::CreateDefaultUnknownMapper(emptyType, FALSE);
+	ThrowIfNil_(newMapper);
+	ThrowIfNil_(mMIMETable);
+	CMIMEListPane::PrefCellInfo cellInfo;
+	mMIMETable->InsertRows(1, 0, &cellInfo);
+	mMIMETable->BindCellToApplication(1, newMapper);
+
+	TableCellT newCell;
+	newCell.row = newCell.col = 1;
+	mMIMETable->GetCellData(newCell, &cellInfo);
+	theDialog->SetCellInfo(cellInfo);
+	
+	// Let the user have at it...
+	theDialog->Show();
+	MessageT theMessage = msg_Nothing;	
+	while ((theMessage != msg_Cancel) && (theMessage != msg_OK))
+	{
+		theMessage = theHandler.DoDialog();
+		
+		if (theMessage == msg_OK && mMIMETable->MimeTypeExists(cellInfo.fMapper))
+		{
+			ErrorManager::PlainAlert(mPREFS_DUPLICATE_MIME);
+			theMessage = msg_Nothing;
+		}
+		// The CEditMimeWindow will handle all other messages
+	}
+	
+	// Process the munged data as appropriate
+	CMIMEListPane::PrefCellInfo newInfo = theDialog->GetCellInfo();
+	if (theMessage == msg_OK && theDialog->Modified())
+	{
+		mModified = TRUE;								// Remember that something changed
+		mMIMETable->SetCellData(newCell, &newInfo);		// Write the edited info into the table
+		mMIMETable->SelectCell(newCell);				// Select the new cell
+		mMIMETable->ScrollImageTo(0, 0, TRUE);
+		mMIMETable->Refresh();							// Let table sync to the new data
+	}
+	else
+	{
+		delete newInfo.fMapper;							// Delete the discarded mapper
+		mMIMETable->RemoveRows(1, newCell.row);			// Remove the row added to the table
+	}	
+}
+
+void
+CBrowserApplicationsMediator::DeleteMimeEntry()
+{
+	if (ErrorManager::PlainConfirm((const char*) GetCString(DELETE_MIMETYPE)))
+	{
+		XP_ASSERT(mMIMETable);
+		TableCellT cellToDelete;
+		mMIMETable->GetSelectedCell(cellToDelete);
+		PrefCellInfo cellInfo;
+		mMIMETable->GetCellData(cellToDelete, &cellInfo);
+		
+		// Instead of freeing the item, add it to a list of deleted mime types
+		// and at commit time, delete the items from xp pref storage.
+		mDeletedTypes.LArray::InsertItemsAt(1, LArray::index_Last, &cellInfo.fMapper);
+		
+		mModified = TRUE;
+		
+		mMIMETable->RemoveRows(1, cellToDelete.row);
+
+		// We want to select the cell immediately after the deleted one. It just so
+		// happens that its coordinates are now (after deleting), what the cell to
+		// delete was before. So we just need to select cellToDelete. However, if
+		// there is no cell after the deleted cell (it was the last one), then we
+		// just select the last one.
+		TableIndexT	rows, columns;
+		mMIMETable->GetTableSize(rows, columns);
+		cellToDelete.row = cellToDelete.row > rows? rows: cellToDelete.row;
+		mMIMETable->ScrollCellIntoFrame(cellToDelete);
+		mMIMETable->SelectCell(cellToDelete);
+		mMIMETable->Refresh();
+	}
+}
+
+void
+CBrowserApplicationsMediator::ListenToMessage(MessageT inMessage, void *ioParam)
+{
+	switch (inMessage)
+	{
+		case eHelperDeleteButton:
+			DeleteMimeEntry();
+			break;
+		case eHelperNewButton:
+			NewMimeEntry();
+			break;
+		case eHelperEditButton:
+		case CMIMEListPane::msg_DoubleClick:
+			EditMimeEntry();
+			break;
+		case CMIMEListPane::msg_SelectionChanged:
+			LButton	*deleteButton = (LButton *)FindPaneByID(eHelperDeleteButton);
+			XP_ASSERT(deleteButton);
+			LButton	*editButton = (LButton *)FindPaneByID(eHelperEditButton);
+			XP_ASSERT(editButton);
+
+			XP_ASSERT(ioParam);
+			CMIMEListPane	*mimeTable = (CMIMEListPane *)ioParam;
+			TableCellT	cell;
+			mimeTable->GetSelectedCell(cell);
+			Boolean inactive;
+			if (cell.row > 0)
+			{
+				PrefCellInfo cellInfo;
+				mimeTable->GetCellData(cell, &cellInfo);
+
+				inactive = CMimeMapper::NetscapeCanHandle(cellInfo.fMapper->GetMimeName());
+				editButton->Enable();
+			}
+			else
+			{
+				inactive = true;
+				editButton->Disable();
+			}
+			if (inactive)
+				deleteButton->Disable();
+			else	
+				deleteButton->Enable();
+			break;
+		default:
+			CPrefsMediator::ListenToMessage(inMessage, ioParam);
+			break;
+	}
+}
+
+void
+CBrowserApplicationsMediator::LoadMainPane()
+{
+	CPrefsMediator::LoadMainPane();
+	mMIMETable = (CMIMEListPane *)FindPaneByID(eHelperTable);
+	XP_ASSERT(mMIMETable);
+	mMIMETable->AddListener(this);
+	TableCellT	currentCell= {1, 1};		// This has to be done after
+	mMIMETable->SelectCell(currentCell);	// mMIMETable->AddListener(); to set the buttons.
+}
+
+void
+CBrowserApplicationsMediator::WritePrefs()
+{
+	if (mModified)
+	{
+		CPrefs::sMimeTypes.DeleteAll(FALSE);
+		XP_ASSERT(mMIMETable);
+		TableIndexT rows, cols;
+		mMIMETable->GetTableSize(rows, cols);
+		for (int i = 1; i <= rows; i++)
+		{
+			CMIMEListPane::PrefCellInfo cellInfo;
+			mMIMETable->GetCellInfo(cellInfo, i);
+			
+			cellInfo.fMapper->WriteMimePrefs();
+			CMimeMapper* mapper = new CMimeMapper(*cellInfo.fMapper);
+			CPrefs::sMimeTypes.InsertItemsAt(1, LArray::index_Last, &mapper);
+		}
+		for (Int32 i = 1; i <= mDeletedTypes.GetCount(); i++)
+		{
+			CMimeMapper* mapper;
+			mDeletedTypes.FetchItemAt(i, &mapper);
+			PREF_DeleteBranch(mapper->GetBasePref());
+		}
+	}
+}
 
 
 enum
@@ -1507,7 +3023,7 @@ void CAdvancedCacheMediator::ClearDiskCacheNow()
 	if (originalDiskCacheSize)	// if the current cache size is zero then do nothing
 	{
 		UDesktop::Deactivate();
-		short	response = ::CautionAlert(eClearDiskCacheDialog, NULL);	
+		short	response = ::CautionAlert(eClearDiskCacheButton, NULL);	
 		UDesktop::Activate();
 		if (1 == response)
 		{
@@ -2001,7 +3517,8 @@ void UAssortedPrefMediators::RegisterViewClasses()
 {
 	RegisterClass_(CEditFieldControl);
 
-
+	RegisterClass_( CEditMIMEWindow);
+	RegisterClass_( CMIMEListPane);
 	RegisterClass_(CColorButton);
 	RegisterClass_( CFilePicker);
 
@@ -2015,4 +3532,3 @@ void UAssortedPrefMediators::RegisterViewClasses()
 	RegisterClass_(OneRowLListBox);	// added by ftang
 	UPrefControls::RegisterPrefControlViews();
 } // CPrefsDialog::RegisterViewClasses
-
