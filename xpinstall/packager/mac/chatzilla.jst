@@ -18,6 +18,7 @@ if (verifyDiskSpace(fProgram, srDest))
             "");                        // target subdir 
 
     registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "content/chatzilla/");
+    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "content/chatzilla/sm/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "skin/modern/chatzilla/");
     registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","chatzilla.jar"), "locale/en-US/chatzilla/");
 
