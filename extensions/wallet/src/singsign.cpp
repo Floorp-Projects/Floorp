@@ -114,7 +114,7 @@ si_3ButtonConfirm(PRUnichar * szMessage) {
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
-#include "nsIWebShellWindow.h" // TODO remove later
+#include "nsIXULWindow.h" // TODO remove later
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 PRIVATE PRBool
@@ -130,9 +130,9 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
   if(NS_FAILED(rv)) {
     return PR_FALSE;
   }
-  nsCOMPtr<nsIWebShellWindow> webshellwindow;
-  appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
-  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(webshellwindow));
+  nsCOMPtr<nsIXULWindow> xulWindow;
+  appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
+  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(xulWindow));
   PRInt32 selectedIndex;
   PRBool rtnValue;
   PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");

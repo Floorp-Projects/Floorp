@@ -269,6 +269,54 @@ NS_IMETHODIMP nsXULWindow::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
    return NS_OK;
 }
 
+NS_IMETHODIMP nsXULWindow::ShowModal()
+{
+   nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
+   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+
+   appShell->Create(0, nsnull);
+   appShell->Spinup();
+   // Store locally so it doesn't die on us
+   nsCOMPtr<nsIWidget> window = mWindow;
+   nsCOMPtr<nsIXULWindow> tempRef = this;  
+                                          
+
+   window->SetModal(PR_TRUE);
+   mContinueModalLoop = PR_TRUE;
+
+   nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+   nsresult rv = NS_OK;
+   if(stack  && NS_SUCCEEDED(stack->Push(nsnull)))
+      {
+      while(NS_SUCCEEDED(rv) && mContinueModalLoop)
+         {
+         void* data;
+         PRBool isRealEvent;
+         PRBool processEvent;
+
+         rv = appShell->GetNativeEvent(isRealEvent, data);
+         if(NS_SUCCEEDED(rv))
+            {
+            window->ModalEventFilter(isRealEvent, data, &processEvent);
+            if(processEvent)
+               appShell->DispatchNativeEvent(isRealEvent, data);
+            }
+         }
+      JSContext* cx;
+      stack->Pop(&cx);
+      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+      }
+   else
+      rv = NS_ERROR_FAILURE;
+
+   mContinueModalLoop = PR_FALSE;
+
+   window->SetModal(PR_FALSE);
+   appShell->Spindown();
+
+   return NS_OK;
+}
+
 //*****************************************************************************
 // nsXULWindow::nsIBaseWindow
 //*****************************************************************************   
@@ -310,11 +358,8 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 #endif
 
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-   //XXXTAB remove this when we convert appshell to talk with nsIXULWindow
-   nsCOMPtr<nsIWebShellWindow> 
-      webShellWindow(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
    if(appShell)
-      appShell->UnregisterTopLevelWindow(webShellWindow);
+      appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
    
    // let's make sure the window doesn't get deleted out from under us
    // while we are trying to close....this can happen if the docshell
@@ -493,11 +538,8 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
    mWindow->Show(aVisibility);
 
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
-   //XXXTAB Update windowMediator to take a nsIXULWindow instead
-   nsCOMPtr<nsIWebShellWindow> 
-      thisWindow(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
    if(windowMediator)
-      windowMediator->UpdateWindowTimeStamp(thisWindow);
+      windowMediator->UpdateWindowTimeStamp(NS_STATIC_CAST(nsIXULWindow*, this));
 
    // Hide splash screen (if there is one).
    static PRBool splashScreenGone = PR_FALSE;
@@ -556,11 +598,7 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const PRUnichar* aTitle)
    if(!windowMediator)
       return NS_OK;
 
-   // XXX Update windowMediator to take nsIXULWindow
-   nsCOMPtr<nsIWebShellWindow> 
-      webShellWindow(do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this)));
-   NS_ENSURE_TRUE(webShellWindow, NS_ERROR_FAILURE);
-   windowMediator->UpdateWindowTitle(webShellWindow, aTitle);
+   windowMediator->UpdateWindowTitle(NS_STATIC_CAST(nsIXULWindow*, this), aTitle);
 
    return NS_OK;
 }
@@ -878,54 +916,6 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::ShowModal()
-{
-   nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
-   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
-   appShell->Create(0, nsnull);
-   appShell->Spinup();
-   // Store locally so it doesn't die on us
-   nsCOMPtr<nsIWidget> window = mWindow;
-   nsCOMPtr<nsIXULWindow> tempRef = this;
-
-   window->SetModal(PR_TRUE);
-   mContinueModalLoop = PR_TRUE;
-   EnableParent(PR_FALSE);
-
-   nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
-   nsresult rv = NS_OK;
-   if(stack  && NS_SUCCEEDED(stack->Push(nsnull)))
-      {
-      while(NS_SUCCEEDED(rv) && mContinueModalLoop)
-         {
-         void* data;
-         PRBool isRealEvent;
-         PRBool processEvent;
-
-         rv = appShell->GetNativeEvent(isRealEvent, data);
-         if(NS_SUCCEEDED(rv))
-            {
-            window->ModalEventFilter(isRealEvent, data, &processEvent);
-            if(processEvent)
-               appShell->DispatchNativeEvent(isRealEvent, data);
-            }
-         }
-      JSContext* cx;
-      stack->Pop(&cx);
-      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
-      }
-   else
-      rv = NS_ERROR_FAILURE;
-
-   mContinueModalLoop = PR_FALSE;
-
-   window->SetModal(PR_FALSE);
-   appShell->Spindown();
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsXULWindow::ExitModalLoop()
 {
    if (mContinueModalLoop) // was a modal window
@@ -955,17 +945,16 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    
    // Just do a normal create of a window and return.
    //XXXTAB remove this when appshell talks in terms of nsIXULWindow
-   nsCOMPtr<nsIWebShellWindow> parent;
+   nsCOMPtr<nsIXULWindow> parent;
    if(aChromeFlags & nsIWebBrowserChrome::dependent)
-      parent = do_QueryInterface(NS_STATIC_CAST(nsIXULWindow*, this));
+      parent = this;
 
-   nsCOMPtr<nsIWebShellWindow> newWindow;
+   nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
       aChromeFlags, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
       getter_AddRefs(newWindow));
 
-   nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(newWindow));
-   NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 
    // XXX Ick, this should be able to go away.....
    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
@@ -973,7 +962,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
       browserChrome->SetChromeMask(aChromeFlags);
 
    nsCOMPtr<nsIDocShell> docShell;
-   xulWindow->GetDocShell(getter_AddRefs(docShell));
+   newWindow->GetDocShell(getter_AddRefs(docShell));
    CallQueryInterface(docShell, aDocShellTreeItem);
 
    return NS_OK;
@@ -1004,13 +993,14 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIWebShellWindow> newWindow;
+   nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(nsnull, uri, PR_FALSE, PR_FALSE,
                                  aChromeFlags, nsnull, 615, 480,
                                  getter_AddRefs(newWindow));
 
-   nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(newWindow));
-   NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIWebShellWindow> webShellWindow(do_QueryInterface(newWindow));
 
    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
    if(browserChrome)
@@ -1023,10 +1013,10 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    subShell->Spinup();
 
    // Specify that we want the window to remain locked until the chrome has loaded.
-   newWindow->LockUntilChromeLoad();
+   webShellWindow->LockUntilChromeLoad();
 
    PRBool locked = PR_FALSE;
-   newWindow->GetLockedState(locked);
+   webShellWindow->GetLockedState(locked);
 
    // Push nsnull onto the JSContext stack before we dispatch a native event.
    nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
@@ -1041,7 +1031,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
          looprv = subShell->GetNativeEvent(isRealEvent, data);
          subShell->DispatchNativeEvent(isRealEvent, data);
 
-         newWindow->GetLockedState(locked);
+         webShellWindow->GetLockedState(locked);
          }
 
       JSContext *cx;
@@ -1055,7 +1045,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    // During the layout of the new window, all content shells were located and placed
    // into the new window's content shell array.  Locate the "content area" content
    // shell.
-   xulWindow->GetPrimaryContentShell(aDocShellTreeItem);
+   newWindow->GetPrimaryContentShell(aDocShellTreeItem);
    return NS_OK;
 }
 

@@ -41,7 +41,6 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIBrowserWindow.h"
-#include "nsIWebShellWindow.h"
 #include "prprf.h"
 
 #include "nsIIOService.h"
@@ -62,8 +61,9 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccount.h"
 
-#include "nsIWebShell.h"
+// Interfaces Needed
 #include "nsIDocShell.h"
+#include "nsIWebShell.h"
 
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
@@ -323,7 +323,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
             return rv;
         } 
 
-        nsCOMPtr<nsIWebShellWindow>  profWindow;
+        nsCOMPtr<nsIXULWindow> profWindow;
         rv = profAppShell->CreateTopLevelWindow(nsnull, profileURL,
                                                 PR_TRUE, PR_TRUE, CHROME_STYLE,
                                                 nsnull, 
@@ -1739,15 +1739,12 @@ nsProfile::TriggerActivation(const char *profileName)
 
 			if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIWebShellWindow> webWindow;
 			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
 													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
 													nsnull, 
 							            NS_SIZETOCONTENT,           // width 
 							            NS_SIZETOCONTENT,           // height
-													getter_AddRefs(webWindow));
-
-      mPregWindow = do_QueryInterface(webWindow);
+													getter_AddRefs(mPregWindow));
 
 			if (NS_FAILED(rv)) return rv;
 

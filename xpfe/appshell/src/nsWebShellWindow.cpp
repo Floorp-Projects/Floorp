@@ -266,7 +266,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
-nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
+nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
                                       PRBool aLoadDefaultPage,
@@ -302,8 +302,9 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
      to be closed. This would mimic the behaviour of OSes that support
      top-level child windows in OSes that do not. Later.
   */
-  if (aParent) {
-    aParent->GetWidget(*getter_AddRefs(parentWidget));
+  nsCOMPtr<nsIBaseWindow> parentAsWin(do_QueryInterface(aParent));
+  if (parentAsWin) {
+    parentAsWin->GetMainWidget(getter_AddRefs(parentWidget));
     mParentWindow = getter_AddRefs(NS_GetWeakReference(aParent));
   }
 

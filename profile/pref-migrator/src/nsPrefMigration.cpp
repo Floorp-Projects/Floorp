@@ -54,6 +54,8 @@
 
 #include "nsVoidArray.h"
 
+#include "nsIWebShellWindow.h"
+
 #ifdef DEBUG_seth
 #define DEBUG_UTF8_CONVERSION 1
 #endif 
@@ -387,9 +389,10 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-  
-  if (mPMProgressWindow)
-    mPMProgressWindow->Close();
+
+   nsCOMPtr<nsIWebShellWindow> progressWindow(do_QueryInterface(mPMProgressWindow));
+   if(progressWindow)
+      progressWindow->Close();
 
   return NS_OK;
 }

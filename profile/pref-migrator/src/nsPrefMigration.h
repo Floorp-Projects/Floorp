@@ -33,11 +33,13 @@
 #include "nsICommonDialogs.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
-#include "nsIWebShellWindow.h"
 #include "nsIFileSpec.h"
 #include "nsPrefMigrationCIDs.h"
 #include "nsIPrefMigration.h"
 #include "nsVoidArray.h"
+
+//Interfaces Needed
+#include "nsIXULWindow.h"
 
 #ifdef XP_MAC
 #define IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x "%s Rules" 
@@ -150,7 +152,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsCOMPtr<nsIFileSpec> m_prefsFile; 
       nsCOMPtr<nsIDOMWindow> m_parentWindow;
       nsIDOMWindow *m_progressWindow;
-      nsCOMPtr<nsIWebShellWindow>  mPMProgressWindow;
+      nsCOMPtr<nsIXULWindow>  mPMProgressWindow;
 };
 
 #endif /* nsPrefMigration_h___ */

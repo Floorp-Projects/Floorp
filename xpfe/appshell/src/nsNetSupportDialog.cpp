@@ -20,32 +20,36 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
+// Local Includes
 #include "nsNetSupportDialog.h"
+
+// Helper Classes
+#include "nsAppShellCIDs.h"
 #include "nsCOMPtr.h"
 
+//Interfaces Needed
 #include "nsIAppShellService.h"
-#include "nsIServiceManager.h"
-#include "nsAppShellCIDs.h"
-#include "nsIWebShellWindow.h"
 #include "nsICommonDialogs.h"
 #include "nsIDOMWindow.h"
+#include "nsIServiceManager.h"
+#include "nsIXULWindow.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 PRBool GetNSIPrompt( nsCOMPtr<nsIPrompt> & outPrompt )
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
-  if(NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
-  nsCOMPtr<nsIWebShellWindow> webshellwindow;
-  appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
-  outPrompt = do_QueryInterface(webshellwindow);
-  if ( outPrompt.get() != NULL )
-  	return PR_TRUE;
-  return PR_FALSE;
+   nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
+   if(!appShellService)
+      return PR_FALSE;
+
+   nsCOMPtr<nsIXULWindow> xulWindow;
+   appShellService->GetHiddenWindow(getter_AddRefs(xulWindow));
+   outPrompt = do_QueryInterface(xulWindow);
+   if(outPrompt)
+  	   return PR_TRUE;
+   return PR_FALSE;
 } 
 
 nsNetSupportDialog::nsNetSupportDialog()

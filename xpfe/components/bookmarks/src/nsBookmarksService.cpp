@@ -70,7 +70,6 @@
 #include "nsIPrompt.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
@@ -96,6 +95,10 @@
 #include "nsICharsetAlias.h"
 #include "nsIPlatformCharset.h"
 #include "nsIPref.h"
+
+// Interfaces Needed
+#include "nsIDocShell.h"
+#include "nsIXULWindow.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC
@@ -2491,26 +2494,18 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				if (NS_SUCCEEDED(rv))
 				{
 					// get a parent window for the new browser window
-					nsCOMPtr<nsIWebShellWindow>	parent;
+					nsCOMPtr<nsIXULWindow>	parent;
 					appShell->GetHiddenWindow(getter_AddRefs(parent));
 
 					// convert it to a DOMWindow
-					nsCOMPtr<nsIWebShell>	webshell;
+					nsCOMPtr<nsIDocShell>	docShell;
 					if (parent)
 					{
-						parent->GetWebShell(*getter_AddRefs(webshell));
+						parent->GetDocShell(getter_AddRefs(docShell));
 					}
-					nsCOMPtr<nsIDOMWindow>	domParent;
-					if (webshell)
-					{
-						parent->ConvertWebShellToDOMWindow(webshell, getter_AddRefs(domParent));
-					}
-					nsCOMPtr<nsIScriptGlobalObject>	sgo;
-					if (domParent)
-					{
-						// extract its JS context and create JS-flavor arguments
-						sgo = do_QueryInterface(domParent);
-					}
+					nsCOMPtr<nsIDOMWindow>	domParent(do_GetInterface(docShell));
+					nsCOMPtr<nsIScriptGlobalObject>	sgo(do_QueryInterface(domParent));
+
 					nsCOMPtr<nsIScriptContext>	context;
 					if (sgo)
 					{

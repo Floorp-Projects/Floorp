@@ -73,5 +73,10 @@ interface nsIXULWindow : nsISupports
 	*/
 	void getPersistence(out boolean persistX, out boolean persistY, 
 		out boolean persistCX, out boolean persistCY);
+
+   /*
+	Shows the window as a modal window
+	*/
+	void showModal();
 };
 

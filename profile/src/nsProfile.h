@@ -29,6 +29,7 @@
 #include "nsICmdLineService.h"
 #include "nsProfileAccess.h"
 
+// Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURIContentListener.h"
@@ -51,7 +52,7 @@ private:
 					   nsCString & profileURLStr);
 	nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
 	PRBool mAutomigrate;
-  nsCOMPtr<nsIXULWindow> mPregWindow;
+   nsCOMPtr<nsIXULWindow> mPregWindow;
 
 public:
 	nsProfile();

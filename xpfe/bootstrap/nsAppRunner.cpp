@@ -26,7 +26,6 @@
 #include "nsNetUtil.h"
 #include "nsIWidget.h"
 #include "nsIBrowserWindow.h"
-#include "nsIWebShellWindow.h"
 #include "nsIPref.h"
 #include "plevent.h"
 #include "prmem.h"
@@ -60,6 +59,10 @@
 
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
+
+// Interfaces Needed
+#include "nsIXULWindow.h"
+
 
 #ifndef XP_MAC
 #include "nsTimeBomb.h"
@@ -211,18 +214,20 @@ static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) {
 
 static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
 {
-	nsIURI* url = nsnull;
+	nsCOMPtr<nsIURI> url;
 	nsresult  rv;
-	rv = NS_NewURI(&url, urlstr);
+	rv = NS_NewURI(getter_AddRefs(url), urlstr);
 	if ( NS_FAILED( rv ) )
 		return rv;
-	nsCOMPtr<nsIWebShellWindow> newWindow;
-	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+
+   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+   NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIXULWindow> newWindow;
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
                                       PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
                                       nsnull, width, height,
                                       getter_AddRefs(newWindow));
-  NS_IF_RELEASE( url );
   return rv;
 }
 
