@@ -31,22 +31,24 @@
 #include "nsIFactory.h"
 
 
-
-class nsJARFactory : public nsIFactory 
+// Module implementation
+class nsJARModule : public nsIModule
 {
-  public:
-        
-    nsJARFactory();
-    virtual ~nsJARFactory();
-        
+public:
+    nsJARModule();
+    virtual ~nsJARModule();
+
     NS_DECL_ISUPPORTS
-    
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                                    REFNSIID aIID,
-                                    void **aResult);
 
-    NS_IMETHOD LockFactory(PRBool aLock);
+    NS_DECL_NSIMODULE
 
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
 
