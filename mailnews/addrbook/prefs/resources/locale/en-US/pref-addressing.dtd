@@ -18,32 +18,17 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title           "Addressing">
-<!ENTITY pane.title             "Addressing">
-<!ENTITY pane.description       "Settings for addressing messages">
-<!ENTITY pinpoint.label         "Pinpoint Addressing">
-<!ENTITY lookFor.label          "Look for addresses in the following:">
-<!ENTITY padCheck.label         "Address Books">
-<!ENTITY padCheck.accesskey     "a">
-<!ENTITY dirCheck.label         "Directory Server">
-<!ENTITY dirCheck.accesskey     "d">
-<!ENTITY mulFound.label         "When there are multiple addresses found:">
-<!ENTITY showList.label         "Show me a list of choices">
-<!ENTITY showList.accesskey     "s">
-<!ENTITY acceptList.label       "Accept what I have typed">
-<!ENTITY acceptList.accesskey   "c">
-<!ENTITY oneMatch.label         "If there is one match in your personal address books:">
-<!ENTITY useAddress.label       "Use the address and do not search in the directory">
-<!ENTITY useAddress.accesskey   "u">
-<!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectionPicker.label    "Add email addresses to my:">
-<!ENTITY emailCollectiontext.label	"Email addresses from outgoing messages can be automatically added to a local address book.">
+<!ENTITY pane.title                            "Addressing">
+<!ENTITY emailCollectiontitle.label            "Email Address Collection">
+<!ENTITY emailCollectionPicker.label           "Add email addresses to my:">
+<!ENTITY emailCollectionPicker.accesskey       "A">
+<!ENTITY emailCollectiontext.label             "Email addresses from outgoing messages can be automatically added to a local address book.">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label                 "Address Autocompletion">
 <!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
 <!ENTITY addressingEnable.label                "Local Address Books">
-<!ENTITY addressingEnable.accesskey            "A">
+<!ENTITY addressingEnable.accesskey            "L">
 <!ENTITY autocompleteText.label                "When addressing messages, look for matching entries in:">
 <!ENTITY directories.label                     "Directory Server:">
 <!ENTITY directories.accesskey                 "D">

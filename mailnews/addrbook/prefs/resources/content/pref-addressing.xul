@@ -38,6 +38,7 @@
     <hbox align="center">
       <checkbox id="emailCollectionOutgoing" 
         label="&emailCollectionPicker.label;"
+        accesskey="&emailCollectionPicker.accesskey;"
         prefstring="mail.collect_email_address_outgoing"/>
    <menulist id="localDirectoriesList" flex="1"
                   preftype="string" 

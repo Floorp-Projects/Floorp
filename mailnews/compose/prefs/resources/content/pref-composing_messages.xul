@@ -122,7 +122,7 @@
     <caption label="&defaultMessagesHeader.label;"/>  
     <vbox>
       <hbox align="center">
-        <label value="&font.label;"/>
+        <label control="FontSelect" value="&font.label;" accesskey="&font.accesskey;"/>
         <menulist id="FontSelect" preftype="string" prefstring="msgcompose.font_face">
           <menupopup>
             <menuitem value="" label="&fontVarWidth.label;"/>
@@ -136,7 +136,7 @@
         </menulist>           
       </hbox>
       <hbox align="center">
-        <label value="&size.label;"/>
+        <label control="fontSizeSelect" value="&size.label;" accesskey="&size.accesskey;"/>
         <menulist id="fontSizeSelect" preftype="string" prefstring="msgcompose.font_size">
           <menupopup>
             <menuitem value="x-small" label="&size-x-smallCmd.label;"/>
@@ -147,10 +147,10 @@
             <menuitem value="xx-large" label="&size-xx-largeCmd.label;"/>
           </menupopup>
         </menulist>
-        <label value="&fontColor.label;"/>        
+        <label control="textColorButton" value="&fontColor.label;" accesskey="&fontColor.accesskey;"/>
         <colorpicker type="button" id="textColorButton" onchange="setColorWell(this)"/>
         <data id="textColor" preftype="color" prefstring="msgcompose.text_color" prefattribute="value" wsm_attributes="value"/>
-        <label value="&bgColor.label;"/>      
+        <label control="backgroundColorButton" value="&bgColor.label;" accesskey="&bgColor.accesskey;"/>      
         <colorpicker type="button" id="backgroundColorButton" onchange="setColorWell(this)"/>
         <data id="backgroundColor" preftype="color" prefstring="msgcompose.background_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>

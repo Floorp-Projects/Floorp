@@ -58,8 +58,10 @@ Contributor(s):
 
     <hbox align="center" class="indent">
       <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
-        <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
-        <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
+        <radio id="system" class="iconic" value="0" oncommand="PlaySoundCheck()" 
+               label="&systemsound.label;" accesskey="&systemsound.accesskey;"/>
+        <radio id="custom" class="iconic" value="1" oncommand="PlaySoundCheck()"
+               label="&customsound.label;" accesskey="&customsound.accesskey;"/>
       </radiogroup>
     </hbox>
 

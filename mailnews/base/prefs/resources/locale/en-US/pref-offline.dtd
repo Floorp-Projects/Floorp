@@ -1,21 +1,28 @@
 <!-- extracted from content/pref-offline.xul -->
 
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
-<!ENTITY window.title  "Offline &amp; Disk Space">
 <!ENTITY boxHeader  "Offline &amp; Disk Space">
 <!ENTITY rHeader  "Offline">
 <!ENTITY textStartUp   "When starting up:">
 <!ENTITY radioRememberPrevState "Remember previous online state">
+<!ENTITY radioRememberPrevState.accesskey "R">
 <!ENTITY radioAskMe "Ask me for online state at startup">
+<!ENTITY radioAskMe.accesskey "A">
 <!ENTITY textGoingOnline   "When going online:">
 <!ENTITY radioAskUnsent  "Ask me if I want to send my unsent messages">
+<!ENTITY radioAskUnsent.accesskey  "s">
 <!ENTITY radioAutoSend  "Automatically send my unsent messages">
+<!ENTITY radioAutoSend.accesskey  "u">
 <!ENTITY radioNotSend  "Do not send my unsent messages">
+<!ENTITY radioNotSend.accesskey  "D">
 <!ENTITY textGoingOffline   "When going offline:">
 <!ENTITY radioAskDownload  "Ask me if I want to download messages for offline use">
+<!ENTITY radioAskDownload.accesskey  "k">
 <!ENTITY radioAutoDownload  "Automatically download messages for offline use">
+<!ENTITY radioAutoDownload.accesskey  "o">
 <!ENTITY radioNotDownload  "Do not download messages for offline use">
+<!ENTITY radioNotDownload.accesskey  "n">
 <!ENTITY Diskspace "Disk Space">
 <!ENTITY offlineCompact.label "Compact folders when it will save over">
-<!ENTITY offlineCompact.accesskey "c">
+<!ENTITY offlineCompact.accesskey "C">
 <!ENTITY kb.label "KB">

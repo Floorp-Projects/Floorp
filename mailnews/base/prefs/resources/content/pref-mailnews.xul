@@ -96,21 +96,21 @@ Contributor(s):
     <caption label="&toolbarIntro.label;"/>
     <vbox>
       <checkbox id="fileButton"
-                label="&fileButton.label;"
+                label="&fileButton.label;" accesskey="&fileButton.accesskey;"
                 prefstring="mail.toolbars.showbutton.file"/>
       <checkbox id="nextButton"
-                label="&nextButton.label;"
+                label="&nextButton.label;" accesskey="&nextButton.accesskey;"
                 prefstring="mail.toolbars.showbutton.next"/>
       <checkbox id="printButton"
-                label="&printButton.label;"
+                label="&printButton.label;" accesskey="&printButton.accesskey;"
                 prefstring="mail.toolbars.showbutton.print"/>
     </vbox>
     <vbox>
       <checkbox id="stopButton"
-                label="&stopButton.label;"
+                label="&stopButton.label;" accesskey="&stopButton.accesskey;"
                 prefstring="mail.toolbars.showbutton.stop"/>
       <checkbox id="junkMailButton"
-                label="&junkMailButton.label;"
+                label="&junkMailButton.label;" accesskey="&junkMailButton.accesskey;"
                 prefstring="mail.toolbars.showbutton.junk"/>
     </vbox>
   </groupbox>

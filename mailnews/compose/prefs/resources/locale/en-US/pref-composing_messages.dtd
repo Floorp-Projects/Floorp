@@ -19,47 +19,39 @@ Rights Reserved.
 --> 
 
 <!ENTITY pane.title                           "Composition">
-<!ENTITY pane.description                     "Composing mail messages">
 <!ENTITY forwardReply.label                   "Forwarding Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
-<!ENTITY forwardMsg.accesskey                 "f">
+<!ENTITY forwardMsg.accesskey                 "F">
 <!ENTITY inline.label                         "Inline">
 <!ENTITY inline.accesskey                     "I">
-<!ENTITY quoted.label                         "Quoted">
-<!ENTITY quoted.accesskey                     "q">
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
 
 <!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">
-<!ENTITY warnOnSendAccelKey.accesskey         "C">
-
-<!ENTITY readingMessagesHeader.label          "For incoming messages">
-<!ENTITY messageWrapping.label                "Message Wrapping">
-<!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
-<!ENTITY wrapInMsg.accesskey                  "w">
+<!ENTITY warnOnSendAccelKey.accesskey         "k">
 
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
-<!ENTITY spellCheck.accesskey                 "c">
+<!ENTITY spellCheck.accesskey                 "C">
 <!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
-<!ENTITY wrapOutMsg.accesskey                 "l">
+<!ENTITY wrapOutMsg.accesskey                 "W">
 <!ENTITY char.label                           "characters">
-<!ENTITY use8Bits.label                       "Send messages that use 8-bit characters">
-<!ENTITY asIs.label                           "As is (does not work well with some mail servers)">
-<!ENTITY asIs.accesskey                       "t">
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
 <!ENTITY useMIME.accesskey                    "o">
 
 <!ENTITY sendDefaultCharset.label             "Character Encoding:">
-<!ENTITY sendDefaultCharset.accesskey         "h">
-<!ENTITY languagesTitle.label				  "Languages">
-<!ENTITY languagesText.label				  "Use the following character encoding as the default for composing messages:">
+<!ENTITY sendDefaultCharset.accesskey         "r">
+<!ENTITY languagesTitle.label                 "Languages">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
 <!ENTITY font.label                           "Font:">
+<!ENTITY font.accesskey                       "n">
 <!ENTITY size.label                           "Size:">
+<!ENTITY size.accesskey                       "S">
 <!ENTITY fontColor.label                      "Text:">
+<!ENTITY fontColor.accesskey                  "T">
 <!ENTITY bgColor.label                        "Background:">
+<!ENTITY bgColor.accesskey                    "B">
 
 <!-- Tooltips -->  
