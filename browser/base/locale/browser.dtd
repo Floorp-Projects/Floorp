@@ -104,8 +104,6 @@
 
 <!ENTITY downloadManagerCmd.label     "Download Manager">
 
-<!ENTITY pageHolder.commandKey     "j">
-
 <!ENTITY downloadManagerCmd.accesskey "D">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
@@ -252,9 +250,6 @@
 
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">
-
-<!ENTITY pageHolderButton.label         "Page Holder">
-<!ENTITY pageHolderButton.tooltip       "Displays pages in a sidebar panel">
 
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
 <!ENTITY newWindowButton.tooltip        "Opens a new window">
