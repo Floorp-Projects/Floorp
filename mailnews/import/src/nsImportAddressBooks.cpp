@@ -43,9 +43,9 @@
 #include "nsTextFormater.h"
 #include "ImportDebug.h"
 
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORYRESOURCE_CID);
+static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_IID(kIStandardUrlIID, NS_IURL_IID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);

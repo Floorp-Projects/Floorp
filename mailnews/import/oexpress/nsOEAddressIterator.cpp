@@ -37,7 +37,7 @@
 
 #include "OEDebugLog.h"
 
-static NS_DEFINE_CID(kAbCardCID,			NS_ABCARDRESOURCE_CID);
+static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
 
 
