@@ -53,7 +53,7 @@ var expectedvalues = [];
 
 /*
  * We will form an eval string to set the result-variable |actual|.
- * To get a feel for this, suppose N were 2. Then the eval string is
+ * To get a feel for this, suppose N were 3. Then the eval string is
  * 'actual = (1&(1&(1&1)));' The expected value after eval() is 1.
  */
 status = inSection(1);
@@ -75,7 +75,7 @@ test();
 
 function repeat_str(str, repeat_count)
 {
-  var arr = new Array(repeat_count);
+  var arr = new Array(--repeat_count);
   while (repeat_count != 0)
     arr[--repeat_count] = str;
   return str.concat.apply(str, arr);
