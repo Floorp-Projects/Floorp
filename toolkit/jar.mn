@@ -1,0 +1,8 @@
+toolkit.jar:
++        content/global/viewZoomOverlay.xul                 (content/viewZoomOverlay.xul)
++        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
++        content/global/xul.css                             (content/xul.css)
++        content/global/nsContextMenu.js                    (content/nsContextMenu.js)
++        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
+         content/global/nsBrowserStatusHandler.js           (content/nsBrowserStatusHandler.js)
+         content/global/nsBrowserContentListener.js         (content/nsBrowserContentListener.js)
