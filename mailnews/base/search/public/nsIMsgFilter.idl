@@ -77,8 +77,7 @@ interface nsIMsgFilter : nsISupports {
 
     nsIMsgSearchTerm createTerm();
 
-    // this is the actual array of search terms, and is thus modifyable
-    readonly attribute nsISupportsArray searchTerms;
+    attribute nsISupportsArray searchTerms;
 
     attribute nsIMsgSearchScopeTerm scope;
 
