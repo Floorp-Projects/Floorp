@@ -99,6 +99,7 @@ nsresult
 nsNativeBrowserWindow::InitNativeWindow()
 {
 	// override to do something special with platform native windows
+  return NS_OK;
 }
 
 static void MenuProc(PRUint32 aId) 
