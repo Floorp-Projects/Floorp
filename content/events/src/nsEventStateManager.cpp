@@ -63,6 +63,9 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
+//we will use key binding by default now. this wil lbreak viewer for now
+#define NON_KEYBINDING 0  
+
 nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
 nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
 
@@ -714,6 +717,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
             ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
             *aStatus = nsEventStatus_eConsumeNoDefault;
             break;
+
+//the problem is that viewer does not have xul so we cannot completely eliminate these 
+#if NON_KEYBINDING
           case NS_VK_PAGE_DOWN: 
           case NS_VK_PAGE_UP:
             if (!mCurrentFocus) {
@@ -775,6 +781,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
             }
           }
           break;
+#endif //NON_KEYBINDING
         }
       }
     }

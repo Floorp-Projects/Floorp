@@ -224,6 +224,38 @@ public:
    */
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame)=0;
 
+  /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
+   *  the effect being the selection will move one character left or right.
+   * @param aForward move forward in document.
+   * @param aExtend continue selection
+   */
+  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend)=0;
+
+  /** WordMove will generally be called from the nsiselectioncontroller implementations.
+   *  the effect being the selection will move one word left or right.
+   * @param aForward move forward in document.
+   * @param aExtend continue selection
+   */
+  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend)=0;
+
+  /** LineMove will generally be called from the nsiselectioncontroller implementations.
+   *  the effect being the selection will move one line up or down.
+   * @param aForward move forward in document.
+   * @param aExtend continue selection
+   */
+  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend)=0;
+
+  /** IntraLineMove will generally be called from the nsiselectioncontroller implementations.
+   *  the effect being the selection will move to beginning or end of line
+   * @param aForward move forward in document.
+   * @param aExtend continue selection
+   */
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend)=0;
+
+  /** Select All will generally be called from the nsiselectioncontroller implementations.
+   *  it will select the whole doc
+   */
+  NS_IMETHOD SelectAll()=0;
 };
 
 

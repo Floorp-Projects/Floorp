@@ -378,6 +378,8 @@ public:
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD ScrollPage(PRBool aForward);
+  NS_IMETHOD CompleteScroll(PRBool aForward);
+  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD SelectAll();
 
   // nsIDocumentObserver
@@ -1321,35 +1323,69 @@ NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *aOutEnable)
 NS_IMETHODIMP 
 PresShell::CharacterMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mSelection->CharacterMove(aForward, aExtend);  
 }
 
 NS_IMETHODIMP 
 PresShell::WordMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mSelection->WordMove(aForward, aExtend);  
 }
 
 NS_IMETHODIMP 
 PresShell::LineMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mSelection->LineMove(aForward, aExtend);  
 }
 
 NS_IMETHODIMP 
 PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mSelection->IntraLineMove(aForward, aExtend);  
 }
 
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIViewManager> viewManager;
+  nsresult result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(result) && viewManager)
+  {
+    nsCOMPtr<nsIScrollableView> scrollView;
+    result = viewManager->GetRootScrollableView(getter_AddRefs(scrollView));
+    if (NS_SUCCEEDED(result) && scrollView)
+    {
+      
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
+{
+  nsCOMPtr<nsIViewManager> viewManager;
+  nsresult result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(result) && viewManager)
+  {
+    nsCOMPtr<nsIScrollableView> scrollView;
+    result = viewManager->GetRootScrollableView(getter_AddRefs(scrollView));
+    if (NS_SUCCEEDED(result) && scrollView)
+    {
+      scrollView->ScrollByPages(aForward ? 1 : -1);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+PresShell::CompleteScroll(PRBool aForward)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1357,7 +1393,7 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP 
 PresShell::SelectAll()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mSelection->SelectAll();
 }
 
 //end implementations nsISelectionController
@@ -2510,14 +2546,14 @@ PresShell::HandleEvent(nsIView         *aView,
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 
-  if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
+/*  if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
   {//KEY HANDLERS WILL GET RID OF THIS 
     if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(mPresContext, aEvent)))
     {  
       return NS_OK;
     }
   }
-
+*/
   if (nsnull != frame) {
     PushCurrentEventFrame();
 

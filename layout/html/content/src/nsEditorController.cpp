@@ -27,6 +27,11 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMSelection.h"
 
+#include "nsISelectionController.h"
+#include "nsIDocument.h"
+#include "nsIHTMLContent.h"
+#include "nsIPresShell.h"
+
 NS_IMPL_ADDREF(nsEditorController)
 NS_IMPL_RELEASE(nsEditorController)
 
@@ -43,6 +48,43 @@ nsEditorController::nsEditorController()
   mPasteString  = "cmd_paste";
   mDeleteString = "cmd_delete";
   mSelectAllString = "cmd_selectAll";
+
+  mBeginLineString = "cmd_beginLine";
+  mEndLineString   = "cmd_endLine";
+  mSelectBeginLineString = "cmd_selectBeginLine";
+  mSelectEndLineString   = "cmd_selectEndLine";
+
+  mScrollTopString = "cmd_scrollTop";
+  mScrollBottomString = "cmd_scrollBottom";
+
+  mMoveTopString   = "cmd_moveTop";
+  mMoveBottomString= "cmd_moveBottom";
+  mSelectMoveTopString   = "cmd_selectTop";
+  mSelectMoveBottomString= "cmd_selectBottom";
+
+  mDownString      = "cmd_linedown";
+  mUpString        = "cmd_lineup";
+  mSelectDownString = "cmd_selectLineDown";
+  mSelectUpString   = "cmd_selectLineUp";
+
+  mLeftString      = "cmd_charPrevious";
+  mRightString     = "cmd_charNext";
+  mSelectLeftString = "cmd_selectCharPrevious";
+  mSelectRightString= "cmd_selectCharNext";
+
+
+  mWordLeftString      = "cmd_wordPrevious";
+  mWordRightString     = "cmd_wordNext";
+  mSelectWordLeftString = "cmd_selectWordPrevious";
+  mSelectWordRightString= "cmd_selectWordNext";
+
+  mScrollPageUp    = "cmd_scrollPageUp";
+  mScrollPageDown  = "cmd_scrollPageDown";
+
+  mMovePageUp    = "cmd_scrollPageUp";
+  mMovePageDown  = "cmd_scrollPageDown";
+  mSelectMovePageUp     = "cmd_selectPageUp";
+  mSelectMovePageDown   = "cmd_selectPageDown";
 }
 
 nsEditorController::~nsEditorController()
@@ -151,7 +193,35 @@ NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRB
       (PR_TRUE==mCopyString.Equals(aCommand)) ||
       (PR_TRUE==mPasteString.Equals(aCommand)) ||
       (PR_TRUE==mDeleteString.Equals(aCommand)) ||
-      (PR_TRUE==mSelectAllString.Equals(aCommand))    
+      (PR_TRUE==mSelectAllString.Equals(aCommand)) ||
+      (PR_TRUE==mBeginLineString.Equals(aCommand)) ||
+      (PR_TRUE==mEndLineString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectBeginLineString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectEndLineString.Equals(aCommand)) ||
+      (PR_TRUE==mScrollTopString.Equals(aCommand)) ||
+      (PR_TRUE==mScrollBottomString.Equals(aCommand)) ||
+      (PR_TRUE==mMoveTopString.Equals(aCommand)) ||
+      (PR_TRUE==mMoveBottomString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectMoveTopString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectMoveBottomString.Equals(aCommand)) ||
+      (PR_TRUE==mDownString.Equals(aCommand)) ||
+      (PR_TRUE==mUpString.Equals(aCommand)) ||
+      (PR_TRUE==mLeftString.Equals(aCommand)) ||
+      (PR_TRUE==mRightString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectDownString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectUpString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectLeftString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectRightString.Equals(aCommand)) ||
+      (PR_TRUE==mWordLeftString.Equals(aCommand)) ||
+      (PR_TRUE==mWordRightString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectWordLeftString.Equals(aCommand)) ||
+      (PR_TRUE==mSelectWordRightString.Equals(aCommand)) ||
+      (PR_TRUE==mScrollPageUp.Equals(aCommand)) ||
+      (PR_TRUE==mScrollPageDown.Equals(aCommand)) ||
+      (PR_TRUE==mMovePageUp.Equals(aCommand)) ||
+      (PR_TRUE==mMovePageDown.Equals(aCommand)) ||
+      (PR_TRUE==mSelectMovePageUp.Equals(aCommand)) ||
+      (PR_TRUE==mSelectMovePageDown.Equals(aCommand))
     )
   {
     *aResult = PR_TRUE;
@@ -164,6 +234,7 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   nsCOMPtr<nsIEditor> editor;
+  nsCOMPtr<nsISelectionController> selCont;
   NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
   if (!editor)
   { // Q: What does it mean if there is no editor?  
@@ -195,11 +266,150 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   { 
     NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eNext), NS_ERROR_FAILURE);
   }
-  else if (PR_TRUE==mSelectAllString.Equals(aCommand))    
+  else if (PR_TRUE==mSelectAllString.Equals(aCommand))    //SelectALL
   { 
     NS_ENSURE_SUCCESS(editor->SelectAll(), NS_ERROR_FAILURE);
   }
-
+  else if (PR_TRUE==mScrollTopString.Equals(aCommand))    //ScrollTOP
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteScroll(PR_FALSE);
+  }
+  else if (PR_TRUE==mScrollBottomString.Equals(aCommand))    //ScrollBOTTOM
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteScroll(PR_TRUE);
+  }
+  else if (PR_TRUE==mMoveTopString.Equals(aCommand)) //MoveTop
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mMoveBottomString.Equals(aCommand)) //MoveBottom
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectMoveTopString.Equals(aCommand)) // SelectMoveTop
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectMoveBottomString.Equals(aCommand)) //SelectMoveBottom
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CompleteMove(PR_TRUE,PR_TRUE);
+  }
+  else if (PR_TRUE==mDownString.Equals(aCommand))    //DOWN
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->LineMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mUpString.Equals(aCommand))    //UP
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->LineMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectDownString.Equals(aCommand))    //SelectDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->LineMove(PR_TRUE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectUpString.Equals(aCommand))    //SelectUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->LineMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mLeftString.Equals(aCommand))    //LeftChar
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CharacterMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mRightString.Equals(aCommand))    //Right char
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CharacterMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectLeftString.Equals(aCommand))    //SelectLeftChar
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CharacterMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectRightString.Equals(aCommand))    //SelectRightChar
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->CharacterMove(PR_TRUE,PR_TRUE);
+  }
+  else if (PR_TRUE==mBeginLineString.Equals(aCommand))  //BeginLine 
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->IntraLineMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mEndLineString.Equals(aCommand))    //EndLine
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->IntraLineMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectBeginLineString.Equals(aCommand))    //SelectBeginLine
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->IntraLineMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectEndLineString.Equals(aCommand))    //SelectEndLine
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->IntraLineMove(PR_TRUE,PR_TRUE);
+  }
+  else if (PR_TRUE==mWordLeftString.Equals(aCommand))  //LeftWord 
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->WordMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mWordRightString.Equals(aCommand))  //RightWord 
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->WordMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectWordLeftString.Equals(aCommand))  //SelectLeftWord 
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->WordMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectWordRightString.Equals(aCommand))  //SelectRightWord 
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->WordMove(PR_TRUE,PR_TRUE);
+  }
+  else if (PR_TRUE==mScrollPageUp.Equals(aCommand))  //ScrollPageUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollPage(PR_FALSE);
+  }
+  else if (PR_TRUE==mScrollPageDown.Equals(aCommand))  //ScrollPageDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollPage(PR_TRUE);
+  }
+  else if (PR_TRUE==mMovePageUp.Equals(aCommand))  //MovePageUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->PageMove(PR_FALSE,PR_FALSE);
+  }
+  else if (PR_TRUE==mMovePageDown.Equals(aCommand))  //MovePageDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->PageMove(PR_TRUE,PR_FALSE);
+  }
+  else if (PR_TRUE==mSelectMovePageUp.Equals(aCommand))  //SelectMovePageUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->PageMove(PR_FALSE,PR_TRUE);
+  }
+  else if (PR_TRUE==mSelectMovePageDown.Equals(aCommand))  //SelectMovePageDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->PageMove(PR_TRUE,PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -224,6 +434,51 @@ NS_IMETHODIMP nsEditorController::GetEditor(nsIEditor ** aEditor)
   NS_ENSURE_SUCCESS(frame->GetEditor(aEditor), NS_ERROR_FAILURE);
   
   return NS_OK;
+}
+
+NS_IMETHODIMP nsEditorController::GetSelectionController(nsISelectionController ** aSelCon)
+{
+  nsCOMPtr<nsIEditor>editor;
+  nsresult result = GetEditor(getter_AddRefs(editor));
+  if (NS_FAILED(result) || !editor)
+    return result ? result : NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  result = editor->GetPresShell(getter_AddRefs(presShell)); 
+  if (NS_FAILED(result) || !presShell)
+    return result ? result : NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsISelectionController> selController = do_QueryInterface(presShell); 
+  if (selController)
+  {
+    *aSelCon = selController;
+    NS_ADDREF(*aSelCon);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+/*
+  NS_ENSURE_ARG_POINTER(aSelCon);
+  nsCOMPtr<nsIDocument> doc; 
+  mContent->GetDocument(*getter_AddRefs(doc)); 
+
+  *aSelCon = nsnull;
+  if (doc)
+  {
+    PRInt32 i = doc->GetNumberOfShells(); 
+    if (i == 0) 
+      return NS_ERROR_FAILURE; 
+
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0)); 
+    nsCOMPtr<nsISelectionController> selController = do_QueryInterface(presShell); 
+    if (selController)
+    {
+      *aSelCon = selController;
+      (*aSelCon)->AddRef();
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+  */
 }
 
 NS_IMETHODIMP nsEditorController::GetFrame(nsIGfxTextControlFrame **aFrame)

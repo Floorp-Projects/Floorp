@@ -31,6 +31,7 @@
 class nsIHTMLContent;
 class nsIGfxTextControlFrame;
 class nsIEditor;
+class nsISelectionController;
 
 class nsEditorController : public nsIController
 {
@@ -55,6 +56,7 @@ protected:
   /** fetch the editor associated with mContent */
   NS_IMETHOD GetEditor(nsIEditor ** aEditor);
 
+  NS_IMETHOD GetSelectionController(nsISelectionController ** aSelCon);
   /** return PR_TRUE if the editor associated with mContent is enabled */
   PRBool IsEnabled();
 
@@ -66,6 +68,42 @@ protected:
   nsString mPasteString;
   nsString mDeleteString;
   nsString mSelectAllString;
+
+  nsString mBeginLineString;
+  nsString mEndLineString  ;
+  nsString mSelectBeginLineString;
+  nsString mSelectEndLineString  ;
+
+  nsString mScrollTopString;
+  nsString mScrollBottomString;
+
+  nsString mMoveTopString ;
+  nsString mMoveBottomString;
+  nsString mSelectMoveTopString;
+  nsString mSelectMoveBottomString;
+
+  nsString mDownString;
+  nsString mUpString;
+  nsString mSelectDownString;
+  nsString mSelectUpString;
+
+  nsString mLeftString;
+  nsString mRightString;
+  nsString mSelectLeftString;
+  nsString mSelectRightString;
+
+  nsString mWordLeftString;
+  nsString mWordRightString;
+  nsString mSelectWordLeftString;
+  nsString mSelectWordRightString;
+
+  nsString mScrollPageUp;
+  nsString mScrollPageDown;
+
+  nsString mMovePageUp;
+  nsString mMovePageDown;
+  nsString mSelectMovePageUp;
+  nsString mSelectMovePageDown;
 
 protected:
    nsIHTMLContent* mContent;    // weak reference, the content object owns this object
