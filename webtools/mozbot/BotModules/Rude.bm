@@ -29,7 +29,7 @@ sub RegisterConfig {
       # [ name, save?, settable? ]
         ['insultHost', 1, 1, 'insulthost.colorado.edu'],
         ['insultPort', 1, 1, '1695'],
-        ['excuseHost', 1, 1, 'bofh.engr.wisc.edu'], # or bofh.jive.org
+        ['excuseHost', 1, 1, 'bofh.engr.wisc.edu'], # same host as bofh.jive.org
         ['excusePort', 1, 1, '666'],
         ['insultOverrides', 1, 1, { # overrides for the insults (keys must be lowercase)
                                    'mozilla' => 'You are nothing but the best browser on the planet.',
@@ -79,7 +79,7 @@ sub Told {
             $self->say($event, "$line");
         } else {
             $self->say($event, "$event->{'from'}: Don't ask *me* for an excuse! Sheesh!");
-            $self->debug("yikes, $self->{'insultHost'}:$self->{'insultPort'} is down!");
+            $self->debug("yikes, $self->{'excuseHost'}:$self->{'excusePort'} is down!");
         }
     } else {
         return $self->SUPER::Told(@_);
