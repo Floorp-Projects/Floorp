@@ -67,7 +67,7 @@ do
       ;;
     -*)
 	case $1 in
-		-ProfileManager | -ProfileWizard | -installer | -edit | -mail | -pref | -compose | -editor | -addressbook | -chrome )
+		-ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome )
 		if [ "x$moreargs" != "x" ]
 		then
 			echo "You can't have $1 and $moreargs"
@@ -90,7 +90,7 @@ do
 done
 
 # if you are debugging, you can't have moreargs
-# ./mozilla-apprunner.sh -g -mail makes no sense.
+# for example, "./mozilla-apprunner.sh -g -mail" makes no sense.
 if [ $debugging -eq 1 -a "x$moreargs" != "x" ]
 then
 	echo "You can't have -g and $moreargs at the same time"

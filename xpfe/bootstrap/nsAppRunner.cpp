@@ -435,6 +435,15 @@ int main(int argc, char* argv[])
     }
     if (nsnull == urlstr)
     {
+      rv = cmdLineArgs->GetCmdLineValue("-news", &cmdResult);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (cmdResult && (strcmp("1",cmdResult)==0))
+          urlstr = "chrome://messenger/content/";
+      }
+    }
+    if (nsnull == urlstr)
+    {
       rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
       if (NS_SUCCEEDED(rv))
       {
