@@ -34,7 +34,7 @@
 #
 # smime.pl - frontend for S/MIME message generation and parsing
 #
-# $Id: smime,v 1.6 2000/07/07 00:57:39 chrisk%netscape.com Exp $
+# $Id: smime,v 1.7 2001/08/09 13:30:44 mcgreer%netscape.com Exp $
 #
 
 use Getopt::Std;
@@ -353,6 +353,7 @@ $saveRS = $/;
 $/ = undef;
 $mimebody = <STDIN>;
 $/ = $saveRS;
+chomp($mimebody);
 
 if (defined $opt_D) {
     #
