@@ -376,7 +376,7 @@ xp_TempFileName(int type, const char * request_prefix, const char * extension,
         ext = ".MOZ";
         prefix = CACHE_PREFIX;
         break;
-#ifdef MOZ_MAIL_NEWS        
+#ifdef OLD_MOZ_MAIL_NEWS        
 	case xpSNewsRC:
 	case xpNewsRC:
     case xpNewsgroups:
@@ -400,7 +400,7 @@ xp_TempFileName(int type, const char * request_prefix, const char * extension,
 			prefix = "abook";
 		ext = ".nab";
 		break;
-#endif // MOZ_MAIL_NEWS
+#endif // OLD_MOZ_MAIL_NEWS
 	case xpCacheFAT:
 		directory = theApp.m_pCacheDir;
 		prefix = "fat";

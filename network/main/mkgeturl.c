@@ -65,7 +65,7 @@
 #endif /* 0 */
 
 #ifdef XP_MAC
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 #ifdef MOZ_SECURITY
 #include "mkcertld.h"
 #endif /* MOZ_SECURITY */
@@ -75,7 +75,7 @@
 #include "mkpop3.h"
 #include "mkimap4.h"
 #include "mkldap.h"
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 #endif /* XP_MAC */
 
 #include "glhist.h"
@@ -88,7 +88,7 @@
 #include "mkldap.h"
 #endif
 
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 #include "mkimap4.h"
 #endif
 
@@ -686,7 +686,7 @@ NET_SetupPrefs(const char * prefChanged)
 	}
 	
 	HG42422
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 	if (bSetupAll || !PL_strcmp(prefChanged,pref_mailAllowSignInUName)) {
 		XP_Bool prefBool;
         if ( (PREF_OK != PREF_GetBoolPref(pref_mailAllowSignInUName,&prefBool)) ) {
@@ -694,7 +694,7 @@ NET_SetupPrefs(const char * prefChanged)
         }
 		NET_SetAllowAtSignInMailUserName (prefBool);
 	}
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 	
 	if (bSetupAll || !PL_strcmp(prefChanged,pref_proxyACUrl)) {
 		if ( (PREF_OK == PREF_CopyCharPref(pref_proxyACUrl,&proxy))
@@ -841,10 +841,10 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 #endif
 	NET_InitTotallyRandomStuffPeopleAddedProtocols();
 
-#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
-	NET_InitMailtoProtocol();  /* has a stub for MOZ_MAIL_NEWS */
-#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
-#ifdef MOZ_MAIL_NEWS    
+#if defined(OLD_MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+	NET_InitMailtoProtocol();  /* has a stub for OLD_MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+#ifdef OLD_MOZ_MAIL_NEWS    
 	NET_InitNewsProtocol();
 	NET_InitMailboxProtocol();
 	NET_InitMsgSearchProtocol();
@@ -855,7 +855,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 #endif /* MOZ_SECURITY */
 	NET_InitAddressBookProtocol();
 	NET_InitIMAP4Protocol();
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 
     return(status);
 }
@@ -912,9 +912,9 @@ NET_ChangeMaxNumberOfConnectionsPerContext(int max_number_of_connections)
 	 */
 /* @@@@	NET_CleanupFTP(); */
 #ifdef MOZILLA_CLIENT
-#ifdef MOZ_MAIL_NEWS    
+#ifdef OLD_MOZ_MAIL_NEWS    
 /* @@@@	NET_CleanupNews(); */
-#endif /* MOZ_MAIL_NEWS */   
+#endif /* OLD_MOZ_MAIL_NEWS */   
 #endif /* MOZILLA_CLIENT */
 
 }
@@ -4942,7 +4942,7 @@ NET_DestroyEvidence()
 	NET_SetMemoryCacheSize(oldSize); /* set it back up */
 }
 
-#if !defined(MOZ_MAIL_NEWS) && !defined(MOZ_MAIL_COMPOSE)
+#if !defined(OLD_MOZ_MAIL_NEWS) && !defined(MOZ_MAIL_COMPOSE)
 
 /* this whole mess should get moved to the mksmtp.c file
  * where it can share the InitMailtoProtocol function
@@ -5212,7 +5212,7 @@ NET_InitMailtoProtocol(void)
         NET_RegisterProtocolImplementation(&mailto_proto_impl, MAILTO_TYPE_URL);
 }
 
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 
 #ifdef TRUST_LABELS
 /* given a URL search the list of URL_s structures for one that has

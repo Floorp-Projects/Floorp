@@ -58,7 +58,7 @@ ifdef MOZ_MAIL_NEWS
 DIRS += \
 	mailbox \
 	smtp \
-	nntp \
+#	nntp \
 	pop3 \
 	imap4 \
 	certld \

@@ -3869,12 +3869,12 @@ net_FTPLoad (ActiveEntry * ce)
 		PR_FREEIF(password);
 		password = NULL;
 		
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 #ifdef MOZILLA_CLIENT
 		if(net_get_send_email_address_as_password())
 			user = FE_UsersMailAddress();
 #endif
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 
 		if(user && *user)
 		  {
