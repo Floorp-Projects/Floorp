@@ -141,7 +141,6 @@ int ProcessArgs(int argc, char *argv[])
           fprintf(stderr, "Unknown option '%c'\n", argv[i][j]);
         }
       }
-      i++;
     } else {
       if (gUnreg == PR_TRUE)
         res = Unregister(argv[i]);
@@ -154,6 +153,7 @@ int ProcessArgs(int argc, char *argv[])
         ReportSuccess(argv[i]);
       }
     }
+    i++;
   }
   return result;
 }
