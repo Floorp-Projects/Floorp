@@ -418,6 +418,49 @@ function InitViewHeadersMenu()
     menuitem.setAttribute("checked", "true"); 
 }
 
+function InitViewBodyMenu()
+{
+  var html_as = 0;
+  var prefer_plaintext = false;
+  var disallow_classes = 0;
+  try
+  {
+    prefer_plaintext = pref.getBoolPref("mailnews.display.prefer_plaintext");
+    html_as = pref.getIntPref("mailnews.display.html_as");
+    disallow_classes = pref.getIntPref("mailnews.display.disallow_mime_handlers");
+    if (disallow_classes > 0)
+      disallow_classes_no_html = disallow_classes;
+    // else disallow_classes_no_html keeps its inital value (see top)
+  }
+  catch (ex)
+  {
+    dump("failed to get the body plaintext vs. HTML prefs\n");
+  }
+
+  var AllowHTML_checked = false;
+  var Sanitized_checked = false;
+  var AsPlaintext_checked = false;
+  if (!prefer_plaintext && !html_as && !disallow_classes)
+    AllowHTML_checked = true;
+  else if (!prefer_plaintext && html_as == 3 && disallow_classes > 0)
+    Sanitized_checked = true;
+  else if (prefer_plaintext && html_as == 1 && disallow_classes > 0)
+    AsPlaintext_checked = true;
+  // else (the user edited prefs/user.js) check none of the radio menu items
+
+  var AllowHTML_menuitem = document.getElementById("bodyAllowHTML");
+  var Sanitized_menuitem = document.getElementById("bodySanitized");
+  var AsPlaintext_menuitem = document.getElementById("bodyAsPlaintext");
+  if (AllowHTML_menuitem && Sanitized_menuitem && AsPlaintext_menuitem)
+  {
+    AllowHTML_menuitem.setAttribute("checked", AllowHTML_checked ? "true" : "false");
+    Sanitized_menuitem.setAttribute("checked", Sanitized_checked ? "true" : "false");
+    AsPlaintext_menuitem.setAttribute("checked", AsPlaintext_checked ? "true" : "false");
+  }
+  else
+    dump("Where is my View|Body menu?\n");
+}
+
 function IsNewsMessage(messageUri)
 {
   return (/^news-message:/.test(messageUri));
@@ -1392,6 +1435,33 @@ function MsgViewBriefHeaders()
     return true;
 }
 
+function MsgBodyAllowHTML()
+{
+    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
+    gPrefs.setIntPref("mailnews.display.html_as", 0);
+    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", 0);
+    MsgReload();
+    return true;
+}
+
+function MsgBodySanitized()
+{
+    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
+    gPrefs.setIntPref("mailnews.display.html_as", 3);
+    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
+                      disallow_classes_no_html);
+    MsgReload();
+    return true;
+}
+
+function MsgBodyAsPlaintext()
+{
+    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", true);
+    gPrefs.setIntPref("mailnews.display.html_as", 1);
+    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", disallow_classes_no_html);
+    MsgReload();
+    return true;
+}
 
 function ToggleInlineAttachment(target)
 {

@@ -1168,6 +1168,18 @@
             </menupopup>
           </menu>
 
+          <menu id="viewBodyMenu" accesskey="&bodyMenu.accesskey;" label="&bodyMenu.label;">
+            <menupopup onpopupshowing="InitViewBodyMenu()">
+              <menuitem id="bodyAllowHTML" type="radio" name="bodyPlaintextVsHTMLPref" label="&bodyAllowHTML.label;"
+                        accesskey="&bodyAllowHTML.accesskey;" oncommand="MsgBodyAllowHTML()"/>
+              <menuitem id="bodySanitized" type="radio" name="bodyPlaintextVsHTMLPref" label="&bodySanitized.label;"
+                        accesskey="&bodySanitized.accesskey;"
+                        oncommand="MsgBodySanitized()"/>
+              <menuitem id="bodyAsPlaintext" type="radio" name="bodyPlaintextVsHTMLPref" label="&bodyAsPlaintext.label;"
+                        accesskey="&bodyAsPlaintext.accesskey;" oncommand="MsgBodyAsPlaintext()"/>
+            </menupopup>
+          </menu>
+
           <menuitem id="viewAttachmentsInlineMenuitem" label="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;"
             oncommand="ToggleInlineAttachment(event.target)" type="checkbox" checked="true"/>
           <menuseparator/>
