@@ -1056,10 +1056,11 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP
 nsBrowserInstance::GetContentDocShell(nsIDocShell** aDocShell)
 {
-   NS_ENSURE_ARG_POINTER(aDocShell);
+  NS_ENSURE_ARG_POINTER(aDocShell);
 
-   *aDocShell = GetContentAreaDocShell();
-	return NS_OK;
+  *aDocShell = GetContentAreaDocShell();
+  NS_IF_ADDREF(*aDocShell); // (GetContentAreaDocShell doesn't)
+  return NS_OK;
 }
 
 
