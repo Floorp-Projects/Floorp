@@ -3,7 +3,8 @@ target: make_base
 CC := $(CC) -g
 
 BASE_OBJS = CommandLineUtils.o \
-	    Double.o \
+	        Double.o \
+            HashTable.o \
             Integer.o \
             List.o \
             MITREObjectWrapper.o \
@@ -21,6 +22,9 @@ CommandLineUtils.o: CommandLineUtils.h CommandLineUtils.cpp
 
 Double.o: primitives.h Double.cpp
 	$(CC) -c Double.cpp
+
+HashTable.o: HashTable.h HashTable.cpp
+	$(CC) -c HashTable.cpp
 
 Integer.o: primitives.h Integer.cpp
 	$(CC) -c Integer.cpp
