@@ -1227,8 +1227,10 @@ nsHttpChannel::ReadFromCache()
     }
 
     // if this is a cached redirect, we must process the redirect asynchronously
-    // since AsyncOpen may not have returned yet.
-    if (mResponseHead && (mResponseHead->Status() / 100 == 3))
+    // since AsyncOpen may not have returned yet.  Make sure there is a Location
+    // header, otherwise we'll have to treat this like a normal 200 response.
+    if (mResponseHead && (mResponseHead->Status() / 100 == 3) 
+                      && (mResponseHead->PeekHeader(nsHttp::Location)))
         return AsyncRedirect();
 
     // Get a transport to the cached data...
