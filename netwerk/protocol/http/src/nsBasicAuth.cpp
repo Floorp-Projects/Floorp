@@ -61,9 +61,8 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
     if (iPass) {
         cPass.AssignWithConversion(iPass);
     }
-    char* tempBuff = (char *)nsMemory::Alloc(cUser.Length() + 
-                                                iPass ? (cPass.Length() + 2) 
-                                                      : 1);
+    PRUint32 length = cUser.Length() + (iPass ? (cPass.Length() + 2) : 1);
+    char* tempBuff = (char *)nsMemory::Alloc(length);
     if (!tempBuff)
         return NS_ERROR_OUT_OF_MEMORY;
     strcpy(tempBuff, cUser.GetBuffer());
@@ -72,7 +71,7 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
         strcat(tempBuff, cPass.GetBuffer());
     }
 
-    char *base64Buff = PL_Base64Encode(tempBuff, 0, nsnull); 
+    char *base64Buff = PL_Base64Encode(tempBuff, length, nsnull); 
     if (!base64Buff) {
         nsMemory::Free(tempBuff);
         return NS_ERROR_FAILURE; // ??
