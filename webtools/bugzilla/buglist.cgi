@@ -187,14 +187,6 @@ sub DiffDate {
     return $date;
 }
 
-sub iCalendarDateTime {
-    my ($datestr) = @_;
-    my $date = str2time($datestr);
-    my ($s,$m,$h,$d,$mo,$y,$wd)= gmtime $date;
-    $date = sprintf "%04d%02d%02dT%02d%02d%02dZ", 1900+$y,$mo+1,$d,$h,$m,$s;
-    return $date;
-}
-
 sub LookupNamedQuery {
     my ($name) = @_;
     Bugzilla->login(LOGIN_REQUIRED);
@@ -621,6 +613,24 @@ if ($format->{'extension'} eq 'ics') {
     push(@selectcolumns, "opendate") if !grep($_ eq 'opendate', @selectcolumns);
 }
 
+if ($format->{'extension'} eq 'rss') {
+    # This is the list of fields that are needed by the rss filter.
+    my @required_rss_columns = (
+      'short_desc',
+      'opendate',
+      'changeddate',
+      'reporter_realname',
+      'priority',
+      'bug_severity',
+      'assigned_to_realname',
+      'bug_status'
+    );
+
+    foreach my $required (@required_rss_columns) {
+        push(@selectcolumns, $required) if !grep($_ eq $required,@selectcolumns);
+    }
+}
+
 ################################################################################
 # Query Generation
 ################################################################################
@@ -829,21 +839,18 @@ while (my @row = $buglist_sth->fetchrow_array()) {
     if ($bug->{'changeddate'}) {
         $bug->{'changeddate'} =~ 
             s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:$6/;
-        if ($format->{'extension'} eq 'ics') {
-            $bug->{'changeddate'} = iCalendarDateTime($bug->{'changeddate'});
-        }
-        else {
-            $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});
-        }
+
+        # Put in the change date as a time, so that the template date plugin
+        # can format the date in any way needed by the template. ICS and RSS
+        # have specific, and different, date and time formatting.
+        $bug->{'changedtime'} = str2time($bug->{'changeddate'});
+        $bug->{'changeddate'} = DiffDate($bug->{'changeddate'});        
     }
 
     if ($bug->{'opendate'}) {
-        if ($format->{'extension'} eq 'ics') {
-            $bug->{'opendate'} = iCalendarDateTime($bug->{'opendate'});
-        }
-        else {
-            $bug->{'opendate'} = DiffDate($bug->{'opendate'});
-        }
+        # Put in the open date as a time for the template date plugin.
+        $bug->{'opentime'} = str2time($bug->{'opendate'});
+        $bug->{'opendate'} = DiffDate($bug->{'opendate'});
     }
 
     # Record the owner, product, and status in the big hashes of those things.
@@ -941,9 +948,6 @@ $vars->{'splitheader'} = $cgi->cookie('SPLITHEADER') ? 1 : 0;
 
 $vars->{'quip'} = GetQuip();
 $vars->{'currenttime'} = time();
-if ($format->{'extension'} eq 'ics') {
-    $vars->{'currenttime'} = iCalendarDateTime(scalar gmtime $vars->{'currenttime'});
-}
 
 # The following variables are used when the user is making changes to multiple bugs.
 if ($dotweak) {
