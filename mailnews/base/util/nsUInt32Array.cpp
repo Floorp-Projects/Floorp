@@ -286,5 +286,5 @@ static int PR_CALLBACK CompareDWord (const void *v1, const void *v2, void *)
 void nsUInt32Array::QuickSort (int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *data))
 {
 	if (m_nSize > 1)
-		NS_QuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);
+		NS_QuickSort(m_pData, m_nSize, sizeof(PRUint32), compare ? compare : CompareDWord, nsnull);
 }
