@@ -222,7 +222,7 @@
          this.selectedItem = this.focusedItem;
          this.selectedItem.doCommand();
       </handler>
-      <handler event="keypress" keycode="VK_UP">
+      <handler event="keypress" keycode="VK_UP" phase="target">
         this.checkAdjacentElement(false);
       </handler>
       <handler event="keypress" keycode="VK_LEFT" phase="target">
@@ -271,7 +271,7 @@
       <constructor>
         <![CDATA[
           var parent = this.radioGroup;
-          this.radioGroup.mRadioChildren[parent.mRadioChildren.length++] = this;
+          parent.mRadioChildren[parent.mRadioChildren.length++] = this;
         ]]>
       </constructor>
       <destructor>
