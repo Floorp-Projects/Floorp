@@ -38,7 +38,7 @@ all default export libs program install release_export::
 	$(MAKE) -f make.server $@
 
 # only do these things once for the whole directory
-depend dependclean clean clobber release_classes release_clean release_cpdistdir release_export release_jars release_md release_policy show::
+depend dependclean clean clobber realclean clobber_all release_classes release_clean release_cpdistdir release_export release_jars release_md release_policy show::
 	$(MAKE) -f make.client $@
 
 
