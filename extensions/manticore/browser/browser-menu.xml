@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" ?>
+<?xml version="1.0" ?>
 <menubar id="mainMenu" xmlns="http://www.silverstone.net.nz/2001/manticore/uidl">
   <menu label="File" accesskey="f">
     <menu label="New Window" accesskey="n" command="file-new-window" />
