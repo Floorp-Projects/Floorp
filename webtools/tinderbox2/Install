@@ -23,10 +23,10 @@ A quick overview of the files:
 	TinderConfig.pm: general configuration settings 
 		(HTML directories, Log files, implementations of libraries 
 		 to use, etc).
-	VCData.pm: version control (CVS, Bonsai) configuration.
+	TreeData.pm: version control (CVS, Bonsai) configuration.
 	Error_Parse.pm: the regular expressions for identifying
 		 errors in build logs.
-	TicketData.pm: bug tracking configuration
+	BTData.pm: bug tracking configuration
 	FileStructure.pm: filesystem (storage) and global/per-project 
 		settings. Most users will not have to change this.
 
