@@ -61,6 +61,7 @@
 #include "nsIInterfaceRequestor.h"
 #ifdef DEBUG
 #include "pure.h"
+extern "C" NS_EXPORT void* NS_CurrentThread(void);
 #endif
 
 class dummyComparitor: public nsAVLNodeComparitor {
