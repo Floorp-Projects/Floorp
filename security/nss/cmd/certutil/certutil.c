@@ -537,35 +537,6 @@ ChangeTrustAttributes(CERTCertDBHandle *handle, char *name, char *trusts)
     return SECSuccess;
 }
 
-static int
-secu_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
-{
-    char fingerprint[20];
-    char *fpStr = NULL;
-    SECItem fpItem;
-    /* print MD5 fingerprint */
-    memset(fingerprint, 0, sizeof fingerprint);
-    MD5_HashBuf(fingerprint, derCert->data, derCert->len);
-    fpItem.data = fingerprint;
-    fpItem.len = MD5_LENGTH;
-    fpStr = CERT_Hexify(&fpItem, 1);
-    SECU_Indent(out, level);  fprintf(out, "%s (MD5):\n", m);
-    SECU_Indent(out, level+1); fprintf(out, "%s\n", fpStr);
-    PORT_Free(fpStr);
-    fpStr = NULL;
-    /* print SHA1 fingerprint */
-    memset(fingerprint, 0, sizeof fingerprint);
-    SHA1_HashBuf(fingerprint, derCert->data, derCert->len);
-    fpItem.data = fingerprint;
-    fpItem.len = SHA1_LENGTH;
-    fpStr = CERT_Hexify(&fpItem, 1);
-    SECU_Indent(out, level);  fprintf(out, "%s (SHA1):\n", m);
-    SECU_Indent(out, level+1); fprintf(out, "%s\n", fpStr);
-    PORT_Free(fpStr);
-	fprintf(out, "\n");
-    return 0;
-}
-
 static SECStatus
 printCertCB(CERTCertificate *cert, void *arg)
 {
@@ -585,7 +556,6 @@ printCertCB(CERTCertificate *cert, void *arg)
 			 "Certificate Trust Flags", 1);
 
     printf("\n");
-    secu_PrintFingerprints(stdout, &data, "Fingerprint", 1);
 
     return(SECSuccess);
 }
