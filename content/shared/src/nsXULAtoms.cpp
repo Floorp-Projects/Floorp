@@ -27,6 +27,7 @@ static const char kXULNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper
 PRInt32  nsXULAtoms::nameSpaceID;
 nsIAtom* nsXULAtoms::button;
 nsIAtom* nsXULAtoms::checkbox;
+nsIAtom* nsXULAtoms::tristatecheckbox;
 nsIAtom* nsXULAtoms::radio;
 nsIAtom* nsXULAtoms::text;
 nsIAtom* nsXULAtoms::toolbar;
@@ -72,6 +73,7 @@ void nsXULAtoms::AddrefAtoms() {
     // now register the atoms
     button = NS_NewAtom("button");
     checkbox = NS_NewAtom("checkbox");
+    tristatecheckbox = NS_NewAtom("tristatecheckbox");
     radio = NS_NewAtom("radio");
     text = NS_NewAtom("text");
     toolbar = NS_NewAtom("toolbar");
@@ -108,6 +110,7 @@ void nsXULAtoms::ReleaseAtoms() {
   if (--gRefCnt == 0) {
     NS_RELEASE(button);
     NS_RELEASE(checkbox);
+    NS_RELEASE(tristatecheckbox);
     NS_RELEASE(radio);
     NS_RELEASE(text);
     NS_RELEASE(toolbar);
