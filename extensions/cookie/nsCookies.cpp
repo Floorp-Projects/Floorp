@@ -1027,8 +1027,9 @@ cookie_P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIHttpChannel *aHttpCha
        reject control chars or non-ASCII chars. This is erring on the loose
        side, since there's probably no good reason to enforce this strictness.
 
-    5. cookie <VALUE> is optional, where spec requires it. This is a fairly
-       trivial case, but allows the flexibility of setting only a cookie <NAME>.
+    5. cookie <NAME> is optional, where spec requires it. This is a fairly
+       trivial case, but allows the flexibility of setting only a cookie <VALUE>
+       with a blank <NAME> and is required by some sites (see bug 169091).
 
  ** Begin BNF:
     token         = 1*<any allowed-chars except separators>
@@ -1051,13 +1052,13 @@ cookie_P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIHttpChannel *aHttpCha
 
     set-cookie    = "Set-Cookie:" cookies
     cookies       = cookie *( cookie-sep cookie )
-    cookie        = NAME ["=" VALUE] *(";" cookie-av)    ; cookie NAME/VALUE must come first
+    cookie        = [NAME "="] VALUE *(";" cookie-av)    ; cookie NAME/VALUE must come first
     NAME          = token                                ; cookie name
     VALUE         = value                                ; cookie value
     cookie-av     = token ["=" value]
 
     valid values for cookie-av (checked post-parsing) are:
-    cookie-av     = "Path" "=" value
+    cookie-av     = "Path"    "=" value
                   | "Domain"  "=" value
                   | "Expires" "=" value
                   | "Max-Age" "=" value
@@ -1080,7 +1081,8 @@ PRIVATE PRBool
 cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
                      nsASingleFragmentCString::const_char_iterator &aEndIter,
                      nsDependentSingleFragmentCSubstring &aTokenString,
-                     nsDependentSingleFragmentCSubstring &aTokenValue)
+                     nsDependentSingleFragmentCSubstring &aTokenValue,
+                     PRBool                              &aEqualsFound)
 {
   nsASingleFragmentCString::const_char_iterator start;
   // initialize value string to clear garbage
@@ -1098,7 +1100,8 @@ cookie_GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter,
   while (aIter != aEndIter && iswhitespace(*aIter)) // skip over spaces at end of cookie name
     ++aIter;
 
-  if (*aIter == '=') {
+  aEqualsFound = (*aIter == '=');
+  if (aEqualsFound) {
     // find <value>
     while (++aIter != aEndIter && iswhitespace(*aIter));
 
@@ -1176,19 +1179,24 @@ cookie_ParseAttributes(nsDependentCString  &aCookieHeader,
 
   nsDependentSingleFragmentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentSingleFragmentCSubstring tokenValue (cookieStart, cookieStart);
-  PRBool newCookie;
+  PRBool newCookie, equalsFound;
 
-  // extract cookie NAME & VALUE (first attribute), and copy the strings
+  // extract cookie <NAME> & <VALUE> (first attribute), and copy the strings
   // if we find multiple cookies, return for processing
-  // note: if there's no '=', we assume token is NAME, not VALUE.
-  //       the old code assumed VALUE instead.
-  newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue);
-  aCookie->name = tokenString;
-  aCookie->cookie = tokenValue;
+  // note: if there's no '=', we assume token is <VALUE>. this is required by
+  //       some sites (see bug 169091).
+  // XXX fix the parser to parse according to <VALUE> grammar for this case
+  newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue, equalsFound);
+  if (equalsFound) {
+    aCookie->name = tokenString;
+    aCookie->cookie = tokenValue;
+  } else {
+    aCookie->cookie = tokenString;
+  }
 
   // extract remaining attributes
   while (cookieStart != cookieEnd && !newCookie) {
-    newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue);
+    newCookie = cookie_GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue, equalsFound);
 
     if (!tokenValue.IsEmpty() && *tokenValue.BeginReading(tempBegin) == '"'
                               && *tokenValue.EndReading(tempEnd) == '"') {
@@ -1416,7 +1424,8 @@ COOKIE_GetCookie(nsIURI *aHostURI,
     // all checks passed - update lastAccessed stamp of cookie
     cookieInList->lastAccessed = currentTime;
 
-    if (!cookieInList->name.IsEmpty()) {
+    // check if we have anything to write
+    if (!cookieInList->name.IsEmpty() || !cookieInList->cookie.IsEmpty()) {
       // if we've already added a cookie to the return list, append a "; " so
       // that subsequent cookies are delimited in the final list.
       if (!cookieData.IsEmpty()) {
@@ -1428,11 +1437,12 @@ COOKIE_GetCookie(nsIURI *aHostURI,
       // only the first instance is sent). This wasn't invoked in our previous code,
       // and RFC2109 implicitly allows duplicate names, so I've removed it.
 
-      // if we have just a cookie->name, don't write the last portion.
-      if (cookieInList->cookie.IsEmpty()) {
-        cookieData += cookieInList->name;
-      } else {
+      if (!cookieInList->name.IsEmpty()) {
+        // we have a cookie->name and cookie->cookie - write both
         cookieData += cookieInList->name + NS_LITERAL_CSTRING("=") + cookieInList->cookie;
+      } else {
+        // just write cookie->cookie
+        cookieData += cookieInList->cookie;
       }
     }
   } // for()
