@@ -2274,14 +2274,14 @@ nsHTMLEditor::SaveHLineSettings(nsIDOMElement* aElement)
       iAlign = 2;
     mPrefs->SetIntPref("editor.hrule.align", iAlign);
 
-    char heightChar[32] = {""};
-    PRInt32 iHeight = atoi(height.ToCString(heightChar, 32));
-    if (iHeight > 0)
+    PRInt32 errorCode;
+    PRInt32 iHeight = height.ToInteger(&errorCode);
+    
+    if (errorCode == NS_OK && iHeight > 0)
       mPrefs->SetIntPref("editor.hrule.height", iHeight);
 
-    char widthChar[32] = {""};
-    PRInt32 iWidth = atoi(width.ToCString(widthChar, 32));
-    if (iWidth > 0) {
+    PRInt32 iWidth = width.ToInteger(&errorCode);
+    if (errorCode == NS_OK && iWidth > 0) {
       mPrefs->SetIntPref("editor.hrule.width", iWidth);
       mPrefs->SetBoolPref("editor.hrule.width_percent", (width.Find("%") > 0));
     }
