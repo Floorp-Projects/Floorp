@@ -834,13 +834,13 @@ nsCookieService::Add(const nsACString &aDomain,
   nsInt64 currentTime = NOW_IN_SECONDS;
 
   nsRefPtr<nsCookie> cookie =
-    new nsCookie(aName, aValue, aDomain, aPath,
-                 nsInt64(aExpiry),
-                 currentTime,
-                 aIsSession,
-                 aIsSecure,
-                 nsICookie::STATUS_UNKNOWN,
-                 nsICookie::POLICY_UNKNOWN);
+    nsCookie::Create(aName, aValue, aDomain, aPath,
+                     nsInt64(aExpiry),
+                     currentTime,
+                     aIsSession,
+                     aIsSecure,
+                     nsICookie::STATUS_UNKNOWN,
+                     nsICookie::POLICY_UNKNOWN);
   if (!cookie) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -970,16 +970,16 @@ nsCookieService::Read()
 
     // create a new nsCookie and assign the data.
     newCookie =
-      new nsCookie(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
-                   Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
-                   host,
-                   Substring(buffer, pathIndex, secureIndex - pathIndex - 1),
-                   nsInt64(expires),
-                   lastAccessedCounter,
-                   PR_FALSE,
-                   Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
-                   nsICookie::STATUS_UNKNOWN,
-                   nsICookie::POLICY_UNKNOWN);
+      nsCookie::Create(Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
+                       Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
+                       host,
+                       Substring(buffer, pathIndex, secureIndex - pathIndex - 1),
+                       nsInt64(expires),
+                       lastAccessedCounter,
+                       PR_FALSE,
+                       Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
+                       nsICookie::STATUS_UNKNOWN,
+                       nsICookie::POLICY_UNKNOWN);
     if (!newCookie) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1155,16 +1155,16 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 
   // create a new nsCookie and copy attributes
   nsRefPtr<nsCookie> cookie =
-    new nsCookie(cookieAttributes.name,
-                 cookieAttributes.value,
-                 cookieAttributes.host,
-                 cookieAttributes.path,
-                 cookieAttributes.expiryTime,
-                 currentTime,
-                 cookieAttributes.isSession,
-                 cookieAttributes.isSecure,
-                 aStatus,
-                 aPolicy);
+    nsCookie::Create(cookieAttributes.name,
+                     cookieAttributes.value,
+                     cookieAttributes.host,
+                     cookieAttributes.path,
+                     cookieAttributes.expiryTime,
+                     currentTime,
+                     cookieAttributes.isSession,
+                     cookieAttributes.isSecure,
+                     aStatus,
+                     aPolicy);
   if (!cookie) {
     return newCookie;
   }

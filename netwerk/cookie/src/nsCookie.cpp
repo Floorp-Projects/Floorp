@@ -37,15 +37,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCookie.h"
+#include <stdlib.h>
 
 /******************************************************************************
  * nsCookie:
  * string helper impl
  ******************************************************************************/
 
-// allocate contiguous storage and copy aSource strings,
+// copy aSource strings into contiguous storage provided in aDest1,
 // providing terminating nulls for each destination string.
-// XXX consider arena allocation here
 static inline void
 StrBlockCopy(const nsACString &aSource1,
              const nsACString &aSource2,
@@ -57,60 +57,56 @@ StrBlockCopy(const nsACString &aSource1,
              char             *&aDest4,
              char             *&aDestEnd)
 {
-  // find the required buffer size, adding 4 for the terminating nulls
-  const PRUint32 totalLength = aSource1.Length() + aSource2.Length() + aSource3.Length() + aSource4.Length() + 4;
+  char *toBegin = aDest1;
+  nsACString::const_iterator fromBegin, fromEnd;
 
-  char *toBegin = NS_STATIC_CAST(char*, nsMemory::Alloc(totalLength * sizeof(char)));
-  NS_ASSERTION(toBegin, "out of memory allocating for nsCookie!");
-
-  aDest1 = toBegin;
-  if (toBegin) {
-    nsACString::const_iterator fromBegin, fromEnd;
-
-    *copy_string(aSource1.BeginReading(fromBegin), aSource1.EndReading(fromEnd), toBegin) = char(0);
-    aDest2 = ++toBegin;
-    *copy_string(aSource2.BeginReading(fromBegin), aSource2.EndReading(fromEnd), toBegin) = char(0);
-    aDest3 = ++toBegin;
-    *copy_string(aSource3.BeginReading(fromBegin), aSource3.EndReading(fromEnd), toBegin) = char(0);
-    aDest4 = ++toBegin;
-    *copy_string(aSource4.BeginReading(fromBegin), aSource4.EndReading(fromEnd), toBegin) = char(0);
-    aDestEnd = toBegin;
-  }
+  *copy_string(aSource1.BeginReading(fromBegin), aSource1.EndReading(fromEnd), toBegin) = char(0);
+  aDest2 = ++toBegin;
+  *copy_string(aSource2.BeginReading(fromBegin), aSource2.EndReading(fromEnd), toBegin) = char(0);
+  aDest3 = ++toBegin;
+  *copy_string(aSource3.BeginReading(fromBegin), aSource3.EndReading(fromEnd), toBegin) = char(0);
+  aDest4 = ++toBegin;
+  *copy_string(aSource4.BeginReading(fromBegin), aSource4.EndReading(fromEnd), toBegin) = char(0);
+  aDestEnd = toBegin;
 }
 
 /******************************************************************************
  * nsCookie:
- * ctor/dtor
+ * creation helper
  ******************************************************************************/
 
-nsCookie::nsCookie(const nsACString &aName,
-                   const nsACString &aValue,
-                   const nsACString &aHost,
-                   const nsACString &aPath,
-                   nsInt64          aExpiry,
-                   nsInt64          aLastAccessed,
-                   PRBool           aIsSession,
-                   PRBool           aIsSecure,
-                   nsCookieStatus   aStatus,
-                   nsCookiePolicy   aPolicy)
- : mNext(nsnull)
- , mExpiry(aExpiry)
- , mLastAccessed(aLastAccessed)
- , mRefCnt(0)
- , mIsSession(aIsSession != PR_FALSE)
- , mIsSecure(aIsSecure != PR_FALSE)
- , mStatus(aStatus)
- , mPolicy(aPolicy)
+nsCookie *
+nsCookie::Create(const nsACString &aName,
+                 const nsACString &aValue,
+                 const nsACString &aHost,
+                 const nsACString &aPath,
+                 nsInt64          aExpiry,
+                 nsInt64          aLastAccessed,
+                 PRBool           aIsSession,
+                 PRBool           aIsSecure,
+                 nsCookieStatus   aStatus,
+                 nsCookiePolicy   aPolicy)
 {
-  // allocate a new (contiguous) string, and assign string members
-  StrBlockCopy(aName, aValue, aHost, aPath,
-               mName, mValue, mHost, mPath, mEnd);
-}
+  // find the required string buffer size, adding 4 for the terminating nulls
+  const PRUint32 stringLength = aName.Length() + aValue.Length() +
+                                aHost.Length() + aPath.Length() + 4;
 
-nsCookie::~nsCookie()
-{
-  if (mName)
-    nsMemory::Free(mName);
+  // allocate contiguous space for the nsCookie and its strings -
+  // we store the strings in-line with the nsCookie to save allocations
+  void *place = ::operator new(sizeof(nsCookie) + stringLength);
+  if (!place)
+    return nsnull;
+
+  // assign string members
+  char *name, *value, *host, *path, *end;
+  name = NS_STATIC_CAST(char *, place) + sizeof(nsCookie);
+  StrBlockCopy(aName, aValue, aHost, aPath,
+               name, value, host, path, end);
+
+  // construct the cookie. placement new, oh yeah!
+  return new (place) nsCookie(name, value, host, path, end,
+                              aExpiry, aLastAccessed, aIsSession,
+                              aIsSecure, aStatus, aPolicy);
 }
 
 /******************************************************************************
@@ -144,4 +140,4 @@ nsCookie::GetExpires(PRUint64 *aExpires)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsCookie, nsICookie, nsICookie2)
+NS_IMPL_ISUPPORTS2(nsCookie, nsICookie2, nsICookie)
