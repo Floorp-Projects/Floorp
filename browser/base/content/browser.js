@@ -368,8 +368,8 @@ function prepareForStartup()
 
   // Wire up session and global history before any possible
   // progress notifications for back/forward button updating
-  getWebNavigation().sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                                .createInstance(Components.interfaces.nsISHistory);
+  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
+                                           .createInstance(Components.interfaces.nsISHistory);
 
   // wire up global history.  the same applies here.
   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
