@@ -17,10 +17,24 @@ function deleteCaption() {
   table.removeChild(caption);
 }
 
+
 function insertColGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
+  var refColGroup = document.getElementsByTagName("COLGROUP")[0];
   var colGroup = document.createElement("COLGROUP", null);
+  colGroup.width=200;
+  colGroup.span=1;
+  table.insertBefore(colGroup, refColGroup);
+  dump("inserted COLGROUP with span=1 width=200 as first colgroup in table");
+}
+
+function appendColGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var colGroup = document.createElement("COLGROUP", null);
+  colGroup.width=300;
+  colGroup.span=1;
   table.appendChild(colGroup);
+  dump("appended COLGROUP with span=1 width=300");
 }
 
 function deleteColGroup() {
@@ -29,10 +43,22 @@ function deleteColGroup() {
   table.removeChild(colGroup);
 }
 
+
 function insertCol() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var refCol = table.getElementsByTagName("COL")[0];
+  var col = document.createElement("COL", null);
+  col.width=200;
+  col.span=1;
+  table.insertBefore(col, refCol);
+  dump("inserted COL with span=1 width=200 as first col in first col group");
+}
+
+function appendCol() {
   var table = document.getElementsByTagName("TABLE")[0];
   var col = document.createElement("COL", null);
   table.appendChild(col);
+  dump("appended COL with span=1 width=300");
 }
 
 function deleteCol() {
@@ -86,16 +112,20 @@ all delete buttons currently remove the first item of <type> found
 <br>
 
 <INPUT TYPE="button" NAME="Ins ColGroup" VALUE="InsertCG" onClick="insertColGroup()" width=100>
+<INPUT TYPE="button" NAME="App ColGroup" VALUE="AppendCG" onClick="appendColGroup()" width=100>
 <INPUT TYPE="button" NAME="Del ColGroup" VALUE="DeleteCG" onClick="deleteColGroup()" width=100>
 <br>
 <INPUT TYPE="button" NAME="Ins Col" VALUE="InsertCol" onClick="insertCol()" width=100>
+<INPUT TYPE="button" NAME="App Col" VALUE="AppendCol" onClick="appendCol()" width=100>
 <INPUT TYPE="button" NAME="Del Col" VALUE="DeleteCol" onClick="deleteCol()" width=100>
 <br>
 <INPUT TYPE="button" NAME="Ins RowGroup" VALUE="InsertRG" onClick="insertRowGroup()" width=100>
+<INPUT TYPE="button" NAME="App RowGroup" VALUE="AppendRG" onClick="appendRowGroup()" width=100>
 <INPUT TYPE="button" NAME="Del RowGroup" VALUE="DeleteRG" onClick="deleteRowGroup()" width=100>
 <br>
-<INPUT TYPE="button" NAME="Ins Row" VALUE="InsertRow" onClick="insertRowGroup()" width=100>
-<INPUT TYPE="button" NAME="Del Row" VALUE="DeleteRow" onClick="deleteRowGroup()" width=100>
+<INPUT TYPE="button" NAME="Ins Row" VALUE="InsertRow" onClick="insertRow()" width=100>
+<INPUT TYPE="button" NAME="App Row" VALUE="AppendRow" onClick="appendRow()" width=100>
+<INPUT TYPE="button" NAME="Del Row" VALUE="DeleteRow" onClick="deleteRow()" width=100>
 <br>
 </form>
 

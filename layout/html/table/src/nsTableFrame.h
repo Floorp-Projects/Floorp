@@ -29,6 +29,7 @@ class nsTableCellFrame;
 class nsTableColFrame;
 class nsTableRowGroupFrame;
 class nsTableRowFrame;
+class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
 class ColumnInfoCache;
@@ -317,39 +318,39 @@ protected:
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
-                                 nsIFrame *             aInsertedFrame,
+                                 nsTableColGroupFrame * aInsertedFrame,
                                  PRBool                 aReplace);
 
-    NS_IMETHOD IR_ColGroupAppended(nsIPresContext&        aPresContext,
+    NS_IMETHOD IR_ColGroupAppended(nsIPresContext&      aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
-                                 nsIFrame *             aAppendedFrame); 
+                                 nsTableColGroupFrame * aAppendedFrame); 
 
   NS_IMETHOD IR_ColGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 InnerTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus,
-                                nsIFrame *             aDeletedFrame);
+                                nsTableColGroupFrame * aDeletedFrame);
 
   NS_IMETHOD IR_RowGroupInserted(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
-                                 nsIFrame *             aInsertedFrame,
+                                 nsTableRowGroupFrame * aInsertedFrame,
                                  PRBool                 aReplace);
 
   NS_IMETHOD IR_RowGroupAppended(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
-                                 nsIFrame *             aAppendedFrame);
+                                 nsTableRowGroupFrame * aAppendedFrame);
 
   NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 InnerTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus,
-                                nsIFrame *             aDeletedFrame);
+                                nsTableRowGroupFrame * aDeletedFrame);
   
   NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&        aPresContext,
                                                    nsHTMLReflowMetrics&   aDesiredSize,
@@ -437,8 +438,13 @@ protected:
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;
 
+  /** returns PR_TRUE if the cached column info is still valid */
+  virtual PRBool IsColumnCacheValid() const;
+
 public:
   virtual void InvalidateFirstPassCache();
+
+  virtual void InvalidateColumnCache();
 
 protected:
   /** do post processing to setting up style information for the frame */
@@ -589,6 +595,7 @@ private:
   PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
   PRBool       mColumnWidthsSet;    // PR_TRUE if column widths have been set at least once
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
+  PRBool       mColumnCacheValid;   // PR_TRUE if column cache info is still legit
   PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   PRInt32      mColCount;           // the number of columns in this table
