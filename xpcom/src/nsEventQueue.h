@@ -27,6 +27,7 @@ class nsEventQueueImpl : public nsIEventQueue
 {
 public:
   nsEventQueueImpl();
+  virtual ~nsEventQueueImpl();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -51,9 +52,6 @@ public:
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 	static const nsCID& CID() { static nsCID cid = NS_EVENTQUEUE_CID; return cid; }
-
-protected:
-  ~nsEventQueueImpl();
 
 private:
   PLEventQueue*	mEventQueue;
