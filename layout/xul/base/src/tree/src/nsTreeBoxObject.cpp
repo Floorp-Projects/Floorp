@@ -158,8 +158,16 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetView(nsIOutlinerView * *aView)
 NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();
-  if (body)
-    return body->SetView(aView);
+  if (body) {
+    body->SetView(aView);
+  
+    // only return if the body frame was able to store the view,
+    // else we need to cache the property below
+    nsCOMPtr<nsIOutlinerView> view;
+    body->GetView(getter_AddRefs(view));
+    if (view)
+      return NS_OK;
+  }
   
   nsCOMPtr<nsISupports> suppView(do_QueryInterface(aView));
   if (suppView)
