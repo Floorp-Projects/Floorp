@@ -491,13 +491,13 @@ input[type=file] {
   color:black;
 }
 
-:file-button {
+:-moz-file-button {
   border: 2px outset rgb(192, 192, 192);
   color:black;
   background-color: rgb(192, 192, 192);
 }
 
-:file-text {
+:-moz-file-text {
   border: 2px inset rgb(192, 192, 192);
   margin-right:10px; 
   background-color: white;

@@ -355,8 +355,8 @@ void nsHTMLAtoms::AddrefAtoms()
     face = NS_NewAtom("face");
     fieldset = NS_NewAtom("fieldset");
     fieldsetContentPseudo = NS_NewAtom(":fieldset-content");
-    fileButtonStylePseudo = NS_NewAtom(":file-button");
-    fileTextStylePseudo = NS_NewAtom(":file-text");
+    fileButtonStylePseudo = NS_NewAtom(":-moz-file-button");
+    fileTextStylePseudo = NS_NewAtom(":-moz-file-text");
 
     firstLetterPseudo = NS_NewAtom(":first-letter");
     firstLinePseudo = NS_NewAtom(":first-line");
