@@ -22,7 +22,7 @@ libplds4.dylib
 ; Javascript:
 ; 
 libmozjs.dylib
-
+components/libjsloader.dylib
 
 
 ; 
