@@ -880,7 +880,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               PRInt32         aModType,
                               PRInt32         aHint) 
 {
-   if (mHScrollbarBox && mVScrollbarBox)
+   if (mHScrollbarBox && mVScrollbarBox && (mHasHorizontalScrollbar || mHasVerticalScrollbar))
    {
      nsIFrame* hframe = nsnull;
      mHScrollbarBox->GetFrame(&hframe);
@@ -1076,6 +1076,7 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(PRBool& aHasScrollbar, nscoord& aXY, n
        return PR_TRUE;
    }
 
+   aHasScrollbar = PR_FALSE;
    return PR_FALSE;
 }
 
