@@ -18,18 +18,13 @@
 
 <box>
   <text value="&serverDirectory.label;"/>
-  <html:input type="text" id="serverDirectory" name="serverDirectory"/>
+  <textfield imap_persist="true" id="serverDirectory"/>
 </box>
 
-<box>
-  <html:input type="checkbox" id="usingSubscription" name="usingSubscription"/>
-  <html:label for="usingSubscription">&usingSubscription.label;</html:label>
-</box>
+  <checkbox imap_persist="true" id="usingSubscription" value="&usingSubscription.label;"/>
 
-<box>
-  <html:input type="checkbox" id="dualUseFolders" name="dualUseFolders"/>
-  <html:label for="dualUseFolders">&dualUseFolders.label;</html:label>
-</box>
+  <checkbox imap_persist="true" id="dualUseFolders" value="&dualUseFolders.label;"/>
+
 <html>&namespaceDesc.label;</html>
 <grid style="padding-left: 10px">
   <columns>
@@ -38,23 +33,22 @@
   </columns>
   <rows>
     <row>
-      <text value="&personalNamespace.label;"/>
-      <box><html:input type="text" id="personalNamespace" name="personalNamespace"/></box>
+      <text for="personalNamespace" class="label" value="&personalNamespace.label;"/>
+      <textfield imap_persist="true" id="personalNamespace" />
     </row>
     <row>
-      <text value="&publicNamespace.label;"/>
-      <box><html:input type="text" id="publicNamespace" name="publicNamespace"/></box>
+      <text for="publicNamespace" class="label" value="&publicNamespace.label;"/>
+      <textfield imap_persist="true" id="publicNamespace"/>
     </row>
     <row>
-      <text value="&otherUsersNamespace.label;"/>
-      <box><html:input type="text" id="otherUsersNamespace" name="otherUsersNamespace"/></box>
+      <text for="otherUsersNamespace" class="label" value="&otherUsersNamespace.label;"/>
+      <textfield imap_persist="true" id="otherUsersNamespace"/>
     </row>
   </rows>
 </grid>
-<box>
-  <html:input type="checkbox" id="overrideNamespaces" name="overrideNamespaces"/>
-  <html:label for="overrideNamespaces">&overrideNamespaces.label;</html:label>
-</box>
+
+<checkbox imap_persist="true" id="overrideNamespaces" value="&overrideNamespaces.label;"/>
+
 <separator class="groove"/>
 <box id="okCancelButtons"/>
 

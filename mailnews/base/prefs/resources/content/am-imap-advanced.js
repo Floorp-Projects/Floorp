@@ -23,20 +23,27 @@
 
 // pull stuff out of window.arguments
 var server=window.arguments[0];
-var result=window.arguments[1]
 
 // initialize the controls with the "server" argument
+
+var gControls;
+function getControls() {
+    if (!gControls)
+        gControls = document.getElementsByAttribute("imap_persist", "true");
+    return gControls;
+}
+    
 function onLoad()
 {
-    var controls = document.controls;
+    var controls = getControls();
 
     for (var i=0; i<controls.length; i++) {
 
-        var slot = controls[i].name;
+        var slot = controls[i].id;
         var val = server[slot];
 
         if (val) {
-            if (controls[i].type.toLowerCase() == "checkbox") {
+            if (controls[i].tagName.toLowerCase() == "checkbox") {
                 controls[i].checked = val;
             }
             else
@@ -50,12 +57,12 @@ function onLoad()
 // save the controls back to the "server" array
 function onOk()
 {
-    var controls = document.controls;
+    var controls = getControls();
     
     for (var i=0; i<controls.length; i++) {
-        var slot = controls[i].name;
+        var slot = controls[i].id;
         if (slot) {
-            if (controls[i].type.toLowerCase() == "checkbox") {
+            if (controls[i].tagName.toLowerCase() == "checkbox") {
                  server[slot] = controls[i].checked;
             }
             else
