@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.24 $ 
-# $Date: 2002/04/27 04:55:37 $ 
+# $Revision: 1.25 $ 
+# $Date: 2002/04/27 04:57:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -396,7 +396,7 @@ sub HTML_status_page {
   $out .= "\n\n";
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;
   $out .= "<p>\n<!-- /Message of the Day -->\n";
@@ -418,9 +418,9 @@ sub HTML_status_page {
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
   $out .= $links;
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= $previous_links;
-  $out .= "<br>\n"
+  $out .= "<br>\n";
   $out .= "<!-- Table Legend -->\n";
   $out .= "<FONT SIZE=\"+3\"><B><NOBR>Table Legend</NOBR></B></FONT>";
   $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
