@@ -268,7 +268,7 @@ pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 
 // Accept header
-pref("network.http.accept.default", "text/xml;q=1, text/html;q=0.9, image/png;q=1, image/jpeg;q=1, image/gif;q=0.9, text/plain;q=0.8, text/css;q=1, */*;q=0.01");
+pref("network.http.accept.default", "text/xml, application/xml, application/xhtml+xml, text/html;q=0.9, image/png, image/jpeg, image/gif;q=0.2, text/plain;q=0.8, text/css, */*;q=0.1");
 
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
