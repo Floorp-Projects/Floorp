@@ -16,7 +16,7 @@
     var _elementIDs = ["emailCollectionIncoming", "emailCollectionOutgoing", 
                        "emailCollectionNewsgroup", "addressingAutocomplete",
                        "enableCABsizeLimit", "CABsizeLimit", "autocompleteLDAP", 
-                       "directoriesList", "autocompleteSkipDirectory"];
+                       "directoriesList"];
 
   function onLoad(){
     createDirectoriesList(true);
@@ -38,7 +38,7 @@
     <checkbox class="small-margin" id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
               prefattribute="checked"/>
-    <checkbox id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
+    <checkbox class="small-margin" id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
               prefattribute="checked"/>
     <checkbox class="small-margin" id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
