@@ -193,6 +193,15 @@ static void AddCite(nsAWritableString& aOutString, PRInt32 citeLevel)
     aOutString.Append(PRUnichar(space));
 }
 
+static inline void
+BreakLine(nsAWritableString& aOutString, PRUint32& outStringCol,
+          PRUint32 citeLevel)
+{
+  aOutString.Append(nl);
+  AddCite(aOutString, citeLevel);
+  outStringCol = citeLevel + (citeLevel ? 1 : 0);
+}
+
 NS_IMETHODIMP
 nsInternetCiter::Rewrap(const nsAReadableString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
@@ -279,10 +288,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     if (newCiteLevel != citeLevel && posInString > newCiteLevel+1
         && outStringCol != 0)
     {
-      //aOutString.Append(nl);
-      //AddCite(aOutString, citeLevel);
-      aOutString.Append(nl);
-      outStringCol = 0;
+      BreakLine(aOutString, outStringCol, 0);
     }
     citeLevel = newCiteLevel;
 
@@ -290,7 +296,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
     if (outStringCol == 0)
     {
       AddCite(aOutString, citeLevel);
-      outStringCol = citeLevel;
+      outStringCol = citeLevel + (citeLevel ? 1 : 0);
     }
     // If it's not a cite, and we're not at the beginning of a line in
     // the output string, add a space to separate new text from the
@@ -350,6 +356,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
              NS_LossyConvertUCS2toASCII(Substring(tString, posInString,
                                               nextNewline-posInString)).get());
 #endif
+
       // Skip over initial spaces:
       while ((PRInt32)posInString < nextNewline
              && nsCRT::IsAsciiSpace(tString[posInString]))
@@ -381,15 +388,24 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
         continue;
       }
 
-      PRInt32 eol = posInString + aWrapCol - citeLevel - 1 - outStringCol;
+      PRInt32 eol = posInString + aWrapCol - citeLevel - outStringCol;
       // eol is the prospective end of line ...
-      // first look backwards from there for a place to break.
+      // We'll first look backwards from there for a place to break.
+      // If it's already less than our current position,
+      // then our line is already too long, so break now.
+      if (eol <= (PRInt32)posInString)
+      {
+        BreakLine(aOutString, outStringCol, citeLevel);
+        continue;    // continue inner loop, with outStringCol now at bol
+      }
+
       PRUint32 breakPt;
       PRBool needMore;
       rv = NS_ERROR_BASE;
       if (lineBreaker)
       {
-        rv = lineBreaker->Prev(tString.get() + posInString, length - posInString,
+        rv = lineBreaker->Prev(tString.get() + posInString,
+                               length - posInString,
                                eol - posInString, &breakPt, &needMore);
         if (NS_FAILED(rv) || needMore)
         {
@@ -439,9 +455,7 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
           printf("Need to break hard!  Now posInString=%d\n", posInString);
 #endif
         }
-        aOutString.Append(nl);
-        AddCite(aOutString, citeLevel);
-        outStringCol = citeLevel + (citeLevel ? 1 : 0);
+        BreakLine(aOutString, outStringCol, citeLevel);
         continue;
       }
 
@@ -457,11 +471,8 @@ nsInternetCiter::Rewrap(const nsAReadableString& aInString,
 
       // Add a newline and the quote level to the out string
       if (posInString < length)    // not for the last line, though
-      {
-        aOutString.Append(nl);
-        AddCite(aOutString, citeLevel);
-        outStringCol = citeLevel + (citeLevel ? 1 : 0);
-      }
+        BreakLine(aOutString, outStringCol, citeLevel);
+
     } // end inner loop within one line of aInString
 #ifdef DEBUG_wrapping
     printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
