@@ -6098,7 +6098,7 @@ else
 #line 6099 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
 #include <stddef.h>
                      int main () {
@@ -8953,7 +8953,7 @@ else
 #line 8954 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
 class X { int i; public: virtual ~X() { } };
                             class Y { int j; public: virtual ~Y() { } };
@@ -12280,7 +12280,7 @@ else
 #line 12281 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw();
+extern "C" void exit(int);
 #endif
  int main () {
                 if (sizeof(long long) != 8) { return 1; } 
@@ -13706,6 +13706,7 @@ EOF
 cat >> confdefs.h <<\EOF
 #define USE_IMG2 1
 EOF
+
 
 
 
