@@ -23,22 +23,40 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+#if defined(XP_MAC)
+#include <Menus.h>
+#endif
+
 static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
 NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 
+//-------------------------------------------------------------------------
+//
+// nsMenuListener interface
+//
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuSelected(const nsGUIEvent & aMenuEvent)
+{
+}
 
 //-------------------------------------------------------------------------
 //
 // nsMenuBar constructor
 //
 //-------------------------------------------------------------------------
-nsMenuBar::nsMenuBar() : nsIMenuBar()
+nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
   mNumMenus = 0;
-  //mMenu     = nsnull;
+  mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
+  
+  mOriginalMacMBarHandle = nsnull;
+  mOriginalMacMBarHandle = ::GetMenuBar();
+  
+  mMacMBarHandle = mOriginalMacMBarHandle;
+  ::ClearMenuBar();
 }
 
 //-------------------------------------------------------------------------
@@ -87,7 +105,12 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
 
   // XXX add to internal data structure
-
+  mMenu = aMenu;
+  
+  MenuHandle menuHandle = nsnull;
+  aMenu->GetNativeData(&menuHandle);
+  
+  ::InsertMenu(menuHandle, 0);
   return NS_OK;
 }
 

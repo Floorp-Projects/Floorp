@@ -20,20 +20,24 @@
 #define nsMenuBar_h__
 
 #include "nsIMenuBar.h"
+#include "nsIMenuListener.h"
 
 class nsIWidget;
 
 /**
- * Native Motif MenuBar wrapper
+ * Native Mac MenuBar wrapper
  */
 
-class nsMenuBar : public nsIMenuBar
+class nsMenuBar : public nsIMenuBar, public nsIMenuListener
 {
 
 public:
   nsMenuBar();
   virtual ~nsMenuBar();
 
+  // nsIMenuListener interface
+  nsEventStatus MenuSelected(const nsGUIEvent & aMenuEvent);
+  
   NS_DECL_ISUPPORTS
 
   
@@ -51,11 +55,14 @@ public:
 
 protected:
   PRUint32    mNumMenus;
-  //Widget      mMenu;
+  nsIMenu *   mMenu;
   nsIWidget * mParent;
 
   PRBool      mIsMenuBarAdded;
 
+  // Mac Specific
+  Handle      mMacMBarHandle;
+  Handle      mOriginalMacMBarHandle;
 };
 
 #endif // nsMenuBar_h__
