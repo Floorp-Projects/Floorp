@@ -197,12 +197,14 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
-                                XPTInterfaceDescriptor *descriptor)
+                                XPTInterfaceDescriptor *descriptor,
+                                void *user_data)
 {
     XPT_COPY_IID(ide->iid, *iid);
     ide->name = name ? strdup(name) : NULL; /* what good is it w/o a name? */
     ide->name_space = name_space ? strdup(name_space) : NULL;
     ide->interface_descriptor = descriptor;
+    ide->user_data = user_data;
     return PR_TRUE;
 }
 
@@ -288,7 +290,7 @@ DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
 
 XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
-                           PRUint16 num_constants)
+                           PRUint16 num_constants, PRUint8 flags)
 {
 
     XPTInterfaceDescriptor *id = PR_NEWZAP(XPTInterfaceDescriptor);
@@ -316,6 +318,8 @@ XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
     } else {
         id->parent_interface = 0;
     }
+
+    id->flags = flags;
 
     return id;
 
@@ -422,7 +426,7 @@ XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id)
 {
     PRUint32 size = 2 /* parent interface */ + 2 /* num_methods */
-        + 2 /* num_constants */, i;
+        + 2 /* num_constants */ + 1 /* flags */, i;
     for (i = 0; i < id->num_methods; i++)
         size += XPT_SizeOfMethodDescriptor(&id->method_descriptors[i]);
     for (i = 0; i < id->num_constants; i++)
@@ -490,6 +494,10 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
         if (!DoConstDescriptor(cursor, &id->const_descriptors[i])) {
             goto error;
         }
+    }
+
+    if (!XPT_Do8(cursor, &id->flags)) {
+        goto error;
     }
     
     return PR_TRUE;

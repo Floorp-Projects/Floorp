@@ -26,9 +26,10 @@
 #include "nsISupportsUtils.h"
 %}
 
-[object, uuid(00000000-0000-0000-c000-000000000046)]
+[scriptable, uuid(00000000-0000-0000-c000-000000000046)]
 interface nsISupports {
-  void QueryInterface(in nsIIDRef uuid, [iid_is(uuid),retval] out nsQIResult result);
-  [notxpcom] nsrefcnt AddRef();
-  [notxpcom] nsrefcnt Release();
+  void QueryInterface(in nsIIDRef uuid, 
+                      [iid_is(uuid),retval] out nsQIResult result);
+  [noscript, notxpcom] nsrefcnt AddRef();
+  [noscript, notxpcom] nsrefcnt Release();
 };

@@ -93,11 +93,11 @@ main(int argc, char **argv)
 
     header_sz = XPT_SizeOfHeaderBlock(header);
 
-    id = XPT_NewInterfaceDescriptor(0xdead, 2, 2);
+    id = XPT_NewInterfaceDescriptor(0xdead, 2, 2, 0);
     TRY("NewInterfaceDescriptor", id);
     
     ok = XPT_FillInterfaceDirectoryEntry(header->interface_directory, &iid,
-					 "Interface", "NS", id);
+					 "Interface", "NS", id, NULL);
     TRY("FillInterfaceDirectoryEntry", ok);
 
     /* void method1(void) */

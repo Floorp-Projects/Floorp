@@ -38,6 +38,8 @@ class nsInterfaceInfo : public nsIInterfaceInfo
     NS_IMETHOD GetName(char** name); // returns IAllocatator alloc'd copy
     NS_IMETHOD GetIID(nsIID** iid);  // returns IAllocatator alloc'd copy
 
+    NS_IMETHOD IsScriptable(PRBool* result);
+
     NS_IMETHOD GetParent(nsIInterfaceInfo** parent);
 
     // these include counts of parents

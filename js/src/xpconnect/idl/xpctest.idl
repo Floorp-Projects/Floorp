@@ -4,7 +4,7 @@
 /* XXX should be built in */
 native nsID(nsID *);
 
-[uuid(159E36D0-991E-11d2-AC3F-00C09300144B)]
+[scriptable, uuid(159E36D0-991E-11d2-AC3F-00C09300144B)]
 interface nsITestXPCFoo : nsISupports {
     long Test(in long p1, in long p2);
     void Test2();
@@ -14,12 +14,12 @@ interface nsITestXPCFoo : nsISupports {
     const short six = 6;
 };
 
-[uuid(5F9D20C0-9B6B-11d2-9FFE-000064657374)]
+[scriptable, uuid(5F9D20C0-9B6B-11d2-9FFE-000064657374)]
 interface nsITestXPCFoo2 : nsITestXPCFoo {
 };
 
 
-[uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
+[scriptable, uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
 interface nsIEcho : nsISupports {
 
     void SetReceiver(in nsIEcho aReceiver);

@@ -406,17 +406,20 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
         return PR_TRUE;
     }
 
-    if (id->parent_interface && id->parent_interface != 0) {
+    if (id->parent_interface) {
 
         parent_ide = &header->interface_directory[id->parent_interface - 1];
 
-        if (parent_ide) {
-            fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
-                    parent_ide->name_space ? 
-                    parent_ide->name_space : "", 
-                    parent_ide->name);
-        }
+        fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
+                parent_ide->name_space ? 
+                parent_ide->name_space : "", 
+                parent_ide->name);
     }
+
+    fprintf(stdout, "%*sFlags:\n", indent, " ");
+
+    fprintf(stdout, "%*sScriptable: %s\n", new_indent, " ", 
+            XPT_ID_IS_SCRIPTABLE(id->flags) ? "TRUE" : "FASLE");
 
     if (verbose_mode) {
         if (id->parent_interface) {

@@ -22,7 +22,7 @@
 native nsID(nsID*);
 
 
-[uuid(C86AE131-D101-11d2-9841-006008962422)]
+[scriptable, uuid(C86AE131-D101-11d2-9841-006008962422)]
 interface nsIJSID : nsISupports
 {
     readonly attribute string   name;
@@ -36,12 +36,12 @@ interface nsIJSID : nsISupports
     string toString();
 };
 
-[uuid(e08dcda0-d651-11d2-9843-006008962422)]
+[scriptable, uuid(e08dcda0-d651-11d2-9843-006008962422)]
 interface nsIJSIID : nsIJSID
 {
 };
 
-[uuid(e3a24a60-d651-11d2-9843-006008962422)]
+[scriptable, uuid(e3a24a60-d651-11d2-9843-006008962422)]
 interface nsIJSCID : nsIJSID
 {
     nsISupports newInstance();

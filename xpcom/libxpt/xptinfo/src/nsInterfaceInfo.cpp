@@ -78,6 +78,16 @@ nsInterfaceInfo::GetIID(nsIID **iid)
 }
 
 NS_IMETHODIMP
+nsInterfaceInfo::IsScriptable(PRBool* result)
+{
+    if(!result)
+        return NS_ERROR_NULL_POINTER;
+    *result = XPT_ID_IS_SCRIPTABLE(this->mInterfaceRecord->
+                                                interfaceDescriptor->flags);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
 {
     NS_PRECONDITION(parent, "bad param");

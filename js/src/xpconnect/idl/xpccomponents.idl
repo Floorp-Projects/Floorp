@@ -18,18 +18,18 @@
 
 #include "nsISupports.idl"
 
-[uuid(4b62a640-d26c-11d2-9842-006008962422)]
+[scriptable, uuid(4b62a640-d26c-11d2-9842-006008962422)]
 interface nsIXPCInterfaces : nsISupports
 {
 };
 
-[uuid(978ff520-d26c-11d2-9842-006008962422)]
+[scriptable, uuid(978ff520-d26c-11d2-9842-006008962422)]
 interface nsIXPCClasses : nsISupports
 {
 };
 
 
-[uuid(42624f80-d26c-11d2-9842-006008962422)]
+[scriptable, uuid(42624f80-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIXPCInterfaces interfaces;
