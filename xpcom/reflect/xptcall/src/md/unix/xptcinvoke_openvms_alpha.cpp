@@ -61,13 +61,22 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
         }
         switch(s->type)
         {
+	/*
+	** The line for T_U32 may look wrong (we use signed value for an
+	** unsigned data type), but it is right. Why? The Alpha calling 
+	** standard is defined to sign extend all 32-bit values, regardless
+	** of whether they are int, unsigned int, or 32-bit pointer. The 
+	** caller must "sign-extend" it by replicating bit 31 in bits 32
+	** thru 63 (yes, even for unsigned). This is the format that results
+	** naturally from the LDL instruction, the ADDL instruction, etc.
+	*/
         case nsXPTType::T_I8     : *d = (PRUint64)s->val.i8;     break;
         case nsXPTType::T_I16    : *d = (PRUint64)s->val.i16;    break;
         case nsXPTType::T_I32    : *d = (PRUint64)s->val.i32;    break;
         case nsXPTType::T_I64    : *d = (PRUint64)s->val.i64;    break;
         case nsXPTType::T_U8     : *d = (PRUint64)s->val.u8;     break;
         case nsXPTType::T_U16    : *d = (PRUint64)s->val.u16;    break;
-        case nsXPTType::T_U32    : *d = (PRUint64)s->val.u32;    break;
+        case nsXPTType::T_U32    : *d = (PRUint64)s->val.i32;    break;
         case nsXPTType::T_U64    : *d = (PRUint64)s->val.u64;    break;
         case nsXPTType::T_FLOAT  :
             if(i < NUM_ARG_REGS)
