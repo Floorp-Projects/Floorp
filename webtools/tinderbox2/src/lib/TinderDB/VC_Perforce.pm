@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.25 $ 
-# $Date: 2004/06/08 04:27:14 $ 
+# $Revision: 1.26 $ 
+# $Date: 2004/06/08 11:48:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.25 $ )[1];
+$VERSION = ( qw $Revision: 1.26 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -202,9 +202,10 @@ sub get_all_perforce_data {
   $out .= "\t<TR>\n";
   $out .= "\t\t<TH>Time</TH>\n";
   $out .= "\t\t<TH>Tree State</TH>\n";
+  $out .= "\t\t<TH>Change</TH>\n";
   $out .= "\t\t<TH>Author</TH>\n";
+  $out .= "\t\t<TH>Comment</TH>\n";
   $out .= "\t\t<TH>File</TH>\n";
-  $out .= "\t\t<TH>Log</TH>\n";
   $out .= "\t</TR>\n";
 
   # we want to be able to make links into this page either with the
@@ -239,11 +240,11 @@ sub get_all_perforce_data {
 
       # Allow us to create links which point to any row.
 
-      my $localtime = localtime($time);
+      my $pretty_time = HTMLPopUp::timeHTML($time);
       my $cell_time =
           HTMLPopUp::Link(
                           "name" => $time,
-                          "linktxt" => $localtime,
+                          "linktxt" => $pretty_time,
                           ) ;
       
       ($names) &&
@@ -259,6 +260,7 @@ sub get_all_perforce_data {
           $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
           $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
           $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
+          $out .= "\t\t<TD>$HTMLPopUp::EMPTY_TABLE_CELL</TD>\n";
           $out .= "\t</TR>\n";
       }
 
@@ -270,42 +272,24 @@ sub get_all_perforce_data {
               my($affected_files_ref, $jobs_fixed_ref, 
                  $change_num, $workspace, $comment) = 
                      @{ $recs->{$author} };
-              my $localtime = localtime($time);
+              my $rowspan = $#{$affected_files_ref} + 1;
+              my $cell_options = "ALIGN=center ROWSPAN=$rowspan";
 
-              $out .= (
-                       HTMLPopUp::Link(
-                                       "name" => $time,
-                                       ).
-                       HTMLPopUp::Link(
-                                       "name" => "change".$change_num,
-                                       ).
-                       "\n");
-
-              $out .= (
-                       "Change number: $change_num <br>\n".
-                       "at $localtime<br>\n".
-                       "by $author <br>\n".
-                       "on workspace: $workspace<br>\n".
-                       "<br>\n".
-                       "$comment<br>\n".
-                       "<br>\n".
-                       "\n");
-                       
-              my (@affected_header) = get_affected_files_header();
-
-#              ($affected_table, $affected_num_rows, $affected_max_length) = 
-#                  struct2table(\@affected_header, $author, $affected_files_ref);
-
-              my (@jobs_header) =  get_jobs_fixed_header();
-#
-#      ($jobs_table, $jobs_num_rows, $jobs_max_length) = 
-#          struct2table(\@jobs_header, $author, $jobs_fixed);
-#
-
-              $out .= "\n";
-              $out .= $affected_table;
-              $out .= "\n";
-
+              $out .= "\t<TR>\n";
+              $out .= "\t\t<TD $cell_options>$cell_time</TD>\n";
+              $out .= "\t\t<TD $cell_options>$treestate</TD>\n";
+              $out .= "\t\t<TD $cell_options>$change_num</TD>\n";
+              $out .= "\t\t<TD $cell_options>$author</TD>\n";
+              $out .= "\t\t<TD $cell_options>$comment</TD>\n";
+              my $num;
+              foreach $file_ref (@{$affected_files_ref}){
+                  my $file = @{$file_ref}[0];
+                  ($num) &&
+                      ($out .= "\t<TR>\n");
+                  $num ++;
+                  $out .= "\t\t<TD>$file</TD>\n";
+                  $out .= "\t</TR>\n";
+              }
          } # $author
       }
 
@@ -1362,7 +1346,7 @@ sub parse_update_affected_files {
 sub get_affected_files_header {
     # this is the header to use when parsing the 
     # affect_files datastructure.
-    my (@header) = qw(Filename Revision Action Comment);
+    my (@header) = qw(Filename Revision Action);
     return @header;
 }
 
@@ -1372,7 +1356,7 @@ sub get_affected_files_header {
 # We use this function to turn their data into a html table.
 
 sub struct2table {
-    my ($header, $author, $struct,) = @_;
+    my ($header, $author, $change_num, $workspace, $comment, $struct,) = @_;
     my (@header) = @{$header};
     
     my $table = '';
