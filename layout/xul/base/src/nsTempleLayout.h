@@ -51,6 +51,7 @@ public:
 protected:
 
   nsTempleLayout(nsIPresShell* aShell);
+  virtual ~nsTempleLayout();
 
 private:
   nsBoxSizeList* mMonuments;

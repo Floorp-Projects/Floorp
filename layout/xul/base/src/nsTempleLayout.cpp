@@ -45,6 +45,11 @@ nsTempleLayout::nsTempleLayout(nsIPresShell* aPresShell):nsMonumentLayout(aPresS
 {
 }
 
+nsTempleLayout::~nsTempleLayout()
+{
+  delete mMonuments;
+}
+
 NS_IMETHODIMP
 nsTempleLayout::CastToTemple(nsTempleLayout** aTemple)
 {
