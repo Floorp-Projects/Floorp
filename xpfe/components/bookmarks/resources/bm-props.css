@@ -1,0 +1,11 @@
+window
+{
+	margin-top: 2px;
+}
+
+#Tabs > titledbutton
+{
+	-moz-border-radius: 8px 8px 0px 0px;
+	margin-left: 5px;
+	margin-right: 5px;
+}
