@@ -74,10 +74,8 @@ DIRS =                         \
 # the following are associated with the layout engine
   expat                        \
   gfx                          \
-!if defined(USE_IMG2)
   gfx2                         \
   modules\libpr0n              \
-!endif
   modules\plugin               \
   uriloader                    \
   htmlparser                   \
