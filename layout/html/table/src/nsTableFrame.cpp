@@ -270,6 +270,7 @@ nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
     mPass(kPASS_UNDEFINED),
     mIsInvariantWidth(PR_FALSE)
 {
+  mEffectiveColCount = -1;  // -1 means uninitialized
 }
 
 nsTableFrame::~nsTableFrame()
@@ -364,24 +365,46 @@ PRInt32 nsTableFrame::GetRowCount ()
   return rowCount;
 }
 
+/* return the effective col count */
 PRInt32 nsTableFrame::GetColCount ()
 {
-  PRInt32 colCount = 0;
+  NS_ASSERTION(nsnull!=mCellMap, "GetColCount can only be called after cellmap has been created");
 
-  if (nsnull != mCellMap)
-    return mCellMap->GetColCount();
-
-  nsIFrame *child=mFirstChild;
-  while (nsnull!=child)
+  if (nsnull!=mCellMap)
   {
-    const nsStyleDisplay *childDisplay;
-    child->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-      colCount += ((nsTableColGroupFrame *)child)->GetColumnCount ();
-    child->GetNextSibling(child);
+    if (-1==mEffectiveColCount)
+      SetEffectiveColCount();
   }
-  return colCount;
+  return mEffectiveColCount;
 }
+
+void nsTableFrame::SetEffectiveColCount()
+{
+  if (nsnull!=mCellMap)
+  {
+    PRInt32 colCount = mCellMap->GetColCount();
+    mEffectiveColCount = colCount;
+    PRInt32 rowCount = mCellMap->GetRowCount();
+    for (PRInt32 colIndex=colCount-1; colIndex>0; colIndex--)
+    {
+      PRBool deleteCol=PR_TRUE;
+      for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
+      {
+        CellData *cell = mCellMap->GetCellAt(rowIndex, colIndex);
+        if ((nsnull!=cell) && (cell->mCell != nsnull))
+        { // found a real cell, so we're done
+          deleteCol = PR_FALSE;
+          break;
+        }
+      }
+      if (PR_TRUE==deleteCol)
+        mEffectiveColCount--;
+      else
+        break;
+    }
+  }
+}
+
 
 
 nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
@@ -441,12 +464,12 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
-  NS_PRECONDITION (0<=aColIndex && aColIndex<mCellMap->GetColCount(), "bad col index arg");
+  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
 
   if (mCellMap->GetRowCount()==1)
     return 1;
   PRInt32 colSpan = aCell->GetColSpan();
-  PRInt32 colCount = mCellMap->GetColCount();
+  PRInt32 colCount = GetColCount();
   if (colCount < (aColIndex + colSpan))
     return (colCount - aColIndex);
   return colSpan;
@@ -522,7 +545,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
     prevSibFrame = childFrame;
     childFrame->GetNextSibling(childFrame);
   }    
-  if (actualColumns < mCellMap->GetColCount())
+  if (actualColumns < GetColCount())
   {
     nsTableColGroup *lastColGroup=nsnull;
     if (nsnull==lastColGroupFrame)
@@ -571,7 +594,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
       lastColGroupFrame->GetContent((nsIContent *&)lastColGroup);  // ADDREF b: lastColGroup++
     }
 
-    PRInt32 excessColumns = mCellMap->GetColCount() - actualColumns;
+    PRInt32 excessColumns = GetColCount() - actualColumns;
     for ( ; excessColumns > 0; excessColumns--)
     {//QQQ
       // need to find the generic way to stamp out this content, and ::AppendChild it
@@ -702,13 +725,13 @@ void nsTableFrame::BuildCellMap ()
 
 /**
   */
-void nsTableFrame::DumpCellMap () const
+void nsTableFrame::DumpCellMap () 
 {
   printf("dumping CellMap:\n");
   if (nsnull != mCellMap)
   {
     PRInt32 rowCount = mCellMap->GetRowCount();
-    PRInt32 cols = mCellMap->GetColCount();
+    PRInt32 cols = GetColCount();
     for (PRInt32 r = 0; r < rowCount; r++)
     {
       if (gsDebug==PR_TRUE)
@@ -842,7 +865,7 @@ void nsTableFrame::GrowCellMap (PRInt32 aColCount)
  * around and lists the cell layout data.
  * This is for debugging purposes only.
  */
-void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) const
+void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) 
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   if (this!=firstInFlow)
@@ -855,7 +878,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent) const
   {
     fprintf(out,"Column Layout Data \n");
     
-    PRInt32 numCols = mCellMap->GetColCount();
+    PRInt32 numCols = GetColCount();
     PRInt32 numRows = mCellMap->GetRowCount();
     for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
     {
@@ -913,7 +936,7 @@ void nsTableFrame::RecalcLayoutData()
   if (nsnull==mCellMap)
     return; // no info yet, so nothing useful to do
 
-  PRInt32 colCount = mCellMap->GetColCount();
+  PRInt32 colCount = GetColCount();
   PRInt32 rowCount = mCellMap->GetRowCount();
   PRInt32 row = 0;
   PRInt32 col = 0;
@@ -2278,7 +2301,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (nsnull==mCellMap)
     return; // we don't have any information yet, so we can't do any useful work
 
-  PRInt32 numCols = mCellMap->GetColCount();
+  PRInt32 numCols = GetColCount();
   if (nsnull==mColumnWidths)
   {
     mColumnWidths = new PRInt32[numCols];
@@ -2379,7 +2402,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   if (nsnull==mCellMap)
     return;  // no info, so nothing to do
 
-  PRInt32 numCols = mCellMap->GetColCount();
+  PRInt32 numCols = GetColCount();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   {
     nscoord totalColWidth = mColumnWidths[colIndex];
@@ -2430,7 +2453,7 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
     if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
          (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
       // compute the width per column spanned
-      PRInt32 colSpan = aCellFrame->GetColSpan();
+      PRInt32 colSpan = GetEffectiveColSpan(aCellFrame->GetColIndex(), aCellFrame);
       for (PRInt32 i=0; i<colSpan; i++)
       {
         // get the appropriate column frame
@@ -2699,7 +2722,7 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
     NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
 #ifdef DEBUG
     NS_ASSERTION(nsnull!=mCellMap, "no column layout data");
-    PRInt32 numCols = mCellMap->GetColCount();
+    PRInt32 numCols = GetColCount();
     NS_ASSERTION (numCols > aColIndex, "bad arg, col index out of bounds");
 #endif
     if (nsnull!=mColumnWidths)
@@ -3041,7 +3064,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
             if (nsnull != ((nsTableFrame*)table)->mColumnWidths)
             {
               PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
-              PRInt32 colSpan = ((nsTableCellFrame *)greatgrandchildFrame)->GetColSpan();
+              PRInt32 colSpan = ((nsTableFrame*)table)->GetEffectiveColSpan(colIndex, ((nsTableCellFrame *)greatgrandchildFrame));
               for (PRInt32 i = 0; i<colSpan; i++)
                 parentWidth += ((nsTableFrame*)table)->GetColumnWidth(i+colIndex);
               // subtract out cell border and padding

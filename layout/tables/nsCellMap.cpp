@@ -131,3 +131,5 @@ nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex)
 }
 
 
+
+
