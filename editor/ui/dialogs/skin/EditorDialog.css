@@ -171,10 +171,14 @@ titledbutton#img-align-right {
 
 /* Rest are from Ben Goodger for Advanced Edit dialog 
    These need reviewing and eliminate all but essential attributes */
+/* Have made some mods and eliminated some unnecessary portions. 
+   hope to merge most of the treecell formatting into global as some of 
+   this "property list" style treecell formatting is used by cookie/signon 
+   viewers. */
+
 
 div.tagname {
     font-weight: bold;
-    /*font-size  : 17px;*/
 }
 
 div#tagLabel {
@@ -183,41 +187,24 @@ div#tagLabel {
 
 /* styles for an attribute tree-table */
 tree.AttributesTree {
-    min-width : 200px;
-    min-height: 200px;
-    border    : 1px inset white;
+  min-width : 200px;
+  min-height: 200px;
+  border: 1px inset #CCCCCC;
 }
 
-tree.AttributesTree treecell {
-    color         : black;
-    padding-left  : 10px;
-    padding-top   : 2px;
-    padding-bottom: 2px;
-    padding-right : 2px;
+tree.AttributesTree > treehead > treerow > treecell, 
+tree.AttributesTree > treechildren > treerow > treecell treecell {
+  color         : #000000;
+  padding-left  : 10px;
+  padding-top   : 2px;
+  padding-bottom: 2px;
+  padding-right : 2px;
 }
 
-tree.AttributesTree > treehead > treerow > treecell {
-    border          : 1px outset white;
-    background-color: #CCCCDD;
-}
-
-tree.AttributesTree > treehead > treerow > treecell:active {
-    border-left   : 1px inset white; /*inset white;*/
-    border-top    : 1px inset white;
-    border-right  : 1px solid #CCCCDD;
-    border-bottom : 1px solid #CCCCDD;
-    padding-left  : 11px;
-    padding-top   : 3px;
-    padding-right : 1px;
-    padding-bottom: 1px;
-}
-
-
-/* FILES/MOZILLAE/M96/BIN/chrome/editor/content/default/EdAdvancedEdit.xul */
-tree.AttributesTree treechildren > treeitem > treerow > treecell {
-    border-right    : 1px solid #CCCCDD;
-    border-bottom   : 1px solid #CCCCDD;
-    color           : black;
+tree.AttributesTree > treechildren > treeitem > treerow > treecell {
+    border-right    : 1px solid #CCCCCC;
+    border-bottom   : 1px solid #CCCCCC;
+    color           : #000000;
     background-color: #FFFFFF;
     padding-left    : 10px;
     padding-top     : 2px;
@@ -225,9 +212,9 @@ tree.AttributesTree treechildren > treeitem > treerow > treecell {
     padding-right   : 2px;
 }
 
-tree.AttributesTree treechildren > treeitem > treerow > treecell.value {
-    border-bottom   : 1px solid #CCCCDD;
-    color           : black;
+tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
+    border-bottom   : 1px solid #CCCCCC;
+    color           : #000000;
     background-color: #FFFFFF;
     padding-left    : 0px;
     padding-top     : 0px;
@@ -237,24 +224,29 @@ tree.AttributesTree treechildren > treeitem > treerow > treecell.value {
 }
 
 
-tree.AttributesTree treechildren > treeitem > treerow [selected ~= false] {
-    color           : black;
+tree.AttributesTree > treechildren > treeitem > treerow [selected ~= false] {
+    color           : #000000;
     background-color: #FFFFFF;
 }
 
-tree.AttributesTree treechildren > treeitem > treerow [selected ~= true] {
-    color           : white;
-    background-color: #666699;
+tree.AttributesTree > treechildren > treeitem > treerow [selected ~= true] {
+    color           : #000000;
+    background-color: #E5E5E5;
 }
 
 input.AttributesCell {
-    width : 95%;
-    border: none;
-    height: 100%;
+  border: none;
+  width: 100%;
+  background-color: #FFFFFF;
+  font-weight: normal;
+  border: none;
+  outline: none;
+  margin: 0px;
+  width: 100%;
 }
 
-treecell input:hover {
-    background-color: #ECECEC;
-    font-weight     : bold;
-    border          : 2px solid #666699;
+treecell > input {
+  margin: 0px;
+  background-color: #E5E5E5 ! important;
 }
+
