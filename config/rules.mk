@@ -520,6 +520,17 @@ endif # IS_COMPONENT
 endif # AIX
 
 #
+# OSF1: add -B symbolic flag for components
+#
+ifeq ($(OS_ARCH),OSF1)
+ifdef IS_COMPONENT
+ifeq ($(GNU_CC)$(GNU_CXX),)
+EXTRA_DSO_LDOPTS += -B symbolic
+endif  
+endif  
+endif
+
+#
 # Linux: add -Bsymbolic flag for components
 # 
 ifeq ($(OS_ARCH),Linux)
