@@ -450,7 +450,10 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
     nsCOMPtr<nsIDOMNodeList> legends;
-    element->GetElementsByTagName(NS_LITERAL_STRING("legend"), getter_AddRefs(legends));
+    nsAutoString nameSpaceURI;
+    element->GetNamespaceURI(nameSpaceURI);
+    element->GetElementsByTagNameNS(nameSpaceURI, NS_LITERAL_STRING("legend"),
+                                  getter_AddRefs(legends));
     if (legends) {
       nsCOMPtr<nsIDOMNode> legendNode;
       legends->Item(0, getter_AddRefs(legendNode));

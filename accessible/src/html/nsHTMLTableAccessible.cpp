@@ -114,7 +114,10 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aResult)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
     nsCOMPtr<nsIDOMNodeList> captions;
-    element->GetElementsByTagName(NS_LITERAL_STRING("caption"), getter_AddRefs(captions));
+    nsAutoString nameSpaceURI;
+    element->GetNamespaceURI(nameSpaceURI);
+    element->GetElementsByTagNameNS(nameSpaceURI, NS_LITERAL_STRING("caption"), 
+                                    getter_AddRefs(captions));
     if (captions) {
       nsCOMPtr<nsIDOMNode> captionNode;
       captions->Item(0, getter_AddRefs(captionNode));
