@@ -25,10 +25,10 @@ VPATH		= @srcdir@
 
 XPIDL_MODULE = netwerk_file
 
-XPIDLSRCS =                          \
-        .\nsIFileChannel.idl         \
-        .\nsIFileProtocolHandler.idl \
-        $(NULL)
+XPIDLSRCS =				\
+	nsIFileChannel.idl		\
+	nsIFileProtocolHandler.idl	\
+	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
