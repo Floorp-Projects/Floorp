@@ -912,7 +912,13 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
       nsAutoString theCharsetKey("charset"); 
       nsAutoString theSourceKey("charsetSource"); 
       nsAutoString intValue;
+      
       // Add pseudo attribute in the end
+
+      if(index>=47) index=47;  //XXX HACK HACK HACK!!!!! 
+                               //We really need to do a better job with attributes here.
+
+
       if(index < 50) {
         theKeys[index]=theCharsetKey.GetUnicode(); 
         theValues[index] = theCharsetValue.GetUnicode();
