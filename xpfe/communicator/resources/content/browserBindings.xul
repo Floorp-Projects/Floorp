@@ -65,7 +65,7 @@
       onkeypress="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
         controller.doCommand('cmd_undo');"/>
-    <key id="redoKey" key="r" xulkey="true" shift="false"
+    <key id="redoKey" key="y" xulkey="true" shift="false"
       onkeypress="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
         controller.doCommand('cmd_redo');"/>
