@@ -106,6 +106,7 @@ EXTRA_LIBS=
 
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap imap4url ldapurl net progress
 EXPORTS= mkstream.h \
+	 net_xp_file.h \
 	 mkparse.h \
 	 mkfsort.h \
 	 mksort.h \
