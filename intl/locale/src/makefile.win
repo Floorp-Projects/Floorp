@@ -38,6 +38,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS		=	nsLocale.cpp				\
 				nsLocaleFactory.cpp			\
 				nsLocaleService.cpp			\
+				nsFontPackageService.cpp		\
 				nsLanguageAtomService.cpp		\
 				nsScriptableDateFormat.cpp			\
 				nsCollation.cpp
@@ -46,6 +47,7 @@ CPPSRCS		=	nsLocale.cpp				\
 CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
 				.\$(OBJDIR)\nsLocaleFactory.obj		\
 				.\$(OBJDIR)\nsLocaleService.obj		\
+				.\$(OBJDIR)\nsFontPackageService.obj	\
 				.\$(OBJDIR)\nsLanguageAtomService.obj	\
 				.\$(OBJDIR)\nsScriptableDateFormat.obj		\
 				.\$(OBJDIR)\nsCollation.obj
