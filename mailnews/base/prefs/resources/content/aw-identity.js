@@ -57,6 +57,7 @@ function identityPageValidate()
 
   var isMailAccount = pageData.accounttype.mailaccount;
   if (isMailAccount && isMailAccount.value) {
+    setNextPage("accounttype","identitypage");
     if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
       setNextPage("identitypage","done");
     }
