@@ -45,8 +45,8 @@
     // Use bar here...
     delete[] bar;
 
-  (Strictly speaking, The `delete[] bar' would use the proper XPCOM
-  de-allocator, we'll ignore that for now.) This makes your life
+  (Strictly speaking, the `delete[] bar' should use the proper XPCOM
+  de-allocator that; we'll ignore that for now.) This makes your life
   harder, because you need to convolute your code to ensure that you
   don't leak `bar'.
 
@@ -107,7 +107,7 @@ public:
     virtual ~nsXPIDLString();
 
     /**
-     * Return an immutable reference to the Unicode string.
+     * Return a reference to the immutable Unicode string.
      */
     operator const PRUnichar*();
 
@@ -191,7 +191,7 @@ getter_Shares(nsXPIDLString& aXPIDLString)
 //
 //   A wrapper for Unicode strings. With the |getter_Copies()| and
 //   |getter_Shares()| helper functions, this can be used instead of
-//   the "naked" |char*| interface for |wstring| parameters in XPIDL
+//   the "naked" |char*| interface for |string| parameters in XPIDL
 //   interfaces.
 //
 
@@ -212,7 +212,7 @@ public:
     virtual ~nsXPIDLCString();
 
     /**
-     * Return an immutable reference to the single-byte string.
+     * Return a reference to the immutable single-byte string.
      */
     operator const char*();
 
