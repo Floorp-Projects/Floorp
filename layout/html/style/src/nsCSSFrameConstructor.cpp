@@ -1015,7 +1015,7 @@ ChildIterator::Init(nsIContent*    aContent,
   if (nodes)
     nodes->GetLength(&length);
   else
-    aContent->ChildCount(NS_REINTERPRET_CAST(PRInt32&, length));
+    aContent->ChildCount((PRInt32&) length);
 
   aFirst->mContent = aContent;
   aLast->mContent  = aContent;
