@@ -268,7 +268,7 @@ JavaClass_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Properties of JavaClass objects may not be deleted");
+    JS_ReportError(cx, "Cannot define a new property in a JavaClass");
     return JS_FALSE;
 }
 

@@ -103,8 +103,7 @@ JavaPackage_setProperty(JSContext *cx, JSObject *obj, jsval slot, jsval *vp)
                            "JavaPackage prototype object");
         return JS_FALSE;
     }
-    JS_ReportError(cx, "You may not add properties to %s, "
-                       "as it is not a JavaScript object", package->path);
+    JS_ReportError(cx, "You may not add properties to a JavaPackage object");
     return JS_FALSE;
 }
 

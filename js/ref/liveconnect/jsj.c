@@ -56,7 +56,7 @@ report_java_initialization_error(JNIEnv *jEnv, const char *js_error_msg)
         (*jEnv)->ExceptionClear(jEnv);
     }
 
-    if (java_error_msg) {
+    if (java_error_msg) { 
         error_msg = PR_smprintf("initialization error: %s (%s)\n",
                                 js_error_msg, java_error_msg);
         free((void*)java_error_msg);
@@ -70,7 +70,7 @@ report_java_initialization_error(JNIEnv *jEnv, const char *js_error_msg)
 
 /*
  * Opaque JVM handles to Java classes and methods required for Java reflection.
- * These are computed and cached at initialization.
+ * These are computed and cached during initialization.
  */
 
 jclass jlObject;                        /* java.lang.Object */
@@ -422,7 +422,7 @@ JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
     return JS_TRUE;
 }
 
-/* Obtain a reference to a Java class */
+/* Eliminate a reference to a Java class */
 #define UNLOAD_CLASS(qualified_name, class)                                  \
     if (class) {                                                             \
         (*jENV)->DeleteGlobalRef(jENV, class);                               \

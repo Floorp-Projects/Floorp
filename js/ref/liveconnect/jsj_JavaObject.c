@@ -526,7 +526,7 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Properties of JavaObject objects may not be deleted");
+    JS_ReportError(cx, "Cannot define a new property in a JavaObject");
     return JS_FALSE;
 }
 
