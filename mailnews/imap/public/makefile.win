@@ -21,6 +21,7 @@ IGNORE_MANIFEST=1
 EXPORTS =							\
 			nsIImapUrl.h			\
 			nsIImapProtocol.h		\
+			nsIImapLog.h			\
 			$(NULL)
 
 MODULE= mailnews
