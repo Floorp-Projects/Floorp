@@ -91,7 +91,6 @@ DupString(char* *o_Dest, const char* i_Src)
 }
 
 // Replace all /./ with a /
-// Also changes all \ to / 
 // But only till #? 
 NS_NET void 
 CoaleseDirs(char* io_Path)
@@ -119,13 +118,7 @@ CoaleseDirs(char* io_Path)
         }
 #endif
 
-#if defined(XP_WIN) || defined(XP_OS2)
-        if (*fwdPtr == '\\')
-            *fwdPtr = '/';
-#endif
-
-        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
-            (*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/' )
         {
             // remove . followed by slash
             fwdPtr += 1;
@@ -134,8 +127,7 @@ CoaleseDirs(char* io_Path)
                 (*(fwdPtr+3) == '/' || 
                     *(fwdPtr+3) == '\0' || // This will take care of 
                     *(fwdPtr+3) == '?' ||  // something like foo/bar/..#sometag
-                    *(fwdPtr+3) == '#' ||
-                    *(fwdPtr+3) == '\\'))
+                    *(fwdPtr+3) == '#'))
         {
             // remove foo/.. 
             // reverse the urlPtr to the previous slash 
