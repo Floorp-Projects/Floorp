@@ -203,6 +203,7 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
       aResult.Append(cbuf);
       break;
 
+    default:
     case eHTMLUnit_Enumerated:
       NS_NOTREACHED("no default enumerated value to string conversion");
       result = eContentAttr_NotThere;
@@ -974,16 +975,13 @@ PRBool nsHTMLTagContent::ParseColor(const nsString& aString,
   aString.ToCString(cbuf, sizeof(cbuf));
   if (aString.Length() > 0) {
     nscolor color;
-    if (cbuf[0] == '#') {
-      if (NS_HexToRGB(cbuf, &color)) {
-        aResult.SetColorValue(color);
-        return PR_TRUE;
-      }
-    } else {
-      if (NS_ColorNameToRGB(cbuf, &color)) {
-        aResult.SetStringValue(aString);
-        return PR_TRUE;
-      }
+    if (NS_ColorNameToRGB(cbuf, &color)) {
+      aResult.SetStringValue(aString);
+      return PR_TRUE;
+    }
+    if (NS_HexToRGB(cbuf, &color)) {
+      aResult.SetColorValue(color);
+      return PR_TRUE;
     }
   }
 
