@@ -137,7 +137,7 @@
 
   <popupset id="tooltip-set">
     <popup id="tooltip-popup" class="tooltip" 
-      oncreate="return fillInTooltip(document.tooltipNode);">
+      onpopupshowing="return fillInTooltip(document.tooltipNode);">
       <box id="tooltipBox" orient="vertical"/>
     </popup>
   </popupset>
@@ -181,7 +181,7 @@
           <menuseparator/>
           <menu id="menu_ThrowMode" label="&TModeMenu.label;"
                 accesskey="&TModeMenu.aKey;">
-            <menupopup oncreate="console.onTModeMenuCreate();">
+            <menupopup onpopupshowing="console.onTModeMenuCreate();">
               <menuitem id="menu_TModeIgnore"
                         observes="cmd_tmode_ignore" type="radio"
                         label="&TModeIgnore.label;"
