@@ -63,7 +63,6 @@ class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +71,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
                           public nsSupportsWeakReference 
 {
   public:
+    friend class PageCycler;
 
     nsBrowserInstance();
     virtual ~nsBrowserInstance();
@@ -85,6 +85,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
   protected:
 
+    nsresult LoadUrl(const PRUnichar * urlToLoad);
+    nsresult GetContentDocShell(nsIDocShell** aDocShell);
     nsresult GetContentAreaDocShell(nsIDocShell** outDocShell);
     nsresult GetContentWindow(nsIDOMWindowInternal** outContentWindow);
     

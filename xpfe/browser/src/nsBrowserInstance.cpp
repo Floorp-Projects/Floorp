@@ -452,33 +452,6 @@ nsBrowserInstance::~nsBrowserInstance()
   Close();
 }
 
-NS_IMETHODIMP
-nsBrowserInstance::SetDefaultCharacterSet(const PRUnichar *aCharset)
-{
-  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-  GetContentWindow(getter_AddRefs(contentWindow));
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
-
-  if (!globalObj)
-   return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
-
-  if (docShell) {
-    nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIMarkupDocumentViewer> markupCV(do_QueryInterface(childCV));
-
-    if (markupCV) {
-      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
-    }
-  }
-  return NS_OK;
-}
-
 void
 nsBrowserInstance::ReinitializeContentVariables()
 {
@@ -604,7 +577,7 @@ NS_INTERFACE_MAP_END
 //    nsBrowserInstance: nsIBrowserInstance
 //*****************************************************************************
 
-NS_IMETHODIMP    
+nsresult
 nsBrowserInstance::LoadUrl(const PRUnichar * urlToLoad)
 {
   nsresult rv = NS_OK;
@@ -698,7 +671,7 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsBrowserInstance::Init()
 {
   nsresult rv = NS_OK;
@@ -706,31 +679,12 @@ nsBrowserInstance::Init()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBrowserInstance::GetContentDocShell(nsIDocShell** aDocShell)
 {
   NS_ENSURE_ARG_POINTER(aDocShell);
 
   return GetContentAreaDocShell(aDocShell);
-}
-
-
-NS_IMETHODIMP
-nsBrowserInstance::SetUrlbarHistory(nsIUrlbarHistory* aUBHistory)
-{
-   mUrlbarHistory = aUBHistory;
-   return NS_OK;
-}
-	
-
-NS_IMETHODIMP
-nsBrowserInstance::GetUrlbarHistory(nsIUrlbarHistory** aUrlbarHistory)
-{
-   NS_ENSURE_ARG_POINTER(aUrlbarHistory);
-
-   *aUrlbarHistory = mUrlbarHistory;
-   NS_IF_ADDREF(*aUrlbarHistory);
-   return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -791,23 +745,6 @@ nsBrowserInstance::Close()
 
   return NS_OK;
 }
-
-NS_IMETHODIMP    
-nsBrowserInstance::Copy()
-{
-  nsCOMPtr<nsIDocShell> docShell;
-  GetContentAreaDocShell(getter_AddRefs(docShell));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-  
-  nsCOMPtr<nsIContentViewer> viewer;
-  docShell->GetContentViewer(getter_AddRefs(viewer));
-  nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
-  if (edit) {
-      edit->CopySelection();
-  }
-  return NS_OK;
-}
-
 
 //*****************************************************************************
 // nsBrowserInstance: Helpers
