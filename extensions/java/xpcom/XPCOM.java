@@ -65,8 +65,6 @@ public final class XPCOM {
 
   public static native void FinalizeStub(Object thisObj);
 
-  public static native int nsWriteSegmentFun(int ptr, Object aInStream, int aClosure, byte[] aFromSegment, int aToOffset, int aCount);
-
 
   /*  Utility functions */
 
