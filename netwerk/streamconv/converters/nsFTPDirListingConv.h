@@ -82,13 +82,13 @@ typedef enum _FTPentryType {
 // indexEntry is the data structure used to maintain directory entry information.
 class indexEntry {
 public:
-    indexEntry() { mContentLen = 0; mMDTM = PR_Now(); mType = File; mSupressSize = PR_FALSE; };
+    indexEntry() { mContentLen = 0; mType = File; mSupressSize = PR_FALSE; };
 
     nsCString       mName;              // the file or dir name
     FTPentryType    mType;              
     PRInt32         mContentLen;        // length of the file
     nsCString       mContentType;       // type of the file
-    PRTime          mMDTM;              // modified time
+    PRExplodedTime  mMDTM;              // modified time
     PRBool          mSupressSize;       // supress the size info from display
 };
 
@@ -138,9 +138,8 @@ private:
     PRBool   IsLSDate(char *aCStr);
 
     // date conversion/parsing methods
-    PRBool   ConvertUNIXDate(char *aCStr, PRTime& outDate);
-    PRBool   ConvertVMSDate(char *aCStr, PRTime& outDate);
-    PRBool   ConvertDOSDate(char *aCStr, PRTime& outDate);
+    PRBool   ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate);
+    PRBool   ConvertDOSDate(char *aCStr, PRExplodedTime& outDate);
 
     // line parsing methods
     nsresult ParseLSLine(char *aLine, indexEntry *aEntry);

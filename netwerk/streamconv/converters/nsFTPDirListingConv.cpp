@@ -98,8 +98,6 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
         mServerType = CMS;
     } else if (-1 != fromMIMEString.Find("tcpc")) {
         mServerType = TCPC;
-    } else if (-1 != fromMIMEString.Find("vms")) {
-        mServerType = VMS;
     } else {
         mServerType = GENERIC;
     }
@@ -218,8 +216,6 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
         mServerType = CMS;
     } else if (-1 != fromMIMEString.Find("tcpc")) {
         mServerType = TCPC;
-    } else if (-1 != fromMIMEString.Find("vms")) {
-        mServerType = VMS;
     } else {
         mServerType = GENERIC;
     }
@@ -550,7 +546,7 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
 // "FCv 23 1990  " ...
 // Returns 0 on error.
 PRBool
-nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
+nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate) {
 
     PRExplodedTime curTime;
     InitPRExplodedTime(curTime);
@@ -601,58 +597,12 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
     }
 
     // set the out param
-    outDate = PR_ImplodeTime(&curTime);
+    outDate = curTime;
     return PR_TRUE;
 }
 
 PRBool
-nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
-
-    PRExplodedTime curTime;
-
-    InitPRExplodedTime(curTime);
-
-    char *col;
-
-    if ((col = strtok(aCStr, "-")) == NULL)
-    	return PR_FALSE;
-
-    // DAY
-    nsCAutoString intStr(col);
-    PRInt32 error;
-    curTime.tm_mday = intStr.ToInteger(&error, 10);
-
-    if ((col = strtok(nsnull, "-")) == nsnull || (curTime.tm_month = MonthNumber(col)) < 0)
-    	return PR_FALSE;
-
-    // YEAR
-    if ((col = strtok(NULL, " ")) == NULL)               
-    	return PR_FALSE;
-
-
-    intStr = col;
-    curTime.tm_year = intStr.ToInteger(&error, 10);
-
-    // HOUR
-    if ((col = strtok(NULL, ":")) == NULL)               
-    	return PR_FALSE;
-    
-    intStr = col;
-    curTime.tm_hour = intStr.ToInteger(&error, 10);
-
-    // MINS
-    if ((col = strtok(NULL, " ")) == NULL)
-    	return PR_FALSE;
-
-    intStr = col;
-    curTime.tm_min = intStr.ToInteger(&error, 10);
-
-    outDate = PR_ImplodeTime(&curTime);
-    return PR_TRUE;
-}
-
-PRBool
-nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
+nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRExplodedTime& outDate) {
 
     PRExplodedTime curTime, nowTime;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowTime);
@@ -671,7 +621,7 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
 
     curTime.tm_min = (((aCStr[13]-'0')*10) + aCStr[14]-'0');
 
-    outDate = PR_ImplodeTime(&curTime);
+    outDate = curTime;
     return PR_TRUE;
 }
 
@@ -725,154 +675,6 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
     return NS_OK;
 }
 
-nsresult
-nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
-        int i, j;
-        int32 ialloc;
-        char *cp, *cpd, *cps, date[64], *sp = " ", *escName;
-        static char ThisYear[5];
-        static PRBool HaveYear = PR_FALSE; 
-
-        //  Get rid of blank lines, and information lines.
-        //  Valid lines have the ';' version number token.
-        if (!PL_strlen(aLine) || (cp=PL_strchr(aLine, ';')) == NULL) 
-		  {
-           // entry_info->display = FALSE;
-            return NS_ERROR_FAILURE;
-          }
-
-        // Cut out file or directory name at VMS version number. 
-    	*cp++ ='\0';
-        escName = nsEscape(aLine, url_Path);
-        aEntry->mName = escName;
-        nsAllocator::Free(escName);
-
-        // Cast VMS file and directory names to lowercase. 
-        aEntry->mName.ToLowerCase();
-
-        /** Uppercase terminal .z's or _z's. **/
-    	//if ((--i > 2) && entry_info->filename[i] == 'z' &&
-        //     	(entry_info->filename[i-1] == '.' || entry_info->filename[i-1] == '_'))
-        //    entry_info->filename[i] = 'Z';
-
-        /** Convert any tabs in rest of line to spaces. **/
-    	cps = cp-1;
-        while ((cps=PL_strchr(cps+1, '\t')) != NULL)
-            *cps = ' ';
-
-        /** Collapse serial spaces. **/
-        i = 0; j = 1;
-    	cps = cp;
-        while (cps[j] != '\0') 
-		  {
-            if (cps[i] == ' ' && cps[j] == ' ')
-                j++;
-            else
-                cps[++i] = cps[j++];
-		  }
-        cps[++i] = '\0';
-
-        /* Save the current year.       
-    	 * It could be wrong on New Year's Eve.
-		 */
-    	if (!HaveYear) 
-	 	  {
-            PRExplodedTime curTime;
-            PR_ExplodeTime(PR_Now(), PR_GMTParameters, &curTime);
-            nsCAutoString year(curTime.tm_year);
-            const char *yearCStr = year.GetBuffer();
-            for (PRInt8 x = 0; x < 4; x++)
-                ThisYear[x] = yearCStr[x];
-        	HaveYear = PR_TRUE;
-    	  }
-
-        // get the date. 
-        if ((cpd=PL_strchr(cp, '-')) != NULL &&
-                PL_strlen(cpd) > 9 && nsString::IsDigit(*(cpd-1)) &&
-                nsString::IsAlpha(*(cpd+1)) && *(cpd+4) == '-') 
-		  {
-
-            /* Month 
-			 */
-            *(cpd+4) = '\0';
-
-            // lowercase these two chars
-            PRInt8 shift = 'A' - 'a';
-            if ( !(*(cpd+2) <= 'z') && !(*(cpd+2) >= 'a') )
-                *(cpd+2) = *(cpd+2) - shift;
-
-            if ( !(*(cpd+3) <= 'z') && !(*(cpd+2) >= 'a') )
-                *(cpd+3) = *(cpd+3) - shift;
-
-            sprintf(date, "%.32s ", cpd+1);
-            *(cpd+4) = '-';
-
-            /** Day **/
-            *cpd = '\0';
-            if (nsString::IsDigit(*(cpd-2)))
-                sprintf(date+4, "%.32s ", cpd-2);
-            else
-                sprintf(date+4, " %.32s ", cpd-1);
-            *cpd = '-';
-
-            /** Time or Year **/
-            if (!PL_strncmp(ThisYear, cpd+5, 4) && PL_strlen(cpd) > 15 && *(cpd+12) == ':')
-			  {
-                *(cpd+15) = '\0';
-                sprintf(date+7, "%.32s", cpd+10);
-                *(cpd+15) = ' ';
-              } 
-			else 
-			  {
-                *(cpd+9) = '\0';
-                sprintf(date+7, " %.32s", cpd+5);
-                *(cpd+9) = ' ';
-              }
-
-            ConvertVMSDate(date, aEntry->mMDTM);
-          }
-
-        /* get the size 
-		 */
-        if ((cpd=PL_strchr(cp, '/')) != NULL) 
-		  {
-            /* Appears be in used/allocated format */
-            cps = cpd;
-            while (nsString::IsDigit(*(cps-1)))
-                cps--;
-            if (cps < cpd)
-                *cpd = '\0';
-            aEntry->mContentLen = atol(cps);
-            cps = cpd+1;
-            while (nsString::IsDigit(*cps))
-                cps++;
-            *cps = '\0';
-            ialloc = atoi(cpd+1);
-            /* Check if used is in blocks or bytes */
-            if (aEntry->mContentLen <= ialloc)
-                aEntry->mContentLen *= 512;
-          }
-        else if ((cps=strtok(cp, sp)) != NULL) 
-		  {
-            /* We just initialized on the version number 
-             * Now let's find a lone, size number   
-			 */
-            while ((cps=strtok(NULL, sp)) != NULL) 
-			  {
-                 cpd = cps;
-                 while (nsString::IsDigit(*cpd))
-                     cpd++;
-                 if (*cpd == '\0') 
-				   {
-                     /* Assume it's blocks */
-                     aEntry->mContentLen = atol(cps) * 512;
-                     break;
-                   }
-               }
-          }
-    return NS_OK;
-}
-
 void
 nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_usec = 0;
@@ -884,7 +686,8 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_year = 0;
     aTime.tm_wday = 0;
     aTime.tm_yday = 0;
-    aTime.tm_params = PR_LocalTimeParameters(&aTime);;
+    aTime.tm_params.tp_gmt_offset = 0;
+    aTime.tm_params.tp_dst_offset = 0;
 }
 
 char *
@@ -997,33 +800,6 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             nsAllocator::Free(escName);
             break; // END CMS
         }
-        case VMS:
-        {
-            /* Interpret and edit LIST output from VMS server */
-            /* and convert information lines to zero length.  */
-            rv = ParseVMSLine(line, thisEntry);
-            if (NS_FAILED(rv)) {
-                NS_DELETEXPCOM(thisEntry);
-                if (cr)
-                    line = eol+2;
-                else
-                    line = eol+1;
-                continue;
-            }
-
-            /** Trim off VMS directory extensions **/
-            //len = thisEntry->mName.Length();
-//            if ((len > 4) && !PL_strcmp(&entry_info->filename[len-4], ".dir"))
-//              {
-//                entry_info->filename[len-4] = '\0';
-//				entry_info->special_type = NET_DIRECTORY;
-//                remove_size=TRUE; /* size is not useful */
-//				/* add trailing slash to directories
-//				 */
-//				StrAllocCat(entry_info->filename, "/");
-//              }
-            break; // END VMS
-        }
         case NT:
         {
 			char *date, *size_s, *name;
@@ -1081,7 +857,8 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         // MODIFIED DATE
         nsString lDate;
         nsStr::Initialize(lDate, eOneByte);
-        rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
+
+        rv = mDateTimeFormat->FormatPRExplodedTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, &thisEntry->mMDTM, lDate);
         if (NS_FAILED(rv)) {
             NS_DELETEXPCOM(thisEntry);
             return nsnull;
