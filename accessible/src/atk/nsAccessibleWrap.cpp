@@ -206,9 +206,11 @@ nsAccessibleWrap::~nsAccessibleWrap()
         MAI_ATK_OBJECT(mMaiAtkObject)->accWrap = nsnull;
         g_object_unref(mMaiAtkObject);
     }
-    if (mInterfaces)
+    if (mInterfaces) {
         for (int index = 0; index < MAI_INTERFACE_NUM; ++index)
             delete mInterfaces[index];
+        delete [] mInterfaces;
+    }
 }
 
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
