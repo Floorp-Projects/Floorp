@@ -1,0 +1,35 @@
+<!ENTITY loadError.label "Page load error">
+<!ENTITY retry.label "Try again">
+<!ENTITY search.label "Search for this address">
+
+<!-- Specific error messages -->
+
+<!ENTITY generic.longDesc "The page could not be loaded, possibly because it does not exist or the location is incorrect.&lt;br/&gt;You should check the location to ensure that is valid and correctly formatted.">
+
+<!ENTITY malformedURI.title "malformedURI title">
+<!ENTITY malformedURI.longDesc "malformedURI long description goes here.">
+
+<!ENTITY fileNotFound.title "fileNotFound title">
+<!ENTITY fileNotFound.longDesc "fileNotFound long description goes here.">
+
+<!ENTITY dnsNotFound.title "dnsNotFound title">
+<!ENTITY dnsNotFound.longDesc "dnsNotFound long description goes here.">
+
+<!ENTITY protocolNotFound.title "protocolNotFound title">
+<!ENTITY protocolNotFound.longDesc "protocolNotFound long description goes here.">
+
+<!ENTITY connectionFailure.title "connectionFailure title">
+<!ENTITY connectionFailure.longDesc "connectionFailure long description goes here.">
+
+<!ENTITY netTimeout.title "netTimeout title">
+<!ENTITY netTimeout.longDesc "netTimeout long description goes here.">
+
+<!ENTITY redirectLoop.title "redirectLoop title">
+<!ENTITY redirectLoop.longDesc "redirectLoop long description goes here.">
+
+<!ENTITY unknownSocketType.title "unknownSocketType title">
+<!ENTITY unknownSocketType.longDesc "unknownSocketType long description goes here.">
+
+<!ENTITY netReset.title "netReset title">
+<!ENTITY netReset.longDesc "netReset long description goes here.">
+

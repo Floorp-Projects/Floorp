@@ -1,0 +1,3 @@
+toolkit.jar:
+	content/global/netError.xhtml
+	content/global/netError.js

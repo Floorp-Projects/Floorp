@@ -251,6 +251,8 @@ protected:
     NS_IMETHOD EnsureEditorData();
     NS_IMETHOD EnsureFind();
     NS_IMETHOD RefreshURIFromQueue();
+    NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL);
+    NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aPage, const PRUnichar *aDescription);
 
     static  inline  PRUint32
     PRTimeToSeconds(PRTime t_usec)
@@ -315,6 +317,7 @@ protected:
     PRPackedBool               mFocusDocFirst;
     PRPackedBool               mHasFocus;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
+    PRPackedBool               mUseErrorPages;
 
     PRUint32                   mAppType;
     PRInt32                    mChildOffset;  // Offset in the parent's child list.

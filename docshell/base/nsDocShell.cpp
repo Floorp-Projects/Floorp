@@ -81,6 +81,11 @@
 #include "nsISHistoryListener.h"
 #include "nsIDirectoryListing.h"
 
+// Pull in various NS_ERROR_* definitions
+#include "nsIDNSService.h"
+#include "nsISocketTransportService.h"
+#include "nsISocketProvider.h"
+
 // Editor-related
 #include "nsIEditingSession.h"
 
@@ -109,6 +114,7 @@
 #include "nsITextToSubURI.h"
 
 #include "prlog.h"
+#include "prmem.h"
 
 #include "nsISelectionDisplay.h"
 
@@ -209,6 +215,7 @@ nsDocShell::nsDocShell():
     mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
+    mUseErrorPages(PR_FALSE),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
@@ -1208,7 +1215,7 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
 {
     mCurrentURI = aURI;         //This assignment addrefs
     PRBool isRoot = PR_FALSE;   // Is this the root docshell
-    PRBool  isSubFrame=PR_FALSE;  // Is this a subframe navigation?
+    PRBool isSubFrame = PR_FALSE;  // Is this a subframe navigation?
 
     if (!mLoadCookie)
       return NS_OK; 
@@ -1241,7 +1248,6 @@ nsDocShell::SetCurrentURI(nsIURI *aURI)
       return NS_OK; 
     }
     
-
     NS_ASSERTION(loader, "No document loader");
     if (loader) {
         loader->FireOnLocationChange(webProgress, nsnull, aURI);
@@ -2343,43 +2349,8 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     if (NS_ERROR_UNKNOWN_PROTOCOL == rv ||
         NS_ERROR_MALFORMED_URI == rv) {
-        // we weren't able to find a protocol handler
-        nsCOMPtr<nsIPrompt> prompter;
-        nsCOMPtr<nsIStringBundle> stringBundle;
-        GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                 getter_AddRefs(stringBundle));
-
-        NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
-
-        nsXPIDLString messageStr;
-        nsresult strerror;
-        
-        if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
-            const nsAutoString uriString(aURI);
-            PRInt32 colon = uriString.FindChar(':');
-            // extract the scheme
-            nsAutoString scheme;
-            uriString.Left(scheme, colon);
-            
-            const PRUnichar* formatStrs[] = { scheme.get() };
-        
-            strerror =
-                stringBundle->FormatStringFromName(NS_LITERAL_STRING("protocolNotFound").get(),
-                                                   formatStrs,
-                                                   1,
-                                                   getter_Copies(messageStr));
-        }
-        else {
-            // NS_ERROR_MALFORMED_URI
-            strerror =
-                stringBundle->GetStringFromName(NS_LITERAL_STRING("malformedURI").get(),
-                                                getter_Copies(messageStr));
-        }
-
-        // now we have the string
-        NS_ENSURE_SUCCESS(strerror, NS_ERROR_FAILURE);
-        prompter->Alert(nsnull, messageStr);
-    }                           // end unknown protocol
+        DisplayLoadError(rv, uri, aURI);
+    } // end unknown protocol
 
     if (NS_FAILED(rv) || !uri)
         return NS_ERROR_FAILURE;
@@ -2400,6 +2371,187 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 }
 
 NS_IMETHODIMP
+nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL)
+{
+    // Get prompt and string bundle servcies
+    nsCOMPtr<nsIPrompt> prompter;
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    GetPromptAndStringBundle(getter_AddRefs(prompter),
+                             getter_AddRefs(stringBundle));
+
+    NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+    nsAutoString error;
+    const PRUint32 kMaxFormatStrArgs = 2;
+    nsAutoString formatStrs[kMaxFormatStrArgs];
+    PRUint32 formatStrCount = 0;
+    nsresult rv = NS_OK;
+
+    // Turn the error code into a human readable error message.
+    if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
+        NS_ENSURE_ARG_POINTER(aURL);
+        const nsAutoString uriString(aURL);
+        PRInt32 colon = uriString.FindChar(':');
+        // extract the scheme
+        nsAutoString scheme;
+        uriString.Left(scheme, colon);
+        formatStrs[0].Assign(scheme.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("protocolNotFound"));
+    }
+    else if (NS_ERROR_FILE_NOT_FOUND == aError) {
+        NS_ENSURE_ARG_POINTER(aURI);
+        nsCAutoString spec;
+        aURI->GetPath(spec);
+        formatStrs[0].AssignWithConversion(spec.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("fileNotFound"));
+    }
+    else if (NS_ERROR_UNKNOWN_HOST == aError) {
+        NS_ENSURE_ARG_POINTER(aURI);
+        // Get the host
+        nsCAutoString host;
+        aURI->GetHost(host);
+        formatStrs[0].AssignWithConversion(host.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("dnsNotFound"));
+    }
+    else if(NS_ERROR_CONNECTION_REFUSED == aError) {
+        NS_ENSURE_ARG_POINTER(aURI);
+        // Build up the host:port string.
+        nsCAutoString hostport;
+        aURI->GetHostPort(hostport);
+        formatStrs[0].AssignWithConversion(hostport.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("connectionFailure"));
+    }
+    else if (NS_ERROR_NET_TIMEOUT == aError) {
+        NS_ENSURE_ARG_POINTER(aURI);
+        // Get the host
+        nsCAutoString host;
+        aURI->GetHost(host);
+        formatStrs[0].AssignWithConversion(host.get());
+        formatStrCount = 1;
+        error.Assign(NS_LITERAL_STRING("netTimeout"));
+    }
+    else {
+        // Errors requiring simple formatting
+        switch (aError) {
+        case NS_ERROR_MALFORMED_URI:
+            // URI is malformed
+            error.Assign(NS_LITERAL_STRING("malformedURI"));
+            break;
+        case NS_ERROR_REDIRECT_LOOP:
+            // Doc failed to load because the server generated too many redirects
+            error.Assign(NS_LITERAL_STRING("redirectLoop"));
+            break;
+        case NS_ERROR_UNKNOWN_SOCKET_TYPE:
+            // Doc failed to load because PSM is not installed
+            error.Assign(NS_LITERAL_STRING("unknownSocketType"));
+            break;
+        case NS_ERROR_NET_RESET:
+            // Doc failed to load because the server kept reseting the connection
+            // before we could read any data from it
+            error.Assign(NS_LITERAL_STRING("netReset"));
+            break;
+        }
+    }
+
+    // Test if the error should be displayed
+    if (error.IsEmpty()) {
+        return NS_OK;
+    }
+
+    // Test if the error needs to be formatted
+    nsAutoString messageStr;
+    if (formatStrCount > 0) {
+        const PRUnichar *strs[kMaxFormatStrArgs];
+        for (PRUint32 i = 0; i < formatStrCount; i++) {
+            strs[i] = formatStrs[i].get();
+        }
+        nsXPIDLString str;
+        rv = stringBundle->FormatStringFromName(
+            error.get(),
+            strs, formatStrCount, getter_Copies(str));
+        NS_ENSURE_SUCCESS(rv, rv);
+        messageStr.Assign(str.get());
+    }
+    else
+    {
+        nsXPIDLString str;
+        rv = stringBundle->GetStringFromName(
+                error.get(),
+                getter_Copies(str));
+        NS_ENSURE_SUCCESS(rv, rv);
+        messageStr.Assign(str.get());
+    }
+
+    // Display the error as a page or an alert prompt
+    NS_ENSURE_FALSE(messageStr.IsEmpty(), NS_ERROR_FAILURE);
+    if (mUseErrorPages) {
+        // Display an error page
+        LoadErrorPage(aURI, aURL, error.get(), messageStr.get());
+    } 
+    else
+    {
+        // Display a message box
+        prompter->Alert(nsnull, messageStr.get());
+    }
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aErrorType, const PRUnichar *aDescription)
+{
+    nsAutoString url;
+    if (aURI)
+    {
+        nsCAutoString uri;
+        nsresult rv = aURI->GetSpec(uri);
+        NS_ENSURE_SUCCESS(rv, rv);
+        url.AssignWithConversion(uri.get());
+    }
+    else if (aURL)
+    {
+        url.Assign(aURL);
+    }
+    else
+    {
+        return NS_ERROR_INVALID_POINTER;
+    }
+
+    // Create a URL to pass all the error information through to the page.
+
+    char *escapedUrl = nsEscape(NS_ConvertUCS2toUTF8(url.get()).get(), url_Path);
+    char *escapedError = nsEscape(NS_ConvertUCS2toUTF8(aErrorType).get(), url_Path);
+    char *escapedDescription = nsEscape(NS_ConvertUCS2toUTF8(aDescription).get(), url_Path);
+
+    nsAutoString errorType(aErrorType);
+    nsAutoString errorPageUrl;
+
+    errorPageUrl.Assign(NS_LITERAL_STRING("chrome://global/content/netError.xhtml?e="));
+    errorPageUrl.AppendWithConversion(escapedError);
+    errorPageUrl.Append(NS_LITERAL_STRING("&u="));
+    errorPageUrl.AppendWithConversion(escapedUrl);
+    errorPageUrl.Append(NS_LITERAL_STRING("&d="));
+    errorPageUrl.AppendWithConversion(escapedDescription);
+
+    PR_FREEIF(escapedDescription);
+    PR_FREEIF(escapedError);
+    PR_FREEIF(escapedUrl);
+    
+    return LoadURI(errorPageUrl.get(), // URI string
+                   LOAD_FLAGS_BYPASS_HISTORY | LOAD_RELOAD_BYPASS_CACHE, 
+                   nsnull,
+                   nsnull,
+                   nsnull);
+}
+
+
+NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
     nsresult rv;
@@ -2413,7 +2565,6 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
         type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
     else if (aReloadFlags & LOAD_FLAGS_CHARSET_CHANGE)
         type = LOAD_RELOAD_CHARSET_CHANGE;
-
     // Send notifications to the HistoryListener if any, about the impending reload
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -2665,7 +2816,9 @@ nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP
 nsDocShell::Create()
 {
-    mPrefs = do_GetService(NS_PREF_CONTRACTID);
+    nsresult rv = NS_ERROR_FAILURE;
+    mPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     //GlobalHistory is now set in SetGlobalHistory
     //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_CONTRACTID);
 
@@ -2678,6 +2831,11 @@ nsDocShell::Create()
 
     // Check pref to see if we should prevent frameset spoofing
     mPrefs->GetBoolPref("browser.frame.validate_origin", &mValidateOrigin);
+
+    // Should we use XUL error pages instead of alerts if possible?
+    PRBool useErrorPages = PR_FALSE;
+    mPrefs->GetBoolPref("browser.xul.error_pages.enabled", &useErrorPages);
+    mUseErrorPages = useErrorPages;
 
     return NS_OK;
 }

@@ -717,6 +717,15 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
   nsDocShell::EndPageLoad(aProgress, channel, aStatus);
 
+  // Test if this is the top frame or a subframe
+  PRBool isTopFrame = PR_TRUE;
+  nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
+  rv = GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
+  if (NS_SUCCEEDED(rv) && targetParentTreeItem) 
+  {
+    isTopFrame = PR_FALSE;
+  }
+
   //
   // If the page load failed, then deal with the error condition...
   // Errors are handled as follows:
@@ -729,26 +738,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
   if(url && NS_FAILED(aStatus)) {
     if (aStatus == NS_ERROR_FILE_NOT_FOUND) {
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      GetPromptAndStringBundle(getter_AddRefs(prompter), 
-                                getter_AddRefs(stringBundle));
-       if (stringBundle && prompter) {
-        nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("fileNotFound").get(), 
-                                                      getter_Copies(messageStr));
-          
-        if (NS_SUCCEEDED(rv) && messageStr) {
-          nsCAutoString spec;
-          url->GetPath(spec);
-
-          PRUnichar *msg = nsTextFormatter::smprintf(messageStr, spec.get());
-          if (!msg) return NS_ERROR_OUT_OF_MEMORY;
-          
-          prompter->Alert(nsnull, msg);
-          nsTextFormatter::smprintf_free(msg);
-        }
-      }
+      DisplayLoadError(aStatus, url, nsnull);
       return NS_OK;
     }  
 
@@ -821,32 +811,28 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       if (aStatus == NS_ERROR_UNKNOWN_HOST ||
           aStatus == NS_ERROR_NET_RESET)
       {
-        // Test if keyword lookup produced a new URI or not
         PRBool doCreateAlternate = PR_TRUE;
-        if (newURI)
-        {
-          PRBool sameURI = PR_FALSE;
-          url->Equals(newURI, &sameURI);
-          if (!sameURI)
-          {
-            // Keyword lookup made a new URI so no need to try an
-            // alternate one.
-            doCreateAlternate = PR_FALSE;
-          }
-        }
-        // Skip fixup for anything except a normal document load operation
-        if (mLoadType != LOAD_NORMAL)
+        
+        // Skip fixup for anything except a normal document load operation on
+        // the topframe.
+        
+        if (mLoadType != LOAD_NORMAL || !isTopFrame)
         {
           doCreateAlternate = PR_FALSE;
         }
         else
         {
-          // Skip fixup for frames & iframes
-          nsCOMPtr<nsIDocShellTreeItem> targetParentTreeItem;
-          rv = GetSameTypeParent(getter_AddRefs(targetParentTreeItem));
-          if (NS_SUCCEEDED(rv) && targetParentTreeItem) 
+          // Test if keyword lookup produced a new URI or not
+          if (newURI)
           {
-            doCreateAlternate = PR_FALSE;
+            PRBool sameURI = PR_FALSE;
+            url->Equals(newURI, &sameURI);
+            if (!sameURI)
+            {
+              // Keyword lookup made a new URI so no need to try an
+              // alternate one.
+              doCreateAlternate = PR_FALSE;
+            }
           }
         }
         if (doCreateAlternate)
@@ -890,89 +876,19 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
     // It is time to throw an error dialog box, and be done with it...
     //
 
-    // Doc failed to load because the host was not found.
-    if(aStatus == NS_ERROR_UNKNOWN_HOST) {
-      // throw a DNS failure dialog
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-      
-      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                    getter_AddRefs(stringBundle));
-      if (!stringBundle) {
-        return rv;
-      }
-
-      nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("dnsNotFound").get(),
-                                           getter_Copies(messageStr));
-      if (NS_FAILED(rv)) return rv;
-
-      nsCAutoString host;
-      url->GetHost(host);
-      if (!host.IsEmpty()) {
-        PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
-        if (!msg) return NS_ERROR_OUT_OF_MEMORY;
-
-        prompter->Alert(nsnull, msg);
-        nsTextFormatter::smprintf_free(msg);
-      }
+    // Errors to be shown only on top-level frames
+    if ((aStatus == NS_ERROR_UNKNOWN_HOST || 
+         aStatus == NS_ERROR_CONNECTION_REFUSED) &&
+            (isTopFrame || mUseErrorPages)) {
+      DisplayLoadError(aStatus, url, nsnull);
     }
-    //
-    // Doc failed to load because we couldn't connect to the server.
-    // throw a connection failure dialog
-    //
-    else if(aStatus == NS_ERROR_CONNECTION_REFUSED) {
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-
-      rv = GetPromptAndStringBundle(getter_AddRefs(prompter), 
-                                    getter_AddRefs(stringBundle));
-      if (!stringBundle) {
-        return rv;
-      }
-
-      nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("connectionFailure").get(),
-                                           getter_Copies(messageStr));
-      if (NS_FAILED(rv)) return rv;
-
-      // build up the host:port string.
-      nsCAutoString hostport;
-      url->GetHostPort(hostport);
-      
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, hostport.get());
-      if (!msg) return NS_ERROR_OUT_OF_MEMORY;
-
-      prompter->Alert(nsnull, msg);
-      nsTextFormatter::smprintf_free(msg);
+    // Errors to be shown for any frame
+    else if (aStatus == NS_ERROR_NET_TIMEOUT ||
+             aStatus == NS_ERROR_REDIRECT_LOOP ||
+             aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
+             aStatus == NS_ERROR_NET_RESET) {
+      DisplayLoadError(aStatus, url, nsnull);
     }
-    //
-    // Doc failed to load because the socket function timed out.
-    // throw a timeout dialog
-    //
-    else if(aStatus == NS_ERROR_NET_TIMEOUT) {
-      nsCOMPtr<nsIPrompt> prompter;
-      nsCOMPtr<nsIStringBundle> stringBundle;
-
-      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                    getter_AddRefs(stringBundle));
-      if (!stringBundle) {
-        return rv;
-      }
-
-      nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("netTimeout").get(),
-                                           getter_Copies(messageStr));
-      if (NS_FAILED(rv)) return rv;
-
-      nsCAutoString host;
-      url->GetHost(host);
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
-      if (!msg) return NS_ERROR_OUT_OF_MEMORY;
-
-      prompter->Alert(nsnull, msg);
-      nsTextFormatter::smprintf_free(msg);
-    } // end NS_ERROR_NET_TIMEOUT
     else if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
       /* A document that was requested to be fetched *only* from
        * the cache is not in cache. May be this is one of those 
@@ -1058,44 +974,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                        nsnull);                           // No nsIRequest
           }
         }
-    }
-    else {
-      //
-      // handle errors that have simple messages w/ no arguments.
-      //
-      const char *errorStr = nsnull;
-      switch (aStatus) {
-        case NS_ERROR_REDIRECT_LOOP:
-          // Doc failed to load because the server generated too many redirects
-          errorStr = "redirectLoop";
-          break;
-        case NS_ERROR_UNKNOWN_SOCKET_TYPE:
-          // Doc failed to load because PSM is not installed
-          errorStr = "unknownSocketType";
-          break;
-        case NS_ERROR_NET_RESET:
-          // Doc failed to load because the server kept reseting the connection
-          // before we could read any data from it
-          errorStr = "netReset";
-          break;
-      }
-      if (errorStr) {
-        nsCOMPtr<nsIPrompt> prompter;
-        nsCOMPtr<nsIStringBundle> stringBundle;
-
-        rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
-                                      getter_AddRefs(stringBundle));
-        if (!stringBundle) {
-          return rv;
-        }
-
-        nsXPIDLString messageStr;
-        rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(errorStr).get(),
-                                             getter_Copies(messageStr));
-        if (NS_FAILED(rv)) return rv;
-
-        prompter->Alert(nsnull, messageStr);
-      }
     }
   } // if we have a host
 
