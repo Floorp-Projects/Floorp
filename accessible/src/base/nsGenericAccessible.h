@@ -31,8 +31,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
-
-class nsIWeakReference;
+#include "nsIWeakReference.h"
 
 /**
  * Basic implementation
