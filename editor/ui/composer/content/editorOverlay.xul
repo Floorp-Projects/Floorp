@@ -305,6 +305,7 @@
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
       <menuitem accesskey="&fileprint.accesskey;"      observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator/>
+      <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
     </menupopup>
   </menu>
 
