@@ -154,7 +154,7 @@ NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
     return GetData(_retval);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(const PRUint32 aLength,
+NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
                                                       const char *aData)
 {
     // if the new string length is the same as the old,
@@ -188,7 +188,7 @@ NS_IMETHODIMP nsSupportsStringImpl::AdoptData(char *aData)
     return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(const PRUint32 aLength,
+NS_IMETHODIMP nsSupportsStringImpl::AdoptDataWithLength(PRUint32 aLength,
                                                         char *aData)
 {
     // free current buffer
@@ -263,7 +263,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
     return GetData(_retval);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(const PRUint32 aLength,
+NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
                                                        const PRUnichar *aData)
 {
     // if the new string length is the same as the old,
@@ -297,7 +297,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::AdoptData(PRUnichar *aData)
     return AdoptDataWithLength(aData ? nsCRT::strlen(aData) : 0, aData);
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::AdoptDataWithLength(const PRUint32 aLength,
+NS_IMETHODIMP nsSupportsWStringImpl::AdoptDataWithLength(PRUint32 aLength,
                                                          PRUnichar *aData)
 {
     // free current buffer
