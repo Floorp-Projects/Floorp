@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsILanguageAtomService.h"
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsISupportsArray.h"
 
 class nsLanguageAtomService : public nsILanguageAtomService
