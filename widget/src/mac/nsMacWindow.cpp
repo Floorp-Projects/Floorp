@@ -815,9 +815,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
       ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
     }
     if (mZoomOnShow) {
-      PRInt32 sizemode;
-      GetSizeMode(&sizemode); // value was earlier saved but not acted on
-      SetSizeMode(sizemode);
+      SetSizeMode(nsSizeMode_Maximized);
       mZoomOnShow = PR_FALSE;
     }
     ComeToFront();
@@ -1036,30 +1034,38 @@ NS_METHOD nsMacWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
 //-------------------------------------------------------------------------
 NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 {
-	nsresult rv;
+  nsresult rv;
+  PRInt32  currentMode;
 
-	if (aMode == nsSizeMode_Minimized) // unlikely on the Mac
-		return NS_ERROR_UNEXPECTED;
+  if (aMode == nsSizeMode_Minimized) // unlikely on the Mac
+    return NS_ERROR_UNEXPECTED;
 
-	rv = nsBaseWidget::SetSizeMode(aMode);
-	if (NS_FAILED(rv))
-		return rv;
+  // already done? it's bad to rezoom a window, so do nothing
+  rv = nsBaseWidget::GetSizeMode(&currentMode);
+  if (NS_SUCCEEDED(rv) && currentMode == aMode)
+    return NS_OK;
 
-	/* zooming on the Mac doesn't seem to work until the window is visible.
-	   the rest of the app is structured to zoom before the window is visible
-	   to avoid flashing. here's where we defeat that. */
-	if (!mVisible) {
-		if (aMode == nsSizeMode_Maximized)
-			mZoomOnShow = PR_TRUE;
-	} else {
-		Rect macRect;
-		CalculateAndSetZoomedSize();
-		::ZoomWindow(mWindowPtr, aMode == nsSizeMode_Normal ? inZoomIn : inZoomOut , ::FrontWindow() == mWindowPtr);
-		::GetWindowPortBounds(mWindowPtr, &macRect);
-		Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
-	}
+  if (!mVisible) {
+    /* zooming on the Mac doesn't seem to work until the window is visible.
+       the rest of the app is structured to zoom before the window is visible
+       to avoid flashing. here's where we defeat that. */
+    if (aMode == nsSizeMode_Maximized)
+      mZoomOnShow = PR_TRUE;
+  } else {
+    Rect macRect;
+    rv = nsBaseWidget::SetSizeMode(aMode);
+    if (NS_SUCCEEDED(rv)) {
+      if (aMode == nsSizeMode_Maximized) {
+        CalculateAndSetZoomedSize();
+        ::ZoomWindow(mWindowPtr, inZoomOut, ::FrontWindow() == mWindowPtr);
+      } else
+        ::ZoomWindow(mWindowPtr, inZoomIn, ::FrontWindow() == mWindowPtr);
+      ::GetWindowPortBounds(mWindowPtr, &macRect);
+      Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+    }
+  }
 
-	return rv;
+  return rv;
 }
 
 void nsMacWindow::CalculateAndSetZoomedSize()
