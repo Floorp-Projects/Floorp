@@ -269,6 +269,13 @@ public:
     return mTransformBuf.GetBufferLength();
   }
 
+  PRBool GetWordSelectEatSpaceAfter() {
+  	return sWordSelectEatSpaceAfter;
+  }
+  
+  PRBool GetWordSelectStopAtPunctuation() {
+  	return sWordSelectStopAtPunctuation;
+  }
   
   static nsresult Initialize();
   static void Shutdown();
@@ -351,6 +358,7 @@ protected:
   // prefs used to configure the double-click word selection behavior
   static int WordSelectPrefCallback(const char* aPref, void* aClosure);
   static PRBool sWordSelectListenerPrefChecked;  // have we read the prefs yet?
+  static PRBool sWordSelectEatSpaceAfter;        // should we include whitespace up to next word? 
   static PRBool sWordSelectStopAtPunctuation;    // should we stop at punctuation?
 
 #ifdef DEBUG

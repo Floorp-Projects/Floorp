@@ -788,10 +788,6 @@ protected:
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
   nsresult GetContentAndOffsetsForSelection(nsPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
 
-  // prefs used to configure the double-click word selection behavior
-  static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
-  static PRPackedBool sWordSelectEatSpaceAfter;         // should we include whitespace up to next word?
-  
   void AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
                                     PRInt32 textLength,
                                     PRBool isRTLChars,
@@ -815,10 +811,6 @@ NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
-
-
-PRPackedBool nsTextFrame::sWordSelectPrefInited = PR_FALSE;
-PRPackedBool nsTextFrame::sWordSelectEatSpaceAfter = PR_TRUE;
 
 
 //-----------------------------------------------------------------------------
@@ -1317,13 +1309,6 @@ NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsTextFrame::nsTextFrame()
 {
-  // read in our global word selection prefs
-  if ( !sWordSelectPrefInited ) {
-    sWordSelectEatSpaceAfter =
-      nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
-
-    sWordSelectPrefInited = PR_TRUE;
-  }
 }
 
 nsTextFrame::~nsTextFrame()
@@ -4124,7 +4109,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       PRBool found = PR_FALSE;
       PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
-
+      PRBool wordSelectEatSpaceAfter = tx.GetWordSelectEatSpaceAfter();
       
       PRBool selectable;
       PRUint8 selectStyle;
@@ -4206,10 +4191,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
             // On some platforms (mac, unix), we want the selection to end
             // at the end of the word (not the beginning of the next one).
-            if ((sWordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
+            if ((wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
               aPos->mContentOffset = aPos->mStartOffset + contentLen;
               keepSearching = PR_TRUE;
-              aPos->mEatingWS = !sWordSelectEatSpaceAfter;
+              aPos->mEatingWS = !wordSelectEatSpaceAfter;
 #ifdef IBMBIDI
               wordLen = (mState & NS_FRAME_IS_BIDI)
                       ? mContentOffset + mContentLength : -1;
@@ -4218,7 +4203,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               {
                 if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
                   goto TryNextFrame;
-                if (sWordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
                   aPos->mContentOffset += contentLen;
                 else
                   break;
