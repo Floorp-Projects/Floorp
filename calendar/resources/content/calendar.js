@@ -568,7 +568,7 @@ function getPreviewText( calendarEventDisplay )
 
 function alertCalendarVersion()
 {
-   alert( "The build id for this calendar is "+gDateMade+". Please include this in your bug report." );
+   window.openDialog("chrome://calendar/content/about.xul", "&calendar.about.title;", "chrome,resizable=yes,height=400,width=600");
 }
 
 function reloadApplication()

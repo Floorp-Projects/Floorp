@@ -176,3 +176,7 @@
 <!ENTITY calendar.context.reload            "Reload">
 <!ENTITY calendar.context.emailevent        "Email Event">
 
+<!-- About Dialog -->
+<!ENTITY calendar.about.title "About Mozilla Calendar">
+<!ENTITY calendar.about.tab   "About">
+
