@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  windowwatcher \
 		  bookmarks \
-		  cookie \
 		  chrome \
 		  intl \
 		  docshell \

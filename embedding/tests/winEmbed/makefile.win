@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  dom \
 		  widget \
-		  layout \
 		  uriloader \
 		  shistory \
 		  webbrowserpersist \

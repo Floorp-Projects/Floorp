@@ -23,12 +23,7 @@ DEPTH=..\..
 MODULE=embed_base
 REQUIRES	= xpcom \
 		  string \
-		  widget \
-		  view \
-		  dom \
-		  uriloader \
 		  intl \
-		  gfx \
 		  appstartup \
 		  $(NULL)
 
