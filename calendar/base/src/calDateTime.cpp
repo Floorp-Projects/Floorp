@@ -188,7 +188,7 @@ calDateTime::ToString(nsACString& aResult)
 {
     aResult.Assign(nsPrintfCString(100,
                                    "%04d/%02d/%02d %02d:%02d:%02d%s%s",
-                                   mYear, mMonth, mDay,
+                                   mYear, mMonth + 1, mDay,
                                    mHour, mMinute, mSecond,
                                    ((mTimezone.IsEmpty()) ? "" : " "),
                                    ((mTimezone.IsEmpty()) ? "" : mTimezone.get())));
