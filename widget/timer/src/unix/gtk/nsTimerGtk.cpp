@@ -22,6 +22,7 @@
  */
 
 #include "nsTimerGtk.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -43,6 +44,9 @@ PRBool nsTimerGtk::FireTimeout()
     mTimerId = g_timeout_add_full(calc_priority(mPriority),
                                   mDelay, nsTimerExpired, this, NULL);
   }
+
+  // because Notify can cause 'this' to get destroyed, we need to hold a ref
+  nsCOMPtr<nsITimer> kungFuDeathGrip = this;
   
   if (mFunc != NULL) {
     (*mFunc)(this, mClosure);
