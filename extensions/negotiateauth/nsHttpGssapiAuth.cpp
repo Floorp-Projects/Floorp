@@ -311,7 +311,7 @@ nsHttpGssapiAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                      char **creds)
 {
     OM_uint32 major_status, minor_status;
-    OM_uint32 req_flags = GSS_C_MUTUAL_FLAG;
+    OM_uint32 req_flags = 0;
     gss_buffer_desc input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_t  in_token_ptr = GSS_C_NO_BUFFER;
