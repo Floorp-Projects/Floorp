@@ -265,6 +265,7 @@
 
       <method name="showHistoryPopup">
         <body><![CDATA[
+          this.maxRows = 14;
           this.attachController();
           this.mController.startSearch("");
         ]]></body>
@@ -504,7 +505,7 @@
       </property>
 
       <property name="maxRows" readonly="true"
-                onget="var t = parseInt(this.getAttribute('maxrows')); return t ? t : 6;"/>
+                onget="var t = parseInt(this.mInput.getAttribute('maxrows')); return t ? t : 6;"/>
 
       <property name="showCommentColumn"
                 onget="return this.mShowCommentColumn;">
@@ -605,6 +606,7 @@
 
       <handler event="popuphiding">
         this.mPopupOpen = false;
+        this.mInput.maxRows = 6;
       </handler>
     </handlers>
   </binding>
