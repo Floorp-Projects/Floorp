@@ -72,7 +72,7 @@ function SaveUriFromPicker(fieldName, pickerID)
 	var uri = picker.getAttribute("uri");
 	//dump("uri = " + uri + "\n");
 	
-	formElement = document.getElementById(fieldName);
+	var formElement = document.getElementById(fieldName);
 	//dump("old value = " + formElement.value + "\n");
 	formElement.setAttribute("value",uri);
 	//dump("new value = " + formElement.value + "\n");

@@ -377,7 +377,6 @@ function SubscribeOKCallback(changeTable)
         }
 
         try {
-            var subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
             subscribableServer.commitSubscribeChanges();
         }
         catch (ex) {
