@@ -710,7 +710,7 @@ public class IRFactory {
                 return new Node(Token.TRUE);
             }
             return new Node(nodeType, left, right);
-        
+
         } else if (nodeType == Token.TYPEOF) {
             if (childNode.getType() == Token.NAME) {
                 childNode.setType(Token.TYPEOFNAME);
@@ -720,12 +720,12 @@ public class IRFactory {
         return new Node(nodeType, childNode);
     }
 
-    public Object createIncDec(int nodeType, boolean post, Object child) 
+    public Object createIncDec(int nodeType, boolean post, Object child)
     {
         Node childNode = (Node)child;
         int childType = childNode.getType();
 
-        if (post && !hasSideEffects(childNode) 
+        if (post && !hasSideEffects(childNode)
             && (childType == Token.NAME
                 || childType == Token.GETPROP
                 || childType == Token.GETELEM))
@@ -756,11 +756,11 @@ public class IRFactory {
     /**
      * Binary
      */
-    public Object createBinary(int nodeType, Object leftObj, Object rightObj) 
+    public Object createBinary(int nodeType, Object leftObj, Object rightObj)
     {
         Node left = (Node)leftObj;
         Node right = (Node)rightObj;
-        
+
         switch (nodeType) {
 
           case Token.DOT:
@@ -835,7 +835,7 @@ public class IRFactory {
         Node opLeft = Node.newString(Token.NAME, s);
         if (tonumber)
             opLeft = new Node(Token.POS, opLeft);
-        
+
         if (!postfix) {
             Node op = new Node(assignOp, opLeft, right);
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
@@ -860,7 +860,7 @@ public class IRFactory {
         return new Node(Token.NEWTEMP, n);
     }
 
-    public Node createUseTemp(Node newTemp) 
+    public Node createUseTemp(Node newTemp)
     {
         switch (newTemp.getType()) {
           case Token.NEWTEMP: {

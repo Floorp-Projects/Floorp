@@ -1638,7 +1638,7 @@ public class ScriptRuntime {
      *
      * @return a instanceof b
      */
-    public static boolean instanceOf(Object a, Object b, Scriptable scope) 
+    public static boolean instanceOf(Object a, Object b, Scriptable scope)
     {
         // Check RHS is an object
         if (! (b instanceof Scriptable)) {

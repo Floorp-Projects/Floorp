@@ -120,17 +120,17 @@ public class ClassFileWriter {
         itsFlags = flags;
     }
 
-    static String getSlashedForm(String name) 
+    static String getSlashedForm(String name)
     {
         return name.replace('.', '/');
     }
-    
-    /** 
+
+    /**
      * Convert Java class name in dot notation into
      * "Lname-with-dots-replaced-by-slashes;" form suitable for use as
      * JVM type signatures.
      */
-    public String classNameToSignature(String name) 
+    public String classNameToSignature(String name)
     {
         int nameLength = name.length();
         int colonPos = 1 + nameLength;
@@ -145,7 +145,7 @@ public class ClassFileWriter {
         }
         return new String(buf, 0, colonPos + 1);
     }
-    
+
     /**
      * Add a field to the class.
      *
@@ -1240,7 +1240,7 @@ public class ClassFileWriter {
         return putInt32((int)value, array, offset);
     }
 
-    private static void badStack(int value) 
+    private static void badStack(int value)
     {
         String s;
         if (value < 0) { s = "Stack underflow: "+value; }
@@ -1381,7 +1381,7 @@ public class ClassFileWriter {
     /**
      * Number of operands accompanying the opcode.
      */
-    static int opcodeCount(int opcode) 
+    static int opcodeCount(int opcode)
     {
         switch (opcode) {
             case ByteCode.AALOAD:
@@ -1601,7 +1601,7 @@ public class ClassFileWriter {
     /**
      *  The effect on the operand stack of a given opcode.
      */
-    static int stackChange(int opcode) 
+    static int stackChange(int opcode)
     {
         // For INVOKE... accounts only for popping this (unless static),
         // ignoring parameters and return type
@@ -1832,7 +1832,7 @@ public class ClassFileWriter {
          * Not in use currently.
          */
 /*
-    int extra(int opcode) 
+    int extra(int opcode)
     {
         switch (opcode) {
             case ByteCode.AALOAD:
@@ -2267,8 +2267,8 @@ public class ClassFileWriter {
         }
         return "";
     }
-    
-    final char[] getCharBuffer(int minimalSize) 
+
+    final char[] getCharBuffer(int minimalSize)
     {
         if (minimalSize > tmpCharBuffer.length) {
             int newSize = tmpCharBuffer.length * 2;
@@ -2749,7 +2749,7 @@ final class ConstantPool
     }
 
     private ClassFileWriter cfw;
-    
+
     private static final int MAX_UTF_ENCODING_SIZE = 65535;
 
     private UintMap itsStringConstHash = new UintMap();
