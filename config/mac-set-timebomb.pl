@@ -68,7 +68,7 @@ sub write_file {
     open(OUT, ">$prefs");
     print OUT $contents;
     close(OUT);
-    print STDERR "$progname: wrote $prefs\n";
+#     print STDERR "$progname: wrote $prefs\n";
 }
 
 sub get_pref {
@@ -131,10 +131,10 @@ sub set_bomb {
 
     set_indirected_bomb(0);
 
-    print STDERR sprintf("%s: timebomb goes off in %2d days (%s)\n",
-			 $progname, $bomb_days, ctime($bomb));
-    print STDERR sprintf("%s:  warning goes off in %2d days (%s)\n",
-			 $progname, $warning_days, ctime($warn));
+#     print STDERR sprintf("%s: timebomb goes off in %2d days (%s)\n",
+# 			 $progname, $bomb_days, ctime($bomb));
+#     print STDERR sprintf("%s:  warning goes off in %2d days (%s)\n",
+# 			 $progname, $warning_days, ctime($warn));
 }
 
 sub main {
