@@ -23,6 +23,8 @@ var messengerContractID        = "@mozilla.org/messenger;1";
 var statusFeedbackContractID   = "@mozilla.org/messenger/statusfeedback;1";
 var messageViewContractID      = "@mozilla.org/messenger/messageview;1";
 var mailSessionContractID      = "@mozilla.org/messenger/services/session;1";
+var secureUIContractID         = "@mozilla.org/secure_browser_ui;1";
+
 
 var prefContractID             = "@mozilla.org/preferences;1";
 var msgWindowContractID		   = "@mozilla.org/messenger/msgwindow;1";
@@ -101,6 +103,19 @@ function CreateMailWindowGlobals()
 
 	statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+
+  // try to create and register ourselves with a security icon...
+  var securityIcon = document.getElementById("security-button");
+  if (securityIcon)
+  {
+    var secureUI = Components.classes[secureUIContractID].createInstance();
+    // we may not have a secure UI if psm isn't installed!
+    if (secureUI)
+    {
+      secureUI = secureUI.QueryInterface(Components.interfaces.nsSecureBrowserUI);
+      secureUI.init(_content, securityIcon);
+    }
+  }
 
 	window.MsgWindowCommands = new nsMsgWindowCommands();
 	//Create message view object
