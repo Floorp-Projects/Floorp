@@ -146,6 +146,12 @@ void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
 {
   lo_TableCell *cell = (lo_TableCell *)cell_v;
   LO_Element *start = cell->cell->cell_list, *end = cell->cell->cell_list_end;
+  lo_DocState *state;
+  lo_TopState *top = lo_FetchTopState(context->doc_id);
+  if (!top)
+    return;
+
+  state = top->doc_state;
 
   if (!start)
     return;
@@ -163,7 +169,7 @@ void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
         fprintf(stderr, "setting bgcolor of %s to %s\n",
                 element_names[iter->type], value);
 #endif
-        lo_SetColor(start, &rgb, TRUE);
+        lo_SetColor(start, &rgb, state, TRUE);
 /*        iter = iter->lo_any.next;
       }
       if (iter != start) {
@@ -171,7 +177,7 @@ void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
         fprintf(stderr, "setting bgcolor of %s to %s\n",
                 element_names[iter->type], value);
 #endif
-        lo_SetColor(start, &rgb, TRUE);
+        lo_SetColor(start, &rgb, state, TRUE);
       }
 */
   }

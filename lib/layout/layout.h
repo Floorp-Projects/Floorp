@@ -934,6 +934,7 @@ extern int32 lo_baseline_adjust(MWContext *context, lo_DocState *state, LO_Eleme
 extern void lo_UpdateElementPosition ( lo_DocState * state, LO_Element * element );
 extern void lo_CopyTextAttr(LO_TextAttr *, LO_TextAttr *);
 extern LO_TextAttr *lo_FetchTextAttr(lo_DocState *, LO_TextAttr *);
+extern LO_TextAttr *lo_NewCopyTextAttr(lo_DocState *, LO_TextAttr *);
 extern void lo_FindLineMargins(MWContext *, lo_DocState *, Bool updateFE);
 extern void lo_AddMarginStack(lo_DocState *, int32, int32, int32, int32,
 				int32, int32, int32, intn);
@@ -1186,7 +1187,8 @@ extern Bool lo_SetNamedAnchor(lo_DocState *, PA_Block);
 
 #ifdef DOM
 extern Bool lo_SetNamedSpan(lo_DocState *, PA_Block);
-extern void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background);
+extern void lo_SetColor( LO_Element *ele, LO_Color *color, lo_DocState *state,
+                         Bool background);
 #endif
 
 extern void lo_AddNameList(lo_DocState *, lo_DocState *);

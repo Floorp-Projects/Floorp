@@ -30,7 +30,8 @@
 
 
 /* Initial attempt at DOM by letting JS set style of SPAN contents */
-void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background);
+void lo_SetColor( LO_Element *ele, LO_Color *color, lo_DocState *state,
+                  Bool background);
 static void lo_SetFontFamily( MWContext *context, LO_Element *ele, char *family);
 static void lo_SetFontWeight( MWContext *context, LO_Element *ele, char *weight);
 static void lo_SetFontSlant( MWContext *context, LO_Element *ele, char *weight);
@@ -69,7 +70,9 @@ void LO_SetSpanColor(MWContext* context, void *span, LO_Color *color)
   ele = parent_span->lo_any.next;
   while (ele != NULL && ele->lo_any.type != LO_SPAN)
     {
+#if 0
       lo_SetColor(ele, color, FALSE);
+#endif
       ele = ele->lo_any.next;
     }
 }
@@ -84,7 +87,9 @@ void LO_SetSpanBackground(MWContext* context, void *span, LO_Color *color)
   ele = parent_span->lo_any.next;
   while (ele != NULL && ele->lo_any.type != LO_SPAN)
     {
+#if 0
       lo_SetColor(ele, color, TRUE);
+#endif
       ele = ele->lo_any.next;
     }
 }
@@ -167,45 +172,45 @@ lo_FindParentSpan( LO_Element *ele )
   return (LO_SpanStruct *) ele;
 }
 
-void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background)
+#define GET_UNSHARED_TEXT_ATTR(new, old)                                      \
+PR_BEGIN_MACRO                                                                \
+  if ((old)->refcnt != 1) {                                                   \
+    (new) = lo_NewCopyTextAttr(state, (old));                                 \
+    (old)->refcnt--;                                                          \
+  } else {                                                                    \
+    (new) = (old);                                                            \
+  }                                                                           \
+PR_END_MACRO
+
+void lo_SetColor( LO_Element *ele, LO_Color *color, lo_DocState *state,
+                  Bool background)
 {
+  LO_TextAttr *new_attr;
   switch (ele->lo_any.type)
     {
     case LO_TEXTBLOCK:
-      if (background)
-        {
-          ele->lo_textBlock.text_attr->bg = *color;
-          ele->lo_textBlock.text_attr->no_background = FALSE;
-        }
-      else
-        {
-          ele->lo_textBlock.text_attr->fg = *color;
-        }
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_textBlock.text_attr);
+      ele->lo_textBlock.text_attr = new_attr;
       break;
     case LO_TEXT:
-      if (background)
-        {
-          ele->lo_text.text_attr->bg = *color;
-          ele->lo_text.text_attr->no_background = FALSE;
-        }
-      else
-        {
-          ele->lo_text.text_attr->fg = *color;
-        }
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_text.text_attr);
+      ele->lo_text.text_attr = new_attr;
       break;
     case LO_BULLET:
-      if (background)
-        {
-          ele->lo_bullet.text_attr->bg = *color;
-          ele->lo_bullet.text_attr->no_background = FALSE;
-        }
-      else
-        {
-          ele->lo_bullet.text_attr->fg = *color;
-        }
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_bullet.text_attr);
+      ele->lo_bullet.text_attr = new_attr;
       break;
     default:
-      break;
+      return;
+    }
+  if (background)
+    {
+      new_attr->bg = *color;
+      new_attr->no_background = FALSE;
+    }
+  else
+    {
+      new_attr->fg = *color;
     }
 }
 
@@ -216,7 +221,6 @@ lo_SetFontFamily( MWContext *context,
                   char *new_face)
 {
   LO_TextAttr *text_attr;
-  LO_TextInfo text_info;
 
   /* if the point size is different, tell the FE to release it's data,
      set the point_size to the new value, and then have the FE
@@ -265,7 +269,6 @@ lo_SetFontWeight( MWContext *context,
                   char *weight)
 {
   LO_TextAttr *text_attr;
-  LO_TextInfo text_info;
   int new_weight = atoi(weight);
 
   /* if the point size is different, tell the FE to release it's data,
@@ -318,7 +321,6 @@ lo_SetFontSlant( MWContext *context,
                  char *slant)
 {
   LO_TextAttr *text_attr;
-  LO_TextInfo text_info;
   int flag;
 
   /* if the point size is different, tell the FE to release it's data,
@@ -368,7 +370,6 @@ lo_SetFontSize( MWContext *context,
                 int32 new_size)
 {
   LO_TextAttr *text_attr;
-  LO_TextInfo text_info;
 
   /* if the point size is different, tell the FE to release it's data,
      set the point_size to the new value, and then have the FE

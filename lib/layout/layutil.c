@@ -1253,6 +1253,35 @@ lo_CopyTextAttr(LO_TextAttr *old_attr, LO_TextAttr *new_attr)
 	new_attr->font_weight = old_attr->font_weight;
 }
 
+LO_TextAttr *
+lo_NewCopyTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
+{
+  LO_TextAttr *new_attr;
+  LO_TextAttr **text_attr_hash;
+  int32 hash_index;
+  
+#ifdef DEBUG_shaver
+  fprintf(stderr, "allocing new TextAttr\n");
+#endif
+  hash_index = (old_attr->fontmask & old_attr->attrmask) % FONT_HASH_SIZE;
+  
+  XP_LOCK_BLOCK(text_attr_hash, LO_TextAttr **,
+		state->top_state->text_attr_hash);
+  new_attr = XP_NEW_ZAP(LO_TextAttr);
+  if (new_attr != NULL)
+    {
+      lo_CopyTextAttr(old_attr, new_attr);
+      new_attr->next = text_attr_hash[hash_index];
+      text_attr_hash[hash_index] = new_attr;
+      new_attr->refcnt = 1;
+    }
+  else
+    {
+      state->top_state->out_of_memory = TRUE;
+    }
+  XP_UNLOCK_BLOCK(state->top_state->text_attr_hash);
+  return new_attr;
+}
 
 LO_TextAttr *
 lo_FetchTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
@@ -1292,25 +1321,15 @@ lo_FetchTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
 #endif		
 			)
 		{
-			break;
+                  attr_ptr->refcnt++;
+                  break;
 		}
 		attr_ptr = attr_ptr->next;
 	}
 	if (attr_ptr == NULL)
 	{
 		LO_TextAttr *new_attr;
-
-		new_attr = XP_NEW_ZAP(LO_TextAttr);
-		if (new_attr != NULL)
-		{
-			lo_CopyTextAttr(old_attr, new_attr);
-			new_attr->next = text_attr_hash[hash_index];
-			text_attr_hash[hash_index] = new_attr;
-		}
-		else
-		{
-			state->top_state->out_of_memory = TRUE;
-		}
+                new_attr = lo_NewCopyTextAttr(state, old_attr);
 		attr_ptr = new_attr;
 	}
 
@@ -2580,7 +2599,6 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
     DOM_Node *node = CURRENT_NODE(state);
 
 #ifdef DEBUG_shaver_0
-    fprintf(stderr, "lo_SetNodeElement: state %x: ", state);
     if (!node)
         fprintf(stderr, "NULL node\n");
     else if (node->type == NODE_TYPE_DOCUMENT)
@@ -2592,24 +2610,6 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
         if (!eptr) {
             /* this the first element for this node, so mark it */
             ELEMENT_PRIV(node)->ele_start = element;
-#ifdef DEBUG_shaver
-            fprintf(stderr, "giving node %s element %s\n",
-                    ELEMENT_PRIV(node)->tagtype ?
-                    PA_TagString(ELEMENT_PRIV(node)->tagtype) : "TEXT",
-                    element->type > 0 &&
-                    element->type <= 31 ? element_names[element->type]
-                    : "UNKNOWN", state);
-#endif
-        } else {
-#ifdef DEBUG_shaver
-            fprintf(stderr, "node %s %s already has element %s\n",
-                    ELEMENT_PRIV(node)->tagtype ?
-                    PA_TagString(ELEMENT_PRIV(node)->tagtype) : "TEXT",
-                    node->name ? node->name : "NULL",
-                    element->type > 0 &&
-                    element->type <= 31 ? element_names[element->type]
-                    : "UNKNOWN");
-#endif
         }
     }
 }
