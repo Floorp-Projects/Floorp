@@ -44,8 +44,6 @@
 #include "nsNetUtil.h"
 
 // content includes
-#include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOM3Node.h"
 
@@ -60,6 +58,8 @@
 // XPCOM includes
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsStaticAtom.h"
+
 
 // XMLExtras includes
 #include "nsISOAPMessage.h"
@@ -76,90 +76,21 @@
 //
 ////////////////////////////////////////////////////////////
 
-// Statics
-nsIAtom* nsWSDLAtoms::sDefinitions_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sImport_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sTypes_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sMessage_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sPortType_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sBinding_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sService_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sPort_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sOperation_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sPart_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sDocumentation_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sInput_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sOutput_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sFault_atom = nsnull;
+// define storage for all atoms
+#define WSDL_ATOM(_name, _value) nsIAtom* nsWSDLAtoms::_name;
+#include "nsWSDLAtomlist.h"
+#undef WSDL_ATOM
 
-nsIAtom* nsWSDLAtoms::sBody_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sHeader_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sHeaderFault_atom = nsnull;
-nsIAtom* nsWSDLAtoms::sAddress_atom = nsnull;
-
-nsIAtom* nsWSDLAtoms::sSchema_atom = nsnull;
-
-#define SET_AND_CHECK_ATOM(_atom, _val)   \
-  PR_BEGIN_MACRO                          \
-    _atom = NS_NewAtom(_val);             \
-    if (!_atom)                           \
-      return NS_ERROR_OUT_OF_MEMORY;      \
-  PR_END_MACRO
+static const nsStaticAtom atomInfo[] = {
+#define WSDL_ATOM(_name, _value) { _value, &nsWSDLAtoms::_name },
+#include "nsWSDLAtomlist.h"
+#undef WSDL_ATOM
+};
 
 nsresult
-nsWSDLAtoms::CreateWSDLAtoms()
+nsWSDLAtoms::AddRefAtoms()
 {
-  NS_ASSERTION(!sDefinitions_atom, "nsWSDLAtoms already created!");
-
-  SET_AND_CHECK_ATOM(sDefinitions_atom,   "definitions");
-  SET_AND_CHECK_ATOM(sImport_atom,        "import");
-  SET_AND_CHECK_ATOM(sTypes_atom,         "types");
-  SET_AND_CHECK_ATOM(sMessage_atom,       "message");
-  SET_AND_CHECK_ATOM(sPortType_atom,      "portType");
-  SET_AND_CHECK_ATOM(sBinding_atom,       "binding");
-  SET_AND_CHECK_ATOM(sService_atom,       "service");
-  SET_AND_CHECK_ATOM(sPort_atom,          "port");
-  SET_AND_CHECK_ATOM(sOperation_atom,     "operation");
-  SET_AND_CHECK_ATOM(sPart_atom,          "part");
-  SET_AND_CHECK_ATOM(sDocumentation_atom, "documentation");
-  SET_AND_CHECK_ATOM(sInput_atom,         "input");
-  SET_AND_CHECK_ATOM(sOutput_atom,        "output");
-  SET_AND_CHECK_ATOM(sFault_atom,         "fault");
-
-  SET_AND_CHECK_ATOM(sBody_atom,          "body");
-  SET_AND_CHECK_ATOM(sHeader_atom,        "header");
-  SET_AND_CHECK_ATOM(sHeaderFault_atom,   "headerFault");
-  SET_AND_CHECK_ATOM(sAddress_atom,       "address");
-
-  SET_AND_CHECK_ATOM(sSchema_atom,        "schema");
-
-  return NS_OK;
-}
-
-void
-nsWSDLAtoms::DestroyWSDLAtoms()
-{
-  NS_IF_RELEASE(sDefinitions_atom);
-  NS_IF_RELEASE(sImport_atom);
-  NS_IF_RELEASE(sTypes_atom);
-  NS_IF_RELEASE(sMessage_atom);
-  NS_IF_RELEASE(sPortType_atom);
-  NS_IF_RELEASE(sBinding_atom);
-  NS_IF_RELEASE(sService_atom);
-  NS_IF_RELEASE(sPort_atom);
-  NS_IF_RELEASE(sOperation_atom);
-  NS_IF_RELEASE(sPart_atom);
-  NS_IF_RELEASE(sDocumentation_atom);
-  NS_IF_RELEASE(sInput_atom);
-  NS_IF_RELEASE(sOutput_atom);
-  NS_IF_RELEASE(sFault_atom);
-
-  NS_IF_RELEASE(sBody_atom);
-  NS_IF_RELEASE(sHeader_atom);
-  NS_IF_RELEASE(sHeaderFault_atom);
-  NS_IF_RELEASE(sAddress_atom);
-
-  NS_IF_RELEASE(sSchema_atom);
+  return NS_RegisterStaticAtoms(atomInfo, NS_ARRAY_LENGTH(atomInfo));
 }
 
 ////////////////////////////////////////////////////////////
@@ -192,19 +123,7 @@ nsWSDLLoader::Init()
     }
   }
 
-  if (disabled) {
-    return NS_ERROR_WSDL_NOT_ENABLED;
-  }
-
-  if (!nsWSDLAtoms::sDefinitions_atom) {
-    nsresult rv = nsWSDLAtoms::CreateWSDLAtoms();
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
+  return disabled ? NS_ERROR_WSDL_NOT_ENABLED : NS_OK;
 }
 nsresult
 nsWSDLLoader::GetResolvedURI(const nsAString& aWSDLURI, const char* aMethod,
@@ -902,6 +821,7 @@ nsWSDLLoadRequest::ProcessTypesElement(nsIDOMElement* aElement)
   while (NS_SUCCEEDED(iterator.GetNextChild(getter_AddRefs(childElement),
                                             getter_AddRefs(tagName))) &&
          childElement) {
+    // XXX : We need to deal with xs:import elements too.
     if (tagName == nsWSDLAtoms::sSchema_atom) {
       nsCOMPtr<nsISchema> schema;
       rv = mSchemaLoader->ProcessSchemaElement(childElement,
@@ -915,8 +835,6 @@ nsWSDLLoadRequest::ProcessTypesElement(nsIDOMElement* aElement)
 
       nsStringKey key(targetNamespace);
       mTypes.Put(&key, schema);
-
-      break;
     }
   }
 

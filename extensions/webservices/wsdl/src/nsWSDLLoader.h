@@ -64,33 +64,14 @@
 
 #define NS_ERROR_WSDL_LOADPENDING NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
 
-class nsWSDLAtoms
+class nsWSDLAtoms 
 {
 public:
-  static nsresult CreateWSDLAtoms();
-  static void DestroyWSDLAtoms();
+  static nsresult AddRefAtoms();
 
-  static nsIAtom* sDefinitions_atom;
-  static nsIAtom* sTypes_atom;
-  static nsIAtom* sMessage_atom;
-  static nsIAtom* sPortType_atom;
-  static nsIAtom* sBinding_atom;
-  static nsIAtom* sService_atom;
-  static nsIAtom* sPort_atom;
-  static nsIAtom* sOperation_atom;
-  static nsIAtom* sPart_atom;
-  static nsIAtom* sDocumentation_atom;
-  static nsIAtom* sImport_atom;
-  static nsIAtom* sInput_atom;
-  static nsIAtom* sOutput_atom;
-  static nsIAtom* sFault_atom;
-
-  static nsIAtom* sBody_atom;
-  static nsIAtom* sHeader_atom;
-  static nsIAtom* sHeaderFault_atom;
-  static nsIAtom* sAddress_atom;
-
-  static nsIAtom* sSchema_atom;
+#define WSDL_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsWSDLAtomList.h"
+#undef WSDL_ATOM
 };
 
 class nsWSDLLoader : public nsIWSDLLoader

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Harshal Pradhan <hpradhan@hotpop.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,11 +38,9 @@
 
 #include "nsString.h"
 #include "nsSOAPPropertyBag.h"
-#include "nsIXPConnect.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsSupportsArray.h"
-#include "nsHashtable.h"
+#include "nsCOMArray.h"
+#include "nsInterfaceHashtable.h"
+#include "nsHashKeys.h"
 #include "jsapi.h"
 #include "nsIXPCScriptable.h"
 
@@ -49,15 +48,17 @@ class nsSOAPPropertyBagEnumerator;
 class nsSOAPPropertyBag:public nsIPropertyBag, public nsIXPCScriptable {
 public:
   nsSOAPPropertyBag();
-  virtual ~ nsSOAPPropertyBag();
+  virtual ~nsSOAPPropertyBag();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTYBAG
   NS_DECL_NSIXPCSCRIPTABLE
-  NS_IMETHOD SetProperty(const nsAString & aName, nsIVariant * aValue);
+
+  nsresult Init();
+  nsresult SetProperty(const nsAString& aName, nsIVariant *aValue);
 
 protected:
-   nsSupportsHashtable * mProperties;
+  nsInterfaceHashtable<nsStringHashKey, nsIVariant> mProperties;
 
   friend class nsSOAPPropertyBagEnumerator;
 };
@@ -66,7 +67,7 @@ protected:
 class nsSOAPProperty:public nsIProperty {
 public:
   nsSOAPProperty(const nsAString & aName, nsIVariant * aValue);
-  virtual ~ nsSOAPProperty();
+  virtual ~nsSOAPProperty();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTY
 
@@ -78,47 +79,49 @@ protected:
 class nsSOAPPropertyBagEnumerator:public nsISimpleEnumerator {
 public:
   NS_DECL_ISUPPORTS
-      // nsISimpleEnumerator methods:
   NS_DECL_NSISIMPLEENUMERATOR
-      // nsSOAPPropertyBagEnumerator methods:
-  nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPropertyBag);
+
+  nsSOAPPropertyBagEnumerator();
   virtual ~nsSOAPPropertyBagEnumerator();
 
+  nsresult Init(nsSOAPPropertyBag*);
+
 protected:
-  nsCOMPtr<nsSupportsArray> mProperties;
+  nsCOMArray<nsISupports> mProperties;
   PRUint32 mCurrent;
 };
+
 NS_IMPL_ISUPPORTS2_CI(nsSOAPPropertyBag, nsIPropertyBag, nsIXPCScriptable) 
-nsSOAPPropertyBag::nsSOAPPropertyBag() : mProperties(new nsSupportsHashtable)
+
+nsSOAPPropertyBag::nsSOAPPropertyBag()
 {
-  /* property initializers and constructor code */
 }
 
 nsSOAPPropertyBag::~nsSOAPPropertyBag()
 {
-  /* destructor code */
-  delete mProperties;
+}
+
+nsresult
+nsSOAPPropertyBag::Init()
+{
+  return mProperties.Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP
-    nsSOAPPropertyBag::GetProperty(const nsAString & aName,
-                                   nsIVariant ** _retval)
+nsSOAPPropertyBag::GetProperty(const nsAString & aName,
+                               nsIVariant ** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-  nsStringKey nameKey(aName);
-  *_retval = NS_STATIC_CAST(nsIVariant *, mProperties->Get(&nameKey));
-  return *_retval ? NS_OK : NS_ERROR_FAILURE;
+  return mProperties.Get(aName, _retval) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-    nsSOAPPropertyBag::SetProperty(const nsAString & aName,
-                                   nsIVariant * aValue)
+nsresult
+nsSOAPPropertyBag::SetProperty(const nsAString & aName,
+                               nsIVariant * aValue)
 {
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aValue);
-  nsStringKey nameKey(aName);
-  return mProperties->Put(&nameKey, aValue);
+  return mProperties.Put(aName, aValue);
 }
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
@@ -129,19 +132,16 @@ NS_IMETHODIMP
 #include "xpc_map_end.h"        /* This will #undef the above */
 
 NS_IMETHODIMP
-    nsSOAPPropertyBag::GetProperty(nsIXPConnectWrappedNative * wrapper,
-                                   JSContext * cx, JSObject * obj,
-                                   jsval id, jsval * vp, PRBool * _retval)
+nsSOAPPropertyBag::GetProperty(nsIXPConnectWrappedNative * wrapper,
+                               JSContext * cx, JSObject * obj,
+                               jsval id, jsval * vp, PRBool * _retval)
 {
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
     const PRUnichar *name = NS_REINTERPRET_CAST(const PRUnichar *,
                                                 JS_GetStringChars(str));
-    nsDependentString namestr(name);
-    nsStringKey nameKey(namestr);
-    nsCOMPtr<nsIVariant> value =
-        dont_AddRef(NS_STATIC_CAST
-                    (nsIVariant *, mProperties->Get(&nameKey)));
+    nsCOMPtr<nsIVariant> value;
+    mProperties.Get(nsDependentString(name), getter_AddRefs(value));
     if (!value)
       return NS_OK;
     void *mark;
@@ -151,23 +151,24 @@ NS_IMETHODIMP
   }
   return NS_OK;
 }
-PRBool PR_CALLBACK PropertyBagEnumFunc(nsHashKey * aKey, void *aData, void *aClosure)
+
+PLDHashOperator PR_CALLBACK
+PropertyBagEnumFunc(const nsAString& aKey, nsIVariant *aData, void *aClosure)
 {
-  nsISupportsArray *properties =
-      NS_STATIC_CAST(nsISupportsArray *, aClosure);
-  nsAutoString name(NS_STATIC_CAST(nsStringKey *, aKey)->GetString());
-  properties->
-      AppendElement(new
-                    nsSOAPProperty(name,
-                                   NS_STATIC_CAST(nsIVariant *, aData)));
-  return PR_TRUE;
+  nsCOMArray<nsISupports>* properties =
+      NS_STATIC_CAST(nsCOMArray<nsISupports>*, aClosure);
+  
+  nsSOAPProperty* prop = new nsSOAPProperty(aKey, aData);
+  NS_ENSURE_TRUE(prop, PL_DHASH_STOP);
+
+  properties->AppendObject(prop);
+
+  return PL_DHASH_NEXT;
 }
 
-nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPropertyBag) : mProperties(new nsSupportsArray()),
-    mCurrent
-    (0)
+nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator() 
+  : mCurrent(0)
 {
-  aPropertyBag->mProperties->Enumerate(&PropertyBagEnumFunc, mProperties);
 }
 
 nsSOAPPropertyBagEnumerator::~nsSOAPPropertyBagEnumerator()
@@ -175,43 +176,62 @@ nsSOAPPropertyBagEnumerator::~nsSOAPPropertyBagEnumerator()
 }
 
 NS_IMPL_ISUPPORTS1_CI(nsSOAPPropertyBagEnumerator, nsISimpleEnumerator)
-NS_IMETHODIMP nsSOAPPropertyBagEnumerator::GetNext(nsISupports ** aItem)
+
+nsresult
+nsSOAPPropertyBagEnumerator::Init(nsSOAPPropertyBag* aPropertyBag)
+{
+  PRUint32 count = aPropertyBag->mProperties.EnumerateRead(PropertyBagEnumFunc,
+                                                           &mProperties);
+  // Check if all the properties got copied to the array.
+  if (count != aPropertyBag->mProperties.Count()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+  
+}
+
+NS_IMETHODIMP
+nsSOAPPropertyBagEnumerator::GetNext(nsISupports ** aItem)
 {
   NS_ENSURE_ARG_POINTER(aItem);
-  PRUint32 count;
-  mProperties->Count(&count);
+  PRUint32 count = mProperties.Count();
   if (mCurrent < count) {
-    *aItem = mProperties->ElementAt(mCurrent++);
+    NS_ADDREF(*aItem = mProperties[mCurrent++]);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-    nsSOAPPropertyBagEnumerator::HasMoreElements(PRBool * aResult)
+nsSOAPPropertyBagEnumerator::HasMoreElements(PRBool * aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  PRUint32 count;
-  mProperties->Count(&count);
-  *aResult = mCurrent < count;
+  *aResult = mCurrent < (PRUint32) mProperties.Count();
   return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1_CI(nsSOAPProperty, nsIProperty)
 
-nsSOAPProperty::nsSOAPProperty(const nsAString & aName,
-                 nsIVariant * aValue) : mName(aName), mValue(aValue) {
+nsSOAPProperty::nsSOAPProperty(const nsAString& aName, nsIVariant *aValue) 
+  : mName(aName), mValue(aValue) 
+{
 }
+
 nsSOAPProperty::~nsSOAPProperty()
 {
 }
 
-NS_IMETHODIMP nsSOAPProperty::GetName(nsAString & _retval) {
-  NS_ENSURE_ARG_POINTER(&_retval);
+NS_IMETHODIMP
+nsSOAPProperty::GetName(nsAString& _retval)
+{
   _retval.Assign(mName);
   return NS_OK;
 }
-NS_IMETHODIMP nsSOAPProperty::GetValue(nsIVariant** _retval) {
+
+NS_IMETHODIMP
+nsSOAPProperty::GetValue(nsIVariant** _retval)
+{
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mValue;
   NS_ADDREF(*_retval);
@@ -220,20 +240,24 @@ NS_IMETHODIMP nsSOAPProperty::GetValue(nsIVariant** _retval) {
 
 /* readonly attribute nsISimpleEnumerator enumerator; */
 NS_IMETHODIMP
-    nsSOAPPropertyBag::GetEnumerator(nsISimpleEnumerator * *aEnumerator)
+nsSOAPPropertyBag::GetEnumerator(nsISimpleEnumerator * *aEnumerator)
 {
   NS_ENSURE_ARG_POINTER(aEnumerator);
-  *aEnumerator = new nsSOAPPropertyBagEnumerator(this);
-  if (aEnumerator) {
-    NS_ADDREF(*aEnumerator);
-    return NS_OK;
+
+  nsRefPtr<nsSOAPPropertyBagEnumerator> enumerator = new nsSOAPPropertyBagEnumerator();
+  NS_ENSURE_TRUE(enumerator, NS_ERROR_OUT_OF_MEMORY);
+
+  if (!enumerator->Init(this)) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(*aEnumerator = enumerator);
+
+  return NS_OK;
 }
 
 nsSOAPPropertyBagMutator::nsSOAPPropertyBagMutator()
 {
-  mBag = mSOAPBag = new nsSOAPPropertyBag();
 }
 
 nsSOAPPropertyBagMutator::~nsSOAPPropertyBagMutator()
@@ -242,21 +266,29 @@ nsSOAPPropertyBagMutator::~nsSOAPPropertyBagMutator()
 
 NS_IMPL_ISUPPORTS1_CI(nsSOAPPropertyBagMutator, nsISOAPPropertyBagMutator)
 
-NS_IMETHODIMP nsSOAPPropertyBagMutator::GetPropertyBag(nsIPropertyBag ** aPropertyBag) {
+nsresult
+nsSOAPPropertyBagMutator::Init()
+{
+  mSOAPBag = new nsSOAPPropertyBag();
+  NS_ENSURE_TRUE(mSOAPBag, NS_ERROR_OUT_OF_MEMORY);
+  
+  return mSOAPBag->Init();
+}
+
+NS_IMETHODIMP
+nsSOAPPropertyBagMutator::GetPropertyBag(nsIPropertyBag ** aPropertyBag)
+{
   NS_ENSURE_ARG_POINTER(aPropertyBag);
-  *aPropertyBag = mBag;
-  NS_IF_ADDREF(*aPropertyBag);
+
+  NS_ADDREF(*aPropertyBag = mSOAPBag);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-    nsSOAPPropertyBagMutator::AddProperty(const nsAString & aName,
-                                          nsIVariant * aValue)
+nsSOAPPropertyBagMutator::AddProperty(const nsAString& aName,
+                                      nsIVariant *aValue)
 {
-  NS_ENSURE_ARG_POINTER(&aName);
   NS_ENSURE_ARG_POINTER(aValue);
-  if (!mSOAPBag) {  //  In case of initialization failure...
-    return NS_ERROR_FAILURE;
-  }
+
   return mSOAPBag->SetProperty(aName, aValue);
 }

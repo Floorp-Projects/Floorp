@@ -51,7 +51,6 @@
 // XPCOM Includes
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
-#include "nsSupportsArray.h"
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -59,88 +58,14 @@
 // Loading includes
 #include "nsIURI.h"
 
-class nsSchemaAtoms {
+class nsSchemaAtoms 
+{
 public:
-  static void CreateSchemaAtoms();
-  static void DestroySchemaAtoms();
+  static nsresult AddRefAtoms();
 
-  static nsIAtom* sAnyType_atom;
-  static nsIAtom* sString_atom;
-  static nsIAtom* sNormalizedString_atom;
-  static nsIAtom* sToken_atom;
-  static nsIAtom* sByte_atom;
-  static nsIAtom* sUnsignedByte_atom;
-  static nsIAtom* sBase64Binary_atom;
-  static nsIAtom* sHexBinary_atom;
-  static nsIAtom* sInteger_atom;
-  static nsIAtom* sPositiveInteger_atom;
-  static nsIAtom* sNegativeInteger_atom;
-  static nsIAtom* sNonnegativeInteger_atom;
-  static nsIAtom* sNonpositiveInteger_atom;
-  static nsIAtom* sInt_atom;
-  static nsIAtom* sUnsignedInt_atom;
-  static nsIAtom* sLong_atom;
-  static nsIAtom* sUnsignedLong_atom;
-  static nsIAtom* sShort_atom;
-  static nsIAtom* sUnsignedShort_atom;
-  static nsIAtom* sDecimal_atom;
-  static nsIAtom* sFloat_atom;
-  static nsIAtom* sDouble_atom;
-  static nsIAtom* sBoolean_atom;
-  static nsIAtom* sTime_atom;
-  static nsIAtom* sDateTime_atom;
-  static nsIAtom* sDuration_atom;
-  static nsIAtom* sDate_atom;
-  static nsIAtom* sGMonth_atom;
-  static nsIAtom* sGYear_atom;
-  static nsIAtom* sGYearMonth_atom;
-  static nsIAtom* sGDay_atom;
-  static nsIAtom* sGMonthDay_atom;
-  static nsIAtom* sName_atom;
-  static nsIAtom* sQName_atom;
-  static nsIAtom* sNCName_atom;
-  static nsIAtom* sAnyURI_atom;
-  static nsIAtom* sLanguage_atom;
-  static nsIAtom* sID_atom;
-  static nsIAtom* sIDREF_atom;
-  static nsIAtom* sIDREFS_atom;
-  static nsIAtom* sENTITY_atom;
-  static nsIAtom* sENTITIES_atom;
-  static nsIAtom* sNOTATION_atom;
-  static nsIAtom* sNMTOKEN_atom;
-  static nsIAtom* sNMTOKENS_atom;
-
-  static nsIAtom* sElement_atom;
-  static nsIAtom* sModelGroup_atom;
-  static nsIAtom* sAny_atom;
-  static nsIAtom* sAttribute_atom;
-  static nsIAtom* sAttributeGroup_atom;
-  static nsIAtom* sSimpleType_atom;
-  static nsIAtom* sComplexType_atom;
-  static nsIAtom* sSimpleContent_atom;
-  static nsIAtom* sComplexContent_atom;
-  static nsIAtom* sAll_atom;
-  static nsIAtom* sChoice_atom;
-  static nsIAtom* sSequence_atom;
-  static nsIAtom* sAnyAttribute_atom;
-  static nsIAtom* sRestriction_atom;
-  static nsIAtom* sExtension_atom;
-  static nsIAtom* sAnnotation_atom;
-  static nsIAtom* sList_atom;
-  static nsIAtom* sUnion_atom;
-
-  static nsIAtom* sMinExclusive_atom;
-  static nsIAtom* sMinInclusive_atom;
-  static nsIAtom* sMaxExclusive_atom;
-  static nsIAtom* sMaxInclusive_atom;
-  static nsIAtom* sTotalDigits_atom;
-  static nsIAtom* sFractionDigits_atom;
-  static nsIAtom* sLength_atom;
-  static nsIAtom* sMinLength_atom;
-  static nsIAtom* sMaxLength_atom;
-  static nsIAtom* sEnumeration_atom;
-  static nsIAtom* sWhiteSpace_atom;
-  static nsIAtom* sPattern_atom;
+#define SCHEMA_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsSchemaAtomList.h"
+#undef SCHEMA_ATOM
 };
 
 class nsBuiltinSchemaCollection : public nsISchemaCollection

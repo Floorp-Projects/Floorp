@@ -77,7 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoding_1_1)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoding_1_2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSSOAPTransport)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPPropertyBagMutator)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSOAPPropertyBagMutator, Init)
 NS_DECL_CLASSINFO(nsSOAPCall)
 NS_DECL_CLASSINFO(nsSOAPResponse)
 NS_DECL_CLASSINFO(nsSOAPEncoding)
@@ -514,15 +514,16 @@ nsWebServicesModuleConstructor(nsIModule* self)
   gSOAPStrings = new nsSOAPStrings();
   if (!gSOAPStrings)
     return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+
+  nsresult rv = nsWSDLAtoms::AddRefAtoms();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsSchemaAtoms::AddRefAtoms();
 }
 
 PR_STATIC_CALLBACK(void)
 nsWebServicesModuleDestructor(nsIModule* self)
 {
-  nsSchemaAtoms::DestroySchemaAtoms();
-  nsWSDLAtoms::DestroyWSDLAtoms();
-
   delete gSOAPStrings;
   gSOAPStrings = nsnull;
 }

@@ -63,6 +63,7 @@
 // XPCOM includes
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsStaticAtom.h"
 
 ////////////////////////////////////////////////////////////
 //
@@ -70,249 +71,21 @@
 //
 ////////////////////////////////////////////////////////////
 
-// Statics
-nsIAtom* nsSchemaAtoms::sAnyType_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sString_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNormalizedString_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sToken_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sByte_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sUnsignedByte_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sBase64Binary_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sHexBinary_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sInteger_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sPositiveInteger_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNegativeInteger_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNonnegativeInteger_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNonpositiveInteger_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sInt_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sUnsignedInt_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sLong_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sUnsignedLong_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sShort_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sUnsignedShort_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sDecimal_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sFloat_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sDouble_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sBoolean_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sTime_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sDateTime_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sDuration_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sDate_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sGMonth_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sGYear_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sGYearMonth_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sGDay_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sGMonthDay_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sName_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sQName_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNCName_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAnyURI_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sLanguage_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sID_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sIDREF_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sIDREFS_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sENTITY_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sENTITIES_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNOTATION_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNMTOKEN_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sNMTOKENS_atom = nsnull;
+// define storage for all atoms
+#define SCHEMA_ATOM(_name, _value) nsIAtom* nsSchemaAtoms::_name;
+#include "nsSchemaAtomList.h"
+#undef SCHEMA_ATOM
 
-nsIAtom* nsSchemaAtoms::sElement_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sModelGroup_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAny_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAttribute_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAttributeGroup_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sSimpleType_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sComplexType_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sSimpleContent_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sComplexContent_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAll_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sChoice_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sSequence_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAnyAttribute_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sRestriction_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sExtension_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sAnnotation_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sList_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sUnion_atom = nsnull;
+static const nsStaticAtom atomInfo[] = {
+#define SCHEMA_ATOM(_name, _value) { _value, &nsSchemaAtoms::_name },
+#include "nsSchemaAtomList.h"
+#undef SCHEMA_ATOM
+};
 
-nsIAtom* nsSchemaAtoms::sMinExclusive_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sMinInclusive_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sMaxExclusive_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sMaxInclusive_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sTotalDigits_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sFractionDigits_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sLength_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sMinLength_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sMaxLength_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sEnumeration_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sWhiteSpace_atom = nsnull;
-nsIAtom* nsSchemaAtoms::sPattern_atom = nsnull;
-
-void
-nsSchemaAtoms::CreateSchemaAtoms()
+nsresult
+nsSchemaAtoms::AddRefAtoms()
 {
-  sAnyType_atom = NS_NewAtom("anyType");
-  sString_atom = NS_NewAtom("string");
-  sNormalizedString_atom = NS_NewAtom("normalizedString");
-  sToken_atom = NS_NewAtom("token");
-  sByte_atom = NS_NewAtom("byte");
-  sUnsignedByte_atom = NS_NewAtom("unsignedByte");
-  sBase64Binary_atom = NS_NewAtom("base64Binary");
-  sHexBinary_atom = NS_NewAtom("hexBinary");
-  sInteger_atom = NS_NewAtom("integer");
-  sPositiveInteger_atom = NS_NewAtom("positiveInteger");
-  sNegativeInteger_atom = NS_NewAtom("negativeInteger");
-  sNonnegativeInteger_atom = NS_NewAtom("nonNegativeInteger");
-  sNonpositiveInteger_atom = NS_NewAtom("nonPositiveInteger");
-  sInt_atom = NS_NewAtom("int");
-  sUnsignedInt_atom = NS_NewAtom("unsignedInt");
-  sLong_atom = NS_NewAtom("long");
-  sUnsignedLong_atom = NS_NewAtom("unsignedLong");
-  sShort_atom = NS_NewAtom("short");
-  sUnsignedShort_atom = NS_NewAtom("unsignedShort");
-  sDecimal_atom = NS_NewAtom("decimal");
-  sFloat_atom = NS_NewAtom("float");
-  sDouble_atom = NS_NewAtom("double");
-  sBoolean_atom = NS_NewAtom("boolean");
-  sTime_atom = NS_NewAtom("time");
-  sDateTime_atom = NS_NewAtom("dateTime");
-  sDuration_atom = NS_NewAtom("duration");
-  sDate_atom = NS_NewAtom("date");
-  sGMonth_atom = NS_NewAtom("gMonth");
-  sGYear_atom = NS_NewAtom("gYear");
-  sGYearMonth_atom = NS_NewAtom("gYearMonth");
-  sGDay_atom = NS_NewAtom("gDay");
-  sGMonthDay_atom = NS_NewAtom("gMonthDay");
-  sName_atom = NS_NewAtom("name");
-  sQName_atom = NS_NewAtom("QName");
-  sNCName_atom = NS_NewAtom("NCName");
-  sAnyURI_atom = NS_NewAtom("anyURI");
-  sLanguage_atom = NS_NewAtom("language");
-  sID_atom = NS_NewAtom("ID");
-  sIDREF_atom = NS_NewAtom("IDREF");
-  sIDREFS_atom = NS_NewAtom("IDREFS");
-  sENTITY_atom = NS_NewAtom("ENTITY");
-  sENTITIES_atom = NS_NewAtom("ENTITIES");
-  sNOTATION_atom = NS_NewAtom("NOTATION");
-  sNMTOKEN_atom = NS_NewAtom("NMTOKEN");
-  sNMTOKENS_atom = NS_NewAtom("NMTOKENS");
-
-  sElement_atom = NS_NewAtom("element");
-  sModelGroup_atom = NS_NewAtom("group");
-  sAny_atom = NS_NewAtom("any");
-  sAttribute_atom = NS_NewAtom("attribute");
-  sAttributeGroup_atom = NS_NewAtom("attributeGroup");
-  sSimpleType_atom = NS_NewAtom("simpleType");
-  sComplexType_atom = NS_NewAtom("complexType");
-  sSimpleContent_atom = NS_NewAtom("simpleContent");
-  sComplexContent_atom = NS_NewAtom("complexContent");
-  sAll_atom = NS_NewAtom("all");
-  sChoice_atom = NS_NewAtom("choice");
-  sSequence_atom = NS_NewAtom("sequence");
-  sAnyAttribute_atom = NS_NewAtom("anyAttribute");
-  sRestriction_atom = NS_NewAtom("restriction");
-  sExtension_atom = NS_NewAtom("extension");
-  sAnnotation_atom = NS_NewAtom("annotation");
-  sList_atom = NS_NewAtom("list");
-  sUnion_atom = NS_NewAtom("union");
-
-  sMinExclusive_atom = NS_NewAtom("minExclusive");
-  sMinInclusive_atom = NS_NewAtom("minInclusive");
-  sMaxExclusive_atom = NS_NewAtom("maxExclusive");
-  sMaxInclusive_atom = NS_NewAtom("maxInclusive");
-  sTotalDigits_atom = NS_NewAtom("totalDigits");
-  sFractionDigits_atom = NS_NewAtom("fractionDigits");
-  sLength_atom = NS_NewAtom("length");
-  sMinLength_atom = NS_NewAtom("minLength");
-  sMaxLength_atom = NS_NewAtom("maxLength");
-  sEnumeration_atom = NS_NewAtom("enumeration");
-  sWhiteSpace_atom = NS_NewAtom("whiteSpace");
-  sPattern_atom = NS_NewAtom("pattern");
-}
-
-void
-nsSchemaAtoms::DestroySchemaAtoms()
-{
-  if (sAnyType_atom) {
-    NS_RELEASE(sAnyType_atom);
-    NS_RELEASE(sString_atom);
-    NS_RELEASE(sNormalizedString_atom);
-    NS_RELEASE(sToken_atom);
-    NS_RELEASE(sByte_atom);
-    NS_RELEASE(sUnsignedByte_atom);
-    NS_RELEASE(sBase64Binary_atom);
-    NS_RELEASE(sHexBinary_atom);
-    NS_RELEASE(sInteger_atom);
-    NS_RELEASE(sPositiveInteger_atom);
-    NS_RELEASE(sNegativeInteger_atom);
-    NS_RELEASE(sNonnegativeInteger_atom);
-    NS_RELEASE(sNonpositiveInteger_atom);
-    NS_RELEASE(sInt_atom);
-    NS_RELEASE(sUnsignedInt_atom);
-    NS_RELEASE(sLong_atom);
-    NS_RELEASE(sUnsignedLong_atom);
-    NS_RELEASE(sShort_atom);
-    NS_RELEASE(sUnsignedShort_atom);
-    NS_RELEASE(sDecimal_atom);
-    NS_RELEASE(sFloat_atom);
-    NS_RELEASE(sDouble_atom);
-    NS_RELEASE(sBoolean_atom);
-    NS_RELEASE(sTime_atom);
-    NS_RELEASE(sDateTime_atom);
-    NS_RELEASE(sDuration_atom);
-    NS_RELEASE(sDate_atom);
-    NS_RELEASE(sGMonth_atom);
-    NS_RELEASE(sGYear_atom);
-    NS_RELEASE(sGYearMonth_atom);
-    NS_RELEASE(sGDay_atom);
-    NS_RELEASE(sGMonthDay_atom);
-    NS_RELEASE(sName_atom);
-    NS_RELEASE(sQName_atom);
-    NS_RELEASE(sNCName_atom);
-    NS_RELEASE(sAnyURI_atom);
-    NS_RELEASE(sLanguage_atom);
-    NS_RELEASE(sID_atom);
-    NS_RELEASE(sIDREF_atom);
-    NS_RELEASE(sIDREFS_atom);
-    NS_RELEASE(sENTITY_atom);
-    NS_RELEASE(sENTITIES_atom);
-    NS_RELEASE(sNOTATION_atom);
-    NS_RELEASE(sNMTOKEN_atom);
-    NS_RELEASE(sNMTOKENS_atom);
-    
-    NS_RELEASE(sElement_atom);
-    NS_RELEASE(sModelGroup_atom);
-    NS_RELEASE(sAny_atom);
-    NS_RELEASE(sAttribute_atom);
-    NS_RELEASE(sAttributeGroup_atom);
-    NS_RELEASE(sSimpleType_atom);
-    NS_RELEASE(sComplexType_atom);
-    NS_RELEASE(sSimpleContent_atom);
-    NS_RELEASE(sComplexContent_atom);
-    NS_RELEASE(sAll_atom);
-    NS_RELEASE(sChoice_atom);
-    NS_RELEASE(sSequence_atom);
-    NS_RELEASE(sAnyAttribute_atom);
-    NS_RELEASE(sRestriction_atom);
-    NS_RELEASE(sExtension_atom);
-    NS_RELEASE(sAnnotation_atom);
-    NS_RELEASE(sList_atom);
-    NS_RELEASE(sUnion_atom);
-    
-    NS_RELEASE(sMinExclusive_atom);
-    NS_RELEASE(sMinInclusive_atom);
-    NS_RELEASE(sMaxExclusive_atom);
-    NS_RELEASE(sMaxInclusive_atom);
-    NS_RELEASE(sTotalDigits_atom);
-    NS_RELEASE(sFractionDigits_atom);
-    NS_RELEASE(sLength_atom);
-    NS_RELEASE(sMinLength_atom);
-    NS_RELEASE(sMaxLength_atom);
-    NS_RELEASE(sEnumeration_atom);
-    NS_RELEASE(sWhiteSpace_atom);
-    NS_RELEASE(sPattern_atom);
-  }
+  return NS_RegisterStaticAtoms(atomInfo, NS_ARRAY_LENGTH(atomInfo));
 }
 
 ////////////////////////////////////////////////////////////
@@ -409,9 +182,6 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
 ////////////////////////////////////////////////////////////
 nsBuiltinSchemaCollection::nsBuiltinSchemaCollection()
 {
-  if (!nsSchemaAtoms::sAnyType_atom) {
-    nsSchemaAtoms::CreateSchemaAtoms();
-  }
 }
 
 nsBuiltinSchemaCollection::~nsBuiltinSchemaCollection()

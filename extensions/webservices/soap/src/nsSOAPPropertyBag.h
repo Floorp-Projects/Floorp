@@ -41,10 +41,7 @@
 #include "nsString.h"
 #include "nsIPropertyBag.h"
 #include "nsISOAPPropertyBagMutator.h"
-#include "nsCOMPtr.h"
-#include "nsIXPCScriptable.h"
-#include "nsHashtable.h"
-#include "nsSupportsArray.h"
+#include "nsAutoPtr.h"
 
 
 class nsSOAPPropertyBag;
@@ -57,9 +54,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOAPPROPERTYBAGMUTATOR
 
+  nsresult Init();
 protected:
-  nsCOMPtr<nsIPropertyBag> mBag;
-  nsSOAPPropertyBag* mSOAPBag;
+  nsRefPtr<nsSOAPPropertyBag> mSOAPBag;
 };
 
 #define NS_SOAPPROPERTY_CID                        \
