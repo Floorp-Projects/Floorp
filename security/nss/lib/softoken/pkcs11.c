@@ -654,12 +654,7 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 	/* Temporary for PKCS 12 */
 	if(cert->nickname == NULL) {
 	    /* use the arena so we at least don't leak memory  */
-	    cert->nickname = (char *)PORT_ArenaAlloc(cert->arena,
-							PORT_Strlen(label)+1);
-	    if(cert->nickname == NULL) {
-		return CKR_HOST_MEMORY;
-	    }
-	    PORT_Memcpy(cert->nickname, label, PORT_Strlen(label));
+	    cert->nickname = PORT_ArenaStrdup(cert->arena, label);
 	}
 
 	/* only add certs that have a private key */
