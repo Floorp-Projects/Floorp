@@ -152,6 +152,7 @@ protected:
     nsresult SyncComponentsInDir(RegistrationTime when, const char *directory);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
+    nsresult HashProgID(const char *aprogID, const nsCID &aClass);
 
     nsresult PlatformVersionCheck();
     nsresult PlatformCreateDll(const char *fullname, nsDll* *result);
