@@ -45,15 +45,75 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 {
   D(printf("XFE_NavCenterView Constructor\n"););
 
-  Widget pane = XtVaCreateManagedWidget("pane", xfePaneWidgetClass,
+#if 0
+  Widget rdf_parent = XtVaCreateManagedWidget("pane", xfePaneWidgetClass,
                                         parent, NULL);
+
   m_selector = XtVaCreateManagedWidget("selector",
-                                       xfeToolScrollWidgetClass,
-                                       pane, NULL);
+                   xfeToolScrollWidgetClass,
+                   rdf_parent,
+                   XmNpaneChildType,       XmPANE_CHILD_ATTACHMENT_ONE,
+                   XmNpaneChildAttachment, XmPANE_CHILD_ATTACH_LEFT,
+                   NULL);
+  /*Widget form = XtVaCreateManagedWidget("form",
+                   xmFormWidgetClass,
+                   pane,
+                   XmNpaneChildType,       XmPANE_CHILD_ATTACHMENT_TWO,
+                   XmNpaneChildAttachment, XmPANE_CHILD_ATTACH_RIGHT,
+                   XmNshadowThickness, 2,
+                   XmNshadowType, XmSHADOW_IN,
+                   NULL);*/
+#endif /*0*/
+  Widget nav_form = XtVaCreateManagedWidget("nav_form",
+                                            xmFormWidgetClass,
+                                            parent,
+                                            NULL);
+
+  m_selector = XtVaCreateManagedWidget("selector",
+                   xfeToolScrollWidgetClass,
+                   nav_form,
+                   XmNtopAttachment,    XmATTACH_FORM,
+                   XmNbottomAttachment, XmATTACH_FORM,
+                   XmNleftAttachment,   XmATTACH_FORM,
+                   XmNrightAttachment,  XmATTACH_NONE,
+                   XmNtopOffset,        0,
+                   XmNbottomOffset,     0,
+                   XmNleftOffset,       0,
+                   XmNrightOffset,      0,
+/*
+                   XmNmarginTop,        2,
+                   XmNmarginBottom,     2,
+                   XmNmarginLeft,       2,
+                   XmNmarginRight,      2,
+*/
+                   XmNspacing,          0,
+                   XmNshadowThickness,  0,
+                   NULL);
+  Widget toolbar;
+  XtVaGetValues(m_selector,XmNtoolBar,&toolbar,NULL);
+  XtVaSetValues(toolbar,
+                XmNshadowThickness,      0,
+                NULL);
+
+  Widget rdf_parent = XtVaCreateManagedWidget("rdf_form",
+                          xmFormWidgetClass,
+                          nav_form,
+                          XmNtopAttachment,    XmATTACH_FORM,
+                          XmNbottomAttachment, XmATTACH_FORM,
+                          XmNleftAttachment,   XmATTACH_WIDGET,
+                          XmNleftWidget,       m_selector,
+                          XmNrightAttachment,  XmATTACH_FORM,
+                          XmNtopOffset,        0,
+                          XmNbottomOffset,     1,
+                          XmNleftOffset,       0,
+                          XmNrightOffset,      0,
+                          XmNshadowThickness,  2,
+                          XmNshadowType,       XmSHADOW_IN,
+                          NULL);
 
   m_htview = NULL;
   m_pane = NULL;
-  m_rdfview = new XFE_RDFView(this, pane, 
+  m_rdfview = new XFE_RDFView(this, rdf_parent, 
                               NULL, context, m_htview);
 
   HT_Notification ns = new HT_NotificationStruct;
@@ -69,9 +129,9 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 
   XtManageChild(m_selector);
   m_rdfview->show();
-  XtManageChild(pane);
+  XtManageChild(nav_form);
 
-  setBaseWidget(pane);
+  setBaseWidget(nav_form);
 }
 
 
@@ -255,6 +315,11 @@ XFE_NavCenterView::addRDFView(HT_View view)
 							  toolbar,
 							  XmNlabelAlignment, XmALIGNMENT_BEGINNING,
 							  NULL);
+
+  // Temp bookmark title hack
+  if (XP_STRNCMP(label,"Bookmarks for", 13) == 0) {
+      label = "Bookmarks";
+  }
 
   XfeSetXmStringPSZ(button, XmNlabelString,
                     XmFONTLIST_DEFAULT_TAG, label);
