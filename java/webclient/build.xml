@@ -94,6 +94,10 @@
 
     <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
                      executable="make"/>
+    <exec os="Windows 2000" dir="${basedir}/src_share" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win"/>
+    </exec>
 
   </target>
 
@@ -159,8 +163,8 @@
 
   <target name="compile.win32.canvas.headers" if="build.win32.classes">
 
-    <javah outputFile="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"
-      class="org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas">
+    <javah outputFile="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"
+      class="org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
 
@@ -173,10 +177,18 @@
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes">
     </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win"/>
+    </exec>
 
     <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
                      failonerror="yes">
       <arg line="buildRunems"/>
+    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win buildRunems"/>
     </exec>
 
   </target>
@@ -192,12 +204,20 @@
       <arg line="clobber_all"/>
 
     </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win clobber_all"/>
+    </exec>
 
     <exec os="Linux" dir="${basedir}/src_share" executable="make"
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
+    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src_share" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win clobber_all"/>
     </exec>
 
     <delete >
@@ -210,6 +230,7 @@
     </delete>
 
     <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
+    <delete file="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"/>
 
 
     <delete dir="${build.home}/org/mozilla/webclient"/>

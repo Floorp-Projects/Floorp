@@ -74,6 +74,10 @@
     <exec os="Linux" dir="${basedir}/dom" executable="make" 
                      failonerror="yes">
     </exec>
+    <exec os="Windows 2000" dir="${basedir}/dom" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win"/>
+    </exec>
 
   </target>
 
@@ -93,15 +97,18 @@
                      failonerror="yes">
       <arg line="clean"/>
     </exec>
+    <exec os="Windows 2000" dir="${basedir}/dom" executable="nmake" 
+                     failonerror="yes">
+      <arg line="-f makefile.win clean"/>
+    </exec>
 
     <ant dir="${basedir}/webclient" target="clean"/>
 
   </target>
 
-    <ant dir="${basedir}/dist"/>
-
   <target name="dist">
 
+    <ant dir="${basedir}/dist"/>
 
   </target>
 

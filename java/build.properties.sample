@@ -1,3 +1,11 @@
-debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
+# Uncomment the following to enable attaching the debugger on win32
+#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n
+# Uncomment the following to enable attaching the debugger on Unix
+#debug.jvm.args=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n
+
+# Uncomment the right one for your system
 build.unix.classes=true
+build.win32.classes=true
+
+# On win32, make sure to use \\ for \
 build.home=/home/edburns/Projects/mozilla/NETSCAPE_7_0_RTM_RELEASE/mozilla/dist/classes
