@@ -678,7 +678,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresCon
                   ((nsTableRowFrame*)rowFrame)->CalculateCellActualSize(cellFrame, cellDesSize.width, 
                                                                         cellDesSize.height, cellDesSize.width);
                   cellFrameSize.height = cellDesSize.height;
-#ifdef MOZ_MATHML
                   // see if the cell has 'vertical-align: baseline'
                   if (((nsTableCellFrame*)cellFrame)->HasVerticalAlignBaseline()) {
                     // to ensure that a spanning cell with a long descender doesn't
@@ -686,8 +685,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresCon
                     // that will be done to align the cell on the baseline of the row.
                     cellFrameSize.height += ((nsTableRowFrame*)rowFrame)->GetMaxCellAscent() 
                                           - ((nsTableCellFrame*)cellFrame)->GetDesiredAscent();
-                  }                                       
-#endif
+                  }
                 }
   
                 if (availHeightOfRowsSpanned >= cellFrameSize.height) {
@@ -695,11 +693,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresCon
                   // spans. Set the cell frame's height
                   cellFrame->SizeTo(aPresContext, cellFrameSize.width, availHeightOfRowsSpanned);
                   // Realign cell content based on new height
-#ifndef MOZ_MATHML
-                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState);
-#else
                   ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState, ((nsTableRowFrame*)rowFrame)->GetMaxCellAscent());
-#endif
                 }
                 else {
                   // the cell's height is larger than the available space of the rows it
