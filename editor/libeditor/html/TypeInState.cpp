@@ -185,19 +185,29 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsStr
     return NS_OK;
   }
   
-  // if it's already set we are done
-  if (IsPropSet(aProp,aAttr,nsnull)) return NS_OK;
+  nsAutoString value;
+  PRInt32 index;
+  PropItem *item = nsnull;
   
-  // make a new propitem
-  PropItem *item = new PropItem(aProp,aAttr,aValue);
-  if (!item) return NS_ERROR_OUT_OF_MEMORY;
-  
-  // remove it from the list of cleared properties, if we have a match
-  RemovePropFromClearedList(aProp,aAttr);
-  
-  // add it to the list of set properties
-  mSetArray.AppendElement((void*)item);
-  
+  if (IsPropSet(aProp,aAttr,nsnull,index))
+  {
+    // if it's already set, update the value
+    item = (PropItem*)mSetArray[index];
+    item->value = aValue;
+  }
+  else 
+  {
+    // make a new propitem
+    item = new PropItem(aProp,aAttr,aValue);
+    if (!item) return NS_ERROR_OUT_OF_MEMORY;
+    
+    // add it to the list of set properties
+    mSetArray.AppendElement((void*)item);
+    
+    // remove it from the list of cleared properties, if we have a match
+    RemovePropFromClearedList(aProp,aAttr);  
+  }
+    
   return NS_OK;
 }
 
