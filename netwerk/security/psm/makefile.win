@@ -38,6 +38,7 @@ EXPORTS= \
 
 LINCS = $(LINCS)     \
     -I$(PUBLIC)      \
+    -I$(PUBLIC)/security \
     $(NULL)
 
 LLIBS   = \
