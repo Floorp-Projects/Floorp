@@ -308,12 +308,19 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 {
 	PRInt32 startingDiff = fLineOfTokens - fStartOfLineOfTokens;
-	if (fNextToken == fStartOfLineOfTokens)
-		fNextToken = "";
+  PRInt32 nextTokenOffset;
+
+  // save off offset into fStartOfLineOfTokens of fNextToken so we can set it appropriately
+  // when we destroy the current line and create a new one. I'm pretty sure fNextToken must
+  // point somewhere in the current line.
+  nextTokenOffset = fNextToken - fStartOfLineOfTokens;
+
 	PR_FREEIF(fStartOfLineOfTokens);
 	if (fCurrentLine)
 	{
 		fStartOfLineOfTokens = PL_strdup(fCurrentLine);
+    fNextToken = fStartOfLineOfTokens + nextTokenOffset;
+
 		if (fStartOfLineOfTokens && ((int32) PL_strlen(fStartOfLineOfTokens) >= bytesToAdvance))
 		{
 			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
