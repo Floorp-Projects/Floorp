@@ -57,6 +57,7 @@
 #define DEMANGLE_STATE_DOLLAR_2 8
 #define DEMANGLE_STATE_START 9
 #define DEMANGLE_STATE_STOP 10
+#define DEMANGLE_SAFE_CHAR(eval)  (isprint(eval) ? eval : ' ')
 
 #else
 #define F_DEMANGLE 0
@@ -978,7 +979,7 @@ char* symdup(const char* inSymbol)
                                 state = DEMANGLE_STATE_STOP;
                                 break;
                             default:
-                                *curresult++ = *curchar;
+                                *curresult++ = DEMANGLE_SAFE_CHAR(*curchar);
                                 state = DEMANGLE_STATE_NORMAL;
                                 break;
                             }
@@ -1040,7 +1041,7 @@ char* symdup(const char* inSymbol)
                             /* same mechanism as above */
                             hex_state += (*curchar - 'A');
                             if (hex_state) {
-                                *curresult++ = hex_state;
+                                *curresult++ = DEMANGLE_SAFE_CHAR(hex_state);
                                 have_null_char = 0;
                             }
                             else {
