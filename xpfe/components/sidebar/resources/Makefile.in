@@ -25,6 +25,8 @@ CHROME_CONTENT_DIR  = content/default
 CHROME_SKIN_DIR     = skin/default
 
 CHROME_CONTENT = \
+	customize-panel.js \
+	customize-panel.xul \
 	customize.js \
 	customize.xul \
 	dummy-flash.rdf \
@@ -41,6 +43,7 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
+	customize-panel.css \
 	customize.css \
 	flash.css \
 	sidebar.css \
@@ -52,6 +55,7 @@ CHROME_SKIN = \
 	$(NULL)
 
 CHROME_L10N = \
+	./locale/en-US/customize-panel.dtd \
 	./locale/en-US/customize.dtd \
 	./locale/en-US/flash.dtd \
 	./locale/en-US/preview.dtd \

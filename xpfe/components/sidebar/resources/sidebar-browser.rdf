@@ -8,8 +8,7 @@
     <RDF:li>
        <RDF:Description ID="whats-related">
          <NC:title>&sidebar.whats-related.label;</NC:title>
-         <NC:content>resource:/res/samples/related-panel.xul</NC:content>
-         <NC:customize>resource:/res/samples/related-panel-cust.xul</NC:customize>
+         <NC:content>chrome://related/content/related-panel.xul</NC:content>
        </RDF:Description>
     </RDF:li>
     <RDF:li>
