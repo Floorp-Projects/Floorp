@@ -63,7 +63,9 @@ pref("chimera.log_js_to_console", true);
 pref("general.useragent.vendor", "Camino");
 pref("general.useragent.vendorSub", "0.7+");
 
+pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
+pref("browser.urlbar.autocomplete.enabled", true);
 
 // Default to auto download enabled but auto helper dispatch disabled
 pref("browser.download.autoDownload", true);
