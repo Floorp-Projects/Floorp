@@ -37,6 +37,5 @@
 		void        setHint(in boolean right);
 		boolean     getHint();
 		noscript xpidl nsIEnumerator    getEnumerator();
-
-                DOMString       toString();
+    DOMString       toString(in DOMString formatType, in unsigned long flags, in int wrapCount);
 };
