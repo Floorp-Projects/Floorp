@@ -28,6 +28,14 @@ DIE=0
 	DIE=1
 }
 
+(libtoolize --version) < /dev/null > /dev/null 2>&1 || {
+	echo
+	echo "You must have libtool installed to compile $PROJECT."
+	echo "Get ftp://ftp.gnu.org/pub/gnu/libtool/libtool-1.4.2.tar.gz"
+	echo "(or a newer version if it is available)"
+	DIE=1
+}
+
 if test "$DIE" -eq 1; then
 	exit 1
 fi
@@ -66,6 +74,7 @@ if test -z "$ACLOCAL_FLAGS"; then
 fi
 
 aclocal $ACLOCAL_FLAGS
+libtoolize
 
 # optionally feature autoheader
 (autoheader --version)  < /dev/null > /dev/null 2>&1 && autoheader
