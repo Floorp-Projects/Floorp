@@ -134,7 +134,7 @@ static FILE *logFile = NULL;
 static PRFileDesc *logFile = 0;
 #endif
 
-#define LINE_BUF_SIZE                200
+#define LINE_BUF_SIZE           512
 #define DEFAULT_BUF_SIZE        16384
 
 #ifdef _PR_NEED_STRCASECMP
