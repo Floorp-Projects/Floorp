@@ -793,7 +793,9 @@ nsImapProtocol::ImapThreadMainLoop()
 		// the first time because it may have already been signaled.
 		if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl)
 		{
-			ProcessCurrentURL();
+			// if we launched another url, just loop around and process it.
+			if (ProcessCurrentURL())
+				continue;
 			ClearFlag(IMAP_FIRST_PASS_IN_THREAD);
 		}
 
@@ -917,9 +919,11 @@ void nsImapProtocol::EstablishServerConnection()
 #endif   
 }
 
-void nsImapProtocol::ProcessCurrentURL()
+// returns PR_TRUE if another url was run, PR_FALSE otherwise.
+PRBool nsImapProtocol::ProcessCurrentURL()
 {
 	PRBool	logonFailed = PR_FALSE;
+	PRBool anotherUrlRun = PR_FALSE;
 
 	if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
 	{
@@ -1038,7 +1042,7 @@ void nsImapProtocol::ProcessCurrentURL()
 	// now try queued urls, now that we've released this connection.
 	if (m_imapServerSink && GetConnectionStatus() >= 0)
 	{
-		rv = m_imapServerSink->LoadNextQueuedUrl();
+		rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
         SetFlag(IMAP_FIRST_PASS_IN_THREAD);
 	}
 
@@ -1050,7 +1054,7 @@ void nsImapProtocol::ProcessCurrentURL()
         TellThreadToDie(PR_TRUE);
 
 	}
-
+	return anotherUrlRun;
 }
 
 void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)

@@ -348,7 +348,7 @@ private:
     nsImapServerResponseParser m_parser;
     nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
-    virtual void ProcessCurrentURL();
+    virtual PRBool ProcessCurrentURL();
 	void EstablishServerConnection();
     virtual void ParseIMAPandCheckForNewMail(const char* commandString =
                                              nsnull);

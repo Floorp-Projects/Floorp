@@ -298,10 +298,11 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
 // checks to see if there are any queued urls on this incoming server,
 // and if so, tries to run the oldest one.
 NS_IMETHODIMP
-nsImapIncomingServer::LoadNextQueuedUrl()
+nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 {
     PRUint32 cnt = 0;
     nsresult rv = NS_OK;
+	PRBool urlRun = PR_FALSE;
 
     PR_CEnterMonitor(this);
     m_urlQueue->Count(&cnt);
@@ -326,7 +327,10 @@ nsImapIncomingServer::LoadNextQueuedUrl()
             {
 				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
 				if (NS_SUCCEEDED(rv) && url)
+				{
 					rv = protocolInstance->LoadUrl(url, aConsumer);
+					urlRun = PR_TRUE;
+				}
                 m_urlQueue->RemoveElementAt(0);
                 m_urlConsumers.RemoveElementAt(0);
             }
@@ -334,6 +338,9 @@ nsImapIncomingServer::LoadNextQueuedUrl()
             NS_IF_RELEASE(aConsumer);
         }
     }
+	if (aResult)
+		*aResult = urlRun;
+
     PR_CExitMonitor(this);
     return rv;
 }
