@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libicalvcal.la
 
 INCLUDES =			\
-	-I/usr/include/objc
+	-I/usr/include/objc	\
 	-I$(top_builddir)	\
 	-I$(top_srcdir)/src/libical	\
 	-I$(top_builddir)/src/libical	\
