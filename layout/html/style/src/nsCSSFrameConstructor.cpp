@@ -226,13 +226,6 @@ static FrameCtorDebugFlags gFlags[] = {
 #include "nsListBoxBodyFrame.h"
 #include "nsListItemFrame.h"
 
-// To kill #define index(a,b) strchr(a,b) macro in Toolkit types.h
-#ifdef XP_OS2_VACPP
-#ifdef index
-#undef index
-#endif
-#endif
-
 //------------------------------------------------------------------
 
 nsresult
