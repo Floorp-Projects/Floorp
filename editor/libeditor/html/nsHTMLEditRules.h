@@ -264,7 +264,7 @@ protected:
   nsCOMPtr<nsIDOMRange>   mUtilRange;
   PRUint32                mJoinOffset;  // need to remember an int across willJoin/didJoin...
   nsCOMPtr<nsIDOMNode>    mNewBlock;
-
+  nsRangeStore            mRangeItem;
 };
 
 nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
