@@ -986,7 +986,7 @@ nsHTMLEditRules::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   	if (NS_FAILED(iter->CurrentNode(getter_AddRefs(content)))) return nullNode;
     // ignore nodes that aren't elements or text, or that are the block parent 
     node = do_QueryInterface(content);
-    if (node && IsTextOrElementNode(node) && (node != blockParent) && (node!=aNode))
+    if (node && IsTextOrElementNode(node) && (node != blockParent) && (node!=nsCOMPtr<nsIDOMNode>(dont_QueryInterface(aNode))))
       return node;
     
     if (aDir == kIterForward)
