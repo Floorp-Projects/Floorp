@@ -213,6 +213,9 @@ XUL_ATOM(ddDropMarker, ":-moz-drop-marker")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")
+XUL_ATOM(page, "page")
+XUL_ATOM(dialog, "dialog")
+XUL_ATOM(wizard, "wizard")
 
 XUL_ATOM(iframe, "iframe")
 XUL_ATOM(browser, "browser")
