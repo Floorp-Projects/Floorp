@@ -635,28 +635,28 @@ static nsresult convertUTF8ToUnicode(const char *utf8String, PRUnichar ** aResul
 static nsresult AddAttribute( nsIMIMEInfo* inElement, nsCString& inAttribute, nsCString& inValue )
 {
 	nsresult rv = NS_OK;
-	if ( inAttribute == kMIMEType )
+	if ( inAttribute == nsLiteralCString(kMIMEType) )
 	{
 		rv = inElement->SetMIMEType( inValue );
 	}
-	else if ( inAttribute == kDescription  )
+	else if ( inAttribute == nsLiteralCString(kDescription)  )
 	{
 		PRUnichar* unicode; 
 		convertUTF8ToUnicode( inValue, &unicode );
 		rv =inElement->SetDescription( unicode );
 		nsTextFormatter::smprintf_free(unicode);
 	}
-	else if ( inAttribute == kExtensions   )
+	else if ( inAttribute == nsLiteralCString(kExtensions)   )
 	{
 		rv = inElement->SetFileExtensions( inValue );
 	}
-	else if ( inAttribute == kMacType )
+	else if ( inAttribute == nsLiteralCString(kMacType) )
 	{
 		PRUint32 value;
 		sscanf ( inValue, "%x", &value);
 		rv = inElement->SetMacType( value );
 	}
-	else if ( inAttribute == kMacCreator )
+	else if ( inAttribute == nsLiteralCString(kMacCreator) )
 	{
 		PRUint32 value;
 		sscanf ( inValue, "%x", &value);
