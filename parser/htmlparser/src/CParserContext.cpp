@@ -139,5 +139,7 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
     mDocType=eXMLText;
   else if(mMimeType.EqualsWithConversion(kXIFTextContentType))
     mDocType=eXMLText;
-
+  else {
+    NS_NOTREACHED("no mime type set");
+  }
 }
