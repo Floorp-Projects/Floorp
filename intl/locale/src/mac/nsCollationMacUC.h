@@ -45,6 +45,10 @@
 #include <MacLocales.h>
 #include <UnicodeUtilities.h>
 
+// Maximum number of characters for a buffer to remember 
+// the generated collation key.
+const PRUint32 kCacheSize = 80;
+
 class nsCollationMacUC : public nsICollation {
 
 public: 
@@ -85,6 +89,9 @@ private:
   LocaleRef mLocale;
   nsCollationStrength mLastStrength;
   CollatorRef mCollator;
+  UCCollationValue mCachedKey[kCacheSize * 5];
+  PRUint32 mCachedKeyLen;   // byte length of key
+  UniChar mCachedString[kCacheSize];
 };
 
 #endif  /* nsCollationMacUC_h__ */
