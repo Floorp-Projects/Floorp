@@ -99,8 +99,8 @@ nsresult	FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody);
 nsresult	GetSortColumnIndex(nsIContent *tree, nsString sortResource, PRInt32 *colIndex);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
-nsresult	RemoveAllChildren(nsIContent *node, PRInt32 *numChildrenTotal);
-nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel, PRInt32 *numChildrenTotal);
+nsresult	RemoveAllChildren(nsIContent *node);
+nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 nsresult	PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 
 public:
@@ -408,7 +408,7 @@ XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
 }
 
 nsresult
-XULSortServiceImpl::RemoveAllChildren(nsIContent *container, PRInt32 *numChildrenTotal)
+XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
 {
         nsCOMPtr<nsIContent>	child;
 	PRInt32			childIndex, numChildren;
@@ -420,10 +420,8 @@ XULSortServiceImpl::RemoveAllChildren(nsIContent *container, PRInt32 *numChildre
 	for (childIndex=numChildren-1; childIndex >= 0; childIndex--)
 	{
 		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	break;
-//		if (NS_FAILED(rv = RemoveAllChildren(child, numChildrenTotal)))	break;
 		container->RemoveChildAt(childIndex, PR_TRUE);
 	}
-	*numChildrenTotal = (*numChildrenTotal) + numChildren;
 	return(rv);
 }
 
@@ -455,7 +453,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 }
 
 nsresult
-XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel, PRInt32 *numChildrenTotal)
+XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel)
 {
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
@@ -511,7 +509,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, PR
 			rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *),
 				inplaceSortCallback, (void *)&sortInfo);
 
-			RemoveAllChildren(container, numChildrenTotal);
+			RemoveAllChildren(container);
 			if (NS_FAILED(rv = container->UnsetAttribute(kNameSpaceID_None,
 			                        kTreeContentsGeneratedAtom,
 			                        PR_FALSE)))
@@ -520,7 +518,6 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, PR
 			}
 			
 			// insert sorted children			
-//			if (NS_FAILED(rv = container->ChildCount(numChildren)))	numChildren=0;
 			numChildren = 0;
 			for (loop=0; loop<numElements; loop+=2)
 			{
@@ -612,7 +609,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource)
 {
 	printf("XULSortServiceImpl::DoSort entered!!!\n");
 
-	PRInt32		childIndex, colIndex, numChildren, numChildrenTotal=0;
+	PRInt32		childIndex, colIndex, numChildren, treeBodyIndex;
 	nsIContent	*child, *contentNode, *treeNode, *treeBody, *treeParent;
 	nsresult	rv;
 
@@ -631,39 +628,28 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource)
 	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
 	printf("Found tree parent.\n");
 
-	if (NS_SUCCEEDED(rv = treeParent->ChildCount(numChildren)))
+	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
+	printf("Found index of tree body in tree parent.\n");
+
+	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
+	printf("Removed tree body from parent.\n");
+
+	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, 0)))
 	{
-		for (childIndex=0; childIndex<numChildren; childIndex++)
-		{
-			if (NS_SUCCEEDED(rv = treeParent->ChildAt(childIndex, child)))
-			{
-				if (child == treeBody)
-				{
-					if (NS_FAILED(rv = treeParent->RemoveChildAt(childIndex, PR_TRUE)))	break;
-					printf("Removed tree body from parent.\n");
-
-					if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, 0, &numChildrenTotal)))
-					{
-						printf("Tree sorted.\n");
-					}
-
-					if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
-						kTreeContentsGeneratedAtom,PR_FALSE)))
-					{
-					}
-					if (NS_SUCCEEDED(rv = treeParent->UnsetAttribute(kNameSpaceID_None,
-						kTreeContentsGeneratedAtom,PR_FALSE)))
-					{
-					}
-
-					if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	break;
-					printf("Added tree body back into parent.\n");
-					
-					break;
-				}
-			}
-		}
+		printf("Tree sorted.\n");
 	}
+
+	if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
+		kTreeContentsGeneratedAtom,PR_FALSE)))
+	{
+	}
+	if (NS_SUCCEEDED(rv = treeParent->UnsetAttribute(kNameSpaceID_None,
+		kTreeContentsGeneratedAtom,PR_FALSE)))
+	{
+	}
+
+	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
+	printf("Added tree body back into parent.\n");
 
 #if 0
 	if (NS_FAILED(rv = PrintTreeChildren(treeBody, colIndex, 0)))	return(rv);
