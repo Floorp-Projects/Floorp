@@ -102,6 +102,7 @@ morkFactory::CloseMorkNode(morkEnv* ev) /*i*/ // CloseFactory() only if open
 /*public virtual*/
 morkFactory::~morkFactory() /*i*/ // assert CloseFactory() executed earlier
 {
+  CloseFactory(&mFactory_Env);
   MORK_ASSERT(mFactory_Env.IsShutNode());
   MORK_ASSERT(this->IsShutNode());
 }
