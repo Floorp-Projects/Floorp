@@ -35,7 +35,6 @@ pippki.jar:
     content/pippki/clientauthask.js			 (content/clientauthask.js)
     content/pippki/certViewer.xul            (content/certViewer.xul)
     content/pippki/certDump.xul              (content/certDump.xul)
-    content/pippki/SecurityPanelOverlay.xul  (content/SecurityPanelOverlay.xul)
     content/pippki/choosetoken.xul           (content/choosetoken.xul)
     content/pippki/choosetoken.js            (content/choosetoken.js)
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
