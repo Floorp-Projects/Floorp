@@ -437,11 +437,11 @@ NS_IMETHODIMP nsPref::EvaluateConfigScriptFile(const char * js_buffer,
                          PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
 {
-    char* path; // GRR COM again.
-    fileSpec->GetNativePath(&path);
+    nsXPIDLCString path;
+    fileSpec->GetNativePath(getter_Copies(path));
     return _convertRes(PREF_EvaluateConfigScript(js_buffer,
                                  length,
-                                 path, // bad, but not used for parsing.
+                                 (const char *)path, // bad, but not used for parsing.
                                  bGlobalContext,
                                  bCallbacks,
                                  PR_TRUE));
