@@ -42,6 +42,7 @@
 
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsIAccessibleHyperLink.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -68,4 +69,19 @@ protected:
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
 };
 
+/* Accessible for support images with "use=#map".
+ * only this kind of images will support nsIAccessibleHyperLink
+ */
+class nsHTMLImageMapAccessible : public nsHTMLImageAccessible,
+                                 public nsIAccessibleHyperLink
+{
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEHYPERLINK
+
+public:
+  nsHTMLImageMapAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell)
+    : nsHTMLImageAccessible(aDomNode, aShell)
+  {
+  }//constructor end
+};
 #endif  

@@ -42,9 +42,13 @@
 
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
+#include "nsIAccessibleHyperLink.h"
 
-class nsHTMLLinkAccessible : public nsLinkableAccessible
+class nsHTMLLinkAccessible : public nsLinkableAccessible,
+                             public nsIAccessibleHyperLink
 {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEHYPERLINK
 
 public:
   nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);

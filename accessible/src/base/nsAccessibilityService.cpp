@@ -550,7 +550,19 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLImageAccessible(node, weakShell);
+  *_retval = nsnull;
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(node));
+  if (domElement) {
+    PRBool hasAttribute;
+    rv = domElement->HasAttribute(NS_LITERAL_STRING("usemap"), &hasAttribute);
+    if (NS_SUCCEEDED(rv) && hasAttribute) {
+      //There is a "use map"
+      *_retval = new nsHTMLImageMapAccessible(node, weakShell);
+    }
+  }
+  else
+    *_retval = new nsHTMLImageAccessible(node, weakShell);
+
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
