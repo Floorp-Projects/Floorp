@@ -22,7 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nsProxiedService.h"
 #include "nsKeygenThread.h"
-#include "nsIWidget.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenThread, nsIKeygenThread)
 
