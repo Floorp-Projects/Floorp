@@ -23,6 +23,10 @@
 #include "nsRepository.h"
 #include <gdk/gdkx.h>
 
+#define NSCOLOR_TO_GDKCOLOR(g,n) \
+  g.red=NS_GET_R(n); \
+  g.green=NS_GET_G(n); \
+  g.blue=NS_GET_B(n);
 
 nsWidget::nsWidget()
 {
@@ -87,8 +91,9 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
+#ifdef DBG
     g_print("nsWidget::Show(%6d)    - %s %p\n", bState, mWidget->name, this);
-
+#endif
     if (bState) {
       if (mWidget) {
         gtk_widget_show(mWidget);
@@ -126,7 +131,9 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
+#ifdef DBG
   g_print("nsWidget::Move(%3d,%3d)   - %s %p\n", aX, aY, mWidget->name, this);
+#endif
   mBounds.x = aX;
   mBounds.y = aY;
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -136,7 +143,9 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+#ifdef DBG
   g_print("nsWidget::Resize(%3d,%3d) - %s %p\n", aWidth, aHeight, mWidget->name, this);
+#endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
@@ -197,8 +206,15 @@ nscolor nsWidget::GetForegroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
 {
+    GtkStyle *style;
+    GdkColor color;
     mForeground = aColor;
-    NS_NOTYETIMPLEMENTED("nsWidget::SetForegroundColor");
+
+    NSCOLOR_TO_GDKCOLOR(color, aColor);
+    style = gtk_style_copy(mWidget->style);
+    style->fg[GTK_STATE_NORMAL] = color;
+    gtk_widget_set_style(mWidget, style);
+    
     return NS_OK;
 }
 
@@ -220,8 +236,15 @@ nscolor nsWidget::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
+    GtkStyle *style;
+    GdkColor color;
     mBackground = aColor;
-    NS_NOTYETIMPLEMENTED("nsWidget::SetBackgroundColor");
+
+    NSCOLOR_TO_GDKCOLOR(color, aColor);
+    style = gtk_style_copy(mWidget->style);
+    style->bg[GTK_STATE_NORMAL] = color;
+    gtk_widget_set_style(mWidget, style);
+    
     return NS_OK;
 }
 
@@ -460,7 +483,9 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
       parentWidget = GTK_WIDGET(shellWidget);
   }
 
+#ifdef DBG
   g_print("--\n");
+#endif
 
   CreateNative (parentWidget);
 
@@ -469,7 +494,9 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
   if (parentWidget)
   {
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
+#ifdef DBG
     g_print("nsWidget::SWC(%3d,%3d)    - %s %p\n", mBounds.x, mBounds.y, mWidget->name, this);
+#endif
   }
 
   InitCallbacks();
