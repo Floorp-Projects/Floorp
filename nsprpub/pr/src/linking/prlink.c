@@ -656,7 +656,7 @@ PR_LoadLibrary(const char *name)
 
         /* Finally, try to load the library */
         err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
-                        kLoadCFrag, &connectionID, &main, errName);
+                        kPrivateCFragCopy, &connectionID, &main, errName);
 
         libName = cName;
         if (err != noErr)
