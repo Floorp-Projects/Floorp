@@ -77,7 +77,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 
 	nsXPIDLCString popHost;
 	nsXPIDLCString popUser;
-	PRInt32 popPort;
+	PRInt32 popPort = -1;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
 	nsCOMPtr<nsIURI> url;
@@ -106,7 +106,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
         // now construct a pop3 url...
 		// we need to escape the username because it may contain
 		// characters like / % or @
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)escapedUsername, (const char *)popHost, &popPort);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)escapedUsername, (const char *)popHost, popPort);
         rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow, popPort);
         PR_FREEIF(urlSpec);
     }
