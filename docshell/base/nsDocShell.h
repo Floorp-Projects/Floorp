@@ -290,10 +290,13 @@ protected:
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader);
-    NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadType, nscoord *cx, nscoord *cy);
-    NS_IMETHOD OnLoadingSite(nsIChannel * aChannel);
+    NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
+                              PRUint32 aLoadType, nscoord *cx, nscoord *cy);
+    nsresult OnLoadingSite(nsIChannel * aChannel,
+                           PRBool aFireOnLocationChange);
 
-    NS_IMETHOD OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType);
+    void OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
+                  PRBool aFireOnLocationChange);
 
     virtual void SetReferrerURI(nsIURI * aURI);
 
@@ -371,7 +374,8 @@ protected:
     static PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
                                  nsIDocShellTreeItem* aTargetTreeItem);
 
-    void SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest);
+    void SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
+                       PRBool aFireOnLocationChange);
 
 protected:
     // Override the parent setter from nsDocLoader
