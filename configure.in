@@ -898,10 +898,6 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
 dnl build mozilla/nsprpub by default
 MOZ_BUILD_NSPR=1
 
-MOZ_ARG_DISABLE_BOOL(build-nspr,
-[  --disable-build-nspr    Dont build mozilla/nsprpub],
-  MOZ_BUILD_NSPR= )
-
 dnl build mozilla/xpfe by default
 MOZ_BUILD_XPFE=1
 
@@ -1513,6 +1509,8 @@ fi # $no_x
 
 if test "$MISSING_NSPR"; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
+else
+	MOZ_BUILD_NSPR=
 fi
 
 dnl Set various defines and substitutions
