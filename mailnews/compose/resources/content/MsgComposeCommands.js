@@ -185,7 +185,7 @@ var gComposeRecyclingListener = {
  
     //Clear the subject
     document.getElementById("msgSubject").value = "";
-
+    SetComposeWindowTitle();
 
     SetContentAndBodyAsUnmodified();
     disableEditableFields();
@@ -1192,7 +1192,7 @@ function ComposeFieldsReady(msgType)
     }
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
-  SetComposeWindowTitle(13);
+  SetComposeWindowTitle();
   AdjustFocus();
 }
 
@@ -1498,7 +1498,7 @@ function SetDocumentCharacterSet(aCharset)
     gMsgCompose.SetDocumentCharset(aCharset);
     gCurrentMailSendCharset = aCharset;
     gCharsetTitle = null;
-    SetComposeWindowTitle(13);
+    SetComposeWindowTitle();
   }
   else
     dump("Compose has not been created!\n");
@@ -2016,23 +2016,16 @@ function AdjustFocus()
   }
 }
 
-function SetComposeWindowTitle(event)
+function SetComposeWindowTitle()
 {
-  /* dump("event = " + event + "\n"); */
-
-  /* only set the title when they hit return (or tab?)
-   */
-
   var newTitle = document.getElementById('msgSubject').value;
 
   /* dump("newTitle = " + newTitle + "\n"); */
 
-  if (newTitle == "" ) {
+  if (newTitle == "" )
     newTitle = sComposeMsgsBundle.getString("defaultSubject");
-  }
 
   newTitle += GetCharsetUIString();
-
   window.title = sComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
 }
 
