@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1064,16 +1064,16 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 NS_IMETHODIMP 
 nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument)
 {
-	PRBool doneLoading;
+  PRBool doneLoading;
   nsresult rv = aLoader->LoadStyleLink(nsnull, // anElement
-															aURL,
-															"", // aTitle
-															"", // aMedia
-															kNameSpaceID_Unknown,
-                              aDocument->GetNumberOfStyleSheets(),
-                              nsnull,
-                              doneLoading,  // Ignore doneLoading. Don't care.
-                              nsnull);
+                                       aURL,
+                                       "", // aTitle
+                                       "", // aMedia
+                                       kNameSpaceID_Unknown,
+                                       aDocument->GetNumberOfStyleSheets(),
+                                       nsnull,
+                                       doneLoading,  // Ignore doneLoading. Don't care.
+                                       nsnull);
 
   return rv;
 }
