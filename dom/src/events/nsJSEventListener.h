@@ -30,6 +30,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsIScriptContext.h"
 
 //nsIDOMMouseListener interface
 class nsJSEventListener : public nsIDOMEventListener,
@@ -51,7 +52,7 @@ public:
   NS_IMETHOD SetEventName(nsIAtom* aName);
 
 protected:
-  nsIScriptContext* mContext;
+  nsCOMPtr<nsIScriptContext> mContext;
   nsISupports* mObject;
   nsCOMPtr<nsIAtom> mEventName;
   

@@ -37,7 +37,7 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
 {
   NS_INIT_REFCNT();
 
-  // Both of these are weak references. We are guaranteed
+  // mObject is a weak reference. We are guaranteed
   // because of the ownership model that this object will be
   // freed (and the references dropped) before either the context
   // or the owner goes away.
