@@ -39,13 +39,20 @@
 # Figure out where the binary code lives.
 #
 
+ifdef BUILD_TREE
+BUILD         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
+OBJDIR        = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
+VPATH         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
+DEPENDENCIES  = $(BUILD_TREE)/nss/$(LIBRARY_NAME)/.md
+else
+
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
-
-DIST          = $(CORE_DEPTH)/../dist/$(PLATFORM)
-
 VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
 DEPENDENCIES  = $(PLATFORM)/.md
+endif
+
+DIST          = $(SOURCE_PREFIX)/$(PLATFORM)
 
 ifdef BUILD_DEBUG_GC
 	DEFINES += -DDEBUG_GC

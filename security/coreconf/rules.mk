@@ -52,6 +52,13 @@ endif
 platform::
 	@echo $(OBJDIR_NAME)
 
+ifeq ($(OS_ARCH), WINNT)
+USE_NT_C_SYNTAX=1
+endif
+
+ifdef XP_OS2_VACPP
+USE_NT_C_SYTNAX=1
+endif
 
 #
 # IMPORTS will always be associated with a component.  Therefore,
@@ -282,32 +289,13 @@ alltags:
 $(PROGRAM): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),WINNT)
-ifeq ($(OS_TARGET),WIN16)
-	echo system windows >w16link
-	echo option map >>w16link
-	echo option oneautodata >>w16link
-	echo option heapsize=32K >>w16link
-	echo debug watcom all >>w16link
-	echo name $@ >>w16link
-	echo file >>w16link
-	echo $(W16OBJS) , >>w16link
-	echo $(W16LDFLAGS) >> w16link
-	echo library >>w16link
-	echo winsock.lib >>w16link
-	$(LINK) @w16link.
-	rm w16link
-else
 	$(MKPROG) $(OBJS) -Fe$@ -link $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
-endif
 else
 ifdef XP_OS2_VACPP
 	$(MKPROG) -Fe$@ $(CFLAGS) $(OBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 else
 	$(MKPROG) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 endif
-endif
-ifneq ($(POLICY),)
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
 get_objs:
@@ -319,10 +307,6 @@ $(LIBRARY): $(OBJS)
 	$(AR) $(OBJS)
 	$(RANLIB) $@
 
-ifeq ($(OS_TARGET), WIN16)
-$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
-	wlib +$(SHARED_LIBRARY)
-endif
 
 ifeq ($(OS_ARCH),OS2)
 $(IMPORT_LIBRARY): $(OBJS)
@@ -332,7 +316,11 @@ $(IMPORT_LIBRARY): $(OBJS)
 endif
 
 ifdef SHARED_LIBRARY_LIBS
+ifdef BUILD_TREE
+SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(shell $(MAKE) -C $(dir) --no-print-directory get_objs))
+else
 SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $(MAKE) -C $(dir) --no-print-directory get_objs)))
+endif
 endif
 
 $(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
@@ -348,22 +336,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 else
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-	echo system windows dll initinstance >w16link
-	echo option map >>w16link
-	echo option oneautodata >>w16link
-	echo option heapsize=32K >>w16link
-	echo debug watcom all >>w16link
-	echo name $@ >>w16link
-	echo file >>w16link
-	echo $(W16OBJS) >>w16link
-	echo $(W16LIBS) >>w16link
-	echo libfile libentry >>w16link
-	$(LINK) @w16link.
-	rm w16link
-else
 	$(LINK_DLL) -MAP $(DLLBASE) $(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS)
-endif
 else
 ifeq ($(OS_ARCH),OS2)
 	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
@@ -383,9 +356,6 @@ ifeq ($(OS_ARCH),OpenVMS)
 	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=vms)
 endif
 endif
-endif
-ifneq ($(POLICY),)
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
 endif
 
 ifeq ($(OS_ARCH), WINNT)
@@ -435,22 +405,21 @@ WCCFLAGS1 := $(subst /,\\,$(CFLAGS))
 WCCFLAGS2 := $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 
+
+$(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): $(OBJDIR)/%.c
+	@$(MAKE_OBJDIR)
+ifdef USE_NT_C_SYNTAX
+	$(CC) -Fo$@ -c $(CFLAGS) $(OBJDIR)/$*.c
+else
+	$(CC) -o $@ -c $(CFLAGS) $(OBJDIR)/$*.c
+endif
+
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-	echo $(WCCFLAGS3) >w16wccf
-	$(CC) -zq -fo$(OBJDIR)\\$(PROG_PREFIX)$*$(OBJ_SUFFIX)  @w16wccf $*.c
-	rm w16wccf
-else
-	$(CC) -Fo$@ -c $(CFLAGS) $*.c
-endif
-else
-ifdef XP_OS2_VACPP
+ifdef USE_NT_C_SYNTAX
 	$(CC) -Fo$@ -c $(CFLAGS) $*.c
 else
 	$(CC) -o $@ -c $(CFLAGS) $*.c
-endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -469,7 +438,7 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifdef USE_NT_C_SYNTAX
 	$(CCC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
@@ -489,37 +458,21 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	$(CCC) -o $@ -c $(CFLAGS) $(OBJDIR)/t_$*.cc
 	rm -f $(OBJDIR)/t_$*.cc
 else
-ifeq ($(OS_ARCH),WINNT)
-	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
-else
-ifdef XP_OS2_VACPP
+ifdef USE_NT_C_SYNTAX
 	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
 else
 	$(CCC) -o $@ -c $(CFLAGS) $*.cpp
 endif
-endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 %.i: %.cpp
-ifeq ($(OS_TARGET), WIN16)
-	echo $(WCCFLAGS3) >w16wccf
-	$(CCC) -pl -fo=$* @w16wccf $*.cpp
-	rm w16wccf
-else
 	$(CCC) -C -E $(CFLAGS) $< > $*.i
-endif
 
 %.i: %.c
-ifeq ($(OS_TARGET), WIN16)
-	echo $(WCCFLAGS3) >w16wccf
-	$(CC) -pl -fo=$* @w16wccf $*.c
-	rm w16wccf
-else
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) -C /P $(CFLAGS) $< 
 else
 	$(CC) -C -E $(CFLAGS) $< > $*.i
-endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -808,11 +761,6 @@ endif
 # Copy each element of EXPORTS to $(SOURCE_XP_DIR)/public/$(MODULE)/
 #
 PUBLIC_EXPORT_DIR = $(SOURCE_XP_DIR)/public/$(MODULE)
-ifeq ($(OS_ARCH),WINNT)
-ifeq ($(OS_TARGET),WIN16)
-PUBLIC_EXPORT_DIR = $(SOURCE_XP_DIR)/public/win16
-endif
-endif
 
 ifneq ($(EXPORTS),)
 $(PUBLIC_EXPORT_DIR)::
@@ -828,11 +776,6 @@ endif
 # Duplicate export rule for private exports, with different directories
 
 PRIVATE_EXPORT_DIR = $(SOURCE_XP_DIR)/private/$(MODULE)
-ifeq ($(OS_ARCH),WINNT)
-ifeq ($(OS_TARGET),WIN16)
-PRIVATE_EXPORT_DIR = $(SOURCE_XP_DIR)/public/win16
-endif
-endif
 
 ifneq ($(PRIVATE_EXPORTS),)
 $(PRIVATE_EXPORT_DIR)::

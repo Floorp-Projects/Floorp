@@ -46,8 +46,13 @@ else
 	DEFINES    += -DDEBUG -UNDEBUG -DDEBUG_$(shell whoami)
 endif
 
+ifdef BUILD_TREE
+NSINSTALL_DIR  = $(BUILD_TREE)/nss
+NSINSTALL      = $(BUILD_TREE)/nss/nsinstall
+else
 NSINSTALL_DIR  = $(CORE_DEPTH)/coreconf/nsinstall
 NSINSTALL      = $(NSINSTALL_DIR)/$(OBJDIR_NAME)/nsinstall
+endif
 
 MKDEPEND_DIR    = $(CORE_DEPTH)/coreconf/mkdepend
 MKDEPEND        = $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend

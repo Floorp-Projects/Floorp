@@ -195,7 +195,10 @@ ifndef OBJS
 		$(CSRCS:.c=$(OBJ_SUFFIX)) \
 		$(CPPSRCS:.cpp=$(OBJ_SUFFIX)) \
 		$(ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX))
-	OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
+	OBJS = $(BUILT_CSRCS:.c=$(OBJ_SUFFIX)) \
+		$(BUILT_CPPSRCS:.cpp=$(OBJ_SUFFIX)) \
+		$(BUILT_ASFILES:$(ASM_SUFFIX)=$(OBJ_SUFFIX)) \
+		$(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS)) 
 endif
 
 ifeq ($(OS_TARGET), WIN16)
