@@ -1275,8 +1275,10 @@ void nsImapServerResponseParser::envelope_data()
 				fServerConnection.HandleMessageDownLoadLine(headerLine.GetBuffer(), PR_FALSE);
 		}
 		else
-			break;
-		fNextToken = GetNextToken();
+		  break;
+            // only fetch the next token if we aren't eating a parenthes
+    	    if (ContinueParse() && (*fNextToken != ')') || tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])) - 1 )
+		  fNextToken = GetNextToken();
 	}
 
 	fNextToken = GetNextToken();
