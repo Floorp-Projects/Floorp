@@ -249,10 +249,10 @@ ButtonCreateInfo gBtnToolbarInfo[] = {
 {2,  23, 21, PR_FALSE, kForwardCmd,  "Forward", "Move forward to next document in history list", "TB_Forward.gif", "TB_Forward.gif", "TB_Forward_dis.gif",  "TB_Forward_mo.gif"},
 {2,  23, 21, PR_TRUE,  kReloadCmd,   "Reload",  "Reload the current page",       "TB_Reload.gif",  "TB_Reload.gif",  "TB_Reload.gif",     "TB_Reload_mo.gif"},
 {2,  23, 21, PR_TRUE,  kHomeCmd,   "Home",  "Go to the Home page",         "TB_Home.gif",  "TB_Home.gif",  "TB_Home.gif",     "TB_Home_mo.gif"},
-{2,  23, 21, PR_TRUE,  kSearchCmd,   "Search",  "Search the internet for information", "TB_Search.gif",  "TB_Search.gif",  "TB_Search.gif",     "TB_Search_mo.gif"},
-{2,  23, 21, PR_TRUE,  kNetscapeCmd, "Netscape","Go to your personal start page",    "TB_Netscape.gif","TB_Netscape.gif","TB_Netscape.gif",   "TB_Netscape_mo.gif"},
-{2,  23, 21, PR_TRUE,  kPrintCmd,  "Print",   "Print this page",           "TB_Print.gif",   "TB_Print.gif",   "TB_Print.gif",    "TB_Print_mo.gif"},
-{2,  23, 21, PR_TRUE,  kSecureCmd,   "Security","Show security information",       "TB_Secure.gif",   "TB_Secure.gif", "TB_Secure.gif",     "TB_Secure_mo.gif"},
+{2,  23, 21, PR_FALSE, kSearchCmd,   "Search",  "Search the internet for information", "TB_Search.gif",  "TB_Search.gif",  "TB_Search.gif",     "TB_Search_mo.gif"},
+{2,  23, 21, PR_FALSE, kNetscapeCmd, "Netscape","Go to your personal start page",    "TB_Netscape.gif","TB_Netscape.gif","TB_Netscape.gif",   "TB_Netscape_mo.gif"},
+{2,  23, 21, PR_FALSE, kPrintCmd,  "Print",   "Print this page",           "TB_Print.gif",   "TB_Print.gif",   "TB_Print.gif",    "TB_Print_mo.gif"},
+{2,  23, 21, PR_FALSE, kSecureCmd,   "Security","Show security information",       "TB_Secure.gif",   "TB_Secure.gif", "TB_Secure.gif",     "TB_Secure_mo.gif"},
 {2,  23, 21, PR_FALSE, kStopCmd,   "Stop",  "Stop the current transfer",       "TB_Stop.gif",  "TB_Stop.gif",  "TB_Stop_dis.gif",   "TB_Stop_mo.gif"},
 {0,   0,  0, PR_FALSE, 0, NULL, NULL, NULL, NULL, NULL}
 };
@@ -1604,7 +1604,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       r, nsnull, &font, baseURL,
                       "TB_Bookmarks.gif", "TB_Bookmarks.gif", "TB_Bookmarks.gif", "TB_Bookmarks_mo.gif",
                       30, 18)) {
-    AddToolbarItem(mURLToolbar, 10, PR_TRUE, mBookmarksWidget);
+    AddToolbarItem(mURLToolbar, 10, PR_FALSE, mBookmarksWidget);
 	  mBookmarksWidget->SetBackgroundColor(widgetBGColor);
     mBookmarks->SetCommand(kBookmarksCmd);
     mBookmarks->SetRollOverDesc("Bookmarks functions");
@@ -1687,7 +1687,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       r, nsnull, &font, baseURL,
                       "TB_WhatsRelated.gif", "TB_WhatsRelated.gif", "TB_WhatsRelated.gif", "TB_WhatsRelated_mo.gif",
                       27, 16)) {
-    AddToolbarItem(mURLToolbar, 2, PR_TRUE, mWhatsRelatedWidget);
+    AddToolbarItem(mURLToolbar, 2, PR_FALSE, mWhatsRelatedWidget);
 	  mWhatsRelatedWidget->SetBackgroundColor(widgetBGColor);
     mWhatsRelated->SetCommand(kWhatsRelatedCmd);
     mWhatsRelated->SetRollOverDesc("View the \"What's Related\" list");
