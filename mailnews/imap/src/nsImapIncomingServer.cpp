@@ -1090,7 +1090,26 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       // mailbox in order to get the \NoSelect flag
       explicitlyVerify = !(boxFlags & kNameSpace);
   }
+  nsCAutoString tempFolderName(dupFolderPath);
+  nsCAutoString tokenStr, remStr, changedStr;
+  PRInt32 slashPos = tempFolderName.FindChar('/');
+  if (slashPos > 0)
+  {
+    tempFolderName.Left(tokenStr,slashPos);
+    tempFolderName.Right(remStr, tempFolderName.Length()-slashPos);
+  }
+  else
+    tokenStr.Assign(tempFolderName);
+  
+  if ((nsCRT::strcasecmp(tokenStr.get(), "INBOX")==0) && (nsCRT::strcmp(tokenStr.get(), "INBOX") != 0))
+    changedStr.Append("INBOX");
+  else
+    changedStr.Append(tokenStr);
 
+  if (slashPos > 0 ) 
+    changedStr.Append(remStr);
+
+  dupFolderPath.Assign(changedStr);
   nsCAutoString folderName(dupFolderPath);
         
   nsCAutoString uri;
@@ -1112,20 +1131,6 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         parentName.Truncate(leafPos);
         folderName.Cut(0, leafPos + 1);	// get rid of the parent name
 		haveParent = PR_TRUE;
-        PRInt32 offset = parentName.Find("INBOX",PR_TRUE,0,1); 
-        if (offset > -1)
-        {  
-          nsCAutoString inbox("INBOX");
-          PRInt32 j=0;
-          for (PRInt32 i=offset;i <(offset+5);i++)
-            inbox.SetCharAt(parentName.CharAt(i), j++);
-          if (nsCRT::strcmp(inbox,"INBOX") != 0)
-          {
-            nsCAutoString INBOX("INBOX");
-            dupFolderPath.ReplaceSubstring(inbox,INBOX);
-            parentName.ReplaceSubstring(inbox,INBOX);
-          }
-        }
         parentUri.Append('/');
         parentUri.Append(parentName);
     }
