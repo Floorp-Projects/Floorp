@@ -38,9 +38,16 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
+#include "nsWidgetSupport.h"
 #include "nsIImageManager.h"
 #include "nsIImageRequest.h"
 #include "nsIImageObserver.h"
+
+
+
+#ifdef XP_MAC
+#include <quickdraw.h>
+#endif
 
 ScribbleApp scribbleData;
 
@@ -121,11 +128,11 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
 
         case NS_DESTROY:
             printf("Destroy Window...Release window\n");
-            NS_RELEASE(scribbleData.red);
-            NS_RELEASE(scribbleData.green);
-            NS_RELEASE(scribbleData.blue);
-            NS_RELEASE(scribbleData.scribble);
-            NS_RELEASE(scribbleData.lines);
+            NS_IF_RELEASE(scribbleData.red);
+            NS_IF_RELEASE(scribbleData.green);
+            NS_IF_RELEASE(scribbleData.blue);
+            NS_IF_RELEASE(scribbleData.scribble);
+            NS_IF_RELEASE(scribbleData.lines);
            // NS_RELEASE(scribbleData.drawPane);
            // NS_RELEASE(scribbleData.mainWindow); 
 
@@ -234,7 +241,9 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
                                   ((nsGUIEvent*)aEvent)->point.x,
                                   ((nsGUIEvent*)aEvent)->point.y);
 
-                if (scribbleData.scribble->GetState())
+                PRBool state;
+                scribbleData.scribble->GetState(state);
+                if (state)
                    scribbleData.mousePos = ((nsGUIEvent*)aEvent)->point;
   
 
@@ -307,7 +316,8 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
 
             if (NS_OK == aEvent->widget->QueryInterface(kICheckButtonIID, (void**)&option)) {
                 // invert the two checkboxes state
-                PRBool state = option->GetState();
+                PRBool state;
+                option->GetState(state);
                 option->SetState((state) ? PR_FALSE : PR_TRUE);
 
                 if (state == PR_FALSE) {
@@ -345,9 +355,9 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                             for (int i = 0; i < 100; i++) {
                                 drawCtx->SetColor((nscolor)rand());
 
-                                rect.MoveTo(x+(rand() % width),y+( rand() % height));
-                                rect.SizeTo(rand() % (width - rect.x), 
-                                            rand() % (height - rect.y));
+                                rect.MoveTo(x+(rand() % width+1),y+( rand() % height+1));
+                                rect.SizeTo(rand() % (width - rect.x)+1, 
+                                            rand() % (height - rect.y)+1);
                                 drawCtx->DrawRect(rect);
                             }
                         }
@@ -390,21 +400,22 @@ nsEventStatus PR_CALLBACK HandleEventText(nsGUIEvent *aEvent)
             nsAutoString buf;
             
             nsITextWidget *text;
+            PRUint32  size;
             if (NS_OK == aEvent->widget->QueryInterface(kITextWidgetIID, (void**)&text)) {
                 if (text == scribbleData.red) {
-                    scribbleData.red->GetText(buf, 0);
+                    scribbleData.red->GetText(buf, 0, size);
                     PRInt32 value, err;
                     value = buf.ToInteger(&err);
                     color = NS_RGB(value, NS_GET_G(color), NS_GET_B(color));
                 }
                 else if (text == scribbleData.green) {
-                    scribbleData.green->GetText(buf, 0);
+                    scribbleData.green->GetText(buf, 0, size);
                     PRInt32 value, err;
                     value = buf.ToInteger(&err);
                     color = NS_RGB(NS_GET_R(color), value, NS_GET_B(color));
                 }
                 else if (text == scribbleData.blue) {
-                    scribbleData.blue->GetText(buf, 0);
+                    scribbleData.blue->GetText(buf, 0, size);
                     PRInt32 value, err;
                     value = buf.ToInteger(&err);
                     color = NS_RGB(NS_GET_R(color), NS_GET_G(color), value);
@@ -421,6 +432,8 @@ nsEventStatus PR_CALLBACK HandleEventText(nsGUIEvent *aEvent)
 
     return nsEventStatus_eIgnore;
 }
+
+
 
 
 //
@@ -485,7 +498,7 @@ nsresult CreateApplication(int * argc, char ** argv)
 
 
      // Create an application shell
-    nsIAppShell *appShell;
+    nsIAppShell *appShell = nsnull;
     nsRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID,
                                  (void**)&appShell);
     appShell->Create(argc, argv);
@@ -531,23 +544,19 @@ nsresult CreateApplication(int * argc, char ** argv)
     rect.SetRect(50, 50, 100, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void **)&(scribbleData.scribble));
-    scribbleData.scribble->Create(controlPane, rect, HandleEventRadioButton, NULL);
-    nsString cbLabel("Scribble");
-    scribbleData.scribble->SetLabel(cbLabel);
+    NS_CreateRadioButton(controlPane,scribbleData.scribble,rect,HandleEventRadioButton);
+    scribbleData.scribble->SetLabel("Scribble");
     scribbleData.scribble->SetState(PR_FALSE);
     //scribbleData.scribble->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    scribbleData.scribble->Show(PR_TRUE);
 
     // create the "Lines" radio button
     rect.SetRect(50, 75, 100, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void **)&(scribbleData.lines));
-    scribbleData.lines->Create(controlPane, rect, HandleEventRadioButton, NULL);
-    nsString cbLabel1("Lines");
-    scribbleData.lines->SetLabel(cbLabel1);
+    NS_CreateRadioButton(controlPane,scribbleData.lines,rect,HandleEventRadioButton);
+    scribbleData.lines->SetLabel("Lines");
     scribbleData.lines->SetState(PR_TRUE);
     //scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    scribbleData.lines->Show(PR_TRUE);
 
     // Add the circle/rectangle section
 
@@ -555,34 +564,45 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsICheckButton * checkButton;
     rect.SetRect(50, 200, 100, 25);  
 
+    nsIWidget* widget = nsnull;
     nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void **)&checkButton);
-    checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
-    nsString cbLabel2("Circles");
-    checkButton->SetLabel(cbLabel2);
-    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    checkButton->Show(PR_TRUE);
+    if (NS_OK == checkButton->QueryInterface(kIWidgetIID,(void **)&widget))
+    {
+      widget->Create(controlPane, rect, HandleEventCheck, NULL);
+      nsString cbLabel2("Circles");
+      checkButton->SetLabel(cbLabel2);
+      //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+      widget->Show(PR_TRUE);
+      NS_RELEASE(widget);
+    }
     NS_RELEASE(checkButton);
 
     // create the "Rectangles" check button
     rect.SetRect(50, 225, 100, 25);  
 
     nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void **)&checkButton);
-    checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
-    nsString cbLabel3("Rectangles");
-    checkButton->SetLabel(cbLabel3);
-    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    checkButton->Show(PR_TRUE);
+    NS_CreateCheckButton(controlPane,checkButton,rect,HandleEventCheck);
+    if (NS_OK == checkButton->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      // widget->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+      checkButton->SetLabel("Rectangles");
+      NS_RELEASE(widget);
+    }
     NS_RELEASE(checkButton);
 
     // create the "Images" check button
     rect.SetRect(50, 250, 100, 25);  
 
     nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void **)&checkButton);
-    checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
-    nsString cbLabel4("Image");
-    checkButton->SetLabel(cbLabel4);
-    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    checkButton->Show(PR_TRUE);
+    if (NS_OK == checkButton->QueryInterface(kIWidgetIID,(void **)&widget))
+    {
+      widget->Create(controlPane, rect, HandleEventCheck, NULL);
+      nsString cbLabel4("Image");
+      checkButton->SetLabel(cbLabel4);
+      //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+      widget->Show(PR_TRUE);
+      NS_RELEASE(widget);
+    }
     NS_RELEASE(checkButton);
 
     //
@@ -593,32 +613,42 @@ nsresult CreateApplication(int * argc, char ** argv)
     // create the "red" text widget
     rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
-    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.red));
-    scribbleData.red->Create(controlPane, rect, HandleEventText, NULL);
+    PRUint32 size;
     nsString initText("0");
-    scribbleData.red->SetText(initText);
-    scribbleData.red->SetBackgroundColor(NS_RGB(0, 0, 255));
-    scribbleData.red->Show(PR_TRUE);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.red));
+    if (NS_OK == scribbleData.red->QueryInterface(kIWidgetIID,(void **)&widget))
+    {
+      widget->Create(controlPane, rect, HandleEventText, NULL);
+      scribbleData.red->SetText(initText,size);
+      widget->SetBackgroundColor(NS_RGB(0, 0, 255));
+      widget->Show(PR_TRUE);
+    }
     y += rect.height +2;
 
     // create the "green" text widget
     rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.green));
-    scribbleData.green->Create(controlPane, rect, HandleEventText, NULL);
-    scribbleData.green->SetText(initText);
-    scribbleData.green->SetBackgroundColor(NS_RGB(255, 0, 0));
-    scribbleData.green->Show(PR_TRUE);
+    if (NS_OK == scribbleData.green->QueryInterface(kIWidgetIID,(void **)&widget))
+    {
+      widget->Create(controlPane, rect, HandleEventText, NULL);
+      scribbleData.green->SetText(initText,size);
+      widget->SetBackgroundColor(NS_RGB(255, 0, 0));
+      widget->Show(PR_TRUE);
+    }
     y += rect.height +2;
 
     // create the "blue" text widget
     rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.blue));
-    scribbleData.blue->Create(controlPane, rect, HandleEventText, NULL);
-    scribbleData.blue->SetText(initText);
-    scribbleData.blue->SetBackgroundColor(NS_RGB(0, 255, 0));
-    scribbleData.blue->Show(PR_TRUE);
+    if (NS_OK == scribbleData.blue->QueryInterface(kIWidgetIID,(void **)&widget))
+    {
+      widget->Create(controlPane, rect, HandleEventText, NULL);
+      scribbleData.blue->SetText(initText,size);
+      widget->SetBackgroundColor(NS_RGB(0, 255, 0));
+      widget->Show(PR_TRUE);
+    }
     y += rect.height +2;
 
     //
@@ -627,12 +657,10 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsIButton *button;
     rect.SetRect(50, 500, 100, 25);  
     nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **)&button);
-    button->Create(controlPane, rect, HandleEventButton, NULL);
-    nsString label("Clear");
-    button->SetLabel(label);
-    button->Show(PR_TRUE);
-    NS_RELEASE(button);
+    NS_CreateButton(controlPane,button,rect,HandleEventButton);
+    button->SetLabel("Clear");
 
+    NS_RELEASE(button);
     NS_RELEASE(controlPane); // the parent keeps a reference on this child
 
     //

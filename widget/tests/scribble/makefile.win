@@ -35,6 +35,7 @@ MYLIBS=				\
  $(LIBNSPR)			\
  $(DIST)\lib\raptorbase.lib	\
  $(DIST)\lib\raptorgfxwin.lib \
+ $(DIST)\lib\raptorwidget.lib \
  $(NULL)
 
 LLIBS= $(MYLIBS)		\
