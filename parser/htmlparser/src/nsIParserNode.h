@@ -40,6 +40,14 @@
 #include "nsString.h"
 #include "nsDebug.h"
 
+/**-------------------------------------------------------
+ *  Parser nodes are the unit of exchange between the 
+ *  parser and the content sink. Nodes offer access to
+ *  the current token, its attributes, and its skipped-
+ *  content if applicable.
+ *  
+ *  @update  gess 3/25/98
+ *------------------------------------------------------*/
 class nsIParserNode {
             
 	public:

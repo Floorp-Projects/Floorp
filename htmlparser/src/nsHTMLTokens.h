@@ -113,59 +113,94 @@ eHTMLTags       DetermineHTMLTagType(const nsString& aString);
 eHTMLTokenTypes DetermineTokenType(const nsString& aString);
 
 
+/** -----------------------------------------------------
+ *  This declares the basic token type used in the html-
+ *	parser.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CHTMLToken : public CToken {
-  public:
+public:
                         CHTMLToken(const nsString& aString);
-    virtual eHTMLTags   GetHTMLTag() {return mTagType;}
-            void        SetHTMLTag(eHTMLTags aTagType) {mTagType=aTagType; return;}
-  protected:
+  virtual   eHTMLTags   GetHTMLTag();
+            void        SetHTMLTag(eHTMLTags aTagType);
+protected:
             eHTMLTags   mTagType;
 };
 
 
+/** -----------------------------------------------------
+ *  This declares start tokens, which always take the 
+ *  form <xxxx>. This class also knows how to consume
+ *  related attributes.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CStartToken: public CHTMLToken {
 	public:
                         CStartToken(const nsString& aString);
     virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "start";}
-		virtual PRInt32     GetTokenType(void) {return eToken_start;}
     virtual eHTMLTags   GetHTMLTag();
-      		  void        SetAttributed(PRBool aValue) {mAttributed=aValue;}
-            PRBool		  IsAttributed(void) {return mAttributed;}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32     GetTokenType(void);
+      		  void        SetAttributed(PRBool aValue);
+            PRBool		  IsAttributed(void);
     virtual void        DebugDumpSource(ostream& out);
   
   protected:
-            PRBool        mAttributed;      
+            PRBool      mAttributed;      
 
 };
 
 
+/** -----------------------------------------------------
+ *  This declares end tokens, which always take the 
+ *  form </xxxx>. This class also knows how to consume
+ *  related attributes.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CEndToken: public CHTMLToken {
 	public:
                         CEndToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "/end";}
-		virtual PRInt32	    GetTokenType(void) {return eToken_end;}
     virtual eHTMLTags   GetHTMLTag();
+    virtual const char*	GetClassName(void);
+		virtual PRInt32	    GetTokenType(void);
     virtual void        DebugDumpSource(ostream& out);
 };
 
 
+/** -----------------------------------------------------
+ *  This declares comment tokens. Comments are usually 
+ *  thought of as tokens, but we treat them that way 
+ *  here so that the parser can have a consistent view
+ *  of all tokens.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CCommentToken: public CHTMLToken {
 	public:
                         CCommentToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
     virtual const char*	GetClassName(void);
-		virtual PRInt32	    GetTokenType(void) {return eToken_comment;}
+		virtual PRInt32	    GetTokenType(void);
             char        mLeadingChar;
 };
 
 
+/** -----------------------------------------------------
+ *  This class declares entity tokens, which always take
+ *  the form &xxxx;. This class also offers a few utility
+ *  methods that allow you to easily reduce entities.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CEntityToken : public CHTMLToken {
 	public:
                         CEntityToken(const nsString& aString);
-    virtual const char*	GetClassName(void) {return "entity";}
-		virtual PRInt32	    GetTokenType(void) {return eToken_entity;}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32	    GetTokenType(void);
             PRInt32     TranslateToUnicode(void);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner* aScanner);
@@ -180,31 +215,53 @@ class CEntityToken : public CHTMLToken {
 };
 
 
+/** -----------------------------------------------------
+ *  Whitespace tokens are used where whitespace can be 
+ *  detected as distinct from text. This allows us to 
+ *  easily skip leading/trailing whitespace when desired.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 #ifdef TOKENIZE_WHITESPACE
 class CWhitespaceToken: public CHTMLToken {
 	public:
                         CWhitespaceToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "ws";}
-		virtual PRInt32			GetTokenType(void) {return eToken_whitespace;}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32			GetTokenType(void);
 };
 #endif
 
+/** -----------------------------------------------------
+ *  Text tokens contain the normalized form of html text.
+ *  These tokens are guaranteed not to contain entities,
+ *  start or end tags, or newlines.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CTextToken: public CHTMLToken {
 	public:
                         CTextToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "text";}
-		virtual PRInt32			GetTokenType(void) {return eToken_text;}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32			GetTokenType(void);
 };
 
 
+/** -----------------------------------------------------
+ *  Attribute tokens are used to contain attribute key/value
+ *  pairs whereever they may occur. Typically, they should
+ *  occur only in start tokens. However, we may expand that
+ *  ability when XML tokens become commonplace.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CAttributeToken: public CHTMLToken {
 	public:
                           CAttributeToken(const nsString& aString);
    	virtual PRInt32       Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	  GetClassName(void) {return "attr";}
-		virtual PRInt32			  GetTokenType(void) {return eToken_attribute;}
+    virtual const char*	  GetClassName(void);
+		virtual PRInt32			  GetTokenType(void);
     virtual nsString&     GetKey(void) {return mTextKey;}
     virtual void          DebugDumpToken(ostream& out);
     virtual void          DebugDumpSource(ostream& out);
@@ -215,44 +272,71 @@ class CAttributeToken: public CHTMLToken {
 };
 
 
+/** -----------------------------------------------------
+ *  Newline tokens contain, you guessed it, newlines. 
+ *  They consume newline (CR/LF) either alone or in pairs.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 #ifdef TOKENIZE_CRLF
 class CNewlineToken: public CHTMLToken { 
 	public:
                         CNewlineToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "crlf";}
-		virtual PRInt32			GetTokenType(void) {return eToken_newline;}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32			GetTokenType(void);
 };
 #endif
 
 
+/** -----------------------------------------------------
+ *  Script tokens contain sequences of javascript (or, gulp,
+ *  any other script you care to send). We don't tokenize
+ *  it here, nor validate it. We just wrap it up, and pass
+ *  it along to the html parser, who sends it (later on) 
+ *  to the scripting engine.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CScriptToken: public CHTMLToken {
 	public:
 
                         CScriptToken(const nsString& aString);
-    virtual const char*	GetClassName(void) {return "script";}
-		virtual PRInt32			GetTokenType(void) {return eToken_script;}
-    virtual	void			  DebugDumpSource(ostream& out) {CToken::DebugDumpSource(out);}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32			GetTokenType(void);
   protected:
 };
 
 
+/** -----------------------------------------------------
+ *  Style tokens contain sequences of css style. We don't 
+ *  tokenize it here, nor validate it. We just wrap it up, 
+ *  and pass it along to the html parser, who sends it 
+ *  (later on) to the style engine.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CStyleToken: public CHTMLToken {
 	public:
                         CStyleToken(const nsString& aString);
-    virtual const char*	GetClassName(void) {return "style";}
-		virtual PRInt32			GetTokenType(void) {return eToken_style;}
-    virtual	void			  DebugDumpSource(ostream& out) {CToken::DebugDumpSource(out);}
+    virtual const char*	GetClassName(void);
+		virtual PRInt32			GetTokenType(void);
   protected:
 };
 
 
+/** -----------------------------------------------------
+ *  This is a placeholder token, which is being deprecated.
+ *  Don't bother paying attention to this.
+ *  
+ *  @update  gess 3/25/98
+ */ //---------------------------------------------------
 class CSkippedContentToken: public CAttributeToken {
 	public:
                         CSkippedContentToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "skipped";}
-		virtual PRInt32			GetTokenType(void) {return eToken_skippedcontent;}
+    virtual const char*	GetClassName(void);
+	  virtual PRInt32			GetTokenType(void);
   protected:
 };
 

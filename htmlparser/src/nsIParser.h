@@ -41,6 +41,12 @@
 
 class nsIContentSink;
 
+/**-------------------------------------------------------
+ *  This class defines the iparser interface. This XPCOM
+ *  inteface is all that parser clients ever need to see.
+ *  
+ *  @update  gess 3/25/98
+ *------------------------------------------------------*/
 class nsIParser : public nsISupports {
             
 	public:
