@@ -109,10 +109,6 @@ extern void vr_findGlobalRegName ()
     XP_File fh = NULL;
     struct stat st;
 
-#ifdef XP_OS2_HACK
-    /*DSR050197 - at this point, I need some front-end call to get the install directory of*/
-    /*communicator... for now I will let it default to the current directory...*/
-#endif
     XP_STRCPY(path, ".");
     pathlen = strlen(path);
 
@@ -142,7 +138,7 @@ char* vr_findVerRegName()
  *  WINDOWS STUBS
  * ------------------------------------------------------------------
  */
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include "windows.h"
 #define PATHLEN 260
 
