@@ -1255,6 +1255,7 @@ enum {
 // the name of the following enum is from 
 // http://www.microsoft.com/typography/otspec/cmap.htm
 enum {
+  eTTFormatUninitialize = -1,
   eTTFormat0ByteEncodingTable = 0,
   eTTFormat2HighbyteMappingThroughTable = 2,
   eTTFormat4SegmentMappingToDeltaValues = 4,
@@ -1264,10 +1265,138 @@ enum {
   eTTFormat12SegmentedCoverage = 12,
 };
 
+nsresult 
+ReadCMAPTableFormat12(PRUint8* aBuf, PRInt32 len, PRUint32 **aExtMap) 
+{
+  PRUint8* p = aBuf;
+  PRUint8* end = aBuf + len;
+  PRUint32 i;
+
+  PRUint16 format = GET_SHORT(p);
+  p += sizeof(PRUint16); 
+  if (format != eTTFormat12SegmentedCoverage) {
+    nsMemory::Free(aBuf);
+    return nsnull;
+  }
+  p += sizeof(PRUint16); // skip reserve field
+  PRUint32 tabLen = GET_LONG(p);
+  p += sizeof(PRUint32); // skip tableLen
+  p += sizeof(PRUint32); // skip language
+  PRUint32 nGroup = GET_LONG(p);
+  p += sizeof(PRUint32); 
+
+  PRUint32 plane;
+  PRUint32 startCode;
+  PRUint32 endCode;
+  PRUint32 c;
+  for (i = 0; i < nGroup; i++) {
+    startCode = GET_LONG(p);
+    p += sizeof(PRUint32); 
+    endCode = GET_LONG(p);
+    p += sizeof(PRUint32); 
+    for ( c = startCode; c <= endCode; ++c) {
+      plane = c >> 16;
+      if (!aExtMap[plane]) {
+        aExtMap[plane] = new PRUint32[UCS2_MAP_LEN];
+        if (!aExtMap[plane])
+          return NS_ERROR_FAILURE;
+      }
+      ADD_GLYPH(aExtMap[plane], c & 0xffff);
+    }
+    p += sizeof(PRUint32); // skip startGlyphID  field
+  }
+
+  return NS_OK;
+}
+
+
+nsresult 
+ReadCMAPTableFormat4(PRUint8* aBuf, PRInt32 aLength, PRUint32* aMap, PRUint8* aIsSpace) 
+{
+  PRUint8* p;
+  PRUint8* end = aBuf + aLength;
+  PRUint32 i;
+
+  p = aBuf;
+  PRUint16 format = GET_SHORT(p);
+  if (format != eTTFormat4SegmentMappingToDeltaValues) {
+    nsMemory::Free(aBuf);
+    return nsnull;
+  }
+
+  // XXX byte swapping only required for little endian (ifdef?)
+  while (p < end) {
+    PRUint8 tmp = p[0];
+    p[0] = p[1];
+    p[1] = tmp;
+    p += 2; // every two bytes
+  }
+
+  PRUint16* s = (PRUint16*) aBuf;
+  PRUint16 segCount = s[3] / 2;
+  PRUint16* endCode = &s[7];
+  PRUint16* startCode = endCode + segCount + 1;
+  PRUint16* idDelta = startCode + segCount;
+  PRUint16* idRangeOffset = idDelta + segCount;
+  PRUint16* glyphIdArray = idRangeOffset + segCount;
+
+  for (i = 0; i < segCount; ++i) {
+    if (idRangeOffset[i]) {
+      PRUint16 startC = startCode[i];
+      PRUint16 endC = endCode[i];
+      for (PRUint32 c = startC; c <= endC; ++c) {
+        PRUint16* g =
+          (idRangeOffset[i]/2 + (c - startC) + &idRangeOffset[i]);
+        if ((PRUint8*) g < end) {
+          if (*g) {
+            PRUint16 glyph = idDelta[i] + *g;
+            if (aIsSpace[glyph]) {
+              if (SHOULD_BE_SPACE_CHAR(c)) {
+                ADD_GLYPH(aMap, c);
+              } 
+            }
+            else {
+              ADD_GLYPH(aMap, c);
+            }
+          }
+          else {
+            // index 0 also applies to space character
+            if (SHOULD_BE_SPACE_CHAR(c))
+              ADD_GLYPH(aMap, c);
+          }
+        }
+        else {
+          // XXX should we trust this font at all if it does this?
+        }
+      }
+      //printf("0x%04X-0x%04X ", startC, endC);
+    }
+    else {
+      PRUint16 endC = endCode[i];
+      for (PRUint32 c = startCode[i]; c <= endC; ++c) {
+        PRUint16 glyph = idDelta[i] + c;
+        if (aIsSpace[glyph]) {
+          if (SHOULD_BE_SPACE_CHAR(c)) {
+            ADD_GLYPH(aMap, c);
+          }
+        }
+        else {
+          ADD_GLYPH(aMap, c);
+        }
+      }
+      //printf("0x%04X-0x%04X ", startCode[i], endC);
+    }
+  }
+  //printf("\n");
+
+  return NS_OK;
+}
+
 PRUint16*
 nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFontType, PRUint8& aCharset)
 {
   PRUint32 map[UCS2_MAP_LEN];
+  PRUint16 *ccmap = nsnull;
 
   DWORD len = GetFontData(aDC, CMAP, 0, nsnull, 0);
   if ((len == GDI_ERROR) || (!len)) {
@@ -1289,7 +1418,10 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
   PRUint16 n = GET_SHORT(p); // get numberSubtables
   p += sizeof(PRUint16); // skip numberSubtables, move to the encoding subtables
   PRUint16 i;
+  PRUint32 keepOffset;
   PRUint32 offset;
+  PRUint32 keepFormat = eTTFormatUninitialize;
+
   for (i = 0; i < n; ++i) {
     PRUint16 platformID = GET_SHORT(p); // get platformID
     p += sizeof(PRUint16); // move to platformSpecificID
@@ -1299,7 +1431,6 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
     p += sizeof(PRUint32); // move to next entry
     if (platformID == eTTPlatformIDMicrosoft) { 
       if (encodingID == eTTMicrosoftEncodingUnicode) { // Unicode
-
         // Some fonts claim to be unicode when they are actually
         // 'pseudo-unicode' fonts that require a converter...
         // Here, we check if this font is a pseudo-unicode font that 
@@ -1312,107 +1443,57 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
           nsMemory::Free(buf);
           return GetCCMapThroughConverter(aShortName);
         } // if GetEncoding();
-        break;  // break out from for(;;) loop
+        keepFormat = eTTFormat4SegmentMappingToDeltaValues;
+        keepOffset = offset;
       } // if (encodingID == eTTMicrosoftEncodingUnicode) 
       else if (encodingID == eTTMicrosoftEncodingSymbol) { // symbol
         aCharset = SYMBOL_CHARSET;
         aFontType = eFontType_NonUnicode;
         nsMemory::Free(buf);
         return GetCCMapThroughConverter(aShortName);
+      } // if (encodingID == eTTMicrosoftEncodingSymbol)
+      else if (encodingID == eTTMicrosoftEncodingUCS4) {
+        keepFormat = eTTFormat12SegmentedCoverage;
+        keepOffset = offset;
+        // we don't want to try anything else when this format is available.
+        break;
       }
     } // if (platformID == eTTPlatformIDMicrosoft) 
   } // for loop
 
-  if (i == n) {
-    nsMemory::Free(buf);
-    return nsnull;
-  }
-  p = buf + offset;
-  PRUint16 format = GET_SHORT(p);
-  if (format != eTTFormat4SegmentMappingToDeltaValues) {
-    nsMemory::Free(buf);
-    return nsnull;
-  }
-  PRUint8* end = buf + len;
 
-  // XXX byte swapping only required for little endian (ifdef?)
-  while (p < end) {
-    PRUint8 tmp = p[0];
-    p[0] = p[1];
-    p[1] = tmp;
-    p += 2; // every two bytes
-  }
-
-  PRUint16* s = (PRUint16*) (buf + offset);
-  PRUint16 segCount = s[3] / 2;
-  PRUint16* endCode = &s[7];
-  PRUint16* startCode = endCode + segCount + 1;
-  PRUint16* idDelta = startCode + segCount;
-  PRUint16* idRangeOffset = idDelta + segCount;
-  PRUint16* glyphIdArray = idRangeOffset + segCount;
-
-  PRUint32 maxGlyph;
-  PRUint8* isSpace = GetSpaces(aDC, &maxGlyph);
-  if (!isSpace) {
-    nsMemory::Free(buf);
-    return nsnull;
-  }
-
-  for (i = 0; i < segCount; ++i) {
-    if (idRangeOffset[i]) {
-      PRUint16 startC = startCode[i];
-      PRUint16 endC = endCode[i];
-      for (PRUint32 c = startC; c <= endC; ++c) {
-        PRUint16* g =
-          (idRangeOffset[i]/2 + (c - startC) + &idRangeOffset[i]);
-        if ((PRUint8*) g < end) {
-          if (*g) {
-            PRUint16 glyph = idDelta[i] + *g;
-            if (glyph < maxGlyph) {
-              if (isSpace[glyph]) {
-                if (SHOULD_BE_SPACE_CHAR(c)) {
-                  ADD_GLYPH(map, c);
-                }
-              }
-              else {
-                ADD_GLYPH(map, c);
-              }
-            }
-          }
-        }
-        else {
-          // XXX should we trust this font at all if it does this?
-        }
-      }
-      //printf("0x%04X-0x%04X ", startC, endC);
+  nsresult res;
+  if (eTTFormat12SegmentedCoverage == keepFormat) {
+    PRUint32* extMap[EXTENDED_UNICODE_PLANES+1];
+    extMap[0] = map;
+    nsCRT::memset(extMap+1, 0, sizeof(PRUint32*)*EXTENDED_UNICODE_PLANES);
+    res = ReadCMAPTableFormat12(buf+keepOffset, len-keepOffset, extMap);
+    if (NS_SUCCEEDED(res)) {
+      ccmap = MapToCCMapExt(map, extMap+1, EXTENDED_UNICODE_PLANES);
+      aCharset = DEFAULT_CHARSET;
+      aFontType = eFontType_Unicode;
     }
-    else {
-      PRUint16 endC = endCode[i];
-      for (PRUint32 c = startCode[i]; c <= endC; ++c) {
-        PRUint16 glyph = idDelta[i] + c;
-        if (glyph < maxGlyph) {
-          if (isSpace[glyph]) {
-            if (SHOULD_BE_SPACE_CHAR(c)) {
-              ADD_GLYPH(map, c);
-            }
-          }
-          else {
-            ADD_GLYPH(map, c);
-          }
-        }
-      }
-      //printf("0x%04X-0x%04X ", startCode[i], endC);
+    for (i = 1; i <= EXTENDED_UNICODE_PLANES; ++i) {
+      if (extMap[i])
+        delete [] extMap[i];
     }
   }
-  //printf("\n");
+  else if (eTTFormat4SegmentMappingToDeltaValues == keepFormat) {
+    PRUint32 maxGlyph;
+    PRUint8* isSpace = GetSpaces(aDC, &maxGlyph);
+    if (isSpace) {
+      res = ReadCMAPTableFormat4(buf+keepOffset, len-keepOffset, map, isSpace);
+      nsMemory::Free(isSpace);
+      if (NS_SUCCEEDED(res))
+        ccmap = MapToCCMap(map);
+      aCharset = DEFAULT_CHARSET;
+      aFontType = eFontType_Unicode;
+    }
+  }
 
   nsMemory::Free(buf);
-  nsMemory::Free(isSpace);
 
-  aCharset = DEFAULT_CHARSET;
-  aFontType = eFontType_Unicode;
- 
-  return MapToCCMap(map);
+  return ccmap;
 }
 
 // Maps that are successfully returned by GetCCMAP() are also cached in the
