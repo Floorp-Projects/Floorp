@@ -1430,9 +1430,24 @@ PRInt32 sRow, eRow, rStep;
 void
 nsPostScriptObj::setcolor(nscolor aColor)
 {
+float greyBrightness;
+
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n", NS_PS_RED(aColor), NS_PS_GREEN(aColor),
-		  NS_PS_BLUE(aColor));
+
+  /* For greyscale postscript, find the average brightness of red, green, and
+   * blue.  Using this average value as the brightness for red, green, and
+   * blue is a simple way to make the postscript greyscale instead of color.
+   */
+
+  if(mPrintSetup->color == PR_FALSE ) {
+    greyBrightness=(NS_PS_RED(aColor)+NS_PS_GREEN(aColor)+NS_PS_BLUE(aColor))/3;
+    XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
+    greyBrightness,greyBrightness,greyBrightness);
+  } else {
+    XP_FilePrintf(mPrintContext->prSetup->out,"%3.2f %3.2f %3.2f setrgbcolor\n",
+    NS_PS_RED(aColor), NS_PS_GREEN(aColor), NS_PS_BLUE(aColor));
+  }
+
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
