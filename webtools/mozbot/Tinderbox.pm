@@ -35,9 +35,9 @@ use LWP::Simple;
 use Carp;
 
 @ISA = qw (Exporter);
-@EXPORT = qw (status statuz);
+@EXPORT = qw (status);
 
-my $VERSION = "1.0";
+my $VERSION = '1.0';
 
 # status wants a reference to a list of tinderbox trees
 # and a url ending with tree=, default to mozilla.org's
@@ -51,51 +51,47 @@ my $VERSION = "1.0";
 # barf.
 
 sub status
-	{
-	my $trees = shift;
-	my $url = shift;
-	my %info; my %tree_state;
-  
-	# maybe this is too helpful
+{
+  my $trees = shift;
+  my $uri = shift;
+  my %info; my %tree_state;
 
-  if (ref ($trees) ne "ARRAY")
-    {
-    carp "status method wants a reference to a list, not a " . ref ($trees);
+  # maybe this is too helpful
+
+  if (ref ($trees) ne 'ARRAY') {
+    carp 'status method wants a reference to a list, not a ' . ref ($trees);
     return;
+  }
+
+  for my $treename (@$trees){ 
+    my $url = $uri || 'http://tinderbox.mozilla.org/' .
+      'showbuilds.cgi?quickparse=1&tree=';
+    $url.=$treename;
+
+    my $output = get $url;
+
+    my @qp = split /\n/, $output;
+
+    # loop through quickparse output
+
+    foreach my $op (@qp) {
+      my ($type, $tree, $build, $state) = split /\|/, $op;
+
+      if ($type eq 'State') {
+        $tree_state{$tree} = $state;
+      } elsif ($type eq 'Build') {
+        if ($state =~ /success/i) {
+          $state = 'Success';
+        } elsif ($state =~ /testfailed/i) {
+          $state = 'Test Failed';
+        } else {
+          $state = 'Horked';
+        }
+        $info{$tree}{$build} = $state;
+      }
     }
-
-  $url = $url || "http://tinderbox.mozilla.org/" .
-    "showbuilds.cgi?quickparse=1&tree="; 
-	
-  my $output = get $url . join ',', @$trees;
-	return if (! $output); 
-	
-	my @qp = split /\n/, $output;
-	
-	# loop through quickparse output
-
-	foreach my $op (@qp)
-		{
-		my ($type, $tree, $build, $state) = split /\|/, $op;
-
-		if ($type eq "State")
-			{
-			$tree_state{$tree} = $state;
-			}
-		elsif ($type eq "Build")
-			{
-				if ($state =~ /success/i) {
-					$state = "Success";
-				} elsif ($state =~ /testfailed/i) {
-					$state = "Test Failed";
-                                } else {
-					$state = "Horked";
-				}
-				$info{$tree}{$build} = $state;
-			}
-		}
-	
-	return (\%info, \%tree_state);
-	}
+  }  
+  return (\%info, \%tree_state);
+}
 
 1;
