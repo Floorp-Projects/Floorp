@@ -25,10 +25,11 @@
 #include "nsITextEditor.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMDocument.h"
+#include "nsIPresContext.h"
+#include "nsIContent.h"
 
-class nsIContent;
 class nsIFrame;
-class nsIPresContext;
 class nsIWebShell;
 
 class nsGfxTextControlFrame;
@@ -48,7 +49,7 @@ public:
 
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
 
-  virtual ~EnderTempObserver() {};
+  virtual ~EnderTempObserver();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -81,11 +82,11 @@ protected:
 class nsEnderDocumentObserver : public nsIDocumentObserver
 {
 public:
-  nsEnderDocumentObserver() { NS_INIT_REFCNT(); }
+  nsEnderDocumentObserver();
 
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
 
-  virtual ~nsEnderDocumentObserver() {};
+  virtual ~nsEnderDocumentObserver(); 
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -159,13 +160,16 @@ nsresult NS_NewEnderKeyListener(nsEnderKeyListener ** aInstancePtrResult);
 class nsEnderKeyListener : public nsIDOMKeyListener 
 {
 public:
+
   /** the default destructor */
-  virtual ~nsEnderKeyListener() {};
+  virtual ~nsEnderKeyListener();
 
   /** SetFrame sets the frame we send event messages to, when necessary
    *  @param aEditor the frame, can be null, not ref counted (guaranteed to outlive us!)
    */
-  void SetFrame(nsGfxTextControlFrame *aFrame) {mFrame = aFrame;}
+  void SetFrame(nsGfxTextControlFrame *aFrame);
+
+  void SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx);}
 
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -183,10 +187,12 @@ protected:
   /** the default constructor.  Protected, use the factory to create an instance.
     * @see NS_NewEnderKeyListener
     */
-  nsEnderKeyListener() {NS_INIT_REFCNT();};
+  nsEnderKeyListener();
 
 protected:
-  nsGfxTextControlFrame *mFrame; // not ref counted
+  nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsCOMPtr<nsIPresContext>  mContext; // ref counted
+  nsCOMPtr<nsIContent>      mContent; // ref counted
 };
 
 
@@ -204,6 +210,16 @@ class nsGfxTextControlFrame : public nsTextControlFrame
 public:
   nsGfxTextControlFrame();
   virtual ~nsGfxTextControlFrame();
+
+  /** nsIFrame override of Init.
+    * all we do here is cache the pres context for later use
+    */
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD InitTextControl();
 
        // nsIFormControlFrame
@@ -294,11 +310,13 @@ protected:
   PRBool mCreatingViewer;
   EnderTempObserver* mTempObserver;
   nsEnderDocumentObserver *mDocObserver;
-  nsCOMPtr<nsEnderKeyListener> mKeyListener;
-  nsCOMPtr<nsITextEditor>mEditor;
+  nsCOMPtr<nsEnderKeyListener> mKeyListener;  // ref counted
+  nsCOMPtr<nsITextEditor>   mEditor;  // ref counted
+  nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
   nsNativeTextControlFrame *mDummyFrame; //DUMMY
   PRBool mNeedsStyleInit;
   PRBool mDummyInitialized; //DUMMY
+  nsIPresContext *mFramePresContext; // not ref counted
 };
 
 #endif
