@@ -1643,8 +1643,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               sibling->GetNextSibling(getter_AddRefs(stepbrother));
             if (startNode == stepbrother) 
             {
-              // are they same type?
-              if (mHTMLEditor->IsTextNode(stepbrother))
+              // are they both text nodes?
+              if (mHTMLEditor->IsTextNode(startNode) && mHTMLEditor->IsTextNode(sibling))
               {
                 // if so, join them!
                 res = JoinNodesSmart(sibling, startNode, address_of(selNode), &selOffset);
@@ -1775,8 +1775,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               sibling->GetPreviousSibling(getter_AddRefs(stepbrother));
             if (startNode == stepbrother) 
             {
-              // are they same type?
-              if (mHTMLEditor->IsTextNode(sibling))
+              // are they both text nodes?
+              if (mHTMLEditor->IsTextNode(startNode) && mHTMLEditor->IsTextNode(sibling))
               {
                 // if so, join them!
                 res = JoinNodesSmart(startNode, sibling, address_of(selNode), &selOffset);
