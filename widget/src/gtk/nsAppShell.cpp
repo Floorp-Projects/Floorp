@@ -74,12 +74,18 @@ static void event_processor_callback(gpointer data,
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
+  gchar *path;
+  
   gtk_set_locale ();
 
   gtk_init (argc, &argv);
 
   gdk_rgb_init();
   gdk_rgb_set_verbose(PR_TRUE);
+
+  path = g_strdup_printf(g_get_home_dir(),"/.gtkrc");
+  gtk_rc_parse(path);
+  g_free(path);
 
 //  gtk_rc_init();
 
