@@ -56,6 +56,7 @@
 [ptr] native JSValPtr(jsval);
       native JSVal(jsval);
       native JSID(jsid);
+[ptr] native voidPtrPtr(void*);
 
 /***************************************************************************/
 
@@ -156,6 +157,12 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
     void debugDump(in short depth);
 
     void refreshPrototype();
+    /* 
+     * This returns a pointer into the instance and care should be taken
+     * to make sure the pointer is not kept past the life time of the
+     * object it points into.
+     */
+    voidPtrPtr GetSecurityInfoAddress();
 };
 
 [uuid(BED52030-BCA6-11d2-BA79-00805F8A5DD7)]
