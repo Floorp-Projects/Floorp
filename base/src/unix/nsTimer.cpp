@@ -83,7 +83,7 @@ void TimerImpl::FireTimeout()
 
 // Always repeating here
 
-  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
+//  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
 }
 
 
