@@ -75,14 +75,10 @@ nsAddbookProtocolHandler::~nsAddbookProtocolHandler()
 
 NS_IMPL_ISUPPORTS1(nsAddbookProtocolHandler, nsIProtocolHandler);
 
-NS_IMETHODIMP nsAddbookProtocolHandler::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsAddbookProtocolHandler::GetScheme(nsACString &aScheme)
 {
-	nsresult rv = NS_OK;
-	if (aScheme)
-		*aScheme = nsCRT::strdup("addbook");
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 
+	aScheme = "addbook";
+	return NS_OK; 
 }
 
 NS_IMETHODIMP nsAddbookProtocolHandler::GetDefaultPort(PRInt32 *aDefaultPort)
@@ -96,7 +92,10 @@ NS_IMETHODIMP nsAddbookProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const nsACString &aSpec,
+                                               const char *aOriginCharset, // ignored
+                                               nsIURI *aBaseURI,
+                                               nsIURI **_retval)
 {
   nsresult rv = NS_OK;
 	nsCOMPtr <nsIAddbookUrl> addbookUrl = do_CreateInstance(NS_ADDBOOKURL_CONTRACTID, &rv);
@@ -152,13 +151,13 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (mAddbookOperation == nsIAddbookUrlOperation::InvalidUrl) {
-    nsString errorString;
+    nsAutoString errorString;
     errorString.Append(NS_LITERAL_STRING("Unsupported format/operation requested for ").get());
-    nsXPIDLCString spec;
-    rv = aURI->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    errorString.AppendWithConversion(spec.get());
+    errorString.Append(NS_ConvertUTF8toUCS2(spec));
     rv = GenerateXMLOutputChannel(errorString, addbookUrl, aURI, _retval);
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
@@ -168,10 +167,10 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
   rv = GeneratePrintOutput(addbookUrl, output);
   if (NS_FAILED(rv)) {
     output.Assign(NS_LITERAL_STRING("failed to print. url=").get());
-    nsXPIDLCString spec;
-    rv = aURI->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
-    output.AppendWithConversion(spec.get());
+    output.Append(NS_ConvertUTF8toUCS2(spec));
   }
  
   rv = GenerateXMLOutputChannel(output, addbookUrl, aURI, _retval);
@@ -185,8 +184,8 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
 {
   NS_ENSURE_ARG_POINTER(addbookUrl);
 
-  nsXPIDLCString pathStr;
-  nsresult rv = addbookUrl->GetPath(getter_Copies(pathStr));
+  nsCAutoString uri;
+  nsresult rv = addbookUrl->GetPath(uri);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
@@ -196,8 +195,6 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
    "//moz-abmdbdirectory/abook.mab?action=print"
    into "moz-abmdbdirectory://abook.mab"
   */
-  nsCAutoString uri;
-  uri.Assign(pathStr.get());
 
   /* step 1:  
    turn "//moz-abmdbdirectory/abook.mab?action=print"

@@ -74,10 +74,10 @@ static void* ProcessURLArg(char* str)
         rv = file->InitWithPath(str);
         if (NS_SUCCEEDED(rv))
         {
-          nsXPIDLCString fileurl;
-          rv = NS_GetURLSpecFromFile(file, getter_Copies(fileurl));
-          if (NS_SUCCEEDED(rv) && fileurl.get())
-            return NS_REINTERPRET_CAST(void*, nsCRT::strdup(fileurl.get()));
+          nsCAutoString fileurl;
+          rv = NS_GetURLSpecFromFile(file, fileurl);
+          if (NS_SUCCEEDED(rv))
+            return NS_REINTERPRET_CAST(void*, ToNewCString(fileurl));
         }
       }
     }

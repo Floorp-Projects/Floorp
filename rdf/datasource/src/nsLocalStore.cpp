@@ -446,11 +446,11 @@ LocalStoreImpl::LoadData()
     rv = NS_NewFileURI(getter_AddRefs(aURI), aFile);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = aURI->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = aURI->GetSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
-    rv = remote->Init(spec);
+    rv = remote->Init(spec.get());
     if (NS_FAILED(rv)) return rv;
 
     // Read the datasource synchronously.

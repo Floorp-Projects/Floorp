@@ -43,6 +43,7 @@
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsMemory.h"
+#include "nsString.h"
 #include "nsCRT.h"
 #include "plstr.h"
 
@@ -79,10 +80,8 @@ NS_IMETHODIMP nsAbDirFactoryService::GetDirFactory(const char* aURI,
     NS_ENSURE_SUCCESS(rv,rv);
     
     // Extract the scheme
-    // Use only the start and end for efficiency
-    PRUint32 start;
-    PRUint32 end;
-    rv = nsService->ExtractScheme (aURI, &start, &end, nsnull);
+	nsCAutoString scheme;
+    rv = nsService->ExtractScheme (nsDependentCString(aURI), scheme);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // TODO 
@@ -92,7 +91,7 @@ NS_IMETHODIMP nsAbDirFactoryService::GetDirFactory(const char* aURI,
     static const char kAbDirFactoryContractIDPrefix[]
         = NS_AB_DIRECTORY_FACTORY_CONTRACTID_PREFIX;
 
-    PRInt32 pos = end - start - 1;
+    PRInt32 pos = scheme.Length();
     PRInt32 len = pos + sizeof(kAbDirFactoryContractIDPrefix) - 1;
 
     // Safely convert to a C-string for the XPCOM APIs

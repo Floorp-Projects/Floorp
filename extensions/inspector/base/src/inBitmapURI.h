@@ -38,7 +38,7 @@ public:
 protected:
   nsCString mBitmapName;
 
-  nsresult FormatSpec(char** result);
+  nsresult FormatSpec(nsACString &result);
 };
 
 #endif // __inBitmapURI_h__

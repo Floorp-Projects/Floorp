@@ -202,8 +202,8 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsXPIDLCString queryPart;
-  rv = mailNewsUrl->GetQuery(getter_Copies(queryPart));
+  nsCAutoString queryPart;
+  rv = mailNewsUrl->GetQuery(queryPart);
   if (!queryPart.IsEmpty())
     queryPart.Append('&');
 
@@ -213,7 +213,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
     queryPart.Append("header=quote");
   else
     queryPart.Append("header=quotebody");
-  rv = mailNewsUrl->SetQuery(queryPart.get());
+  rv = mailNewsUrl->SetQuery(queryPart);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // if we were given a non empty charset, then use it

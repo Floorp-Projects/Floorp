@@ -17,6 +17,7 @@ DEPTH=..\..\..\..
 REQUIRES	= xpcom \
 		  chrome \
 		  necko \
+		  string \
 		  $(NULL)
 
 MAKE_OBJ_TYPE   = EXE

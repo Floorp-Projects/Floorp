@@ -4,10 +4,10 @@
 #include "nsNetCID.h"
 #include "nsIURL.h"
 #include "prinrval.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 static nsIURL     *test_url = 0;
-static const char *test_param = 0;
+static nsCString   test_param;
 
 static void run_test(const char *testname, int count, void (* testfunc)())
 {
@@ -27,59 +27,59 @@ static void set_spec_test()
 
 static void get_spec_test()
 {
-    nsXPIDLCString spec;
-    test_url->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    test_url->GetSpec(spec);
 }
 
 static void resolve_test()
 {
-    nsXPIDLCString spec;
-    test_url->Resolve("foo.html?q=45", getter_Copies(spec));
+    nsCAutoString spec;
+    test_url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), spec);
 }
 
 static void set_scheme_test()
 {
-    test_url->SetScheme("foo");
+    test_url->SetScheme(NS_LITERAL_CSTRING("foo"));
 }
 
 static void get_scheme_test()
 {
-    nsXPIDLCString scheme;
-    test_url->GetScheme(getter_Copies(scheme));
+    nsCAutoString scheme;
+    test_url->GetScheme(scheme);
 }
 
 static void host_test()
 {
-    nsXPIDLCString host;
-    test_url->GetHost(getter_Copies(host));
-    test_url->SetHost("www.yahoo.com");
+    nsCAutoString host;
+    test_url->GetHost(host);
+    test_url->SetHost(NS_LITERAL_CSTRING("www.yahoo.com"));
     test_url->SetHost(host);
 }
 
 static void set_path_test()
 {
-    test_url->SetPath("/some-path/one-the-net/about.html?with-a-query#for-you");
+    test_url->SetPath(NS_LITERAL_CSTRING("/some-path/one-the-net/about.html?with-a-query#for-you"));
 }
 
 static void get_path_test()
 {
-    nsXPIDLCString path;
-    test_url->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    test_url->GetPath(path);
 }
 
 static void query_test()
 {
-    nsXPIDLCString query;
-    test_url->GetQuery(getter_Copies(query));
-    test_url->SetQuery("a=b&d=c&what-ever-you-want-to-be-called=45");
+    nsCAutoString query;
+    test_url->GetQuery(query);
+    test_url->SetQuery(NS_LITERAL_CSTRING("a=b&d=c&what-ever-you-want-to-be-called=45"));
     test_url->SetQuery(query);
 }
 
 static void ref_test()
 {
-    nsXPIDLCString ref;
-    test_url->GetRef(getter_Copies(ref));
-    test_url->SetRef("#some-book-mark");
+    nsCAutoString ref;
+    test_url->GetRef(ref);
+    test_url->SetRef(NS_LITERAL_CSTRING("#some-book-mark"));
     test_url->SetRef(ref);
 }
 

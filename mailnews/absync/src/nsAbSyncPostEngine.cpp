@@ -686,7 +686,7 @@ nsEngineNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
   if (NS_FAILED(res)) 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 
-  return pService->NewURI(aSpec, aBase, aInstancePtrResult);
+  return pService->NewURI(nsDependentCString(aSpec), nsnull, aBase, aInstancePtrResult);
 }
 
 nsresult
@@ -698,7 +698,7 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   if (!postData)
     return NS_ERROR_INVALID_ARG;
 
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(mChannel), aURL, nsnull), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(NS_NewChannel(getter_AddRefs(mChannel), aURL, nsnull), NS_ERROR_FAILURE);
 
   // Tag the post stream onto the channel...but never seemed to work...so putting it
   // directly on the URL spec

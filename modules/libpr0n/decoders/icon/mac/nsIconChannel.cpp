@@ -37,7 +37,7 @@
 #include "nsCExternalHandlerService.h"
 #include "plstr.h"
 #include "nsILocalFileMac.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 
 #include <Files.h>
 #include <Folders.h>

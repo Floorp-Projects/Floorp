@@ -317,7 +317,7 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
   if (blankDoc) {
     // initialize
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), "about:blank", 0);
+    NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank"));
     if (uri)
       rv = blankDoc->ResetToURI(uri, aLoadGroup);
   }
@@ -674,7 +674,7 @@ nsContentDLF::EnsureUAStyleSheet()
 
   // Load the UA style sheet
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), UA_CSS_URL);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(UA_CSS_URL));
   if (NS_FAILED(rv)) {
 #ifdef DEBUG
     printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);

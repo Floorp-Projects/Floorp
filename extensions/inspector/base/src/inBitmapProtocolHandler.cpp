@@ -46,10 +46,9 @@ NS_IMPL_ISUPPORTS2(inBitmapProtocolHandler, nsIProtocolHandler, nsISupportsWeakR
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler
 
-NS_IMETHODIMP inBitmapProtocolHandler::GetScheme(char* *result) 
+NS_IMETHODIMP inBitmapProtocolHandler::GetScheme(nsACString &result) 
 {
-  *result = nsCRT::strdup("moz-bitmap");
-  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  result = "moz-bitmap";
   return NS_OK;
 }
 
@@ -67,12 +66,15 @@ NS_IMETHODIMP inBitmapProtocolHandler::GetProtocolFlags(PRUint32 *result)
 
 NS_IMETHODIMP inBitmapProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    // don't override anything.  
-    *_retval = PR_FALSE;
-    return NS_OK;
+  // don't override anything.  
+  *_retval = PR_FALSE;
+  return NS_OK;
 }
 
-NS_IMETHODIMP inBitmapProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **result) 
+NS_IMETHODIMP inBitmapProtocolHandler::NewURI(const nsACString &aSpec,
+                                              const char *aOriginCharset, // ignored
+                                              nsIURI *aBaseURI,
+                                              nsIURI **result) 
 {
   // no concept of a relative bitmap url
   NS_ASSERTION(!aBaseURI, "base url passed into bitmap protocol handler");

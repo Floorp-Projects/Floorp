@@ -87,8 +87,8 @@ nsResURL::GetFile(nsIFile **result)
 
     NS_ENSURE_TRUE(gResHandler, NS_ERROR_NOT_AVAILABLE);
 
-    nsXPIDLCString spec;
-    rv = gResHandler->ResolveURI(this, getter_Copies(spec));
+    nsCAutoString spec;
+    rv = gResHandler->ResolveURI(this, spec);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> localFile =
@@ -188,12 +188,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsResProtocolHandler,
 //----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsResProtocolHandler::GetScheme(char **result)
+nsResProtocolHandler::GetScheme(nsACString &result)
 {
-    NS_ENSURE_ARG_POINTER(result);
-    *result = nsCRT::strdup("resource");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "resource";
     return NS_OK;
 }
 
@@ -212,7 +209,9 @@ nsResProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsResProtocolHandler::NewURI(const nsACString &aSpec,
+                             const char *aCharset,
+                             nsIURI *aBaseURI,
                              nsIURI **result)
 {
     nsresult rv;
@@ -223,7 +222,7 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(resURL);
 
-    rv = resURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aBaseURI);
+    rv = resURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
     if (NS_SUCCEEDED(rv))
         rv = CallQueryInterface(resURL, result);
     NS_RELEASE(resURL);
@@ -234,12 +233,12 @@ NS_IMETHODIMP
 nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
-    nsXPIDLCString spec;
+    nsCAutoString spec;
 
-    rv = ResolveURI(uri, getter_Copies(spec));
+    rv = ResolveURI(uri, spec);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mIOService->NewChannel(spec, nsnull, result);
+    rv = mIOService->NewChannel(spec, nsnull, nsnull, result);
     if (NS_FAILED(rv)) return rv;
 
     return (*result)->SetOriginalURI(uri);
@@ -293,29 +292,33 @@ nsResProtocolHandler::HasSubstitution(const char *root, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::ResolveURI(nsIURI *uri, char **result)
+nsResProtocolHandler::ResolveURI(nsIURI *uri, nsACString &result)
 {
     nsresult rv;
-    nsXPIDLCString host, path;
+    nsCAutoString host;
+    nsCAutoString path;
 
-    rv = uri->GetHost(getter_Copies(host));
+    rv = uri->GetAsciiHost(host);
     if (NS_FAILED(rv)) return rv;
 
-    rv = uri->GetPath(getter_Copies(path));
+    rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> baseURI;
     rv = GetSubstitution(host.get() ?  host.get() : "", getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) return rv;
 
-    const char *p = path.get(); // be nice to the AIX and OS/2 compilers
-    rv = baseURI->Resolve(p[0] == '/' ? p+1 : p, result);
+    const char *p = path.get();
+    if (path[0] == '/')
+        p++;
+
+    rv = baseURI->Resolve(nsDependentCString(p), result);
 
 #if defined(PR_LOGGING)
     if (PR_LOG_TEST(gResLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString spec;
-        uri->GetSpec(getter_Copies(spec));
-        LOG(("%s\n -> %s\n", spec.get(), *result));
+        nsCAutoString spec;
+        uri->GetAsciiSpec(spec);
+        LOG(("%s\n -> %s\n", spec.get(), PromiseFlatCString(result).get()));
     }
 #endif
     return rv;

@@ -128,9 +128,9 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
           nsCOMPtr<nsIURI> originalURI = nsnull;
           if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) && originalURI)
           {
-            nsXPIDLCString spec;
+            nsCAutoString spec;
 
-            if (NS_SUCCEEDED(originalURI->GetSpec(getter_Copies(spec))))
+            if (NS_SUCCEEDED(originalURI->GetSpec(spec)))
             {      
               if (spec.Equals("about:blank"))
               {

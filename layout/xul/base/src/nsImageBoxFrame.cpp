@@ -427,7 +427,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
   nsCOMPtr<nsIURI> srcURI;
-  NS_NewURI(getter_AddRefs(srcURI), mSrc, baseURI);
+  NS_NewURI(getter_AddRefs(srcURI), mSrc, nsnull, baseURI);
 
   if (mImageRequest) {
     nsCOMPtr<nsIURI> requestURI;

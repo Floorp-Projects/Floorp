@@ -42,17 +42,21 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsEscape.h"
+#include "netCore.h"
 
 #if defined(XP_WIN)
 #include <windows.h> // ::IsDBCSLeadByte need
 #endif
 
+#if 0
 /* extracts first number from a string and assumes that this is the port number*/
 PRInt32 
-ExtractPortFrom(const char* src)
+ExtractPortFrom(const nsACString &src)
 {
     // search for digits up to a slash or the string ends
-    const char* port = src;
+    const nsPromiseFlatCString flat( PromiseFlatCString(src) );
+    const char* port = flat.get();
+
     PRInt32 returnValue = -1;
 
     // skip leading white space
@@ -67,8 +71,9 @@ ExtractPortFrom(const char* src)
         else if (!nsCRT::IsAsciiDigit(c))
             return returnValue;
     }
-    return (0 < PR_sscanf(src, "%d", &returnValue)) ? returnValue : -1;
+    return (0 < PR_sscanf(flat.get(), "%d", &returnValue)) ? returnValue : -1;
 }
+#endif
 
 /* extract string from other string */
 nsresult 
@@ -286,21 +291,19 @@ ToLowerCase(char *str)
 }
 
 /* Extract URI-Scheme if possible */
-nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
-                                 PRUint32 *endPos, char* *scheme)
+nsresult ExtractURLScheme(const nsACString &inURI, PRUint32 *startPos, 
+                          PRUint32 *endPos, nsACString *scheme)
 {
     // search for something up to a colon, and call it the scheme
-    NS_ENSURE_ARG_POINTER(inURI);
-    if (scheme)
-       *scheme = nsnull;
-    
-    const char* uri = inURI;
+    const nsPromiseFlatCString flatURI( PromiseFlatCString(inURI) );
+    const char* uri_start = flatURI.get();
+    const char* uri = uri_start;
 
     // skip leading white space
     while (nsCRT::IsAsciiSpace(*uri))
         uri++;
 
-    PRUint32 start = uri - inURI;
+    PRUint32 start = uri - uri_start;
     if (startPos) {
         *startPos = start;
     }
@@ -324,14 +327,8 @@ nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
                 *endPos = start + length + 1;
             }
 
-            if (scheme) {
-                char* str = (char*)nsMemory::Alloc(length + 1);
-                if (str == nsnull)
-                    return NS_ERROR_OUT_OF_MEMORY;
-                memcpy(str, &inURI[start], length);
-                str[length] = '\0';
-                *scheme = str;
-            }
+            if (scheme)
+                scheme->Assign(Substring(inURI, start, length));
             return NS_OK;
         }
         else 

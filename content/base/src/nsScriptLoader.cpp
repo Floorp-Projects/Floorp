@@ -348,7 +348,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     
     // Use the SRC attribute value to load the URL
     mDocument->GetBaseURL(*getter_AddRefs(baseURI));
-    rv = NS_NewURI(getter_AddRefs(scriptURI), src, baseURI);
+    rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);
     }
@@ -568,10 +568,10 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   NS_ASSERTION(principal, "principal required for document");
 
   nsAutoString ret;
-  nsXPIDLCString url;
+  nsCAutoString url;
 
   if (aRequest->mURI) {
-    rv = aRequest->mURI->GetSpec(getter_Copies(url));
+    rv = aRequest->mURI->GetSpec(url);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -580,7 +580,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   context->SetProcessingScriptTag(PR_TRUE);
 
   PRBool isUndefined;
-  context->EvaluateString(aScript, nsnull, principal, url,
+  context->EvaluateString(aScript, nsnull, principal, url.get(),
                           aRequest->mLineNo, aRequest->mJSVersion, 
                           ret, &isUndefined);  
 

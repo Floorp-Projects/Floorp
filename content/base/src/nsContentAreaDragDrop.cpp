@@ -298,9 +298,9 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
     nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1"));
     nsCOMPtr<nsIFile> file(do_QueryInterface(inDataWrapper));
     if ( ioService && file ) {
-      nsXPIDLCString url;
-      ioService->GetURLSpecFromFile(file, getter_Copies(url));
-      outURL = NS_ConvertUTF8toUCS2(url.get());
+      nsCAutoString url;
+      ioService->GetURLSpecFromFile(file, url);
+      outURL = NS_ConvertUTF8toUCS2(url);
     } 
   }
 }

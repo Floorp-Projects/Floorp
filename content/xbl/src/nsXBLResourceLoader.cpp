@@ -113,7 +113,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
     if (curr->mSrc.IsEmpty())
       continue;
 
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc, docURL)))
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc, nsnull, docURL)))
       continue;
 
     if (curr->mType == nsXBLAtoms::image) {

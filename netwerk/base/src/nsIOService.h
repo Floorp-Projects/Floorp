@@ -38,8 +38,8 @@
 #ifndef nsIOService_h__
 #define nsIOService_h__
 
-#include "nsIIOService.h"
 #include "nsString.h"
+#include "nsIIOService.h"
 #include "nsVoidArray.h"
 #include "nsISocketTransportService.h" 
 #include "nsIFileTransportService.h" 
@@ -103,11 +103,10 @@ protected:
     void GetPrefBranch(nsIPrefBranch **);
     void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
-    nsresult ParseFileURL(const char* inURL,
-                                 char **outHost,
-                                 char **outDirectory,
-                                 char **outFileBaseName,
-                                 char **outFileExtension);
+    nsresult ParseFileURL(const nsACString &inURL,
+                          nsACString &outDirectory,
+                          nsACString &outFileBaseName,
+                          nsACString &outFileExtension);
 protected:
     PRPackedBool      mOffline;
     PRPackedBool      mOfflineForProfileChange;

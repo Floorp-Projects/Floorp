@@ -63,9 +63,8 @@ nsFingerHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) 
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFingerHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("finger");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsFingerHandler::GetScheme(nsACString &result) {
+    result = "finger";
     return NS_OK;
 }
 
@@ -82,8 +81,10 @@ nsFingerHandler::GetProtocolFlags(PRUint32 *result) {
 }
 
 NS_IMETHODIMP
-nsFingerHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result) {
+nsFingerHandler::NewURI(const nsACString &aSpec,
+                        const char *aCharset, // ignore charset info
+                        nsIURI *aBaseURI,
+                        nsIURI **result) {
     nsresult rv;
 
     // no concept of a relative finger url
@@ -94,7 +95,7 @@ nsFingerHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec((char*)aSpec);
+    rv = url->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

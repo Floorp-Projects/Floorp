@@ -140,7 +140,7 @@ nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
       (void**) aUrl);
   }
   if (*aUrl)
-    (*aUrl)->SetSpec(uri);
+    (*aUrl)->SetSpec(nsDependentCString(uri));
   return rv;
 }
 

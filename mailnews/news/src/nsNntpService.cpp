@@ -416,13 +416,13 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
   newsUrl += "&filename=";
   newsUrl += aFileName;
 
-  NewURI(newsUrl.get(), nsnull, getter_AddRefs(url));
+  NewURI(newsUrl, nsnull, nsnull, getter_AddRefs(url));
 
   if (NS_SUCCEEDED(rv) && url)
   {
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
     msgUrl->SetMsgWindow(aMsgWindow);
-    msgUrl->SetFileName(aFileName);
+    msgUrl->SetFileName(nsDependentCString(aFileName));
 
     // set up the url listener
 	  if (aUrlListener)
@@ -908,7 +908,7 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   NS_ENSURE_SUCCESS(rv,rv);
   if (!mailnewsurl) return NS_ERROR_FAILURE;
 
-  mailnewsurl->SetSpec((const char *)newsUrlSpec);
+  mailnewsurl->SetSpec(newsUrlSpec);
   
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
@@ -947,7 +947,7 @@ nsNntpService::ConstructNntpUrl(const char *urlString, nsIUrlListener *aUrlListe
   mailnewsurl->SetMsgWindow(aMsgWindow);
   nsCOMPtr <nsIMsgMessageUrl> msgUrl = do_QueryInterface(nntpUrl);
   msgUrl->SetUri(urlString);
-  mailnewsurl->SetSpec(urlString);
+  mailnewsurl->SetSpec(nsDependentCString(urlString));
   nntpUrl->SetNewsAction(action);
   
   if (originalMessageUri) {
@@ -1016,18 +1016,18 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 nsresult
 nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol)
 {
-  nsXPIDLCString hostName;
-  nsXPIDLCString userName;
-  nsXPIDLCString scheme;
-  nsXPIDLCString path;
+  nsCAutoString hostName;
+  nsCAutoString userPass;
+  nsCAutoString scheme;
+  nsCAutoString path;
   PRInt32 port = 0;
   nsresult rv;
   
-  rv = aUri->GetHost(getter_Copies(hostName));
-  rv = aUri->GetPreHost(getter_Copies(userName));
-  rv = aUri->GetScheme(getter_Copies(scheme));
+  rv = aUri->GetAsciiHost(hostName);
+  rv = aUri->GetUserPass(userPass);
+  rv = aUri->GetScheme(scheme);
   rv = aUri->GetPort(&port);
-  rv = aUri->GetPath(getter_Copies(path));
+  rv = aUri->GetPath(path);
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1068,16 +1068,16 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   //
   // xxx todo what if we have two servers on the same host, but different ports?
   // or no port, but isSecure (snews:// vs news://) is different?
-  rv = accountManager->FindServer((const char *)userName,
-                                (const char *)hostName,
+  rv = accountManager->FindServer(userPass.get(),
+                                hostName.get(),
                                 "nntp",
                                 getter_AddRefs(server));
 
   // if we didn't find the server, and path was "/", this is a news://group url
-  if (!server && !(nsCRT::strcmp("/",(const char *)path))) {
+  if (!server && !strcmp("/",path.get())) {
     // the uri was news://group and we want to turn that into news://host/group
     // step 1, set the path to be the hostName;
-    rv = aUri->SetPath((const char *)hostName);
+    rv = aUri->SetPath(hostName);
     NS_ENSURE_SUCCESS(rv,rv);
 
     // until we support default news servers, use the first nntp server we find
@@ -1085,19 +1085,21 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
     if (NS_FAILED(rv) || !server) {
         // step 2, set the uri's hostName and the local variable hostName
         // to be "news"
-        rv = aUri->SetHost("news");
+        rv = aUri->SetHost(NS_LITERAL_CSTRING("news"));
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = aUri->GetHost(getter_Copies(hostName));
+        rv = aUri->GetAsciiHost(hostName);
         NS_ENSURE_SUCCESS(rv,rv);
     }
     else {
         // step 2, set the uri's hostName and the local variable hostName
         // to be the host name of the server we found
-        rv = server->GetHostName(getter_Copies(hostName));
+        nsXPIDLCString hostBuf;
+        rv = server->GetHostName(getter_Copies(hostBuf));
         NS_ENSURE_SUCCESS(rv,rv);
-    
-        rv = aUri->SetHost((const char *)hostName);
+        hostName = hostBuf;
+
+        rv = aUri->SetHost(hostName);
         NS_ENSURE_SUCCESS(rv,rv);
     }
   }
@@ -1110,7 +1112,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
               port = SECURE_NEWS_PORT;
           }
 	  }
-	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,isSecure,port,getter_AddRefs(server));
+	  rv = CreateNewsAccount(userPass.get(),hostName.get(),isSecure,port,getter_AddRefs(server));
   }
    
   if (NS_FAILED(rv)) return rv;
@@ -1121,8 +1123,8 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   if (!nntpServer || NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString spec;
-  rv = aUri->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  rv = aUri->GetSpec(spec);
 
   // if this is a news-message:/ uri, decompose it and set hasMsgOffline on the uri
   if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)) {
@@ -1245,14 +1247,10 @@ nsNntpService::CancelMessage(const char *cancelURL, const char *messageURI, nsIS
   return rv; 
 }
 
-NS_IMETHODIMP nsNntpService::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsNntpService::GetScheme(nsACString &aScheme)
 {
-	nsresult rv = NS_OK;
-	if (aScheme)
-		*aScheme = nsCRT::strdup("news");
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 
+    aScheme = "news";
+	return NS_OK; 
 }
 
 NS_IMETHODIMP nsNntpService::GetDefaultDoBiff(PRBool *aDoBiff)
@@ -1297,7 +1295,10 @@ NS_IMETHODIMP nsNntpService::GetProtocolFlags(PRUint32 *aUritype)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsNntpService::NewURI(const nsACString &aSpec,
+                                    const char *aCharset, // ignored
+                                    nsIURI *aBaseURI,
+                                    nsIURI **_retval)
 {
 	nsresult rv = NS_OK;
 

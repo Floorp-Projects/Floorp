@@ -2583,10 +2583,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (mDocument) {
       mDocument->GetDocumentURL(getter_AddRefs(uri));
       if (uri) {
-        char* url = nsnull;
-        uri->GetSpec(&url);
-        printf("*** PresShell::InitialReflow (this=%p, url='%s')\n", (void*)this, url);
-        Recycle(url);
+        nsCAutoString url;
+        uri->GetSpec(url);
+        printf("*** PresShell::InitialReflow (this=%p, url='%s')\n", (void*)this, url.get());
       }
     }
   }
@@ -4281,14 +4280,14 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
               NS_ENSURE_SUCCESS(rv, rv);
 
               nsCOMPtr<nsIURI> baseURI;
-              rv = ios->NewURI(NS_ConvertUCS2toUTF8(base).get(),nsnull,getter_AddRefs(baseURI));
+              rv = ios->NewURI(NS_ConvertUCS2toUTF8(base),nsnull,nsnull,getter_AddRefs(baseURI));
               NS_ENSURE_SUCCESS(rv, rv);
 
-              nsXPIDLCString spec;
-              rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText).get(),getter_Copies(spec));
+              nsCAutoString spec;
+              rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText),spec);
               NS_ENSURE_SUCCESS(rv, rv);
 
-              anchorText.AssignWithConversion(spec.get());
+              anchorText = NS_ConvertUTF8toUCS2(spec);
             }
           }
         }
@@ -7242,18 +7241,17 @@ NS_IMETHODIMP
 PresShell::DumpReflows()
 {
   if (mReflowCountMgr) {
-    char * uriStr = nsnull;
+    nsCAutoString uriStr;
     if (mDocument) {
       nsCOMPtr<nsIURI> uri;
       mDocument->GetDocumentURL(getter_AddRefs(uri));
       if (uri) {
-        uri->GetPath(&uriStr);
+        uri->GetPath(uriStr);
       }
     }
-    mReflowCountMgr->DisplayTotals(uriStr);
-    mReflowCountMgr->DisplayHTMLTotals(uriStr);
+    mReflowCountMgr->DisplayTotals(uriStr.get());
+    mReflowCountMgr->DisplayHTMLTotals(uriStr.get());
     mReflowCountMgr->DisplayDiffsInTotals("Differences");
-    if (uriStr) nsCRT::free(uriStr);
   }
   return NS_OK;
 }

@@ -63,8 +63,8 @@ nsDownloader::Init(nsIURI* aURL,
   nsCOMPtr<nsIFile> localFile;
   nsCOMPtr<nsIChannel> channel;
 
-  rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, aGroup, aNotificationCallbacks,
-                  aLoadAttributes);
+  rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, aGroup, aNotificationCallbacks,
+                     aLoadAttributes);
   if (NS_SUCCEEDED(rv) && channel)
   {
     nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(channel);

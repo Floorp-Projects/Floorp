@@ -35,11 +35,12 @@
 
 #include "nsLDAPURL.h"
 #include "nsReadableUtils.h"
+#include "netCore.h"
 
 // The two schemes we support, LDAP and LDAPS
 //
-static const char *kLDAPScheme = "ldap";
-static const char *kLDAPSSLScheme = "ldaps";
+static const char kLDAPScheme[] = "ldap";
+static const char kLDAPSSLScheme[] = "ldaps";
 
 
 // Constructor and destructor
@@ -83,16 +84,11 @@ nsLDAPURL::Init()
 // attribute string spec;
 //
 NS_IMETHODIMP 
-nsLDAPURL::GetSpec(char **_retval)
+nsLDAPURL::GetSpec(nsACString &_retval)
 {
     nsCAutoString spec;
     PRUint32 count;
     
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetSpec: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
     spec = ((mOptions & OPT_SECURE) ? kLDAPSSLScheme : kLDAPScheme);
     spec.Append("://");
     if (mHost.Length() > 0) {
@@ -134,16 +130,11 @@ nsLDAPURL::GetSpec(char **_retval)
         }
     }
 
-    *_retval = ToNewCString(spec);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetSpec: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval = spec;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsLDAPURL::SetSpec(const char *aSpec)
+nsLDAPURL::SetSpec(const nsACString &aSpec)
 {
     PRUint32 rv, count;
     LDAPURLDesc *desc;
@@ -153,7 +144,7 @@ nsLDAPURL::SetSpec(const char *aSpec)
     // This is from the LDAP C-SDK, which currently doesn't
     // support everything from RFC 2255... :(
     //
-    rv = ldap_url_parse(aSpec, &desc);
+    rv = ldap_url_parse(PromiseFlatCString(aSpec).get(), &desc);
     switch (rv) {
     case LDAP_SUCCESS:
         mHost = desc->lud_host;
@@ -204,39 +195,24 @@ nsLDAPURL::SetSpec(const char *aSpec)
 
 // attribute string prePath;
 //
-NS_IMETHODIMP nsLDAPURL::GetPrePath(char **_retval)
+NS_IMETHODIMP nsLDAPURL::GetPrePath(nsACString &_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsLDAPURL::SetPrePath(const char *aPrePath)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    _retval.Truncate();
+    return NS_OK;
 }
 
 // attribute string scheme;
 //
-NS_IMETHODIMP nsLDAPURL::GetScheme(char **_retval)
+NS_IMETHODIMP nsLDAPURL::GetScheme(nsACString &_retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetScheme: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    
-    *_retval = nsCRT::strdup((mOptions & OPT_SECURE) ? kLDAPSSLScheme :
-                             kLDAPScheme);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetScheme: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval = (mOptions & OPT_SECURE) ? kLDAPSSLScheme : kLDAPScheme;
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPURL::SetScheme(const char *aScheme)
+NS_IMETHODIMP nsLDAPURL::SetScheme(const nsACString &aScheme)
 {
-    if (nsCRT::strcasecmp(aScheme, kLDAPScheme) == 0) {
+    if (aScheme.Equals(kLDAPScheme, nsCaseInsensitiveCStringComparator())) {
         mOptions ^= OPT_SECURE;
-    } else if (nsCRT::strcasecmp(aScheme, kLDAPSSLScheme) == 0) {
+    } else if (aScheme.Equals(kLDAPSSLScheme, nsCaseInsensitiveCStringComparator())) {
         mOptions |= OPT_SECURE;
     } else {
         return NS_ERROR_MALFORMED_URI;
@@ -245,15 +221,16 @@ NS_IMETHODIMP nsLDAPURL::SetScheme(const char *aScheme)
     return NS_OK;
 }
 
-// attribute string preHost;
+// attribute string userPass;
 //
 NS_IMETHODIMP 
-nsLDAPURL::GetPreHost(char **_retval)
+nsLDAPURL::GetUserPass(nsACString &_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    _retval.Truncate();
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsLDAPURL::SetPreHost(const char *aPreHost)
+nsLDAPURL::SetUserPass(const nsACString &aPreHost)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -261,12 +238,13 @@ nsLDAPURL::SetPreHost(const char *aPreHost)
 // attribute string username
 //
 NS_IMETHODIMP
-nsLDAPURL::GetUsername(char **_retval)
+nsLDAPURL::GetUsername(nsACString &_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    _retval.Truncate();
+    return NS_OK;
 }
 NS_IMETHODIMP
-nsLDAPURL::SetUsername(const char *aUsername)
+nsLDAPURL::SetUsername(const nsACString &aUsername)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -274,12 +252,27 @@ nsLDAPURL::SetUsername(const char *aUsername)
 // attribute string password;
 //
 NS_IMETHODIMP 
-nsLDAPURL::GetPassword(char **_retval)
+nsLDAPURL::GetPassword(nsACString &_retval)
+{
+    _retval.Truncate();
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLDAPURL::SetPassword(const nsACString &aPassword)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+// attribute string hostPort;
+//
 NS_IMETHODIMP 
-nsLDAPURL::SetPassword(const char *aPassword)
+nsLDAPURL::GetHostPort(nsACString &_retval)
+{
+    _retval.Truncate();
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLDAPURL::SetHostPort(const nsACString &aHostPort)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -287,23 +280,13 @@ nsLDAPURL::SetPassword(const char *aPassword)
 // attribute string host;
 //
 NS_IMETHODIMP 
-nsLDAPURL::GetHost(char **_retval)
+nsLDAPURL::GetHost(nsACString &_retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetHost: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewCString(mHost);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetHost: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval = mHost;
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsLDAPURL::SetHost(const char *aHost)
+nsLDAPURL::SetHost(const nsACString &aHost)
 {
     mHost = aHost;
     return NS_OK;
@@ -346,24 +329,31 @@ nsLDAPURL::SetPort(PRInt32 aPort)
 
 // attribute string path;
 // XXXleif: For now, these are identical to SetDn()/GetDn().
-NS_IMETHODIMP nsLDAPURL::GetPath(char **_retval)
+NS_IMETHODIMP nsLDAPURL::GetPath(nsACString &_retval)
 {
-    if (!_retval) {
-        NS_ERROR("nsLDAPURL::GetPath: null pointer ");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *_retval = ToNewCString(mDN);
-    if (!*_retval) {
-        NS_ERROR("nsLDAPURL::GetPath: out of memory ");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    _retval = mDN;
     return NS_OK;
 }
-NS_IMETHODIMP nsLDAPURL::SetPath(const char *aPath)
+NS_IMETHODIMP nsLDAPURL::SetPath(const nsACString &aPath)
 {
     mDN = aPath;
+    return NS_OK;
+}
+
+// attribute string specA
+NS_IMETHODIMP nsLDAPURL::GetAsciiSpec(nsACString &_retval)
+{
+    return GetSpec(_retval);
+}
+// attribute string hostA
+NS_IMETHODIMP nsLDAPURL::GetAsciiHost(nsACString &_retval)
+{
+    return GetHost(_retval);
+}
+
+NS_IMETHODIMP nsLDAPURL::GetOriginCharset(nsACString &result)
+{
+    result.Truncate();
     return NS_OK;
 }
 
@@ -397,8 +387,8 @@ NS_IMETHODIMP nsLDAPURL::Clone(nsIURI **_retval)
 
 // string resolve (in string relativePath);
 //
-NS_IMETHODIMP nsLDAPURL::Resolve(const char *relativePath,
-                                 char **_retval)
+NS_IMETHODIMP nsLDAPURL::Resolve(const nsACString &relativePath,
+                                 nsACString &_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -45,7 +45,7 @@
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsFileStream.h"
 #include "nsIFileTransportService.h"
 #include "nsIDNSService.h"
@@ -146,11 +146,11 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
 {
   NS_ENSURE_ARG(aURL);
 
-  nsXPIDLCString hostName;
+  nsCAutoString hostName;
   PRInt32 port = 0;
 
   aURL->GetPort(&port);
-  aURL->GetHost(getter_Copies(hostName));
+  aURL->GetAsciiHost(hostName);
 
   nsCOMPtr<nsIProxyInfo> proxyInfo;
 
@@ -173,16 +173,16 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
       nsCOMPtr<nsIURI> proxyUri = aURL;
       PRBool isSMTP = PR_FALSE;
       if (NS_SUCCEEDED(aURL->SchemeIs("smtp", &isSMTP)) && isSMTP) {
-          nsXPIDLCString spec;
-          rv = aURL->GetSpec(getter_Copies(spec));
+          nsCAutoString spec;
+          rv = aURL->GetSpec(spec);
           if (NS_SUCCEEDED(rv)) {
               static NS_DEFINE_CID(kSTDURLCID, NS_STANDARDURL_CID);    
               proxyUri = do_CreateInstance(kSTDURLCID, &rv);
           }
           if (NS_SUCCEEDED(rv))
-              rv = proxyUri->SetSpec(spec.get());
+              rv = proxyUri->SetSpec(spec);
           if (NS_SUCCEEDED(rv))
-              rv = proxyUri->SetScheme("mailto");
+              rv = proxyUri->SetScheme(NS_LITERAL_CSTRING("mailto"));
       }
       if (NS_SUCCEEDED(rv))
           rv = pps->ExamineForProxy(proxyUri, getter_AddRefs(proxyInfo));
@@ -190,7 +190,7 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
       if (NS_FAILED(rv)) proxyInfo = nsnull;
   }
 
-  return OpenNetworkSocketWithInfo(hostName, port, connectionType,
+  return OpenNetworkSocketWithInfo(hostName.get(), port, connectionType,
                                    proxyInfo, callbacks);
 }
 
@@ -199,10 +199,9 @@ nsresult nsMsgProtocol::GetFileFromURL(nsIURI * aURL, nsIFile **aResult)
   NS_ENSURE_ARG_POINTER(aURL);
   NS_ENSURE_ARG_POINTER(aResult);
   // extract the file path from the uri...
-  nsXPIDLCString filePath;
-  aURL->GetPath(getter_Copies(filePath));
-  nsCAutoString urlSpec("file://");
-  urlSpec.Append(filePath.get());
+  nsCAutoString urlSpec;
+  aURL->GetPath(urlSpec);
+  urlSpec.Insert(NS_LITERAL_CSTRING("file://"), 0);
   nsresult rv;
 
 // dougt - there should be an easier way!
@@ -497,13 +496,13 @@ NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports 
     if (NS_FAILED(rv))
         return rv;
     
-    nsXPIDLCString scheme;
-    rv = m_url->GetScheme(getter_Copies(scheme));
+    nsCAutoString scheme;
+    rv = m_url->GetScheme(scheme);
     if (NS_FAILED(rv))
         return rv;
     
 
-    rv = NS_CheckPortSafety(port, scheme);
+    rv = NS_CheckPortSafety(port, scheme.get());
     if (NS_FAILED(rv))
         return rv;
 
@@ -872,7 +871,7 @@ nsresult nsMsgFilePostHelper::Init(nsIOutputStream * aOutStream, nsMsgAsyncWrite
   rv = fts->CreateTransport(aFileToPost, PR_RDONLY, 0664, getter_AddRefs(transport));
   if (transport)
   {
-    rv = transport->AsyncRead(this, nsnull, 0, -1, 0, getter_AddRefs(mPostFileRequest));
+    rv = transport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mPostFileRequest));
   }
   return rv;
 }

@@ -92,7 +92,7 @@ public:
 	NS_DECL_ISUPPORTS_INHERITED
 
 	// nsIURI over-ride...
-	NS_IMETHOD SetSpec(const char * aSpec);
+	NS_IMETHOD SetSpec(const nsACString &aSpec);
 
 	// From nsISmtpUrl
 	NS_DECL_NSISMTPURL

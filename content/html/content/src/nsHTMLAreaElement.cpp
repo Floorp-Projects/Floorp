@@ -516,8 +516,10 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
 
     if (baseURL) {
       // Get absolute URL.
-      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mDocument, baseURL,
+      nsCAutoString buf;
+      NS_MakeAbsoluteURIWithCharset(buf, relURLSpec, mDocument, baseURL,
                                     nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+      aBuf = ToNewCString(buf);
     }
     else {
       // Absolute URL is same as relative URL.

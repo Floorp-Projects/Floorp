@@ -181,7 +181,7 @@ nsresult nsMsgAttachment::DeleteAttachment()
   nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv))
 	{
-    NS_InitFileFromURLSpec(urlFile, mUrl.get());
+    NS_InitFileFromURLSpec(urlFile, mUrl);
     if (NS_SUCCEEDED(rv))
 	  {
       PRBool bExists = PR_FALSE;

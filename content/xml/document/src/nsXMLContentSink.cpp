@@ -713,7 +713,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       return NS_OK;
 
     nsCOMPtr<nsIURI> url;
-    rv = NS_NewURI(getter_AddRefs(url), aHref, mDocumentBaseURL);
+    rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIScriptSecurityManager> secMan = 
@@ -749,7 +749,7 @@ nsXMLContentSink::ProcessBASETag()
 
     if (NS_CONTENT_ATTR_HAS_VALUE == mBaseElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
-      rv = NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
+      rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
@@ -970,15 +970,16 @@ nsXMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
-  nsXPIDLCString ref;
+  nsCAutoString ref;
   nsIURL* url;
   nsresult rv = mDocumentURL->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
   if (NS_SUCCEEDED(rv)) {
-    rv = url->GetRef(getter_Copies(ref));
+    rv = url->GetRef(ref);
     NS_RELEASE(url);
   }
   if (rv == NS_OK) {
-    mRef.AssignWithConversion(ref);
+    NS_UnescapeURL(ref); // XXX this may result in random non-ASCII bytes!
+    mRef = NS_ConvertASCIItoUCS2(ref);
   }
 
   PRBool topLevelFrameset = PR_FALSE;
@@ -991,7 +992,7 @@ nsXMLContentSink::StartLayout()
     }
   }
 
-  if (ref || topLevelFrameset) {
+  if (!ref.IsEmpty() || topLevelFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the

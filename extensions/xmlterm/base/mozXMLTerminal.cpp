@@ -235,7 +235,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     urlCString.AssignWithConversion(aURL);
 
     nsCOMPtr<nsIURI> uri;
-    result = uri->SetSpec(urlCString.get());
+    result = uri->SetSpec(urlCString);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 

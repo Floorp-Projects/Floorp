@@ -60,8 +60,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIURI override
-  NS_IMETHOD SetSpec(const char * aSpec);
-  NS_IMETHOD SetQuery(const char * aQuery);
+  NS_IMETHOD SetSpec(const nsACString &aSpec);
+  NS_IMETHOD SetQuery(const nsACString &aQuery);
 
   ////////////////////////////////////////////////////////////////////////////// 
   // we support the nsIImapUrl interface

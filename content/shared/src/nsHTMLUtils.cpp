@@ -48,68 +48,17 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prprf.h"
-#include "nsEscape.h"
+#include "nsNetCID.h"
+#include "nsReadableUtils.h"
+#include "nsIURI.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-/*
- * Extracts the hostname part from the given |uSpec|, encodes it to UTF8,
- * and use it to update the hostname part in |spec|, putting the result
- * in |targetSpec|
- * XXX: If the hostname is ASCII, i.e. there is no need for conversion,
- *      |*targetSpec| would be set to nsnull.
- */
 nsresult
-ConvertHostnameToUTF8(char* *targetSpec,
-                      const char* spec,
-                      const nsString& uSpec,
-                      nsIIOService* aIOService)
-{
-  nsresult rv;
-
-  *targetSpec = nsnull;
-
-  nsCOMPtr<nsIIOService> serv;
-  if (!aIOService) {
-    serv = do_GetIOService(&rv);
-    if (NS_FAILED(rv))
-      return rv;
-    aIOService = serv.get();
-  }
-
-  NS_ConvertUCS2toUTF8 specUTF8(uSpec);
-  nsXPIDLCString hostUTF8;
-
-  rv = aIOService->ExtractUrlPart(specUTF8.get(), nsIIOService::url_Host,
-                                  nsnull, nsnull, getter_Copies(hostUTF8));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to extract Hostname part from URL");
-  if (NS_FAILED(rv) || hostUTF8.IsEmpty())
-    return NS_OK;  // spec may be relative, bailing out.
-
-  // If hostname is pure ASCII, get out of here.
-  if (nsCRT::IsAscii(hostUTF8.get()))
-    return NS_OK;
-
-  // Try creating a URI from the original spec
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), spec, nsnull, aIOService);
-  if (NS_FAILED(rv))
-    return NS_OK; // spec may be relative, bailing out
-
-  // replace the original hostname with hostUTF8
-  rv = uri->SetHost(hostUTF8.get());
-  if (NS_FAILED(rv))
-    return rv;
-
-  return uri->GetSpec(targetSpec);
-}
-
-nsresult
-NS_MakeAbsoluteURIWithCharset(char* *aResult,
+NS_MakeAbsoluteURIWithCharset(nsACString &aResult,
                               const nsString& aSpec,
                               nsIDocument* aDocument,
                               nsIURI* aBaseURI,
@@ -117,7 +66,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
                               nsICharsetConverterManager* aConvMgr)
 {
   // Initialize aResult in case of tragedy
-  *aResult = nsnull;
+  aResult.Truncate();
 
   // Sanity
   NS_PRECONDITION(aBaseURI != nsnull, "no base URI");
@@ -126,112 +75,25 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
 
   // This gets the relative spec after gyrating it through all the
   // necessary encodings and escaping.
-  nsCAutoString spec;
 
-  if (nsCRT::IsAscii(aSpec.get())) {
+  if (IsASCII(aSpec)) {
     // If it's ASCII, then just copy the characters
-    spec.AssignWithConversion(aSpec);
-  }
-  else {
-    // If the scheme is javascript then no charset conversion is needed,
-    // escape non ASCII in \uxxxx form.
-    PRInt32 pos = aSpec.FindChar(':');
-    static const char kJavaScript[] = "javascript";
-    nsAutoString scheme;
-    if ((pos == (PRInt32)(sizeof kJavaScript - 1)) &&
-        (aSpec.Left(scheme, pos)) &&
-         scheme.EqualsIgnoreCase(kJavaScript)) {
-      char buf[6+1];	// space for \uXXXX plus a NUL at the end
-      spec.Truncate(0);
-      for (const PRUnichar* uch = aSpec.get(); *uch; ++uch) {
-        if (!nsCRT::IsAscii(*uch)) {
-          PR_snprintf(buf, sizeof(buf), "\\u%.4x", *uch);
-          spec.Append(buf);
-        }
-        else {
-          // it's ascii, so we're safe
-          spec.Append(char(*uch));
-        }
-      }
-    }
-    else {
-      // If the scheme is mailtourl then should not convert to a document charset
-      // because the charset cannot be passes to mailnews code, 
-      // use UTF-8 instead and apply URL escape.
-      static const char kMailToURI[] = "mailto";
-      if ((pos == (PRInt32)(sizeof kMailToURI - 1)) &&
-          (aSpec.Left(scheme, pos)) &&
-           scheme.EqualsIgnoreCase(kMailToURI)) {
-        spec = NS_ConvertUCS2toUTF8(aSpec.get());
-      }
-      else {
-        // Otherwise, we'll need to use aDocument to cough up a character
-        // set converter, and re-encode the relative portion of the URL as
-        // 8-bit characters.
-        nsCOMPtr<nsIUnicodeEncoder> encoder;
-
-        if (aDocument) {
-          nsCOMPtr<nsICharsetConverterManager> convmgr;
-          if (aConvMgr) {
-            convmgr = aConvMgr;
-          }
-          else {
-            convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
-          }
-
-          if (! convmgr)
-            return NS_ERROR_FAILURE;
-
-          nsAutoString charSetID;
-          aDocument->GetDocumentCharacterSet(charSetID);
-
-          convmgr->GetUnicodeEncoder(&charSetID, getter_AddRefs(encoder));
-        }
-
-        if (encoder) {
-          // Got the encoder: let's party.
-          PRInt32 len = aSpec.Length();
-          PRInt32 maxlen;
-          encoder->GetMaxLength(aSpec.get(), len, &maxlen);
-
-          char buf[64], *p = buf;
-          if (PRUint32(maxlen) > sizeof(buf) - 1)
-            p = new char[maxlen + 1];
-
-          if (! p)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-          encoder->Convert(aSpec.get(), &len, p, &maxlen);
-          p[maxlen] = 0;
-          spec = p;
-          encoder->Finish(p, &len);
-          p[len] = 0;
-          spec += p;
-
-          if (p != buf)
-            delete[] p;
-
-          // iDNS support: encode the hostname in the URL to UTF8
-          nsresult rv;
-          nsXPIDLCString newSpec;
-          rv = ConvertHostnameToUTF8(getter_Copies(newSpec), spec.get(), aSpec, aIOService);
-          if (NS_FAILED(rv))
-            return rv;
-
-          if (!newSpec.IsEmpty()) // hostname is non-ASCII
-            spec = newSpec;
-        }
-        else {
-          // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
-          // by default.
-          spec = NS_ConvertUCS2toUTF8(aSpec.get());
-        }
-
-      }
-    }
+    return aBaseURI->Resolve(NS_LossyConvertUCS2toASCII(aSpec), aResult);
   }
 
-  return aBaseURI->Resolve(spec.get(), aResult);
+  nsCOMPtr<nsIURI> absURI;
+  nsresult rv;
+
+  nsAutoString originCharset; // XXX why store charset as UCS2?
+  if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
+    originCharset.Truncate();
+
+  rv = nsHTMLUtils::IOService->NewURI(NS_ConvertUCS2toUTF8(aSpec),
+                                      NS_LossyConvertUCS2toASCII(originCharset).get(),
+                                      aBaseURI, getter_AddRefs(absURI));
+  if (NS_FAILED(rv)) return rv; 
+
+  return absURI->GetSpec(aResult);
 }
 
 

@@ -45,6 +45,7 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsNetCID.h"
+#include "nsDependentString.h"
 
 #include "jsapi.h"
 
@@ -257,7 +258,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
         goto return_exception;
     }
 
-    rv = serv->NewChannel(url, NS_STATIC_CAST(nsIURI *, nsnull),
+    rv = serv->NewChannel(nsDependentCString(url), nsnull, NS_STATIC_CAST(nsIURI *, nsnull),
                           getter_AddRefs(chan));
     if (NS_FAILED(rv))
     {

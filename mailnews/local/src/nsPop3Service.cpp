@@ -232,7 +232,7 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
   rv = pop3Url->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
   NS_ENSURE_SUCCESS(rv,rv);
     
-  (*aUrl)->SetSpec(urlSpec);
+  (*aUrl)->SetSpec(nsDependentCString(urlSpec));
     
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
   if (mailnewsurl)
@@ -287,14 +287,10 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 }
 
 
-NS_IMETHODIMP nsPop3Service::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsPop3Service::GetScheme(nsACString &aScheme)
 {
-	nsresult rv = NS_OK;
-	if (aScheme)
-		*aScheme = nsCRT::strdup("pop3");
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 
+	aScheme = "pop3";
+	return NS_OK; 
 }
 
 NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
@@ -325,10 +321,13 @@ NS_IMETHODIMP nsPop3Service::GetProtocolFlags(PRUint32 *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
+                                    const char *aOriginCharset, // ignored
+                                    nsIURI *aBaseURI,
+                                    nsIURI **_retval)
 {
     nsresult rv = NS_ERROR_FAILURE;
-    if (!aSpec || !_retval) return rv;
+    if (!_retval) return rv;
     nsCAutoString folderUri(aSpec);
     nsCOMPtr<nsIRDFResource> resource;
     PRInt32 offset = folderUri.Find("?");
@@ -369,7 +368,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     popSpec += ":";
     popSpec.AppendInt(port);
     popSpec += "?";
-    const char *uidl = PL_strstr(aSpec, "uidl=");
+    const char *uidl = PL_strstr(PromiseFlatCString(aSpec).get(), "uidl=");
     if (!uidl) return NS_ERROR_FAILURE;
     popSpec += uidl;
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
@@ -384,7 +383,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
         {
 			// escape the username before we call SetUsername().  we do this because GetUsername()
 			// will unescape the username
-            mailnewsurl->SetUsername((const char*) escapedUsername);
+            mailnewsurl->SetUsername(escapedUsername);
         }
         nsCOMPtr<nsIPop3URL> popurl = do_QueryInterface(mailnewsurl, &rv);
         if (NS_SUCCEEDED(rv))
@@ -417,14 +416,18 @@ NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
             delete protocol;
             return rv;
         }
-        nsXPIDLCString username;
+        nsCAutoString username;
         nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(aURI, &rv);
         if (NS_SUCCEEDED(rv) && url)
         {
-			// GetUsername() returns an unescaped username, and the protocol
-			// stores the username unescaped, so there is no need to escape or unescape anything
-            url->GetUsername(getter_Copies(username));
-            protocol->SetUsername((const char *)username);
+			// GetUsername() returns an escaped username, and the protocol
+			// stores the username unescaped, so we must unescape the username.
+            // XXX this is of course very risky since the unescaped string may
+            // contain embedded nulls as well as characters from some unknown
+            // charset!!
+            url->GetUsername(username);
+            NS_UnescapeURL(username);
+            protocol->SetUsername(username.get());
         }
 		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 	}

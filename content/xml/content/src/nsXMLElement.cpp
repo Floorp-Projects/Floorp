@@ -169,7 +169,7 @@ NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 
-static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
+static inline nsresult MakeURI(const nsACString &aSpec, nsIURI *aBase, nsIURI **aURI)
 {
   nsresult rv;
   static NS_DEFINE_CID(ioServCID,NS_IOSERVICE_CID);
@@ -177,7 +177,7 @@ static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
   if (NS_FAILED(rv))
     return rv;
 
-  return service->NewURI(aSpec,aBase,aURI);
+  return service->NewURI(aSpec,nsnull,aBase,aURI);
 }
 
 NS_IMETHODIMP
@@ -202,18 +202,16 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // The complex looking if above is to make sure that we do not erroneously
         // think a value of "./this:that" would have a scheme of "./that"
 
-        // XXX URL escape?
-        nsCAutoString str; str.AssignWithConversion(value);
+        NS_ConvertUCS2toUTF8 str(value);
       
-        rv = MakeURI(str.get(),nsnull,aURI);
+        rv = MakeURI(str,nsnull,aURI);
         if (NS_FAILED(rv))
           break;
 
-        if (!base.IsEmpty()) {
-          // XXX URL escape?
-          str.AssignWithConversion(base.get());
-          nsXPIDLCString resolvedStr;
-          rv = (*aURI)->Resolve(str.get(), getter_Copies(resolvedStr));
+        if (!base.IsEmpty()) { // XXXdarin base is always empty
+          str = NS_ConvertUCS2toUTF8(base);
+          nsCAutoString resolvedStr;
+          rv = (*aURI)->Resolve(str, resolvedStr);
           if (NS_FAILED(rv)) break;
           rv = (*aURI)->SetSpec(resolvedStr);
         }
@@ -252,9 +250,8 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
       } else {
-        // XXX URL escape?
-        nsCAutoString str; str.AssignWithConversion(base);
-        rv = MakeURI(str.get(),docBase,aURI);
+        NS_ConvertUCS2toUTF8 str(base);
+        rv = MakeURI(str,docBase,aURI);
       }
     }
   } else {
@@ -316,13 +313,12 @@ static nsresult WebShellToPresContext(nsIWebShell *aShell,
 static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI,
                              nsIURI **aAbsURI)
 {
-  // XXX URL escape?
-  nsCAutoString str; str.Assign(NS_ConvertUCS2toUTF8(aURI));
+  NS_ConvertUCS2toUTF8 str(aURI);
 
   *aAbsURI = nsnull;
 
   nsresult rv;
-  rv = MakeURI(str.get(),aBaseURI,aAbsURI);
+  rv = MakeURI(str,aBaseURI,aAbsURI);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

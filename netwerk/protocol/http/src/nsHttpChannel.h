@@ -116,7 +116,7 @@ private:
     nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, PRUnichar **user, PRUnichar **pass);
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, PRUnichar **user, PRUnichar **pass);
     void     AddAuthorizationHeaders();
-    nsresult GetCurrentPath(char **);
+    nsresult GetCurrentPath(nsACString &);
     void     ClearPasswordManagerEntry(const char *host, PRInt32 port, const char *realm, const PRUnichar *user);
 
     static void *PR_CALLBACK AsyncRedirect_EventHandlerFunc(PLEvent *);
@@ -144,7 +144,7 @@ private:
     nsHttpTransaction                *mPrevTransaction; // hard ref
     nsHttpConnectionInfo             *mConnectionInfo;  // hard ref
 
-    nsXPIDLCString                    mSpec;
+    nsSharableCString                 mSpec; // ASCII encoded URL spec
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;

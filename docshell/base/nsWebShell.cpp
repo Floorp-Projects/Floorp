@@ -586,13 +586,13 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         if (!uri && NS_SUCCEEDED(EnsureContentListener()))
         {
             nsCOMPtr<nsIURIContentListener> listener = do_QueryInterface(mContentListener);
-            nsCAutoString spec; spec.AssignWithConversion(aURLSpec);
+            NS_ConvertUCS2toUTF8 spec(aURLSpec);
             PRBool abort = PR_FALSE;
             uri = do_CreateInstance(kSimpleURICID, &rv);
             NS_ASSERTION(NS_SUCCEEDED(rv), "can't create simple uri");
             if (NS_SUCCEEDED(rv))
             {
-                rv = uri->SetSpec(spec.get());
+                rv = uri->SetSpec(spec);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
                 if (NS_SUCCEEDED(rv))
                 {
@@ -734,10 +734,10 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {
-          nsXPIDLCString spec;
-          url->GetPath(getter_Copies(spec));
+          nsCAutoString spec;
+          url->GetPath(spec);
 
-          PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)spec);
+          PRUnichar *msg = nsTextFormatter::smprintf(messageStr, spec.get());
           if (!msg) return NS_ERROR_OUT_OF_MEMORY;
           
           prompter->Alert(nsnull, msg);
@@ -760,8 +760,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       //
       nsCOMPtr<nsIURI> newURI;
 
-      nsXPIDLCString oldSpec;
-      url->GetSpec(getter_Copies(oldSpec));
+      nsCAutoString oldSpec;
+      url->GetSpec(oldSpec);
       NS_ConvertUTF8toUCS2 oldSpecW(oldSpec);
       
       //
@@ -812,12 +812,12 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         url->Equals(newURI, &sameURI);
         if (!sameURI)
         {
-          nsXPIDLCString newSpec;
-          newURI->GetSpec(getter_Copies(newSpec));
-          nsAutoString newSpecW; newSpecW.AssignWithConversion(newSpec.get());
+          nsCAutoString newSpec;
+          newURI->GetSpec(newSpec);
+          NS_ConvertUTF8toUCS2 newSpecW(newSpec);
 
           // This seems evil, since it is modifying the original URL
-          rv = url->SetSpec(newSpec.get());
+          rv = url->SetSpec(newSpec);
           if (NS_FAILED(rv)) return rv;
 
           return LoadURI(newSpecW.get(),      // URI string
@@ -851,9 +851,9 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
-      nsXPIDLCString host;
-      url->GetHost(getter_Copies(host));
-      if (host) {
+      nsCAutoString host;
+      url->GetHost(host);
+      if (!host.IsEmpty()) {
         PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
         if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -866,11 +866,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
     // throw a connection failure dialog
     //
     else if(aStatus == NS_ERROR_CONNECTION_REFUSED) {
-      PRInt32 port = -1;
-
-      rv = url->GetPort(&port);
-      if (NS_FAILED(rv)) return rv;
-
       nsCOMPtr<nsIPrompt> prompter;
       nsCOMPtr<nsIStringBundle> stringBundle;
 
@@ -886,15 +881,10 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       if (NS_FAILED(rv)) return rv;
 
       // build up the host:port string.
-      nsXPIDLCString host;
-      url->GetHost(getter_Copies(host));
-      nsCAutoString combo(host);
-      if (port > 0) {
-        combo.Append(':');
-        combo.AppendInt(port);
-      }
+      nsCAutoString hostport;
+      url->GetHostPort(hostport);
       
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.get());
+      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, hostport.get());
       if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
       prompter->Alert(nsnull, msg);
@@ -919,8 +909,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
-      nsXPIDLCString host;
-      url->GetHost(getter_Copies(host));
+      nsCAutoString host;
+      url->GetHost(host);
       PRUnichar *msg = nsTextFormatter::smprintf(messageStr, host.get());
       if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 

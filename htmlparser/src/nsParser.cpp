@@ -1594,13 +1594,12 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
   }
 
   if(aURL) {
-    char* spec;
-    nsresult rv = aURL->GetSpec(&spec);
+    nsCAutoString spec;
+    nsresult rv = aURL->GetSpec(spec);
     if (rv != NS_OK) {      
       return rv;
     }
     NS_ConvertUTF8toUCS2 theName(spec);
-    nsCRT::free(spec);
 
     nsScanner* theScanner=new nsScanner(theName,PR_FALSE,mCharset,mCharsetSource);
     CParserContext* pc=new CParserContext(theScanner,aKey,mCommand,aListener);
@@ -1640,7 +1639,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeT
   nsAutoString theUnknownFilename(NS_LITERAL_STRING("unknown"));
 
   nsInputStream input(&aStream);
-    
+
   nsScanner* theScanner=new nsScanner(theUnknownFilename,input,mCharset,mCharsetSource);
   CParserContext* pc=new CParserContext(theScanner,aKey,mCommand,0);
   if(pc && theScanner) {
@@ -1681,8 +1680,7 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
   //      bug #2361 to break again! 
 
   nsresult result=NS_OK;
-  
- 
+
   if(aLastCall && (0==aSourceBuffer.Length())) {
     // Nothing is being passed to the parser so return
     // immediately. mUnusedInput will get processed when

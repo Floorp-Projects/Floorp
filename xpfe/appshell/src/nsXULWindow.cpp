@@ -1564,7 +1564,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
 
      nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID));
      if (service)
-       service->NewURI(urlStr, nsnull, getter_AddRefs(uri));
+       service->NewURI(nsDependentCString(urlStr), nsnull, nsnull, getter_AddRefs(uri));
      if (strAllocated)
        PL_strfree(urlStr);
    }

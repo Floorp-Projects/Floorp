@@ -409,12 +409,12 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     }
 
     if (docURL) {
-      nsXPIDLCString url;
+      nsCAutoString url;
 
-      docURL->GetSpec(getter_Copies(url));
+      docURL->GetSpec(url);
 
       //about:blank URL's do not have ClearScope called on page change.
-      if (nsCRT::strcmp(url.get(), "about:blank") != 0) {
+      if (strcmp(url.get(), "about:blank") != 0) {
         ClearAllTimeouts();
 
         if (mSidebar) {
@@ -4533,7 +4533,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
     }
   }
 
-  rv = NS_NewURI(getter_AddRefs(uriToLoad), aURL, baseURI);
+  rv = NS_NewURI(getter_AddRefs(uriToLoad), nsDependentCString(aURL), nsnull, baseURI);
   if (NS_FAILED(rv))
     return rv;
 

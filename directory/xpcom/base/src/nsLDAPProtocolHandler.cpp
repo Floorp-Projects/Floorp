@@ -59,13 +59,10 @@ nsLDAPProtocolHandler::~nsLDAPProtocolHandler()
 // getter method for scheme attr
 //
 NS_IMETHODIMP
-nsLDAPProtocolHandler::GetScheme(char **result)
+nsLDAPProtocolHandler::GetScheme(nsACString &result)
 {
-  *result = nsCRT::strdup("ldap");
-  if ( ! *result ) 
-    return NS_ERROR_OUT_OF_MEMORY;
-  else
-    return NS_OK;
+  result = "ldap";
+  return NS_OK;
 }
 
 // getter method for defaultPort attribute
@@ -89,7 +86,9 @@ nsLDAPProtocolHandler::GetProtocolFlags(PRUint32 *result)
 // construct an appropriate URI
 //
 NS_IMETHODIMP
-nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsLDAPProtocolHandler::NewURI(const char *aSpec,
+                              const char *aOriginCharset, // ignored
+                              nsIURI *aBaseURI,
                               nsIURI **result) 
 {
     nsCOMPtr<nsILDAPURL> url;

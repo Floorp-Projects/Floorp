@@ -224,10 +224,9 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
     // A login succeeded; store the password.
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
     if (uri) {
-      nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
-      if (spec)
-        SI_StorePassword(spec, nsnull, someData);
+      nsCAutoString spec;
+      if (NS_SUCCEEDED(uri->GetSpec(spec)))
+        SI_StorePassword(spec.get(), nsnull, someData);
     }
   }
   else if (!nsCRT::strcmp(aTopic, "login-failed")) {
@@ -235,10 +234,10 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTo
     // the URL where the failure occurred.
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
     if (uri) {
-      nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
-      if (spec)
-        SI_RemoveUser(spec, nsnull);
+      nsCAutoString spec;
+      uri->GetSpec(spec);
+      if (NS_SUCCEEDED(uri->GetSpec(spec)))
+        SI_RemoveUser(spec.get(), nsnull);
     }
   }
   return NS_OK;
@@ -395,8 +394,8 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
             return NS_OK;
           }
 
-          nsXPIDLCString spec;
-          rv = uri->GetSpec(getter_Copies(spec));
+          nsCAutoString spec;
+          rv = uri->GetSpec(spec);
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsIDOMHTMLCollection> forms;
@@ -475,7 +474,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                                     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
                                 }
                                 if (prompter) {
-                                  SINGSIGN_RestoreSignonData(prompter, spec, nameString, &valueString, elementNumber++);
+                                  SINGSIGN_RestoreSignonData(prompter, spec.get(), nameString, &valueString, elementNumber++);
                                 }
                                 if (valueString) {
                                   value = valueString;

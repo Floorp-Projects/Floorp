@@ -46,7 +46,7 @@ function _getChannelForURL (url)
     if (!serv)
         throw new BadMojo(ERR_FAILURE);
     
-    return serv.newChannel(url, null);
+    return serv.newChannel(url, null, null);
 
 }
 

@@ -60,19 +60,18 @@ NS_IMETHODIMP
 nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
-    nsXPIDLCString path;
-    rv = aURI->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = aURI->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     nsTraceRefcnt::StatisticsType statType = nsTraceRefcnt::ALL_STATS;
     PRBool clear = PR_FALSE;
     PRBool leaks = PR_FALSE;
 
-    nsCAutoString p(path);
-    PRInt32 pos = p.Find("?");
+    PRInt32 pos = path.Find("?");
     if (pos > 0) {
         nsCAutoString param;
-        (void)p.Right(param, p.Length() - (pos+1));
+        (void)path.Right(param, path.Length() - (pos+1));
         if (param.Equals("new"))
             statType = nsTraceRefcnt::NEW_STATS;
         else if (param.Equals("clear"))

@@ -209,7 +209,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 		if (urlSpec.get())
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
-			url->SetSpec(urlSpec.get());
+			url->SetSpec(urlSpec);
             smtpUrl->SetRecipients(aRecipients);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
@@ -267,14 +267,10 @@ nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest **
 	return rv;
 }
 
-NS_IMETHODIMP nsSmtpService::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsSmtpService::GetScheme(nsACString &aScheme)
 {
-	nsresult rv = NS_OK;
-	if (aScheme)
-		*aScheme = PL_strdup("mailto");
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 
+    aScheme = "mailto";
+	return NS_OK; 
 }
 
 NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
@@ -494,7 +490,10 @@ NS_IMETHODIMP nsMailtoChannel::Resume()
 
 // the smtp service is also the protocol handler for mailto urls....
 
-NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
+                                    const char *aOriginCharset, // ignored
+                                    nsIURI *aBaseURI,
+                                    nsIURI **_retval)
 {
   // get a new smtp url 
 

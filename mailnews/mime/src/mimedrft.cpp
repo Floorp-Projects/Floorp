@@ -180,11 +180,9 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 
     if ( tmp->url ) 
     {
-      char *spec = nsnull;
-
-      tmp->url->GetSpec(&spec);
-      printf("URL               : %s\n", spec);
-      PR_FREEIF(spec);
+      nsCAutoString spec;
+      tmp->url->GetSpec(spec);
+      printf("URL               : %s\n", spec.get());
     }
 
     printf("Desired Type      : %s\n", tmp->desired_type);
@@ -216,11 +214,11 @@ mime_dump_attachments ( attachmentList );
   nsMsgAttachmentData *curAttachment = attachmentList;
   if (curAttachment)
   {
-    nsXPIDLCString spec;
+    nsCAutoString spec;
 
     while (curAttachment && curAttachment->real_name) //JFD: Why do we check for real_name?
     {
-      rv = curAttachment->url->GetSpec(getter_Copies(spec));
+      rv = curAttachment->url->GetSpec(spec);
       if (NS_SUCCEEDED(rv))
       {
         nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
@@ -554,13 +552,12 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 
     if ( tmpFile->orig_url ) 
     {
-      char  *tmpSpec = nsnull;
-      if (NS_FAILED(tmpFile->orig_url->GetSpec(&tmpSpec)))
+      nsCAutoString tmpSpec;
+      if (NS_FAILED(tmpFile->orig_url->GetSpec(tmpSpec)))
         goto FAIL;
 
-      if (NS_FAILED(nsMimeNewURI(&(tmp->url), tmpSpec, nsnull)))
+      if (NS_FAILED(nsMimeNewURI(&(tmp->url), tmpSpec.get(), nsnull)))
       {
-        PR_FREEIF(tmpSpec);
         goto FAIL; 
       }
 
@@ -570,7 +567,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
         if (tmpFile->real_name)
           NS_MsgSACopy ( &(tmp->real_name), tmpFile->real_name );
         else
-          NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
+          NS_MsgSACopy ( &(tmp->real_name), tmpSpec.get() );
       }
     }
 
@@ -1981,24 +1978,24 @@ mime_bridge_create_draft_stream(
     return nsnull;
 
   // first, convert the rdf msg uri into a url that represents the message...
-  nsXPIDLCString turl;
-  if (NS_FAILED(uri->GetSpec(getter_Copies(turl))))
+  nsCAutoString turl;
+  if (NS_FAILED(uri->GetSpec(turl)))
     return nsnull;
 
   nsCOMPtr <nsIMsgMessageService> msgService;
-  nsresult rv = GetMessageServiceFromURI(turl, getter_AddRefs(msgService));
+  nsresult rv = GetMessageServiceFromURI(turl.get(), getter_AddRefs(msgService));
   if (NS_FAILED(rv)) 
     return nsnull;
 
   nsCOMPtr<nsIURI> aURL;
-  rv = msgService->GetUrlForUri(turl, getter_AddRefs(aURL), nsnull);
+  rv = msgService->GetUrlForUri(turl.get(), getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) 
     return nsnull;
 
-  nsXPIDLCString urlString;
-  if (NS_SUCCEEDED(aURL->GetSpec(getter_Copies(urlString))))
+  nsCAutoString urlString;
+  if (NS_SUCCEEDED(aURL->GetSpec(urlString)))
   {
-    mdd->url_name = nsCRT::strdup(urlString);
+    mdd->url_name = ToNewCString(urlString);
     if (!(mdd->url_name))
     {
       PR_FREEIF(mdd);

@@ -539,7 +539,7 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 	memset(a, 0, sizeof(nsMsgAttachedFile) * (count + 1));
 	
 	nsresult			rv;
-	char *				urlStr;
+	nsXPIDLCString		urlStr;
 	OutlookAttachment *	pAttach;
 
 	for (PRInt32 i = 0; i < count; i++) {
@@ -551,14 +551,13 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 		pAttach = (OutlookAttachment *) m_pAttachments->ElementAt( i);
 		a[i].file_spec = new nsFileSpec;
 		pAttach->pAttachment->GetFileSpec( a[i].file_spec);
-		urlStr = nsnull;
-		pAttach->pAttachment->GetURLString( &urlStr);
+		urlStr.Adopt(0);
+		pAttach->pAttachment->GetURLString(getter_Copies(urlStr));
 		if (!urlStr) {
 			CleanUpAttach( a, count);
 			return( nsnull);
 		}
-		rv = m_pIOService->NewURI( urlStr, nsnull, getter_AddRefs(a[i].orig_url));
-		nsCRT::free( urlStr);
+		rv = m_pIOService->NewURI( urlStr, nsnull, nsnull, getter_AddRefs(a[i].orig_url));
 		if (NS_FAILED( rv)) {
 			CleanUpAttach( a, count);
 			return( nsnull);

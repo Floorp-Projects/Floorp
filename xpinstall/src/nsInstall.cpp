@@ -1192,14 +1192,14 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     // get the string bundle using the extracted properties file
 #if 1
     {
-      nsXPIDLCString spec;
-      ret = NS_GetURLSpecFromFile(resFile, getter_Copies(spec));
+      nsCAutoString spec;
+      ret = NS_GetURLSpecFromFile(resFile, spec);
       if (NS_FAILED(ret)) {
         NS_WARNING("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
         return ret;
       }
-      ret = service->CreateBundle(spec, &bundle);
+      ret = service->CreateBundle(spec.get(), &bundle);
     }
 #else
     ret = service->CreateBundle(url, &bundle);

@@ -337,6 +337,36 @@ IsASCII( const nsAString& aString )
     return PR_TRUE;
   }
 
+NS_COM
+PRBool
+IsASCII( const nsACString& aString )
+  {
+    static const char NOT_ASCII = char(~0x7F);
+
+
+    // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
+
+    nsACString::const_iterator done_reading;
+    aString.EndReading(done_reading);
+
+      // for each chunk of |aString|...
+    PRUint32 fragmentLength = 0;
+    nsACString::const_iterator iter;
+    for ( aString.BeginReading(iter); iter != done_reading; iter.advance( PRInt32(fragmentLength) ) )
+      {
+        fragmentLength = PRUint32(iter.size_forward());
+        const char* c = iter.get();
+        const char* fragmentEnd = c + fragmentLength;
+
+          // for each character in this chunk...
+        while ( c < fragmentEnd )
+          if ( *c++ & NOT_ASCII )
+            return PR_FALSE;
+      }
+
+    return PR_TRUE;
+  }
+
 
 
   /**

@@ -107,6 +107,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
@@ -556,7 +557,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     nsCOMPtr<nsIRequest> request;
 
     // Null LoadGroup ?
-    rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull);
+    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull);
     if (NS_FAILED(rv)) return rv;
     nsIInputStream* in;
     PRUint32 sourceOffset = 0;
@@ -646,12 +647,12 @@ static const char kResourceURIPrefix[] = "resource:";
 
     nsresult rv;
 
-    rv = NS_NewURI(getter_AddRefs(mURL), uri);
+    rv = NS_NewURI(getter_AddRefs(mURL), nsDependentCString(uri));
     if (NS_FAILED(rv)) return rv;
 
     // Keep a 'cached' copy of the URL; opening it may cause the spec
     // to be re-written.
-    mURL->GetSpec(getter_Copies(mOriginalURLSpec));
+    mURL->GetSpec(mOriginalURLSpec);
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.

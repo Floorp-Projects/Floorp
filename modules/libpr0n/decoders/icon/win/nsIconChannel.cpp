@@ -34,7 +34,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIFile.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 

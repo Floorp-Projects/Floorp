@@ -18,8 +18,8 @@ load_sync_1(nsISupports *element, void *data)
 
     rv = NS_OpenURI(getter_AddRefs(stream), uri, gIOService);
     if (NS_FAILED(rv)) {
-        nsXPIDLCString spec;
-        uri->GetSpec(getter_Copies(spec));
+        nsCAutoString spec;
+        uri->GetAsciiSpec(spec);
         fprintf(stderr, "*** failed opening %s [rv=%x]\n", spec.get(), rv);
         return PR_TRUE;
     }

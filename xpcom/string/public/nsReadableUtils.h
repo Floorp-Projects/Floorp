@@ -167,6 +167,13 @@ NS_COM void AppendUnicodeTo( const nsAString::const_iterator& aSrcStart,
    */
 NS_COM PRBool IsASCII( const nsAString& aString );
 
+  /**
+   * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
+   *
+   * @param aString a 8-bit wide string to scan
+   */
+NS_COM PRBool IsASCII( const nsACString& aString );
+
 
 
   /**

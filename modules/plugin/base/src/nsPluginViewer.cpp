@@ -409,12 +409,11 @@ PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const 
     rv = mChannel->GetURI(&uri);
     if (NS_FAILED(rv)) return rv;
 
-    char* spec;
-    rv = uri->GetSpec(&spec);
+    nsCAutoString spec;
+    rv = uri->GetSpec(spec);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString str; str.AssignWithConversion(spec);
-    nsCRT::free(spec);
+    NS_ConvertUTF8toUCS2 str(spec);
 
     char* ct;
   

@@ -82,10 +82,11 @@ do_GetIOService(nsresult* error = 0)
 }
 
 inline nsresult
-NS_NewURI(nsIURI* *result, 
-          const char* spec, 
-          nsIURI* baseURI = nsnull,
-          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+NS_NewURI(nsIURI **result, 
+          const nsACString &spec, 
+          const char *charset = nsnull,
+          nsIURI *baseURI = nsnull,
+          nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
 
@@ -96,21 +97,27 @@ NS_NewURI(nsIURI* *result,
         ioService = serv.get();
     }
 
-    return ioService->NewURI(spec, baseURI, result);
+    return ioService->NewURI(spec, charset, baseURI, result);
 }
 
 inline nsresult
 NS_NewURI(nsIURI* *result, 
-          const nsAReadableString& spec, 
+          const nsAString& spec, 
+          const char *charset = nsnull,
           nsIURI* baseURI = nsnull,
           nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    NS_ConvertUCS2toUTF8 specStr(spec); // this forces a single byte char*
-    if (!spec.IsEmpty() && specStr.IsEmpty())
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_NewURI(result, specStr.get(), baseURI, ioService);
+    return NS_NewURI(result, NS_ConvertUCS2toUTF8(spec), charset, baseURI, ioService);
 }
 
+inline nsresult
+NS_NewURI(nsIURI* *result, 
+          const char *spec,
+          nsIURI* baseURI = nsnull,
+          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+{
+    return NS_NewURI(result, nsDependentCString(spec), nsnull, baseURI, ioService);
+}
 
 inline nsresult
 NS_NewFileURI(nsIURI* *result, 
@@ -130,12 +137,12 @@ NS_NewFileURI(nsIURI* *result,
 }
 
 inline nsresult
-NS_OpenURI(nsIChannel* *result, 
-           nsIURI* uri,
-           nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
-           nsILoadGroup* loadGroup = nsnull,
-           nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
+NS_NewChannel(nsIChannel* *result, 
+              nsIURI* uri,
+              nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
+              nsILoadGroup* loadGroup = nsnull,
+              nsIInterfaceRequestor* notificationCallbacks = nsnull,
+              nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
 
@@ -184,8 +191,8 @@ NS_OpenURI(nsIInputStream* *result,
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
-                    loadGroup, notificationCallbacks, loadAttributes);
+    rv = NS_NewChannel(getter_AddRefs(channel), uri, ioService,
+                       loadGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
@@ -208,8 +215,8 @@ NS_OpenURI(nsIStreamListener* aConsumer,
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
-                    loadGroup, notificationCallbacks, loadAttributes);
+    rv = NS_NewChannel(getter_AddRefs(channel), uri, ioService,
+                       loadGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->AsyncOpen(aConsumer, context);
@@ -217,38 +224,53 @@ NS_OpenURI(nsIStreamListener* aConsumer,
 }
 
 inline nsresult
-NS_MakeAbsoluteURI(char* *result,
-                   const char* spec, 
-                   nsIURI* baseURI = nsnull, 
-                   nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+NS_MakeAbsoluteURI(nsACString &result,
+                   const nsACString &spec, 
+                   nsIURI *baseURI = nsnull, 
+                   nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
- 
-    if (spec == nsnull)
+
+    if (spec.IsEmpty())
         return baseURI->GetSpec(result);
-    
+
     return baseURI->Resolve(spec, result);
 }
 
 inline nsresult
-NS_MakeAbsoluteURI(nsAWritableString& result,
-                   const nsAReadableString& spec, 
-                   nsIURI* baseURI = nsnull,
-                   nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+NS_MakeAbsoluteURI(char **result,
+                   const char *spec, 
+                   nsIURI *baseURI = nsnull, 
+                   nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    char* resultStr;
-    char* specStr = ToNewUTF8String(spec);
-    if (!specStr) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult rv = NS_MakeAbsoluteURI(&resultStr, specStr, baseURI, ioService);
-    nsMemory::Free(specStr);
+    nsCAutoString resultBuf;
+
+    nsresult rv = NS_MakeAbsoluteURI(resultBuf, nsDependentCString(spec), baseURI, ioService);
     if (NS_FAILED(rv)) return rv;
 
-    result.Assign(NS_ConvertUTF8toUCS2(resultStr));
-   
-    nsMemory::Free(resultStr);
-    return rv;
+    *result = ToNewCString(resultBuf);
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+inline nsresult
+NS_MakeAbsoluteURI(nsAString &result,
+                   const nsAString &spec, 
+                   nsIURI *baseURI = nsnull,
+                   nsIIOService *ioService = nsnull)     // pass in nsIIOService to optimize callers
+{
+    NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
+
+    nsCAutoString resultBuf;
+    nsresult rv;
+
+    if (spec.IsEmpty())
+        rv = baseURI->GetSpec(resultBuf);
+    else
+        rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(spec), resultBuf);
+    if (NS_FAILED(rv)) return rv;
+
+    result = NS_ConvertUTF8toUCS2(resultBuf); // XXX CopyUTF8toUCS2
+    return NS_OK;
 }
 
 inline nsresult
@@ -307,12 +329,12 @@ NS_NewInputStreamChannel(nsIChannel **result,
                          PRInt32 contentLength)
 {
     nsresult rv;
-    nsXPIDLCString spec;
-    rv = uri->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = uri->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStreamIO> io;
-    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec, inStr, 
+    rv = NS_NewInputStreamIO(getter_AddRefs(io), spec.get(), inStr, 
                              contentType, contentLength);
     if (NS_FAILED(rv)) return rv;
 
@@ -704,7 +726,7 @@ NS_NewProxyInfo(const char* type, const char* host, PRInt32 port, nsIProxyInfo* 
 }
 
 inline nsresult
-NS_InitFileFromURLSpec(nsIFile* aFile, const char *inURL,
+NS_InitFileFromURLSpec(nsIFile* aFile, const nsACString &inURL,
                        nsIIOService *ioService=nsnull)
 {
     nsCOMPtr<nsIIOService> serv;
@@ -718,7 +740,7 @@ NS_InitFileFromURLSpec(nsIFile* aFile, const char *inURL,
 }
 
 inline nsresult
-NS_GetURLSpecFromFile(nsIFile* aFile, char **aUrl,
+NS_GetURLSpecFromFile(nsIFile* aFile, nsACString &aUrl,
                       nsIIOService *ioService=nsnull)
 {
     nsCOMPtr<nsIIOService> serv;
@@ -775,7 +797,7 @@ NS_ExamineForProxy(const char* scheme, const char* host, PRInt32 port,
     static NS_DEFINE_CID(kSTDURLCID, NS_STANDARDURL_CID);    
     nsCOMPtr<nsIURI> uri = do_CreateInstance(kSTDURLCID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = uri->SetSpec(spec.get());
+    rv = uri->SetSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     return pps->ExamineForProxy(uri, proxyInfo);

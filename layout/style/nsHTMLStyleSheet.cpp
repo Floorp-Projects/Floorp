@@ -1523,11 +1523,10 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML Style Sheet: ", out);
-  char* urlSpec = nsnull;
-  mURL->GetSpec(&urlSpec);
-  if (urlSpec) {
-    fputs(urlSpec, out);
-    nsCRT::free(urlSpec);
+  nsCAutoString urlSpec;
+  mURL->GetSpec(urlSpec);
+  if (!urlSpec.IsEmpty()) {
+    fputs(urlSpec.get(), out);
   }
   fputs("\n", out);
 }

@@ -114,28 +114,30 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
 
         // okay, now fill in our event sinks...Note that each getter ref counts before
         // it returns the interface to us...we'll release when we are done
- 
-        char *fileName = nsnull; // may be shortened by NS_UnescapeURL
-        url->GetFilePath(&fileName);
+
+        nsCAutoString fileName; // may be shortened by NS_UnescapeURL
+        url->GetFilePath(fileName);
         
-        char *folderName = nsnull; // may be shortened by NS_UnescapeURL
-        url->GetFileName(&folderName);
-        if (folderName)
+        nsCAutoString folderName; // may be shortened by NS_UnescapeURL
+        url->GetFileName(folderName);
+        if (!folderName.IsEmpty())
         {
             NS_UnescapeURL(folderName);
 
+#if 0
             // convert from OS native charset to unicode
-            rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), folderName, m_folderName);
+            rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), folderName.get(), m_folderName);
             if (NS_FAILED(rv))
                 m_folderName.AssignWithConversion(folderName);
-
-            nsMemory::Free(folderName);
+#endif
+            // folderName is UTF-8
+            m_folderName = NS_ConvertUTF8toUCS2(folderName.get());
         }
 
-        if (fileName)
+        if (!fileName.IsEmpty())
         {
             NS_UnescapeURL(fileName);
-            nsFilePath dbPath(fileName);
+            nsFilePath dbPath(fileName.get());
             nsFileSpec dbName(dbPath);
 
             // the size of the mailbox file is our total base line for measuring progress
@@ -154,9 +156,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
             }
             NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 #ifdef DEBUG_mscott
-            printf("url file = %s\n", fileName);
+            printf("url file = %s\n", fileName.get());
 #endif
-            nsMemory::Free(fileName);
         }
     }
 

@@ -5205,15 +5205,15 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     if (NS_FAILED(rv))
         return rv;
 
-    nsXPIDLCString urlspec;
-    aURI->GetSpec(getter_Copies(urlspec));
+    nsCAutoString urlspec;
+    aURI->GetSpec(urlspec);
 
     // Ok, compile it to create a prototype script object!
     rv = context->CompileScript(aText,
                                 aTextLength,
                                 scopeObject,
                                 principal,
-                                urlspec,
+                                urlspec.get(),
                                 PRUint32(aLineNo),
                                 mLangVersion,
                                 (void**)&mJSObject);

@@ -915,8 +915,11 @@ void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
 		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
 		nsIURI * aURL = nsnull;
 		boxSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aURL);
-		if (aURL)
-			aURL->GetHost(&boxSpec->hostName);
+		if (aURL) {
+            nsCAutoString host;
+			aURL->GetHost(host);
+            boxSpec->hostName = ToNewCString(host);
+        }
 		NS_IF_RELEASE(aURL);
         if (boxname)
             PL_strfree( boxname);
@@ -2613,8 +2616,11 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 			nsIURI * aUrl = nsnull;
 			nsresult rv = NS_OK;
 			returnSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aUrl);
-			if (NS_SUCCEEDED(rv) && aUrl)
-				aUrl->GetHost(&returnSpec->hostName);
+			if (NS_SUCCEEDED(rv) && aUrl) {
+                nsCAutoString host;
+				aUrl->GetHost(host);
+                returnSpec->hostName = ToNewCString(host);
+            }
 			NS_IF_RELEASE(aUrl);
 			
 		}

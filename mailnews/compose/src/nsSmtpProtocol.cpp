@@ -308,9 +308,11 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     if (NS_SUCCEEDED(rv) && TestFlag(SMTP_WAIT_FOR_REDIRECTION))
         return;
 
-    nsXPIDLCString hostName;
-    aURL->GetHost(getter_Copies(hostName));
-    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
+#if defined(PR_LOGGING)
+    nsCAutoString hostName;
+    aURL->GetAsciiHost(hostName);
+    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", hostName.get()));
+#endif
     
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(aURL));
@@ -1270,9 +1272,9 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
     // a host name and inform the caller that we are not going to
     // run the url...
 
-    nsXPIDLCString hostName;
-    aURL->GetHost(getter_Copies(hostName));
-    if (!hostName)
+    nsCAutoString hostName;
+    aURL->GetHost(hostName);
+    if (hostName.IsEmpty())
     {
        nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
        if (aMsgUrl)

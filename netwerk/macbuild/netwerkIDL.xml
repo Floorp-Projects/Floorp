@@ -437,7 +437,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>264pj2an64j9222Wp'!&#152;&#224;&#226;&#144;&#191;&#255;&#217;P</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1442,6 +1442,20 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIFileURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIStandardURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1874,6 +1888,16 @@
                     <PATH>nsIDirectoryListing.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIFileURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIStandardURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
             </LINKORDER>
         </TARGET>
         <TARGET>
@@ -2260,7 +2284,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>264pj2an64j9222Xp'!&#152;&#224;&#226;&#144;&#191;&#255;&#217;P</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -3258,6 +3282,20 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIFileURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIStandardURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -3685,6 +3723,16 @@
                     <PATH>nsIDirectoryListing.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIFileURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsIStandardURL.idl</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
             </LINKORDER>
         </TARGET>
     </TARGETLIST>
@@ -4058,6 +4106,30 @@
                 <PATH>nsIMIMEInputStream.idl</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
+            <FILEREF>
+                <TARGETNAME>headers</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsIFileURL.idl</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>headers</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsIStandardURL.idl</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>headers</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsIMultiPartChannel.idl</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>headers</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsIDirectoryListing.idl</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
         </GROUP>
         <GROUP><NAME>mimetype</NAME>
             <FILEREF>
@@ -4225,18 +4297,6 @@
                 </FILEREF>
             </GROUP>
         </GROUP>
-        <FILEREF>
-            <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIMultiPartChannel.idl</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
-        <FILEREF>
-            <TARGETNAME>headers</TARGETNAME>
-            <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIDirectoryListing.idl</PATH>
-            <PATHFORMAT>MacOS</PATHFORMAT>
-        </FILEREF>
     </GROUPLIST>
 
 </PROJECT>

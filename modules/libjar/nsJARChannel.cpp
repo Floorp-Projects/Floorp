@@ -24,6 +24,7 @@
 #include "nsCRT.h"
 #include "nsIFileTransportService.h"
 #include "nsIURI.h"
+#include "nsIFileURL.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsAutoLock.h"
@@ -65,7 +66,6 @@ nsJARChannel::nsJARChannel()
     : mLoadFlags(LOAD_NORMAL)
     , mContentType(nsnull)
     , mContentLength(-1)
-    , mJAREntry(nsnull)
     , mStatus(NS_OK)
 #ifdef DEBUG
     , mInitiator(nsnull)
@@ -88,8 +88,6 @@ nsJARChannel::~nsJARChannel()
 {
     if (mContentType)
         nsCRT::free(mContentType);
-    if (mJAREntry)
-        nsCRT::free(mJAREntry);
     NS_IF_RELEASE(mJARProtocolHandler);
 }
 
@@ -138,12 +136,10 @@ NS_IMETHODIMP
 nsJARChannel::GetName(PRUnichar* *result)
 {
     nsresult rv;
-    nsXPIDLCString urlStr;
-    rv = mURI->GetSpec(getter_Copies(urlStr));
+    nsCAutoString urlStr;
+    rv = mURI->GetSpec(urlStr);
     if (NS_FAILED(rv)) return rv;
-    nsString name;
-    name.AppendWithConversion(urlStr);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -301,17 +297,17 @@ nsJARChannel::EnsureJARFileAvailable()
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString jarURLStr;
-        mURI->GetSpec(getter_Copies(jarURLStr));
+        nsCAutoString jarURLStr;
+        mURI->GetSpec(jarURLStr);
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: EnsureJARFileAvailable %s", (const char*)jarURLStr));
+               ("nsJarProtocol: EnsureJARFileAvailable %s", jarURLStr.get()));
     }
 #endif
 
     rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = mURI->GetJAREntry(&mJAREntry);
+    rv = mURI->GetJAREntry(mJAREntry);
     if (NS_FAILED(rv)) return rv;
 
     // try to get a nsIFile directly from the url, which will often succeed.
@@ -364,10 +360,10 @@ nsJARChannel::AsyncReadJARElement()
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString jarURLStr;
-        mURI->GetSpec(getter_Copies(jarURLStr));
+        nsCAutoString jarURLStr;
+        mURI->GetSpec(jarURLStr);
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
+               ("nsJarProtocol: AsyncRead jar entry %s", jarURLStr.get()));
     }
 #endif
 
@@ -396,36 +392,27 @@ nsJARChannel::GetContentType(char* *aContentType)
 {
     nsresult rv = NS_OK;
     if (mContentType == nsnull) {
-        if (!mJAREntry)
-            return NS_ERROR_FAILURE;
-        char* fileName = nsCRT::strdup(mJAREntry);
-        if (fileName != nsnull) {
-            PRInt32 len = strlen(fileName);
-            const char* ext = nsnull;
-            for (PRInt32 i = len-1; i >= 0; i--) {
-                if (fileName[i] == '.') {
-                    ext = &fileName[i + 1];
-                    break;
-                }
+        if (mJAREntry.IsEmpty())
+            return NS_ERROR_NOT_AVAILABLE;
+        const char *ext = nsnull, *fileName = mJAREntry.get();
+        PRInt32 len = mJAREntry.Length();
+        for (PRInt32 i = len-1; i >= 0; i--) {
+            if (fileName[i] == '.') {
+                ext = &fileName[i + 1];
+                break;
             }
-
-            if (ext) {
-                nsIMIMEService* mimeServ = mJARProtocolHandler->GetCachedMimeService();
-                if (mimeServ) {
-                    rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
-                }
-            }
-            else 
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            
-            nsCRT::free(fileName);
-        } 
-        else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
         }
+        if (ext) {
+            nsIMIMEService* mimeServ = mJARProtocolHandler->GetCachedMimeService();
+            if (mimeServ) {
+                rv = mimeServ->GetTypeFromExtension(ext, &mContentType);
+            }
+        }
+        else
+            rv = NS_ERROR_NOT_AVAILABLE;
 
         if (NS_FAILED(rv)) {
-            mContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
+            mContentType = strdup(UNKNOWN_CONTENT_TYPE);
             if (mContentType == nsnull)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else
@@ -433,7 +420,7 @@ nsJARChannel::GetContentType(char* *aContentType)
         }
     }
     if (NS_SUCCEEDED(rv)) {
-        *aContentType = nsCRT::strdup(mContentType);
+        *aContentType = strdup(mContentType);
         if (*aContentType == nsnull)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -496,7 +483,7 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
         nsCOMPtr<nsIJAR> jar = do_QueryInterface(mJAR, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Zip reader is not an nsIJAR");
         nsCOMPtr<nsIPrincipal> certificate;
-        rv = jar->GetCertificatePrincipal(mJAREntry, 
+        rv = jar->GetCertificatePrincipal(mJAREntry.get(), 
                                            getter_AddRefs(certificate));
         if (NS_FAILED(rv)) return rv;
         if (certificate)
@@ -598,12 +585,12 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
         nsCOMPtr<nsIURI> jarURI;
-        nsXPIDLCString jarURLStr;
-        rv = mURI->GetSpec(getter_Copies(jarURLStr));
+        nsCAutoString jarURLStr;
+        rv = mURI->GetSpec(jarURLStr);
         if (NS_SUCCEEDED(rv)) {
             PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                    ("nsJarProtocol: jar extraction complete %s status=%x",
-                    (const char*)jarURLStr, aStatus));
+                    jarURLStr.get(), aStatus));
         }
     }
 #endif
@@ -666,7 +653,7 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIZipEntry> entry;
-    rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
+    rv = mJAR->GetEntry(mJAREntry.get(), getter_AddRefs(entry));
     if (NS_FAILED(rv)) return rv;
 
     if (contentLength) {
@@ -692,14 +679,14 @@ nsJARChannel::GetInputStream(nsIInputStream* *aInputStream)
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString jarURLStr;
-        mURI->GetSpec(getter_Copies(jarURLStr));
+        nsCAutoString jarURLStr;
+        mURI->GetSpec(jarURLStr);
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: GetInputStream jar entry %s", (const char*)jarURLStr));
+               ("nsJarProtocol: GetInputStream jar entry %s", jarURLStr.get()));
     }
 #endif
     NS_ENSURE_TRUE(mJAR, NS_ERROR_NULL_POINTER);
-    nsresult rv = mJAR->GetInputStream(mJAREntry, aInputStream);
+    nsresult rv = mJAR->GetInputStream(mJAREntry.get(), aInputStream);
     if (NS_SUCCEEDED(rv))
         (*aInputStream)->Available((PRUint32 *) &mContentLength);
     return rv;
@@ -715,7 +702,11 @@ nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream)
 NS_IMETHODIMP
 nsJARChannel::GetName(char* *aName) 
 {
-    return mURI->GetSpec(aName);
+    nsCAutoString spec;
+    nsresult rv = mURI->GetSpec(spec);
+    if (NS_FAILED(rv)) return rv;
+    *aName = ToNewCString(spec);
+    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

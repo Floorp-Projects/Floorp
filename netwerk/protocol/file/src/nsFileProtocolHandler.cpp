@@ -39,6 +39,8 @@
 #include "nsFileProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsIURLParser.h"
+#include "nsIStandardURL.h"
+#include "nsIFileURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -99,11 +101,9 @@ nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsFileProtocolHandler::GetScheme(char* *result)
+nsFileProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("file");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "file";
     return NS_OK;
 }
 
@@ -122,7 +122,9 @@ nsFileProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsFileProtocolHandler::NewURI(const nsACString &aSpec,
+                              const char *aCharset,
+                              nsIURI *aBaseURI,
                               nsIURI **result)
 {
     nsresult rv;
@@ -136,10 +138,11 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             nsnull, NS_GET_IID(nsIStandardURL),
                                             getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
-    rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aBaseURI);
+
+    rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    return url->QueryInterface(NS_GET_IID(nsIURI), (void**)result);
+    return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP

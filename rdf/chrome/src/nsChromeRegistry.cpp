@@ -221,7 +221,7 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
     return rv;
 
   nsCOMPtr<nsIURI> url;
-  rv = NS_NewURI(getter_AddRefs(url), NS_LossyConvertUCS2toASCII(valueStr).get());
+  rv = NS_NewURI(getter_AddRefs(url), NS_ConvertUCS2toUTF8(valueStr));
 
   if (NS_FAILED(rv))
     return NS_OK;
@@ -387,16 +387,13 @@ SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
 
   nsresult rv;
 
-  nsXPIDLCString str;
-  rv = aChromeURI->GetSpec(getter_Copies(str));
+  nsCAutoString str;
+  rv = aChromeURI->GetSpec(str);
   if (NS_FAILED(rv)) return rv;
-
-  if (!str.get())
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // We only want to deal with "chrome:" URLs here. We could return
   // an error code if the URL isn't properly prefixed here...
-  if (PL_strncmp(str, kChromePrefix, sizeof(kChromePrefix) - 1) != 0)
+  if (PL_strncmp(str.get(), kChromePrefix, sizeof(kChromePrefix) - 1) != 0)
     return NS_ERROR_INVALID_ARG;
 
   // Cull out the "package" string; e.g., "navigator"
@@ -497,7 +494,7 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
   canonical += "/";
   canonical += file;
 
-  return aChromeURI->SetSpec(canonical.get());
+  return aChromeURI->SetSpec(canonical);
 }
 
 NS_IMETHODIMP
@@ -534,11 +531,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
     nsCAutoString msg("chrome: failed to get base url");
-    nsXPIDLCString url;
-    rv = aChromeURL->GetSpec(getter_Copies(url));
+    nsCAutoString url;
+    rv = aChromeURL->GetSpec(url);
     if (NS_SUCCEEDED(rv)) {
       msg += " for ";
-      msg += (const char*)url;
+      msg += url.get();
     }
     msg += " -- using wacky default";
     NS_WARNING(msg.get());
@@ -858,10 +855,10 @@ NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsAr
     nsCOMPtr<nsIURL> url(do_QueryInterface(supp));
     if (url) {
       nsCOMPtr<nsICSSStyleSheet> sheet;
-      nsXPIDLCString str;
-      rv = url->GetSpec(getter_Copies(str));
+      nsCAutoString str;
+      rv = url->GetSpec(str);
       if (NS_FAILED(rv)) return rv;
-      rv = LoadStyleSheet(getter_AddRefs(sheet), nsCAutoString(str));
+      rv = LoadStyleSheet(getter_AddRefs(sheet), str);
       if (NS_FAILED(rv)) return rv;
       rv = (*aResult)->AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
       if (NS_FAILED(rv)) return rv;
@@ -894,13 +891,13 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsXPIDLCString lookup;
-  rv = aChromeURL->GetSpec(getter_Copies(lookup));
+  nsCAutoString lookup;
+  rv = aChromeURL->GetSpec(lookup);
   if (NS_FAILED(rv)) return rv;
 
   // Get the chromeResource from this lookup string
   nsCOMPtr<nsIRDFResource> chromeResource;
-  rv = GetResource(nsCAutoString(lookup), getter_AddRefs(chromeResource));
+  rv = GetResource(lookup, getter_AddRefs(chromeResource));
   if (NS_FAILED(rv)) {
       NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
       return rv;
@@ -1345,7 +1342,7 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
   nsCAutoString str(aDocURI);
-  rv = NS_NewURI(getter_AddRefs(uri), str.get());
+  rv = NS_NewURI(getter_AddRefs(uri), str);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFDataSource> dataSource;
@@ -2529,13 +2526,7 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
    if (NS_FAILED(rv))
      return rv;
 
-   nsXPIDLCString urlSpec;
-   rv = NS_GetURLSpecFromFile(userChromeDir, getter_Copies(urlSpec));
-   if (NS_FAILED(rv))
-     return rv;
-   aFileURL = urlSpec;
-
-   return NS_OK;
+   return NS_GetURLSpecFromFile(userChromeDir, aFileURL);
 }
 
 NS_IMETHODIMP
@@ -2550,13 +2541,7 @@ nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
   if (NS_FAILED(rv) || !appChromeDir)
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString urlSpec;
-  rv = NS_GetURLSpecFromFile(appChromeDir, getter_Copies(urlSpec));
-  if (NS_FAILED(rv))
-    return rv;
-  aFileURL = urlSpec;
-
-  return NS_OK;
+  return NS_GetURLSpecFromFile(appChromeDir, aFileURL);
 }
 
 NS_IMETHODIMP
@@ -2719,7 +2704,7 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
           nsCOMPtr<nsIURI> docURL;
           doc->GetDocumentURL(getter_AddRefs(docURL));
           nsCOMPtr<nsIURI> url;
-          rv = NS_NewURI(getter_AddRefs(url), token, docURL);
+          rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(token), nsnull, docURL);
 
           PRBool enabled = PR_FALSE;
           nsCOMPtr<nsICSSStyleSheet> sheet;
@@ -2790,7 +2775,7 @@ nsChromeRegistry::GetUserSheets(PRBool aIsChrome, nsISupportsArray **aResult)
 nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
 {
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL.get());
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) return rv;
 
   rv = LoadStyleSheetWithURL(uri, aSheet);
@@ -3084,11 +3069,8 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       /* xpidl strings aren't unified with strings, so this fu is necessary.
        * all we want here is the canonical url
        */
-      nsXPIDLCString chromeURLfoopy;
-      rv = NS_GetURLSpecFromFile(chromeFile, getter_Copies(chromeURLfoopy));
-      if (NS_FAILED(rv))
-        return rv;
-      chromeURL = chromeURLfoopy;
+      rv = NS_GetURLSpecFromFile(chromeFile, chromeURL);
+      if (NS_FAILED(rv)) return rv;
 
       /* if we're a file, we must be a jar file. do appropriate string munging.
        * otherwise, the string we got from GetSpec is fine.

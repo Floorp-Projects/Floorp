@@ -40,6 +40,7 @@
 #include "nsEscape.h"
 #include "nsMemory.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 
 const int netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
@@ -350,7 +351,7 @@ const int EscapeChars[256] =
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 {
     result.Truncate();
-    nsresult rv = NS_EscapeURLPart(str, -1, mask, result);
+    nsresult rv = NS_EscapeURL(str, -1, mask, result);
     if (NS_SUCCEEDED(rv) && result.IsEmpty())
         result = str;
     return rv;
@@ -361,27 +362,28 @@ NS_COM nsresult nsStdUnescape(char *str, char **result)
     *result = nsCRT::strdup(str);
     if (!*result)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_UnescapeURL(*result);
+    nsUnescape(*result);
     return NS_OK;
 }
 
-NS_COM PRBool NS_EscapeURLPart(const char *part,
-                               PRInt32 partLen,
-                               PRInt16 mask,
-                               nsACString &result)
+NS_COM PRBool NS_EscapeURL(const char *part,
+                           PRInt32 partLen,
+                           PRInt16 mask,
+                           nsACString &result)
 {
-    if (!part)
+    if (!part) {
+        NS_NOTREACHED("null pointer");
         return PR_FALSE;
+    }
 
     int i = 0;
     static const char hexChars[] = "0123456789ABCDEF";
     if (partLen < 0)
         partLen = strlen(part);
-    PRBool forced = PR_FALSE;
-    PRBool writing = PR_FALSE;
-
-    if (mask & esc_Forced)
-        forced = PR_TRUE;
+    PRBool forced = (mask & esc_Forced);
+    PRBool ignoreNonAscii = (mask & esc_OnlyASCII);
+    PRBool ignoreAscii = (mask & esc_OnlyNonASCII);
+    PRBool writing = (mask & esc_AlwaysCopy);
 
     register const unsigned char* src = (const unsigned char *) part;
 
@@ -392,13 +394,17 @@ NS_COM PRBool NS_EscapeURLPart(const char *part,
     {
       unsigned char c = *src++;
 
-      /* if the char has not to be escaped or whatever follows % is 
-         a valid escaped string, just copy the char */
+      // if the char has not to be escaped or whatever follows % is 
+      // a valid escaped string, just copy the char.
+      //
+      // Also the % will not be escaped until forced
+      // See bugzilla bug 61269 for details why we changed this
+      //
+      // And, we will not escape non-ascii characters if requested.
 
-      /* Also the % will not be escaped until forced */
-      /* See bugzilla bug 61269 for details why we changed this */
-
-      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced)))
+      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
+                         || (c > 0x7f && ignoreNonAscii)
+                         || (c < 0x80 && ignoreAscii))
       {
         if (writing)
           tempBuffer[tempBufferPos++] = c;
@@ -430,7 +436,50 @@ NS_COM PRBool NS_EscapeURLPart(const char *part,
     return writing;
 }
 
-NS_COM void NS_UnescapeURL(char *str)
+#define ISHEX(c) memchr(hexChars, c, sizeof(hexChars)-1)
+
+NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACString &result)
 {
-    nsUnescape(str);
+    if (!str) {
+        NS_NOTREACHED("null pointer");
+        return PR_FALSE;
+    }
+
+    if (len < 0)
+        len = strlen(str);
+
+    PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
+    PRBool writing = (flags & esc_AlwaysCopy);
+
+    static const char hexChars[] = "0123456789ABCDEFabcdef";
+
+    const char *last = str;
+    const char *p = str;
+
+    for (int i=0; i<len; ++i, ++p) {
+        //printf("%c [i=%d of len=%d]\n", *p, i, len);
+        if (*p == HEX_ESCAPE && i < len-2) {
+            unsigned char *p1 = ((unsigned char *) p) + 1;
+            unsigned char *p2 = ((unsigned char *) p) + 2;
+            if (ISHEX(*p1) && ISHEX(*p2) && !(ignoreNonAscii && *p1 >= '8')) {
+                //printf("- p1=%c p2=%c\n", *p1, *p2);
+                writing = PR_TRUE;
+                if (p > last) {
+                    //printf("- p=%p, last=%p\n", p, last);
+                    result.Append(last, p - last);
+                    last = p;
+                }
+                char u = (UNHEX(*p1) << 4) + UNHEX(*p2);
+                //printf("- u=%c\n", u);
+                result.Append(u);
+                i += 2;
+                p += 2;
+                last += 3;
+            }
+        }
+    }
+    if (writing && last < str + len)
+        result.Append(last, str + len - last);
+
+    return writing;
 }

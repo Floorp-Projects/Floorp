@@ -100,7 +100,7 @@ NS_IMETHODIMP
 HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
 {
   PRInt32 curIndex=0;
-  char *  curURL=nsnull;
+  nsCAutoString curURL;
   nsCOMPtr<nsISHistory> sHistory;
 
   // Get SessionHistory from docshell
@@ -119,9 +119,8 @@ HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
   // Get the URI for the current entry
   curEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(&curURL);
-  aCurrent.Assign(NS_ConvertASCIItoUCS2(curURL));
-  nsCRT::free(curURL);
+  uri->GetSpec(curURL);
+  aCurrent.Assign(NS_ConvertUTF8toUCS2(curURL));
 
   return NS_OK;
 }
@@ -130,7 +129,7 @@ NS_IMETHODIMP
 HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
 {
   PRInt32 curIndex;
-  char *  prevURL = nsnull;
+  nsCAutoString prevURL;
   nsCOMPtr<nsISHistory>  sHistory;
 
   // Get session History from docshell
@@ -149,9 +148,8 @@ HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
   // Get the URI for the previous entry
   prevEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(&prevURL);
-  aPrevious.Assign(NS_ConvertASCIItoUCS2(prevURL));
-  nsCRT::free(prevURL);
+  uri->GetSpec(prevURL);
+  aPrevious.Assign(NS_ConvertUTF8toUCS2(prevURL));
 
   return NS_OK;
 }
@@ -160,7 +158,7 @@ NS_IMETHODIMP
 HistoryImpl::GetNext(nsAWritableString& aNext)
 {
   PRInt32 curIndex;
-  char * nextURL = nsnull;
+  nsCAutoString nextURL;
   nsCOMPtr<nsISHistory>  sHistory;
 
   // Get session History from docshell
@@ -179,9 +177,8 @@ HistoryImpl::GetNext(nsAWritableString& aNext)
   // Get the URI for the next entry
   nextEntry->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(&nextURL); 
-  aNext.Assign(NS_ConvertASCIItoUCS2(nextURL));
-  nsCRT::free(nextURL);
+  uri->GetSpec(nextURL); 
+  aNext.Assign(NS_ConvertUTF8toUCS2(nextURL));
 
   return NS_OK;
 }
@@ -272,11 +269,10 @@ HistoryImpl::GoUri(const nsAReadableString& aUriSubstring)
       rv = sh_entry->GetURI(getter_AddRefs(uri));
 
       if (uri) {
-        nsXPIDLCString   urlCString;
-        rv = uri->GetSpec(getter_Copies(urlCString));
+        nsCAutoString urlCString;
+        rv = uri->GetSpec(urlCString);
 
-        nsAutoString url;
-        url.AssignWithConversion(urlCString);
+        NS_ConvertUTF8toUCS2 url(urlCString);
 
         nsReadingIterator<PRUnichar> start;
         nsReadingIterator<PRUnichar> end;
@@ -364,10 +360,10 @@ HistoryImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
   }
 
   if (uri) {
-    nsXPIDLCString   urlCString;
-    rv = uri->GetSpec(getter_Copies(urlCString));
+    nsCAutoString urlCString;
+    rv = uri->GetSpec(urlCString);
 
-    aReturn.Assign(NS_ConvertASCIItoUCS2(urlCString));
+    aReturn.Assign(NS_ConvertUTF8toUCS2(urlCString));
   }
 
   return rv;

@@ -3138,11 +3138,9 @@ nsDocument::GetBaseURI(nsAWritableString &aURI)
 {
   aURI.Truncate();
   if (mDocumentBaseURL) {
-    nsXPIDLCString spec;
-    mDocumentBaseURL->GetSpec(getter_Copies(spec));
-    if (spec) {
-      CopyASCIItoUCS2(nsDependentCString(spec), aURI);
-    }
+    nsCAutoString spec;
+    mDocumentBaseURL->GetSpec(spec);
+    aURI = NS_ConvertUTF8toUCS2(spec);
   }
   return NS_OK;
 }

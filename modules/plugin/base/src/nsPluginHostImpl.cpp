@@ -374,7 +374,7 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
 ////////////////////////////////////////////////////////////////////////
 nsActivePlugin::nsActivePlugin(nsPluginTag* aPluginTag,
                                nsIPluginInstance* aInstance, 
-                               char * url,
+                               const char * url,
                                PRBool aDefaultPlugin)
 {
   mNext = nsnull;
@@ -675,7 +675,7 @@ nsActivePlugin * nsActivePluginList::find(nsIPluginInstance* instance)
   return nsnull;
 }
 
-nsActivePlugin * nsActivePluginList::find(char * mimetype)
+nsActivePlugin * nsActivePluginList::find(const char * mimetype)
 {
   PRBool defaultplugin = (PL_strcmp(mimetype, "*") == 0);
 
@@ -711,7 +711,7 @@ nsActivePlugin * nsActivePluginList::find(char * mimetype)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsActivePlugin * nsActivePluginList::findStopped(char * url)
+nsActivePlugin * nsActivePluginList::findStopped(const char * url)
 {
   for(nsActivePlugin * p = mFirst; p != nsnull; p = p->mNext)
   {
@@ -1432,10 +1432,10 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> url;
 
-  rv = NS_NewURI(getter_AddRefs(url), mURL);
+  rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(mURL));
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull, nsnull);
+  rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull, nsnull);
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1695,14 +1695,13 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
 nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 {
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(mURL != nsnull) (void)mURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(mURL != nsnull) (void)mURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::dtor this=%p, url=%s, POST_file=%s\n",this, urlSpec, mLocalFile));
+        ("nsPluginStreamListenerPeer::dtor this=%p, url=%s, POST_file=%s\n",this, urlSpec.get(), mLocalFile));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
   NS_IF_RELEASE(mURL);
@@ -1742,14 +1741,13 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
                                                 PRInt32 requestCount)
 {
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(aURL != nsnull) (void)aURL->GetAsciiSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n", aInstance, urlSpec));
+        ("nsPluginStreamListenerPeer::Initialize instance=%p, url=%s\n", aInstance, urlSpec.get()));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
   mURL = aURL;
@@ -1792,14 +1790,13 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
                                                        nsIPluginHost *aHost)
 {
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::InitializeEmbeded url=%s\n", urlSpec));
+        ("nsPluginStreamListenerPeer::InitializeEmbeded url=%s\n", urlSpec.get()));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
   mURL = aURL;
@@ -1892,12 +1889,12 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
     if(!url)
       return NS_ERROR_FAILURE;
 
-    nsXPIDLCString filename;
-    url->GetFileName(getter_Copies(filename));
+    nsCAutoString filename;
+    url->GetFileName(filename);
     if (NS_FAILED(rv)) return rv;
 
     // Create a file to save our stream into. Should we scramble the name?
-    rv = pluginTmp->Append(filename);
+    rv = pluginTmp->Append(filename.get());
     if (NS_FAILED(rv)) return rv;
     
     // Yes, make it unique.
@@ -1983,15 +1980,14 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     mPluginStreamInfo->SetContentType(aContentType);
 
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnStartRequest this=%p request=%p mime=%s, url=%s\n",
-  this, request, aContentType, urlSpec));
+  this, request, aContentType, urlSpec.get()));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
   nsPluginWindow    *window = nsnull;
@@ -2141,13 +2137,12 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   if(!mPStreamListener || !mPluginStreamInfo)
     return NS_ERROR_FAILURE;
 
-  char* urlString;
-  aURL->GetSpec(&urlString);
-  mPluginStreamInfo->SetURL(urlString);
+  nsCAutoString urlString;
+  aURL->GetSpec(urlString);
+  mPluginStreamInfo->SetURL(urlString.get());
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%d, length=%d, url=%s\n",
-  this, request, sourceOffset, aLength, urlString));
-  nsCRT::free(urlString);
+  this, request, sourceOffset, aLength, urlString.get()));
 
   // if the plugin has requested an AsFileOnly stream, then don't 
   // call OnDataAvailable
@@ -2313,10 +2308,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (NS_FAILED(rv)) 
     return rv;
   
-  nsXPIDLCString urlString;
-  rv = aURL->GetSpec(getter_Copies(urlString));
+  nsCAutoString urlString;
+  rv = aURL->GetAsciiSpec(urlString);
   if (NS_SUCCEEDED(rv)) 
-    mPluginStreamInfo->SetURL(urlString);
+    mPluginStreamInfo->SetURL(urlString.get());
   
   // Set the content type to ensure we don't pass null to the plugin
   nsXPIDLCString aContentType;
@@ -2424,10 +2419,9 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     }
   } 
 
-  char* urlString;
-  aURL->GetSpec(&urlString);
-  mPluginStreamInfo->SetURL(urlString);
-  nsCRT::free(urlString);
+  nsCAutoString urlString;
+  aURL->GetAsciiSpec(urlString);
+  mPluginStreamInfo->SetURL(urlString.get());
 
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
@@ -3112,7 +3106,7 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   }
   
   // make an nsURI from the argument url
-  res = ioService->NewURI(url, nsnull, getter_AddRefs(uriIn));
+  res = ioService->NewURI(nsDependentCString(url), nsnull, nsnull, getter_AddRefs(uriIn));
   if (NS_FAILED(res)) {
     return res;
   }
@@ -3294,15 +3288,14 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
                                                          nsIPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(aURL != nsnull) (void)aURL->GetAsciiSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
         ("nsPluginHostImpl::InstatiateEmbededPlugin Begin mime=%s, owner=%p, url=%s\n",
-        aMimeType, aOwner, urlSpec));
+        aMimeType, aOwner, urlSpec.get()));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
   nsresult  rv;
@@ -3355,8 +3348,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   // only open the initial stream if it's one that we can handle internally. Otherwise
   // |NS_OpenURI| in |InstantiateEmbededPlugin| may open up a OS protocal registered helper app
   PRBool bCanHandleInternally = PR_FALSE;
-  nsXPIDLCString scheme;
-  if (aURL && NS_SUCCEEDED(aURL->GetScheme(getter_Copies(scheme)))) {
+  nsCAutoString scheme;
+  if (aURL && NS_SUCCEEDED(aURL->GetScheme(scheme))) {
       nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
       contractID += scheme;
       ToLowerCase(contractID);
@@ -3478,15 +3471,14 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   }
 
 #ifdef PLUGIN_LOGGING
-  char* urlSpec2 = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec2);
+  nsCAutoString urlSpec2;
+  if(aURL != nsnull) (void)aURL->GetAsciiSpec(urlSpec2);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
         ("nsPluginHostImpl::InstatiateEmbededPlugin Finished mime=%s, rv=%d, owner=%p, url=%s\n",
-        aMimeType, rv, aOwner, urlSpec2));
+        aMimeType, rv, aOwner, urlSpec2.get()));
 
   PR_LogFlush();
-  if (urlSpec2) nsCRT::free(urlSpec2);
 #endif
 
   return rv;
@@ -3569,13 +3561,13 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL, 
                                                    nsIPluginInstanceOwner *aOwner)
 {
-  char* url;
+  nsCAutoString url;
   if(!aURL)
     return NS_ERROR_FAILURE;
 
-  (void)aURL->GetSpec(&url);
+  (void)aURL->GetAsciiSpec(url);
   
-  nsActivePlugin * plugin = mActivePluginList.findStopped(url);
+  nsActivePlugin * plugin = mActivePluginList.findStopped(url.get());
 
   if((plugin != nsnull) && (plugin->mStopped))
   {
@@ -3597,10 +3589,8 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
       instance->SetWindow(window);
 
     plugin->setStopped(PR_FALSE);
-    nsCRT::free(url);
     return NS_OK;
   }
-  nsCRT::free(url);
   return NS_ERROR_FAILURE;
 }
 
@@ -3612,12 +3602,12 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                                                PRBool aDefaultPlugin)
 
 {
-  char* url;
+  nsCAutoString url;
 
   if(!aURL)
     return;
 
-  (void)aURL->GetSpec(&url);
+  (void)aURL->GetSpec(url);
 
   // find corresponding plugin tag
   // this is legal for xpcom plugins not to have nsIPlugin implemented
@@ -3642,14 +3632,12 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
     */
   }
 
-  nsActivePlugin * plugin = new nsActivePlugin(pluginTag, aInstance, url, aDefaultPlugin);
+  nsActivePlugin * plugin = new nsActivePlugin(pluginTag, aInstance, url.get(), aDefaultPlugin);
 
   if(plugin == nsnull)
     return;
 
   mActivePluginList.add(plugin);
-
-  nsCRT::free(url);
 }
 
 
@@ -3703,15 +3691,14 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
                                                     nsIPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
-  char* urlSpec = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
+  nsCAutoString urlSpec;
+  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
         ("nsPluginHostImpl::SetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
-        aMimeType, aOwner, urlSpec));
+        aMimeType, aOwner, urlSpec.get()));
 
   PR_LogFlush();
-  if (urlSpec) nsCRT::free(urlSpec);
 #endif
 
 
@@ -3728,20 +3715,16 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   {
     char* extension;
 
-    char* filename;
-    aURL->GetPath(&filename);
-    extension = PL_strrchr(filename, '.');
+    nsCAutoString filename;
+    aURL->GetPath(filename);
+    extension = PL_strrchr(filename.get(), '.');
     if(extension)
       ++extension;
     else
       return NS_ERROR_FAILURE;
 
     if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
-    {
-      nsCRT::free(filename);
       return NS_ERROR_FAILURE;
-    }
-    nsCRT::free(filename);
   }
   else
     mimetype = aMimeType;
@@ -3883,15 +3866,14 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
     NS_RELEASE(instance);
 
 #ifdef PLUGIN_LOGGING
-  char* urlSpec2 = nsnull;
-  if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec2);
+  nsCAutoString urlSpec2;
+  if(aURL != nsnull) (void)aURL->GetSpec(urlSpec2);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
         ("nsPluginHostImpl::SetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
-        aMimeType, result, aOwner, urlSpec2));
+        aMimeType, result, aOwner, urlSpec2.get()));
 
   PR_LogFlush();
-  if (urlSpec2) nsCRT::free(urlSpec2);
 #endif
 
     return NS_OK;
@@ -3943,15 +3925,15 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
     if(url)
     {
-      nsXPIDLCString extension;
-      url->GetFileExtension(getter_Copies(extension));
+      nsCAutoString extension;
+      url->GetFileExtension(extension);
     
-      if(extension)
+      if(!extension.IsEmpty())
       {
         nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
         if(NS_SUCCEEDED(res) && ms)
         {
-          res = ms->GetTypeFromExtension(extension, getter_Copies(mt));
+          res = ms->GetTypeFromExtension(extension.get(), getter_Copies(mt));
           if(NS_SUCCEEDED(res))
             mimetype = mt;
         }
@@ -5601,7 +5583,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       nsCOMPtr<nsIChannel> channel;
 
       // XXX: Null LoadGroup?
-      rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull, callbacks);
+      rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull, callbacks);
       if (NS_FAILED(rv)) 
         return rv;
 
@@ -5929,7 +5911,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
   }
 
   // make an nsURI from the argument url
-  rv = ioService->NewURI(inCookieURL, nsnull, getter_AddRefs(uriIn));
+  rv = ioService->NewURI(nsDependentCString(inCookieURL), nsnull, nsnull, getter_AddRefs(uriIn));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5974,7 +5956,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   }
   
   // make an nsURI from the argument url
-  rv = ioService->NewURI(inCookieURL, nsnull, getter_AddRefs(uriIn));
+  rv = ioService->NewURI(nsDependentCString(inCookieURL), nsnull, nsnull, getter_AddRefs(uriIn));
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -6028,23 +6010,20 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
 
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIURI> uri;
-  char *spec = nsnull;
+  nsCAutoString spec;
 
   PRInt32 buttonPressed;
   PRBool checkboxState = PR_FALSE;
   
-  rv = io->NewURI(PLUGIN_PROPERTIES_URL, nsnull, getter_AddRefs(uri));
+  rv = io->NewURI(NS_LITERAL_CSTRING(PLUGIN_PROPERTIES_URL), nsnull, nsnull, getter_AddRefs(uri));
   if (NS_FAILED(rv))
     return rv;
 
-  rv = uri->GetSpec(&spec);
-  if (NS_FAILED(rv)) {
-    nsCRT::free(spec);
+  rv = uri->GetSpec(spec);
+  if (NS_FAILED(rv))
     return rv;
-  }
 
-  rv = strings->CreateBundle(spec, getter_AddRefs(bundle));
-  nsCRT::free(spec);
+  rv = strings->CreateBundle(spec.get(), getter_AddRefs(bundle));
   if (NS_FAILED(rv))
     return rv;
 
@@ -6286,7 +6265,8 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
   // stat file == get size & convert file:///c:/ to c: if needed
   nsCOMPtr<nsILocalFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   if (NS_FAILED(rv) || 
-    (NS_FAILED(rv = NS_InitFileFromURLSpec(file, postDataURL)) && NS_FAILED(rv = file->InitWithPath(postDataURL))) ||
+    (NS_FAILED(rv = NS_InitFileFromURLSpec(file, nsDependentCString(postDataURL))) &&
+     NS_FAILED(rv = file->InitWithPath(postDataURL))) ||
     NS_FAILED(rv = file->GetFileSize(&fileSize)) ||
     NS_FAILED(rv = file->GetPath(getter_Copies(filename)))
     )

@@ -189,7 +189,21 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         mPerm = 0;
 
     rv = localFile->OpenNSPRFileDesc(mIOFlags, mPerm, &mFD);
-    if (NS_FAILED(rv)) return NS_ERROR_FILE_NOT_FOUND;  //How do we deal with directories/??
+    if (NS_FAILED(rv)) {
+        PRBool isDir;
+        rv = localFile->IsDirectory(&isDir);
+        if (NS_SUCCEEDED(rv) && isDir) {
+            // Directories turn into an HTTP-index stream, with
+            // unbounded (i.e., read 'til the stream says it's done)
+            // length.
+            if (contentType)
+                *contentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
+            if (contentLength) 
+                *contentLength = -1;
+            return NS_OK;
+        }
+        return NS_ERROR_FILE_NOT_FOUND;
+    }
 
     if (contentLength) {
         // We'll try to use the file's length, if it has one. If not,
@@ -206,34 +220,22 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
             *contentLength = -1;
     }
     if (contentType) {
-        PRBool isDir;
-        rv = mFile->IsDirectory(&isDir);
-        if (NS_SUCCEEDED(rv) && isDir) {
-            // Directories turn into an HTTP-index stream, with
-            // unbounded (i.e., read 'til the stream says it's done)
-            // length.
-            *contentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
-            *contentLength = -1;
+        // must we really go though this? dougt
+        nsIMIMEService* mimeServ = nsnull;
+        nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
+        if (fileTransportService) {
+            mimeServ = fileTransportService->GetCachedMimeService();
+            if (mimeServ)
+                rv = mimeServ->GetTypeFromFile(mFile, contentType);
         }
-        else {
-            // must we really go though this? dougt
-            nsIMIMEService* mimeServ = nsnull;
-            nsFileTransportService* fileTransportService = nsFileTransportService::GetInstance();
-            if (fileTransportService) {
-                mimeServ = fileTransportService->GetCachedMimeService();
-                if (mimeServ) {
-                    rv = mimeServ->GetTypeFromFile(mFile, contentType);
-                }
-            }
-            
-            if (!mimeServ || (NS_FAILED(rv))) {
-                // if all else fails treat it as text/html?
-                *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
-                if (*contentType == nsnull)
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                else
-                    rv = NS_OK;
-            }
+        
+        if (!mimeServ || (NS_FAILED(rv))) {
+            // if all else fails treat it as text/html?
+            *contentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
+            if (*contentType == nsnull)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else
+                rv = NS_OK;
         }
     }
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
@@ -264,8 +266,6 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     nsresult rv;
 
     if (!mFD) {
-        // NS_ASSERTION(mFD, "Your suppose to call Open()");
-        
         rv = Open(nsnull, nsnull);        
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
@@ -277,7 +277,8 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
         return rv;
     
     if (isDir) {
-        PR_Close(mFD);
+        if (mFD)
+            PR_Close(mFD);
         rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
         PR_LOG(gFileIOLog, PR_LOG_DEBUG,
                ("nsFileIO: opening local dir %s for input (%x)",
@@ -318,9 +319,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
     nsresult rv;
 
     if (!mFD) {
-        nsXPIDLCString contentType;
-        PRInt32 contentLength;
-        rv = Open(getter_Copies(contentType), &contentLength);        
+        rv = Open(nsnull, nsnull);
         if (NS_FAILED(rv))  // file or directory does not exist
             return rv;
     }

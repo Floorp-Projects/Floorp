@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,10 +20,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -36,47 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef COOKIES_H
-#define COOKIES_H
+#include "nsIURL.idl"
 
-#include "nsString.h"
-#include "nsCookie.h"
+interface nsIFile;
 
-#ifdef _IMPL_NS_COOKIE
-#define NS_COOKIE NS_EXPORT
-#else
-#define NS_COOKIE NS_IMPORT
-#endif
-
-#include "nsIIOService.h"
-
-class nsIPrompt;
-class nsIHttpChannel;
-
-extern nsresult COOKIE_Read();
-extern nsresult COOKIE_Write();
-//XXX these should operate on |const char*|
-extern char * COOKIE_GetCookie(char * address, nsIIOService* ioService);
-extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress, nsIIOService* ioService);
-extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, const char * set_cookie_header, nsIIOService* ioService, nsIHttpChannel* aHttpChannel);
-extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, const char * set_cookie_header, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel);
-extern void COOKIE_RegisterPrefCallbacks(void);
-
-extern void COOKIE_RemoveAll(void);
-extern void COOKIE_DeletePersistentUserData(void);
-extern PRInt32 COOKIE_Count();
-extern nsresult COOKIE_Enumerate
-    (PRInt32 count,
-     char **name,
-     char **value,
-     PRBool *isDomain,
-     char ** host,
-     char ** path,
-     PRBool * isSecure,
-     PRUint64 * expires,
-     nsCookieStatus_t * status,
-     nsCookiePolicy_t * policy);
-extern void COOKIE_Remove
-  (const char* host, const char* name, const char* path, const PRBool permanent);
-
-#endif /* COOKIES_H */
+/**
+ * nsIFileURL is used for the file: protocol, and gives access to the
+ * underlying nsIFile object.
+ */
+[scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
+interface nsIFileURL : nsIURL
+{
+    /**
+     * setter clones and getter references, meaning that you must clone the
+     * resulting nsIFile if you wish to modify it.
+     */
+    attribute nsIFile file;
+};

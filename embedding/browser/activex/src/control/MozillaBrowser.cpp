@@ -731,12 +731,12 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
     }
 
     // Get the current URI
-    nsXPIDLCString aURI;
-    mWebBrowserContainer->m_pCurrentURI->GetSpec(getter_Copies(aURI));
+    nsCAutoString aURI;
+    mWebBrowserContainer->m_pCurrentURI->GetSpec(aURI);
 
     nsAutoString strURI;
     strURI.Assign(NS_LITERAL_STRING("view-source:"));
-    strURI.AppendWithConversion(aURI);
+    strURI.Append(NS_ConvertUTF8toUCS2(aURI));
 
     CIPtr(IDispatch) spDispNew;
     VARIANT_BOOL bCancel = VARIANT_FALSE;
@@ -2355,9 +2355,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
     if (uri)
     {
         USES_CONVERSION;
-        nsXPIDLCString aURI;
-        uri->GetSpec(getter_Copies(aURI));
-        *LocationURL = SysAllocString(A2OLE((const char *) aURI));
+        nsCAutoString aURI;
+        uri->GetAsciiSpec(aURI);
+        *LocationURL = SysAllocString(A2OLE(aURI.get()));
     }
     else
     {

@@ -175,7 +175,7 @@ function (aPort, aScheme)
 }
 
 IRCProtocolHandler.prototype.newURI =
-function (aSpec, aBaseURI)
+function (aSpec, aCharset, aBaseURI)
 {
     if (aBaseURI)
     {
@@ -185,7 +185,7 @@ function (aSpec, aBaseURI)
     
     var url = Components.classes[STANDARDURL_CONTRACTID].
       createInstance(nsIStandardURL);
-    url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aBaseURI);
+    url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aCharset, aBaseURI);
     
     return url.QueryInterface(nsIURI);
 }

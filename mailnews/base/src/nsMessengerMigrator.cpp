@@ -939,19 +939,19 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!ioService) return NS_ERROR_FAILURE;
     
-    rv = ioService->ExtractUrlPart(old_uri, nsIIOService::url_Host, 0, 0, getter_Copies(hostname));
+    rv = ioService->ExtractUrlPart(nsDependentCString(old_uri), nsIIOService::url_Host, hostname);
     if (NS_FAILED(rv)) return rv;
 
-    rv = ioService->ExtractUrlPart(old_uri, nsIIOService::url_Username, 0, 0, getter_Copies(username));
+    rv = ioService->ExtractUrlPart(nsDependentCString(old_uri), nsIIOService::url_Username, username);
     if (NS_FAILED(rv)) return rv;
 
     // in 4.x, mac and windows stored the URI as IMAP://<hostname> 
 	// if the URI was the default folder on the server.
 	// If it wasn't the default folder, they would have stored it as
-	if (!username || (PL_strlen((const char *)username) == 0)) {
+	if (username.IsEmpty()) {
 		char *imap_username = nsnull;
 		char *prefname = nsnull;
-		prefname = PR_smprintf("mail.imap.server.%s.userName", (const char *)hostname);
+		prefname = PR_smprintf("mail.imap.server.%s.userName", hostname.get());
 		if (!prefname) return NS_ERROR_FAILURE;
 
 		rv = m_prefs->CopyCharPref(prefname, &imap_username);
@@ -963,9 +963,9 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 		else {
 			// new_uri = imap://<username>@<hostname>/<folder name>
 #ifdef DEBUG_MIGRATOR
-			printf("new_uri = %s/%s@%s/%s\n",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
+			printf("new_uri = %s/%s@%s/%s\n",IMAP_SCHEMA, imap_username, hostname.get(), default_folder_name);
 #endif /* DEBUG_MIGRATOR */
-			*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
+			*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA, imap_username, hostname.get(), default_folder_name);
 			return NS_OK;      
 		}
     }

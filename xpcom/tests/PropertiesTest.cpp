@@ -93,7 +93,7 @@ main(int argc, char* argv[])
   if (NS_FAILED(ret)) return ret;
 
   nsIChannel *channel = nsnull;
-  ret = service->NewChannel(TEST_URL, nsnull, &channel);
+  ret = service->NewChannel(NS_LITERAL_CSTRING(TEST_URL), nsnull, nsnull, &channel);
   if (NS_FAILED(ret)) return ret;
 
   nsIEventQueue *eventQ = nsnull;

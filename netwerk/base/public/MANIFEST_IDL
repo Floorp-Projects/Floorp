@@ -7,6 +7,7 @@ nsIAuthPrompt.idl
 nsIChannel.idl
 nsIDirectoryListing.idl
 nsIDownloader.idl
+nsIFileURL.idl
 nsIFileChannel.idl
 nsIFileTransportService.idl
 nsIMIMEInputStream.idl
@@ -37,6 +38,7 @@ nsIURI.idl
 nsIURIChecker.idl
 nsIURL.idl
 nsIURLParser.idl
+nsIStandardURL.idl
 nsIWebFilters.idl
 nsISecurityEventSink.idl
 nsISecretDecoderRing.idl

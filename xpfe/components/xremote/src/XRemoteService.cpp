@@ -681,7 +681,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
 
     // open a channel
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), uri);
+    rv = NS_NewChannel(getter_AddRefs(channel), uri);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 

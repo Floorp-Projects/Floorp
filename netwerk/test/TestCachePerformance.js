@@ -49,7 +49,7 @@ function getIOService()
 function downloadHTTP(spec)
 {
     var ioService = getIOService();
-    var uri = ioService.newURI(spec, null);
+    var uri = ioService.newURI(spec, null, null);
     var channel = ioService.newChannelFromURI(uri);
     var input = wrapInputStream(channel.open());
     var data = input.read(input.available());

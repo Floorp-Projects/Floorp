@@ -41,6 +41,7 @@
 #include "nsIURL.h"
 #include "nsAgg.h"
 #include "nsISerializable.h"
+#include "nsString.h"
 
 #define NS_THIS_SIMPLEURI_IMPLEMENTATION_CID         \
 { /* 22b8f64a-2f7b-11d3-8cd0-0060b0fc14a3 */         \
@@ -66,8 +67,8 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    char*       mScheme;
-    char*       mPath;
+    nsCString mScheme;
+    nsCString mPath;
 };
 
 #endif // nsSimpleURI_h__

@@ -820,7 +820,7 @@ nsSchemaLoader::GetResolvedURI(const nsAReadableString& aSchemaURI,
       }
     }
     
-    rv = NS_NewURI(aURI, aSchemaURI, baseURI);
+    rv = NS_NewURI(aURI, aSchemaURI, nsnull, baseURI);
     if (NS_FAILED(rv)) return rv;
     
     rv = secMan->CheckLoadURIFromScript(cx, *aURI);
@@ -852,8 +852,8 @@ nsSchemaLoader::Load(const nsAReadableString& schemaURI,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsXPIDLCString spec;
-  resolvedURI->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  resolvedURI->GetSpec(spec);
   
   nsCOMPtr<nsIXMLHttpRequest> request(do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv));
   if (!request) {
@@ -908,8 +908,8 @@ nsSchemaLoader::LoadAsync(const nsAReadableString& schemaURI,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsXPIDLCString spec;
-  resolvedURI->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  resolvedURI->GetSpec(spec);
 
   nsCOMPtr<nsIXMLHttpRequest> request(do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv));
   if (!request) {

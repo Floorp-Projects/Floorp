@@ -50,10 +50,10 @@ NS_IMPL_ISUPPORTS1(nsWyciwygProtocolHandler, nsIProtocolHandler);
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygProtocolHandler::GetScheme(char* *result)
+nsWyciwygProtocolHandler::GetScheme(nsACString &result)
 {
-  *result = nsCRT::strdup("wyciwyg");
-  return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  result = "wyciwyg";
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -71,8 +71,10 @@ nsWyciwygProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_r
 }
 
 NS_IMETHODIMP
-nsWyciwygProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result) 
+nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
+                                 const char *aCharset, // ignored
+                                 nsIURI *aBaseURI,
+                                 nsIURI **result) 
 {
   nsresult rv;
 
@@ -84,7 +86,7 @@ nsWyciwygProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
   if (NS_FAILED(rv)) return rv;
-  rv = url->SetSpec((char*)aSpec);
+  rv = url->SetSpec(aSpec);
   if (NS_FAILED(rv)) {
     NS_RELEASE(url);
     return rv;

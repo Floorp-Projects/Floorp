@@ -73,7 +73,7 @@ NS_IMETHODIMP nsAbDirectoryRDFResource::Init(const char* aURI)
     nsCOMPtr<nsIURI> uri = do_CreateInstance (NS_STANDARDURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uri->SetSpec(aURI);
+    rv = uri->SetSpec(nsDependentCString(aURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mIsValidURI = PR_TRUE;
@@ -81,17 +81,17 @@ NS_IMETHODIMP nsAbDirectoryRDFResource::Init(const char* aURI)
     nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString queryString;
-    rv = url->GetEscapedQuery (getter_Copies(queryString));
+    nsCAutoString queryString;
+    rv = url->GetQuery (queryString);
 
-    nsXPIDLCString path;
-    rv = url->GetPath (getter_Copies(path));
+    nsCAutoString path;
+    rv = url->GetPath (path);
     mPath = path;
 
     PRUint32 queryStringLength;
-    if (queryString.get () && (queryStringLength = strlen (queryString)))
+    if (queryString.get () && (queryStringLength = queryString.Length ()))
     {
-        int pathLength = strlen (path) - queryStringLength - 1;
+        int pathLength = path.Length () - queryStringLength - 1;
         mPath.Truncate (pathLength);
 
         mURINoQuery.Truncate (mURINoQuery.Length () - queryStringLength - 1);

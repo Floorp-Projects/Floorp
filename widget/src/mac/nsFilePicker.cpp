@@ -31,7 +31,7 @@
 #endif
 #include "nsIURL.h"
 #include "nsVoidArray.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsToolkit.h"
 #include "nsIEventSink.h"
 

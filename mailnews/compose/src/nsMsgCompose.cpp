@@ -89,7 +89,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
-#include "nsNetCID.h"
+#include "nsIFileURL.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
@@ -370,26 +370,24 @@ PRBool nsMsgCompose::IsEmbeddedObjectSafe(const char * originalScheme,
   if (!objURL.IsEmpty())
   {
     nsCOMPtr<nsIURI> uri;
-    nsCString objCUrl;
-    CopyUCS2toASCII(objURL, objCUrl);
-    rv = NS_NewURI(getter_AddRefs(uri), objCUrl.get());
+    rv = NS_NewURI(getter_AddRefs(uri), objURL);
     if (NS_SUCCEEDED(rv) && uri)
     {
-      nsXPIDLCString scheme;
-      rv = uri->GetScheme(getter_Copies(scheme));
-      if (NS_SUCCEEDED(rv) && (nsCRT::strcasecmp(scheme, originalScheme) == 0))
+      nsCAutoString scheme;
+      rv = uri->GetScheme(scheme);
+      if (NS_SUCCEEDED(rv) && (nsCRT::strcasecmp(scheme.get(), originalScheme) == 0))
       {
-        nsXPIDLCString host;
-        rv = uri->GetHost(getter_Copies(host));
+        nsCAutoString host;
+        rv = uri->GetAsciiHost(host);
         // mailbox url don't have a host therefore don't be too strict.
-        if (NS_SUCCEEDED(rv) && (!host || originalHost || (nsCRT::strcasecmp(host, originalHost) == 0)))
+        if (NS_SUCCEEDED(rv) && (host.IsEmpty() || originalHost || (nsCRT::strcasecmp(host.get(), originalHost) == 0)))
         {
-          nsXPIDLCString path;
-          rv = uri->GetPath(getter_Copies(path));
+          nsCAutoString path;
+          rv = uri->GetPath(path);
           if (NS_SUCCEEDED(rv))
           {
-            char * query = PL_strrchr((const char *)path, '?');
-            if (query && nsCRT::strncasecmp(path, originalPath, query - (const char *)path) == 0)
+            char * query = strrchr(path.get(), '?');
+            if (query && nsCRT::strncasecmp(path.get(), originalPath, query - path.get()) == 0)
               return PR_TRUE; //This object is a part of the original message, we can send it safely.
           }
         }
@@ -438,9 +436,9 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
     rv = msgService->GetUrlForUri(mQuoteURI.get(), getter_AddRefs(originalUrl), nsnull);
     if (NS_SUCCEEDED(rv) && originalUrl)
     {
-      originalUrl->GetScheme(getter_Copies(originalScheme));
-      originalUrl->GetHost(getter_Copies(originalHost));
-      originalUrl->GetPath(getter_Copies(originalPath));
+      originalUrl->GetScheme(originalScheme);
+      originalUrl->GetAsciiHost(originalHost);
+      originalUrl->GetPath(originalPath);
     }
   }
 
@@ -455,8 +453,8 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
       continue;
 
     node = do_QueryInterface(isupp);
-    if (IsEmbeddedObjectSafe((const char *)originalScheme, (const char *)originalHost,
-                             (const char *)originalPath, node))
+    if (IsEmbeddedObjectSafe(originalScheme.get(), originalHost.get(),
+                             originalPath.get(), node))
       continue; //Don't need to tag this object, it safe to send it.
     
     //The source of this object should not be sent with the message 
@@ -1566,13 +1564,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
       {
         if (!myGetter.IsEmpty())
         {
-          const char *escapedMessageId;
           nsCAutoString buf;
-          if (NS_EscapeURLPart(myGetter.get(), myGetter.Length(), esc_FileBaseName | esc_Forced, buf))
-            escapedMessageId = buf.get();
-          else
-            escapedMessageId = myGetter.get();
-          mCiteReference = NS_LITERAL_STRING("mid") + NS_ConvertASCIItoUCS2(escapedMessageId);
+          mCiteReference = NS_LITERAL_STRING("mid")
+             + NS_ConvertASCIItoUCS2(NS_EscapeURL(myGetter, esc_FileBaseName | esc_Forced, buf));
         }
       }
 
@@ -3023,8 +3017,8 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   if (fileUrl)
   {
     fileUrl->SetFilePath(sigNativePath);
-    nsXPIDLCString fileExt;
-    rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+    nsCAutoString fileExt;
+    rv = fileUrl->GetFileExtension(fileExt);
     if (NS_SUCCEEDED(rv) && !fileExt.IsEmpty())
   {
     // Now, most importantly, we need to figure out what the content type is for

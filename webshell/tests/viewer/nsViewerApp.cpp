@@ -1112,10 +1112,10 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        char * str;
+        nsCAutoString str;
         nsCOMPtr<nsIURI> uri;
         doc->GetDocumentURL(getter_AddRefs(uri));
-        nsresult rv = uri->GetSpec(&str);
+        nsresult rv = uri->GetSpec(str);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -1124,7 +1124,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
         {
           nsString* tempStr = new nsString;
           if ( tempStr )
-            tempStr->AssignWithConversion(str);
+            tempStr->Assign(NS_ConvertUTF8toUCS2(str));
           gWorkList->AppendElement(tempStr);
         }
 #if defined(XP_PC) && defined(NS_DEBUG) && !defined(XP_OS2)
@@ -1135,7 +1135,6 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
           PL_strdup(gVerifyDir),
           yieldProc);
 #endif
-        nsCRT::free(str);
       }
     }
   }

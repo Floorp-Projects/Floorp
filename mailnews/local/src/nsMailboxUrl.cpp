@@ -373,20 +373,20 @@ NS_IMETHODIMP nsMailboxUrl::IsUrlType(PRUint32 type, PRBool *isType)
 
 nsresult nsMailboxUrl::ParseSearchPart()
 {
-	nsXPIDLCString searchPart;
-	nsresult rv = GetQuery(getter_Copies(searchPart));
+	nsCAutoString searchPart;
+	nsresult rv = GetQuery(searchPart);
 	// add code to this function to decompose everything past the '?'.....
-	if (NS_SUCCEEDED(rv) && searchPart)
+	if (NS_SUCCEEDED(rv) && !searchPart.IsEmpty())
 	{
     // the action for this mailbox must be a display message...
-    char * msgPart = extractAttributeValue(searchPart, "part=");
+    char * msgPart = extractAttributeValue(searchPart.get(), "part=");
     if (msgPart)  // if we have a part in the url then we must be fetching just the part.
       m_mailboxAction = nsIMailboxUrl::ActionFetchPart;
     else
 		  m_mailboxAction = nsIMailboxUrl::ActionFetchMessage;
 
-		char * messageKey = extractAttributeValue(searchPart, "number=");
-		m_messageID = extractAttributeValue(searchPart,"messageid=");
+		char * messageKey = extractAttributeValue(searchPart.get(), "number=");
+		m_messageID = extractAttributeValue(searchPart.get(),"messageid=");
 		if (messageKey)
 			m_messageKey = atol(messageKey); // convert to a long...
 		if (messageKey || m_messageID)
@@ -405,7 +405,7 @@ nsresult nsMailboxUrl::ParseUrl()
 {
 	if (m_filePath)
 		delete m_filePath;
-	GetFilePath(getter_Copies(m_file));
+	GetFilePath(m_file);
 	ParseSearchPart();
   // ### fix me.
   // this hack is to avoid asserting on every local message loaded because the security manager
@@ -417,7 +417,7 @@ nsresult nsMailboxUrl::ParseUrl()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
+NS_IMETHODIMP nsMailboxUrl::SetSpec(const nsACString &aSpec)
 {
   nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
   if (NS_SUCCEEDED(rv))
@@ -425,7 +425,7 @@ NS_IMETHODIMP nsMailboxUrl::SetSpec(const char * aSpec)
   return rv;
 }
 
-NS_IMETHODIMP nsMailboxUrl::SetQuery(const char *aQuery)
+NS_IMETHODIMP nsMailboxUrl::SetQuery(const nsACString &aQuery)
 {
   nsresult rv = nsMsgMailNewsUrl::SetQuery(aQuery);
   if (NS_SUCCEEDED(rv))

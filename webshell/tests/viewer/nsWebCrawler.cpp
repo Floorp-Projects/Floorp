@@ -298,10 +298,9 @@ nsWebCrawler::DumpRegressionData()
             }
           }
           else {
-            char* file;
-            (void)mLastURL->GetPath(&file);
-            printf("could not open output file for %s\n", file);
-            nsCRT::free(file);
+            nsCAutoString file;
+            (void)mLastURL->GetPath(file);
+            printf("could not open output file for %s\n", file.get());
           }
         }
         else {
@@ -411,8 +410,8 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
     // Ignore this notification unless its for the current url. That way
     // we skip over embedded webshell notifications (e.g. frame cells,
     // iframes, etc.)
-    nsXPIDLCString spec;
-    uri->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    uri->GetSpec(spec);
 
     PRTime delta, cvt, rounder;
     LL_I2L(cvt, 1000);
@@ -519,10 +518,9 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
   if (nsnull!=aURL)
   {
     char *inputFileName;
-    char* file;
-    (void)aURL->GetPath(&file);
-    nsAutoString inputFileFullPath; inputFileFullPath.AssignWithConversion(file);
-    nsCRT::free(file);
+    nsCAutoString file;
+    (void)aURL->GetPath(file);
+    NS_ConvertUTF8toUCS2 inputFileFullPath(file);
     PRInt32 fileNameOffset = inputFileFullPath.RFindChar('/');
     if (-1==fileNameOffset)
     {
@@ -702,16 +700,16 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
   rv = NS_NewURI(&url, aURLSpec);
 
   if (NS_OK == rv) {
-    nsXPIDLCString host;
-    rv = url->GetHost(getter_Copies(host));
+    nsCAutoString host;
+    rv = url->GetHost(host);
     if (rv == NS_OK) {
-      PRInt32 hostlen = PL_strlen(host);
+      PRInt32 hostlen = host.Length();
 
       // Check domains to avoid
       PRInt32 i, n = mAvoidDomains.Count();
       for (i = 0; i < n; i++) {
         nsString* s = (nsString*) mAvoidDomains.ElementAt(i);
-        if (s && EndsWith(*s, host, hostlen)) {
+        if (s && EndsWith(*s, host.get(), hostlen)) {
           printf("Avoiding '");
           fputs(NS_LossyConvertUCS2toASCII(aURLSpec).get(), stdout);
           printf("'\n");
@@ -728,7 +726,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
       }
       for (i = 0; i < n; i++) {
         nsString* s = (nsString*) mSafeDomains.ElementAt(i);
-        if (s && EndsWith(*s, host, hostlen)) {
+        if (s && EndsWith(*s, host.get(), hostlen)) {
           return PR_TRUE;
         }
       }

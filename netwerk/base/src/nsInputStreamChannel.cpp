@@ -206,12 +206,10 @@ NS_IMETHODIMP
 nsStreamIOChannel::GetName(PRUnichar* *result)
 {
     nsresult rv;
-    nsXPIDLCString urlStr;
-    rv = mURI->GetSpec(getter_Copies(urlStr));
+    nsCAutoString urlStr;
+    rv = mURI->GetSpec(urlStr);
     if (NS_FAILED(rv)) return rv;
-    nsString name;
-    name.AppendWithConversion(urlStr);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

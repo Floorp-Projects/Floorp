@@ -398,18 +398,21 @@ MakeAbsoluteURL(char *base_url, char *relative_url)
   nsresult err = nsMimeNewURI(&base, base_url, nsnull);
   if (err != NS_OK) 
     return nsnull;
-  
+
+  nsCAutoString spec;
+
   nsIURI    *url = nsnull;
   err = nsMimeNewURI(&url, relative_url, base);
   if (err != NS_OK) 
     goto done;
   
-  err = url->GetSpec(&retString);
+  err = url->GetSpec(spec);
   if (err)
   {
     retString = nsnull;
     goto done;
   }
+  retString = ToNewCString(spec);
   
 done:
   NS_IF_RELEASE(url);

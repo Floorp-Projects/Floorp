@@ -371,14 +371,9 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   if (NS_FAILED(rv) || !mIOService)
     return PR_FALSE;
 
-  char* specStr = ToNewCString(txtURL);  //I18N this forces a single byte char
-  if (specStr == nsnull)
-    return PR_FALSE;
-
   // it would be faster if we could just check to see if there is a protocol
   // handler for the url and return instead of actually trying to create a url...
-  rv = mIOService->NewURI(specStr, nsnull, getter_AddRefs(uri));
-  Recycle(specStr);
+  rv = mIOService->NewURI(NS_ConvertUCS2toUTF8(txtURL), nsnull, nsnull, getter_AddRefs(uri));
 
   // Real work
   if (NS_SUCCEEDED(rv) && uri)

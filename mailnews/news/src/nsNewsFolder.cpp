@@ -1251,12 +1251,11 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
 {
     nsresult rv;
     PRInt32 port = 0;
-    nsXPIDLCString spec;
 
     nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = url->SetSpec(inUriStr);
+    rv = url->SetSpec(nsDependentCString(inUriStr));
     if (NS_FAILED(rv)) return rv;
 
     rv = url->GetPort(&port);
@@ -1280,11 +1279,15 @@ nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, cons
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = url->SetRef(ref);
+    rv = url->SetRef(nsDependentCString(ref));
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->GetSpec(result);
-    return rv;
+    nsCAutoString spec;
+    rv = url->GetSpec(spec);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = ToNewCString(spec);
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()

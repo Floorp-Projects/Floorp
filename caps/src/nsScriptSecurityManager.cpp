@@ -822,10 +822,10 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     }
 
     // Report error.
-    nsXPIDLCString spec;
-    if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+    nsCAutoString spec;
+    if (NS_FAILED(aURI->GetAsciiSpec(spec)))
         return NS_ERROR_FAILURE;
-    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+    JS_ReportError(cx, "illegal URL method '%s'", spec.get());
     return NS_ERROR_DOM_BAD_URI;
 }
 
@@ -839,19 +839,19 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
     nsCOMPtr<nsIURI> uri(aURI);
 
     //-- get the source scheme
-    nsXPIDLCString scheme;
-    rv = uri->GetScheme(getter_Copies(scheme));
+    nsCAutoString scheme;
+    rv = uri->GetScheme(scheme);
     if (NS_FAILED(rv)) return rv;
 
     //-- If uri is a view-source URI, drill down to the base URI
-    nsXPIDLCString path;
-    while(PL_strcmp(scheme, "view-source") == 0)
+    nsCAutoString path;
+    while(PL_strcmp(scheme.get(), "view-source") == 0)
     {
-        rv = uri->GetPath(getter_Copies(path));
+        rv = uri->GetPath(path);
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewURI(getter_AddRefs(uri), path, nsnull);
         if (NS_FAILED(rv)) return rv;
-        rv = uri->GetScheme(getter_Copies(scheme));
+        rv = uri->GetScheme(scheme);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -866,30 +866,30 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
     if (!uri) return NS_ERROR_FAILURE;
     if (isJAR)
     {
-        rv = uri->GetScheme(getter_Copies(scheme));
+        rv = uri->GetScheme(scheme);
         if (NS_FAILED(rv)) return rv;
     }
 
     //-- if uri is an about uri, distinguish 'safe' and 'unsafe' about URIs
     static const char aboutScheme[] = "about";
-    if(nsCRT::strcasecmp(scheme, aboutScheme) == 0)
-            *aScheme = PL_strdup(scheme);
+    if(nsCRT::strcasecmp(scheme.get(), aboutScheme) == 0)
+            *aScheme = nsCRT::strdup(scheme.get());
     {
-        nsXPIDLCString spec;
-        if(NS_FAILED(uri->GetSpec(getter_Copies(spec))))
+        nsCAutoString spec;
+        if(NS_FAILED(uri->GetAsciiSpec(spec)))
             return NS_ERROR_FAILURE;
         const char* page = spec.get() + sizeof(aboutScheme);
-        if ((PL_strcmp(page, "blank") == 0)   ||
-            (PL_strcmp(page, "") == 0)        ||
-            (PL_strcmp(page, "mozilla") == 0) ||
-            (PL_strcmp(page, "credits") == 0))
+        if ((strcmp(page, "blank") == 0)   ||
+            (strcmp(page, "") == 0)        ||
+            (strcmp(page, "mozilla") == 0) ||
+            (strcmp(page, "credits") == 0))
         {
-            *aScheme = PL_strdup("about safe");
+            *aScheme = nsCRT::strdup("about safe");
             return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }
     }
 
-    *aScheme = PL_strdup(scheme);
+    *aScheme = nsCRT::strdup(scheme.get());
     return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -999,13 +999,13 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
 nsresult
 nsScriptSecurityManager::ReportErrorToConsole(nsIURI* aTarget)
 {
-    nsXPIDLCString spec;
-    nsresult rv = aTarget->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    nsresult rv = aTarget->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString msg;
     msg.Assign(NS_LITERAL_STRING("The link to "));
-    msg.AppendWithConversion(spec);
+    msg.AppendWithConversion(spec.get());
     msg.Append(NS_LITERAL_STRING(" was blocked by the security manager.\nRemote content may not link to local content."));
     // Report error in JS console
     nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
@@ -1034,10 +1034,10 @@ nsScriptSecurityManager::CheckLoadURIStr(const char* aSourceURIStr, const char* 
                                          PRUint32 aFlags)
 {
     nsCOMPtr<nsIURI> source;
-    nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr, nsnull);
+    nsresult rv = NS_NewURI(getter_AddRefs(source), nsDependentCString(aSourceURIStr), nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIURI> target;
-    rv = NS_NewURI(getter_AddRefs(target), aTargetURIStr, nsnull);
+    rv = NS_NewURI(getter_AddRefs(target), nsDependentCString(aTargetURIStr), nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
     return CheckLoadURI(source, target, aFlags);
 }
@@ -1688,7 +1688,7 @@ Localize(const char *genericString, nsString &result)
         return ret;
     }
     nsIURI *uri = nsnull;
-    ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
+    ret = pNetService->NewURI(NS_LITERAL_CSTRING(PROPERTIES_URL), nsnull, nsnull, &uri);
     if (NS_FAILED(ret))
     {
         NS_WARNING("cannot create URI\n");
@@ -1715,18 +1715,16 @@ Localize(const char *genericString, nsString &result)
         NS_WARNING("cannot get string service\n");
         return ret;
     }
-    char *spec = nsnull;
-    ret = url->GetSpec(&spec);
+    nsCAutoString spec;
+    ret = url->GetAsciiSpec(spec);
     if (NS_FAILED(ret))
     {
         NS_WARNING("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-        nsCRT::free(spec);
         return ret;
     }
     nsIStringBundle *bundle = nsnull;
-    ret = pStringService->CreateBundle(spec, &bundle);
-    nsCRT::free(spec);
+    ret = pStringService->CreateBundle(spec.get(), &bundle);
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     if (NS_FAILED(ret))
     {

@@ -327,8 +327,8 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     NS_NAMED_LITERAL_STRING(errorString, "Error loading script");
     event.errorMsg = errorString.get();
 
-    nsXPIDLCString spec;
-    aURI->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    aURI->GetSpec(spec);
 
     NS_ConvertUTF8toUCS2 fileName(spec);
 

@@ -99,14 +99,14 @@ nsresult nsSOAPCall::GetTransport(nsISOAPTransport ** aTransport)
   NS_ENSURE_ARG_POINTER(aTransport);
   nsresult rv;
   nsCOMPtr < nsIURI > uri;
-  nsXPIDLCString protocol;
+  nsCAutoString protocol;
   nsCString transportURI(ToNewCString(mTransportURI));
 
   rv = NS_NewURI(getter_AddRefs(uri), transportURI.get());
   if (NS_FAILED(rv))
     return rv;
 
-  uri->GetScheme(getter_Copies(protocol));
+  uri->GetScheme(protocol);
 
   nsCAutoString transportContractid;
   transportContractid.Assign(NS_SOAPTRANSPORT_CONTRACTID_PREFIX);

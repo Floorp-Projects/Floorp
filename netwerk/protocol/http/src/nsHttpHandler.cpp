@@ -37,6 +37,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpNotify.h"
 #include "nsIURL.h"
+#include "nsIStandardURL.h"
 #include "nsICacheService.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
@@ -1674,7 +1675,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsHttpHandler,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpHandler::GetScheme(char **aScheme)
+nsHttpHandler::GetScheme(nsACString &aScheme)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1693,7 +1694,10 @@ nsHttpHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsHttpHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **aURI)
+nsHttpHandler::NewURI(const nsACString &aSpec,
+                      const char *aCharset,
+                      nsIURI *aBaseURI,
+                      nsIURI **aURI)
 {
     nsresult rv = NS_OK;
 
@@ -1703,7 +1707,7 @@ nsHttpHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **aURI)
     if (NS_FAILED(rv)) return rv;
 
     // XXX need to choose the default port based on the scheme
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 80, aSpec, aBaseURI);
+    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 80, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(url, aURI);

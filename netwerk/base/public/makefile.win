@@ -76,6 +76,8 @@ XPIDLSRCS =                             \
         .\nsIURIChecker.idl             \
         .\nsIURL.idl                    \
         .\nsIURLParser.idl              \
+        .\nsIFileURL.idl                \
+        .\nsIStandardURL.idl            \
         .\nsIWebFilters.idl             \
         .\nsISecurityEventSink.idl      \
 	.\nsISecretDecoderRing.idl	\

@@ -199,8 +199,8 @@ private:
     PRPackedBool        mList;          // Use LIST instead of NLST
 
         // ****** protocol interpretation related state vars
-    nsAutoString        mUsername;      // username
-    nsAutoString        mPassword;      // password
+    nsString            mUsername;      // username
+    nsString            mPassword;      // password
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
     PRPackedBool        mAnonymous;     // try connecting anonymous (default)
     PRPackedBool        mRetryPass;     // retrying the password
@@ -209,7 +209,7 @@ private:
         // ****** URI vars
     nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
-    nsAutoString           mFilename;   // url filename (if any)
+    nsString               mFilename;   // url filename (if any)
     nsCString              mPath;       // the url's path
     nsCString              mPwd;        // login Path
 

@@ -650,7 +650,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), updateURL.get())))	return;
 
 		nsCOMPtr<nsIChannel>	channel;
-		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))	return;
+		if (NS_FAILED(rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull)))	return;
 
 		channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
 
@@ -1240,13 +1240,13 @@ InternetSearchDataSource::GetCategoryList()
 	// get search.rdf
 		
   nsCOMPtr<nsIFile> searchFile;
-  nsXPIDLCString searchFileURLSpec;
+  nsCAutoString searchFileURLSpec;
 
   rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
   if (NS_FAILED(rv)) return rv;
-  NS_GetURLSpecFromFile(searchFile, getter_Copies(searchFileURLSpec));
+  NS_GetURLSpecFromFile(searchFile, searchFileURLSpec);
   if (NS_FAILED(rv)) return rv;
-	rv = remoteCategoryDataSource->Init(searchFileURLSpec);
+	rv = remoteCategoryDataSource->Init(searchFileURLSpec.get());
   if (NS_FAILED(rv)) return rv;
     
 	// synchronous read
@@ -2322,7 +2322,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 		return(rv);
 
 	nsCOMPtr<nsIChannel>	engineChannel;
-	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(engineChannel), engineURI, nsnull, mBackgroundLoadGroup)))
+	if (NS_FAILED(rv = NS_NewChannel(getter_AddRefs(engineChannel), engineURI, nsnull, mBackgroundLoadGroup)))
 		return(rv);
     
 	if (NS_FAILED(rv = engineChannel->AsyncOpen(this, engineContext)))
@@ -2342,7 +2342,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 			return(rv);
 
 		nsCOMPtr<nsIChannel>	iconChannel;
-		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(iconChannel), iconURI, nsnull, mBackgroundLoadGroup)))
+		if (NS_FAILED(rv = NS_NewChannel(getter_AddRefs(iconChannel), iconURI, nsnull, mBackgroundLoadGroup)))
 			return(rv);
 		if (NS_FAILED(rv = iconChannel->AsyncOpen(this, iconContext)))
 			return(rv);
@@ -2367,16 +2367,12 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (!channelURI)
 		return(NS_ERROR_NULL_POINTER);
 
-	char			*spec = nsnull;
-	if (NS_FAILED(rv = channelURI->GetSpec(&spec)))
+	nsCAutoString spec;
+	if (NS_FAILED(rv = channelURI->GetSpec(spec)))
 		return(rv);
-	if (!spec)
-		return(NS_ERROR_NULL_POINTER);
 
 	// get base name
-	nsAutoString		baseName;
-	baseName.AssignWithConversion(spec);
-	Recycle(spec);
+    NS_ConvertUTF8toUCS2 baseName(spec);
 
 	PRInt32			slashOffset = baseName.RFindChar(PRUnichar('/'));
 	if (slashOffset < 0)		return(NS_ERROR_UNEXPECTED);
@@ -3675,7 +3671,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), action)))
 	{
 		nsCOMPtr<nsIChannel>	channel;
-		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, mLoadGroup)))
+		if (NS_SUCCEEDED(rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, mLoadGroup)))
 		{
 
 			// send a "MultiSearch" header
@@ -3857,19 +3853,19 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	nsAutoString	iconURL;
 	if (icon)
 	{
-		nsXPIDLCString  iconFileURL;
-		if (NS_FAILED(rv = NS_GetURLSpecFromFile(icon, getter_Copies(iconFileURL))))
+		nsCAutoString iconFileURL;
+		if (NS_FAILED(rv = NS_GetURLSpecFromFile(icon, iconFileURL)))
 			return(rv);
-		iconURL.AssignWithConversion(iconFileURL);
+		iconURL = NS_ConvertUTF8toUCS2(iconFileURL);
 	}
 #ifdef XP_MAC
 	else if (file)
 	{
-		nsXPIDLCString  fileURL;
-		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,getter_Copies(fileURL))))
+		nsCAutoString  fileURL;
+		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,fileURL)))
 			return(rv);
 		iconURL.Assign(NS_LITERAL_STRING("moz-icon:"));
-		iconURL.AppendWithConversion(fileURL);
+		iconURL.Append(NS_ConvertUTF8toUCS2(fileURL));
 	}
 #endif
 
@@ -4887,25 +4883,17 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 	GetData(dataUni, "search", 0, "name", engineStr);
 
 	// pre-compute host (we might discard URLs that match this)
-	nsAutoString	hostStr;
-	char		*hostName = nsnull;
-	aURL->GetHost(&hostName);
-	if (hostName)
-	{
-		hostStr.AssignWithConversion(hostName);
-		nsCRT::free(hostName);
-		hostName = nsnull;
-	}
+	nsCAutoString hostName;
+	aURL->GetAsciiHost(hostName);
 
 	// pre-compute server path (we might discard URLs that match this)
 	nsAutoString	serverPathStr;
-	char *serverPath = nsnull;
-	aURL->GetPath(&serverPath);
-	if (serverPath)
+	nsCAutoString serverPath;
+	aURL->GetPath(serverPath);
+	if (!serverPath.IsEmpty())
 	{
-		serverPathStr.AssignWithConversion(serverPath);
-		nsCRT::free(serverPath);
-		serverPath = nsnull;
+        serverPathStr = NS_ConvertUTF8toUCS2(serverPath);
+        serverPath.Truncate();
 
 		PRInt32 serverOptionsOffset = serverPathStr.FindChar(PRUnichar('?'));
 		if (serverOptionsOffset >= 0)	serverPathStr.Truncate(serverOptionsOffset);
@@ -5164,13 +5152,11 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 				if ((absURI) && (skipLocalFlag == PR_TRUE))
 				{
-					char	*absPath = nsnull;
-					absURI->GetPath(&absPath);
-					if (absPath)
+					nsCAutoString absPath;
+					absURI->GetPath(absPath);
+					if (!absPath.IsEmpty())
 					{
-						nsAutoString	absPathStr;
-						absPathStr.AssignWithConversion(absPath);
-						nsCRT::free(absPath);
+                        NS_ConvertUTF8toUCS2 absPathStr(absPath);
 						PRInt32 pathOptionsOffset = absPathStr.FindChar(PRUnichar('?'));
 						if (pathOptionsOffset >= 0)
 							absPathStr.Truncate(pathOptionsOffset);
@@ -5178,14 +5164,13 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 						if (pathsMatchFlag == PR_TRUE)	continue;
 					}
 
-					if (!hostStr.IsEmpty())
+					if (!hostName.IsEmpty())
 					{
-						char		*absHost = nsnull;
-						absURI->GetHost(&absHost);
-						if (absHost)
+						nsCAutoString absHost;
+						absURI->GetAsciiHost(absHost);
+						if (!absHost.IsEmpty())
 						{
-							PRBool	hostsMatchFlag = hostStr.EqualsIgnoreCase(absHost);
-							nsCRT::free(absHost);
+							PRBool	hostsMatchFlag = !nsCRT::strcasecmp(hostName.get(), absHost.get());
 							if (hostsMatchFlag == PR_TRUE)	continue;
 						}
 					}

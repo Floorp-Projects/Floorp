@@ -592,8 +592,8 @@ BOOL CProgressDlg::OnInitDialog()
         nsresult rv = m_HelperAppLauncher->GetSource(getter_AddRefs(srcUri));
         if(NS_SUCCEEDED(rv))
         {
-            nsXPIDLCString uriString;
-            srcUri->GetSpec(getter_Copies(uriString));
+            nsCAutoString uriString;
+            srcUri->GetSpec(uriString);
 
             m_SavingFrom.SetWindowText(uriString.get());
         }

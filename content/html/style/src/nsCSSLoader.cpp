@@ -73,39 +73,28 @@ MOZ_DECL_CTOR_COUNTER(URLKey)
 class URLKey: public nsHashKey {
 public:
   URLKey(nsIURI* aURL)
-    : nsHashKey(),
-      mURL(aURL),
-      mSpec(nsnull)
+    : mURL(aURL)
   {
     MOZ_COUNT_CTOR(URLKey);
-    NS_ADDREF(mURL);
     mHashValue = 0;
 
-    mURL->GetSpec((char **)&mSpec);
-    if (mSpec) {
-      mHashValue = nsCRT::HashCode(mSpec);
+    mURL->GetSpec(mSpec);
+    if (!mSpec.IsEmpty()) {
+      mHashValue = nsCRT::HashCode(mSpec.get());
     }
   }
 
   URLKey(const URLKey& aKey)
-    : nsHashKey(),
-      mURL(aKey.mURL),
+    : mURL(aKey.mURL),
       mHashValue(aKey.mHashValue),
-      mSpec(nsnull)
+      mSpec(aKey.mSpec)
   {
     MOZ_COUNT_CTOR(URLKey);
-    NS_ADDREF(mURL);
-    if (aKey.mSpec)
-      mSpec = nsCRT::strdup(aKey.mSpec);
   }
 
   virtual ~URLKey(void)
   {
     MOZ_COUNT_DTOR(URLKey);
-    NS_RELEASE(mURL);
-    if (mSpec)
-      nsCRT::free((char *)mSpec);
-    mSpec = nsnull;
   }
 
   virtual PRUint32 HashCode(void) const
@@ -121,7 +110,7 @@ public:
     nsresult result = mURL->Equals(key->mURL, &equals);
     return (NS_SUCCEEDED(result) && equals);
 #else
-    return (nsCRT::strcasecmp(mSpec, key->mSpec) == 0);
+    return (nsCRT::strcasecmp(mSpec.get(), key->mSpec.get()) == 0);
 #endif
   }
 
@@ -130,9 +119,9 @@ public:
     return new URLKey(*this);
   }
 
-  nsIURI*   mURL;
-  PRUint32  mHashValue;
-  const char* mSpec;
+  nsCOMPtr<nsIURI>  mURL;
+  PRUint32          mHashValue;
+  nsSharableCString mSpec;
 };
 
 class SheetLoadData : public nsIStreamLoaderObserver
@@ -722,8 +711,8 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                    * being fixed
                    */
                    
-                  nsXPIDLCString uriStr;
-                  mURL->GetSpec(getter_Copies(uriStr));
+                  nsCAutoString uriStr;
+                  mURL->GetSpec(uriStr);
                   nsCAutoString errorMessage;
                   errorMessage = NS_LITERAL_CSTRING("Decoding sheet from ") +
                                  uriStr +
@@ -1000,10 +989,10 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
 #ifdef DEBUG
     if (mDocument && NS_FAILED(aStatus)) {  // still have doc, must have failed
       // Dump error message to console.
-      nsXPIDLCString url;
-      aLoadData->mURL->GetSpec(getter_Copies(url));
+      nsCAutoString url;
+      aLoadData->mURL->GetSpec(url);
       nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::DidLoadStyle: Load of URL '") +
-                                 nsDependentCString(url) +
+                                 url +
                                  NS_LITERAL_CSTRING("' failed.  Error code: "));
       errorMessage.AppendInt(NS_ERROR_GET_CODE(aStatus));
       NS_WARNING(errorMessage.get());
@@ -1286,10 +1275,10 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 #ifdef DEBUG
         else {
           // Dump an error message to the console
-          nsXPIDLCString url;
-          aKey.mURL->GetSpec(getter_Copies(url));
+          nsCAutoString url;
+          aKey.mURL->GetSpec(url);
           nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadSheet: Load of URL '") +
-                                     nsDependentCString(url) +
+                                     url +
                                      NS_LITERAL_CSTRING("' failed.  Error code: "));
           errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
           NS_WARNING(errorMessage.get());
@@ -1635,8 +1624,8 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
       else {
         // Dump an error message to the console
         PRBool ignoreError = PR_FALSE;
-        nsXPIDLCString url;
-        aURL->GetSpec(getter_Copies(url));
+        nsCAutoString url;
+        aURL->GetSpec(url);
         // Ignore userChrome.css and userContent.css failures
 #define USERCHROMECSS "userChrome.css"
 #define USERCONTENTCSS "userContent.css"
@@ -1651,7 +1640,7 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
 
         if (!ignoreError) {
           nsCAutoString errorMessage(NS_LITERAL_CSTRING("CSSLoaderImpl::LoadAgentSheet: Load of URL '") +
-                                     nsDependentCString(url) +
+                                     url +
                                      NS_LITERAL_CSTRING("' failed.  Error code: "));
           errorMessage.AppendInt(NS_ERROR_GET_CODE(result));
           NS_WARNING(errorMessage.get());

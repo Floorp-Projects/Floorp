@@ -120,7 +120,7 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     rv = pref->CopyCharPref(prefName.get(), getter_Copies(ldapURL));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mURL->SetSpec(ldapURL.get());
+    rv = mURL->SetSpec(ldapURL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);

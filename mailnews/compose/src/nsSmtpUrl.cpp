@@ -256,7 +256,7 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 }
 
 
-NS_IMETHODIMP nsMailtoUrl::SetSpec(const char * aSpec)
+NS_IMETHODIMP nsMailtoUrl::SetSpec(const nsACString &aSpec)
 {
   m_baseURL->SetSpec(aSpec);
 	return ParseUrl();
@@ -285,10 +285,9 @@ nsresult nsMailtoUrl::ParseUrl()
 	nsresult rv = NS_OK;
 
   // we can get the path from the simple url.....
-  nsXPIDLCString aPath;
-  m_baseURL->GetPath(getter_Copies(aPath));
-  if (aPath)
-    m_toPart.Assign(aPath);
+  nsCAutoString aPath;
+  m_baseURL->GetPath(aPath);
+  m_toPart.Assign(aPath);
 
   PRInt32 startOfSearchPart = m_toPart.FindChar('?');
   if (startOfSearchPart >= 0)
@@ -360,67 +359,72 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 ////////////////////////////////////////////////////////////////////////////////////
 
 
-NS_IMETHODIMP nsMailtoUrl::GetSpec(char * *aSpec)
+NS_IMETHODIMP nsMailtoUrl::GetSpec(nsACString &aSpec)
 {
 	return m_baseURL->GetSpec(aSpec);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetPrePath(char * *aPrePath)
+NS_IMETHODIMP nsMailtoUrl::GetPrePath(nsACString &aPrePath)
 {
 	return m_baseURL->GetPrePath(aPrePath);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetPrePath(const char * aPrePath)
-{
-	return m_baseURL->SetPrePath(aPrePath);
-}
-
-NS_IMETHODIMP nsMailtoUrl::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsMailtoUrl::GetScheme(nsACString &aScheme)
 {
 	return m_baseURL->GetScheme(aScheme);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetScheme(const char * aScheme)
+NS_IMETHODIMP nsMailtoUrl::SetScheme(const nsACString &aScheme)
 {
 	return m_baseURL->SetScheme(aScheme);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetPreHost(char * *aPreHost)
+NS_IMETHODIMP nsMailtoUrl::GetUserPass(nsACString &aUserPass)
 {
-	return m_baseURL->GetPreHost(aPreHost);
+	return m_baseURL->GetUserPass(aUserPass);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetPreHost(const char * aPreHost)
+NS_IMETHODIMP nsMailtoUrl::SetUserPass(const nsACString &aUserPass)
 {
-	return m_baseURL->SetPreHost(aPreHost);
+	return m_baseURL->SetUserPass(aUserPass);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetUsername(char * *aUsername)
+NS_IMETHODIMP nsMailtoUrl::GetUsername(nsACString &aUsername)
 {
 	return m_baseURL->GetUsername(aUsername);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetUsername(const char * aUsername)
+NS_IMETHODIMP nsMailtoUrl::SetUsername(const nsACString &aUsername)
 {
 	return m_baseURL->SetUsername(aUsername);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetPassword(char * *aPassword)
+NS_IMETHODIMP nsMailtoUrl::GetPassword(nsACString &aPassword)
 {
 	return m_baseURL->GetPassword(aPassword);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetPassword(const char * aPassword)
+NS_IMETHODIMP nsMailtoUrl::SetPassword(const nsACString &aPassword)
 {
 	return m_baseURL->SetPassword(aPassword);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetHost(char * *aHost)
+NS_IMETHODIMP nsMailtoUrl::GetHostPort(nsACString &aHostPort)
+{
+	return m_baseURL->GetHost(aHostPort);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetHostPort(const nsACString &aHostPort)
+{
+	return m_baseURL->SetHost(aHostPort);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetHost(nsACString &aHost)
 {
 	return m_baseURL->GetHost(aHost);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetHost(const char * aHost)
+NS_IMETHODIMP nsMailtoUrl::SetHost(const nsACString &aHost)
 {
 	return m_baseURL->SetHost(aHost);
 }
@@ -435,14 +439,29 @@ NS_IMETHODIMP nsMailtoUrl::SetPort(PRInt32 aPort)
 	return m_baseURL->SetPort(aPort);
 }
 
-NS_IMETHODIMP nsMailtoUrl::GetPath(char * *aPath)
+NS_IMETHODIMP nsMailtoUrl::GetPath(nsACString &aPath)
 {
 	return m_baseURL->GetPath(aPath);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SetPath(const char * aPath)
+NS_IMETHODIMP nsMailtoUrl::SetPath(const nsACString &aPath)
 {
 	return m_baseURL->SetPath(aPath);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetAsciiHost(nsACString &aHostA)
+{
+	return m_baseURL->GetAsciiHost(aHostA);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetAsciiSpec(nsACString &aSpecA)
+{
+	return m_baseURL->GetAsciiSpec(aSpecA);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetOriginCharset(nsACString &aOriginCharset)
+{
+    return m_baseURL->GetOriginCharset(aOriginCharset);
 }
 
 NS_IMETHODIMP nsMailtoUrl::SchemeIs(const char *aScheme, PRBool *_retval)
@@ -460,7 +479,7 @@ NS_IMETHODIMP nsMailtoUrl::Clone(nsIURI **_retval)
 	return m_baseURL->Clone(_retval);
 }	
 
-NS_IMETHODIMP nsMailtoUrl::Resolve(const char *relativePath, char **result) 
+NS_IMETHODIMP nsMailtoUrl::Resolve(const nsACString &relativePath, nsACString &result) 
 {
 	return m_baseURL->Resolve(relativePath, result);
 }
@@ -491,7 +510,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsSmtpUrl::SetSpec(const char * aSpec)
+NS_IMETHODIMP nsSmtpUrl::SetSpec(const nsACString &aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
 	if (NS_SUCCEEDED(rv))
@@ -506,10 +525,10 @@ nsresult nsSmtpUrl::ParseUrl()
 	nsresult rv = NS_OK;
 	
 	// set the username
-	nsXPIDLCString userName;
-	rv = GetUsername(getter_Copies(userName));
+	nsCAutoString userName;
+	rv = GetUsername(userName);
 	if (NS_FAILED(rv)) return rv; 
-	m_userName = (const char *)userName;
+	m_userName = userName;
  
   return NS_OK;
 }

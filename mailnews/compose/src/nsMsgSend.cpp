@@ -60,6 +60,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
+#include "nsIFileURL.h"
 #include "nsMsgCopy.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -1192,7 +1193,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
         turl.Adopt(nsCRT::strdup(ma->m_uri));
     }
   else
-    ma->mURL->GetSpec(getter_Copies(turl));
+    ma->mURL->GetSpec(turl);
   hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
                                            ma->m_description,
                                            ma->m_x_mac_type,
@@ -1720,25 +1721,24 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
             return NS_ERROR_OUT_OF_MEMORY;
           }
           
-          nsXPIDLCString    spec;
+          nsCAutoString spec;
           nsCOMPtr<nsIURI> uri;
           doc->GetDocumentURL(getter_AddRefs(uri));
           
           if (!uri)
             return NS_ERROR_OUT_OF_MEMORY;
           
-          uri->GetSpec(getter_Copies(spec));
+          uri->GetSpec(spec);
           
           // Ok, now get the path to the root doc and tack on the name we
           // got from the GetSrc() call....
-          nsString   workURL; workURL.AssignWithConversion(spec);
+          NS_ConvertUTF8toUCS2 workURL(spec);
           
           PRInt32 loc = workURL.RFind("/");
           if (loc >= 0)
             workURL.SetLength(loc+1);
           workURL.Append(tUrl);
-          nsCAutoString workurlC;
-          workurlC.AssignWithConversion(workURL);
+          NS_ConvertUCS2toUTF8 workurlC(workURL);
           if (NS_FAILED(nsMsgNewURL(&attachment.url, workurlC.get())))
           {
             // rhp - just try to continue and send it without this image.
@@ -1867,13 +1867,15 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // Start counting the attachments which are going to come from mail folders
     // and from NNTP servers.
     //
-    nsXPIDLCString    turl;
     if (m_attachments[i].mURL)
     {
-      m_attachments[i].mURL->GetSpec(getter_Copies(turl));
-      if (PL_strncasecmp(turl, "mailbox:",8) || PL_strncasecmp(turl, "IMAP:",5))
+      nsIURI *uri = m_attachments[i].mURL;
+      PRBool match = PR_FALSE;
+      if ((NS_SUCCEEDED(uri->SchemeIs("mailbox", &match)) && match) ||
+         (NS_SUCCEEDED(uri->SchemeIs("imap", &match)) && match))
         (*aMailboxCount)++;
-      else if (PL_strncasecmp(turl, "news:",5) || PL_strncasecmp(turl, "snews:",6))
+      else if ((NS_SUCCEEDED(uri->SchemeIs("news", &match)) && match) ||
+              (NS_SUCCEEDED(uri->SchemeIs("snews", &match)) && match))
         (*aNewsCount)++;
     }
     
@@ -2118,14 +2120,14 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           if (NS_SUCCEEDED(rv) && mimeFinder) 
           {
             nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
-            nsXPIDLCString fileExt;
             if (fileUrl)
             {
+              nsCAutoString fileExt;
               //First try using the real file name
-              rv = fileUrl->SetFileName(m_attachments[newLoc].m_real_name);
+              rv = fileUrl->SetFileName(nsDependentCString(m_attachments[newLoc].m_real_name));
               if (NS_SUCCEEDED(rv))
               {
-                rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+                rv = fileUrl->GetFileExtension(fileExt);
                 if (NS_SUCCEEDED(rv))
                   mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
               }
@@ -2133,10 +2135,10 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
               //Then try using the url if we still haven't figured out the content type
               if ((!m_attachments[newLoc].m_type) ||  (!*m_attachments[newLoc].m_type))
               {
-                rv = fileUrl->SetSpec(url.get());
+                rv = fileUrl->SetSpec(url);
                 if (NS_SUCCEEDED(rv))
                 {
-                  rv = fileUrl->GetFileExtension(getter_Copies(fileExt));
+                  rv = fileUrl->GetFileExtension(fileExt);
                   if (NS_SUCCEEDED(rv))
                     mimeFinder->GetTypeFromExtension(fileExt.get(), &(m_attachments[newLoc].m_type));
                 }
@@ -2489,20 +2491,19 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
       /* Count up attachments which are going to come from mail folders
       and from NNTP servers. */
-          if (m_attachments[i].mURL)
-          {
-            nsXPIDLCString turl;
-            m_attachments[i].mURL->GetSpec(getter_Copies(turl));
-        if (PL_strncasecmp(turl, "mailbox:",8) ||
-            PL_strncasecmp(turl, "IMAP:",5))
-          mailbox_count++;
-        else
-          if (PL_strncasecmp(turl, "news:",5) ||
-              PL_strncasecmp(turl, "snews:",6))
-            news_count++;
+	  if (m_attachments[i].mURL)
+	  {
+		nsIURI *uri = m_attachments[i].mURL;
+		PRBool match = PR_FALSE;
+		if ((NS_SUCCEEDED(uri->SchemeIs("mailbox", &match)) && match) ||
+			(NS_SUCCEEDED(uri->SchemeIs("imap", &match)) && match))
+		  mailbox_count++;
+		else if ((NS_SUCCEEDED(uri->SchemeIs("news", &match)) && match) ||
+			     (NS_SUCCEEDED(uri->SchemeIs("snews", &match)) && match))
+	      news_count++;
 
-                if (m_attachments[i].mURL)
-                  msg_pick_real_name(&m_attachments[i], nsnull, mCompFields->GetCharacterSet());
+	    if (uri)
+	      msg_pick_real_name(&m_attachments[i], nsnull, mCompFields->GetCharacterSet());
       }
     }
   }
@@ -3803,7 +3804,6 @@ BuildURLAttachmentData(nsIURI *url)
   int                 attachCount = 2;  // one entry and one empty entry
   nsMsgAttachmentData *attachments = nsnull;
   char                *theName = nsnull;
-  nsXPIDLCString spec;
 
   if (!url)
     return nsnull;    
@@ -3813,10 +3813,11 @@ BuildURLAttachmentData(nsIURI *url)
     return nsnull;
 
   // Now get a readable name...
-  url->GetSpec(getter_Copies(spec));
-  if (spec)
+  nsCAutoString spec;
+  url->GetSpec(spec);
+  if (!spec.IsEmpty())
   {
-    theName = PL_strrchr(spec, '/');
+    theName = strrchr(spec.get(), '/');
   }
 
   if (!theName)

@@ -2759,7 +2759,7 @@ nsPostScriptObj::InitUnixPrinterProps()
   nsCOMPtr<nsIPersistentProperties> printerprops_tmp;
   const char propertyURL[] = "resource:/res/unixpsfonts.properties";
   nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), propertyURL), PR_FALSE);
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING(propertyURL)), PR_FALSE);
   nsCOMPtr<nsIInputStream> in;
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), PR_FALSE);
   NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(

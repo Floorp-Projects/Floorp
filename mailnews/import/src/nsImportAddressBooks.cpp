@@ -265,7 +265,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 			nsCOMPtr<nsIURL>	url;
 			rv = nsComponentManager::CreateInstance( kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs( url));
 			if (NS_SUCCEEDED( rv)) {
-				url->SetSpec( m_pDestinationUri);
+				url->SetSpec( nsDependentCString(m_pDestinationUri));
 				*_retval = url;
 				NS_IF_ADDREF( *_retval);
 			}
@@ -358,7 +358,9 @@ NS_IMETHODIMP nsImportGenericAddressBooks::SetData( const char *dataId, nsISuppo
 				if (m_pDestinationUri)
 					nsCRT::free( m_pDestinationUri);
 				m_pDestinationUri = nsnull;
-				url->GetSpec( &m_pDestinationUri);
+                nsCAutoString spec;
+				url->GetSpec(spec);
+                m_pDestinationUri = ToNewCString(spec);
 			}
 		}
 	}

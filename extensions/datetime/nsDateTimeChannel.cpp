@@ -78,7 +78,7 @@ nsDateTimeChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo)
     if (NS_FAILED(rv) || mPort < 1)
         mPort = DATETIME_PORT;
 
-    rv = mUrl->GetPath(getter_Copies(mHost));
+    rv = mUrl->GetPath(mHost);
     if (NS_FAILED(rv)) return rv;
 
     if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
@@ -193,7 +193,7 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
     transport->SetNotificationCallbacks(mCallbacks,
                                         (mLoadFlags & LOAD_BACKGROUND));
 
-    return transport->OpenInputStream(0, -1, 0, _retval);
+    return transport->OpenInputStream(0, PRUint32(-1), 0, _retval);
 }
 
 NS_IMETHODIMP
@@ -223,7 +223,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     mListener = aListener;
     
     nsCOMPtr<nsIRequest> request;
-    return transport->AsyncRead(this, ctxt, 0, -1, 0, getter_AddRefs(request));
+    return transport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0, getter_AddRefs(request));
 }
 
 NS_IMETHODIMP

@@ -667,16 +667,16 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     if (NS_FAILED(rv))
         return rv;
 
-	nsXPIDLCString queryPart;
-	rv = url->GetQuery(getter_Copies(queryPart));
+	nsCAutoString queryPart;
+	rv = url->GetQuery(queryPart);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get the url spect");
 
-	if (PL_strcasestr(queryPart, "check"))
+	if (PL_strcasestr(queryPart.get(), "check"))
 		m_pop3ConData->only_check_for_new_mail = PR_TRUE;
   else
     m_pop3ConData->only_check_for_new_mail = PR_FALSE;
 
-	if (PL_strcasestr(queryPart, "gurl"))
+	if (PL_strcasestr(queryPart.get(), "gurl"))
 		m_pop3ConData->get_url = PR_TRUE;
   else
     m_pop3ConData->get_url = PR_FALSE;
@@ -726,7 +726,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
   m_pop3ConData->uidlinfo = net_pop3_load_state(hostName, userName, mailDirectory);
 	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
-	const char* uidl = PL_strcasestr(queryPart, "uidl=");
+	const char* uidl = PL_strcasestr(queryPart.get(), "uidl=");
   PR_FREEIF(m_pop3ConData->only_uidl);
 		
   if (uidl)
@@ -1404,11 +1404,10 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         m_pop3ConData->pause_for_read = PR_FALSE;
         
         // get the hostname first, convert to unicode
-        nsXPIDLCString hostName;
-        m_url->GetHost(getter_Copies(hostName));
+        nsCAutoString hostName;
+        m_url->GetHost(hostName);
         
-        nsAutoString hostNameUnicode;
-        hostNameUnicode.AssignWithConversion(hostName);
+        NS_ConvertUTF8toUCS2 hostNameUnicode(hostName);
     
         const PRUnichar *formatStrings[] =
         {
@@ -2396,14 +2395,11 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
     mStringService->GetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND, &statusTemplate);
 		if (statusTemplate)
 		{
-			nsXPIDLCString hostName;
+			nsCAutoString hostName;
 			PRUnichar * statusString = nsnull;
-			m_url->GetHost(getter_Copies(hostName));
+			m_url->GetHost(hostName);
 
-			if (hostName)
-				statusString = nsTextFormatter::smprintf(statusTemplate, (const char *) hostName);  
-			else
-				statusString = nsTextFormatter::smprintf(statusTemplate, "(null)"); 
+            statusString = nsTextFormatter::smprintf(statusTemplate, hostName.get());
 			UpdateStatusWithString(statusString);
 			nsTextFormatter::smprintf_free(statusString);
 			nsCRT::free(statusTemplate);

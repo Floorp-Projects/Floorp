@@ -1624,21 +1624,18 @@ static void
 wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
 {
   outHostFile.Truncate(0);
-  nsAutoString urlName;
-  char* host = nsnull;
-  nsresult rv = url->GetHost(&host);
+  nsCAutoString host;
+  nsresult rv = url->GetHost(host);
   if (NS_FAILED(rv)) {
     return;
   }
-  urlName.AppendWithConversion(host);
-  nsCRT::free(host);
-  char* file = nsnull;
-  rv = url->GetPath(&file);
+  NS_ConvertUTF8toUCS2 urlName(host);
+  nsCAutoString file;
+  rv = url->GetPath(file);
   if (NS_FAILED(rv)) {
     return;
   }
-  urlName.AppendWithConversion(file);
-  nsCRT::free(file);
+  urlName.Append(NS_ConvertUTF8toUCS2(file));
 
   PRInt32 queryPos = urlName.FindChar('?');
   PRInt32 stringEnd = (queryPos == kNotFound) ? urlName.Length() : queryPos;
@@ -3864,19 +3861,19 @@ public:
 PRIVATE PRBool
 wallet_IsFromCartman(nsIURI* aURL) {
   PRBool retval = PR_FALSE;
-  nsXPIDLCString host;
-  if (NS_SUCCEEDED(aURL->GetHost(getter_Copies(host))) && host) {
-    if (PL_strncasecmp(host, "127.0.0.1",  9) == 0) {
+  nsCAutoString host;
+  if (NS_SUCCEEDED(aURL->GetHost(host))) {
+    if (PL_strncasecmp(host.get(), "127.0.0.1", 9) == 0) {
       /* submit is to server on local machine */
       nsresult res;
       nsCOMPtr<nsISecurityManagerComponent> psm = 
                do_GetService(PSM_COMPONENT_CONTRACTID, &res);
       if (NS_SUCCEEDED(res)) { 
-        nsXPIDLCString password;
-        if (NS_SUCCEEDED(aURL->GetPassword(getter_Copies(password))) && password) {
+        nsCAutoString password;
+        if (NS_SUCCEEDED(aURL->GetPassword(password))) {
           nsXPIDLCString secmanPassword;
           if (NS_SUCCEEDED(psm->GetPassword(getter_Copies(secmanPassword))) && secmanPassword) {
-            if (PL_strncasecmp(password, secmanPassword,  9) == 0) {
+            if (PL_strncasecmp(password.get(), secmanPassword,  9) == 0) {
               /* password for submit is cartman's password */
               retval = PR_TRUE;
             }
@@ -3916,7 +3913,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));
 
   /* get url name as ascii string */
-  char *URLName = nsnull;
+  nsCAutoString URLName;
   nsAutoString strippedURLNameUCS2;
   nsCOMPtr<nsIDocument> doc;
   currentForm->GetDocument(*getter_AddRefs(doc));
@@ -3928,21 +3925,19 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   if (!docURL || wallet_IsFromCartman(docURL)) {
     return;
   }
-  (void)docURL->GetSpec(&URLName);
+  (void)docURL->GetSpec(URLName);
   wallet_GetHostFile(docURL, strippedURLNameUCS2);
   nsCAutoString strippedURLNameUTF8 = NS_ConvertUCS2toUTF8(strippedURLNameUCS2);
 
   /* get to the form elements */
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
   if (htmldoc == nsnull) {
-    nsCRT::free(URLName);
     return;
   }
 
   nsCOMPtr<nsIDOMHTMLCollection> forms;
   nsresult rv = htmldoc->GetForms(getter_AddRefs(forms));
   if (NS_FAILED(rv) || (forms == nsnull)) {
-    nsCRT::free(URLName);
     return;
   }
 
@@ -4133,7 +4128,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
               wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
 
             if (dialog) {
-              SINGSIGN_RememberSignonData(dialog, URLName, signonData, window);
+              SINGSIGN_RememberSignonData(dialog, (char*)URLName.get(), signonData, window);
             }
           }
           PRInt32 count2 = signonData->Count();
@@ -4176,7 +4171,6 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
       }
     }
   }
-  nsCRT::free(URLName);
 }
 
 PUBLIC void

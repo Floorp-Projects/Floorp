@@ -76,9 +76,8 @@ nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsDataHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("data");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsDataHandler::GetScheme(nsACString &result) {
+    result = "data";
     return NS_OK;
 }
 
@@ -96,21 +95,21 @@ nsDataHandler::GetProtocolFlags(PRUint32 *result) {
 }
 
 NS_IMETHODIMP
-nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result) {
+nsDataHandler::NewURI(const nsACString &aSpec,
+                      const char *aCharset, // ignore charset info
+                      nsIURI *aBaseURI,
+                      nsIURI **result) {
     nsresult rv;
 
     // no concept of a relative data url
     NS_ASSERTION(!aBaseURI, "base url passed into data protocol handler");
-
-    nsCAutoString spec(aSpec);
 
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec(spec.get());
+    rv = url->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

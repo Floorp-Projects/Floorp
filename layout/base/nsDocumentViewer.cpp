@@ -1302,12 +1302,11 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
       mDocument->GetDocumentURL(getter_AddRefs(uri));
       if (uri.get() != nsnull) {
         //printf("DEBUG: getting spec fro uri (%p)\n", uri.get());
-        char *spec = nsnull;
-        uri->GetSpec(&spec);
-        if (spec && !strcmp(spec, "chrome://navigator/content/navigator.xul")) {
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        if (!strcmp(spec.get(), "chrome://navigator/content/navigator.xul")) {
           NS_TIMELINE_MARK("Navigator Window visible now");
         }
-        CRTFREEIF(spec);
       }
     }
 #endif /* MOZ_TIMELINE */
@@ -2461,11 +2460,9 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
   doc->GetDocumentURL(getter_AddRefs(url));
   if (!url) return;
 
-  nsXPIDLCString urlCStr;
-  url->GetSpec(getter_Copies(urlCStr));
-  if (urlCStr.get()) {
-    *aURLStr = ToNewUnicode(urlCStr);
-  }
+  nsCAutoString urlCStr;
+  url->GetSpec(urlCStr);
+  *aURLStr = ToNewUnicode(NS_ConvertUTF8toUCS2(urlCStr));
 }
 
 //-------------------------------------------------------

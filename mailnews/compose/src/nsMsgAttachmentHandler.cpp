@@ -59,6 +59,7 @@
 #include "nsMsgSimulateError.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
+#include "nsIFileURL.h"
 #include "nsNetCID.h"
 
 
@@ -363,7 +364,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_deliv
     
     if (mURL)
     {
-      mURL->GetSpec(getter_Copies(turl));
+      mURL->GetSpec(turl);
       
       tailName = PL_strrchr(turl, '/');
       if (tailName) 
@@ -605,7 +606,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   }
   mOutFile = do_QueryInterface(outputStream);
 
-  mURL->GetSpec(getter_Copies(url_string));
+  mURL->GetSpec(url_string);
 
 #ifdef XP_MAC
   if ( !m_bogus_attachment && nsMsgIsLocalFile(url_string))
@@ -675,24 +676,23 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
           nsresult rv = fileUrl->SetSpec(url_string);
           if (NS_SUCCEEDED(rv))
           {
-            char  *ext;
-            rv = fileUrl->GetFileExtension(&ext);
-            if (NS_SUCCEEDED(rv) && ext && *ext)
+            nsCAutoString ext;
+            rv = fileUrl->GetFileExtension(ext);
+            if (NS_SUCCEEDED(rv) && !ext.IsEmpty())
             {
               sendResourceFork =
-                 PL_strcasecmp(ext, "TXT") &&
-                 PL_strcasecmp(ext, "JPG") &&
-                 PL_strcasecmp(ext, "GIF") &&
-                 PL_strcasecmp(ext, "TIF") &&
-                 PL_strcasecmp(ext, "HTM") &&
-                 PL_strcasecmp(ext, "HTML") &&
-                 PL_strcasecmp(ext, "ART") &&
-                 PL_strcasecmp(ext, "XUL") &&
-                 PL_strcasecmp(ext, "XML") &&
-                 PL_strcasecmp(ext, "CSS") &&
-                 PL_strcasecmp(ext, "JS");
+                 PL_strcasecmp(ext.get(), "TXT") &&
+                 PL_strcasecmp(ext.get(), "JPG") &&
+                 PL_strcasecmp(ext.get(), "GIF") &&
+                 PL_strcasecmp(ext.get(), "TIF") &&
+                 PL_strcasecmp(ext.get(), "HTM") &&
+                 PL_strcasecmp(ext.get(), "HTML") &&
+                 PL_strcasecmp(ext.get(), "ART") &&
+                 PL_strcasecmp(ext.get(), "XUL") &&
+                 PL_strcasecmp(ext.get(), "XML") &&
+                 PL_strcasecmp(ext.get(), "CSS") &&
+                 PL_strcasecmp(ext.get(), "JS");
             }
-            PR_FREEIF(ext);
           }
         }
       }
@@ -994,7 +994,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     if (m_real_name && *m_real_name)
       printfString = nsTextFormatter::smprintf(msg, m_real_name);
     else
-    if (NS_SUCCEEDED(mURL->GetSpec(getter_Copies(turl))) && (turl))
+    if (NS_SUCCEEDED(mURL->GetSpec(turl)) && (turl))
       {
         nsCAutoString unescapeUrl(turl);
         nsUnescape (NS_CONST_CAST(char*, unescapeUrl.get()));

@@ -605,7 +605,7 @@ nsMsgFolder::parseURI(PRBool needServer)
   if (NS_FAILED(rv)) return rv;
 #endif
   
-  rv = url->SetSpec(mURI);
+  rv = url->SetSpec(nsDependentCString(mURI));
   if (NS_FAILED(rv)) return rv;
 
   //
@@ -614,10 +614,10 @@ nsMsgFolder::parseURI(PRBool needServer)
   
   // empty path tells us it's a server.
   if (!mIsServerIsValid) {
-    nsXPIDLCString path;
-    rv = url->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = url->GetPath(path);
     if (NS_SUCCEEDED(rv)) {
-      if (!nsCRT::strcmp(path, "/"))
+      if (!strcmp(path.get(), "/"))
         mIsServer = PR_TRUE;
       else
         mIsServer = PR_FALSE;
@@ -629,14 +629,13 @@ nsMsgFolder::parseURI(PRBool needServer)
   if (mName.IsEmpty()) {
     // mName:
     // the name is the trailing directory in the path
-    char *fileName = nsnull;
-    url->GetFileName(&fileName);
-    if (fileName) {
+    nsCAutoString fileName;
+    url->GetFileName(fileName);
+    if (!fileName.IsEmpty()) {
       // XXX conversion to unicode here? is fileName in UTF8?
       // yes, let's say it is in utf8
-      NS_UnescapeURL(fileName);
-      mName = NS_ConvertUTF8toUCS2(fileName);
-      nsMemory::Free(fileName);
+      NS_UnescapeURL((char *)fileName.get());
+      mName = NS_ConvertUTF8toUCS2(fileName.get());
     }
   }
 
@@ -657,15 +656,15 @@ nsMsgFolder::parseURI(PRBool needServer)
     // no parent. do the extra work of asking
     if (!server && needServer) {
       // Get username and hostname so we can get the server
-      nsXPIDLCString userName;
-      rv = url->GetPreHost(getter_Copies(userName));
-      if (NS_SUCCEEDED(rv) && (const char*)userName)
-        nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+      nsCAutoString userPass;
+      rv = url->GetUserPass(userPass);
+      if (NS_SUCCEEDED(rv) && !userPass.IsEmpty())
+        nsUnescape(NS_CONST_CAST(char*,userPass.get()));
       
-      nsXPIDLCString hostName;
-      rv = url->GetHost(getter_Copies(hostName));
-      if (NS_SUCCEEDED(rv) && (const char*)hostName)
-        nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
+      nsCAutoString hostName;
+      rv = url->GetHost(hostName);
+      if (NS_SUCCEEDED(rv) && !hostName.IsEmpty())
+        nsUnescape(NS_CONST_CAST(char*,hostName.get()));
       
       // turn it back into a server:
       
@@ -673,8 +672,8 @@ nsMsgFolder::parseURI(PRBool needServer)
                do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return rv;
 
-      rv = accountManager->FindServer(userName,
-                                      hostName,
+      rv = accountManager->FindServer(userPass.get(),
+                                      hostName.get(),
                                       GetIncomingServerType(),
                                       getter_AddRefs(server));
       
@@ -690,10 +689,10 @@ nsMsgFolder::parseURI(PRBool needServer)
   if (server) {
     nsCAutoString newPath;
 
-    char *urlPath = nsnull;
-    url->GetFilePath(&urlPath);
-    if (urlPath) {
-      NS_UnescapeURL(urlPath);
+    nsCAutoString urlPath;
+    url->GetFilePath(urlPath);
+    if (!urlPath.IsEmpty()) {
+      NS_UnescapeURL((char *) urlPath.get());
 
       // transform the filepath from the URI, such as
       // "/folder1/folder2/foldern"
@@ -702,9 +701,7 @@ nsMsgFolder::parseURI(PRBool needServer)
       // (remove leading / and add .sbd to first n-1 folders)
       // to be appended onto the server's path
       
-	  NS_MsgCreatePathStringFromFolderURI(urlPath, newPath);
-
-      nsMemory::Free(urlPath);
+	  NS_MsgCreatePathStringFromFolderURI(urlPath.get(), newPath);
     }
 
     // now append munged path onto server path

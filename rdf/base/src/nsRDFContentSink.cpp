@@ -932,8 +932,8 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
     // This corresponds to the dirty work of production [6.5]
     nsresult rv;
 
-    nsXPIDLCString docURI;
-    rv = mDocumentURL->GetSpec(getter_Copies(docURI));
+    nsCAutoString docURI;
+    rv = mDocumentURL->GetSpec(docURI);
     if (NS_FAILED(rv)) return rv;
 
     for (; *aAttributes; aAttributes += 2) {
@@ -1035,10 +1035,9 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
           // XXX Take the URI and make it fully qualified by
           // sticking it into the document's URL. This may not be
           // appropriate...
-          char* documentURL;
-          mDocumentURL->GetSpec(&documentURL);
+          nsCAutoString documentURL;
+          mDocumentURL->GetSpec(documentURL);
           rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(documentURL), uri);
-          nsCRT::free(documentURL);
 
           return gRDFService->GetUnicodeResource(uri.get(), aResource);
       }

@@ -50,8 +50,8 @@ class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMs
 {
 public:
 	// nsIURI over-ride...
-	NS_IMETHOD SetSpec(const char * aSpec);
-    NS_IMETHOD SetQuery(const char * aQuery);
+	NS_IMETHOD SetSpec(const nsACString &aSpec);
+    NS_IMETHOD SetQuery(const nsACString &aQuery);
 
 	// from nsIMailboxUrl:
 	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);

@@ -578,7 +578,7 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
     nsCOMPtr <nsIURI> uri = do_CreateInstance("@mozilla.org/network/simple-uri;1");
     if (!uri) return NS_ERROR_UNEXPECTED;
 
-    rv = uri->SetSpec(dataSpec.get());
+    rv = uri->SetSpec(dataSpec);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr <nsIDocShell> docShell;

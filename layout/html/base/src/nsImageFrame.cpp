@@ -1440,7 +1440,7 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
         doc->GetDocumentURL(getter_AddRefs(baseURI));
       nsCOMPtr<nsIURI> absURI;
       if (NS_SUCCEEDED(rv)) 
-        rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, baseURI);
+        rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, nsnull, baseURI);
       
       if (NS_SUCCEEDED(rv)) 
         proceed = securityManager->CheckLoadURI(baseURI, absURI, nsIScriptSecurityManager::STANDARD);
@@ -1786,8 +1786,8 @@ mRect.height);
   // output the img src url
   nsCOMPtr<nsIURI> uri;
   mLoads[0].mRequest->GetURI(getter_AddRefs(uri));
-  nsXPIDLCString uristr;
-  uri->GetSpec(getter_Copies(uristr));
+  nsCAutoString uristr;
+  uri->GetAsciiSpec(uristr);
   fprintf(out, " [src=%s]", uristr.get());
 
   fputs("\n", out);
@@ -1944,7 +1944,7 @@ nsImageFrame::GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI)
 {
   nsCOMPtr<nsIURI> baseURI;
   GetBaseURI(getter_AddRefs(baseURI));
-  NS_NewURI(aURI, aSpec, baseURI);
+  NS_NewURI(aURI, aSpec, nsnull, baseURI);
 }
 
 void

@@ -62,7 +62,7 @@ nsAddbookUrl::~nsAddbookUrl()
 NS_IMPL_ISUPPORTS2(nsAddbookUrl, nsIAddbookUrl, nsIURI)
 
 NS_IMETHODIMP 
-nsAddbookUrl::SetSpec(const char * aSpec)
+nsAddbookUrl::SetSpec(const nsACString &aSpec)
 {
   m_baseURL->SetSpec(aSpec);
 	return ParseUrl();
@@ -72,11 +72,11 @@ nsresult nsAddbookUrl::ParseUrl()
 {
 	nsresult rv;
 
-  nsXPIDLCString pathStr;
-  rv = m_baseURL->GetPath(getter_Copies(pathStr));
+  nsCAutoString pathStr;
+  rv = m_baseURL->GetPath(pathStr);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (PL_strstr(pathStr.get(), "?action=print"))
+  if (strstr(pathStr.get(), "?action=print"))
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
   else
     mOperationType = nsIAddbookUrlOperation::InvalidUrl;
@@ -88,67 +88,72 @@ nsresult nsAddbookUrl::ParseUrl()
 ////////////////////////////////////////////////////////////////////////////////////
 
 
-NS_IMETHODIMP nsAddbookUrl::GetSpec(char * *aSpec)
+NS_IMETHODIMP nsAddbookUrl::GetSpec(nsACString &aSpec)
 {
 	return m_baseURL->GetSpec(aSpec);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetPrePath(char * *aPrePath)
+NS_IMETHODIMP nsAddbookUrl::GetPrePath(nsACString &aPrePath)
 {
 	return m_baseURL->GetPrePath(aPrePath);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetPrePath(const char * aPrePath)
-{
-	return m_baseURL->SetPrePath(aPrePath);
-}
-
-NS_IMETHODIMP nsAddbookUrl::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsAddbookUrl::GetScheme(nsACString &aScheme)
 {
 	return m_baseURL->GetScheme(aScheme);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetScheme(const char * aScheme)
+NS_IMETHODIMP nsAddbookUrl::SetScheme(const nsACString &aScheme)
 {
 	return m_baseURL->SetScheme(aScheme);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetPreHost(char * *aPreHost)
+NS_IMETHODIMP nsAddbookUrl::GetUserPass(nsACString &aUserPass)
 {
-	return m_baseURL->GetPreHost(aPreHost);
+	return m_baseURL->GetUserPass(aUserPass);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetPreHost(const char * aPreHost)
+NS_IMETHODIMP nsAddbookUrl::SetUserPass(const nsACString &aUserPass)
 {
-	return m_baseURL->SetPreHost(aPreHost);
+	return m_baseURL->SetUserPass(aUserPass);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetUsername(char * *aUsername)
+NS_IMETHODIMP nsAddbookUrl::GetUsername(nsACString &aUsername)
 {
 	return m_baseURL->GetUsername(aUsername);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetUsername(const char * aUsername)
+NS_IMETHODIMP nsAddbookUrl::SetUsername(const nsACString &aUsername)
 {
 	return m_baseURL->SetUsername(aUsername);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetPassword(char * *aPassword)
+NS_IMETHODIMP nsAddbookUrl::GetPassword(nsACString &aPassword)
 {
 	return m_baseURL->GetPassword(aPassword);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetPassword(const char * aPassword)
+NS_IMETHODIMP nsAddbookUrl::SetPassword(const nsACString &aPassword)
 {
 	return m_baseURL->SetPassword(aPassword);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetHost(char * *aHost)
+NS_IMETHODIMP nsAddbookUrl::GetHostPort(nsACString &aHostPort)
+{
+	return m_baseURL->GetHostPort(aHostPort);
+}
+
+NS_IMETHODIMP nsAddbookUrl::SetHostPort(const nsACString &aHostPort)
+{
+	return m_baseURL->SetHostPort(aHostPort);
+}
+
+NS_IMETHODIMP nsAddbookUrl::GetHost(nsACString &aHost)
 {
 	return m_baseURL->GetHost(aHost);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetHost(const char * aHost)
+NS_IMETHODIMP nsAddbookUrl::SetHost(const nsACString &aHost)
 {
 	return m_baseURL->SetHost(aHost);
 }
@@ -163,14 +168,29 @@ NS_IMETHODIMP nsAddbookUrl::SetPort(PRInt32 aPort)
 	return m_baseURL->SetPort(aPort);
 }
 
-NS_IMETHODIMP nsAddbookUrl::GetPath(char * *aPath)
+NS_IMETHODIMP nsAddbookUrl::GetPath(nsACString &aPath)
 {
 	return m_baseURL->GetPath(aPath);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SetPath(const char * aPath)
+NS_IMETHODIMP nsAddbookUrl::SetPath(const nsACString &aPath)
 {
 	return m_baseURL->SetPath(aPath);
+}
+
+NS_IMETHODIMP nsAddbookUrl::GetAsciiHost(nsACString &aHostA)
+{
+	return m_baseURL->GetAsciiHost(aHostA);
+}
+
+NS_IMETHODIMP nsAddbookUrl::GetAsciiSpec(nsACString &aSpecA)
+{
+	return m_baseURL->GetAsciiSpec(aSpecA);
+}
+
+NS_IMETHODIMP nsAddbookUrl::GetOriginCharset(nsACString &aOriginCharset)
+{
+    return m_baseURL->GetOriginCharset(aOriginCharset);
 }
 
 NS_IMETHODIMP nsAddbookUrl::SchemeIs(const char *aScheme, PRBool *_retval)
@@ -188,7 +208,7 @@ NS_IMETHODIMP nsAddbookUrl::Clone(nsIURI **_retval)
 	return m_baseURL->Clone(_retval);
 }	
 
-NS_IMETHODIMP nsAddbookUrl::Resolve(const char *relativePath, char **result) 
+NS_IMETHODIMP nsAddbookUrl::Resolve(const nsACString &relativePath, nsACString &result) 
 {
 	return m_baseURL->Resolve(relativePath, result);
 }

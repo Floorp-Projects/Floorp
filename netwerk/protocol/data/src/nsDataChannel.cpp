@@ -119,12 +119,12 @@ nsDataChannel::ParseData() {
     NS_ASSERTION(mUrl, "no url in the data channel");
     if (!mUrl) return NS_ERROR_NULL_POINTER;
 
-    nsXPIDLCString spec;
-    rv = mUrl->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = mUrl->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     // move past "data:"
-    char *buffer = PL_strstr((const char*)spec, "data:");
+    char *buffer = strstr(spec.get(), "data:");
     if (!buffer) {
         // malfored url
         return NS_ERROR_MALFORMED_URI;
@@ -247,12 +247,10 @@ nsDataChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsDataChannel::GetName(PRUnichar* *result)
 {
-    nsXPIDLCString name;
-
-    if (mUrl) {
-        mUrl->GetSpec(getter_Copies(name));
-    }
-    *result = ToNewUnicode(name);
+    nsCAutoString name;
+    if (mUrl)
+        mUrl->GetSpec(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
     return NS_OK;
 }
 

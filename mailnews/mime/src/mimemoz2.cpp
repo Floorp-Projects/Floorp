@@ -596,8 +596,6 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
 
   while (tmp->url)
   {
-    char  *spec;
-
     if (!tmp->real_name)
     {
       ++i;
@@ -605,15 +603,12 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
       continue;
     }
 
-    spec = nsnull;
+    nsCAutoString spec;
     if ( tmp->url ) 
-      tmp->url->GetSpec(&spec);
+      tmp->url->GetSpec(spec);
 
-    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec, tmp->notDownloaded);
-    mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
-
-	  if (spec)
-		  nsMemory::Free(spec);
+    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec.get(), tmp->notDownloaded);
+    mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec.get());
 
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
@@ -657,7 +652,7 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
   if (NS_FAILED(res)) 
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 
-  return pService->NewURI(aSpec, aBase, aInstancePtrResult);
+  return pService->NewURI(nsDependentCString(aSpec), nsnull, aBase, aInstancePtrResult);
 }
 
 extern "C" nsresult 
@@ -1099,9 +1094,6 @@ mime_image_begin(const char *image_url, const char *content_type,
         mailUrl->GetImageCacheSession(getter_AddRefs(memCacheSession));
         if (memCacheSession)
         {
-          nsXPIDLCString spec;
-
-          uri->GetSpec(getter_Copies(spec));
           nsCOMPtr<nsICacheEntryDescriptor> entry;
 
           // we may need to convert the image_url into just a part url - in any case,
@@ -1470,17 +1462,17 @@ mime_bridge_create_display_stream(
   msd->firstCheck = PR_TRUE;
 
   // Store the URL string for this decode operation
-  char *urlString;
+  nsCAutoString urlString;
   nsresult rv;
 
   // Keep a hold of the channel...
   msd->channel = aChannel;
-  rv = uri->GetSpec(&urlString);
+  rv = uri->GetSpec(urlString);
   if (NS_SUCCEEDED(rv))
   {
-    if ((urlString) && (*urlString))
+    if (!urlString.IsEmpty())
     {
-      msd->url_name = nsCRT::strdup(urlString);
+      msd->url_name = ToNewCString(urlString);
       if (!(msd->url_name))
       {
         PR_FREEIF(msd);
@@ -1489,7 +1481,6 @@ mime_bridge_create_display_stream(
       nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(uri);
       if (msgUrl)
           msgUrl->GetOriginalSpec(&msd->orig_url_name);
-      PR_FREEIF(urlString);
     }
   }
   

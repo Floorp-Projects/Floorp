@@ -373,17 +373,12 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableStrin
         // figure out.
 #define USE_BROKEN_RELATIVE_PARSING
 #ifdef USE_BROKEN_RELATIVE_PARSING
-        nsXPIDLCString spec;
-        docURL->GetSpec(getter_Copies(spec));
-        if (! spec)
-            return NS_ERROR_FAILURE;
-
-        aURI.Assign(spec);
+        docURL->GetSpec(aURI);
 
         if (aElementID.First() != '#') {
             aURI.Append('#');
         }
-        aURI.AppendWithConversion(aElementID);
+        aURI.Append(NS_ConvertUCS2toUTF8(aElementID));
 #else
         nsXPIDLCString spec;
         rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
@@ -431,10 +426,8 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString
     rv = aDocument->GetBaseURL(*getter_AddRefs(docURL));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    docURL->GetSpec(getter_Copies(spec));
-    if (! spec)
-        return NS_ERROR_FAILURE;
+    nsCAutoString spec;
+    docURL->GetSpec(spec);
 
     // XXX FIX ME to not do a copy
     nsAutoString str(aURI);
@@ -444,7 +437,7 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString
 #else
         static const PRInt32 kFudge = 0;
 #endif
-        PRInt32 len = PL_strlen(spec);
+        PRInt32 len = spec.Length();
         aURI.Right(aElementID, aURI.Length() - (len + kFudge));
     }
     else {

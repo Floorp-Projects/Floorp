@@ -297,8 +297,8 @@ nsImapProtocol::nsImapProtocol() :
   m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
   m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
 
+  m_hostName.Truncate();
   m_userName = nsnull;
-  m_hostName = nsnull;
   m_serverKey = nsnull;
 
   m_progressStringId = 0;
@@ -386,8 +386,6 @@ nsImapProtocol::~nsImapProtocol()
 
   NS_IF_RELEASE(m_flagState);
 
-  nsCRT::free(m_hostName);
-
   PR_FREEIF(m_dataOutputBuf);
   if (m_inputStreamBuffer)
     delete m_inputStreamBuffer;
@@ -446,13 +444,13 @@ nsImapProtocol::~nsImapProtocol()
 const char*
 nsImapProtocol::GetImapHostName()
 {
-  if (m_runningUrl && !m_hostName)
+  if (m_runningUrl && m_hostName.IsEmpty())
   {
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningUrl);
-    url->GetHost(&m_hostName);
+    url->GetAsciiHost(m_hostName);
   }
 
-  return m_hostName;
+  return m_hostName.get();
 }
 
 const char*
@@ -7281,10 +7279,10 @@ nsresult nsImapMockChannel::OpenCacheEntry()
   // need to go through mime...
 
   // Open a cache entry with key = url
-  nsXPIDLCString urlSpec;
-  m_url->GetSpec(getter_Copies(urlSpec));
+  nsCAutoString urlSpec;
+  m_url->GetAsciiSpec(urlSpec);
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = PL_strrchr(urlSpec, '?');
+  char * anchor = strrchr(urlSpec.get(), '?');
   if (anchor)
   {
     // if we were trying to read a part, we failed - fall back and look for whole msg
@@ -7296,7 +7294,7 @@ nsresult nsImapMockChannel::OpenCacheEntry()
     else
       mTryingToReadPart = PR_TRUE;
   }
-  return cacheSession->AsyncOpenCacheEntry(urlSpec, nsICache::ACCESS_READ_WRITE, this);
+  return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
 }
 
 nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)

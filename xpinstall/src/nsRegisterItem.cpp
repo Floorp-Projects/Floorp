@@ -26,7 +26,7 @@
 #include "nsRegisterItem.h"
 #include "nsInstallResources.h"
 #include "nsNetUtil.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsInstallTrigger.h"
@@ -453,7 +453,9 @@ nsRegisterItem::GetURLFromIFile(nsIFile* aFile, char** aOutURL)
             rv = fileURL->SetFile(aFile);
             if (NS_SUCCEEDED(rv))
             {
-                rv = fileURL->GetSpec(aOutURL);
+                nsCAutoString spec;
+                rv = fileURL->GetSpec(spec);
+                *aOutURL = ToNewCString(spec);
             }
         }
     }

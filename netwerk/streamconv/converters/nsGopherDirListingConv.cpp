@@ -71,11 +71,11 @@ nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
 
     NS_ASSERTION(aCtxt, "Gopher dir conversion needs the context");
     // build up the 300: line
-    nsXPIDLCString spec;
+    nsCAutoString spec;
     mUri = do_QueryInterface(aCtxt, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    rv = mUri->GetSpec(getter_Copies(spec));
+    rv = mUri->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) return rv;
 
     convertedData.Append("300: ");
@@ -178,14 +178,14 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
 
     if (!mSentHeading) {
         // build up the 300: line
-        nsXPIDLCString spec;
-        rv = mUri->GetSpec(getter_Copies(spec));
+        nsCAutoString spec;
+        rv = mUri->GetAsciiSpec(spec);
         if (NS_FAILED(rv)) return rv;
 
         //printf("spec is %s\n",spec.get());
         
         indexFormat.Append("300: ");
-        indexFormat.Append(spec.get());
+        indexFormat.Append(spec);
         indexFormat.Append(char(nsCRT::LF));
         // END 300:
 

@@ -40,6 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIServiceManager.h"
 
 #include "nsIURL.h"
@@ -81,23 +82,23 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
                                           (void **)getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
   
-  rv = url->SetSpec(uri);
+  rv = url->SetSpec(nsDependentCString(uri));
 
   // seperate out username, hostname
-  nsXPIDLCString hostname;
-  nsXPIDLCString username;
+  nsCAutoString hostname;
+  nsCAutoString userpass;
 
-  rv = url->GetPreHost(getter_Copies(username));
+  rv = url->GetUserPass(userpass);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  url->GetHost(getter_Copies(hostname));
+  url->GetAsciiHost(hostname);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISmtpService> smtpService = do_GetService(kSmtpServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISmtpServer> smtpServer;
-  rv = smtpService->FindServer(username, hostname, getter_AddRefs(smtpServer));
+  rv = smtpService->FindServer(userpass.get(), hostname.get(), getter_AddRefs(smtpServer));
 
   // no server, it's a failure!
   if (NS_FAILED(rv)) return rv;

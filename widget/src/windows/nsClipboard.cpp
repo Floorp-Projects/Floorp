@@ -670,14 +670,12 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
         if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
-        nsXPIDLCString urlSpec;
-        NS_GetURLSpecFromFile(file, getter_Copies(urlSpec));
+        nsCAutoString urlSpec;
+        NS_GetURLSpecFromFile(file, urlSpec);
 
           // convert it to unicode and pass it out
           nsMemory::Free(*outData);
-          nsAutoString urlSpecUnicode;
-          urlSpecUnicode.AssignWithConversion( urlSpec );
-          *outData = ToNewUnicode(urlSpecUnicode);
+          *outData = ToNewUnicode(NS_ConvertUTF8toUCS2(urlSpec));
           *outDataLen = strlen(urlSpec.get()) * sizeof(PRUnichar);
           dataFound = PR_TRUE;
         

@@ -126,7 +126,6 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
   
   // we need to use the "mailnews.reuse_thread_window2" pref
   // to determine if we should open a new window, or use an existing one.
-  return openWindow(NS_ConvertASCIItoUCS2(chromeurl).get(), uri ? 
-                  NS_ConvertASCIItoUCS2(uri).get() : nsnull, nsMsgKey_None);
-
+  return openWindow(NS_ConvertUTF8toUCS2(chromeurl).get(), uri ? 
+                    NS_ConvertUTF8toUCS2(uri).get() : nsnull, nsMsgKey_None);
 }

@@ -155,7 +155,7 @@ int main (int argc, char* argv[])
                       argv[2] );
 
       if (NS_SUCCEEDED( rv )) {
-        rv = NS_OpenURI( getter_AddRefs( pChannel ),
+        rv = NS_NewChannel( getter_AddRefs( pChannel ),
                          pURI,
                          nsnull,
                          nsnull );
@@ -198,7 +198,7 @@ int main (int argc, char* argv[])
           }
         }
         else {
-          printf( "NS_OpenURI failed for %s - %08X\n", argv[2], rv );
+          printf( "NS_NewChannel failed for %s - %08X\n", argv[2], rv );
         }
       }
       else {
@@ -273,8 +273,8 @@ int main (int argc, char* argv[])
     if (doc) {
       nsCOMPtr<nsIURI> uri;
       doc->GetDocumentURL(getter_AddRefs(uri));
-      nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
+      nsCAutoString spec;
+      uri->GetSpec(spec);
       printf("Document URI=\"%s\"\n",spec.get());
     }
   }

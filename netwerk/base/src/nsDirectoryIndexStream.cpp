@@ -214,8 +214,8 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 #endif
 
     mBuf.Append("300: ");
-    nsXPIDLCString url;
-    rv = NS_GetURLSpecFromFile(mDir, getter_Copies(url));
+    nsCAutoString url;
+    rv = NS_GetURLSpecFromFile(mDir, url);
     if (NS_FAILED(rv)) return rv;
     mBuf.Append(url);
     mBuf.Append('\n');

@@ -87,7 +87,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
                 return NS_ERROR_FAILURE;
             }
             pURL = url;
-            pURL->SetSpec((char*)i_pURL);
+            pURL->SetSpec(nsDependentCString(i_pURL));
             break;
         }
         case URL_FACTORY_DEFAULT: {
@@ -98,7 +98,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
                 cout << "Service failed!" << endl;
                 return NS_ERROR_FAILURE;
             }   
-            result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+            result = pService->NewURI(nsDependentCString(i_pURL), nsnull, nsnull, getter_AddRefs(pURL));
         }
     }
 
@@ -106,44 +106,47 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
     if (NS_SUCCEEDED(result))
     {
         nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
-        nsXPIDLCString temp;
+        nsCAutoString temp;
         PRInt32 port;
+        nsresult rv;
 
-        tURL->GetScheme(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+#define RESULT() NS_SUCCEEDED(rv) ? temp.get() : ""
+
+        rv = tURL->GetScheme(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetUsername(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetUsername(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetPassword(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetPassword(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetHost(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetHost(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetPort(&port);
+        rv = tURL->GetPort(&port);
         output.AppendInt(port);
         output += ',';
-        tURL->GetDirectory(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetDirectory(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetFileBaseName(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetFileBaseName(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetFileExtension(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetFileExtension(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetParam(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetParam(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetQuery(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetQuery(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetRef(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetRef(temp);
+        output += RESULT();
         output += ',';
-        tURL->GetSpec(getter_Copies(temp));
-        output += temp ? (const char*)temp : "";
+        rv = tURL->GetSpec(temp);
+        output += RESULT();
         *o_Result = ToNewCString(output);
     } else {
         output = "Can not create URL";
@@ -250,25 +253,25 @@ nsresult makeAbsTest(const char* i_BaseURI, const char* relativePortion,
         cout << "CreateInstance failed" << endl;
         return status;
     }
-    status = baseURL->SetSpec((char*)i_BaseURI);
+    status = baseURL->SetSpec(nsDependentCString(i_BaseURI));
     if (NS_FAILED(status)) return status;
 
 
     // get the new spec
-    nsXPIDLCString newURL;
-    status = baseURL->Resolve(relativePortion, getter_Copies(newURL));
+    nsCAutoString newURL;
+    status = baseURL->Resolve(nsDependentCString(relativePortion), newURL);
     if (NS_FAILED(status)) return status;
 
-    nsXPIDLCString temp;
-    baseURL->GetSpec(getter_Copies(temp));
+    nsCAutoString temp;
+    baseURL->GetSpec(temp);
 
-    cout << "Analyzing " << temp << endl;
+    cout << "Analyzing " << temp.get() << endl;
     cout << "With      " << relativePortion << endl;
     
-    cout << "Got       " <<  newURL << endl;
+    cout << "Got       " << newURL.get() << endl;
     if (expectedResult) {
         cout << "Expect    " << expectedResult << endl;
-        int res = PL_strcmp(newURL, expectedResult);
+        int res = PL_strcmp(newURL.get(), expectedResult);
         if (res == 0) {
             cout << "\tPASSED" << endl << endl;
             return NS_OK;

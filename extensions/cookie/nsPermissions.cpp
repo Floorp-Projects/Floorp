@@ -698,11 +698,11 @@ PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
     return;
   }
   nsresult rv = NS_OK;
-  char *host = nsnull;
-  PRUint32 start,end;
+  nsCAutoString host;
   NS_ASSERTION(ioService, "IOService not available");
-  rv = ioService->ExtractUrlPart(objectURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, &host);
+  rv = ioService->ExtractUrlPart(nsDependentCString(objectURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port, host);
 
   /*
    * if permission is false, it will be added to the permission list
@@ -710,7 +710,7 @@ PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
    *    true permission being added
    */
   if (permission) {
-    char * hostPtr = host;
+    char * hostPtr = (char *)host.get();
     while (PR_TRUE) {
       permission_Unblock(hostPtr, type);
       hostPtr = PL_strchr(hostPtr, '.');
@@ -719,10 +719,9 @@ PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
       }
       hostPtr++; /* get passed the period */
     }
-    Recycle(host);
     return;
   }
-  Permission_AddHost(host, permission, type, PR_TRUE);
+  Permission_AddHost((char*)host.get(), permission, type, PR_TRUE);
 }
 
 PUBLIC void
@@ -732,11 +731,11 @@ PERMISSION_TestForBlocking(const char * objectURL, PRBool* blocked, PRInt32 type
     return;
   }
   nsresult rv = NS_OK;
-  nsXPIDLCString host;
-  PRUint32 start,end;
+  nsCAutoString host;
   NS_ASSERTION(ioService, "IOService not available");
-  rv = ioService->ExtractUrlPart(objectURL, nsIIOService::url_Host |
-                                 nsIIOService::url_Port, &start, &end, getter_Copies(host));
+  rv = ioService->ExtractUrlPart(nsDependentCString(objectURL),
+                                 nsIIOService::url_Host |
+                                 nsIIOService::url_Port, host);
 
   const char * hostPtr = host.get();
   while (PR_TRUE) {

@@ -1463,7 +1463,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *propose
   else //Let's extract the name from the URL
   {
     nsXPIDLCString url;
-  attachment->mURL->GetSpec(getter_Copies(url));
+  attachment->mURL->GetSpec(url);
 
   s = url;
   s2 = PL_strchr (s, ':');
@@ -1579,14 +1579,10 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   {
     if (PL_strstr(aSpec, "://") == nsnull)
     {
-      nsAutoString newSpec(NS_LITERAL_STRING("http://"));
-      newSpec.AppendWithConversion(aSpec);
-      nsCAutoString newspecC;
-      newspecC.AssignWithConversion(newSpec);
-		  rv = pNetService->NewURI(newspecC.get(), nsnull, aInstancePtrResult);
+	  rv = pNetService->NewURI(NS_LITERAL_CSTRING("http://") + nsDependentCString(aSpec), nsnull, nsnull, aInstancePtrResult);
   	}
   	else
-		  rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);
+	  rv = pNetService->NewURI(nsDependentCString(aSpec), nsnull, nsnull, aInstancePtrResult);
   }
   return rv;
 }
@@ -1646,19 +1642,19 @@ char *
 nsMsgParseURLHost(const char *url)
 {
   nsIURI        *workURI = nsnull;
-  char          *retVal = nsnull;
   nsresult      rv;
 
   rv = nsMsgNewURL(&workURI, url);
   if (NS_FAILED(rv) || !workURI)
     return nsnull;
   
-  rv = workURI->GetHost(&retVal);
+  nsCAutoString host;
+  rv = workURI->GetHost(host);
   NS_IF_RELEASE(workURI);
   if (NS_FAILED(rv))
     return nsnull;
-  else
-    return retVal;
+
+  return ToNewCString(host);
 }
 
 char *
@@ -1692,7 +1688,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
   char        *cp = nsnull;
   char        *cp1 = nsnull;
 
-  rv = aURL->GetPath(getter_Copies(file));
+  rv = aURL->GetPath(file);
   if ( NS_SUCCEEDED(rv) && file)
   {
     char *newFile = PL_strdup(file);
@@ -1726,7 +1722,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
   cp1 = nsnull;
 
 
-  rv = aURL->GetSpec(getter_Copies(spec));
+  rv = aURL->GetSpec(spec);
   if ( NS_SUCCEEDED(rv) && spec)
   {
     char *newSpec = PL_strdup(spec);

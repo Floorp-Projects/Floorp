@@ -36,7 +36,7 @@
 #include "nsProxiedService.h"
 #include "nsFileStream.h"
 #include "nsIURI.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsNetUtil.h"
 
 #include "nspr.h"
@@ -551,8 +551,8 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
             if (NS_SUCCEEDED(rv))
             {
-                nsXPIDLCString localURL;
-                rv = fileURL->GetSpec(getter_Copies(localURL));
+                nsCAutoString localURL;
+                rv = fileURL->GetSpec(localURL);
                 spec.Append(localURL);
                 spec.Append("!/");
             }

@@ -52,6 +52,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIFastLoadService.h"
 #include "nsIFile.h"
+#include "nsIFileURL.h"
 #include "nsIFileChannel.h"
 #include "nsIIOService.h"
 #include "nsIJARChannel.h"
@@ -60,11 +61,13 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
+#include "nsIStandardURL.h"
 #include "nsIStreamListener.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsNetCID.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 #include "prlog.h"
 
 //----------------------------------------------------------------------
@@ -515,11 +518,9 @@ nsChromeProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResu
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::GetScheme(char* *result)
+nsChromeProtocolHandler::GetScheme(nsACString &result)
 {
-    *result = nsCRT::strdup("chrome");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    result = "chrome";
     return NS_OK;
 }
 
@@ -546,7 +547,9 @@ nsChromeProtocolHandler::GetProtocolFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
+                                const char *aCharset,
+                                nsIURI *aBaseURI,
                                 nsIURI **result)
 {
     nsresult rv;
@@ -554,26 +557,15 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // Chrome: URLs (currently) have no additional structure beyond that provided
     // by standard URLs, so there is no "outer" given to CreateInstance
 
-    nsCOMPtr<nsIURI> url(do_CreateInstance(kStandardURLCID, &rv));
+    nsCOMPtr<nsIStandardURL> url(do_CreateInstance(kStandardURLCID, &rv));
     if (NS_FAILED(rv))
         return rv;
 
-    if (aBaseURI) {
-        nsXPIDLCString aResolvedURI;
-        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
-        if (NS_SUCCEEDED(rv))
-            rv = url->SetSpec(aResolvedURI);
-    }
-    else {
-        rv = url->SetSpec((char*)aSpec);
-    }
-
+    rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv))
         return rv;
 
-    *result = url;
-    NS_ADDREF(*result);
-    return rv;
+    return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP
@@ -623,7 +615,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIURI> chromeURI;
-        rv = ioServ->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
+        rv = ioServ->NewURI(spec, nsnull, nsnull, getter_AddRefs(chromeURI));
         if (NS_FAILED(rv)) return rv;
 
         rv = ioServ->NewChannelFromURI(chromeURI, getter_AddRefs(result));
@@ -649,11 +641,11 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         // Get a system principal for xul files and set the owner
         // property of the result
         nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-        nsXPIDLCString fileExtension;
-        rv = url->GetFileExtension(getter_Copies(fileExtension));
-        if (PL_strcasecmp(fileExtension, "xul") == 0 ||
-            PL_strcasecmp(fileExtension, "html") == 0 ||
-            PL_strcasecmp(fileExtension, "xml") == 0)
+        nsCAutoString fileExtension;
+        rv = url->GetFileExtension(fileExtension);
+        if (PL_strcasecmp(fileExtension.get(), "xul") == 0 ||
+            PL_strcasecmp(fileExtension.get(), "html") == 0 ||
+            PL_strcasecmp(fileExtension.get(), "xml") == 0)
         {
             nsCOMPtr<nsIScriptSecurityManager> securityManager =
                      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

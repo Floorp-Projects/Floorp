@@ -42,7 +42,7 @@
 #include "nsIChannel.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIFilePicker.h"
-#include "nsIFileChannel.h"
+#include "nsIFileURL.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
@@ -1022,7 +1022,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
     nsIURI *uri = nsnull;
-    res = service->NewURI(WALLET_EDITOR_URL, nsnull, &uri);
+    res = service->NewURI(NS_LITERAL_CSTRING(WALLET_EDITOR_URL), nsnull, nsnull, &uri);
     if (NS_FAILED(res)) return nsEventStatus_eIgnore;
 
     res = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
@@ -1141,12 +1141,12 @@ nsBrowserWindow::DoFileOpen()
     if (fileURL) {
       fileURL->SetFile(file);
 
-      nsXPIDLCString url;
-      fileURL->GetSpec(getter_Copies(url));
+      nsCAutoString url;
+      fileURL->GetSpec(url);
       
       // Ask the Web widget to load the file URL
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(NS_ConvertASCIItoUCS2(url.get()).get(),
+      webNav->LoadURI(NS_ConvertUTF8toUCS2(url).get(),
                       nsIWebNavigation::LOAD_FLAGS_NONE,
                       nsnull,
                       nsnull,
@@ -1274,7 +1274,7 @@ nsBrowserWindow::DoFind()
 
 //----------------------------------------------------------------------
 
-#define VIEWER_BUNDLE_URL "resource:/res/viewer.properties"
+#define VIEWER_BUNDLE_URL NS_LITERAL_CSTRING("resource:/res/viewer.properties")
 
 static nsString* gTitleSuffix = nsnull;
 
@@ -1294,7 +1294,7 @@ GetTitleSuffix(void)
     if (NS_FAILED(ret)) return ret;
 
     nsIURI *uri = nsnull;
-    ret = service->NewURI(VIEWER_BUNDLE_URL, nsnull, &uri);
+    ret = service->NewURI(VIEWER_BUNDLE_URL, nsnull, nsnull, &uri);
     if (NS_FAILED(ret)) return ret;
 
     ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
@@ -2094,10 +2094,9 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
-      char* str;
-      aURL->GetSpec(&str);
-      url.AssignWithConversion(str);
-      nsCRT::free(str);
+      nsCAutoString str;
+      aURL->GetSpec(str);
+      url = NS_ConvertUTF8toUCS2(str);
     }
     url.Append(NS_LITERAL_STRING(": progress "));
     url.AppendInt(aProgress, 10);

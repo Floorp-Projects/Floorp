@@ -76,9 +76,8 @@ nsViewSourceHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("view-source");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsViewSourceHandler::GetScheme(nsACString &result) {
+    result = "view-source";
     return NS_OK;
 }
 
@@ -95,14 +94,16 @@ nsViewSourceHandler::GetProtocolFlags(PRUint32 *result) {
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                               nsIURI **result) {
+nsViewSourceHandler::NewURI(const nsACString &aSpec,
+                            const char *aCharset, // ignore charset info
+                            nsIURI *aBaseURI,
+                            nsIURI **result) {
     nsresult rv;
     nsIURI* uri;
 
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
-    rv = uri->SetSpec((char*)aSpec);
+    rv = uri->SetSpec(aSpec);
     if (NS_FAILED(rv)) return rv;
 
     *result = uri;

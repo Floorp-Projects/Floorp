@@ -26,8 +26,6 @@
 #include "nsIZipReader.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
- 
 ////////////////////////////////////////////////////////////////////////////////
  
 nsJARURI::nsJARURI()
@@ -38,74 +36,28 @@ nsJARURI::nsJARURI()
  
 nsJARURI::~nsJARURI()
 {
-    if (mJAREntry)
-        nsMemory::Free(mJAREntry);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARURI, nsIJARURI, nsIURI, nsISerializable)
 
-NS_METHOD
-nsJARURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsJARURI* uri = new nsJARURI();
-
-    if (uri == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(uri);
-    nsresult rv = uri->Init();
-
-    if (NS_SUCCEEDED(rv)) {
-        rv = uri->QueryInterface(aIID, aResult);
-    }
-    NS_RELEASE(uri);
-
-    return rv;
-}
- 
 nsresult
-nsJARURI::Init()
+nsJARURI::Init(const char *charsetHint)
 {
+    mCharsetHint = charsetHint;
     return NS_OK;
 }
 
-#define NS_JAR_SCHEME           "jar:"
-#define NS_JAR_SCHEME_LEN       (sizeof(NS_JAR_SCHEME)-1)
-#define NS_JAR_DELIMITER        "!/"
-#define NS_JAR_DELIMITER_LEN    (sizeof(NS_JAR_DELIMITER)-1)
+#define NS_JAR_SCHEME           NS_LITERAL_CSTRING("jar:")
+#define NS_JAR_DELIMITER        NS_LITERAL_CSTRING("!/")
 
 nsresult
-nsJARURI::FormatSpec(const char* entryPath, char* *result)
+nsJARURI::FormatSpec(const nsACString &entryPath, nsACString &result)
 {
-    char* fileSpec;
-    nsresult rv = mJARFile->GetSpec(&fileSpec);
+    nsCAutoString fileSpec;
+    nsresult rv = mJARFile->GetSpec(fileSpec);
     if (NS_FAILED(rv)) return rv;
 
-    int fileSpecLen = strlen(fileSpec);
-    int entryPathLen = strlen(entryPath);
-
-    char *spec = (char *) nsMemory::Alloc(NS_JAR_SCHEME_LEN +
-                                          fileSpecLen +
-                                          NS_JAR_DELIMITER_LEN +
-                                          entryPathLen + 1);
-    if (!spec)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = spec;
-
-    memcpy(spec, NS_JAR_SCHEME, NS_JAR_SCHEME_LEN);
-    spec += NS_JAR_SCHEME_LEN;
-    memcpy(spec, fileSpec, fileSpecLen);
-    spec += fileSpecLen;
-    memcpy(spec, NS_JAR_DELIMITER, NS_JAR_DELIMITER_LEN);
-    spec += NS_JAR_DELIMITER_LEN;
-    memcpy(spec, entryPath, entryPathLen);
-    spec[entryPathLen] = 0;
-
-    nsMemory::Free(fileSpec);
+    result = NS_JAR_SCHEME + fileSpec + NS_JAR_DELIMITER + entryPath;
     return NS_OK;
 }
 
@@ -130,23 +82,23 @@ nsJARURI::Write(nsIObjectOutputStream* aStream)
 // nsIURI methods:
 
 NS_IMETHODIMP
-nsJARURI::GetSpec(char* *aSpec)
+nsJARURI::GetSpec(nsACString &aSpec)
 {
     return FormatSpec(mJAREntry, aSpec);
 }
 
 NS_IMETHODIMP
-nsJARURI::SetSpec(const char * aSpec)
+nsJARURI::SetSpec(const nsACString &aSpec)
 {
     nsresult rv;
-    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 startPos, endPos;
-    rv = serv->ExtractScheme(aSpec, &startPos, &endPos, nsnull);
+    nsCAutoString scheme;
+    rv = serv->ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) return rv;
 
-    if (nsCRT::strncmp("jar", &aSpec[startPos], endPos - startPos - 1) != 0)
+    if (strcmp("jar", scheme.get()) != 0)
         return NS_ERROR_MALFORMED_URI;
 
     // Search backward from the end for the "!/" delimiter. Remember, jar URLs
@@ -155,97 +107,108 @@ nsJARURI::SetSpec(const char * aSpec)
     // This gets the b.html document from out of the a.jar file, that's 
     // contained within the bar.jar file.
 
-    nsCAutoString jarPath(aSpec);
-    PRInt32 pos = jarPath.RFind(NS_JAR_DELIMITER);
-    startPos = (PRUint32) pos;
-    if (pos == -1 || endPos + 1 > startPos)
+    nsACString::const_iterator begin, end, delim_begin, delim_end;
+    aSpec.BeginReading(begin);
+    aSpec.EndReading(end);
+
+    delim_begin = begin;
+    delim_end = end;
+
+    if (!RFindInReadable(NS_JAR_DELIMITER, delim_begin, delim_end))
         return NS_ERROR_MALFORMED_URI;
 
-    jarPath.Cut(pos, jarPath.Length());
-    jarPath.Cut(0, endPos);
+    begin.advance(4);
 
-    rv = serv->NewURI(jarPath.get(), nsnull, getter_AddRefs(mJARFile));
+    rv = serv->NewURI(Substring(begin, delim_begin), mCharsetHint.get(), nsnull, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 slashChar=pos + 1;
-    while (aSpec[++slashChar]=='/');
+    // skip over any extra '/' chars
+    while (*delim_end == '/')
+        ++delim_end;
 
-    rv = serv->ResolveRelativePath(&aSpec[slashChar], nsnull, &mJAREntry);
+    rv = serv->ResolveRelativePath(Substring(delim_end, end),
+                                     NS_LITERAL_CSTRING(""),
+                                     mJAREntry);
     return rv;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetPrePath(char* *prePath)
+nsJARURI::GetPrePath(nsACString &prePath)
 {
-    *prePath = nsCRT::strdup("jar:");
-    return *prePath ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    prePath = "jar:";
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetPrePath(const char* prePath)
+nsJARURI::GetScheme(nsACString &aScheme)
 {
-    NS_NOTREACHED("nsJARURI::SetPrePath");
-    return NS_ERROR_NOT_IMPLEMENTED; 
+    aScheme = "jar";
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetScheme(char * *aScheme)
-{
-    *aScheme = nsCRT::strdup("jar");
-    return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP
-nsJARURI::SetScheme(const char * aScheme)
+nsJARURI::SetScheme(const nsACString &aScheme)
 {
     // doesn't make sense to set the scheme of a jar: URL
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetUsername(char * *aUsername)
+nsJARURI::GetUserPass(nsACString &aUserPass)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetUsername(const char * aUsername)
+nsJARURI::SetUserPass(const nsACString &aUserPass)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetPassword(char * *aPassword)
+nsJARURI::GetUsername(nsACString &aUsername)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetPassword(const char * aPassword)
+nsJARURI::SetUsername(const nsACString &aUsername)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetPreHost(char * *aPreHost)
+nsJARURI::GetPassword(nsACString &aPassword)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetPreHost(const char * aPreHost)
+nsJARURI::SetPassword(const nsACString &aPassword)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::GetHost(char * *aHost)
+nsJARURI::GetHostPort(nsACString &aHostPort)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetHost(const char * aHost)
+nsJARURI::SetHostPort(const nsACString &aHostPort)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetHost(nsACString &aHost)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetHost(const nsACString &aHost)
 {
     return NS_ERROR_FAILURE;
 }
@@ -263,15 +226,34 @@ nsJARURI::SetPort(PRInt32 aPort)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetPath(char * *aPath)
+nsJARURI::GetPath(nsACString &aPath)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetPath(const char * aPath)
+nsJARURI::SetPath(const nsACString &aPath)
 {
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetAsciiSpec(nsACString &aSpec)
+{
+    return GetSpec(aSpec);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetAsciiHost(nsACString &aHost)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
+{
+    aOriginCharset.Truncate();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -297,12 +279,11 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
     if (!equal)
         return NS_OK;   // not equal
 
-    char* otherJAREntry;
-    rv = otherJAR->GetJAREntry(&otherJAREntry);
+    nsCAutoString otherJAREntry;
+    rv = otherJAR->GetJAREntry(otherJAREntry);
     if (NS_FAILED(rv)) return rv;
 
-    *result = nsCRT::strcmp(mJAREntry, otherJAREntry) == 0;
-    nsCRT::free(otherJAREntry);
+    *result = (strcmp(mJAREntry.get(), otherJAREntry.get()) == 0);
     return NS_OK;
 }
 
@@ -329,39 +310,31 @@ nsJARURI::Clone(nsIURI **result)
     rv = mJARFile->Clone(getter_AddRefs(newJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    char* newJAREntry = nsCRT::strdup(mJAREntry);
-    if (newJAREntry == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     nsJARURI* uri = new nsJARURI();
     if (uri == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(uri);
     uri->mJARFile = newJARFile;
-    uri->mJAREntry = newJAREntry;
+    uri->mJAREntry = mJAREntry;
     *result = uri;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARURI::Resolve(const char *relativePath, char **result)
+nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
     nsresult rv;
 
-    if (!relativePath) return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString scheme;
-    rv = serv->ExtractScheme(relativePath, nsnull, nsnull, getter_Copies(scheme));
+    nsCAutoString scheme;
+    rv = serv->ExtractScheme(relativePath, scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
-        *result = nsCRT::strdup(relativePath);
-        if (*result == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        result = relativePath;
         return NS_OK;
     }
 
@@ -372,14 +345,12 @@ nsJARURI::Resolve(const char *relativePath, char **result)
     else
         path = "";
 
-    char* resolvedEntry;
-    rv = serv->ResolveRelativePath(relativePath, path.get(),
-                                   &resolvedEntry);
+    nsCAutoString resolvedEntry;
+    rv = serv->ResolveRelativePath(relativePath, path,
+                                   resolvedEntry);
     if (NS_FAILED(rv)) return rv;
 
-    rv = FormatSpec(resolvedEntry, result);
-    nsCRT::free(resolvedEntry);
-    return rv;
+    return FormatSpec(resolvedEntry, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,28 +372,26 @@ nsJARURI::SetJARFile(nsIURI* jarFile)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetJAREntry(char* *entryPath)
+nsJARURI::GetJAREntry(nsACString &entryPath)
 {
-    nsCAutoString entry(mJAREntry);
-    PRInt32 pos = entry.RFindCharInSet("#?;");
-    if (pos >= 0)
-        entry.Truncate(pos);
-    *entryPath = ToNewCString(entry);
-    return *entryPath ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // trim off any trailing ref, query, or param
+    PRInt32 pos = mJAREntry.RFindCharInSet("#?;");
+    if (pos < 0)
+        pos = mJAREntry.Length();
+    entryPath = Substring(mJAREntry, 0, pos);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsJARURI::SetJAREntry(const char* entryPath)
+nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
     nsresult rv;
-    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
 
-    if (mJAREntry)
-        nsCRT::free(mJAREntry);
+    mJAREntry.Truncate();
 
-    rv = serv->ResolveRelativePath(entryPath, nsnull, &mJAREntry);
-    return rv;
+    return serv->ResolveRelativePath(entryPath, NS_LITERAL_CSTRING(""), mJAREntry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

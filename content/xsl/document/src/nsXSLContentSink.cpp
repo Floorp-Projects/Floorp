@@ -44,6 +44,7 @@
 #include "nsIParser.h"
 #include "nsIURL.h"
 #include "nsString2.h"
+#include "nsEscape.h"
 
 nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
@@ -109,13 +110,14 @@ nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   nsCOMPtr<nsIDOMNode> styleNode;
   nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
   if (url) {
-      nsXPIDLCString ref;
-      url->GetRef(getter_Copies(ref));
+      nsCAutoString ref;
+      url->GetRef(ref);
       if (!ref.IsEmpty()) {
+          NS_UnescapeURL(ref); // XXX this may result in non-ASCII octets
           nsCOMPtr<nsIDOMDocument> styleDoc = do_QueryInterface(mDocument);
           NS_ENSURE_TRUE(styleDoc, NS_ERROR_NO_INTERFACE);
           nsCOMPtr<nsIDOMElement> elem;
-          styleDoc->GetElementById(NS_ConvertASCIItoUCS2(ref),
+          styleDoc->GetElementById(NS_ConvertUTF8toUCS2(ref),
                                    getter_AddRefs(elem));
           styleNode = elem;
       }

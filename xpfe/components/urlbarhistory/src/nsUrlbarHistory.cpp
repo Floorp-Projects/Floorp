@@ -562,29 +562,27 @@ nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
     
-    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aPath).get());
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aPath));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURL> pathURL(do_QueryInterface(uri));
 
     if (pathURL) {
-       char *  host=nsnull, *preHost = nsnull, * filePath = nsnull;
-       pathURL->GetHost(&host);
-       pathURL->GetFilePath(&filePath);
-       pathURL->GetPreHost(&preHost);
-       nsAutoString path(aPath);
-       if (preHost) 
-           slashIndex  = path.Find(preHost, PR_TRUE);
-       else if (host)
-           slashIndex = path.Find(host,PR_TRUE);
-       else if (filePath)
-           slashIndex = path.Find(filePath, PR_TRUE);
+       nsCAutoString host, filePath, userPass;
+       pathURL->GetHost(host);
+       pathURL->GetFilePath(filePath);
+       pathURL->GetUserPass(userPass);
+       nsCAutoString spec;
+       pathURL->GetSpec(spec);
+       if (!userPass.IsEmpty()) 
+           slashIndex = spec.Find(userPass, PR_TRUE);
+       else if (!host.IsEmpty())
+           slashIndex = spec.Find(host,PR_TRUE);
+       else if (!filePath.IsEmpty())
+           slashIndex = spec.Find(filePath, PR_TRUE);
        else
            slashIndex = 0;
        
-       nsCRT::free(preHost);
-       nsCRT::free(host);
-       nsCRT::free(filePath);
        //printf("$$$$ Scheme for uri = %s, preHost = %s, filepath = %s, Host = %s HostIndex = %d\n", pathScheme, preHost, filePath, pathHost, *aReturn);
     }
 
@@ -650,22 +648,22 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, const PRUni
         searchStrLen = nsCRT::strlen(aSearchItem);
     nsresult rv;
 
-    nsXPIDLCString filePath;
+    nsCAutoString filePath;
     nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!ioService) return NS_ERROR_FAILURE;
-    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem).get(), nsIIOService::url_Path, 0, 0, getter_Copies(filePath));
+    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem), nsIIOService::url_Path, filePath);
         
         // Don't bother checking for hostname if the search string
         // already has a filepath;
-        if (filePath && (strlen(filePath) > 1)) {
+        if (filePath.Length() > 1) {
             return NS_OK;
         }
           
-   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr).get(), nsIIOService::url_Path, 0, 0, getter_Copies(filePath));
+   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr), nsIIOService::url_Path, filePath);
 
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.
-        if (!filePath || (filePath && (strlen(filePath) <=1)))
+        if (filePath.Length() <= 1)
             return NS_OK;
         
         // Find the position of the filepath in the result string

@@ -2053,12 +2053,12 @@ SINGSIGN_RememberSignonData
      nsIDOMWindowInternal* window)
 {
     
-  nsXPIDLCString strippedRealm;
+  nsCAutoString strippedRealm;
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return;
-  ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, getter_Copies(strippedRealm));
-  if (strippedRealm) {
-    si_RememberSignonData(dialog, strippedRealm, signonData, window);
+  ioService->ExtractUrlPart(nsDependentCString(passwordRealm), nsIIOService::url_Host, strippedRealm);
+  if (!strippedRealm.IsEmpty()) {
+    si_RememberSignonData(dialog, strippedRealm.get(), signonData, window);
   }
 }
 
@@ -2168,11 +2168,11 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 
 PUBLIC void
 SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
-  nsXPIDLCString strippedRealm;
+  nsCAutoString strippedRealm;
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return;
-  ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, getter_Copies(strippedRealm));
-  si_RestoreSignonData(dialog, strippedRealm, name, value, elementNumber);
+  ioService->ExtractUrlPart(nsDependentCString(passwordRealm), nsIIOService::url_Host, strippedRealm);
+  si_RestoreSignonData(dialog, (char*)strippedRealm.get(), name, value, elementNumber);
 }
 
 /*

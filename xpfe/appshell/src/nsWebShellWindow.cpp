@@ -328,13 +328,12 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
 
   if (nsnull != aUrl)  {
-    char *tmpStr = NULL;
-    nsAutoString urlString;
+    nsCAutoString tmpStr;
 
-    rv = aUrl->GetSpec(&tmpStr);
+    rv = aUrl->GetSpec(tmpStr);
     if (NS_FAILED(rv)) return rv;
-    urlString.AssignWithConversion(tmpStr);
-    nsCRT::free(tmpStr);
+
+    NS_ConvertUTF8toUCS2 urlString(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
     rv = webNav->LoadURI(urlString.get(),
@@ -1400,12 +1399,11 @@ void nsWebShellWindow::LoadContentAreas() {
       nsCOMPtr<nsIURI> mainURL;
       doc->GetDocumentURL(getter_AddRefs(mainURL));
       if (mainURL) {
-        char *search = nsnull;
+        nsCAutoString search;
         nsCOMPtr<nsIURL> url = do_QueryInterface(mainURL);
         if (url)
-          url->GetQuery(&search);
-        searchSpec.AssignWithConversion(search);
-        nsCRT::free(search);
+          url->GetQuery(search);
+        searchSpec = NS_ConvertUTF8toUCS2(search);
       }
     }
   }

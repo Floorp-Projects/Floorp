@@ -93,7 +93,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsNntpUrl::SetSpec(const char * aSpec)
+NS_IMETHODIMP nsNntpUrl::SetSpec(const nsACString &aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -107,18 +107,18 @@ nsresult nsNntpUrl::DetermineNewsAction()
 {
   nsresult rv;
 
-  nsXPIDLCString path;
-  rv = nsMsgMailNewsUrl::GetPath(getter_Copies(path));
+  nsCAutoString path;
+  rv = nsMsgMailNewsUrl::GetPath(path);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (!nsCRT::strcmp(path,"/*")) {
+  if (!strcmp(path.get(),"/*")) {
     // news://news.mozilla.org/* 
     // get all newsgroups on the server, for subscribe
     m_newsAction = nsINntpUrl::ActionListGroups;
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(path,"/")) {
+  if (!strcmp(path.get(),"/")) {
     // could be news:netscape.public.mozilla.mail-news or news://news.mozilla.org
     // news:netscape.public.mozilla.mail-news gets turned into news://netscape.public.mozilla.mail-news/ by nsStandardURL
     // news://news.mozilla.org gets turned in to news://news.mozilla.org/ by nsStandardURL
@@ -154,7 +154,7 @@ nsresult nsNntpUrl::DetermineNewsAction()
     return NS_OK;
   }
    
-  if (PL_strchr(path.get(), '@') || PL_strstr(path.get(),"%40")) {
+  if (strchr(path.get(), '@') || strstr(path.get(),"%40")) {
     // news://news.mozilla.org/3B98D201.3020100@cs.com
     // news://news.mozilla.org/3B98D201.3020100%40cs.com
     m_newsAction = nsINntpUrl::ActionFetchArticle;
@@ -211,10 +211,10 @@ NS_IMETHODIMP nsNntpUrl::GetUri(char ** aURI)
   // if we have been given a uri to associate with this url, then use it
   // otherwise try to reconstruct a URI on the fly....
   if (mURI.IsEmpty()) {
-    nsXPIDLCString spec;
-    rv = GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    rv = GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
-    mURI = (const char *)spec;
+    mURI = spec;
   }
   
   *aURI = ToNewCString(mURI);

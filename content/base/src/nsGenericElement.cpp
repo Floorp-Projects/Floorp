@@ -237,11 +237,9 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
   }
 
   if (uri) {
-    nsXPIDLCString spec;
-
-    uri->GetSpec(getter_Copies(spec));
-
-    CopyASCIItoUCS2(nsDependentCString(spec), aURI);
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    aURI = NS_ConvertUTF8toUCS2(spec);
   }
   
   return NS_OK;
@@ -2623,7 +2621,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     nsCOMPtr<nsIURI> absURI;
     if (NS_SUCCEEDED(rv))
-      rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, aBaseURL);
+      rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, nsnull, aBaseURL);
     if (NS_SUCCEEDED(rv))
       proceed = securityManager->CheckLoadURI(aBaseURL, absURI, nsIScriptSecurityManager::STANDARD);
 

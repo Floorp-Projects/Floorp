@@ -49,6 +49,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgMailSession)
@@ -448,10 +449,10 @@ nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, nsIMsgWindow *aMsgWind
   if (NS_FAILED(rv)) 
     return NS_ERROR_NULL_POINTER;
 
-  nsXPIDLCString urlString;
-  if (NS_SUCCEEDED(tURI->GetSpec(getter_Copies(urlString))))
+  nsCAutoString urlString;
+  if (NS_SUCCEEDED(tURI->GetSpec(urlString)))
   {
-    *aURL = nsCRT::strdup(urlString);
+    *aURL = ToNewCString(urlString);
     if (!(aURL))
       return NS_ERROR_NULL_POINTER;
   }

@@ -55,6 +55,7 @@
 #include "nsIDownloader.h"
 #include "nsIInputStream.h"
 #include "nsJARProtocolHandler.h"
+#include "nsString.h"
 
 #ifdef DEBUG
 #include "prthread.h"
@@ -116,7 +117,7 @@ protected:
     char*                               mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsIURI>                    mJARBaseURI;
-    char*                               mJAREntry;
+    nsCString                           mJAREntry;
     nsCOMPtr<nsIZipReader>              mJAR;
     nsCOMPtr<nsIFile>                   mDownloadedJARFile;
     nsresult                            mStatus;

@@ -389,18 +389,19 @@ nsFTPDirListingConv::GetHeaders(nsAWritableCString& headers,
     headers.Append("300: ");
 
     // Bug 111117 - don't print the password
-    nsXPIDLCString pw,spec;
-    uri->GetPassword(getter_Copies(pw));
+    nsCAutoString pw;
+    nsCAutoString spec;
+    uri->GetPassword(pw);
     if (!pw.IsEmpty()) {
-         rv = uri->SetPassword(nsnull);
+         rv = uri->SetPassword(NS_LITERAL_CSTRING(""));
          if (NS_FAILED(rv)) return rv;
-         rv = uri->GetSpec(getter_Copies(spec));
+         rv = uri->GetAsciiSpec(spec);
          if (NS_FAILED(rv)) return rv;
          headers.Append(spec);
          rv = uri->SetPassword(pw);
          if (NS_FAILED(rv)) return rv;
     } else {
-        rv = uri->GetSpec(getter_Copies(spec));
+        rv = uri->GetAsciiSpec(spec);
         if (NS_FAILED(rv)) return rv;
         
         headers.Append(spec);

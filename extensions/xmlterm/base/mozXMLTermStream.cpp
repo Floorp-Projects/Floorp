@@ -194,7 +194,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   if (NS_FAILED(result))
     return result;
 
-  result = uri->SetSpec(contentURL);
+  result = uri->SetSpec(nsDependentCString(contentURL));
   if (NS_FAILED(result))
     return result;
 

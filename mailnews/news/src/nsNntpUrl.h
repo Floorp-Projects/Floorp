@@ -52,7 +52,7 @@ public:
   NS_DECL_NSIMSGI18NURL
 
   // nsIURI over-ride...
-	NS_IMETHOD SetSpec(const char * aSpec);
+	NS_IMETHOD SetSpec(const nsACString &aSpec);
 
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 

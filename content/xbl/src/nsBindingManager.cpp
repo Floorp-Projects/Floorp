@@ -831,17 +831,17 @@ NS_IMETHODIMP
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
                                       nsIDocument** aResult)
 {
-  nsCAutoString url; url.AssignWithConversion(PromiseFlatString(aURL).get());
+  NS_ConvertUCS2toUTF8 url(aURL);
   
-  nsXPIDLCString otherScheme;
-  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  nsCAutoString otherScheme;
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService();
   if (!ioService) return NS_ERROR_FAILURE;
-  ioService->ExtractScheme(url.get(), 0, 0, getter_Copies(otherScheme));
+  ioService->ExtractScheme(url, otherScheme);
 
   nsCOMPtr<nsIURI> docURL;
   aBoundDoc->GetDocumentURL(getter_AddRefs(docURL));
-  nsXPIDLCString scheme;
-  docURL->GetScheme(getter_Copies(scheme));
+  nsCAutoString scheme;
+  docURL->GetScheme(scheme);
 
   // First we need to load our binding.
   *aResult = nsnull;
@@ -857,7 +857,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
   if (!info)
     return NS_ERROR_FAILURE;
 
-  if (!PL_strcmp(scheme, otherScheme))
+  if (!strcmp(scheme.get(), otherScheme.get()))
     info->GetDocument(aResult); // Addref happens here.
     
   return NS_OK;
@@ -948,10 +948,10 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 
   nsCOMPtr<nsIURI> uri;
   doc->GetDocumentURL(getter_AddRefs(uri));
-  nsXPIDLCString str;
-  uri->GetSpec(getter_Copies(str));
+  nsCAutoString str;
+  uri->GetSpec(str);
   
-  nsCStringKey key((const char*)str);
+  nsCStringKey key(str.get());
   mDocumentTable->Put(&key, aDocumentInfo);
   return NS_OK;
 }
@@ -967,10 +967,10 @@ nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 
   nsCOMPtr<nsIURI> uri;
   doc->GetDocumentURL(getter_AddRefs(uri));
-  nsXPIDLCString str;
-  uri->GetSpec(getter_Copies(str));
+  nsCAutoString str;
+  uri->GetSpec(str);
   
-  nsCStringKey key((const char*)str);
+  nsCStringKey key(str.get());
   mDocumentTable->Remove(&key);
   return NS_OK;
 }
@@ -1035,11 +1035,11 @@ PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
   nsCAutoString uriStr;
   binding->GetDocURI(uriStr);
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), uriStr.get());
+  NS_NewURI(getter_AddRefs(uri), uriStr);
   if (uri) {
-    nsXPIDLCString path;
-    uri->GetPath(getter_Copies(path));
-    if (!PL_strncmp(path.get(), "/skin", 5))
+    nsCAutoString path;
+    uri->GetPath(path);
+    if (!strncmp(path.get(), "/skin", 5))
       binding->MarkForDeath();
   }
   return PR_TRUE;

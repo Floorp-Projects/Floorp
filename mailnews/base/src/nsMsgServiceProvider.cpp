@@ -105,9 +105,9 @@ nsMsgServiceProviderService::Init()
       if (NS_FAILED(rv))
         continue;
 
-      nsXPIDLCString urlSpec;
-      rv = NS_GetURLSpecFromFile(dirEntry, getter_Copies(urlSpec));
-      rv = LoadDataSource(urlSpec);
+      nsCAutoString urlSpec;
+      rv = NS_GetURLSpecFromFile(dirEntry, urlSpec);
+      rv = LoadDataSource(urlSpec.get());
       NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
     }
   }

@@ -96,9 +96,9 @@ nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aM
 		nsFilePath filePath(aMailboxPath); // convert to file url representation...
 		url->SetUpdatingFolder(PR_TRUE);
 		url->SetMsgWindow(aMsgWindow);
-		char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
-		url->SetSpec(urlSpec);
-		PR_FREEIF(urlSpec);
+        char *temp = PR_smprintf("mailbox://%s", (const char *) filePath);
+        url->SetSpec(nsDependentCString(temp));
+        PR_Free(temp);
 		mailboxurl->SetMailboxParser(aMailboxParser);
 		if (aUrlListener)
 			url->RegisterListener(aUrlListener);
@@ -199,7 +199,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
     i18nurl->SetCharsetOverRide(aCharsetOverride);
 
     if (aFileName)
-      msgUrl->SetFileName(aFileName);
+      msgUrl->SetFileName(nsDependentCString(aFileName));
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the docshell...
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
@@ -398,7 +398,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
           urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
             
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
-			url->SetSpec(urlSpec);
+			url->SetSpec(nsDependentCString(urlSpec));
 			PR_FREEIF(urlSpec);
    
       (*aMailboxUrl)->SetMailboxAction(aMailboxAction);
@@ -421,14 +421,10 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 	return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::GetScheme(char * *aScheme)
+NS_IMETHODIMP nsMailboxService::GetScheme(nsACString &aScheme)
 {
-	nsresult rv = NS_OK;
-	if (aScheme)
-		*aScheme = nsCRT::strdup("mailbox");
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 
+	aScheme = "mailbox";
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxService::GetDefaultPort(PRInt32 *aDefaultPort)
@@ -454,11 +450,16 @@ NS_IMETHODIMP nsMailboxService::GetProtocolFlags(PRUint32 *result)
     return NS_OK; 	
 }
 
-NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
+                                       const char *aOriginCharset,
+                                       nsIURI *aBaseURI,
+                                       nsIURI **_retval)
 {
 	nsCOMPtr<nsIMailboxUrl> aMsgUrl;
 	nsresult rv = NS_OK;
-  if (PL_strstr(aSpec, "?uidl=") || PL_strstr(aSpec, "&uidl="))
+    nsACString::const_iterator b, e;
+    if (FindInReadable(NS_LITERAL_CSTRING("?uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)) ||
+        FindInReadable(NS_LITERAL_CSTRING("&uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)))
   {
     nsCOMPtr<nsIPop3Service> pop3Service = 
              do_GetService(kCPop3ServiceCID, &rv);
@@ -466,7 +467,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
     nsCOMPtr<nsIProtocolHandler> handler = do_QueryInterface(pop3Service,
                                                              &rv);
     if (NS_SUCCEEDED(rv))
-        rv = handler->NewURI(aSpec, aBaseURI, _retval);
+        rv = handler->NewURI(aSpec, aOriginCharset, aBaseURI, _retval);
   }
   else
   {
@@ -478,7 +479,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
     if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
-      aUrl->SetSpec((char *) aSpec);
+      aUrl->SetSpec(aSpec);
       aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
     }
   }

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,14 +40,12 @@
 #include "nsISupports.idl"
 
 /**
- * URIs are essentially structured names for things -- anything.
- * This interface provides accessors to destructure those names.
+ * URIs are essentially structured names for things -- anything. This interface
+ * provides accessors to set and query the most basic components of an URI.
+ * Subclasses, including nsIURL, impose greater structure on the URI.
  *
- * This interface follows Tim Berners-Lee's URI spec:
- *
- *     http://www.w3.org/Addressing/URI/URI_Overview.html
- *  
- * essentially:
+ * This interface follows Tim Berners-Lee's URI spec (RFC2396) [1], where the
+ * basic URI components are defined as such:
  *  
  *      ftp://username:password@hostname:portnumber/pathname
  *      \ /   \               / \      / \        /\       /
@@ -55,147 +54,180 @@
  *       |            |             |        |        Path
  *       |            |             |       Port         
  *       |            |            Host      /
- *       |         PreHost                  /
+ *       |         UserPass                 /
  *     Scheme                              /
  *       \                                /
  *        --------------------------------
  *                       |
  *                    PrePath
  *
- * The subclass nsIURL provides a means to open an input or output              
- * stream to a URI as a source/destination, as well as providing additional     
- * accessors to destructure the path, query and reference portions typically    
- * associated with URLs.                                                        
+ * The definition of the URI components has been extended to allow for
+ * internationalized domain names [2] and the more generic IRI structure [3].
  *
- * @status UNDER_REVIEW
+ * [1] http://www.ietf.org/rfc/rfc2396.txt
+ * [2] http://www.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
+ * [3] http://www.ietf.org/internet-drafts/draft-masinter-url-i18n-08.txt
  */
 
 %{C++
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
-#ifdef XP_OS2 // OS2 has UNKNOWN problems :)
-#undef UNKNOWN
-#endif
+#include "nsAString.h"
 %}
 
+/**
+ * nsIURI - interface for an uniform resource identifier w/ i18n support.
+ *
+ * AUTF8String attributes may contain unescaped UTF-8 characters.
+ * Consumers should be careful to escape the UTF-8 strings as necessary, but
+ * should always try to "display" the UTF-8 version as provided by this
+ * interface.
+ *
+ * AUTF8String attributes may also contain escaped characters.
+ * 
+ * Unescaping URI segments is unadvised unless there is intimate
+ * knowledge of the underlying charset or there is no plan to display (or
+ * otherwise enforce a charset on) the resulting URI substring.
+ * 
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(07a22cc0-0ce5-11d3-9331-00104ba0fd40)]
 interface nsIURI : nsISupports
 {
-
-    /**
-     * Returns a string representation of the URI. Setting the spec 
-     * causes the new spec to be parsed, initializing the URI. Setting
-     * the spec (or any of the accessors) causes also any currently
-     * open streams on the URI's channel to be closed.
+    /************************************************************************
+     * The URI is broken down into the following principal components:
      */
-    attribute string spec;
 
     /**
-     * The prePath returns the stuff before the path
-     * (e.g. protocol://user:password@host:port/). This is useful for
-     * authentication, or managing sessions.
+     * Returns a string representation of the URI. Setting the spec causes
+     * the new spec to be parsed, initializing the URI.
+     *
+     * Some characters may be escaped.
      */
-    attribute string prePath;
+    attribute AUTF8String spec;
 
     /**
-     * The Scheme is the protocol to which this URI refers. Setting
-     * the scheme is a special operation that builds up an equivalent
-     * URI string from the new scheme and all the other URI attributes
-     * and passes the it to the nsIOService to create a new URI for
-     * the new scheme.
+     * The prePath (eg. scheme://user:password@host:port) returns the string
+     * before the path.  This is useful for authentication or managing sessions.
+     *
+     * Some characters may be escaped.
      */
-    attribute string scheme;
+    readonly attribute AUTF8String prePath;
 
     /**
-     * The PreHost portion includes elements like the optional 
-     * username:password, or maybe other scheme specific items. 
+     * The Scheme is the protocol to which this URI refers.  The scheme is
+     * restricted to the US-ASCII charset per RFC2396.
      */
-    attribute string preHost;
-
-    attribute string username;
-
-    attribute string password;
+    attribute ACString scheme;
 
     /**
-     * The Host is the internet domain name to which this URI refers. 
-     * Note that it could be an IP address as well. 
+     * The username:password (or username only if value doesn't contain a ':')
+     *
+     * Some characters may be escaped.
      */
-    attribute string host;
+    attribute AUTF8String userPass;
 
     /**
-     * A return value of -1 indicates that no port value is set and the 
-     * implementor of the specific scheme will use its default port. 
-     * Similarly setting a value of -1 indicates that the default is to be used.
-     * Thus as an example:
-     *     for HTTP, Port 80 is same as a return value of -1. 
-     * However after setting a port (even if its default), the port number will
-     * appear in the ToNewCString function.
+     * The optional username and password, assuming the preHost consists of
+     * username:password.
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String username;
+    attribute AUTF8String password;
+
+    /**
+     * The host:port (or simply the host, if port == -1).
+     *
+     * Characters are NOT escaped.
+     */
+    attribute AUTF8String hostPort;
+
+    /**
+     * The host is the internet domain name to which this URI refers.  It could
+     * be an IPv4 (or IPv6) address literal.  If supported, it could be a
+     * non-ASCII internationalized domain name.
+     *
+     * Characters are NOT escaped.
+     */
+    attribute AUTF8String host;
+
+    /**
+     * A port value of -1 corresponds to the protocol's default port (eg. -1
+     * implies port 80 for http URIs).
      */
     attribute long port;
 
     /**
-     * Note that the path includes the leading '/' Thus if no path is 
-     * available the Path accessor will return a "/" 
-     * For SetPath if none is provided, one would be prefixed to the path. 
+     * The path, typically including at least a leading '/' (but may also be
+     * empty, depending on the protocol).
+     *
+     * Some characters may be escaped.
      */
-    attribute string path;
+    attribute AUTF8String path;
+
+
+    /************************************************************************
+     * An URI supports the following methods:
+     */
 
     /**
-     * Note that this comparison is only on char* level. Use 
-     * the scheme specific URI to do a more thorough check. For example,
-     * in HTTP:
-     *     http://foo.com:80 == http://foo.com
-     * but this function through nsIURI alone will not return equality
-     * for this case.
+     * URI equivalence test (not a strict string comparison).
+     *
+     * eg. http://foo.com:80/ == http://foo.com/
      */
     boolean equals(in nsIURI other);
 
     /**
-    * An optimization to do scheme checks without requiring the users of nsIURI
-    * to GetScheme thereby saving extra allocating and freeing. Returns true if
-    * the schemes match (case ignored). Note that for unknown cases this will 
-    * always return false.
-    */
+     * An optimization to do scheme checks without requiring the users of nsIURI
+     * to GetScheme, thereby saving extra allocating and freeing. Returns true if
+     * the schemes match (case ignored).
+     */
     boolean schemeIs(in string scheme);
 
     /**
-     * Clones the current URI. The newly created URI will be in a closed
-     * state even if the underlying channel of the cloned URI is open.
-     * Cloning allows the current location to be retained since once the
-     * channel is opened the URI may get redirected to a new location.
+     * Clones the current URI.  For some protocols, this is more than just an
+     * optimization.  For example, under MacOS, the spec of a file URL does not
+     * necessarily uniquely identify a file since two volumes could share the
+     * same name.
      */
     nsIURI clone();
 
     /**
      * This method resolves a relative string into an absolute URI string,
-     * using the URI as the base. 
+     * using this URI as the base. 
      *
-     * This method subsumes the deprecated method nsIIOService::MakeAbsolute.
+     * NOTE: some implementations may have no concept of a relative URI.
      */
-    string resolve(in string relativePath);
+    AUTF8String resolve(in AUTF8String relativePath);
 
+
+    /************************************************************************
+     * Additional attributes:
+     */
+
+    /**
+     * The URI spec with an ASCII compatible encoding.  Host portion follows
+     * the IDNA draft spec.  Other parts are URL-escaped per the rules of
+     * RFC2396.  The result is strictly ASCII.
+     */
+    readonly attribute ACString asciiSpec;
+
+    /**
+     * The URI host with an ASCII compatible encoding.  Follows the IDNA
+     * draft spec for converting internationalized domain names (UTF-8) to
+     * ASCII for compatibility with existing internet infrasture.
+     */
+    readonly attribute ACString asciiHost;
+
+    /**
+     * The charset of the document from which this URI originated.  An empty
+     * value implies UTF-8.
+     *
+     * If this value is something other than UTF-8 then the URI components
+     * (e.g., spec, prePath, username, etc.) will all be fully URL-escaped.
+     * Otherwise, the URI components may contain unescaped multibyte UTF-8
+     * characters.
+     */
+    readonly attribute ACString originCharset;
 };
-
-/**
- * Protocol writers can obtain a very basic (ok, degenerate) implementation
- * of nsIURI by calling the component manager with NS_SIMPLEURI_CID. The
- * implementation returned will only parse things of the form:
- *
- *    about:cache
- *    \   / \   /
- *     ---   ---
- *      |     |
- *   Scheme  Path
- *
- * where the path is everything after the colon. Note that this is probably 
- * only useful for cases like about: or javascript: URIs. 
- *
- * *** What you most likely will want is NS_STANDARDURL_CID which is much more 
- * full featured. Look at nsIURL.idl for more details.
- *
- * NOTE: CIDs are declared in build/nsNetCID.h
- */
-
-%{C++
-#define NS_ERROR_MALFORMED_URI  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 10)
-%}

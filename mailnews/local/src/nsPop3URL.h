@@ -56,7 +56,7 @@ protected:
 	virtual ~nsPop3URL();
 	// protocol specific code to parse a url...
     virtual nsresult ParseUrl(const nsString& aSpec);
-	virtual const char * GetUserName() { GetUsername(getter_Copies(m_userName)); return m_userName;}
+	virtual const char * GetUserName() { GetUsername(m_userName); return m_userName;}
 
     nsXPIDLCString m_userName;
     nsCString m_messageUri;

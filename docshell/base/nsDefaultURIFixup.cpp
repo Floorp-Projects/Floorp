@@ -88,10 +88,9 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
                                       getter_AddRefs(uri));
         if (NS_FAILED(rv) || !uri)
             return NS_ERROR_FAILURE;
-        nsXPIDLCString spec;
-        uri->GetSpec(getter_Copies(spec));
-        uriString.Assign(NS_LITERAL_STRING("view-source:"));
-        uriString.Append(NS_ConvertASCIItoUCS2(spec));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        uriString.Assign(NS_LITERAL_STRING("view-source:") + NS_ConvertUTF8toUCS2(spec));
     }
     else {
         // Check for if it is a file URL
@@ -205,20 +204,14 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
 
     // Security - URLs with user / password info should NOT be fixed up
-    nsXPIDLCString username;
-    nsXPIDLCString password;
-    aURI->GetUsername(getter_Copies(username));
-    aURI->GetPassword(getter_Copies(password));
-    if (username.Length() > 0 || password.Length() > 0)
-    {
+    nsCAutoString userpass;
+    aURI->GetUserPass(userpass);
+    if (userpass.Length() > 0) {
         return PR_FALSE;
     }
 
-    nsXPIDLCString host;
-    aURI->GetHost(getter_Copies(host));
-
-    nsCAutoString oldHost(host);
-    nsCAutoString newHost;
+    nsCAutoString oldHost, newHost;
+    aURI->GetHost(oldHost);
 
     // Count the dots
     PRInt32 numDots = 0;
@@ -267,7 +260,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
 
     // Assign the new host string over the old one
-    aURI->SetHost(newHost.get());
+    aURI->SetHost(newHost);
     return PR_TRUE;
 }
 
@@ -352,9 +345,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         nsresult rv = NS_NewLocalFile(file.get(), PR_FALSE, getter_AddRefs(filePath));
         if (NS_SUCCEEDED(rv))
         {
-            nsXPIDLCString fileurl;
-            NS_GetURLSpecFromFile(filePath, getter_Copies(fileurl));
-            aOut.Assign(fileurl);
+            NS_GetURLSpecFromFile(filePath, aOut);
             return NS_OK;
         }
     }

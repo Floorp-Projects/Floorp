@@ -1668,7 +1668,7 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
       doc->GetBaseURL(*getter_AddRefs(baseURI));
      
       nsCOMPtr<nsIURI> srcURI;
-      NS_NewURI(getter_AddRefs(srcURI), myList->mListStyleImage, baseURI);
+      NS_NewURI(getter_AddRefs(srcURI), myList->mListStyleImage, nsnull, baseURI);
       nsCOMPtr<imgIRequest> imageRequest;
 
       nsresult rv;

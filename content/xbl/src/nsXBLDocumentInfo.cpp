@@ -436,10 +436,10 @@ nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aRes
   nsCOMPtr<nsIURI> url;
   aDocument->GetDocumentURL(getter_AddRefs(url));
   
-  nsXPIDLCString str;
-  url->GetSpec(getter_Copies(str));
+  nsCAutoString str;
+  url->GetSpec(str);
 
-  *aResult = new nsXBLDocumentInfo((const char*)str, aDocument);
+  *aResult = new nsXBLDocumentInfo(str.get(), aDocument);
   
   NS_IF_ADDREF(*aResult);
   return NS_OK;

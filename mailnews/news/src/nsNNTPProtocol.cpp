@@ -468,12 +468,12 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     }
     nsMsgProtocol::InitFromURI(aURL);
 
-    nsXPIDLCString userName;
-    rv = m_url->GetPreHost(getter_Copies(userName));
+    nsCAutoString userPass;
+    rv = m_url->GetUserPass(userPass);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsXPIDLCString hostName;
-    rv = m_url->GetHost(getter_Copies(hostName));
+    nsCAutoString hostName;
+    rv = m_url->GetAsciiHost(hostName);
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -481,7 +481,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 
     // find the server
     nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->FindServer((const char *)userName, (const char *)hostName, "nntp",
+    rv = accountManager->FindServer(userPass.get(), hostName.get(), "nntp",
                                     getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
     if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
@@ -932,13 +932,13 @@ nsresult nsNNTPProtocol::OpenCacheEntry()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Open a cache entry with key = url
-  nsXPIDLCString urlSpec;
-  mailnewsUrl->GetSpec(getter_Copies(urlSpec));
+  nsCAutoString urlSpec;
+  mailnewsUrl->GetAsciiSpec(urlSpec);
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = PL_strrchr(urlSpec, '?');
+  char * anchor = strrchr(urlSpec.get(), '?');
   if (anchor)
     *anchor = '\0';
-  return cacheSession->AsyncOpenCacheEntry(urlSpec, nsICache::ACCESS_READ_WRITE, this);
+  return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
 }
 
 NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
@@ -1352,16 +1352,16 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
     }
 
 	// get the file path part and store it as the group...
-	nsXPIDLCString fullPath;
-	rv = aURL->GetPath(getter_Copies(fullPath));
+	nsCAutoString fullPath;
+	rv = aURL->GetPath(fullPath);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) fullPath = %s",this, (const char *)fullPath));
+    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) fullPath = %s",this, fullPath.get()));
 
-	if (fullPath.get() && fullPath.get()[0] == '/')
-		group = PL_strdup((const char *)fullPath+1); 
+	if (fullPath.First() == '/')
+		group = nsCRT::strdup(fullPath.get()+1); 
 	else
-		group = PL_strdup((const char *)fullPath);
+		group = nsCRT::strdup(fullPath.get());
 
 	// more to do here, but for now, this works.
 	// only escape if we are doing a search
@@ -1441,16 +1441,16 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
       return NS_OK;
   }
 
-  nsXPIDLCString serverURI;
+  nsCAutoString serverURI;
 
   if (*aMessageID) {
     // if this is a message id, use the pre path (the server) for the folder uri.
-    rv = aURL->GetPrePath(getter_Copies(serverURI));
+    rv = aURL->GetPrePath(serverURI);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else if (*aGroup) {
     if (PL_strchr(*aGroup,'*')) {
-      rv = aURL->GetPrePath(getter_Copies(serverURI));
+      rv = aURL->GetPrePath(serverURI);
       NS_ENSURE_SUCCESS(rv,rv);
     }
     else {
@@ -1458,7 +1458,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
     }
   }
 
-  if (serverURI.get() && serverURI.get()[0]) {
+  if (!serverURI.IsEmpty()) {
     // if we get here, we, we are either doing:
     // news://host/message-id or news://host/*
     // (but not news://host/message-id?cancel)

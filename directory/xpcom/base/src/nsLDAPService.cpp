@@ -716,7 +716,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     nsCOMPtr<nsILDAPURL> url;
     nsCOMPtr<nsILDAPConnection> conn, conn2;
     nsCOMPtr<nsILDAPMessage> message;
-    nsXPIDLCString host;
+    nsCAutoString host;
     nsXPIDLString binddn;
     nsXPIDLString password;
     PRInt32 port;
@@ -744,7 +744,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
-    rv = url->GetHost(getter_Copies(host));
+    rv = url->GetAsciiHost(host);
     if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;
     }
@@ -764,7 +764,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
     // Here we need to provide the binddn, see bug #75990
     //
-    rv = conn->Init(host, port, 0, this);
+    rv = conn->Init(host.get(), port, 0, this);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of

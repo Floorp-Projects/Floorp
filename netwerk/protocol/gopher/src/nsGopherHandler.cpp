@@ -34,9 +34,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
-//#include "nsIHTTPProtocolHandler.h"
-//#include "nsIHTTPChannel.h"
 #include "nsIErrorService.h"
+#include "nsIStandardURL.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 
@@ -80,9 +79,8 @@ nsGopherHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) 
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsGopherHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("gopher");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsGopherHandler::GetScheme(nsACString &result) {
+    result = "gopher";
     return NS_OK;
 }
 
@@ -99,8 +97,10 @@ nsGopherHandler::GetProtocolFlags(PRUint32 *result) {
 }
 
 NS_IMETHODIMP
-nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result) {
+nsGopherHandler::NewURI(const nsACString &aSpec,
+                        const char *aCharset,
+                        nsIURI *aBaseURI,
+                        nsIURI **result) {
     nsresult rv;
 
     nsCOMPtr<nsIStandardURL> url;
@@ -109,10 +109,10 @@ nsGopherHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
     rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, GOPHER_PORT,
-                   aSpec, aBaseURI);
+                   aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    return url->QueryInterface(NS_GET_IID(nsIURI), (void**)result);
+    return CallQueryInterface(url, result);
 }
 
 NS_IMETHODIMP

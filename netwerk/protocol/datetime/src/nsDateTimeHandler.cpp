@@ -78,9 +78,8 @@ nsDateTimeHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsDateTimeHandler::GetScheme(char* *result) {
-    *result = nsCRT::strdup("datetime");
-    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+nsDateTimeHandler::GetScheme(nsACString &result) {
+    result = "datetime";
     return NS_OK;
 }
 
@@ -97,8 +96,10 @@ nsDateTimeHandler::GetProtocolFlags(PRUint32 *result) {
 }
 
 NS_IMETHODIMP
-nsDateTimeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result) {
+nsDateTimeHandler::NewURI(const nsACString &aSpec,
+                          const char *aCharset, // ignore charset info
+                          nsIURI *aBaseURI,
+                          nsIURI **result) {
     nsresult rv;
 
     // no concept of a relative datetime url
@@ -109,7 +110,7 @@ nsDateTimeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec((char*)aSpec);
+    rv = url->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

@@ -363,10 +363,10 @@ WebBrowserChrome::OnHistoryPurge(PRInt32 aNumEntries, PRBool *aContinue)
 nsresult
 WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1, PRUint32 aReloadFlags)
 {
-    nsXPIDLCString uriCStr;
+    nsCAutoString uriCStr;
     if (aURI)
     {
-        aURI->GetSpec(getter_Copies(uriCStr));
+        aURI->GetSpec(uriCStr);
     }
 
     nsString uriAStr;

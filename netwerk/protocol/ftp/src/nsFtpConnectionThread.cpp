@@ -544,11 +544,11 @@ NS_IMETHODIMP
 nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
 #if defined(PR_LOGGING)
-    nsXPIDLCString spec;
-    (void)mURL->GetSpec(getter_Copies(spec));
+    nsCAutoString spec;
+    (void)mURL->GetAsciiSpec(spec);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) nsFtpState::OnStartRequest() (spec =%s)\n",
-        this, NS_STATIC_CAST(const char*, spec)));
+        this, spec.get()));
 #endif
     return NS_OK;
 }
@@ -623,11 +623,11 @@ nsFtpState::EstablishControlConnection()
     mState = FTP_READ_BUF;
     mNextState = FTP_S_USER;
     
-    nsXPIDLCString host;
-    rv = mURL->GetHost(getter_Copies(host));
+    nsCAutoString host;
+    rv = mURL->GetAsciiHost(host);
     if (NS_FAILED(rv)) return rv;
 
-    mControlConnection = new nsFtpControlConnection(host, mPort);
+    mControlConnection = new nsFtpControlConnection(host.get(), mPort);
     if (!mControlConnection) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(mControlConnection);
@@ -985,10 +985,10 @@ nsFtpState::S_user() {
             if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
-            nsXPIDLCString prePath;
-            rv = mURL->GetPrePath(getter_Copies(prePath));
+            nsCAutoString prePath;
+            rv = mURL->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
-            nsAutoString prePathU; prePathU.AppendWithConversion(prePath);
+            NS_ConvertUTF8toUCS2 prePathU(prePath);
 
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -1004,7 +1004,7 @@ nsFtpState::S_user() {
                                               getter_Copies(formatedString));                   
             rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
                                                           formatedString,
-                                                          NS_ConvertASCIItoUCS2(prePath).get(),
+                                                          prePathU.get(),
                                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                           &user, 
                                                           &passwd, 
@@ -1082,10 +1082,10 @@ nsFtpState::S_pass() {
             PRUnichar *passwd = nsnull;
             PRBool retval;
             
-            nsXPIDLCString prePath;
-            rv = mURL->GetPrePath(getter_Copies(prePath));
+            nsCAutoString prePath;
+            rv = mURL->GetPrePath(prePath);
             if (NS_FAILED(rv)) return rv;
-            nsAutoString prePathU; prePathU.AppendWithConversion(prePath);
+            NS_ConvertUTF8toUCS2 prePathU(prePath);
             
             nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
             if (NS_FAILED(rv)) return rv;
@@ -1111,6 +1111,7 @@ nsFtpState::S_pass() {
                 return NS_ERROR_FAILURE;
             mPassword = passwd;
         }
+        // XXX mPassword may contain non-ASCII characters!  what do we do?
         passwordStr.AppendWithConversion(mPassword);    
     }
     passwordStr.Append(CRLF);
@@ -1141,8 +1142,8 @@ nsFtpState::R_pass() {
         if (!mPassword.IsEmpty()) {
             nsCOMPtr<nsIPasswordManager> pm = do_GetService("@mozilla.org/passwordmanager;1");
             if (pm) {
-                nsXPIDLCString prePath;
-                nsresult rv = mURL->GetPrePath(getter_Copies(prePath));
+                nsCAutoString prePath;
+                nsresult rv = mURL->GetPrePath(prePath);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
                 if (NS_SUCCEEDED(rv)) {
                     pm->RemoveUser(prePath.get(), nsnull);
@@ -1799,12 +1800,10 @@ NS_IMETHODIMP
 nsFtpState::GetName(PRUnichar* *result)
 {
     nsresult rv;
-    nsXPIDLCString urlStr;
-    rv = mURL->GetSpec(getter_Copies(urlStr));
+    nsCAutoString urlStr;
+    rv = mURL->GetSpec(urlStr);
     if (NS_FAILED(rv)) return rv;
-    nsString name;
-    name.AppendWithConversion(urlStr);
-    *result = ToNewUnicode(name);
+    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -2101,17 +2100,17 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
                                         getter_AddRefs(mDPipeRequest));
         }
     }
-    char *path = nsnull;
+
+    nsCAutoString path;
     nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL));
-    
     if (aURL)
-        rv = aURL->GetFilePath(&path);
+        rv = aURL->GetFilePath(path);
     else
-        rv = mURL->GetPath(&path);
+        rv = mURL->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     // Skip leading slash
-    char* fwdPtr= path;
+    char* fwdPtr = (char *)path.get();
     if (fwdPtr && (*fwdPtr == '/'))
         fwdPtr++;
     if (*fwdPtr != '\0') {
@@ -2119,31 +2118,27 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         NS_UnescapeURL(fwdPtr);
         mPath.Assign(fwdPtr);
     }
-    nsMemory::Free(path);
 
     // pull any username and/or password out of the uri
-    nsXPIDLCString uname;
-    rv = mURL->GetUsername(getter_Copies(uname));
+    nsCAutoString uname;
+    rv = mURL->GetUsername(uname);
     if (NS_FAILED(rv)) {
         return rv;
     } else {
-        if ((const char*)uname && *(const char*)uname) {
+        if (!uname.IsEmpty()) {
             mAnonymous = PR_FALSE;
-            mUsername.AssignWithConversion(uname);
+            mUsername = NS_ConvertUTF8toUCS2(uname);
         }
     }
 
-    nsXPIDLCString password;
-    rv = mURL->GetPassword(getter_Copies(password));
+    nsCAutoString password;
+    rv = mURL->GetPassword(password);
     if (NS_FAILED(rv))
         return rv;
     else
-        mPassword.AssignWithConversion(password);
+        mPassword = NS_ConvertUTF8toUCS2(password);
     
     // setup the connection cache key
-    nsXPIDLCString host;
-    rv = mURL->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
 
     PRInt32 port;
     rv = mURL->GetPort(&port);

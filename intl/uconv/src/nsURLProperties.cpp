@@ -63,9 +63,7 @@ nsURLProperties::nsURLProperties(const nsAFlatString& aUrl)
     gRefCnt++;
   }
 
-  nsCAutoString aUrlCString;
-  aUrlCString.AssignWithConversion(aUrl);
-  res = gIOService->NewURI(aUrlCString.get(), nsnull, &url);
+  res = gIOService->NewURI(NS_ConvertUCS2toUTF8(aUrl), nsnull, nsnull, &url);
   if (NS_FAILED(res)) return;
 
   res = NS_OpenURI(&in, url);

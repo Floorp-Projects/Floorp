@@ -133,7 +133,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     GetBaseURI(getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> imgURI;
-    NS_NewURI(getter_AddRefs(imgURI), myList->mListStyleImage, baseURI);
+    NS_NewURI(getter_AddRefs(imgURI), myList->mListStyleImage, nsnull, baseURI);
 
     if (!mListener) {
       nsBulletListener *listener;
@@ -1443,7 +1443,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 
 
         nsCOMPtr<nsIURI> newURI;
-        NS_NewURI(getter_AddRefs(newURI), myList->mListStyleImage, baseURI);
+        NS_NewURI(getter_AddRefs(newURI), myList->mListStyleImage, nsnull, baseURI);
 
         PRBool needNewRequest = PR_TRUE;
 

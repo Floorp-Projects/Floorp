@@ -227,20 +227,19 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
             }
           }
         }
-        char *urlString;
-        if (NS_SUCCEEDED(aURI->GetSpec(&urlString)))
+        nsCAutoString urlString;
+        if (NS_SUCCEEDED(aURI->GetSpec(urlString)))
         {
-          if ((urlString) && (*urlString))
+          if (!urlString.IsEmpty())
           {
             CRTFREEIF(*url_name);
-            *url_name = nsCRT::strdup(urlString);
+            *url_name = ToNewCString(urlString);
             if (!(*url_name))
               return NS_ERROR_OUT_OF_MEMORY;
 
             // rhp: Ugh, this is ugly...but it works.
             if (fixup_pointer)
               *fixup_pointer = (const char *)*url_name;
-            CRTFREEIF(urlString);
           }
         }
       }
@@ -568,9 +567,9 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   
   if (!mAlreadyKnowOutputType)
   {
-    nsXPIDLCString urlSpec;
-    rv = aURI->GetSpec(getter_Copies(urlSpec));
-    DetermineOutputFormat(urlSpec, &newType);
+    nsCAutoString urlSpec;
+    rv = aURI->GetSpec(urlSpec);
+    DetermineOutputFormat(urlSpec.get(), &newType);
     mAlreadyKnowOutputType = PR_TRUE;
   }
   else
@@ -867,12 +866,11 @@ const char output[] = "\
 </FRAMESET>\
 </HTML>";
 
-    char *url = nsnull;
-    if (NS_FAILED(mURI->GetSpec(&url)))
+    nsCAutoString url;
+    if (NS_FAILED(mURI->GetSpec(url)))
       return NS_ERROR_FAILURE;
   
-    PR_snprintf(outBuf, sizeof(outBuf), output, url, url);
-    PR_FREEIF(url);
+    PR_snprintf(outBuf, sizeof(outBuf), output, url.get(), url.get());
     
     if (mEmitter)
       mEmitter->Write(outBuf, strlen(outBuf), &written);

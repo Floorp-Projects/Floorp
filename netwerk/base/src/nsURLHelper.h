@@ -44,7 +44,7 @@
 #include "nsString.h"
 
 /* Get port from string */ 
-PRInt32 ExtractPortFrom(const char* src);
+//PRInt32 ExtractPortFrom(const nsACString &src);
 
 /* Extract string out of another */
 nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
@@ -63,10 +63,15 @@ void ToLowerCase(char* str, PRUint32 length);
 void ToLowerCase(char* str);
 
 /* Extract URI-Scheme if possible */
-nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
-                                 PRUint32 *endPos, char* *scheme);
+nsresult ExtractURLScheme(const nsACString &inURI, PRUint32 *startPos, 
+                          PRUint32 *endPos, nsACString *scheme = nsnull);
 
 /* check that the given scheme conforms to RFC 2396 */
 PRBool IsValidScheme(const char *scheme, PRUint32 schemeLen);
+
+inline PRBool IsValidScheme(const nsAFlatCString &scheme)
+{
+    return IsValidScheme(scheme.get(), scheme.Length());
+}
 
 #endif

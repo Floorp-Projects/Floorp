@@ -736,43 +736,40 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         if ( fileURL )
         {
           PRBool insertAsImage = PR_FALSE;
-          char *fileextension = nsnull;
-          rv = fileURL->GetFileExtension( &fileextension );
-          if ( NS_SUCCEEDED(rv) && fileextension )
+          nsCAutoString fileextension;
+          rv = fileURL->GetFileExtension( fileextension );
+          if ( NS_SUCCEEDED(rv) && !fileextension.IsEmpty() )
           {
-            if ( (nsCRT::strcasecmp( fileextension, "jpg" ) == 0 )
-              || (nsCRT::strcasecmp( fileextension, "jpeg" ) == 0 )
-              || (nsCRT::strcasecmp( fileextension, "gif" ) == 0 )
-              || (nsCRT::strcasecmp( fileextension, "png" ) == 0 ) )
+            if ( (nsCRT::strcasecmp( fileextension.get(), "jpg" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension.get(), "jpeg" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension.get(), "gif" ) == 0 )
+              || (nsCRT::strcasecmp( fileextension.get(), "png" ) == 0 ) )
             {
               insertAsImage = PR_TRUE;
             }
           }
-          if (fileextension) nsCRT::free(fileextension);
           
-          char *urltext = nsnull;
-          rv = fileURL->GetSpec( &urltext );
-          if ( NS_SUCCEEDED(rv) && urltext && urltext[0] != 0)
+          nsCAutoString urltext;
+          rv = fileURL->GetSpec( urltext );
+          if ( NS_SUCCEEDED(rv) && !urltext.IsEmpty() )
           {
-            len = strlen(urltext);
             if ( insertAsImage )
             {
               stuffToPaste.Assign(NS_LITERAL_STRING("<IMG src=\""));
-              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
               stuffToPaste.Append(NS_LITERAL_STRING("\" alt=\"\" >"));
             }
             else /* insert as link */
             {
               stuffToPaste.Assign(NS_LITERAL_STRING("<A href=\""));
-              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
               stuffToPaste.Append(NS_LITERAL_STRING("\">"));
-              stuffToPaste.AppendWithConversion ( urltext, len );
+              stuffToPaste.Append(NS_ConvertUTF8toUCS2(urltext));
               stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
             }
             nsAutoEditBatch beginBatching(this);
             rv = InsertHTML(stuffToPaste);
           }
-          if (urltext) nsCRT::free(urltext);
         }
       }
     }

@@ -51,7 +51,7 @@ protected:
   nsCString mContentType; // optional field explicitly specifying the content type
   nsCString mDummyFilePath; // if we don't have a valid file url, the file path is stored here....i.e if mFileIcon is null.....
 
-  nsresult FormatSpec(char* *result);
+  nsresult FormatSpec(nsACString &result);
 };
 
 #endif // nsMozIconURI_h__

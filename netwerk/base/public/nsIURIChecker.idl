@@ -42,6 +42,10 @@
 interface nsIRequest;
 interface nsIRequestObserver;
 
+%{C++
+#include "nsAString.h"
+%}
+
 [scriptable,uuid(0ce148b2-1dd2-11b2-ba70-af918b44b323)]
 interface nsIURIChecker : nsISupports
 {
@@ -66,7 +70,7 @@ interface nsIURIChecker : nsISupports
    *                    nsIRequestObserver methods
    * @param aLoadFlags  Load flags to set on the base request.
    */
-  nsIRequest asyncCheckURI(in string uri, in nsIRequestObserver aObserver,
+  nsIRequest asyncCheckURI(in AUTF8String uri, in nsIRequestObserver aObserver,
                            in nsISupports aCtxt, in nsLoadFlags aLoadFlags);
 
   readonly attribute nsIRequest baseRequest;

@@ -562,8 +562,6 @@ nsMsgSendLater::StartNextMailFileSend()
   nsresult      rv = NS_OK;
   nsXPIDLCString  messageURI;
 
-  PRBool hasMore = PR_FALSE;
-
   if ( (!mEnumerator) || (mEnumerator->IsDone() == NS_OK) )
   {
     // Call any listeners on this operation and then exit cleanly

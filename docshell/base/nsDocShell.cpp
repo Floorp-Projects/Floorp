@@ -516,8 +516,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gDocShellLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString uristr;
-        aURI->GetSpec(getter_Copies(uristr));
+        nsCAutoString uristr;
+        aURI->GetAsciiSpec(uristr);
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsDocShell[%p]: loading %s with flags 0x%08x",
                 this, uristr.get(), aLoadFlags));
@@ -675,7 +675,7 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
             return rv;
         // Make sure that the URI spec "looks" like a protocol and path...
         // For now, just use a bogus protocol called "internal"
-        rv = uri->SetSpec("internal:load-stream");
+        rv = uri->SetSpec(NS_LITERAL_CSTRING("internal:load-stream"));
         if (NS_FAILED(rv))
             return rv;
     }
@@ -770,35 +770,35 @@ nsDocShell::FireUnloadNotification()
 static
 PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aDocumentDomainSet)
 {
-  nsXPIDLCString targetScheme;
-  nsresult rv = aTargetURI->GetScheme(getter_Copies(targetScheme));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetScheme, PR_TRUE);
+  nsCAutoString targetScheme;
+  nsresult rv = aTargetURI->GetScheme(targetScheme);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-  nsXPIDLCString originScheme;
-  rv = aOriginURI->GetScheme(getter_Copies(originScheme));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originScheme, PR_TRUE);
+  nsCAutoString originScheme;
+  rv = aOriginURI->GetScheme(originScheme);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-  if (PL_strcmp(targetScheme, originScheme))
+  if (strcmp(targetScheme.get(), originScheme.get()))
     return PR_FALSE; // Different schemes - check fails
 
-  if (! PL_strcmp(targetScheme, "file"))
+  if (! strcmp(targetScheme.get(), "file"))
     return PR_TRUE; // All file: urls are considered to have the same origin.
 
-  if (! PL_strcmp(targetScheme, "imap") ||
-      ! PL_strcmp(targetScheme, "mailbox") ||
-      ! PL_strcmp(targetScheme, "news"))
+  if (! strcmp(targetScheme.get(), "imap") ||
+      ! strcmp(targetScheme.get(), "mailbox") ||
+      ! strcmp(targetScheme.get(), "news"))
   {
 
     // Each message is a distinct trust domain; use the whole spec for comparison
-    nsXPIDLCString targetSpec;
-    rv =aTargetURI->GetSpec(getter_Copies(targetSpec));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetSpec, PR_TRUE);
+    nsCAutoString targetSpec;
+    rv =aTargetURI->GetAsciiSpec(targetSpec);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-    nsXPIDLCString originSpec;
-    rv = aOriginURI->GetSpec(getter_Copies(originSpec));
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originSpec, PR_TRUE);
+    nsCAutoString originSpec;
+    rv = aOriginURI->GetAsciiSpec(originSpec);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-    return (! PL_strcmp(targetSpec, originSpec)); // True if full spec is same, false otherwise
+    return (! strcmp(targetSpec.get(), originSpec.get())); // True if full spec is same, false otherwise
   }
 
   // Compare ports.
@@ -813,28 +813,28 @@ PRBool SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI, PRBool aD
     return PR_FALSE; // Different port - check fails
 
   // Need to check the hosts
-  nsXPIDLCString targetHost;
-  rv = aTargetURI->GetHost(getter_Copies(targetHost));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetHost, PR_TRUE);
+  nsCAutoString targetHost;
+  rv = aTargetURI->GetHost(targetHost);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-  nsXPIDLCString originHost;
-  rv = aOriginURI->GetHost(getter_Copies(originHost));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originHost, PR_TRUE);
+  nsCAutoString originHost;
+  rv = aOriginURI->GetHost(originHost);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv), PR_TRUE);
 
-  if (!PL_strcmp(targetHost, originHost))
+  if (!strcmp(targetHost.get(), originHost.get()))
     return PR_TRUE; // Hosts are the same - check passed
   
   // If document.domain was set, do the relaxed check
   // Right align hostnames and compare - ensure preceeding char is . or /
   if (aDocumentDomainSet)
   {
-    int targetHostLen = PL_strlen(targetHost);
-    int originHostLen = PL_strlen(originHost);
+    int targetHostLen = targetHost.Length();
+    int originHostLen = originHost.Length();
     int prefixChar = originHostLen-targetHostLen-1;
 
     return ((originHostLen > targetHostLen) &&
-            (! PL_strcmp((originHost+prefixChar+1), targetHost)) &&
-            (originHost[prefixChar] == '.' || originHost[prefixChar] == '/'));
+            (! strcmp((originHost.get()+prefixChar+1), targetHost.get())) &&
+            (originHost.CharAt(prefixChar) == '.' || originHost.CharAt(prefixChar) == '/'));
   }
 
   return PR_FALSE; // document.domain not set and hosts not same - check failed
@@ -2884,12 +2884,12 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
     }
 
     if (mGlobalHistory && mCurrentURI) {
-        nsXPIDLCString url;
-        mCurrentURI->GetSpec(getter_Copies(url));
+        nsCAutoString url;
+        mCurrentURI->GetSpec(url);
         nsCOMPtr<nsIBrowserHistory> browserHistory =
             do_QueryInterface(mGlobalHistory);
         if (browserHistory)
-            browserHistory->SetPageTitle(url, aTitle);
+            browserHistory->SetPageTitle(url.get(), aTitle);
     }
 
 
@@ -3472,7 +3472,7 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
     }
     else {
         uriAttrib = Substring(tokenStart, iter);
-        rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, aBaseURI);
+        rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, nsnull, aBaseURI);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -3726,9 +3726,9 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                             nsCOMPtr<nsIBrowserHistory> browserHistory =
                                 do_QueryInterface(mGlobalHistory);
                             if (browserHistory) {
-                                nsXPIDLCString urlString;
-                                if (NS_SUCCEEDED(uri->GetSpec(getter_Copies(urlString))))
-                                    browserHistory->HidePage(urlString);
+                                nsCAutoString urlString;
+                                if (NS_SUCCEEDED(uri->GetSpec(urlString)))
+                                    browserHistory->HidePage(urlString.get());
                             }
                         }
                             
@@ -4325,14 +4325,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                  name.EqualsIgnoreCase("_blank"))) 
             {
                 nsCOMPtr<nsIExternalProtocolService> extProtService;
-                nsXPIDLCString urlScheme;
+                nsCAutoString urlScheme;
 
                 extProtService = do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
                 if (extProtService) {
                     PRBool haveHandler = PR_FALSE;
-                    aURI->GetScheme(getter_Copies(urlScheme));
+                    aURI->GetScheme(urlScheme);
 
-                    extProtService->ExternalProtocolHandlerExists(urlScheme,
+                    extProtService->ExternalProtocolHandlerExists(urlScheme.get(),
                                                                   &haveHandler);
                     if (haveHandler)
                         return extProtService->LoadUrl(aURI);
@@ -4534,7 +4534,7 @@ nsDocShell::CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI)
         mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
         if (!mURIFixup) {
             // No fixup service so try and create a URI and see what happens
-            return NS_NewURI(aURI, uriString, nsnull);
+            return NS_NewURI(aURI, uriString);
         }
     }
 
@@ -4606,11 +4606,11 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
     // open a channel for the url
     nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_OpenURI(getter_AddRefs(channel),
-                    aURI,
-                    nsnull,
-                    loadGroup,
-                    NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       aURI,
+                       nsnull,
+                       loadGroup,
+                       NS_STATIC_CAST(nsIInterfaceRequestor *, this));
     if (NS_FAILED(rv))
         return rv;
 
@@ -4975,12 +4975,12 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor)
 
     // NOTE: we assume URIs are absolute for comparison purposes
 
-    nsXPIDLCString currentSpec;
-    NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(getter_Copies(currentSpec)),
+    nsCAutoString currentSpec;
+    NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(currentSpec),
                       NS_ERROR_FAILURE);
 
-    nsXPIDLCString newSpec;
-    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(newSpec)), NS_ERROR_FAILURE);
+    nsCAutoString newSpec;
+    NS_ENSURE_SUCCESS(aURI->GetSpec(newSpec), NS_ERROR_FAILURE);
 
     // Search for hash marks in the current URI and the new URI and
     // take a copy of everything to the left of the hash for
@@ -5271,21 +5271,18 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI * aURI)
     // should just do a spec compare, rather than two gets of the scheme and
     // then the path.  -Gagan
     nsresult rv;
-    nsXPIDLCString buffer;
-    nsCAutoString schemeStr;
+    nsCAutoString buf;
 
-    rv = aURI->GetScheme(getter_Copies(buffer));
+    rv = aURI->GetScheme(buf);
     if (NS_FAILED(rv))
         return PR_FALSE;
 
-    schemeStr = buffer;
-    if (schemeStr.Equals("about")) {
-        rv = aURI->GetPath(getter_Copies(buffer));
+    if (buf.Equals("about")) {
+        rv = aURI->GetPath(buf);
         if (NS_FAILED(rv))
             return PR_FALSE;
 
-        schemeStr = buffer;
-        if (schemeStr.Equals("blank")) {
+        if (buf.Equals("blank")) {
             return PR_FALSE;
         }
     }
@@ -5776,10 +5773,10 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI)
 {
     NS_ENSURE_STATE(mGlobalHistory);
 
-    nsXPIDLCString spec;
-    NS_ENSURE_SUCCESS(aURI->GetSpec(getter_Copies(spec)), NS_ERROR_FAILURE);
+    nsCAutoString spec;
+    NS_ENSURE_SUCCESS(aURI->GetSpec(spec), NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
 
     return NS_OK;
 }

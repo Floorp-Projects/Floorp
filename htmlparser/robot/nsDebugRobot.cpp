@@ -263,17 +263,15 @@ extern "C" NS_EXPORT int DebugRobot(
     if (NS_FAILED(rv)) return rv;
 
     nsIURI *uri = nsnull;
-    char *uriStr = ToNewCString(*urlName);
-    if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
-    rv = service->NewURI(uriStr, nsnull, &uri);
-    nsCRT::free(uriStr);
+    NS_ConvertUCS2toUTF8 uriStr(*urlName);
+    rv = service->NewURI(uriStr, nsnull, nsnull, &uri);
     if (NS_FAILED(rv)) return rv;
 
     rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
     if (NS_OK != rv) {
       printf("invalid URL: '");
-      fputs(NS_LossyConvertUCS2toASCII(*urlName).get(), stdout);
+      fputs(uriStr.get(), stdout);
       printf("'\n");
       NS_RELEASE(myObserver);
       return -1;
@@ -321,10 +319,9 @@ extern "C" NS_EXPORT int DebugRobot(
     parser->Parse(url, nsnull,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
       if (yieldProc != NULL) {
-        char* spec;
-        (void)url->GetSpec(&spec);
-        (*yieldProc)(spec);
-        nsCRT::free(spec);
+        nsCAutoString spec;
+        (void)url->GetSpec(spec);
+        (*yieldProc)(spec.get());
       }
     }
     g_bReadyForNextUrl = PR_FALSE;
@@ -334,10 +331,9 @@ extern "C" NS_EXPORT int DebugRobot(
 
       (void) progress->AddProgressListener(pl);
 
-      char* spec;
-      (void)url->GetSpec(&spec);
-      nsAutoString theSpec; theSpec.AssignWithConversion(spec);
-      nsCRT::free(spec);
+      nsCAutoString spec;
+      (void)url->GetSpec(spec);
+      NS_ConvertUTF8toUCS2 theSpec(spec);
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
       webNav->LoadURI(theSpec.get(),
                       nsIWebNavigation::LOAD_FLAGS_NONE,
@@ -346,9 +342,8 @@ extern "C" NS_EXPORT int DebugRobot(
                       nsnull);/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
-          (void)url->GetSpec(&spec);
-          (*yieldProc)(spec);
-          nsCRT::free(spec);
+          (void)url->GetSpec(spec);
+          (*yieldProc)(spec.get());
         }
       }
     }  

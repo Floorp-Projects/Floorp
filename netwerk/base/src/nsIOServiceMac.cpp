@@ -66,11 +66,8 @@ static void PascalStringCopy(Str255 dst, const char *src)
 
 
 NS_IMETHODIMP
-nsIOService::GetURLSpecFromFile(nsIFile *aFile, char **aURL)
+nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
 {
-    NS_ENSURE_ARG_POINTER(aURL);
-    *aURL = nsnull;
-     
     nsresult rv;
     nsXPIDLCString ePath;
 
@@ -83,8 +80,7 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char **aURL)
     NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
 
     // Escape the path with the directory mask
-    if (!NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
-        escPath.Assign(ePath);
+    NS_EscapeURL(ePath, esc_Directory|esc_Forced|esc_AlwaysCopy, escPath);
 
     // colons [originally slashes, before SwapSlashColon() usage above]
     // need encoding; use %2F which is a forward slash
@@ -104,46 +100,30 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char **aURL)
         }
     }
 
-    *aURL = ToNewCString(escPath);
-    return *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aURL = escPath;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char *aURL)
+nsIOService::InitFileFromURLSpec(nsIFile *aFile, const nsACString &aURL)
 {
-    NS_ENSURE_ARG(aURL);
     nsresult rv;
        
-    nsXPIDLCString host, directory, fileBaseName, fileExtension;
-    
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile, &rv);
     if (NS_FAILED(rv)) {
         NS_ERROR("Only nsILocalFile supported right now");
         return rv;
     }
      
-    rv = ParseFileURL(aURL, getter_Copies(host),
-                      getter_Copies(directory),
-                      getter_Copies(fileBaseName),
-                      getter_Copies(fileExtension));
+    nsCAutoString directory, fileBaseName, fileExtension;
+    
+    rv = ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
                    
     nsCAutoString path;
  
-    if (host) {
-        // We can end up with a host when given: file:// instead of file:///
-        // Check to see if the host is a volume name - If so prepend it
-        Str255 volName;
-        FSSpec volSpec;
-         
-        PascalStringCopy(volName, host);
-        volName[++volName[0]] = ':';
-        if (::FSMakeFSSpec(0, 0, volName, &volSpec) == noErr)
-            path += host;
-    }
-    if (directory) {
-        if (!NS_EscapeURLPart(directory.get(), directory.Length(), esc_Directory, path))
-            path += directory;
+    if (!directory.IsEmpty()) {
+        NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
 
         // "%2F"s need to become slashes, while all other slashes need to
         // become colons. If we start out by changing "%2F"s to colons, we
@@ -152,14 +132,11 @@ nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char *aURL)
 
         SwapSlashColon((char *) path.get());
     }
-    if (fileBaseName) {
-        if (!NS_EscapeURLPart(fileBaseName.get(), fileBaseName.Length(), esc_FileBaseName, path))
-            path += fileBaseName;
-    }
-    if (fileExtension) {
+    if (!fileBaseName.IsEmpty())
+        NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
+    if (!fileExtension.IsEmpty()) {
         path += '.';
-        if (!NS_EscapeURLPart(fileExtension.get(), fileExtension.Length(), esc_FileExtension, path))
-            path += fileExtension;
+        NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
     }
     
     NS_UnescapeURL((char *) path.get());

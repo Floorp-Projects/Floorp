@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 MODULE=necko
 REQUIRES	= xpcom \
 		  string \
+		  uconv \
 		  $(NULL)
 
 LIBRARY_NAME=nkres_s
