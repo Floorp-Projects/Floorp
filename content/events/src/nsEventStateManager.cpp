@@ -2293,7 +2293,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       //TabIndex not set (-1) treated at same level as set to 0
       tabIndex = tabIndex < 0 ? 0 : tabIndex;
 
-      if (!disabled && !hidden && mCurrentTabIndex == tabIndex) {
+      if (!disabled && !hidden && mCurrentTabIndex == tabIndex && child.get() != mCurrentFocus) {
         *aResult = child;
         NS_IF_ADDREF(*aResult);
         return NS_OK;
