@@ -20,6 +20,7 @@ viewer:Search Plugins:*
 ; default files for en-US
 viewer:defaults:profile:bookmarks.html
 viewer:defaults:profile:panels.rdf
+viewer:defaults:profile:localstore.rdf
 viewer:defaults:profile:search.rdf
 
 [xpcom]

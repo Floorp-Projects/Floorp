@@ -902,6 +902,7 @@ sub MakeResourceAliases()
 
     _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir"."bookmarks.html");
     _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir"."panels.rdf");
+    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir"."localstore.rdf");
     _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir"."search.rdf");
     _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir"."mimeTypes.rdf");
 
@@ -911,6 +912,7 @@ sub MakeResourceAliases()
 
     _copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir_en_US"."bookmarks.html");
     _copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir_en_US"."panels.rdf");
+    _copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir_en_US"."localstore.rdf");
     _copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir_en_US"."search.rdf");
     _copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir_en_US"."mimeTypes.rdf");
     }

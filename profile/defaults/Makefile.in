@@ -30,6 +30,7 @@ include $(topsrcdir)/config/rules.mk
 FILES := \
 	bookmarks.html \
 	panels.rdf \
+	localstore.rdf \
 	search.rdf \
 	mimeTypes.rdf \
 	$(NULL)
