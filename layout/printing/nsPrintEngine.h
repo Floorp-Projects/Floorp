@@ -37,6 +37,8 @@
 #ifndef nsPrintEngine_h___
 #define nsPrintEngine_h___
 
+#include "nsCOMPtr.h"
+
 #include "nsPrintObject.h"
 #include "nsPrintData.h"
 
@@ -44,7 +46,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsIPrintProgress.h"
 #include "nsIPrintProgressParams.h"
@@ -84,7 +85,8 @@ class nsPagePrintTimer;
 //   because the document is no longer stable.
 // 
 //------------------------------------------------------------------------
-class nsPrintEngine : public nsIWebBrowserPrint, public nsIObserver {
+class nsPrintEngine : public nsIWebBrowserPrint, public nsIObserver
+{
 public:
   //NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -123,7 +125,10 @@ public:
                       FILE*                   aDebugFile);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, PRInt32& aCount);
-  PRBool   IsOldPrintPreviewPres() { return mOldPrtPreview != nsnull; }
+  PRBool   IsOldPrintPreviewPres()
+  {
+    return mOldPrtPreview != nsnull;
+  }
   //
   // The following three methods are used for printing...
   //
@@ -131,8 +136,8 @@ public:
   nsresult GetSelectionDocument(nsIDeviceContextSpec * aDevSpec,
                                 nsIDocument ** aNewDoc);
 
-  nsresult SetupToPrintContent(nsIDeviceContext*     aDContext,
-                               nsIDOMWindowInternal* aCurrentFocusedDOMWin);
+  nsresult SetupToPrintContent(nsIDeviceContext* aDContext,
+                               nsIDOMWindow* aCurrentFocusedDOMWin);
   nsresult EnablePOsForPrinting();
   nsPrintObject* FindSmallestSTF();
 
@@ -141,10 +146,13 @@ public:
                    PRBool& aDonePrinting);
   void SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs = PR_TRUE);
 
-  enum ePrintFlags {eSetPrintFlag = 1U, eSetHiddenFlag = 2U };
-  void SetPrintPO(nsPrintObject* aPO, PRBool aPrint, PRBool aIsHidden = PR_FALSE, PRUint32 aFlags = eSetPrintFlag);
-
-
+  enum ePrintFlags {
+    eSetPrintFlag = 1U,
+    eSetHiddenFlag = 2U
+  };
+  void SetPrintPO(nsPrintObject* aPO, PRBool aPrint,
+                  PRBool aIsHidden = PR_FALSE,
+                  PRUint32 aFlags = eSetPrintFlag);
 
   void TurnScriptingOn(PRBool aDoTurnOn);
   PRBool CheckDocumentForPPCaching();
@@ -195,7 +203,7 @@ public:
   void CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount);
   void CheckForHiddenFrameSetFrames();
 
-  PRBool   IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin);
+  PRBool IsThereARangeSelection(nsIDOMWindow * aDOMWin);
 
   //---------------------------------------------------------------------
 
@@ -209,20 +217,17 @@ public:
   //---------------------------------------------------------------------
   // Static Methods
   //---------------------------------------------------------------------
-  PRBool IsWindowsInOurSubTree(nsIDOMWindowInternal * aDOMWindow);
+  PRBool IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow);
   PRBool IsParentAFrameSet(nsIWebShell * aParent);
-  PRBool IsThereAnIFrameSelected(nsIWebShell*           aWebShell,
-                                        nsIDOMWindowInternal * aDOMWin,
-                                        PRPackedBool&          aIsParentFrameSet);
+  PRBool IsThereAnIFrameSelected(nsIWebShell* aWebShell,
+                                 nsIDOMWindow* aDOMWin,
+                                 PRPackedBool& aIsParentFrameSet);
 
   nsPrintObject* FindPrintObjectByDOMWin(nsPrintObject* aParentObject,
-                                         nsIDOMWindowInternal * aDOMWin);
-
-  // get the DOMWindow for a given WebShell
-  nsIDOMWindowInternal * GetDOMWinForWebShell(nsIWebShell* aWebShell);
+                                         nsIDOMWindow* aDOMWin);
 
   // get the currently infocus frame for the document viewer
-  nsIDOMWindowInternal * FindFocusedDOMWindowInternal();
+  already_AddRefed<nsIDOMWindow> FindFocusedDOMWindow();
 
   void GetWebShellTitleAndURL(nsIWebShell* aWebShell, nsIDocument* aDoc,
                               PRUnichar** aTitle, PRUnichar** aURLStr);
@@ -248,36 +253,61 @@ public:
 
   // CachedPresentationObj is used to cache the presentation
   // so we can bring it back later
-  PRBool HasCachedPres()                  { return mIsCachingPresentation && mCachedPresObj; }
-  PRBool IsCachingPres()                  { return mIsCachingPresentation;                   }
-  void   SetCacheOldPres(PRBool aDoCache) { mIsCachingPresentation = aDoCache;               }
-  void   CachePresentation(nsIPresShell* aShell, nsIPresContext* aPC, nsIViewManager* aVM, nsIWidget* aW);
-  void   GetCachedPresentation(nsCOMPtr<nsIPresShell>& aShell, 
-                               nsCOMPtr<nsIPresContext>& aPC, 
-                               nsCOMPtr<nsIViewManager>& aVM, 
-                               nsCOMPtr<nsIWidget>& aW);
+  PRBool HasCachedPres()
+  {
+    return mIsCachingPresentation && mCachedPresObj;
+  }
+  PRBool IsCachingPres()
+  {
+    return mIsCachingPresentation;
+  }
+  void SetCacheOldPres(PRBool aDoCache)
+  {
+    mIsCachingPresentation = aDoCache;
+  }
+  void CachePresentation(nsIPresShell* aShell, nsIPresContext* aPC,
+                         nsIViewManager* aVM, nsIWidget* aW);
+  void GetCachedPresentation(nsCOMPtr<nsIPresShell>& aShell, 
+                             nsCOMPtr<nsIPresContext>& aPC, 
+                             nsCOMPtr<nsIViewManager>& aVM, 
+                             nsCOMPtr<nsIWidget>& aW);
 
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
-  void SetDialogParent(nsIDOMWindowInternal* aDOMWin) { mDialogParentWin = aDOMWin; }
+  void SetDialogParent(nsIDOMWindow* aDOMWin)
+  {
+    mDialogParentWin = aDOMWin;
+  }
 
   // These calls also update the DocViewer
-  void   SetIsPrinting(PRBool aIsPrinting);
-  PRBool GetIsPrinting()                           { return mIsDoingPrinting; }
-  void   SetIsPrintPreview(PRBool aIsPrintPreview);
-  PRBool GetIsPrintPreview()                       { return mIsDoingPrintPreview; }
-  void   SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview) { mIsCreatingPrintPreview = aIsCreatingPrintPreview; }
-  PRBool GetIsCreatingPrintPreview()               { return mIsCreatingPrintPreview; }
+  void SetIsPrinting(PRBool aIsPrinting);
+  PRBool GetIsPrinting()
+  {
+    return mIsDoingPrinting;
+  }
+  void SetIsPrintPreview(PRBool aIsPrintPreview);
+  PRBool GetIsPrintPreview()
+  {
+    return mIsDoingPrintPreview;
+  }
+  void SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview)
+  {
+    mIsCreatingPrintPreview = aIsCreatingPrintPreview;
+  }
+  PRBool GetIsCreatingPrintPreview()
+  {
+    return mIsCreatingPrintPreview;
+  }
 
 #ifdef MOZ_LAYOUTDEBUG
   static nsresult TestRuntimeErrorCondition(PRInt16  aRuntimeID, 
                                             nsresult aCurrentErrorCode, 
                                             nsresult aNewErrorCode);
 
-  static PRBool   IsDoingRuntimeTesting();
-  static void     InitializeTestRuntimeError();
+  static PRBool IsDoingRuntimeTesting();
+  static void InitializeTestRuntimeError();
 protected:
-  static PRBool   mIsDoingRuntimeTesting;
+  static PRBool mIsDoingRuntimeTesting;
 
   static nsCOMPtr<nsIDebugObject> mLayoutDebugObj; // always de-referenced with the destructor
 #endif
@@ -348,7 +378,7 @@ protected:
   nsPrintData*            mOldPrtPreview;
 
   nsCOMPtr<nsIDocument>   mDocument;
-  nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
+  nsCOMPtr<nsIDOMWindow>  mDialogParentWin;
 
   PRBool                      mIsCachingPresentation;
   CachedPresentationObj*      mCachedPresObj;

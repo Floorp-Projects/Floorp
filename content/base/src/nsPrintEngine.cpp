@@ -44,6 +44,7 @@
 
 #include "nsISelection.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
 #include "nsINodeInfo.h"
@@ -421,7 +422,7 @@ nsPrintEngine::GetNewPresentation(nsCOMPtr<nsIPresShell>& aShell,
       // Start at "1" and skip the FrameSet document itself
       for (PRInt32 i=1;i<cnt;i++) {
         nsPrintObject* po = (nsPrintObject *)mPrt->mPrintObject->mKids[i];
-        nsCOMPtr<nsIDOMWindowInternal> domWin(getter_AddRefs(GetDOMWinForWebShell(po->mWebShell)));
+        nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(po->mWebShell));
         if (domWin.get() == mPrt->mCurrentFocusWin.get()) {
           prtObjToDisplay = po;
           break;
@@ -434,7 +435,7 @@ nsPrintEngine::GetNewPresentation(nsCOMPtr<nsIPresShell>& aShell,
       // Start at "1" and skip the FrameSet document itself
       for (PRInt32 i=1;i<cnt;i++) {
         nsPrintObject* po = (nsPrintObject *)mPrt->mPrintObject->mKids[i];
-        nsCOMPtr<nsIDOMWindowInternal> domWin(getter_AddRefs(GetDOMWinForWebShell(po->mWebShell)));
+        nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(po->mWebShell));
         if (domWin.get() == mPrt->mCurrentFocusWin.get()) {
           nscoord width;
           nscoord height;
@@ -632,7 +633,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   // Get the currently focused window and cache it
   // because the Print Dialog will "steal" focus and later when you try
   // to get the currently focused windows it will be NULL
-  mPrt->mCurrentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  mPrt->mCurrentFocusWin = FindFocusedDOMWindow();
 
   // Check to see if there is a "regular" selection
   PRBool isSelection = IsThereARangeSelection(mPrt->mCurrentFocusWin);
@@ -1104,7 +1105,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // Get the currently focused window and cache it
   // because the Print Dialog will "steal" focus and later when you try
   // to get the currently focused windows it will be NULL
-  mPrt->mCurrentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  mPrt->mCurrentFocusWin = FindFocusedDOMWindow();
 
   // Check to see if there is a "regular" selection
   PRBool isSelection = IsThereARangeSelection(mPrt->mCurrentFocusWin);
@@ -1290,7 +1291,7 @@ nsPrintEngine::GetIsIFrameSelected(PRBool *aIsIFrameSelected)
   // Get the webshell for this documentviewer
   nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   // Get the currently focused window
-  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  nsCOMPtr<nsIDOMWindow> currentFocusWin = FindFocusedDOMWindow();
   if (currentFocusWin && webContainer) {
     // Get whether the doc contains a frameset 
     // Also, check to see if the currently focus webshell 
@@ -1307,7 +1308,7 @@ NS_IMETHODIMP
 nsPrintEngine::GetIsRangeSelection(PRBool *aIsRangeSelection)
 {
   // Get the currently focused window 
-  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  nsCOMPtr<nsIDOMWindow> currentFocusWin = FindFocusedDOMWindow();
   *aIsRangeSelection = IsThereARangeSelection(currentFocusWin);
   return NS_OK;
 }
@@ -1318,7 +1319,7 @@ NS_IMETHODIMP
 nsPrintEngine::GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected)
 {
   // Get the currently focused window 
-  nsCOMPtr<nsIDOMWindowInternal> currentFocusWin = getter_AddRefs(FindFocusedDOMWindowInternal());
+  nsCOMPtr<nsIDOMWindow> currentFocusWin = FindFocusedDOMWindow();
   *aIsFramesetFrameSelected = currentFocusWin != nsnull;
   return NS_OK;
 }
@@ -1702,10 +1703,10 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
 
 //---------------------------------------------------------------------
 PRBool
-nsPrintEngine::IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin)
+nsPrintEngine::IsThereARangeSelection(nsIDOMWindow* aDOMWin)
 {
   nsCOMPtr<nsIPresShell> presShell;
-  if (aDOMWin != nsnull) {
+  if (aDOMWin) {
     nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWin));
     nsCOMPtr<nsIDocShell> docShell;
     scriptObj->GetDocShell(getter_AddRefs(docShell));
@@ -2028,9 +2029,9 @@ nsPrintObject * nsPrintEngine::FindPrintObjectByWS(nsPrintObject* aPO, nsIWebShe
 
 //---------------------------------------------------------------------
 PRBool
-nsPrintEngine::IsThereAnIFrameSelected(nsIWebShell*           aWebShell,
-                                       nsIDOMWindowInternal * aDOMWin,
-                                       PRPackedBool&          aIsParentFrameSet)
+nsPrintEngine::IsThereAnIFrameSelected(nsIWebShell* aWebShell,
+                                       nsIDOMWindow* aDOMWin,
+                                       PRPackedBool& aIsParentFrameSet)
 {
   aIsParentFrameSet = IsParentAFrameSet(aWebShell);
   PRBool iFrameIsSelected = PR_FALSE;
@@ -2043,11 +2044,11 @@ nsPrintEngine::IsThereAnIFrameSelected(nsIWebShell*           aWebShell,
       // Check to see if there is a currenlt focused frame
       // if so, it means the selected frame is either the main webshell
       // or an IFRAME
-      if (aDOMWin != nsnull) {
+      if (aDOMWin) {
         // Get the main webshell's DOMWin to see if it matches 
         // the frame that is selected
-        nsCOMPtr<nsIDOMWindowInternal> domWin = getter_AddRefs(GetDOMWinForWebShell(aWebShell));
-        if (aDOMWin != nsnull && domWin != aDOMWin) {
+        nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(aWebShell);
+        if (domWin != aDOMWin) {
           iFrameIsSelected = PR_TRUE; // we have a selected IFRAME
         }
       }
@@ -2305,8 +2306,8 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
   nsCOMPtr<nsIDOMWindow> active;
   wwatch->GetActiveWindow(getter_AddRefs(active));
 
-  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active, &rv);
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+  if (!parent)
     return;
 
   nsCOMPtr<nsIPrompt> dialog;
@@ -2323,8 +2324,8 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 
 //-------------------------------------------------------
 nsresult
-nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
-                                   nsIDOMWindowInternal* aCurrentFocusedDOMWin)
+nsPrintEngine::SetupToPrintContent(nsIDeviceContext* aDContext,
+                                   nsIDOMWindow* aCurrentFocusedDOMWin)
 {
 
   NS_ENSURE_ARG_POINTER(aDContext);
@@ -2649,8 +2650,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO, gFrameTypesStr[aPO->mFrameType], width, height));
 
-  nsCOMPtr<nsIDOMWindowInternal> domWinIntl =
-    do_QueryInterface(mPrt->mPrintDocDW);
   // XXX - Hack Alert
   // OK, so ther eis a selection, we will print the entire selection
   // on one page and then crop the page.
@@ -2663,7 +2662,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   }
 
   if (printRangeType == nsIPrintSettings::kRangeSelection &&
-      IsThereARangeSelection(domWinIntl)) {
+      IsThereARangeSelection(mPrt->mPrintDocDW)) {
     height = NS_UNCONSTRAINEDSIZE;
   }
 
@@ -3938,74 +3937,65 @@ nsPrintEngine::CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount)
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
  */
-nsIDOMWindowInternal*
-nsPrintEngine::FindFocusedDOMWindowInternal()
+already_AddRefed<nsIDOMWindow>
+nsPrintEngine::FindFocusedDOMWindow()
 {
-  nsCOMPtr<nsIDOMWindowInternal>  theDOMWin;
   nsCOMPtr<nsIDocument>           theDoc;
-  nsCOMPtr<nsIFocusController>    focusController;
-  nsIDOMWindowInternal *          domWin = nsnull;
+  nsIDOMWindow *                  domWin = nsnull;
 
   mDocViewer->GetDocument(getter_AddRefs(theDoc));
   if(theDoc){
     nsIScriptGlobalObject* theSGO = theDoc->GetScriptGlobalObject();
-    if(theSGO){
-      nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
-      if(theDOMWindow){
-        theDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
-        if(focusController){
-          focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
-          domWin = theDOMWin.get();
-          if(domWin != nsnull) {
-            if (IsWindowsInOurSubTree(domWin)){
-              NS_ADDREF(domWin);
-            } else {
-              domWin = nsnull;
-            }
-          }
+    nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
+    if(theDOMWindow){
+      nsCOMPtr<nsIFocusController> focusController;
+      theDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+      if(focusController){
+        nsCOMPtr<nsIDOMWindowInternal> theDOMWin;
+        focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
+        if(theDOMWin && IsWindowsInOurSubTree(theDOMWin)){
+          NS_ADDREF(domWin = theDOMWin);
         }
       }
     }
   }
+
   return domWin;
 }
 
 //---------------------------------------------------------------------
 PRBool
-nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindowInternal * aDOMWindow)
+nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow)
 {
   PRBool found = PR_FALSE;
-  if(aDOMWindow) {
-    // now check to make sure it is in "our" tree of webshells
-    nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWindow));
-    if (scriptObj) {
-      nsCOMPtr<nsIDocShell> docShell;
-      scriptObj->GetDocShell(getter_AddRefs(docShell));
-      if (docShell) {
-        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-        if (docShellAsItem) {
-          // get this DocViewer webshell
-          nsCOMPtr<nsIWebShell> thisDVWebShell(do_QueryInterface(mContainer));
-          while (!found) {
-            nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-            docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
-            if (docShellParent) {
-              nsCOMPtr<nsIWebShell> parentWebshell(do_QueryInterface(docShellParent));
-              if (parentWebshell) {
-                if (parentWebshell.get() == thisDVWebShell.get()) {
-                  found = PR_TRUE;
-                  break;
-                }
-              }
-            } else {
-              break; // at top of tree
-            }
-            docShellAsItem = docShellParent;
-          } // while
+
+  // now check to make sure it is in "our" tree of webshells
+  nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWindow));
+  if (scriptObj) {
+    nsCOMPtr<nsIDocShell> docShell;
+    scriptObj->GetDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    if (docShellAsItem) {
+      // get this DocViewer webshell
+      nsCOMPtr<nsIWebShell> thisDVWebShell(do_QueryInterface(mContainer));
+      while (!found) {
+        nsCOMPtr<nsIDocShellTreeItem> docShellParent;
+        docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+
+        nsCOMPtr<nsIWebShell> parentWebshell(do_QueryInterface(docShellParent));
+        if (parentWebshell) {
+          if (parentWebshell == thisDVWebShell) {
+            found = PR_TRUE;
+            break;
+          }
+        } else {
+          break; // at top of tree
         }
-      } // docshell
-    } // scriptobj
-  } // domWindow
+        docShellAsItem = docShellParent;
+      } // while
+    }
+  } // scriptobj
 
   return found;
 }
@@ -4124,47 +4114,32 @@ nsPrintEngine::SetClipRect(nsPrintObject*  aPO,
 //-------------------------------------------------------
 // Given a DOMWindow it recursively finds the PO object that matches
 nsPrintObject*
-nsPrintEngine::FindPrintObjectByDOMWin(nsPrintObject* aPO, nsIDOMWindowInternal * aDOMWin)
+nsPrintEngine::FindPrintObjectByDOMWin(nsPrintObject* aPO,
+                                       nsIDOMWindow* aDOMWin)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
   // Often the CurFocused DOMWindow is passed in
   // andit is valid for it to be null, so short circut
-  if (aDOMWin == nsnull) {
+  if (!aDOMWin) {
     return nsnull;
   }
 
-  nsCOMPtr<nsIDOMWindowInternal> domWin(GetDOMWinForWebShell(aPO->mWebShell));
-  if (domWin != nsnull && domWin.get() == aDOMWin) {
+  nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(aPO->mWebShell));
+  if (domWin && domWin == aDOMWin) {
     return aPO;
   }
 
   PRInt32 cnt = aPO->mKids.Count();
-  for (PRInt32 i=0;i<cnt;i++) {
-    nsPrintObject* po = FindPrintObjectByDOMWin((nsPrintObject*)aPO->mKids[i], aDOMWin);
-    if (po != nsnull) {
+  for (PRInt32 i = 0; i < cnt; ++i) {
+    nsPrintObject* po = FindPrintObjectByDOMWin((nsPrintObject*)aPO->mKids[i],
+                                                aDOMWin);
+    if (po) {
       return po;
     }
   }
+
   return nsnull;
-}
-
-//-------------------------------------------------------
-// return the DOMWindowInternal for a WebShell
-nsIDOMWindowInternal *
-nsPrintEngine::GetDOMWinForWebShell(nsIWebShell* aWebShell)
-{
-  NS_ASSERTION(aWebShell, "Pointer is null!");
-
-  nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(aWebShell); 
-
-  nsCOMPtr<nsIDOMWindowInternal> domWinInt(do_QueryInterface(domWin));
-  if (!domWinInt) return nsnull;
-
-  nsIDOMWindowInternal * dw = domWinInt.get();
-  NS_ADDREF(dw);
-
-  return dw;
 }
 
 //-------------------------------------------------------
@@ -4256,7 +4231,7 @@ nsPrintEngine::EnablePOsForPrinting()
           //
           // XXX this is sort of a hack right here to make the page
           // not try to reposition itself when printing selection
-          nsCOMPtr<nsIDOMWindowInternal> domWin = getter_AddRefs(GetDOMWinForWebShell(po->mWebShell));
+          nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(po->mWebShell);
           if (!IsThereARangeSelection(domWin)) {
             printRangeType = nsIPrintSettings::kRangeAllPages;
             mPrt->mPrintSettings->SetPrintRange(printRangeType);
@@ -4270,7 +4245,7 @@ nsPrintEngine::EnablePOsForPrinting()
         for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
           nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);
           NS_ASSERTION(po, "nsPrintObject can't be null!");
-          nsCOMPtr<nsIDOMWindowInternal> domWin = getter_AddRefs(GetDOMWinForWebShell(po->mWebShell));
+          nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(po->mWebShell);
           if (IsThereARangeSelection(domWin)) {
             mPrt->mCurrentFocusWin = domWin;
             SetPrintPO(po, PR_TRUE);
@@ -4303,7 +4278,7 @@ nsPrintEngine::EnablePOsForPrinting()
         //
         // XXX this is sort of a hack right here to make the page
         // not try to reposition itself when printing selection
-        nsCOMPtr<nsIDOMWindowInternal> domWin = getter_AddRefs(GetDOMWinForWebShell(po->mWebShell));
+        nsCOMPtr<nsIDOMWindow> domWin = do_GetInterface(po->mWebShell);
         if (!IsThereARangeSelection(domWin)) {
           printRangeType = nsIPrintSettings::kRangeAllPages;
           mPrt->mPrintSettings->SetPrintRange(printRangeType);

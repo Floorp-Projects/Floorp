@@ -43,7 +43,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
 #include "nsIPrintProgress.h"
 #include "nsIPrintProgressParams.h"
@@ -141,7 +140,7 @@ public:
   PRBool                           mShowProgressDialog;    // means we should try to show it
   PRPackedBool                     mProgressDialogIsShown; // means it is already being shown
 
-  nsCOMPtr<nsIDOMWindowInternal> mCurrentFocusWin; // cache a pointer to the currently focused window
+  nsCOMPtr<nsIDOMWindow> mCurrentFocusWin; // cache a pointer to the currently focused window
 
   nsVoidArray*                mPrintDocList;
   nsCOMPtr<nsIDeviceContext>  mPrintDocDC;
