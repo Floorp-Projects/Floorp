@@ -6,9 +6,7 @@
 
   <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:hbox class="tabcontainer">
-        <children/>
-      </xul:hbox>
+      <children/>
       <xul:spacer class="tabs-spacer" flex="1"/>
     </content>
   </binding>

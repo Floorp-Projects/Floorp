@@ -265,10 +265,8 @@
     <content>
       <xul:spacer class="tabs-left-cap"/>
   	  <xul:spacer class="tabs-left"/>
-  	  <xul:hbox class="tabs-mid">
-  		  <children/>
-  	  </xul:hbox>
-  	  <xul:spacer class="tabs-right" flex="1"/>
+      <children/>
+      <xul:spacer class="tabs-right" flex="1"/>
   	  <xul:spacer class="tabs-right-cap"/>
   	</content>
   </binding>

@@ -166,9 +166,7 @@
     <content>
       <xul:spacer class="tab-border-top-left-cap"/>
       <xul:spacer class="tab-border-top-left"/>
-      <xul:box inherits="orient,align,pack">
-        <children/>
-      </xul:box>
+      <children/>
       <xul:spacer class="tab-border-top-right" flex="1"/>
       <xul:spacer class="tab-border-top-right-cap"/>
     </content>
