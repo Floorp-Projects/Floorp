@@ -50,9 +50,10 @@
     </resources>
 
     <content>
-      <xul:button label="&print.label;" oncommand="BrowserPrint();"/>
+      <xul:button label="&print.label;" accesskey="&print.accesskey;"
+        oncommand="BrowserPrint();"/>
 
-      <xul:button label="&pageSetup.label;" 
+      <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="doPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
@@ -117,7 +118,7 @@
 
       <xul:toolbarseparator/>
       <xul:toolbarseparator class="toolbarseparator-primary"/>
-      <xul:button label="&close.label;" 
+      <xul:button label="&close.label;" accesskey="&close.accesskey;"
         oncommand="BrowserExitPrintPreview();"/>
       <xul:data value="&customPrompt.title;"/>
     </content>
