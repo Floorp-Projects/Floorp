@@ -134,7 +134,7 @@ function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attNam
       if (isPercent)
         numString += "%";
       if (element)
-        element.setAttribute(attName, numString);
+        GetCurrentEditor().setAttributeOrEquivalent(element, attName, numString, true);
     }
   } else if (element) {
     GetCurrentEditor().removeAttributeOrEquivalent(element, attName, true)
