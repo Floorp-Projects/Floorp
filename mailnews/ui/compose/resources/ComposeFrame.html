@@ -6,10 +6,10 @@
 
 FIELDSET {
     background-color: rgb(192, 192, 192);
-    border: 2px groove rgb(192, 192, 192);
+    border: 0px groove rgb(192, 192, 192);
     display: inline; 
-    margin-left: 10px; 
-    padding: 2px;
+    margin-left: 0px; 
+    padding: 0px;
   }
 
 LEGEND {
@@ -43,30 +43,12 @@ BODY {
 </head>
 <body>
 <center>
-<p><form ENCTYPE="text/plain" onSubmit="return submitForms()"></center>
+<p><form ENCTYPE="text/plain" name="fbody"></center>
 <TABLE bgcolor="#C0C0C0">
 <TR>
 <TD>
 <fieldset width="100%" height="100%" > 
-<legend align=left>&nbsp;Info&nbsp;</legend>
-<TABLE width="100%" height="100%">
-  <TR>
-    <TD>Address:</TD>
-    <TD width="100%"><input type="text" name="addrTo" ></TD>
-  </TR>
-  <TR>
-    <TD>Subject:</TD>
-    <TD><input type="text" name="subject" id="subject"></TD>
-  </TR>
-</TABLE>
-</fieldset>
-</TD>
-</TR>
-<TR>
-<TD>
-<fieldset width="100%" height="100%" > 
-	<legend align=left>&nbsp;Message&nbsp;</legend>
-	<TEXTAREA cols=40 rows=20 name="mailbody"></TEXTAREA>
+	<TEXTAREA cols=80 rows=20 name="body"></TEXTAREA>
 </fieldset>
 </TD>
 </TR></TABLE>
