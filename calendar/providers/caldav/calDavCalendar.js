@@ -188,8 +188,9 @@ calDavCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
     modifyItem: function (aItem, aListener) {
-        if (aItem.id == null ||
-            this.mItems[aItem.id] == null) {
+
+        if (aItem.id == null) {
+
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (this,
@@ -200,25 +201,64 @@ calDavCalendar.prototype = {
             return;
         }
 
-        // technically, they should be the same item
-        var modifiedItem = this.mItems[aItem.id];
-        this.mItems[aItem.id] = aItem;
+        // XXX use if-exists stuff here
 
-        // notify observers
-        this.observeModifyItem(modifiedItem, aItem);
+        // XXX how are we REALLY supposed to figure this out?
+        var eventUri = this.mUri.clone();
+        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
+        var eventResource = new WebDavResource(eventUri);
 
-        if (aListener)
-            aListener.onOperationComplete (this,
-                                           Components.results.NS_OK,
-                                           aListener.MODIFY,
-                                           aItem.id,
-                                           aItem);
+        var listener = new WebDavListener();
+        var savedthis = this;
+        listener.onOperationComplete = function(aStatusCode, aResource,
+                                                aOperation, aClosure) {
+
+            // 200 = HTTP "OK"
+            //
+            if (aStatusCode == 200) {
+                dump("Item modified successfully.\n");
+                var retVal = Components.results.NS_OK;
+
+            } else {
+                dump("Error modifying item: " + aStatusCode + "\n");
+
+                // XXX deal with non-existent item here, other
+                // real error handling
+
+                retVal = Components.results.NS_ERROR_FAILURE;
+            }
+
+            // XXX ensure immutable version returned
+            
+            // notify listener
+            if (aListener) {
+                aListener.onOperationComplete (savedthis, retVal,
+                                               aListener.MODIFY, aItem.id,
+                                               aItem);
+            }
+
+            // XXX only if retVal is successn
+            // notify observers
+            // XXX modified item should be first arg
+            savedthis.observeModifyItem(null, aItem);
+
+            return;
+        }
+
+        // do WebDAV put
+        var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+            .getService(Components.interfaces.nsIWebDAVService);
+        webSvc.putFromString(eventResource, "text/calendar", aItem.icalString, 
+                             listener, null);
+
+        return;
     },
+
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aId, aListener) {
-        if (aId == null ||
-            this.mItems[aId] == null) {
+
+        if (aId == null) {
             if (aListener)
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
@@ -228,19 +268,48 @@ calDavCalendar.prototype = {
             return;
         }
 
-        deletedItem = this.mItems[aId];
-        delete this.mItems[aId];
+        // XXX how are we REALLY supposed to figure this out?
+        var eventUri = this.mUri.clone();
+        eventUri.spec = eventUri.spec + "calendar/events/" + aItem.id + ".ics";
+        var eventResource = new WebDavResource(eventUri);
 
-        // notify observers
-        observeDeleteItem(deletedItem);
+        var listener = new WebDavListener();
+        var savedthis = this;
+        listener.onOperationComplete = function(aStatusCode, aResource,
+                                                aOperation, aClosure) {
 
-        if (aListener)
-            aListener.onOperationComplete (this,
-                                           Components.results.NS_OK,
-                                           aListener.DELETE,
-                                           aId,
-                                           null);
+            // 200 = HTTP "OK"
+            //
+            if (aStatusCode == 201) {
+                dump("Item deleted successfully.\n");
+                var retVal = Components.results.NS_OK;
 
+                // notify observers
+                // XXX should be called after listener?
+                savedthis.observeAddItem(aItem);
+
+            } else {
+                dump("Error deleting item: " + aStatusCode + "\n");
+                retVal = Components.results.NS_ERROR_FAILURE;
+            }
+
+            // notify the listener
+            if (aListener)
+                aListener.onOperationComplete (savedthis,
+                                               Components.results.NS_OK,
+                                               aListener.DELETE,
+                                               aId,
+                                               null);
+            // notify observers
+            observeDeleteItem(deletedItem);
+        }
+
+        // do WebDAV remove
+        var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+            .getService(Components.interfaces.nsIWebDAVService);
+        webSvc.remove(eventResource, listener, null);
+
+        return;
     },
 
     // void getItem( in string id, in calIOperationListener aListener );
