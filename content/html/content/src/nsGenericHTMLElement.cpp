@@ -49,7 +49,6 @@
 #include "nsIViewManager.h"
 
 #include "nsIXMLDocument.h"
-#include "nsIXMLContent.h"
 
 #include "nsHTMLParts.h"
 #include "nsString.h"
@@ -78,7 +77,6 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 
 //----------------------------------------------------------------------
@@ -368,21 +366,13 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   }
 
   nsIHTMLContent* htmlContent;
-  nsIXMLContent* xmlContent = nsnull;
-
-  // XXX Current XMLContent is also HTMLContent. However, we don't
-  // want to use the attribute stylesheet for XMLContent. This code
-  // will go away when XMLContent is more pure.
-  // TODO However, we still may want to use the attribute stylesheet
-  // for attributes in XMLContent with the HTML namespace.
-  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
 
   result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
 
-  if ((nsnull != mDocument) && (nsnull != mAttributes) && (nsnull == xmlContent)) {
+  if ((nsnull != mDocument) && (nsnull != mAttributes)) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
       sheet->SetAttributesFor(htmlContent, mAttributes); // sync attributes with sheet
@@ -500,14 +490,6 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
 
     nsHTMLValue val;
     nsIHTMLContent* htmlContent;
-    nsIXMLContent* xmlContent = nsnull;
-    
-    // XXX Current XMLContent is also HTMLContent. However, we don't
-    // want to use the attribute stylesheet for XMLContent. This code
-    // will go away when XMLContent is more pure.
-    // TODO However, we still may want to use the attribute stylesheet
-    // for attributes in XMLContent with the HTML namespace.
-    result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
     
     result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
     if (NS_OK != result) {
@@ -522,7 +504,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
     }
     else {
       // set as string value to avoid another string copy
-      if ((nsnull != mDocument) && (nsnull == xmlContent)) {  // set attr via style sheet
+      if (nsnull != mDocument) {  // set attr via style sheet
         nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
         if (nsnull != sheet) {
           result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent, mAttributes);
@@ -556,27 +538,17 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
 {
   nsresult  result = NS_OK;
   nsIHTMLContent* htmlContent;
-  nsIXMLContent* xmlContent = nsnull;
-
-  // XXX Current XMLContent is also HTMLContent. However, we don't
-  // want to use the attribute stylesheet for XMLContent. This code
-  // will go away when XMLContent is more pure.
-  // TODO However, we still may want to use the attribute stylesheet
-  // for attributes in XMLContent with the HTML namespace.
-  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
 
   result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
   if (nsnull != mDocument) {  // set attr via style sheet
-    if (nsnull == xmlContent) {
-      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      if (nsnull != sheet) {
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    if (nsnull != sheet) {
         result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent,
                                         mAttributes);
         NS_RELEASE(sheet);
-      }
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
@@ -620,26 +592,16 @@ nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 {
   nsresult result = NS_OK;
   nsIHTMLContent* htmlContent;
-  nsIXMLContent* xmlContent = nsnull;
-
-  // XXX Current XMLContent is also HTMLContent. However, we don't
-  // want to use the attribute stylesheet for XMLContent. This code
-  // will go away when XMLContent is more pure.
-  // TODO However, we still may want to use the attribute stylesheet
-  // for attributes in XMLContent with the HTML namespace.
-  result = mContent->QueryInterface(kIXMLContentIID, (void **)&xmlContent);
 
   result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
   if (nsnull != mDocument) {  // set attr via style sheet
-    if (nsnull == xmlContent) {
-      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      if (nsnull != sheet) {
-        result = sheet->UnsetAttributeFor(aAttribute, htmlContent, mAttributes);
-        NS_RELEASE(sheet);
-      }
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    if (nsnull != sheet) {
+      result = sheet->UnsetAttributeFor(aAttribute, htmlContent, mAttributes);
+      NS_RELEASE(sheet);
     }
     if (aNotify) {
       mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
