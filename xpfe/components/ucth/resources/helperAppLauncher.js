@@ -179,5 +179,5 @@ nsHelperAppLauncherDialog.prototype= {
         }
     
         return result;
-    },
+    }
 }
