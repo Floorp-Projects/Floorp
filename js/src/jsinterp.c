@@ -2934,6 +2934,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_THIS:
             PUSH_OPND(OBJECT_TO_JSVAL(fp->thisp));
+            obj = NULL;
             break;
 
           case JSOP_FALSE:
