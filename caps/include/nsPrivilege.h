@@ -19,103 +19,55 @@
 #ifndef _NS_PRIVILEGE_H_
 #define _NS_PRIVILEGE_H_
 
+#include "nsIPrivilege.h"
 #include "prtypes.h"
-//#include "nsCaps.h"
-#include "nsCapsEnums.h"
 
-PRBool nsPrivilegeInitialize(void);
-
-struct nsPrivilege {
+class nsPrivilege : public nsIPrivilege {
 
 public:
-	/* Public Field Accessors */
-	nsPermissionState itsPerm;
 
-	nsDurationState itsDuration;
+	NS_DECL_ISUPPORTS
 
-	/* Public Methods */
-	nsPrivilege(nsPermissionState perm, nsDurationState duration);
+	NS_IMETHOD
+	GetState(PRInt16 * state);
 
+	NS_IMETHOD 
+	SetState(PRInt16 state);
+
+	NS_IMETHOD 
+	GetDuration(PRInt16 * duration);
+
+	NS_IMETHOD 
+	SetDuration(PRInt16 duration);
+
+	NS_IMETHOD
+	SameState(nsIPrivilege * other, PRBool * result);
+
+	NS_IMETHOD
+	SameDuration(nsIPrivilege * other, PRBool * result);
+
+	NS_IMETHOD
+	IsAllowed(PRBool * result);
+
+	NS_IMETHOD
+	IsForbidden(PRBool * result);
+
+	NS_IMETHOD
+	IsBlank(PRBool * result);
+
+	NS_IMETHOD
+	ToString(char * * result);
+
+	NS_IMETHOD
+	Equals(nsIPrivilege * perm, PRBool * res);
+
+	nsPrivilege(PRInt16 state, PRInt16 duration);
 	virtual ~nsPrivilege(void);
 
-	static nsPrivilege * findPrivilege(nsPermissionState permission, nsDurationState duration);
-
-	static nsPermissionState add(nsPermissionState perm1, nsPermissionState perm2);
-
-	static nsPrivilege * add(nsPrivilege *privilege1, nsPrivilege *privilege2);
-
-	PRBool samePermission(nsPrivilege *privilege);
-
-	PRBool samePermission(nsPermissionState perm);
-
-	PRBool sameDuration(nsPrivilege *privilege);
-
-	PRBool sameDuration(nsDurationState duration);
-
-	PRBool isAllowed(void);
-
-	PRBool isAllowedForever(void);
-
-	PRBool isForbidden(void);
-
-	PRBool isForbiddenForever(void);
-
-	PRBool isBlank(void);
-
-	nsPermissionState getPermission(void);
-
-	nsDurationState getDuration(void);
-
-	static nsPrivilege * findPrivilege(char *privStr);
-
-	char * toString(void);
-
-private:
-
-	/* Private Field Accessors */
-	char *itsString;
-
-	static PRBool theInited;
-
-	/* Private Methods */
+protected:
+	PRInt16 itsState;
+	PRInt16 itsDuration;
+	char * itsString;
 };
-
-/**
- * add() method takes two permissions and returns a new permission.
- * Permission addition follows these rules:
- * <pre>
- *   ALLOWED   + ALLOWED   = ALLOWED        1 + 1 = 1
- *   ALLOWED   + BLANK     = ALLOWED        1 + 2 = 1
- *   BLANK     + BLANK     = BLANK          2 + 2 = 2
- *   ALLOWED   + FORBIDDEN = FORBIDDEN      1 + 0 = 0
- *   BLANK     + FORBIDDEN = FORBIDDEN      2 + 0 = 0
- *   FORBIDDEN + FORBIDDEN = FORBIDDEN      0 + 0 = 0
- * </pre>
- *
- * @return the permission that results from the above rules
- * <p>
- * Note: there are two versions of add().  One adds two Privilege
- * objects.  The other just adds permissions (as returned by
- * <a href="#getPermission">getPermission()</a>).
- */
-/* XXX: Whenever you change the value of FORBIDDEN, ALLOWED and BLANK
- * make sure they obey the laws mentioned in add() method.
- */
-inline nsPermissionState nsPrivilege::add(nsPermissionState p1, nsPermissionState p2)
-{
-  if (p1 < p2)
-    return p1;
-  else 
-    return p2;
-}
-
-inline nsPrivilege * nsPrivilege::add(nsPrivilege *p1, nsPrivilege *p2)
-{
-  if (p1->itsPerm < p2->itsPerm)
-    return p1;
-  else
-    return p2;
-}
-
 
 #endif /* _NS_PRIVILEGE_H_ */

@@ -72,7 +72,7 @@ public:
 	{
 	}
 
-	nsPrivilege * EnablePrivilege(nsIPrincipal * prin, void *data);
+	nsIPrivilege * EnablePrivilege(nsIPrincipal * prin, void *data);
 
 private:
 

@@ -16,13 +16,12 @@
  * Reserved.
  */
 
-#ifndef nsICapsManager_h___
-#define nsICapsManager_h___
+#ifndef _NS_ICAPS_MANAGER_H_
+#define _NS_ICAPS_MANAGER_H_
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIPrincipal.h"
-#include "nsCapsPublicEnums.h"
 #include "nsTarget.h"
 //class nsITarget;
 class nsICapsSecurityCallbacks;
@@ -48,7 +47,7 @@ public:
      * @param prin  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin) = 0;
+    CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal * * prin) = 0;
 
     /**
      * Initializes the Certificate principal with the certificate data. I am 
@@ -64,27 +63,7 @@ public:
      * @param prin  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin) = 0;
-
-
-    /**
-     * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
-     * and nsICertPrincipal
-     *
-     *
-     * @param certChain        - An array of pointers, with each pointer 
-     *                           pointing to a certificate data.
-     * @param certChainLengths  - An array of intergers. Each integer indicates 
-     *                            the length of the cert that is in CertChain 
-     *                             parametr.
-     * @param noOfCerts - the number of certifcates that are in the certChain array
-     * @param codebaseURL - the codebase URL
-     * @param prin  - the return value is passed in this parameter.
-     */
-/*
-    NS_IMETHOD
-    CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin) = 0;
-*/
+    CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin) = 0;
 
     /**
      * Returns the permission for given principal and target
@@ -94,7 +73,7 @@ public:
      * @param state  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    GetPermission(nsIPrincipal* prin, nsTarget * target, nsPermission *state) = 0;
+    GetPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
 
     /**
      * Set the permission state for given principal and target. This wouldn't 
@@ -106,7 +85,7 @@ public:
      *                 and target parameters.
      */
     NS_IMETHOD
-    SetPermission(nsIPrincipal* prin, nsTarget * target, nsPermission state) = 0;
+    SetPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
 
     /**
      * Prompts the user if they want to grant permission for the given principal and 
@@ -118,8 +97,7 @@ public:
      *                 target
      */
     NS_IMETHOD
-    AskPermission(nsIPrincipal* prin, nsTarget * target, nsPermission *result) = 0;
-
+    AskPermission(nsIPrincipal* prin, nsTarget * target, PRInt16 * privilegeState) = 0;
 
     /* 
      * All of the following methods are used by JS (the code located
@@ -149,6 +127,7 @@ public:
      * @param prin   - is either certificate principal or codebase principal
      * @param result - is true if principal was successfully registered with the system
      */
+//NEED TO FIGURE THIS SUCKER OUT ARIEL
 //    NS_IMETHOD
 //    RegisterPrincipal(nsIPrincipal* prin, PRBool *result) = 0;
 
@@ -213,7 +192,7 @@ public:
      * This is a first cut. I need to talk to joki. We should get rid of void* parameters.
      */
     NS_IMETHOD
-    ComparePrincipalArray(void* prin1Array, void* prin2Array, nsSetComparisonType *result) = 0;
+    ComparePrincipalArray(void* prin1Array, void* prin2Array, PRInt16 * comparisonType) = 0;
 
     NS_IMETHOD
     IntersectPrincipalArray(void* prin1Array, void* prin2Array, void* *result) = 0;
@@ -226,19 +205,10 @@ public:
 /*
     NS_IMETHOD
     NewPrincipal(nsPrincipalType type, void* key, PRUint32 key_len, void *zig, nsIPrincipal* *result) = 0;
-
-    NS_IMETHOD
-    IsCodebaseExact(nsIPrincipal* principal, PRBool *result) = 0;
 */
     NS_IMETHOD
     CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result) = 0;
-/*
-    NS_IMETHOD
-    ToString(nsIPrincipal* principal, char* *result) = 0;
 
-    NS_IMETHOD
-    GetVendor(nsIPrincipal* principal, char* *result) = 0;
-*/
     NS_IMETHOD
     NewPrincipalArray(PRUint32 count, void* *result) = 0;
 

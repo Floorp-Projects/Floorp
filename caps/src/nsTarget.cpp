@@ -770,37 +770,39 @@ nsTarget::FindTarget(char * name, nsIPrincipal * prin)
 	return ret_val;
 }
 
-nsPrivilege * 
+//WHAT THE HELL IS VOID * DATA????????????????????????????????????????????????????
+
+nsIPrivilege * 
 nsTarget::CheckPrivilegeEnabled(nsPrincipalArray * prinArray, void * data)
 {
-	return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
-nsPrivilege * 
+nsIPrivilege * 
 nsTarget::CheckPrivilegeEnabled(nsPrincipalArray* prinArray)
 {
 	return this->CheckPrivilegeEnabled(prinArray, NULL);
 }
 
-nsPrivilege * 
+nsIPrivilege * 
 nsTarget::CheckPrivilegeEnabled(nsIPrincipal *p, void *data)
 {
-	return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
-nsPrivilege * 
+nsIPrivilege * 
 nsTarget::EnablePrivilege(nsIPrincipal * prin, void *data)
 {
 	PRBool eq;
 	itsPrincipal->Equals(prin, & eq);
-	return (eq) ? nsPrivilege::findPrivilege(nsPermissionState_Allowed, nsDurationState_Session)
-	: nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+	return (eq) ? nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Session)
+	: nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
-nsPrivilege * 
+nsIPrivilege * 
 nsTarget::GetPrincipalPrivilege(nsIPrincipal * prin, void *data)
 {
-	return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
 nsTargetArray * 

@@ -23,7 +23,7 @@
 #include "nsHashtable.h"
 #include "nsCaps.h"
 #include "nsTarget.h"
-#include "nsPrivilege.h"
+#include "nsIPrivilege.h"
 
 class nsPrivilegeTable {
 
@@ -36,11 +36,11 @@ public:
 
 	PRBool IsEmpty(void);
 
-	virtual nsPrivilege * Get(nsTarget * t);
+	virtual nsIPrivilege * Get(nsTarget * t);
 
-	nsPrivilege * Put(nsTarget * a, nsPrivilege * priv);
+	nsIPrivilege * Put(nsTarget * a, nsIPrivilege * priv);
 
-	nsPrivilege * Remove(nsTarget * key);
+	nsIPrivilege * Remove(nsTarget * key);
 
 	nsPrivilegeTable * Clone(void);
 

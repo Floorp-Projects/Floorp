@@ -19,213 +19,163 @@
 #include "nsPrivilege.h"
 #include "xp.h"
 
-static nsPrivilege *thePrivilegeCache[nsPermissionState_NumberOfPermissions][nsDurationState_NumberOfDurations];
+static NS_DEFINE_IID(kIPrivilegeIID, NS_IPRIVILEGE_IID);
 
+NS_IMPL_ISUPPORTS(nsPrivilege, kIPrivilegeIID);
 
-//
-// 			PUBLIC METHODS 
-//
-
-nsPrivilege::nsPrivilege(nsPermissionState perm, nsDurationState duration)
+NS_IMETHODIMP
+nsPrivilege::GetState(PRInt16 * state)
 {
-  itsPerm=perm;
-  itsDuration=duration;
-  itsString = NULL;
+	* state = itsState;
+	return (itsState) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsPrivilege::SetState(PRInt16 state)
+{
+	itsState=state;	
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPrivilege::GetDuration(PRInt16 * duration)
+{
+	* duration = itsDuration;
+	return (itsDuration) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsPrivilege::SetDuration(PRInt16 duration)
+{
+	itsDuration=duration;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrivilege::SameState(nsIPrivilege * other, PRBool * result)
+{
+	nsresult rv;
+	PRInt16 * myState;
+	rv = this->GetState(myState);
+	PRInt16 * otherState;
+	rv = other->GetState(otherState);
+	* result = (otherState == myState) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsPrivilege::SameDuration(nsIPrivilege * other, PRBool * result)
+{
+	nsresult rv;
+	PRInt16 * myDur;
+	rv = this->GetState(myDur);
+	PRInt16 * otherDur;
+	rv = other->GetState(otherDur);
+	* result = (otherDur == myDur) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsPrivilege::IsAllowed(PRBool * result) 
+{	
+	nsresult rv;
+	PRInt16 * myState;
+	rv = this->GetState(myState);
+	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Allowed) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsPrivilege::IsForbidden(PRBool * result)
+{
+	nsresult rv;
+	PRInt16 * myState;
+	rv = this->GetState(myState);
+	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Forbidden) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsPrivilege::IsBlank(PRBool * result)
+{
+	nsresult rv;
+	PRInt16 * myState;
+	rv = this->GetState(myState);
+	* result = (myState == (PRInt16 *)nsIPrivilege::PrivilegeState_Blank) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsPrivilege::ToString(char * * result)
+{
+	char * privStr = NULL;
+	char * durStr = NULL;
+	if (itsString != NULL) {
+		result=&itsString;
+		return NS_OK;
+	}
+	PRInt16 temp;
+	this->GetState(& temp);
+	switch(temp) {
+		case nsIPrivilege::PrivilegeState_Allowed:
+			privStr = "allowed";
+			break;
+		case nsIPrivilege::PrivilegeState_Forbidden:
+			privStr = "forbidden";
+			break;
+		case nsIPrivilege::PrivilegeState_Blank:
+			privStr = "blank";
+			break;
+		default:
+			PR_ASSERT(FALSE);
+			privStr = "error";
+			break;
+	}
+	this->GetDuration(& temp);
+	switch(temp) {
+		case nsIPrivilege::PrivilegeDuration_Scope:
+			durStr = " in scope";
+			break;
+		case nsIPrivilege::PrivilegeDuration_Session:
+			durStr = " in session";
+			break;
+		case nsIPrivilege::PrivilegeDuration_Forever:
+			durStr = " forever";
+			break;
+		case nsIPrivilege::PrivilegeDuration_Blank:
+			privStr = "blank";
+			break;
+		default:
+			PR_ASSERT(FALSE);
+			privStr = "error";
+			break;
+	}
+	itsString = new char[strlen(privStr) + strlen(durStr) + 1];
+	XP_STRCPY(itsString, privStr);
+	XP_STRCAT(itsString, durStr);
+	result = & itsString;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrivilege::Equals(nsIPrivilege * other, PRBool * result)
+{
+	nsresult rv;
+	PRBool * sameState, * sameDuration;
+	rv = this->SameState(other, sameState);
+	rv = this->SameDuration(other, sameDuration);
+	*result = (sameState && sameDuration) ? PR_TRUE : PR_FALSE;
+	return rv;
+}
+
+nsPrivilege::nsPrivilege(PRInt16 state, PRInt16 duration)
+{
+	itsState = state;
+	itsDuration = duration;
+	itsString = NULL;
 }
 
 nsPrivilege::~nsPrivilege(void)
 {
-  if (itsString)
-    delete []itsString;
+	if(itsString) delete [] itsString;
 }
-
-nsPrivilege * nsPrivilege::findPrivilege(nsPermissionState permission, nsDurationState duration)
-{
-  return thePrivilegeCache[permission][duration];
-}
-
-PRBool nsPrivilege::samePermission(nsPrivilege *p)
-{
-  if (p->itsPerm == itsPerm)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::samePermission(nsPermissionState perm)
-{
-  if (itsPerm == perm)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::sameDuration(nsPrivilege *p)
-{
-  if (p->itsDuration == itsDuration)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::sameDuration(nsDurationState duration)
-{
-  if (itsDuration == duration)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::isAllowed(void)
-{
-  if (itsPerm == nsPermissionState_Allowed)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::isAllowedForever(void)
-{
-  if ((itsPerm == nsPermissionState_Allowed) &&
-      (itsDuration == nsDurationState_Forever))
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::isForbidden(void)
-{
-  if (itsPerm == nsPermissionState_Forbidden)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::isForbiddenForever(void)
-{
-  if ((itsPerm == nsPermissionState_Forbidden) &&
-      (itsDuration == nsDurationState_Forever))
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-PRBool nsPrivilege::isBlank(void)
-{
-  if (itsPerm == nsPermissionState_Blank)
-    return PR_TRUE;
-  return PR_FALSE;
-}
-
-nsPermissionState nsPrivilege::getPermission(void)
-{
-  return itsPerm;
-}
-
-nsDurationState nsPrivilege::getDuration(void)
-{
-  return itsDuration;
-}
-
-/* The following function is used to restore the privilege from persistent store.
- * This does the reverse of toString method.
- */
-nsPrivilege * nsPrivilege::findPrivilege(char *privStr)
-{
-  nsPermissionState permission; 
-  nsDurationState duration;
-  if (XP_STRCMP(privStr, "allowed in scope") == 0) {
-    permission = nsPermissionState_Allowed;
-    duration = nsDurationState_Scope;
-  } else if (XP_STRCMP(privStr, "allowed in session") == 0) {
-    permission = nsPermissionState_Allowed;
-    duration = nsDurationState_Session;
-  } else if (XP_STRCMP(privStr, "allowed forever") == 0) {
-    permission = nsPermissionState_Allowed;
-    duration = nsDurationState_Forever;
-  } else if (XP_STRCMP(privStr, "forbidden forever") == 0) {
-    permission = nsPermissionState_Forbidden;
-    duration = nsDurationState_Forever;
-  } else if (XP_STRCMP(privStr, "forbidden in session") == 0) {
-    permission = nsPermissionState_Forbidden;
-    duration = nsDurationState_Session;
-  } else if (XP_STRCMP(privStr, "forbidden in scope") == 0) {
-    permission = nsPermissionState_Forbidden;
-    duration = nsDurationState_Scope;
-  } else if (XP_STRCMP(privStr, "blank forever") == 0) {
-    permission = nsPermissionState_Blank;
-    duration = nsDurationState_Forever;
-  } else if (XP_STRCMP(privStr, "blank in session") == 0) {
-    permission = nsPermissionState_Blank;
-    duration = nsDurationState_Session;
-  } else if (XP_STRCMP(privStr, "blank in scope") == 0) {
-    permission = nsPermissionState_Blank;
-    duration = nsDurationState_Scope;
-  } else {
-    permission = nsPermissionState_Blank;
-    duration = nsDurationState_Scope;
-  }
-  return findPrivilege(permission, duration);
-}
-
-
-char * nsPrivilege::toString(void) 
-{
-  char *permStr=NULL;
-  char *durStr=NULL;
-  if (itsString != NULL)
-    return itsString;
-
-  switch(itsPerm) {
-  case nsPermissionState_Allowed:
-    permStr = "allowed";
-    break;
-  case nsPermissionState_Forbidden:
-    permStr = "forbidden";
-    break;
-  case nsPermissionState_Blank:
-    permStr = "blank";
-    break;
-  default:
-    PR_ASSERT(FALSE);
-    permStr = "blank";
-    break;
-  }
-
-  switch(itsDuration) {
-  case nsDurationState_Scope:
-    durStr = " in scope";
-    break;
-  case nsDurationState_Session:
-    durStr = " in session";
-    break;
-  case nsDurationState_Forever:
-    durStr = " forever";
-    break;
-  default:
-    PR_ASSERT(FALSE);
-    permStr = "blank";
-    break;
-  }
-
-  itsString = new char[strlen(permStr) + strlen(durStr) + 1];
-  XP_STRCPY(itsString, permStr);
-  XP_STRCAT(itsString, durStr);
-  return itsString;
-}
-
-
-
-//
-// 			PRIVATE METHODS 
-//
-
-PRBool nsPrivilegeInitialize(void)
-{
-  nsPermissionState perm;
-  nsDurationState duration;
-  for (int i = 0; i < nsPermissionState_NumberOfPermissions; i++)
-    for(int j = 0; j < nsDurationState_NumberOfDurations; j++) {
-      /* This code assumes that nsPermissionState and nsDurationState 
-       * are ordered sequentially from 0 to N 
-       */
-      perm = (nsPermissionState)i;
-      duration = (nsDurationState)j;
-      thePrivilegeCache[i][j] = new nsPrivilege(perm, duration);
-    }
-  return PR_TRUE;
-}
-
-PRBool nsPrivilege::theInited = nsPrivilegeInitialize();

@@ -29,8 +29,8 @@ IGNORE_MANIFEST=1
 MODULE=caps 
 DEPTH=..\..
 EXPORTS=                          \
-	 nsICapsManager.h         \
-	 nsCapsPublicEnums.h      
+	 nsICapsManager.h
+
 
 
 
