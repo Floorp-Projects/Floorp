@@ -650,7 +650,7 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
 
 nsresult URLImpl::Open(nsIStreamListener *aListener)
 {
-  nsINetService *inet;
+  nsINetService *inet = nsnull;
   nsresult rv;
 
   // XXX: Rewrite the resource: URL into a file: URL
