@@ -141,8 +141,7 @@ unless ($action) {
     print "<p>";
     print "<b>Name</b> is what is used with the UserInGroup() function in any
 customized cgi files you write that use a given group.  It can also be used by
-people submitting bugs by email to limit a bug to a certain groupset.  It
-may not contain any spaces.<p>";
+people submitting bugs by email to limit a bug to a certain groupset. <p>";
     print "<b>Description</b> is what will be shown in the bug reports to
 members of the group where they can choose whether the bug will be restricted
 to others in the same group.<p>";
