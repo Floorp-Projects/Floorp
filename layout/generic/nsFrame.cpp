@@ -5429,9 +5429,9 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
   if (aTreeNode.mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, aTreeNode.mIndent);
 
-
     char width[16];
     char height[16];
+
     DR_state->PrettyUC(aReflowState.availableWidth, width);
     DR_state->PrettyUC(aReflowState.availableHeight, height);
     printf("r=%d a=%s,%s ", aReflowState.reason, width, height); 
@@ -5497,6 +5497,8 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
 
     char width[16];
     char height[16];
+    char x[16];
+    char y[16];
     DR_state->PrettyUC(aMetrics.width, width);
     DR_state->PrettyUC(aMetrics.height, height);
     printf("d=%s,%s ", width, height);
@@ -5510,7 +5512,16 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
       printf("m=%s ", width);
     }
     if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      printf("status=%d", aStatus);
+      printf("status=0x%x", aStatus);
+    }
+    nsFrameState  frameState;
+    aFrame->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_OUTSIDE_CHILDREN) {
+       DR_state->PrettyUC(aMetrics.mOverflowArea.x, x);
+       DR_state->PrettyUC(aMetrics.mOverflowArea.y, y);
+       DR_state->PrettyUC(aMetrics.mOverflowArea.width, width);
+       DR_state->PrettyUC(aMetrics.mOverflowArea.height, height);
+       printf("o=(%s,%s) %s x %s", x, y, width, height);
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {
