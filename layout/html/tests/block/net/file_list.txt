@@ -2647,9 +2647,6 @@ http://dbaron.org/css/test/2002/abs-marg-col
 http://dbaron.org/css/test/2002/abs-marg-col2
 http://dbaron.org/css/test/2002/pre-wrap
 http://dbaron.org/css/test/2002/overflow-in-table
-http://dbaron.org/css/test/line-breaking/02-images-with-spaces
-http://dbaron.org/css/test/line-breaking/03-inputs
-http://dbaron.org/css/test/line-breaking/01-images
 http://dbaron.org/css/test/which-tree/01-overflow-body-inflow/01-visible
 http://dbaron.org/css/test/which-tree/01-overflow-body-inflow/02-hidden
 http://dbaron.org/css/test/which-tree/01-overflow-body-inflow/03-auto
@@ -2764,3 +2761,11 @@ http://dbaron.org/css/test/2003/inconsistent-min-size
 http://dbaron.org/css/test/2003/inconsistent-min-size2
 http://dbaron.org/css/test/2003/border-collapse-edge-2
 http://dbaron.org/css/test/2003/border-collapse-edge-2-quirks
+http://dbaron.org/css/test/2003/line-breaking/quirks/01-images
+http://dbaron.org/css/test/2003/line-breaking/quirks/02-images-with-spaces
+http://dbaron.org/css/test/2003/line-breaking/quirks/03-inputs
+http://dbaron.org/css/test/2003/line-breaking/quirks/04-images-text
+http://dbaron.org/css/test/2003/line-breaking/standards/01-images
+http://dbaron.org/css/test/2003/line-breaking/standards/02-images-with-spaces
+http://dbaron.org/css/test/2003/line-breaking/standards/03-inputs
+http://dbaron.org/css/test/2003/line-breaking/standards/04-images-text
