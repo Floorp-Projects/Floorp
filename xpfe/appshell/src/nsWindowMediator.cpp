@@ -703,7 +703,7 @@ NS_IMETHODIMP nsWindowMediator::DoCommand(nsISupportsArray* aSources,
 // Private helpers
 nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 {
-	if ( ioWindowInfo == NULL || ioWindowInfo->mWindow == NULL || gRDFService == NULL  )
+	if ( !ioWindowInfo || !(ioWindowInfo->mWindow) || !gRDFService )
 		return NS_ERROR_NULL_POINTER;
 		
 	nsCOMPtr<nsIRDFResource> window;
