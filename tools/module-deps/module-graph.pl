@@ -36,7 +36,7 @@ Getopt::Long::Configure("auto_abbrev");
 sub PrintUsage {
   die <<END_USAGE
   Prints out required modules for specified directories.
-  usage: module-graph.pl [--list-only] [--start-module <mod> ] <dir1> <dir2> ...
+  usage: module-graph.pl [--list-only] [--start-module <mod> ] [--file <file> | <dir1> <dir2> ...]
 END_USAGE
 }
 
@@ -61,6 +61,7 @@ my $curdir = getcwd();
 my $list_only_mode = 0;  # --list-only argument, only print out module names
 my $opt_list_only;
 
+my $load_file = 0;  # --file
 my $opt_start_module;    # --start-module optionally print out dependencies    
                          # for a given module.
 
@@ -70,21 +71,25 @@ sub parse_args() {
   # Stuff arguments into variables.
   # Print usage if we get an unknown argument.
   PrintUsage() if !GetOptions('list-only' => \$opt_list_only,
-							  'start-module=s' => \$opt_start_module);
+							  'start-module=s' => \$opt_start_module,
+							  'file=s' => \$load_file);
 
   # Pick up arguments, if any.
   if($opt_list_only) {
 	$list_only_mode = 1;
   }
 
-  if (!@ARGV) {
-	@dirs = (getcwd());
-  } else {
-	@dirs = @ARGV;
-	# XXX does them in reverse order..
-	my $arg;
-	foreach $arg (@ARGV) {
-	  push @dirs, "$curdir/$arg";
+  # Last args are directories, if not in load-from-file mode.
+  unless($load_file) {
+	if (!@ARGV) {
+	  @dirs = (getcwd());
+	} else {
+	  @dirs = @ARGV;
+	  # XXX does them in reverse order..
+	  my $arg;
+	  foreach $arg (@ARGV) {
+		push @dirs, "$curdir/$arg";
+	  }
 	}
   }
 }
@@ -136,7 +141,6 @@ MFILE:
 	for (@local_dirs) {
 	  push @dirs,"$curdir/$_" if $_;
 	}
-	
   }
 
   if(!$list_only_mode) {
@@ -144,6 +148,30 @@ MFILE:
   }
 }
 
+
+#
+# 
+#
+sub build_deps_matrix_from_file {
+  my ($filename) = @_;
+
+  print "build_deps_matrix_from_file()\n";
+
+  open DEPS_FILE, $filename or print "can't open $filename, $?\n";
+  my @line;
+  while (<DEPS_FILE>) {
+	if(/->/) {
+	  chomp;
+	  s/\;//;  # Strip off ';'
+
+	  @line = split(' -> ', $_);
+	  #print "$line[0], $line[1]\n";
+	  $deps{$line[0]}{$line[1]}++;
+	}
+  }
+  close DEPS_FILE;
+
+}
 
 # Print out %deps.
 sub print_deps_matrix() {
@@ -340,7 +368,11 @@ sub print_module_deps {
 {
   parse_args();
 
-  build_deps_matrix();
+  if($load_file) {
+	build_deps_matrix_from_file($load_file);
+  } else {
+	build_deps_matrix();
+  }
 
   # Print out deps matrix.
   # --list-only and --start-module together mean to
