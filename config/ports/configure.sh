@@ -308,6 +308,19 @@ else
 	echo " yes"
 fi
 
+echo ${ECHO_FLAG} "Do we have snprintf()....${ENDER}"
+rm -f foo ${TMPFILE}
+echo "#include <stdio.h>" > ${TMPFILE}
+echo "void main() { snprintf(\"xxx\", 2, \"yyy\"); }" >> ${TMPFILE}
+${CC} -o foo ${TMPFILE} >/dev/null 2>&1
+if test $? -ne 0
+then
+	echo " no"
+else
+	MACROS="${MACROS} -DHAVE_SNPRINTF"
+	echo " yes"
+fi
+
 echo ${ECHO_FLAG} "Do we have pgno_t....${ENDER}"
 rm -f foo ${TMPFILE}
 echo "#include <stdio.h>" > ${TMPFILE}
