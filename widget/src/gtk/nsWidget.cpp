@@ -3494,6 +3494,12 @@ void
 nsWidget::IMEDestroyIC()
 {
   if (!mXIC) return;
+  if (mParent) {
+    nsWidget* parent = (nsWidget*)mParent.get();
+    if (parent && parent->mIMEChildWidget) {
+      parent->mIMEChildWidget = 0;
+    }
+  }
   if (mICPerShell == PR_FALSE || mIsToplevel == PR_TRUE) {
     delete mXIC;
   }
