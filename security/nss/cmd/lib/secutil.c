@@ -2495,7 +2495,7 @@ char *
 SECU_ErrorStringRaw(int16 err)
 {
     if (err == 0)
-	sprintf(SECUErrorBuf, "");
+	SECUErrorBuf[0] = '\0';
     else if (err == SEC_ERROR_BAD_DATA)
 	sprintf(SECUErrorBuf, "Bad data");
     else if (err == SEC_ERROR_BAD_DATABASE)
