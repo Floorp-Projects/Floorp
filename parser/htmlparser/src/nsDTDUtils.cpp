@@ -288,8 +288,14 @@ nsCParserNode* nsEntryStack::Pop(void)
       //now we have to tell the residual style stack where this tag
       //originated that it's no longer in use.
       PRUint32 scount = theStyleStack->mCount;
+
+      // XXX If this NS_ENSURE_TRUE fails, it means that the style stack was
+      //     empty before we were removed.
+      NS_ENSURE_TRUE(scount != 0, result);
+
       PRUint32 sindex = 0;
       nsTagEntry *theStyleEntry=theStyleStack->mEntries;
+
       for (sindex=scount-1;sindex>0;--sindex){            
         if (theStyleEntry->mTag==mEntries[mCount].mTag) {
           theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
