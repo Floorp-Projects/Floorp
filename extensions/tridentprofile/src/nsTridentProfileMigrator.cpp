@@ -67,8 +67,11 @@ NS_IMETHODIMP
 nsTridentProfileMigrator::MigrateTridentProfile(PRUint32 aItems)
 {
   nsTridentPreferences *pref = MakeTridentPreferences();
-  if (pref)
-    return pref->MigrateTridentPreferences(aItems);
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (!pref)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv =  pref->MigrateTridentPreferences(aItems);
+  delete pref;
+  return rv;
 }
 
