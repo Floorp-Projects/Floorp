@@ -55,6 +55,8 @@ typedef nsresult (*nsIFrameImageLoaderCB)(nsIPresContext* aPresContext,
  */
 class nsIFrameImageLoader : public nsISupports {
 public:
+  static const nsIID& GetIID() {static nsIID iid = NS_IFRAME_IMAGE_LOADER_IID; return iid;}
+
   NS_IMETHOD Init(nsIPresContext* aPresContext,
                   nsIImageGroup* aGroup,
                   const nsString& aURL,
@@ -81,6 +83,7 @@ public:
   NS_IMETHOD SafeToDestroy(PRBool* aResult) = 0;
 
   NS_IMETHOD GetURL(nsString& aResult) = 0;
+  NS_IMETHOD GetPresContext(nsIPresContext** aPresContext) = 0;
 
   NS_IMETHOD GetImage(nsIImage** aResult) = 0;
 
