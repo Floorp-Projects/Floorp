@@ -130,7 +130,7 @@ nsBrowserContentListener.prototype =
             contentListener =
                 docShell.QueryInterface(Components.interfaces.nsIInterfaceRequester).getInterface(Components.interfaces.nsIURIContentListener);
         } catch (ex) {
-            dump(ex);
+            // dump(ex);
         }
         if (!contentListener) return false;
         
