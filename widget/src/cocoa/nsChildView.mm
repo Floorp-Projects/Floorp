@@ -1879,7 +1879,7 @@ nsChildView::GetQuickDrawPort()
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
-  [self mouseMoved:theEvent];
+  [self mouseMoved: theEvent];
 }
 
 - (void)mouseEntered:(NSEvent*)theEvent
@@ -1906,6 +1906,9 @@ const PRInt32 kNumLines = 8;
   geckoEvent.delta = PRInt32([theEvent deltaY])*(-kNumLines);
   geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
  
+  // obscure the cursor during a wheel scroll
+  ::ObscureCursor();
+
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchWindowEvent(geckoEvent);
