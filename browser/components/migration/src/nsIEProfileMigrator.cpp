@@ -904,7 +904,7 @@ nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData,
         // Bingo! Found a username in the saved data for this item. Now, add a Signon.
         nsDependentString usernameStr(sd->user), passStr(sd->pass);
         nsDependentCString realm(sd->realm);
-        pwmgr->AddUserFull(realm, usernameStr, passStr, aKey, NS_LITERAL_STRING(""));
+        pwmgr->AddUserFull(realm, usernameStr, passStr, aKey, EmptyString());
       }
     }
 
