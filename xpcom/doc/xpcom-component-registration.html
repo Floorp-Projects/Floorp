@@ -151,7 +151,8 @@ do to salvage this situation other than warning the user of possible instability
 and advice a restart upon which the re-registration will happen.
 <h3>
 <a NAME="ProgID Spec"></a>ProgID Spec</h3>
-Let us consider some more examples:
+The general format of ProgIDs is <i><font color="#990000">component://</font>netscape<font color="#990000">/</font>compname<font color="#990000">?</font>var<font color="#990000">=</font>value<font color="#990000">;</font>var<font color="#990000">=</font>value<font color="#990000">;</font>var<font color="#990000">=</font>value...</i><i></i>
+<p>Let us consider some more examples:
 <ol>
 <li>
 A pluggable protocol that implementes the nfs protocol</li>
@@ -176,31 +177,31 @@ they particularly do.
 <p>The ProgID for these would look like
 <ol>
 <li>
-<tt>component://netscape/network-protocol&amp;type=nfs</tt></li>
+<tt>component://netscape/network-protocol?type=nfs</tt></li>
 
 <li>
-<tt>component://netscape/data-converter&amp;type=application/x-zip</tt></li>
+<tt>component://netscape/data-converter?type=application/x-zip</tt></li>
 
 <li>
-<tt>component://netscape/plugin&amp;type=image/gif&amp;name=ImageMedia's
-Gif Image Plugin&amp;Description=Reders GIF Images....</tt></li>
+<tt>component://netscape/plugin?type=image/gif;name=ImageMedia Gif Image
+Plugin;Description=Reders GIF Images....</tt></li>
 
 <li>
-<tt>component://netscape/widget&amp;type=toolbar</tt></li>
+<tt>component://netscape/widget?type=toolbar</tt></li>
 
 <li>
-<tt>component://netscape/rdf/datsource&amp;type=mail</tt></li>
+<tt>component://netscape/rdf/datsource?type=mail</tt></li>
 
 <li>
-<tt>component://netscape/helperapp&amp;type=application/postscript</tt></li>
+<tt>component://netscape/helperapp?type=application/postscript</tt></li>
 </ol>
 {Assume proper escaping of all above URI}
 <p>The above semantics would let ProgID be an extensible mechanism that
 could be searched on multiple ways. And
 <br>query on a progid should match only whatever was passed in. So a query
 for
-<br>component://netscape/plugin&amp;type=image/gif should pass for the
-progid specified above. We could extend this
+<br>component://netscape/plugin?type=image/gif should pass for the progid
+specified above. We could extend this
 <br>mechanism with wildcards, but I dont want to go there yet... :-)
 <br>&nbsp;
 <h3>
