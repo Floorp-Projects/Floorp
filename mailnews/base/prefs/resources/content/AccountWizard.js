@@ -282,32 +282,35 @@ function finishAccount(account, accountData) {
                               accountData.incomingServer);
         account.incomingServer.valid=true;
     }
+
+    // copy identity info
+    var destIdentity =
+        account.identities.QueryElementAt(0, nsIMsgIdentity);
     
-    if (accountData.identity) {
+    if (accountData.identity && destIdentity) {
 
         // fixup the email address if we have a default domain
         var emailArray = accountData.identity.email.split('@');
-        dump("emailArray = " + emailArray + " (length = " + emailArray.length + "\n");
-        dump("domain = " + accountData.domain + "\n");
         if (emailArray.length < 2 && accountData.domain) {
             accountData.identity.email += '@' + accountData.domain;
         }
 
-        var destIdentity =
-            account.identities.QueryElementAt(0, nsIMsgIdentity);
         copyObjectToInterface(destIdentity,
                               accountData.identity);
         destIdentity.valid=true;
     }
 
-    if (accountData.smtp) {
-        var server = smtpService.defaultServer;
+    var smtpServer = smtpService.defaultServer;
         
-        if (accountData.smtpCreateNewServer)
-            server = smtpService.createSmtpServer();
+    if (accountData.smtpCreateNewServer)
+        smtpServer = smtpService.createSmtpServer();
+    
+    copyObjectToInterface(smtpServer, accountData.smtp);
 
-        copyObjectToInterface(server, accountData.smtp);
-    }
+    // some identities have 'preferred' 
+    if (accountData.smtpUsePreferredServer && destIdentity)
+        destIdentity.smtpServer = smtpServer;
+
 }
 
 
