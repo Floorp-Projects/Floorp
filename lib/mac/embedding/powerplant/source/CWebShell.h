@@ -5,7 +5,7 @@
 #include <LPeriodical.h>
 #include "nsMacMessageSink.h"
 #include "nsIWebShell.h"
-#include "nsIStreamObserver.h"
+#include "nsIDocumentLoaderObserver.h"
 
 
 class nsIWidget;
@@ -15,7 +15,7 @@ class nsIWebShell;
 class CWebShell :	public LView,
 					public LCommander,
 					public LPeriodical,
-					public nsIStreamObserver,
+					public nsIDocumentLoaderObserver,
 					public nsIWebShellContainer
 {
 private:
@@ -77,13 +77,33 @@ public:
 	// nsISupports
 	NS_DECL_ISUPPORTS
 
-	// nsIStreamObserver
-//	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-	NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-//	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-//	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
-//	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
-	NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	// nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* /*loader*/, nsIURI* /*aURL*/, const char* /*aCommand*/)
+  													{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
+
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsresult /*aStatus*/,
+														nsIDocumentLoaderObserver * /*aObserver*/)
+														{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
+
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, 
+                            nsIContentViewer* /*aViewer*/)
+                            { return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
+
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                            nsIChannel* channel, PRUint32 aProgress, 
+                          	PRUint32 aProgressMax);
+
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsresult /*aStatus*/)
+  													{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */ };
+
+  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* /*loader*/,
+                             nsIChannel* /*channel*/,
+                             const char */*aContentType*/,
+                             const char */*aCommand*/ )
+                           	{ return NS_ERROR_NOT_IMPLEMENTED; /* XXX TBI */};
+
 
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell,

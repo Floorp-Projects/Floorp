@@ -9,7 +9,8 @@
 #include "nsRepeater.h"
 #include "nsIImageManager.h"
 #include "nsISupports.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
+#include "nsIDocumentLoader.h"
 
 
 // CWebShell:
@@ -128,7 +129,7 @@ CWebShell::Init()
 	if (rv != NS_OK)
 		return;
 	mWebShell->SetContainer((nsIWebShellContainer*)this);
-	mWebShell->SetObserver((nsIStreamObserver*)this);
+	mWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
 	mWebShell->Show();
 }
 
@@ -484,63 +485,45 @@ CWebShell::DisplayStatus(const PRUnichar* status)
 
 
 // ---------------------------------------------------------------------------
-//	¥ OnStartRequest
+//	¥ OnProgressURLLoad
 // ---------------------------------------------------------------------------
-
-NS_IMETHODIMP CWebShell::OnStartRequest(nsIChannel* /*channel*/, nsISupports */*ctxt*/)
-{
-	return NS_OK;
-}
-
-
-// ---------------------------------------------------------------------------
-//	¥ OnProgress
-// ---------------------------------------------------------------------------
-/*
-NS_IMETHODIMP CWebShell::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+NS_IMETHODIMP CWebShell::OnProgressURLLoad(nsIDocumentLoader* /*loader*/,
+                          nsIChannel* channel, PRUint32 aProgress, 
+                        	PRUint32 aProgressMax)
 {
 	if (mLoading)
 	{
-		nsAutoString url;
-		if (aURL)
+		nsIURI* url;
+		channel->GetURI(&url);
+
+		nsAutoString urlString;
+		if (url)
 		{
-			PRUnichar* str;
-			aURL->ToString(&str);
-			url = str;
+			char* str;
+			url->GetSpec(&str);
+			urlString = str;
 			delete[] str;
+			NS_RELEASE(url);
 		}
-		url.Append(": progress ");
-		url.Append(aProgress, 10);
+		urlString.Append(": progress ");
+		urlString.Append(aProgress, 10);
 		if (0 != aProgressMax)
 		{
-			url.Append(" (out of ");
-			url.Append(aProgressMax, 10);
-			url.Append(")");
+			urlString.Append(" (out of ");
+			urlString.Append(aProgressMax, 10);
+			urlString.Append(")");
 		}
-		DisplayStatus(url.GetUnicode());
+		DisplayStatus(urlString.GetUnicode());
 	}
 	return NS_OK;
-}
-*/
+};
 
 // ---------------------------------------------------------------------------
-//	¥ OnStatus
+//	¥ OnStatusURLLoad
 // ---------------------------------------------------------------------------
-/*
-NS_IMETHODIMP CWebShell::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+NS_IMETHODIMP CWebShell::OnStatusURLLoad(nsIDocumentLoader* /*loader*/, nsIChannel* /*channel*/, nsString& aMsg)
 {
-#pragma unused (aURL)
-	DisplayStatus(aMsg);
-	return NS_OK;
-}
-*/
-
-// ---------------------------------------------------------------------------
-//	¥ OnStopRequest
-// ---------------------------------------------------------------------------
-
-NS_IMETHODIMP CWebShell::OnStopRequest(nsIChannel* /*channel*/, nsISupports */*ctxt*/, nsresult /*status*/, const PRUnichar */*errorMsg*/)
-{
+	DisplayStatus(aMsg.GetUnicode());
 	return NS_OK;
 }
 
@@ -720,7 +703,7 @@ NS_IMETHODIMP CWebShell::ChildShellAdded(nsIWebShell** /*aChildShell*/, nsIConte
 //	¥ QueryInterface
 // ---------------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -738,8 +721,8 @@ CWebShell::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
 
   *aInstancePtrResult = NULL;
 
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
+  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+    *aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
