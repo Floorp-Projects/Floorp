@@ -580,6 +580,7 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
+#if 0
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
@@ -592,6 +593,7 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
         JS_ReportError(aJSContext, "Access denied to XPConnect service.");
         return NS_ERROR_FAILURE;
     }
+#endif
     return NS_OK;
 }
 
