@@ -250,6 +250,12 @@ typedef enum XP_FileType {
 	xpFolderCache,               /* for caching mail/news folder info */
     xpPKCS12File,		/* used for PKCS 12 certificate transport */
 	xpJSCookieFilters,			/* Opens personal js cookie filters */
+#if defined(CookieManagement)        
+	xpHTTPCookiePermission,
+#endif
+#if defined(SingleSignon)
+	xpHTTPSingleSignon,
+#endif
     xpLIClientDB,
 	xpLIPrefs
 } XP_FileType;
