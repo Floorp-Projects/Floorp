@@ -33,6 +33,7 @@ messenger.jar:
 *+  content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
 *+  content/messenger/msgPrintEngine.xul            (content/msgPrintEngine.xul)
 *+  content/messenger/searchBar.js                  (content/searchBar.js)
+*   content/messenger/phishingDetector.js           (content/phishingDetector.js)
 *+  content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     content/messenger/about-credits.png             (content/about-credits.png)

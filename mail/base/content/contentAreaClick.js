@@ -45,31 +45,13 @@
  *    - gatherTextUnder
  */
 
-  var pref = null;
-  pref = Components.classes["@mozilla.org/preferences-service;1"]
-                   .getService(Components.interfaces.nsIPrefBranch);
+  var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
-  // Prefill a single text field
-  function prefillTextBox(target) {
-
-    // obtain values to be used for prefilling
-    var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-    var value = walletService.WALLET_PrefillOneElement(window._content, target);
-    if (value) {
-
-      // result is a linear sequence of values, each preceded by a separator character
-      // convert linear sequence of values into an array of values
-      var separator = value[0];
-      var valueList = value.substring(1, value.length).split(separator);
-
-      target.value = valueList[0];
-    }
-  }
-  
-  function hrefForClickEvent(event)
+  function linkNodeForClickEvent(event)
   {
     var target = event.target;
     var linkNode;
+    var linkNodeText;
 
     var local_name = target.localName;
 
@@ -87,13 +69,6 @@
           linkNode = target;
         break;
       case "input":
-        if ((event.target.type == "text") // text field
-            && !isKeyPress       // not a key event
-            && event.detail == 2 // double click
-            && event.button == 0 // left mouse button
-            && event.target.value.length == 0) { // no text has been entered
-          prefillTextBox(target); // prefill the empty text field if possible
-        }
         break;
       default:
         linkNode = findParentNode(event.originalTarget, "a");
@@ -103,24 +78,8 @@
           linkNode = null;
         break;
     }
-    var href;
-    if (linkNode) {
-      href = linkNode.href;
-    } else {
-      // Try simple XLink
-      linkNode = target;
-      while (linkNode) {
-        if (linkNode.nodeType == Node.ELEMENT_NODE) {
-          href = linkNode.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-          break;
-        }
-        linkNode = linkNode.parentNode;
-      }
-      if (href && href != "") {
-        href = makeURLAbsolute(target.baseURI,href);
-      }
-    }
-    return href;
+
+    return linkNode;
   }
 
   // Called whenever the user clicks in the content area,
@@ -128,10 +87,13 @@
   // should always return true for click to go through
   function contentAreaClick(event) 
   {
-    var href = hrefForClickEvent(event);
-    if (href) {
-      handleLinkClick(event, href, null);
-      return true;
+    var linkNode = linkNodeForClickEvent(event);
+    if (linkNode && linkNode.href) 
+    {
+      handleLinkClick(event, linkNode.href, null);
+      // block the link click if we determine that this URL
+      // is phishy (i.e. a potential email scam)
+      return isPhishingURL(linkNode, false); 
     }
 
     return true;
@@ -140,7 +102,6 @@
   function openNewTabOrWindow(event, href, sendReferrer)
   {
     // always return false for stand alone mail (MOZ_THUNDERBIRD)
-
     // let someone else deal with it
     return false;
   }
