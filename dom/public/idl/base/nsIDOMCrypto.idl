@@ -24,15 +24,16 @@
 [scriptable, uuid(f45efbe0-1d52-11d4-8a7c-006008c844c3)]
 interface nsIDOMCrypto : nsISupports
 {
-	readonly attribute DOMString version;
+  readonly attribute DOMString        version;
 
-	nsIDOMCRMFObject generateCRMFRequest(/* ... */);
-	DOMString  importUserCertificates(in DOMString nickname, in DOMString cmmfResponse, in boolean doForcedBackup);
-	DOMString  popChallengeResponse(in DOMString challenge);
-	DOMString  random(in long numBytes);
-	DOMString  signText(/* ... */);
-	void       alert(in DOMString message);
-	void       logout();
-	void       disableRightClick();
+  nsIDOMCRMFObject          generateCRMFRequest(/* ... */);
+  DOMString                 importUserCertificates(in DOMString nickname,
+                                                   in DOMString cmmfResponse,
+                                                   in boolean doForcedBackup);
+  DOMString                 popChallengeResponse(in DOMString challenge);
+  DOMString                 random(in long numBytes);
+  DOMString                 signText(/* ... */);
+  void                      alert(in DOMString message);
+  void                      logout();
+  void                      disableRightClick();
 };
-

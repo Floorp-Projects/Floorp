@@ -22,9 +22,8 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(a6cf9108-15b3-11d2-932e-00805f8add32)]
-interface NSLocation : nsISupports
+interface nsIDOMNSLocation : nsISupports
 {
-        void reload(/* ... */);
-        void replace(/* ... */);
+  void                      reload(/* ... */);
+  void                      replace(/* ... */);
 };
-

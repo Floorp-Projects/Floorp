@@ -24,9 +24,8 @@
 [scriptable, uuid(a6cf906f-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindowCollection : nsISupports
 {
+  readonly attribute unsigned long    length;
 
-     readonly attribute unsigned long   length;
-     nsIDOMWindow                      item(in unsigned long index);
-     nsIDOMWindow                      namedItem(in DOMString name);
+  nsIDOMWindow              item(in unsigned long index);
+  nsIDOMWindow              namedItem(in DOMString name);
 };
-

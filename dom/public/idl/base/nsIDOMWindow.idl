@@ -24,22 +24,25 @@
 [scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindow : nsISupports
 {
-       readonly attribute  nsIDOMDocument document;
-       readonly attribute  nsIDOMWindow parent;
+  readonly attribute nsIDOMDocument           document;
+  readonly attribute nsIDOMWindow             parent;
 
-       /* [replaceable] readonly attribute  nsIDOMWindow top; */
-       [noscript] readonly attribute  nsIDOMWindow top;
+  /* [replaceable] readonly attribute  nsIDOMWindow top; */
+  [noscript] readonly attribute nsIDOMWindow  top;
 
-       /* [replaceable] readonly attribute  nsIDOMBarProp scrollbars; */
-       [noscript] readonly attribute  nsIDOMBarProp scrollbars;
-       readonly attribute  nsIDOMWindowCollection frames;
-       attribute  DOMString name;
-       readonly attribute  long scrollX;
-       readonly attribute  long scrollY;
-       void  scrollTo(in long xScroll, in long yScroll);
-       void  scrollBy(in long xScrollDif, in long yScrollDif);
-       nsISelection getSelection();
-       void scrollByLines(in long numLines);
-       void scrollByPages(in long numPages);
+  /* [replaceable] readonly attribute  nsIDOMBarProp scrollbars; */
+  [noscript] readonly attribute nsIDOMBarProp scrollbars;
+
+  readonly attribute nsIDOMWindowCollection   frames;
+
+  /* XXX: Shouldn't name be replaceable? */
+           attribute DOMString                name;
+  readonly attribute long                     scrollX;
+  readonly attribute long                     scrollY;
+
+  void                      scrollTo(in long xScroll, in long yScroll);
+  void                      scrollBy(in long xScrollDif, in long yScrollDif);
+  nsISelection              getSelection();
+  void                      scrollByLines(in long numLines);
+  void                      scrollByPages(in long numPages);
 };
-
