@@ -585,6 +585,7 @@ PK11_MakeCertFromHandle(PK11SlotInfo *slot,CK_OBJECT_HANDLE certID,
 	cert->slot = PK11_ReferenceSlot(slot);
 	cert->pkcs11ID = certID;
 	cert->ownSlot = PR_TRUE;
+	cert->series = slot->series;
     }
 
     trust = (CERTCertTrust*)PORT_ArenaAlloc(cert->arena, sizeof(CERTCertTrust));
@@ -1667,6 +1668,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     cert->dbhandle = STAN_GetDefaultTrustDomain();
     if (cert->slot == NULL) {
 	cert->slot = PK11_ReferenceSlot(slot);
+	cert->series = slot->series;
 	cert->ownSlot = PR_TRUE;
 	if (cert->nssCertificate) {
 	    nssCryptokiInstance *instance;
@@ -1787,9 +1789,11 @@ pk11_getcerthandle(PK11SlotInfo *slot, CERTCertificate *cert,
 
     if (cert->slot == slot) {
 	certh = cert->pkcs11ID;
-	if (certh == CK_INVALID_HANDLE) {
+	if ((certh == CK_INVALID_HANDLE) ||
+			(cert->series != slot->series)) {
     	     certh = pk11_FindObjectByTemplate(slot,theTemplate,tsize);
 	     cert->pkcs11ID = certh;
+	     cert->series = slot->series;
 	}
     } else {
     	certh = pk11_FindObjectByTemplate(slot,theTemplate,tsize);
@@ -2411,6 +2415,7 @@ PK11_FindObjectForCert(CERTCertificate *cert, void *wincx, PK11SlotInfo **pSlot)
 	    cert->slot = PK11_ReferenceSlot(*pSlot);
 	    cert->pkcs11ID = certHandle;
 	    cert->ownSlot = PR_TRUE;
+	    cert->series = cert->slot->series;
 	}
     }
 
