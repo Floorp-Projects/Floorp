@@ -360,13 +360,19 @@ NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
 	// Create it with huge bounds. The actual bounds that matters is that of the
 	// nsIBaseWindow. The bounds of the top level widget clips its children so
 	// we just have to make sure it is big enough to always contain the children.
+	// Under 10.2, if this rect is too large, subwidget offsets can temporarily push the
+	// bounds over 32,727 and OffsetRgn() will silently fail. In order to avoid that, we
+	// err towards a local max of the size of the gray rgn.
     
     nsCOMPtr<nsIWidget> newWidget(do_CreateInstance(kWindowCID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-	    
-	nsRect r(0, 0, 32000, 32000);
-	rv = newWidget->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
-	NS_ENSURE_SUCCESS(rv, rv);
+	
+    RgnHandle grayRgn = ::GetGrayRgn();
+    Rect grayRect;
+    ::GetRegionBounds(grayRgn, &grayRect);
+    nsRect r(0, 0, grayRect.right - grayRect.left, grayRect.bottom - grayRect.top);
+    rv = newWidget->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
 
 	widget = newWidget;
     err = ::SetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), (void*)&widget);
