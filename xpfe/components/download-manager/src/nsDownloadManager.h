@@ -83,9 +83,9 @@ protected:
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
   nsresult AssertProgressInfo();
-  nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
-  nsresult DownloadStarted(const char* aPersistentDescriptor);
-  nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage);
+  nsresult AssertProgressInfoFor(const nsACString& aTargetPath);
+  nsresult DownloadStarted(const nsACString& aTargetPath);
+  nsresult DownloadEnded(const nsACString& aTargetPath, const PRUnichar* aMessage);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
 private:

@@ -48,11 +48,13 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
 
-  <stringbundle id="dlMgrBundle"
-                src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
-  <stringbundle id="dlProgressDlgBundle"
-                src="chrome://global/locale/nsProgressDialog.properties"/>
-
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="dlMgrBundle"
+                  src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
+    <stringbundle id="dlProgressDlgBundle"
+                  src="chrome://global/locale/nsProgressDialog.properties"/>
+  </stringbundleset>
+  
   <data id="strings.confirmCancel">&confirmCancel;</data>
   <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
   <data id="strings.rateMsg">&rateMsg;</data>

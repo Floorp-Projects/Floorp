@@ -79,10 +79,12 @@ public:
     if (behavior == 0)
       return dm->Open(nsnull, this);
     if (behavior == 1) {
-      nsCAutoString path;
-      rv = aTarget->GetNativePath(path);
+      nsAutoString path;
+      rv = aTarget->GetPath(path);
       if (NS_FAILED(rv)) return rv;
-      return dm->OpenProgressDialogFor(path.get(), nsnull);
+
+      NS_ConvertUCS2toUTF8 utf8Path(path);
+      return dm->OpenProgressDialogFor(utf8Path, nsnull);
     }
     return rv;
   }
