@@ -69,12 +69,12 @@ NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult
 NS_NewDirectionalFrame(nsIFrame** aNewFrame, PRUnichar aChar);
 
-nsBidiPresUtils::nsBidiPresUtils() : mSuccess(NS_ERROR_FAILURE),
-                                     mBidiEngine(nsnull),
-                                     mUnicodeUtils(nsnull),
-                                     mArraySize(8),
+nsBidiPresUtils::nsBidiPresUtils() : mArraySize(8),
                                      mIndexMap(nsnull),
-                                     mLevels(nsnull)
+                                     mLevels(nsnull),
+                                     mSuccess(NS_ERROR_FAILURE),
+                                     mBidiEngine(nsnull),
+                                     mUnicodeUtils(nsnull)
 {
   mBidiEngine = do_GetService("@mozilla.org/intl/bidi;1");
   if (mBidiEngine) {

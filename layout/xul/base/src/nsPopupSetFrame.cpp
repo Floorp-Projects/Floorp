@@ -73,9 +73,9 @@
 
 nsPopupFrameList::nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* aNext)
 :mNextPopup(aNext), 
- mElementContent(nsnull), 
- mPopupContent(aPopupContent),
  mPopupFrame(nsnull),
+ mPopupContent(aPopupContent),
+ mElementContent(nsnull), 
  mCreateHandlerSucceeded(PR_FALSE),
  mLastPref(-1,-1)
 {

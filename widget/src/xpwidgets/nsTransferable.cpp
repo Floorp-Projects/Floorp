@@ -77,7 +77,7 @@ NS_IMPL_ISUPPORTS1(nsTransferable, nsITransferable)
 struct DataStruct
 {
   DataStruct ( const char* aFlavor )
-    : mFlavor(aFlavor), mDataLen(0), mCacheFileName(nsnull) { }
+    : mDataLen(0), mFlavor(aFlavor), mCacheFileName(nsnull) { }
   ~DataStruct();
   
   const nsCString& GetFlavor() const { return mFlavor; }

@@ -904,7 +904,8 @@ NS_INTERFACE_MAP_END
 ChromeTooltipListener :: ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
   : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome),
      mTooltipListenerInstalled(PR_FALSE),
-     mShowingTooltip(PR_FALSE), mMouseClientX(0), mMouseClientY(0)
+     mMouseClientX(0), mMouseClientY(0),
+     mShowingTooltip(PR_FALSE)
 {
   NS_INIT_REFCNT();
 
@@ -1336,7 +1337,9 @@ NS_INTERFACE_MAP_END
 // ChromeTooltipListener ctor
 //
 ChromeContextMenuListener :: ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) 
-  : mWebBrowser(inBrowser), mWebBrowserChrome(inChrome), mContextMenuListenerInstalled(PR_FALSE)
+  : mContextMenuListenerInstalled(PR_FALSE),
+    mWebBrowser(inBrowser),
+    mWebBrowserChrome(inChrome)
 {
   NS_INIT_REFCNT();
 } // ctor

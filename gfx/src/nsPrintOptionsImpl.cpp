@@ -91,20 +91,20 @@ nsFont* nsPrintOptions::sDefaultFont = nsnull;
  *	@update 6/21/00 dwc
  */
 nsPrintOptions::nsPrintOptions() :
+  mPrintOptions(0L),
   mPrintRange(kRangeAllPages),
   mStartPageNum(1),
   mEndPageNum(1),
-  mPrintOptions(0L),
+  mPrintFrameType(kFramesAsIs),
+  mHowToEnableFrameUI(kFrameEnableNone),
+  mIsCancelled(PR_FALSE),
+  mPrintSilent(PR_FALSE),
+  mPrintPageDelay(500),
   mPrintReversed(PR_FALSE),
   mPrintInColor(PR_TRUE),
   mPaperSize(kLetterPaperSize),
   mOrientation(kPortraitOrientation),
-  mPrintToFile(PR_FALSE),
-  mPrintFrameType(kFramesAsIs),
-  mHowToEnableFrameUI(kFrameEnableNone),
-  mIsCancelled(PR_FALSE),
-  mPrintPageDelay(500),
-  mPrintSilent(PR_FALSE)
+  mPrintToFile(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 

@@ -98,8 +98,9 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
-   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
-   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ), mIsHiddenWindow(PR_FALSE)
+   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
+   mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
+   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
 {
   NS_INIT_REFCNT();
 }

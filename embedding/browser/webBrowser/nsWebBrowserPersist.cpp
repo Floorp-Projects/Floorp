@@ -117,8 +117,8 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mCancel(PR_FALSE),
     mJustStartedLoading(PR_TRUE),
     mCompleted(PR_FALSE),
-    mPersistResult(NS_OK),
-    mPersistFlags(PERSIST_FLAGS_NONE)
+    mPersistFlags(PERSIST_FLAGS_NONE),
+    mPersistResult(NS_OK)
 {
     NS_INIT_REFCNT();
 }

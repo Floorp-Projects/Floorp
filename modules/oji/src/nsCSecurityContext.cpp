@@ -233,8 +233,8 @@ MOZ_DECL_CTOR_COUNTER(nsCSecurityContext)
 nsCSecurityContext::nsCSecurityContext(JSContext* cx)
                    : m_pJStoJavaFrame(NULL), m_pJSCX(cx),
                      m_pPrincipal(NULL),
-                     m_HasUniversalBrowserReadCapability(PR_FALSE),
-                     m_HasUniversalJavaCapability(PR_FALSE)
+                     m_HasUniversalJavaCapability(PR_FALSE),
+                     m_HasUniversalBrowserReadCapability(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsCSecurityContext);
     NS_INIT_REFCNT();
@@ -277,8 +277,8 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
 nsCSecurityContext::nsCSecurityContext(nsIPrincipal *principal)
                    : m_pJStoJavaFrame(NULL), m_pJSCX(NULL),
                      m_pPrincipal(principal),
-                     m_HasUniversalBrowserReadCapability(PR_FALSE),
-                     m_HasUniversalJavaCapability(PR_FALSE)
+                     m_HasUniversalJavaCapability(PR_FALSE),
+                     m_HasUniversalBrowserReadCapability(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsCSecurityContext);
     NS_INIT_REFCNT();

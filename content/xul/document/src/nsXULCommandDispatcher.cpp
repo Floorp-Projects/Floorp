@@ -75,7 +75,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
-    : mDocument(aDocument), mFocusController(nsnull), mUpdaters(nsnull)
+    : mFocusController(nsnull), mDocument(aDocument), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
 

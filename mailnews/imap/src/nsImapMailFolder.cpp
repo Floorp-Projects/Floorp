@@ -5415,9 +5415,10 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
 }
 
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
-    m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0),
+    m_isMove(PR_FALSE), m_selectedState(PR_FALSE),
+    m_isCrossServerOp(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_leftOver(0), m_isCrossServerOp(PR_FALSE), m_allowUndo(PR_FALSE)
+    m_leftOver(0), m_allowUndo(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }

@@ -71,8 +71,8 @@ nsAbMDBDirectory::nsAbMDBDirectory(void)
   :  nsAbMDBRDFResource(),
      mInitialized(PR_FALSE),
 	 mIsMailingList(-1),
-     mPerformingQuery(PR_FALSE),
-     mIsQueryURI(PR_FALSE)
+     mIsQueryURI(PR_FALSE),
+     mPerformingQuery(PR_FALSE)
 {
 	NS_NewISupportsArray(getter_AddRefs(mSubDirectories));
 }

@@ -162,8 +162,8 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
     mLineBreaker(aLineBreaker),
     mWordBreaker(aWordBreaker),
     mBufferPos(0),
-    mFlags(0),
-    mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE)
+    mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE),
+    mFlags(0)
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
 

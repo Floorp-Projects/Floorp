@@ -77,8 +77,8 @@ static int sbWinSockInited = FALSE;
 #endif
 
 nsSocket::nsSocket(char *aHost, int aPort, int (*aEventPumpCB)(void)) :
-    mHost(aHost),
     mEventPumpCB( aEventPumpCB ),
+    mHost(aHost),
     mPort(aPort),
     mFd(-1),
     mListenFd(-1)
@@ -86,8 +86,8 @@ nsSocket::nsSocket(char *aHost, int aPort, int (*aEventPumpCB)(void)) :
 }
 
 nsSocket::nsSocket(char *aHost, int aPort) :
-    mHost(aHost),
     mEventPumpCB( NULL ),
+    mHost(aHost),
     mPort(aPort),
     mFd(-1),
     mListenFd(-1)
