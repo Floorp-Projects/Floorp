@@ -42,8 +42,10 @@ void nsUrlListenerManager::ReleaseListeners()
   if(m_listeners)
 	{
 		PRUint32 count;
-    nsresult rv = m_listeners->Count(&count);
-
+        nsresult rv = m_listeners->Count(&count);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "m_listeners->Count() failed");
+        if (NS_FAILED(rv)) return;
+        
 		for (int i = count - 1; i >= 0; i--)
 			m_listeners->RemoveElementAt(i);
 	}
