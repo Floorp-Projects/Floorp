@@ -62,13 +62,13 @@
 <!ENTITY repeat.units.years.singular    "rok" >
 
 <!ENTITY priority.level.none              "Žiadna" >
-<!ENTITY priority.level.none.accesskey    "N">
+<!ENTITY priority.level.none.accesskey    "d">
 <!ENTITY priority.level.low               "Nízka" >
 <!ENTITY priority.level.low.accesskey     "N">
 <!ENTITY priority.level.medium            "Stredná" >
-<!ENTITY priority.level.medium.accesskey  "N">
+<!ENTITY priority.level.medium.accesskey  "S">
 <!ENTITY priority.level.high              "Vysoká" >
-<!ENTITY priority.level.high.accesskey    "N">
+<!ENTITY priority.level.high.accesskey    "V">
 
 <!ENTITY newevent.title.label        "Názov" >
 <!ENTITY newevent.location.label     "Miesto" >
@@ -255,14 +255,14 @@
 <!ENTITY calendar.monthview.button.label        "Mesačný" >
 <!ENTITY calendar.multiweekview.button.label        "Viactýždenný" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Iba pracovný týždeň" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "I" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Zobrazené úlohy" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "Z" >
 
 <!ENTITY calendar.menu.options.modify           "Upraviť" >
 <!ENTITY calendar.menu.options.remove           "Odstrániť" >
 <!ENTITY calendar.menu.options.close            "Zavrieť okno" >
-<!ENTITY calendar.menu.options.close.accesskey  "C" >
+<!ENTITY calendar.menu.options.close.accesskey  "Z" >
 
 <!ENTITY calendar.main.tab.label        "Udalosti" >
 <!ENTITY calendar.search.tab.label      "Hľadaj">
@@ -354,11 +354,11 @@
 <!ENTITY calendar.context.newserver.label              "Nový kalendár">
 <!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Upraviť kalendár">
-<!ENTITY calendar.context.editserver.accesskey         "E">
+<!ENTITY calendar.context.editserver.accesskey         "U">
 <!ENTITY calendar.context.deleteserver.label           "Odstrániť kalendár">
-<!ENTITY calendar.context.deleteserver.accesskey       "D">
+<!ENTITY calendar.context.deleteserver.accesskey       "d">
 <!ENTITY calendar.context.refreshserver.label          "Obnoviť vzdialené kalendáre">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.refreshserver.accesskey      "b">
 <!ENTITY calendar.context.publish.label                "Publikovať celý kalendár">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -409,7 +409,7 @@
 <!ENTITY calendar.publish.example.url.description   "Napríklad http://www.mojserver.com/webdav/test.ics">
 
 <!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
-<!ENTITY allDayEvents.label "Všetky celodenné udalosti">
+<!ENTITY allDayEvents.label "Všetky udalosti dňa">
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Import: Import udalostí z lokálneho súboru do aktuálneho kalendára.">
@@ -421,7 +421,7 @@
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Prosim namapujte nasledujúce polia kalendára na zodpovedajúce polia CSV-súboru programu Outlook:" >
 <!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
 <!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
 <!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
@@ -435,7 +435,7 @@
 <!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
 <!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
 <!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
-<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Zvoľte význam nasledujúceho slova: " >
 <!ENTITY calendar.importoutlook.true.label "True" >
 <!ENTITY calendar.importoutlook.false.label "False" >
 

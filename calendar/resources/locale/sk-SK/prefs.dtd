@@ -40,14 +40,14 @@
 <!ENTITY calendarPanel.label        "Kalendár" >
 <!ENTITY calendar.accesskey         "k" >
 <!ENTITY calendar.publish.label     "Publikovanie">
-<!ENTITY calendar.general.label     "General">
+<!ENTITY calendar.general.label     "Hlavné">
 <!ENTITY calendar.alarms.label      "Upozornenia">
 <!ENTITY calendar.views.label       "Pohľady">
 <!ENTITY calendar.timezone.label    "Moja časová zóna">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Nastavenia ">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategória">
 
 <!ENTITY pref.mainbox.label         "Hlavné nastavenia" >
 <!ENTITY pref.alarmgoesoff.label "Pri aktivácii upozornenia:">
@@ -62,8 +62,8 @@
 <!ENTITY pref.defalarm4todos.label "Východzie nastavenie upozornení pre úlohy:">
 <!ENTITY pref.alarm.on "Zapnuté">
 <!ENTITY pref.alarm.off "Vypnuté">
-<!ENTITY pref.defalarmlen4events.label "Čas aktivácii upozornenia pred začiatkom udalosťi:">
-<!ENTITY pref.defalarmlen4todos.label "Čas aktivácii upozornenia pred začiatkom úlohy:">
+<!ENTITY pref.defalarmlen4events.label "Čas aktivácie upozornenia pred začiatkom udalosti:">
+<!ENTITY pref.defalarmlen4todos.label "Čas aktivácie upozornenia pred začiatkom úlohy:">
 
 <!ENTITY pref.dateformat.label      "Formát dátumu:" >
 <!ENTITY pref.dateformat.long       "Dlhý" >

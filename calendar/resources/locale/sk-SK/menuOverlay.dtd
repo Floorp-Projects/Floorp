@@ -44,9 +44,9 @@
 <!ENTITY event.new.event.accesskey "u">
 
 <!ENTITY event.new.todo     "Nová úloha">
-<!ENTITY event.new.todo.accesskey "k">
+<!ENTITY event.new.todo.accesskey "a">
 
-<!ENTITY calendar.new.server.label "Nový kalendár">
+<!ENTITY calendar.new.server.label "Nový Kalendár">
 <!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event   "Upraviť">
@@ -104,7 +104,7 @@
 <!ENTITY calendar.preferences.accesskey "e">
 
 <!ENTITY goMenu.label                   "Prejsť">
-<!ENTITY goMenu.accesskey               "j">
+<!ENTITY goMenu.accesskey               "r">
 
 <!ENTITY goTodayCmd.label               "Prejsť na dnešný deň">
 <!ENTITY goTodayCmd.accesskey           "d">
@@ -113,24 +113,24 @@
 <!ENTITY goPreviousCmd.accesskey        "p">
 
 <!ENTITY goNextCmd.label                "Nasledujúci">
-<!ENTITY goNextCmd.accesskey            "N">
+<!ENTITY goNextCmd.accesskey            "n">
 
-<!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.label                "Úlohy">
+<!ENTITY taskMenu.accesskey            "l">
 
-<!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.label                "Nástroje">
+<!ENTITY toolsMenu.accesskey            "N">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "Konzola JavaScriptu">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.label     "Prehliadač">
 <!ENTITY navigatorCmd.accesskey "B">
 
-<!ENTITY messengerCmd.label     "Mail">
-<!ENTITY messengerCmd.accesskey "M">
+<!ENTITY messengerCmd.label     "Pošta a diskusie">
+<!ENTITY messengerCmd.accesskey "P">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "Adresár">
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">
