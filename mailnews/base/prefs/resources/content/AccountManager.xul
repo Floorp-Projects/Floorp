@@ -3,11 +3,11 @@
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
-<dialog id="account-manager" 
+<dialog id="accountManager" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&accountManagerTitle.label;"
-        width="&account-manager.width;" height="&account-manager.height;"
-        persist="screenX screenY width height"
+        style="&accountManager.size;"
+        persist="screenX screenY"
         buttons="accept,cancel,help"
         onload="onLoad(event);"
         ondialogaccept="return onAccept();"

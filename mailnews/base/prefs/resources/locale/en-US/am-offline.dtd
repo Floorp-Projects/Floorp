@@ -3,7 +3,7 @@
 <!ENTITY offlineMsg.label "To save download time and disk space:">
 <!ENTITY offlineNewFolder.label "When I create new folders, select them for offline">
 <!ENTITY offlineNewFolder.accesskey "h">
-<!ENTITY offlineNotDownload.label "Do not download messages locally that are larger than">
+<!ENTITY offlineNotDownload.label "Do not download messages that are larger than">
 <!ENTITY offlineNotDownload.accesskey "d">
 <!ENTITY kb.label "KB">
 <!ENTITY days.label "days">

@@ -10,9 +10,6 @@
 <!ENTITY directories.label         "Use a different LDAP server:">
 
 <!-- am-addressing.xul -->
-<!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the directoriesList 
-     drop down List box, which specifies the width of the dropdown listbox. -->
-<!ENTITY directoriesList.width "512">
 
 <!ENTITY compositionGroupTitle.label "Composition">
 <!-- LOCALIZATION NOTE (useHtml.label) : do not translate "html" in below line -->
@@ -22,15 +19,15 @@
 <!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
 <!ENTITY then.label                           "Then,">
 <!ENTITY then.accesskey                       "t">
-<!ENTITY aboveQuote.label                     "start my reply above the quoted text">
+<!ENTITY aboveQuote.label                     "start my reply above the quote">
 <!ENTITY aboveQuote.accesskey                 "v">
-<!ENTITY belowQuote.label                     "start my reply below the quoted text">
+<!ENTITY belowQuote.label                     "start my reply below the quote">
 <!ENTITY belowQuote.accesskey                 "b">
-<!ENTITY selectAndQuote.label                 "select the quoted text">
+<!ENTITY selectAndQuote.label                 "select the quote">
 <!ENTITY selectAndQuote.accesskey             "e">
 <!ENTITY place.label                          "and place my signature">
 <!ENTITY place.accesskey                      "p">
-<!ENTITY belowText.label                      "below the quoted text (recommended)">
+<!ENTITY belowText.label                      "below the quote (recommended)">
 <!ENTITY belowText.accesskey                  "b">
-<!ENTITY aboveText.label                      "below my reply (above quoted text)">
+<!ENTITY aboveText.label                      "below my reply (above the quote)">
 <!ENTITY aboveText.accesskey                  "v">

@@ -17,5 +17,4 @@
      panel content to fit. 1em = the width of the letter 'm' in the selected font.
      XUL/FE DEVELOPERS: DO NOT MODIFY THIS VALUE. It represents the correct size of
      this window for en-US. -->
-<!ENTITY account-manager.width "640">
-<!ENTITY account-manager.height "470">
+<!ENTITY accountManager.size "width: 55em; height: 44em;">

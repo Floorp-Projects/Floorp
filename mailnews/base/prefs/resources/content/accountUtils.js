@@ -238,7 +238,7 @@ function MsgAccountManager(selectPage)
     } catch (ex) { /* functions might not be defined */}
     
     window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal,titlebar,resizable",
+                      "AccountManager", "chrome,centerscreen,modal,titlebar",
                       { server: server, selectPage: selectPage });
 }
 
