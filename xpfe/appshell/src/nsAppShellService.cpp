@@ -243,8 +243,7 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
       goto done;
   }
 
-  // Initialize each registered component.
-  EnumerateComponents( &nsAppShellService::InitializeComponent );
+ 
 	
 // enable window mediation
 	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
@@ -280,6 +279,12 @@ void nsAppShellService::CreateHiddenWindow()
   NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
 }
 
+ NS_IMETHODIMP  nsAppShellService::EnumerateAndInitializeComponents(void)
+ {
+ 	 // Initialize each registered component.
+ 	 EnumerateComponents( &nsAppShellService::InitializeComponent );
+ 	 return NS_OK;
+ }
 // Apply function (Initialize/Shutdown) to each app shell component.
 void
 nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
