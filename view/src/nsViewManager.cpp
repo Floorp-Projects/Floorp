@@ -1966,6 +1966,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 											}
 										}
 									}
+                  *aStatus = nsEventStatus_eConsumeNoDefault;
 							}
 
 				break;
