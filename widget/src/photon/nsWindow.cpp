@@ -58,7 +58,7 @@ nsWindow::nsWindow()
   mClientWidget    = nsnull;
   mShell           = nsnull;
   mFontMetrics     = nsnull;
-  mClipChildren    = PR_FALSE;
+  mClipChildren    = PR_TRUE;		/* This needs to be true for Photon */
   mClipSiblings    = PR_FALSE;
   mBorderStyle     = eBorderStyle_default;
   mWindowType      = eWindowType_child;
@@ -200,6 +200,8 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
   {
     SetWindowType( aInitData->mWindowType );
     SetBorderStyle( aInitData->mBorderStyle );
+    mClipChildren = aInitData->clipChildren;
+    mClipSiblings = aInitData->clipSiblings;
 
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
       mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
@@ -417,6 +419,15 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     // call the event callback to notify about creation
     DispatchStandardEvent( NS_CREATE );
 
+#if 0
+/* kirkj hack trying to get modal dialogs to work better */
+    if ( ( mWindowType == eWindowType_dialog ) || 
+	     ( mWindowType == eWindowType_child ) )
+    {
+	  this->Show(PR_TRUE);
+    }
+#endif
+	
     result = NS_OK;
   }
   else
@@ -520,8 +531,8 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     PhPoint_t   offset = { aDx, aDy };
     PhArea_t    area;
     PhRid_t     rid = PtWidgetRid( widget );
-    PhTile_t    *clipped_tiles, *sib_tiles, *tile;
-    PhTile_t    *offset_tiles, *intersection = nsnull;
+    PhTile_t    *clipped_tiles=nsnull, *sib_tiles=nsnull, *tile=nsnull;
+    PhTile_t    *offset_tiles=nsnull, *intersection = nsnull;
 
 //    int flux = PtStartFlux( widget ) - 1;
 
@@ -532,7 +543,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     PhPoint_t  *pos;
     PhPoint_t  p;
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Moving children...\n" ));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll  Moving children...\n" ));
     for( w=PtWidgetChildFront( widget ); w; w=PtWidgetBrotherBehind( w )) 
     { 
       PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
@@ -554,7 +565,6 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
     if( GetSiblingClippedRegion( &clipped_tiles, &sib_tiles ) == NS_OK )
     {
-
       // Now we need to calc the actual blit tiles. We do this by making a copy
       // of the client-rect tiles (clipped_tiles) and offseting them by (-aDx,-aDy)
       // then intersecting them with the original clipped_tiles. These new tiles (there
@@ -590,10 +600,10 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
       // Blit individual tiles
       tile = intersection;
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Blitng tiles...\n" ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll  Bliting tiles...\n" ));
       while( tile )
       {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("    tile (%i,%i,%i,%i)\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y ));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll tile (%i,%i,%i,%i)\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y ));
         PhBlit( rid, &tile->rect, &offset );
         tile = tile->next;
       }
@@ -613,11 +623,11 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       clipped_tiles = PhClipTilings( clipped_tiles, offset_tiles, nsnull );
       tile = clipped_tiles;
 
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Damaging tiles...\n" ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll  Damaging tiles...\n" ));
       while( tile )
       {
         PtDamageExtent( widget, &(tile->rect));
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("    tile (%i,%i,%i,%i)\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y ));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll tile (%i,%i,%i,%i)\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y ));
         tile = tile->next;
       }
 
@@ -628,12 +638,12 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     }
     else
     {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clipped out!\n" ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll clipped out!\n" ));
     }
   }
   else
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  widget is NULL!\n" ));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll  widget is NULL!\n" ));
   }
   
   return NS_OK;
@@ -929,8 +939,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area+offset=<%d,%d,%d,%d>
 #if 0
     rect = damage->rect;
 #else
-//    PhTile_t *top = damage->next;
-    PhTile_t *top = damage;
+    PhTile_t *top = damage->next;
     rect = top->rect;	
     top=top->next;
     while (top)
@@ -1003,7 +1012,11 @@ printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.wi
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
         result = pWin->DispatchWindowEvent(&pev);
       }
-
+	  else
+	  {
+         printf("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw\n");
+	  }
+	  
 	  NS_RELEASE(pev.renderingContext);
     }
   }
@@ -1094,6 +1107,8 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
 {
   nsresult res = NS_ERROR_FAILURE;
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 0\n"));
+
   if(( btiles ) && ( ctiles ))
   {
     *btiles = PhGetTile();
@@ -1103,6 +1118,8 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
       PtWidget_t *w;
       PhArea_t   *area;
       PtArg_t    arg;
+
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 1\n"));
 
       PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
       if( PtGetResources( mWidget, 1, &arg ) == 0 )
@@ -1142,12 +1159,16 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
         if( *ctiles )
         {
           // We have siblings... now clip'em
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 5\n"));
+
           *btiles = PhClipTilings( *btiles, *ctiles, nsnull );
           res = NS_OK;
         }
       }
     }
   }
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion error failure \n"));
 
   return res;
 }
@@ -1164,7 +1185,7 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
 
   clip_tiles = last = nsnull;
 
-  if( mClipChildren )
+  if ( mClipChildren )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clipping children...\n"));
 
@@ -1192,37 +1213,7 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
     }
   }
 
-  #if 0
-  if( mClipSiblings )
-  {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clipping siblings...\n"));
-
-    for( w=PtWidgetBrotherInFront( mWidget ); w; w=PtWidgetBrotherInFront( w ))
-    {
-      if( PtWidgetIsRealized( w ))
-      {
-        PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
-        PtGetResources( w, 1, &arg );
-        tile = PhGetTile();
-        if( tile )
-        {
-          tile->rect.ul.x = area->pos.x;
-          tile->rect.ul.y = area->pos.y;
-          tile->rect.lr.x = area->pos.x + area->size.w - 1;
-          tile->rect.lr.y = area->pos.y + area->size.h - 1;
-          tile->next = NULL;
-          if( !clip_tiles )
-            clip_tiles = tile;
-          if( last )
-            last->next = tile;
-          last = tile;
-        }
-      }
-    }
-  }
-  #endif
-  
-  if( mClipSiblings )
+  if ( mClipSiblings )
   {
     PtWidget_t *node = mWidget;
     PhPoint_t  origin = { 0, 0 };
@@ -1352,10 +1343,11 @@ void nsWindow::ResizeHoldOff()
 
     if ( (mResizeProcID = PtAppAddWorkProc( nsnull, ResizeWorkProc, top )) != nsnull )
     {
+#if 1
       int Global_Widget_Hold_Count;
         Global_Widget_Hold_Count =  PtHold();
         PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeHoldOff PtHold Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
-
+#endif
         mResizeQueueInited = PR_TRUE;
     }
     else
@@ -1437,10 +1429,11 @@ void nsWindow::RemoveResizeWidget()
       mResizeQueueInited = PR_FALSE;
       PtWidget_t *top = PtFindDisjoint( mWidget );
 
+#if 1
       int Global_Widget_Hold_Count;
       Global_Widget_Hold_Count =  PtRelease();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::RemoveResizeWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
-
+#endif
       if( mResizeProcID )
         PtAppRemoveWorkProc( nsnull, mResizeProcID );
     }
@@ -1469,9 +1462,11 @@ int nsWindow::ResizeWorkProc( void *data )
     nsWindow::mResizeQueue = nsnull;
     nsWindow::mResizeQueueInited = PR_FALSE;
 
+#if 1
     int Global_Widget_Hold_Count;
       Global_Widget_Hold_Count =  PtRelease();
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWindow::ResizeWorkProc PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, NULL));
+#endif
   }
 
   return Pt_END;
