@@ -698,6 +698,10 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
     if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties))))
         return rv;
 
+// rjc - sort
+	nsVoidArray	*tempArray;
+        if ((tempArray = new nsVoidArray()) == nsnull)	return (NS_ERROR_OUT_OF_MEMORY);
+
     while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsCOMPtr<nsIRDFResource> property;
 
@@ -718,9 +722,6 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
             NS_ERROR("unable to get targets for property");
             return rv;
         }
-// rjc - sort
-	nsVoidArray	*tempArray;
-        if ((tempArray = new nsVoidArray()) == nsnull)	break;
 
         while (NS_SUCCEEDED(rv = assertions->Advance())) {
             nsCOMPtr<nsIRDFNode> value;
@@ -733,7 +734,10 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
             nsCOMPtr<nsIRDFResource> valueResource;
             if (NS_SUCCEEDED(value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)))
                 && IsTreeProperty(aElement, property)) {
+			/* XXX hack: always append value resource 1st!
+			       due to sort callback implementation */
                 	tempArray->AppendElement(valueResource);
+                	tempArray->AppendElement(property);
 /*                if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource))) {
                     NS_ERROR("unable to create tree row");
                     return rv;
@@ -748,6 +752,8 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
                 }
             }
         }
+    }
+
         unsigned long numElements = tempArray->Count();
         if (numElements > 0)
         {
@@ -775,24 +781,20 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
-        		rdf_qsort((void *)flatArray, numElements, sizeof(void *), rdfSortCallback, (void *)&sortInfo);
+        		rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *), rdfSortCallback, (void *)&sortInfo);
         		for (loop=0; loop<numElements; loop++)
         		{
-				nsIRDFResource	*valueResource;
-				
-				if ((valueResource = (nsIRDFResource *)flatArray[loop]) != nsnull)
+				if (NS_FAILED(rv = AddTreeRow(aElement,
+							(nsIRDFResource *)flatArray[loop+1],
+							(nsIRDFResource *)flatArray[loop])))
 				{
-					if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource)))
-					{
-						NS_ERROR("unable to create tree row");
-					}
+					NS_ERROR("unable to create tree row");
 				}
         		}
         		free(flatArray);
         	}
         }
         delete tempArray;
-    }
 
     if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
         // This is a normal return code from nsIRDFCursor::Advance()
