@@ -53,3 +53,6 @@ public:
 nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
 										   nsIMsgFolder *folder,	
 										   nsMessageFromMsgHdrEnumerator **messageEnumerator);
+
+nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority);
+

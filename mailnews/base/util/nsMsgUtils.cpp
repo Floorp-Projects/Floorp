@@ -151,3 +151,43 @@ nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
 	return NS_OK;
 
 }
+
+// Where should this live? It's a utility used to convert a string priority, e.g., "High, Low, Normal" to an enum.
+// Perhaps we should have an interface that groups together all these utilities...
+nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority)
+{
+	if (!outPriority)
+		return NS_ERROR_NULL_POINTER;
+
+	nsMsgPriority retPriority = nsMsgPriorityNormal;
+
+	if (PL_strcasestr(priority, "Normal") != NULL)
+		retPriority = nsMsgPriorityNormal;
+	else if (PL_strcasestr(priority, "Lowest") != NULL)
+		retPriority = nsMsgPriorityLowest;
+	else if (PL_strcasestr(priority, "Highest") != NULL)
+		retPriority = nsMsgPriorityHighest;
+	else if (PL_strcasestr(priority, "High") != NULL || 
+			 PL_strcasestr(priority, "Urgent") != NULL)
+		retPriority = nsMsgPriorityHigh;
+	else if (PL_strcasestr(priority, "Low") != NULL ||
+			 PL_strcasestr(priority, "Non-urgent") != NULL)
+		retPriority = nsMsgPriorityLow;
+	else if (PL_strcasestr(priority, "1") != NULL)
+		retPriority = nsMsgPriorityHighest;
+	else if (PL_strcasestr(priority, "2") != NULL)
+		retPriority = nsMsgPriorityHigh;
+	else if (PL_strcasestr(priority, "3") != NULL)
+		retPriority = nsMsgPriorityNormal;
+	else if (PL_strcasestr(priority, "4") != NULL)
+		retPriority = nsMsgPriorityLow;
+	else if (PL_strcasestr(priority, "5") != NULL)
+	    retPriority = nsMsgPriorityLowest;
+	else
+		retPriority = nsMsgPriorityNormal;
+	*outPriority = retPriority;
+	return NS_OK;
+		//return nsMsgNoPriority;
+}
+
+
