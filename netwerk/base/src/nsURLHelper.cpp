@@ -165,7 +165,7 @@ nsURLUnescape(char* str, char **result)
         return NS_OK;
     }
     register char *src = str;
-    static const char hexChars[] = "0123456789ABCDEF";
+    static const char hexChars[] = "0123456789ABCDEFabcdef";
     int len = PL_strlen(str);
 
     *result = (char *)nsMemory::Alloc(len + 1);
