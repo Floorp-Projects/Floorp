@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -26,11 +26,8 @@ var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"
 promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
-// we need the folder datasource and account manager datasource
-// for when trying to figure out which folder (or account) is next
-// in the folder pane.
-var gFolderDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=mailnewsfolders"].createInstance().QueryInterface(Components.interfaces.nsIRDFDataSource);
-
+// we need the account manager datasource for when trying
+// to figure out which account is next in the folder pane.
 var gAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].createInstance().QueryInterface(Components.interfaces.nsIRDFDataSource);
 
 // we can't compare the name to determine the order in the folder pane
@@ -38,35 +35,25 @@ var gAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;
 // as that's what we use to sort on in the folder pane
 var gNameProperty = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService).GetResource("http://home.netscape.com/NC-rdf#Name?sort=true");
 
-function compareServerSortOrder(a,b)
-{
-  return compareSortOrder(a,b, gAccountManagerDataSource);
-}
-
-function compareFolderSortOrder(a,b)
-{
-  return compareSortOrder(a,b, gFolderDataSource);
-}
-
-function compareSortOrder(folder1, folder2, datasource)
+function compareServerSortOrder(server1, server2)
 {
   var sortValue1, sortValue2;
 
   try {
-    var res1 = RDF.GetResource(folder1.URI);
-    sortValue1 = datasource.GetTarget(res1, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    var res1 = RDF.GetResource(server1.URI);
+    sortValue1 = gAccountManagerDataSource.GetTarget(res1, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + folder1.URI + "," + ex + "\n");
+    dump("XXX ex " + server1.URI + "," + ex + "\n");
     sortValue1 = "";
   }
 
   try {
-    var res2 = RDF.GetResource(folder2.URI);
-    sortValue2 = datasource.GetTarget(res2, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    var res2 = RDF.GetResource(server2.URI);
+    sortValue2 = gAccountManagerDataSource.GetTarget(res2, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + folder2.URI + "," + ex + "\n");
+    dump("XXX ex " + server2.URI + "," + ex + "\n");
     sortValue2 = "";
   }
 
@@ -76,6 +63,15 @@ function compareSortOrder(folder1, folder2, datasource)
     return 1;
   else 
     return 0;
+}
+
+function compareFolderSortKey(folder1, folder2) {
+
+  if (folder1.sortKey < folder2.sortKey)
+    return -1;
+  if (folder1.sortKey > folder2.sortKey)
+    return 1;
+  return 0;
 }
 
 function GetSubFoldersInFolderPaneOrder(folder)
@@ -88,7 +84,9 @@ function GetSubFoldersInFolderPaneOrder(folder)
   while (!done) {
     try {
       var element = subFolderEnumerator.currentItem();
-      msgFolders[msgFolders.length] = element.QueryInterface(Components.interfaces.nsIMsgFolder);
+	  var msgFolder = element.QueryInterface(Components.interfaces.nsIMsgFolder);
+      msgFolders[msgFolders.length] = msgFolder;
+	  
 
       subFolderEnumerator.next();
     }
@@ -98,118 +96,100 @@ function GetSubFoldersInFolderPaneOrder(folder)
   }
 
   // sort the subfolders
-  msgFolders.sort(compareFolderSortOrder);
+  msgFolders.sort(compareFolderSortKey);
   return msgFolders;
 }
 
-function IgnoreFolderForNextNavigation(folder)
+function FindNextChildFolder(folder)
 {
-   // if there is unread mail in the trash, sent, drafts, unsent messages
-   // or templates folders, we ignore it
-   // when doing cross folder "next" navigation
-   return IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES)
+  // if there is unread mail in the trash, sent, drafts, unsent messages
+  // or templates folders, we ignore it
+  // when doing cross folder "next" navigation
+  if (IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES))
+    return null;
+
+  if (folder.getNumUnread(false) > 0)
+    return folder;
+
+  if (folder.getNumUnread(true) > 0) {
+    var subFolders = GetSubFoldersInFolderPaneOrder(folder);
+    for (var i = 0; i < subFolders.length; i++) {
+      folder = FindNextChildFolder(subFolders[i]);
+      if (folder)
+        return folder;
+    }
+  }
+
+  return null;
 }
 
-function FindNextFolder(originalFolderURI)
+function FindNextFolder()
 {
-    if (!originalFolderURI) return null;
+  // look for the next folder, this will only look on the current account
+  // and below us, in the folder pane
+  // note use of gDBView restricts this function to message folders
+  // otherwise you could go next unread from a server
+  var folder = FindNextChildFolder(gDBView.msgFolder);
+  if (folder)
+    return folder;
 
-    var originalFolderResource = RDF.GetResource(originalFolderURI);
-    var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
-    if (!folder) return null;
+  // didn't find folder in children
+  // go up to the parent, and start at the folder after the current one
+  // unless we are at a server, in which case bail out.
+  for (folder = gDBView.msgFolder; !folder.isServer; ) {
 
-    var originalMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-    // don't land on folders or subfolder of folders
-    // that we don't care about
-    if(!IgnoreFolderForNextNavigation(originalMsgFolder)) {
-      if (originalMsgFolder.getNumUnread(false /* don't descend */) > 0) {
-        return originalMsgFolder.URI;
-      }
-    }
-
-    // first check the children
-    var msgFolders = GetSubFoldersInFolderPaneOrder(folder);
-    var i;
-    for (i=0;i<msgFolders.length;i++) {
-      var currentSubFolder = msgFolders[i];
-      // don't land on folders we don't care about
-      if(!IgnoreFolderForNextNavigation(currentSubFolder)) {
-        if (currentSubFolder.getNumUnread(false /* don't descend */) > 0) {
-           // if the child has unread, use it.
-           return currentSubFolder.URI;
-        }
-        else if (currentSubFolder.getNumUnread(true /* descend */) > 0) {
-           // if the child doesn't have any unread, but it's children do, recurse
-           return FindNextFolder(currentSubFolder.URI);
-        }
-      }
-    } 
- 
-    // didn't find folder in children
-    // go up to the parent, and start at the folder after the current one
-    // unless we are at a server, in which case bail out.
-    if (originalMsgFolder.isServer) {
-      return null;
-    }
-
-    msgFolders = GetSubFoldersInFolderPaneOrder(folder.parent);
-    for (i=0;i<msgFolders.length;i++) {
+    var parent = folder.parent;
+    var msgFolders = GetSubFoldersInFolderPaneOrder(parent);
+    for (var i = 0; i < msgFolders.length; i++)
       if (msgFolders[i].URI == folder.URI)
         break;
-    }
     
     // the current folder is at index i
     // start at the next folder after that, if there is one
-    if (i+1 < msgFolders.length) {
-      return FindNextFolder(msgFolders[i+1].URI);
+    while (++i < msgFolders.length) {
+      folder = FindNextChildFolder(msgFolders[i]);
+      if (folder)
+        return folder;
     }
  
-    try {
-      // none at this level after the current folder.  go up.
-      if (folder.parent && folder.parent.URI) { 
-        var parentMsgFolder = folder.parent.QueryInterface(Components.interfaces.nsIMsgFolder);
-        if (parentMsgFolder.isServer) {
-          // we've already search the parent's children below us.
-          // don't search the server again, return null and let
-          // the caller search the next server
-          return null;
-        }
-        else {
-          return FindNextFolder(folder.parent.URI);
-        }
-      }
-    }
-    catch (ex) {
-      dump("XXX ex " + ex + "\n");
-    }
+    // none at this level after the current folder.  go up.
+    folder = parent;
+  }
 
-    return null;
-}
+  // nothing in the current account, start with the next account (below)
+  // and try until we hit the bottom of the folder pane
 
-function GetTopLevelMessageForMessage(message, folder)
-{
-  if(!folder)
-    folder = message.msgFolder;
-
-  var thread = folder.getThreadForMessage(message);
-  var outIndex = new Object();
-  var rootHdr = thread.GetRootHdr(outIndex);
-
-  var topMessage = folder.createMessageFromMsgDBHdr(rootHdr);
-  return topMessage;
+  // start at the account after the current account
+  var rootFolders = GetRootFoldersInFolderPaneOrder();
+  for (i = 0; i < rootFolders.length; i++) {
+    if (rootFolders[i].URI == gDBView.msgFolder.server.serverURI)
+      break;
+  }
+  
+  for (var j = i + 1; j < rootFolders.length; j++) {
+    folder = FindNextChildFolder(rootFolders[j]);
+    if (folder)
+      return folder;
+  }
+  
+  // if nothing from the current account down to the bottom
+  // (of the folder pane), start again at the top.
+  for (j = 0; j <= i; j++) {
+    folder = FindNextChildFolder(rootFolders[j]);
+    if (folder)
+      return folder;
+  }
+  return null;
 }
 
 function GetRootFoldersInFolderPaneOrder()
 {
   var allServers = accountManager.allServers;
   var numServers = allServers.Count();
-  var i;
 
   var serversMsgFolders = Array(numServers);
-  for (i=0;i<numServers;i++) {
+  for (var i = 0; i < numServers; i++)
     serversMsgFolders[i] = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).RootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-  }
 
   // sort accounts, so they are in the same order as folder pane
   serversMsgFolders.sort(compareServerSortOrder);
@@ -232,67 +212,28 @@ function CrossFolderNavigation(type, supportsFolderPane )
   // not crossing folders, don't find next
   if (nextMode == 2) return null;
 
-  var originalFolderURI = gDBView.msgFolder.URI;
-  var nextFolderURI = null;
-  var done = false;
-  var startAtURI = originalFolderURI;
-  var i,j;
-  var rootFolders;
-
-  // look for the next folder, this will only look on the current account
-  // and below us, in the folder pane
-  nextFolderURI = FindNextFolder(startAtURI);
-
-  // if nothing in the current account, start with the next account (below)
-  // and try until we hit the bottom of the folder pane
-  if (!nextFolderURI) {
-    // start at the account after the current account
-    rootFolders = GetRootFoldersInFolderPaneOrder();
-    for (i=0;i<rootFolders.length;i++) {
-      if (rootFolders[i].URI == gDBView.msgFolder.server.serverURI)
-        break;
-    }
-
-    for (j=i+1; j<rootFolders.length; j++) {
-      nextFolderURI = FindNextFolder(rootFolders[j].URI);
-      if (nextFolderURI)
-        break;
-    }
- 
-    // if nothing from the current account down to the bottom
-    // (of the folder pane), start again at the top.
-    if (!nextFolderURI) {
-      for (j=0; j<rootFolders.length; j++) {
-        nextFolderURI = FindNextFolder(rootFolders[j].URI);
-        if (nextFolderURI)
-          break;
-      }
-    }
-  }
-
-  if (nextFolderURI && (originalFolderURI != nextFolderURI)) {
-    var nextFolderResource = RDF.GetResource(nextFolderURI);
-    var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  var folder = FindNextFolder();
+  if (folder && (gDBView.msgFolder.URI != folder.URI)) {
     switch (nextMode) {
       case 0:
         // do this unconditionally
         gNextMessageAfterLoad = type;
         if (supportsFolderPane)
-          SelectFolder(nextFolderURI);
+          SelectFolder(folder.URI);
         break;
       case 1:
       default:
-        var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ nextFolder.name ], 1); 
+        var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ folder.name ], 1); 
         if (promptService.confirm(window, promptText, promptText)) {
           gNextMessageAfterLoad = type;
           if (supportsFolderPane)
-            SelectFolder(nextFolderURI);
+            SelectFolder(folder.URI);
         }
         break;
     }
   }
 
-  return nextFolderURI;
+  return folder;
 }
 
 // from MailNewsTypes.h
@@ -313,7 +254,7 @@ function ScrollToMessage(type, wrap, selectMessage)
 
     // only scroll and select if we found something
     if ((resultId.value != nsMsgViewIndex_None) && (resultIndex.value != nsMsgViewIndex_None)) {
-        if (selectMessage) {
+        if (selectMessage){
             outlinerSelection.select(resultIndex.value);
         }
         EnsureRowInThreadOutlinerIsVisible(resultIndex.value);
