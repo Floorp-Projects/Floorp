@@ -4332,7 +4332,7 @@ nsBookmarksService::WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *
 
 
 nsresult
-nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm,
+nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm,
 			nsIRDFResource *parent, PRInt32 level, nsISupportsArray *parentArray)
 {
 	nsresult	rv = NS_OK;
@@ -4624,7 +4624,7 @@ nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 
 
 nsresult
-nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm,
+nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream& strm,
 	nsIRDFResource *child, nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst)
 {
 	nsresult		rv;

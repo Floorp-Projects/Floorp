@@ -76,10 +76,10 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 
 	nsresult GetBookmarksFile(nsFileSpec* aResult);
 	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
-	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
+	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
 	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
-	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
+	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *node,
 					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
 	PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
