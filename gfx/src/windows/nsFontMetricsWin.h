@@ -19,6 +19,8 @@
 #ifndef nsFontMetricsWin_h__
 #define nsFontMetricsWin_h__
 
+#include <windows.h>
+
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsString.h"
