@@ -87,13 +87,6 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) = 0;
 
   /**
-   * Test and see if this piece of content is synthetic. Synthetic content
-   * is content generated stylistically and should normally be ignored
-   * during content saving.
-   */
-  NS_IMETHOD IsSynthetic(PRBool& aResult) = 0;
-
-  /**
    * Normalizes an attribute string into an atom that represents the
    * qualified attribute name of the attribute. This method is intended
    * for character case conversion if the content object is case

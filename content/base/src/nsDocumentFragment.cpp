@@ -156,8 +156,6 @@ public:
     { return mInner.AppendChildTo(aKid, aNotify); }  
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     { return mInner.RemoveChildAt(aIndex, aNotify); }
-  NS_IMETHOD IsSynthetic(PRBool& aResult)
-    { return mInner.IsSynthetic(aResult); }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue,
                           PRBool aNotify)

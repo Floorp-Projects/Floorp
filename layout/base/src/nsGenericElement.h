@@ -181,10 +181,6 @@ public:
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
   nsresult GetParent(nsIContent*& aResult) const;
   nsresult SetParent(nsIContent* aParent);
-  nsresult IsSynthetic(PRBool& aResult) {
-    aResult = PR_FALSE;
-    return NS_OK;
-  }
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult GetTag(nsIAtom*& aResult) const;
   nsresult GetNodeInfo(nsINodeInfo*& aResult) const;
@@ -600,9 +596,6 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
   }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
-  }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \
   }                                                                        \
@@ -724,9 +717,6 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
-  }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
   }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \
@@ -850,9 +840,6 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
   }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
-  }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \
   }                                                                        \
@@ -972,9 +959,6 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
-  }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
   }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \
@@ -1100,9 +1084,6 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
   }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
-  }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \
   }                                                                        \
@@ -1218,9 +1199,6 @@ public:
   }                                                                        \
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               \
     return _g.RemoveChildAt(aIndex, aNotify);                              \
-  }                                                                        \
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
-    return _g.IsSynthetic(aResult);                                        \
   }                                                                        \
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
     return _g.GetNameSpaceID(aResult);                                     \

@@ -91,11 +91,6 @@ public:
   NS_IMETHOD GetParent(nsIContent*& aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
 
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {
-    aResult = PR_FALSE;
-    return NS_OK;
-  }
-
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {
     aID = kNameSpaceID_None;
     return NS_OK;

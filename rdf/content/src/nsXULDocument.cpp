@@ -1854,17 +1854,13 @@ nsXULDocument::SelectAll()
     for (i=0;i<n;i++) {
         nsIContent * child;
         mRootContent->ChildAt(i, child);
-        PRBool isSynthetic;
-        child->IsSynthetic(isSynthetic);
-        if (!isSynthetic) {
-            nsIAtom * atom;
-            child->GetTag(atom);
-            if (bodyStr.EqualsIgnoreCase(atom)) {
-                body = child;
-                break;
-            }
-
+        nsCOMPtr<nsIAtom> atom;
+        child->GetTag(*getter_AddRefs(atom));
+        if (bodyStr.EqualsIgnoreCase(atom)) {
+            body = child;
+            break;
         }
+
         NS_RELEASE(child);
     }
 

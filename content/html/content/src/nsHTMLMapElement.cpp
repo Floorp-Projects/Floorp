@@ -99,9 +99,6 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {               
     return mInner.RemoveChildAt(aIndex, aNotify);                              
   }                                                                        
-  NS_IMETHOD IsSynthetic(PRBool& aResult) {                                
-    return mInner.IsSynthetic(aResult);                                        
-  }                                                                        
   NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      
     return mInner.GetNameSpaceID(aResult);                                     
   }                                                                        

@@ -394,15 +394,6 @@ nsRDFDOMDataSource::createContentMiscArcs(nsIContent *content,
  
   appendLeafObject(name, value, arcs);
 
-  // syntetic
-  name.AssignWithConversion("synthetic");
-  
-  PRBool synthetic;
-  content->IsSynthetic(synthetic);
-  value.AssignWithConversion(synthetic ? "yes" : "no");
-
-  appendLeafObject(name, value, arcs);
-
   return NS_OK;
 }
 
