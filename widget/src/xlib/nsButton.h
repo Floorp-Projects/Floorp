@@ -48,10 +48,7 @@ class nsButton : public nsWidget,
   nsButton();
   virtual ~nsButton();
   
-  // from nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
-  NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
-  NS_IMETHOD_(nsrefcnt) Release(void);                                      
+  NS_DECL_ISUPPORTS_INHERITED
 
   // from nsIButton
   NS_IMETHOD SetLabel(const nsString& aText);

@@ -53,6 +53,8 @@ class nsIDeviceContextSpecPS : public nsISupports
 {
 
 public:
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_PS_IID)
+
   /*
    * If PR_TRUE, print to printer  
    * @update 

@@ -51,8 +51,8 @@ static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
  *	@update 12/21/98 dwc
  */
 nsDeviceContextPS :: nsDeviceContextPS()
+  : DeviceContextImpl()
 {
-  NS_INIT_REFCNT();
   mSpec = nsnull; 
   mParentDeviceContext = nsnull;
 }

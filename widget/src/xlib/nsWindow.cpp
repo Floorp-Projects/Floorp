@@ -206,7 +206,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 nsWindow::nsWindow() : nsWidget()
 {
-  NS_INIT_REFCNT();
   mName.Assign(NS_LITERAL_STRING("nsWindow"));
   mBackground = NS_RGB(255, 255, 255);
   mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);

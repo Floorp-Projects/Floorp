@@ -1063,7 +1063,7 @@ nsAppShell::HandleEnterEvent(XEvent *event, nsWidget *aWidget)
 
   // make sure this is in focus. This will do until I rewrite all the 
   // focus routines. KenF
-  aWidget->SetFocus(PR_FALSE);
+  aWidget->SetFocus();
 
   NS_ADDREF(aWidget);
   aWidget->DispatchWindowEvent(enterEvent);

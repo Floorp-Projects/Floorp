@@ -83,10 +83,10 @@ Display                    *nsClipboard::sDisplay;
 #define DEBUG_CLIPBOARD
 #endif
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
+NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
 nsClipboard::nsClipboard() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   sDisplay = xxlib_rgb_get_display(nsAppShell::GetXlibRgbHandle());
 

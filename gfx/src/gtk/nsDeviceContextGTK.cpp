@@ -119,9 +119,8 @@ nscoord nsDeviceContextGTK::mDpi = 96;
 static nsSystemFontsGTK *gSystemFonts = nsnull;
 
 nsDeviceContextGTK::nsDeviceContextGTK()
+  : DeviceContextImpl()
 {
-  NS_INIT_REFCNT();
-
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mDepth = 0 ;

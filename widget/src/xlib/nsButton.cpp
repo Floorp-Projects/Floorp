@@ -37,12 +37,8 @@
 
 #include "nsButton.h"
 
-NS_IMPL_ADDREF(nsButton)
-NS_IMPL_RELEASE(nsButton)
-
-nsButton::nsButton() : nsWidget() , nsIButton()
+nsButton::nsButton() : nsWidget()
 {
-  NS_INIT_REFCNT();
   mName.Assign(NS_LITERAL_STRING("nsButton"));
 }
 
@@ -50,21 +46,7 @@ nsButton::~nsButton()
 {
 }
 
-nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  
-  static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
-  if (aIID.Equals(kIButton)) {
-    *aInstancePtr = (void*) ((nsIButton*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  
-  return nsWidget::QueryInterface(aIID,aInstancePtr);
-}
+NS_IMPL_ISUPPORTS_INHERITED1(nsButton, nsWidget, nsIButton)
 
 NS_METHOD nsButton::SetLabel (const nsString &aText)
 {

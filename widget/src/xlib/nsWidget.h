@@ -103,7 +103,7 @@ public:
                     PRBool   aRepaint);
 
   NS_IMETHOD Enable(PRBool bState);
-  NS_IMETHOD              SetFocus(PRBool aRaise);
+  NS_IMETHOD              SetFocus(PRBool aRaise = PR_FALSE);
   NS_IMETHOD              SetName(const char * aName);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
   virtual nsIFontMetrics* GetFont(void);

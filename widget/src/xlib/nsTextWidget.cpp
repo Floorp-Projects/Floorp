@@ -37,12 +37,8 @@
 
 #include "nsTextWidget.h"
 
-NS_IMPL_ADDREF(nsTextWidget)
-NS_IMPL_RELEASE(nsTextWidget)
-
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
-  NS_INIT_REFCNT();
   mName.Assign(NS_LITERAL_STRING("nsTextWidget"));
 }
 
@@ -50,19 +46,7 @@ nsTextWidget::~nsTextWidget()
 {
 }
 
-nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-  
-  static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {
-    *aInstancePtr = (void*) ((nsITextWidget*)this);
-    NS_ADDREF_THIS();
-    result = NS_OK;
-  }
-  
-  return result;
-}
+NS_IMPL_ISUPPORTS_INHERITED1(nsTextWidget, nsWidget, nsITextWidget)
 
 NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect)

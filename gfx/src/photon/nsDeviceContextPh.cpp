@@ -59,9 +59,9 @@ nscoord nsDeviceContextPh::mDpi = 96;
 
 static nsHashtable* mFontLoadCache = nsnull;
 
-nsDeviceContextPh :: nsDeviceContextPh( ) {
-  NS_INIT_REFCNT();
-  
+nsDeviceContextPh :: nsDeviceContextPh( )
+  : DeviceContextImpl()
+  {
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
   mDepth = 0 ;
