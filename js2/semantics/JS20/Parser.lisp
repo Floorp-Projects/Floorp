@@ -9,7 +9,7 @@
 (defparameter *jw-source* 
   '((line-grammar code-grammar :lr-1 :program)
     
-    (%subsection :semantics "Errors")
+    (%section :semantics "Errors")
     
     (deftag syntax-error)
     (deftag reference-error)
@@ -27,6 +27,7 @@
     (deftype semantic-exception (union early-exit semantic-error))
     
     
+    (%section :semantics "Objects")
     (%subsection :semantics "Undefined")
     (deftag undefined)
     (deftype undefined (tag undefined))
@@ -74,10 +75,6 @@
     
     
     (%subsection :semantics "Classes")
-    (%text :comment "The first " (:type object) " is the this value, the " (:type (vector object)) " are the positional arguments, and the "
-           (:type (list-set named-argument)) " are the named arguments.")
-    (deftype invoker (-> (object (vector object) (list-set named-argument)) object))
-    
     (defrecord class
       (super class-opt)
       (prototype object)
@@ -92,9 +89,9 @@
     
     (define (make-built-in-class (superclass class-opt) (class-mod class-modifier) (primitive boolean)) class
       (const private-namespace namespace (new namespace "private"))
-      (function (call (this object :unused) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+      (function (call (this object :unused) (args argument-list :unused)) object
         (todo))
-      (function (construct (this object :unused) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+      (function (construct (this object :unused) (args argument-list :unused)) object
         (todo))
       (return (new class superclass null (list-set-of global-member) (list-set-of instance-member)
                    class-mod primitive private-namespace call construct)))
@@ -179,13 +176,13 @@
     (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
            (:tag null) " to be an instance of the classes " (:character-literal "Null") " and "
            (:character-literal "Object") " only.")
-    (define (instance-of (o object) (c class)) boolean
+    (define (has-type (o object) (c class)) boolean
       (return (is-ancestor c (object-type o))))
     
     (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
            (:tag null) " to be an instance of the classes " (:character-literal "Null") ", "
            (:character-literal "Object") ", and all other non-primitive classes.")
-    (define (relaxed-instance-of (o object) (c class)) boolean
+    (define (relaxed-has-type (o object) (c class)) boolean
       (const t class (object-type o))
       (return (or (is-ancestor c t)
                   (and (= o null object) (not (& primitive c))))))
@@ -242,24 +239,6 @@
       (return (u-int32-to-int32 (to-u-int32 x))))
     
     
-    (%subsection :semantics "References")
-    (deftag ref)
-    (deftype ref (tag ref))
-    (deftype reference (union object ref))
-    
-    (%text :comment "Read the " (:type reference) ".")
-    (define (read-reference (r reference)) object
-      (case r
-        (:narrow object (return r))
-        (:select ref (todo))))
-    
-    (%text :comment "Write " (:local v) " into the " (:type reference) " " (:local r) ".")
-    (define (write-reference (r reference) (v object :unused)) void
-      (case r
-        (:select object (throw reference-error))
-        (:select ref (todo))))
-    
-    
     (%subsection :semantics "Slots")
     (defrecord slot-id (type class))
     
@@ -280,7 +259,52 @@
       (value object :var))
     
     
-    (%subsection :semantics "Signatures")
+    (%section :semantics "References")
+    (deftuple qualified-name (namespace namespace) (name string))
+    
+    (deftuple partial-name (namespaces (list-set namespace)) (name string))
+    
+    (deftuple dot-reference
+      (base object)
+      (super class-opt)
+      (prop-name partial-name))
+    
+    (deftuple bracket-reference
+      (base object)
+      (super class-opt)
+      (args argument-list))
+    
+    (deftype reference (union object dot-reference bracket-reference))
+    
+    (%text :comment "Read the " (:type reference) " " (:local r) ".")
+    (define (read-reference (r reference)) object
+      (case r
+        (:narrow object (return r))
+        (:narrow dot-reference (return (read-property (& base r) (& prop-name r) (& super r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-read-table (& super r) null (& base r) (& args r))))))
+    
+    (%text :comment "Write " (:local v) " into the " (:type reference) " " (:local r) ".")
+    (define (write-reference (r reference) (v object)) void
+      (case r
+        (:select object (throw reference-error))
+        (:narrow dot-reference (write-property (& base r) (& prop-name r) (& super r) v))
+        (:narrow bracket-reference
+          (const args argument-list (new argument-list (append (vector v) (& positional (& args r))) (& named (& args r))))
+          (exec (unary-dispatch bracket-write-table (& super r) null (& base r) args)))))
+    
+    (define (delete-reference (r reference)) object
+      (case r
+        (:select object (throw reference-error))
+        (:narrow dot-reference (return (delete-property (& base r) (& prop-name r) (& super r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table (& super r) null (& base r) (& args r))))))
+    
+    (define (reference-base (r reference)) object
+      (case r
+        (:narrow object (return null))
+        (:narrow (union dot-reference bracket-reference) (return (& base r)))))
+    
+    
+    (%section :semantics "Signatures")
     (deftuple signature
       (required-positional (vector class))
       (optional-positional (vector class))
@@ -292,6 +316,17 @@
     (deftuple named-parameter
       (name string)
       (type class))
+    
+    
+    (%section :semantics "Argument Lists")
+    (deftuple named-argument (name string) (value object))
+    
+    (deftuple argument-list
+      (positional (vector object))
+      (named (list-set named-argument)))
+    
+    (%text :comment "The first " (:type object) " is the " (:character-literal "this") " value.")
+    (deftype invoker (-> (object argument-list) object))
     
     
     (%subsection :semantics "Members")
@@ -331,8 +366,6 @@
     (deftype member (union instance-member global-member))
     (deftype member-data (union instance-data global-data))
     (deftype member-data-opt (union null member-data))
-    
-    (deftuple qualified-name (namespace namespace) (name string))
     
     
     (define (most-specific-member (c class) (global boolean) (name string) (ns namespace) (indexable-only boolean)) member-data-opt
@@ -376,7 +409,7 @@
         (:narrow method
           (return (new method-closure o d)))
         (:narrow accessor
-          (return ((& call (& f d)) o (vector-of object) (list-set-of named-argument))))))
+          (return ((& call (& f d)) o (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
     (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (list-set namespace))) namespace-opt
       (const s class-opt (& super c))
@@ -408,9 +441,16 @@
         (return ns))
       (return public-namespace))
     
-    (define (read-unqualified-property (o object) (name string) (uses (list-set namespace))) object
-      (const ns namespace (resolve-object-namespace o name uses))
-      (return (read-qualified-property o name ns false)))
+    (define (read-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused)) object
+      (todo))
+    ;(const ns namespace (resolve-object-namespace o name uses))
+    ;(return (read-qualified-property o name ns false)))
+    
+    (define (write-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused) (new-value object :unused)) void
+      (todo))
+    
+    (define (delete-property (o object :unused) (prop-name partial-name :unused) (super class-opt :unused)) boolean
+      (todo))
     
     (define (write-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused) (new-value object :unused)) void
       (todo))
@@ -419,25 +459,25 @@
       (todo))
     
     
-    (%subsection :semantics "Verification Environments")
-    (deftuple verify-env
+    (%section :semantics "Static Constraint Environments")
+    (deftuple constraint-env
       (enclosing-class class-opt)
       (labels (vector string))
       (can-return boolean)
       (constants (vector definition)))
     
-    (define initial-verify-env verify-env (new verify-env null (vector-of string) false (vector-of definition)))
+    (define initial-constraint-env constraint-env (new constraint-env null (vector-of string) false (vector-of definition)))
     
-    (%text :comment "Return a " (:type verify-env) " with label " (:local label) " prepended to " (:local s) ".")
-    (define (add-label (t verify-env) (label string)) verify-env
-      (return (new verify-env (& enclosing-class t) (append (vector label) (& labels t)) (& can-return t) (& constants t))))
+    (%text :comment "Return a " (:type constraint-env) " with label " (:local label) " prepended to " (:local s) ".")
+    (define (add-label (t constraint-env) (label string)) constraint-env
+      (return (new constraint-env (& enclosing-class t) (append (vector label) (& labels t)) (& can-return t) (& constants t))))
     
     (%text :comment "Return " (:tag true) " if this code is inside a class body.")
-    (define (inside-class (s verify-env)) boolean
+    (define (inside-class (s constraint-env)) boolean
       (return (/= (& enclosing-class s) null class-opt)))
     
     
-    (%subsection :semantics "Dynamic Environments")
+    (%section :semantics "Dynamic Environments")
     (defrecord dynamic-env
       (parent dynamic-env-opt)
       (enclosing-class class-opt)
@@ -447,8 +487,11 @@
       (writer-passthroughs (vector qualified-name) :var))
     (deftype dynamic-env-opt (union null dynamic-env))
     
-    (%text :comment "If the " (:type dynamic-env) " is from within a class" :apostrophe "s body, return that class; otherwise, return " (:tag null) ".")
-    (define (lexical-class (e dynamic-env :unused)) class-opt
+    (%text :comment "If the " (:type dynamic-env) " is from within a class" :apostrophe "s body, return that class; otherwise, throw an exception.")
+    (define (lexical-class (e dynamic-env :unused)) class
+      (todo))
+    
+    (define (dynamic-env-uses (e dynamic-env :unused)) (list-set namespace)
       (todo))
     
     (define initial-dynamic-env dynamic-env (new dynamic-env null null
@@ -464,25 +507,27 @@
     
     (define (lookup-variable (e dynamic-env :unused) (name string :unused) (internal-is-namespace boolean :unused)) reference
       (todo))
-
+    
     (define (lookup-qualified-variable (e dynamic-env :unused) (namespace namespace :unused) (name string :unused)) reference
       (todo))
     
+    (%text :comment "Return the value of " (:character-literal "this") ". Throw an exception if there is no " (:character-literal "this") " defined.")
+    (define (lookup-this (e dynamic-env :unused)) object
+      (todo))
     
-    (%subsection :semantics "Unary Operators")
-    (deftuple named-argument (name string) (value object))
     
+    (%section :semantics "Unary Operators")
     (deftuple unary-method 
       (operand-type class)
-      (op (-> (object object (vector object) (list-set named-argument)) object)))
+      (op (-> (object object argument-list) object)))
     
     (defrecord unary-table
       (methods (list-set unary-method) :var))
     
     (%text :comment "Return " (:tag true) " if " (:local v) " is a member of class " (:local c) " and, if "
            (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
-    (define (limited-instance-of (v object) (c class) (limit class-opt)) boolean
-      (if (instance-of v c)
+    (define (limited-has-type (v object) (c class) (limit class-opt)) boolean
+      (if (has-type v c)
         (if (in limit (tag null) :narrow-false)
           (return true)
           (return (is-proper-ancestor c limit)))
@@ -490,70 +535,68 @@
     
     (%text :comment "Dispatch the unary operator described by " (:local table) " applied to the " (:character-literal "this")
            " value " (:local this) ", the first argument " (:local op)
-           ", a vector of zero or more additional positional arguments " (:local positional-args)
-           ", and a set of zero or more named arguments " (:local named-args)
+           ", and optionally other arguments " (:local args)
            ". If " (:local limit) " is non-" (:tag null)
            ", restrict the lookup to operators defined on the proper ancestors of " (:local limit) ".")
-    (define (unary-dispatch (table unary-table) (limit class-opt) (this object) (op object) (positional-args (vector object))
-                            (named-args (list-set named-argument))) object
+    (define (unary-dispatch (table unary-table) (limit class-opt) (this object) (op object) (args argument-list)) object
       (const applicable-ops (list-set unary-method)
-        (map (& methods table) m m (limited-instance-of op (& operand-type m) limit)))
+        (map (& methods table) m m (limited-has-type op (& operand-type m) limit)))
       (reserve best)
       (if (some applicable-ops best
                 (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
-        (return ((& op best) this op positional-args named-args))
+        (return ((& op best) this op args))
         (throw property-not-found-error)))
     
     
     (%subsection :semantics "Unary Operator Tables")
     
-    (define (plus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+    (define (plus-object (this object :unused) (a object) (args argument-list :unused)) object
       (return (to-number a)))
     
-    (define (minus-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+    (define (minus-object (this object :unused) (a object) (args argument-list :unused)) object
       (return (float64-negate (to-number a))))
     
-    (define (bitwise-not-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+    (define (bitwise-not-object (this object :unused) (a object) (args argument-list :unused)) object
       (const i integer (to-int32 (to-number a)))
       (return (real-to-float64 (bitwise-xor i -1))))
     
-    (define (increment-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+    (define (increment-object (this object :unused) (a object) (args argument-list :unused)) object
       (const x object (unary-plus a))
       (return (binary-dispatch add-table null null x 1.0)))
     
-    (define (decrement-object (this object :unused) (a object) (positional-args (vector object) :unused) (named-args (list-set named-argument) :unused)) object
+    (define (decrement-object (this object :unused) (a object) (args argument-list :unused)) object
       (const x object (unary-plus a))
       (return (binary-dispatch subtract-table null null x 1.0)))
     
-    (define (call-object (this object) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
+    (define (call-object (this object) (a object) (args argument-list)) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
-        (:narrow (union class instance) (return ((& call a) this positional-args named-args)))
-        (:narrow method-closure (return (call-object (& this a) (& f (& method a)) positional-args named-args)))))
+        (:narrow (union class instance) (return ((& call a) this args)))
+        (:narrow method-closure (return (call-object (& this a) (& f (& method a)) args)))))
     
-    (define (construct-object (this object) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
+    (define (construct-object (this object) (a object) (args argument-list)) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute method-closure) (throw type-error))
-        (:narrow (union class instance) (return ((& construct a) this positional-args named-args)))))
+        (:narrow (union class instance) (return ((& construct a) this args)))))
     
-    (define (bracket-read-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
-      (rwhen (or (/= (length positional-args) 1) (nonempty named-args))
+    (define (bracket-read-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
         (throw argument-mismatch-error))
-      (const name string (to-string (nth positional-args 0)))
+      (const name string (to-string (nth (& positional args) 0)))
       (return (read-qualified-property a name public-namespace true)))
     
-    (define (bracket-write-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
-      (rwhen (or (/= (length positional-args) 2) (nonempty named-args))
+    (define (bracket-write-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 2) (nonempty (& named args)))
         (throw argument-mismatch-error))
-      (const new-value object (nth positional-args 0))
-      (const name string (to-string (nth positional-args 1)))
+      (const new-value object (nth (& positional args) 0))
+      (const name string (to-string (nth (& positional args) 1)))
       (write-qualified-property a name public-namespace true new-value)
-      (return new-value))
+      (return undefined))
     
-    (define (bracket-delete-object (this object :unused) (a object) (positional-args (vector object)) (named-args (list-set named-argument))) object
-      (rwhen (or (/= (length positional-args) 1) (nonempty named-args))
+    (define (bracket-delete-object (this object :unused) (a object) (args argument-list)) object
+      (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
         (throw argument-mismatch-error))
-      (const name string (to-string (nth positional-args 0)))
+      (const name string (to-string (nth (& positional args) 0)))
       (return (delete-qualified-property a name public-namespace true)))
     
     
@@ -570,13 +613,13 @@
     
     
     (define (unary-plus (a object)) object
-      (return (unary-dispatch plus-table null null a (vector-of object) (list-set-of named-argument))))
+      (return (unary-dispatch plus-table null null a (new argument-list (vector-of object) (list-set-of named-argument)))))
     
     (define (unary-not (a object)) object
       (return (not (to-boolean a))))
     
     
-    (%subsection :semantics "Binary Operators")
+    (%section :semantics "Binary Operators")
     (deftuple binary-method
       (left-type class)
       (right-type class)
@@ -598,8 +641,8 @@
            ", restrict the lookup to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
     (define (binary-dispatch (table binary-table) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
       (const applicable-ops (list-set binary-method)
-        (map (& methods table) m m (and (limited-instance-of left (& left-type m) left-limit)
-                                        (limited-instance-of right (& right-type m) right-limit))))
+        (map (& methods table) m m (and (limited-has-type left (& left-type m) left-limit)
+                                        (limited-has-type right (& right-type m) right-limit))))
       (reserve best)
       (if (some applicable-ops best
                 (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
@@ -751,18 +794,19 @@
       (production :identifier (named) identifier-named (name "named")))
     (%print-actions)
     
-    (rule :qualifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) namespace)))
+    (%subsection "Qualified Identifiers")
+    (rule :qualifier ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) namespace)))
       (production :qualifier (:identifier) qualifier-identifier
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval e)
          (const a object (read-reference (lookup-variable e (name :identifier) true)))
          (rwhen (not-in a namespace :narrow-false) (throw type-error))
          (return a)))
       (production :qualifier (public) qualifier-public
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return public-namespace)))
       (production :qualifier (private) qualifier-private
-        ((verify s)
+        ((constrain s)
          (rwhen (not (inside-class s))
            (throw syntax-error)))
         ((eval e)
@@ -770,111 +814,133 @@
          (rwhen (in q null :narrow-false) (bottom))
          (return (& private-namespace q)))))
     
-    (rule :simple-qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :simple-qualified-identifier ((constrain (-> (constraint-env) void)) (name (-> (dynamic-env) partial-name)) (eval (-> (dynamic-env) reference)))
       (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
+        ((name e) (return (new partial-name (dynamic-env-uses e) (name :identifier))))
         ((eval e) (return (lookup-variable e (name :identifier) false))))
       (production :simple-qualified-identifier (:qualifier \:\: :identifier) simple-qualified-identifier-qualifier
-        (verify (verify :qualifier))
+        (constrain (constrain :qualifier))
+        ((name e)
+         (const q namespace ((eval :qualifier) e))
+         (return (new partial-name (list-set q) (name :identifier))))
         ((eval e)
          (const q namespace ((eval :qualifier) e))
          (return (lookup-qualified-variable e q (name :identifier))))))
     
-    (rule :expression-qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :expression-qualified-identifier ((constrain (-> (constraint-env) void)) (name (-> (dynamic-env) partial-name)) (eval (-> (dynamic-env) reference)))
       (production :expression-qualified-identifier (:paren-expression \:\: :identifier) expression-qualified-identifier-identifier
-        ((verify s)
-         ((verify :paren-expression) s)
+        ((constrain s)
+         ((constrain :paren-expression) s)
          (todo))
+        ((name e)
+         (const q object (read-reference ((eval :paren-expression) e)))
+         (rwhen (not-in q namespace :narrow-false) (throw type-error))
+         (return (new partial-name (list-set q) (name :identifier))))
         ((eval e)
-         (const a object (read-reference ((eval :paren-expression) e)))
-         (rwhen (not-in a namespace :narrow-false) (throw type-error))
-         (return (lookup-qualified-variable e a (name :identifier))))))
+         (const q object (read-reference ((eval :paren-expression) e)))
+         (rwhen (not-in q namespace :narrow-false) (throw type-error))
+         (return (lookup-qualified-variable e q (name :identifier))))))
     
-    (rule :qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :qualified-identifier ((constrain (-> (constraint-env) void)) (name (-> (dynamic-env) partial-name)) (eval (-> (dynamic-env) reference)))
       (production :qualified-identifier (:simple-qualified-identifier) qualified-identifier-simple
-        (verify (verify :simple-qualified-identifier))
+        (constrain (constrain :simple-qualified-identifier))
+        (name (name :simple-qualified-identifier))
         (eval (eval :simple-qualified-identifier)))
       (production :qualified-identifier (:expression-qualified-identifier) qualified-identifier-expression
-        (verify (verify :expression-qualified-identifier))
+        (constrain (constrain :expression-qualified-identifier))
+        (name (name :expression-qualified-identifier))
         (eval (eval :expression-qualified-identifier))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Unit Expressions")
-    (rule :unit-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :unit-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :unit-expression (:paren-list-expression) unit-expression-paren-list-expression
-        (verify (verify :paren-list-expression))
+        (constrain (constrain :paren-list-expression))
         (eval (eval :paren-list-expression)))
       (production :unit-expression ($number :no-line-break $string) unit-expression-number-with-unit
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused)) (todo)))
       (production :unit-expression (:unit-expression :no-line-break $string) unit-expression-unit-expression-with-unit
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused)) (todo))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     (%subsection "Primary Expressions")
-    (rule :primary-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :primary-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :primary-expression (null) primary-expression-null
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return null)))
       (production :primary-expression (true) primary-expression-true
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return true)))
       (production :primary-expression (false) primary-expression-false
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return false)))
       (production :primary-expression (public) primary-expression-public
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return public-namespace)))
       (production :primary-expression ($number) primary-expression-number
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return (eval $number))))
       (production :primary-expression ($string) primary-expression-string
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (return (eval $string))))
       (production :primary-expression (this) primary-expression-this
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused)) (todo)))
+        ((constrain (s :unused)) (todo))
+        (eval lookup-this))
       (production :primary-expression ($regular-expression) primary-expression-regular-expression
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)))
         ((eval (e :unused)) (todo)))
       (production :primary-expression (:unit-expression) primary-expression-unit-expression
-        (verify (verify :unit-expression))
+        (constrain (constrain :unit-expression))
         (eval (eval :unit-expression)))
       (production :primary-expression (:array-literal) primary-expression-array-literal
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused)) (todo)))
       (production :primary-expression (:object-literal) primary-expression-object-literal
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused)) (todo)))
       (production :primary-expression (:function-expression) primary-expression-function-expression
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused)) (todo))))
-    (%print-actions)
+        (constrain (constrain :function-expression))
+        (eval (eval :function-expression))))
     
-    (rule :paren-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :paren-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :paren-expression (\( (:assignment-expression allow-in) \)) paren-expression-assignment-expression
-        (verify (verify :assignment-expression))
+        (constrain (constrain :assignment-expression))
         (eval (eval :assignment-expression))))
     
-    (rule :paren-list-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :paren-list-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (eval-as-list (-> (dynamic-env) (vector object))))
       (production :paren-list-expression (:paren-expression) paren-list-expression-paren-expression
-        (verify (verify :paren-expression))
-        (eval (eval :paren-expression)))
+        (constrain (constrain :paren-expression))
+        (eval (eval :paren-expression))
+        ((eval-as-list e)
+         (const elt object (read-reference ((eval :paren-expression) e)))
+         (return (vector elt))))
       (production :paren-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) paren-list-expression-list-expression
-        ((verify s)
-         ((verify :list-expression) s)
-         ((verify :assignment-expression) s))
+        ((constrain s)
+         ((constrain :list-expression) s)
+         ((constrain :assignment-expression) s))
         ((eval e)
          (exec (read-reference ((eval :list-expression) e)))
-         (return ((eval :assignment-expression) e)))))
-    (%print-actions)
+         (return ((eval :assignment-expression) e)))
+        ((eval-as-list e)
+         (const elts (vector object) ((eval-as-list :list-expression) e))
+         (const elt object (read-reference ((eval :assignment-expression) e)))
+         (return (append elts (vector elt))))))
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Function Expressions")
-    (production :function-expression (function :function-signature :block) function-expression-anonymous)
-    (production :function-expression (function :identifier :function-signature :block) function-expression-named)
+    (rule :function-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :function-expression (function :function-signature :block) function-expression-anonymous
+        ((constrain (s :unused)) (todo))
+        ((eval (e :unused)) (todo)))
+      (production :function-expression (function :identifier :function-signature :block) function-expression-named
+        ((constrain (s :unused)) (todo))
+        ((eval (e :unused)) (todo))))
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Object Literals")
@@ -884,14 +950,32 @@
     (production :field-list (:literal-field) field-list-one)
     (production :field-list (:field-list \, :literal-field) field-list-more)
     
-    (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression)
+    (rule :literal-field ((constrain (-> (constraint-env) (list-set string))) (eval (-> (dynamic-env) named-argument)))
+      (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression
+        ((constrain s)
+         (const names (list-set string) ((constrain :field-name) s))
+         ((constrain :assignment-expression) s)
+         (return names))
+        ((eval e)
+         (const name string ((eval :field-name) e))
+         (const value object (read-reference ((eval :assignment-expression) e)))
+         (return (new named-argument name value)))))
     
-    (production :field-name (:identifier) field-name-identifier)
-    (production :field-name ($string) field-name-string)
-    (production :field-name ($number) field-name-number)
-    (? js2
-      (production :field-name (:paren-expression) field-name-paren-expression))
-    (%print-actions)
+    (rule :field-name ((constrain (-> (constraint-env) (list-set string))) (eval (-> (dynamic-env) string)))
+      (production :field-name (:identifier) field-name-identifier
+        ((constrain (s :unused)) (return (list-set (name :identifier))))
+        ((eval (e :unused)) (return (name :identifier))))
+      (production :field-name ($string) field-name-string
+        ((constrain (s :unused)) (return (list-set (eval $string))))
+        ((eval (e :unused)) (return (eval $string))))
+      (production :field-name ($number) field-name-number
+        ((constrain (s :unused)) (todo))
+        ((eval (e :unused)) (todo)))
+      (? js2
+        (production :field-name (:paren-expression) field-name-paren-expression
+          ((constrain (s :unused)) (todo))
+          ((eval (e :unused)) (todo)))))
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Array Literals")
@@ -902,133 +986,312 @@
     
     (production :literal-element () literal-element-none)
     (production :literal-element ((:assignment-expression allow-in)) literal-element-assignment-expression)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
-    (%subsection "Super Operator")
-    (rule :super-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (%subsection "Super Expressions")
+    (rule :super-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) object)) (super (-> (dynamic-env) class)))
       (production :super-expression (super) super-expression-super
-        ((verify s)
+        ((constrain s)
          (rwhen (not (inside-class s))
            (throw syntax-error)))
-        ((eval (e :unused)) (todo))
+        (eval lookup-this)
         ((super e) (return (lexical-class e))))
       (production :super-expression (:full-super-expression) super-expression-full-super-expression
-        ((verify s)
+        (constrain (constrain :full-super-expression))
+        (eval (eval :full-super-expression))
+        (super (super :full-super-expression))))
+    
+    (rule :full-super-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) object)) (super (-> (dynamic-env) class)))
+      (production :full-super-expression (super :paren-expression) full-super-expression-super-paren-expression
+        ((constrain s)
          (rwhen (not (inside-class s))
            (throw syntax-error))
-         (todo))
-        ((eval (e :unused)) (todo))
+         ((constrain :paren-expression) s))
+        ((eval e)
+         (const a object (read-reference ((eval :paren-expression) e)))
+         (const c class (lexical-class e))
+         (rwhen (not (has-type a c))
+           (throw type-error))
+         (return a))
         ((super e) (return (lexical-class e)))))
-    
-    (production :full-super-expression (super :paren-expression) full-super-expression-super-paren-expression)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
-    (%subsection "Postfix Operators")
-    (rule :postfix-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (%subsection "Postfix Expressions")
+    (rule :postfix-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused)) (todo)))
+        (constrain (constrain :attribute-expression))
+        (eval (eval :attribute-expression)))
       (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused)) (todo)))
+        (constrain (constrain :full-postfix-expression))
+        (eval (eval :full-postfix-expression)))
       (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression
-        ((verify (s :unused)) (todo))
-        ((eval (e :unused)) (todo))))
-    (%print-actions)
+        (constrain (constrain :short-new-expression))
+        (eval (eval :short-new-expression))))
     
-    (rule :postfix-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule :postfix-expression-or-super ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression
-        (verify (verify :postfix-expression))
+        (constrain (constrain :postfix-expression))
         (eval (eval :postfix-expression))
         ((super (e :unused)) (return null)))
       (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
     
-    ;(rule :attribute-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier)
-    (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator)
-    (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call)
+    (rule :attribute-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
+        (constrain (constrain :simple-qualified-identifier))
+        (eval (eval :simple-qualified-identifier)))
+      (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator
+        ((constrain s)
+         ((constrain :attribute-expression) s)
+         ((constrain :member-operator) s))
+        ((eval e)
+         (const a object (read-reference ((eval :attribute-expression) e)))
+         (return ((eval :member-operator) e a))))
+      (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call
+        ((constrain s)
+         ((constrain :attribute-expression) s)
+         ((constrain :arguments) s))
+        ((eval e)
+         (const r reference ((eval :attribute-expression) e))
+         (const f object (read-reference r))
+         (const base object (reference-base r))
+         (const args argument-list ((eval :arguments) e))
+         (return (unary-dispatch call-table null base f args)))))
     
-    ;(rule :full-postfix-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression)
-    (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier)
-    (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
-    (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
-    (production :full-postfix-expression (:super-expression :dot-operator) full-postfix-expression-super-dot-operator)
-    (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
-    (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call)
-    (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment)
-    (production :full-postfix-expression (:postfix-expression-or-super :no-line-break --) full-postfix-expression-decrement)
+    (rule :full-postfix-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression
+        (constrain (constrain :primary-expression))
+        (eval (eval :primary-expression)))
+      (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier
+        (constrain (constrain :expression-qualified-identifier))
+        (eval (eval :expression-qualified-identifier)))
+      (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression
+        (constrain (constrain :full-new-expression))
+        (eval (eval :full-new-expression)))
+      (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator
+        ((constrain s)
+         ((constrain :full-postfix-expression) s)
+         ((constrain :member-operator) s))
+        ((eval e)
+         (const a object (read-reference ((eval :full-postfix-expression) e)))
+         (return ((eval :member-operator) e a))))
+      (production :full-postfix-expression (:super-expression :dot-operator) full-postfix-expression-super-dot-operator
+        ((constrain s)
+         ((constrain :super-expression) s)
+         ((constrain :dot-operator) s))
+        ((eval e)
+         (const a object (read-reference ((eval :super-expression) e)))
+         (const sa class ((super :super-expression) e))
+         (return ((eval :dot-operator) e a sa))))
+      (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
+        ((constrain s)
+         ((constrain :full-postfix-expression) s)
+         ((constrain :arguments) s))
+        ((eval e)
+         (const r reference ((eval :full-postfix-expression) e))
+         (const f object (read-reference r))
+         (const base object (reference-base r))
+         (const args argument-list ((eval :arguments) e))
+         (return (unary-dispatch call-table null base f args))))
+      (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call
+        ((constrain s)
+         ((constrain :full-super-expression) s)
+         ((constrain :arguments) s))
+        ((eval e)
+         (const r reference ((eval :full-super-expression) e))
+         (const f object (read-reference r))
+         (const base object (reference-base r))
+         (const sf class ((super :full-super-expression) e))
+         (const args argument-list ((eval :arguments) e))
+         (return (unary-dispatch call-table sf base f args))))
+      (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment
+        (constrain (constrain :postfix-expression-or-super))
+        ((eval e)
+         (const r reference ((eval :postfix-expression-or-super) e))
+         (const a object (read-reference r))
+         (const sa class-opt ((super :postfix-expression-or-super) e))
+         (const b object (unary-dispatch increment-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (write-reference r b)
+         (return a)))
+      (production :full-postfix-expression (:postfix-expression-or-super :no-line-break --) full-postfix-expression-decrement
+        (constrain (constrain :postfix-expression-or-super))
+        ((eval e)
+         (const r reference ((eval :postfix-expression-or-super) e))
+         (const a object (read-reference r))
+         (const sa class-opt ((super :postfix-expression-or-super) e))
+         (const b object (unary-dispatch decrement-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (write-reference r b)
+         (return a))))
     
-    ;(rule :full-new-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
-    (production :full-new-expression (new :full-super-expression :arguments) full-new-expression-super-new)
+    (rule :full-new-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new
+        ((constrain s)
+         ((constrain :full-new-subexpression) s)
+         ((constrain :arguments) s))
+        ((eval e)
+         (const f object (read-reference ((eval :full-new-subexpression) e)))
+         (const args argument-list ((eval :arguments) e))
+         (return (unary-dispatch construct-table null null f args))))
+      (production :full-new-expression (new :full-super-expression :arguments) full-new-expression-super-new
+        ((constrain s)
+         ((constrain :full-super-expression) s)
+         ((constrain :arguments) s))
+        ((eval e)
+         (const f object (read-reference ((eval :full-super-expression) e)))
+         (const sf class ((super :full-super-expression) e))
+         (const args argument-list ((eval :arguments) e))
+         (return (unary-dispatch construct-table sf null f args)))))
     
-    ;(rule :full-new-subexpression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression)
-    (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier)
-    (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression)
-    (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator)
-    (production :full-new-subexpression (:super-expression :dot-operator) full-new-subexpression-super-dot-operator)
+    (rule :full-new-subexpression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression
+        (constrain (constrain :primary-expression))
+        (eval (eval :primary-expression)))
+      (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier
+        (constrain (constrain :qualified-identifier))
+        (eval (eval :qualified-identifier)))
+      (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression
+        (constrain (constrain :full-new-expression))
+        (eval (eval :full-new-expression)))
+      (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator
+        ((constrain s)
+         ((constrain :full-new-subexpression) s)
+         ((constrain :member-operator) s))
+        ((eval e)
+         (const a object (read-reference ((eval :full-new-subexpression) e)))
+         (return ((eval :member-operator) e a))))
+      (production :full-new-subexpression (:super-expression :dot-operator) full-new-subexpression-super-dot-operator
+        ((constrain s)
+         ((constrain :super-expression) s)
+         ((constrain :dot-operator) s))
+        ((eval e)
+         (const a object (read-reference ((eval :super-expression) e)))
+         (const sa class ((super :super-expression) e))
+         (return ((eval :dot-operator) e a sa)))))
     
-    ;(rule :short-new-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :short-new-expression (new :short-new-subexpression) short-new-expression-new)
-    (production :short-new-expression (new :super-expression) short-new-expression-super-new)
+    (rule :short-new-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :short-new-expression (new :short-new-subexpression) short-new-expression-new
+        (constrain (constrain :short-new-subexpression))
+        ((eval e)
+         (const f object (read-reference ((eval :short-new-subexpression) e)))
+         (return (unary-dispatch construct-table null null f (new argument-list (vector-of object) (list-set-of named-argument))))))
+      (production :short-new-expression (new :super-expression) short-new-expression-super-new
+        (constrain (constrain :super-expression))
+        ((eval e)
+         (const f object (read-reference ((eval :super-expression) e)))
+         (const sf class ((super :super-expression) e))
+         (return (unary-dispatch construct-table sf null f (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
-    ;(rule :short-new-subexpression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full)
-    (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
-    (%print-actions)
+    (rule :short-new-subexpression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
+        (constrain (constrain :full-new-subexpression))
+        (eval (eval :full-new-subexpression)))
+      (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short
+        (constrain (constrain :short-new-expression))
+        (eval (eval :short-new-expression))))
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
-    ;(rule :member-operator ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :member-operator (:dot-operator) member-operator-dot-operator)
-    (production :member-operator (\. :paren-expression) member-operator-indirect)
+    (%subsection "Member Operators")
+    (rule :member-operator ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) reference)))
+      (production :member-operator (:dot-operator) member-operator-dot-operator
+        (constrain (constrain :dot-operator))
+        ((eval e a) (return ((eval :dot-operator) e a null))))
+      (production :member-operator (\. :paren-expression) member-operator-indirect
+        (constrain (constrain :paren-expression))
+        ((eval (e :unused) (a :unused)) (todo))))
     
-    ;(rule :dot-operator ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
-    (production :dot-operator (:brackets) dot-operator-brackets)
+    (rule :dot-operator ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object class-opt) reference)))
+      (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier
+        (constrain (constrain :qualified-identifier))
+        ((eval e a sa)
+         (const n partial-name ((name :qualified-identifier) e))
+         (return (new dot-reference a sa n))))
+      (production :dot-operator (:brackets) dot-operator-brackets
+        (constrain (constrain :brackets))
+        ((eval e a sa)
+         (const args argument-list ((eval :brackets) e))
+         (return (new bracket-reference a sa args)))))
     
-    ;(rule :brackets ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :brackets ([ ]) brackets-none)
-    (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed)
-    (production :brackets ([ :named-argument-list ]) brackets-named)
+    (rule :brackets ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) argument-list)))
+      (production :brackets ([ ]) brackets-none
+        ((constrain (s :unused)))
+        ((eval (e :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
+      (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed
+        (constrain (constrain :list-expression))
+        ((eval e)
+         (const positional (vector object) ((eval-as-list :list-expression) e))
+         (return (new argument-list positional (list-set-of named-argument)))))
+      (production :brackets ([ :named-argument-list ]) brackets-named
+        ((constrain s) (exec ((constrain :named-argument-list) s)))
+        (eval (eval :named-argument-list))))
     
-    ;(rule :arguments ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :arguments (:paren-expressions) arguments-paren-expressions)
-    (production :arguments (\( :named-argument-list \)) arguments-named)
+    (rule :arguments ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) argument-list)))
+      (production :arguments (:paren-expressions) arguments-paren-expressions
+        (constrain (constrain :paren-expressions))
+        (eval (eval :paren-expressions)))
+      (production :arguments (\( :named-argument-list \)) arguments-named
+        ((constrain s) (exec ((constrain :named-argument-list) s)))
+        (eval (eval :named-argument-list))))
     
-    ;(rule :paren-expressions ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :paren-expressions (\( \)) paren-expressions-none)
-    (production :paren-expressions (:paren-list-expression) paren-expressions-some)
+    (rule :paren-expressions ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) argument-list)))
+      (production :paren-expressions (\( \)) paren-expressions-none
+        ((constrain (s :unused)))
+        ((eval (e :unused)) (return (new argument-list (vector-of object) (list-set-of named-argument)))))
+      (production :paren-expressions (:paren-list-expression) paren-expressions-some
+        (constrain (constrain :paren-list-expression))
+        ((eval e)
+         (const positional (vector object) ((eval-as-list :paren-list-expression) e))
+         (return (new argument-list positional (list-set-of named-argument))))))
     
-    ;(rule :named-argument-list ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :named-argument-list (:literal-field) named-argument-list-one)
-    (production :named-argument-list ((:list-expression allow-in) \, :literal-field) named-argument-list-unnamed)
-    (production :named-argument-list (:named-argument-list \, :literal-field) named-argument-list-more)
-    (%print-actions)
+    (rule :named-argument-list ((constrain (-> (constraint-env) (list-set string))) (eval (-> (dynamic-env) argument-list)))
+      (production :named-argument-list (:literal-field) named-argument-list-one
+        (constrain (constrain :literal-field))
+        ((eval e)
+         (const na named-argument ((eval :literal-field) e))
+         (return (new argument-list (vector-of object) (list-set na)))))
+      (production :named-argument-list ((:list-expression allow-in) \, :literal-field) named-argument-list-unnamed
+        ((constrain s)
+         ((constrain :list-expression) s)
+         (return ((constrain :literal-field) s)))
+        ((eval e)
+         (const positional (vector object) ((eval-as-list :list-expression) e))
+         (const na named-argument ((eval :literal-field) e))
+         (return (new argument-list positional (list-set na)))))
+      (production :named-argument-list (:named-argument-list \, :literal-field) named-argument-list-more
+        ((constrain s)
+         (const names1 (list-set string) ((constrain :named-argument-list) s))
+         (const names2 (list-set string) ((constrain :literal-field) s))
+         (rwhen (nonempty (set* names1 names2))
+           (throw syntax-error))
+         (return (set+ names1 names2)))
+        ((eval e)
+         (const args argument-list ((eval :named-argument-list) e))
+         (const na named-argument ((eval :literal-field) e))
+         (rwhen (some (& named args) na2 (= (& name na2) (& name na) string))
+           (throw argument-mismatch-error))
+         (return (new argument-list (& positional args) (set+ (& named args) (list-set na)))))))
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Unary Operators")
-    (rule :unary-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :unary-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :unary-expression (:postfix-expression) unary-expression-postfix
-        (verify (verify :postfix-expression))
+        (constrain (constrain :postfix-expression))
         (eval (eval :postfix-expression)))
-      (production :unary-expression (delete :postfix-expression-or-super) unary-expression-delete
-        (verify (verify :postfix-expression-or-super))
-        ((eval (e :unused)) (todo)))
+      (production :unary-expression (delete :postfix-expression) unary-expression-delete
+        (constrain (constrain :postfix-expression))
+        ((eval e) (return (delete-reference ((eval :postfix-expression) e)))))
       (production :unary-expression (void :unary-expression) unary-expression-void
-        (verify (verify :unary-expression))
+        (constrain (constrain :unary-expression))
         ((eval e)
          (exec (read-reference ((eval :unary-expression) e)))
          (return undefined)))
       (production :unary-expression (typeof :unary-expression) unary-expression-typeof
-        (verify (verify :unary-expression))
+        (constrain (constrain :unary-expression))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression) e)))
          (case a
@@ -1042,68 +1305,68 @@
            (:select (union class method-closure) (return "function"))
            (:narrow instance (return (& typeof-string a))))))
       (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
-        (verify (verify :postfix-expression-or-super))
+        (constrain (constrain :postfix-expression-or-super))
         ((eval e)
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch increment-table sa null a (vector-of object) (list-set-of named-argument)))
+         (const b object (unary-dispatch increment-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
          (return b)))
       (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement
-        (verify (verify :postfix-expression-or-super))
+        (constrain (constrain :postfix-expression-or-super))
         ((eval e)
          (const r reference ((eval :postfix-expression-or-super) e))
          (const a object (read-reference r))
          (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch decrement-table sa null a (vector-of object) (list-set-of named-argument)))
+         (const b object (unary-dispatch decrement-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
          (return b)))
       (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus
-        (verify (verify :unary-expression-or-super))
+        (constrain (constrain :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch plus-table sa null a (vector-of object) (list-set-of named-argument)))))
+         (return (unary-dispatch plus-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :unary-expression (- :unary-expression-or-super) unary-expression-minus
-        (verify (verify :unary-expression-or-super))
+        (constrain (constrain :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch minus-table sa null a (vector-of object) (list-set-of named-argument)))))
+         (return (unary-dispatch minus-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not
-        (verify (verify :unary-expression-or-super))
+        (constrain (constrain :unary-expression-or-super))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch bitwise-not-table sa null a (vector-of object) (list-set-of named-argument)))))
+         (return (unary-dispatch bitwise-not-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
-        (verify (verify :unary-expression))
+        (constrain (constrain :unary-expression))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression) e)))
          (return (unary-not a)))))
     
-    (rule :unary-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule :unary-expression-or-super ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production :unary-expression-or-super (:unary-expression) unary-expression-or-super-unary-expression
-        (verify (verify :unary-expression))
+        (constrain (constrain :unary-expression))
         (eval (eval :unary-expression))
         ((super (e :unused)) (return null)))
       (production :unary-expression-or-super (:super-expression) unary-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Multiplicative Operators")
-    (rule :multiplicative-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :multiplicative-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary
-        (verify (verify :unary-expression))
+        (constrain (constrain :unary-expression))
         (eval (eval :unary-expression)))
       (production :multiplicative-expression (:multiplicative-expression-or-super * :unary-expression-or-super) multiplicative-expression-multiply
-        ((verify s)
-         ((verify :multiplicative-expression-or-super) s)
-         ((verify :unary-expression-or-super) s))
+        ((constrain s)
+         ((constrain :multiplicative-expression-or-super) s)
+         ((constrain :unary-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
@@ -1111,9 +1374,9 @@
          (const sb class-opt ((super :unary-expression-or-super) e))
          (return (binary-dispatch multiply-table sa sb a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super / :unary-expression-or-super) multiplicative-expression-divide
-        ((verify s)
-         ((verify :multiplicative-expression-or-super) s)
-         ((verify :unary-expression-or-super) s))
+        ((constrain s)
+         ((constrain :multiplicative-expression-or-super) s)
+         ((constrain :unary-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
@@ -1121,38 +1384,37 @@
          (const sb class-opt ((super :unary-expression-or-super) e))
          (return (binary-dispatch divide-table sa sb a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super % :unary-expression-or-super) multiplicative-expression-remainder
-        ((verify s)
-         ((verify :multiplicative-expression-or-super) s)
-         ((verify :unary-expression-or-super) s))
+        ((constrain s)
+         ((constrain :multiplicative-expression-or-super) s)
+         ((constrain :unary-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const b object (read-reference ((eval :unary-expression-or-super) e)))
          (const sa class-opt ((super :multiplicative-expression-or-super) e))
          (const sb class-opt ((super :unary-expression-or-super) e))
          (return (binary-dispatch remainder-table sa sb a b)))))
-    (%print-actions)
     
-    (rule :multiplicative-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule :multiplicative-expression-or-super ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production :multiplicative-expression-or-super (:multiplicative-expression) multiplicative-expression-or-super-multiplicative-expression
-        (verify (verify :multiplicative-expression))
+        (constrain (constrain :multiplicative-expression))
         (eval (eval :multiplicative-expression))
         ((super (e :unused)) (return null)))
       (production :multiplicative-expression-or-super (:super-expression) multiplicative-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Additive Operators")
-    (rule :additive-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :additive-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative
-        (verify (verify :multiplicative-expression))
+        (constrain (constrain :multiplicative-expression))
         (eval (eval :multiplicative-expression)))
       (production :additive-expression (:additive-expression-or-super + :multiplicative-expression-or-super) additive-expression-add
-        ((verify s)
-         ((verify :additive-expression-or-super) s)
-         ((verify :multiplicative-expression-or-super) s))
+        ((constrain s)
+         ((constrain :additive-expression-or-super) s)
+         ((constrain :multiplicative-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :additive-expression-or-super) e)))
          (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
@@ -1160,38 +1422,37 @@
          (const sb class-opt ((super :multiplicative-expression-or-super) e))
          (return (binary-dispatch add-table sa sb a b))))
       (production :additive-expression (:additive-expression-or-super - :multiplicative-expression-or-super) additive-expression-subtract
-        ((verify s)
-         ((verify :additive-expression-or-super) s)
-         ((verify :multiplicative-expression-or-super) s))
+        ((constrain s)
+         ((constrain :additive-expression-or-super) s)
+         ((constrain :multiplicative-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :additive-expression-or-super) e)))
          (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
          (const sa class-opt ((super :additive-expression-or-super) e))
          (const sb class-opt ((super :multiplicative-expression-or-super) e))
          (return (binary-dispatch subtract-table sa sb a b)))))
-    (%print-actions)
-    
-    (rule :additive-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+     
+    (rule :additive-expression-or-super ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production :additive-expression-or-super (:additive-expression) additive-expression-or-super-additive-expression
-        (verify (verify :additive-expression))
+        (constrain (constrain :additive-expression))
         (eval (eval :additive-expression))
         ((super (e :unused)) (return null)))
       (production :additive-expression-or-super (:super-expression) additive-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Bitwise Shift Operators")
-    (rule :shift-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule :shift-expression ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production :shift-expression (:additive-expression) shift-expression-additive
-        (verify (verify :additive-expression))
+        (constrain (constrain :additive-expression))
         (eval (eval :additive-expression)))
       (production :shift-expression (:shift-expression-or-super << :additive-expression-or-super) shift-expression-left
-        ((verify s)
-         ((verify :shift-expression-or-super) s)
-         ((verify :additive-expression-or-super) s))
+        ((constrain s)
+         ((constrain :shift-expression-or-super) s)
+         ((constrain :additive-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :shift-expression-or-super) e)))
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
@@ -1199,9 +1460,9 @@
          (const sb class-opt ((super :additive-expression-or-super) e))
          (return (binary-dispatch shift-left-table sa sb a b))))
       (production :shift-expression (:shift-expression-or-super >> :additive-expression-or-super) shift-expression-right-signed
-        ((verify s)
-         ((verify :shift-expression-or-super) s)
-         ((verify :additive-expression-or-super) s))
+        ((constrain s)
+         ((constrain :shift-expression-or-super) s)
+         ((constrain :additive-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :shift-expression-or-super) e)))
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
@@ -1209,38 +1470,37 @@
          (const sb class-opt ((super :additive-expression-or-super) e))
          (return (binary-dispatch shift-right-table sa sb a b))))
       (production :shift-expression (:shift-expression-or-super >>> :additive-expression-or-super) shift-expression-right-unsigned
-        ((verify s)
-         ((verify :shift-expression-or-super) s)
-         ((verify :additive-expression-or-super) s))
+        ((constrain s)
+         ((constrain :shift-expression-or-super) s)
+         ((constrain :additive-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :shift-expression-or-super) e)))
          (const b object (read-reference ((eval :additive-expression-or-super) e)))
          (const sa class-opt ((super :shift-expression-or-super) e))
          (const sb class-opt ((super :additive-expression-or-super) e))
          (return (binary-dispatch shift-right-unsigned-table sa sb a b)))))
-    (%print-actions)
     
-    (rule :shift-expression-or-super ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule :shift-expression-or-super ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production :shift-expression-or-super (:shift-expression) shift-expression-or-super-shift-expression
-        (verify (verify :shift-expression))
+        (constrain (constrain :shift-expression))
         (eval (eval :shift-expression))
         ((super (e :unused)) (return null)))
       (production :shift-expression-or-super (:super-expression) shift-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Relational Operators")
-    (rule (:relational-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:relational-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:relational-expression :beta) (:shift-expression) relational-expression-shift
-        (verify (verify :shift-expression))
+        (constrain (constrain :shift-expression))
         (eval (eval :shift-expression)))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) < :shift-expression-or-super) relational-expression-less
-        ((verify s)
-         ((verify :relational-expression-or-super) s)
-         ((verify :shift-expression-or-super) s))
+        ((constrain s)
+         ((constrain :relational-expression-or-super) s)
+         ((constrain :shift-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :relational-expression-or-super) e)))
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
@@ -1248,9 +1508,9 @@
          (const sb class-opt ((super :shift-expression-or-super) e))
          (return (binary-dispatch less-table sa sb a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) > :shift-expression-or-super) relational-expression-greater
-        ((verify s)
-         ((verify :relational-expression-or-super) s)
-         ((verify :shift-expression-or-super) s))
+        ((constrain s)
+         ((constrain :relational-expression-or-super) s)
+         ((constrain :shift-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :relational-expression-or-super) e)))
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
@@ -1258,9 +1518,9 @@
          (const sb class-opt ((super :shift-expression-or-super) e))
          (return (binary-dispatch less-table sb sa b a))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) <= :shift-expression-or-super) relational-expression-less-or-equal
-        ((verify s)
-         ((verify :relational-expression-or-super) s)
-         ((verify :shift-expression-or-super) s))
+        ((constrain s)
+         ((constrain :relational-expression-or-super) s)
+         ((constrain :shift-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :relational-expression-or-super) e)))
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
@@ -1268,9 +1528,9 @@
          (const sb class-opt ((super :shift-expression-or-super) e))
          (return (binary-dispatch less-or-equal-table sa sb a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) >= :shift-expression-or-super) relational-expression-greater-or-equal
-        ((verify s)
-         ((verify :relational-expression-or-super) s)
-         ((verify :shift-expression-or-super) s))
+        ((constrain s)
+         ((constrain :relational-expression-or-super) s)
+         ((constrain :shift-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :relational-expression-or-super) e)))
          (const b object (read-reference ((eval :shift-expression-or-super) e)))
@@ -1278,48 +1538,47 @@
          (const sb class-opt ((super :shift-expression-or-super) e))
          (return (binary-dispatch less-or-equal-table sb sa b a))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
-        ((verify s)
-         ((verify :relational-expression) s)
-         ((verify :shift-expression) s))
+        ((constrain s)
+         ((constrain :relational-expression) s)
+         ((constrain :shift-expression) s))
         ((eval (e :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) as :shift-expression) relational-expression-as
-        ((verify s)
-         ((verify :relational-expression) s)
-         ((verify :shift-expression) s))
+        ((constrain s)
+         ((constrain :relational-expression) s)
+         ((constrain :shift-expression) s))
         ((eval (e :unused)) (todo)))
       (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression-or-super) relational-expression-in
-        ((verify s)
-         ((verify :relational-expression) s)
-         ((verify :shift-expression-or-super) s))
+        ((constrain s)
+         ((constrain :relational-expression) s)
+         ((constrain :shift-expression-or-super) s))
         ((eval (e :unused)) (todo)))
       (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof
-        ((verify s)
-         ((verify :relational-expression) s)
-         ((verify :shift-expression) s))
+        ((constrain s)
+         ((constrain :relational-expression) s)
+         ((constrain :shift-expression) s))
         ((eval (e :unused)) (todo))))
-    (%print-actions)
     
-    (rule (:relational-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule (:relational-expression-or-super :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production (:relational-expression-or-super :beta) ((:relational-expression :beta)) relational-expression-or-super-relational-expression
-        (verify (verify :relational-expression))
+        (constrain (constrain :relational-expression))
         (eval (eval :relational-expression))
         ((super (e :unused)) (return null)))
       (production (:relational-expression-or-super :beta) (:super-expression) relational-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Equality Operators")
-    (rule (:equality-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:equality-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational
-        (verify (verify :relational-expression))
+        (constrain (constrain :relational-expression))
         (eval (eval :relational-expression)))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) == (:relational-expression-or-super :beta)) equality-expression-equal
-        ((verify s)
-         ((verify :equality-expression-or-super) s)
-         ((verify :relational-expression-or-super) s))
+        ((constrain s)
+         ((constrain :equality-expression-or-super) s)
+         ((constrain :relational-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :equality-expression-or-super) e)))
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
@@ -1327,9 +1586,9 @@
          (const sb class-opt ((super :relational-expression-or-super) e))
          (return (binary-dispatch equal-table sa sb a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) != (:relational-expression-or-super :beta)) equality-expression-not-equal
-        ((verify s)
-         ((verify :equality-expression-or-super) s)
-         ((verify :relational-expression-or-super) s))
+        ((constrain s)
+         ((constrain :equality-expression-or-super) s)
+         ((constrain :relational-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :equality-expression-or-super) e)))
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
@@ -1337,9 +1596,9 @@
          (const sb class-opt ((super :relational-expression-or-super) e))
          (return (unary-not (binary-dispatch equal-table sa sb a b)))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) === (:relational-expression-or-super :beta)) equality-expression-strict-equal
-        ((verify s)
-         ((verify :equality-expression-or-super) s)
-         ((verify :relational-expression-or-super) s))
+        ((constrain s)
+         ((constrain :equality-expression-or-super) s)
+         ((constrain :relational-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :equality-expression-or-super) e)))
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
@@ -1347,38 +1606,37 @@
          (const sb class-opt ((super :relational-expression-or-super) e))
          (return (binary-dispatch strict-equal-table sa sb a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) !== (:relational-expression-or-super :beta)) equality-expression-strict-not-equal
-        ((verify s)
-         ((verify :equality-expression-or-super) s)
-         ((verify :relational-expression-or-super) s))
+        ((constrain s)
+         ((constrain :equality-expression-or-super) s)
+         ((constrain :relational-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :equality-expression-or-super) e)))
          (const b object (read-reference ((eval :relational-expression-or-super) e)))
          (const sa class-opt ((super :equality-expression-or-super) e))
          (const sb class-opt ((super :relational-expression-or-super) e))
          (return (unary-not (binary-dispatch strict-equal-table sa sb a b))))))
-    (%print-actions)
     
-    (rule (:equality-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule (:equality-expression-or-super :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production (:equality-expression-or-super :beta) ((:equality-expression :beta)) equality-expression-or-super-equality-expression
-        (verify (verify :equality-expression))
+        (constrain (constrain :equality-expression))
         (eval (eval :equality-expression))
         ((super (e :unused)) (return null)))
       (production (:equality-expression-or-super :beta) (:super-expression) equality-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Binary Bitwise Operators")
-    (rule (:bitwise-and-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:bitwise-and-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
-        (verify (verify :equality-expression))
+        (constrain (constrain :equality-expression))
         (eval (eval :equality-expression)))
       (production (:bitwise-and-expression :beta) ((:bitwise-and-expression-or-super :beta) & (:equality-expression-or-super :beta)) bitwise-and-expression-and
-        ((verify s)
-         ((verify :bitwise-and-expression-or-super) s)
-         ((verify :equality-expression-or-super) s))
+        ((constrain s)
+         ((constrain :bitwise-and-expression-or-super) s)
+         ((constrain :equality-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :bitwise-and-expression-or-super) e)))
          (const b object (read-reference ((eval :equality-expression-or-super) e)))
@@ -1386,14 +1644,14 @@
          (const sb class-opt ((super :equality-expression-or-super) e))
          (return (binary-dispatch bitwise-and-table sa sb a b)))))
     
-    (rule (:bitwise-xor-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:bitwise-xor-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
-        (verify (verify :bitwise-and-expression))
+        (constrain (constrain :bitwise-and-expression))
         (eval (eval :bitwise-and-expression)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression-or-super :beta) ^ (:bitwise-and-expression-or-super :beta)) bitwise-xor-expression-xor
-        ((verify s)
-         ((verify :bitwise-xor-expression-or-super) s)
-         ((verify :bitwise-and-expression-or-super) s))
+        ((constrain s)
+         ((constrain :bitwise-xor-expression-or-super) s)
+         ((constrain :bitwise-and-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :bitwise-xor-expression-or-super) e)))
          (const b object (read-reference ((eval :bitwise-and-expression-or-super) e)))
@@ -1401,156 +1659,152 @@
          (const sb class-opt ((super :bitwise-and-expression-or-super) e))
          (return (binary-dispatch bitwise-xor-table sa sb a b)))))
     
-    (rule (:bitwise-or-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:bitwise-or-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
-        (verify (verify :bitwise-xor-expression))
+        (constrain (constrain :bitwise-xor-expression))
         (eval (eval :bitwise-xor-expression)))
       (production (:bitwise-or-expression :beta) ((:bitwise-or-expression-or-super :beta) \| (:bitwise-xor-expression-or-super :beta)) bitwise-or-expression-or
-        ((verify s)
-         ((verify :bitwise-or-expression-or-super) s)
-         ((verify :bitwise-xor-expression-or-super) s))
+        ((constrain s)
+         ((constrain :bitwise-or-expression-or-super) s)
+         ((constrain :bitwise-xor-expression-or-super) s))
         ((eval e)
          (const a object (read-reference ((eval :bitwise-or-expression-or-super) e)))
          (const b object (read-reference ((eval :bitwise-xor-expression-or-super) e)))
          (const sa class-opt ((super :bitwise-or-expression-or-super) e))
          (const sb class-opt ((super :bitwise-xor-expression-or-super) e))
          (return (binary-dispatch bitwise-or-table sa sb a b)))))
-    (%print-actions)
     
     
-    (rule (:bitwise-and-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-and-expression-or-super :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression
-        (verify (verify :bitwise-and-expression))
+        (constrain (constrain :bitwise-and-expression))
         (eval (eval :bitwise-and-expression))
         ((super (e :unused)) (return null)))
       (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
     
-    (rule (:bitwise-xor-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-xor-expression-or-super :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression
-        (verify (verify :bitwise-xor-expression))
+        (constrain (constrain :bitwise-xor-expression))
         (eval (eval :bitwise-xor-expression))
         ((super (e :unused)) (return null)))
       (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
     
-    (rule (:bitwise-or-expression-or-super :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-or-expression-or-super :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (super (-> (dynamic-env) class-opt)))
       (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression
-        (verify (verify :bitwise-or-expression))
+        (constrain (constrain :bitwise-or-expression))
         (eval (eval :bitwise-or-expression))
         ((super (e :unused)) (return null)))
       (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super
-        (verify (verify :super-expression))
+        (constrain (constrain :super-expression))
         (eval (eval :super-expression))
         (super (super :super-expression))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Binary Logical Operators")
-    (rule (:logical-and-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:logical-and-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or
-        (verify (verify :bitwise-or-expression))
+        (constrain (constrain :bitwise-or-expression))
         (eval (eval :bitwise-or-expression)))
       (production (:logical-and-expression :beta) ((:logical-and-expression :beta) && (:bitwise-or-expression :beta)) logical-and-expression-and
-        ((verify s)
-         ((verify :logical-and-expression) s)
-         ((verify :bitwise-or-expression) s))
+        ((constrain s)
+         ((constrain :logical-and-expression) s)
+         ((constrain :bitwise-or-expression) s))
         ((eval e)
          (const a object (read-reference ((eval :logical-and-expression) e)))
          (if (to-boolean a)
            (return (read-reference ((eval :bitwise-or-expression) e)))
            (return a)))))
-    (%print-actions)
     
-    (rule (:logical-xor-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:logical-xor-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:logical-xor-expression :beta) ((:logical-and-expression :beta)) logical-xor-expression-logical-and
-        (verify (verify :logical-and-expression))
+        (constrain (constrain :logical-and-expression))
         (eval (eval :logical-and-expression)))
       (production (:logical-xor-expression :beta) ((:logical-xor-expression :beta) ^^ (:logical-and-expression :beta)) logical-xor-expression-xor
-        ((verify s)
-         ((verify :logical-xor-expression) s)
-         ((verify :logical-and-expression) s))
+        ((constrain s)
+         ((constrain :logical-xor-expression) s)
+         ((constrain :logical-and-expression) s))
         ((eval e)
          (const a object (read-reference ((eval :logical-xor-expression) e)))
          (const b object (read-reference ((eval :logical-and-expression) e)))
          (const ab boolean (to-boolean a))
          (const bb boolean (to-boolean b))
          (return (xor ab bb)))))
-    (%print-actions)
     
-    (rule (:logical-or-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:logical-or-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:logical-or-expression :beta) ((:logical-xor-expression :beta)) logical-or-expression-logical-xor
-        (verify (verify :logical-xor-expression))
+        (constrain (constrain :logical-xor-expression))
         (eval (eval :logical-xor-expression)))
       (production (:logical-or-expression :beta) ((:logical-or-expression :beta) \|\| (:logical-xor-expression :beta)) logical-or-expression-or
-        ((verify s)
-         ((verify :logical-or-expression) s)
-         ((verify :logical-xor-expression) s))
+        ((constrain s)
+         ((constrain :logical-or-expression) s)
+         ((constrain :logical-xor-expression) s))
         ((eval e)
          (const a object (read-reference ((eval :logical-or-expression) e)))
          (if (to-boolean a) 
            (return a)
            (return (read-reference ((eval :logical-xor-expression) e)))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Conditional Operator")
-    (rule (:conditional-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:conditional-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or
-        (verify (verify :logical-or-expression))
+        (constrain (constrain :logical-or-expression))
         (eval (eval :logical-or-expression)))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta) ? (:assignment-expression :beta) \: (:assignment-expression :beta)) conditional-expression-conditional
-        ((verify s)
-         ((verify :logical-or-expression) s)
-         ((verify :assignment-expression 1) s)
-         ((verify :assignment-expression 2) s))
+        ((constrain s)
+         ((constrain :logical-or-expression) s)
+         ((constrain :assignment-expression 1) s)
+         ((constrain :assignment-expression 2) s))
         ((eval e)
          (if (to-boolean (read-reference ((eval :logical-or-expression) e)))
            (return ((eval :assignment-expression 1) e))
            (return ((eval :assignment-expression 2) e))))))
-    (%print-actions)
     
     (production (:non-assignment-expression :beta) ((:logical-or-expression :beta)) non-assignment-expression-logical-or)
     (production (:non-assignment-expression :beta) ((:logical-or-expression :beta) ? (:non-assignment-expression :beta) \: (:non-assignment-expression :beta)) non-assignment-expression-conditional)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Assignment Operators")
-    (rule (:assignment-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:assignment-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)))
       (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional
-        (verify (verify :conditional-expression))
+        (constrain (constrain :conditional-expression))
         (eval (eval :conditional-expression)))
       (production (:assignment-expression :beta) (:postfix-expression = (:assignment-expression :beta)) assignment-expression-assignment
-        ((verify s)
-         ((verify :postfix-expression) s)
-         ((verify :assignment-expression) s))
+        ((constrain s)
+         ((constrain :postfix-expression) s)
+         ((constrain :assignment-expression) s))
         ((eval e)
          (const r reference ((eval :postfix-expression) e))
          (const a object (read-reference ((eval :assignment-expression) e)))
          (write-reference r a)
          (return a)))
       (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment (:assignment-expression :beta)) assignment-expression-compound
-        ((verify s)
-         ((verify :postfix-expression-or-super) s)
-         ((verify :assignment-expression) s))
+        ((constrain s)
+         ((constrain :postfix-expression-or-super) s)
+         ((constrain :assignment-expression) s))
         ((eval e)
          (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) null
                                      (eval :postfix-expression-or-super) (eval :assignment-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super
-        ((verify s)
-         ((verify :postfix-expression-or-super) s)
-         ((verify :super-expression) s))
+        ((constrain s)
+         ((constrain :postfix-expression-or-super) s)
+         ((constrain :super-expression) s))
         ((eval e)
          (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) ((super :super-expression) e)
                                      (eval :postfix-expression-or-super) (eval :super-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound
-        ((verify s)
-         ((verify :postfix-expression) s)
-         ((verify :assignment-expression) s))
+        ((constrain s)
+         ((constrain :postfix-expression) s)
+         ((constrain :assignment-expression) s))
         ((eval (e :unused)) (todo))))
     
     (define (eval-assignment-op (table binary-table) (left-limit class-opt) (right-limit class-opt)
@@ -1561,7 +1815,6 @@
       (const result object (binary-dispatch table left-limit right-limit v-left v-right))
       (write-reference r-left result)
       (return result))
-    (%print-actions)
     
     (rule :compound-assignment ((table binary-table))
       (production :compound-assignment (*=) compound-assignment-multiply (table multiply-table))
@@ -1575,35 +1828,41 @@
       (production :compound-assignment (&=) compound-assignment-bitwise-and (table bitwise-and-table))
       (production :compound-assignment (^=) compound-assignment-bitwise-xor (table bitwise-xor-table))
       (production :compound-assignment (\|=) compound-assignment-bitwise-or (table bitwise-or-table)))
-    (%print-actions)
     
     (production :logical-assignment (&&=) logical-assignment-logical-and)
     (production :logical-assignment (^^=) logical-assignment-logical-xor)
     (production :logical-assignment (\|\|=) logical-assignment-logical-or)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Comma Expressions")
-    (rule (:list-expression :beta) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (rule (:list-expression :beta) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) reference)) (eval-as-list (-> (dynamic-env) (vector object))))
       (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment
-        (verify (verify :assignment-expression))
-        (eval (eval :assignment-expression)))
+        (constrain (constrain :assignment-expression))
+        (eval (eval :assignment-expression))
+        ((eval-as-list e)
+         (const elt object (read-reference ((eval :assignment-expression) e)))
+         (return (vector elt))))
       (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma
-        ((verify s)
-         ((verify :list-expression) s)
-         ((verify :assignment-expression) s))
+        ((constrain s)
+         ((constrain :list-expression) s)
+         ((constrain :assignment-expression) s))
         ((eval e)
          (exec (read-reference ((eval :list-expression) e)))
-         (return ((eval :assignment-expression) e)))))
+         (return ((eval :assignment-expression) e)))
+        ((eval-as-list e)
+         (const elts (vector object) ((eval-as-list :list-expression) e))
+         (const elt object (read-reference ((eval :assignment-expression) e)))
+         (return (append elts (vector elt))))))
     
     (production :optional-expression ((:list-expression allow-in)) optional-expression-expression)
     (production :optional-expression () optional-expression-empty)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Type Expressions")
     (production (:type-expression :beta) ((:non-assignment-expression :beta)) type-expression-non-assignment-expression)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%section "Statements")
@@ -1614,69 +1873,69 @@
                       full)        ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
-    (rule (:statement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule (:statement :omega) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:statement :omega) (:empty-statement) statement-empty-statement
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused) d) (return d)))
       (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement
-        (verify (verify :expression-statement))
+        (constrain (constrain :expression-statement))
         ((eval e (d :unused)) (return ((eval :expression-statement) e))))
       (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:annotated-block) statement-annotated-block
-        (verify (verify :annotated-block))
+        (constrain (constrain :annotated-block))
         (eval (eval :annotated-block)))
       (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
-        (verify (verify :labeled-statement))
+        (constrain (constrain :labeled-statement))
         (eval (eval :labeled-statement)))
       (production (:statement :omega) ((:if-statement :omega)) statement-if-statement
-        (verify (verify :if-statement))
+        (constrain (constrain :if-statement))
         (eval (eval :if-statement)))
       (production (:statement :omega) (:switch-statement) statement-switch-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) ((:while-statement :omega)) statement-while-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) ((:for-statement :omega)) statement-for-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) ((:with-statement :omega)) statement-with-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement
-        (verify (verify :continue-statement))
+        (constrain (constrain :continue-statement))
         (eval (eval :continue-statement)))
       (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement
-        (verify (verify :break-statement))
+        (constrain (constrain :break-statement))
         (eval (eval :break-statement)))
       (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement
-        (verify (verify :return-statement))
+        (constrain (constrain :return-statement))
         ((eval e (d :unused)) (return ((eval :return-statement) e))))
       (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:try-statement) statement-try-statement
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
     
-    (rule (:substatement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule (:substatement :omega) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:substatement :omega) ((:statement :omega)) substatement-statement
-        (verify (verify :statement))
+        (constrain (constrain :statement))
         (eval (eval :statement)))
       (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
-    (%print-actions)
     
     (production (:semicolon :omega) (\;) semicolon-semicolon)
     (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
     (production (:semicolon abbrev) () semicolon-abbrev)
     (production (:semicolon no-short-if) () semicolon-no-short-if)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Empty Statement")
@@ -1684,96 +1943,96 @@
     
     
     (%subsection "Expression Statement")
-    (rule :expression-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) object)))
+    (rule :expression-statement ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) object)))
       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
-        (verify (verify :list-expression))
+        (constrain (constrain :list-expression))
         ((eval e) (return (read-reference ((eval :list-expression) e))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Super Statement")
     (production :super-statement (super :arguments) super-statement-super-arguments)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Block Statement")
-    (rule :annotated-block ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :annotated-block ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :annotated-block (:attributes :block) annotated-block-attributes-and-block
-        (verify (verify :block)) ;******
+        (constrain (constrain :block)) ;******
         (eval (eval :block)))) ;******
     
-    (rule :block ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :block ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :block ({ :directives }) block-directives
-        (verify (verify :directives))
+        (constrain (constrain :directives))
         (eval (eval :directives))))
     
-    (rule :directives ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :directives ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :directives () directives-none
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused) d) (return d)))
       (production :directives (:directives-prefix (:directive abbrev)) directives-more
-        ((verify s)
-         ((verify :directives-prefix) s)
-         ((verify :directive) s))
+        ((constrain s)
+         ((constrain :directives-prefix) s)
+         ((constrain :directive) s))
         ((eval e d)
          (const v object ((eval :directive) e d))
          (return ((eval :directives-prefix) e v)))))
     
-    (rule :directives-prefix ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :directives-prefix ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :directives-prefix () directives-prefix-none
-        ((verify (s :unused)))
+        ((constrain (s :unused)))
         ((eval (e :unused) d) (return d)))
       (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
-        ((verify s)
-         ((verify :directives-prefix) s)
-         ((verify :directive) s))
+        ((constrain s)
+         ((constrain :directives-prefix) s)
+         ((constrain :directive) s))
         ((eval e d)
          (const v object ((eval :directive) e d))
          (return ((eval :directives-prefix) e v)))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Labeled Statements")
-    (rule (:labeled-statement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule (:labeled-statement :omega) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:labeled-statement :omega) (:identifier \: (:substatement :omega)) labeled-statement-label
-        ((verify s) ((verify :substatement) (add-label s (name :identifier))))
+        ((constrain s) ((constrain :substatement) (add-label s (name :identifier))))
         ((eval e d)
          (catch ((return ((eval :substatement) e d)))
            (x) (if (and (in x go-break :narrow-true) (= (& label x) (name :identifier) string))
                  (return (& value x))
                  (throw x))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "If Statement")
-    (rule (:if-statement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule (:if-statement :omega) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:if-statement abbrev) (if :paren-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
-        ((verify s)
-         ((verify :paren-list-expression) s)
-         ((verify :substatement) s))
+        ((constrain s)
+         ((constrain :paren-list-expression) s)
+         ((constrain :substatement) s))
         ((eval e d)
          (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement) e d))
            (return d))))
       (production (:if-statement full) (if :paren-list-expression (:substatement full)) if-statement-if-then-full
-        ((verify s)
-         ((verify :paren-list-expression) s)
-         ((verify :substatement) s))
+        ((constrain s)
+         ((constrain :paren-list-expression) s)
+         ((constrain :substatement) s))
         ((eval e d)
          (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement) e d))
            (return d))))
       (production (:if-statement :omega) (if :paren-list-expression (:substatement no-short-if) else (:substatement :omega))
                   if-statement-if-then-else
-        ((verify s)
-         ((verify :paren-list-expression) s)
-         ((verify :substatement 1) s)
-         ((verify :substatement 2) s))
+        ((constrain s)
+         ((constrain :paren-list-expression) s)
+         ((constrain :substatement 1) s)
+         ((constrain :substatement 2) s))
         ((eval e d)
          (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement 1) e d))
            (return ((eval :substatement 2) e d))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Switch Statement")
@@ -1791,17 +2050,17 @@
     
     (production :case-label (case (:list-expression allow-in) \:) case-label-case)
     (production :case-label (default \:) case-label-default)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Do-While Statement")
     (production :do-statement (do (:substatement abbrev) while :paren-list-expression) do-statement-do-while)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "While Statement")
     (production (:while-statement :omega) (while :paren-list-expression (:substatement :omega)) while-statement-while)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "For Statements")
@@ -1815,52 +2074,52 @@
     
     (production :for-in-binding (:postfix-expression) for-in-binding-expression)
     (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "With Statement")
     (production (:with-statement :omega) (with :paren-list-expression (:substatement :omega)) with-statement-with)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Continue and Break Statements")
-    (rule :continue-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :continue-statement ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :continue-statement (continue) continue-statement-unlabeled
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) d) (throw (new go-continue d ""))))
       (production :continue-statement (continue :no-line-break :identifier) continue-statement-labeled
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) d) (throw (new go-continue d (name :identifier))))))
     
-    (rule :break-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule :break-statement ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production :break-statement (break) break-statement-unlabeled
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) d) (throw (new go-break d ""))))
       (production :break-statement (break :no-line-break :identifier) break-statement-labeled
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) d) (throw (new go-break d (name :identifier))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Return Statement")
-    (rule :return-statement ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) object)))
+    (rule :return-statement ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env) object)))
       (production :return-statement (return) return-statement-default
-        ((verify s)
+        ((constrain s)
          (when (not (& can-return s))
            (throw syntax-error)))
         ((eval (e :unused)) (throw (new go-return undefined))))
       (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression
-        ((verify s)
+        ((constrain s)
          (when (not (& can-return s))
            (throw syntax-error))
-         ((verify :list-expression) s))
+         ((constrain :list-expression) s))
         ((eval e) (throw (new go-return (read-reference ((eval :list-expression) e)))))))
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Throw Statement")
     (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Try Statement")
@@ -1874,31 +2133,30 @@
     (production :catch-clause (catch \( :parameter \) :block) catch-clause-block)
     
     (production :finally-clause (finally :block) finally-clause-block)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%section "Directives")
-    (rule (:directive :omega_2) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
+    (rule (:directive :omega_2) ((constrain (-> (constraint-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
-        (verify (verify :statement))
+        (constrain (constrain :statement))
         (eval (eval :statement)))
       (production (:directive :omega_2) ((:annotatable-directive :omega_2)) directive-annotatable-directive
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:directive :omega_2) (:attribute :no-line-break :attributes (:annotatable-directive :omega_2)) directive-attributes-and-directive
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
       (production (:directive :omega_2) (:package-definition) directive-package-definition
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo)))
-    (? js2
+      (? js2
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
-          ((verify (s :unused)) (todo))
+          ((constrain (s :unused)) (todo))
           ((eval (e :unused) (d :unused)) (todo))))
       (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
-        ((verify (s :unused)) (todo))
+        ((constrain (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
-    (%print-actions)
     
     (production (:annotatable-directive :omega_2) (:export-definition (:semicolon :omega_2)) annotatable-directive-export-definition)
     (production (:annotatable-directive :omega_2) (:variable-definition (:semicolon :omega_2)) annotatable-directive-variable-definition)
@@ -1909,7 +2167,7 @@
       (production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition))
     (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive)
     (production (:annotatable-directive :omega_2) (:import-directive (:semicolon :omega_2)) annotatable-directive-import-directive)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
     (%subsection "Attributes")
@@ -1924,10 +2182,10 @@
     (production :attribute (static) attribute-static)
     (production :attribute (true) attribute-true)
     (production :attribute (false) attribute-false)
-    (%print-actions)
+    (%print-actions ("Static Constraints" constrain) ("Evaluation" eval))
     
     
-
+    
     (%subsection "Use Directive")
     (production :use-directive (use namespace :paren-list-expression :includes-excludes) use-directive-normal)
     
@@ -2131,7 +2389,7 @@
       (production :program (:directives) program-directives
         (eval-program
          (begin
-          ((verify :directives) initial-verify-env)
+          ((constrain :directives) initial-constraint-env)
           (return ((eval :directives) initial-dynamic-env undefined))))))))
 
 
