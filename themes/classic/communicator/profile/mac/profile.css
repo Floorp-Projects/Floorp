@@ -23,6 +23,11 @@
  *
  */
 
+#header
+  {
+    list-style-image       : url("chrome://communicator/skin/profile/mac-users.gif");
+  }
+  
 #contentarea
   {
     padding                : 7px 5px 7px 5px;

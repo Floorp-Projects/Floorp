@@ -31,5 +31,3 @@ clobber::
 install:: 
 	$(MAKE_INSTALL) newProfile1_2.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
 	$(MAKE_INSTALL) profile.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
-	$(MAKE_INSTALL) profileManager.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile
-	$(MAKE_INSTALL) mac-users.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\profile

@@ -33,8 +33,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/profile
 EXPORT_RESOURCE_SAMPLES = \
         newProfile1_2.css \
         profile.css \
-        profileManager.css \
-        mac-users.gif \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

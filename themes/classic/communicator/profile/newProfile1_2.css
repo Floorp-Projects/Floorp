@@ -1,18 +1,10 @@
 
-#finishtext {
-  margin-top                  : -20px;
-}
-
-text#ProfileDir {
-  font-weight                 : bold;
+#ProfileDir {
   padding-left                : 1em;
   margin-top                  : 0.4em;
+  width                       : 10em !important;
 }
 
-box#dirbox > box > titledbutton {
-  min-width                   : 8em;
-}
-
-span#deffoldername {
+#deffoldername {
   margin-left                 : 2px;
 } 
