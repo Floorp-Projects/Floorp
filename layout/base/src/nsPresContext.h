@@ -25,6 +25,9 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsIImageGroup.h"
+#include "nsIPref.h"
+#include "nsIURL.h"
+#include "nsIEventStateManager.h"
 
 
 // Base class for concrete presentation context classes
