@@ -416,6 +416,7 @@ sub BuildClientDist()
 
 	#LIBPREF
     _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",					"$distdirectory:libpref:");
+    _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	#PROFILE
     _InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",							"$distdirectory:idl:");
@@ -543,7 +544,10 @@ sub BuildClientDist()
 
 	#EXPAT
 	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",						"$distdirectory:expat:");
-      
+    
+    #DOCSHELL
+	_InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",						"$distdirectory:idl:");
+
 	#WIDGET
     _InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
     _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
@@ -876,6 +880,8 @@ sub BuildIDLProjects()
 
     BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",                      "chrome");
     	
+    BuildIDLProject(":mozilla:docshell:macbuild:docshellIDL.mcp",                   "docshell");
+
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
