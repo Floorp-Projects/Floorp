@@ -37,11 +37,14 @@
 #define nsScriptNameSpaceManager_h__
 
 #include "nsIScriptNameSpaceManager.h"
-#include "nsHashtable.h"
+#include "nsString.h"
+#include "nsID.h"
+#include "pldhash.h"
 
 struct nsGlobalNameStruct
 {
   enum nametype {
+    eTypeNotInitialized,
     eTypeInterface,
     eTypeProperty,
     eTypeExternalConstructor,
@@ -76,7 +79,10 @@ public:
   nsresult Init();
   nsresult InitForContext(nsIScriptContext *aContext);
 
-  nsresult LookupName(const nsAReadableString& aName,
+  // Returns a nsGlobalNameStruct for aName, or null if one is not
+  // found. The returned nsGlobalNameStruct is only guaranteed to be
+  // valid until the next call to any of the methods in this class.
+  nsresult LookupName(const nsAString& aName,
                       const nsGlobalNameStruct **aNameStruct);
 
   nsresult RegisterClassName(const char *aClassName,
@@ -87,12 +93,22 @@ public:
                               PRBool *aFoundOld);
 
 protected:
+  // Adds a new entry to the hash and returns the nsGlobalNameStruct
+  // that aKey will be mapped to. If mType in the returned
+  // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
+  // already existed.
+  nsGlobalNameStruct *AddToHash(const nsAString& aKey);
+
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory,
                     nsGlobalNameStruct::nametype aType);
   nsresult FillHashWithDOMInterfaces();
 
-  nsHashtable mGlobalNames;
+  // Inline PLDHashTable, init with PL_DHashTableInit() and delete
+  // with PL_DHashTableFinish().
+  PLDHashTable mGlobalNames;
+
+  PRPackedBool mIsInitialized;
 };
 
 #endif /* nsScriptNameSpaceManager_h__ */
