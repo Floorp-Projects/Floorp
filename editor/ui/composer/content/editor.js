@@ -396,8 +396,8 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   if (!title)
     title = GetString("untitled");
 
-  var dialogTitle = window.editorShell.GetString("SaveDocument");
-  var dialogMsg = window.editorShell.GetString("SaveFilePrompt");
+  var dialogTitle = GetString("SaveDocument");
+  var dialogMsg = GetString("SaveFilePrompt");
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
@@ -409,7 +409,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   						  (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
   						  (allowDontSave ? (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2) : 0),
   						  null, null,
-  						  (allowDontSave ? window.editorShell.GetString("DontSave") : null),
+  						  (allowDontSave ? GetString("DontSave") : null),
   						  null, {value:0}, result);
 
   if (result.value == 0)
@@ -418,7 +418,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
     if (gHTMLSourceChanged)
       FinishHTMLSource();
 
-    var success = window.editorShell.saveDocument(false, false, editorShell.contentsMIMEType);
+    var success = SaveDocument(false, false, editorShell.contentsMIMEType);
     return success;
   }
 
