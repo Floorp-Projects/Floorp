@@ -297,7 +297,7 @@
 <!ENTITY copyButton.tooltip             "Copy">
 <!ENTITY pasteButton.tooltip            "Paste">
 
-<!ENTITY findOnSearchBarCmd.label       "Find in this Page">
+<!ENTITY findOnSearchBarCmd.label       "Find in This Page">
 
 <!ENTITY quitApplicationCmdWin.label       "Exit"> 
 <!ENTITY quitApplicationCmdWin.accesskey   "x">
