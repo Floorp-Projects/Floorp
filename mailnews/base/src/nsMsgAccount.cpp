@@ -95,6 +95,9 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 {
   if (!aIncomingServer) return NS_ERROR_NULL_POINTER;
   nsresult rv;
+
+  // need to call SetKey() first!
+  if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
   
   // create the incoming server lazily
   if (!m_incomingServer) {
@@ -110,6 +113,9 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     char *serverKey;
     rv = m_prefs->CopyCharPref(serverKeyPref, &serverKey);
     PR_FREEIF(serverKeyPref);
+
+    // the server pref doesn't exist
+    if (NS_FAILED(rv)) return NS_ERROR_NOT_INITIALIZED;
     
 #ifdef DEBUG_alecf
     printf("\t%s's server: %s\n", m_accountKey, serverKey);
@@ -122,6 +128,9 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     char *serverType;
     rv = m_prefs->CopyCharPref(serverTypePref, &serverType);
     PR_FREEIF(serverTypePref);
+
+    // the server type doesn't exist!
+    if (NS_FAILED(rv)) return NS_ERROR_NOT_INITIALIZED;
     
 #ifdef DEBUG_alecf
     if (NS_FAILED(rv)) {
