@@ -50,6 +50,7 @@ sub defaultOutputProtocol {
 
 sub splitArguments {
     my $self = shift;
+    $self->dump(5, "Invoked as: $ENV{'SCRIPT_NAME'}");
     # register typical CGI variables
     foreach my $property (qw(SERVER_SOFTWARE SERVER_NAME
       GATEWAY_INTERFACE SERVER_PROTOCOL SERVER_PORT REQUEST_METHOD
