@@ -93,6 +93,26 @@ function savePage( url )
   }
 }
 
+ 
+/**                                                                             
+* We can avoid adding multiple load event listeners and save some time by adding
+* one listener that calls all real handlers.                                   
+*/                                                                             
+                                                                                 
+function loadEventHandlers(event) {                                             
+   // Filter out events that are not about the document load we are interested in
+   if (event.target == window._content.document) {                             
+      UpdateBookmarksLastVisitedDate(event);                                  
+      UpdateInternetSearchResults(event);                                     
+      checkForDirectoryListing();                                             
+      getContentAreaFrameCount();                                             
+      postURLToNativeWidget();                                                
+    
+	}                                                                           
+}                                                                               
+                                                                                 
+                                                                         
+
 /** 
  * Determine whether or not the content area is displaying a page with frames,
  * and if so, toggle the display of the 'save frame as' menu item.
@@ -424,12 +444,8 @@ function Startup()
     var contentArea = document.getElementById("appcontent");
     if (contentArea)
     {
-	    contentArea.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
-	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
-      contentArea.addEventListener("load", checkForDirectoryListing, true);
-      contentArea.addEventListener("load", getContentAreaFrameCount, true);
+      contentArea.addEventListener("load", loadEventHandlers, true);
       contentArea.addEventListener("focus", contentAreaFrameFocus, true);
-      contentArea.addEventListener("load",postURLToNativeWidget, true);
     }
 
     dump("*** Pulling out the charset\n");
