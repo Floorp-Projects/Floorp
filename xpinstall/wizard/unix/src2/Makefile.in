@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= mozilla-installer
+PROGRAM		= mozilla-installer-bin
 
 CPPSRCS		= \
         nsXInstallerDlg.cpp \
