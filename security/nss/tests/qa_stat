@@ -4,7 +4,7 @@
 # /u/sonmi/bin/qa_stat - /u/svbld/bin/init/nss/qa_stat
 #
 # this script is supposed to automatically run QA for NSS on all required
-# Unix platforms - warning - will not run on Windows
+# Unix platforms
 #
 # parameters
 # ----------
@@ -186,7 +186,12 @@ qa_stat_init()
     touch $ERRORLIST $PLATFORMLIST $PERFLIST $WARNINGLIST \
        $BCMISSINGLIST $BCERRORLIST $TMP_HTML_FILE  2>/dev/null
 
-    HREF_TMP_HTML_FILE="http://cindercone${TMP_HTML_FILE}"
+    if [  $O_WIN = "ON" -a "$O_TBX" = "ON" ] ; then
+        HTML_PATH="http://cindercone${UX_D0}/nss${NSSVER}/tinderbox/tests_results/security/`basename $RESULTDIR`"
+    else
+        HTML_PATH="http://cindercone${RESULTDIR}"
+    fi
+    HREF_TMP_HTML_FILE="${HTML_PATH}/`basename $HTML_FILE`"
 
     write_qa_header_html >$TMP_HTML_FILE
 }
@@ -274,33 +279,33 @@ setQAsysvars()
             -e 's/_/ /'`
     Debug "BUILD_SYS=$BUILD_SYS"
     if [ -f "${RESULTDIR}/${MACHINE}/results.html" ] ; then
-        RESULT="http://cindercone${RESULTDIR}/${MACHINE}/results.html"
+        RESULT="${HTML_PATH}/${MACHINE}/results.html"
     else
         RESULT="0"
     fi
     if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/results.html" ] ; then
-      BCL_RESULT="http://cindercone${RESULTDIR}/bc_libs/${MACHINE}/results.html"
+        BCL_RESULT="${HTML_PATH}/bc_libs/${MACHINE}/results.html"
     else
-      BCL_RESULT="0"
+        BCL_RESULT="0"
     fi
     if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/results.html" ] ; then
-      BCB_RESULT="http://cindercone${RESULTDIR}/bc_bins/${MACHINE}/results.html"
+        BCB_RESULT="${HTML_PATH}/bc_bins/${MACHINE}/results.html"
     else
       BCB_RESULT="0"
     fi
 
     if [ -f "${RESULTDIR}/${MACHINE}/output.log" ] ; then
-        LOG="http://cindercone${RESULTDIR}/${MACHINE}/output.log"
+        LOG="${HTML_PATH}/${MACHINE}/output.log"
     else
         LOG="0"
     fi
     if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/output.log" ] ; then
-        BCL_LOG="http://cindercone${RESULTDIR}/bc_libs/${MACHINE}/output.log"
+        BCL_LOG="${HTML_PATH}/bc_libs/${MACHINE}/output.log"
     else
         BCL_LOG="0"
     fi
     if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/output.log" ] ; then
-        BCB_LOG="http://cindercone${RESULTDIR}/bc_bins/${MACHINE}/output.log"
+        BCB_LOG="${HTML_PATH}/bc_bins/${MACHINE}/output.log"
     else
         BCB_LOG="0"
     fi
