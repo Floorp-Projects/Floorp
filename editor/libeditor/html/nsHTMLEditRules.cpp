@@ -2981,7 +2981,6 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
   if (NS_FAILED(res)) return res;                                 
                                      
   // Remove all non-editable nodes.  Leave them be.
-  
   PRUint32 listCount;
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
@@ -2994,6 +2993,9 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
       arrayOfNodes->RemoveElementAt(i);
     }
   }
+  
+  // reset list count
+  arrayOfNodes->Count(&listCount);
   
   // Only act on lists or list items in the array
   nsCOMPtr<nsIDOMNode> curParent;
@@ -3058,14 +3060,30 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
   *aHandled = PR_TRUE;
+  nsString tString(*aBlockType);
 
   // contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   res = GetNodesFromSelection(aSelection, kMakeBasicBlock, address_of(arrayOfNodes));
   if (NS_FAILED(res)) return res;
-  
-  nsString tString(*aBlockType);
 
+  // Remove all non-editable nodes.  Leave them be.
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
+  for (i=listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
+    if (!mHTMLEditor->IsEditable(testNode))
+    {
+      arrayOfNodes->RemoveElementAt(i);
+    }
+  }
+  
+  // reset list count
+  arrayOfNodes->Count(&listCount);
+  
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -4401,16 +4419,42 @@ nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode,
   {
     res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
     if (NS_FAILED(res)) return res;
-    if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(aStartNode))
+    if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(block))
     {
-      // adjust selection to be right after it
       nsCOMPtr<nsIDOMNode> blockParent;
       PRInt32 offset;
       res = nsEditor::GetNodeLocation(block, address_of(blockParent), &offset);
       if (NS_FAILED(res)) return res;
       if (!blockParent || offset < 0) return NS_ERROR_FAILURE;
-      res = aSelection->Collapse(blockParent, offset+1);
-      if (NS_FAILED(res)) return res;
+
+      if (nsHTMLEditUtils::IsListItem(block))
+      {
+        // are we the first list item in the list?
+        PRBool bIsFirst;
+        res = mHTMLEditor->IsFirstEditableChild(block, &bIsFirst);
+        if (NS_FAILED(res)) return res;
+        if (bIsFirst)
+        {
+          nsCOMPtr<nsIDOMNode> listParent;
+          PRInt32 listOffset;
+          res = nsEditor::GetNodeLocation(blockParent, address_of(listParent), &listOffset);
+          if (NS_FAILED(res)) return res;
+          if (!listParent || listOffset < 0) return NS_ERROR_FAILURE;
+          // create a br before list
+          nsCOMPtr<nsIDOMNode> brNode;
+          res = mHTMLEditor->CreateBR(listParent, listOffset, address_of(brNode));
+          if (NS_FAILED(res)) return res;
+          // adjust selection to be right after it
+          res = aSelection->Collapse(listParent, listOffset);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+      else
+      {
+        // adjust selection to be right after it
+        res = aSelection->Collapse(blockParent, offset+1);
+        if (NS_FAILED(res)) return res;
+      }
       res = mHTMLEditor->DeleteNode(block);
       *aHandled = PR_TRUE;
     }
@@ -6442,6 +6486,20 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAString
   PRUint32 listCount;
   nsString tString(*aBlockTag);////MJUDGE SCC NEED HELP
 
+  // Remove all non-editable nodes.  Leave them be.
+  PRInt32 j;
+  arrayOfNodes->Count(&listCount);
+  for (j=listCount-1; j>=0; j--)
+  {
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
+    if (!mHTMLEditor->IsEditable(testNode))
+    {
+      arrayOfNodes->RemoveElementAt(j);
+    }
+  }
+  
+  // reset list count
   arrayOfNodes->Count(&listCount);
   
   PRUint32 i;
