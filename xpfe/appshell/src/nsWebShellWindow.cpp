@@ -654,7 +654,12 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
         nsIDOMNode * node = FindNamedDOMNode(nsAutoString("INPUT"), parent, count, 1);
         if (nsnull != node) {
           if (NS_OK == node->QueryInterface(kIDOMHTMLInputElementIID, (void**) &mURLBarText)) {
-             // no errors 
+            PRUnichar * urlStr = nsnull;
+            contentWS->GetURL(0, &urlStr);
+            if (nsnull != urlStr) {
+              nsString url(urlStr);
+              mURLBarText->SetValue(url);
+            }
           }
           NS_RELEASE(node);
         }
