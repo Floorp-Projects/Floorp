@@ -54,7 +54,7 @@
 
 /* Outstanding issues/todo:
  * 1. Using the target path as an identifier is not sufficient because it's not unique on mac.
- * 2. Implement pause/resume
+ * 2. Implement pause/resume.
  */
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -403,7 +403,7 @@ nsDownloadManager::CancelDownload(const char* aKey)
     nsCOMPtr<nsIWebBrowserPersist> persist;
     item->GetPersist(getter_AddRefs(persist));
     if (persist)
-      persist->CancelSave();
+      rv = persist->CancelSave();
 
     // if an observer was provided, notify that the download was cancelled.
     // if no persist was provided, this is necessary so that whatever transfer
