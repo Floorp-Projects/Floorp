@@ -153,6 +153,10 @@ public:
     NS_IMETHOD GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
                                         nsISupports** aObj) = 0;
 
+    NS_IMETHOD GetWrappedNativeOfJSObject(nsIJSContext* aJSContext,
+                                    nsIJSObject* aJSObj,
+                                    nsIXPConnectWrappedNative** aWrapper) = 0;
+
     // other stuff...
 
 };

@@ -35,11 +35,13 @@ nsXPConnect*
 nsXPConnect::GetXPConnect()
 {
     if(mSelf)
+    {
         NS_ADDREF(mSelf);
+    }
     else
     {
         mSelf = new nsXPConnect();
-        if(mSelf && !mSelf->mContextMap)
+        if(mSelf && (!mSelf->mContextMap || !mSelf->mAllocator))
         {
             NS_RELEASE(mSelf);  // XXX two line macro (bug in nsISupports.h)
         }
@@ -52,12 +54,17 @@ nsXPConnect::nsXPConnect()
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
+    mAllocator = new nsMalloc();
 }
 
 nsXPConnect::~nsXPConnect()
 {
     if(mContextMap)
         delete mContextMap;
+    if(mAllocator)
+    {
+        NS_RELEASE(mAllocator);  // XXX two line macro (bug in nsISupports.h)
+    }
     mSelf = NULL;
 }
 
@@ -235,6 +242,26 @@ nsXPConnect::GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
     *aObj = realWrapper->GetNative();
     NS_ADDREF(*aObj);
     return NS_OK;
+}
+
+nsresult
+nsXPConnect::GetWrappedNativeOfJSObject(nsIJSContext* aJSContext,
+                                        nsIJSObject* aJSObj,
+                                        nsIXPConnectWrappedNative** aWrapper)
+{
+    JSContext* cx;
+    JSObject* jsobj;
+    NS_PRECONDITION(aJSContext,"bad param");
+    NS_PRECONDITION(aJSObj,"bad param");
+    NS_PRECONDITION(aWrapper,"bad param");
+
+    if(aWrapper && aJSObj && 
+       NS_SUCCEEDED(aJSObj->GetNative(&jsobj)) && jsobj &&
+       NS_SUCCEEDED(aJSContext->GetNative(&cx)) && cx)
+        *aWrapper = nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,jsobj);
+    else
+        *aWrapper = NULL;
+    return *aWrapper ? NS_OK : NS_ERROR_FAILURE;
 }
 
 XPC_PUBLIC_API(nsIXPConnect*)

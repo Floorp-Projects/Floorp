@@ -38,6 +38,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcbogusjs.obj	\
 	.\$(OBJDIR)\xpcbogusii.obj	\
+	.\$(OBJDIR)\xpcbogusmem.obj	\
 	.\$(OBJDIR)\xpcinvoke.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\

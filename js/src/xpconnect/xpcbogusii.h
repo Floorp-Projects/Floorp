@@ -38,8 +38,7 @@ public:
         IS_POINTER        = 0x80,
         IS_UNIQUE_POINTER = 0x40,
         IS_REFERENCE      = 0x20,
-        SPECIAL_BIT       = 0x10,
-        TYPE_MASK         = 0xf,
+        TYPE_MASK         = 0x1f,
 
         T_I8          = 0,
         T_I16         = 1,
@@ -71,10 +70,12 @@ public:
         T_P_WCHAR     = IS_POINTER | 12,
         T_P_VOID      = IS_POINTER | 13,
         T_P_IID       = IS_POINTER | 14,
-        T_STRING      = IS_POINTER | 15,
+        T_BSTR        = IS_POINTER | 15,
+        T_P_CHAR_STR  = IS_POINTER | 16,
+        T_P_WCHAR_STR = IS_POINTER | 17,
 
-        T_INTERFACE     = 16,   /* SPECIAL_BIT | 0 */
-        T_INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
+        T_INTERFACE     = 18,
+        T_INTERFACE_IS  = 19
     };
 };
 
@@ -201,13 +202,15 @@ public:
         IS_GETTER         = 0x80,
         IS_SETTER         = 0x40,
         IS_VAR_ARGS       = 0x20,
-        IS_CONSTRUCTOR    = 0x10
+        IS_CONSTRUCTOR    = 0x10,
+        IS_HIDDEN         = 0x08
     };
 
     JSBool IsGetter()      const {return (JSBool) (mFlags & IS_GETTER);}
     JSBool IsSetter()      const {return (JSBool) (mFlags & IS_SETTER);}
     JSBool IsVarArgs()     const {return (JSBool) (mFlags & IS_VAR_ARGS);}
     JSBool IsConstructor() const {return (JSBool) (mFlags & IS_CONSTRUCTOR);}
+    JSBool IsHidden()      const {return (JSBool) (mFlags & IS_HIDDEN);}
     const char* GetName()  const {return mName;}
     uint8 GetParamCount()  const {return mParamCount;}
     const nsXPCParamInfo& GetParam(uint8 index) const
