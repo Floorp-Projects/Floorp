@@ -26,23 +26,23 @@
       </object>
     </object>
     <object class="wxMenu" name="context_browser_link">
-      <object class="wxMenuItem" name="dummy">
-        <label>This space for rent context_browser_link</label>
+      <object class="wxMenuItem" name="browser_open_in_new_window">
+        <label>Open Link In New Window</label>
       </object>
     </object>
     <object class="wxMenu" name="context_browser_image">
       <object class="wxMenuItem" name="dummy">
-        <label>This space for rent context_browser_image</label>
+        <label>This space for rent image</label>
       </object>
     </object>
     <object class="wxMenu" name="context_browser_text">
       <object class="wxMenuItem" name="dummy">
-        <label>This space for rent context_browser_text</label>
+        <label>This space for rent text</label>
       </object>
     </object>
     <object class="wxMenu" name="context_browser_input">
       <object class="wxMenuItem" name="dummy">
-        <label>This space for rent context_browser_input</label>
+        <label>This space for rent input</label>
       </object>
     </object>  
 
