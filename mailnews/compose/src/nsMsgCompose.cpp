@@ -144,7 +144,7 @@ static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type,
     if (NS_FAILED(rv) || !*reply_header_locale)
       *reply_header_locale = nsCRT::strdup(NS_LITERAL_STRING("").get());
 
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_authorwrote", reply_header_authorwrote);
+    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_authorwrote", reply_header_authorwrote);
     if (NS_FAILED(rv) || !*reply_header_authorwrote)
       *reply_header_authorwrote = nsCRT::strdup(NS_LITERAL_STRING("%s wrote").get());
 
@@ -160,7 +160,7 @@ static nsresult GetReplyHeaderInfo(PRInt32* reply_header_type,
     if (NS_FAILED(rv) || !*reply_header_colon)
       *reply_header_colon = nsCRT::strdup(NS_LITERAL_STRING(":").get());
 
-    rv = prefs->CopyUnicharPref("mailnews.reply_header_originalmessage", reply_header_originalmessage);
+    rv = prefs->GetLocalizedUnicharPref("mailnews.reply_header_originalmessage", reply_header_originalmessage);
     if (NS_FAILED(rv) || !*reply_header_originalmessage)
       *reply_header_originalmessage = nsCRT::strdup(NS_LITERAL_STRING("--- Original Message ---").get());
   }
