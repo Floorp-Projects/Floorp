@@ -139,7 +139,10 @@ nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsILineBreaker** oResult)
   {
      *oResult = new nsJISx4501LineBreaker (nsnull, 0, nsnull, 0);
   }
-  return (*oResult)->AddRef();
+
+  if (*oResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  (*oResult)->AddRef();
+  return NS_OK;
 }
 
 nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsIWordBreaker** oResult)
@@ -148,6 +151,8 @@ nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsIWordBreaker** oResult)
     return NS_ERROR_NULL_POINTER;
   }
   *oResult = new nsSampleWordBreaker ();
-  return (*oResult)->AddRef();
+  if (*oResult == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  (*oResult)->AddRef();
+  return NS_OK;
 }
 
