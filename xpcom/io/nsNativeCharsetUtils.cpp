@@ -61,7 +61,7 @@
 // iconv for all platforms where nltypes.h and nllanginfo.h are present 
 // along with iconv.
 //
-#if defined(HAVE_ICONV) && defined(HAVE_NL_TYPES_H) && defined(HAVE_NL_LANGINFO)
+#if defined(HAVE_ICONV) && defined(HAVE_NL_TYPES_H) && defined(HAVE_LANGINFO_CODESET)
 #define USE_ICONV 1
 #else
 #define USE_STDCONV 1

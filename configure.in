@@ -2313,7 +2313,7 @@ dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64)
-AC_CHECK_FUNCS(nl_langinfo flockfile getpagesize)
+AC_CHECK_FUNCS(flockfile getpagesize)
 
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
 if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
@@ -2442,6 +2442,8 @@ LIBS=$_SAVE_LIBS
 
     ;;
 esac
+
+AM_LANGINFO_CODESET
 
 AC_LANG_C
 

@@ -55,7 +55,7 @@
 #ifdef HAVE_NL_TYPES_H
 #include <nl_types.h>
 #endif
-#if HAVE_NL_LANGINFO
+#if HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif
 #include "nsPlatformCharset.h"
@@ -170,7 +170,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
     return NS_OK;
   }
 
-#if HAVE_NL_LANGINFO
+#if HAVE_LANGINFO_CODESET
   //
   // This locale appears to be a different locale from the user's locale. 
   // To do this we would need to lock the global resource we are currently 
@@ -216,7 +216,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
   nsCString aCharset;
   nsresult res;
 
-#if HAVE_NL_LANGINFO && defined(CODESET)
+#if HAVE_LANGINFO_CODESET
   nl_langinfo_codeset = nl_langinfo(CODESET);
   NS_ASSERTION(nl_langinfo_codeset, "cannot get nl_langinfo(CODESET)");
 
