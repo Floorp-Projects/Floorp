@@ -432,7 +432,7 @@ nsImageDocument::EndLayout(nsIURI* aURL,
     titleStr.Append((PRInt32)width);
     titleStr.Append("x");
     titleStr.Append((PRInt32)height);
-    titleStr.Append(" pixels ");
+    titleStr.Append(" pixels");
   } 
   SetTitle(titleStr);
   return NS_OK;
