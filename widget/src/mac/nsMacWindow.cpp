@@ -182,11 +182,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 {
-		//¥TODO:	We should check that the new window belongs to one of the screens
-		//				but "qd.screenBits.bounds" is not the right way to do it.
-	Rect screenRect = qd.screenBits.bounds;
-	::InsetRect(&screenRect, 4, 4);
-	screenRect.top += ::LMGetMBarHeight() + kWindowTitleBarHeight;
+	Rect screenRect = (**::GetGrayRgn()).rgnBBox;
 
 	short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
 	if (((PRInt32)aX) < screenRect.left - windowWidth)

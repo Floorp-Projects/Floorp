@@ -245,9 +245,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::SetPort(whichWindow);
 				if (!(anEvent.modifiers & cmdKey))
 					::SelectWindow(whichWindow);
-				Rect screenRect = qd.screenBits.bounds;
-				::InsetRect(&screenRect, 4, 4);
-				screenRect.top += ::LMGetMBarHeight();
+				Rect screenRect = (**::GetGrayRgn()).rgnBBox;
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
 
 				::GetMouse(&anEvent.where);
@@ -283,9 +281,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					}
 				}
 #else
-				Rect sizeRect;
-				sizeRect.bottom = qd.screenBits.bounds.bottom;
-				sizeRect.right = qd.screenBits.bounds.right;
+				Rect sizeRect = (**::GetGrayRgn()).rgnBBox;
 				sizeRect.top = sizeRect.left = 75;
 				long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
 				if (newSize != 0)
