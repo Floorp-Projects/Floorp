@@ -1305,6 +1305,8 @@ sourcetext { /* XXX should not be in HTML namespace */
   padding: 0px;
   float: inherit;
   position: inherit;
+  width:  0px; /* hack for boxes */
+  height: 0px; /* hack for boxes */
 }
 
 :table-cell {
