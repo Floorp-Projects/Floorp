@@ -104,7 +104,7 @@ public :
    virtual void   DataEnd();
  
 protected:
-   virtual void Report(const char* charset);
+   virtual void Report(const char* charset) = 0;
 
    PRUint32 mItems;
    PRUint32* mState;
@@ -125,11 +125,6 @@ nsPSMDetectorBase::nsPSMDetectorBase()
 #ifdef DETECTOR_DEBUG
   mDbgLen = 0;
 #endif
-}
-//----------------------------------------------------------
-void nsPSMDetectorBase::Report(const char* charset)
-{
-  printf("%s\n", charset);
 }
 //----------------------------------------------------------
 void nsPSMDetectorBase::DataEnd()
@@ -554,6 +549,8 @@ class nsXPCOMZhTwDetector :
     virtual void   DataEnd() 
                       { nsZhTwDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -580,6 +577,8 @@ class nsXPCOMZhTwStringDetector :
     virtual void   DataEnd() 
                       { nsZhTwDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMStringDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -605,6 +604,8 @@ class nsXPCOMZhCnDetector :
     virtual void   DataEnd() 
                       { nsZhCnDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -631,6 +632,8 @@ class nsXPCOMZhCnStringDetector :
     virtual void   DataEnd() 
                       { nsZhCnDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char * charset)
+                      { nsXPCOMStringDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -656,6 +659,8 @@ class nsXPCOMKoDetector :
     virtual void   DataEnd() 
                       { nsKoDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -682,6 +687,8 @@ class nsXPCOMKoStringDetector :
     virtual void   DataEnd() 
                       { nsKoDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char *charset)
+                      { nsXPCOMStringDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -708,6 +715,8 @@ class nsXPCOMJaDetector :
     virtual void   DataEnd() 
                       { nsJaDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -734,6 +743,8 @@ class nsXPCOMJaStringDetector :
     virtual void   DataEnd() 
                       { nsJaDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char *charset)
+                      { nsXPCOMStringDetectorBase::Report(charset);};
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -759,6 +770,8 @@ class nsXPCOMZhDetector :
     virtual void   DataEnd() 
                       { nsZhDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -785,6 +798,8 @@ class nsXPCOMZhStringDetector :
     virtual void   DataEnd() 
                       { nsZhDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char *charset)
+                      { nsXPCOMStringDetectorBase::Report(charset);};
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -810,6 +825,8 @@ class nsXPCOMCJKDetector :
     virtual void   DataEnd() 
                       { nsCJKDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char* charset)
+                      { nsXPCOMDetectorBase::Report(charset); };
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
@@ -836,6 +853,8 @@ class nsXPCOMCJKStringDetector :
     virtual void   DataEnd() 
                       { nsCJKDetector::DataEnd(); };
   protected:
+    virtual void   Report(const char *charset)
+                      { nsXPCOMStringDetectorBase::Report(charset);};
     virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
