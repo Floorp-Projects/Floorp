@@ -447,7 +447,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
     result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
-      if((kCR==aChar) && (NS_OK==result)) {
+      if(((kCR==aChar) || (kNewLine==aChar)) && (NS_OK==result)) {
         result=aScanner.GetChar(aChar); //strip off the \r
         result=aScanner.Peek(aChar);    //then see what's next.
         if(NS_OK==result) {
