@@ -32,7 +32,6 @@ LIBRARY_NAME	= raptorwebwidget
 CPPSRCS		= \
 		dlldeps.cpp \
 		nsDLLFactory.cpp \
-		nsDocLoader.cpp \
 		nsWebShell.cpp \
 		$(NULL)
 
