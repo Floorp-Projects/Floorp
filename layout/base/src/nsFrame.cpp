@@ -174,6 +174,7 @@ nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
   : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
   NS_ADDREF(mContent);
+  mState = NS_FRAME_FIRST_REFLOW;
 }
 
 nsFrame::~nsFrame()
@@ -998,7 +999,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 {
   NS_FRAME_TRACE_MSG(("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    mState &= ~NS_FRAME_IN_REFLOW;
+    mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW);
 
     if (nsnull != mView) {
       // Position and size view relative to its parent, not relative to our
