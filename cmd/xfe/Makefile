@@ -109,6 +109,10 @@ REQUIRES	=\
 		  progress \
 		  $(NULL)
 
+ifdef MOZ_FULLCIRCLE
+REQUIRES += fullsoft
+endif
+
 CSRCS		= \
 		  pref_helpers.c \
 		  colors.c \
@@ -264,7 +268,6 @@ BASIC_LIBS	= \
 ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif
-
 
 ifdef JAVA_OR_OJI
 JAVA_JMC = $(DIST)/lib/libjmc.a      # XXX To be removed...
@@ -1094,3 +1097,4 @@ symbols:
 	@echo "ALL_TARGETS = $(ALL_TARGETS)"
 	@echo "RELEASES    = $(RELEASES)"
 	@echo "OS_ARCH     = $(OS_ARCH)"
+	@echo "FC_PLATFORM = $(FC_PLATFORM)"
