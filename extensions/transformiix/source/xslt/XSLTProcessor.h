@@ -42,6 +42,7 @@
 #include "nsIDocumentTransformer.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIObserver.h"
+#include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
 
 #include "txMozillaTextOutput.h"
@@ -398,7 +399,7 @@ private:
 #ifndef TX_EXE
     void SignalTransformEnd();
 
-    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsIScriptLoader> mScriptLoader;
     nsCOMPtr<nsIObserver> mObserver;
 #endif
 }; //-- XSLTProcessor
