@@ -95,7 +95,6 @@ addThis();
 arr = [0,1,2,3];
 cmp = function(x,y) {return x-y;};
 arr.sort(cmp);
-arr.join = Array.prototype.join;
 
 status = inSection(4);
 actual = arr.join();
