@@ -134,7 +134,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
 
   rv = block->SetString(1, tokenName);
   rv = nsNSSDialogHelper::openDialog(nsnull, 
-                                "chrome://pipnss/content/changepassword.xul",
+                                "chrome://pippki/content/changepassword.xul",
                                 PR_TRUE, block);
   if (NS_FAILED(rv)) return rv;
 
