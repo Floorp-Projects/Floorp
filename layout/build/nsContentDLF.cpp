@@ -179,7 +179,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     PRInt32 typeIndex;
     for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
       if (type.Equals(gHTMLTypes[typeIndex]) &&
-          !type.Equals(NS_LITERAL_CSTRING("application/x-view-source"))) {
+          !type.EqualsLiteral("application/x-view-source")) {
         knownType = PR_TRUE;
       }
     }

@@ -320,7 +320,7 @@ NS_IMETHODIMP nsTreeSelection::GetSingle(PRBool* aSingle)
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
   nsAutoString seltype;
   content->GetAttr(kNameSpaceID_None, nsXULAtoms::seltype, seltype);
-  *aSingle = seltype.Equals(NS_LITERAL_STRING("single"));
+  *aSingle = seltype.EqualsLiteral("single");
   return NS_OK;
 }
 

@@ -219,9 +219,9 @@ XXX The winner is the outermost setting in conflicting settings like these:
   // if we have an accentunder attribute, it overrides what the underscript said
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                    nsMathMLAtoms::accentunder_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
-    else if (value.Equals(NS_LITERAL_STRING("false"))) 
+    else if (value.EqualsLiteral("false")) 
       mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
   }
 

@@ -355,7 +355,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     // This allows selective overriding for subcontent.
     nsAutoString value;
     content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       return result;
   }
   if (GetStyleVisibility()->IsVisible()) {
@@ -685,7 +685,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (aAttribute == nsXULAtoms::open) {
     aChild->GetAttr(kNameSpaceID_None, aAttribute, value);
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       OpenMenuInternal(PR_TRUE);
     else {
       OpenMenuInternal(PR_FALSE);
@@ -932,8 +932,8 @@ nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
   else {
     nsAutoString sizedToPopup;
     aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-    sizeToPopup = sizedToPopup.Equals(NS_LITERAL_STRING("always")) ||
-                  !aRequireAlways && sizedToPopup.Equals(NS_LITERAL_STRING("pref"));
+    sizeToPopup = sizedToPopup.EqualsLiteral("always") ||
+                  !aRequireAlways && sizedToPopup.EqualsLiteral("pref");
   }
   
   return sizeToPopup;
@@ -1108,39 +1108,39 @@ static void ConvertPosition(nsIContent* aPopupElt, nsString& aAnchor, nsString& 
   if (position.IsEmpty())
     return;
 
-  if (position.Equals(NS_LITERAL_STRING("before_start"))) {
+  if (position.EqualsLiteral("before_start")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
+  else if (position.EqualsLiteral("before_end")) {
     aAnchor.Assign(NS_LITERAL_STRING("topright"));
     aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
+  else if (position.EqualsLiteral("after_start")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
+  else if (position.EqualsLiteral("after_end")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
     aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
+  else if (position.EqualsLiteral("start_before")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
+  else if (position.EqualsLiteral("start_after")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
     aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
+  else if (position.EqualsLiteral("end_before")) {
     aAnchor.Assign(NS_LITERAL_STRING("topright"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
+  else if (position.EqualsLiteral("end_after")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
     aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
+  else if (position.EqualsLiteral("overlap")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
@@ -1294,7 +1294,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
     if (!mMenuOpen && mMenuParent) {
       nsAutoString active;
       mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-      if (active.Equals(NS_LITERAL_STRING("true"))) {
+      if (active.EqualsLiteral("true")) {
         // We're still the active menu. Make sure all submenus/timers are closed
         // before opening this one
         mMenuParent->KillPendingTimers();
@@ -1314,7 +1314,7 @@ nsMenuFrame::IsDisabled()
 {
   nsAutoString disabled;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.Equals(NS_LITERAL_STRING("true")))
+  if (disabled.EqualsLiteral("true"))
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -1324,9 +1324,9 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value.Equals(NS_LITERAL_STRING("checkbox")))
+  if (value.EqualsLiteral("checkbox"))
     mType = eMenuType_Checkbox;
-  else if (value.Equals(NS_LITERAL_STRING("radio"))) {
+  else if (value.EqualsLiteral("radio")) {
     mType = eMenuType_Radio;
 
     nsAutoString valueName;
@@ -1351,7 +1351,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
                     value);
-  newChecked = (value.Equals(NS_LITERAL_STRING("true")));
+  newChecked = (value.EqualsLiteral("true"));
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1580,7 +1580,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
     nsAutoString value;
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::autocheck, value);
-    if (!value.Equals(NS_LITERAL_STRING("false"))) {
+    if (!value.EqualsLiteral("false")) {
       if (mChecked) {
         mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
                             PR_TRUE);

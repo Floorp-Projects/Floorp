@@ -264,10 +264,10 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     }
     */
   }
-  else if (unit.Equals(NS_LITERAL_STRING("width")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
-  else if (unit.Equals(NS_LITERAL_STRING("height"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
-  else if (unit.Equals(NS_LITERAL_STRING("depth")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (unit.Equals(NS_LITERAL_STRING("lspace"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
+  else if (unit.EqualsLiteral("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  else if (unit.EqualsLiteral("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
+  else if (unit.EqualsLiteral("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
+  else if (unit.EqualsLiteral("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
   else if (!gotPercent) { // percentage can only apply to a pseudo-unit
 
     // see if the unit is a named-space

@@ -223,9 +223,9 @@ nsMathMLmunderoverFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
   // if we have an accentunder attribute, it overrides what the underscript said
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                    nsMathMLAtoms::accentunder_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
-    else if (value.Equals(NS_LITERAL_STRING("false"))) 
+    else if (value.EqualsLiteral("false")) 
       mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
   }
 
@@ -240,9 +240,9 @@ nsMathMLmunderoverFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
   // if we have an accent attribute, it overrides what the overscript said
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
                    nsMathMLAtoms::accent_, value)) {
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
-    else if (value.Equals(NS_LITERAL_STRING("false"))) 
+    else if (value.EqualsLiteral("false")) 
       mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
   }
 

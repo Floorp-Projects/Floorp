@@ -385,18 +385,18 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
   if (unit.IsEmpty()) {
     cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
   }
-  else if (unit.Equals(NS_LITERAL_STRING("%"))) {
+  else if (unit.EqualsLiteral("%")) {
     aCSSValue.SetPercentValue(floatValue / 100.0f);
     return PR_TRUE;
   }
-  else if (unit.Equals(NS_LITERAL_STRING("em"))) cssUnit = eCSSUnit_EM;
-  else if (unit.Equals(NS_LITERAL_STRING("ex"))) cssUnit = eCSSUnit_XHeight;
-  else if (unit.Equals(NS_LITERAL_STRING("px"))) cssUnit = eCSSUnit_Pixel;
-  else if (unit.Equals(NS_LITERAL_STRING("in"))) cssUnit = eCSSUnit_Inch;
-  else if (unit.Equals(NS_LITERAL_STRING("cm"))) cssUnit = eCSSUnit_Centimeter;
-  else if (unit.Equals(NS_LITERAL_STRING("mm"))) cssUnit = eCSSUnit_Millimeter;
-  else if (unit.Equals(NS_LITERAL_STRING("pt"))) cssUnit = eCSSUnit_Point;
-  else if (unit.Equals(NS_LITERAL_STRING("pc"))) cssUnit = eCSSUnit_Pica;
+  else if (unit.EqualsLiteral("em")) cssUnit = eCSSUnit_EM;
+  else if (unit.EqualsLiteral("ex")) cssUnit = eCSSUnit_XHeight;
+  else if (unit.EqualsLiteral("px")) cssUnit = eCSSUnit_Pixel;
+  else if (unit.EqualsLiteral("in")) cssUnit = eCSSUnit_Inch;
+  else if (unit.EqualsLiteral("cm")) cssUnit = eCSSUnit_Centimeter;
+  else if (unit.EqualsLiteral("mm")) cssUnit = eCSSUnit_Millimeter;
+  else if (unit.EqualsLiteral("pt")) cssUnit = eCSSUnit_Point;
+  else if (unit.EqualsLiteral("pc")) cssUnit = eCSSUnit_Pica;
   else // unexpected unit
     return PR_FALSE;
 
@@ -450,31 +450,31 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
   PRInt32 i = 0;
   nsIAtom* namedspaceAtom = nsnull;
-  if (aString.Equals(NS_LITERAL_STRING("veryverythinmathspace"))) {
+  if (aString.EqualsLiteral("veryverythinmathspace")) {
     i = 1;
     namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("verythinmathspace"))) {
+  else if (aString.EqualsLiteral("verythinmathspace")) {
     i = 2;
     namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("thinmathspace"))) {
+  else if (aString.EqualsLiteral("thinmathspace")) {
     i = 3;
     namedspaceAtom = nsMathMLAtoms::thinmathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("mediummathspace"))) {
+  else if (aString.EqualsLiteral("mediummathspace")) {
     i = 4;
     namedspaceAtom = nsMathMLAtoms::mediummathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("thickmathspace"))) {
+  else if (aString.EqualsLiteral("thickmathspace")) {
     i = 5;
     namedspaceAtom = nsMathMLAtoms::thickmathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("verythickmathspace"))) {
+  else if (aString.EqualsLiteral("verythickmathspace")) {
     i = 6;
     namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
   }
-  else if (aString.Equals(NS_LITERAL_STRING("veryverythickmathspace"))) {
+  else if (aString.EqualsLiteral("veryverythickmathspace")) {
     i = 7;
     namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
   }

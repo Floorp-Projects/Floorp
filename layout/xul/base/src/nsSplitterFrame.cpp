@@ -186,7 +186,7 @@ nsSplitterFrameInner::GetResizeBefore()
   nsString value;
   mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                 nsXULAtoms::resizebefore, value);
-  if (value.Equals(NS_LITERAL_STRING("farthest")))
+  if (value.EqualsLiteral("farthest"))
     return Farthest;
   return Closest;
 }
@@ -203,9 +203,9 @@ nsSplitterFrameInner::GetResizeAfter()
   nsString value;
   mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                 nsXULAtoms::resizeafter, value);
-  if (value.Equals(NS_LITERAL_STRING("farthest")))
+  if (value.EqualsLiteral("farthest"))
     return Farthest;
-  if (value.Equals(NS_LITERAL_STRING("grow")))
+  if (value.EqualsLiteral("grow"))
     return Grow;
   return Closest;
 }
@@ -216,9 +216,9 @@ nsSplitterFrameInner::GetState()
   nsString value;
   mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                 nsXULAtoms::state, value);
-  if (value.Equals(NS_LITERAL_STRING("dragging")))
+  if (value.EqualsLiteral("dragging"))
     return Dragging;
-  if (value.Equals(NS_LITERAL_STRING("collapsed")))
+  if (value.EqualsLiteral("collapsed"))
     return Collapsed;
   return Open;
 }
@@ -743,7 +743,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   nsAutoString disabled;
   mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                 nsHTMLAtoms::disabled, disabled);
-  if (disabled.Equals(NS_LITERAL_STRING("true")))
+  if (disabled.EqualsLiteral("true"))
     return NS_OK;
 
   nsBoxLayoutState state(mOuter->mPresContext);
@@ -951,9 +951,9 @@ nsSplitterFrameInner::GetCollapseDirection()
     nsString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
     {
-     if (value.Equals(NS_LITERAL_STRING("before")))
+     if (value.EqualsLiteral("before"))
          return Before;
-     else if (value.Equals(NS_LITERAL_STRING("after")))
+     else if (value.EqualsLiteral("after"))
          return After;
      else 
        return None;

@@ -654,74 +654,74 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPo
   nsAutoString popupAlign(aPopupAlign);
 
   if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    if (popupAnchor == NS_LITERAL_STRING("topright"))
+    if (popupAnchor.EqualsLiteral("topright"))
       popupAnchor.Assign(NS_LITERAL_STRING("topleft"));
-    else if (popupAnchor == NS_LITERAL_STRING("topleft"))
+    else if (popupAnchor.EqualsLiteral("topleft"))
       popupAnchor.Assign(NS_LITERAL_STRING("topright"));
-    else if (popupAnchor == NS_LITERAL_STRING("bottomleft"))
+    else if (popupAnchor.EqualsLiteral("bottomleft"))
       popupAnchor.Assign(NS_LITERAL_STRING("bottomright"));
-    else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
+    else if (popupAnchor.EqualsLiteral("bottomright"))
       popupAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
 
-    if (popupAlign == NS_LITERAL_STRING("topright"))
+    if (popupAlign.EqualsLiteral("topright"))
       popupAlign.Assign(NS_LITERAL_STRING("topleft"));
-    else if (popupAlign == NS_LITERAL_STRING("topleft"))
+    else if (popupAlign.EqualsLiteral("topleft"))
       popupAlign.Assign(NS_LITERAL_STRING("topright"));
-    else if (popupAlign == NS_LITERAL_STRING("bottomleft"))
+    else if (popupAlign.EqualsLiteral("bottomleft"))
       popupAlign.Assign(NS_LITERAL_STRING("bottomright"));
-    else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
+    else if (popupAnchor.EqualsLiteral("bottomright"))
       popupAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
 
   // Adjust position for margins at the aligned corner
   nsMargin margin;
   GetStyleMargin()->GetMargin(margin);
-  if (popupAlign == NS_LITERAL_STRING("topleft")) {
+  if (popupAlign.EqualsLiteral("topleft")) {
     *ioXPos += margin.left;
     *ioYPos += margin.top;
-  } else if (popupAlign == NS_LITERAL_STRING("topright")) {
+  } else if (popupAlign.EqualsLiteral("topright")) {
     *ioXPos += margin.right;
     *ioYPos += margin.top;
-  } else if (popupAlign == NS_LITERAL_STRING("bottomleft")) {
+  } else if (popupAlign.EqualsLiteral("bottomleft")) {
     *ioXPos += margin.left;
     *ioYPos += margin.bottom;
-  } else if (popupAlign == NS_LITERAL_STRING("bottomright")) {
+  } else if (popupAlign.EqualsLiteral("bottomright")) {
     *ioXPos += margin.right;
     *ioYPos += margin.bottom;
   }
   
-  if (popupAnchor == NS_LITERAL_STRING("topright") && popupAlign == NS_LITERAL_STRING("topleft")) {
+  if (popupAnchor.EqualsLiteral("topright") && popupAlign.EqualsLiteral("topleft")) {
     *ioXPos += inParentRect.width;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("topleft")) {
+  else if (popupAnchor.EqualsLiteral("topleft") && popupAlign.EqualsLiteral("topleft")) {
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("topright") && popupAlign == NS_LITERAL_STRING("bottomright")) {
+  else if (popupAnchor.EqualsLiteral("topright") && popupAlign.EqualsLiteral("bottomright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("bottomright") && popupAlign == NS_LITERAL_STRING("bottomleft")) {
+  else if (popupAnchor.EqualsLiteral("bottomright") && popupAlign.EqualsLiteral("bottomleft")) {
     *ioXPos += inParentRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (popupAnchor == NS_LITERAL_STRING("bottomright") && popupAlign == NS_LITERAL_STRING("topright")) {
+  else if (popupAnchor.EqualsLiteral("bottomright") && popupAlign.EqualsLiteral("topright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("topright")) {
+  else if (popupAnchor.EqualsLiteral("topleft") && popupAlign.EqualsLiteral("topright")) {
     *ioXPos -= mRect.width;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("bottomleft")) {
+  else if (popupAnchor.EqualsLiteral("topleft") && popupAlign.EqualsLiteral("bottomleft")) {
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (popupAnchor == NS_LITERAL_STRING("bottomleft") && popupAlign == NS_LITERAL_STRING("bottomright")) {
+  else if (popupAnchor.EqualsLiteral("bottomleft") && popupAlign.EqualsLiteral("bottomright")) {
     *ioXPos -= mRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (popupAnchor == NS_LITERAL_STRING("bottomleft") && popupAlign == NS_LITERAL_STRING("topleft")) {
+  else if (popupAnchor.EqualsLiteral("bottomleft") && popupAlign.EqualsLiteral("topleft")) {
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
@@ -1211,9 +1211,9 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
-  if (menuActive != NS_LITERAL_STRING("true")) {
+  if (!menuActive.EqualsLiteral("true")) {
     mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, shouldDisplay);
-    if ( shouldDisplay == NS_LITERAL_STRING("true") )
+    if ( shouldDisplay.EqualsLiteral("true") )
       mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
   }
 
@@ -1378,7 +1378,7 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
       // Don't consume outside clicks for autocomplete widget
       nsAutoString typeString;
       parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, typeString);
-      if (typeString.Equals(NS_LITERAL_STRING("autocomplete")))
+      if (typeString.EqualsLiteral("autocomplete"))
         aConsumeOutsideClicks = PR_FALSE;
     }
   }
@@ -1701,7 +1701,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 
       // Get the active status
       current->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, activeKey);
-      if (activeKey == NS_LITERAL_STRING("true")) {
+      if (activeKey.EqualsLiteral("true")) {
         foundActive = PR_TRUE;
         if (stringLength > 1) {
           // If there is more than one char typed, the current item has highest priority,
@@ -2026,7 +2026,7 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled;
   aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled == NS_LITERAL_STRING("true"))
+  if (disabled.EqualsLiteral("true"))
     return PR_TRUE;
   return PR_FALSE;
 }

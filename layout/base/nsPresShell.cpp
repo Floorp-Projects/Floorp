@@ -4415,7 +4415,7 @@ NS_IMETHODIMP PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocation
     }
   }
 
-  if (anchor || area || link || xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+  if (anchor || area || link || xlinkType.EqualsLiteral("simple")) {
     //Remove all the '\t', '\r' and '\n' from 'anchorText'
     anchorText.StripChars(strippedChars);
 

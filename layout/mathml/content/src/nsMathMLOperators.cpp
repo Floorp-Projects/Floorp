@@ -117,29 +117,29 @@ SetProperty(OperatorData* aOperatorData,
   // maxsize (default: infinity)
   // minsize (default: 1)
 
-  if (aValue.Equals(NS_LITERAL_STRING("true"))) {
+  if (aValue.EqualsLiteral("true")) {
     // see if we should enable flags with default value=false
-    if (aName.Equals(NS_LITERAL_STRING("fence")))
+    if (aName.EqualsLiteral("fence"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
-    else if (aName.Equals(NS_LITERAL_STRING("accent")))
+    else if (aName.EqualsLiteral("accent"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
-    else if (aName.Equals(NS_LITERAL_STRING("largeop")))
+    else if (aName.EqualsLiteral("largeop"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_LARGEOP;
-    else if (aName.Equals(NS_LITERAL_STRING("separator")))
+    else if (aName.EqualsLiteral("separator"))
       aOperatorData->mFlags |=  NS_MATHML_OPERATOR_SEPARATOR;
-    else if (aName.Equals(NS_LITERAL_STRING("movablelimits")))
+    else if (aName.EqualsLiteral("movablelimits"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_MOVABLELIMITS;
   }
-  else if (aValue.Equals(NS_LITERAL_STRING("false"))) {
+  else if (aValue.EqualsLiteral("false")) {
     // see if we should disable flags with default value=true
-    if (aName.Equals(NS_LITERAL_STRING("symmetric")))
+    if (aName.EqualsLiteral("symmetric"))
       aOperatorData->mFlags &= ~NS_MATHML_OPERATOR_SYMMETRIC;
   }
-  else if (aName.Equals(NS_LITERAL_STRING("stretchy")) &&
+  else if (aName.EqualsLiteral("stretchy") &&
           (1 == aOperatorData->mStr.Length())) {
-    if (aValue.Equals(NS_LITERAL_STRING("vertical")))
+    if (aValue.EqualsLiteral("vertical"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_VERT;
-    else if (aValue.Equals(NS_LITERAL_STRING("horizontal")))
+    else if (aValue.EqualsLiteral("horizontal"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY_HORIZ;
     else return; // invalid value
     if (kNotFound == nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
@@ -150,9 +150,9 @@ SetProperty(OperatorData* aOperatorData,
     PRInt32 i = 0;
     float space = 0.0f;
     PRBool isLeftSpace;
-    if (aName.Equals(NS_LITERAL_STRING("lspace")))
+    if (aName.EqualsLiteral("lspace"))
       isLeftSpace = PR_TRUE;
-    else if (aName.Equals(NS_LITERAL_STRING("rspace")))
+    else if (aName.EqualsLiteral("rspace"))
       isLeftSpace = PR_FALSE;
     else return;  // input is not applicable
 
@@ -163,13 +163,13 @@ SetProperty(OperatorData* aOperatorData,
       if (error) return;
     }
     // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
-    else if (aValue.Equals(NS_LITERAL_STRING("veryverythinmathspace")))  i = 1;
-    else if (aValue.Equals(NS_LITERAL_STRING("verythinmathspace")))      i = 2;
-    else if (aValue.Equals(NS_LITERAL_STRING("thinmathspace")))          i = 3;
-    else if (aValue.Equals(NS_LITERAL_STRING("mediummathspace")))        i = 4;
-    else if (aValue.Equals(NS_LITERAL_STRING("thickmathspace")))         i = 5;
-    else if (aValue.Equals(NS_LITERAL_STRING("verythickmathspace")))     i = 6;
-    else if (aValue.Equals(NS_LITERAL_STRING("veryverythickmathspace"))) i = 7;
+    else if (aValue.EqualsLiteral("veryverythinmathspace"))  i = 1;
+    else if (aValue.EqualsLiteral("verythinmathspace"))      i = 2;
+    else if (aValue.EqualsLiteral("thinmathspace"))          i = 3;
+    else if (aValue.EqualsLiteral("mediummathspace"))        i = 4;
+    else if (aValue.EqualsLiteral("thickmathspace"))         i = 5;
+    else if (aValue.EqualsLiteral("verythickmathspace"))     i = 6;
+    else if (aValue.EqualsLiteral("veryverythickmathspace")) i = 7;
 
     if (0 != i) // it was a namedspace value
       space = float(i)/float(18);
