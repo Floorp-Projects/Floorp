@@ -229,7 +229,12 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
         pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-        WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
+        // Don't copy text larger than 64K to the clipboard
+        if (strlen(pByteMem) <= 0xFFFF) {
+          WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
+        } else {
+          WinAlarm(HWND_DESKTOP, WA_ERROR);
+        }
       }
     }
     else                           // All other text/.. flavors are in unicode
@@ -275,7 +280,12 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
           WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData), NumOfBytes, pByteMem, NumOfBytes);
           pByteMem [NumOfBytes] = '\0';
 
-          WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
+          // Don't copy text larger than 64K to the clipboard
+          if (strlen(pByteMem) <= 0xFFFF) {
+            WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
+          } else {
+            WinAlarm(HWND_DESKTOP, WA_ERROR);
+          }
         }
       }
     }
