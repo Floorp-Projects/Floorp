@@ -50,7 +50,9 @@ nsresult nsBasicUTF7Decoder::DecodeDirect(
     ch = *src;
 
     // stop when we meet other chars or end of direct encoded seq.
-    if ((ch < 0x20) || (ch > 0x7e) || (ch == mEscChar)) {
+    // if ((ch < 0x20) || (ch > 0x7e) || (ch == mEscChar)) {
+    // but we are decoding; so we should be lax; pass everything until escchar
+    if (ch == mEscChar) {
       res = NS_ERROR_UDEC_ILLEGALINPUT;
       break;
     }
@@ -122,7 +124,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
         }
         mEncBits += value >> 4;
         *(dest++) = (PRUnichar) mEncBits;
-        mEncBits = (value & 0x03) << 12;
+        mEncBits = (value & 0x0e) << 12;
         break;
       case 6:
         mEncBits += value << 6;
@@ -206,6 +208,8 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
         if (*src == mEscChar) {
           mEncoding = ENC_BASE64;
           mFreshBase64 = PR_TRUE;
+          mEncBits = 0;
+          mEncStep = 0;
           src++;
           res = NS_OK;
         } else break;
