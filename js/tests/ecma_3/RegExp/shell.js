@@ -32,8 +32,13 @@ var ERR_NO_MATCH = '\nERROR !!! regexp FAILED to match anything !!!';
 var ERR_UNEXP_MATCH = '\nERROR !!! regexp MATCHED when we expected it to fail !!!';
 var CHAR_LBRACKET = '[';
 var CHAR_RBRACKET = ']';
+var CHAR_QT_DBL = '"';
 var CHAR_QT = "'";
 var CHAR_NL = '\n';
+var CHAR_COMMA = ',';
+var CHAR_SPACE = ' ';
+var TYPE_STRING = typeof 'abc';
+
 
 
 function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
@@ -141,7 +146,7 @@ function getState(status, pattern, string)
   string = string.replace(/\v/g, '\\v');
   string = string.replace(/\f/g, '\\f');
 
-  return (status + MSG_PATTERN + pattern + MSG_STRING + quote(string));
+  return (status + MSG_PATTERN + pattern + MSG_STRING + singleQuote(string));
 }
 
 
@@ -156,7 +161,7 @@ function getState(status, pattern, string)
  * arr.toString()
  * 1,2,3
  *
- * But toSource() doesn't exist in Rhino - so branch on this -
+ * But toSource() doesn't exist in Rhino, so use our own imitation, below -
  *
  */
 function formatArray(arr)
@@ -167,12 +172,59 @@ function formatArray(arr)
   }
   catch(e)
   {
-    return CHAR_LBRACKET + arr.toString() + CHAR_RBRACKET;
+    return toSource(arr);
   }
 }
 
 
-function quote(text)
+/*
+ * Imitate SpiderMonkey's arr.toSource() method:
+ *
+ * a) Double-quote each array element that is of string type
+ * b) Represent |undefined| and |null| by empty strings
+ * c) Delimit elements by a comma + single space
+ * d) Do not add delimiter at the end UNLESS the last element is |undefined|
+ * e) Add square brackets to the beginning and end of the string
+ */
+function toSource(arr)
 {
-  return (CHAR_QT + text + CHAR_QT);
+  var delim = CHAR_COMMA + CHAR_SPACE;
+  var elt = '';
+  var ret = '';
+  var len = arr.length;
+
+  for (i=0; i<len; i++)
+  {
+    elt = arr[i];
+
+    switch(true)
+    {
+      case (typeof elt === TYPE_STRING) :
+        ret += doubleQuote(elt);
+        break;
+
+      case (elt === undefined || elt === null) :
+        break; // add nothing but the delimiter, below -
+
+      default:
+        ret += elt.toString();
+    }
+
+    if ((i < len-1) || (elt === undefined))
+      ret += delim;
+  }
+
+  return  CHAR_LBRACKET + ret + CHAR_RBRACKET;
+}
+
+
+function doubleQuote(text)
+{
+  return CHAR_QT_DBL + text + CHAR_QT_DBL;
+}
+
+
+function singleQuote(text)
+{
+  return CHAR_QT + text + CHAR_QT;
 }
