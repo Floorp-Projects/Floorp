@@ -70,6 +70,8 @@
 #include <os2.h>
 #endif
 
+extern JSRuntime* PREF_GetJSRuntime();
+
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
 
@@ -290,7 +292,6 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE, request = PR_FALSE;
-    extern JSRuntime* PREF_GetJSRuntime(void);
 
     /* --ML hash test */
     if (!gHashTable)
@@ -421,7 +422,6 @@ void PREF_CleanupPrefs()
     gMochaTaskState = NULL; /* We -don't- destroy this. */
 
     if (gMochaContext) {
-        extern JSRuntime* PREF_GetJSRuntime(void);
         JSRuntime *rt;
         gMochaPrefObject = NULL;
 
