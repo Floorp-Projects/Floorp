@@ -99,14 +99,14 @@ XP_DIST_LIBS		= \
 			$(JSJ_LIB) \
 			$(NULL)
 
-ifdef MOZ_FULLCIRCLE
-XP_DIST_LIBS		+= $(FULLCIRCLE_LIBS)
-endif
-
 XP_LIBS			= \
 			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
+
+ifdef MOZ_FULLCIRCLE
+XP_LIBS			+= $(FULLCIRCLE_LIBS)
+endif
 
 LIBS			= \
 			$(UNIX_VIEWER_TK_LIBS) \
