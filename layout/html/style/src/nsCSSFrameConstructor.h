@@ -416,6 +416,14 @@ protected:
                                nsIStyleContext*         aStyleContext,
                                nsFrameItems&            aFrameItems);
 
+  nsresult CreateAnonymousFrames(nsIPresContext*          aPresContext,
+                                             nsIAtom*                 aTag,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems);
+
+
 #ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresContext*          aPresContext,
                              nsFrameConstructorState& aState,
@@ -425,13 +433,6 @@ protected:
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
                              PRBool&                  aHaltProcessing);
-
-  nsresult CreateAnonymousXULContent(nsIPresContext*          aPresContext,
-                           nsIAtom*                 aTag,
-                           nsFrameConstructorState& aState,
-                           nsIContent*              aContent,
-                           nsIFrame*                aParentFrame,
-                           nsFrameItems&            aChildItems);
 
 #endif
 

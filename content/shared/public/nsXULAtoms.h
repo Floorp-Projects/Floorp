@@ -95,6 +95,9 @@ public:
   static nsIAtom* thumb; 
 
   static nsIAtom* toggled; 
+  static nsIAtom* grippy; 
+  static nsIAtom* splitter; 
+  static nsIAtom* collapse; 
 };
 
 #endif /* nsXULAtoms_h___ */

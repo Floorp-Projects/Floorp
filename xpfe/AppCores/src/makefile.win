@@ -176,8 +176,10 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\resources\TB_NewStop.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_NewHome.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_NewPrint.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\grippy.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\grippyO.gif			$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\grippy-horizontal-before.gif	$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\grippy-horizontal-after.gif	$(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\grippy-vertical-before.gif	    $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\grippy-vertical-after.gif		$(DIST)\bin\res\toolbar
 
   $(MAKE_INSTALL) ..\xul\resources\throbbingN.gif			$(DIST)\bin\res\throbber
 
@@ -260,8 +262,10 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\TB_NewStop.gif	
 	rm -f $(DIST)\bin\res\samples\TB_NewHome.gif	
 	rm -f $(DIST)\bin\res\samples\TB_NewPrint.gif	
-	rm -f $(DIST)\bin\res\toolbar\grippy.gif	
-	rm -f $(DIST)\bin\res\toolbar\grippyO.gif	
+	rm -f $(DIST)\bin\res\toolbar\grippy-horizontal-before.gif	
+	rm -f $(DIST)\bin\res\toolbar\grippy-horizontal-after.gif	
+	rm -f $(DIST)\bin\res\toolbar\grippy-vertical-before.gif	
+	rm -f $(DIST)\bin\res\toolbar\grippy-vertical-after.gif	
   
   rm -f $(DIST)\bin\res\throbber\throbbingN.gif
 

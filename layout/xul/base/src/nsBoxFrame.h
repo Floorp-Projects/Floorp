@@ -38,6 +38,7 @@ public:
     PRBool sizeValid;
     PRBool needsReflow;
     PRBool needsRecalc;
+    PRBool collapsed;
 
     nsCalculatedBoxInfo();
     virtual void clear();

@@ -35,6 +35,7 @@
 #include "nsXULAtoms.h"
 #include "nsIReflowCommand.h"
 #include "nsIContent.h"
+#include "nsIViewManager.h"
 
 #define CONSTANT float(0.0)
 
@@ -312,27 +313,29 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
   nsIFrame* childFrame = mFrames.FirstChild(); 
   while (nsnull != childFrame) 
   {    
+   
+      if (!mSprings[count].collapsed)
+      {
+        // reflow only fixed children
+        if (mSprings[count].flex == 0.0) {
+          FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, count, incrementalChild);
 
-      // reflow only fixed children
-      if (mSprings[count].flex == 0.0) {
-        FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, count, incrementalChild);
-
-        // if its height greater than the max. Set the max to this height and set a flag
-        // saying we will need to do another pass. But keep going there
-        // may be another child that is bigger
-        if (!mHorizontal) {
-          if (rect.height == NS_INTRINSICSIZE || aDesiredSize.height > mSprings[count].calculatedSize.height) {
-              mSprings[count].calculatedSize.height = aDesiredSize.height;
-              resized[count] = PR_TRUE;
-          } 
-        } else {
-          if (rect.width == NS_INTRINSICSIZE || aDesiredSize.width > mSprings[count].calculatedSize.width) {
-              mSprings[count].calculatedSize.width = aDesiredSize.width;
-              resized[count] = PR_TRUE;
-          } 
+          // if its height greater than the max. Set the max to this height and set a flag
+          // saying we will need to do another pass. But keep going there
+          // may be another child that is bigger
+          if (!mHorizontal) {
+            if (rect.height == NS_INTRINSICSIZE || aDesiredSize.height > mSprings[count].calculatedSize.height) {
+                mSprings[count].calculatedSize.height = aDesiredSize.height;
+                resized[count] = PR_TRUE;
+            } 
+          } else {
+            if (rect.width == NS_INTRINSICSIZE || aDesiredSize.width > mSprings[count].calculatedSize.width) {
+                mSprings[count].calculatedSize.width = aDesiredSize.width;
+                resized[count] = PR_TRUE;
+            } 
+          }
         }
-      }
-      
+      }      
     nsresult rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
@@ -368,6 +371,8 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
         if (count == changedIndex)
             break;
 
+        if (!mSprings[count].collapsed)
+        {
         // reflow if the child needs it or we are on a second pass
       //  if (mSprings[count].needsReflow || passes > 0) {
           FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, count, incrementalChild);
@@ -424,6 +429,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
                 changedIndex = count;
             }     
         }
+      }
         
       nsresult rv = childFrame->GetNextSibling(&childFrame);
       NS_ASSERTION(rv == NS_OK,"failed to get next child");
@@ -448,6 +454,29 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
   return NS_OK;
 }
 
+/*
+void CollapseChildren(nsIFrame* frame)
+{
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nscoord count = 0;
+  while (nsnull != childFrame) 
+  {
+    childFrame->SetRect(nsRect(0,0,0,0));
+    // make the view really small as well
+    nsIView* view = nsnull;
+    childFrame->GetView(&view);
+
+    if (view) {
+      view->SetDimensions(0,0,PR_FALSE);
+    }
+ 
+    CollapseChildren(childFrame);
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+  }
+}
+*/
+
 /**
  * Given the boxes rect. Set the x,y locations of all its children. Taking into account
  * their margins
@@ -463,43 +492,61 @@ nsBoxFrame::PlaceChildren(nsRect& boxRect)
   nscoord count = 0;
   while (nsnull != childFrame) 
   {
-    const nsStyleSpacing* spacing;
-    nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                   (const nsStyleStruct*&) spacing);
+    nsresult rv;
 
-    nsMargin margin(0,0,0,0);
-    spacing->GetMargin(margin);
+    // make collapsed children not show up
+    if (mSprings[count].collapsed) {
+      childFrame->SetRect(nsRect(0,0,0,0));
 
-    if (mHorizontal) {
-      x += margin.left;
-      y = boxRect.y + margin.top;
+      // make the view really small as well
+      nsIView* view = nsnull;
+      childFrame->GetView(&view);
+
+      if (view) {
+        nsCOMPtr<nsIViewManager> vm;
+        view->GetViewManager(*getter_AddRefs(vm));
+        vm->ResizeView(view, 0,0);
+      }
     } else {
-      y += margin.top;
-      x = boxRect.x + margin.left;
-    }
+      const nsStyleSpacing* spacing;
+      rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                     (const nsStyleStruct*&) spacing);
 
-    nsRect rect;
-    childFrame->GetRect(rect);
-    rect.x = x;
-    rect.y = y;
-    childFrame->SetRect(rect);
+      nsMargin margin(0,0,0,0);
+      spacing->GetMargin(margin);
 
-    // add in the right margin
-    if (mHorizontal)
-      x += margin.right;
-    else
-      y += margin.bottom;
+      if (mHorizontal) {
+        x += margin.left;
+        y = boxRect.y + margin.top;
+      } else {
+        y += margin.top;
+        x = boxRect.x + margin.left;
+      }
+
+      nsRect rect;
+      childFrame->GetRect(rect);
+      rect.x = x;
+      rect.y = y;
+      childFrame->SetRect(rect);
+
+      // add in the right margin
+      if (mHorizontal)
+        x += margin.right;
+      else
+        y += margin.bottom;
      
-    if (mHorizontal) {
-      x += rect.width;
-      //width += rect.width + margin.left + margin.right;
-    } else {
-      y += rect.height;
-      //height += rect.height + margin.top + margin.bottom;
+      if (mHorizontal) {
+        x += rect.width;
+        //width += rect.width + margin.left + margin.right;
+      } else {
+        y += rect.height;
+        //height += rect.height + margin.top + margin.bottom;
+      }
     }
 
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    count++;
   }
 
   return NS_OK;
@@ -754,6 +801,10 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
       for (i=0; i<mSpringCount; i++) {
           nsCalculatedBoxInfo& spring = mSprings[i];
  
+          // ignore collapsed children
+          if (spring.collapsed)
+              continue;
+
           // figure out the direction of the box and get the correct value either the width or height
           nscoord& pref = GET_WIDTH(spring.prefSize);
           nscoord& max  = GET_WIDTH(spring.maxSize);
@@ -782,6 +833,11 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           sz = 0;
           for (i=0; i<mSpringCount; i++) {
               nsCalculatedBoxInfo& spring=mSprings[i];
+
+              // ignore collapsed springs
+              if (spring.collapsed)
+                 continue;
+
               nscoord& calculated = GET_WIDTH(spring.calculatedSize);
               nscoord& pref = GET_WIDTH(spring.prefSize);
 
@@ -803,6 +859,10 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           limit = PR_FALSE;
           for (i=0; i<mSpringCount; i++) {
               nsCalculatedBoxInfo& spring=mSprings[i];
+              // ignore collapsed springs
+              if (spring.collapsed)
+                 continue;
+
               nscoord& pref = GET_WIDTH(spring.prefSize);
               nscoord& max  = GET_WIDTH(spring.maxSize);
               nscoord& min  = GET_WIDTH(spring.minSize);
@@ -837,6 +897,11 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
         s = 0;
         for (i=0; i<mSpringCount; i++) {
              nsCalculatedBoxInfo& spring=mSprings[i];
+
+             // ignore collapsed springs
+             if (spring.collapsed)
+                 continue;
+
              nscoord& pref = GET_WIDTH(spring.prefSize);
              nscoord& calculated = GET_WIDTH(spring.calculatedSize);
   
@@ -849,15 +914,6 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
         }
 }
 
-/*
-void
-nsBoxFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
-{
-
-}
-*/
 
 NS_IMETHODIMP
 nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
@@ -933,7 +989,7 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
    nsresult rv;
 
    aSize.clear();
-
+ 
    // run through all the children and get there min, max, and preferred sizes
    // return us the size of the box
    nscoord count = 0;
@@ -960,25 +1016,34 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
       if (NS_FAILED(rv))
          return rv;
 
-      // add in the child's margin and border/padding if there is one.
-      const nsStyleSpacing* spacing;
-      nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
-                    (const nsStyleStruct*&) spacing);
+      // see if the child is collapsed
+      const nsStyleDisplay* disp;
+      childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
-      NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
-      if (NS_FAILED(rv))
-         return rv;
+      // if collapsed then the child will have no size
+      if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+         mSprings[count].collapsed = PR_TRUE;
+      else {
+        // add in the child's margin and border/padding if there is one.
+        const nsStyleSpacing* spacing;
+        nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+                      (const nsStyleStruct*&) spacing);
 
-      nsMargin margin;
-      spacing->GetMargin(margin);
-      nsSize m(margin.left+margin.right,margin.top+margin.bottom);
-      mSprings[count].minSize += m;
-      mSprings[count].prefSize += m;
+        NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
+        if (NS_FAILED(rv))
+           return rv;
 
-      spacing->GetBorderPadding(margin);
-      nsSize b(margin.left+margin.right,margin.top+margin.bottom);
-      mSprings[count].minSize += b;
-      mSprings[count].prefSize += b;
+        nsMargin margin;
+        spacing->GetMargin(margin);
+        nsSize m(margin.left+margin.right,margin.top+margin.bottom);
+        mSprings[count].minSize += m;
+        mSprings[count].prefSize += m;
+
+        spacing->GetBorderPadding(margin);
+        nsSize b(margin.left+margin.right,margin.top+margin.bottom);
+        mSprings[count].minSize += b;
+        mSprings[count].prefSize += b;
+      }
 
       // ok we don't need to calc this guy again
       mSprings[count].needsRecalc = PR_FALSE;
@@ -1088,32 +1153,6 @@ nsBoxFrame::Release(void)
     return NS_OK;
 }
 
-
-/*
-nsBoxInfo::nsBoxInfo()
-{
-   clear();
-}
-
-void 
-nsBoxInfo::clear()
-{ 
-    prefSize.width = 0;
-    prefSize.height = 0;
-
-    minSize.width = 0;
-    minSize.height = 0;
-
-    flex = 0.0;
-
-    maxSize.width = NS_INTRINSICSIZE;
-    maxSize.height = NS_INTRINSICSIZE;
-
-    prefWidthIntrinsic = PR_FALSE;
-    prefHeightIntrinsic = PR_FALSE;
-}
-*/
-
 nsCalculatedBoxInfo::nsCalculatedBoxInfo()
 {
    clear();
@@ -1125,6 +1164,7 @@ nsCalculatedBoxInfo::clear()
     nsBoxInfo::clear();
     needsReflow = PR_TRUE;
     needsRecalc = PR_TRUE;
+    collapsed = PR_FALSE;
 
     calculatedSize.width = 0;
     calculatedSize.height = 0;

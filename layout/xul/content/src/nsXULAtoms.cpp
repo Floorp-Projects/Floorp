@@ -73,6 +73,9 @@ nsIAtom* nsXULAtoms::increment;
 nsIAtom* nsXULAtoms::pageincrement;
 nsIAtom* nsXULAtoms::thumb;
 nsIAtom* nsXULAtoms::toggled;
+nsIAtom* nsXULAtoms::grippy;
+nsIAtom* nsXULAtoms::splitter;
+nsIAtom* nsXULAtoms::collapse;
 
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
@@ -140,6 +143,9 @@ void nsXULAtoms::AddrefAtoms() {
   pageincrement = NS_NewAtom("pageincrement");
   thumb = NS_NewAtom("thumb");
   toggled = NS_NewAtom("toggled");
+  grippy = NS_NewAtom("grippy");
+  splitter = NS_NewAtom("splitter");
+  collapse = NS_NewAtom("collapse");
 
 
     widget = NS_NewAtom("widget");
@@ -198,6 +204,9 @@ void nsXULAtoms::ReleaseAtoms() {
  	NS_RELEASE(pageincrement);
  	NS_RELEASE(thumb);
  	NS_RELEASE(toggled);
+ 	NS_RELEASE(grippy);
+ 	NS_RELEASE(splitter);
+ 	NS_RELEASE(collapse);
 
 	NS_RELEASE(widget);
     NS_RELEASE(window);

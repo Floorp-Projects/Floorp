@@ -932,3 +932,24 @@ treepusher.decrement:hover {
 treepusher.decrement[disabled="true"] {
    list-style-image: url(lessCols_dis.gif)
 }
+
+splitter {
+   display: block;
+}
+
+grippy {
+   border: 1px outset white;
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
+   background-color: rgb(198,198,198);
+   display: block;
+   margin: 1px;
+}
+
+box[align="vertical"] splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+box splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+

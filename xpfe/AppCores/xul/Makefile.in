@@ -96,8 +96,10 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/TB_NewStop.gif \
 	$(srcdir)/resources/TB_NewHome.gif \
 	$(srcdir)/resources/TB_NewPrint.gif \
-        $(srcdir)/resources/grippy.gif \
-        $(srcdir)/resources/grippyO.gif \
+    $(srcdir)/resources/grippy-horizontal-before.gif \
+    $(srcdir)/resources/grippy-horizontal-after.gif \
+    $(srcdir)/resources/grippy-vertical-before.gif \
+    $(srcdir)/resources/grippy-vertical-after.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_THROBBER = \

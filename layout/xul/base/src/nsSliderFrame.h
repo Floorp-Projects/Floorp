@@ -29,14 +29,18 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIAnonymousContentCreator.h"
 
 class nsString;
 class nsIScrollbarListener;
+class nsISupportsArray;
 
 nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
 
 
-class nsSliderFrame : public nsHTMLContainerFrame, public nsIDOMMouseListener
+class nsSliderFrame : public nsHTMLContainerFrame, 
+                             nsIDOMMouseListener, 
+                             nsIAnonymousContentCreator
 {
 public:
   nsSliderFrame();
@@ -63,6 +67,8 @@ public:
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
+
+       NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
 
    NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
