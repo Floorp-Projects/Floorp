@@ -89,7 +89,7 @@
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
-#include "nsILocaleFactory.h"
+#include "nsILocaleService.h"
 
 
 #define TEST_SORT 1
@@ -122,8 +122,6 @@ static NS_DEFINE_IID(kICollationFactoryIID,   NS_ICOLLATIONFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
-static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
 static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 
@@ -344,14 +342,12 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 						(nsISupports**) &gXULUtils);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
-		// get a locale factory 
-		nsCOMPtr<nsIFactory>		aFactory;
-		nsCOMPtr<nsILocaleFactory>	localeFactory;
-		if (NS_SUCCEEDED(rv = nsComponentManager::FindFactory(kLocaleFactoryCID, getter_AddRefs(aFactory)))
-			&& ((localeFactory = do_QueryInterface(aFactory)) != nsnull))
+		// get a locale service 
+		nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &rv);
+		if (NS_SUCCEEDED(rv))
 		{
 			nsCOMPtr<nsILocale>	locale;
-			if (NS_SUCCEEDED(rv = localeFactory->GetApplicationLocale(getter_AddRefs(locale))) && (locale))
+			if (NS_SUCCEEDED(rv = localeService->GetApplicationLocale(getter_AddRefs(locale))) && (locale))
 			{
 				nsCOMPtr<nsICollationFactory>	colFactory;
 				if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
