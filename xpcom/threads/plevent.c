@@ -24,7 +24,6 @@
 #define INCL_WIN
 #include <os2.h>
 #define DefWindowProc WinDefWindowProc
-typedef MPARAM WPARAM,LPARAM;
 #endif /* XP_OS2 */
 
 #include "nspr.h"
@@ -104,11 +103,9 @@ struct PLEventQueue {
     int		 efn;
 #elif defined(XP_UNIX)
     PRInt32      eventPipe[2];
-#elif defined(_WIN32) || defined(WIN16)
+#elif defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
     HWND         eventReceiverWindow;
     PRBool       removeMsg;
-#elif defined(XP_OS2)
-    HWND         eventReceiverWindow;
 #elif defined(XP_BEOS)
     port_id      eventport;
 #endif
@@ -128,11 +125,10 @@ static PRInt32     _pl_GetEventCount(PLEventQueue* self);
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
 #if defined(XP_OS2)
 ULONG _pr_PostEventMsgId;
-static char *_pr_eventWindowClass = "NSPR:EventWindow";
 #else
 UINT _pr_PostEventMsgId;
-static char *_pr_eventWindowClass = "NSPR:EventWindow";
 #endif /* OS2 */
+static char *_pr_eventWindowClass = "NSPR:EventWindow";
 #endif /* Win32, Win16, OS2 */
 
 /*******************************************************************************
@@ -166,7 +162,7 @@ static PLEventQueue * _pl_CreateEventQueue(char *name,
     self->handlerThread = handlerThread;
     self->processingEvents = PR_FALSE;
     self->type = qtype;
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
     self->removeMsg = PR_TRUE;
 #endif
     self->notified = PR_FALSE;
@@ -485,7 +481,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
 {
     PRInt32 count;
 
-    if (self == NULL) 
+    if (self == NULL)
       return;
     
     
@@ -798,6 +794,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
     close(self->eventPipe[1]);
 #elif defined(_WIN32) || defined(WIN16)
     DestroyWindow(self->eventReceiverWindow);
+#elif defined(XP_OS2)
+    WinDestroyWindow(self->eventReceiverWindow);
 #endif
 }
 
@@ -805,8 +803,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-	PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
-	    (WPARAM)0, (LPARAM)self);
+    PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
+                 (WPARAM)0, (LPARAM)self);
     return PR_SUCCESS;
 }/* --- end _pl_NativeNotify() --- */
 #endif
@@ -816,7 +814,7 @@ static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
     BOOL rc = WinPostMsg( self->eventReceiverWindow, _pr_PostEventMsgId,
-                       0, MPFROMP(self));
+                          0, MPFROMP(self));
     return (rc == TRUE) ? PR_SUCCESS : PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_OS2 */
@@ -889,8 +887,12 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+#ifdef XP_OS2
+    QMSG aMsg;
+#else
     MSG aMsg;
+#endif
     /*
      * only remove msg when we've been called directly by
      * PL_ProcessPendingEvents, not when we've been called by
@@ -900,8 +902,13 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
     if (self->removeMsg) {
         PR_LOG(event_lm, PR_LOG_DEBUG,
                 ("_pl_AcknowledgeNativeNotify: self=%p", self));
+#ifdef XP_OS2
+        WinPeekMsg((HAB)0, &aMsg, self->eventReceiverWindow,
+                   _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
+#else
         PeekMessage(&aMsg, self->eventReceiverWindow,
                 _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
+#endif
     }
     return PR_SUCCESS;
 #elif defined(VMS)
@@ -1037,20 +1044,16 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (_pr_PostEventMsgId == uMsg )
     {
-		PREventQueue *queue = (PREventQueue *)lParam;
-#if defined(_WIN32) || defined(WIN16)
+        PREventQueue *queue = (PREventQueue *)lParam;
         queue->removeMsg = PR_FALSE;
-#endif
         PL_ProcessPendingEvents(queue);
-#if defined(_WIN32) || defined(WIN16)
         queue->removeMsg = PR_TRUE;
-#endif
 #ifdef XP_OS2
-            return MRFROMLONG(TRUE);
+        return MRFROMLONG(TRUE);
 #else
-            return TRUE;
+        return TRUE;
 #endif
-        }
+    }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
