@@ -692,7 +692,7 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeInitialize(
         const char *nativePath = (const char *) env->GetStringUTFChars(verifiedBinDirAbsolutePath, 0);
         gBinDir = nativePath;
         
-        NS_InitXPCOM(NULL, &gBinDir, NULL);
+        NS_InitXPCOM(NULL, &gBinDir);
 		NS_SetupRegistry();
         nsComponentManager::RegisterComponentLib(kSessionHistoryCID, NULL, 
                                                  NULL, APPSHELL_DLL, 
