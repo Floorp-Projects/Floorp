@@ -677,26 +677,26 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
         }
         else if (responseLine.Compare("AUTH", PR_TRUE, 4) == 0)
         {
-            if (m_responseText.Find("PLAIN", PR_TRUE, 5) >= 0)  
+            if (responseLine.Find("PLAIN", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_PLAIN_ENABLED);
 
-            if (m_responseText.Find("LOGIN", PR_TRUE, 5) >= 0)  
+            if (responseLine.Find("LOGIN", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_LOGIN_ENABLED);
 
-            if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
+            if (responseLine.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
 
             if(m_prefTrySecAuth)
             {
-                    nsresult rv;
-                    nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
-                    // this checks if psm is installed...
-                    if (NS_SUCCEEDED(rv))
+                nsresult rv;
+                nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+                // this checks if psm is installed...
+                if (NS_SUCCEEDED(rv))
                 {
-                    if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
+                    if (responseLine.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
                       SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
 
-                    if (m_responseText.Find("NTLM", PR_TRUE, 5) >= 0)  
+                    if (responseLine.Find("NTLM", PR_TRUE, 5) >= 0)  
                         SetFlag(SMTP_AUTH_NTLM_ENABLED);
                 }
             }
