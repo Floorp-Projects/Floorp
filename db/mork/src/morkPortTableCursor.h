@@ -62,12 +62,21 @@ public: // state is public because the entire Mork system is private
   mdb_scope     mPortTableCursor_RowScope;
   mdb_kind      mPortTableCursor_TableKind;
   
-  // $$$ need use a map iter for covering tables in port map (hash table)
-  morkTable* mPortTableCursor_LastTable; // nil or last table
-  morkRowSpace* mPortTableCursor_RowSpace; // current space in store
+  // We only care if LastTablle is non-nil, so it is not refcounted;
+  // so you must never access table state or methods using LastTable:
+  
+  morkTable* mPortTableCursor_LastTable; // nil or last table (no refcount)
+  morkRowSpace* mPortTableCursor_RowSpace; // current space (strong ref)
 
   morkRowSpaceMapIter mPortTableCursor_SpaceIter; // iter over spaces
-  morkTableMapIter    mPortTableCursor_TableIter; // iter over tables  
+  morkTableMapIter    mPortTableCursor_TableIter; // iter over tables 
+  
+  // these booleans indicate when the table or space iterator is exhausted:
+  
+  mork_bool           mPortTableCursor_TablesDidEnd; // no more tables?
+  mork_bool           mPortTableCursor_SpacesDidEnd; // no more spaces?
+  mork_u1             mPortTableCursor_Pad[ 2 ]; // for u4 alignment
+   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // ClosePortTableCursor()
@@ -88,12 +97,21 @@ public: // dynamic type identification
   { return IsNode() && mNode_Derived == morkDerived_kPortTableCursor; }
 // } ===== end morkNode methods =====
 
-public: // other cell cursor methods
+protected: // utilities
 
+  void init_space_tables_map(morkEnv* ev);
+
+public: // other cursor methods
+
+  static void NilCursorStoreError(morkEnv* ev);
   static void NonPortTableCursorTypeError(morkEnv* ev);
   
   orkinPortTableCursor* AcquirePortTableCursorHandle(morkEnv* ev);
-  morkTable *NextTable(morkEnv* ev);
+  morkRowSpace* NextSpace(morkEnv* ev);
+  morkTable* NextTable(morkEnv* ev);
+
+  mork_bool SetRowScope(morkEnv* ev, mork_scope inRowScope);
+  mork_bool SetTableKind(morkEnv* ev, mork_kind inTableKind);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakPortTableCursor(morkPortTableCursor* me,
