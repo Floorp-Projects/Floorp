@@ -30,30 +30,90 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-use strict;
+#use strict;
+#use Config;
+
+my $java;
+
+# dist <dist_dir>
+# release <java release dir> <nss release dir> <nspr release dir>
+
+sub usage {
+    print "Usage:\n";
+    print "$0 dist <dist_dir>\n";
+    print "$0 release <jss release dir> <nss release dir> "
+        . "<nspr release dir>\n";
+    exit(1);
+}
+
+my $nss_lib_dir;
+
+sub setup_vars {
+    my $argv = shift;
+
+    my $osname = `uname -s`;
+
+    my $truncate_lib_path = 1;
+    my $pathsep = ":";
+    if( $osname =~ /HP/ ) {
+        $ld_lib_path = "SHLIB_PATH";
+    } elsif( $osname =~ /windows/i ) {
+        $ld_lib_path = "PATH";
+        $truncate_lib_path = 0;
+        $pathsep = ";";
+    } else {
+        $ld_lib_path = "LD_LIBRARY_PATH";
+    }
+
+    my $dbg_suffix = "_DBG";
+    $ENV{BUILD_OPT} and $dbg_suffix = "";
+
+    $ENV{CLASSPATH}  = "";
+    $ENV{$ld_lib_path} = "" if $truncate_lib_path;
+
+    if( $$argv[0] eq "dist" ) {
+        shift @$argv;
+        my $dist_dir = shift @$argv or usage("did not provide dist_dir");
+
+        $ENV{CLASSPATH} .= "$dist_dir/../classes$dbg_suffix";
+        $ENV{$ld_lib_path} .= "$dist_dir/lib";
+        $nss_lib_dir = "$dist_dir/lib"
+    } elsif( $$argv[0] eq "release" ) {
+        shift @$argv;
+
+        my $jss_rel_dir = shift @$argv or usage();
+        my $nss_rel_dir = shift @$argv or usage();
+        my $nspr_rel_dir = shift @$argv or usage();
+
+        $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$dbg_suffix.jar";
+        $ENV{$ld_lib_path} .=
+            "$jss_rel_dir/lib$pathsep$nss_rel_dir/lib$pathsep$nspr_rel_dir/lib";
+        $nss_lib_dir = "$nss_rel_dir/lib";
+    } else {
+        usage();
+    }
+
+    unless( $ENV{JAVA_HOME} ) {
+        print "Must set JAVA_HOME environment variable\n";
+        exit(1);
+    }
+
+    $java = "$ENV{JAVA_HOME}/jre/bin/java";
+
+    print "*****ENVIRONMENT*****\n";
+    print "java=$java\n";
+    print "LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}\n";
+    print "CLASSPATH=$ENV{CLASSPATH}\n";
+}
+
+setup_vars(\@ARGV);
 
 my $passwd = "netscape";
 my $passwdfile = "password";
-my $dist = "$ARGV[0]";
-my $java = "$ARGV[1]";
 my $ssltesthost = "trading.etrade.com";
 my $signingToken = "Internal Key Storage Token";
-(-d $dist) or die "Directory '$dist' does not exist\n";
 (-f $java) or die "'$java' does not exist\n";
 
-my @env_vars = (
-    "LD_LIBRARY_PATH",
-    "CLASSPATH"
-);
-my $modutil = "$dist/bin/modutil";
-
-print "*****ENVIRONMENT*****\n";
-print "\$(DIST)=$dist\n";
-print "\$(JAVA)=$java\n";
-foreach my $var (@env_vars) {
-    print "$var=$ENV{$var}\n";
-}
-print "modutil is $modutil\n";
 print "password is $passwd\n";
 print "*********************\n";
 
@@ -71,26 +131,17 @@ if( ! -d $testdir ) {
     unlink @dbfiles;
     (grep{ -f } @dbfiles)  and die "Unable to delete old database files";
     chdir ".." or die;
-    my $result = system("cp $dist/lib/libnssckbi.so testdir"); $result >>= 8;
+    my $result = system("cp $nss_lib_dir/*nssckbi* testdir"); $result >>= 8;
     $result and die "Failed to copy builtins library";
 }
 my $result;
-#$result = system("$modutil -dbdir $testdir -create -force"); $result >>= 8;
-#$result and die "modutil returned $result";
-#system("echo $passwd > $testdir/$passwdfile");
-#$result = system("$modutil -dbdir $testdir -force -changepw ".
-#    "\"NSS Certificate DB\" -pwfile $testdir/$passwdfile ".
-#    "-newpwfile $testdir/$passwdfile"); $result >>= 8;
-#$result and die "modutil returned $result";
-#$result = system("$modutil -force -dbdir $testdir -add builtins -libfile /u/nicolson/local/jss/mozilla/dist/SunOS5.8_DBG.OBJ/lib/libnssckbi.so");
-#$result and die "modutil returned $result";
 $result = system("$java org.mozilla.jss.tests.SetupDBs testdir"); $result >>=8;
 $result and die "SetupDBs returned $result";
 
 #
 # test sockets
 #
-$result = system("$java socketTest $testdir $ssltesthost"); $result >>=8;
+$result = system("$java org.mozilla.jss.tests.socketTest $testdir $ssltesthost"); $result >>=8;
 $result and die "socketTest returned $result";
 
 # test key gen
