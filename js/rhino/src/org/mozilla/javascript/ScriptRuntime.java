@@ -82,6 +82,7 @@ public class ScriptRuntime {
     public final static Class FunctionClass = Function.class;
     public final static Class ClassClass = Class.class;
     public final static Class SerializableClass = java.io.Serializable.class;
+    public final static Class DateClass = java.util.Date.class;
 
     // Can not use .class as Comparable is only since JDK 1.2
     public final static Class

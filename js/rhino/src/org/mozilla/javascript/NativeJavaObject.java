@@ -43,6 +43,7 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Date;
 
 /**
  * This class reflects non-Array Java objects into the JavaScript environment.  It
@@ -372,17 +373,25 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         case JSTYPE_OBJECT:
             // Other objects takes #1-#3 spots
-            if (fromObj instanceof NativeArray && to.isArray()) {
-                // This is a native array conversion to a java array
-                // Array conversions are all equal, and preferable to object
-                // and string conversion, per LC3.
-                result = 1;
+            if (to.isArray()) {
+                if (fromObj instanceof NativeArray) {
+                    // This is a native array conversion to a java array
+                    // Array conversions are all equal, and preferable to object
+                    // and string conversion, per LC3.
+                    result = 1;
+                }
             }
             else if (to == ScriptRuntime.ObjectClass) {
                 result = 2;
             }
             else if (to == ScriptRuntime.StringClass) {
                 result = 3;
+            }
+            else if (to == ScriptRuntime.DateClass) {
+                if (fromObj instanceof NativeDate) {
+                    // This is a native date to java date conversion
+                    result = 1;
+                }
             }
             else if (to.isPrimitive() || to != Boolean.TYPE) {
                 result = 3 + NativeJavaObject.getSizeRank(to);
@@ -623,6 +632,13 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             }
             else if (type.isInstance(value)) {
                 return value;
+            }
+            else if (type == ScriptRuntime.DateClass
+                     && value instanceof NativeDate)
+            {
+                double time = ((NativeDate)value).getJSTimeValue();
+                // XXX: This will replace NaN by 0
+                return new Date((long)time);
             }
             else if (type.isArray() && value instanceof NativeArray) {
                 // Make a new java array, and coerce the JS array components

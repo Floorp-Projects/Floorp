@@ -79,6 +79,10 @@ final class NativeDate extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
+    double getJSTimeValue() {
+        return date;
+    }
+
     protected void fillConstructorProperties
         (Context cx, IdFunction ctor, boolean sealed)
     {
