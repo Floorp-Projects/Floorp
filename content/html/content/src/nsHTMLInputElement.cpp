@@ -56,6 +56,7 @@
 #include "nsDOMError.h"
 
 #include "nsIPresState.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 
@@ -789,9 +790,28 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
       } break;// NS_KEY_PRESS
 
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:     // cancel all of these events for buttons
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      case NS_MOUSE_RIGHT_DOUBLECLICK:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_UP: {
+          PRInt32 type;
+          GetType(&type);
+          if (type == NS_FORM_INPUT_BUTTON || 
+              type == NS_FORM_INPUT_RESET || 
+              type == NS_FORM_INPUT_SUBMIT ) {
+            if (aDOMEvent != nsnull && *aDOMEvent != nsnull) {
+              (*aDOMEvent)->PreventBubble();
+            } else {
+              ret = NS_ERROR_FAILURE;
+            }
+          }
+        } break;
+
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         mDidMouseDown = PR_TRUE;
-        break;// NS_KEY_PRESS
+        break;
 
       case NS_MOUSE_LEFT_BUTTON_UP:
       {

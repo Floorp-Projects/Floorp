@@ -455,8 +455,17 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }
       break;
 
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:     // cancel all of these events for buttons
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      // XXX Bring up a contextual menu provided by the application
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      if (aDOMEvent != nsnull && *aDOMEvent != nsnull) {
+        (*aDOMEvent)->PreventBubble();
+      } else {
+        ret = NS_ERROR_FAILURE;
+      }
       break;
 
     case NS_MOUSE_ENTER_SYNTH:
