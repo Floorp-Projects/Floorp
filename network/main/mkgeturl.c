@@ -3153,7 +3153,7 @@ PUBLIC void NET_ResumeWithAuth (void *closure)
 {
     XP_List * iter = NULL;
     ActiveEntry * tmpEntry = NULL;
-    NET_AuthClosure *auth_closure = (char *) closure;
+    NET_AuthClosure *auth_closure = (NET_AuthClosure *) closure;
 
     /* check to see if our entry is in the list */
     if (XP_ListIsEmpty(net_EntryList)) {
