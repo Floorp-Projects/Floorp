@@ -42,6 +42,8 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
+#include "nsIAccessibleEvent.h"
+#include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIEditor.h"
@@ -96,6 +98,7 @@ class nsDocAccessible : public nsBlockAccessible,
     NS_DECL_NSIWEBPROGRESSLISTENER
 
     NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
+    static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
 
     // nsIAccessNode
     NS_IMETHOD Shutdown();
@@ -124,11 +127,13 @@ class nsDocAccessible : public nsBlockAccessible,
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
     nsCOMPtr<nsITimer> mDocLoadTimer;
+    nsCOMPtr<nsITimer> mFireEventTimer;
     nsCOMPtr<nsIWebProgress> mWebProgress;
     nsCOMPtr<nsIEditor> mEditor; // Editor, if there is one
     EBusyState mBusy;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsNewDocument;
+    nsCOMArray<nsIAccessibleEvent> mEventsToFire;
 };
 
 #endif  

@@ -518,7 +518,7 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
     if (NS_SUCCEEDED(accService->GetAccessibleFor(selectNode, 
                                                   getter_AddRefs(selAcc)))) {
       PRUint32 state;
-      selAcc->GetState(&state);
+      selAcc->GetFinalState(&state);
       if (state & STATE_COLLAPSED) {
         nsCOMPtr<nsIPresShell> presShell(GetPresShell());
         if (!presShell) {
@@ -879,7 +879,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
   nsCOMPtr<nsIAccessible> textFieldAccessible;
   nsresult rv = GetFirstChild(getter_AddRefs(textFieldAccessible));
   NS_ENSURE_SUCCESS(rv, rv);
-  return textFieldAccessible->GetValue(aValue);
+  return textFieldAccessible->GetFinalValue(aValue);
 }
 
 /** ----- nsHTMLComboboxTextFieldAccessible ----- */

@@ -769,7 +769,7 @@ getRoleCB(AtkObject *aAtkObj)
             NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
         PRUint32 accRole;
-        nsresult rv = accWrap->GetRole(&accRole);
+        nsresult rv = accWrap->GetFinalRole(&accRole);
         NS_ENSURE_SUCCESS(rv, ATK_ROLE_INVALID);
 
         //the cross-platform Accessible object returns the same value for
@@ -880,7 +880,7 @@ refStateSetCB(AtkObject *aAtkObj)
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
     PRUint32 accState = 0;
-    nsresult rv = accWrap->GetState(&accState);
+    nsresult rv = accWrap->GetFinalState(&accState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
     rv = accWrap->GetExtState(&accState);
