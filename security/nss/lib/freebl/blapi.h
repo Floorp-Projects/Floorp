@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.15 2003/02/27 01:31:11 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.16 2003/05/30 23:31:18 wtc%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -975,16 +975,6 @@ extern SECStatus   PQG_VerifyParams(const PQGParams *params,
  * library has been quiessed.
  */
 extern void BL_Cleanup(void);
-
-/**************************************************************************
- *  Free the PQGParams struct and the things it points to.                *
- **************************************************************************/
-extern void PQG_DestroyParams(PQGParams *params);
-
-/**************************************************************************
- *  Free the PQGVerify struct and the things it points to.                *
- **************************************************************************/
-extern void PQG_DestroyVerify(PQGVerify *vfy);
 
 
 /**************************************************************************

@@ -58,13 +58,13 @@ REQUIRES =
 
 EXPORTS = \
 	blapit.h \
-	secrng.h \
 	shsign.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
 	blapi.h \
 	secmpi.h \
+	secrng.h \
 	ec.h \
 	$(NULL)
 

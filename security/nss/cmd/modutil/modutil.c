@@ -34,7 +34,6 @@
 #include "modutil.h"
 #include "install.h"
 #include <plstr.h>
-#include "secrng.h"
 #include "certdb.h" /* for CERT_DB_FILE_VERSION */
 #include "nss.h"
 

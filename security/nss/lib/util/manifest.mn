@@ -43,7 +43,6 @@ EXPORTS = \
 	nssrwlk.h \
 	nssrwlkt.h \
 	portreg.h \
-	pqgutil.h \
 	secasn1.h \
 	secasn1t.h \
 	seccomon.h \
@@ -57,6 +56,10 @@ EXPORTS = \
 	secport.h \
 	secerr.h \
 	watcomfx.h \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	pqgutil.h \
 	$(NULL)
 
 CSRCS = \

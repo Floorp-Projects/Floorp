@@ -43,7 +43,6 @@
 /* #include "dh.h" */
 #include "maci.h"
 #include "secport.h"
-#include "blapi.h"
 #include "secrng.h"
 #ifdef XP_OS2
 #include <sys/stat.h>
