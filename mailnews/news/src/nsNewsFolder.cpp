@@ -441,14 +441,9 @@ nsMsgNewsFolder::GetCanRename(PRBool *aResult)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
-#ifdef DEBUG_NEWS
-  printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
-#endif
-
   nsresult rv = NS_OK;
 
   rv = GetDatabase(aMsgWindow);

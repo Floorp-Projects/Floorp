@@ -953,19 +953,15 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   nsXPIDLCString hostName;
   nsXPIDLCString userName;
   nsXPIDLCString scheme;
+  nsXPIDLCString path;
   PRInt32 port = 0;
   nsresult rv;
   
-#ifdef DEBUG_sspitzer
-  nsXPIDLCString spec;
-  rv = aUri->GetSpec(getter_Copies(spec));
-  printf("GetProtocolForUri(%s,...)\n",(const char *)spec);
-#endif
-
   rv = aUri->GetHost(getter_Copies(hostName));
   rv = aUri->GetPreHost(getter_Copies(userName));
   rv = aUri->GetScheme(getter_Copies(scheme));
   rv = aUri->GetPort(&port);
+  rv = aUri->GetPath(getter_Copies(path));
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -997,12 +993,49 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
  	messengerMigrator->UpgradePrefs(); 
   }
 
+  // news:group becomes news://group, so we have three types of urls:
+  // news://group       (autosubscribing without a host)
+  // news://host/group  (autosubscribing with a host)
+  // news://host        (updating the unread message counts on a server)
+  //
+  // first, check if hostName is really a server or a group
+  // by looking for a server with hostName
+  //
   // xxx todo what if we have two servers on the same host, but different ports?
   // or no port, but isSecure (snews:// vs news://) is different?
   rv = accountManager->FindServer((const char *)userName,
                                 (const char *)hostName,
                                 "nntp",
                                 getter_AddRefs(server));
+
+  // if we didn't find the server, and path was "/", this is a news://group url
+  if (!server && !(nsCRT::strcmp("/",(const char *)path))) {
+    // the uri was news://group and we want to turn that into news://host/group
+    // step 1, set the path to be the hostName;
+    rv = aUri->SetPath((const char *)hostName);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // until we support default news servers, use the first nntp server we find
+    rv = accountManager->FindServer("","","nntp", getter_AddRefs(server));
+    if (NS_FAILED(rv) || !server) {
+        // step 2, set the uri's hostName and the local variable hostName
+        // to be "news"
+        rv = aUri->SetHost("news");
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = aUri->GetHost(getter_Copies(hostName));
+        NS_ENSURE_SUCCESS(rv,rv);
+    }
+    else {
+        // step 2, set the uri's hostName and the local variable hostName
+        // to be the host name of the server we found
+        rv = server->GetHostName(getter_Copies(hostName));
+        NS_ENSURE_SUCCESS(rv,rv);
+    
+        rv = aUri->SetHost((const char *)hostName);
+        NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
 
   if (NS_FAILED(rv) || !server) {
 	  PRBool isSecure = PR_FALSE;
