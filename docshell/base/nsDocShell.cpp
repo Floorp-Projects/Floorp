@@ -5224,7 +5224,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          !name.EqualsLiteral("_main")) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
-                                     NS_STATIC_CAST(nsIInterfaceRequestor *, this),
+                                     nsnull,
                                      getter_AddRefs(targetTreeItem));
                     if (targetTreeItem)
                         targetDocShell = do_QueryInterface(targetTreeItem);
