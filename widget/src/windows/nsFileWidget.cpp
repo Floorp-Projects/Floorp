@@ -312,7 +312,7 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
   TCHAR buffer[MAX_PATH];
   char *title = ConvertToFileSystemCharset(mTitle.GetUnicode());
   if (nsnull == title)
-    mTitle.ToNewCString();
+    title = mTitle.ToNewCString();
 
   BROWSEINFO browserInfo;
   browserInfo.hwndOwner      = mWnd;
