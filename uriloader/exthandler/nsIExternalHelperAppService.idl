@@ -20,10 +20,6 @@
  *   Scott MacGregor <mscott@netscape.com>
  */
 
-/* The external helper app service is used for finding and launching
-   platform specific external applications for a given mime content type.
- */
-
 #include "nsISupports.idl"
 
 interface nsIURI;
@@ -33,83 +29,121 @@ interface nsIFile;
 interface nsIMIMEInfo;
 interface nsIWebProgressListener;
 
-
+/**
+ * The external helper app service is used for finding and launching
+ * platform specific external applications for a given mime content type.
+ */
 [scriptable, uuid(663CC0AA-42EA-11d4-98D0-001083010E9B)]
 interface nsIExternalHelperAppService : nsISupports
 {
-  // doContent: binds an external helper application to a stream listener. The caller should pump data
-  // into the returned stream listener. When the OnStopRequest is issued, the stream listener implementation
-  // will launch the helper app with this data.
-  // aMimeContentType --> the content type of the incoming data
-  // aRequest --> the request corresponding to the incoming data
-  // aWindowContext --> use GetInterface to retrieve properties like the dom window or parent window...
-  //                    the service might need this in order to bring up dialogs.
-  // returns a nsIStreamListener which the caller should pump the data into.
+  /**
+   * Binds an external helper application to a stream listener. The caller
+   * should pump data into the returned stream listener. When the OnStopRequest
+   * is issued, the stream listener implementation will launch the helper app
+   * with this data.
+   * @param aMimeContentType The content type of the incoming data
+   * @param aRequest The request corresponding to the incoming data
+   * @param aWindowContext Use GetInterface to retrieve properties like the
+   *                       dom window or parent window...
+   *                       The service might need this in order to bring up dialogs.
+   * @return A nsIStreamListener which the caller should pump the data into.
+   */
   nsIStreamListener doContent (in string aMimeContentType, in nsIRequest aRequest,
                                in nsISupports aWindowContext); 
 
-  // applyDecodingForType: returns true if this type is to be decoded
-  //                       prior to saving or passing off to helper apps,
-  //                       false otherwise
+  /**
+   * Returns true if this type is to be decoded prior to saving or passing
+   * off to helper apps, false otherwise
+   */
   boolean applyDecodingForType (in string aMimeContentType);
 
-  // applyDecodingForExtension: returns false if files with this extension
-  //                            are not to be decoded prior to saving or
-  //                            passing off to helper apps, false otherwise
+  /**
+   * Returns false if files with this extension are not to be decoded prior
+   * to saving or passing off to helper apps, false otherwise
+   */
   boolean applyDecodingForExtension(in string aExtension);
 };
 
-// this is a private interface shared between external app handlers and the platform specific
-// external helper app service
+/**
+ * This is a private interface shared between external app handlers and the platform specific
+ * external helper app service
+ */
 [scriptable, uuid(491D04D5-449C-11d4-98D0-001083010E9B)]
 interface nsPIExternalAppLauncher : nsISupports
 {
-  // launchAppWithTempFile --> used by the handler to actually launch the helper application
-  // aTempFile --> the file which contains the data we want the helper app to use when it is launched
+  /**
+   * Used by the handler to actually launch the helper application.
+   * @param aTempFile The file which contains the data we want the helper app
+   *                  to use when it is launched
+   */
   void launchAppWithTempFile(in nsIMIMEInfo aMIMEInfo, in nsIFile aTempFile);
 
-  // mscott --> eventually I should move this into a new service so other consumers can add temporary files
-  // they want deleted on exit.
-  // aTemporaryFile --> a temporary file we should delete on exit.
-
+  /**
+   * mscott --> eventually I should move this into a new service so other
+   * consumers can add temporary files they want deleted on exit.
+   * @param aTemporaryFile A temporary file we should delete on exit.
+   */
   void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile); 
 };
 
-// a helper app launcher is a small object created to handle the launching of an external application.
-
+/**
+ * A helper app launcher is a small object created to handle the launching
+ * of an external application.
+ */
 [scriptable, uuid(9503D0FE-4C9D-11d4-98D0-001083010E9B)]
 interface nsIHelperAppLauncher : nsISupports
 {
-  // the mime info object associated with the content type this helper app launcher is currently
-  // attempting to load
+  /**
+   * The mime info object associated with the content type this helper app
+   * launcher is currently attempting to load
+   */
   readonly attribute nsIMIMEInfo MIMEInfo;
 
-  // the source url
+  /**
+   * The source uri
+   */
   readonly attribute nsIURI source;
 
+  /**
+   * The suggested name for this file
+   */
   readonly attribute wstring suggestedFileName;
 
-  // saveToDisk: called when we want to just save the content to a particular file
-  // aNewFileLocation --> location where the content should be saved
+  /**
+   * Called when we want to just save the content to a particular file
+   * @param aNewFileLocation Location where the content should be saved
+   */
   void saveToDisk(in nsIFile aNewFileLocation, in boolean aRememberThisPreference);
 
-  // launchWithApplication: use aApplication to launch with this content 
-  // aApplication --> nsIFile corresponding to the location of the application to use
-  // aRememberThisPreference --> TRUE if we should remember this choice.
+  /**
+   * Use aApplication to launch with this content.
+   * @param aApplication nsIFile corresponding to the location of the application to use.
+   * @param aRememberThisPreference TRUE if we should remember this choice.
+   */
   void launchWithApplication(in nsIFile aApplication, in boolean aRememberThisPreference);
 
-  // called if the user decides to cancel the handling of this content type
+  /**
+   * Called if the user decides to cancel the handling of this content type
+   */
   void Cancel();
 
-  // the following methods are used by the progress dialog to get or set information 
-  // on the current helper app launcher download
+  /**
+   * the following methods are used by the progress dialog to get or set
+   * information on the current helper app launcher download.
+   */
   void setWebProgressListener(in nsIWebProgressListener aWebProgressListener);
-  // when the stand along progress window actually closes, it calls this method
-  // so we can release any local state...
+  /**
+   * when the stand along progress window actually closes, it calls this method
+   * so we can release any local state...
+   */
   void closeProgressWindow();
 
-  // aSourceUrl--> the url we are downloading....and the file we are saving too
-  // aTimeDownloadStarted --> time in ms that the download actually began
-  nsIFile getDownloadInfo(out nsIURI aSourceUrl, out long long aTimeDownloadStarted);
-  
+  /**
+   * The file we are saving to
+   */
+  readonly attribute nsIFile targetFile;
+  /**
+   * Time when the download started
+   */
+  readonly attribute PRTime timeDownloadStarted;
 };

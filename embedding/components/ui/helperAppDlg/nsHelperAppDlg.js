@@ -364,9 +364,7 @@ nsHelperAppDialog.prototype = {
             // in that case).
             
             // Need to get temporary file and check for executable-ness.
-            var ignore1 = new Object;
-            var ignore2 = new Object;
-            var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
+            var tmpFile = this.mLauncher.targetFile;
             
             //  Default is Ok if the file isn't executable (and vice-versa).
             result = !tmpFile.isExecutable();

@@ -27,6 +27,7 @@
 #define FORCE_PR_LOG
 #endif
 #include "prlog.h"
+#include "prtime.h"
 
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
@@ -229,7 +230,7 @@ protected:
   PRPackedBool mProgressListenerInitialized;
   // This is set when handling something with "Content-Disposition: attachment"
   PRPackedBool mHandlingAttachment;
-  PRInt64 mTimeDownloadStarted;
+  PRTime mTimeDownloadStarted;
   PRInt32 mContentLength;
   PRInt32 mProgress; // Number of bytes received (for sending progress notifications).
 

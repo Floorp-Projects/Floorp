@@ -146,9 +146,9 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 				if( moz->EmbedRef->app_launcher ) 
 				{
 					nsCOMPtr<nsIURI> aSourceUrl;
-					PRInt64 dummy;
 					nsCOMPtr<nsIFile> tempFile;
-					moz->EmbedRef->app_launcher->GetDownloadInfo( getter_AddRefs(aSourceUrl), &dummy, getter_AddRefs( tempFile ) );
+					moz->EmbedRef->app_launcher->GetSource( getter_AddRefs(aSourceUrl) );
+					moz->EmbedRef->app_launcher->GetTargetFile( getter_AddRefs( tempFile ) );
 
 					if( tempFile ) 
 					{
