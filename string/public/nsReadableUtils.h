@@ -133,9 +133,10 @@ ToUpperCase(basic_nsAWritableString<CharT>& aString)
 
     while ( start != end ) {
       PRUint32 fraglen = start.size_forward();
+      PRUint32 num_bytes = fraglen;
       CharT *buf = start.get();
 
-      while ( fraglen-- ) {
+      while ( num_bytes-- ) {
         *buf = nsCRT::ToUpper(*buf);
         ++buf;
       }
@@ -156,9 +157,10 @@ ToLowerCase(basic_nsAWritableString<CharT>& aString)
 
     while ( start != end ) {
       PRUint32 fraglen = start.size_forward();
+      PRUint32 num_bytes = fraglen;
       CharT *buf = start.get();
 
-      while ( fraglen-- ) {
+      while ( num_bytes-- ) {
         *buf = nsCRT::ToLower(*buf);
         ++buf;
       }
