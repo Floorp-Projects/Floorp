@@ -46,6 +46,7 @@ public class NativeMath extends ScriptableObject
     implements IdFunction.Master, ScopeInitializer
 {
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+        sealFunctions = sealed;
         setPrototype(getObjectPrototype(scope));
         setParentScope(scope);
         if (sealed) {
@@ -97,36 +98,29 @@ public class NativeMath extends ScriptableObject
     }
 
     public void put(String name, Scriptable start, Object value) {
-        if (doOverwrite(name)) {
+        if (doOverwrite(name, start)) {
             super.put(name, start, value);
         }
     }
 
     public void delete(String name) {
-        if (doOverwrite(name)) {
+        // Let the super class to throw exceptions for sealed objects
+        if (isSealed() || doOverwrite(name, this)) {
             super.delete(name);
         }
     }
     
     // Return true to invoke put/delete in super class
-    private boolean doOverwrite(String name) {
-        if (isSealed()) { 
-            // Let the super class to throw exceptions for sealed objects
-            return true; 
-        }
+    private boolean doOverwrite(String name, Scriptable start) {
         int id = nameToId(name);
-        if (id > LAST_METHOD_ID) { 
-            // Ignore modifications of read-only Math constants
-            return false; 
-        }
-        
-        if (0 != id) {
-            if (functionPool[id] != IdFunction.WAS_OVERWRITTEN) {
-                synchronized (this) {
-                    // Forget default implementation
-                    // Must be synchronized to avoid clearance of overwritten
-                    // mark by another thread running in wrapMethod 
-                    functionPool[id] = IdFunction.WAS_OVERWRITTEN;
+        if (id != 0) {
+            if (id > LAST_METHOD_ID) { 
+                // Ignore modifications of read-only Math constants
+                return false; 
+            }
+            else {
+                if (this == start) {
+                    overwriteMethod(id);
                 }
             }
         }
@@ -137,9 +131,21 @@ public class NativeMath extends ScriptableObject
         synchronized (this) {
             IdFunction f = functionPool[id];
             if (f == null) {
-                f = functionPool[id] = new IdFunction(this, name, id);
+                f = new IdFunction(this, name, id);
+                if (sealFunctions) { f.sealObject(); }
+                functionPool[id] = f;
             }
             return f;
+        }
+    }
+
+    private void overwriteMethod(int id) {
+        if (functionPool[id] != IdFunction.WAS_OVERWRITTEN) {
+            // Must be synchronized to avoid clearance of overwritten mark
+            // by another thread running in wrapMethod 
+            synchronized (this) {
+                functionPool[id] = IdFunction.WAS_OVERWRITTEN;
+            }
         }
     }
     
@@ -176,39 +182,66 @@ public class NativeMath extends ScriptableObject
         throws JavaScriptException
     {
         switch (methodId) {        
-            case Id_abs: return wrap_dbl(js_abs(to_dbl(args, 0)));
-            case Id_acos: return wrap_dbl(js_acos(to_dbl(args, 0)));
-            case Id_asin: return wrap_dbl(js_asin(to_dbl(args, 0)));
-            case Id_atan: return wrap_dbl(js_atan(to_dbl(args, 0)));
-            case Id_atan2: return wrap_dbl
-                (js_atan2(to_dbl(args, 0), to_dbl(args, 1)));
-            case Id_ceil: return wrap_dbl(js_ceil(to_dbl(args, 0)));
-            case Id_cos: return wrap_dbl(js_cos(to_dbl(args, 0)));
-            case Id_exp: return wrap_dbl(js_exp(to_dbl(args, 0)));
-            case Id_floor: return wrap_dbl(js_floor(to_dbl(args, 0)));
-            case Id_log: return wrap_dbl(js_log(to_dbl(args, 0)));
-            case Id_max: return wrap_dbl(js_max(args));
-            case Id_min: return wrap_dbl(js_min(args));
-            case Id_pow: return wrap_dbl
-                (js_pow(to_dbl(args, 0), to_dbl(args, 1)));
-            case Id_random: return wrap_dbl(js_random());
-            case Id_round: return wrap_dbl(js_round(to_dbl(args, 0)));
-            case Id_sin: return wrap_dbl(js_sin(to_dbl(args, 0)));
-            case Id_sqrt: return wrap_dbl(js_sqrt(to_dbl(args, 0)));
-            case Id_tan: return wrap_dbl(js_tan(to_dbl(args, 0)));
+            case Id_abs: return wrap_double
+                (js_abs(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_acos: return wrap_double
+                (js_acos(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_asin: return wrap_double
+                (js_asin(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_atan: return wrap_double
+                (js_atan(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_atan2: return wrap_double
+                (js_atan2(ScriptRuntime.toNumber(args, 0),
+                          ScriptRuntime.toNumber(args, 1)));
+            
+            case Id_ceil: return wrap_double
+                (js_ceil(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_cos: return wrap_double
+                (js_cos(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_exp: return wrap_double
+                (js_exp(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_floor: return wrap_double
+                (js_floor(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_log: return wrap_double
+                (js_log(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_max: return wrap_double
+                (js_max(args));
+            
+            case Id_min: return wrap_double
+                (js_min(args));
+            
+            case Id_pow: return wrap_double
+                (js_pow(ScriptRuntime.toNumber(args, 0),
+                        ScriptRuntime.toNumber(args, 1)));
+            
+            case Id_random: return wrap_double
+                (js_random());
+            
+            case Id_round: return wrap_double
+                (js_round(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_sin: return wrap_double
+                (js_sin(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_sqrt: return wrap_double
+                (js_sqrt(ScriptRuntime.toNumber(args, 0)));
+            
+            case Id_tan: return wrap_double
+                (js_tan(ScriptRuntime.toNumber(args, 0)));
         }
         return null;
     }
     
-    private double to_dbl(Object[] args, int index) {
-        return ScriptRuntime.toNumber(args, index);
-    }
-
-    private double to_dbl(Object arg) {
-        return ScriptRuntime.toNumber(arg);
-    }
-
-    private Double wrap_dbl(double x) {
+    private Double wrap_double(double x) {
         return (x == x) ? new Double(x) : ScriptRuntime.NaNobj;
     }
     
@@ -410,5 +443,7 @@ public class NativeMath extends ScriptableObject
     
     // Last accessed function cache
     private IdFunction lastFunction = IdFunction.WAS_OVERWRITTEN;
+    
+    private boolean sealFunctions;
 }
 

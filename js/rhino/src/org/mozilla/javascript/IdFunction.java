@@ -106,7 +106,8 @@ public class IdFunction extends ScriptableObject implements Function
     }
 
     public void delete(String name) {
-        if (nameToId(name) == 0) {
+        // Let the super class throw exceptions for sealed objects
+        if (isSealed() || nameToId(name) == 0) {
             super.delete(name);
         }
     }
