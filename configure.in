@@ -491,7 +491,7 @@ if test -z "$XARGS" || test "$XARGS" = ":"; then
 fi
 case "$target_os" in
 darwin*)
-    AC_PATH_PROGS(PBBUILD, pbbuild pbxbuild)
+    AC_PATH_PROGS(PBBUILD, pbbuild pbxbuild xcodebuild)
     ;;
 esac
 
