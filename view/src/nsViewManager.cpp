@@ -924,31 +924,130 @@ NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
+NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
 {
+  NS_ASSERTION(!(nsnull == aView), "no view");
+  NS_ASSERTION(!(nsnull == aRect), "no clip");
+
+  aView->SetClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
+
+  UpdateView(aView, *aRect, 0);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility visible)
+NS_IMETHODIMP nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
-  aView->SetVisibility(visible);
+  aView->SetVisibility(aVisible);
   UpdateView(aView, nsnull, 0);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: SetViewZindex(nsIView *aView, PRInt32 zindex)
+NS_IMETHODIMP nsViewManager :: SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult  rv;
+
+  NS_ASSERTION(!(nsnull == aView), "no view");
+
+  PRInt32 oldidx;
+
+  aView->GetZIndex(oldidx);
+
+  if (oldidx != aZIndex)
+  {
+    nsIView *parent;
+
+    aView->GetParent(parent);
+
+    if (nsnull != parent)
+    {
+      //we don't just call the view manager's RemoveChild()
+      //so that we can avoid two trips trough the UpdateView()
+      //code (one for removal, one for insertion). MMP
+
+      parent->RemoveChild(aView);
+      UpdateTransCnt(aView, nsnull);
+      rv = InsertChild(parent, aView, aZIndex);
+    }
+    else
+      rv = NS_OK;
+  }
+  else
+    rv = NS_OK;
+
+  return rv;
 }
 
-NS_IMETHODIMP nsViewManager :: MoveViewAbove(nsIView *aView, nsIView *other)
+NS_IMETHODIMP nsViewManager :: MoveViewAbove(nsIView *aView, nsIView *aOther)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult  rv;
+
+  NS_ASSERTION(!(nsnull == aView), "no view");
+  NS_ASSERTION(!(nsnull == aOther), "no view");
+
+  nsIView *nextview;
+
+  aView->GetNextSibling(nextview);
+ 
+  if (nextview != aOther)
+  {
+    nsIView *parent;
+
+    aView->GetParent(parent);
+
+    if (nsnull != parent)
+    {
+      //we don't just call the view manager's RemoveChild()
+      //so that we can avoid two trips trough the UpdateView()
+      //code (one for removal, one for insertion). MMP
+
+      parent->RemoveChild(aView);
+      UpdateTransCnt(aView, nsnull);
+      rv = InsertChild(parent, aView, aOther, PR_TRUE);
+    }
+    else
+      rv = NS_OK;
+  }
+  else
+    rv = NS_OK;
+
+  return rv;
 }
 
-NS_IMETHODIMP nsViewManager :: MoveViewBelow(nsIView *aView, nsIView *other)
+NS_IMETHODIMP nsViewManager :: MoveViewBelow(nsIView *aView, nsIView *aOther)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult  rv;
+
+  NS_ASSERTION(!(nsnull == aView), "no view");
+  NS_ASSERTION(!(nsnull == aOther), "no view");
+
+  nsIView *nextview;
+
+  aOther->GetNextSibling(nextview);
+ 
+  if (nextview != aView)
+  {
+    nsIView *parent;
+
+    aView->GetParent(parent);
+
+    if (nsnull != parent)
+    {
+      //we don't just call the view manager's RemoveChild()
+      //so that we can avoid two trips trough the UpdateView()
+      //code (one for removal, one for insertion). MMP
+
+      parent->RemoveChild(aView);
+      UpdateTransCnt(aView, nsnull);
+      rv = InsertChild(parent, aView, aOther, PR_FALSE);
+    }
+    else
+      rv = NS_OK;
+  }
+  else
+    rv = NS_OK;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsViewManager :: IsViewShown(nsIView *aView, PRBool &aResult)
