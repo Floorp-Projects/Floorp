@@ -789,15 +789,22 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          style &= ~WS_CLIPSIBLINGS;
    }
 
-   // For pop-up menus, the parent is the desktop, but use the "parent" as owner
-   if( hwndP != HWND_DESKTOP && aInitData &&
-       aInitData->mWindowType == eWindowType_popup)
+   if( hwndP != HWND_DESKTOP)
    {
-      if( !hwndOwner)
+      // For pop-up menus, the parent is the desktop, but use the "parent" as owner
+      if( aInitData && aInitData->mWindowType == eWindowType_popup)
+      {
+         if( !hwndOwner)
+         {
+            hwndOwner = hwndP;
+         }
+         hwndP = HWND_DESKTOP;
+      }
+      // For scrollbars, the parent is the owner, for notification purposes
+      else if( !hwndOwner && WindowClass() == WC_SCROLLBAR)
       {
          hwndOwner = hwndP;
       }
-      hwndP = HWND_DESKTOP;
    }
 
    // Create a window: create hidden & then size to avoid swp_noadjust problems
