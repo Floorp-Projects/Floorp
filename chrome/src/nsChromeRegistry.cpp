@@ -2407,9 +2407,6 @@ nsChromeRegistry::CheckForNewChrome()
     mInstallInitialized = PR_TRUE;
     rv = AddToCompositeDataSource(PR_FALSE);
     if (NS_FAILED(rv)) return rv;
-
-    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-    if (NS_FAILED(rv)) return rv;
   }
 
   // open the installed-chrome file
