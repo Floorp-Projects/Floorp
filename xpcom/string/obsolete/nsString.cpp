@@ -126,7 +126,7 @@ nsCString::~nsCString() {
 }
 
 #ifdef NEW_STRING_APIS
-const char* nsCString::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const {
+const char* nsCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const {
   switch ( aRequest ) {
     case kFirstFragment:
     case kLastFragment:
@@ -141,7 +141,7 @@ const char* nsCString::GetReadableFragment( ReadableFragment& aFragment, Fragmen
   }
 }
 
-char* nsCString::GetWritableFragment( WritableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) {
+char* nsCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) {
   switch ( aRequest ) {
     case kFirstFragment:
     case kLastFragment:
@@ -204,7 +204,6 @@ void nsCString::SetCapacity(PRUint32 aLength) {
   Accessor methods...
  *********************************************************************/
 
-#ifndef NEW_STRING_APIS
 /**
  * Retrieves internal (1-byte) buffer ptr;
  * @update  gess1/4/99
@@ -214,6 +213,7 @@ const char* nsCString::GetBuffer(void) const {
   return mStr;
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * Get nth character.
  */

@@ -63,6 +63,7 @@ using namespace std;
   'C') is a string of |char|s.
 */
 
+template <class CharT> class basic_nsAReadableString;
 
 template <class CharT> class basic_nsAWritableString;
   // ...because we sometimes use them as `out' params
@@ -71,8 +72,171 @@ template <class CharT> class basic_nsLiteralString;
   // ...because we sometimes use them as in params to force the conversion of |CharT*|s
 
 
+enum nsFragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
+
+template <class CharT>
+struct nsReadableFragment
+  {
+    const CharT*  mStart;
+    const CharT*  mEnd;
+    PRUint32      mFragmentIdentifier;
+
+    nsReadableFragment()
+        : mStart(0), mEnd(0), mFragmentIdentifier(0)
+      {
+        // nothing else to do here
+      }
+  };
+
+template <class CharT>
+class nsReadingIterator
+      : public bidirectional_iterator_tag
+  {
+    public:
+      typedef ptrdiff_t                   difference_type;
+      typedef CharT                       value_type;
+      typedef const CharT*                pointer;
+      typedef const CharT&                reference;
+      typedef bidirectional_iterator_tag  iterator_category;
+
+    private:
+      friend class basic_nsAReadableString<CharT>;
+
+      nsReadableFragment<CharT>             mFragment;
+      const CharT*                          mPosition;
+      const basic_nsAReadableString<CharT>* mOwningString;
+
+      inline void normalize_forward();
+      inline void normalize_backward();
+
+      nsReadingIterator( const nsReadableFragment<CharT>& aFragment,
+                         const CharT* aStartingPosition,
+                         const basic_nsAReadableString<CharT>& aOwningString )
+          : mFragment(aFragment),
+            mPosition(aStartingPosition),
+            mOwningString(&aOwningString)
+        {
+          // nothing else to do here
+        }
+
+    public:
+      // nsReadingIterator( const nsReadingIterator<CharT>& ); ...use default copy-constructor
+      // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& ); ...use default copy-assignment operator
+
+      
+      CharT
+      operator*() const
+        {
+          return *mPosition;
+        }
+
+      pointer
+      operator->() const
+        {
+          return mPosition;
+        }
+
+      nsReadingIterator<CharT>&
+      operator++()
+        {
+          ++mPosition;
+          normalize_forward();
+          return *this;
+        }
+
+      nsReadingIterator<CharT>
+      operator++( int )
+        {
+          nsReadingIterator<CharT> result(*this);
+          ++mPosition;
+          normalize_forward();
+          return result;
+        }
+
+      nsReadingIterator<CharT>&
+      operator--()
+        {
+          normalize_backward();
+          --mPosition;
+          return *this;
+        }
+
+      nsReadingIterator<CharT>
+      operator--( int )
+        {
+          nsReadingIterator<CharT> result(*this);
+          normalize_backward();
+          --mPosition;
+          return result;
+        }
+
+      const nsReadableFragment<CharT>&
+      fragment() const
+        {
+          return mFragment;
+        }
+
+      difference_type
+      size_forward() const
+        {
+          return mFragment.mEnd - mPosition;
+        }
+
+      difference_type
+      size_backward() const
+        {
+          return mPosition - mFragment.mStart;
+        }
+
+      nsReadingIterator<CharT>&
+      operator+=( difference_type n )
+        {
+          if ( n < 0 )
+            return operator-=(-n);
+
+          while ( n )
+            {
+              difference_type one_hop = NS_MIN(n, size_forward());
+              mPosition += one_hop;
+              normalize_forward();
+              n -= one_hop;
+            }
+
+          return *this;
+        }
+
+      nsReadingIterator<CharT>&
+      operator-=( difference_type n )
+        {
+          if ( n < 0 )
+            return operator+=(-n);
+
+          while ( n )
+            {
+              difference_type one_hop = NS_MIN(n, size_backward());
+              mPosition -= one_hop;
+              normalize_backward();
+              n -= one_hop;
+            }
+
+          return *this;
+        }
 
 
+        // Damn again!  Problems with templates made me implement comparisons as members.
+
+      PRBool
+      operator==( const nsReadingIterator<CharT>& rhs ) const
+        {
+          return mPosition == rhs.mPosition;
+        }
+
+      PRBool
+      operator!=( const nsReadingIterator<CharT>& rhs ) const
+        {
+          return mPosition != rhs.mPosition;
+        }
+  };
 
 
   //
@@ -85,213 +249,34 @@ class basic_nsAReadableString
       ...
     */
   {
-    public:
-
-      struct ReadableFragment
-        {
-          const CharT*  mStart;
-          const CharT*  mEnd;
-          PRUint32      mFragmentIdentifier;
-
-          ReadableFragment()
-              : mStart(0), mEnd(0), mFragmentIdentifier(0)
-            {
-              // nothing else to do here
-            }
-        };
-
+    // friend class nsReadingIterator<CharT>;
 
     public:
+
+      typedef nsReadingIterator<CharT> ConstIterator;
+
+    public:
+
       virtual const void* Implementation() const;
 
-      enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
-
         // Damn!  Had to make |GetReadableFragment| public because the compilers suck.  Should be protected.
-      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
-
-      friend class ReadingIterator;
-      class ReadingIterator
-            : public bidirectional_iterator_tag
-        {
-          public:
-            typedef ptrdiff_t                   difference_type;
-            typedef CharT                       value_type;
-            typedef const CharT*                pointer;
-            typedef const CharT&                reference;
-            typedef bidirectional_iterator_tag  iterator_category;
-
-          private:
-            friend class basic_nsAReadableString<CharT>;
-
-            ReadableFragment                      mFragment;
-            const CharT*                          mPosition;
-            const basic_nsAReadableString<CharT>* mOwningString;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
 
 
-            void
-            normalize_forward()
-              {
-                if ( mPosition == mFragment.mEnd )
-                  if ( mOwningString->GetReadableFragment(mFragment, kNextFragment) )
-                    mPosition = mFragment.mStart;
-              }
-
-            void
-            normalize_backward()
-              {
-                if ( mPosition == mFragment.mStart )
-                  if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
-                    mPosition = mFragment.mEnd;
-              }
-
-            ReadingIterator( const ReadableFragment& aFragment,
-                             const CharT* aStartingPosition,
-                             const basic_nsAReadableString<CharT>& aOwningString )
-                : mFragment(aFragment),
-                  mPosition(aStartingPosition),
-                  mOwningString(&aOwningString)
-              {
-                // nothing else to do here
-              }
-
-          public:
-            // ReadingIterator( const ReadingIterator& ); ...use default copy-constructor
-            // ReadingIterator& operator=( const ReadingIterator& ); ...use default copy-assignment operator
-
-            
-            CharT
-            operator*() const
-              {
-                return *mPosition;
-              }
-
-            pointer
-            operator->() const
-              {
-                return mPosition;
-              }
-
-            ReadingIterator&
-            operator++()
-              {
-                ++mPosition;
-                normalize_forward();
-                return *this;
-              }
-
-            ReadingIterator
-            operator++( int )
-              {
-                ReadingIterator result(*this);
-                ++mPosition;
-                normalize_forward();
-                return result;
-              }
-
-            ReadingIterator&
-            operator--()
-              {
-                normalize_backward();
-                --mPosition;
-                return *this;
-              }
-
-            ReadingIterator
-            operator--( int )
-              {
-                ReadingIterator result(*this);
-                normalize_backward();
-                --mPosition;
-                return result;
-              }
-
-            const ReadableFragment&
-            fragment() const
-              {
-                return mFragment;
-              }
-
-            difference_type
-            size_forward() const
-              {
-                return mFragment.mEnd - mPosition;
-              }
-
-            difference_type
-            size_backward() const
-              {
-                return mPosition - mFragment.mStart;
-              }
-
-            ReadingIterator&
-            operator+=( difference_type n )
-              {
-                if ( n < 0 )
-                  return operator-=(-n);
-
-                while ( n )
-                  {
-                    difference_type one_hop = NS_MIN(n, size_forward());
-                    mPosition += one_hop;
-                    normalize_forward();
-                    n -= one_hop;
-                  }
-
-                return *this;
-              }
-
-            ReadingIterator&
-            operator-=( difference_type n )
-              {
-                if ( n < 0 )
-                  return operator+=(-n);
-
-                while ( n )
-                  {
-                    difference_type one_hop = NS_MIN(n, size_backward());
-                    mPosition -= one_hop;
-                    normalize_backward();
-                    n -= one_hop;
-                  }
-
-                return *this;
-              }
-
-
-              // Damn again!  Problems with templates made me implement comparisons as members.
-
-            PRBool
-            operator==( const ReadingIterator& rhs ) const
-              {
-                return mPosition == rhs.mPosition;
-              }
-
-            PRBool
-            operator!=( const ReadingIterator& rhs ) const
-              {
-                return mPosition != rhs.mPosition;
-              }
-        };
-
-      typedef ReadingIterator ConstIterator;
-
-
-    public:
-
-      basic_nsAReadableString<CharT>::ReadingIterator
+      nsReadingIterator<CharT>
       BeginReading( PRUint32 aOffset = 0 ) const
         {
-          ReadableFragment fragment;
+          nsReadableFragment<CharT> fragment;
           const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, aOffset);
-          return basic_nsAReadableString<CharT>::ReadingIterator(fragment, startPos, *this);
+          return nsReadingIterator<CharT>(fragment, startPos, *this);
         }
 
-      basic_nsAReadableString<CharT>::ReadingIterator
+      nsReadingIterator<CharT>
       EndReading( PRUint32 aOffset = 0 ) const
         {
-          ReadableFragment fragment;
+          nsReadableFragment<CharT> fragment;
           const CharT* startPos = GetReadableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-          return basic_nsAReadableString<CharT>::ReadingIterator(fragment, startPos, *this);
+          return nsReadingIterator<CharT>(fragment, startPos, *this);
         }
 
     public:
@@ -305,22 +290,6 @@ class basic_nsAReadableString
         {
           return Length() == 0;
         }
-
-
-
-        /*
-          RickG says the following three routines, |IsUnicode()|, |GetBuffer()|, and |GetUnicode()|
-          shouldn't be implemented because they're wrong access.  I agree.  Callers who really need
-          this access should use the iterators instead.  We'll use these to ease the transition to
-          |nsAReadable...|, and then remove them as soon as possible.
-        */
-
-      PRBool IsUnicode() const { return PR_FALSE; }
-        // ...but note specialization for |PRUnichar|, below
-
-      const char* GetBuffer() const { return 0; }
-      const PRUnichar* GetUnicode() const { return 0; }
-        // ...but note specializations for |char| and |PRUnichar|, below
 
 
 
@@ -411,6 +380,26 @@ class basic_nsAReadableString
       PRBool operator> ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)> 0; }
   };
 
+template <class CharT>
+inline
+void
+nsReadingIterator<CharT>::normalize_forward()
+  {
+    if ( mPosition == mFragment.mEnd )
+      if ( mOwningString->GetReadableFragment(mFragment, kNextFragment) )
+        mPosition = mFragment.mStart;
+  }
+
+template <class CharT>
+inline
+void
+nsReadingIterator<CharT>::normalize_backward()
+  {
+    if ( mPosition == mFragment.mStart )
+      if ( mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
+        mPosition = mFragment.mEnd;
+  }
+
 #define NS_DEF_1_STRING_COMPARISON_OPERATOR(comp, T1, T2) \
   inline                                        \
   PRBool                                        \
@@ -444,36 +433,6 @@ NS_DEF_STRING_COMPARISONS(basic_nsAReadableString<CharT>)
 
 
 
-NS_SPECIALIZE_TEMPLATE
-inline
-PRBool
-basic_nsAReadableString<PRUnichar>::IsUnicode() const
-  {
-    return PR_TRUE;
-  }
-
-NS_SPECIALIZE_TEMPLATE
-inline
-const char*
-basic_nsAReadableString<char>::GetBuffer() const
-    // DEPRECATED: use the iterators instead
-  {
-    ReadableFragment fragment;
-    GetReadableFragment(fragment, kFirstFragment);
-    return fragment.mStart;
-  }
-
-NS_SPECIALIZE_TEMPLATE
-inline
-const PRUnichar*
-basic_nsAReadableString<PRUnichar>::GetUnicode() const
-    // DEPRECATED: use the iterators instead
-  {
-    ReadableFragment fragment;
-    GetReadableFragment(fragment, kFirstFragment);
-    return fragment.mStart;
-  }
-
 template <class CharT>
 const void*
 basic_nsAReadableString<CharT>::Implementation() const
@@ -501,7 +460,7 @@ CharT
 basic_nsAReadableString<CharT>::CharAt( PRUint32 aIndex ) const
   {
       // ??? Is |CharAt()| supposed to be the 'safe' version?
-    ReadableFragment fragment;
+    nsReadableFragment<CharT> fragment;
     return *GetReadableFragment(fragment, kFragmentAt, aIndex);
   }
 
@@ -539,7 +498,7 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
     PRUint32 result = 0;
     PRUint32 lengthToExamine = Length();
 
-    ReadingIterator iter( BeginReading() );
+    nsReadingIterator<CharT> iter( BeginReading() );
     for (;;)
       {
         PRUint32 lengthToExamineInThisFragment = iter.size_forward();
@@ -633,11 +592,8 @@ class basic_nsLiteralString
       allows the automatic conversion of a |CharT*|.
     */
   {
-    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
-
     protected:
-      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
 
     public:
     
@@ -667,7 +623,7 @@ NS_DEF_STRING_COMPARISONS(basic_nsLiteralString<CharT>)
 
 template <class CharT>
 const CharT*
-basic_nsLiteralString<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+basic_nsLiteralString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -724,29 +680,26 @@ class nsPromiseConcatenation
       |GetReadableFragment()|.
     */
   {
-    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
-
     protected:
-      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
 
       enum { kLeftString, kRightString };
 
       int
-      GetCurrentStringFromFragment( const ReadableFragment& aFragment ) const
+      GetCurrentStringFromFragment( const nsReadableFragment<CharT>& aFragment ) const
         {
           return (aFragment.mFragmentIdentifier & mFragmentIdentifierMask) ? kRightString : kLeftString;
         }
 
       int
-      SetLeftStringInFragment( ReadableFragment& aFragment ) const
+      SetLeftStringInFragment( nsReadableFragment<CharT>& aFragment ) const
         {
           aFragment.mFragmentIdentifier &= ~mFragmentIdentifierMask;
           return kLeftString;
         }
 
       int
-      SetRightStringInFragment( ReadableFragment& aFragment ) const
+      SetRightStringInFragment( nsReadableFragment<CharT>& aFragment ) const
         {
           aFragment.mFragmentIdentifier |= mFragmentIdentifierMask;
           return kRightString;
@@ -785,7 +738,7 @@ nsPromiseConcatenation<CharT>::Length() const
 
 template <class CharT>
 const CharT*
-nsPromiseConcatenation<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+nsPromiseConcatenation<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
     int whichString;
 
@@ -848,6 +801,7 @@ nsPromiseConcatenation<CharT>::GetReadableFragment( ReadableFragment& aFragment,
   }
 
 template <class CharT>
+inline
 nsPromiseConcatenation<CharT>
 nsPromiseConcatenation<CharT>::operator+( const basic_nsAReadableString<CharT>& rhs ) const
   {
@@ -875,11 +829,8 @@ class nsPromiseSubstring
       calls to |GetReadableFragment()|.
     */
   {
-    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-    typedef typename basic_nsAWritableString<CharT>::ReadableFragment ReadableFragment;
-
     protected:
-      virtual const CharT* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
 
     public:
       nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aLength )
@@ -909,7 +860,7 @@ nsPromiseSubstring<CharT>::Length() const
 
 template <class CharT>
 const CharT*
-nsPromiseSubstring<CharT>::GetReadableFragment( ReadableFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string
@@ -957,8 +908,8 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
     PRUint32 rLength = rhs.Length();
     PRUint32 lengthToCompare = NS_MIN(lLength, rLength);
 
-    basic_nsAReadableString<CharT>::ReadingIterator leftIter( lhs.BeginReading() );
-    basic_nsAReadableString<CharT>::ReadingIterator rightIter( rhs.BeginReading() );
+    nsReadingIterator<CharT> leftIter( lhs.BeginReading() );
+    nsReadingIterator<CharT> rightIter( rhs.BeginReading() );
 
     for (;;)
       {
@@ -1025,6 +976,7 @@ Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
   */
 
 template <class CharT>
+inline
 nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
@@ -1032,6 +984,7 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
   }
 
 template <class CharT>
+inline
 nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
   {
@@ -1039,6 +992,7 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsLiteralStrin
   }
 
 template <class CharT>
+inline
 nsPromiseConcatenation<CharT>
 operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
@@ -1046,6 +1000,7 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsAReadableStrin
   }
 
 template <class CharT>
+inline
 nsPromiseConcatenation<CharT>
 operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
   {

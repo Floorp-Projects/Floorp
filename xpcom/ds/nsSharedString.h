@@ -35,7 +35,28 @@ class basic_nsSharedString
       ...
     */
   {
+    private:
+      ~basic_nsSharedString() { }
+        // You can't sub-class me, or make an instance of me on the stack
+
+      // operator delete
+
     public:
+
+      virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 ) const;
+
+      virtual
+      PRUint32
+      Length() const
+        {
+          return mLength;
+        }
+
+      basic_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
+        {
+          mLength = aReadable.Length();
+          copy(aReadable.BeginReading(), aReadable.EndReading(), mData+0);
+        }
 
       nsrefcnt
       AddRef() const
@@ -53,10 +74,31 @@ class basic_nsSharedString
         }
 
     private:
-      mutable nsrefcnt mRefCount;
+      mutable nsrefcnt  mRefCount;
+      size_t            mLength;
+      CharT             mData[1];
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper<CharT>)
+NS_DEF_STRING_COMPARISONS(basic_nsSharedString<CharT>)
+
+template <class CharT>
+const CharT*
+basic_nsSharedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 anOffset ) const
+  {
+    switch ( aRequest )
+      {
+        case kFirstFragment:
+        case kLastFragment:
+        case kFragmentAt:
+          aFragment.mEnd = (aFragment.mStart = mData) + mLength;
+          return aFragment.mStart + anOffset;
+        
+        case kPrevFragment:
+        case kNextFragment:
+        default:
+          return 0;
+      }
+  }
 
 
 
@@ -71,12 +113,17 @@ class nsSharedStringPtr
   };
 
 
+template <class CharT>
+basic_nsSharedString<CharT>*
+new_nsSharedString( const basic_nsAReadableString<CharT>& aReadable )
+  {
+    void* in_buffer = operator new( sizeof(basic_nsSharedString<CharT>) + aReadable.Length()*sizeof(CharT) );
+    return new (in_buffer) basic_nsSharedString<CharT>(aReadable);
+  }
+
 
 typedef basic_nsSharedString<PRUnichar>     nsSharedString;
-typedef basic_nsSharedStringPtr<PRUnichar>  nsSharedStringPtr;
-
 typedef basic_nsSharedString<char>          nsSharedCString;
-typedef basic_nsSharedStringPtr<char>       nsSharedCStringPtr;
 
 
 #endif // !defined(_nsSharedString_h__)

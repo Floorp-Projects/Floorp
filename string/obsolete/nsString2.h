@@ -67,12 +67,8 @@ class NS_COM nsString :
 
 #ifdef NEW_STRING_APIS
 protected:
-  typedef nsAReadableString::FragmentRequest  FragmentRequest;
-  typedef nsAReadableString::ReadableFragment ReadableFragment;
-  typedef nsAWritableString::WritableFragment WritableFragment;
-
-  virtual const PRUnichar* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
-  virtual PRUnichar* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
+  virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+  virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 
 public:
   nsString( const nsAReadableString& );
@@ -189,7 +185,6 @@ public:
   }
 
 
-#ifndef NEW_STRING_APIS
   /**
    *  Determine whether or not the characters in this
    *  string are in store as 1 or 2 byte (unicode) strings.
@@ -201,6 +196,7 @@ public:
     return result;
   }
 
+#ifndef NEW_STRING_APIS
   /**
    *  Determine whether or not this string has a length of 0
    *  
@@ -209,6 +205,7 @@ public:
   PRBool IsEmpty(void) const {
     return PRBool(0==mLength);
   }
+#endif
 
   /**********************************************************************
     Getters/Setters...
@@ -221,6 +218,7 @@ public:
   const PRUnichar* GetUnicode(void) const;
 
 
+#ifndef NEW_STRING_APIS
    /**
      * Get nth character.
      */
