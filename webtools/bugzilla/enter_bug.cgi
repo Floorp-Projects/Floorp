@@ -183,7 +183,8 @@ print "
   <TR>
     <td ALIGN=right valign=top><B>Version:</B></td>
     <td>" . Version_element(pickversion(), $product) . "</td>
-    <td align=right valign=top><b>Component:</b></td>
+    <td align=right valign=top><b><a href=\"describecomponents.cgi?product=" .
+    url_quote($product) . "\">Component:</b></td>
     <td>$component_popup</td>
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>

@@ -10,6 +10,13 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+2/4/99 Added a new column "description" to the components table, and added 
+links to a new page which will use this to describe the components of a 
+given product.  Feed this to MySQL:
+
+	alter table components add column description mediumtext not null;
+
+
 2/3/99 Added a new column "initialqacontact" to the components table that gives
 an initial QA contact field.  It may be empty if you wish the initial qa
 contact to be empty.  If you're not using the QA contact field, you don't need

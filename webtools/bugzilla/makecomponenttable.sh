@@ -31,7 +31,8 @@ create table components (
 value tinytext,
 program tinytext,
 initialowner tinytext not null,	# Should arguably be a mediumint!
-initialqacontact tinytext not null # Should arguably be a mediumint!
+initialqacontact tinytext not null, # Should arguably be a mediumint!
+description mediumtext not null
 );
 
 
@@ -60,14 +61,14 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("LDAP Tools", "Directory", "chuckb@netscape.com", "");
 
 
-insert into components (value, program, initialowner, initialqacontact) values ("Networking", "MailNews", "mscott@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Database", "MailNews", "davidmc@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("MIME", "MailNews", "rhp@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Security", "MailNews", "jefft@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Composition", "MailNews", "ducarroz@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Address Book", "MailNews", "putterman@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Front End", "MailNews", "phil@netscape.com", "lchiang@netscape.com");
-insert into components (value, program, initialowner, initialqacontact) values ("Back End", "MailNews", "phil@netscape.com", "lchiang@netscape.com");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Networking", "MailNews", "mscott@netscape.com", "lchiang@netscape.com", "Integration with libnet, protocol support for POP3, IMAP4, SMTP, NNTP and LDAP");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Database", "MailNews", "davidmc@netscape.com", "lchiang@netscape.com", "Persistent storage of address books and mail/news summary files");
+insert into components (value, program, initialowner, initialqacontact, description) values ("MIME", "MailNews", "rhp@netscape.com", "lchiang@netscape.com", "Parsing the MIME structure");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Security", "MailNews", "jefft@netscape.com", "lchiang@netscape.com", "SSL, S/MIME for mail");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Composition", "MailNews", "ducarroz@netscape.com", "lchiang@netscape.com", "Front-end and back-end of message composition and sending");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Address Book", "MailNews", "putterman@netscape.com", "lchiang@netscape.com", "Names, email addresses, phone numbers, etc.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Front End", "MailNews", "phil@netscape.com", "lchiang@netscape.com", "Three pane view, sidebar contents, toolbars, dialogs, etc.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Back End", "MailNews", "phil@netscape.com", "lchiang@netscape.com", "RDF data sources and application logic for local mail, news, IMAP and LDAP");
 insert into components (value, program, initialowner, initialqacontact) values ("Internationalization", "MailNews", "nhotta@netscape.com", "momoi@netscape.com");
 insert into components (value, program, initialowner, initialqacontact) values ("Localization", "MailNews", "rchen@netscape.com", "momoi@netscape.com");
 
@@ -156,12 +157,12 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Localization", "NGLayout", "rchen@netscape.com", "teruko@netscape.com");
 
 
-insert into components (value, program, initialowner, initialqacontact) values ("Bonsai", "Webtools", "terry@mozilla.org", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Bugzilla", "Webtools", "terry@mozilla.org", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Despot", "Webtools", "terry@mozilla.org", "");
-insert into components (value, program, initialowner, initialqacontact) values ("LXR", "Webtools", "endico@mozilla.org", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Mozbot", "Webtools", "terry@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Tinderbox", "Webtools", "terry@mozilla.org", "");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Bonsai", "Webtools", "terry@mozilla.org", "", 'Web based <a href="http://www.mozilla.org/bonsai.html">Tree control system</a> for watching the up-to-the-minute goings-on in a CVS repository');
+insert into components (value, program, initialowner, initialqacontact, description) values ("Bugzilla", "Webtools", "terry@mozilla.org", "", "Use this component to report bugs in the bug system itself");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Despot", "Webtools", "terry@mozilla.org", "", "mozilla.org's <a href=http://cvs-mirror.mozilla.org/webtools/despot.cgi>account management</a> system");
+insert into components (value, program, initialowner, initialqacontact, description) values ("LXR", "Webtools", "endico@mozilla.org", "", 'Source code <a href="http://cvs-mirror.mozilla.org/webtools/lxr/">cross reference</a> system');
+insert into components (value, program, initialowner, initialqacontact, description) values ("Mozbot", "Webtools", "terry@mozilla.org", "", 'IRC robot that watches tinderbox and other things');
+insert into components (value, program, initialowner, initialqacontact, description) values ("Tinderbox", "Webtools", "terry@mozilla.org", "", 'Tree-watching system to monitor <a href="http://www.mozilla.org/tinderbox.html">continuous builds</a> that we run on multiple platforms.');
 
 
 select * from components;

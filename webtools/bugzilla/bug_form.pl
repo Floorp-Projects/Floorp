@@ -138,7 +138,8 @@ print "
       <TD>$bug{'resolution'}</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
       <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-    <TD ALIGN=RIGHT><B>Component:</B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"describecomponents.cgi?product=" .
+    url_quote($bug{'product'}) . "\">Component:</A></B></TD>
       <TD><SELECT NAME=component>$component_popup</SELECT></TD>
   </TR><TR>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:

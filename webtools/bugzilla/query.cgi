@@ -259,7 +259,7 @@ $emailinput2<p>
 <tr>
 <TH ALIGN=LEFT VALIGN=BOTTOM>Program:</th>
 <TH ALIGN=LEFT VALIGN=BOTTOM>Version:</th>
-<TH ALIGN=LEFT VALIGN=BOTTOM>Component:</th>
+<TH ALIGN=LEFT VALIGN=BOTTOM><A HREF=describecomponents.cgi>Component:<a></th>
 ";
 
 if (Param("usetargetmilestone")) {
