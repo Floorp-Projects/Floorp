@@ -154,7 +154,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     ofn.lpstrTitle   = title;
     ofn.lpstrFilter  = filterBuffer;
-    ofn.nFilterIndex = 1;
+    ofn.nFilterIndex = mSelectedType;
     ofn.hwndOwner    = mWnd;
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = MAX_PATH;
