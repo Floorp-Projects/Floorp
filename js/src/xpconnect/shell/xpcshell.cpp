@@ -37,6 +37,10 @@
 #include <errno.h>
 #ifdef XP_PC
 #include <io.h>     /* for isatty() */
+#else
+#ifdef XP_UNIX
+#include <unistd.h>     /* for isatty() */
+#endif
 #endif
 #include "jsparse.h"
 #include "jsscan.h"
