@@ -42,6 +42,7 @@ classic.jar:
     skin/classic/messenger/icons/throbber.gif       (skin/icons/throbber.gif)
     skin/classic/messenger/icons/throbber-small.gif (skin/icons/throbber-small.gif)
     skin/classic/messenger/icons/throbber-small.png (skin/icons/throbber-small.png)
+    skin/classic/messenger/icons/mail-16.gif        (skin/icons/mail-16.gif)
 
 comm.jar:
 *+  content/navigator/viewSource.xul                (content/viewSource.xul)
