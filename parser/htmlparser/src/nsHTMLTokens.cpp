@@ -26,6 +26,7 @@
 #include "prtypes.h"
 #include "nsDebug.h"
 #include "nsHTMLTags.h"
+#include "nsHTMLEntities.h"
 #include "nsCRT.h"
 
 //#define GESS_MACHINE
@@ -44,56 +45,6 @@ static const char*  gEmpty = "";
 
 
 const PRInt32 kMAXNAMELEN=10;
-struct StrToUnicodeStruct
-{
-  char    mName[kMAXNAMELEN+1];
-  PRInt32 mValue;
-};
-
-
-  // KEEP THIS LIST SORTED!
-  // NOTE: This names table is sorted in ascii collating order. If you
-  // add a new entry, make sure you put it in the right spot otherwise
-  // the binary search code above will break! 
-static StrToUnicodeStruct gStrToUnicodeTable[] =
-{
-  {"AElig", 0x00c6},  {"AMP",   0x0026},  {"Aacute",0x00c1},  
-  {"Acirc", 0x00c2},  {"Agrave",0x00c0},  {"Aring", 0x00c5},  
-  {"Atilde",0x00c3},  {"Auml",  0x00c4},  {"COPY",  0x00a9},  
-  {"Ccedil",0x00c7},  {"ETH",   0x00d0},  {"Eacute",0x00c9},
-  {"Ecirc", 0x00ca},  {"Egrave",0x00c8},  {"Euml",  0x00cb},  
-  {"GT",    0x003e},  {"Iacute",0x00cd},  {"Icirc", 0x00ce},  
-  {"Igrave",0x00cc},  {"Iuml",  0x00cf},  {"LT",    0x003c},  
-  {"Ntilde",0x00d1},  {"Oacute",0x00d3},  {"Ocirc", 0x00d4},
-  {"Ograve",0x00d2},  {"Oslash",0x00d8},  {"Otilde",0x00d5},  
-  {"Ouml",  0x00d6},  {"QUOT",  0x0022},  {"REG",   0x00ae},  
-  {"THORN", 0x00de},  {"Uacute",0x00da},  {"Ucirc", 0x00db},  
-  {"Ugrave",0x00d9},  {"Uuml",  0x00dc},  {"Yacute",0x00dd},
-  {"aacute",0x00e1},  {"acirc", 0x00e2},  {"acute", 0x00b4},  
-  {"aelig", 0x00e6},  {"agrave",0x00e0},  {"amp",   0x0026},  
-  {"aring", 0x00e5},  {"atilde",0x00e3},  {"auml",  0x00e4},  
-  {"brvbar",0x00a6},  {"ccedil",0x00e7},  {"cedil", 0x00b8},
-  {"cent",  0x00a2},  {"copy",  0x00a9},  {"curren",0x00a4},  
-  {"deg",   0x00b0},  {"divide",0x00f7},  {"eacute",0x00e9},  
-  {"ecirc", 0x00ea},  {"egrave",0x00e8},  {"eth",   0x00f0},  
-  {"euml",  0x00eb},  {"frac12",0x00bd},  {"frac14",0x00bc},
-  {"frac34",0x00be},  {"gt",    0x003e},  {"iacute",0x00ed},  
-  {"icirc", 0x00ee},  {"iexcl", 0x00a1},  {"igrave",0x00ec},  
-  {"iquest",0x00bf},  {"iuml",  0x00ef},  {"laquo",  0x00ab},  
-  {"lt",    0x003c},  {"macr",  0x00af},  {"micro",  0x00b5},
-  {"middot",0x00b7},  {"nbsp",  0x00a0},  {"not",   0x00ac}, 
-  {"ntilde",0x00f1},  {"oacute",0x00f3},  {"ocirc", 0x00f4},  
-  {"ograve",0x00f2},  {"ordf",  0x00aa},  {"ordm",  0x00ba},  
-  {"oslash",0x00f8},  {"otilde",0x00f5},  {"ouml",  0x00f6},
-  {"para",  0x00b6},  {"plusmn",0x00b1},  {"pound", 0x00a3},  
-  {"quot",  0x0022},  {"raquo", 0x00bb},  {"reg",   0x00ae},  
-  {"sect",  0x00a7},  {"shy",   0x00ad},  {"sup1",  0x00b9},  
-  {"sup2",  0x00b2},  {"sup3",  0x00b3},  {"szlig", 0x00df},
-  {"thorn", 0x00fe},  {"times", 0x00d7},  {"uacute",0x00fa},  
-  {"ucirc", 0x00fb},  {"ugrave",0x00f9},  {"uml",   0x00a8},  
-  {"uuml",  0x00fc},  {"yacute",0x00fd},  {"yen",   0x00a5},  
-  {"yuml",  0x00ff}
-};
 
 
 /**************************************************************
@@ -1072,158 +1023,22 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& 
  *  @return  
  */
 PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
-  PRInt32 index=0;
-  if(aString.IsDigit(mTextValue[0])) {
+  PRInt32 value=0;
+  if(nsString::IsDigit(mTextValue[0])) {
     PRInt32 err=0;
-    index=mTextValue.ToInteger(&err);
+    value=mTextValue.ToInteger(&err);
     if(0==err)
-      aString.Append(PRUnichar(index));
+      aString.Append(PRUnichar(value));
   }
   else {
-    index=FindEntityIndex(mTextValue);
-    if(kNotFound!=index) {
-      PRUnichar ch=gStrToUnicodeTable[index].mValue;
-      aString=ch;
+    char cbuf[30];
+    mTextValue.ToCString(cbuf, sizeof(cbuf));
+    value = NS_EntityToUnicode(cbuf);
+    if(-1 != value) {
+      aString = PRUnichar(value);
     } 
-    else {
-#ifdef GESS_MACHINE
-      index=TranslateExtendedEntity(mTextValue,aString);
-#endif
-    }
   }
-  return index;
-}
-
- 
-
-/*
- *  This method ensures that the entity table doesn't get
- *  out of sync. Make sure you call this at least once.
- *  
- *  @update  gess 3/25/98
- *  @return  PR_TRUE if valid (ordered correctly)
- */
-PRBool CEntityToken::VerifyEntityTable(){
-  PRInt32  count=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
-  PRInt32 i,j;
-  for(i=1;i<count-1;i++)
-  {
-    j=strcmp(gStrToUnicodeTable[i-1].mName,gStrToUnicodeTable[i].mName);
-    if(j>0)
-      return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
-
-/*
- *  This method is used to convert from a given string (char*)
- *  into a entity index (offset within entity table).
- *  
- *  @update  gess 3/25/98
- *  @param   aBuffer -- string to be converted
- *  @param   aBuflen -- optional string length
- *  @return  integer offset of string in table, or kNotFound
- */
-PRInt32 CEntityToken::FindEntityIndex(nsString& aString) {
-  PRInt32  result=kNotFound;
-  PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
-  PRInt32  low=0; 
-  PRInt32  high=cnt-1;
-  PRInt32  middle=kNotFound;
-    
-  if(cnt) {
-    while(low<=high)
-    {
-      middle=(PRInt32)(low+high)/2;
-      result=aString.Compare(gStrToUnicodeTable[middle].mName);
-//      result=strcmp(aBuffer,gStrToUnicodeTable[middle].mName);
-      if (result==0) {
-        return middle;
-      }
-      if (result<0) {
-        high=middle-1;
-      }
-      else low=middle+1; 
-    }
-  }
-  return kNotFound;
-}
-
-
-/*
- *  This method is used to convert from a given string (char*)
- *  into a entity index (offset within entity table).
- *  
- *  @update  gess 3/25/98
- *  @param   aBuffer -- string to be converted
- *  @param   aBuflen -- optional string length
- *  @return  integer offset of string in table, or kNotFound
- */
-PRInt32 CEntityToken::FindEntityIndexMax(const char* aBuffer,PRInt32 aBufLen) {
-  PRInt32  result=kNotFound;
-  PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
-  PRInt32  low=0; 
-  PRInt32  high=cnt-1;
-  PRInt32  middle=kNotFound;
-  
-  if(aBuffer) {
-    if(-1==aBufLen) {
-      aBufLen=strlen(aBuffer);
-    }
-  
-    if(aBufLen && cnt) {
-      while(low<=high)
-      {
-        middle=(PRInt32)(low+high)/2;
-        result=strcmp(aBuffer,gStrToUnicodeTable[middle].mName);
-        if (result==0) {
-          return middle;
-        }
-        if (result<0) {
-          high=middle-1;
-        }
-        else low=middle+1; 
-      }
-    }
-  }
-  return kNotFound;
-}
-
-
-/*
- *  This method reduces all text entities into their char
- *  representation.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-PRInt32 CEntityToken::ReduceEntities(nsString& aString) {
-  PRInt32 result=0;
-  PRInt32 amppos=0;
-  PRBool done=PR_FALSE;
-  PRInt32 offset=0;
-
-  while(!done) {
-    if(kNotFound!=(amppos=aString.Find('&',offset))) {
-      if(!nsString::IsSpace(aString[amppos+1])) { //have we found a genuine entity?
-        PRInt32 endpos=aString.FindLastCharInSet(gIdentChars,amppos+1);
-        PRInt32 cnt;
-        if(kNotFound==endpos) 
-          cnt=aString.Length()-1-amppos;
-        else cnt=endpos-amppos;
-        PRInt32 index=FindEntityIndexMax((const char*)&aString[amppos+1],cnt);
-        if(kNotFound!=index) {
-          aString[amppos]=gStrToUnicodeTable[index].mValue;
-          aString.Cut(amppos+1,cnt+(endpos!=kNotFound));
-        }
-        else offset=amppos+1;
-      }
-    }
-    else done=PR_TRUE;
-  }
-  return result;
+  return value;
 }
 
 /*
@@ -1364,35 +1179,6 @@ nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
 }
 
 
-#if 0
-/*
- *  This method iterates the tagtable to ensure that is 
- *  is proper sort order. This method only needs to be
- *  called once.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-class CTagTableVerifier {
-public:
-  CTagTableVerifier(){
-    PRInt32  count=sizeof(gHTMLTagTable)/sizeof(HTMLTagEntry);
-    PRInt32 i,j;
-    for(i=1;i<count-1;i++)
-    {
-      j=strcmp(gHTMLTagTable[i-1].mName,gHTMLTagTable[i].mName);
-      if(j>0) {
-        cout << "Tag Table names are out of order at " << i << "!" << endl;
-      }
-      if(gHTMLTagTable[i-1].mTagID>=gHTMLTagTable[i].mTagID) {
-        cout << "Tag table ID's are out of order at " << i << "!" << endl;;
-      }
-    }
-  }
-};
-#endif
-
 /**
  * 
  * @update	gess4/25/98
@@ -1408,46 +1194,3 @@ const char* GetTagName(PRInt32 aTag) {
   }
   return result;
 }
-
-
-#if 0
-/*
- *  This method iterates the attribute-table to ensure that is 
- *  is proper sort order. This method only needs to be
- *  called once.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-class CAttributeTableVerifier {
-public:
-  CAttributeTableVerifier(){
-    PRInt32  count=sizeof(gHTMLAttributeTable)/sizeof(HTMLAttrEntry);
-    PRInt32 i,j;
-    for(i=1;i<count-1;i++)
-    {
-      j=strcmp(gHTMLAttributeTable[i-1].mName,gHTMLAttributeTable[i].mName);
-      if(j>0) {
-#ifdef VERBOSE_DEBUG
-        cout << "Attribute table is out of order at " << j << "!" << endl;
-#endif
-        return;
-      }
-    }
-    return;
-  }
-};
-
-
-/*
- *  These objects are here to force the validation of the
- *  tag and attribute tables.
- */
-
-CAttributeTableVerifier gAttributeTableVerifier;
-CTagTableVerifier gTableVerifier;
-
-
-
-#endif
