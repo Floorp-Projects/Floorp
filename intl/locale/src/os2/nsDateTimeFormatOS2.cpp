@@ -65,7 +65,7 @@ nsresult nsDateTimeFormatOS2::FormatTime(nsILocale* locale,
 
 /* Workaround for GCC problem */
 #ifndef LOCI_sDate
-#define LOCI_sDate 63
+#define LOCI_sDate ((LocaleItem)63)
 #endif
 
 // performs a locale sensitive date formatting operation on the struct tm parameter

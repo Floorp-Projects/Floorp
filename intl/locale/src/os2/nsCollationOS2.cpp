@@ -64,7 +64,7 @@ nsCollationOS2::~nsCollationOS2()
 
 /* Workaround for GCC problem */
 #ifndef LOCI_iCodepage
-#define LOCI_iCodepage 111
+#define LOCI_iCodepage ((LocaleItem)111)
 #endif
 
 nsresult nsCollationOS2::Initialize(nsILocale *locale)
