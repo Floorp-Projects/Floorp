@@ -773,7 +773,6 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
 {
     SECStatus rv;
     SECItem *derCert;
-    PRArenaPool *arena;
     CERTCertificate *cert = NULL;
     CERTCertificate *newcert = NULL;
     CERTCertDBHandle *handle;
@@ -784,13 +783,6 @@ cert_ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage, PRBool 
     
     handle = CERT_GetDefaultCertDB();
     
-    arena = NULL;
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( ! arena ) {
-	goto loser;
-    }
-
     while (numcerts--) {
 	derCert = certs;
 	certs++;
@@ -910,10 +902,6 @@ done:
 	cert = NULL;
     }
     
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
-    }
-
     return(rv);
 }
 
