@@ -47,6 +47,7 @@
 
 extern GtkWidget* gButtonWidget;
 extern GtkWidget* gCheckboxWidget;
+extern GtkWidget* gScrollbarWidget;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* aState)
@@ -185,7 +186,35 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
 
   moz_gtk_button_paint(window, style, arrowRect, clipRect, state);
-  gtk_draw_arrow(style, window, state_type, shadow_type, arrowType, TRUE,
-                 arrowRect->x, arrowRect->y, arrowRect->width, arrowRect->height);
+  gtk_paint_arrow(style, window, state_type, shadow_type, clipRect,
+                  gScrollbarWidget, (arrowType < 2) ? "vscrollbar" : "hscrollbar", 
+                  arrowType, TRUE,
+                  arrowRect->x, arrowRect->y, arrowRect->width, arrowRect->height);
+}
+
+void
+moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
+                               GdkRectangle* troughRect, GdkRectangle* clipRect,
+                               GtkWidgetState* state)
+{
+  gtk_paint_box(style, window, GTK_STATE_ACTIVE, GTK_SHADOW_IN,
+                clipRect, gScrollbarWidget, "trough", troughRect->x,
+                troughRect->y, troughRect->width, troughRect->height);
+
+  if (state->focused)
+    gtk_paint_focus(style, window, clipRect, gScrollbarWidget, "trough",
+                    troughRect->x, troughRect->y, troughRect->width, 
+                    troughRect->height);
+}
+
+void
+moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
+                              GdkRectangle* thumbRect, GdkRectangle* clipRect,
+                              GtkWidgetState* state)
+{
+  GtkStateType state_type = state->inHover ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
+  gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, clipRect,
+                gScrollbarWidget, "slider", thumbRect->x, thumbRect->y,
+                thumbRect->width, thumbRect->height);
 }
 
