@@ -1354,6 +1354,7 @@ public final class Context {
     
     /**
      * Remove a Context listener.
+     * @param listener the listener to remove.
      */
     public static void removeContextListener(ContextListener listener) {
         if (contextListeners == null)
@@ -1362,6 +1363,22 @@ public final class Context {
             if (contextListeners.elementAt(i).equals(listener))
                 contextListeners.removeElementAt(i);
         }
+    }
+
+    /**
+     * Set the security support for this context. 
+     * <p> SecuritySupport may only be set if it is currently null.
+     * Otherwise a SecurityException is thrown.
+     * @param securitySupportObj a SecuritySupport object
+     * @throws SecurityException if there is already a SecuritySupport
+     *         object for this Context
+     */
+    public void setSecuritySupport(SecuritySupport securitySupportObj) {
+        if (securitySupport != null) {
+            throw new SecurityException("Cannot overwrite existing " +
+                                        "SecuritySupport object");
+        }
+        securitySupport = securitySupportObj;
     }
         
     /**
