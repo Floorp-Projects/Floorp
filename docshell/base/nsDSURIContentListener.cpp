@@ -60,13 +60,13 @@ NS_IMETHODIMP nsDSURIContentListener::GetProtocolHandler(nsIURI* aURI,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
-   const char* aCommand, const char* aWindowTarget, nsIChannel* aOpenedChannel,
+NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType, nsURILoadCommand aCommand, 
+   const char* aWindowTarget, nsIChannel* aOpenedChannel,
    nsIStreamListener** aContentHandler, PRBool* aAbortProcess)
 {
    NS_ENSURE_ARG_POINTER(aContentHandler && aAbortProcess);
 
-   if(HandleInCurrentDocShell(aContentType, aCommand, aWindowTarget, 
+   if(HandleInCurrentDocShell(aContentType, "view", aWindowTarget, 
       aOpenedChannel, aContentHandler))
       { 
       // In this condition content will start to be directed here.
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
 }
 
 NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
-   const char* aCommand, const char* aWindowTarget, char ** aDesiredContentType, PRBool* aCanHandle)
+   nsURILoadCommand aCommand, const char* aWindowTarget, char ** aDesiredContentType, PRBool* aCanHandle)
 {
    NS_ENSURE_ARG_POINTER(aCanHandle);
    NS_ENSURE_ARG_POINTER(aDesiredContentType);
