@@ -399,11 +399,15 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         case _OPM(STRING):
           transform->stringValue = ToNewCString(val);
           break;
-        case _OPM(INT):
-          transform->intValue = val.ToInteger(&strerr);
+        case _OPM(INT): {
+            nsCAutoString valStr; valStr = val;
+            transform->intValue = valStr.ToInteger(&strerr);
+          }
           break;
-        case _OPM(BOOL):
-          transform->boolValue = val.ToInteger(&strerr) != 0;
+        case _OPM(BOOL): {
+            nsCAutoString valStr; valStr = val;
+            transform->boolValue = valStr.ToInteger(&strerr) != 0;
+          }
           break;
         default:
           break;

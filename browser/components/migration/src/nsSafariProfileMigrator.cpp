@@ -289,7 +289,7 @@ nsSafariProfileMigrator::SetDownloadHandlers(void* aTransform, nsIPrefBranch* aB
       
       nsCOMPtr<nsIRDFNode> handlerPropNode;
       mimeTypes->GetTarget(currOverride, handlerPropArc, PR_TRUE, getter_AddRefs(handlerPropNode));
-      nsCOMPtr<nsIRDFResource> handlerPropResource;
+      nsCOMPtr<nsIRDFResource> handlerPropResource(do_QueryInterface(handlerPropNode));
       
       if (handlerPropResource) {
         nsCOMPtr<nsIRDFNode> externalApplicationNode;
