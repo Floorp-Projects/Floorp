@@ -25,7 +25,7 @@ class ostrstream;
  * Owns the copied text, listens for selection request events.
  */
 
-class nsSelectionMgr : nsISelectionMgr
+class nsSelectionMgr : public nsISelectionMgr
 {
 public:
   nsSelectionMgr();
@@ -39,7 +39,7 @@ public:
 
 private:
   ostrstream* mCopyStream;
-}
+};
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult);
 
