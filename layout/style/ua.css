@@ -192,29 +192,21 @@ a:out-of-date {
 a:link img {
   display: inline;
   border: 2px solid blue;
-  font-family: sans-serif;
-  font-size: 8.5pt;
   text-decoration: none;
 }
 a:visited img {
   display: inline;
   border: 2px solid purple;
-  font-family: sans-serif;
-  font-size: 8.5pt;
   text-decoration: none;
 }
 a:active img {
   display: inline;
   border: 2px solid lime;
-  font-family: sans-serif;
-  font-size: 8.5pt;
   text-decoration: none;
 }
 a:out-of-date img {
   display: inline;
   border: 2px solid red;
-  font-family: sans-serif;
-  font-size: 8.5pt;
   text-decoration: none;
 }
 b, strong {
@@ -382,6 +374,8 @@ br {
 }
 img {
   display: inline;
+}
+img:-moz-text {
   font-family: sans-serif;
   font-size: 8.5pt;
 }
