@@ -157,7 +157,7 @@ ah_crap_handler(int signum)
   nsTraceRefcnt::WalkTheStack(stdout);
 
   printf("Sleeping for 5 minutes.\n");
-  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+  printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
          _progname,
          getpid());
 
