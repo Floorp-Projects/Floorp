@@ -367,14 +367,13 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 #endif
 } // nsFileURL::operator =
 
-#if DEBUG
+
 //----------------------------------------------------------------------------------------
 nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
 //----------------------------------------------------------------------------------------
 {
     return (s << url.mURL);
 }
-#endif
 
 //========================================================================================
 //                                nsFilePath implementation
@@ -673,7 +672,7 @@ void nsFileSpec::operator = (const char* inString)
 }
 #endif //XP_UNIX
 
-#if DEBUG
+
 #if (defined(XP_UNIX) || defined(XP_PC))
 //----------------------------------------------------------------------------------------
 nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
@@ -682,7 +681,6 @@ nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
     return (s << (const char*)spec.mPath);
 }
 #endif // DEBUG && XP_UNIX
-#endif
 
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const

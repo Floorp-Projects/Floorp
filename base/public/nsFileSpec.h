@@ -230,12 +230,12 @@ class NS_BASE nsFileSpec
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
         nsresult                Error() const { return mError; }
 
-#if DEBUG
+
         friend                  NS_BASE nsOutputStream& operator << (
                                     nsOutputStream& s,
                                     const nsFileSpec& spec); // THIS IS FOR DEBUGGING ONLY.
                                         // see PersistentFileDescriptor for the real deal.
-#endif
+
 
         //--------------------------------------------------
         // Queries and path algebra.  These do not modify the disk.
