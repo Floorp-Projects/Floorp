@@ -1874,7 +1874,7 @@ AddFDef("bug_file_loc", "URL", 1);
 AddFDef("op_sys", "OS/Version", 1);
 AddFDef("bug_status", "Status", 1);
 AddFDef("status_whiteboard", "Status Whiteboard", 0);
-AddFDef("keywords", "Keywords", 0);
+AddFDef("keywords", "Keywords", 1);
 AddFDef("resolution", "Resolution", 0);
 AddFDef("bug_severity", "Severity", 1);
 AddFDef("priority", "Priority", 1);
