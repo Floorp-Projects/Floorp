@@ -2061,12 +2061,13 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
     if (msgParent) 
     {
       msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
-      oldPath.Delete(PR_TRUE);  //berkeley mailbox
-      summarySpec.Delete(PR_TRUE); //msf file
-      if (!oldPath.IsDirectory())   
+      oldPath.Delete(PR_FALSE);  //berkeley mailbox
+      summarySpec.Delete(PR_FALSE); //msf file
+      if (!oldPath.IsDirectory())   //folder path cannot be directory but still check it to be safe
       {
         AddDirectorySeparator(oldPath);
-        oldPath.Delete(PR_TRUE);   //delete the .sbd directory and it's content. All subfolders have been moved
+        if (oldPath.IsDirectory())
+          oldPath.Delete(PR_TRUE);   //delete the .sbd directory and it's content. All subfolders have been moved
       }
     }
   }
