@@ -3342,6 +3342,14 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
   nsIFrame *first;
   FirstChild(aPresContext,nsnull, &first);
 
+  // Mark the scroll frame as being a reflow root. This will allow
+  // incremental reflows to be initiated at the scroll frame, rather
+  // than descending from the root frame of the frame hierarchy.
+  nsFrameState state;
+  first->GetFrameState(&state);
+  state |= NS_FRAME_REFLOW_ROOT;
+  first->SetFrameState(state);
+
 //we must turn off scrollbars for singleline text controls
   PRInt32 type;
   GetType(&type);

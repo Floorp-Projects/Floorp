@@ -845,24 +845,21 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
-  if (!state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
-    // XXXwaterson are we sure we don't need to do this work if BRS_ISINLINEINCRREFLOW?
-    aStatus = state.mReflowStatus;
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-      if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
-        aStatus = NS_FRAME_COMPLETE;
-      }
-      else {
-#ifdef DEBUG_kipp
-        ListTag(stdout); printf(": block is not complete\n");
-#endif
-      }
+  aStatus = state.mReflowStatus;
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
+      aStatus = NS_FRAME_COMPLETE;
     }
-
-    // XXX_perf get rid of this!  This is one of the things that makes
-    // incremental reflow O(N^2).
-    BuildFloaterList();
+    else {
+#ifdef DEBUG_kipp
+      ListTag(stdout); printf(": block is not complete\n");
+#endif
+    }
   }
+
+  // XXX_perf get rid of this!  This is one of the things that makes
+  // incremental reflow O(N^2).
+  BuildFloaterList();
   
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
@@ -919,10 +916,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
-  //
-  // XXXwaterson are we sure we can skip this if BRS_ISINLINEINCRREFLOW?
-  if (!state.GetFlag(BRS_ISINLINEINCRREFLOW) &&
-      (eReflowReason_Incremental == aReflowState.reason ||
+  if ((eReflowReason_Incremental == aReflowState.reason ||
        eReflowReason_Dirty == aReflowState.reason)) {
     if (isStyleChange) {
       // This is only true if it's a style change reflow targeted at this
@@ -1005,10 +999,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
   // based width/height
-  //
-  // XXXwaterson are we sure we can skip this if BRS_ISINLINEINCRREFLOW?
-  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()
-      && !state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
+  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()) {
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
     nsRect  childBounds;
@@ -1576,8 +1567,6 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   }
 
   if (line->IsInline()) {
-    aState.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
-
     if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
       // We've been asked to compute the maximum width of the block
       // frame, which ReflowLine() will handle this by performing an
@@ -2131,9 +2120,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.mReflowState.reflowCommand->GetType(type);
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": incrementally reflowing dirty lines: type=%s(%d) isInline=%s",
-             kReflowCommandType[type], type,
-             aState.GetFlag(BRS_ISINLINEINCRREFLOW) ? "true" : "false");
+      printf(": incrementally reflowing dirty lines: type=%s(%d)",
+             kReflowCommandType[type], type);
     }
     else {
       IndentBy(stdout, gNoiseIndent);
