@@ -418,6 +418,9 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
 #endif /* PR_LOGGING */
 
     nsLoadFlags flags;
+
+    MergeLoadAttributes(channel);
+
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) return rv;
 
@@ -613,3 +616,55 @@ nsLoadGroup::GetActiveCount(PRUint32* aResult)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult nsLoadGroup::MergeLoadAttributes(nsIChannel *aChannel)
+{
+  nsresult rv;
+  nsLoadFlags flags, oldFlags;
+
+  rv = aChannel->GetLoadAttributes(&flags);
+  if (NS_FAILED(rv)) return rv;
+
+  oldFlags = flags;
+  //
+  // Inherit the group cache validation policy (bits 12-15)
+  //
+  if ( !((nsIChannel::VALIDATE_NEVER            | 
+          nsIChannel::VALIDATE_ALWAYS           | 
+          nsIChannel::VALIDATE_ONCE_PER_SESSION | 
+          nsIChannel::VALIDATE_HEURISTICALLY) & flags)) {
+    flags |= (nsIChannel::VALIDATE_NEVER            |
+              nsIChannel::VALIDATE_ALWAYS           |
+              nsIChannel::VALIDATE_ONCE_PER_SESSION |
+              nsIChannel::VALIDATE_HEURISTICALLY) & mDefaultLoadAttributes;
+  }
+  //
+  // Inherit the group reload policy (bits 9-10)
+  //
+  if (!(nsIChannel::FORCE_VALIDATION & flags)) {
+    flags |= (nsIChannel::FORCE_VALIDATION & mDefaultLoadAttributes);
+  }
+
+  if (!(nsIChannel::FORCE_RELOAD & flags)) {
+    flags |= (nsIChannel::FORCE_RELOAD & mDefaultLoadAttributes);
+  }
+  //
+  // Inherit the group persistent cache policy (bit 8)
+  //
+  if (!(nsIChannel::INHIBIT_PERSISTENT_CACHING & flags)) {
+    flags |= (nsIChannel::INHIBIT_PERSISTENT_CACHING & mDefaultLoadAttributes);
+  }
+  //
+  // Inherit the group loading policy (bit 0)
+  //
+  if (!(nsIChannel::LOAD_BACKGROUND & flags)) {
+    flags |= (nsIChannel::LOAD_BACKGROUND & mDefaultLoadAttributes);
+  }
+
+  if (flags != oldFlags) {
+    rv = aChannel->SetLoadAttributes(flags);
+  }
+
+  return rv;
+}
+

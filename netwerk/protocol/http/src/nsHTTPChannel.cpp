@@ -370,39 +370,9 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsHTTPChannel::SetLoadGroup(nsILoadGroup *aGroup)
 {
-    //TODO think if we need to make a copy of the URL and keep it here
-    //since it might get deleted off the creators thread. And the
-    //stream listener could be elsewhere...
-
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsILoadGroup> oldLoadGroup = mLoadGroup;
-
     mLoadGroup = aGroup;
-    if (mLoadGroup) {
-      mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-    }
   
-    // if we had an old group....
-    if (oldLoadGroup) {
-      // then remove ourselves from the group...and add ourselves to the new group...
-      (void)oldLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
-      mLoadGroup->AddChannel(this, nsnull);
-    }
-    else {
-      // this is the first load group we've been given...so do any extra
-      // start up work...
-
-      /* 
-        Set up a request object - later set to a clone of a default 
-        request from the handler. TODO
-      */
-      mRequest = new nsHTTPRequest(mURI);
-      if (mRequest == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(mRequest);
-      rv = mRequest->SetConnection(this);
-    }
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -653,6 +623,27 @@ nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
+
+nsresult nsHTTPChannel::Init(nsILoadGroup *aLoadGroup) 
+{
+  nsresult rv;
+
+  /* 
+    Set up a request object - later set to a clone of a default 
+    request from the handler. TODO
+  */
+  mRequest = new nsHTTPRequest(mURI);
+  if (!mRequest) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(mRequest);
+  (void) mRequest->SetConnection(this);
+  
+  rv = SetLoadGroup(aLoadGroup);
+
+  return rv;
+}
+
 
 // Create a cache entry for the channel's URL or retrieve an existing one.  If
 // there's an existing cache entry for the current URL, confirm that it doesn't

@@ -529,10 +529,6 @@ nsResChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
     nsAutoLock lock(mLock);
 
     mLoadGroup = aLoadGroup;
-    if (mLoadGroup) {
-        nsresult rv = mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-        if (NS_FAILED(rv)) return rv;
-    }
     return NS_OK;
 }
 

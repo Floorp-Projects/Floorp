@@ -229,9 +229,9 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                                      bufferMaxSize);
         if (pChannel) {
             NS_ADDREF(pChannel);
-            rv = pChannel->SetLoadAttributes(loadAttributes);
+            rv = pChannel->Init(aLoadGroup);
             if (NS_FAILED(rv)) goto done;
-            rv = pChannel->SetLoadGroup(aLoadGroup);
+            rv = pChannel->SetLoadAttributes(loadAttributes);
             if (NS_FAILED(rv)) goto done;
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;

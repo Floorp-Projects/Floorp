@@ -59,6 +59,7 @@ protected:
     virtual ~nsLoadGroup();
     nsresult Init();
 
+    nsresult MergeLoadAttributes(nsIChannel *aChannel);
 
 protected:
     PRUint32                    mDefaultLoadAttributes;
