@@ -126,7 +126,7 @@ NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellServic
 typedef enum { NO_SUBSTITUTION    = 0x00,
                PATH_SUBSTITUTION  = 0x01,
                EXE_SUBSTITUTION   = 0x02,
-               NON_ESSENTIAL      = 0x04,} SettingFlags;
+               NON_ESSENTIAL      = 0x04} SettingFlags;
 typedef struct {
   char* keyName;
   char* valueName;
