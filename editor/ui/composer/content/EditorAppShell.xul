@@ -252,7 +252,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onunload="EditorShutdown()" title="AAAeditorWindow.titlesss" align="vertical"
+			  onunload="EditorShutdown()" title="&editorWindow.title;" align="vertical"
 			  width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
@@ -498,7 +498,7 @@
       <toolbar id="EditToolbar">
 	      <titledbutton src="&newEditorIcon.url;" align="bottom" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
 	      <titledbutton src="&openEditorIcon.url;" align="bottom" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
-	      <titledbutton src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()"/>
+	      <titledbutton id="saveButton" src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()"/>
 	      <titledbutton src="&publishIcon.url;" align="bottom" value="&publishToolbarCmd.label;" class="popup"/>
 	      <titledbutton src="&previewIcon.url;" align="bottom" value="&previewToolbarCmd.label;" class="popup"/>
 	      <titledbutton src="&printIcon.url;" align="bottom" value="&printToolbarCmd.label;" class="popup"/>
