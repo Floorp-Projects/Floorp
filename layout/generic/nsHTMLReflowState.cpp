@@ -110,7 +110,7 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
   frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
   const nsStylePosition* pos;
   frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-  if ((nsnull != pos) && (NS_STYLE_POSITION_ABSOLUTE == pos->mPosition)) {
+  if (pos->IsAbsolutelyPositioned()) {
     frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
   }
   else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
