@@ -67,10 +67,10 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../../../html/style/src \
-	-I$(srcdir)/../../../html/base/src \
-	-I$(srcdir)/../../../base/src \
-        -I$(srcdir)/../../../html/table/src \
+	-I$(srcdir)/../../../style \
+	-I$(srcdir)/../../../base \
+	-I$(srcdir)/../../../generic \
+        -I$(srcdir)/../../../tables \
 	-I$(srcdir)/../../content/src \
 	-I$(srcdir)/../../../xul/base/src \
 	$(NULL)

@@ -67,7 +67,6 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
-#include "nsXULAtoms.h"
 #include "nsIDOMDocument.h"
 
 /**

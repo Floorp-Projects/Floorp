@@ -965,6 +965,11 @@
 			path = xpconnect.xpt;
 			refType = 4;
 		};
+		79C236190439FD4500202892 = {
+			isa = PBXFileReference;
+			path = layout_printing.xpt;
+			refType = 4;
+		};
 		79C2366E0439FF2600202892 = {
 			isa = PBXFileReference;
 			path = arrow.gif;
@@ -1730,6 +1735,12 @@
 			settings = {
 			};
 		};
+		79C23709043A00AC00202892 = {
+			fileRef = 79C236190439FD4500202892;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		79C2371A043A1AE800202892 = {
 			isa = PBXFileReference;
 			name = libwidget.rsrc;
@@ -1957,6 +1968,7 @@
 				79C236160439FD4500202892,
 				79C236170439FD4500202892,
 				79C236180439FD4500202892,
+				79C236190439FD4500202892,
 			);
 			isa = PBXGroup;
 			path = components;
@@ -2075,6 +2087,7 @@
 				79C236EF043A00AC00202892,
 				79C236F0043A00AC00202892,
 				79C236F1043A00AC00202892,
+				79C23709043A00AC00202892,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

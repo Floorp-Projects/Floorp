@@ -67,7 +67,13 @@ REQUIRES	= xpcom \
 		  pref \
 		  $(NULL)
 
+EXPORTS		= \
+		nsXULAtomList.h \
+		nsXULAtoms.h \
+		$(NULL)
+
 CPPSRCS		= \
+		nsXULAtoms.cpp \
 		nsXULElement.cpp \
 		nsXULPopupListener.cpp \
 		$(NULL)
@@ -84,7 +90,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../xml/content/src \
 	-I$(srcdir)/../../../base/src \
 	-I$(srcdir)/../../../xml/document/src \
-	-I$(srcdir)/../../../html/style/src \
+	-I$(srcdir)/../../../../layout/style \
 	-I$(srcdir)/../../../html/content/src \
 	$(NULL)
 

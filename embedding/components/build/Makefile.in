@@ -73,6 +73,7 @@ REQUIRES	= js \
 		  lwbrk \
 		  mimetype \
 		  content \
+		  layout \
 		  uriloader \
 		  necko \
 		  commandhandler \

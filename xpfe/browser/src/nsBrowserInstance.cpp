@@ -62,7 +62,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
-#include "nsIDocument.h"
 #include "nsIDOMWindowInternal.h"
 
 #include "nsIContentViewer.h"
@@ -85,7 +84,6 @@
 
 #include "nsIAppStartup.h"
 
-#include "nsIDocumentViewer.h"
 #include "nsIBrowserHistory.h"
 #include "nsDocShellCID.h"
 

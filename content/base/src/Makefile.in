@@ -78,64 +78,60 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 EXPORTS		= \
-		nsStubDocumentObserver.h \
+		nsAtomListUtils.h \
+		nsHTMLValue.h \
 		nsNodeInfoManager.h \
-		nsStyleSet.h \
+		nsPropertyTable.h \
+		nsStubDocumentObserver.h \
+		nsTextFragment.h \
 		$(NULL)
 
 CPPSRCS		= \
+		mozSanitizingSerializer.cpp \
+		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
-		nsContentSink.cpp \
-		nsPrintEngine.cpp \
-		nsPrintData.cpp \
-		nsPrintObject.cpp \
-		nsPagePrintTimer.cpp \
-		nsPrintPreviewListener.cpp \
 		nsCommentNode.cpp \
+		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \
 		nsContentList.cpp \
 		nsContentPolicy.cpp \
-		nsDocument.cpp \
-		nsDocumentEncoder.cpp \
-		nsDocumentFragment.cpp \
-		nsDocumentViewer.cpp \
+		nsContentSink.cpp \
+		nsContentUtils.cpp \
+		nsCopySupport.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMLists.cpp \
+		nsDocument.cpp \
+		nsDocumentEncoder.cpp \
+		nsDocumentFragment.cpp \
+		nsFrameLoader.cpp \
 		nsGenConImageContent.cpp \
 		nsGeneratedIterator.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
-		nsContentUtils.cpp \
-		nsLayoutStylesheetCache.cpp \
+		nsHTMLContentSerializer.cpp \
+		nsHTMLValue.cpp \
+		nsImageLoadingContent.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
+		nsParserUtils.cpp \
+		nsPlainTextSerializer.cpp \
+		nsPropertyTable.cpp \
 		nsRange.cpp \
-		nsRuleNode.cpp \
-		nsSelection.cpp \
+		nsScriptEventManager.cpp \
+		nsScriptLoader.cpp \
 		nsStubDocumentObserver.cpp \
-		nsStyleContext.cpp \
-		nsStyleSet.cpp \
+		nsStyleLinkElement.cpp \
 		nsSyncLoadService.cpp \
+		nsTextFragment.cpp \
 		nsTextNode.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
-		nsHTMLContentSerializer.cpp \
-		nsParserUtils.cpp \
-		nsPlainTextSerializer.cpp \
-		mozSanitizingSerializer.cpp \
-		nsScriptLoader.cpp \
-		nsStyleLinkElement.cpp \
-		nsContentAreaDragDrop.cpp \
-		nsFrameLoader.cpp \
-		nsScriptEventManager.cpp \
-		nsImageLoadingContent.cpp \
-		nsCopySupport.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
@@ -146,16 +142,14 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
 		-I$(srcdir)/../../events/src \
-		-I$(srcdir)/../../html/base/src \
-		-I$(srcdir)/../../html/style/src \
 		-I$(srcdir)/../../xml/content/src \
 		-I$(srcdir)/../../xul/base/src \
 		-I$(srcdir)/../../xul/content/src \
 		-I$(srcdir)/../../html/content/src \
 		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../../layout/html/base/src \
+		-I$(srcdir)/../../../layout/generic \
+		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../dom/src/base \
-		-I$(srcdir)/../../../view/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

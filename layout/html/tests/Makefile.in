@@ -59,26 +59,23 @@ CPPSRCS		= \
 		TestCSSPropertyLookup.cpp \
 		$(NULL)
 
-LOCAL_INCLUDES	= -I$(srcdir)/../style/src
-
 EXTRA_DSO_LIBS += gkgfx
 
 LIBS		= \
 		$(LIBS_DIR) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlforms_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmltable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \

@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  locale \
 		  content \
+		  xul \
 		  gfx \
 		  widget \
 		  view \
@@ -140,13 +141,9 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
-		-I$(srcdir)/../../../base/src \
-		-I$(srcdir)/../../../html/style/src \
-		-I$(srcdir)/../../../html/base/src \
-		-I$(srcdir)/../../../html/forms/src \
-		-I$(srcdir)/../../content/src \
-		-I$(srcdir)/../../../xml/content/src \
-		-I$(srcdir)/../../../base/public \
+		-I$(srcdir)/../../../base \
+		-I$(srcdir)/../../../generic \
+		-I$(srcdir)/../../../style \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

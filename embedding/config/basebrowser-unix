@@ -65,6 +65,7 @@ res/dtd/xhtml11.dtd
 components/libgklayout.so                   
 components/libhtmlpars.so                 
 components/layout_base.xpt              
+components/layout_printing.xpt              
 components/layout_xul.xpt
 components/layout_xul_tree.xpt               
 components/content_base.xpt

@@ -6,6 +6,7 @@ dist/bin/components/@SHARED_LIBRARY@
 #endif
 !xpt dist/bin/components/xuldoc.xpt
 !xpt dist/bin/components/layout_base.xpt
+!xpt dist/bin/components/layout_printing.xpt
 !xpt dist/bin/components/layout_xul.xpt
 !xpt dist/bin/components/content_base.xpt
 !xpt dist/bin/components/content_html.xpt

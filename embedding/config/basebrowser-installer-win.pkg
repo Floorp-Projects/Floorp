@@ -72,6 +72,7 @@ components\gkcontent.dll
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\layout_base.xpt              
+components\layout_printing.xpt              
 components\layout_xul.xpt               
 components\content_base.xpt
 res\dtd\xhtml11.dtd

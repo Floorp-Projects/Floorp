@@ -72,6 +72,7 @@ CPPSRCS		= \
 		nsSVGAnimatedPreserveAspectRatio.cpp \
 		nsSVGAnimatedString.cpp \
 		nsSVGAnimatedTransformList.cpp \
+		nsSVGAtoms.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
 		nsSVGCoordCtxProvider.cpp \
@@ -136,6 +137,8 @@ EXPORTS =  			\
 	nsSVGRect.h                \
 	nsSVGPoint.h               \
 	nsSVGMatrix.h              \
+	nsSVGAtomList.h            \
+	nsSVGAtoms.h               \
 	$(NULL)
 
 
@@ -149,7 +152,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../../dom \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../../layout/svg/base/src \
-		-I$(srcdir)/../../../html/style/src \
+		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../html/content/src \
 		$(NULL)
 
