@@ -111,7 +111,8 @@ void CBrowserFrame::BrowserFrameGlueObj::UpdateCurrentURI(nsIURI *aLocation)
 
 	if(aLocation)
 	{
-		nsXPIDLCString uriString;
+		nsCAutoString uriString; 
+//		nsXPIDLCString uriString;
 		aLocation->GetSpec(uriString);
 
 		pThis->m_wndUrlBar.SetCurrentURL(uriString.get());
@@ -329,6 +330,8 @@ void CBrowserFrame::BrowserFrameGlueObj::DestroyBrowserFrame()
 
 	pThis->PostMessage(WM_CLOSE);
 }
+
+#define GOTO_BUILD_CTX_MENU { bContentHasFrames = FALSE; goto BUILD_CTX_MENU; }
 
 void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode)
 {

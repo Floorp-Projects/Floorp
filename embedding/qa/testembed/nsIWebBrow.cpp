@@ -43,12 +43,12 @@
 #include "stdafx.h"
 #include "TestEmbed.h"
 #include "BrowserImpl.h"
-#include "BrowserFrm.h""
+#include "BrowserFrm.h"
 #include "Tests.h"
 #include "domwindow.h"
 #include "QaUtils.h"
 #include <stdio.h>
-#include "nsIWebBrowser.h"
+#include "nsIWebBrow.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -81,6 +81,9 @@ void CNsIWebBrowser::WBAddListener()
 void CNsIWebBrowser::WBRemoveListener()
 {
 	// RemoveWebBrowserListener
+	nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
+
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
 	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", 2);
 }
@@ -102,6 +105,7 @@ void CNsIWebBrowser::WBGetContainerWindow()
 void CNsIWebBrowser::WBSetContainerWindow()
 {
 	// SetContainerWindow
+
 	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
 	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", 2);
 }
@@ -109,7 +113,6 @@ void CNsIWebBrowser::WBSetContainerWindow()
 void CNsIWebBrowser::WBGetURIContentListener()
 {
 	// GetParentURIContentListener
-	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
 
 	rv = qaWebBrowser->GetParentURIContentListener(getter_AddRefs(qaURIContentListener));
 	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 2);

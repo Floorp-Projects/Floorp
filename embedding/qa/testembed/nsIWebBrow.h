@@ -14,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Epstein <depstein@netscape.com> 
+ *   David Epstein <depstein@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// nsIWebBrowser.h : header file for nsIWebBrowser test cases
+// nsIWebBrow.h : header file for nsIWebBrowser test cases
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _NSIWEBBROWSER_H
-#define _NSIWEBBROWSER_H
+#ifndef _NSIWEBBROW_H
+#define _NSIWEBBROW_H
 
 #if _MSC_VER > 1000
 	#pragma once
@@ -61,13 +61,15 @@ class CBrowserImpl;
 class CNsIWebBrowser
 {
 public:
-	CNsIWebBrowser(nsIWebBrowser* mWebBrowser,
+	CNsIWebBrowser(nsIWebBrowser *mWebBrowser,
 				   CBrowserImpl *mpBrowserImpl);
 	virtual ~CNsIWebBrowser();
 
 	// Mozilla interfaces
 	//
-	nsCOMPtr<nsIWebBrowser> qaWebBrowser;	
+	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
+	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
+	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
 	CBrowserImpl	*qaBrowserImpl;
 
 	// local test methods for nsIWebBrowser
@@ -81,7 +83,7 @@ public:
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests(void);
 
-	// local test methods for nsIWebBrowserSetup	
+	// local test methods for nsIWebBrowserSetup
 	void WBSSetupProperty(void);
 
 	// local test variables
@@ -90,7 +92,6 @@ public:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTests)
 	public:
-	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
 	//}}AFX_VIRTUAL
 
 private:
@@ -104,4 +105,4 @@ protected:
 
 };
 
-#endif //_NSIWEBBROWSER_H
+#endif //_NSIWEBBROW_H

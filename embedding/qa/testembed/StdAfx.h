@@ -128,6 +128,7 @@
 #include "nsIXPIDialogService.h"
 
 #include "nsIWebBrowserSetup.h"
+#include "nsCRT.h"
 
 //#include "nsIURIContentListener.h"
 

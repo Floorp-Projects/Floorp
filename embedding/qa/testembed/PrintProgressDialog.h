@@ -9,7 +9,6 @@
 
 #include "nsIWebProgressListener.h"
 class nsIWebBrowser;
-class nsIDOMWindow;
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrintProgressDialog dialog
@@ -50,7 +49,6 @@ protected:
 	CProgressCtrl              m_wndProgress;
   CString                    m_URL;
   nsIWebBrowser*             m_WebBrowser;
-  nsIDOMWindow*              m_DOMWin;
   nsCOMPtr<nsIWebProgressListener> m_PrintListener;
   nsIPrintSettings*          m_PrintSettings;
   BOOL                       m_InModalMode;
