@@ -25,6 +25,15 @@ class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
+// Some macros for container classes to do sanity checking on
+// width/height/x/y values computed during reflow.
+#ifdef DEBUG
+#define CRAZY_W 500000
+#define CRAZY_H 500000
+#define CRAZY_WIDTH(_x) (((_x) < -CRAZY_W) || ((_x) > CRAZY_W))
+#define CRAZY_HEIGHT(_y) (((_y) < -CRAZY_H) || ((_y) > CRAZY_H))
+#endif
+
 // Base class for html container frames that provides common
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
