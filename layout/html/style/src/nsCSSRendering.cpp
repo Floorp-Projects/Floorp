@@ -2277,7 +2277,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_BEOS)
     // Setup clipping so that rendering doesn't leak out of the computed
     // dirty rect
     PRBool clipState;
@@ -2359,7 +2359,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     // Take the intersection again to paint only the required area
     nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
     nsRect drawRect;
@@ -2424,7 +2424,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       theTransform->AddScale(app2dev, app2dev);
 
       // XXX this #ifdef needs to go away when we are sure that this works on windows and mac
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
       srcRect.SetRect(0,0,tvrect.width,tvrect.height);
       aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
 #endif
@@ -2475,7 +2475,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     }
 #endif
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_BEOS)
     // Restore clipping
     aRenderingContext.PopState(clipState);
 #endif
