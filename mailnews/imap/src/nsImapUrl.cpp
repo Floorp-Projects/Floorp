@@ -63,6 +63,7 @@ nsImapUrl::nsImapUrl()
     m_imapMessageSink = nsnull;
     m_imapExtensionSink = nsnull;
     m_imapMiscellaneousSink = nsnull;
+    m_addDummyEnvelope = PR_FALSE;
 }
 
 nsresult nsImapUrl::Initialize(const char * aUserName)
@@ -90,10 +91,10 @@ nsImapUrl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
     *aInstancePtr = nsnull;
-    if (aIID.Equals(nsIImapUrl::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsIImapUrl)))
         *aInstancePtr = NS_STATIC_CAST(nsIImapUrl*, this);
-    else if (aIID.Equals(nsIMsgUriUrl::GetIID()))
-        *aInstancePtr = NS_STATIC_CAST(nsIMsgUriUrl*, this);
+    else if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
+        *aInstancePtr = NS_STATIC_CAST(nsIMsgMessageUrl*, this);
 
     if(*aInstancePtr)
     {
@@ -912,6 +913,23 @@ nsImapUrl::GetMsgFileSpec(nsIFileSpec** fileSpec)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetMockChannel(nsIImapMockChannel ** aChannel)
+{    
+    if (!aChannel) return NS_ERROR_NULL_POINTER;
+    NS_LOCK_INSTANCE();
+    *aChannel = m_mockChannel;
+    NS_IF_ADDREF(*aChannel);
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetMockChannel(nsIImapMockChannel * aChannel)
+{
+    nsresult rv = NS_OK;
+    m_mockChannel = dont_QueryInterface(aChannel);
+    return rv;
+}
+
 NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
 {
 	if (!result)
@@ -937,6 +955,24 @@ nsImapUrl::GetURI(char** aURI)
         return nsBuildImapMessageURI(theFile, key, aURI);
     }
     return rv;
+}
+
+NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+
+NS_IMETHODIMP nsImapUrl::SetMessageFile(nsIFileSpec * aFileSpec)
+{
+	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
+{
+	if (aFileSpec)
+	{
+		*aFileSpec = m_messageFileSpec;
+		NS_IF_ADDREF(*aFileSpec);
+	}
+	return NS_OK;
 }
 
 char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar)

@@ -20,12 +20,13 @@
 #define nsImapUrl_h___
 
 #include "nsIImapUrl.h"
+#include "nsIImapMockChannel.h"
 #include "nsCOMPtr.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapServerSink.h"
 
-class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
+class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
 {
 public:
 
@@ -89,8 +90,11 @@ public:
     NS_IMETHOD SetMsgFileSpec(nsIFileSpec* fileSpec);
     NS_IMETHOD GetMsgFileSpec(nsIFileSpec** fileSpec);
 
-    // nsIMsgUriUrl
-    NS_IMETHOD GetURI(char **aURI);
+    NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel);
+    NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel);
+
+    // nsIMsgMessageUrl
+    NS_DECL_NSIMSGMESSAGEURL
 
 	// nsImapUrl
 	nsImapUrl();
@@ -149,6 +153,11 @@ protected:
     // online message copy support; i don't have a better solution yet
     nsCOMPtr <nsISupports> m_copyState;   // now, refcounted.
     nsIFileSpec* m_fileSpec;
+    nsCOMPtr<nsIImapMockChannel> m_mockChannel;
+
+    // used by save message to disk
+	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
+    PRBool                m_addDummyEnvelope;
 };
 
 #endif /* nsImapUrl_h___ */
