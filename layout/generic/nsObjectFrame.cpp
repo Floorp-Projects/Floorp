@@ -2894,10 +2894,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   if (cattrs < 0x0000FFFF) {
     // signed 32 bits to unsigned 16 bits conversion
-
     mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);
   } else { 
-    mNumCachedParams = 0xFFFF;
+    mNumCachedAttrs = 0xFFFE;  // minus one in case we add an extra "src" entry below
   }
 
   // now, we need to find all the PARAM tags that are children of us
@@ -2997,6 +2996,20 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   else 
     mNumCachedParams = 0xFFFF;
 
+  // Some plugins were never written to understand the "data" attribute of the OBJECT tag.
+  // Real and WMP will not play unless they find a "src" attribute, see bug 152334.
+  // Nav 4.x would simply replace the "data" with "src". Because some plugins correctly
+  // look for "data", lets instead copy the "data" attribute and add another entry
+  // to the bottom of the array if there isn't already a "src" specified.
+  PRInt16 numRealAttrs = mNumCachedAttrs;
+  nsAutoString data;
+  nsCOMPtr<nsIAtom> tag;
+  content->GetTag(*getter_AddRefs(tag));
+  if (nsHTMLAtoms::object == tag.get() &&
+      !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src) &&
+      NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)))
+    mNumCachedAttrs++;
+
   // now lets make the arrays
   mCachedAttrParamNames  = (char **)PR_Calloc(sizeof(char *) * (mNumCachedAttrs + 1 + mNumCachedParams), 1);
   NS_ENSURE_TRUE(mCachedAttrParamNames,  NS_ERROR_OUT_OF_MEMORY);
@@ -3005,7 +3018,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   // let's fill in our attributes
   PRInt16 c = 0;
-  for (PRInt16 index = 0; index < mNumCachedAttrs; index++) {
+  for (PRInt16 index = 0; index < numRealAttrs; index++) {
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIAtom> prefix;
@@ -3020,6 +3033,12 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
       mCachedAttrParamValues[c] = ToNewUTF8String(value);
       c++;
     }
+  }
+
+  // if the conditions above were met, copy the "data" attribute to a "src" array entry
+  if (data.Length()) {
+    mCachedAttrParamNames [mNumCachedAttrs-1] = ToNewUTF8String(NS_LITERAL_STRING("SRC"));
+    mCachedAttrParamValues[mNumCachedAttrs-1] = ToNewUTF8String(data);
   }
 
   // add our PARAM and null seperator

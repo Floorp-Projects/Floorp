@@ -3489,10 +3489,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   
     if(pti) {
       const char *value;
-      if(tagType == nsPluginTagType_Embed)
-        havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
-      if(tagType == nsPluginTagType_Object)
-        havedata = NS_SUCCEEDED(pti->GetAttribute("DATA", &value));
+      havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
+      // no need to check for "data" as it would have been converted to "src"
     }
 
     if(havedata && !isJava && bCanHandleInternally)
