@@ -233,3 +233,4 @@ nsXMLElement::GetBinding(nsIXBLBinding** aResult)
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
+
