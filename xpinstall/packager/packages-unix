@@ -22,6 +22,7 @@ bin/defaults/profile/bookmarks.html
 bin/defaults/profile/panels.rdf
 bin/defaults/profile/localstore.rdf
 bin/defaults/profile/search.rdf
+bin/defaults/profile/mimeTypes.rdf
 
 [xpcom]
 bin/libjsdom.so

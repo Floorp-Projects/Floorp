@@ -22,6 +22,7 @@ viewer:defaults:profile:bookmarks.html
 viewer:defaults:profile:panels.rdf
 viewer:defaults:profile:localstore.rdf
 viewer:defaults:profile:search.rdf
+viewer:defaults:profile:mimeTypes.rdf
 
 [xpcom]
 viewer:Components:libjar.shlb 
