@@ -77,6 +77,7 @@ private:
     /** encoding of stream */
     JulianUtility::MimeEncoding m_Encoding;
 
+    /** need to deallocate */
     JulianPtrArray * m_Chunks;
 
     static const t_int32 m_MAXBUFFERSIZE;
@@ -85,6 +86,7 @@ private:
     /* finished getting input from CAPI callback */
     t_bool m_bFinished;
 
+    /** do not deallocate */
     PRMonitor * m_Monitor;
     /*-----------------------------
     ** PRIVATE METHODS

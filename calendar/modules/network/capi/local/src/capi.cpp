@@ -397,17 +397,16 @@ CAPIStatus CAPI_DestroyHandles(
 }
 
 /**
- *  Destroy streams: this doesn't make sense. CAPI_Stream is not an
- *  opaque type.
+ *  Destroy a list of streams
  */
 CAPIStatus CAPI_DestroyStreams( 
     CAPISession s,              /* i: login session handle  */
     CAPIStream* pS,             /* i: array of streams to destroy  */
-    int iHandleCount,           /* i: number of valid handles in ppH  */
+    int iCount,                 /* i: number of valid handles in ppH  */
     long lFlags)                /* i: bit flags (none at this time; set to 0)  */
 {
-    PCAPIStream** paS;
-    for (int i = 0; i < iHandleCount; i++)
+    PCAPIStream** paS = (PCAPIStream **) pS;
+    for (int i = 0; i < iCount; i++)
       delete paS[i];
     return CAPI_ERR_OK;
 }

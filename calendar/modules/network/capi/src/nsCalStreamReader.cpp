@@ -44,6 +44,12 @@ nsCalStreamReader::nsCalStreamReader()
 
 //---------------------------------------------------------------------
 
+nsCalStreamReader::~nsCalStreamReader()
+{
+}
+
+//---------------------------------------------------------------------
+
 nsCalStreamReader::nsCalStreamReader(nsCapiCallbackReader * reader, 
                            JulianPtrArray * outCalendars,
                            PRThread * thread, void* condVar)

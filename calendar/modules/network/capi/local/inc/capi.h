@@ -106,7 +106,7 @@ NS_CALENDAR CAPIStatus CAPI_DestroyHandles(
 NS_CALENDAR CAPIStatus CAPI_DestroyStreams( 
     CAPISession s,              /* i: login session handle  */
     CAPIStream* pS,             /* i: array of streams to destroy  */
-    int iHandlCount,            /* i: number of valid handles in ppH  */
+    int iCount,                 /* i: number of valid handles in ppH  */
     long lFlags);               /* i: bit flags (none at this time; set to 0)  */
 
 NS_CALENDAR CAPIStatus CAPI_FetchEventsByAlarmRange( 

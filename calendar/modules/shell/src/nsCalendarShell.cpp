@@ -139,8 +139,8 @@ int RcvData(void * pData,
        * XXX: may want to ensure that pBuf is 0 terminated.
        */
       //pCapiCallbackReader->AddChunk(new UnicodeString(pBuf));
-        char * pBufCopy = new char[strlen(pBuf)];
-        strncpy(pBufCopy, pBuf, (size_t) strlen(pBuf));
+      char * pBufCopy = new char[strlen(pBuf)];
+      strncpy(pBufCopy, pBuf, (size_t) strlen(pBuf));
       nsCapiBufferStruct * capiBuffer = new nsCapiBufferStruct();
       capiBuffer->m_pBuf = pBufCopy;
       capiBuffer->m_pBufSize = iSize;
@@ -331,12 +331,12 @@ nsresult nsCalendarShell::InitialLoadData()
   char * psDTEnd = 0;
   CAPIStream RcvStream = 0;
   CAPIStatus capiStatus;
-  JulianPtrArray * pParsedCalList = new JulianPtrArray();
-  nsCalStreamReader * pCalStreamReader = 0;
+  JulianPtrArray * pParsedCalList = new JulianPtrArray(); // destroyed
+  nsCalStreamReader * pCalStreamReader = 0;  // destroyed
   PRThread * parseThread = 0;
   PRThread * mainThread = 0;
-  PRMonitor * pCBReaderMonitor = 0;
-  PRMonitor *pThreadMonitor = 0;
+  PRMonitor * pCBReaderMonitor = 0; /// destroyed
+  PRMonitor *pThreadMonitor = 0; /// destroyed
 
   /*
    * Select the capi interface to use for this operation...
@@ -363,9 +363,9 @@ nsresult nsCalendarShell::InitialLoadData()
    * up here...
    */
   mainThread = PR_CurrentThread();    
-  pCBReaderMonitor = PR_NewMonitor();
+  pCBReaderMonitor = PR_NewMonitor();  // destroyed
   nsCapiCallbackReader * capiReader = new nsCapiCallbackReader(pCBReaderMonitor);
-  pThreadMonitor = ::PR_NewMonitor();
+  pThreadMonitor = ::PR_NewMonitor(); // destroyed
   PR_EnterMonitor(pThreadMonitor);
   pCalStreamReader = new nsCalStreamReader(capiReader, pParsedCalList, parseThread, pThreadMonitor);
   parseThread = PR_CreateThread(PR_USER_THREAD,
@@ -397,7 +397,6 @@ nsresult nsCalendarShell::InitialLoadData()
     iListSize = 0;
   }
 
-  
   capiStatus = pCapi->CAPI_FetchEventsByRange( 
       mCAPISession, &mCAPIHandle, 1, 0,
       psDTStart, psDTEnd, 
@@ -416,11 +415,6 @@ nsresult nsCalendarShell::InitialLoadData()
     PR_Wait(pThreadMonitor,PR_INTERVAL_NO_TIMEOUT);
     PR_ExitMonitor(pThreadMonitor);
   }
-
-  delete [] psDTStart; psDTStart = 0;
-  delete [] psDTEnd; psDTEnd = 0;
-
-  PR_DestroyMonitor(pThreadMonitor);
 
   /*
    * Load the retrieved events ito our calendar...
@@ -443,6 +437,20 @@ nsresult nsCalendarShell::InitialLoadData()
       }
     }
   }
+
+  /**
+   * cleanup allocated memory
+   */
+  delete [] psDTStart; psDTStart = 0;
+  delete [] psDTEnd; psDTEnd = 0;
+  delete pCalStreamReader; pCalStreamReader = 0;
+  delete capiReader; capiReader = 0;
+  PR_DestroyMonitor(pThreadMonitor);
+  PR_DestroyMonitor(pCBReaderMonitor);
+  /* todo: need to delete calendars in pParsedCalList without deleting events in it */
+  capiStatus = pCapi->CAPI_DestroyStreams(mCAPISession, &RcvStream, 1, 0);
+  if (CAPI_ERR_OK != capiStatus)
+    return 1;   /* XXX: really need to fix this up */
 
   /*
    * register the calendar...

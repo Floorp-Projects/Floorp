@@ -37,6 +37,8 @@ CLASS_EXPORT_CAPI nsCalStreamReader
 private:
     static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
+
+    /* dont deallocate these */
     JulianPtrArray * m_OutCalendars;
     nsCapiCallbackReader * m_Reader;
     t_bool m_bParseStarted;
@@ -46,6 +48,7 @@ private:
 
 public:
     nsCalStreamReader();
+    ~nsCalStreamReader();
     nsCalStreamReader(
         nsCapiCallbackReader * reader, 
         JulianPtrArray * outCalendars,
