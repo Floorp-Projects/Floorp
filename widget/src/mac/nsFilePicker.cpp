@@ -27,6 +27,7 @@
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
+#include "nsIURL.h"
 
 #include "nsStringUtil.h"
 
@@ -498,6 +499,17 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
   NS_IF_ADDREF(*aFile = mFile);
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
+{
+  nsCOMPtr<nsIFileURL> file(do_CreateInstance("component://netscape/network/standard-url"));
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+  file->SetFile(mFile);
+  NS_ADDREF(*aFileURL = file);
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 //

@@ -22,6 +22,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIURL.idl"
 #include "nsILocalFile.idl"
 
 interface nsIDOMWindow;
@@ -85,11 +86,18 @@ interface nsIFilePicker : nsISupports
 
 
  /**
-  * Get the nsFileSpec for the file or directory.
+  * Get the nsILocalFile for the file or directory.
   *
   * @return Returns the file currently selected
   */
   readonly attribute nsILocalFile file;
+
+ /**
+  * Get the nsIFileURL for the file or directory.
+  *
+  * @return Returns the file currently selected
+  */
+  readonly attribute nsIFileURL fileURL;
 
  /**
   * Show File Dialog. The dialog is displayed modally.

@@ -39,6 +39,7 @@ const DEBUG = true; /* set to false to suppress debug messages */
 const FILEPICKER_PROGID   = "component://mozilla/filepicker";
 const FILEPICKER_CID      = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
 const nsILocalFile        = Components.interfaces.nsILocalFile;
+const nsIFileURL          = Components.interfaces.nsIFileURL;
 const nsISupports         = Components.interfaces.nsISupports;
 const nsIFactory          = Components.interfaces.nsIFactory;
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
@@ -64,6 +65,16 @@ nsFilePicker.prototype = {
   /* readonly attribute nsILocalFile file; */
   set file(a) { throw "readonly property"; },
   get file()  { return this.mFile; },
+
+  /* readonly attribute nsIFileURL fileURL; */
+  set fileURL(a) { throw "readonly property"; },
+  get fileURL()  { 
+    if (this.mFile) {
+      var url = Components.classes["component://netscape/network/standard-url"].createInstance(nsIFileURL);
+      url.file = this.mFile;
+      return url;
+    }
+  },
 
   /* attribute wstring defaultString; */
   set defaultString(a) { this.mSelectedFilter = a; },

@@ -142,6 +142,7 @@ interface nsIFile;
  * nsIFileURL is used for the file: protocol, and gives access to the
  * underlying nsIFile object.
  */
+[scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
 interface nsIFileURL : nsIURL
 {
     attribute nsIFile file;

@@ -310,13 +310,13 @@ function EditorOpen()
 
   /* check for already open window and activate it... */
   if (fp.file) {
-    var found = FindAndSelectEditorWindowWithURL(fp.file.path);
+    var found = FindAndSelectEditorWindowWithURL(fp.fileURL.spec);
     if (!found) {
       /* open new window */
       window.openDialog("chrome://editor/content",
                         "_blank",
                         "chrome,dialog=no,all",
-                        fp.file.path);
+                        fp.fileURL.spec);
     }
   }
 }
