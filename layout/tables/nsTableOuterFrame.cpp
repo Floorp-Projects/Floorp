@@ -104,8 +104,20 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
   // Set our internal member data
   mInnerTableFrame = aChildList;
   //XXX this should go through the child list looking for a displaytype==caption
-  if (2 == mFrames.GetLength()) {
-    aChildList->GetNextSibling(mCaptionFrame);
+  if (1 < mFrames.GetLength()) {
+    nsIFrame *child;
+    nsresult result = aChildList->GetNextSibling(child);
+    while ((NS_SUCCEEDED(result)) && (nsnull!=child)) 
+    {
+      const nsStyleDisplay* childDisplay;
+      child->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)childDisplay);
+      if (NS_STYLE_DISPLAY_TABLE_CAPTION==childDisplay->mDisplay)
+      {
+        mCaptionFrame = child;
+        break;
+      }
+      result = child->GetNextSibling(child);
+    }
   }
 
   return NS_OK;
