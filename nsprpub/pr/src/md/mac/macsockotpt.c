@@ -1870,7 +1870,8 @@ PR_IMPLEMENT(unsigned long) inet_addr(const char *cp)
     	_MD_FinishInitNetAccess();
 
     err = OTInetStringToHost((char*) cp, &host);
-    PR_ASSERT(err == kOTNoError);
+    if (err != kOTNoError)
+        return -1;
     
     return host;
 }
