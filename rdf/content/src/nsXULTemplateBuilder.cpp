@@ -653,7 +653,7 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
 
 
 NS_IMETHODIMP
-RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResource *res)
+RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aParentNode, nsIContent *aNode, nsIRDFResource *res)
 {
 	// get all arcs out, and if not a containment property, set attribute
 	nsresult			rv = NS_OK;
@@ -680,7 +680,8 @@ RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResour
 			}
 
 			// Ignore any properties set in ignore attribute
-			if (IsIgnoredProperty(aNode, property))
+			// Note: since node isn't in the content model yet, start with its parent
+			if (IsIgnoredProperty(aParentNode, property))
 			{
 				continue;
 			}
@@ -951,8 +952,14 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				if (NS_FAILED(rv = CreateElement(nameSpaceID,
 					tag, aValue, getter_AddRefs(treeGrandchild))))
 					continue;
-				if (NS_FAILED(rv = SetAllAttributesOnElement(treeGrandchild, aValue)))
+				if (NS_FAILED(rv = SetAllAttributesOnElement(treeChildren,
+					treeGrandchild, aValue)))
 					continue;
+
+				// save a reference (its ID) to the template node that was used
+				nsAutoString	templateID("");
+				aTemplateKid->GetAttribute(kNameSpaceID_None, kIdAtom, templateID);
+				treeGrandchild->SetAttribute(kNameSpaceID_None, kTreeTemplateAtom, templateID, PR_FALSE);
 			}
 			else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
 			{
