@@ -227,7 +227,7 @@ mng_retcode read_chunk (mng_datap  pData)
       iRetcode = ((mng_object_headerp)pData->pCurraniobj)->fProcess (pData, pData->pCurraniobj);
                                        /* refresh needed ? */
 /*      if ((!iRetcode) && (!pData->bTimerset) && (pData->bNeedrefresh))
-        iRetcode = display_progressive_refresh (pData, 10); */
+        iRetcode = display_progressive_refresh (pData, 1); */
                                        /* can we advance to next object ? */
       if ((!iRetcode) && (!pData->bTimerset) && (pData->pCurraniobj))
       {
@@ -387,7 +387,7 @@ mng_retcode read_chunk (mng_datap  pData)
                                        /* refresh needed ? */
   if ((!pData->bTimerset) && (pData->bNeedrefresh))
   {
-    iRetcode = display_progressive_refresh (pData, 10);
+    iRetcode = display_progressive_refresh (pData, 1);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;

@@ -58,6 +58,8 @@
 /* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
 /* *             - added initialization of Speed                            * */
 /* *             - added initialization of Imagelevel                       * */
+/* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
+/* *             - changed userdata variable to mng_ptr                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -272,7 +274,7 @@ mng_uint8 MNG_DECL mng_version_release (void)
 /* *                                                                        * */
 /* ************************************************************************** */
 
-mng_handle MNG_DECL mng_initialize (mng_int32     iUserdata,
+mng_handle MNG_DECL mng_initialize (mng_ptr       pUserdata,
                                     mng_memalloc  fMemalloc,
                                     mng_memfree   fMemfree,
                                     mng_traceproc fTraceproc)
@@ -294,7 +296,7 @@ mng_handle MNG_DECL mng_initialize (mng_int32     iUserdata,
                                        /* validate the structure */
   pData->iMagic                = MNG_MAGIC;
                                        /* save userdata field */
-  pData->iUserdata             = iUserdata;
+  pData->pUserdata             = pUserdata;
                                        /* remember trace callback */
   pData->fTraceproc            = fTraceproc;
 

@@ -13,6 +13,7 @@ This is a working version only; the next release will be 0.9.0 (first Beta!)
 - added an image-level parameter for the processtext callback
 - updated mngplg to 0.3.0 (supports JNG & full color-correction!)
 - fixed a lot of small things
+- added support for PPLT chunk                         
 
 -------------------
 
@@ -51,6 +52,12 @@ core:
 - added support for PPLT chunk                         
 - added trace-codes & -strings for PPLT chunk processing
 - fixed problem with incorrect gamma-correction           
+- fixed inclusion of IJG read/write code                  
+- fixed problem with 16-bit GA format
+- fixed problem with cheap transparency for 4-bit gray    
+- fixed display_xxxx routines for interlaced images      
+- added precaution against faulty iCCP chunks from PS     
+- changed userdata variable to mng_ptr                    
 
 samples:
 

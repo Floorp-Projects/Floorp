@@ -52,6 +52,8 @@
 /* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
 /* *             - added Speed parameter to facilitate testing              * */
 /* *             - added Imagelevel parameter for processtext callback      * */
+/* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
+/* *             - changed userdata variable to mng_ptr                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -169,7 +171,7 @@ typedef struct mng_data_struct {
 
            mng_uint32        iMagic;             /* magic number to validate
                                                     a given handle */     
-           mng_int32         iUserdata;          /* application workdata */
+           mng_ptr           pUserdata;          /* application workdata */
 
            mng_imgtype       eSigtype;           /* image information */
            mng_imgtype       eImagetype;         /* initially zeroed */

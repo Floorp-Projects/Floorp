@@ -80,6 +80,8 @@
 /* *             - added administration of imagelevel parameter             * */
 /* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
 /* *             - implemented support for PPLT chunk                       * */
+/* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
+/* *             - added precaution against faulty iCCP chunks from PS      * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -305,7 +307,8 @@ mng_retcode inflate_buffer (mng_datap  pData,
         MNG_ALLOC (pData, *pOutbuf, *iOutsize)
       }
     }                                  /* repeat if we didn't have enough space */
-    while (iRetcode == MNG_BUFOVERFLOW);
+    while ((iRetcode == MNG_BUFOVERFLOW) &&
+           (*iOutsize < 20 * iInsize));
 
     if (!iRetcode)                     /* if oke ? */
       *((*pOutbuf) + *iRealsize) = 0;  /* then put terminator zero */

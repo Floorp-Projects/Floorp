@@ -35,6 +35,8 @@
 /* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
 /* *             - added get/set for speedtype to facilitate testing        * */
 /* *             - added get for imagelevel during processtext callback     * */
+/* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
+/* *             - changed userdata variable to mng_ptr                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -58,14 +60,14 @@
 /* ************************************************************************** */
 
 mng_retcode MNG_DECL mng_set_userdata (mng_handle hHandle,
-                                       mng_int32  iUserdata)
+                                       mng_ptr    pUserdata)
 {
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_USERDATA, MNG_LC_START)
 #endif
 
   MNG_VALIDHANDLE (hHandle)
-  ((mng_datap)hHandle)->iUserdata = iUserdata;
+  ((mng_datap)hHandle)->pUserdata = pUserdata;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_USERDATA, MNG_LC_END)
@@ -817,10 +819,10 @@ mng_retcode MNG_DECL mng_set_speed (mng_handle    hHandle,
 /* *                                                                        * */
 /* ************************************************************************** */
 
-mng_int32 MNG_DECL mng_get_userdata (mng_handle hHandle)
+mng_ptr MNG_DECL mng_get_userdata (mng_handle hHandle)
 {                            /* no tracing in here to prevent recursive calls */
   MNG_VALIDHANDLEX (hHandle)
-  return ((mng_datap)hHandle)->iUserdata;
+  return ((mng_datap)hHandle)->pUserdata;
 }
 
 /* ************************************************************************** */

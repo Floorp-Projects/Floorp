@@ -208,7 +208,7 @@ mng_retcode interframe_delay (mng_datap pData)
   if (pData->iRuntime < iWaitfor)      /* delay necessary ? */
     iInterval = iWaitfor - pData->iRuntime;
   else
-    iInterval = 10;                    /* force app to process messageloop */
+    iInterval = 1;                     /* force app to process messageloop */
                                        /* set the timer */
   if (!pData->fSettimer ((mng_handle)pData, iInterval))
     MNG_ERROR (pData, MNG_APPTIMERERROR)

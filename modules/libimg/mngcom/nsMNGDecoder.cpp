@@ -317,7 +317,7 @@ MNGDecoder::ImgDInit()
     
     /* pass ic as user data */
     imng_p->handle = 
-      mng_initialize((long)ilContainer, il_mng_alloc, il_mng_free, NULL);
+      mng_initialize(ilContainer, il_mng_alloc, il_mng_free, NULL);
 
 ////////////
 // Gamma correction - gross hack, but it's what mozilla's PNG
