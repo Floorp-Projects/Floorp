@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 # Build xpidl first, so it's available to process idl.
 # Explicitly recur into libxpt/xptinfo and libxpt/xptcall,
 # as they depend on xpidl and can't be in the DIRS for libxpt.
-DIRS	= libxpt tools/xpidl public src idl libxpt/xptinfo libxpt/xptcall
+DIRS	= libxpt tools/xpidl public src idl libxpt/xptinfo libxpt/xptcall proxy
 
 ifdef ENABLE_TESTS
 DIRS += tests
