@@ -156,3 +156,9 @@
 
 // The ticks for a slider.
 #define NS_THEME_SLIDER_TICK                               115
+
+// A generic container that always repaints on state
+// changes.  This is a hack to make checkboxes and
+// radio buttons work.
+#define NS_THEME_CHECKBOX_CONTAINER                        200
+#define NS_THEME_RADIO_CONTAINER                           201
