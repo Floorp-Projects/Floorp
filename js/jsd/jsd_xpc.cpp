@@ -43,7 +43,6 @@
 #include "nsIPref.h"
 #include "nsICategoryManager.h"
 #include "nsIJSRuntimeService.h"
-#include "nsString.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
 #include "nspr.h"
@@ -54,7 +53,8 @@
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
-#define ASSERT_VALID_SCRIPT { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
+#define ASSERT_VALID_CONTEXT { if (!mCx) return NS_ERROR_NOT_AVAILABLE; }
+#define ASSERT_VALID_SCRIPT  { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
 
 #define JSDSERVICE_CID                               \
 { /* f1299dc2-1dd1-11b2-a347-ee6b7660e048 */         \
@@ -109,6 +109,37 @@ static struct DeadScript {
  * c callbacks
  *******************************************************************************/
 
+static void
+jsds_NotifyPendingDeadScripts ()
+{
+    nsCOMPtr<jsdIScriptHook> hook = 0;   
+    gJsds->GetScriptHook (getter_AddRefs(hook));
+    if (hook)
+    {
+        DeadScript *ds;
+        do {
+#ifdef DEBUG_verbose  
+            printf ("calling script delete hook.\n");
+#endif
+            ds = gDeadScripts;
+            
+            /* tell the user this script has been destroyed */
+            hook->OnScriptDestroyed (ds->script);
+            /* get next deleted script */
+            gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
+                                               PR_NEXT_LINK(&ds->links));
+            /* take ourselves out of the circular list */
+            PR_REMOVE_LINK(&ds->links);
+            /* addref came from the FromPtr call in jsds_ScriptHookProc */
+            NS_RELEASE(ds->script);
+            /* free the struct! */
+            PR_Free(ds);
+        } while (&gDeadScripts->links != &ds->links);
+        /* keep going until we catch up with our tail */
+    }
+    gDeadScripts = 0;
+}
+
 static JSBool
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
@@ -116,34 +147,8 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 #ifdef DEBUG
     printf ("new gc status is %i\n", status);
 #endif
-    if (status == JSGC_END && gDeadScripts) {
-        nsCOMPtr<jsdIScriptHook> hook = 0;   
-        gJsds->GetScriptHook (getter_AddRefs(hook));
-        if (hook)
-        {
-            DeadScript *ds;
-            do {
-#ifdef DEBUG_verbose  
-                printf ("calling script delete hook.\n");
-#endif
-                ds = gDeadScripts;
-            
-                /* tell the user this script has been destroyed */
-                hook->OnScriptDestroyed (ds->script);
-                /* get next deleted script */
-                gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
-                                                   PR_NEXT_LINK(&ds->links));
-                /* take ourselves out of the circular list */
-                PR_REMOVE_LINK(&ds->links);
-                /* addref came from the FromPtr call in jsds_ScriptHookProc */
-                NS_RELEASE(ds->script);
-                /* free the struct! */
-                PR_Free(ds);
-            } while (&gDeadScripts->links != &ds->links);
-            /* keep going until we catch up with our tail */
-        }
-        gDeadScripts = 0;
-    }
+    if (status == JSGC_END && gDeadScripts)
+        jsds_NotifyPendingDeadScripts ();
     
     if (gLastGCProc)
         return gLastGCProc (cx, status);
@@ -220,6 +225,7 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
             getter_AddRefs(jsdScript::FromPtr(jsdc, jsdscript));
         hook->OnScriptCreated (script);
     } else {
+        
 #ifdef DEBUG_verbose  
         printf ("script deleted.\n");
 #endif
@@ -426,19 +432,32 @@ NS_IMETHODIMP
 jsdScript::Invalidate()
 {
     ASSERT_VALID_SCRIPT;
+    mValid = PR_FALSE;
     
     /* release the addref we do in FromPtr */
     jsdIScript *script = NS_STATIC_CAST(jsdIScript *,
                                         JSD_GetScriptPrivate(mScript));
     NS_ASSERTION (script == this, "That's not my script!");
     NS_RELEASE(script);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetIsValid(PRBool *_rval)
+{
+    *_rval = mValid;
     return NS_OK;
 }
     
 NS_IMETHODIMP
 jsdScript::GetIsActive(PRBool *_rval)
 {
-    ASSERT_VALID_SCRIPT;
+    if (!mValid) {
+        *_rval = PR_FALSE;
+        return NS_OK;
+    }
+    
     JSD_LockScriptSubsystem(mCx);
     *_rval = JSD_IsActiveScript(mCx, mScript);
     JSD_UnlockScriptSubsystem(mCx);
@@ -448,40 +467,28 @@ jsdScript::GetIsActive(PRBool *_rval)
 NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
-    ASSERT_VALID_SCRIPT;
-    JSD_LockScriptSubsystem(mCx);
-    *_rval = nsCString(JSD_GetScriptFilename(mCx, mScript)).ToNewCString();
-    JSD_UnlockScriptSubsystem(mCx);
+    *_rval = mFileName->ToNewCString();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::GetFunctionName(char **_rval)
 {
-    ASSERT_VALID_SCRIPT;
-    JSD_LockScriptSubsystem(mCx);
-    *_rval = nsCString(JSD_GetScriptFunctionName(mCx, mScript)).ToNewCString();
-    JSD_UnlockScriptSubsystem(mCx);
+    *_rval = mFunctionName->ToNewCString();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::GetBaseLineNumber(PRUint32 *_rval)
 {
-    ASSERT_VALID_SCRIPT;
-    JSD_LockScriptSubsystem(mCx);
-    *_rval = JSD_GetScriptBaseLineNumber(mCx, mScript);
-    JSD_UnlockScriptSubsystem(mCx);
+    *_rval = mBaseLineNumber;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::GetLineExtent(PRUint32 *_rval)
 {
-    ASSERT_VALID_SCRIPT;
-    JSD_LockScriptSubsystem(mCx);
-    *_rval = JSD_GetScriptLineExtent(mCx, mScript);
-    JSD_UnlockScriptSubsystem(mCx);
+    *_rval = mLineExtent;
     return NS_OK;
 }
 
@@ -862,12 +869,11 @@ jsdValue::Refresh()
  ******************************************************************************/
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdService, jsdIDebuggerService); 
 
-jsdService::jsdService() : mOn(PR_FALSE), mNestedLoopLevel(0), mCx(0),
-                           mBreakpointHook(0), mErrorHook(0),
-                           mDebuggerHook(0), mInterruptHook(0), mScriptHook(0),
-                           mThrowHook(0)
+NS_IMETHODIMP
+jsdService::GetIsOn (PRBool *_rval)
 {
-    NS_INIT_ISUPPORTS();
+    *_rval = mOn;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -894,15 +900,33 @@ jsdService::On (void)
 NS_IMETHODIMP
 jsdService::OnForRuntime (JSRuntime *rt)
 {
+    if (mOn)
+        return (rt == mRuntime) ? NS_OK : NS_ERROR_ALREADY_INITIALIZED;
+
+    mRuntime = rt;
+
     if (gLastGCProc == jsds_GCCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
         gLastGCProc = JS_SetGCCallbackRT (rt, jsds_GCCallbackProc);
 
-    if (!mOn)
-        mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
+    mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
         return NS_ERROR_FAILURE;
-    
+
+    /* If any of these mFooHook objects are installed, do the required JSD
+     * hookup now.   See also, jsdService::SetFooHook().
+     */
+    if (mThrowHook)
+        JSD_SetThrowHook (mCx, jsds_ExecutionHookProc, NULL);
+    if (mScriptHook)
+        JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
+    if (mInterruptHook)
+        JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc, NULL);
+    if (mDebuggerHook)
+        JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc, NULL);
+    if (mErrorHook)
+        JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc, NULL);
+
     mOn = PR_TRUE;
 
     return NS_OK;
@@ -911,8 +935,30 @@ jsdService::OnForRuntime (JSRuntime *rt)
 NS_IMETHODIMP
 jsdService::Off (void)
 {
+    if (!mCx || !mRuntime)
+        return NS_ERROR_NOT_INITIALIZED;
+    
+    if (gDeadScripts)
+        if (gGCStatus == JSGC_END)
+            jsds_NotifyPendingDeadScripts();
+        else
+            return NS_ERROR_NOT_AVAILABLE;
+    
+    if (gLastGCProc != jsds_GCCallbackProc)
+        JS_SetGCCallbackRT (mRuntime, gLastGCProc);
+
+    ClearAllBreakpoints();
+
+    JSD_SetThrowHook (mCx, NULL, NULL);
+    JSD_SetScriptHook (mCx, NULL, NULL);
+    JSD_SetInterruptHook (mCx, NULL, NULL);
+    JSD_SetDebuggerHook (mCx, NULL, NULL);
+    JSD_SetDebugBreakHook (mCx, NULL, NULL);
+    
     JSD_DebuggerOff (mCx);
-    mCx = 0;
+
+    mCx = nsnull;
+    mRuntime = nsnull;
     mOn = PR_FALSE;
     return NS_OK;
 }
@@ -920,6 +966,8 @@ jsdService::Off (void)
 NS_IMETHODIMP
 jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
 {
+    ASSERT_VALID_CONTEXT;
+    
     JSDScript *script;
     JSDScript *iter = NULL;
     PRBool cont_flag;
@@ -940,6 +988,8 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
 NS_IMETHODIMP
 jsdService::ClearAllBreakpoints (void)
 {
+    ASSERT_VALID_CONTEXT;
+
     JSD_LockScriptSubsystem(mCx);
     JSD_ClearAllExecutionHooks (mCx);
     JSD_UnlockScriptSubsystem(mCx);
@@ -1027,6 +1077,13 @@ NS_IMETHODIMP
 jsdService::SetErrorHook (jsdIExecutionHook *aHook)
 {    
     mErrorHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
     if (aHook)
         JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc, NULL);
     else
@@ -1048,6 +1105,13 @@ NS_IMETHODIMP
 jsdService::SetDebuggerHook (jsdIExecutionHook *aHook)
 {    
     mDebuggerHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
     if (aHook)
         JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc, NULL);
     else
@@ -1069,6 +1133,13 @@ NS_IMETHODIMP
 jsdService::SetInterruptHook (jsdIExecutionHook *aHook)
 {    
     mInterruptHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
     if (aHook)
         JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc, NULL);
     else
@@ -1090,6 +1161,13 @@ NS_IMETHODIMP
 jsdService::SetScriptHook (jsdIScriptHook *aHook)
 {    
     mScriptHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+    
     if (aHook)
         JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
     else
@@ -1111,6 +1189,13 @@ NS_IMETHODIMP
 jsdService::SetThrowHook (jsdIExecutionHook *aHook)
 {    
     mThrowHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx)
+        return NS_OK;
+
     if (aHook)
         JSD_SetThrowHook (mCx, jsds_ExecutionHookProc, NULL);
     else
