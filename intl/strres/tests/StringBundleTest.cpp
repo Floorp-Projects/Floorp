@@ -28,25 +28,36 @@
 
 #define TEST_URL "resource:/res/strres.properties"
 
+#ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
-#define RAPTORBASE_DLL "raptorbase.dll"
-#define XPCOM_DLL "xpcom32.dll"
+#else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
+#define NETLIB_DLL "libnetlib.so"
+#endif
+#endif
 
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 int
 main(int argc, char *argv[])
 {
   nsresult ret;
 
-  nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL, NULL,
-    RAPTORBASE_DLL, PR_FALSE, PR_FALSE);
+  ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                         "components");
+  if (NS_FAILED(ret)) {
+    printf("auto-registration failed\n");
+    return 1;
+  }
+  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL,
+    PR_FALSE, PR_FALSE);
 
   nsIStringBundleService* service = nsnull;
   ret = nsServiceManager::GetService(kStringBundleServiceCID,
@@ -56,10 +67,6 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL,
-    XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL,
-    XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsIEventQueueService* pEventQueueService = nsnull;
   ret = nsServiceManager::GetService(kEventQueueServiceCID,
     kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
@@ -73,7 +80,6 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);
