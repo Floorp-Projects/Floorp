@@ -503,16 +503,26 @@ NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 aIndex)
 
 nsresult nsMsgThread::RemoveChild(nsMsgKey msgKey)
 {
-	nsresult ret = NS_OK;
-	mdbOid		rowObjectId;
-	rowObjectId.mOid_Id = msgKey;
-	rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
-	ret = m_mdbTable->CutOid(m_mdbDB->GetEnv(), &rowObjectId);
+  nsresult ret = NS_OK;
+  mdbOid		rowObjectId;
+  rowObjectId.mOid_Id = msgKey;
+  rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
+  ret = m_mdbTable->CutOid(m_mdbDB->GetEnv(), &rowObjectId);
+  // if this thread is empty, remove it from the all threads table.
+  if (m_numChildren == 0 && m_mdbDB->m_mdbAllThreadsTable)
+  {
+    mdbOid rowID;
+    rowID.mOid_Id = m_threadKey;
+    rowID.mOid_Scope = m_mdbDB->m_threadRowScopeToken;
+    
+    m_mdbDB->m_mdbAllThreadsTable->CutOid(m_mdbDB->GetEnv(), &rowID);
+  }
 #if 0 // this seems to cause problems
   if (m_numChildren == 0 && m_metaRow && m_mdbDB)
     m_metaRow->CutAllColumns(m_mdbDB->GetEnv());
 #endif
-	return ret;
+  
+  return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnouncer *announcer)
