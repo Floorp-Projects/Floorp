@@ -247,6 +247,8 @@
     be part of the process of moving from experimental to production.
   */
 
+#define NSCAP_FEATURE_DONT_ADDREF
+
 #if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 #endif
