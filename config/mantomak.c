@@ -284,6 +284,7 @@ int buffer_to_output(char *pBuffer, FILE *pOutput)
 	slash_convert(pMacros, "JBOOTDIRS");
 	slash_convert(pMacros, "JDIRS");
 	slash_convert(pMacros, "DEPTH");
+	slash_convert(pMacros, "NS_DEPTH");
 	slash_convert(pMacros, "PACKAGE");
 	slash_convert(pMacros, "JMC_GEN_DIR");
 	slash_convert(pMacros, "DIST_PUBLIC");
