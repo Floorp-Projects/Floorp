@@ -208,6 +208,7 @@ static int
 MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status = 0;
+  struct MimeInlineTextPlainFlowedExData *exdata = nsnull;
 
   PRBool quoting = ( obj->options
     && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
@@ -225,7 +226,6 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
   // Look up and unlink "our" extended data structure
   // We do it in the beginning so that if an error occur, we can
   // just free |exdata|.
-  struct MimeInlineTextPlainFlowedExData *exdata;
   struct MimeInlineTextPlainFlowedExData **prevexdata;
   prevexdata = &MimeInlineTextPlainFlowedExDataList;
 
