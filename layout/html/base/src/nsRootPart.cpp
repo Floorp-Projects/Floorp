@@ -40,17 +40,10 @@ class RootFrame : public nsContainerFrame {
 public:
   RootFrame(nsIContent* aContent);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
@@ -62,17 +55,10 @@ class RootContentFrame : public nsContainerFrame {
 public:
   RootContentFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -89,93 +75,67 @@ RootFrame::RootFrame(nsIContent* aContent)
 {
 }
 
-NS_METHOD RootFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize& aMaxSize,
-                                  nsSize* aMaxElementSize,
-                                  nsReflowStatus& aStatus)
+NS_METHOD RootFrame::Reflow(nsIPresContext*      aPresContext,
+                            nsReflowMetrics&     aDesiredSize,
+                            const nsReflowState& aReflowState,
+                            nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_REFLOW_IN("RootFrame::ResizeReflow");
+  NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
 
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
   aStatus = NS_FRAME_COMPLETE;
 
-  // Do we have any children?
-  if (nsnull == mFirstChild) {
-    // No. Create a pseudo frame
-    mFirstChild = new RootContentFrame(mContent, this);
-    mChildCount = 1;
-    nsIStyleContext* style = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
-    mFirstChild->SetStyleContext(aPresContext,style);
-    NS_RELEASE(style);
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // We don't expect the target of the reflow command to be the root frame
+    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "no reflow command");
+    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
+                 "root frame is reflow command target");
+  
+    // Verify that the next frame in the reflow chain is our pseudo frame
+    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
+  
+  } else {
+    // Do we have any children?
+    if (nsnull == mFirstChild) {
+      // No. Create a pseudo frame
+      NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "unexpected reflow reason");
+      mFirstChild = new RootContentFrame(mContent, this);
+      mChildCount = 1;
+      nsIStyleContext* style = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
+      mFirstChild->SetStyleContext(aPresContext,style);
+      NS_RELEASE(style);
+    }
   }
 
-  // Resize the pseudo frame passing it our max size. It will choose whatever
-  // height its child frame wants...
+  // Reflow our pseudo frame. It will choose whetever height its child frame
+  // wants
+  nsReflowMetrics  desiredSize(nsnull);
+
   if (nsnull != mFirstChild) {
-    nsReflowMetrics  desiredSize;
-
     mFirstChild->WillReflow(*aPresContext);
-    aStatus = ReflowChild(mFirstChild, aPresContext, desiredSize, aMaxSize,
-                         aMaxElementSize);
-
+    aStatus = ReflowChild(mFirstChild, aPresContext, desiredSize, aReflowState);
+  
     // Place and size the child
     nsRect  rect(0, 0, desiredSize.width, desiredSize.height);
     mFirstChild->SetRect(rect);
     mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-  }
-  mLastContentOffset = ((RootContentFrame*)mFirstChild)->GetLastContentOffset();
 
-  // Return the max size as our desired size
-  aDesiredSize.width = aMaxSize.width;
-  aDesiredSize.height = aMaxSize.height;
-  aDesiredSize.ascent = aMaxSize.height;
-  aDesiredSize.descent = 0;
-
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
-
-  NS_FRAME_TRACE_REFLOW_OUT("RootFrame::ResizeReflow", aStatus);
-  return NS_OK;
-}
-
-NS_METHOD RootFrame::IncrementalReflow(nsIPresContext* aPresContext,
-                                       nsReflowMetrics& aDesiredSize,
-                                       const nsSize& aMaxSize,
-                                       nsReflowCommand& aReflowCommand,
-                                       nsReflowStatus& aStatus)
-{
-  NS_FRAME_TRACE_REFLOW_IN("RootFrame::IncrementalReflow");
-
-  // We don't expect the target of the reflow command to be the root frame
-  NS_ASSERTION(aReflowCommand.GetTarget() != this, "root frame is reflow command target");
-
-  nsReflowMetrics  desiredSize;
-  nsIFrame*        child;
-
-  // Dispatch the reflow command to our pseudo frame
-  mFirstChild->WillReflow(*aPresContext);
-  aStatus = aReflowCommand.Next(desiredSize, aMaxSize, child);
-
-  // Place and size the child
-  if (nsnull != child) {
-    NS_ASSERTION(child == mFirstChild, "unexpected reflow command frame");
-
-    nsRect  rect(0, 0, desiredSize.width, desiredSize.height);
-    child->SetRect(rect);
-    child->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    mLastContentOffset = ((RootContentFrame*)mFirstChild)->GetLastContentOffset();
   }
 
   // Return the max size as our desired size
-  aDesiredSize.width = aMaxSize.width;
-  aDesiredSize.height = aMaxSize.height;
-  aDesiredSize.ascent = aMaxSize.height;
+  aDesiredSize.width = aReflowState.maxSize.width;
+  aDesiredSize.height = aReflowState.maxSize.height;
+  aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  NS_FRAME_TRACE_REFLOW_OUT("RootFrame::IncrementalReflow", aStatus);
+  #ifdef NS_DEBUG
+    PostReflowCheck(aStatus);
+  #endif
+  NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
   return NS_OK;
 }
 
@@ -300,109 +260,144 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
 // XXX Hack
 #define PAGE_SPACING 100
 
-NS_METHOD RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsSize*          aMaxElementSize,
-                                         nsReflowStatus&  aStatus)
+NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
+                                   nsReflowMetrics&     aDesiredSize,
+                                   const nsReflowState& aReflowState,
+                                   nsReflowStatus&      aStatus)
 {
-  NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::ResizeReflow");
+  NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::Reflow");
 
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
   aStatus = NS_FRAME_COMPLETE;
 
-  // Do we have any children?
-  if (nsnull == mFirstChild) {
-    // No, create the first child frame
-    CreateFirstChild(aPresContext);
-  }
+  // XXX Incremental reflow code doesn't handle page mode at all...
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // We don't expect the target of the reflow command to be the root
+    // content frame
+    NS_ASSERTION(aReflowState.reflowCommand->GetTarget() != this,
+                 "root content frame is reflow command target");
+  
+    nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
+    nsReflowState reflowState(aReflowState.reflowCommand, maxSize);
+  
+    // Verify the next frame in the reflow chain is our child frame
+    nsIFrame* next = aReflowState.reflowCommand->GetNext();
+    NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
-  // Resize our frames
-  if (nsnull != mFirstChild) {
-    if (aPresContext->IsPaginated()) {
-      nscoord         y = PAGE_SPACING;
-      nsReflowMetrics kidSize;
-      nsSize          pageSize(aPresContext->GetPageWidth(),
-                               aPresContext->GetPageHeight());
-
-      // Tile the pages vertically
-      for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
-        // Reflow the page
-        kidFrame->WillReflow(*aPresContext);
-        nsReflowStatus  status = ReflowChild(kidFrame, aPresContext, kidSize,
-                                             pageSize, aMaxElementSize);
-
-        // Place and size the page. If the page is narrower than our max width then
-        // center it horizontally
-        nsIDeviceContext *dx = aPresContext->GetDeviceContext();
-        PRInt32 extra = aMaxSize.width - kidSize.width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-        NS_RELEASE(dx);
-        kidFrame->SetRect(nsRect(extra > 0 ? extra / 2 : 0, y, kidSize.width, kidSize.height));
-        kidFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-        y += kidSize.height;
-
-        // Leave a slight gap between the pages
-        y += PAGE_SPACING;
-
-        // Is the page complete?
-        nsIFrame* kidNextInFlow;
-         
-        kidFrame->GetNextInFlow(kidNextInFlow);
-        if (NS_FRAME_IS_COMPLETE(status)) {
-          NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
-        } else if (nsnull == kidNextInFlow) {
-          // The page isn't complete and it doesn't have a next-in-flow so
-          // create a continuing page
-          nsIStyleContext* kidSC;
-          kidFrame->GetStyleContext(aPresContext, kidSC);
-          nsIFrame*  continuingPage;
-          nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
-                                                        kidSC, continuingPage);
-          NS_RELEASE(kidSC);
-
-          // Add it to our child list
-#ifdef NS_DEBUG
-          nsIFrame* kidNextSibling;
-
-          kidFrame->GetNextSibling(kidNextSibling);
-          NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
-#endif
-          kidFrame->SetNextSibling(continuingPage);
-          mChildCount++;
-        }
-
-        // Get the next page
-        kidFrame->GetNextSibling(kidFrame);
+    // Dispatch the reflow command to our child frame. Allow it to be as high
+    // as it wants
+    mFirstChild->WillReflow(*aPresContext);
+    aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState);
+  
+    // Place and size the child. Make sure the child is at least as
+    // tall as our max size (the containing window)
+    if (nsnull != mFirstChild) {
+      if (aDesiredSize.height < aReflowState.maxSize.height) {
+        aDesiredSize.height = aReflowState.maxSize.height;
       }
-
-      // Return our desired size
-      aDesiredSize.width = aMaxSize.width;
-      aDesiredSize.height = y;
-
-    } else {
-      // Allow the frame to be as wide as our max width, and as high
-      // as it wants to be.
-      nsSize  maxSize(aMaxSize.width, NS_UNCONSTRAINEDSIZE);
-
-      // Get the child's desired size. Our child's desired height is our
-      // desired size
-      mFirstChild->WillReflow(*aPresContext);
-      aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, maxSize,
-                            aMaxElementSize);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-
-      // Place and size the child. Make sure the child is at least as
-      // tall as our max size (the containing window)
-      if (aDesiredSize.height < aMaxSize.height) {
-        aDesiredSize.height = aMaxSize.height;
-      }
-
-      // Place and size the child
+  
       nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
       mFirstChild->SetRect(rect);
       mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    }
+
+  } else {
+    // Do we have any children?
+    if (nsnull == mFirstChild) {
+      // No, create the first child frame
+      CreateFirstChild(aPresContext);
+    }
+  
+    // Resize our frames
+    if (nsnull != mFirstChild) {
+      if (aPresContext->IsPaginated()) {
+        nscoord         y = PAGE_SPACING;
+        nsReflowMetrics kidSize(aDesiredSize.maxElementSize);
+        nsSize          pageSize(aPresContext->GetPageWidth(),
+                                 aPresContext->GetPageHeight());
+        nsReflowState   reflowState(aReflowState.reason, pageSize);
+  
+        // Tile the pages vertically
+        for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
+          // Reflow the page
+          nsReflowStatus  status;
+
+          kidFrame->WillReflow(*aPresContext);
+          status = ReflowChild(kidFrame, aPresContext, kidSize, reflowState);
+  
+          // Place and size the page. If the page is narrower than our max width then
+          // center it horizontally
+          nsIDeviceContext *dx = aPresContext->GetDeviceContext();
+          PRInt32 extra = aReflowState.maxSize.width - kidSize.width -
+                          NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+          NS_RELEASE(dx);
+          kidFrame->SetRect(nsRect(extra > 0 ? extra / 2 : 0, y, kidSize.width, kidSize.height));
+          kidFrame->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+          y += kidSize.height;
+  
+          // Leave a slight gap between the pages
+          y += PAGE_SPACING;
+  
+          // Is the page complete?
+          nsIFrame* kidNextInFlow;
+           
+          kidFrame->GetNextInFlow(kidNextInFlow);
+          if (NS_FRAME_IS_COMPLETE(status)) {
+            NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
+          } else if (nsnull == kidNextInFlow) {
+            // The page isn't complete and it doesn't have a next-in-flow so
+            // create a continuing page
+            nsIStyleContext* kidSC;
+            kidFrame->GetStyleContext(aPresContext, kidSC);
+            nsIFrame*  continuingPage;
+            nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
+                                                          kidSC, continuingPage);
+            NS_RELEASE(kidSC);
+  
+            // Add it to our child list
+  #ifdef NS_DEBUG
+            nsIFrame* kidNextSibling;
+  
+            kidFrame->GetNextSibling(kidNextSibling);
+            NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
+  #endif
+            kidFrame->SetNextSibling(continuingPage);
+            mChildCount++;
+          }
+  
+          // Get the next page
+          kidFrame->GetNextSibling(kidFrame);
+        }
+  
+        // Return our desired size
+        aDesiredSize.width = aReflowState.maxSize.width;
+        aDesiredSize.height = y;
+  
+      } else {
+        // Allow the frame to be as wide as our max width, and as high
+        // as it wants to be.
+        nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
+        nsReflowState reflowState(aReflowState.reason, maxSize);
+  
+        // Get the child's desired size. Our child's desired height is our
+        // desired size
+        mFirstChild->WillReflow(*aPresContext);
+        aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, reflowState);
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  
+        // Place and size the child. Make sure the child is at least as
+        // tall as our max size (the containing window)
+        if (aDesiredSize.height < aReflowState.maxSize.height) {
+          aDesiredSize.height = aReflowState.maxSize.height;
+        }
+  
+        // Place and size the child
+        nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+        mFirstChild->SetRect(rect);
+        mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+      }
     }
   }
 
@@ -410,45 +405,7 @@ NS_METHOD RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
   PostReflowCheck(aStatus);
 #endif
 
-  NS_FRAME_TRACE_REFLOW_OUT("RootContentFrame::ResizeReflow", aStatus);
-  return NS_OK;
-}
-
-// XXX Do something sensible for page mode...
-NS_METHOD RootContentFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                              nsReflowMetrics& aDesiredSize,
-                                              const nsSize&    aMaxSize,
-                                              nsReflowCommand& aReflowCommand,
-                                              nsReflowStatus&  aStatus)
-{
-  NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::IncrementalReflow");
-
-  // We don't expect the target of the reflow command to be the root
-  // content frame
-  NS_ASSERTION(aReflowCommand.GetTarget() != this, "root content frame is reflow command target");
-
-  nsSize        maxSize(aMaxSize.width, NS_UNCONSTRAINEDSIZE);
-  nsIFrame*     child;
-
-  // Dispatch the reflow command to our pseudo frame. Allow it to be as high
-  // as it wants
-  mFirstChild->WillReflow(*aPresContext);
-  aStatus = aReflowCommand.Next(aDesiredSize, maxSize, child);
-
-  // Place and size the child. Make sure the child is at least as
-  // tall as our max size (the containing window)
-  if (nsnull != child) {
-    NS_ASSERTION(child == mFirstChild, "unexpected reflow command frame");
-    if (aDesiredSize.height < aMaxSize.height) {
-      aDesiredSize.height = aMaxSize.height;
-    }
-
-    nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    child->SetRect(rect);
-    child->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
-  }
-
-  NS_FRAME_TRACE_REFLOW_OUT("RootContentFrame::IncrementalReflow", aStatus);
+  NS_FRAME_TRACE_REFLOW_OUT("RootContentFrame::Reflow", aStatus);
   return NS_OK;
 }
 

@@ -1008,24 +1008,20 @@ NS_METHOD nsFrame::Reflow(nsIPresContext*      aPresContext,
                           const nsReflowState& aReflowState,
                           nsReflowStatus&      aStatus)
 {
-  return NS_OK;
-}
-
-NS_METHOD nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                const nsSize&    aMaxSize,
-                                nsSize*          aMaxElementSize,
-                                nsReflowStatus&  aStatus)
-{
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = 0;
-    aMaxElementSize->height = 0;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
+
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   return NS_OK;
 }
 
@@ -1033,32 +1029,6 @@ NS_METHOD nsFrame::JustifyReflow(nsIPresContext* aPresContext,
                                  nscoord         aAvailableSpace)
 {
   return NS_OK;
-}
-
-NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsReflowCommand& aReflowCommand,
-                                     nsReflowStatus&  aStatus)
-{
-  NS_PRECONDITION(aReflowCommand.GetTarget() == this, "bad target");
-
-  // The only type of incremental reflow command we expect to get is a
-  // content changed reflow command
-  if (aReflowCommand.GetType() == nsReflowCommand::ContentChanged) {
-    // Generic response is to reflow the child
-    return ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
-
-  } else {
-    NS_ERROR("not a container reflow command handler");
-    aDesiredSize.width = 0;
-    aDesiredSize.height = 0;
-    aDesiredSize.ascent = 0;
-    aDesiredSize.descent = 0;
-    aStatus = NS_FRAME_COMPLETE;
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
 }
 
 NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,

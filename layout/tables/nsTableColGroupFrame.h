@@ -41,15 +41,8 @@ public:
 
   NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
                           nsReflowMetrics& aDesiredSize,
-                          const nsSize&   aMaxSize,
-                          nsSize*         aMaxElementSize,
+                          const nsReflowState& aReflowState,
                           nsReflowStatus& aStatus);
-
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
 
 protected:
 

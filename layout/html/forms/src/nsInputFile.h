@@ -31,11 +31,10 @@ class nsString;
 class nsInputFileFrame : public nsInlineFrame {
 public:
   nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aCX,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
   virtual void MouseClicked(nsIPresContext* aPresContext);
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);

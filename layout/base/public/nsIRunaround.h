@@ -35,8 +35,8 @@ class nsIRunaround
 {
 public:
   /**
-   * Resize reflow. The frame is given a maximum size and asked for its
-   * desired rect. The space manager should be used to do runaround of anchored
+   * Reflow. The frame is given a maximum size and asked for its desired
+   * rect. The space manager should be used to do runaround of anchored
    * items.
    *
    * @param aSpaceManager the space manager to use. The caller has translated
@@ -65,48 +65,12 @@ public:
    *
    * @see nsISpaceManager#Translate()
    */
-  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
-                           nsISpaceManager* aSpaceManager,
-                           const nsSize&    aMaxSize,
-                           nsRect&          aDesiredRect,
-                           nsSize*          aMaxElementSize,
-                           nsReflowStatus&  aStatus) = 0;
-
-  /**
-   * Incremental reflow. The reflow command contains information about the
-   * type of change. The frame is given a maximum size and asked for its
-   * desired rect. The space manager should be used to do runaround of anchored
-   * items.
-   *
-   * @param aSpaceManager the space manager to use. The caller has translated
-   *          the coordinate system so the frame has its own local coordinate
-   *          space with an origin of (0, 0). If you translate the coordinate
-   *          space you must restore it before returning.
-   * @param aMaxSize the available space in which to lay out. Each dimension
-   *          can either be constrained or unconstrained (a value of
-   *          NS_UNCONSTRAINEDSIZE). If constrained you should choose a value
-   *          that's less than or equal to the constrained size. If unconstrained
-   *          you can choose as large a value as you like.
-   *
-   *          It's okay to return a desired size that exceeds the max size if
-   *          that's the smallest you can be, i.e. it's your minimum size.
-   *
-   * @param aDesiredRect <i>out</i> parameter where you should return the desired
-   *          origin and size. You should include any space you want for border
-   *          and padding in the desired size.
-   *
-   *          The origin of the desired rect is relative to the upper-left of the
-   *          local coordinate space.
-   *
-   * @param aReflowCommand the reflow command contains information about the
-   *          type of change.
-   */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsISpaceManager* aSpaceManager,
-                               const nsSize&    aMaxSize,
-                               nsRect&          aDesiredRect,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus) = 0;
+  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
+                     nsISpaceManager*     aSpaceManager,
+                     nsReflowMetrics&     aDesiredSize,
+                     const nsReflowState& aReflowState,
+                     nsRect&              aDesiredRect,  // XXX FIX ME
+                     nsReflowStatus&      aStatus) = 0;
 };
 
 #endif /* nsIRunaround_h___ */

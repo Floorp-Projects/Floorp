@@ -80,20 +80,12 @@ public:
     * @see nsTableFrame::ResizeReflowPass1
     * @see nsTableFrame::ResizeReflowPass2
     * @see nsTableFrame::BalanceColumnWidths
-    * @see nsIFrame::ResizeReflow 
+    * @see nsIFrame::Reflow 
     */
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  /** @see nsIFrame::IncrementalReflow */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   /** @see nsContainerFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,

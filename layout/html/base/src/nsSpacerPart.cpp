@@ -38,11 +38,10 @@ class SpacerFrame : public nsFrame
 public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 protected:
   virtual ~SpacerFrame();
 };
@@ -81,11 +80,10 @@ SpacerFrame::~SpacerFrame()
 {
 }
 
-NS_METHOD SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize,
-                                    nsReflowStatus& aStatus)
+NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
+                              nsReflowMetrics&     aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus&      aStatus)
 {
   // Get cached state for containing block frame
   nsBlockReflowState* state = nsnull;

@@ -28,12 +28,12 @@ public:
                            nsIFrame*   aParent);
 
   // nsIFrame
-  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
-                          nsISpaceManager* aSpaceManager,
-                          const nsSize& aMaxSize,
-                          nsRect& aDesiredRect,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aCX,
+                    nsISpaceManager*     aSpaceManager,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsRect&              aDesiredRect,
+                    nsReflowStatus&      aStatus);
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,

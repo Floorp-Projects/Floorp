@@ -107,11 +107,10 @@ public:
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                         nsReflowMetrics& aDesiredSize,
-                         const nsSize& aMaxSize,
-                         nsSize* aMaxElementSize,
-                         nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView* aView);
 
@@ -405,27 +404,26 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 NS_METHOD
-nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                 nsReflowMetrics& aDesiredSize,
-                                 const nsSize& aMaxSize,
-                                 nsSize* aMaxElementSize,
-                                 nsReflowStatus& aStatus)
+nsInputButtonFrame::Reflow(nsIPresContext*      aPresContext,
+                           nsReflowMetrics&     aDesiredSize,
+                           const nsReflowState& aReflowState,
+                           nsReflowStatus&      aStatus)
 {
   if ((kButtonTag_Input == GetButtonTagType()) &&
       (kButton_Image == GetButtonType())) {
     nsSize ignore;
-    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, ignore);
+    GetDesiredSize(aPresContext, aReflowState.maxSize, aDesiredSize, ignore);
     AddBordersAndPadding(aPresContext, aDesiredSize);
-    if (nsnull != aMaxElementSize) {
-      aMaxElementSize->width = aDesiredSize.width;
-      aMaxElementSize->height = aDesiredSize.height;
+    if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width = aDesiredSize.width;
+      aDesiredSize.maxElementSize->height = aDesiredSize.height;
     }
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
   else {
     return nsInputButtonFrameSuper::
-      ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
+      Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 }
 

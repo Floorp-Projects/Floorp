@@ -71,27 +71,19 @@ public:
     *   do column balancing
     *   set mFirstPassValid to true
     *   do pass 2
-    *     use column widths to ResizeReflow cells
+    *     use column widths to Reflow cells
     *     shrinkWrap Cells in each row to tallest, realigning contents within the cell
     * </pre>
     *
     * @see ResizeReflowPass1
     * @see ResizeReflowPass2
     * @see BalanceColumnWidths
-    * @see nsIFrame::ResizeReflow 
+    * @see nsIFrame::Reflow 
     */
-  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
-
-  /** @see nsIFrame::IncrementalReflow */
-  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,

@@ -121,11 +121,10 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize,
-                          nsReflowStatus& aStatus);
+  NS_IMETHOD Reflow(nsIPresContext* aCX,
+                    nsReflowMetrics& aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus& aStatus);
 
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
@@ -747,17 +746,16 @@ NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
   return NS_OK;
 }
 
-NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize& aMaxSize,
-                                  nsSize* aMaxElementSize,
-                                  nsReflowStatus& aStatus)
+NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
+                            nsReflowMetrics& aDesiredSize,
+                            const nsReflowState& aReflowState,
+                            nsReflowStatus& aStatus)
 {
 #ifdef NOISY
   ListTag(stdout);
   printf(": resize reflow into %g,%g\n",
-         NS_TWIPS_TO_POINTS_FLOAT(aMaxSize.width),
-         NS_TWIPS_TO_POINTS_FLOAT(aMaxSize.height));
+         NS_TWIPS_TO_POINTS_FLOAT(aReflowState.maxSize.width),
+         NS_TWIPS_TO_POINTS_FLOAT(aReflowState.maxSize.height));
 #endif
 
   // Wipe out old justification information since it's going to change
@@ -804,14 +802,14 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
 
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
-    aStatus = ReflowPre(aCX, aDesiredSize, aMaxSize,
-                        aMaxElementSize, *font, startingOffset,
+    aStatus = ReflowPre(aCX, aDesiredSize, aReflowState.maxSize,
+                        aDesiredSize.maxElementSize, *font, startingOffset,
                         lineLayoutState);
   } else {
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
-    aStatus = ReflowNormal(aCX, aDesiredSize, aMaxSize,
-                           aMaxElementSize, *font, *text,
+    aStatus = ReflowNormal(aCX, aDesiredSize, aReflowState.maxSize,
+                           aDesiredSize.maxElementSize, *font, *text,
                            startingOffset, lineLayoutState);
   }
 

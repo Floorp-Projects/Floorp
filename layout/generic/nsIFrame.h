@@ -51,21 +51,21 @@ struct PRLogModuleInfo;
  * Reflow metrics used to return the frame's desired size and alignment
  * information.
  *
- * @see #ResizeReflow()
- * @see #IncrementalReflow()
+ * @see #Reflow()
  * @see #GetReflowMetrics()
  */
 struct nsReflowMetrics {
-  nscoord width, height;  // desired width and height
+  nscoord width, height;   // desired width and height
   nscoord ascent, descent;
-  nsSize* maxElementSize;
+  nsSize* maxElementSize;  // null if you don't need to compute the max element size
+
+  nsReflowMetrics(nsSize* aMaxElementSize) {maxElementSize = aMaxElementSize;}
 };
 
 /**
  * Constant used to indicate an unconstrained size.
  *
- * @see #ResizeReflow()
- * @see #IncrementalReflow()
+ * @see #Reflow()
  */
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
@@ -84,6 +84,25 @@ struct nsReflowState {
   nsReflowReason   reason;         // the reason for the reflow
   nsReflowCommand* reflowCommand;  // only used for incremental changes
   nsSize           maxSize;        // the available space in which to reflow
+
+  // Construct a non-incremental reflow state
+  nsReflowState(nsReflowReason aReason, const nsSize& aMaxSize) {
+    reason = aReason; reflowCommand = nsnull; maxSize = aMaxSize;
+  }
+  // Construct a reflow state for an incremental change
+  nsReflowState(nsReflowCommand* aReflowCommand, const nsSize& aMaxSize) {
+    reason = eReflowReason_Incremental;
+    reflowCommand = aReflowCommand;
+    maxSize = aMaxSize;
+  }
+
+  // Construct a reflow state similar to an existing reflow state except that
+  // it has a different max size
+  nsReflowState(const nsReflowState& aReflowState, const nsSize& aMaxSize) {
+    reason = aReflowState.reason;
+    reflowCommand = aReflowState.reflowCommand;
+    maxSize = aMaxSize;
+  }
 };
 
 //----------------------------------------------------------------------
@@ -100,8 +119,7 @@ struct nsReflowState {
  * for a frame that is not complete, i.e. you wouldn't set both
  * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW
  *
- * @see #ResizeReflow()
- * @see #IncrementalReflow()
+ * @see #Reflow()
  * @see #CreateContinuingFrame()
  */
 typedef PRUint32 nsReflowStatus;
@@ -296,28 +314,7 @@ public:
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext) = 0;
 
   /**
-   * Post-reflow hook. After a frame is incrementally reflowed or
-   * resize-reflowed this method will be called telling the frame of
-   * the outcome. This call may be invoked many times, while
-   * NS_FRAME_IN_REFLOW is set, before it is finally called once with
-   * a NS_FRAME_REFLOW_COMPLETE value. When called with a
-   * NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
-   * frame state will be cleared.
-   */
-  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
-                        nsDidReflowStatus aStatus) = 0;
-
-  /**
-   *
-   *
-   */
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus) = 0;
-
-  /**
-   * Resize reflow. The frame is given a maximum size and asked for its desired
+   * The frame is given a maximum size and asked for its desired size.
    * size. This is the frame's opportunity to reflow its children.
    *
    * @param aDesiredSize <i>out</i> parameter where you should return the
@@ -341,49 +338,32 @@ public:
    *          maximum element size must be less than or equal to your
    *          desired size.
    */
-  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize&    aMaxSize,
-                           nsSize*          aMaxElementSize,
-                           nsReflowStatus&  aStatus) = 0;
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus) = 0;
+
+  /**
+   * Post-reflow hook. After a frame is incrementally reflowed or
+   * resize-reflowed this method will be called telling the frame of
+   * the outcome. This call may be invoked many times, while
+   * NS_FRAME_IN_REFLOW is set, before it is finally called once with
+   * a NS_FRAME_REFLOW_COMPLETE value. When called with a
+   * NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
+   * frame state will be cleared.
+   */
+  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus) = 0;
 
   /**
    * Post-processing reflow method invoked when justification is enabled.
-   * This is always called after ResizeReflow/IncrementalReflow.
+   * This is always called after Reflow()
    *
    * @param aAvailableSpace The amount of available space that the frame
    *         should distribute internally.
    */
   NS_IMETHOD  JustifyReflow(nsIPresContext* aPresContext,
                             nscoord         aAvailableSpace) = 0;
-
-  /**
-   * Incremental reflow. The reflow command contains information about the
-   * type of change. The frame is given a maximum size and asked for its
-   * desired size.
-   *
-   * @param aDesiredSize <i>out</i> parameter where you should return
-   *          the desired size and ascent/descent info. You should
-   *          include any space you want for border/padding in the
-   *          desired size you return.
-   *
-   * @param aMaxSize the available space in which to lay out. Each
-   *          dimension can either be constrained or unconstrained (a
-   *          value of NS_UNCONSTRAINEDSIZE). If constrained you
-   *          should choose a value that's less than or equal to the
-   *          constrained size. If unconstrained you can choose as
-   *          large a value as you like. It's okay to return a
-   *          desired size that exceeds the max size if that's the
-   *          smallest you can be, i.e. it's your minimum size.
-   *
-   * @see nsReflowCommand#GetTarget()
-   * @see nsReflowCommand#GetType()
-   */
-  NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                const nsSize&    aMaxSize,
-                                nsReflowCommand& aReflowCommand,
-                                nsReflowStatus&  aStatus) = 0;
 
   /**
    * This call is invoked when content is appended to the content tree.

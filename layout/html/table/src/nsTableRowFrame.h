@@ -64,7 +64,7 @@ public:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect);
 
-  /** calls ResizeReflow for all of its child cells.
+  /** calls Reflow for all of its child cells.
     * Cells with rowspan=1 are all set to the same height and stacked horizontally.
     * <P> Cells are not split unless absolutely necessary.
     * <P> Cells are resized in nsTableFrame::BalanceColumnWidths 
@@ -73,22 +73,14 @@ public:
     * @param aDesiredSize width set to width of the sum of the cells, height set to 
     *                     height of cells with rowspan=1.
     *
-    * @see nsIFrame::ResizeReflow
+    * @see nsIFrame::Reflow
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsTableFrame::ShrinkWrapChildren
     */
-  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize,
-                          nsReflowStatus&  aStatus);
-
-  /** @see nsIFrame::IncrementalReflow */
-  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand,
-                               nsReflowStatus&  aStatus);
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,

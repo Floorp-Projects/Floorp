@@ -139,11 +139,10 @@ nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsInputFileFrame::ResizeReflow(nsIPresContext* aCX, 
-                                             nsReflowMetrics& aDesiredSize,
-                                             const nsSize& aMaxSize, 
-                                             nsSize* aMaxElementSize,
-                                             nsReflowStatus&  aStatus)
+NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext*      aCX, 
+                                       nsReflowMetrics&     aDesiredSize,
+                                       const nsReflowState& aReflowState, 
+                                       nsReflowStatus&      aStatus)
 {
   nsIFrame* childFrame;
   PRInt32 numChildren;
@@ -174,13 +173,14 @@ NS_IMETHODIMP nsInputFileFrame::ResizeReflow(nsIPresContext* aCX,
     }
   }
 
-  nsSize maxSize = aMaxSize;
+  nsSize maxSize = aReflowState.maxSize;
   nsReflowMetrics desiredSize = aDesiredSize;
   aDesiredSize.width = gSpacing; 
   aDesiredSize.height = 0;
   childFrame = mFirstChild;
   while (nsnull != childFrame) {
-    nsresult result = childFrame->ResizeReflow(aCX, desiredSize, maxSize, nsnull, aStatus);
+    nsReflowState   reflowState(aReflowState, maxSize);
+    nsresult result = childFrame->Reflow(aCX, desiredSize, reflowState, aStatus);
     // XXX check aStatus ??
     if (NS_OK != result) {
       break;
@@ -194,9 +194,9 @@ NS_IMETHODIMP nsInputFileFrame::ResizeReflow(nsIPresContext* aCX,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-	  aMaxElementSize->height = aDesiredSize.height;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
   aStatus = NS_FRAME_COMPLETE;

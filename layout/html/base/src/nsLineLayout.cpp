@@ -326,14 +326,14 @@ nsLineLayout::WordBreakReflow()
   mReflowType = NS_LINE_LAYOUT_REFLOW_TYPE_WORD_WRAP;
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nsSize maxElementSize;
-  nsReflowMetrics kidSize;
   nsReflowStatus kidReflowStatus;
   nsSize* kidMaxElementSize = nsnull;
   if (nsnull != mMaxElementSizePointer) {
     kidMaxElementSize = &maxElementSize;
   }
-  rv = mBlock->ReflowInlineChild(frame, mPresContext, kidSize,
-                                 kidAvailSize, kidMaxElementSize,
+  nsReflowMetrics kidSize(kidMaxElementSize);
+  nsReflowState   kidReflowState(eReflowReason_Resize, kidAvailSize);
+  rv = mBlock->ReflowInlineChild(frame, mPresContext, kidSize, kidReflowState,
                                  kidReflowStatus);
 
   return rv;
@@ -502,7 +502,7 @@ nsLineLayout::ReflowMappedChild()
     // IncrementalReflow AND GetReflowMetrics by those frames that are
     // line layout aware.
     mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
-    nsReflowMetrics kidMetrics;
+    nsReflowMetrics kidMetrics(nsnull);
     mKidFrame->GetReflowMetrics(mPresContext, kidMetrics);
 
     nsSize maxElementSize;
@@ -612,31 +612,22 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   mFramesReflowed++;
   nsRect kidRect;
   nsSize maxElementSize;
-  nsReflowMetrics kidMetrics;
   nsSize* kidMaxElementSize = nsnull;
   nsReflowStatus kidReflowStatus;
   if (nsnull != mMaxElementSizePointer) {
     kidMaxElementSize = &maxElementSize;
   }
+  nsReflowMetrics kidMetrics(kidMaxElementSize);
+  nsReflowState   kidReflowState(aReflowCommand ? eReflowReason_Incremental :
+                                 eReflowReason_Resize, kidAvailSize);
+  kidReflowState.reflowCommand = aReflowCommand;
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nscoord dx = mReflowData.mX + kidMargin.left;
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                ("nsLineLayout::ReflowChild: reflowing frame=%p[%d] into %d,%d",
                 mKidFrame, mKidIndex,
                 kidAvailSize.width, kidAvailSize.height));
-  if (aReflowCommand) {
-    nsIFrame* nextFrame;
-
-    mSpaceManager->Translate(dx, mY);
-    kidReflowStatus = aReflowCommand->Next(mSpaceManager, kidRect, kidAvailSize, nextFrame);
-    mSpaceManager->Translate(-dx, -mY);
-    kidRect.x = dx;
-    kidRect.y = mY;
-    kidMetrics.width = kidRect.width;
-    kidMetrics.height = kidRect.height;
-    kidMetrics.ascent = kidRect.height;
-    kidMetrics.descent = 0;
-  } else if (isBlock) {
+  if (isBlock) {
     // Calculate top margin by collapsing with previous bottom margin
     nscoord negTopMargin;
     nscoord posTopMargin;
@@ -672,8 +663,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     mSpaceManager->Translate(dx, mY);
     mKidFrame->WillReflow(*mPresContext);
     rv = mBlock->ReflowBlockChild(mKidFrame, mPresContext,
-                                  mSpaceManager, kidAvailSize, kidRect,
-                                  kidMaxElementSize, kidReflowStatus);
+                                  mSpaceManager, kidMetrics, kidReflowState,
+                                  kidRect, kidReflowStatus);
     mSpaceManager->Translate(-dx, -mY);
     kidRect.x = dx;
     kidRect.y = mY;
@@ -685,9 +676,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   else {
     // Reflow the inline child
     mKidFrame->WillReflow(*mPresContext);
-    rv = mBlock->ReflowInlineChild(mKidFrame, mPresContext,
-                                   kidMetrics, kidAvailSize, kidMaxElementSize,
-                                   kidReflowStatus);
+    rv = mBlock->ReflowInlineChild(mKidFrame, mPresContext, kidMetrics,
+                                   kidReflowState, kidReflowStatus);
     // After we reflow the inline child we will know whether or not it
     // has any height/width. If it doesn't have any height/width then
     // we do not yet apply any previous block bottom margin.
@@ -815,7 +805,7 @@ nsLineLayout::PlaceChild(const nsRect& kidRect,
 }
 
 nsresult
-nsLineLayout::IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
+nsLineLayout::IncrementalReflowFromChild(nsReflowCommand* aReflowCommand,
                                          nsIFrame*        aChildFrame)
 {
   nsresult reflowStatus = NS_LINE_LAYOUT_COMPLETE;
@@ -827,7 +817,7 @@ nsLineLayout::IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
   while (kidNum < mLine->mChildCount) {
     nsresult childReflowStatus;
     if (mKidFrame == aChildFrame) {
-      childReflowStatus = ReflowChild(&aReflowCommand);
+      childReflowStatus = ReflowChild(aReflowCommand);
     } else {
       childReflowStatus = ReflowMappedChild();
     }

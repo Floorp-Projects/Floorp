@@ -78,7 +78,7 @@ struct nsLineLayout {
 
   nsresult ReflowLine();
 
-  nsresult IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
+  nsresult IncrementalReflowFromChild(nsReflowCommand* aReflowCommand,
                                       nsIFrame*        aChildFrame);
                                       
   // The presentation context

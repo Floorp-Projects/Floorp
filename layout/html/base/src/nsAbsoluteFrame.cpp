@@ -235,11 +235,10 @@ nsIFrame* AbsoluteFrame::GetContainingBlock()
   return result;
 }
 
-NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                                      nsReflowMetrics& aDesiredSize,
-                                      const nsSize&    aMaxSize,
-                                      nsSize*          aMaxElementSize,
-                                      nsReflowStatus&  aStatus)
+NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
+                                nsReflowMetrics&     aDesiredSize,
+                                const nsReflowState& aReflowState,
+                                nsReflowStatus&      aStatus)
 {
   // Have we created the absolutely positioned item yet?
   if (nsnull == mFrame) {
@@ -301,24 +300,26 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
       availSize.height = NS_UNCONSTRAINEDSIZE;
     }
 
-    mFrame->ResizeReflow(aPresContext, aDesiredSize, availSize, nsnull, aStatus);
+    nsReflowMetrics desiredSize(nsnull);
+    nsReflowState   reflowState(eReflowReason_Initial, availSize);
+    mFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 
     // Figure out what size to actually use. If the position style is 'auto' or
     // the container should be enlarged to contain overflowing frames then use
     // the desired size
     if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
-        ((aDesiredSize.width > availSize.width) &&
+        ((desiredSize.width > availSize.width) &&
          (NS_STYLE_OVERFLOW_VISIBLE == position->mOverflow))) {
-      rect.width = aDesiredSize.width;
+      rect.width = desiredSize.width;
     }
     if (eStyleUnit_Auto == position->mHeight.GetUnit()) {
-      rect.height = aDesiredSize.height;
+      rect.height = desiredSize.height;
     }
     mFrame->SizeTo(rect.width, rect.height);
   }
 
   // Return our desired size as (0, 0)
-  return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
+  return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
 NS_METHOD

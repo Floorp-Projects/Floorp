@@ -47,32 +47,19 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
 NS_METHOD
 nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
                         nsReflowMetrics& aDesiredSize,
-                        const nsSize&   aMaxSize,
-                        nsSize*         aMaxElementSize,
+                        const nsReflowState& aReflowState,
                         nsReflowStatus& aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::ResizeReflow\n");
+  if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Reflow\n");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
-  if (nsnull!=aMaxElementSize)
+  if (nsnull!=aDesiredSize.maxElementSize)
   {
-    aMaxElementSize->width=0;
-    aMaxElementSize->height=0;
+    aDesiredSize.maxElementSize->width=0;
+    aDesiredSize.maxElementSize->height=0;
   }
   aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
-}
-
-NS_METHOD
-nsTableColGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                        nsReflowMetrics& aDesiredSize,
-                                        const nsSize&    aMaxSize,
-                                        nsReflowCommand& aReflowCommand,
-                                        nsReflowStatus&  aStatus)
-{
-  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::IncrementalReflow\n");
   return NS_OK;
 }
 

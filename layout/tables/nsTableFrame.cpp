@@ -476,18 +476,17 @@ PRBool nsTableFrame::NeedsReflow(const nsSize& aMaxSize)
 
 /** Layout the entire inner table.
   */
-NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize& aMaxSize,
-                                     nsSize* aMaxElementSize,
-                                     nsReflowStatus& aStatus)
+NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsReflowState& aReflowState,
+                               nsReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   if (gsDebug==PR_TRUE) 
   {
     printf("-----------------------------------------------------------------\n");
-    printf("nsTableFrame::ResizeReflow: maxSize=%d,%d\n",
-                               aMaxSize.width, aMaxSize.height);
+    printf("nsTableFrame::Reflow: maxSize=%d,%d\n",
+                               aReflowState.maxSize.width, aReflowState.maxSize.height);
   }
 
 #ifdef NS_DEBUG
@@ -504,25 +503,25 @@ NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (PR_TRUE==gsDebug) 
     printf ("*** tableframe reflow\t\t%p\n", this);
 
-  if (PR_TRUE==NeedsReflow(aMaxSize))
+  if (PR_TRUE==NeedsReflow(aReflowState.maxSize))
   {
     if (PR_FALSE==IsFirstPassValid())
     { // we treat the table as if we've never seen the layout data before
       mPass = kPASS_FIRST;
       aStatus = ResizeReflowPass1(aPresContext, aDesiredSize,
-                                  aMaxSize, aMaxElementSize);
+                                  aReflowState.maxSize, aDesiredSize.maxElementSize);
       // check result
     }
     mPass = kPASS_SECOND;
 
     // assign column widths, and assign aMaxElementSize->width
-    BalanceColumnWidths(aPresContext, aMaxSize, aMaxElementSize);
+    BalanceColumnWidths(aPresContext, aReflowState.maxSize, aDesiredSize.maxElementSize);
 
     // assign table width
     SetTableWidth(aPresContext);
 
-    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aMaxSize,
-                                aMaxElementSize, 0, 0);
+    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aReflowState.maxSize,
+                                aDesiredSize.maxElementSize, 0, 0);
 
     if (gsTiming) {
       PRIntervalTime endTime = PR_IntervalNow();
@@ -579,7 +578,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nsSize maxSize(0, 0);       // maxSize is the size of the largest child so far in the process
   nsSize kidMaxSize(0,0);
   nsSize* pKidMaxSize = (nsnull != aMaxElementSize) ? &kidMaxSize : nsnull;
-  nsReflowMetrics kidSize;
+  nsReflowMetrics kidSize(pKidMaxSize);
   nscoord y = 0;
   nscoord maxAscent = 0;
   nscoord maxDescent = 0;
@@ -642,7 +641,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       }
 
       nsSize maxKidElementSize;
-      result = ReflowChild(kidFrame, aPresContext, kidSize, availSize, pKidMaxSize);
+      nsReflowState kidReflowState(eReflowReason_Resize, availSize);
+      result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
       // Place the child since some of it's content fit in us.
       if (gsDebug) {
@@ -984,7 +984,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
 
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsSize            kidAvailSize(aState.availSize);
-    nsReflowMetrics   desiredSize;
+    nsReflowMetrics   desiredSize(pKidMaxElementSize);
     nsReflowStatus    status;
 
     // Get top margin for this kid
@@ -1015,8 +1015,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
       }
 
       // Reflow the child into the available space
-      status = ReflowChild(kidFrame, aPresContext, desiredSize,
-                           kidAvailSize, pKidMaxElementSize);
+      nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
@@ -1195,7 +1195,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
   PRBool        result = PR_TRUE;
 
   while (nsnull != nextInFlow) {
-    nsReflowMetrics kidSize;
+    nsReflowMetrics kidSize(pKidMaxElementSize);
     nsReflowStatus  status;
 
     // Get the next child
@@ -1230,8 +1230,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
-    status = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
-                         pKidMaxElementSize);
+    nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
+    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
     if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
@@ -1435,9 +1435,9 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
-    nsReflowMetrics kidSize;
-    nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
-                                      aState.availSize, pKidMaxElementSize);
+    nsReflowMetrics kidSize(pKidMaxElementSize);
+    nsReflowState   kidReflowState(eReflowReason_Initial, aState.availSize);
+    nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
     if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
@@ -1886,26 +1886,6 @@ PRBool nsTableFrame::IsProportionalWidth(nsStylePosition* aStylePosition)
     }
   }
   return result;
-}
-
-/**
-  */
-NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
-                                          nsReflowMetrics& aDesiredSize,
-                                          const nsSize&    aMaxSize,
-                                          nsReflowCommand& aReflowCommand,
-                                          nsReflowStatus&  aStatus)
-{
-  NS_ASSERTION(nsnull != aCX, "bad arg");
-  if (gsDebug==PR_TRUE) printf ("nsTableFrame::IncrementalReflow: maxSize=%d,%d\n",
-                                aMaxSize.width, aMaxSize.height);
-
-  // mFirstPassValid needs to be set somewhere in response to change notifications.
-
-  aDesiredSize.width = mRect.width;
-  aDesiredSize.height = mRect.height;
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
 }
 
 void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
