@@ -219,6 +219,9 @@ GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICON_FILES))
 
 libs:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
 	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+
+install:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/chrome/icons/default
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -310,7 +313,7 @@ libs:: mozilla.1
 	$(INSTALL) $< $(DIST)/man/man1
 
 install:: mozilla.1
-	$(SYSINSTALL) $(IFLAGS) $< $(DESTDIR)$(mandir)/man1
+	$(SYSINSTALL) $(IFLAGS1) $< $(DESTDIR)$(mandir)/man1
 
 ifdef MOZ_PHOENIX
 MOZILLA_SCRIPT=mozbrowser
@@ -328,7 +331,7 @@ libs:: $(MOZILLA_SCRIPT)
 	$(INSTALL) $< $(DIST)/bin
 
 install:: $(MOZILLA_SCRIPT)
-	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
 
 GARBAGE += mozilla.1 $(MOZILLA_SCRIPT)
 
