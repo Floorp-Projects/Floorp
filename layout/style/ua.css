@@ -513,6 +513,10 @@ input[type=image]:focus {
 
 /*------- End Focus ------*/
 
+input[type=image]:focus {
+  border: 2px solid blue;
+}
+
 input[type=file] {
   white-space: nowrap;
   border:none;
