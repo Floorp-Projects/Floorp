@@ -111,33 +111,16 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRInt32 menuAccessKey = -1;
   
+  // If the key just pressed is the access key (usually Alt),
+  // dismiss and unfocus the menu.
+
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
   if (menuAccessKey) {
     PRUint32 theChar;
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
     keyEvent->GetKeyCode(&theChar);
 
-    PRBool access = PR_FALSE;
-    PRBool accessKeyDown = PR_FALSE;
-    switch (menuAccessKey)
-    {
-      case nsIDOMKeyEvent::DOM_VK_CONTROL:
-        keyEvent->GetCtrlKey(&access);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_ALT:
-        keyEvent->GetAltKey(&access);
-        break;
-      case nsIDOMKeyEvent::DOM_VK_META:
-        keyEvent->GetMetaKey(&access);
-        break;
-      default:
-        access = 0;
-    }
-    if (theChar == nsIDOMKeyEvent::DOM_VK_TAB && accessKeyDown) {
-      accessKeyDown = PR_FALSE;
-    }
-
-    if (theChar == (PRUint32)menuAccessKey || access) {
+    if (theChar == (PRUint32)menuAccessKey) {
       // No other modifiers can be down.
       // Especially CTRL.  CTRL+ALT == AltGR, and
       // we'll fuck up on non-US enhanced 102-key
@@ -155,13 +138,15 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
       if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_META)
         keyEvent->GetMetaKey(&meta);
       if (!(ctrl || alt || shift || meta)) {
-        // The access key just went down by itself. Track this.
-        accessKeyDown = PR_TRUE;
+        // The access key just went down and no other
+        // modifiers are already down.
+        mMenuParent->DismissChain();
       }
     }
-    if (accessKeyDown)
-      mMenuParent->DismissChain();
   }
+
+  // Since a menu was open, eat the event to keep other event
+  // listeners from becoming confused.
 
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
 
