@@ -108,6 +108,12 @@ public:
   NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
   virtual ~nsTableRowGroupFrame();
 
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,

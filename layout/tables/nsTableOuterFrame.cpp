@@ -179,6 +179,9 @@ nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
   if (NS_FAILED(rv) || !mStyleContext) return rv;
   AdjustZeroWidth();
 
+  // record that children that are ignorable whitespace should be excluded 
+  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+
   return rv;
 }
 

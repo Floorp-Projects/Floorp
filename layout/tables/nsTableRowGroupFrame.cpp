@@ -1713,6 +1713,25 @@ NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTableRowGroupFrame::Init(nsIPresContext*  aPresContext,
+                           nsIContent*      aContent,
+                           nsIFrame*        aParent,
+                           nsIStyleContext* aContext,
+                           nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv;
+
+  // Let the base class do its processing
+  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
+
+  // record that children that are ignorable whitespace should be excluded 
+  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
+
+  return rv;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
