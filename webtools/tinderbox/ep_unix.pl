@@ -23,16 +23,35 @@
 # 
 # Scan a line and see if it has an error
 #
-sub has_error {
-  local $_ = $_[0];
-  /fatal error/ # . . . . . . . . . . . . Link
-    or /^C /  # . . . . . . . . . . . . . cvs merge conflict
-    or / Error: / # . . . . . . . . . . . C
-    or / error\([0-9]*\)\:/ # . . . . . . C
-    or /^gmake(?:\[\d\d?\])?: \*\*\*/ # . gmake
-    or /\[checkout aborted\]/   # . . . . cvs
-    or /\: cannot find module/  # . . . . cvs
-    ;
+BEGIN {
+  # Make $last_error_was_gmake persistent private variable for has_error().
+  my $last_error_was_gmake = 0; 
+
+  sub has_error {
+    local $_ = $_[0];
+  
+    # Special case gmake to mark the "Leaving directory"
+    # line as an error too.
+    if (/^gmake(?:\[\d\d?\])?: \*\*\*/) {
+      $last_error_was_gmake = 1;
+      return 1;
+    }
+
+    if ($last_error_was_gmake 
+        and /^gmake(?:\[\d\d?\])?: Leaving directory/) {
+      return 1;
+    }
+
+    $last_error_was_gmake = 0;
+
+    /fatal error/ # . . . . . . . . . . . . Link
+      or /^C /  # . . . . . . . . . . . . . cvs merge conflict
+      or /Error: /  # . . . . . . . . . . . C or smoketest
+      or / error\([0-9]*\)\:/ # . . . . . . C
+      or /\[checkout aborted\]/   # . . . . cvs
+      or /\: cannot find module/  # . . . . cvs
+      ;
+  }
 }
 
 
