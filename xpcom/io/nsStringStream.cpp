@@ -113,7 +113,7 @@ protected:
     void Clear()
     {
         NS_ASSERTION(mConstString || !mOwned,
-                     "Can't have mOwned set and have a null string!")
+                     "Can't have mOwned set and have a null string!");
         if (mOwned)
             nsMemory::Free((char*)mConstString);
 
