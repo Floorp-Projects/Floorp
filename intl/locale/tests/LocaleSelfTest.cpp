@@ -765,9 +765,9 @@ static char* find_option(int argc, char** argv, char* arg)
 
 int main(int argc, char** argv) {
   nsILocale *locale = NULL;
+  nsresult res; 
 
 #if 0
-  nsresult res; 
 	nsILocaleFactory*	localeFactory;
 
 	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
@@ -845,13 +845,11 @@ int main(int argc, char** argv) {
 
   cout << "Finish All The Test Cases\n";
 
-#if !XP_PC
   res = nsComponentManager::FreeLibraries();
   if(NS_FAILED(res))
     cout << "nsComponentManager failed\n";
   else
     cout << "nsComponentManager FreeLibraries Done\n";
-#endif
   
   return 0;
 }
