@@ -343,7 +343,7 @@ nsFileChannel::GetContentType(char * *aContentType)
         PRBool directory;
 		mFile->IsDirectory(&directory);
 		if (directory) {
-            mContentType = "application/http-index-format";
+            mContentType = APPLICATION_HTTP_INDEX_FORMAT;
         }
         else {
             nsCOMPtr<nsIMIMEService> MIMEService(do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));

@@ -38,6 +38,8 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIStreamListener.h"
 #include "nsCRT.h"
+#include "nsMimeTypes.h"
+
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -234,7 +236,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   uri,
                                   nsnull,
-                                  "application/http-index-format",
+                                  APPLICATION_HTTP_INDEX_FORMAT,
                                   -1);          // XXX fix contentLength
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
