@@ -553,11 +553,10 @@ void InstallDefProc(
 	if (!jH)				/* is there no defproc resource? */
 			DebugStr("\pStub Defproc Not Found!");
 
+	HNoPurge((Handle)jH);	/* make this resource nonpurgeable */
 	(**jH).jmpAddr = dpAddr;
 	(**jH).jmpInstr = 0x4EF9;
 	//FlushCache();
 
-	HUnlock((Handle)jH);
-	MoveHHi((Handle)jH);
-	HNoPurge((Handle)jH);	/* make this resource nonpurgeable */
+	HLockHi((Handle)jH);
 }
