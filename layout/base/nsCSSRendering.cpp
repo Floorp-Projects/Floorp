@@ -2431,8 +2431,10 @@ FindCanvasBackground(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> content;
       aForFrame->GetContent(getter_AddRefs(content));
       if (content) {
-        nsCOMPtr<nsIDocument> doc;
-        content->GetDocument(*getter_AddRefs(doc));
+        nsCOMPtr<nsIDOMNode> node( do_QueryInterface(content) );
+        // Use |GetOwnerDocument| so it works during destruction.
+        nsCOMPtr<nsIDOMDocument> doc;
+        node->GetOwnerDocument(getter_AddRefs(doc));
         nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
         if (htmlDoc) {
           nsCOMPtr<nsIDOMHTMLElement> body;
