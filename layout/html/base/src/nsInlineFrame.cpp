@@ -146,7 +146,7 @@ nsInlineFrame::AppendNewFrames(nsIPresContext* aPresContext,
     lastFrame = nsnull;
     mFirstChild = aNewFrame;
   } else {
-    LastFrame(mFirstChild);
+    lastFrame = LastFrame(mFirstChild);
     lastFrame->SetNextSibling(aNewFrame);
   }
   mChildCount += LengthOf(aNewFrame);
