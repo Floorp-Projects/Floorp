@@ -191,25 +191,25 @@ FactoryData g_FactoryData[] =
   {
     &kMacRomanToUnicodeCID,
     nsMacRomanToUnicode::CreateInstance,
-    "MacRoman",
+    "x-mac-roman",
     "Unicode"
   },
   {
     &kMacCEToUnicodeCID,
     nsMacCEToUnicode::CreateInstance,
-    "MacCE",
+    "x-mac-ce",
     "Unicode"
   },
   {
     &kMacGreekToUnicodeCID,
     nsMacGreekToUnicode::CreateInstance,
-    "MacGreek",
+    "x-mac-greek",
     "Unicode"
   },
   {
     &kMacTurkishToUnicodeCID,
     nsMacTurkishToUnicode::CreateInstance,
-    "MacTurkish",
+    "x-mac-turkish",
     "Unicode"
   },
   {
@@ -312,25 +312,25 @@ FactoryData g_FactoryData[] =
     &kUnicodeToMacRomanCID,
     nsUnicodeToMacRoman::CreateInstance,
     "Unicode",
-    "MacRoman"
+    "x-mac-roman"
   },
   {
     &kUnicodeToMacCECID,
     nsUnicodeToMacCE::CreateInstance,
     "Unicode",
-    "MacCE"
+    "x-mac-ce"
   },
   {
     &kUnicodeToMacGreekCID,
     nsUnicodeToMacGreek::CreateInstance,
     "Unicode",
-    "MacGreek"
+    "x-mac-greek"
   },
   {
     &kUnicodeToMacTurkishCID,
     nsUnicodeToMacTurkish::CreateInstance,
     "Unicode",
-    "MacTurkish"
+    "x-mac-turkish"
   },
   {
     &kUnicodeToUTF8CID,
