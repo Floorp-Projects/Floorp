@@ -153,6 +153,7 @@ MimeGetStringByNameREAL(const char *aHeaderName)
 	nsString uniStr(aHeaderName);
 	res = sBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
 	v = ptrv;
+	NS_RELEASE(sBundle);
     if (NS_FAILED(res)) 
       return nsnull;
 

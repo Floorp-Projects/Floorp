@@ -2003,6 +2003,7 @@ VCardGetStringByIDREAL(PRInt32 stringID)
 #else
     res = sBundle->GetStringFromID(stringID, v);
 #endif
+	NS_RELEASE(sBundle);
     if (NS_FAILED(res)) 
     {
       char    buf[128];
