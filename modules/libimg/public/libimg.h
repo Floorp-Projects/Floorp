@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.6 1999/11/13 22:37:35 cls%seawood.org Exp $
+ *  $Id: libimg.h,v 3.7 2000/03/19 16:58:09 morse%netscape.com Exp $
  */
 
 
@@ -36,6 +36,7 @@
 
 #include "ilISystemServices.h"
 #include "ilIImageRenderer.h"
+#include "nsIImageObserver.h"
 
 /*********************** Observers and Observables ***************************/
 
@@ -147,7 +148,8 @@ IL_GetImage(const char* url,
             IL_IRGB *background_color,
             PRUint32 width, PRUint32 height,
             PRUint32 flags,
-            void *net_context);
+            void *net_context,
+            nsIImageRequestObserver * aObserver);
 
 /* Release a reference to an image lib request.  If there are no other
    clients of the request's associated pixmap, any related netlib

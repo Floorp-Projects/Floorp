@@ -254,11 +254,11 @@ ImageRequestImpl::Init(IL_GroupContext *aGroupContext,
     ((aFlags & IL_STICKY) ? nsImageLoadFlags_kSticky : 0) |
     ((aFlags & IL_BYPASS_CACHE) ? nsImageLoadFlags_kBypassCache : 0) |
     ((aFlags & IL_ONLY_FROM_CACHE) ? nsImageLoadFlags_kOnlyFromCache : 0);
-  
+
   mImageReq = IL_GetImage(aUrl, aGroupContext, mXPObserver,
                           nsnull == aBackgroundColor ? nsnull : &bgcolor,
-                          aWidth, aHeight, flags, (void *)aNetContext);
-			  
+                          aWidth, aHeight, flags, (void *)aNetContext, aObserver);
+  
   if (mImageReq == nsnull) {
     XP_DisposeObserverList(mXPObserver);
     mXPObserver = nsnull;
