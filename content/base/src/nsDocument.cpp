@@ -86,13 +86,14 @@
 #include "nsIServiceManager.h"
 
 #include "nsLayoutAtoms.h"
+#include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
 #include "nsDOMError.h"
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
 
@@ -112,7 +113,7 @@
 #include "nsXULAtoms.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
+static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 #include "nsILineBreakerFactory.h"
@@ -611,7 +612,6 @@ nsDocument::~nsDocument()
     NS_RELEASE(subdoc);
   }
 
-
   mRootContent = nsnull;
   mChildren->Clear();
 
@@ -1041,9 +1041,9 @@ nsDocument::CreateShell(nsIPresContext* aContext,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIPresShell* shell;
-  nsresult rv = NS_NewPresShell(&shell);
-  if (NS_OK != rv) {
+  nsresult rv;
+  nsIPresShell* shell = do_CreateInstance(kPresShellCID,&rv);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -2965,7 +2965,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
 
         if (manager) {
           nsCOMPtr<nsIScriptContext> scriptContext;
-          nsresult rv = nsLayoutUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, mScriptObject),
+          nsresult rv = nsContentUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, mScriptObject),
                                                               getter_AddRefs(scriptContext));
           if (NS_SUCCEEDED(rv) && scriptContext) {
             rv = manager->RegisterScriptEventListener(scriptContext, this, atom, theIID);

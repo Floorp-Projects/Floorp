@@ -26,6 +26,7 @@
 #include "nsColor.h"
 #include "nsString.h"
 #include "nsISupports.h"
+#include "nsReadableUtils.h"
 
 enum nsHTMLUnit {
   eHTMLUnit_Null          = 0,      // (n/a) null unit, value is not specified
@@ -45,14 +46,39 @@ enum nsHTMLUnit {
 
 class nsHTMLValue {
 public:
-  nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null);
+  nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null) : mUnit(aUnit)
+  {
+    NS_ASSERTION((aUnit <= eHTMLUnit_Empty), "not a valueless unit");
+    if (aUnit > eHTMLUnit_Empty) {
+      mUnit = eHTMLUnit_Null;
+    }
+    mValue.mString = nsnull;
+  }
+
   nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
   nsHTMLValue(float aValue);
-  nsHTMLValue(const nsAReadableString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
+  nsHTMLValue(const nsAReadableString& aValue,
+              nsHTMLUnit aUnit = eHTMLUnit_String) : mUnit(aUnit)
+  {
+    NS_ASSERTION((eHTMLUnit_String == aUnit) ||
+                 (eHTMLUnit_ColorName == aUnit), "not a string value");
+    if ((eHTMLUnit_String == aUnit) ||
+        (eHTMLUnit_ColorName == aUnit)) {
+      mValue.mString = ToNewUnicode(aValue);
+    }
+    else {
+      mUnit = eHTMLUnit_Null;
+      mValue.mInt = 0;
+    }
+  }
+
   nsHTMLValue(nsISupports* aValue);
   nsHTMLValue(nscolor aValue);
   nsHTMLValue(const nsHTMLValue& aCopy);
-  ~nsHTMLValue(void);
+  ~nsHTMLValue(void)
+  {
+    Reset();
+  }
 
   nsHTMLValue&  operator=(const nsHTMLValue& aCopy);
   PRBool        operator==(const nsHTMLValue& aOther) const;
@@ -67,7 +93,19 @@ public:
   nsISupports*  GetISupportsValue(void) const;
   nscolor     GetColorValue(void) const;
 
-  void  Reset(void);
+  void  Reset(void) {
+    if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
+      if (nsnull != mValue.mString) {
+        nsCRT::free(mValue.mString);
+      }
+    }
+    else if (eHTMLUnit_ISupports == mUnit) {
+      NS_IF_RELEASE(mValue.mISupports);
+    }
+    mUnit = eHTMLUnit_Null;
+    mValue.mString = nsnull;
+  }
+
   void  SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit);
   void  SetPixelValue(PRInt32 aValue);
   void  SetPercentValue(float aValue);

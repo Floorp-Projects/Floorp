@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSProps.h"
+#include "nsUnitConversion.h"
 
 
 enum nsCSSUnit {
@@ -93,20 +94,34 @@ enum nsCSSUnit {
 
 class nsCSSValue {
 public:
-  nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null);  // for valueless units only (null, auto, inherit, none, normal)
+  // for valueless units only (null, auto, inherit, none, normal)
+  nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
+    : mUnit(aUnit)
+  {
+    NS_ASSERTION(aUnit <= eCSSUnit_Normal, "not a valueless unit");
+    if (aUnit > eCSSUnit_Normal) {
+      mUnit = eCSSUnit_Null;
+    }
+    mValue.mInt = 0;
+  }
+
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsAReadableString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
   nsCSSValue(const nsCSSValue& aCopy);
-  ~nsCSSValue(void);
+  ~nsCSSValue(void)
+  {
+    Reset();
+  }
+
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
   PRBool      operator==(const nsCSSValue& aOther) const;
   PRBool      operator!=(const nsCSSValue& aOther) const;
 
   nsCSSUnit GetUnit(void) const { return mUnit; };
-  PRBool    IsLengthUnit(void) const  
+  PRBool    IsLengthUnit(void) const
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Pixel)); }
   PRBool    IsFixedLengthUnit(void) const  
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Cicero)); }
@@ -124,12 +139,72 @@ public:
   float     GetFloatValue(void) const;
   nsAWritableString& GetStringValue(nsAWritableString& aBuffer) const;
   nscolor   GetColorValue(void) const;
-  nscoord   GetLengthTwips(void) const;
+  nscoord   GetLengthTwips(void) const
+  {
+    NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
 
-  void  Reset(void);  // sets to null
+    if (IsFixedLengthUnit()) {
+      switch (mUnit) {
+      case eCSSUnit_Inch:        
+        return NS_INCHES_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Foot:        
+        return NS_FEET_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Mile:        
+        return NS_MILES_TO_TWIPS(mValue.mFloat);
+
+      case eCSSUnit_Millimeter:
+        return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Centimeter:
+        return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Meter:
+        return NS_METERS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Kilometer:
+        return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
+
+      case eCSSUnit_Point:
+        return NSFloatPointsToTwips(mValue.mFloat);
+      case eCSSUnit_Pica:
+        return NS_PICAS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Didot:
+        return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
+      case eCSSUnit_Cicero:
+        return NS_CICEROS_TO_TWIPS(mValue.mFloat);
+      default:
+        NS_ERROR("should never get here");
+        break;
+      }
+    }
+    return 0;
+  }
+
+  void  Reset(void)  // sets to null
+  {
+    if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
+        (nsnull != mValue.mString)) {
+      nsCRT::free(mValue.mString);
+    }
+    mUnit = eCSSUnit_Null;
+    mValue.mInt = 0;
+  }
+
   void  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
-  void  SetPercentValue(float aValue);
-  void  SetFloatValue(float aValue, nsCSSUnit aUnit);
+  void  SetPercentValue(float aValue)
+  {
+    Reset();
+    mUnit = eCSSUnit_Percent;
+    mValue.mFloat = aValue;
+  }
+
+  void  SetFloatValue(float aValue, nsCSSUnit aUnit)
+  {
+    NS_ASSERTION(eCSSUnit_Number <= aUnit, "not a float value");
+    Reset();
+    if (eCSSUnit_Number <= aUnit) {
+      mUnit = aUnit;
+      mValue.mFloat = aValue;
+    }
+  }
+
   void  SetStringValue(const nsAReadableString& aValue, nsCSSUnit aUnit);
   void  SetColorValue(nscolor aValue);
   void  SetAutoValue(void);

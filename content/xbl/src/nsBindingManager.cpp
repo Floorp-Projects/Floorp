@@ -40,7 +40,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsSupportsArray.h"

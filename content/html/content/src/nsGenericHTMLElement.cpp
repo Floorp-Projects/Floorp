@@ -94,7 +94,7 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 
-#include "nsObjectFrame.h"
+#include "nsIObjectFrame.h"
 #include "nsLayoutAtoms.h"
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
@@ -107,6 +107,8 @@
 #include "nsParserCIID.h"
 #include "nsIHTMLContentSink.h"
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
@@ -2430,7 +2432,9 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
         aContent->GetContentID(&ID);
         result = history->GetState(ID, aPresState, aStateType);
         if (!*aPresState) {
-          result = NS_NewPresState(aPresState);
+          result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
+                                                      NS_GET_IID(nsIPresState),
+                                                      (void**)aPresState);
           if (NS_SUCCEEDED(result)) {
             result = history->AddState(ID, *aPresState, aStateType);
           }
@@ -3970,19 +3974,13 @@ nsGenericHTMLElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
   if (!frame) {
     return NS_OK;
   }
-  
-  nsCOMPtr<nsIAtom> type;
 
-  frame->GetFrameType(getter_AddRefs(type));
-
-  if (type.get() == nsLayoutAtoms::objectFrame) {
-    // XXX We could have created an interface for this, but Troy
-    // preferred the ugliness of a static cast to the weight of
-    // a new interface.
-
-    nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
-
-    return objectFrame->GetPluginInstance(*aPluginInstance);
+  nsIObjectFrame* objectFrame = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsIObjectFrame),(void**)&objectFrame);
+  if (objectFrame) {
+    objectFrame->GetPluginInstance(*aPluginInstance);
+  } else {
+    NS_WARNING("frame should have been an object frame");
   }
 
   return NS_OK;

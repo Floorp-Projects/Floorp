@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= gkhtmlcon_s
+LIBRARY_NAME	= gkconhtmlcon_s
 REQUIRES	= xpcom widget dom js locale webshell htmlparser necko unicharutil view pref oji java plugin docshell uriloader xpconnect rdf caps editor intl uconv
 
 CPPSRCS		= \
@@ -97,6 +97,12 @@ CPPSRCS		= \
 		nsHTMLUtils.cpp \
 		nsHTMLWBRElement.cpp \
 		$(NULL)
+
+EXPORTS       = \
+nsIAttributeContent.h \
+nsIHTMLTableCellElement.h \
+nsIHTMLTableColElement.h \
+$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1

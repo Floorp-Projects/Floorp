@@ -35,7 +35,7 @@
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsParserCIID.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -377,7 +377,7 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
     PRUint32 length;
     str.SetCapacity(text.Length());
     nsReadingIterator<PRUnichar> srcStart, srcEnd;
-    length = nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(text.BeginReading(srcStart), text.EndReading(srcEnd), str);
+    length = nsContentUtils::CopyNewlineNormalizedUnicodeTo(text.BeginReading(srcStart), text.EndReading(srcEnd), str);
     str.SetLength(length);
     return DoAddLeaf(type, str);
   }

@@ -42,7 +42,7 @@
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 #include "nsIXMLContentSink.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"

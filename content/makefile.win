@@ -30,9 +30,6 @@ DIRS=                \
         events       \
         xul          \
         build        \
-!if !defined(DISABLE_TESTS)
-        html\tests   \
-!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

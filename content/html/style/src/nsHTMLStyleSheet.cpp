@@ -50,18 +50,22 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsHTMLIIDs.h"
-#include "nsCSSFrameConstructor.h"
+#include "nsICSSFrameConstructor.h"
+#include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsContentCID.h"
+#include "nsLayoutCID.h"
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
+static NS_DEFINE_CID(kHTMLAttributesCID, NS_HTMLATTRIBUTES_CID);
+static NS_DEFINE_CID(kCSSFrameConstructorCID, NS_CSSFRAMECONSTRUCTOR_CID);
 
 class HTMLColorRule : public nsIStyleRule {
 public:
@@ -798,16 +802,15 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
   if (aIID.Equals(kIStyleFrameConstructionIID)) {
     // XXX this breaks XPCOM rules since it isn't a proper delegate
     // This is a temporary method of connecting the constructor for now
-    nsCSSFrameConstructor* constructor = new nsCSSFrameConstructor();
-    if (nsnull != constructor) {
-      constructor->Init(mDocument);
-      nsresult result = constructor->QueryInterface(aIID, aInstancePtrResult);
-      if (NS_FAILED(result)) {
-        delete constructor;
+    nsresult result;
+    nsCOMPtr<nsICSSFrameConstructor> constructor(do_CreateInstance(kCSSFrameConstructorCID,&result));
+    if (NS_SUCCEEDED(result)) {
+      result = constructor->Init(mDocument);
+      if (NS_SUCCEEDED(result)) {
+        result = constructor->QueryInterface(aIID, aInstancePtrResult);
       }
-      return result;
     }
-    return NS_ERROR_OUT_OF_MEMORY;
+    return result;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) this;
@@ -1240,7 +1243,9 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
 
   if (! aAttributes) {
-    result = NS_NewHTMLAttributes(&aAttributes);
+    result = nsComponentManager::CreateInstance(kHTMLAttributesCID, nsnull,
+                                                NS_GET_IID(nsIHTMLAttributes),
+                                                (void**)&aAttributes);
   }
   if (aAttributes) {
     result = aAttributes->SetAttributeFor(aAttribute, aValue, aMappedToStyle, 
@@ -1259,7 +1264,9 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
 
   if ((! aAttributes) && (eHTMLUnit_Null != aValue.GetUnit())) {
-    result = NS_NewHTMLAttributes(&aAttributes);
+    result = nsComponentManager::CreateInstance(kHTMLAttributesCID, nsnull,
+                                                NS_GET_IID(nsIHTMLAttributes),
+                                                (void**)&aAttributes);
   }
   if (aAttributes) {
     PRInt32 count;

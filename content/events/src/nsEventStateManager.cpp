@@ -80,6 +80,10 @@
 #include "nsWidgetsCID.h"
 #include "nsIFormControl.h"
 
+#include "nsIFrameTraversal.h"
+#include "nsLayoutCID.h"
+static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
+
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0
 
@@ -865,7 +869,8 @@ nsEventStateManager::DoTreeScroll(nsIPresContext* inPresContext, PRInt32 inNumLi
   // w/out going back to the main event loop we can easily scroll the wrong
   // bits and it looks like garbage (bug 63465).
   nsIFrame* frame = nsnull;
-  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame)) ) {
+  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame),
+                                                (void **)&frame)) ) {
     nsIView* treeView = nsnull;
     frame->GetView(inPresContext, &treeView);
     if (!treeView) {
@@ -1209,10 +1214,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case MOUSE_SCROLL_N_LINES:
       case MOUSE_SCROLL_PAGE:
         {
-          nsresult rv = DoWheelScroll(aPresContext, aTargetFrame, msEvent,
-                                      numLines,
-                                      (action == MOUSE_SCROLL_PAGE),
-                                      PR_FALSE);
+          DoWheelScroll(aPresContext, aTargetFrame, msEvent, numLines,
+                        (action == MOUSE_SCROLL_PAGE), PR_FALSE);
 
         }
 
@@ -2204,9 +2207,13 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
     }
   }
 
-  nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
-                                         mPresContext, aFrame);
+  nsresult result;
+  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,&result));
+  if (NS_FAILED(result))
+    return result;
 
+  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), EXTENSIVE,
+                                   mPresContext, aFrame);
   if (NS_FAILED(result))
     return NS_OK;
 
@@ -3169,8 +3176,8 @@ void nsEventStateManager::FlushPendingEvents(nsIPresContext* aPresContext) {
   if (nsnull != shell) {
     shell->FlushPendingNotifications();
     nsCOMPtr<nsIViewManager> viewManager;
-    nsresult result = shell->GetViewManager(getter_AddRefs(viewManager));
-    if (nsnull != viewManager) {
+    shell->GetViewManager(getter_AddRefs(viewManager));
+    if (viewManager) {
       viewManager->FlushPendingInvalidates();
     }
   }

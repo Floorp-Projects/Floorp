@@ -34,7 +34,7 @@
 #include "nsISelectionListener.h"
 #include "nsIFocusTracker.h"
 #include "nsIComponentManager.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"

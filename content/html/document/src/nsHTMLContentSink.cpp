@@ -67,7 +67,7 @@
 
 #include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"
-#include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -1006,7 +1006,7 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_form:
     // the form was already created 
     if (aForm) {
-      rv = aForm->QueryInterface(kIHTMLContentIID, (void**)aResult);
+      rv = aForm->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)aResult);
     }
     else {
       rv = NS_NewHTMLFormElement(aResult, aNodeInfo);
@@ -1952,7 +1952,7 @@ SinkContext::AddText(const nsAReadableString& aText)
         return rv;
       }
     }
-    mTextLength += nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(aText, 
+    mTextLength += nsContentUtils::CopyNewlineNormalizedUnicodeTo(aText, 
                                                                  offset, 
                                                                  &mText[mTextLength], 
                                                                  amount);
@@ -2113,7 +2113,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         
         // Set the text in the text node
         nsITextContent* text = nsnull;
-        content->QueryInterface(kITextContentIID, (void**) &text);
+        content->QueryInterface(NS_GET_IID(nsITextContent), (void**) &text);
         text->SetText(mText, mTextLength, PR_FALSE);
         NS_RELEASE(text);
         

@@ -73,13 +73,12 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsIAggregatePrincipal.h"
-
+#include "nsLayoutCID.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
-#ifdef INCLUDE_XUL
-#include "nsXULAtoms.h"
-#endif
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -441,10 +440,9 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                    nsnull, 
-                                    NS_GET_IID(nsIParser), 
-                                    (void **)&mParser);
+  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
+                                          NS_GET_IID(nsIParser), 
+                                          (void **)&mParser);
   if (NS_OK == rv) {
     nsIXMLContentSink* sink;
     
@@ -1025,7 +1023,14 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 {
   nsresult result = NS_OK;
   if (aUrl) {
-    result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this);
+    //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aUrl, this);
+    result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,nsnull,NS_GET_IID(nsIHTMLStyleSheet),(void**)&mAttrStyleSheet);
+    if (NS_SUCCEEDED(result)) {
+      result = mAttrStyleSheet->Init(aUrl,this);
+      if (NS_FAILED(result)) {
+        NS_RELEASE(mAttrStyleSheet);
+      }
+    }
     if (NS_OK == result) {
       AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
       

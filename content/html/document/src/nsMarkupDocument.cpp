@@ -25,8 +25,9 @@
 #include "nsMarkupDocument.h"
 #include "nsIURL.h"
 
-
+#include "nsLayoutCID.h"
 #include "nsIPresShell.h"
+static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 
 
 nsMarkupDocument::nsMarkupDocument() : nsDocument()
@@ -38,8 +39,6 @@ nsMarkupDocument::~nsMarkupDocument()
 }
 
 // XXX Temp hack: moved from nsDocument to fix circular linkage problem...
-extern NS_LAYOUT nsresult
-  NS_NewPresShell(nsIPresShell** aInstancePtrResult);
 
 NS_IMETHODIMP
 nsMarkupDocument::CreateShell(nsIPresContext* aContext,
@@ -52,20 +51,20 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIPresShell* shell;
-  nsresult rv = NS_NewPresShell(&shell);
-  if (NS_OK != rv) {
+  nsresult rv;
+  nsCOMPtr<nsIPresShell> shell(do_CreateInstance(kPresShellCID,&rv));
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
   if (NS_OK != (rv = shell->Init(this, aContext, aViewManager, aStyleSet))) {
-    NS_RELEASE(shell);
     return rv;
   }
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShells.AppendElement(shell);
-  *aInstancePtrResult = shell;
+  *aInstancePtrResult = shell.get();
+  NS_ADDREF(*aInstancePtrResult);
   return NS_OK;
 }
 

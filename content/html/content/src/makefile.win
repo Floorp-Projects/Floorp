@@ -21,12 +21,18 @@
 
 DEPTH=..\..\..\..
 
-LIBRARY_NAME = nglhtmlcon_s
+LIBRARY_NAME = contenthtmlcontent_s
 MODULE=raptor 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
+
+EXPORTS= \
+  nsIAttributeContent.h \
+  nsIHTMLTableCellElement.h \
+  nsIHTMLTableColElement.h \
+  $(NULL)
 
 CPPSRCS=				\
 	nsAttributeContent.cpp		\
