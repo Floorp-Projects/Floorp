@@ -85,6 +85,12 @@ nsIRDFService* nsXULContentUtils::gRDF;
 nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
 
+#define XUL_RESOURCE(ident, uri) nsIRDFResource* nsXULContentUtils::ident
+#define XUL_LITERAL(ident, val) nsIRDFLiteral* nsXULContentUtils::ident
+#include "nsXULResourceList.h"
+#undef XUL_RESOURCE
+#undef XUL_LITERAL
+
 //------------------------------------------------------------------------
 // Constructors n' stuff
 //
@@ -98,6 +104,22 @@ nsXULContentUtils::Init()
                                           NS_GET_IID(nsIRDFService),
                                           (nsISupports**) &gRDF);
         if (NS_FAILED(rv)) return rv;
+
+#define XUL_RESOURCE(ident, uri)            \
+  PR_BEGIN_MACRO                            \
+   rv = gRDF->GetResource((uri), &(ident)); \
+   if (NS_FAILED(rv)) return rv;            \
+  PR_END_MACRO
+
+#define XUL_LITERAL(ident, val)                                   \
+  PR_BEGIN_MACRO                                                  \
+   rv = gRDF->GetLiteral(NS_LITERAL_STRING(val).get(), &(ident)); \
+   if (NS_FAILED(rv)) return rv;                                  \
+  PR_END_MACRO
+
+#include "nsXULResourceList.h"
+#undef XUL_RESOURCE
+#undef XUL_LITERAL
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -125,6 +147,12 @@ nsXULContentUtils::Finish()
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
             gRDF = nsnull;
         }
+
+#define XUL_RESOURCE(ident, uri) NS_IF_RELEASE(ident)
+#define XUL_LITERAL(ident, val) NS_IF_RELEASE(ident)
+#include "nsXULResourceList.h"
+#undef XUL_RESOURCE
+#undef XUL_LITERAL
 
         NS_IF_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gFormat);

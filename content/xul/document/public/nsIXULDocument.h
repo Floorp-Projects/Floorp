@@ -42,10 +42,10 @@ class nsForwardReference;
 class nsIAtom;
 class nsIDOMElement;
 class nsIPrincipal;
-class nsIRDFContentModelBuilder;
 class nsIRDFResource;
 class nsISupportsArray;
 class nsIXULPrototypeDocument;
+class nsIXULTemplateBuilder;
 class nsIURI;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
@@ -83,13 +83,6 @@ public:
    * nsIContent pointers.
    */
   NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements) = 0;
-
-  NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
-
-  /**
-   * Add a content model builder to the document.
-   */
-  NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 
   /**
    * Add a "forward declaration" of a XUL observer. Such declarations
@@ -136,6 +129,19 @@ public:
    * Notify the XUL document that a subtree has been removed
    */
   NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement) = 0;
+
+  /**
+   * Attach a XUL template builder to the specified content node.
+   * @param aBuilder the tmeplate builder to attach, or null if
+   *   the builder is to be removed.
+   */
+  NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder) = 0;
+
+  /**
+   * Retrieve the XUL template builder that's attached to a content
+   * node.
+   */
+  NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult) = 0;
 };
 
 // factory functions

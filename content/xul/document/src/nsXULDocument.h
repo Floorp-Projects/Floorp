@@ -293,8 +293,6 @@ public:
     NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement);
     NS_IMETHOD RemoveElementForID(const nsAReadableString& aID, nsIContent* aElement);
     NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements);
-    NS_IMETHOD CreateContents(nsIContent* aElement);
-    NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
@@ -304,6 +302,8 @@ public:
     NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
+    NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder);
+    NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult);
     
     // nsIDOMEventCapturer interface
     NS_IMETHOD    CaptureEvent(const nsAReadableString& aType);
@@ -383,10 +383,6 @@ protected:
     nsresult Init(void);
     nsresult StartLayout(void);
 
-    nsresult OpenWidgetItem(nsIContent* aElement);
-    nsresult CloseWidgetItem(nsIContent* aElement);
-    nsresult RebuildWidgetItem(nsIContent* aElement);
-
     nsresult
     AddElementToMap(nsIContent* aElement);
 
@@ -440,31 +436,6 @@ protected:
     // pseudo constants
     static PRInt32 gRefCnt;
 
-    static nsIAtom*  kAttributeAtom;
-    static nsIAtom*  kCommandUpdaterAtom;
-    static nsIAtom*  kContextAtom;
-    static nsIAtom*  kDataSourcesAtom;
-    static nsIAtom*  kElementAtom;
-    static nsIAtom*  kIdAtom;
-    static nsIAtom*  kKeysetAtom;
-    static nsIAtom*  kObservesAtom;
-    static nsIAtom*  kOpenAtom;
-    static nsIAtom*  kOverlayAtom;
-    static nsIAtom*  kPersistAtom;
-    static nsIAtom*  kPopupAtom;
-    static nsIAtom*  kPositionAtom;
-    static nsIAtom*  kInsertAfterAtom;
-    static nsIAtom*  kInsertBeforeAtom;
-    static nsIAtom*  kRemoveElementAtom;
-    static nsIAtom*  kRefAtom;
-    static nsIAtom*  kRuleAtom;
-    static nsIAtom*  kStyleAtom;
-    static nsIAtom*  kTemplateAtom;
-    static nsIAtom*  kTooltipAtom;
-
-    static nsIAtom*  kCoalesceAtom;
-    static nsIAtom*  kAllowNegativesAtom;
-
     static nsIAtom** kIdentityAttrs[];
 
     static nsIRDFService* gRDFService;
@@ -480,8 +451,6 @@ protected:
 
     static nsIXULContentUtils* gXULUtils;
     static nsIXULPrototypeCache* gXULCache;
-    static nsIScriptSecurityManager* gScriptSecurityManager;
-    static nsIPrincipal* gSystemPrincipal;
 
     static PRLogModuleInfo* gXULLog;
 
@@ -527,7 +496,6 @@ protected:
     nsCOMPtr<nsIHTMLCSSStyleSheet>    mInlineStyleSheet;  // [OWNER]
     nsCOMPtr<nsICSSLoader>            mCSSLoader;         // [OWNER]
     nsElementMap               mElementMap;
-    nsCOMPtr<nsISupportsArray> mBuilders;        // [OWNER] of array, elements shouldn't own this, but they do
     nsCOMPtr<nsIRDFDataSource>          mLocalStore;
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
@@ -538,6 +506,10 @@ protected:
 
     nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings
     nsSupportsHashtable* mBoxObjectTable; // Box objects for content nodes. 
+
+    // Maintains the template builders that have been attached to
+    // content elements
+    nsSupportsHashtable* mTemplateBuilderTable;
     
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;

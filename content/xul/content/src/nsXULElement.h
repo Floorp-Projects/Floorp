@@ -57,6 +57,7 @@
 #include "nsIXBLBinding.h"
 #include "nsIURI.h"
 #include "nsIXULContent.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
 #include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
@@ -70,7 +71,6 @@ class nsIXBLService;
 class nsISupportsArray;
 class nsIXULContentUtils;
 class nsIXULPrototypeDocument;
-class nsIXULTemplateBuilder;
 class nsRDFDOMNodeList;
 class nsString;
 class nsXULAttributes;
@@ -407,8 +407,6 @@ public:
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aValue);
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
-    NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
-                                nsIXULTemplateBuilder* aBuilder);
     
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_IDOMNODE
@@ -532,8 +530,6 @@ protected:
         nsVoidArray*                        mBroadcastListeners; // [WEAK]
         nsIDOMXULElement*                   mBroadcaster;        // [WEAK]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
-        nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;           // [OWNER]
-        nsIXULTemplateBuilder*              mBuilder;            // [WEAK]
         nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
         nsXULAttributes*                    mAttributes;
 
@@ -556,8 +552,6 @@ protected:
     nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
     nsIDOMXULElement*          Broadcaster() const        { return mSlots ? mSlots->mBroadcaster              : nsnull; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
-    nsIRDFCompositeDataSource* Database() const           { return mSlots ? mSlots->mDatabase.get()           : nsnull; }
-    nsIXULTemplateBuilder*     Builder() const            { return mSlots ? mSlots->mBuilder                  : nsnull; }
     nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }

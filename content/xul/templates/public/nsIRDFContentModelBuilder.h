@@ -33,12 +33,7 @@
 
 #include "nsISupports.h"
 
-class nsIAtom;
 class nsIContent;
-class nsIRDFCompositeDataSource;
-class nsIXULDocument;
-class nsIRDFNode;
-class nsIRDFResource;
 
 // {541AFCB0-A9A3-11d2-8EC5-00805F29F370}
 #define NS_IRDFCONTENTMODELBUILDER_IID \
@@ -50,44 +45,24 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IRDFCONTENTMODELBUILDER_IID; return iid; }
 
     /**
-     * Point the content model builder to the document. The content model
-     * builder must not reference count the document.
+     * Called to initialize a XUL content builder on a particular root
+     * element. This element presumably has a ``datasources''
+     * attribute, which the builder will parse to set up the template
+     * builder's datasources.
      */
-    NS_IMETHOD SetDocument(nsIXULDocument* aDocument) = 0;
-
-    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase) = 0;
-    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase) = 0;
-
-    /**
-     * Set the root element from which this content model will
-     * operate.
-     */
-    NS_IMETHOD CreateRootContent(nsIRDFResource* aResource) = 0;
     NS_IMETHOD SetRootContent(nsIContent* aElement) = 0;
 
     /**
-     * Construct the contents for a container element.
+     * Invoked lazily by a XUL element that needs its child content
+     * built.
      */
     NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
-
-    /** 
-     * 'Open' a container element that was closed before. This gives
-     * the container a chance to populate its contents.
-     */
-    NS_IMETHOD OpenContainer(nsIContent* aContainer) = 0;
-
-    /**
-     * 'Close' an open container. This gives the container a chance to
-     * release unused content nodes.
-     */
-    NS_IMETHOD CloseContainer(nsIContent* aContainer) = 0;
-
-    /**
-     * Rebuild the contents of a container.
-     */
-    NS_IMETHOD RebuildContainer(nsIContent* aContainer) = 0;
 };
 
-extern nsresult NS_NewXULTemplateBuilder(nsIRDFContentModelBuilder** aResult);
+extern NS_IMETHODIMP
+NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+extern NS_IMETHODIMP
+NS_NewXULOutlinerBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 #endif // nsIRDFContentModelBuilder_h__

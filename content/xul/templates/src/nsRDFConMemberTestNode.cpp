@@ -126,7 +126,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             if (hasContainerBinding)
                 VALUE_TO_IRDFRESOURCE(containerValue)->GetValueConst(&container);
 
-            nsAutoString member = NS_LITERAL_STRING("(unbound)");
+            nsAutoString member(NS_LITERAL_STRING("(unbound)"));
             if (hasMemberBinding)
                 nsXULContentUtils::GetTextForNode(VALUE_TO_IRDFRESOURCE(memberValue), member);
 

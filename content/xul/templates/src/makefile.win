@@ -27,15 +27,51 @@ MODULE=raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsClusterKey.cpp                        \
+        nsClusterKeySet.cpp                     \
+        nsConflictSet.cpp                       \
+        nsContentSupportMap.cpp                 \
+        nsContentTagTestNode.cpp                \
+        nsContentTestNode.cpp                   \
+        nsInstantiationNode.cpp                 \
+        nsOutlinerRowTestNode.cpp               \
+        nsOutlinerRows.cpp                      \
+        nsRDFConInstanceTestNode.cpp            \
+        nsRDFConMemberTestNode.cpp              \
+        nsRDFPropertyTestNode.cpp               \
+        nsResourceSet.cpp                       \
         nsRuleNetwork.cpp                       \
+        nsTemplateMatch.cpp                     \
+        nsTemplateMatchSet.cpp                  \
+        nsTemplateRule.cpp                      \
+        nsXULContentBuilder.cpp                 \
         nsXULContentUtils.cpp                   \
+        nsXULOutlinerBuilder.cpp                \
         nsXULSortService.cpp                    \
         nsXULTemplateBuilder.cpp                \
 	$(NULL)
 
 CPP_OBJS=					        \
+        .\$(OBJDIR)\nsClusterKey.obj                    \
+        .\$(OBJDIR)\nsClusterKeySet.obj                 \
+        .\$(OBJDIR)\nsConflictSet.obj                   \
+        .\$(OBJDIR)\nsContentSupportMap.obj             \
+        .\$(OBJDIR)\nsContentTagTestNode.obj            \
+        .\$(OBJDIR)\nsContentTestNode.obj               \
+        .\$(OBJDIR)\nsInstantiationNode.obj             \
+        .\$(OBJDIR)\nsOutlinerRowTestNode.obj           \
+        .\$(OBJDIR)\nsOutlinerRows.obj                  \
+        .\$(OBJDIR)\nsRDFConInstanceTestNode.obj        \
+        .\$(OBJDIR)\nsRDFConMemberTestNode.obj          \
+        .\$(OBJDIR)\nsRDFPropertyTestNode.obj           \
+        .\$(OBJDIR)\nsResourceSet.obj                   \
         .\$(OBJDIR)\nsRuleNetwork.obj                   \
+        .\$(OBJDIR)\nsTemplateMatch.obj                 \
+        .\$(OBJDIR)\nsTemplateMatchSet.obj              \
+        .\$(OBJDIR)\nsTemplateRule.obj                  \
+        .\$(OBJDIR)\nsXULContentBuilder.obj             \
         .\$(OBJDIR)\nsXULContentUtils.obj               \
+        .\$(OBJDIR)\nsXULOutlinerBuilder.obj            \
         .\$(OBJDIR)\nsXULSortService.obj                \
         .\$(OBJDIR)\nsXULTemplateBuilder.obj            \
 	$(NULL)

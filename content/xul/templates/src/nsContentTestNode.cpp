@@ -78,7 +78,7 @@ nsContentTestNode::nsContentTestNode(InnerNode* aParent,
 {
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-        nsAutoString tag = NS_LITERAL_STRING("(none)");
+        nsAutoString tag(NS_LITERAL_STRING("(none)"));
         if (mTag)
             mTag->ToString(tag);
 

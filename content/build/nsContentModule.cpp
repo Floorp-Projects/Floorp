@@ -358,6 +358,8 @@ static Components gComponents[] = {
     "@mozilla.org/xul/xul-sort-service;1", },
   { "XUL Template Builder", NS_XULTEMPLATEBUILDER_CID,
     "@mozilla.org/xul/xul-template-builder;1", },
+  { "XUL Outliner Builder", NS_XULOUTLINERBUILDER_CID,
+    "@mozilla.org/xul/xul-outliner-builder;1", },
   { "XUL Content Sink", NS_XULCONTENTSINK_CID,
     "@mozilla.org/xul/xul-content-sink;1", },
   { "XUL Document", NS_XULDOCUMENT_CID,

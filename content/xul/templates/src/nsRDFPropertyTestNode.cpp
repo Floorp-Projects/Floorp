@@ -160,7 +160,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
             if (hasSourceBinding)
                 VALUE_TO_IRDFRESOURCE(sourceValue)->GetValueConst(&source);
 
-            nsAutoString target = NS_LITERAL_STRING("(unbound)");
+            nsAutoString target(NS_LITERAL_STRING("(unbound)"));
             if (hasTargetBinding)
                 nsXULContentUtils::GetTextForNode(VALUE_TO_IRDFNODE(targetValue), target);
 
@@ -245,7 +245,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
 
 #ifdef PR_LOGGING
                     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
-                        nsAutoString s = NS_LITERAL_STRING("(none found)");
+                        nsAutoString s(NS_LITERAL_STRING("(none found)"));
                         if (target)
                             nsXULContentUtils::GetTextForNode(target, s);
 

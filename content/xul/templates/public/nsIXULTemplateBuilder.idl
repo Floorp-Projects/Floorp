@@ -20,14 +20,36 @@
  * Contributor(s): 
  */
 
+#include "domstubs.idl"
 #include "nsISupports.idl"
+#include "nsIRDFCompositeDataSource.idl"
+#include "nsIRDFResource.idl"
 
 [scriptable, uuid(fb744f8e-1dd1-11b2-a5d7-935c9ab60602)]
 interface nsIXULTemplateBuilder : nsISupports
 {
+    /**
+     * The ``root'' node in the DOM to which this builder is attached
+     */
+    readonly attribute nsIDOMElement root;
+
+    /**
+     * The composite datasource that the template builder observes
+     * and uses to create content
+     */
+    readonly attribute nsIRDFCompositeDataSource database;
+
     /**
      * Force the template builder to rebuild its content.
      */
     void rebuild();
 };
 
+[scriptable, uuid(06b31b15-ebf5-4e74-a0e2-6bc0a18a3969)]
+interface nsIXULOutlinerBuilder : nsISupports
+{
+    /**
+     * Retrieve the RDF resource associated with the specified row.
+     */
+    nsIRDFResource getResourceFor(in long aRowIndex);
+};

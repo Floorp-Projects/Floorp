@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Chris Waterson <waterson@netscape.com>
  */
 
 /*
@@ -39,6 +40,7 @@ class nsIRDFNode;
 class nsCString;
 class nsString;
 class nsIRDFResource;
+class nsIRDFLiteral;
 class nsIRDFService;
 class nsINameSpaceManager;
 class nsIDateTimeFormat;
@@ -112,6 +114,12 @@ public:
 
     static nsresult
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
+
+#define XUL_RESOURCE(ident, uri) static nsIRDFResource* ident
+#define XUL_LITERAL(ident, val)  static nsIRDFLiteral*  ident
+#include "nsXULResourceList.h"
+#undef XUL_RESOURCE
+#undef XUL_LITERAL
 };
 
 

@@ -165,6 +165,7 @@ static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kXULOutlinerBuilderCID,     NS_XULOUTLINERBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kRangeCID,                  NS_RANGE_CID);
 
@@ -200,31 +201,6 @@ const nsForwardReference::Phase nsForwardReference::kPasses[] = {
 
 PRInt32 nsXULDocument::gRefCnt = 0;
 
-nsIAtom* nsXULDocument::kAttributeAtom;
-nsIAtom* nsXULDocument::kCommandUpdaterAtom;
-nsIAtom* nsXULDocument::kContextAtom;
-nsIAtom* nsXULDocument::kDataSourcesAtom;
-nsIAtom* nsXULDocument::kElementAtom;
-nsIAtom* nsXULDocument::kIdAtom;
-nsIAtom* nsXULDocument::kKeysetAtom;
-nsIAtom* nsXULDocument::kObservesAtom;
-nsIAtom* nsXULDocument::kOpenAtom;
-nsIAtom* nsXULDocument::kOverlayAtom;
-nsIAtom* nsXULDocument::kPersistAtom;
-nsIAtom* nsXULDocument::kPositionAtom;
-nsIAtom* nsXULDocument::kInsertAfterAtom;
-nsIAtom* nsXULDocument::kInsertBeforeAtom;
-nsIAtom* nsXULDocument::kRemoveElementAtom;
-nsIAtom* nsXULDocument::kPopupAtom;
-nsIAtom* nsXULDocument::kRefAtom;
-nsIAtom* nsXULDocument::kRuleAtom;
-nsIAtom* nsXULDocument::kStyleAtom;
-nsIAtom* nsXULDocument::kTemplateAtom;
-nsIAtom* nsXULDocument::kTooltipAtom;
-
-nsIAtom* nsXULDocument::kCoalesceAtom;
-nsIAtom* nsXULDocument::kAllowNegativesAtom;
-
 nsIRDFService* nsXULDocument::gRDFService;
 nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
@@ -237,8 +213,6 @@ nsINameSpaceManager* nsXULDocument::gNameSpaceManager;
 PRInt32 nsXULDocument::kNameSpaceID_XUL;
 
 nsIXULPrototypeCache* nsXULDocument::gXULCache;
-nsIScriptSecurityManager* nsXULDocument::gScriptSecurityManager;
-nsIPrincipal* nsXULDocument::gSystemPrincipal;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
@@ -427,11 +401,12 @@ nsXULDocument::nsXULDocument(void)
       mNextSrcLoadWaiter(nsnull),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
+      mBoxObjectTable(nsnull),
+      mTemplateBuilderTable(nsnull),
       mResolutionPhase(nsForwardReference::eStart),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mState(eState_Master),
       mCurrentScriptProto(nsnull),
-      mBoxObjectTable(nsnull),
       mNumCapturers(0)
 {
     NS_INIT_REFCNT();
@@ -452,6 +427,13 @@ nsXULDocument::~nsXULDocument()
     // In case we failed somewhere early on and the forward observer
     // decls never got resolved.
     DestroyForwardReferences();
+
+    // Notify observer that we're about to go away
+    PRInt32 i;
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
+        observer->DocumentWillBeDestroyed(this);
+    }
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -483,45 +465,10 @@ nsXULDocument::~nsXULDocument()
       mCSSLoader->DropDocumentReference();
     }
 
+    delete mTemplateBuilderTable;
     delete mBoxObjectTable;
 
-#if 0
-    PRInt32 i;
-    for (i = 0; i < mObservers.Count(); i++) {
-        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
-        observer->DocumentWillBeDestroyed(this);
-        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
-          i--;
-        }
-    }
-#endif
-
     if (--gRefCnt == 0) {
-        NS_IF_RELEASE(kAttributeAtom);
-        NS_IF_RELEASE(kCommandUpdaterAtom);
-        NS_IF_RELEASE(kContextAtom);
-        NS_IF_RELEASE(kDataSourcesAtom);
-        NS_IF_RELEASE(kElementAtom);
-        NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kKeysetAtom);
-        NS_IF_RELEASE(kObservesAtom);
-        NS_IF_RELEASE(kOpenAtom);
-        NS_IF_RELEASE(kOverlayAtom);
-        NS_IF_RELEASE(kPersistAtom);
-        NS_IF_RELEASE(kPositionAtom);
-        NS_IF_RELEASE(kInsertAfterAtom);
-        NS_IF_RELEASE(kInsertBeforeAtom);
-        NS_IF_RELEASE(kRemoveElementAtom);
-        NS_IF_RELEASE(kPopupAtom);
-        NS_IF_RELEASE(kRefAtom);
-        NS_IF_RELEASE(kRuleAtom);
-        NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kTemplateAtom);
-        NS_IF_RELEASE(kTooltipAtom);
-
-        NS_IF_RELEASE(kCoalesceAtom);
-        NS_IF_RELEASE(kAllowNegativesAtom);
-
         if (gRDFService) {
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
@@ -543,13 +490,6 @@ nsXULDocument::~nsXULDocument()
             nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
             gXULCache = nsnull;
         }
-
-        if (gScriptSecurityManager) {
-            nsServiceManager::ReleaseService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, gScriptSecurityManager);
-            gScriptSecurityManager = nsnull;
-        }
-
-        NS_IF_RELEASE(gSystemPrincipal);
     }
 }
 
@@ -1411,31 +1351,6 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         if (mRootContent)
             mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
-        // set all builder references to document to nsnull -- out of band notification
-        // to break ownership cycle
-        if (mBuilders) {
-            PRUint32 cnt = 0;
-            nsresult rv = mBuilders->Count(&cnt);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-
-            for (PRUint32 i = 0; i < cnt; ++i) {
-                nsIRDFContentModelBuilder* builder
-                    = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-                NS_ASSERTION(builder != nsnull, "null ptr");
-                if (! builder) continue;
-
-                rv = builder->SetDocument(nsnull);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from document");
-                // XXX ignore error code?
-
-                rv = builder->SetDataBase(nsnull);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from database");
-
-                NS_RELEASE(builder);
-            }
-        }
-
         // Propagate the out-of-band notification to each PresShell's
         // anonymous content as well. This ensures that there aren't
         // any accidental script references left in anonymous content
@@ -1617,7 +1532,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
     if (NS_FAILED(rv)) return rv;
 
     // First see if we need to update our element map.
-    if ((aAttribute == kIdAtom) || (aAttribute == kRefAtom)) {
+    if ((aAttribute == nsXULAtoms::id) || (aAttribute == nsXULAtoms::ref)) {
 
         rv = mElementMap.Enumerate(RemoveElementsFromMapByContent, aElement);
         if (NS_FAILED(rv)) return rv;
@@ -1626,22 +1541,6 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         // the map. So add 'em back now.
         rv = AddElementToMap(aElement);
         if (NS_FAILED(rv)) return rv;
-    }
-
-    // Handle "open" and "close" cases. We do this handling before
-    // we've notified the observer, so that content is already created
-    // for the frame system to walk.
-    if ((nameSpaceID == kNameSpaceID_XUL) && (aAttribute == kOpenAtom)) {
-        nsAutoString open;
-        rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
-        if (NS_FAILED(rv)) return rv;
-
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open == NS_LITERAL_STRING("true"))) {
-            OpenWidgetItem(aElement);
-        }
-        else {
-            CloseWidgetItem(aElement);
-        }
     }
 
     // Now notify external observers
@@ -1653,20 +1552,12 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         }
     }
 
-    // Check for a change to the 'ref' attribute on an atom, in which
-    // case we may need to nuke and rebuild the entire content model
-    // beneath the element.
-    if (aAttribute == kRefAtom) {
-        RebuildWidgetItem(aElement);
-    }
-
-
     // Finally, see if there is anything we need to persist in the
     // localstore.
     //
     // XXX Namespace handling broken :-(
     nsAutoString persist;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kPersistAtom, persist);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::persist, persist);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -2096,7 +1987,6 @@ nsXULDocument::RemoveElementForID(const nsAReadableString& aID, nsIContent* aEle
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsXULDocument::GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements)
 {
@@ -2107,60 +1997,6 @@ nsXULDocument::GetElementsForID(const nsAReadableString& aID, nsISupportsArray* 
     mElementMap.Find(aID, aElements);
     return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsXULDocument::CreateContents(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mBuilders)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    PRUint32 cnt = 0;
-    nsresult rv = mBuilders->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        // XXX we should QueryInterface() here
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        NS_ASSERTION(builder != nsnull, "null ptr");
-        if (! builder)
-            continue;
-
-        rv = builder->CreateContents(aElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error creating content");
-        // XXX ignore error code?
-
-        NS_RELEASE(builder);
-    }
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULDocument::AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
-{
-    NS_PRECONDITION(aBuilder != nsnull, "null ptr");
-    if (! aBuilder)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    if (! mBuilders) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mBuilders));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    rv = aBuilder->SetDocument(this);
-    if (NS_FAILED(rv)) return rv;
-
-    return mBuilders->AppendElement(aBuilder) ? NS_OK : NS_ERROR_FAILURE;
-}
-
 
 NS_IMETHODIMP
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
@@ -3169,7 +3005,7 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
     // "commandupdater='true'" attribute), then add the element to the
     // document's command dispatcher
     nsAutoString value;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         rv = nsXULContentUtils::SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
@@ -3259,7 +3095,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // 3. If the element is a 'command updater', then remove the
     // element from the document's command dispatcher.
     nsAutoString value;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
         NS_ASSERTION(domelement != nsnull, "not a DOM element");
@@ -3273,9 +3109,43 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder)
+{
+  if (! mTemplateBuilderTable) {
+    mTemplateBuilderTable = new nsSupportsHashtable();
+    if (! mTemplateBuilderTable)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsISupportsKey key(aContent);
+
+  if (aContent) {
+    mTemplateBuilderTable->Put(&key, aBuilder);
+  }
+  else {
+    mTemplateBuilderTable->Remove(&key);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult)
+{
+  if (mTemplateBuilderTable) {
+    nsISupportsKey key(aContent);
+    *aResult = NS_STATIC_CAST(nsIXULTemplateBuilder*, mTemplateBuilderTable->Get(&key));
+  }
+  else
+    *aResult = nsnull;
+
+  return NS_OK;
+}
+
 // Attributes that are used with getElementById() and the
 // resource-to-element map.
-nsIAtom** nsXULDocument::kIdentityAttrs[] = { &kIdAtom, &kRefAtom, nsnull };
+nsIAtom** nsXULDocument::kIdentityAttrs[] = { &nsXULAtoms::id, &nsXULAtoms::ref, nsnull };
 
 nsresult
 nsXULDocument::AddElementToMap(nsIContent* aElement)
@@ -3900,31 +3770,6 @@ nsXULDocument::Init()
 #endif
 
     if (gRefCnt++ == 0) {
-        kAttributeAtom      = NS_NewAtom("attribute");
-        kCommandUpdaterAtom = NS_NewAtom("commandupdater");
-        kContextAtom        = NS_NewAtom("context");
-        kDataSourcesAtom    = NS_NewAtom("datasources");
-        kElementAtom        = NS_NewAtom("element");
-        kIdAtom             = NS_NewAtom("id");
-        kKeysetAtom         = NS_NewAtom("keyset");
-        kObservesAtom       = NS_NewAtom("observes");
-        kOpenAtom           = NS_NewAtom("open");
-        kOverlayAtom        = NS_NewAtom("overlay");
-        kPersistAtom        = NS_NewAtom("persist");
-        kPopupAtom          = NS_NewAtom("popup");
-        kPositionAtom       = NS_NewAtom("position");
-        kInsertAfterAtom    = NS_NewAtom("insertafter");
-        kInsertBeforeAtom   = NS_NewAtom("insertbefore");
-        kRemoveElementAtom  = NS_NewAtom("removeelement");
-        kRefAtom            = NS_NewAtom("ref");
-        kRuleAtom           = NS_NewAtom("rule");
-        kStyleAtom          = NS_NewAtom("style");
-        kTemplateAtom       = NS_NewAtom("template");
-        kTooltipAtom        = NS_NewAtom("tooltip");
-
-        kCoalesceAtom       = NS_NewAtom("coalesceduplicatearcs");
-        kAllowNegativesAtom = NS_NewAtom("allownegativeassertions");
-
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
         rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -3967,14 +3812,6 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
         rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
                                           NS_GET_IID(nsIXULPrototypeCache),
                                           (nsISupports**) &gXULCache);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                          NS_GET_IID(nsIScriptSecurityManager),
-                                          (nsISupports**) &gScriptSecurityManager);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4367,160 +4204,6 @@ nsXULDocument::ReleaseEvent(const nsAReadableString& aType)
 }
 
 nsresult
-nsXULDocument::OpenWidgetItem(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mBuilders)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr;
-        tag->ToString(tagStr);
-        nsCAutoString tagstrC;
-        tagstrC.AssignWithConversion(tagStr);
-        PR_LOG(gXULLog, PR_LOG_DEBUG,
-               ("xuldoc open-widget-item %s",
-                (const char*) tagstrC));
-    }
-#endif
-
-    PRUint32 cnt = 0;
-    rv = mBuilders->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        // XXX we should QueryInterface() here
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        NS_ASSERTION(builder != nsnull, "null ptr");
-        if (! builder)
-            continue;
-
-        rv = builder->OpenContainer(aElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error opening container");
-        // XXX ignore error code?
-
-        NS_RELEASE(builder);
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsXULDocument::CloseWidgetItem(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mBuilders)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr;
-        tag->ToString(tagStr);
-        nsCAutoString tagstrC;
-        tagstrC.AssignWithConversion(tagStr);
-
-        PR_LOG(gXULLog, PR_LOG_DEBUG,
-               ("xuldoc close-widget-item %s",
-                (const char*) tagstrC));
-    }
-#endif
-
-    PRUint32 cnt = 0;
-    rv = mBuilders->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        // XXX we should QueryInterface() here
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        NS_ASSERTION(builder != nsnull, "null ptr");
-        if (! builder)
-            continue;
-
-        rv = builder->CloseContainer(aElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error closing container");
-        // XXX ignore error code?
-
-        NS_RELEASE(builder);
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-nsXULDocument::RebuildWidgetItem(nsIContent* aElement)
-{
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mBuilders)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString tagStr;
-        tag->ToString(tagStr);
-
-        nsCAutoString tagstrC;
-        tagstrC.AssignWithConversion(tagStr);
-        PR_LOG(gXULLog, PR_LOG_DEBUG,
-               ("xuldoc close-widget-item %s",
-                (const char*) tagstrC));
-    }
-#endif
-
-    PRUint32 cnt = 0;
-    rv = mBuilders->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i = 0; i < cnt; ++i) {
-        // XXX we should QueryInterface() here
-        nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-        NS_ASSERTION(builder != nsnull, "null ptr");
-        if (! builder)
-            continue;
-
-        rv = builder->RebuildContainer(aElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error rebuilding container");
-        // XXX ignore error code?
-
-        NS_RELEASE(builder);
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
 nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 {
     NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -4881,7 +4564,7 @@ nsXULDocument::ContextStack::IsInsideXULTemplate()
             if (nameSpaceID == kNameSpaceID_XUL) {
                 nsCOMPtr<nsIAtom> tag;
                 element->GetTag(*getter_AddRefs(tag));
-                if (tag.get() == kTemplateAtom) {
+                if (tag.get() == nsXULAtoms::Template) {
                     return PR_TRUE;
                 }
             }
@@ -5565,7 +5248,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (NS_FAILED(rv)) return rv;
 
         // We also need to pay special attention to the keyset tag to set up a listener
-        if (aPrototype->mNodeInfo->Equals(kKeysetAtom, kNameSpaceID_XUL)) {
+        if (aPrototype->mNodeInfo->Equals(nsXULAtoms::keyset, kNameSpaceID_XUL)) {
             // Create our XUL key listener and hook it up.    
             NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
             if (xblService) {
@@ -5649,7 +5332,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     }
 
     nsAutoString datasources;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kDataSourcesAtom, datasources);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
     if (NS_FAILED(rv)) return rv;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
@@ -5657,180 +5340,54 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 
     // Get the document and its URL
     nsCOMPtr<nsIDocument> doc;
-    rv = aElement->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
-
+    aElement->GetDocument(*getter_AddRefs(doc));
     NS_ASSERTION(doc != nsnull, "no document");
     if (! doc)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIURI> docurl = dont_AddRef(doc->GetDocumentURL());
-
     // construct a new builder
-    nsCOMPtr<nsIRDFContentModelBuilder> builder;
-    rv = nsComponentManager::CreateInstance(kXULTemplateBuilderCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFContentModelBuilder),
-                                            getter_AddRefs(builder));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create tree content model builder");
-    if (NS_FAILED(rv)) return rv;
+    PRInt32 nameSpaceID = 0;
+    nsCOMPtr<nsIAtom> baseTag;
 
-    rv = builder->SetRootContent(aElement);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set builder's root content element");
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
+    if (xblService)
+        xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
 
-    // create a database for the builder
-    nsCOMPtr<nsIRDFCompositeDataSource> db;
-    rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFCompositeDataSource),
-                                            getter_AddRefs(db));
+    if ((nameSpaceID == kNameSpaceID_XUL) &&
+        (baseTag.get() == nsXULAtoms::outlinerbody)) {
+        nsCOMPtr<nsIXULTemplateBuilder> builder =
+            do_CreateInstance("@mozilla.org/xul/xul-outliner-builder;1");
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct new composite data source");
-    if (NS_FAILED(rv)) return rv;
+        if (! builder)
+            return NS_ERROR_FAILURE;
 
-	// check for magical attributes
-	nsAutoString		attrib;
-	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kCoalesceAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib == NS_LITERAL_STRING("false")))
-	{
-		db->SetCoalesceDuplicateArcs(PR_FALSE);
-	}
-	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kAllowNegativesAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib == NS_LITERAL_STRING("false")))
-	{
-		db->SetAllowNegativeAssertions(PR_FALSE);
-	}
-
-    // Grab the doc's principal...
-    nsCOMPtr<nsIPrincipal> docPrincipal;
-    rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv)) return rv;
-
-    if (docPrincipal.get() == gSystemPrincipal) {
-        // If we're a privileged (e.g., chrome) document, then add the
-        // local store as the first data source in the db. Note that
-        // we _might_ not be able to get a local store if we haven't
-        // got a profile to read from yet.
-        nsCOMPtr<nsIRDFDataSource> localstore;
-        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-        if (NS_SUCCEEDED(rv)) {
-            rv = db->AddDataSource(localstore);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-
-    // Parse datasources: they are assumed to be a whitespace
-    // separated list of URIs; e.g.,
-    //
-    //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
-    //
-    PRUint32 first = 0;
-
-    while(1) {
-        while (first < datasources.Length() && nsCRT::IsAsciiSpace(datasources.CharAt(first)))
-            ++first;
-
-        if (first >= datasources.Length())
-            break;
-
-        PRUint32 last = first;
-        while (last < datasources.Length() && !nsCRT::IsAsciiSpace(datasources.CharAt(last)))
-            ++last;
-
-        nsAutoString uriStr;
-        datasources.Mid(uriStr, first, last - first);
-        first = last + 1;
-
-        // A special 'dummy' datasource
-        if (uriStr == NS_LITERAL_STRING("rdf:null"))
-            continue;
-
-        // N.B. that `failure' (e.g., because it's an unknown
-        // protocol) leaves uriStr unaltered.
-        NS_MakeAbsoluteURI(uriStr, uriStr, docurl);
-
-        if (docPrincipal.get() != gSystemPrincipal) {
-            // Our document is untrusted, so check to see if we can
-            // load the datasource that they've asked for.
-            nsCOMPtr<nsIURI> uri;
-            rv = NS_NewURI(getter_AddRefs(uri), uriStr);
-            if (NS_FAILED(rv) || !uri)
-                continue; // Necko will barf if our URI is weird
-
-            nsCOMPtr<nsIPrincipal> principal;
-            rv = gScriptSecurityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get codebase principal");
-            if (NS_FAILED(rv)) return rv;
-
-            PRBool same;
-            rv = docPrincipal->Equals(principal, &same);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test same origin");
-            if (NS_FAILED(rv)) return rv;
-
-            if (! same)
-                continue;
-
-            // If we get here, we've run the gauntlet, and the
-            // datasource's URI has the same origin as our
-            // document. Let it load!
-        }
-
-        nsCOMPtr<nsIRDFDataSource> ds;
-        nsCAutoString uristrC;
-        uristrC.AssignWithConversion(uriStr);
-
-        rv = gRDFService->GetDataSource(uristrC, getter_AddRefs(ds));
-
-        if (NS_FAILED(rv)) {
-            // This is only a warning because the data source may not
-            // be accessable for any number of reasons, including
-            // security, a bad URL, etc.
-#ifdef DEBUG
-            nsCAutoString msg;
-            msg.Append("unable to load datasource '");
-            msg.AppendWithConversion(uriStr);
-            msg.Append('\'');
-            NS_WARNING((const char*) msg);
-#endif
-            continue;
-        }
-
-        rv = db->AddDataSource(ds);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasource to composite data source");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // add it to the set of builders in use by the document
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-    if (! xuldoc)
-        return NS_ERROR_UNEXPECTED;
-
-    rv = xuldoc->AddContentModelBuilder(builder);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add builder to the document");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = builder->SetDataBase(db);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set builder's database");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-    if (xulcontent) {
-        // Mark the XUL element as being lazy, so the template builder
-        // will run when layout first asks for these nodes.
-        //
-        //rv = xulcontent->ClearLazyState(eTemplateContentsBuilt | eContainerContentsBuilt);
-        //if (NS_FAILED(rv)) return rv;
-
-        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-        if (NS_FAILED(rv)) return rv;
+        // Because the outliner box object won't be created until the
+        // frame is available, we need to tuck the template builder
+        // away in the binding manager so there's at least one
+        // reference to it.
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+        if (xuldoc)
+            xuldoc->SetTemplateBuilderFor(aElement, builder);
     }
     else {
-        // Force construction of immediate template sub-content _now_.
-        rv = builder->CreateContents(aElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create template contents");
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIRDFContentModelBuilder> builder
+            = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
+
+        if (! builder)
+            return NS_ERROR_FAILURE;
+
+        builder->SetRootContent(aElement);
+
+        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+        if (xulcontent) {
+            // Mark the XUL element as being lazy, so the template builder
+            // will run when layout first asks for these nodes.
+            xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+        }
+        else {
+            // Force construction of immediate template sub-content _now_.
+            builder->CreateContents(aElement);
+        }
     }
 
     return NS_OK;
@@ -5899,7 +5456,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsresult rv;
 
     nsAutoString id;
-    rv = mOverlay->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    rv = mOverlay->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     nsCOMPtr<nsIDOMElement> domtarget;
@@ -5964,7 +5521,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (NS_FAILED(rv)) return rv;
 
         // We don't want to swap IDs, they should be the same.
-        if (nameSpaceID == kNameSpaceID_None && attr.get() == kIdAtom)
+        if (nameSpaceID == kNameSpaceID_None && attr.get() == nsXULAtoms::id)
             continue;
         
         nsAutoString value;
@@ -5972,11 +5529,11 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString tempID;
-        rv = aOverlayNode->GetAttribute(kNameSpaceID_None, kIdAtom, tempID);
+        rv = aOverlayNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, tempID);
 
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
-        if (attr.get() == kRemoveElementAtom &&
+        if (attr.get() == nsXULAtoms::removeelement &&
             value.EqualsIgnoreCase("true")) {
             nsCOMPtr<nsIContent> parent;
             rv = aTargetNode->GetParent(*getter_AddRefs(parent));
@@ -6021,7 +5578,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString id;
-        rv = currContent->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+        rv = currContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIDOMElement> nodeInDocument;
@@ -6049,7 +5606,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             // also has aTargetNode as its parent.
 
             nsAutoString documentParentID;
-            rv = aTargetNode->GetAttribute(kNameSpaceID_None, kIdAtom,
+            rv = aTargetNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id,
                                            documentParentID);
             if (NS_FAILED(rv)) return rv;
 
@@ -6089,7 +5646,7 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS) && !mResolved) {
         nsAutoString id;
-        mOverlay->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+        mOverlay->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
 
         nsCAutoString idC;
         idC.AssignWithConversion(id);
@@ -6133,15 +5690,15 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         nsAutoString broadcasterID;
         nsAutoString attribute;
 
-        if (tag.get() == kObservesAtom) {
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, kElementAtom, broadcasterID);
+        if (tag.get() == nsXULAtoms::observes) {
+            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
             if (NS_FAILED(rv)) return;
 
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, kAttributeAtom, attribute);
+            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
             if (NS_FAILED(rv)) return;
         }
         else {
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, kObservesAtom, broadcasterID);
+            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
             if (NS_FAILED(rv)) return;
 
             attribute.Assign(NS_LITERAL_STRING("*"));
@@ -6193,7 +5750,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
     nsAutoString broadcasterID;
     nsAutoString attribute;
 
-    if ((nameSpaceID == kNameSpaceID_XUL) && (tag.get() == kObservesAtom)) {
+    if ((nameSpaceID == kNameSpaceID_XUL) && (tag.get() == nsXULAtoms::observes)) {
         // It's an <observes> element, which means that the actual
         // listener is the _parent_ node. This element should have an
         // 'element' attribute that specifies the ID of the
@@ -6209,17 +5766,17 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
-        if (parentTag.get() == kOverlayAtom) {
+        if (parentTag.get() == nsXULAtoms::overlay) {
             *aNeedsHookup = PR_TRUE;
             return NS_OK;
         }
 
         listener = do_QueryInterface(parent);
 
-        rv = aElement->GetAttribute(kNameSpaceID_None, kElementAtom, broadcasterID);
+        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
         if (NS_FAILED(rv)) return rv;
 
-        rv = aElement->GetAttribute(kNameSpaceID_None, kAttributeAtom, attribute);
+        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -6227,7 +5784,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         // value of the 'observes' attribute to determine the ID of
         // the broadcaster element, and we'll watch _all_ of its
         // values.
-        rv = aElement->GetAttribute(kNameSpaceID_None, kObservesAtom, broadcasterID);
+        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
         if (NS_FAILED(rv)) return rv;
 
         // Bail if there's no broadcasterID
@@ -6331,12 +5888,12 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     PRBool wasInserted = PR_FALSE;
 
     // insert after an element of a given id
-    rv = aChild->GetAttribute(kNameSpaceID_None, kInsertAfterAtom, posStr);
+    rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::insertafter, posStr);
     if (NS_FAILED(rv)) return rv;
     PRBool isInsertAfter = PR_TRUE;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = aChild->GetAttribute(kNameSpaceID_None, kInsertBeforeAtom, posStr);
+        rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::insertbefore, posStr);
         if (NS_FAILED(rv)) return rv;
         isInsertAfter = PR_FALSE;
     }
@@ -6350,14 +5907,14 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
         nsCOMPtr<nsIDOMElement> domElement;
 
         char* str = posStr.ToNewCString();
-        char* remainder;
-        char* token = nsCRT::strtok(str, ", ", &remainder);
+        char* rest;
+        char* token = nsCRT::strtok(str, ", ", &rest);
 
         while (token) {
             rv = xulDocument->GetElementById(NS_ConvertASCIItoUCS2(token), getter_AddRefs(domElement));
             if (domElement) break;
 
-            token = nsCRT::strtok(remainder, ", ", &remainder);
+            token = nsCRT::strtok(rest, ", ", &rest);
         }
         nsMemory::Free(str);
         if (NS_FAILED(rv)) return rv;
@@ -6383,7 +5940,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 
     if (!wasInserted) {
     
-        rv = aChild->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
+        rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::position, posStr);
         if (NS_FAILED(rv)) return rv;
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
