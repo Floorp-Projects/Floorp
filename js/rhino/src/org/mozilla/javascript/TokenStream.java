@@ -269,10 +269,11 @@ public class TokenStream {
         return id & 0xff;
     }
 
-    public TokenStream(Reader sourceReader, String sourceString,
+    public TokenStream(Context cx, Reader sourceReader, String sourceString,
                        boolean fromEval, String sourceName, int lineno,
                        ErrorReporter errorReporter)
     {
+        this.cx = cx;
         this.fromEval = fromEval;
         this.pushbackToken = Token.EOF;
         this.sourceName = sourceName;
@@ -499,7 +500,7 @@ public class TokenStream {
                         if (result != Token.RESERVED) {
                             return result;
                         }
-                        else if (!Context.getContext().hasFeature(
+                        else if (!cx.hasFeature(
                                 Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER))
                         {
                             return result;
@@ -1232,4 +1233,5 @@ public class TokenStream {
 
     private ErrorReporter errorReporter;
     int errorCount;
+    Context cx;
 }

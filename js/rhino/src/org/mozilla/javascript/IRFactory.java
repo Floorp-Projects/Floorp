@@ -588,7 +588,7 @@ public class IRFactory {
          * (Which will make Array optimizations involving allocating a
          * Java array to back the javascript array work better.)
          */
-        if (Context.getContext().getLanguageVersion() == Context.VERSION_1_2) {
+        if (ts.cx.getLanguageVersion() == Context.VERSION_1_2) {
             /* When last array element is empty, we need to set the
              * length explicitly, because we can't depend on SETELEM
              * to do it for us - because empty [,,] array elements

@@ -49,7 +49,6 @@ package org.mozilla.javascript;
 
 import java.beans.*;
 import java.io.*;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -930,7 +929,7 @@ public class Context {
     {
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(null, source, false, null, 1,
+        TokenStream ts = new TokenStream(this, null, source, false, null, 1,
                                          new DefaultErrorReporter());
 
         boolean errorseen = false;
@@ -1895,24 +1894,6 @@ public class Context {
         return formatter.format(arguments);
     }
 
-    private static String readReader(Reader r)
-        throws IOException
-    {
-        char[] buffer = new char[512];
-        int cursor = 0;
-        for (;;) {
-            int n = r.read(buffer, cursor, buffer.length - cursor);
-            if (n < 0) { break; }
-            cursor += n;
-            if (cursor == buffer.length) {
-                char[] tmp = new char[buffer.length * 2];
-                System.arraycopy(buffer, 0, tmp, 0, cursor);
-                buffer = tmp;
-            }
-        }
-        return new String(buffer, 0, cursor);
-    }
-
     /**
      * Compile a script.
      *
@@ -1955,12 +1936,12 @@ public class Context {
 
         if (debugger != null) {
             if (sourceReader != null) {
-                sourceString = readReader(sourceReader);
+                sourceString = Kit.readReader(sourceReader);
                 sourceReader = null;
             }
         }
         boolean fromEval = (scope != null);
-        TokenStream ts = new TokenStream(sourceReader, sourceString,
+        TokenStream ts = new TokenStream(this, sourceReader, sourceString,
                                          fromEval, sourceName, lineno,
                                          getErrorReporter());
         Parser p = createParser();
