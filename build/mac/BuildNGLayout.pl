@@ -31,7 +31,7 @@ $ALIAS_SYM_FILES = $DEBUG;
 $CLOBBER_LIBS = 0;
 $MOZ_FULLCIRCLE = 0;
 
-$pull{all} = 1;
+$pull{all} = 0;
 $pull{lizard} = 0;
 $pull{xpcom} = 0;
 $pull{imglib} = 0;
