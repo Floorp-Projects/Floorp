@@ -104,13 +104,13 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
         vm->Refresh(view, ((nsPaintEvent *)aEvent)->renderingContext, &trect,
                     ((db == PR_TRUE) ? NS_VMREFRESH_DOUBLE_BUFFER : 0) | NS_VMREFRESH_SCREEN_RECT);
+#endif
 
         vm->UpdateView(view, trect,
 		       //                       ((db == PR_TRUE) ? NS_VMREFRESH_DOUBLE_BUFFER : 0) |
                        NS_VMREFRESH_SCREEN_RECT);
 	//                       NS_VMREFRESH_IMMEDIATE);
         vm->Composite();
-#endif
         NS_RELEASE(dx);
         NS_RELEASE(px);
         NS_RELEASE(vm);
