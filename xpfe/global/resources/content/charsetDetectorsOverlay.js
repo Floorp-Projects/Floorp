@@ -30,9 +30,10 @@ function LoadDetectorsMenu()
     Registry = Registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
     var menu = document.getElementById('CharsetDetectorsMenu');
-    menu.database.AddDataSource(Registry);
-
-    menu.setAttribute('ref', 'urn:mozilla-registry:key:/software/netscape/intl/charsetdetector');
+    if (menu) {
+      menu.database.AddDataSource(Registry);
+      menu.setAttribute('ref', 'urn:mozilla-registry:key:/software/netscape/intl/charsetdetector');
+    }
   }
 function SelectDetectors( event )
   {

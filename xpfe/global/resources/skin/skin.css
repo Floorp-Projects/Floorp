@@ -104,7 +104,7 @@ toolbox {
 
 :toolbox-normal {
 	background-color: #666699;
-	background-image: url("chrome://global/skin/TB_Tab.gif");
+	background-image: url("chrome://global/skin/taskbar-tab.gif");
 	background-repeat: no-repeat;
 	color: lightgray;
 	border: solid darkGray 1px;
@@ -113,7 +113,7 @@ toolbox {
 
 :toolbox-rollover {
 	background-color: #ccccff;
-	background-image: url("chrome://global/skin/TB_Tab_mo.gif");
+	background-image: url("chrome://global/skin/taskbar-tab-hover.gif");
 	background-repeat: no-repeat;
 	color: green;
 	border: outset #ccccff 1px;
@@ -345,11 +345,11 @@ menuitem > .menu-left {
 }
 
 menu > .menu-right {
-  list-style-image: url("chrome://global/skin/menuArrow.gif");
+  list-style-image: url("chrome://global/skin/menu-arrow.gif");
 }
 
 menu[menuactive="true"] > .menu-right {
-  list-style-image: url("chrome://global/skin/menuArrow_mo.gif");
+  list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
 }
 
 
@@ -371,7 +371,7 @@ window.dialog titledbutton{
 }
 
 titledbutton[class~=popup] {
-	list-style-image:url(chrome://global/skin/TB_popup.gif);
+	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
 }
 
 titledbutton:hover {
@@ -828,33 +828,33 @@ scrollbarbutton[type="increment"][disabled="true"] {
 
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
-   list-style-image: url(chrome://global/skin/scrollUp.gif)
+   list-style-image: url(chrome://global/skin/scroll-up.gif)
 }
 
 /*
 pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"]:hover {
-   list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
+   list-style-image: url(chrome://global/skin/scroll-up-hover.gif)
 }
 */
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
+   list-style-image: url(chrome://global/skin/scroll-up-disabled.gif) 
 }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
-   list-style-image: url(chrome://global/skin/scrollDown.gif)
+   list-style-image: url(chrome://global/skin/scroll-down.gif)
 }
 
 /*
 pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbar[align="vertical"] scrollbarbutton[type="increment"]:hover {
-   list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
+   list-style-image: url(chrome://global/skin/scroll-down-hover.gif)
 }
 */
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
-   list-style-image: url(chrome://global/skin/scrollDown_dis.gif) 
+   list-style-image: url(chrome://global/skin/scroll-down-disabled.gif) 
 }
 
 

@@ -12,7 +12,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 		  <tab>centered</tab>
 		  <tab>percent</tab>
 		  <tab>html</tab>
-		  <tab><html:img src="resource:/res/toolbar/TB_Stop.gif"/></tab>
+		  <tab><html:img src="resource:/res/toolbar/stop.gif"/></tab>
           <tab>native</tab>
           <tab>iframe</tab>
 		  <tab>dialog</tab>
@@ -50,11 +50,11 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 			<toolbox>  
 			   <toolbar>
 				  <titledbutton id="back-button" align="bottom" value="Back"/>	
-				  <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward"/>
-				  <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload"/>
-				  <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop"/>
-				  <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home"/>
-				  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"/> 
+				  <titledbutton src="resource:/res/toolbar/forward.gif" align="bottom" value="Forward"/>
+				  <titledbutton src="resource:/res/toolbar/reload.gif" align="bottom" value="Reload"/>
+				  <titledbutton src="resource:/res/toolbar/stop.gif" align="bottom" value="Stop"/>
+				  <titledbutton src="resource:/res/toolbar/home.gif" align="bottom" value="Home"/>
+				  <titledbutton src="resource:/res/toolbar/print.gif" align="bottom" value="Print"/> 
 				
                   <spring flex="100%"/>
 
@@ -63,8 +63,8 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 				</toolbar>
 
 				<toolbar>
-				  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" />
-				  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News"/>
+				  <titledbutton align="right" src="resource:/res/toolbar/location.gif" value="Mozilla" />
+				  <titledbutton align="right" src="resource:/res/toolbar/location.gif" value="ABC News"/>
 				</toolbar>
 		  </toolbox>
 

@@ -345,7 +345,7 @@
         
         <xul:titledbutton 
                 id              = "image.alignType" 
-                src             = "resource:/chrome/editor/skin/default/images/ED_imgalignbottom.gif" 
+                src             = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
                 class           = "popup" 
                 popup           = "ImageTextAlignment" 
                 popupanchor     = "bottomleft" 

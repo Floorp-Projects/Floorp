@@ -143,15 +143,15 @@ button.PopupButton:active {
 titledbutton.PopupButton {
   min-width: 50px;
   min-height: 10px;
-  list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
+  list-style-image: url(chrome://editor/skin/images/left.gif); 
 }
 
 titledbutton#SaveButton {
-  list-style-image:url(chrome://editor/skin/images/ED_SaveFile.gif); 
+  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
 }
 
 titledbutton#SaveButton[dirty="true"] {
-  list-style-image:url(chrome://editor/skin/images/ED_SaveMod.gif); 
+  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
 }
 
 titledbutton[toggled="1"]:hover {

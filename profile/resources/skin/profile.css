@@ -43,7 +43,7 @@ icon {
 	display: list-item;
 	height: 16px;
 	width: 16px;
-	list-style-image: url("resource:/res/mailnews/messenger/closedMailFolder.gif");
+	list-style-image: url("resource:/res/mailnews/messenger/mailfolder.gif");
 }
 
 treecell[selected] {

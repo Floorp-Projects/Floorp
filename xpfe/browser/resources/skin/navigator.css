@@ -6,47 +6,47 @@
 }
 
 titledbutton#translate-button {
-	list-style-image:url(chrome://navigator/skin/TB_Location.gif);
+	list-style-image:url(chrome://navigator/skin/location.gif);
 }
 
 titledbutton#print-button {
-	list-style-image:url(chrome://navigator/skin/TB_Print.gif);
+	list-style-image:url(chrome://navigator/skin/print.gif);
 }
 
 titledbutton#back-button {
-	list-style-image:url(chrome://navigator/skin/TB_Back.gif);
+	list-style-image:url(chrome://navigator/skin/back.gif);
 }
 
 titledbutton#forward-button {
-	list-style-image:url(chrome://navigator/skin/TB_Forward.gif);
+	list-style-image:url(chrome://navigator/skin/forward.gif);
 }
 
 titledbutton#stop-button {
-	list-style-image:url(chrome://navigator/skin/TB_Stop.gif);
+	list-style-image:url(chrome://navigator/skin/stop.gif);
 } 
 
 titledbutton#search-button {
-	list-style-image:url(chrome://navigator/skin/TB_Search.gif);
+	list-style-image:url(chrome://navigator/skin/search.gif);
 }
 
 titledbutton#reload-button {
-	list-style-image:url(chrome://navigator/skin/TB_Reload.gif);
+	list-style-image:url(chrome://navigator/skin/reload.gif);
 }
 
 titledbutton#home-button {
-	list-style-image:url(chrome://navigator/skin/TB_Home.gif);
+	list-style-image:url(chrome://navigator/skin/home.gif);
 }
 
 titledbutton#netscape-button {
-	list-style-image:url(chrome://navigator/skin/TB_Netscape.gif);
+	list-style-image:url(chrome://navigator/skin/mynetscape.gif);
 }
 
 titledbutton#bugzilla-button {
-	list-style-image:url(chrome://navigator/skin/TB_Location.gif);
+	list-style-image:url(chrome://navigator/skin/location.gif);
 }
 
 titledbutton#tinderbox-button {
-	list-style-image:url(chrome://navigator/skin/TB_Location.gif);
+	list-style-image:url(chrome://navigator/skin/location.gif);
 }
 
 titledbutton#Throbber
@@ -113,13 +113,13 @@ input[type="text"]#urlbar {
 toolbar.main-bar > titledbutton,
 toolbar.main-bar .menu-left
 {
-  list-style-image: url('chrome://navigator/skin/TB_Location.gif');
+  list-style-image: url('chrome://navigator/skin/location.gif');
 }
 
 toolbar.main-bar > titledbutton:hover,
 toolbar.main-bar .menu-left:hover
 {
-  list-style-image: url('chrome://navigator/skin/TB_Location_mo.gif');
+  list-style-image: url('chrome://navigator/skin/location-hover.gif');
 }
 
 toolbar.main-bar > menu > titledbutton,

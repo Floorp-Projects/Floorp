@@ -121,7 +121,7 @@ treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell 
 
 treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > titledbutton 
 {
-  list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
+  list-style-image: url("chrome://messenger/skin/folder-hasmail.gif");
 }
 
 treeitem[type="http://www.mozilla.org/rdf#XPInstallNotification"] > treerow > treecell > titledbutton 

@@ -63,7 +63,7 @@
     <toolbar>
       <!-- insert the next line should the bug where buttons don't show up
            without an image specified ever return -->
-      <!-- src="resource:/res/toolbar/TB_Back.gif" align="bottom" -->
+      <!-- src="resource:/res/toolbar/back.gif" align="bottom" -->
       <titledbutton
          value="Make Dialog" onclick="MakeDialog()"
          style="background-color:rgb(192,192,192);"/>
