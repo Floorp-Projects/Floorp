@@ -3521,7 +3521,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
      * Remove all breakpoints
      */
     public void clearAllBreakpoints() {
-        Enumeration e = sourceNames.keys();
+        Enumeration e = sourceNames.elements();
         while (e.hasMoreElements()) {
             SourceInfo si = (SourceInfo)e.nextElement();
             si.removeAllBreakpoints();
