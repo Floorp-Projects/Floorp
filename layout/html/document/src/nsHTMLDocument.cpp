@@ -16,6 +16,7 @@
  * Reserved. 
  */ 
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"
 #include "nsIParserFilter.h"
@@ -70,7 +71,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
-
+#include "nsIHTTPChannel.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -140,7 +141,8 @@ nsHTMLDocument::nsHTMLDocument()
     mAttrStyleSheet(nsnull),
     mStyleAttrStyleSheet(nsnull),
     mBaseURL(nsnull),
-    mBaseTarget(nsnull)
+    mBaseTarget(nsnull),
+    mLastModified(nsnull)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -196,6 +198,10 @@ nsHTMLDocument::~nsHTMLDocument()
   if (nsnull != mBaseTarget) {
     delete mBaseTarget;
     mBaseTarget = nsnull;
+  }
+  if (nsnull != mLastModified) {
+    delete mLastModified;
+    mLastModified = nsnull;
   }
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
@@ -372,6 +378,25 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIURI> aURL;
   rv = aChannel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    nsXPIDLCString header;
+    nsAutoString lastModified;
+    nsIAtom* key = NS_NewAtom("last-modified");
+
+    rv = httpChannel->GetResponseHeader(key, 
+                                        getter_Copies(header));
+
+    NS_RELEASE(key);
+    if (NS_SUCCEEDED(rv)) {
+      lastModified = header;
+      SetLastModified(lastModified);
+    }
+    // Don't propogate the result code beyond here, since it
+    // could just be that the response header wasn't found.
+    rv = NS_OK;
+  }
 #endif
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -754,6 +779,25 @@ nsHTMLDocument:: SetBaseTarget(const nsString& aTarget)
       mBaseTarget = nsnull;
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLDocument::SetLastModified(const nsString& aLastModified)
+{
+  if (0 < aLastModified.Length()) {
+    if (nsnull != mLastModified) {
+      *mLastModified = aLastModified;
+    }
+    else {
+      mLastModified = aLastModified.ToNewString();
+    }
+  }
+  else if (nsnull != mLastModified) {
+    delete mLastModified;
+    mLastModified = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -1956,7 +2000,13 @@ NS_IMETHODIMP
 nsHTMLDocument::GetLastModified(nsString& aLastModified)
 {
   //XXX TBImplemented
-  aLastModified.Truncate();
+  if (nsnull != mLastModified) {
+    aLastModified = *mLastModified;
+  }
+  else {
+    aLastModified.SetString("January 1, 1970 GMT");
+  }
+
   return NS_OK;
 }
 

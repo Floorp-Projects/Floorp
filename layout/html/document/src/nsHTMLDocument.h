@@ -87,6 +87,8 @@ public:
   NS_IMETHOD GetBaseTarget(nsString& aTarget) const;
   NS_IMETHOD SetBaseTarget(const nsString& aTarget);
 
+  NS_IMETHOD SetLastModified(const nsString& aLastModified);
+
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
@@ -204,6 +206,7 @@ protected:
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
   nsIURI*     mBaseURL;
   nsString*   mBaseTarget;
+  nsString*   mLastModified;
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
   nsICSSLoader* mCSSLoader;
