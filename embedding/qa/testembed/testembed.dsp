@@ -246,6 +246,10 @@ SOURCE=.\nsiDirServ.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIFile.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsiHistory.h
 # End Source File
 # Begin Source File
