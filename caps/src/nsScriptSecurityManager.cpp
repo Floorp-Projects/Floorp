@@ -1392,11 +1392,11 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
 	nsresult rv;
     mIsAccessingPrefs = PR_TRUE;
     rv = mPrefs->CopyCharPref(prefName, &secLevelString);
-    mIsAccessingPrefs = PR_FALSE;
     if (NS_FAILED(rv)) {
         prefName += (isWrite ? ".write" : ".read");
         rv = mPrefs->CopyCharPref(prefName, &secLevelString);
     }
+    mIsAccessingPrefs = PR_FALSE;
     if (NS_SUCCEEDED(rv) && secLevelString) {
         if (PL_strcmp(secLevelString, "sameOrigin") == 0)
             secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
@@ -1637,6 +1637,7 @@ nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName,
 {
     if (!prefName || !*prefName)
         return;
+
     nsScriptSecurityManager *mgr = (nsScriptSecurityManager *) data;
     unsigned count = 0;
     const char *dots[5];
