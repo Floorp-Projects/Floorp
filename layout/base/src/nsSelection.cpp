@@ -5240,6 +5240,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     if (!range)
       return NS_ERROR_UNEXPECTED;
 
+#if 0
     // For bug 46554: since the only callers of ContainsNode() is the copy code from document, 
     // I'm altering the semantics of this routine.  Now it will consider any node whose 
     // children are all selected to be selected itself.  This is to help the user get 
@@ -5252,11 +5253,12 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
 
     rv = PromoteRange(newrange);
     if (NS_FAILED(rv)) return rv;
+#endif
 
     nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
     if (content)
     {
-      if (IsNodeIntersectsRange(content, newrange))
+      if (IsNodeIntersectsRange(content, range))
       {
         // If recursive, then we're done -- IsNodeIntersectsRange does the right thing
         if (aRecursive)
@@ -5268,7 +5270,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
         // else not recursive -- node itself must be contained,
         // so we need to do more checking
         PRBool nodeStartsBeforeRange, nodeEndsAfterRange;
-        if (NS_SUCCEEDED(CompareNodeToRange(content, newrange,
+        if (NS_SUCCEEDED(CompareNodeToRange(content, range,
                                             &nodeStartsBeforeRange,
                                             &nodeEndsAfterRange)))
         {
