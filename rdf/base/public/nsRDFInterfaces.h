@@ -27,10 +27,7 @@
 
 class nsIRDFNode : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFNODE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFNODE_IID)
 
   /* boolean EqualsNode (in nsIRDFNode aNode); */
   NS_IMETHOD EqualsNode(nsIRDFNode *aNode, PRBool *_retval) = 0;
@@ -51,10 +48,7 @@ class nsIRDFNode : public nsISupports {
 
 class nsIRDFResource : public nsIRDFNode {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFRESOURCE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFRESOURCE_IID)
 
   /* readonly attribute string Value; */
   NS_IMETHOD GetValue(char * *aValue) = 0;
@@ -84,10 +78,7 @@ class nsIRDFResource : public nsIRDFNode {
 
 class nsIRDFLiteral : public nsIRDFNode {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFLITERAL_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFLITERAL_IID)
 
   /* readonly attribute wstring Value; */
   NS_IMETHOD GetValue(PRUnichar * *aValue) = 0;
@@ -111,10 +102,7 @@ class nsIRDFLiteral : public nsIRDFNode {
 
 class nsIRDFDate : public nsIRDFNode {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFDATE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFDATE_IID)
 
   /* readonly attribute long long Value; */
   NS_IMETHOD GetValue(PRInt64 *aValue) = 0;
@@ -138,10 +126,7 @@ class nsIRDFDate : public nsIRDFNode {
 
 class nsIRDFInt : public nsIRDFNode {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFINT_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFINT_IID)
 
   /* readonly attribute long Value; */
   NS_IMETHOD GetValue(PRInt32 *aValue) = 0;
@@ -166,10 +151,7 @@ class nsIRDFDataSource; /* forward decl */
 
 class nsIRDFCursor : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFCURSOR_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFCURSOR_IID)
 
   /* void Advance (); */
   NS_IMETHOD Advance() = 0;
@@ -196,10 +178,7 @@ class nsIRDFCursor : public nsISupports {
 
 class nsIRDFAssertionCursor : public nsIRDFCursor {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFASSERTIONCURSOR_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFASSERTIONCURSOR_IID)
 
   /* readonly attribute nsIRDFResource Source; */
   NS_IMETHOD GetSource(nsIRDFResource * *aSource) = 0;
@@ -229,10 +208,7 @@ class nsIRDFAssertionCursor : public nsIRDFCursor {
 
 class nsIRDFArcsInCursor : public nsIRDFCursor {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFARCSINCURSOR_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFARCSINCURSOR_IID)
 
   /* readonly attribute nsIRDFResource Label; */
   NS_IMETHOD GetLabel(nsIRDFResource * *aLabel) = 0;
@@ -256,10 +232,7 @@ class nsIRDFArcsInCursor : public nsIRDFCursor {
 
 class nsIRDFArcsOutCursor : public nsIRDFCursor {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFARCSOUTCURSOR_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFARCSOUTCURSOR_IID)
 
   /* readonly attribute nsIRDFResource Source; */
   NS_IMETHOD GetSource(nsIRDFResource * *aSource) = 0;
@@ -283,10 +256,7 @@ class nsIRDFArcsOutCursor : public nsIRDFCursor {
 
 class nsIRDFResourceCursor : public nsIRDFCursor {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFRESOURCECURSOR_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFRESOURCECURSOR_IID)
 
   /* readonly attribute nsIRDFResource Resource; */
   NS_IMETHOD GetResource(nsIRDFResource * *aResource) = 0;
@@ -307,10 +277,7 @@ class nsIRDFResourceCursor : public nsIRDFCursor {
 
 class nsIRDFObserver : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFOBSERVER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFOBSERVER_IID)
 
   /* void OnAssert (in nsIRDFResource aSource, in nsIRDFResource aLabel, in nsIRDFNode aTarget); */
   NS_IMETHOD OnAssert(nsIRDFResource *aSource, nsIRDFResource *aLabel, nsIRDFNode *aTarget) = 0;
@@ -334,10 +301,7 @@ class nsIRDFObserver : public nsISupports {
 
 class nsIRDFDataSource : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFDATASOURCE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFDATASOURCE_IID)
 
   /* void Init (in string uri); */
   NS_IMETHOD Init(const char *uri) = 0;
@@ -409,10 +373,7 @@ class nsIRDFDataSource : public nsISupports {
 
 class nsIRDFCompositeDataSource : public nsIRDFDataSource {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFCOMPOSITEDATASOURCE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFCOMPOSITEDATASOURCE_IID)
 
   /* void AddDataSource (in nsIRDFDataSource aDataSource); */
   NS_IMETHOD AddDataSource(nsIRDFDataSource *aDataSource) = 0;
@@ -436,10 +397,7 @@ class nsIRDFCompositeDataSource : public nsIRDFDataSource {
 
 class nsIRDFService : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IRDFSERVICE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFSERVICE_IID)
 
   /* nsIRDFResource GetResource (in string aURI); */
   NS_IMETHOD GetResource(const char *aURI, nsIRDFResource **_retval) = 0;
