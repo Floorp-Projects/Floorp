@@ -194,6 +194,12 @@ NS_IMETHODIMP
 nsStreamIOChannel::GetStatus(nsresult *status)
 {
     *status = mStatus;
+    // if we don't have a status error of our own to report
+    // then we should propogate the status error of the underlying
+    // file transport (if we have one)
+    if (NS_SUCCEEDED(mStatus) && mFileTransport)
+      mFileTransport->GetStatus(status);
+
     return NS_OK;
 }
 
