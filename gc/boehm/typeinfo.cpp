@@ -101,25 +101,73 @@ Signaller::~Signaller()
     signal(mSignal, mOldHandler);
 }
 
+// The following are pointers that bamboozle our otherwise feeble
+// attempts to "safely" collect type names.
+//
+// XXX this kind of sucks because it means that anyone trying to use
+// this without NSPR will get unresolved symbols when this library
+// loads. It's also not very extensible. Oh well: FIX ME!
+extern "C" {
+    // from nsprpub/pr/src/io/priometh.c (libnspr4.so)
+    extern void* _pr_faulty_methods;
+};
+
+static inline int
+sanity_check_vtable_i386(void** vt)
+{
+    // Now that we're "safe" inside the signal handler, we can
+    // start poking around. If we're really an object with
+    // RTTI, then the second entry in the vtable should point
+    // to a function.
+    //
+    // Let's see if the second entry:
+    //
+    // 1) looks like a 4-byte aligned pointer
+    //
+    // 2) points to something that looks like the following
+    //    i386 instructions:
+    //
+    //    55     push %ebp
+    //    89e5   mov  %esp,%ebp
+    //
+    //    (which is the standard function prologue generated
+    //    by egcs).
+    unsigned** i = reinterpret_cast<unsigned**>(vt) + 1;
+    return !(unsigned(*i) & 3) && ((**i & 0xffffff) == 0xe58955);
+}
+
+static inline int
+sanity_check_vtable_ppc(void** vt)
+{
+    // XXX write me!
+    return 1;
+}
+
+#if defined(__i386)
+#  define SANITY_CHECK_VTABLE(vt) (sanity_check_vtable_i386(vt))
+#elif defined(PPC)
+#  define SANITY_CHECK_VTABLE(vt) (sanity_check_vtable_ppc(vt))
+#else
+#  define SANITY_CHECK_VTABLE(vt) (1)
+#endif
+
 const char* getTypeName(void* ptr)
 {
-#if 0
     // sanity check the vtable pointer, before trying to use RTTI on the object.
     void** vt = *(void***)ptr;
-    if (vt && !(unsigned(vt) & 3)) {
-	Signaller s1(SIGSEGV), s2(SIGILL);
+    if (vt && !(unsigned(vt) & 3) && (vt != &_pr_faulty_methods)) {
+	Signaller s1(SIGSEGV);
 	if (attempt() == 0) {
-	    IUnknown* u = static_cast<IUnknown*>(ptr);
-	    const char* type = typeid(*u).name();
-	    // make sure it looks like a C++ identifier.
-	    if (type && (isalnum(type[0]) || type[0] == '_')) {
-		// ECGS seems to prefix a length string.
-		while (isdigit(*type)) ++type;
-		return type;
+            if (SANITY_CHECK_VTABLE(vt)) {
+                // Looks like a function: what the hell, let's call it.
+                IUnknown* u = static_cast<IUnknown*>(ptr);
+                const char* type = typeid(*u).name();
+                // EGCS seems to prefix a length string.
+                while (isdigit(*type)) ++type;
+                return type;
 	    }
-	} 
+	}
     }
-#endif
     return "void*";
 }
 
