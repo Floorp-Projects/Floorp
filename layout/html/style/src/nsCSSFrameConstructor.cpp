@@ -4128,14 +4128,15 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         tag.get() == nsXULAtoms::treeitem)) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
-      nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+      nsCOMPtr<nsIContent> parent;
       nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+      child->GetParent(*getter_AddRefs(parent));
       while (parent) {
-        child->GetParent(*getter_AddRefs(parent));
         parent->GetTag(*getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree)
           break;
         child = parent;
+        child->GetParent(*getter_AddRefs(parent));
       }
 
       if (parent) {
@@ -4345,14 +4346,15 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         tag.get() == nsXULAtoms::treeitem)) {
       // Walk up to the outermost tree row group frame and tell it that
       // content was added.
-      nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+      nsCOMPtr<nsIContent> parent;
       nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+      child->GetParent(*getter_AddRefs(parent));
       while (parent) {
-        child->GetParent(*getter_AddRefs(parent));
         parent->GetTag(*getter_AddRefs(tag));
         if (tag.get() == nsXULAtoms::tree)
           break;
         child = parent;
+        child->GetParent(*getter_AddRefs(parent));
       }
 
       if (parent) {
@@ -4665,14 +4667,15 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         // has been removed (so that we can update the scrollbar state).
         // Walk up to the outermost tree row group frame and tell it that
         // content was removed.
-        nsCOMPtr<nsIContent> parent = dont_QueryInterface(aContainer);
+        nsCOMPtr<nsIContent> parent;
         nsCOMPtr<nsIContent> child = dont_QueryInterface(aContainer);
+        child->GetParent(*getter_AddRefs(parent));
         while (parent) {
-          child->GetParent(*getter_AddRefs(parent));
           parent->GetTag(*getter_AddRefs(tag));
           if (tag.get() == nsXULAtoms::tree)
             break;
           child = parent;
+          child->GetParent(*getter_AddRefs(parent));
         }
 
         if (parent) {
