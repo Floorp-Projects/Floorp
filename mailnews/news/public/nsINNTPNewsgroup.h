@@ -15,9 +15,7 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
-#include "nsIID.h"
 #include "nsError.h"
-#include "nsISupportsUtils.h"
 
 
 /* starting interface nsINNTPNewsgroup */

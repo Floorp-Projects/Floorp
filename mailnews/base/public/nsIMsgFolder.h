@@ -19,12 +19,11 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
-#include "nsIID.h"
 #include "nsError.h"
-#include "nsISupportsUtils.h"
 
+class nsISupportsArray;
+class nsIMessage;
 #include "nsFileSpec.h"
-
 
 /* starting interface nsIMsgFolder */
 
@@ -214,6 +213,8 @@ class nsIMsgLocalMailFolder : public nsISupports {
     return iid;
   }
 
+  /*  <IDL>  */
+  NS_IMETHOD GetPath(nsFileSpec& aPathName) = 0;
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgLocalMailFolder *priv);
@@ -235,8 +236,8 @@ class nsIMsgImapMailFolder : public nsISupports {
     return iid;
   }
 
-  /* readonly attribute nsNativeFileSpec pathName; */
-  NS_IMETHOD GetPathName(nsNativeFileSpec* *aPathName) = 0;
+  /*  <IDL>  */
+  NS_IMETHOD GetPathName(nsFileSpec& aPathName) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
