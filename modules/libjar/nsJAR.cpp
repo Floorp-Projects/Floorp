@@ -491,9 +491,15 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
   (void)sigFilename.Cut(extension, 2);
   nsXPIDLCString sigBuffer;
   PRUint32 sigLen;
-  rv = LoadEntry(sigFilename+"rsa", getter_Copies(sigBuffer), &sigLen);
+  {
+    nsCAutoString tempFilename(sigFilename); tempFilename.Append("rsa", 3);
+    rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
+  }
   if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"RSA", getter_Copies(sigBuffer), &sigLen);
+    {
+      nsCAutoString tempFilename(sigFilename); tempFilename.Append("RSA", 3);
+      rv = LoadEntry(tempFilename, getter_Copies(sigBuffer), &sigLen);
+    }
   if (NS_FAILED(rv)) return rv;
   
   //-- Verify that the signature file is a valid signature of the SF file
