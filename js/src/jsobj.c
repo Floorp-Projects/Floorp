@@ -1951,8 +1951,19 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     SET_OBJ_INFO(obj, file, line);
                     if (obj2) {
                         scope = OBJ_SCOPE(obj2);
-                        if (MAP_IS_NATIVE(&scope->map))
+                        if (MAP_IS_NATIVE(&scope->map) &&
+                            scope->object == obj2) {
                             sym = scope->ops->lookup(cx, scope, id, hash);
+#ifdef DEBUG
+                            /*
+                             * Set obj so we can assert that OBJ_SCOPE(obj)
+                             * is scope, below, just before setting *objp to
+                             * scope->object.
+                             */
+                            if (sym && sym_property(sym))
+                                obj = obj2;
+#endif
+                        }
                     }
                 } else {
                     JS_UNLOCK_OBJ(cx, obj);
@@ -1961,7 +1972,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     JS_LOCK_OBJ(cx, obj);
                     SET_OBJ_INFO(obj, file, line);
                     scope = OBJ_SCOPE(obj);
-                    if (MAP_IS_NATIVE(&scope->map))
+                    if (MAP_IS_NATIVE(&scope->map) && scope->object == obj)
                         sym = scope->ops->lookup(cx, scope, id, hash);
                 }
             }
