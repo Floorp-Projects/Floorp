@@ -17,7 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Rick Gessner <rickg@netscape.com>
+ *
  * Contributor(s): 
+ *   Scott Collins <scc@mozilla.org>
  */
 
 
@@ -406,6 +410,14 @@ public:
    * @return  this
    */
 
+  nsCString& operator=( const nsCString& aString )                  { Assign(aString); return *this; }
+#ifdef NEW_STRING_APIS
+  nsCString& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
+  nsCString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+  nsCString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
+  nsCString& operator=( char aChar )                                { Assign(aChar); return *this; }
+#endif
+
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
   void AssignWithConversion( const nsString& aString );
   void AssignWithConversion(PRUnichar);
@@ -427,7 +439,6 @@ public:
   nsCString& operator=(char aChar)                {return Assign(aChar);}
 //nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
 
-  nsCString& operator=(const nsCString& aString)  {return Assign(aString);}
 //nsCString& operator=(const nsStr& aString)      {return Assign(aString);}
   nsCString& operator=(const char* aCString)      {return Assign(aCString);}
 
@@ -773,6 +784,9 @@ public:
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
+#ifdef NEW_STRING_APIS
+  void operator=( PRUnichar );
+#endif
   void AssignWithConversion( char );
   void AssignWithConversion( const char*, PRInt32=-1 );
   void AppendWithConversion( char );
@@ -821,8 +835,16 @@ public:
 #endif // AIX || XP_OS2_VACPP
 
 
-#ifndef NEW_STRING_APIS
-    nsCAutoString& operator=(const nsCAutoString& aString) {nsCString::Assign(aString); return *this;}
+    nsCAutoString& operator=( const nsCAutoString& aString )              { Assign(aString); return *this; }
+#ifdef NEW_STRING_APIS
+  private:
+    void operator=( PRUnichar ); // NOT TO BE IMPLEMENTED
+  public:
+    nsCAutoString& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
+    nsCAutoString& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+    nsCAutoString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
+    nsCAutoString& operator=( char aChar )                                { Assign(aChar); return *this; }
+#else
     nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
 //  nsCAutoString& operator=(const PRUnichar* aString) {nsCString::Assign(aString); return *this;}
@@ -864,6 +886,15 @@ public:
   nsSubsumeCStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 
+  nsSubsumeCStr& operator=( const nsSubsumeCStr& aString )              { Assign(aString); return *this; }
+#ifdef NEW_STRING_APIS
+  nsSubsumeCStr& operator=( const nsAReadableCString& aReadable )       { Assign(aReadable); return *this; }
+  nsSubsumeCStr& operator=( const nsPromiseReadable<char>& aReadable )  { Assign(aReadable); return *this; }
+  nsSubsumeCStr& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
+  nsSubsumeCStr& operator=( char aChar )                                { Assign(aChar); return *this; }
+private:
+  void operator=( PRUnichar ); // NOT TO BE IMPLEMENTED
+#endif
 };
 
 

@@ -17,7 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Rick Gessner <rickg@netscape.com>
+ *
  * Contributor(s): 
+ *   Scott Collins <scc@mozilla.org>
  */
 
 
@@ -439,6 +443,14 @@ public:
    * @return  this
    */
 
+  nsString& operator=( const nsString& aString )                              { Assign(aString); return *this; }
+#ifdef NEW_STRING_APIS
+  nsString& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
+  nsString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+  nsString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
+  nsString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
+#endif
+
   void AssignWithConversion(char);
 #ifdef NEW_STRING_APIS
   void AssignWithConversion(const char*);
@@ -462,7 +474,6 @@ public:
 //nsString& operator=(char aChar)               {AssignWithConversion(aChar); return *this;}
 //nsString& operator=(const char* aCString)     {AssignWithConversion(aCString); return *this;}
 
-  nsString& operator=(const nsString& aString)  {return Assign(aString);}
 //nsString& operator=(const nsStr& aString)     {return Assign(aString);}
   nsString& operator=(const PRUnichar* aString) {return Assign(aString);}
 
@@ -747,17 +758,17 @@ public:
    * @param  aCount  -- number of chars to be compared.
    * @return TRUE if equal
    */
-//PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-//  return EqualsWithConversion(aString,aIgnoreCase,aCount);
-//}
+  PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return EqualsWithConversion(aString,aIgnoreCase,aCount);
+  }
 
 //PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
 //  return EqualsWithConversion(aString,aIgnoreCase,aCount);
 //}
 
-//PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-//  return EqualsWithConversion(aString,aIgnoreCase,aCount);
-//}
+  PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return EqualsWithConversion(aString,aIgnoreCase,aCount);
+  }
 
 //PRBool  Equals(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const { return EqualsAtom(anAtom, aIgnoreCase); }
   PRBool  Equals(const PRUnichar* s1, const PRUnichar* s2,PRBool aIgnoreCase=PR_FALSE) const;
@@ -866,6 +877,9 @@ public:
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
+#ifdef NEW_STRING_APIS
+  void operator=( char );
+#endif
   void AssignWithConversion( PRUnichar );
   void AssignWithConversion( const PRUnichar*, PRInt32=-1 );
   void AppendWithConversion( PRUnichar );
@@ -911,9 +925,17 @@ public:
 #endif // AIX || XP_OS2_VACPP
 
 
-#ifndef NEW_STRING_APIS
+    nsAutoString& operator=( const nsAutoString& aString )                          { Assign(aString); return *this; }
+#ifdef NEW_STRING_APIS
+  private:
+    void operator=( char ); // NOT TO BE IMPLEMENTED
+  public:
+    nsAutoString& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
+    nsAutoString& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+    nsAutoString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
+    nsAutoString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
+#else
     nsAutoString& operator=(const nsStr& aString) {nsString::Assign(aString); return *this;}
-    nsAutoString& operator=(const nsAutoString& aString) {nsString::Assign(aString); return *this;}
 //  nsAutoString& operator=(const char* aCString) {nsString::Assign(aCString); return *this;}
 //  nsAutoString& operator=(char aChar) {nsString::Assign(aChar); return *this;}
     nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::Assign(aBuffer); return *this;}
@@ -996,6 +1018,16 @@ public:
   nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
+
+  nsSubsumeStr& operator=( const nsSubsumeStr& aReadable )                        { Assign(aReadable); return *this; }
+#ifdef NEW_STRING_APIS
+  nsSubsumeStr& operator=( const nsAReadableString& aReadable )                   { Assign(aReadable); return *this; }
+  nsSubsumeStr& operator=( const nsPromiseReadable<PRUnichar>& aReadable )        { Assign(aReadable); return *this; }
+  nsSubsumeStr& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
+  nsSubsumeStr& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
+private:
+  void operator=( char ); // NOT TO BE IMPLEMENTED
+#endif
 };
 
 
