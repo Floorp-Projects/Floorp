@@ -125,10 +125,10 @@ nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
     NS_ENSURE_ARG_POINTER(authMethod);
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    *authMethod = 0;
+    *authMethod = 1;
     getPrefString("auth_method", pref);
     rv = prefs->GetIntPref(pref, authMethod);
-    if (NS_FAILED(rv)) *authMethod = 0;
+    if (NS_FAILED(rv)) *authMethod = 1;
     return NS_OK;
 }
 
