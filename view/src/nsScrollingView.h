@@ -68,6 +68,7 @@ public:
 
   virtual void SetScrollPreference(nsScrollPreference aPref);
   virtual nsScrollPreference GetScrollPreference(void);
+  NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
