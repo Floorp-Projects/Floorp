@@ -22,4 +22,30 @@
 /** 
   Styles for Macintosh form widgets implemented in XBL
  **/ 
+@import url(resource:///res/builtin/buttons.css);
+
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
  
+/* widgets will be removed from this list as their XBL counterparts are implemented */ 
+input[type="image"], 
+input[type="checkbox"], 
+input[type="radio"], 
+select, fieldset, legend {
+  display: none; 
+}
+
+input {
+  -moz-user-focus: normal;
+}
+
+button
+{
+  -moz-binding        : url("resource:///res/builtin/platformButtonBindings.xml#button");
+  -moz-user-focus     : normal;
+}
+
+input[type="button"],input[type="submit"],input[type="reset"] {
+  -moz-binding        : url("resource:///res/builtin/platformButtonBindings.xml#inputButton");
+}
+
+
