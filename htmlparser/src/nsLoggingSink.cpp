@@ -76,6 +76,7 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
   NS_IMETHOD WillInterrupt();
   NS_IMETHOD WillResume();
+  NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -213,6 +214,12 @@ nsLoggingSink::WillInterrupt()
 
 NS_IMETHODIMP
 nsLoggingSink::WillResume()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoggingSink::SetParser(nsIParser* aParser) 
 {
   return NS_OK;
 }

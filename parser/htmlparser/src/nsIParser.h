@@ -34,13 +34,22 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
+#include "nsError.h"
 #include <fstream.h>
-
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
   {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
+/**
+ * Return codes for parsing routines.
+ * NS_ERROR_HTMLPARSER_BLOCK indicates that the parser should
+ * block further parsing until it gets a Unblock() method call.
+ * NS_ERROR_HTMLPARSER_CONTINUE indicates that the parser should
+ * continue parsing
+ */
+#define NS_ERROR_HTMLPARSER_BLOCK       NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_HTMLPARSER,1)
+#define NS_ERROR_HTMLPARSER_CONTINUE    NS_OK
 
 class nsIContentSink;
 class nsIStreamObserver;

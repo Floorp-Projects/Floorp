@@ -35,6 +35,8 @@
 #include "nsIParserNode.h"
 #include "nsISupports.h"
 
+class nsIParser;
+
 #define NS_ICONTENT_SINK_IID \
 { 0xa6cf9052, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
@@ -74,6 +76,14 @@ public:
    * @update 5/7/98 gess
    */     
   NS_IMETHOD WillResume(void)=0;
+
+  /**
+   * This method gets called by the parser so that the content
+   * sink can retain a reference to the parser. The expectation
+   * is that the content sink will drop the reference when it
+   * gets the DidBuildModel notification i.e. when parsing is done.
+   */
+  NS_IMETHOD SetParser(nsIParser* aParser)=0;
 
   /**
    * This method is used to open a generic container in the sink.

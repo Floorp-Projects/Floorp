@@ -908,6 +908,11 @@ nsHTMLContentSinkStream::WillResume(void) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLContentSinkStream::SetParser(nsIParser* aParser) {
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsHTMLContentSinkStream::NotifyError(nsresult aErrorResult)
 {
