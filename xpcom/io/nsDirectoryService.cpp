@@ -510,7 +510,7 @@ nsDirectoryService::Define(const char* prop, nsISupports* initialValue)
 NS_IMETHODIMP
 nsDirectoryService::Undefine(const char* prop)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     if (!mHashtable->Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -544,7 +544,7 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
 NS_IMETHODIMP
 nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     
     nsCOMPtr<nsISupports> value = dont_AddRef(mHashtable->Get(&key));
     
@@ -587,7 +587,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 NS_IMETHODIMP
 nsDirectoryService::Set(const char* prop, nsISupports* value)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     if (mHashtable->Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
     

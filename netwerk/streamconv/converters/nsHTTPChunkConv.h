@@ -165,7 +165,7 @@ public:
     
     void AddTrailerHeader (const char *header)
     {
-        nsStringKey key (header);
+        nsCStringKey key (header);
         mTrailer.Put (&key, (void *) 1);
 
         mHeadersCount++;

@@ -380,7 +380,7 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool createIfMissing, 
 							nsIMsgFolderCacheElement **result)
 {
-	nsStringKey hashKey(pathKey);
+	nsCStringKey hashKey(pathKey);
 
 	if (!result || !pathKey)
 		return NS_ERROR_NULL_POINTER;
@@ -472,7 +472,7 @@ nsresult nsMsgFolderCache::AddCacheElement(const char *key, nsIMdbRow *row, nsIM
 		nsCOMPtr<nsISupports> supports(do_QueryInterface(cacheElement));
 		if(supports)
 		{
-			nsStringKey hashKey(hashStrKey);
+			nsCStringKey hashKey(hashStrKey);
 			m_cacheElements->Put(&hashKey, supports);
 		}
 		if (result)

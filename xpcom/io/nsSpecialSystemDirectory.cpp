@@ -67,7 +67,7 @@ public:
 
     SystemDirectoriesKey(nsSpecialSystemDirectory::SystemDirectories newKey) : sdKey(newKey) {}
 
-    virtual PRUint32 HashValue(void) const
+    virtual PRUint32 HashCode(void) const
     {
         return PRUint32(sdKey);
     }

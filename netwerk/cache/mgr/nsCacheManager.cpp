@@ -245,12 +245,13 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
     // Construct the cache key by appending the secondary key to the URI spec
     nsCAutoString cacheKey(aUriSpec);
 
-    // Insert NUL at end of URI spec
-    cacheKey += '\0';
-    if (aSecondaryKey)
+    // Insert a newline between URI spec and secondary key
+    if (aSecondaryKey) {
+        cacheKey += '\n';
         cacheKey.Append(aSecondaryKey, aSecondaryKeyLength);
+    }
 
-    nsStringKey key(cacheKey);
+    nsCStringKey key(cacheKey);
     cachedData = (nsCachedNetData*)mActiveCacheRecords->Get(&key);
 
     // There is no existing instance of nsCachedNetData for this URL.
@@ -288,7 +289,7 @@ nsCacheManager::NoteDormant(nsCachedNetData* aEntry)
     rv = record->GetKey(&keyLength, &key);
     if (NS_FAILED(rv)) return rv;
     
-    nsStringKey hashTableKey(nsCString(key, keyLength));
+    nsCStringKey hashTableKey(key, keyLength);
     deletedEntry = (nsCachedNetData*)gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
 //  NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
     nsMemory::Free( key );
@@ -310,12 +311,14 @@ nsCacheManager::Contains(const char *aUriSpec, const char *aSecondaryKey,
     // Construct the cache key by appending the secondary key to the URI spec
     nsCAutoString cacheKey(aUriSpec);
 
-    // Insert NUL between URI spec and secondary key
-    cacheKey += '\0';
-    cacheKey.Append(aSecondaryKey, aSecondaryKeyLength);
+    // Insert a newline between URI spec and secondary key
+    if (aSecondaryKey) {
+        cacheKey += '\n';
+        cacheKey.Append(aSecondaryKey, aSecondaryKeyLength);
+    }
 
     // Locate the record using (URI + secondary key)
-    nsStringKey key(cacheKey);
+    nsCStringKey key(cacheKey);
     cachedData = (nsCachedNetData*)mActiveCacheRecords->Get(&key);
 
     if (cachedData && (cache == cachedData->mCache)) {

@@ -36,38 +36,6 @@ extern PRUint32 gEventQueueLogCount;
 
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
-////////////////////////////////////////////////////////////////////////////////
-
-// XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
-class ThreadKey: public nsHashKey {
- 
-public:
-  ThreadKey(PRThread* aID) {
-    id = aID;
-  }
-  
-  ThreadKey(const ThreadKey &aKey) {
-    id = aKey.id;
-  }
-  
-  PRUint32 HashValue(void) const {
-    return (PRUint32)id;
-  }
-
-  PRBool Equals(const nsHashKey *aKey) const {
-    return (id == ((const ThreadKey *) aKey)->id);
-  }
-
-  nsHashKey *Clone(void) const {
-    return new ThreadKey(id);
-  }
-
-  PRThread* id;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 nsEventQueueServiceImpl::nsEventQueueServiceImpl()
 {
   NS_INIT_REFCNT();
@@ -177,7 +145,7 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread, PRBool aNative)
 {
   nsresult rv = NS_OK;
-  ThreadKey  key(aThread);
+  nsVoidKey  key(aThread);
   nsCOMPtr<nsIEventQueue> queue;
 
   /* Enter the lock which protects the EventQ hashtable... */
@@ -202,7 +170,7 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::DestroyThreadEventQueue(void)
 {
   nsresult rv = NS_OK;
-  ThreadKey key(PR_GetCurrentThread());
+  nsVoidKey key(PR_GetCurrentThread());
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
@@ -263,7 +231,7 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
 {
   nsresult rv = NS_OK;
-  ThreadKey  key(PR_GetCurrentThread());
+  nsVoidKey  key(PR_GetCurrentThread());
   PRBool native = PR_TRUE; // native by default as per old comment
 
 
@@ -284,7 +252,7 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   }
 
   nsCOMPtr<nsIEventQueue> newQueue;
-  MakeNewQueue(key.id, native, getter_AddRefs(newQueue)); // create new queue
+  MakeNewQueue((PRThread*)key.GetValue(), native, getter_AddRefs(newQueue)); // create new queue
 
   if (!queue) {
     // shouldn't happen. as a fallback, we guess you wanted a native queue
@@ -317,7 +285,7 @@ NS_IMETHODIMP
 nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
 {
   nsresult rv = NS_OK;
-  ThreadKey key(PR_GetCurrentThread());
+  nsVoidKey key(PR_GetCurrentThread());
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
@@ -374,7 +342,7 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, nsIEventQueue** 
     if (NS_FAILED(rv)) return rv;
   }
 
-  ThreadKey key(keyThread);
+  nsVoidKey key(keyThread);
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);

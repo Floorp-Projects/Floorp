@@ -141,7 +141,7 @@ nsXBLJSClass::Destroy()
                "referenced nsXBLJSClass is on LRU list already!?");
 
   if (nsXBLService::gClassTable) {
-    nsStringKey key(name);
+    nsCStringKey key(name);
     (nsXBLService::gClassTable)->Remove(&key);
   }
 
@@ -1147,7 +1147,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
     
     nsXBLJSClass* c;
     void* classObject;
-    nsStringKey key(aClassName);
+    nsCStringKey key(aClassName);
     classObject = (nsXBLService::gClassTable)->Get(&key);
 
     if (classObject) {
@@ -1173,7 +1173,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
 
         // Remove any mapping from the old name to the class struct.
         c = NS_STATIC_CAST(nsXBLJSClass*, lru);
-        nsStringKey oldKey(c->name);
+        nsCStringKey oldKey(c->name);
         (nsXBLService::gClassTable)->Remove(&oldKey);
 
         // Change the class name and we're done.

@@ -37,6 +37,39 @@
 
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
+////////////////////////////////////////////////////////////////////////////////
+
+class nsProxyEventKey : public nsHashKey
+{
+public:
+    nsProxyEventKey(void* rootObjectKey, void* destQueueKey, PRInt32 proxyType)
+        : mRootObjectKey(rootObjectKey), mDestQueueKey(destQueueKey), mProxyType(proxyType) {
+    }
+  
+    PRUint32 HashCode(void) const {
+        // XXX what about 64-bit machines?
+        return (PRUint32)mRootObjectKey ^ (PRUint32)mDestQueueKey ^ mProxyType;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        const nsProxyEventKey* other = (const nsProxyEventKey*)aKey;
+        return mRootObjectKey == other->mRootObjectKey
+            && mDestQueueKey == other->mDestQueueKey
+            && mProxyType == other->mProxyType;
+    }
+
+    nsHashKey *Clone() const {
+        return new nsProxyEventKey(mRootObjectKey, mDestQueueKey, mProxyType);
+    }
+
+protected:
+    void*       mRootObjectKey;
+    void*       mDestQueueKey;
+    PRInt32     mProxyType;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef DEBUG_xpcom_proxy
 static PRMonitor* mon = nsnull;
 static PRUint32 totalProxyObjects = 0;
@@ -72,9 +105,11 @@ nsProxyEventObject::DebugDump(const char * message, PRUint32 hashKey)
 
     PRBool isRoot = mRoot == nsnull;
     printf("%s wrapper around  @ %x\n", isRoot ? "ROOT":"non-root\n", GetRealObject());
-    
-    if (mHashKey.HashValue()!=0)
-        printf("Hashkey: %d\n", mHashKey.HashValue());
+
+    nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
+    nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
+    nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
+    printf("Hashkey: %d\n", key.HashCode());
         
     char* name;
     GetClass()->GetInterfaceInfo()->GetName(&name);
@@ -166,9 +201,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     if (NS_FAILED(rv))
         return nsnull;
 
-    char* rootKeyString = PR_sprintf_append(nsnull, "%p.%p.%d", (PRUint32)rootObject.get(), (PRUint32)destQRoot.get(), proxyType);
-    nsStringKey rootkey(rootKeyString);
-    
+    nsProxyEventKey rootkey(rootObject.get(), destQRoot.get(), proxyType);
 
     // find in our hash table 
     root  = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
@@ -178,7 +211,6 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         
         if(proxy)  
         {
-            PR_FREEIF(rootKeyString);
             peo = proxy;
             NS_ADDREF(peo);
             return peo;  
@@ -194,14 +226,12 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                          proxyType, 
                                          requestedInterface, 
                                          clazz, 
-                                         nsnull, 
-                                         rootKeyString);
+                                         nsnull);
         
             proxy = do_QueryInterface(peo);
             
             if(proxy)
             {
-                PR_FREEIF(rootKeyString);
                 realToProxyMap->Put(&rootkey, peo);
                 peo = proxy;
                 NS_ADDREF(peo);
@@ -216,7 +246,6 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
             
             if (!rootClazz)
             {
-                PR_FREEIF(rootKeyString);
                 return nsnull;
             }
                 
@@ -224,12 +253,10 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                          proxyType, 
                                          rootObject, 
                                          rootClazz, 
-                                         nsnull, 
-                                         rootKeyString);
+                                         nsnull);
 
             if(!peo)
             {
-                PR_FREEIF(rootKeyString);
                 return nsnull;
             }
 
@@ -248,14 +275,12 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                      proxyType, 
                                      requestedInterface, 
                                      clazz, 
-                                     root, 
-                                     "");
+                                     root);
 
         proxy = do_QueryInterface(peo);
         
         if(!proxy)
         {
-            PR_FREEIF(rootKeyString);
             return nsnull;
         }
     }
@@ -263,15 +288,14 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     proxy->mNext = root->mNext;
     root->mNext = proxy;
 
-    PR_FREEIF(rootKeyString);
     peo = proxy;
     NS_ADDREF(peo);
     return peo;  
 
 }
+
 nsProxyEventObject::nsProxyEventObject()
-: mHashKey(""),
-  mNext(nsnull)
+: mNext(nsnull)
 {
      NS_WARNING("This constructor should never be called");
 }
@@ -280,29 +304,25 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
                                        PRInt32 proxyType,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
-                                       nsProxyEventObject* root,
-                                       const char * hashStr)
-    : mHashKey(hashStr),
+                                       nsProxyEventObject* root)
+    : mClass(aClass),
+      mRoot(root),
       mNext(nsnull)
 {
     NS_INIT_REFCNT();
-    
-    mClass       = aClass;
-    
-    mRoot        = root;
     NS_IF_ADDREF(mRoot);
 
     mProxyObject = new nsProxyObject(destQueue, proxyType, aObj);
-                
+
 #ifdef DEBUG_xpcom_proxy
-DebugDump("Create", 0);
+    DebugDump("Create", 0);
 #endif
 }
 
 nsProxyEventObject::~nsProxyEventObject()
 {
 #ifdef DEBUG_xpcom_proxy
-DebugDump("Delete", 0);
+    DebugDump("Delete", 0);
 #endif
     if (mRoot != nsnull)
     {
@@ -325,9 +345,13 @@ DebugDump("Delete", 0);
             nsCOMPtr<nsProxyObjectManager> manager = nsProxyObjectManager::GetInstance();
             nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
 
-            if (realToProxyMap != nsnull && mHashKey.HashValue() != 0)
+            if (realToProxyMap != nsnull)
             {
-                realToProxyMap->Remove(&mHashKey);
+                nsCOMPtr<nsISupports> rootObject = do_QueryInterface(mProxyObject->mRealObject);
+                nsCOMPtr<nsISupports> rootQueue = do_QueryInterface(mProxyObject->mDestQueue);
+                nsProxyEventKey key(rootObject, rootQueue, mProxyObject->mProxyType);
+                void* value = realToProxyMap->Remove(&key);
+                NS_ASSERTION(value, "failed to remove from realToProxyMap");
             }
         }
     }
@@ -398,28 +422,11 @@ nsProxyEventObject::GetInterfaceInfo(nsIInterfaceInfo** info)
 
 NS_IMETHODIMP
 nsProxyEventObject::CallMethod(PRUint16 methodIndex,
-                           const nsXPTMethodInfo* info,
-                           nsXPTCMiniVariant * params)
+                               const nsXPTMethodInfo* info,
+                               nsXPTCMiniVariant * params)
 {
     if (mProxyObject)
         return mProxyObject->Post(methodIndex, (nsXPTMethodInfo*)info, params, GetClass()->GetInterfaceInfo());
 
     return NS_ERROR_NULL_POINTER;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

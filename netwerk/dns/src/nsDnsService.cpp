@@ -542,7 +542,7 @@ nsDNSLookup::InitiateLookup(void)
             rv = CompleteLookup(NS_OK);
 
             // XXX remove from hashtable and release - for now
-            nsStringKey key(mHostName);
+            nsCStringKey key(mHostName);
             (void) nsDNSService::gService->mLookups.Remove(&key);
         }
         nsMemory::Free(netAddr);
@@ -605,7 +605,7 @@ nsDNSLookup::InitiateLookup(void)
     rv = CompleteLookup(rv);
 
     // XXX remove from hashtable and release - for now
-    nsStringKey key(mHostName);
+    nsCStringKey key(mHostName);
     nsDNSService::gService->mLookups.Remove(&key);
     
 #endif /* XP_UNIX */
@@ -775,7 +775,7 @@ nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         gService->FreeMsgID(lookup->mMsgID);
 
         // XXX remove from hashtable and release - for now
-        nsStringKey key(lookup->mHostName);
+        nsCStringKey key(lookup->mHostName);
         (void) nsDNSService::gService->mLookups.Remove(&key);
 
         NS_RELEASE(lookup);
@@ -1069,7 +1069,7 @@ nsDNSService::Run(void)
             rv = lookup->CompleteLookup(lookup->mStatus);    // sets lookup->mComplete = PR_TRUE;
 
             // XXX remove from hashtable and release - for now
-            nsStringKey key(lookup->mHostName);
+            nsCStringKey key(lookup->mHostName);
             (void) nsDNSService::gService->mLookups.Remove(&key);
 
             NS_RELEASE(lookup);
@@ -1152,7 +1152,7 @@ nsDNSService::GetLookupEntry(const char* hostName,
 
     nsAutoMonitor mon(mMonitor);
 
-    nsStringKey key(hostName);
+    nsCStringKey key(hostName);
     nsDNSLookup * lookup = (nsDNSLookup*)mLookups.Get(&key);
     if (lookup) {
         nsAutoCMonitor lmon(lookup);

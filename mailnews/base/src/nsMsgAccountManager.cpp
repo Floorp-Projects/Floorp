@@ -250,7 +250,7 @@ nsMsgAccountManager::getUniqueKey(const char* prefix,
   do {
     aResult=prefix;
     aResult.AppendInt(i++);
-    nsStringKey hashKey(aResult);
+    nsCStringKey hashKey(aResult);
     void* hashElement = hashTable->Get(&hashKey);
     
     if (!hashElement) unique=PR_TRUE;
@@ -310,7 +310,7 @@ nsMsgAccountManager::GetIdentity(const char* key,
 
   nsresult rv;
   // check for the identity in the hash table
-  nsStringKey hashKey(key);
+  nsCStringKey hashKey(key);
   nsISupports *idsupports = (nsISupports*)m_identities.Get(&hashKey);
   nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(idsupports, &rv);
 
@@ -344,7 +344,7 @@ nsMsgAccountManager::createKeyedIdentity(const char* key,
   
   identity->SetKey(NS_CONST_CAST(char *,key));
   
-  nsStringKey hashKey(key);
+  nsCStringKey hashKey(key);
 
   // addref for the hash table`
   nsISupports* idsupports = identity;
@@ -381,7 +381,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
 
   nsresult rv=NS_OK;
   
-  nsStringKey hashKey(key);
+  nsCStringKey hashKey(key);
   nsCOMPtr<nsIMsgIncomingServer> server =
     do_QueryInterface((nsISupports*)m_incomingServers.Get(&hashKey), &rv);
 
@@ -466,7 +466,7 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   server->SetUsername(username);
   server->SetHostName(hostname);
 
-  nsStringKey hashKey(key);
+  nsCStringKey hashKey(key);
 
   // addref for the hashtable
   nsISupports* serversupports = server;
@@ -561,7 +561,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     nsXPIDLCString serverKey;
     rv = server->GetKey(getter_Copies(serverKey));
     
-    nsStringKey hashKey(serverKey);
+    nsCStringKey hashKey(serverKey);
     
     nsIMsgIncomingServer* removedServer =
       (nsIMsgIncomingServer*) m_incomingServers.Remove(&hashKey);

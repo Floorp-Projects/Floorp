@@ -6196,7 +6196,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     }
   }
 
- addToHashTable:
+// addToHashTable:
 
   if (topFrame) {
     // the top frame is always what we map the content to. This is the frame that contains a pointer

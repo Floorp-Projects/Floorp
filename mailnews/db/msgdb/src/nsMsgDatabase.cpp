@@ -86,7 +86,7 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
-		nsStringKey hashKey(strKey.GetBuffer());
+		nsCStringKey hashKey(strKey.GetBuffer());
 		// nsSupportsHashtable does an addref
 		*result = (nsIMsgDBHdr *) m_cachedHeaders->Get(&hashKey);
 		if (*result)
@@ -109,7 +109,7 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 			// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 			nsCAutoString strKey;
 			strKey.AppendInt(key, 10);
-			nsStringKey hashKey(strKey.GetBuffer());
+			nsCStringKey hashKey(strKey.GetBuffer());
 			m_cachedHeaders->Put(&hashKey, hdr);
 			return NS_OK;
 		}
@@ -135,7 +135,7 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
-		nsStringKey hashKey(strKey.GetBuffer());
+		nsCStringKey hashKey(strKey.GetBuffer());
             /*
              * this does release on the held object, unless you don't
              * want it to, by passing as third argument a non-null pointer
@@ -162,7 +162,7 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 		// it would be nice if we had a hash table that hashed 32 bit int's
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
-		nsStringKey hashKey(strKey.GetBuffer());
+		nsCStringKey hashKey(strKey.GetBuffer());
 		// nsHashtable doesn't do an addref
 		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
 		if (*result)
@@ -184,7 +184,7 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
-		nsStringKey hashKey(strKey.GetBuffer());
+		nsCStringKey hashKey(strKey.GetBuffer());
 		m_headersInUse->Put(&hashKey, hdr);
 		NS_ADDREF(hdr);
 		// the hash table won't add ref, we'll do it ourselves
@@ -213,7 +213,7 @@ nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
-		nsStringKey hashKey(strKey.GetBuffer());
+		nsCStringKey hashKey(strKey.GetBuffer());
 		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_headersInUse->Remove(&hashKey); 
 	}
 	return NS_OK;

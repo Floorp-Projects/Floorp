@@ -848,7 +848,7 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
 
   if (mDataSourceTable)
   {
-    nsStringKey skey(key);
+    nsCStringKey skey(key);
     nsCOMPtr<nsISupports> supports = 
       getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
 
@@ -884,7 +884,7 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
     rv = remote->Refresh(PR_TRUE);
   
   nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
-  nsStringKey skey(key);
+  nsCStringKey skey(key);
   mDataSourceTable->Put(&skey, supports.get());
 
   return NS_OK;

@@ -172,7 +172,7 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
     mimeTypesSeen = new nsHashtable(NS_MIME_TYPES_HASH_NUM);
   }
   if (nsnull != mimeTypesSeen){
-    nsStringKey key(mimeType);
+    nsCStringKey key(mimeType);
     // if we've seen this mimetype before
     if (mimeTypesSeen->Get(&key)) {
       // don't display the dialog

@@ -34,13 +34,107 @@
 #include "prlog.h"
 #include "nsHashtable.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// These functions really should be part of nspr, and have internal knowledge
+// of its workings. They allow the PLHashTable to be embedded in the structure
+// of the nsHashtable, thereby avoiding a secondary allocation. I've added them
+// here because we don't have the "right" to add anything to nspr at this point.
+
+#include "prbit.h"
+
+/* Compute the number of buckets in ht */
+#define NBUCKETS(ht)    (1 << (PL_HASH_BITS - (ht)->shift))
+
+/* The smallest table has 16 buckets */
+#define MINBUCKETSLOG2  4
+#define MINBUCKETS      (1 << MINBUCKETSLOG2)
+
+/* Compute the maximum entries given n buckets that we will tolerate, ~90% */
+#define OVERLOADED(n)   ((n) - ((n) >> 3))
+
+/* Compute the number of entries below which we shrink the table by half */
+#define UNDERLOADED(n)  (((n) > MINBUCKETS) ? ((n) >> 2) : 0)
+
+PR_IMPLEMENT(PRStatus)
+PL_HashTableInit(PLHashTable *ht, PRUint32 n, PLHashFunction keyHash,
+                 PLHashComparator keyCompare, PLHashComparator valueCompare,
+                 const PLHashAllocOps *allocOps, void *allocPriv)
+{
+    PRSize nb;
+
+    if (n <= MINBUCKETS) {
+        n = MINBUCKETSLOG2;
+    } else {
+        n = PR_CeilingLog2(n);
+        if ((PRInt32)n < 0)
+            return PR_FAILURE;
+    }
+
+#if 0 // if we were in nspr...
+    if (!allocOps) allocOps = &defaultHashAllocOps;
+#else
+    PR_ASSERT(allocOps);
+#endif
+
+    memset(ht, 0, sizeof *ht);
+    ht->shift = PL_HASH_BITS - n;
+    n = 1 << n;
+#if defined(WIN16)
+    if (n > 16000) {
+        (*allocOps->freeTable)(allocPriv, ht);
+        return PR_FAILURE;
+    }
+#endif  /* WIN16 */
+    nb = n * sizeof(PLHashEntry *);
+    ht->buckets = (PLHashEntry**)((*allocOps->allocTable)(allocPriv, nb));
+    if (!ht->buckets) {
+        (*allocOps->freeTable)(allocPriv, ht);
+        return PR_FAILURE;
+    }
+    memset(ht->buckets, 0, nb);
+
+    ht->keyHash = keyHash;
+    ht->keyCompare = keyCompare;
+    ht->valueCompare = valueCompare;
+    ht->allocOps = allocOps;
+    ht->allocPriv = allocPriv;
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(void)
+PL_HashTableFinalize(PLHashTable *ht)
+{
+    PRUint32 i, n;
+    PLHashEntry *he, *next;
+    const PLHashAllocOps *allocOps = ht->allocOps;
+    void *allocPriv = ht->allocPriv;
+
+    n = NBUCKETS(ht);
+    for (i = 0; i < n; i++) {
+        for (he = ht->buckets[i]; he; he = next) {
+            next = he->next;
+            (*allocOps->freeEntry)(allocPriv, he, HT_FREE_ENTRY);
+        }
+    }
+#ifdef DEBUG
+    memset(ht->buckets, 0xDB, n * sizeof ht->buckets[0]);
+#endif
+    (*allocOps->freeTable)(allocPriv, ht->buckets);
+#ifdef DEBUG
+    memset(ht, 0xDB, sizeof *ht);
+#endif
+}
+
+// end of nspr stuff
+////////////////////////////////////////////////////////////////////////////////
+
 //
 // Key operations
 //
 
 static PLHashNumber PR_CALLBACK _hashValue(const void *key) 
 {
-  return ((const nsHashKey *) key)->HashValue();
+  return ((const nsHashKey *) key)->HashCode();
 }
 
 static PRIntn PR_CALLBACK _hashKeyCompare(const void *key1, const void *key2) {
@@ -107,6 +201,9 @@ MOZ_DECL_CTOR_COUNTER(nsHashKey);
 
 nsHashKey::nsHashKey(void)
 {
+#ifdef DEBUG
+  mKeyType = UnknownKey;
+#endif
   MOZ_COUNT_CTOR(nsHashKey);
 }
 
@@ -121,12 +218,14 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   : mLock(NULL)
 {
   MOZ_COUNT_CTOR(nsHashtable);
-  hashtable = PL_NewHashTable(aInitSize,
-                              _hashValue,
-                              _hashKeyCompare,
-                              _hashValueCompare,
-                              &_hashAllocOps,
-                              NULL);
+  PRStatus status = PL_HashTableInit(&mHashtable,
+                                     aInitSize,
+                                     _hashValue,
+                                     _hashKeyCompare,
+                                     _hashValueCompare,
+                                     &_hashAllocOps,
+                                     NULL);
+  PR_ASSERT(status == PR_SUCCESS);
   if (threadSafe == PR_TRUE)
   {
     mLock = PR_NewLock();
@@ -141,17 +240,17 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
 
 nsHashtable::~nsHashtable() {
   MOZ_COUNT_DTOR(nsHashtable);
-  PL_HashTableDestroy(hashtable);
+  PL_HashTableFinalize(&mHashtable);
   if (mLock) PR_DestroyLock(mLock);
 }
 
 PRBool nsHashtable::Exists(nsHashKey *aKey)
 {
-  PLHashNumber hash = aKey->HashValue();
+  PLHashNumber hash = aKey->HashCode();
 
   if (mLock) PR_Lock(mLock);
 
-  PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
+  PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
 
   if (mLock) PR_Unlock(mLock);
 
@@ -160,19 +259,24 @@ PRBool nsHashtable::Exists(nsHashKey *aKey)
 
 void *nsHashtable::Put(nsHashKey *aKey, void *aData) {
   void *res =  NULL;
-  PLHashNumber hash = aKey->HashValue();
+  PLHashNumber hash = aKey->HashCode();
   PLHashEntry *he;
 
   if (mLock) PR_Lock(mLock);
 
-  PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
+  PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
 
   if ((he = *hep) != NULL) {
     res = he->value;
     he->value = aData;
   } else {
-    PL_HashTableRawAdd(hashtable, hep, hash,
-                       (void *) aKey->Clone(), aData);
+    nsHashKey* key = aKey->Clone();
+    if (key) {
+      PL_HashTableRawAdd(&mHashtable, hep, hash,
+                         (void *)key, aData);
+    }
+    else
+        res = NULL;
   }
 
   if (mLock) PR_Unlock(mLock);
@@ -184,7 +288,7 @@ void *nsHashtable::Get(nsHashKey *aKey) {
 
   if (mLock) PR_Lock(mLock);
 
-  void *ret = PL_HashTableLookup(hashtable, (void *) aKey);
+  void *ret = PL_HashTableLookup(&mHashtable, (void *) aKey);
 
   if (mLock) PR_Unlock(mLock);
 
@@ -192,17 +296,17 @@ void *nsHashtable::Get(nsHashKey *aKey) {
 }
 
 void *nsHashtable::Remove(nsHashKey *aKey) {
-  PLHashNumber hash = aKey->HashValue();
+  PLHashNumber hash = aKey->HashCode();
   PLHashEntry *he;
 
   if (mLock) PR_Lock(mLock);
 
-  PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
+  PLHashEntry **hep = PL_HashTableRawLookup(&mHashtable, hash, (void *) aKey);
   void *res = NULL;
   
   if ((he = *hep) != NULL) {
     res = he->value;
-    PL_HashTableRawRemove(hashtable, hep, he);
+    PL_HashTableRawRemove(&mHashtable, hep, he);
   }
 
   if (mLock) PR_Unlock(mLock);
@@ -224,9 +328,9 @@ nsHashtable * nsHashtable::Clone() {
   PRBool threadSafe = PR_FALSE;
   if (mLock)
     threadSafe = PR_TRUE;
-  nsHashtable *newHashTable = new nsHashtable(hashtable->nentries, threadSafe);
+  nsHashtable *newHashTable = new nsHashtable(mHashtable.nentries, threadSafe);
 
-  PL_HashTableEnumerateEntries(hashtable, _hashEnumerateShare, newHashTable);
+  PL_HashTableEnumerateEntries(&mHashtable, _hashEnumerateShare, newHashTable);
   return newHashTable;
 }
 
@@ -234,7 +338,7 @@ void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
   _HashEnumerateArgs thunk;
   thunk.fn = aEnumFunc;
   thunk.arg = closure;
-  PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, &thunk);
+  PL_HashTableEnumerateEntries(&mHashtable, _hashEnumerate, &thunk);
 }
 
 static PRIntn  PR_CALLBACK _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)
@@ -259,60 +363,129 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
       _HashEnumerateArgs thunk;
       thunk.fn = destroyFunc;
       thunk.arg = closure;
-      PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, &thunk);
+      PL_HashTableEnumerateEntries(&mHashtable, _hashEnumerateRemove, &thunk);
   }
   else
-      PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, NULL);
+      PL_HashTableEnumerateEntries(&mHashtable, _hashEnumerateRemove, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsStringKey::nsStringKey(const char* str)
+nsCStringKey::nsCStringKey(const nsCString& str)
+    : mStr((char*)str.GetBuffer()), mStrLen(str.Length()), mOwnsStr(PR_FALSE)
 {
-	MOZ_COUNT_CTOR(nsStringKey);
-	mStr.AssignWithConversion(str);
+    NS_ASSERTION(mStr, "null string key");
+    NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
+#ifdef DEBUG
+    mKeyType = CStringKey;
+#endif
+    MOZ_COUNT_CTOR(nsCStringKey);
 }
 
-nsStringKey::nsStringKey(const PRUnichar* str)
+nsCStringKey::nsCStringKey(const char* str, PRUint32 strLen, PRBool ownsStr)
+    : mStr((char*)str), mStrLen(strLen), mOwnsStr(ownsStr)
 {
-	MOZ_COUNT_CTOR(nsStringKey);
-	mStr.Assign(str);
+    NS_ASSERTION(mStr, "null string key");
+    if (mStrLen == -1)
+        mStrLen = nsCRT::strlen(str);
+#ifdef DEBUG
+    mKeyType = CStringKey;
+#endif
+    MOZ_COUNT_CTOR(nsCStringKey);
 }
 
-nsStringKey::nsStringKey(const nsString& str) {
-	MOZ_COUNT_CTOR(nsStringKey);
-	mStr.Assign(str);
+nsCStringKey::~nsCStringKey(void)
+{
+    if (mOwnsStr)
+        nsMemory::Free(mStr);
+    MOZ_COUNT_DTOR(nsCStringKey);
 }
 
-nsStringKey::nsStringKey(const nsCString& str) {
-	MOZ_COUNT_CTOR(nsStringKey);
-	mStr.AssignWithConversion(str);
+PRUint32
+nsCStringKey::HashCode(void) const
+{
+    return nsCRT::HashCode(mStr, mStrLen);
+}
+
+PRBool
+nsCStringKey::Equals(const nsHashKey* aKey) const
+{
+    NS_ASSERTION(aKey->GetKeyType() == CStringKey, "mismatched key types");
+    nsCStringKey* other = (nsCStringKey*)aKey;
+    if (mStrLen != other->mStrLen)
+        return PR_FALSE;
+    return nsCRT::memcmp(mStr, other->mStr, mStrLen) == 0;
+}
+
+nsHashKey*
+nsCStringKey::Clone() const
+{
+    PRUint32 len = mStrLen * sizeof(char);
+    char* str = (char*)nsMemory::Alloc(len);
+    if (str == NULL)
+        return NULL;
+    nsCRT::memcpy(str, mStr, len);
+    return new nsCStringKey(str, mStrLen, PR_TRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsStringKey::nsStringKey(const nsString& str)
+    : mStr((PRUnichar*)str.GetUnicode()), mStrLen(str.Length()), mOwnsStr(PR_FALSE)
+{
+    NS_ASSERTION(mStr, "null string key");
+    NS_ASSERTION(mStrLen == nsCRT::strlen(mStr), "bad string length");
+#ifdef DEBUG
+    mKeyType = StringKey;
+#endif
+    MOZ_COUNT_CTOR(nsStringKey);
+}
+
+nsStringKey::nsStringKey(const PRUnichar* str, PRUint32 strLen, PRBool ownsStr)
+    : mStr((PRUnichar*)str), mStrLen(strLen), mOwnsStr(ownsStr)
+{
+    NS_ASSERTION(mStr, "null string key");
+    if (mStrLen == -1)
+        mStrLen = nsCRT::strlen(str);
+#ifdef DEBUG
+    mKeyType = StringKey;
+#endif
+    MOZ_COUNT_CTOR(nsStringKey);
 }
 
 nsStringKey::~nsStringKey(void)
 {
-	MOZ_COUNT_DTOR(nsStringKey);
+    if (mOwnsStr)
+        nsMemory::Free(mStr);
+    MOZ_COUNT_DTOR(nsStringKey);
 }
 
-PRUint32 nsStringKey::HashValue(void) const
+PRUint32
+nsStringKey::HashCode(void) const
 {
-    return nsStr::HashCode(mStr);
+    return nsCRT::HashCode(mStr, mStrLen);
 }
 
-PRBool nsStringKey::Equals(const nsHashKey* aKey) const
+PRBool
+nsStringKey::Equals(const nsHashKey* aKey) const
 {
-	return ((nsStringKey*)aKey)->mStr == mStr;
+    NS_ASSERTION(aKey->GetKeyType() == StringKey, "mismatched key types");
+    nsStringKey* other = (nsStringKey*)aKey;
+    if (mStrLen != other->mStrLen)
+        return PR_FALSE;
+    return nsCRT::memcmp(mStr, other->mStr, mStrLen) == 0;
 }
 
-nsHashKey* nsStringKey::Clone() const
+nsHashKey*
+nsStringKey::Clone() const
 {
-	return new nsStringKey(mStr);
+    PRUint32 len = mStrLen * sizeof(PRUnichar);
+    PRUnichar* str = (PRUnichar*)nsMemory::Alloc(len);
+    if (str == NULL)
+        return NULL;
+    nsCRT::memcpy(str, mStr, len);
+    return new nsStringKey(str, mStrLen, PR_TRUE);
 }
-
-const nsString& nsStringKey::GetString() const
-{
-    return mStr;
-}    
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsObjectHashtable: an nsHashtable where the elements are C++ objects to be
@@ -358,9 +531,9 @@ nsObjectHashtable::Clone()
     nsObjectHashtable* newHashTable = 
         new nsObjectHashtable(mCloneElementFun, mCloneElementClosure,
                               mDestroyElementFun, mDestroyElementClosure,
-                              hashtable->nentries, threadSafe);
+                              mHashtable.nentries, threadSafe);
 
-    PL_HashTableEnumerateEntries(hashtable, CopyElement, newHashTable);
+    PL_HashTableEnumerateEntries(&mHashtable, CopyElement, newHashTable);
     return newHashTable;
 }
 
@@ -401,7 +574,7 @@ nsSupportsHashtable::~nsSupportsHashtable()
     // Return if we overwrote something
 
 PRBool
-nsSupportsHashtable::Put (nsHashKey *aKey, nsISupports* aData, nsISupports **value)
+nsSupportsHashtable::Put(nsHashKey *aKey, nsISupports* aData, nsISupports **value)
 {
     NS_IF_ADDREF(aData);
     void *prev = nsHashtable::Put(aKey, aData);
@@ -455,9 +628,9 @@ nsSupportsHashtable::Clone()
     if (mLock)
         threadSafe = PR_TRUE;
     nsSupportsHashtable* newHashTable = 
-        new nsSupportsHashtable(hashtable->nentries, threadSafe);
+        new nsSupportsHashtable(mHashtable.nentries, threadSafe);
 
-    PL_HashTableEnumerateEntries(hashtable, EnumerateCopy, newHashTable);
+    PL_HashTableEnumerateEntries(&mHashtable, EnumerateCopy, newHashTable);
     return newHashTable;
 }
 
@@ -466,70 +639,6 @@ nsSupportsHashtable::Reset()
 {
     Enumerate(ReleaseElement, nsnull);
     nsHashtable::Reset();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsOpaqueKey: Where keys are opaque byte array blobs
-//
-
-// Note opaque keys are not copied by this constructor.  If you want a private
-// copy in each hash key, you must create one and pass it in to this function.
-nsOpaqueKey::nsOpaqueKey(const char *aOpaqueKey, PRUint32 aKeyLength)
-{
-    mOpaqueKey = aOpaqueKey;
-    mKeyLength = aKeyLength;
-}
-
-nsOpaqueKey::~nsOpaqueKey(void)
-{
-}
-
-PRUint32
-nsOpaqueKey::HashValue(void) const
-{
-    PRUint32 h, i, k;
-
-    h = 0;
-
-    // Same hashing technique as for java.lang.String.hashCode()
-    if (mKeyLength <= 15) {
-        // A short key; Use a dense sampling to compute the hash code
-        for (i = 0; i < mKeyLength; i++)
-            h += 37 * mOpaqueKey[i];
-    } else {
-        // A long key; Use a sparse sampling to compute the hash code
-        k = mKeyLength >> 3;
-        for (i = 0; i < mKeyLength; i += k)
-            h += 39 * mOpaqueKey[i];
-    }
-    return h;
-}
-
-PRBool
-nsOpaqueKey::Equals(const nsHashKey* aKey) const
-{
-    nsOpaqueKey *otherKey = (nsOpaqueKey*)aKey;
-    if (mKeyLength !=  otherKey->mKeyLength)
-        return PR_FALSE;
-	return !(PRBool)memcmp(otherKey->mOpaqueKey, mOpaqueKey, mKeyLength);
-}
-
-nsHashKey*
-nsOpaqueKey::Clone() const
-{
-	return new nsOpaqueKey(mOpaqueKey, mKeyLength);
-}
-
-PRUint32
-nsOpaqueKey::GetKeyLength() const
-{
-    return mKeyLength;
-}
-
-const char*
-nsOpaqueKey::GetKey() const
-{
-    return mOpaqueKey;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,10 +47,11 @@ NS_IMETHODIMP
 nsMemCacheRecord::GetKey(PRUint32 *aLength, char **aResult)
 {
     NS_ENSURE_ARG(aResult);
-    *aResult = (char *)nsMemory::Alloc(mKeyLength);
+    *aResult = (char *)nsMemory::Alloc(mKeyLength + 1);
     if (!*aResult)
         return NS_ERROR_OUT_OF_MEMORY;
     memcpy(*aResult, mKey, mKeyLength);
+	(*aResult)[mKeyLength] = '\0';	// null terminate because this is going to be used in a string key
     *aLength = mKeyLength;
     return NS_OK;
 }
@@ -67,10 +68,11 @@ nsMemCacheRecord::Init(const char *aKey, PRUint32 aKeyLength,
                              getter_AddRefs(mStorageStream));
     if (NS_FAILED(rv)) return rv;
 
-    mKey = new char[aKeyLength];
+    mKey = new char[aKeyLength + 1];
     if (!mKey)
         return NS_ERROR_OUT_OF_MEMORY;
     memcpy(mKey, aKey, aKeyLength);
+	mKey[aKeyLength] = '\0';	// null terminate because we're going to use this for a hash key
     mKeyLength = aKeyLength;
     mRecordID = aRecordID;
     mCache = aCache;

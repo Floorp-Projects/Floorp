@@ -486,9 +486,13 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n) {
 
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {
-  PRUint32 len = nsCRT::strlen(str) + 1; // add one for null
+  PRUint32 len = nsCRT::strlen(str);
+  return strndup(str, len);
+}
 
-
+PRUnichar* nsCRT::strndup(const PRUnichar* str, PRUint32 len)
+{
+  len += 1;     // add one for the null
 	nsCppSharedAllocator<PRUnichar> shared_allocator;
 	PRUnichar* rslt = shared_allocator.allocate(len);
   // PRUnichar* rslt = new PRUnichar[len];
@@ -498,6 +502,7 @@ PRUnichar* nsCRT::strdup(const PRUnichar* str)
   return rslt;
 }
 
+#if 0
 PRUint32 nsCRT::HashValue(const char* us)
 {
   PRUint32 rv = 0;
@@ -550,6 +555,47 @@ PRUint32 nsCRT::HashValue(const PRUnichar* us, PRUint32* uslenp)
   }
   *uslenp = len;
   return rv;
+}
+#endif
+
+PRUint32
+nsCRT::HashCode(const char* c, PRUint32 n)
+{
+  PRUint32 h = 0;
+  NS_ASSERTION(n >= 0, "bad string length");
+    
+  // Same hashing technique as for java.lang.String.hashCode()
+  if (n < 16) {
+    // A short key; Use a dense sampling to compute the hash code
+    for(; n; c++, n--)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  else {
+    // A long key; Use a sparse sampling to compute the hash code
+    for(PRUint32 m = n >> 3; n >= m; c += m, n -= m)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  return h; 
+}
+
+PRUint32
+nsCRT::HashCode(const PRUnichar* c, PRUint32 n)
+{
+  PRUint32 h = 0;
+  NS_ASSERTION(n >= 0, "bad string length");
+    
+  // Same hashing technique as for java.lang.String.hashCode()
+  if (n < 16) {
+    // A short key; Use a dense sampling to compute the hash code
+    for(; n; c++, n--)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  else {
+    // A long key; Use a sparse sampling to compute the hash code
+    for(PRUint32 m = n >> 3; n >= m; c += m, n -= m)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  return h; 
 }
 
 PRInt32 nsCRT::atoi( const PRUnichar *string )

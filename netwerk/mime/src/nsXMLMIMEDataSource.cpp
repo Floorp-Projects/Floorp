@@ -129,7 +129,7 @@ nsXMLMIMEDataSource::AddMapping(const char* mimeType,
     if (NS_FAILED(rv)) return rv;
 
     // Next add the new root MIME mapping.
-    nsStringKey key(mimeType);
+    nsCStringKey key(mimeType);
     nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
     NS_ASSERTION(!oldInfo, "we just removed the entry, we shouldn't have one");
     NS_ADDREF(anInfo);
@@ -164,7 +164,7 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
     if (NS_FAILED(rv)) return rv;
 
     // Next add the new root MIME mapping.
-    nsStringKey key(mimeType);
+    nsCStringKey key(mimeType);
     nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, aMapper);
     NS_ASSERTION(!oldInfo, "we just removed the entry, we shouldn't have one");
     NS_ADDREF(aMapper);
@@ -197,7 +197,7 @@ static PRBool removeExts(nsCString& aElement, void *aData) {
     nsHashtable* infoObjects = (nsHashtable*)aData;
     NS_ASSERTION(infoObjects, "hash table botched up");
 
-    nsStringKey key(aElement);
+    nsCStringKey key(aElement);
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)infoObjects->Remove(&key);
     NS_RELEASE(info);
     return PR_TRUE;
@@ -206,7 +206,7 @@ static PRBool removeExts(nsCString& aElement, void *aData) {
 NS_IMETHODIMP
 nsXMLMIMEDataSource::Remove(const char* aMIMEType) {
     nsresult rv = NS_OK;
-    nsStringKey key(aMIMEType);
+    nsCStringKey key(aMIMEType);
 
     // First remove the root MIME mapping.
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
@@ -228,7 +228,7 @@ nsXMLMIMEDataSource::Remove(const char* aMIMEType) {
 
 nsresult
 nsXMLMIMEDataSource::AppendExtension(const char* mimeType, const char* extension) {
-    nsStringKey key(mimeType);
+    nsCStringKey key(mimeType);
 
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!info) return NS_ERROR_FAILURE;
@@ -247,7 +247,7 @@ nsXMLMIMEDataSource::AppendExtension(const char* mimeType, const char* extension
 nsresult
 nsXMLMIMEDataSource::RemoveExtension(const char* aExtension) {
     nsresult rv = NS_OK;
-    nsStringKey key(aExtension);
+    nsCStringKey key(aExtension);
 
     // First remove the extension mapping.
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Remove(&key);
@@ -255,8 +255,7 @@ nsXMLMIMEDataSource::RemoveExtension(const char* aExtension) {
     
     // Next remove the root MIME mapping from the array and hash
     // IFF this was the only file extension mapping left.
-    nsCAutoString keyString; keyString.AssignWithConversion(key.GetString().GetUnicode());
-    PRBool removed = info->mExtensions.RemoveCString(keyString);
+    PRBool removed = info->mExtensions.RemoveCString(aExtension);
     NS_ASSERTION(removed, "mapping problem");
 
     if (info->GetExtCount() == 0) {
@@ -517,7 +516,7 @@ nsXMLMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retva
     nsCAutoString fileExt(aFileExt);
     fileExt.ToLowerCase();
 
-    nsStringKey key(fileExt.GetBuffer());
+    nsCStringKey key(fileExt.GetBuffer());
 
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;
@@ -533,7 +532,7 @@ nsXMLMIMEDataSource::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retva
     nsCAutoString MIMEType(aMIMEType);
     MIMEType.ToLowerCase();
 
-    nsStringKey key(MIMEType.GetBuffer());
+    nsCStringKey key(MIMEType.GetBuffer());
 
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;
@@ -549,9 +548,9 @@ nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const
     PRUint32 buf[2];
     buf[0] = aType;
     buf[1] = aCreator;
-    nsAutoString keyString; keyString.AssignWithConversion( (char*)buf,8 );
-    keyString.AppendWithConversion(aExt);
-    nsStringKey key(  keyString );
+    nsCAutoString keyString((char*)buf,8);
+    keyString += aExt;
+    nsCStringKey key(keyString);
     // Check if in cache for real quick look up of common ( html,js, xul, ...) types
 		nsIMIMEInfo *entry = (nsIMIMEInfo*)mMacCache.Get(&key);
     if (entry)

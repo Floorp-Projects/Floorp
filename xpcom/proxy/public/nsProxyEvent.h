@@ -93,10 +93,11 @@ public:
                               nsIInterfaceInfo  * interfaceInfo);
     
     nsresult            PostAndWait(nsProxyObjectCallInfo *proxyInfo);
-    nsISupports*        GetRealObject();
-    nsIEventQueue*      GetQueue();
+    nsISupports*        GetRealObject() const;
+    nsIEventQueue*      GetQueue() const;
     PRInt32             GetProxyType() const { return mProxyType; }
 
+    friend class nsProxyEventObject;
 private:
     
     PRInt32                   mProxyType;

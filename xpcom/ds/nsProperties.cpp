@@ -86,7 +86,7 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsProperties::Define(const char* prop, nsISupports* initialValue)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     if (Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -99,7 +99,7 @@ nsProperties::Define(const char* prop, nsISupports* initialValue)
 NS_IMETHODIMP
 nsProperties::Undefine(const char* prop)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     if (!Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -112,7 +112,7 @@ NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 {
     nsresult rv;
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
     if (value) {
         rv = value->QueryInterface(uuid, result);
@@ -126,7 +126,7 @@ nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
 NS_IMETHODIMP
 nsProperties::Set(const char* prop, nsISupports* value)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     if (!Exists(&key))
         return NS_ERROR_FAILURE;
 
@@ -139,7 +139,7 @@ nsProperties::Set(const char* prop, nsISupports* value)
 NS_IMETHODIMP
 nsProperties::Has(const char* prop, PRBool *result)
 {
-    nsStringKey key(prop);
+    nsCStringKey key(prop);
     nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
     // XXX this is bogus because it doesn't distinguish between properties
     // defined with a value NULL, and undefined properties, but we'll fix

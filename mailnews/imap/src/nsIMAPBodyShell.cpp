@@ -1616,7 +1616,7 @@ PRBool nsIMAPBodyShellCache::EjectEntry()
 	nsIMAPBodyShell *removedShell = (nsIMAPBodyShell *) (m_shellList->ElementAt(0));
 
 	m_shellList->RemoveElementAt(0);
-	nsStringKey hashKey (removedShell->GetUID());
+	nsCStringKey hashKey (removedShell->GetUID());
 	m_shellHash->Remove(&hashKey);
 	delete removedShell;
 
@@ -1636,11 +1636,11 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// First, for safety sake, remove any entry with the given UID,
 	// just in case we have a collision between two messages in different
 	// folders with the same UID.
-	nsStringKey hashKey1(shell->GetUID());
+	nsCStringKey hashKey1(shell->GetUID());
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey1);
 	if (foundShell)
 	{
-		nsStringKey hashKey(foundShell->GetUID());
+		nsCStringKey hashKey(foundShell->GetUID());
 		m_shellHash->Remove(&hashKey);
 		m_shellList->RemoveElement(foundShell);
 	}
@@ -1648,7 +1648,7 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// Add the new one to the cache
 	m_shellList->AppendElement(shell);
 	
-	nsStringKey hashKey2 (shell->GetUID());
+	nsCStringKey hashKey2 (shell->GetUID());
 	m_shellHash->Put(&hashKey2, shell);
 	shell->SetIsCached(PR_TRUE);
 
@@ -1665,7 +1665,7 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 
 nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsCString &UID, const char *mailboxName)
 {
-	nsStringKey hashKey(UID);
+	nsCStringKey hashKey(UID);
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
 
 	if (!foundShell)

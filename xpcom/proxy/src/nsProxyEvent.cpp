@@ -91,7 +91,7 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
     if (mOwner->GetProxyType() & PROXY_ASYNC)
         CopyStrings(PR_FALSE);
 
-    mOwner = 0;
+    mOwner = nsnull;
     
     PR_FREEIF(mEvent);
     
@@ -262,13 +262,13 @@ nsProxyObject::~nsProxyObject()
 //  This function must return the real pointer to the object to be proxied.
 //  It must not be a comptr or be addreffed.
 nsISupports*        
-nsProxyObject::GetRealObject()
+nsProxyObject::GetRealObject() const
 { 
     return mRealObject.get(); 
 } 
 
 nsIEventQueue*      
-nsProxyObject::GetQueue() 
+nsProxyObject::GetQueue() const
 { 
     return mDestQueue; 
 }

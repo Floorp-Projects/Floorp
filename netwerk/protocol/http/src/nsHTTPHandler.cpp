@@ -1468,7 +1468,7 @@ nsHTTPHandler::SetServerCapabilities(
         hStr.Append( ':');
         hStr.AppendInt(port);
 
-        nsStringKey key(hStr);
+        nsCStringKey key(hStr);
         mCapTable.Put(&key, (void *)aCapabilities);
     }
     return NS_OK;
@@ -1494,7 +1494,7 @@ nsHTTPHandler::GetServerCapabilities (
     hStr.Append ( ':');
     hStr.AppendInt (port);
 
-    nsStringKey key (hStr);
+    nsCStringKey key (hStr);
     void * p = mCapTable.Get (&key);
 
     if (p != NULL)

@@ -84,7 +84,7 @@ protected:
         nsIURIKey(nsIURI* key) : mKey(key) {}
         ~nsIURIKey(void) {}
   
-        PRUint32 HashValue(void) const {
+        PRUint32 HashCode(void) const {
             nsXPIDLCString spec;
             mKey->GetSpec(getter_Copies(spec));
             return (PRUint32) PL_HashString(spec);
@@ -201,7 +201,7 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
 NS_IMETHODIMP
 nsXULPrototypeCache::GetXBLDocument(const nsCString& aString, nsIDocument** _result)
 {
-    nsStringKey key(aString);
+    nsCStringKey key(aString);
     *_result = NS_STATIC_CAST(nsIDocument*, mXBLDocTable.Get(&key));
     return NS_OK;
 }
@@ -213,7 +213,7 @@ nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
     nsXPIDLCString str;
     uri->GetSpec(getter_Copies(str));
 
-    nsStringKey key((const char*)str);
+    nsCStringKey key((const char*)str);
     mXBLDocTable.Put(&key, aDocument);
 
     return NS_OK;
@@ -222,7 +222,7 @@ nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
 NS_IMETHODIMP
 nsXULPrototypeCache::GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result)
 {
-    nsStringKey key(aString);
+    nsCStringKey key(aString);
     *_result = NS_STATIC_CAST(nsIDocument*, mScriptAccessTable.Get(&key));
     return NS_OK;
 }
@@ -234,7 +234,7 @@ nsXULPrototypeCache::PutXBLDocScriptAccess(nsIDocument *aDocument)
     nsXPIDLCString str;
     uri->GetSpec(getter_Copies(str));
 
-    nsStringKey key((const char*)str);
+    nsCStringKey key((const char*)str);
     mScriptAccessTable.Put(&key, aDocument);
 
     return NS_OK;

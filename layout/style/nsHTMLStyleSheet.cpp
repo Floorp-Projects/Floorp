@@ -497,7 +497,7 @@ public:
   virtual ~AttributeKey(void);
 
   PRBool      Equals(const nsHashKey* aOther) const;
-  PRUint32    HashValue(void) const;
+  PRUint32    HashCode(void) const;
   nsHashKey*  Clone(void) const;
 
 private:
@@ -540,7 +540,7 @@ PRBool AttributeKey::Equals(const nsHashKey* aOther) const
   return equals;
 }
 
-PRUint32 AttributeKey::HashValue(void) const
+PRUint32 AttributeKey::HashCode(void) const
 {
   if (0 == mHash.mBits.mHashSet) {
     AttributeKey* self = (AttributeKey*)this; // break const

@@ -564,8 +564,9 @@ NS_IMPL_ISUPPORTS(nsFontEnumeratorPh, NS_GET_IID(nsIFontEnumerator));
 static int gInitializedFontEnumerator = 0;
 static PLHashNumber HashKey(const void* aString)
 {
+  const nsString* key = (const nsString*) aString;
   return (PLHashNumber)
-    nsCRT::HashValue(((const nsString*) aString)->GetUnicode());
+    nsCRT::HashCode(key->GetUnicode(), key->Length());
 }
 
 static PRIntn
