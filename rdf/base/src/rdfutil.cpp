@@ -321,7 +321,7 @@ rdf_Assert(nsIRDFDataSource* ds,
     NS_ASSERTION(predicate, "null ptr");
     NS_ASSERTION(object,    "null ptr");
 
-#ifdef DEBUG
+#ifdef DEBUG_waterson
     const char* s;
     predicate->GetValue(&s);
     printf(" %s", (strchr(s, '#') ? strchr(s, '#')+1 : s));
