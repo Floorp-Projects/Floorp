@@ -437,7 +437,7 @@ fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess)
 		}
 		if (errFlag == true)
 		{
-			FE_Alert(((MWContext *)gRDFMWContext()),
+			FE_Alert(((MWContext *)gRDFMWContext(NULL)),
 				PR_smprintf(XP_GetString(RDF_UNABLETODELETEFILE),
 				filePathname));
 		}
@@ -511,7 +511,7 @@ fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess)
 
 				if (errFlag == true)
 				{
-					FE_Alert(((MWContext *)gRDFMWContext()),
+					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFOLDER),
 						filePathname));
 				}

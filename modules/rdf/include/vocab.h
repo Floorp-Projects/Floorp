@@ -196,6 +196,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource to;
   RDF_Resource subject;
   RDF_Resource date;
+  RDF_Resource displayURL;
 } RDF_NCVocabStruct;
 
 typedef RDF_NCVocabStruct* RDF_NCVocab;

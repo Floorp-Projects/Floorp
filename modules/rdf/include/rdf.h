@@ -112,7 +112,7 @@ PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource);
 PR_PUBLIC_API(RDF_Resource) RDF_GetResource(RDF db, char* id, PRBool createp);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseResource(RDF db, RDF_Resource resource);
 PR_PUBLIC_API(RDF_Error) RDF_DeleteAllArcs(RDF rdfDB, RDF_Resource source);
-
+PR_PUBLIC_API(RDF_Error) RDF_Update(RDF rdfDB);
 
 PR_PUBLIC_API(RDF_Notification) RDF_AddNotifiable (RDF rdfDB, RDF_NotificationProc callBack, RDF_Event ev, void* pdata);
 PR_PUBLIC_API(RDF_Error) RDF_DeleteNotifiable (RDF_Notification ns);

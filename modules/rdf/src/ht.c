@@ -1220,7 +1220,7 @@ HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool 
 
 
 PR_PUBLIC_API(HT_Pane)
-HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count, 
+HT_PaneFromURL(void *pContext, char *url, HT_Notification n, PRBool autoFlush, int32 param_count, 
                char** param_names, char** param_values)
 {
 	HT_Pane			pane = NULL;
@@ -1253,6 +1253,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
 	dbstr[0] = dburl;
 	dbstr[1] = NULL;
 	if ((db = RDF_GetDB(dbstr)) != NULL) {
+		db->context = pContext;
           if (r != NULL)
             {
               remoteStoreAdd(db->translators[0], r, gCoreVocab->RDF_name, 
@@ -1278,7 +1279,7 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
             columnList = &(column->next);
             column->name = (strchr(param_value, ':') ? copyString(strchr(param_value, ':')+1) :
                             copyString(param_value));
-            HT_SetColumnVisibility(view, r,  HT_COLUMN_STRING, 0);
+            HT_SetColumnVisibility(view, r,  HT_COLUMN_STRING, 1);
           } 
           pn++;
         }    
@@ -1446,7 +1447,7 @@ htLookInCacheForMetaTags(char *url)
 		if ((urls = NET_CreateURLStruct(url,  NET_DONT_RELOAD)) != NULL)
 		{
 			NET_GetURL(urls, FO_ONLY_FROM_CACHE_AND_PRESENT,
-				gRDFMWContext(), htMetaTagURLExitFunc);
+				gRDFMWContext(NULL), htMetaTagURLExitFunc);
 		}
 	}
 }
@@ -4131,11 +4132,11 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 	{
 		case	HT_CMD_NEW_WORKSPACE:
 		/* XXX localization */
-		if (FE_Confirm(((MWContext *)gRDFMWContext()),
+		if (FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
 				"Create a workspace for remote data?"))
 		{
 			/* XXX localization */
-			if ((url = FE_Prompt(((MWContext *)gRDFMWContext()),
+			if ((url = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
 					"Enter the URL for the remote workspace:", "http://")) != NULL)
 			{
 				if (url[0] != '\0')
@@ -4158,7 +4159,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 					url = NULL;
 				}
 			} while (rNode != NULL);
-			if ((url != NULL) && (title = FE_Prompt(((MWContext *)gRDFMWContext()),
+			if ((url != NULL) && (title = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
 					XP_GetString(RDF_NEWWORKSPACEPROMPT), "")) != NULL)
 			{
 				if (!strcmp(title, "about"))
@@ -4192,7 +4193,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 		case	HT_CMD_DELETE_WORKSPACE:
 		if (view == NULL)	break;
 		if ((topNode = HT_TopNode(view)) == NULL)	break;
-		if (FE_Confirm(((MWContext *)gRDFMWContext()),
+		if (FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
 				PR_smprintf(XP_GetString(RDF_DELETEWORKSPACE),
 				HT_GetViewName(topNode->view))))
 		{
@@ -4252,7 +4253,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				chrome.show_scrollbar = TRUE;
 
 				urls = NET_CreateURLStruct(resourceID(node->node), NET_DONT_RELOAD);
-				FE_MakeNewWindow((MWContext *)gRDFMWContext(), urls, NULL, &chrome);
+				FE_MakeNewWindow((MWContext *)gRDFMWContext(NULL), urls, NULL, &chrome);
 				break;
 
 				case	HT_CMD_OPEN_COMPOSER:
@@ -4273,7 +4274,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				uniqueCount = 0;
 				if (menuCmd == HT_CMD_NEW_BOOKMARK)
 				{
-					if ((url = FE_Prompt(((MWContext *)gRDFMWContext()),
+					if ((url = FE_Prompt(((MWContext *)gRDFMWContext(NULL)),
 							"URL:", "http://")) == NULL)	break;
 
 					if (!strcmp(url, "about"))
@@ -4554,7 +4555,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 						if (ht_checkPassword(node, false) == PR_FALSE)	break;
 					}
 #endif
-					FE_PromptForFileName(((MWContext *)gRDFMWContext()),
+					FE_PromptForFileName(((MWContext *)gRDFMWContext(NULL)),
 						"", NULL, false, false,
 						(ReadFileNameCallbackFunction)exportCallback,
 						(void *)node->node);
@@ -4562,7 +4563,7 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				break;
 
 				case	HT_CMD_EXPORTALL:
-				FE_PromptForFileName(((MWContext *)gRDFMWContext()),
+				FE_PromptForFileName(((MWContext *)gRDFMWContext(NULL)),
 					NULL, NETSCAPE_RDF_FILENAME, false, false,
 					(ReadFileNameCallbackFunction)exportCallback,
 					(void *)gNavCenter->RDF_Top);
@@ -4653,13 +4654,13 @@ HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd)
 				{
 					if (ht_checkPassword(node, true) == PR_FALSE)	break;
 				}
-				if ((password1 = FE_PromptPassword(((MWContext *)gRDFMWContext()),
+				if ((password1 = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
 								XP_GetString(RDF_NEWPASSWORD))) == NULL)	break;
-				if ((password2 = FE_PromptPassword(((MWContext *)gRDFMWContext()),
+				if ((password2 = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
 								XP_GetString(RDF_CONFIRMPASSWORD))) == NULL)	break;
 				if (strcmp(password1, password2))
 				{
-					FE_Alert(((MWContext *)gRDFMWContext()), XP_GetString(RDF_MISMATCHPASSWORD));
+					FE_Alert(((MWContext *)gRDFMWContext(NULL)), XP_GetString(RDF_MISMATCHPASSWORD));
 					break;
 				}
 				ht_SetPassword(node, password1);
@@ -5212,7 +5213,7 @@ htVerifyUniqueToken(HT_Resource node, void *token, uint32 tokenType, char *data)
 				data, resourceID(r));
 			if (msg != NULL)
 			{
-				ok = FE_Confirm(((MWContext *)gRDFMWContext()), msg);
+				ok = FE_Confirm(((MWContext *)gRDFMWContext(NULL)), msg);
 				XP_FREE(msg);
 			}
 		}
@@ -5436,7 +5437,7 @@ HT_ToggleTreeMode(HT_View view)
 							gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data);
 	}
 
-	if (XP_STRCASECMP("Navigation", data))
+	if ((data != NULL) && XP_STRCASECMP("Navigation", data))
 	{
 		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING, 
 						"Navigation");
@@ -6736,7 +6737,7 @@ HT_Find(char *hint)
 		{
 			XP_CopyDialogString(strings, 1, postHTMLdynStr);
 		}
-		context = gRDFMWContext();
+		context = gRDFMWContext(NULL);
 		XP_MakeHTMLDialog(context, &rdfFindDialogInfo, RDF_FIND_TITLE,
 			strings, NULL, PR_FALSE);
 	}
@@ -6960,7 +6961,7 @@ HT_Properties (HT_Resource node)
 
 		if ((context = XP_GetNavCenterContext(node->view->pane)) == NULL)
 		{
-			context = gRDFMWContext();
+			context = gRDFMWContext(NULL);
 		}
 		XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
 			RDF_MAIN_TITLE, strings, node, PR_FALSE);
@@ -6995,12 +6996,30 @@ HT_GetRDFResource (HT_Resource node)
 
 
 PR_PUBLIC_API(char *)
+HT_GetNodeDisplayURL(HT_Resource node)
+{
+  char		*retVal = NULL;
+  char*         ans;
+  XP_ASSERT(node != NULL);
+  XP_ASSERT(node->node != NULL);
+  
+  ans  = RDF_GetSlotValue(node->view->pane->db, node->node, gNavCenter->displayURL, 
+                          RDF_STRING_TYPE, 0, 1);
+  if (ans) return ans;
+  if (node != NULL)
+    {
+      if (node->node != NULL)
+        {
+          retVal = resourceID(node->node);
+        }
+    }
+  return(retVal);
+}
+
+PR_PUBLIC_API(char *)
 HT_GetNodeURL(HT_Resource node)
 {
 	char		*retVal = NULL;
-#ifdef DEBUG 
-	RDF_BT type = resourceType(node->node);
-#endif
 	
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
@@ -8187,12 +8206,12 @@ htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash)
 		{
 			if (HT_IsContainer(child))
 			{
-				if (!FE_Confirm(((MWContext *)gRDFMWContext()),
+				if (!FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
 					PR_smprintf(XP_GetString(RDF_DELETEFOLDER),
 					resourceID(child->node))))	return(true);
 				if (fsRemoveDir( resourceID(child->node), true) == true)
 				{
-					FE_Alert(((MWContext *)gRDFMWContext()),
+					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFOLDER),
 						resourceID(child->node)));
 					return(true);
@@ -8200,12 +8219,12 @@ htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash)
 			}
 			else
 			{
-				if (!FE_Confirm(((MWContext *)gRDFMWContext()),
+				if (!FE_Confirm(((MWContext *)gRDFMWContext(NULL)),
 					PR_smprintf(XP_GetString(RDF_DELETEFILE),
 					 resourceID(child->node))))	return(true);
 				if (CallPRWriteAccessFileUsingFileURL(resourceID(child->node)))
 				{
-					FE_Alert(((MWContext *)gRDFMWContext()),
+					FE_Alert(((MWContext *)gRDFMWContext(NULL)),
 						PR_smprintf(XP_GetString(RDF_UNABLETODELETEFILE),
 						resourceID(child->node)));
 					return(true);
@@ -8377,7 +8396,7 @@ ht_checkPassword(HT_Resource node, PRBool alwaysCheck)
 				name = 	 resourceID(node->node);
 			}
 
-			if ((userPassword = FE_PromptPassword(((MWContext *)gRDFMWContext()),
+			if ((userPassword = FE_PromptPassword(((MWContext *)gRDFMWContext(NULL)),
 						PR_smprintf(XP_GetString(RDF_ENTERPASSWORD),
 						name))) != NULL)
 			{
@@ -8388,7 +8407,7 @@ ht_checkPassword(HT_Resource node, PRBool alwaysCheck)
 				}
 				else
 				{
-					FE_Alert(((MWContext *)gRDFMWContext()), XP_GetString(RDF_MISMATCHPASSWORD));
+					FE_Alert(((MWContext *)gRDFMWContext(NULL)), XP_GetString(RDF_MISMATCHPASSWORD));
 				}
 			}
 		}
@@ -8821,10 +8840,6 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 	targetType  = resourceType(dropTarget->node);
 	objType     = resourceType(dropObject->node);
 
-#ifdef DEBUG
-	FE_Trace(resourceID(dropTarget->node));
-	FE_Trace("\n");
-#endif
 	if (!containerp(dropTarget->node) && (targetType != PMF_RT))
 	{
 		return dropOnSmartNode(dropTarget, dropObject, justAction);

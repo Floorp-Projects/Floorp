@@ -23,10 +23,7 @@
 */
 
 #ifdef SMART_MAIL
-
 #include "pm2rdf.h"
-
-
 
 extern	char		*profileDirURL;
 
@@ -58,7 +55,8 @@ GetPopToRDF (RDFT rdf)
     urls = NET_CreateURLStruct(popurl, NET_DONT_RELOAD);
     if (urls != NULL)  {
       urls->fe_data = rdf;
-      NET_GetURL(urls, FO_PRESENT, gRDFMWContext(), Pop_GetUrlExitFunc);
+
+      NET_GetURL(urls, FO_PRESENT, gRDFMWContext(rdf), Pop_GetUrlExitFunc);
     }
   }
 }
@@ -98,7 +96,7 @@ openPMFile (char* path)
 	FILE* ans = fopen(path, "r+");
 	if (!ans) {
 		ans = fopen(path, "w");
-		fclose(ans);
+		if (ans) fclose(ans);
 		ans = fopen(path, "r+");
 	}
 	return ans;
@@ -186,11 +184,9 @@ RDF_AddMessageLine (RDFT rdf, char* block, int32 length)
 }
 
 
-
-void
-writeMsgSum (MF folder, MM msg)
-{
-  if (!msg->flags) msg->flags = getMem(4);
+#define TON(s) ((s == NULL) ? "" : s)  
+void writeMsgSum (MF folder, MM msg) {
+  if (!msg->flags) msg->flags = copyString("0000");
   if (msg->summOffset == -1) {
     fseek(folder->sfile, 0L, SEEK_END);
     msg->summOffset = ftell(folder->sfile);
@@ -234,28 +230,55 @@ setMessageFlag (RDFT rdf, RDF_Resource r, char* newFlag)
   fflush(folder->sfile);
 }
 
+#define BUFF_SIZE 50000
 
 
-#define BUFF_SIZE 100000 
-
-
+RDFT 
+getBFTranslator (char* url) {
+	if (startsWith("mailbox://folder/", url)) {
+		char* temp = getMem(strlen(url));
+		RDFT ans = NULL;
+		sprintf(temp, "mailbox://%s", &url[17]);
+	    ans = getTranslator(temp);
+		freeMem(temp);
+		return ans;
+	} else return getTranslator(url);
+}
 
 PRBool
-MoveMessage (char* to, char* from, MM message)
-{
-  RDFT todb = getTranslator(to);
-  RDFT fromdb = getTranslator(from);
+MoveMessage (char* to, char* from, MM message) {
+  RDFT todb = getBFTranslator(to);
+  RDFT fromdb = getBFTranslator(from);
   MF tom = todb->pdata;
   MF fom = fromdb->pdata;
+  RDF_Resource r;
+  MM newMsg = (MM)getMem(sizeof(struct MailMessage));
   char* buffer = getMem(BUFF_SIZE);
-  setMessageFlag(fromdb, message->r, "0008");
-  writeMsgSum(tom, message);
+  if (!buffer) return 0;
+  setMessageFlag(fromdb, message->r, "0008"); 
   fseek(tom->mfile, 0L, SEEK_END);
   fseek(fom->mfile, message->offset, SEEK_SET);
   fputs("From -\n", tom->mfile);
+  sprintf(buffer, "%s?%d", to, ftell(tom->mfile));
+  r = RDF_GetResource(NULL, buffer, 1);
+  newMsg->subject = copyString(message->subject);
+  newMsg->from = copyString(message->from);
+  newMsg->date = copyString(message->date);
+  newMsg->r = r;
+  r->pdata = newMsg;
+  setResourceType(r, PM_RT);        
+  newMsg->summOffset = -1;
+  newMsg->offset = ftell(tom->mfile);
+  writeMsgSum(tom, newMsg);
+  addMsgToFolder (tom, newMsg) ;
+  fflush(tom->sfile);
   while (fgets(buffer, BUFF_SIZE, fom->mfile) && strncmp("From ", buffer, 5)) {
     fputs(buffer, tom->mfile);
   }
+  sendNotifications2(todb, RDF_ASSERT_NOTIFY, r, gCoreVocab->RDF_parent, tom->top, 
+                     RDF_RESOURCE_TYPE, 1);       
+  sendNotifications2(fromdb, RDF_DELETE_NOTIFY, r, gCoreVocab->RDF_parent, tom->top, 
+                     RDF_RESOURCE_TYPE, 1);       
   freeMem(buffer);
   return 1;
 }
@@ -486,7 +509,7 @@ MakePopDB (char* url)
         ntr->hasAssertion = pmHasAssertion;
         ntr->nextValue = pmNextValue;
         ntr->disposeCursor = pmDisposeCursor;
-        ntr->url = copyString(url);
+        ntr->url = copyString(url);        
         readSummaryFile(ntr);
         return ntr;
       } else {

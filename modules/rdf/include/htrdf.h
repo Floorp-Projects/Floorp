@@ -147,7 +147,7 @@ typedef HT_NotificationStruct* HT_Notification;
 
 PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool autoOpen, PRBool useColumns);
 
-PR_PUBLIC_API(HT_Pane) HT_PaneFromURL(char* url, HT_Notification n, PRBool autoFlush, int32 param_count,
+PR_PUBLIC_API(HT_Pane) HT_PaneFromURL(void* context, char* url, HT_Notification n, PRBool autoFlush, int32 param_count,
                                       char** param_names, char** param_values);
 
 /* NewQuickFilePane
@@ -391,6 +391,7 @@ PR_PUBLIC_API(RDF_Resource) HT_GetRDFResource (HT_Resource node);
  */
 
 PR_PUBLIC_API(char *) HT_GetNodeURL(HT_Resource node);
+PR_PUBLIC_API(char *) HT_GetNodeDisplayURL(HT_Resource node);
 PR_PUBLIC_API(char *) HT_GetNodeName(HT_Resource node);
 
 /*-----------------------------------------------------------------------*/

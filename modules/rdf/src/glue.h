@@ -80,7 +80,7 @@ int			rdf_GetURL (MWContext *cx,  int method,
 void			possiblyRereadRDFFiles (void* data);
 void			RDFglueInitialize (void);
 void			RDFglueExit (void);
-void			*gRDFMWContext();
+void			*gRDFMWContext(RDFT db);
 void			beginReadingRDFFile (RDFFile file);
 void			readLocalFile (RDFFile file);
 

@@ -240,7 +240,7 @@ ESAddChild (RDF_Resource parent, RDF_Resource child)
 			urls->method = URL_POST_METHOD;
 			urls->fe_data = (void *)feData;
 			NET_GetURL(urls, FO_PRESENT,
-				(MWContext *)gRDFMWContext(),
+				(MWContext *)gRDFMWContext(NULL),
 				es_GetUrlExitFunc);
 		}
 		else
@@ -276,7 +276,7 @@ ESRemoveChild (RDF_Resource parent, RDF_Resource child)
 			urls->method = URL_DELETE_METHOD;
 			urls->fe_data = (void *)feData;
 			NET_GetURL(urls, FO_PRESENT,
-				(MWContext *)gRDFMWContext(),
+				(MWContext *)gRDFMWContext(NULL),
 				es_GetUrlExitFunc);
 		}
 		else

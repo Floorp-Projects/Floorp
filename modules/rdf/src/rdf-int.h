@@ -146,8 +146,6 @@ typedef struct RDF_AssertionStruct *Assertion;
 typedef struct RDF_FileStruct *RDFFile;
 
 
-RDF	newNavCenterDB();
-void	walkThroughAllBookmarks (RDF_Resource u);
 typedef PRBool (*assertProc)(RDFT r, RDF_Resource u, RDF_Resource  s, void* value, RDF_ValueType type, PRBool tv);
 typedef PRBool (*hasAssertionProc)(RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 typedef void* (*getSlotValueProc)(RDFT r, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv) ;
@@ -156,11 +154,13 @@ typedef PRBool (*unassertProc)(RDFT r, RDF_Resource u, RDF_Resource s, void* val
 typedef void* (*nextItemProc)(RDFT r, RDF_Cursor c) ;
 typedef RDF_Error (*disposeCursorProc)(RDFT r, RDF_Cursor c);
 typedef RDF_Error (*disposeResourceProc)(RDFT r, RDF_Resource u);
+typedef RDF_Error (*updateProc)(RDFT r);
 typedef RDF_Error (*destroyProc)(struct RDF_TranslatorStruct*);
 typedef RDF_Cursor (*arcLabelsOutProc)(RDFT r, RDF_Resource u);
 typedef RDF_Cursor (*arcLabelsInProc)(RDFT r, RDF_Resource u);
 typedef PRBool (*fAssert1Proc) (RDFFile  file, RDFT mcf,  RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 typedef void (*accessFileProc) (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) ;
+
 struct RDF_ListStruct {
   struct RDF_DBStruct*   rdf;
   struct RDF_ListStruct* next;
@@ -184,6 +184,7 @@ struct RDF_TranslatorStruct {
   arcLabelsInProc   arcLabelsIn;
   arcLabelsInProc   arcLabelsOut;
   accessFileProc    possiblyAccessFile;
+  updateProc        update;
   RDFL dependents;
   RDFL dependentOn; 
 };
@@ -198,6 +199,7 @@ struct RDF_DBStruct {
   RDFT*  translators;
   struct RDF_FileStruct* files;
   struct RDF_NotificationStruct* notifs;
+  void* context;
 };
 
 extern RDFT gLocalStore;
@@ -265,7 +267,8 @@ struct RDF_FileStruct {
   struct RDF_FileStructTokens tokens[RDF_MAX_NUM_FILE_TOKENS];
 };
 
-
+RDF	newNavCenterDB();
+void	walkThroughAllBookmarks (RDF_Resource u);
 RDFT NewRemoteStore (char* url);
 RDF_Resource nextFindValue (RDF_Cursor c) ;
 PRBool isTypeOf (RDF rdf, RDF_Resource u,  RDF_Resource v); 

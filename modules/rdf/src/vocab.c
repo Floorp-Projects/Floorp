@@ -275,6 +275,7 @@ createNavCenterVocab () {
   gNavCenter->to   = newResource("mail:To", 0 );
   gNavCenter->subject = newResource("mail:Subject", 0 /* XXX */);
   gNavCenter->date = newResource("mail:Date", 0 /* XXX */);
+  gNavCenter->displayURL = newResource("displayURL", 0 /* XXX */);
   remoteStoreAdd(gRemoteStore, gNavCenter->from, gCoreVocab->RDF_name, copyString("from"), RDF_STRING_TYPE, 1);
   remoteStoreAdd(gRemoteStore, gNavCenter->to, gCoreVocab->RDF_name, copyString("to"), RDF_STRING_TYPE, 1);
   remoteStoreAdd(gRemoteStore, gNavCenter->subject, gCoreVocab->RDF_name, copyString("subject"), RDF_STRING_TYPE, 1);

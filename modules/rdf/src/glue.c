@@ -273,12 +273,20 @@ RDFglueExit (void)
 
 
 void *
-gRDFMWContext()
+gRDFMWContext(RDFT db)
 {
 #ifndef MOZILLA_CLIENT
    return NULL;
 #else
 	void		*cx;
+        RDFL            rdf = NULL;
+        
+        if (db) rdf = db->rdf;
+        
+        while (rdf) {
+          if (rdf->rdf->context) return (rdf->rdf->context);
+          rdf = rdf->next;
+        }
 
 	cx = (void *)FE_GetRDFContext();
 	return(cx);
@@ -334,7 +342,7 @@ beginReadingRDFFile (RDFFile file)
 
 	url = file->url;
 	if (file->fileType == ES_RT)	method = URL_INDEX_METHOD;
-	rdf_GetURL (gRDFMWContext(), method, NULL, file);
+	rdf_GetURL (gRDFMWContext(file->db), method, NULL, file);
 
 #endif
 }
