@@ -42,3 +42,21 @@ Documentation
 Documentation can be found inside the scripts. The source code is self
 documenting.
 
+Issues for someone trying to use it to convert a gnats install
+-----------------------------------
+
+1. We have three custom fields bugzilla doesn't ship with, 
+gcchost, gcctarget, and gccbuild. 
+We removed two bugzilla fields, rep_platform and op_sys.
+If you use the latter instead of the former, you'll need to
+update the script to account for this.
+2. Because gcc attachments consist of preprocessed source, all attachments
+inserted into the attachment database are compressed with zlib.compress.
+This requires associated bugzilla changes to decompress before sending to
+the browser.
+Unless you want to make those changes (it's roughly 3 lines), you'll
+need to remove the zlib.compress call.
+3. You will need to come up with your own release to version mapping and
+install it.
+4. Obviously, any extra gnats fields you have added will have to
+be handled in some manner.
