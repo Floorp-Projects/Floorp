@@ -10,6 +10,27 @@
 
   <script type="application/x-javascript">
   <![CDATA[
+
+    function getCurrentIdentityKey()                                           
+    {                                                                          
+      try {                                                                                 
+        var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+        var iwindowManager = Components.interfaces.nsIWindowMediator;           
+        var windowManager  = cwindowManager.QueryInterface(iwindowManager);     
+        var mailWindow = windowManager.getMostRecentWindow('mail:3pane');       
+        var folder = mailWindow.GetFirstSelectedMsgFolder();                    
+
+        var server = folder.server;                                             
+
+        var identity = mailWindow.getIdentityForServer(server);                 
+
+        return identity.key;                                                    
+      }                                                                         
+      catch(ex) {                                                               
+        return null;                                                            
+      }                                                                         
+    }   
+  
     function sendLink(pageUrl, pageTitle)
     {
       var currentIdentity = getCurrentIdentityKey();
