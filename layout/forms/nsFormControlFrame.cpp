@@ -619,9 +619,8 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
     if (NS_KEY_EVENT == aEvent->eventStructType) {
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
       if (NS_VK_RETURN == keyEvent->keyCode) {
-        // XXX breaking the mac to fix the tree, go figure
-        //        EnterPressed(aPresContext);
-      } 
+        EnterPressed(aPresContext);
+      }
       else if (NS_VK_SPACE == keyEvent->keyCode) {
         MouseClicked(&aPresContext);
       }
