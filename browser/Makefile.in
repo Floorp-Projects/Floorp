@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base components app extensions
+DIRS = base components extensions app
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER
