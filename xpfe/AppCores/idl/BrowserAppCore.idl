@@ -26,9 +26,5 @@ interface BrowserAppCore : BaseAppCore
 	void close();
 	void exit();
 
-
-	void setDisableCallback(in wstring script);
-	void setEnableCallback(in wstring script);
-
 };
 
