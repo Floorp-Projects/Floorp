@@ -230,7 +230,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
   receiver->AddEventListener("dragover", mDragListener, PR_TRUE);
   receiver->AddEventListener("dragexit", mDragListener, PR_TRUE);
 
-#if TEMP_HACK_FOR_BUG_11291
+#if 0 //TEMP_HACK_FOR_BUG_11291
   // Ok, this is a hack until Ender lands. We need to have a mouse listener on text widgets
   // in order to make sure that mouseDowns within the text widget don't bubble up to the toolbar
   // listener. This would cause problems where selecting text and moving the mouse outside the text
