@@ -186,6 +186,7 @@ function MonthView( calendarWindow )
          // set on click of day boxes
          
          dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( event )" );
+         dayBoxItem.setAttribute( "oncontextmenu", "gCalendarWindow.monthView.contextClickDay( event )" );
 
          //set the drop
          dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
@@ -753,6 +754,28 @@ MonthView.prototype.clickDay = function monthView_clickDay( event )
       this.calendarWindow.selectedDate.setDate( dayBoxItem.dayNumber );
 
       gCalendarWindow.EventSelection.emptySelection();
+   }
+}
+
+/** PUBLIC  -- monthview only
+*
+*   Called when a day box item is single clicked
+*/
+MonthView.prototype.contextClickDay = function monthView_contextClickDay( event )
+{
+   var dayBoxItem = event.currentTarget;
+   
+   if( dayBoxItem.dayNumber != null )
+   {
+      // turn off showingLastDay - see notes in MonthView class
+      
+      this.showingLastDay = false;
+   
+      // change the selected date and redraw it
+      
+      gNewDateVariable = this.calendarWindow.selectedDate;
+
+      gNewDateVariable.setDate( dayBoxItem.dayNumber );
    }
 }
 

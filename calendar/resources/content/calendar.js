@@ -264,6 +264,26 @@ function dayViewHourClick( event )
 }
 
 
+/** 
+* Called on single click in the hour area in the day view
+*
+* PARAMETERS
+*    hourNumber - 0-23 hard-coded in the XUL
+*    event      - the click event, Not used yet 
+*/
+
+function dayViewHourContextClick( event )
+{
+   var dayIndex = event.target.getAttribute( "day" );
+
+   gNewDateVariable = gCalendarWindow.getSelectedDate();
+   
+   gNewDateVariable.setHours( event.target.getAttribute( "hour" ) );
+
+   gNewDateVariable.setMinutes( 0 );
+}
+
+
 /**
 * Called on double click of an hour box.
 */
@@ -339,6 +359,24 @@ function weekViewHourClick( event )
 }
 
 
+/** ( event )
+* Called on single click in the hour area in the day view
+*
+* PARAMETERS
+*    hourNumber - 0-23 hard-coded in the XUL
+*    event      - the click event, Not used yet 
+*/
+
+function weekViewContextClick( event )
+{
+   var dayIndex = event.target.getAttribute( "day" );
+
+   gNewDateVariable = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+   
+   gNewDateVariable.setHours( event.target.getAttribute( "hour" ) );
+}
+
+
 /**
 * Called on double click of an hour box.
 */
@@ -405,12 +443,17 @@ function monthEventBoxDoubleClickEvent( eventBox, event )
 /** 
 * Called when the new event button is clicked
 */
+var gNewDateVariable = null;
 
-function newEventCommand()
+function newEventCommand( event )
 {
-   var startDate = gCalendarWindow.currentView.getNewEventDate();
-   
-   
+   if( gNewDateVariable != null )
+   {
+      var startDate = gNewDateVariable;
+   }
+   else
+      var startDate = gCalendarWindow.currentView.getNewEventDate();
+
    var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
    
    startDate = new Date( startDate.getFullYear(),

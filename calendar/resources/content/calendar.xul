@@ -80,7 +80,7 @@
    persist="screenX screenY width height sizemode"> 
  
 <commandset id="calendar_commands">
-   <command id="new_command" oncommand="newEventCommand()"/>
+   <command id="new_command" oncommand="newEventCommand( event )"/>
    <command id="delete_command" oncommand="unifinderDeleteCommand( )" disabled="true"/>
    <command id="delete_command_no_confirm" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
    <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
@@ -184,7 +184,7 @@
 
 
 <!-- GENERAL CONTEXT MENU -->
-<popup id="context-menu">
+<popup id="context-menu" onpopuphidden="gNewDateVariable = null;">
    <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" observes="new_command"/>
    <menuitem label="&calendar.context.newtodo.label;" accesskey="&calendar.context.newtodo.accesskey;" observes="new_todo_command"/>
    <menuitem label="&calendar.context.modifyevent.label;" accesskey="&calendar.context.modifyevent.accesskey;" observes="modify_command" />
