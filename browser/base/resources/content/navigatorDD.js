@@ -340,21 +340,6 @@ var proxyIconDNDObserver = {
 };
 
 var homeButtonObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
-    {
-      var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
-
-      if (homepage)
-        {
-          // XXX find a readable title string for homepage, perhaps do a history lookup.
-          var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
-          aXferData.data = new TransferData();
-          aXferData.data.addDataForFlavour("text/x-moz-url", homepage + "\n" + homepage);
-          aXferData.data.addDataForFlavour("text/html", htmlString);
-          aXferData.data.addDataForFlavour("text/unicode", homepage);
-        }
-    },
-
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);

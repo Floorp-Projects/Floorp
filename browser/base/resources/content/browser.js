@@ -1491,54 +1491,6 @@ function stylesheetSwitchAll(frameset, title) {
   }
 }
 
-function applyTheme(themeName)
-{
-  var name = themeName.getAttribute("name");
-  if (!name)
-    return;
-
-  var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIChromeRegistry);
-
-  var oldTheme = false;
-  try {
-    oldTheme = !chromeRegistry.checkThemeVersion(name);
-  }
-  catch(e) {
-  }
-
-  var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
-
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  if (oldTheme) {
-    var title = gNavigatorBundle.getString("oldthemetitle");
-    var message = gNavigatorBundle.getString("oldTheme");
-
-    message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
-    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
-
-    if (promptService.confirm(window, title, message)){
-      var inUse = chromeRegistry.isSkinSelected(name, true);
-
-      chromeRegistry.uninstallSkin( name, true );
-      // XXX - this sucks and should only be temporary.
-
-      str.data = true;
-      pref.setComplexValue("general.skins.removelist." + name,
-                           Components.interfaces.nsISupportsWString, str);
-      
-      if (inUse)
-        chromeRegistry.refreshSkins();
-    }
-
-    return;
-  }
-
-  chromeRegistry.selectSkin(name, true);                                        
-  chromeRegistry.refreshSkins(); 
-}
-
 function URLBarFocusHandler(aEvent)
 {
   if (gURLBar) {
