@@ -157,6 +157,17 @@ struct nsCharTraits<PRUnichar>
 
     static
     char_type*
+    copyASCII( char_type* s1, const char* s2, size_t n )
+      {
+        for (char_type* s = s1; n--; ++s, ++s2) {
+          NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+          *s = *s2;
+        }
+        return s1;
+      }
+
+    static
+    char_type*
     assign( char_type* s, size_t n, char_type c )
       {
 #ifdef USE_CPP_WCHAR_FUNCS
@@ -214,6 +225,58 @@ struct nsCharTraits<PRUnichar>
             NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
             if ( !eq_int_type(to_int_type(*s1), to_int_type(*s2)) )
               return to_int_type(*s1) - to_int_type(*s2);
+          }
+
+        if ( *s2 )
+          return -1;
+
+        return 0;
+      }
+
+    /**
+     * Convert c to its lower-case form, but only if c is ASCII.
+     */
+    static
+    char_type
+    ASCIIToLower( char_type c )
+      {
+        return (c >= 'A' && c <= 'Z') ? (c + ('a' - 'A')) : c;
+      }
+
+    static
+    int
+    compareLowerCaseToASCII( const char_type* s1, const char* s2, size_t n )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            NS_ASSERTION(!(*s2 >= 'A' && *s2 <= 'Z'),
+                         "Unexpected uppercase character");
+            char_type lower_s1 = ASCIIToLower(*s1);
+            if ( lower_s1 != to_char_type(*s2) )
+              return to_int_type(lower_s1) - to_int_type(*s2);
+          }
+
+        return 0;
+      }
+
+    // this version assumes that s2 is null-terminated and s1 has length n.
+    // if s1 is shorter than s2 then we return -1; if s1 is longer than s2,
+    // we return 1.
+    static
+    int
+    compareLowerCaseToASCIINullTerminated( const char_type* s1, size_t n, const char* s2 )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            if ( !*s2 )
+              return 1;
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            NS_ASSERTION(!(*s2 >= 'A' && *s2 <= 'Z'),
+                         "Unexpected uppercase character");
+            char_type lower_s1 = ASCIIToLower(*s1);
+            if ( lower_s1 != to_char_type(*s2) )
+              return to_int_type(lower_s1) - to_int_type(*s2);
           }
 
         if ( *s2 )
@@ -361,6 +424,13 @@ struct nsCharTraits<char>
 
     static
     char_type*
+    copyASCII( char_type* s1, const char* s2, size_t n )
+      {
+        return copy(s1, s2, n);
+      }
+
+    static
+    char_type*
     assign( char_type* s, size_t n, char_type c )
       {
         return NS_STATIC_CAST(char_type*, memset(s, to_int_type(c), n));
@@ -402,6 +472,57 @@ struct nsCharTraits<char>
             NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
             if ( *s1 != *s2 )
               return to_int_type(*s1) - to_int_type(*s2);
+          }
+
+        if ( *s2 )
+          return -1;
+
+        return 0;
+      }
+
+    /**
+     * Convert c to its lower-case form, but only if c is ASCII.
+     */
+    static
+    char_type
+    ASCIIToLower( char_type c )
+      {
+        return (c >= 'A' && c <= 'Z') ? (c + ('a' - 'A')) : c;
+      }
+
+    static
+    int
+    compareLowerCaseToASCII( const char_type* s1, const char* s2, size_t n )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            NS_ASSERTION(!(*s2 >= 'A' && *s2 <= 'Z'),
+                         "Unexpected uppercase character");
+            char_type lower_s1 = ASCIIToLower(*s1);
+            if ( lower_s1 != *s2 )
+              return to_int_type(lower_s1) - to_int_type(*s2);
+          }
+        return 0;
+      }
+
+    // this version assumes that s2 is null-terminated and s1 has length n.
+    // if s1 is shorter than s2 then we return -1; if s1 is longer than s2,
+    // we return 1.
+    static
+    int
+    compareLowerCaseToASCIINullTerminated( const char_type* s1, size_t n, const char* s2 )
+      {
+        for ( ; n--; ++s1, ++s2 )
+          {
+            if ( !*s2 )
+              return 1;
+            NS_ASSERTION(!(*s2 & ~0x7F), "Unexpected non-ASCII character");
+            NS_ASSERTION(!(*s2 >= 'A' && *s2 <= 'Z'),
+                         "Unexpected uppercase character");
+            char_type lower_s1 = ASCIIToLower(*s1);
+            if ( lower_s1 != *s2 )
+              return to_int_type(lower_s1) - to_int_type(*s2);
           }
 
         if ( *s2 )

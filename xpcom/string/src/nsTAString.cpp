@@ -124,6 +124,24 @@ nsTAString_CharT::EqualsASCII( const char* data ) const
   }
 
 PRBool
+nsTAString_CharT::LowerCaseEqualsASCII( const char* data, size_type len ) const
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      return AsSubstring()->LowerCaseEqualsASCII(data, len);
+
+    return ToSubstring().LowerCaseEqualsASCII(data, len);
+  }
+
+PRBool
+nsTAString_CharT::LowerCaseEqualsASCII( const char* data ) const
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      return AsSubstring()->LowerCaseEqualsASCII(data);
+
+    return ToSubstring().LowerCaseEqualsASCII(data);
+  }
+
+PRBool
 nsTAString_CharT::IsVoid() const
   {
     if (mVTable == obsolete_string_type::sCanonicalVTable)
@@ -245,6 +263,40 @@ nsTAString_CharT::Assign( const char_type* data, size_type length )
   }
 
 void
+nsTAString_CharT::AssignASCII( const char* data )
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      AsSubstring()->AssignASCII(data);
+    else
+      {
+#ifdef CharT_is_char
+        AsObsoleteString()->do_AssignFromElementPtr(data);
+#else
+        nsTAutoString_CharT temp;
+        temp.AssignASCII(data);
+        AsObsoleteString()->do_AssignFromReadable(temp);
+#endif
+      }
+  }
+
+void
+nsTAString_CharT::AssignASCII( const char* data, size_type length )
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      AsSubstring()->AssignASCII(data, length);
+    else
+      {
+#ifdef CharT_is_char
+        AsObsoleteString()->do_AssignFromElementPtrLength(data, length);
+#else
+        nsTAutoString_CharT temp;
+        temp.AssignASCII(data, length);
+        AsObsoleteString()->do_AssignFromReadable(temp);
+#endif
+      }
+  }
+
+void
 nsTAString_CharT::Assign( char_type c )
   {
     if (mVTable == obsolete_string_type::sCanonicalVTable)
@@ -289,6 +341,40 @@ nsTAString_CharT::Append( const char_type* data, size_type length )
       AsSubstring()->Append(data, length);
     else
       AsObsoleteString()->do_AppendFromElementPtrLength(data, length);
+  }
+
+void
+nsTAString_CharT::AppendASCII( const char* data )
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      AsSubstring()->AppendASCII(data);
+    else
+      {
+#ifdef CharT_is_char
+        AsObsoleteString()->do_AppendFromElementPtr(data);
+#else
+        nsTAutoString_CharT temp;
+        temp.AssignASCII(data);
+        AsObsoleteString()->do_AppendFromReadable(temp);
+#endif
+      }
+  }
+
+void
+nsTAString_CharT::AppendASCII( const char* data, size_type length )
+  {
+    if (mVTable == obsolete_string_type::sCanonicalVTable)
+      AsSubstring()->AppendASCII(data, length);
+    else
+      {
+#ifdef CharT_is_char
+        AsObsoleteString()->do_AppendFromElementPtrLength(data, length);
+#else
+        nsTAutoString_CharT temp;
+        temp.AssignASCII(data, length);
+        AsObsoleteString()->do_AppendFromReadable(temp);
+#endif
+      }
   }
 
 void

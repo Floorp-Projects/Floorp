@@ -252,6 +252,37 @@ class nsTSubstring_CharT : public nsTAString_CharT
         }
 #endif
 
+    // The LowerCaseEquals methods compare the lower case version of
+    // this string to some ASCII/Literal string. The ASCII string is
+    // *not* lowercased for you. If you compare to an ASCII or literal
+    // string that contains an uppercase character, it is guaranteed to
+    // return false. We will throw assertions too.
+      NS_COM PRBool LowerCaseEqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool LowerCaseEqualsASCII( const char* data ) const;
+
+    // LowerCaseEqualsLiteral must ONLY be applied to an actual
+    // literal string.  Do not attempt to use it with a regular char*
+    // pointer, or with a char array variable. Use
+    // LowerCaseEqualsASCII for them.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      inline PRBool LowerCaseEqualsLiteral( const char* str ) const
+        {
+          return LowerCaseEqualsASCII(str);
+        }
+#else
+      template<int N>
+      inline PRBool LowerCaseEqualsLiteral( const char (&str)[N] ) const
+        {
+          return LowerCaseEqualsASCII(str, N-1);
+        }
+      template<int N>
+      inline PRBool LowerCaseEqualsLiteral( char (&str)[N] ) const
+        {
+          const char* s = str;
+          return LowerCaseEqualsASCII(s, N-1);
+        }
+#endif
+
         /**
          * assignment
          */
@@ -261,6 +292,24 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM void Assign( const self_type& );
       NS_COM void Assign( const substring_tuple_type& );
       NS_COM void Assign( const abstract_string_type& );
+
+      NS_COM void AssignASCII( const char* data, size_type length );
+      NS_COM void AssignASCII( const char* data );
+
+    // AssignLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use AssignASCII for those.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      void AssignLiteral( const char* str )
+                  { return AssignASCII(str); }
+#else
+      template<int N>
+      void AssignLiteral( const char (&str)[N] )
+                  { return AssignASCII(str, N-1); }
+      template<int N>
+      void AssignLiteral( char (&str)[N] )
+                  { return AssignASCII(str, N-1); }
+#endif
 
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
@@ -281,11 +330,30 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM void Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
       NS_COM void Replace( index_type cutStart, size_type cutLength, const abstract_string_type& readable );
 
+      NS_COM void ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
+
       void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
       void Append( const self_type& str )                                                        { Replace(mLength, 0, str); }
       void Append( const substring_tuple_type& tuple )                                           { Replace(mLength, 0, tuple); }
       void Append( const abstract_string_type& readable )                                        { Replace(mLength, 0, readable); }
+
+      void AppendASCII( const char* data, size_type length = size_type(-1) )                     { ReplaceASCII(mLength, 0, data, length); }
+
+    // AppendLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use AppendASCII for those.
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      void AppendLiteral( const char* str )
+                  { return AppendASCII(str); }
+#else
+      template<int N>
+      void AppendLiteral( const char (&str)[N] )
+                  { return AppendASCII(str, N-1); }
+      template<int N>
+      void AppendLiteral( char (&str)[N] )
+                  { return AppendASCII(str, N-1); }
+#endif
 
       self_type& operator+=( char_type c )                                                       { Append(c);        return *this; }
       self_type& operator+=( const char_type* data )                                             { Append(data);     return *this; }

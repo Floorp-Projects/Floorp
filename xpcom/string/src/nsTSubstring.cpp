@@ -293,6 +293,30 @@ nsTSubstring_CharT::Assign( const char_type* data, size_type length )
   }
 
 void
+nsTSubstring_CharT::AssignASCII( const char* data, size_type length )
+  {
+    // A Unicode string can't depend on an ASCII string buffer,
+    // so this dependence check only applies to CStrings.
+#ifdef CharT_is_char
+    if (IsDependentOn(data, data + length))
+      {
+        // take advantage of sharing here...
+        Assign(string_type(data, length));
+        return;
+      }
+#endif
+
+    ReplacePrep(0, mLength, length);
+    char_traits::copyASCII(mData, data, length);
+  }
+
+void
+nsTSubstring_CharT::AssignASCII( const char* data )
+  {
+    AssignASCII(data, strlen(data));
+  }
+
+void
 nsTSubstring_CharT::Assign( const self_type& str )
   {
     // |str| could be sharable.  we need to check its flags to know how to
@@ -406,6 +430,29 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
 
     if (length > 0)
       char_traits::copy(mData + cutStart, data, length);
+  }
+
+void
+nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length )
+  {
+    if (length == size_type(-1))
+      length = strlen(data);
+    
+    // A Unicode string can't depend on an ASCII string buffer,
+    // so this dependence check only applies to CStrings.
+#ifdef CharT_is_char
+    if (IsDependentOn(data, data + length))
+      {
+        nsTAutoString_CharT temp(data, length);
+        Replace(cutStart, cutLength, temp);
+        return;
+      }
+#endif
+
+    ReplacePrep(cutStart, cutLength, length);
+
+    if (length > 0)
+      char_traits::copyASCII(mData + cutStart, data, length);
   }
 
 void
@@ -565,6 +612,18 @@ PRBool
 nsTSubstring_CharT::EqualsASCII( const char* data ) const
   {
     return char_traits::compareASCIINullTerminated(mData, mLength, data) == 0;
+  }
+
+PRBool
+nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data, size_type len ) const
+  {
+    return mLength == len && char_traits::compareLowerCaseToASCII(mData, data, len) == 0;
+  }
+
+PRBool
+nsTSubstring_CharT::LowerCaseEqualsASCII( const char* data ) const
+  {
+    return char_traits::compareLowerCaseToASCIINullTerminated(mData, mLength, data) == 0;
   }
 
 nsTSubstring_CharT::size_type
