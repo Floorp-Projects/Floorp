@@ -56,6 +56,10 @@ var RDFCU;
 var BMDS;
 var BMSVC;
 
+var kPREFContractID;
+var kPREFIID;
+var PREF;
+
 var kSOUNDContractID;
 var kSOUNDIID;
 var SOUND;
@@ -87,6 +91,11 @@ function initServices()
   kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
   kRDFCUIID        = Components.interfaces.nsIRDFContainerUtils;
   RDFCU            = Components.classes[kRDFCUContractID].getService(kRDFCUIID);
+
+  kPREFContractID  = "@mozilla.org/preferences-service;1";
+  kPREFIID         = Components.interfaces.nsIPrefService;
+  PREF             = Components.classes[kPREFContractID].getService(kPREFIID)
+                               .getBranch(null)
 
   kSOUNDContractID = "@mozilla.org/sound;1";
   kSOUNDIID        = Components.interfaces.nsISound;
@@ -559,11 +568,7 @@ var BookmarksCommand = {
       var containerChildren = RDFC.GetElements();
       var tabPanels = browser.mPanelContainer.childNodes;
       var tabCount  = tabPanels.length;
-      // Get the preferences service
-      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                  .getService(Components.interfaces.nsIPrefService);
-      var doReplace = prefService.getBranch(null)
-                                 .getBoolPref("browser.tabs.loadFolderAndReplace");
+      var doReplace = PREF.getBoolPref("browser.tabs.loadFolderAndReplace");
       var index0;
       if (doReplace)
         index0 = 0;
@@ -1607,7 +1612,9 @@ var BookmarksUtils = {
   getBrowserTargetFromEvent: function (aEvent)
   {
     var button = (aEvent.type == "command" || aEvent.type == "keypress") ? 0 :aEvent.button;
-    if (aEvent.shiftKey)      
+    if (button == 1)
+      return PREF.getBoolPref("browser.tabs.opentabfor.middleclick")? "tab":"window"
+    else if (aEvent.shiftKey)      
       return "window";
     else if (aEvent.ctrlKey)
       return "tab";
