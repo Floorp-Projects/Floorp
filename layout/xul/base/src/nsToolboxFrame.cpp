@@ -857,7 +857,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
               // If the string was not empty then make it so.
               if ( dataAsString ) {
                 char* stuffToPaste;
-                dataAsString->toString ( &stuffToPaste );
+                dataAsString->ToString ( &stuffToPaste );
                 printf("Dropped: %s\n", stuffToPaste);
                 dragSession->SetCanDrop(PR_TRUE);
               }
