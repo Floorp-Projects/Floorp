@@ -50,59 +50,62 @@ sub main {
   my $embedding_dir = "$mozilla_build_dir/mozilla/embedding/config";
   my $chimera_binary = "Navigator";
 
-  # Checkout/update the chimera code.
-  #$status = checkout($mozilla_build_dir);
-  TinderUtils::print_log "Status from checkout: $status\n";
-  if ($status != 0) {
-    $post_status = 'busted';
-  }
-
-  # Build chimera if we passed the checkout command.
-  if ($post_status ne 'busted') {
-    # Build embedding/config.
-    
-    chdir $embedding_dir;
-    
-    if ($status == 0) {
-      $status = TinderUtils::run_shell_command("make");
-      TinderUtils::print_log "Status from make: $status\n";
-    }
-
-    #
-    # Build chimera.
-    #
-
-    chdir $chimera_dir;
-    
-    if ($status == 0) {
-      TinderUtils::print_log "Deleting binary...\n";
-      TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
-
-      # Always do a clean build; gecko dependencies don't work correctly
-      # for Chimera.
-
-      TinderUtils::print_log "Clobbering chimera...\n";
-      TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\" clean");
-
-      my $foo = Cwd::getcwd();
-      TinderUtils::print_log "cwd = $foo\n";
-      
-      # opt = Deployment, debug = Development
-      $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\"");
-      TinderUtils::print_log "Status from pbxbuild: $status\n";
-    }
-
-    TinderUtils::print_log "Testing build status...\n";
+  unless ($Settings::TestOnly) {
+    # Checkout/update the chimera code.
+    #$status = checkout($mozilla_build_dir);
+    TinderUtils::print_log "Status from checkout: $status\n";
     if ($status != 0) {
-      TinderUtils::print_log "busted, pbxbuild status non-zero\n";
       $post_status = 'busted';
-    } elsif (not TinderUtils::BinaryExists("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary")) {
-      TinderUtils::print_log "Error: binary not found: $chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary\n";
-      $post_status = 'busted';
-    } else {
-      $post_status = 'success';
     }
-  }
+    
+    # Build chimera if we passed the checkout command.
+    if ($post_status ne 'busted') {
+      # Build embedding/config.
+      
+      chdir $embedding_dir;
+      
+      if ($status == 0) {
+        $status = TinderUtils::run_shell_command("make");
+        TinderUtils::print_log "Status from make: $status\n";
+      }
+      
+      #
+      # Build chimera.
+      #
+      
+      chdir $chimera_dir;
+      
+      if ($status == 0) {
+        TinderUtils::print_log "Deleting binary...\n";
+        TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
+        
+        # Always do a clean build; gecko dependencies don't work correctly
+        # for Chimera.
+        
+        TinderUtils::print_log "Clobbering chimera...\n";
+        TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\" clean");
+        
+        my $foo = Cwd::getcwd();
+        TinderUtils::print_log "cwd = $foo\n";
+        
+        # opt = Deployment, debug = Development
+        $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\"");
+        TinderUtils::print_log "Status from pbxbuild: $status\n";
+      }
+    
+      TinderUtils::print_log "Testing build status...\n";
+      if ($status != 0) {
+        TinderUtils::print_log "busted, pbxbuild status non-zero\n";
+        $post_status = 'busted';
+      } elsif (not TinderUtils::BinaryExists("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary")) {
+        TinderUtils::print_log "Error: binary not found: $chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary\n";
+        $post_status = 'busted';
+      } else {
+        $post_status = 'success';
+      }
+    }  
+  } # TestOnly
+
 
   # Test chimera, about:blank
   if ($chimera_alive_test and $post_status eq 'success') {
