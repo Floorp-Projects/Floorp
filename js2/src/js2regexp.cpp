@@ -278,7 +278,7 @@ namespace MetaData {
             return RegExp_Constructor(meta, thisValue, argv, argc);
     }
 
-    js2val RegExp_compile(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    js2val RegExp_compile_sub(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc, bool flat)
     {
         if (!JS2VAL_IS_OBJECT(thisValue) 
                 || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
@@ -313,7 +313,7 @@ namespace MetaData {
                     meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
             }
         }
-        JS2RegExp *re = RECompile(meta, regexpStr->begin(), (int32)regexpStr->length(), flags, false);
+        JS2RegExp *re = RECompile(meta, regexpStr->begin(), (int32)regexpStr->length(), flags, flat);
         if (re) {
             thisInst->mRegExp = re;
             // XXX ECMA spec says these are DONTENUM
@@ -328,12 +328,17 @@ namespace MetaData {
         return thisValue;
 	}
 
+    js2val RegExp_compile(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+		return RegExp_compile_sub(meta, thisValue, argv, argc, false);
+	}
+
     js2val RegExp_ConstructorOpt(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc, bool flat)
     {
         RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
         DEFINE_ROOTKEEPER(rk, thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
-		return RegExp_compile(meta, thatValue, argv, argc);
+		return RegExp_compile_sub(meta, thatValue, argv, argc, flat);
     }
 
     js2val RegExp_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val *argv, uint32 argc)
@@ -341,7 +346,7 @@ namespace MetaData {
         RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
         DEFINE_ROOTKEEPER(rk, thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
-		return RegExp_compile(meta, thatValue, argv, argc);
+		return RegExp_compile_sub(meta, thatValue, argv, argc, false);
     }
 
     void initRegExpObject(JS2Metadata *meta)
