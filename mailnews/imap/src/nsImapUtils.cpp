@@ -62,69 +62,69 @@ nsGetImapRoot(const char* hostname, nsFileSpec &result)
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
-  nsresult rv;
-  nsAutoString sep;
+	nsresult rv;
+	nsAutoString sep;
 
-  sep += PR_GetDirectorySeparator();
+	sep += PR_GetDirectorySeparator();
 
-  nsAutoString sbdSep;
-  /* sspitzer: is this ok for mail and news? */
-  rv = nsGetMailFolderSeparator(sbdSep);
-  if (NS_FAILED(rv)) return rv;
+	nsAutoString sbdSep;
+	/* sspitzer: is this ok for mail and news? */
+	rv = nsGetMailFolderSeparator(sbdSep);
+	if (NS_FAILED(rv)) 
+		return rv;
 
-  nsAutoString uri = uriStr;
-  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
-    return NS_ERROR_FAILURE;
+	nsAutoString uri = uriStr;
+	if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+		return NS_ERROR_FAILURE;
 
-  if ((strcmp(rootURI, kImapRootURI) != 0) &&
-           (strcmp(rootURI, kImapMessageRootURI) != 0)) {
-    pathResult = nsnull;
-    rv = NS_ERROR_FAILURE; 
-  }
+	if ((PL_strcmp(rootURI, kImapRootURI) != 0) &&
+		   (PL_strcmp(rootURI, kImapMessageRootURI) != 0)) 
+	{
+		pathResult = nsnull;
+		rv = NS_ERROR_FAILURE; 
+	}
 
-  // the server name is the first component of the path, so extract it out
-  PRInt32 hostStart;
+	// the server name is the first component of the path, so extract it out
+	PRInt32 hostStart;
 
-  hostStart = uri.Find('/');
-  if (hostStart <= 0) return NS_ERROR_FAILURE;
+	hostStart = uri.Find('/');
+	if (hostStart <= 0) return NS_ERROR_FAILURE;
 
-  // skip past all //
-  while (uri[hostStart]=='/') hostStart++;
+	// skip past all //
+	while (uri[hostStart]=='/') hostStart++;
 
-  // cut mailbox://hostname/folder -> hostname/folder
-  nsAutoString hostname;
-  uri.Right(hostname, uri.Length() - hostStart);
+	// cut imap://hostname/folder -> hostname/folder
+	nsAutoString hostname;
+	uri.Right(hostname, uri.Length() - hostStart);
 
-  PRInt32 hostEnd = hostname.Find('/');
+	PRInt32 hostEnd = hostname.Find('/');
 
-  // folder comes after the hostname, after the '/'
-  nsAutoString folder;
-  hostname.Right(folder, hostname.Length() - hostEnd - 1);
+	nsAutoString folder;
+	// folder comes after the hostname, after the '/'
 
-  // cut off first '/' and everything following it
-  // hostname/folder -> hostname
-  if (hostEnd >0) {
-    hostname.Truncate(hostEnd);
-  }
-  
-  // local mail case
-  // should return a list of all local mail folders? or maybe nothing
-  // at all?
-  char *hostchar = hostname.ToNewCString();
-  
-  rv = nsGetImapRoot(hostchar, pathResult);
+	// cut off first '/' and everything following it
+	// hostname/folder -> hostname
+	if (hostEnd > 0) 
+	{
+		hostname.Right(folder, hostname.Length() - hostEnd - 1);
+		hostname.Truncate(hostEnd);
+	}
+	char *hostchar = hostname.ToNewCString();
 
-  delete[] hostchar;
+	rv = nsGetImapRoot(hostchar, pathResult);
 
-  if (NS_FAILED(rv)) {
-      pathResult = nsnull;
-      return rv;
-  }
+	delete[] hostchar;
 
-  if (folder != "")
-      pathResult += folder;
+	if (NS_FAILED(rv)) 
+	{
+		pathResult = nsnull;
+		return rv;
+	}
 
-  return NS_OK;
+	if (folder != "")
+	  pathResult += folder;
+
+	return NS_OK;
 }
 
 nsresult
