@@ -22,7 +22,6 @@
  */
 
 #include "nsGraphicsImpl.h"
-#include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
