@@ -170,8 +170,10 @@ function PREF_ParsePref( elementID, elementObject )
             catch(e) {
               var oldPref = false;
             }
-            if( oldPref != elementObject.prefindex );
+            if( oldPref != elementObject.prefindex ) {
+              dump("** set bool pref " + elementObject.prefstring + " to " + elementObject.prefindex + "\n");
               whp.SetBoolPref( elementObject.prefstring, elementObject.prefindex );  // bool pref
+            }
             break;
           }
         }
@@ -181,8 +183,10 @@ function PREF_ParsePref( elementID, elementObject )
         catch(e) {
           var oldPref = false;
         }
-        if( oldPref != elementObject.prefindex );
+        if( oldPref != elementObject.prefindex ) {
+          dump("*** set bool pref " + elementObject.prefstring + " to " + elementObject.prefindex + "\n");
           whp.SetBoolPref( elementObject.prefstring, elementObject.value );  // bool pref
+        }
         break;
 
       case "int":
@@ -210,6 +214,7 @@ function PREF_ParsePref( elementID, elementObject )
 
       case "string":
       case "color":
+        dump("*** " + elementObject.prefstring + "\n");
         try {
           var charPref = whp.CopyCharPref( elementObject.prefstring );
         }
@@ -223,7 +228,12 @@ function PREF_ParsePref( elementID, elementObject )
           break;
         }
         if( charPref != elementObject.value )   // do we care about whitespace? 
-          whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
+          try {
+            whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
+          }
+          catch (ex) {
+            dump("*** failure when calling SetCharPref: " + ex + "\n");
+          }
         break;
       default:
         // TODO: insert implementation for other pref types;
