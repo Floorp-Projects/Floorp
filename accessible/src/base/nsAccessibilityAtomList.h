@@ -82,6 +82,7 @@ ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // Alphabetical list of attributes
+ACCESSIBILITY_ATOM(acceltext, "acceltext")
 ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(disabled, "disabled")
