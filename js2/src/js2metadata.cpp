@@ -2437,7 +2437,7 @@ doUnary:
             case ParameterKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = findLocalMember(*fi, multiname, ReadAccess, NULL);
+                    LocalMember *m = findLocalMember(*fi, multiname, ReadAccess);
                     if (m)
                         result = readLocalMember(m, Phase, rval);
                 }
@@ -2478,7 +2478,7 @@ doUnary:
             case ParameterKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess, NULL);
+                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess);
                     if (m) {
                         writeLocalMember(m, newValue, false);
                         result = true;
@@ -2529,7 +2529,7 @@ doUnary:
             case ParameterKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess, NULL);
+                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess);
                     if (m) {
                         writeLocalMember(m, newValue, true);
                         result = true;
@@ -2581,7 +2581,7 @@ doUnary:
             case ParameterKind:
             case BlockFrameKind:
                 {
-                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess, NULL);
+                    LocalMember *m = findLocalMember(*fi, multiname, WriteAccess);
                     if (m)
                         return false;
                 }
@@ -2697,6 +2697,17 @@ doUnary:
             GCMARKOBJECT(*n)
         }
         if (name) JS2Object::mark(name);
+    }
+
+    bool Multiname::subsetOf(Multiname &mn)
+    {
+        if (*name != *mn.name)
+            return false;
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
+            if (!mn.listContains(*n))
+                return false;
+        }
+        return true;
     }
 
 /************************************************************************************
@@ -2836,30 +2847,62 @@ doUnary:
         return NULL;
     }
 
-    // Examine class 'c' and find all instance members that would be overridden
-    // by 'id' in any of the given namespaces.
-    OverrideStatus *JS2Metadata::searchForOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, size_t pos)
+    InstanceMember *JS2Metadata::searchForOverrides(JS2Class *c, Multiname *multiname, Access access, size_t pos)
     {
-        OverrideStatus *os = new OverrideStatus(NULL, id);
-        for (NamespaceListIterator ns = namespaces->begin(), end = namespaces->end(); (ns != end); ns++) {
-            QualifiedName qname(*ns, id);
-            InstanceMember *m = findInstanceMember(c, &qname, access);
-            if (m) {
-                os->multiname.addNamespace(*ns);
-                if (os->overriddenMember == NULL)
-                    os->overriddenMember = m;
+        InstanceMember *mb = NULL;
+        JS2Class *s = c->super;
+        if (s) {
+            for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
+                Multiname mn(multiname->name, *nli);
+                InstanceMember *m = findBaseInstanceMember(s, &mn, access, NULL);
+                if (mBase == NULL)
+                    mBase = m
                 else
-                    if (os->overriddenMember != m)  // different instance members by same id
+                    if (m && (m != mBase))
                         reportError(Exception::definitionError, "Illegal override", pos);
-            }
+            }            
         }
-        return os;
+        return mBase;
+    }
+
+    InstanceMember *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, 
+                                                                    Attribute::OverrideModifier overrideMod, bool xplicit,
+                                                                    InstanceMember *m, size_t pos)
+    {
+        if (xplicit)
+            reportError(Exception::definitionError, "Illegal use of explicit", pos);
+        Access access = m->instanceMemberAccess();
+        Multiname requestedMultiname(id, namespaces);
+        Multiname openMultiname(id, cxt);
+        Multiname definedMultiname;
+        Multiname searchedMultiname;
+        if (requestedMultiname.nsList->empty()) {
+            definedMultiname = Multiname(id, publicNamespace);
+            searchedMultiname = openMultiname;
+        }
+        else {
+            definedMultiname = requestedMultiname;
+            searchedMultiname = requestedMultiname;
+        }
+        InstanceMember *mBase = searchForOverrides(c, searchedMultiname, access, pos);
+        InstanceMember *mOverridden = NULL;
+        if (mBase) {
+            mOverridden = getDerivedInstanceMember(c, mBase, access);
+            definedMultiname = *mOverridden->multiname;
+            if (!requestedMultiname.subsetOf(definedMultiname))
+                reportError(Exception::definitionError, "Illegal definition", pos);
+            bool goodKind;
+        }
+        
     }
 
     // Find the possible override conflicts that arise from the given id and namespaces
     // Fall back on the currently open namespace list if no others are specified.
-    OverrideStatus *JS2Metadata::resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos)
+    OverrideStatus *JS2Metadata::resolveOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos)
     {
+
+
+
         OverrideStatus *os = NULL;
         if ((namespaces == NULL) || namespaces->empty()) {
             os = searchForOverrides(c, id, &cxt->openNamespaces, access, pos);
@@ -3508,7 +3551,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
 
 
-    InstanceBinding *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access, Namespace **found_ns)
+    InstanceBinding *JS2Metadata::findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
         InstanceBinding *result = NULL;
         InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
@@ -3520,7 +3563,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
                     else {
                         result = ns.second;
-                        if (found) *found_ns = ns.first;
                     }
                 }
             }
@@ -3528,17 +3570,21 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return result;
     }        
 
-    InstanceMember* JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access, Namespace **found_ns)
+    InstanceMember* JS2Metadata::findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access)
     {
         InstanceMember *result = NULL;
         if (limit->super) {
-            result = findBaseInstanceMember(limit->super, multiname, access, found);
+            result = findBaseInstanceMember(limit->super, multiname, access);
             if (result) return result;
         }
-        return findLocalInstanceMember(limit, multiname, access, found_ns);
+        return findLocalInstanceMember(limit, multiname, access);
     }
 
-    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access, Namespace *found)
+    // getDerivedInstanceMember returns the most derived instance member whose name includes that of mBase and 
+    // whose access includes access. The caller of getDerivedInstanceMember ensures that such a member always exists. 
+    // If accesses is readWrite then it is possible that this search could find both a getter and a setter defined in the same class;
+    // in this case either the getter or the setter is returned at the implementation's discretion
+    InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Multiname *multiname, Access access)
     {
         InstanceBindingEntry **ibeP = c->instanceBindings[*multiname->name];
         if (ibeP) {
@@ -3552,7 +3598,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return getDerivedInstanceMember(c->super, mBase, multiname, access, found);
     }
 
-    LocalMember *JS2Metadata::findLocalMember(JS2Object *container, Multiname *multiname, Access access, Namespace **found_ns)
+    LocalMember *JS2Metadata::findLocalMember(JS2Object *container, Multiname *multiname, Access access)
     {
         LocalMember *found = NULL;
         LocalBindingMap *lMap;
@@ -3573,7 +3619,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
                     else {
                         found = ns.second->content;
-                        if (found_ns) *found_ns = ns.first;
                     }
                 }
             }
@@ -3597,7 +3642,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    Member *JS2Metadata::findCommonMember(js2val base, Multiname *multiname, Access access, bool flat, Namespace **found_ns)
+    Member *JS2Metadata::findCommonMember(js2val base, Multiname *multiname, Access access, bool flat)
     {
         Member *m = NULL;
         if (JS2VAL_IS_PRIMITIVE(base))
@@ -3605,15 +3650,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         JS2Object *baseObj = JS2VAL_TO_OBJECT(base);
         switch (baseObj->kind) {
         case SimpleInstanceKind:
-            m = findLocalMember(baseObj, multiname, access, found_ns);
+            m = findLocalMember(baseObj, multiname, access);
             break;
         case PackageKind:
-            m = findLocalMember(baseObj, multiname, access, found_ns);
+            m = findLocalMember(baseObj, multiname, access);
             break;
         case ClassKind:
-            m = findLocalMember(baseObj, multiname, access, found_ns);
+            m = findLocalMember(baseObj, multiname, access);
             if (m == NULL)
-                m = findLocalInstanceMember(checked_cast<JS2Class *>baseObj, multiname, access, found_ns);
+                m = findLocalInstanceMember(checked_cast<JS2Class *>baseObj, multiname, access);
             break;
         default:
             return NULL;    // non-primitive, but not one of the above
@@ -3622,16 +3667,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             return m;
         js2val superVal = getSuperObject(baseObj);
         if (!JS2VAL_IS_NULL(superVal)) {
-            m = findCommonMember(superVal, multiname, access, flat, found_ns);
+            m = findCommonMember(superVal, multiname, access, flat);
             if (flat && (m->kind == Member::DynamicVariableKind))
                 m = NULL;
         }
         return m;
     }
 
-    bool JS2Metadata::readInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval, Namespace *found_ns)
+    bool JS2Metadata::readInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval)
     {
-        InstanceMember *m = getDerivedInstanceMember(c, mBase, ReadAccess, found_ns);
+        InstanceMember *m = getDerivedInstanceMember(c, mBase, ReadAccess);
         switch (m->kind) {
         case Member::InstanceVariableKind:
             {
@@ -3650,9 +3695,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return false;
     }
 
-    bool JS2Metadata::writeInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, js2val newValue, Namespace *found_ns)
+    bool JS2Metadata::writeInstanceMember(js2val base, JS2Class *c, InstanceMember *mBase, js2val newValue)
     {
-        InstanceMember *m = getDerivedInstanceMember(c, mBase, WriteAccess, found_ns);
+        InstanceMember *m = getDerivedInstanceMember(c, mBase, WriteAccess);
         switch (m->kind) {
         case Member::InstanceVariableKind:
             {
@@ -3737,14 +3782,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     bool defaultReadProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        Namespace *found_ns;
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess, &found_ns);
+        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess);
         if (mBase)
-            return meta->readInstanceMember(base, limit, mBase, phase, rval, found_ns);
+            return meta->readInstanceMember(base, limit, mBase, phase, rval);
         if (limit != objectType(base))
             return false;
 
-        Member *m = meta->findCommonMember(base, multiname, ReadAccess, false, &found_ns);
+        Member *m = meta->findCommonMember(base, multiname, ReadAccess, false);
         if (m == NULL) {
             if (lookupKind->isPropertyLookup() && JS2VAL_IS_OBJECT(base) 
                         && ((JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind)
@@ -3779,7 +3823,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
             if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
                 meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-            return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval, found_ns);
+            return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval);
         default:
             NOT_REACHED("bad member kind");
             return false;
@@ -3794,16 +3838,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
     {
-        Namespace *found_ns;
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess, &found_ns);
+        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
         if (mBase) {
-            meta->writeInstanceMember(base, limit, mBase, newValue, found_ns);
+            meta->writeInstanceMember(base, limit, mBase, newValue);
             return true;
         }
         if (limit != objectType(base))
             return false;
 
-        Member *m = meta->findCommonMember(base, multiname, WriteAccess, true, &found_ns);
+        Member *m = meta->findCommonMember(base, multiname, WriteAccess, true);
         if (m == NULL) {
             if (createIfMissing 
                     && JS2VAL_IS_OBJECT(base) 
@@ -3836,7 +3879,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
             if (JS2VAL_IS_VOID(lookupKind->thisObject))
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            meta->writeInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, newValue, found_ns);
+            meta->writeInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, newValue);
             return true;
         default:
             NOT_REACHED("bad member kind");
@@ -3852,8 +3895,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result)
     {
-        Namespace *found_ns;
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess, &found_ns);
+        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
         if (mBase) {
             *result = false;
             return true;
@@ -3861,7 +3903,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (limit != objectType(base))
             return false;
 
-        Member *m = meta->findCommonMember(base, multiname, WriteAccess, false, &found_ns);
+        Member *m = meta->findCommonMember(base, multiname, WriteAccess, false);
         if (m == NULL)
             return false;
         switch (m->kind) {
@@ -3899,7 +3941,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
             if (JS2VAL_IS_VOID(lookupKind->thisObject))
                 meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            meta->writeInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, newValue, found_ns);
+            meta->writeInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, newValue);
             return true;
         default:
             NOT_REACHED("bad member kind");
@@ -3913,7 +3955,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
         if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
             meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-        return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval, found_ns);
+        return meta->readInstanceMember(lookupKind->thisObject, objectType(lookupKind->thisObject), m, phase, rval);
     }
 
     bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
@@ -4488,6 +4530,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  *  InstanceMember
  *
  ************************************************************************************/
+
+    static Access instanceMemberAccess(MemberKind kind)
+    {
+        switch (kind)
+    }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMember::mark()                 

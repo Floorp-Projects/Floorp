@@ -274,6 +274,7 @@ public:
     bool listContains(Namespace *nameSpace);
 
     QualifiedName selectPrimaryName(JS2Metadata *meta);
+    bool subsetOf(Multiname &mn);
 
     const String *name;
     NamespaceList *nsList;
@@ -308,6 +309,7 @@ public:
     Member(MemberKind kind) : kind(kind) { }
 
     MemberKind kind;
+
 
     virtual void mark()                 { }
 };
@@ -411,18 +413,22 @@ public:
 
 class InstanceMember : public Member {
 public:
-    InstanceMember(MemberKind kind, JS2Class *type, bool final) : Member(kind), type(type), final(final) { }
+    InstanceMember(MemberKind kind, Multiname *multiname, bool final, bool enumerable) : Member(kind), multiname(multiname), final(final), enumerable(enumerable) { }
 
-    JS2Class *type;             // Type of values that may be stored in this variable
+
+    Multiname *multiname;       // The set of qualified names for this instance method
     bool final;                 // true if this member may not be overridden in subclasses
-
+    bool enumerable;            // true if this instance member's public name should be visible in a for-in statemen
+    
+    virtual Access instanceMemberAccess()   { return ReadWriteAccess; }
     virtual void mark();
 };
 
 class InstanceVariable : public InstanceMember {
 public:
-    InstanceVariable(JS2Class *type, bool immutable, bool final, uint32 slotIndex) : InstanceMember(InstanceVariableKind, type, final), immutable(immutable), slotIndex(slotIndex) { }
+    InstanceVariable(Multiname *multiname, JS2Class *type, bool immutable, bool final, bool enumerable, uint32 slotIndex) : InstanceMember(InstanceVariableKind, multiname, final, enumerable), type(type), immutable(immutable), slotIndex(slotIndex) { }
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
+    JS2Class *type;                 // Type of values that may be stored in this variable
     bool immutable;                 // true if this variable's value may not be changed once set
     uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
 
@@ -431,9 +437,9 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod(SimpleInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
-    Signature type;         // This method's signature
-//    Invokable *code;        // This method itself (a callable object); null if this method is abstract
+    InstanceMethod(Multiname *multiname, SimpleInstance *fInst, bool final, bool enumerable) : InstanceMember(InstanceMethodKind, multiname, final, enumerable), fInst(fInst) { }
+    Signature type;                 // This method's signature
+//    Invokable *code;              // This method itself (a callable object); null if this method is abstract
     SimpleInstance *fInst;
 
     virtual void mark();
@@ -441,14 +447,20 @@ public:
 
 class InstanceGetter : public InstanceMember {
 public:
-    InstanceGetter(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceGetterKind, type, final), code(code) { }
-    Invokable *code;        // A callable object which does the read or write; null if this method is abstract
+    InstanceGetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) : InstanceMember(InstanceGetterKind, multiname, final, enumerable), code(code), type(type) { }
+    Invokable *code;                // A callable object which does the read or write; null if this method is abstract
+    JS2Class *type;                 // Type of values that may be stored in this variable
+
+    virtual Access instanceMemberAccess()   { return ReadAccess; }
 };
 
 class InstanceSetter : public InstanceMember {
 public:
-    InstanceSetter(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceSetterKind, type, final), code(code) { }
-    Invokable *code;        // A callable object which does the read or write; null if this method is abstract
+    InstanceSetter(Multiname *multiname, Invokable *code, JS2Class *type, bool final, bool enumerable) : InstanceMember(InstanceSetterKind, multiname, final, enumerable), code(code), type(type) { }
+    Invokable *code;                // A callable object which does the read or write; null if this method is abstract
+    JS2Class *type;                 // Type of values that may be stored in this variable
+
+    virtual Access instanceMemberAccess()   { return WriteAccess; }
 };
 
 class InstanceBinding {
