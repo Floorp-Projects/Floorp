@@ -857,10 +857,7 @@ Content-type: text/html
             print qq|
               <hr>
               <p>If you don't have a Bugzilla account, you can 
-              <a href="createaccount.cgi">create a new account</a>.
-              <a href="display.cgi?page=why-account">
-              I just want to report a bug.
-              Why is this necessary?</a></p>
+              <a href="createaccount.cgi">create a new account</a>.</p>
               <form method="get" action="token.cgi">
                 <input type="hidden" name="a" value="reqpw">
                 If you have an account, but have forgotten your password,
