@@ -516,9 +516,8 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 
     // Nope. So go to the repository to create it.
     nsresult rv;
-    nsAutoString uriStr(aURI);
-    PRInt32 pos = uriStr.Find(':');
-    if (pos < 0) {
+    char* p = PL_strchr(aURI, ':');
+    if (!p) {
         // no colon, so try the default resource factory
         rv = nsComponentManager::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                           nsnull, nsIRDFResource::GetIID(),
@@ -532,20 +531,24 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
     else {
         // the resource is qualified, so construct a ProgID and
         // construct it from the repository.
-        nsAutoString progIDStr;
-        uriStr.Left(progIDStr, pos);      // truncate
-        progIDStr.Insert(NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX, 0);
+        static const char kRDFResourceFactoryProgIDPrefix[]
+            = NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX;
+
+        PRInt32 pos = (p) ? (p - aURI) : (-1);
+        PRInt32 len = pos + sizeof(kRDFResourceFactoryProgIDPrefix) - 1;
 
         // Safely convert to a C-string for the XPCOM APIs
         char buf[128];
         char* progID = buf;
-        if (progIDStr.Length() >= sizeof(buf))
-            progID = new char[progIDStr.Length() + 1];
+        if (len >= sizeof(buf))
+            progID = new char[len + 1];
 
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        progIDStr.ToCString(progID, progIDStr.Length() + 1);
+        PL_strcpy(progID, kRDFResourceFactoryProgIDPrefix);
+        PL_strncpy(progID + sizeof(kRDFResourceFactoryProgIDPrefix) - 1, aURI, pos);
+        progID[len] = '\0';
 
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                           nsIRDFResource::GetIID(),
@@ -597,7 +600,7 @@ ServiceImpl::FindResource(const char* uri, nsIRDFResource** resource, PRBool *fo
 NS_IMETHODIMP
 ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResource)
 {
-    nsString uriStr(aURI);
+    nsAutoString uriStr(aURI);
     char buf[128];
     char* uri = buf;
 
@@ -773,13 +776,15 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
     if (NS_FAILED(rv = aDataSource->GetURI(&uri)))
         return rv;
 
-    nsIRDFDataSource* ds =
-        NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+    if (uri) {
+        nsIRDFDataSource* ds =
+            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
-    if (! ds)
-        return NS_ERROR_ILLEGAL_VALUE;
+        if (! ds)
+            return NS_ERROR_ILLEGAL_VALUE;
 
-    PL_HashTableRemove(mNamedDataSources, uri);
+        PL_HashTableRemove(mNamedDataSources, uri);
+    }
     return NS_OK;
 }
 
