@@ -357,10 +357,17 @@ exe=
 exe_param=
 
 [Check Instance0]
-Class Name=MozillaWindowClass
+Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Mozilla requires a way to shut down it's turbo mode.
+Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd Reg Name=
+Extra Cmd Parameter=-kill
 
 
 
