@@ -631,11 +631,17 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
   PRInt32   indx = 0;
   PRInt32   strOffset = 0;
   PRInt32   lineLength, oldLineEnd;
+  PRBool    addSpace = PR_FALSE;
   
   // Find the end of the first old line
   oldLineEnd = aStr.FindChar(PRUnichar('\n'), 0);
   
   while ((!done) && (strOffset < length)) {
+    if (addSpace) {
+      AppendToString(NS_LITERAL_STRING(" "), aOutputStr);
+      addSpace = PR_FALSE;
+    }
+    
     // This is how much is needed to fill up the new line
     PRInt32 leftInLine = mMaxColumn - mColPos;
     
@@ -698,12 +704,15 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
       // old line break and find the end of the next old line.
       if (indx == oldLineEnd) {
         oldLineEnd = aStr.FindChar(PRUnichar('\n'), indx+1);
-        AppendToString(NS_LITERAL_STRING(" "), aOutputStr);
+        if (lineLength > 0) {
+          addSpace = PR_TRUE;
+        }
       }
       
       if (addLineBreak) {
         AppendToString(mLineBreak, aOutputStr);
         mColPos = 0;
+        addSpace = PR_FALSE;
       }
       strOffset = indx+1;
     }
