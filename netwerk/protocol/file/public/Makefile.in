@@ -34,4 +34,9 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
+
 include $(DEPTH)/config/rules.mk

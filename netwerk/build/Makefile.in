@@ -44,6 +44,11 @@ LOCAL_INCLUDES  += \
 
 include $(topsrcdir)/config/config.mk
 
+# hack until necko lands
+ifndef NECKO
+PUBLIC = $(DEPTH)/netwerk/dist/include
+endif
+
 ifeq ($(OS_ARCH),HP-UX)
 EXTRA_DSO_LDOPTS = -c objs/objslist
 else
