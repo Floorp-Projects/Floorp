@@ -18,7 +18,6 @@
  * 
  * Contributor(s):
  *   Radha Kulkarni <radha@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Local Includes
@@ -31,6 +30,7 @@
 nsSHEntry::nsSHEntry() 
 {
    NS_INIT_REFCNT();
+   mParent = nsnull;
 }
 
 nsSHEntry::~nsSHEntry() 
@@ -46,6 +46,7 @@ NS_IMPL_RELEASE(nsSHEntry)
 
 NS_INTERFACE_MAP_BEGIN(nsSHEntry)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHContainer)
    NS_INTERFACE_MAP_ENTRY(nsISHEntry)
 NS_INTERFACE_MAP_END
 
@@ -127,7 +128,8 @@ NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
    return NS_OK;
 }
 
-NS_IMETHODIMP
+
+nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
 {
@@ -138,4 +140,162 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
 	SetLayoutHistoryState(aHistoryLayoutState);
 	return NS_OK;
 	
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetParent(nsISHEntry ** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mParent;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHEntry::SetParent(nsISHEntry * aParent)
+{
+	/* parent not Addrefed on purpose to avoid cyclic reference
+	 * Null parent is OK
+	 */
+  mParent = aParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSHEntry::GetChildCount(PRInt32 * aCount)
+{
+	NS_ENSURE_ARG_POINTER(aCount);
+    *aCount = mChildren.Count();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::AddChild(nsISHEntry * aChild)
+{
+    NS_ENSURE_ARG_POINTER(aChild);
+
+	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
+	mChildren.AppendElement((void *)aChild);
+	NS_ADDREF(aChild);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::RemoveChild(nsISHEntry * aChild)
+{
+    NS_ENSURE_ARG_POINTER(aChild);
+	PRBool childRemoved = mChildren.RemoveElement((void *)aChild);
+	if (childRemoved) {
+	  aChild->SetParent(nsnull);
+	  NS_RELEASE(aChild);
+	}
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
+{
+	NS_ENSURE_ARG_POINTER(aResult);
+    if (PRUint32(aIndex) >= PRUint32(mChildren.Count())) {
+      *aResult = nsnull;
+	}
+    else {
+      *aResult = (nsISHEntry*) mChildren.ElementAt(aIndex);
+      NS_IF_ADDREF(*aResult);
+	}
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHEntry::GetChildEnumerator(nsIEnumerator** aChildEnumerator)
+{
+	nsresult status = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aChildEnumerator);
+	nsSHEnumerator * iterator = new nsSHEnumerator(this);
+	if (iterator && !!NS_SUCCEEDED(status = CallQueryInterface(iterator, aChildEnumerator)))
+      delete iterator;
+    return status;
+}
+
+
+//*****************************************************************************
+//***    nsSHEnumerator: Object Management
+//*****************************************************************************
+
+nsSHEnumerator::nsSHEnumerator(nsSHEntry * aEntry):mIndex(0)
+{
+  NS_INIT_REFCNT();
+  mSHEntry = aEntry;
+}
+
+nsSHEnumerator::~nsSHEnumerator()
+{
+mSHEntry = nsnull;
+}
+
+NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsIEnumerator)
+
+NS_IMETHODIMP
+nsSHEnumerator::Next()
+{
+  PRUint32 cnt=0;
+  cnt = mSHEntry->mChildren.Count();
+  if (mIndex < (PRInt32)(cnt-1))  {
+     mIndex++;
+     return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsSHEnumerator::First()
+{
+  mIndex = 0;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHEnumerator::IsDone()
+{
+  PRUint32 cnt;
+  cnt = mSHEntry->mChildren.Count();
+  if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
+    return NS_ENUMERATOR_FALSE;
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsSHEnumerator::CurrentItem(nsISupports **aItem)
+{
+  NS_ENSURE_ARG_POINTER(aItem);
+  PRUint32 cnt= mSHEntry->mChildren.Count();
+  if (mIndex >=0 && mIndex < (PRInt32)cnt){
+    *aItem = (nsISupports *)mSHEntry->mChildren.ElementAt(mIndex);
+	NS_IF_ADDREF(*aItem);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
+NS_IMETHODIMP 
+nsSHEnumerator::CurrentItem(nsISHEntry **aItem)
+{
+  NS_ENSURE_ARG_POINTER(aItem);
+  PRUint32 cnt = mSHEntry->mChildren.Count();
+  if (mIndex >=0 && mIndex < (PRInt32)cnt){
+    nsCOMPtr<nsISupports> indexIsupports =  (nsISHEntry *) mSHEntry->mChildren.ElementAt(mIndex);
+    return indexIsupports->QueryInterface(NS_GET_IID(nsISHEntry),(void **)aItem);
+  }
+  return NS_ERROR_FAILURE;
 }
