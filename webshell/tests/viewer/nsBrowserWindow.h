@@ -135,6 +135,7 @@ public:
   void DoSiteWalker();
   void DoJSConsole();
   void DoEditorMode();
+  void DoSelectAll();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
 

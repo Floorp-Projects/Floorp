@@ -291,6 +291,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoCopy();
     break;
 
+  case VIEWER_EDIT_SELECTALL:
+    DoSelectAll();
+    break;
+
   case VIEWER_DEMO0:
   case VIEWER_DEMO1:
   case VIEWER_DEMO2:
@@ -576,7 +580,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   }
   mLocation->Create(mWindow, r, HandleLocationEvent, NULL);
   mLocation->SetText("");
-  mLocation->SetForegroundColor(NS_RGB(255, 0, 0));
+  mLocation->SetForegroundColor(NS_RGB(0, 0, 0));
   mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
   mLocation->Show(PR_TRUE);
   mLocation->SetFont(font);
@@ -615,7 +619,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   }
   mStatus->Create(mWindow, r, HandleLocationEvent, NULL);
   mStatus->SetText("");
-  mStatus->SetForegroundColor(NS_RGB(255, 0, 0));
+  mStatus->SetForegroundColor(NS_RGB(0, 0, 0));
   mStatus->SetFont(font);
   mStatus->Show(PR_TRUE);
 
@@ -1447,6 +1451,21 @@ nsBrowserWindow::DoDebugSave()
         }
         NS_RELEASE(parser);
       }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+void
+nsBrowserWindow::DoSelectAll()
+{
+
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      doc->SelectAll();
       NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
