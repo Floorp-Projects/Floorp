@@ -287,6 +287,8 @@ public:
   NS_IMETHOD RemoveOption(nsIContent* aContent);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone);
+  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool * aIsSelected);
+  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected);
 
   // nsIJSScriptObject
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -305,7 +307,10 @@ public:
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
 protected:
-  NS_IMETHOD GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray);
+  // Helper Methods
+  nsresult GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray);
+  nsresult GetOptionIndex(nsIDOMHTMLOptionElement* aOption, PRUint32 * anIndex);
+  nsresult SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected);
 
   nsGenericHTMLContainerFormElement mInner;
   nsIForm*      mForm;
@@ -755,53 +760,178 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
     formControlFrame->SetProperty(presContext, nsHTMLAtoms::selectedindex, value);
     NS_IF_RELEASE(presContext);
   } else {
-    // Since there are no frames, then we must adjust which options
-    // are selcted in the content and the current select state is kept in
-    // the PreState
-    //
-    // First, get whether this is a select with 
-    // multiple items that can be slected
-    PRBool isMultiple;
-    nsresult res = GetMultiple(&isMultiple);         // Must not be multiple
-    if (NS_FAILED(res)) {
-      isMultiple = PR_FALSE;
-    }
+    SetOptionSelectedByIndex(aIndex, PR_TRUE);
+  }
+  return NS_OK;
+}
 
-    // Call the helper method to get the PresState and 
-    // the SupportsArray that contains the value
-    //
-    nsCOMPtr<nsIPresState> presState;
-    nsCOMPtr<nsISupportsArray> value;
-    res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
-    if (NS_SUCCEEDED(res) && !presState) {
+nsresult
+nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption, PRUint32 * anIndex)
+{
+  // first find index of option
+  nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
+  nsresult rv = GetOptions(getter_AddRefs(options));
+  if (NS_SUCCEEDED(rv) && options) {
+    PRUint32 numOptions;
+    rv = options->GetLength(&numOptions);
+    if (NS_SUCCEEDED(rv)) {
+      for (PRUint32 i = 0; i < numOptions; i++) {
+        nsCOMPtr<nsIDOMNode> node;
+        rv = options->Item(i, getter_AddRefs(node));
+        if (NS_SUCCEEDED(rv) && node) {
+          nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node, &rv);
+          if (NS_SUCCEEDED(rv) && option && option.get() == aOption) {
+            *anIndex = i;
+            return NS_OK;
+          }
+        }
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption, PRBool * aIsSelected)
+{
+  // start off by assuming it isn't in the list of index objects
+  *aIsSelected = PR_FALSE;
+
+  // first find the index of the incoming option
+  PRUint32 index    = 0;
+  if (NS_FAILED(GetOptionIndex(aOption, &index))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // The PresState hold a nsISupportsArray that contain nsISupportsPRInt32 objects that hold
+  // the index of the option that is selected, for example, there are 10 options and option
+  // 2 and oiption 8 are selected then the array hold to objects, one that contains 2 and one that contains 8
+  nsCOMPtr<nsIPresState> presState;
+  nsCOMPtr<nsISupportsArray> value;
+  nsresult res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
+  if (NS_SUCCEEDED(res) && presState) {
+    // get the property by name
+    // I am not sure why this is done, versus just using the value array above
+    nsCOMPtr<nsISupports> supp;
+    presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+
+    res = NS_ERROR_NULL_POINTER;
+    if (supp) {
+
+      // Query for nsISupportArray from nsISupports
+      nsCOMPtr<nsISupportsArray> svalue = do_QueryInterface(supp);
+      if (svalue) {
+
+        PRUint32 count = 0; // num items in array
+        svalue->Count(&count);
+
+        // loop through the array look for "index" object and
+        // then we compare it against the option's index to see if there is a match
+        nsCOMPtr<nsISupportsPRInt32> thisVal;
+        for (PRUint32 i=0; i<count; i++) {
+          // get index obj
+          nsCOMPtr<nsISupports> suppval = getter_AddRefs(svalue->ElementAt(i));
+          thisVal = do_QueryInterface(suppval);
+          if (thisVal) {
+            // get out the index
+            PRInt32 optIndex;
+            res = thisVal->GetData(&optIndex);
+            if (NS_SUCCEEDED(res)) {
+              // ccompare them then bail if they match
+              if (PRUint32(optIndex) == index) {
+                *aIsSelected = PR_TRUE;
+                return NS_OK;
+              }
+            }
+          } else {
+            res = NS_ERROR_UNEXPECTED;
+          }
+          if (!NS_SUCCEEDED(res)) break;
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected)
+{
+  PRUint32 index    = 0;
+  if (NS_FAILED(GetOptionIndex(anOption, &index))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return SetOptionSelectedByIndex(index, aIsSelected);
+}
+
+nsresult
+nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected)
+{
+  // Since there are no frames, then we must adjust which options
+  // are selcted in the content and the current select state is kept in
+  // the PreState
+  //
+  // First, get whether this is a select with 
+  // multiple items that can be slected
+  PRBool isMultiple;
+  nsresult res = GetMultiple(&isMultiple);         // Must not be multiple
+  if (NS_FAILED(res)) {
+    isMultiple = PR_FALSE;
+  }
+
+  // Call the helper method to get the PresState and 
+  // the SupportsArray that contains the value
+  //
+  nsCOMPtr<nsIPresState> presState;
+  nsCOMPtr<nsISupportsArray> value;
+  res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
+  if (NS_SUCCEEDED(res) && !presState) {
+    return NS_OK;
+  }
+
+  // If the nsISupportsArray doesn't exist then we must creat one
+  // cache the values
+  PRBool doesExist = PR_FALSE;
+  if (!value) {
+    // if we are selecting an options continue on
+    // but if the array doesn't exist and we are unselecting an option bail out
+    // because we don't need to do anything
+    if (aIsSelected) {
+      res = NS_NewISupportsArray(getter_AddRefs(value));
+    } else {
+      return NS_OK;
+    }
+  } else {
+    doesExist = PR_TRUE;
+  }
+
+  if (NS_SUCCEEDED(res) && value) {
+    // The nsISupportArray will hold a list of indexes 
+    // of the items that are selected
+    // get the count of selected items
+    PRUint32 count = 0;
+    value->Count(&count);
+
+    // If there are no items and we are unselecting an option
+    // then we don't have to do anything.
+    if (count == 0 && !aIsSelected) {
       return NS_OK;
     }
 
-    // If the nsISupportsArray doesn't exist then we must creat one
-    // cache the values
-    PRBool doesExist = PR_FALSE;
-    if (!value) {
-      res = NS_NewISupportsArray(getter_AddRefs(value));
-    } else {
-      doesExist = PR_TRUE;
+    // if not multiple then only one item can be selected
+    // so we clear the list of selcted items
+    if (!isMultiple || (-1 == aIndex)) { // -1 -> deselect all (bug 28143)
+      value->Clear();
+      count = 0;
     }
 
-    if (NS_SUCCEEDED(res) && value) {
-      // The nsISupportArray will hold a list of indexes 
-      // of the items that are selected
-      // get the count of selected items
-      PRUint32 count = 0;
-      value->Count(&count);
-
-      // if not multiple then only one item can be selected
-      // so we clear the list of selcted items
-      if (!isMultiple || (-1 == aIndex)) { // -1 -> deselect all (bug 28143)
-        value->Clear();
-        count = 0;
-      }
-
-      // Set the index as selected and add it to the array
-      if (-1 != aIndex) {
+    // Set the index as selected and add it to the array
+    if (-1 != aIndex) {
+      if (aIsSelected) {
         nsCOMPtr<nsISupportsPRInt32> thisVal;
         res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
 	                     nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
@@ -812,15 +942,35 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
             if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
           }
         }
+      } else {
+        // deselecting the option -> remove it from the list
+        nsCOMPtr<nsISupportsPRInt32> thisVal;
+        for (PRUint32 i=0; i<count; i++) {
+          nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+          thisVal = do_QueryInterface(suppval);
+          if (thisVal) {
+            PRInt32 optIndex;
+            res = thisVal->GetData(&optIndex);
+            if (NS_SUCCEEDED(res)) {
+              if (optIndex == aIndex) {
+                value->RemoveElementAt(i);
+                return NS_OK;
+              }
+            }
+          } else {
+            res = NS_ERROR_UNEXPECTED;
+          }
+          if (!NS_SUCCEEDED(res)) break;
+        }
       }
+    }
 
-      // If it is a new nsISupportsArray then 
-      // set it into the PresState
-      if (!doesExist) {
-        presState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
-      }
-    } // if
-  }
+    // If it is a new nsISupportsArray then 
+    // set it into the PresState
+    if (!doesExist) {
+      presState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
+    }
+  } // if
   return NS_OK;
 }
 
@@ -1030,7 +1180,7 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
 // aValueArray will be null if it didn't exist and non-null if it did
 // always return NS_OK whether aValueArray was nsnull or not
 //-----------------------------------------------------------------
-NS_IMETHODIMP 
+nsresult 
 nsHTMLSelectElement::GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray)
 {
   *aValueArray = nsnull;
