@@ -71,7 +71,7 @@ function InputSepCharacter()
 
   // Limit input to 1 character
   if (str.length > 1)
-    str.slice(0,1);
+    str = str.slice(0,1);
 
   // We can never allow tag or entity delimeters for separator character
   if (str == "<" || str == ">" || str == "&" || str == ";" || str == " ")
