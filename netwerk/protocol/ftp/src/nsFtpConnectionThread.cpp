@@ -111,7 +111,7 @@ public:
     
     PRUint32 GetBytesTransfered() {return mBytesTransfered;} ;
     void Uploading(PRBool value);
-    void RetryConnection();
+    void SetRetrying(PRBool retry);
 
 protected:
 
@@ -277,14 +277,14 @@ DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ct
 }
 
 void
-DataRequestForwarder::RetryConnection()
+DataRequestForwarder::SetRetrying(PRBool retry)
 {
     // The problem here is that if we send a second PASV, our listener would
     // get an OnStop from the socket transport, and fail. So we temporarily
     // suspend notifications
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder RetryConnection \n", this));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder SetRetrying [retry=%d]\n", this, retry));
 
-    mRetrying = PR_TRUE;
+    mRetrying = retry;
     mDelayedOnStartFired = PR_FALSE;
 }
 
@@ -333,6 +333,10 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
         if (sTrans)
             sTrans->SetReuseConnection(PR_FALSE);
     }
+
+    if (mUploading)
+        request->Cancel(NS_OK);
+
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -1187,7 +1191,8 @@ nsFtpState::R_syst() {
     if (mResponseCode/100 == 2) {
         if (( mResponseMsg.Find("L8") > -1) || 
             ( mResponseMsg.Find("UNIX") > -1) || 
-            ( mResponseMsg.Find("BSD") > -1) )  // non standard response (91019)
+            ( mResponseMsg.Find("BSD") > -1) ||
+            ( mResponseMsg.Find("MACOS Peter's Server") > -1))
         {
             mServerType = FTP_UNIX_TYPE;
         }
@@ -1538,18 +1543,9 @@ nsFtpState::R_retr() {
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
 
-    if ((mResponseCode/100 == 5) && (mServerType != FTP_OS2_TYPE)) {
+    if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
-                
-        // We need to kill off the existing connection - see bug 101128
-        mDRequestForwarder->RetryConnection();
-        nsCOMPtr<nsISocketTransport> st = do_QueryInterface(mDPipe);
-        if (st)
-            st->SetReuseConnection(PR_FALSE);
-        mDPipe = 0;
-        mDPipeRequest->Cancel(NS_OK);
-        mDPipeRequest = 0;
-
+        mDRequestForwarder->SetRetrying(PR_TRUE);
         return FTP_S_PASV;
     }
 
@@ -1748,70 +1744,102 @@ nsFtpState::R_pasv() {
 
     const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
 
-    // now we know where to connect our data channel
-    nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
+    PRBool newDataConn = PR_TRUE;
+    if (mDPipeRequest) {
+        // Reuse this connection only if its still alive, and the port
+        // is the same
 
-    rv =  sts->CreateTransport(hostStr, 
-                               port, 
-                               mProxyInfo,
-                               FTP_DATA_CHANNEL_SEG_SIZE, 
-                               FTP_DATA_CHANNEL_MAX_SIZE, 
-                               getter_AddRefs(mDPipe)); // the data channel
-    if (NS_FAILED(rv)) return FTP_ERROR;
+        nsCOMPtr<nsISocketTransport> st = do_QueryInterface(mDPipe);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Created Data Transport (%s:%x)\n", this, hostStr, port));
+        if (st) {
+            PRInt32 oldPort;
+            nsresult rv = st->GetPort(&oldPort);
+            if (NS_SUCCEEDED(rv)) {
+                if (oldPort == port) {
+                    PRBool isAlive;
+                    if (NS_SUCCEEDED(st->IsAlive(0, &isAlive)) && isAlive) {
+                        newDataConn = PR_FALSE;
+                    }
+                }
+            }
+        }
 
-    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
-    if (NS_FAILED(rv)) return FTP_ERROR;
+        if (newDataConn) {
+            if (st)
+                st->SetReuseConnection(PR_FALSE);
+            mDPipe = 0;
+            mDPipeRequest->Cancel(NS_OK);
+            mDPipeRequest = 0;
+        } else {
+            mDRequestForwarder->SetRetrying(PR_FALSE);
+        }
+    }
 
-    if (NS_FAILED(sTrans->SetReuseConnection(PR_TRUE))) return FTP_ERROR;
-
-    if (!mDRequestForwarder) {
-        mDRequestForwarder = new DataRequestForwarder;
-        if (!mDRequestForwarder) return FTP_ERROR;
-        NS_ADDREF(mDRequestForwarder);
-    
-        rv = mDRequestForwarder->Init(mChannel);
+    if (newDataConn) {
+        // now we know where to connect our data channel
+        nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
+        
+        rv =  sts->CreateTransport(hostStr, 
+                                   port, 
+                                   mProxyInfo,
+                                   FTP_DATA_CHANNEL_SEG_SIZE, 
+                                   FTP_DATA_CHANNEL_MAX_SIZE, 
+                                   getter_AddRefs(mDPipe)); // the data channel
+        if (NS_FAILED(rv)) return FTP_ERROR;
+        
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Created Data Transport (%s:%x)\n", this, hostStr, port));
+        
+        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
+        if (NS_FAILED(rv)) return FTP_ERROR;
+        
+        if (NS_FAILED(sTrans->SetReuseConnection(PR_TRUE))) return FTP_ERROR;
+        
+        if (!mDRequestForwarder) {
+            mDRequestForwarder = new DataRequestForwarder;
+            if (!mDRequestForwarder) return FTP_ERROR;
+            NS_ADDREF(mDRequestForwarder);
+            
+            rv = mDRequestForwarder->Init(mChannel);
+            if (NS_FAILED(rv)){
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->Init failed (rv=%x)\n", this, rv));
+                return FTP_ERROR;
+            }
+        }
+        
+        // hook ourself up as a proxy for progress notifications
+        mWaitingForDConn = PR_TRUE;
+        rv = mDPipe->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor*, mDRequestForwarder), PR_FALSE);
         if (NS_FAILED(rv)){
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->Init failed (rv=%x)\n", this, rv));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->SetNotificationCallbacks failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+        
+        // we need to get mDPipe going so tcp connection is made
+        rv = mDPipe->AsyncRead(mDRequestForwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
+        if (NS_FAILED(rv)){
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->AsyncRead failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+        
+        if (mAction == PUT) {
+            NS_ASSERTION(!mRETRFailed, "Failed before uploading");
+            mDRequestForwarder->Uploading(PR_TRUE);
+            return FTP_S_STOR;
+        }
+
+        // Suspend the read
+        // If we don't do this, then the remote server could close the
+        // connection before we get the error message, and then we process the
+        // onstop as if it was from the real data connection
+        rv = mDPipeRequest->Suspend();
+        if (NS_FAILED(rv)){
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Suspend failed (rv=%x)\n", this, rv));
             return FTP_ERROR;
         }
     }
 
-    // hook ourself up as a proxy for progress notifications
-    mWaitingForDConn = PR_TRUE;
-    rv = mDPipe->SetNotificationCallbacks(NS_STATIC_CAST(nsIInterfaceRequestor*, mDRequestForwarder), PR_FALSE);
-    if (NS_FAILED(rv)){
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->SetNotificationCallbacks failed (rv=%x)\n", this, rv));
-        return FTP_ERROR;
-    }
-
-    // we need to get mDPipe going so tcp connection is made
-    rv = mDPipe->AsyncRead(mDRequestForwarder, nsnull, 0, PRUint32(-1), 0, getter_AddRefs(mDPipeRequest));    
-    if (NS_FAILED(rv)){
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) forwarder->AsyncRead failed (rv=%x)\n", this, rv));
-        return FTP_ERROR;
-    }
-
-    if (mAction == PUT) {
-        NS_ASSERTION(!mRETRFailed, "Failed before uploading");
-        mDRequestForwarder->Uploading(PR_TRUE);
-        return FTP_S_STOR;
-    }
-   
     if (mRETRFailed)
         return FTP_S_CWD;
-
-    // Suspend the read
-    // If we don't do this, then the remote server could close the connection
-    // before we get the error message, and then we process the onstop as if
-    // it was from the real data connection
-    rv = mDPipeRequest->Suspend();
-    if (NS_FAILED(rv)){
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) dataPipe->Suspend failed (rv=%x)\n", this, rv));
-        return FTP_ERROR;
-    }
-
     return FTP_S_SIZE;
 }
 
