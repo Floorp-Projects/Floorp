@@ -390,6 +390,15 @@ nsHttpConnection::ActivateConnection()
     // in our OnStopRequest.
     nsHttpTransaction *trans = mTransaction;
     NS_ADDREF(trans);
+
+    // We need to tell the socket transport what origin server we're
+    // communicating with. This may not be the same as the original host,
+    // if we're talking to a proxy server using persistent connections.
+    // We update the connectionInfo as well, so that our logging is correct.
+    // See bug 94088
+
+    mSocketTransport->SetHost(mConnectionInfo->Host());
+    mSocketTransport->SetPort(mConnectionInfo->Port());
     
     // fire off the read first so that we'll often detect premature EOF before
     // writing to the socket, though this is not necessary.

@@ -1148,10 +1148,35 @@ nsSocketTransport::GetHost(char **aHost)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::SetHost(const char *aHost)
+{
+    if (!mProxyHost)
+        return NS_ERROR_FAILURE;
+    
+    NS_ENSURE_ARG_POINTER(aHost);
+
+    CRTFREEIF(mHostName);
+    mHostName = nsCRT::strdup(aHost);
+    if (!mHostName)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetPort(PRInt32 *aPort)
 {
     NS_ENSURE_ARG_POINTER(aPort);
     *aPort = mPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetPort(PRInt32 aPort)
+{
+    if (!mProxyHost)
+        return NS_ERROR_FAILURE;
+
+    mPort = aPort;
     return NS_OK;
 }
 
