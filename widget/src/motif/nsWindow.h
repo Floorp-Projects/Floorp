@@ -441,7 +441,7 @@ public: \
     } \
     PRBool _classname::_aggname::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos) \
     { \
-      GET_OUTER()->OnScroll(aEvent, cPos); \
+      return GET_OUTER()->OnScroll(aEvent, cPos); \
     }
 
 
