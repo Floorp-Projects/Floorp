@@ -1685,7 +1685,6 @@ nsMsgDBFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURIC
 NS_IMETHODIMP
 nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
 {
-
     nsCOMPtr<nsIMsgIncomingServer> server;
     nsCOMPtr<nsISpamSettings> spamSettings;
     nsCOMPtr<nsIAbMDBDirectory> whiteListDirectory;
@@ -1693,7 +1692,12 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
     PRBool useWhiteList = PR_FALSE;
     PRInt32 spamLevel = 0;
     nsXPIDLCString whiteListAbURI;
-    
+ 
+    // if this is the junk folder, or the trash folder
+    // don't analyze for spam
+    if (mFlags & MSG_FOLDER_FLAG_JUNK || mFlags & MSG_FOLDER_FLAG_TRASH)
+      return NS_OK;
+
     nsresult rv = GetServer(getter_AddRefs(server));
     NS_ENSURE_SUCCESS(rv, rv); 
     rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
