@@ -19,7 +19,7 @@ my($iso2022jp_ver);
 package genverifier;
 @iso2022jp_st = (
 # 0  1  2   
-  0, 1, 2,   # Start State - 0
+  0, 2, 1,   # Start State - 0
   1, 1, 1,   # Error State - 1
   2, 2, 2,   # ItsMe State - 2
 );

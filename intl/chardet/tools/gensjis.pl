@@ -28,7 +28,7 @@ package genverifier;
   1, 0, 0, 3, 1, 3,  # Start State - 0
   1, 1, 1, 1, 1, 1,  # Error State - 1
   2, 2, 2, 2, 2, 2,  # ItsMe State - 2
-  1, 1, 0, 1, 0, 0   #       State - 3
+  1, 1, 0, 0, 1, 0   #       State - 3
 );
 
 $sjis_ver = genverifier::GenVerifier("SJIS", "Shift_JIS", \@sjis_cls, 6,     \@sjis_st);
