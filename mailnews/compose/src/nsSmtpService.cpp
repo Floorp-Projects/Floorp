@@ -153,7 +153,7 @@ nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
 			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			// this cast is safe....it is necessary because of a bug to the xpidl compiler
-			smtpUrl->SetUserEmailAddress((char *) aSender);
+			smtpUrl->SetUserEmailAddress(aSender);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
