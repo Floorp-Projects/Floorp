@@ -738,6 +738,8 @@ retry:
 
     if (c == EOF)
 	RETURN(TOK_EOF);
+    if (c != '-')
+        ts->flags |= TSF_DIRTYLINE;
 
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDENT_START(c) ||
@@ -954,7 +956,11 @@ retry:
     }
 
     switch (c) {
-      case '\n': c = TOK_EOL; break;
+      case '\n': 
+        ts->flags &= ~TSF_DIRTYLINE; 
+        c = TOK_EOL; 
+        break;
+
       case ';': c = TOK_SEMI; break;
       case '.': c = TOK_DOT; break;
       case '[': c = TOK_LB; break;
@@ -1138,8 +1144,10 @@ skipline:
 				     ts->tokenbuf.base,
 				     TOKEN_LENGTH(&ts->tokenbuf),
 				     flags);
-	    if (!obj)
-		RETURN(TOK_ERROR);
+            if (!obj) {
+                js_ReportUncaughtException(cx);
+                RETURN(TOK_ERROR);
+            }
 	    atom = js_AtomizeObject(cx, obj, 0);
 	    if (!atom)
 		RETURN(TOK_ERROR);
@@ -1164,20 +1172,31 @@ skipline:
 	break;
 
       case '+':
-      case '-':
 	if (MatchChar(ts, '=')) {
-	    tp->t_op = (c == '+') ? JSOP_ADD : JSOP_SUB;
+	    tp->t_op = JSOP_ADD;
 	    c = TOK_ASSIGN;
 	} else if (MatchChar(ts, c)) {
-	    c = (c == '+') ? TOK_INC : TOK_DEC;
-	} else if (c == '-') {
-	    tp->t_op = JSOP_NEG;
-	    c = TOK_MINUS;
+	    c = TOK_INC;
 	} else {
 	    tp->t_op = JSOP_POS;
 	    c = TOK_PLUS;
 	}
 	break;
+
+      case '-':
+        if (MatchChar(ts, '=')) {
+            tp->t_op = JSOP_SUB;
+            c = TOK_ASSIGN;
+        } else if (MatchChar(ts, c)) {
+            if ((PeekChar(ts) == '>') && !(ts->flags & TSF_DIRTYLINE))
+                goto skipline;
+            c = TOK_DEC;
+        } else {
+            tp->t_op = JSOP_NEG;
+            c = TOK_MINUS;
+        }
+        ts->flags |= TSF_DIRTYLINE;
+        break;
 
 #if JS_HAS_SHARP_VARS
       case '#':

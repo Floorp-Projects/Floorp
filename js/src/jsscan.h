@@ -177,6 +177,7 @@ struct JSTokenStream {
 #define TSF_REGEXP      0x08            /* looking for a regular expression */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
+#define TSF_DIRTYLINE   0x80            /* stuff other than whitespace since start of line */
 
 /*
  * Create a new token stream, either from an input buffer or from a file.
