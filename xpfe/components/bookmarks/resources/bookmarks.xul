@@ -83,7 +83,7 @@
       <command id="cmd_newfolder" oncommand="goDoCommand('cmd_newfolder');"/>
       <command id="cmd_newbookmark" oncommand="goDoCommand('cmd_newbookmark');"/>
       <command id="cmd_newseparator" oncommand="goDoCommand('cmd_newseparator');"/>
-      <command id="cmd_find" oncommand="dump('wsdfsdflk\n');goDoCommand('cmd_find');"/>
+      <command id="cmd_find" oncommand="goDoCommand('cmd_find');"/>
       <command id="cmd_setnewbookmarkfolder" oncommand="goDoCommand('cmd_setnewbookmarkfolder');"/>
       <command id="cmd_setpersonaltoolbarfolder" oncommand="goDoCommand('cmd_setpersonaltoolbarfolder');"/>
       <command id="cmd_setnewsearchfolder" oncommand="goDoCommand('cmd_setnewsearchfolder');"/>
