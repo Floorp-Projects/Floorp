@@ -863,6 +863,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
           nsCOMPtr<nsIDOMRange> range(currentItem);
           PRBool isCollapsed;
           range->GetIsCollapsed(&isCollapsed);
+          printf("GetIsCollapsed returned %d\n", isCollapsed);
           if (PR_FALSE==isCollapsed)
           {
             DeleteRangeTxn *txn;

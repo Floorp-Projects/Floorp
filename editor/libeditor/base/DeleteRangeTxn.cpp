@@ -248,7 +248,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
     {
       start=aOffset;
       textNode->GetLength(&numToDelete);
-      numToDelete -= (aOffset+1);
+      numToDelete -= aOffset;
     }
     else
     {
