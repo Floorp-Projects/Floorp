@@ -43,7 +43,7 @@ class nsIRDFResource;
 class nsIRDFContentModelBuilder : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFCONTENTMODELBUILDER_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFCONTENTMODELBUILDER_IID; return iid; }
 
     /**
      * Point the content model builder to the document. The content model

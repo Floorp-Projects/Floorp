@@ -33,7 +33,7 @@ class nsIDOMWindow;
 
 class nsIDOMToolbarCore : public nsIDOMBaseAppCore {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMTOOLBARCORE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMTOOLBARCORE_IID; return iid; }
 
   NS_IMETHOD    SetWindow(nsIDOMWindow* aWin)=0;
 

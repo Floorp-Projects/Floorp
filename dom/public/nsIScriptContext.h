@@ -41,7 +41,7 @@ class nsIScriptNameSpaceManager;
  */
 class nsIScriptContext : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ISCRIPTCONTEXT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ISCRIPTCONTEXT_IID; return iid; }
 
   /**
    * Execute a script.

@@ -32,7 +32,7 @@
 
 class nsIDOMComment : public nsIDOMCharacterData {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMCOMMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCOMMENT_IID; return iid; }
 };
 
 

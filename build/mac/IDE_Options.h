@@ -41,7 +41,7 @@
 #pragma unsigned_char			off
 #pragma exceptions				on
 #pragma bool 					on
-#pragma RTTI                off
+#pragma RTTI                on
 
 
 	/* Save as much space as possible with strings... */
@@ -71,6 +71,14 @@
 		#pragma scheduling 			604
 		#pragma peephole 			on
 		#pragma optimize_for_size	on
+
+    #pragma opt_strength_reduction on
+    #pragma opt_propagation on
+    #pragma opt_loop_invariants on
+    #pragma opt_lifetimes on
+    #pragma opt_dead_code on
+    #pragma opt_dead_assignments on
+    #pragma opt_common_subs on
 	#endif
 
 #else /* ...generating 68k */

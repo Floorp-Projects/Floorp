@@ -32,7 +32,7 @@
 
 class nsIDOMAttr : public nsIDOMNode {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMATTR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMATTR_IID; return iid; }
 
   NS_IMETHOD    GetName(nsString& aName)=0;
 

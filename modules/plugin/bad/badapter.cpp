@@ -821,7 +821,7 @@ NPP_New(NPMIMEType pluginType,
 
     // Create a new plugin instance and start it.
     nsIPluginInstance* pluginInstance = NULL;
-    thePlugin->CreateInstance(thePluginManager, nsIPluginInstance::IID(), (void**)&pluginInstance);
+    thePlugin->CreateInstance(thePluginManager, nsIPluginInstance::GetIID(), (void**)&pluginInstance);
     if (pluginInstance == NULL) {
         return NPERR_OUT_OF_MEMORY_ERROR;
     }
@@ -1241,7 +1241,7 @@ CPluginManager::GetURL(nsISupports* pluginInst,
     }
 
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
+    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1291,7 +1291,7 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     }
 
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
+    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1341,7 +1341,7 @@ CPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
                        const char* referrer, PRBool forceJSEnabled)
 {
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
+    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1374,7 +1374,7 @@ CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
                         PRUint32 postHeadersLength, const char* postHeaders)
 {
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
+    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1524,17 +1524,17 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
   
-    if (iid.Equals(nsIServiceManager::IID())) {                                                          
+    if (iid.Equals(nsIServiceManager::GetIID())) {                                                          
         *ptr = (void*) (nsIServiceManager*)this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }
-    if (iid.Equals(nsIAllocator::IID())) {                                                          
+    if (iid.Equals(nsIAllocator::GetIID())) {                                                          
         *ptr = (void*) (nsIAllocator*)this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }
-    if (iid.Equals(nsIPluginManager::IID()) || iid.Equals(nsISupports::IID())) {
+    if (iid.Equals(nsIPluginManager::GetIID()) || iid.Equals(nsISupports::GetIID())) {
         *ptr = (void*) ((nsIPluginManager*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        
@@ -1783,12 +1783,12 @@ CPluginInstancePeer::QueryInterface(const nsIID& iid, void** ptr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
   
-    if (iid.Equals(nsIPluginInstancePeer::IID())) {
+    if (iid.Equals(nsIPluginInstancePeer::GetIID())) {
         *ptr = (void*) this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
-    if (iid.Equals(nsIPluginTagInfo::IID()) || iid.Equals(nsISupports::IID())) {                                      
+    if (iid.Equals(nsIPluginTagInfo::GetIID()) || iid.Equals(nsISupports::GetIID())) {                                      
         *ptr = (void*) ((nsIPluginTagInfo*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        
@@ -1903,7 +1903,7 @@ CPluginManagerStream::Close(void)
 NS_IMPL_ADDREF(CPluginManagerStream);
 NS_IMPL_RELEASE(CPluginManagerStream);
 
-NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, nsIOutputStream::IID());
+NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, nsIOutputStream::GetIID());
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -2091,7 +2091,7 @@ nsresult CPluginStreamPeer::QueryInterface(const nsIID& iid, void** ptr)
         AddRef(); 
         return NS_OK; 
 	} else if (iid.Equals(kIPluginStreamPeerIID) ||
-			   iid.Equals(nsISupports::IID())) {
+			   iid.Equals(nsISupports::GetIID())) {
         *ptr = (void*) ((nsIPluginStreamPeer*)this); 
         AddRef(); 
         return NS_OK; 

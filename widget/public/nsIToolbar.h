@@ -44,7 +44,7 @@ enum nsToolbarBorderType {
 class nsIToolbar : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ITOOLBAR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITOOLBAR_IID; return iid; }
 
  /**
   * Adds a widget to the toolbar and indicates the left side gap

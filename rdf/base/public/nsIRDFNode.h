@@ -55,7 +55,7 @@
 
 class NS_RDF nsIRDFNode : public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFNODE_IID; return iid; }
 
     /**
      * Called by nsIRDFService after constructing a resource object to
@@ -80,7 +80,7 @@ public:
 
 class NS_RDF nsIRDFResource : public nsIRDFNode {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFRESOURCE_IID; return iid; }
 
     /**
      * Get the 8-bit string value of the node.
@@ -105,7 +105,7 @@ public:
 
 class NS_RDF nsIRDFLiteral : public nsIRDFNode {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IRDFLITERAL_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFLITERAL_IID; return iid; }
 
     /**
      * Get the Unicode string value of the node.

@@ -30,7 +30,7 @@
 class nsIFocusTracker : public nsISupports
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IFOCUSTRACKER_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IFOCUSTRACKER_IID; return iid; }
 
   /** SetFocus will keep track of the new frame as the focus frame. 
    *  as well as keeping track of the anchor frame; <BR>

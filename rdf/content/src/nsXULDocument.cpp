@@ -728,9 +728,9 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
              iid.Equals(kIXMLDocumentIID)) {
         *result = NS_STATIC_CAST(nsIRDFDocument*, this);
     }
-    else if (iid.Equals(nsIDOMXULDocument::IID()) ||
-             iid.Equals(nsIDOMDocument::IID()) ||
-             iid.Equals(nsIDOMNode::IID())) {
+    else if (iid.Equals(nsIDOMXULDocument::GetIID()) ||
+             iid.Equals(nsIDOMDocument::GetIID()) ||
+             iid.Equals(nsIDOMNode::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMXULDocument*, this);
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
@@ -742,10 +742,10 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(kIHTMLContentContainerIID)) {
         *result = NS_STATIC_CAST(nsIHTMLContentContainer*, this);
     }
-    else if (iid.Equals(nsIDOMNodeObserver::IID())) {
+    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
     }
-    else if (iid.Equals(nsIDOMElementObserver::IID())) {
+    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMElementObserver*, this);
     }
     else {
@@ -2054,7 +2054,7 @@ XULDocumentImpl::GetDocumentElement(nsIDOMElement** aDocumentElement)
   nsresult res = NS_ERROR_FAILURE;
 
   if (nsnull != mRootContent) {
-    res = mRootContent->QueryInterface(nsIDOMElement::IID(), (void**)aDocumentElement);
+    res = mRootContent->QueryInterface(nsIDOMElement::GetIID(), (void**)aDocumentElement);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Element");
   }
   
@@ -2142,7 +2142,7 @@ XULDocumentImpl::GetElementsByTagName(const nsString& aTagName, nsIDOMNodeList**
 
     if (root != nsnull) {
         nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::IID(), (void**) &domRoot))) {
+        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::GetIID(), (void**) &domRoot))) {
             rv = GetElementsByTagName(domRoot, aTagName, elements);
             NS_RELEASE(domRoot);
         }
@@ -2169,7 +2169,7 @@ XULDocumentImpl::GetElementsByAttribute(const nsString& aAttribute, const nsStri
 
     if (root != nsnull) {
         nsIDOMNode* domRoot;
-        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::IID(), (void**) &domRoot))) {
+        if (NS_SUCCEEDED(rv = root->QueryInterface(nsIDOMNode::GetIID(), (void**) &domRoot))) {
             rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
             NS_RELEASE(domRoot);
         }
@@ -2223,7 +2223,7 @@ XULDocumentImpl::GetElementByID(const nsString& aId, nsIDOMNode** aReturn)
 
     if (elements->Count() > 0) {
         nsISupports* element = elements->ElementAt(0);
-        rv = element->QueryInterface(nsIDOMNode::IID(), (void**) aReturn);
+        rv = element->QueryInterface(nsIDOMNode::GetIID(), (void**) aReturn);
         NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
         NS_RELEASE(element);
         return rv;
@@ -2585,7 +2585,7 @@ XULDocumentImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
             obs->OnSetNodeValue(aNode, aValue);
             NS_RELEASE(obs);
         }
@@ -2605,7 +2605,7 @@ XULDocumentImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
             obs->OnInsertBefore(aParent, aNewChild, aRefChild);
             NS_RELEASE(obs);
         }
@@ -2625,7 +2625,7 @@ XULDocumentImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsID
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
             obs->OnReplaceChild(aParent, aNewChild, aOldChild);
             NS_RELEASE(obs);
         }
@@ -2645,7 +2645,7 @@ XULDocumentImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
             obs->OnRemoveChild(aParent, aOldChild);
             NS_RELEASE(obs);
         }
@@ -2665,7 +2665,7 @@ XULDocumentImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMNodeObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMNodeObserver::GetIID(), (void**) &obs))) {
             obs->OnAppendChild(aParent, aNewChild);
             NS_RELEASE(obs);
         }
@@ -2688,7 +2688,7 @@ XULDocumentImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, 
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
             obs->OnSetAttribute(aElement, aName, aValue);
             NS_RELEASE(obs);
         }
@@ -2706,7 +2706,7 @@ XULDocumentImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aNam
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
             obs->OnRemoveAttribute(aElement, aName);
             NS_RELEASE(obs);
         }
@@ -2724,7 +2724,7 @@ XULDocumentImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAtt
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
             obs->OnSetAttributeNode(aElement, aNewAttr);
             NS_RELEASE(obs);
         }
@@ -2742,7 +2742,7 @@ XULDocumentImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOld
             = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
         nsIDOMElementObserver* obs;
-        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::IID(), (void**) &obs))) {
+        if (NS_SUCCEEDED(builder->QueryInterface(nsIDOMElementObserver::GetIID(), (void**) &obs))) {
             obs->OnRemoveAttributeNode(aElement, aOldAttr);
             NS_RELEASE(obs);
         }

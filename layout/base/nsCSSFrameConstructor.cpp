@@ -3764,7 +3764,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // the style tag has its own interpretation based on aHint 
   if (NS_STYLE_HINT_UNKNOWN == aHint) { 
     nsIStyledContent* styledContent;
-    result = aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent);
+    result = aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent);
 
     if (NS_OK == result) { 
       // Get style hint from HTML content object. 

@@ -39,7 +39,7 @@ class nsIDOMSelectionListener;
 // Selection interface
 class nsIDOMSelection : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSELECTION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTION_IID; return iid; }
 
   /*
    * Get the node and offset for the anchor point

@@ -335,7 +335,7 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIEnumeratorIID) ||
-      aIID.Equals(nsIBidirectionalEnumerator::IID())) {
+      aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
     nsIBidirectionalEnumerator* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();

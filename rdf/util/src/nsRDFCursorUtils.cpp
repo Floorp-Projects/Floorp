@@ -143,9 +143,9 @@ nsRDFSingletonAssertionCursor::QueryInterface(REFNSIID iid, void** result)
     if (!result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIRDFAssertionCursor::IID()) ||
-        iid.Equals(nsIRDFCursor::IID()) ||
-        iid.Equals(::nsISupports::IID())) {
+    if (iid.Equals(nsIRDFAssertionCursor::GetIID()) ||
+        iid.Equals(nsIRDFCursor::GetIID()) ||
+        iid.Equals(::nsISupports::GetIID())) {
         *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
         AddRef();
         return NS_OK;
@@ -283,8 +283,8 @@ nsRDFEnumeratorCursor::QueryInterface(REFNSIID iid, void** result)
     if (!result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(nsIRDFCursor::IID()) ||
-        iid.Equals(::nsISupports::IID())) {
+    if (iid.Equals(nsIRDFCursor::GetIID()) ||
+        iid.Equals(::nsISupports::GetIID())) {
         *result = NS_STATIC_CAST(nsIRDFCursor*, this);
         AddRef();
         return NS_OK;

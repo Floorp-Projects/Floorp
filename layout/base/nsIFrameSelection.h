@@ -40,7 +40,7 @@
 // Selection interface
 class nsIFrameSelection : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
 
   /** HandleKeyEvent will accept an event and frame and 
    *  will return NS_OK if it handles the event or NS_COMFALSE if not.

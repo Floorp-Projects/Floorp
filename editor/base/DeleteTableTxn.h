@@ -76,7 +76,7 @@ public:
   // override QueryInterface to handle DeleteTableTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  static const nsIID& IID() { static nsIID iid = DELETE_TABLE_TXN_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = DELETE_TABLE_TXN_IID; return iid; }
 
 
   /** return the string data associated with this transaction */

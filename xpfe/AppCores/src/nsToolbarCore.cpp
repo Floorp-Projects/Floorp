@@ -41,9 +41,9 @@
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIToolbarCoreIID,           NS_IDOMTOOLBARCORE_IID);
 
-static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::IID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::IID());
-static NS_DEFINE_IID(kIDOMCharacterDataIID,      nsIDOMCharacterData::IID());
+static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
+static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
+static NS_DEFINE_IID(kIDOMCharacterDataIID,      nsIDOMCharacterData::GetIID());
 
 static NS_DEFINE_IID(kToolbarCoreCID,            NS_TOOLBARCORE_CID);
 

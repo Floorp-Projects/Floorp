@@ -68,7 +68,7 @@ public:
 
   typedef enum {eLTR=0, eRTL=1} Direction;
 
-  static const nsIID& IID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
   /**
    * Init tells is to tell the implementation of nsIEditor to begin its services

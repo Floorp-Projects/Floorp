@@ -31,7 +31,7 @@
 
 class nsIDOMScreen : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSCREEN_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSCREEN_IID; return iid; }
 
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
 

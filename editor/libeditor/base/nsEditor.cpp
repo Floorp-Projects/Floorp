@@ -1705,7 +1705,7 @@ NS_IMETHODIMP GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode
       if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
       { // get the table cell interface from the frame
         nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
-        result = layoutObject->QueryInterface(nsITableCellLayout::IID(), (void**)(&cellLayoutObject));
+        result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
         if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
         { // get the index
           result = cellLayoutObject->GetColIndex(aCellIndex);

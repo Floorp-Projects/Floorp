@@ -106,7 +106,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     }
 
     // always find the native root
-    if(NS_FAILED(aObj->QueryInterface(nsISupports::IID(), (void**)&rootObj)))
+    if(NS_FAILED(aObj->QueryInterface(nsISupports::GetIID(), (void**)&rootObj)))
         return NULL;
 
     // look for the root wrapper
@@ -149,7 +149,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             // just a root wrapper
             nsXPCWrappedNativeClass* rootClazz;
             rootClazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(
-                                                    xpcc, nsISupports::IID());
+                                                    xpcc, nsISupports::GetIID());
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -219,7 +219,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
     if(mRoot == this)
     {
         nsIXPCScriptable* ds;
-        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::IID(),
+        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::GetIID(),
                                              (void**)&ds)))
             mDynamicScriptable = ds;
     }
@@ -262,7 +262,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
 nsXPCWrappedNative*
 nsXPCWrappedNative::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(nsISupports::IID()))
+    if(aIID.Equals(nsISupports::GetIID()))
         return mRoot;
 
     nsXPCWrappedNative* cur = mRoot;

@@ -42,7 +42,7 @@ Transaction interface to outside world
 class nsITransaction  : public nsISupports{
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_ITRANSACTION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITRANSACTION_IID; return iid; }
 
   /**
    * Executes the transaction.

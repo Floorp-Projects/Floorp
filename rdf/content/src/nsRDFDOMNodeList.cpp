@@ -96,7 +96,7 @@ RDFHTMLCollectionImpl::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIDOMHTMLCollection::IID())) {
+    if (aIID.Equals(nsIDOMHTMLCollection::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIDOMHTMLCollection*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -186,7 +186,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsIDOMNodeList::IID()) ||
+    if (aIID.Equals(nsIDOMNodeList::GetIID()) ||
         aIID.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIDOMNodeList*, this);
         NS_ADDREF(this);
@@ -197,7 +197,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
         NS_ADDREF(this);
         return NS_OK;
     }
-    else if (aIID.Equals(nsIDOMHTMLCollection::IID())) {
+    else if (aIID.Equals(nsIDOMHTMLCollection::GetIID())) {
         // Aggregate this interface
         if (! mInner) {
             if (! (mInner = new RDFHTMLCollectionImpl(this)))

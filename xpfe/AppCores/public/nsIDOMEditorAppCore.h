@@ -33,7 +33,7 @@ class nsIDOMWindow;
 
 class nsIDOMEditorAppCore : public nsIDOMBaseAppCore {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMEDITORAPPCORE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEDITORAPPCORE_IID; return iid; }
 
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue)=0;
 

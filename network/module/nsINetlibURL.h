@@ -40,7 +40,7 @@ struct URL_Struct_;
  */
 class nsINetlibURL : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_INETLIBURL_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_INETLIBURL_IID; return iid; }
 
   NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const = 0;
   NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s) = 0;

@@ -32,7 +32,7 @@
 
 class nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMHTMLHTMLELEMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLHTMLELEMENT_IID; return iid; }
 
   NS_IMETHOD    GetVersion(nsString& aVersion)=0;
   NS_IMETHOD    SetVersion(const nsString& aVersion)=0;

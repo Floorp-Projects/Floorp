@@ -207,7 +207,7 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
     void* result;
     NS_PRECONDITION(aPtr, "null pointer");
     return aPtr &&
-           NS_OK == aPtr->QueryInterface(WrappedJSIdentity::IID(), &result) &&
+           NS_OK == aPtr->QueryInterface(WrappedJSIdentity::GetIID(), &result) &&
            result == WrappedJSIdentity::GetSingleton();
 }
 
@@ -216,7 +216,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
                                              void** aInstancePtr)
 {
-    if(aIID.Equals(nsISupports::IID()))
+    if(aIID.Equals(nsISupports::GetIID()))
     {
         nsXPCWrappedJS* root = self->GetRootWrapper();
         *aInstancePtr = (void*) root;
@@ -229,7 +229,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         NS_ADDREF(self);
         return NS_OK;
     }
-    else if(aIID.Equals(WrappedJSIdentity::IID()))
+    else if(aIID.Equals(WrappedJSIdentity::GetIID()))
     {
         *aInstancePtr = WrappedJSIdentity::GetSingleton();
         return NS_OK;
@@ -258,7 +258,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 JSObject*
 nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 {
-    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsISupports::IID());
+    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsISupports::GetIID());
     return result ? result : aJSObj;
 }
 

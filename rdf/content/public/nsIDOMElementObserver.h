@@ -33,7 +33,7 @@ class nsIDOMAttr;
 
 class nsIDOMElementObserver : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMELEMENTOBSERVER_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMELEMENTOBSERVER_IID; return iid; }
 
   NS_IMETHOD    OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)=0;
 

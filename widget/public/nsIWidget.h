@@ -154,7 +154,7 @@ class nsIWidget : public nsISupports {
 
   public:
 
-    static const nsIID& IID() { static nsIID iid = NS_IWIDGET_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IWIDGET_IID; return iid; }
 
     /**
      * Create and initialize a widget. 

@@ -882,7 +882,7 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsITableCellLayout::IID())) {
+  if (aIID.Equals(nsITableCellLayout::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)(nsITableCellLayout*)this;
     return NS_OK;
   }

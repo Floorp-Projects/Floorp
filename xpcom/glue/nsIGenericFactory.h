@@ -35,7 +35,7 @@
  */
 class nsIGenericFactory : public nsIFactory {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IGENERICFACTORY_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IGENERICFACTORY_IID; return iid; }
     
     typedef NS_CALLBACK(ConstructorProcPtr) (nsISupports *aOuter, REFNSIID aIID, void **aResult);
     typedef NS_CALLBACK(DestructorProcPtr) (void);

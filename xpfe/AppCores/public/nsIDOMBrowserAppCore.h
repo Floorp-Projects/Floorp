@@ -33,7 +33,7 @@ class nsIDOMWindow;
 
 class nsIDOMBrowserAppCore : public nsIDOMBaseAppCore {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMBROWSERAPPCORE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMBROWSERAPPCORE_IID; return iid; }
 
   NS_IMETHOD    Back()=0;
 

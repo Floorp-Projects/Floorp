@@ -31,7 +31,7 @@
 
 class nsIDOMDOMImplementation : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMDOMIMPLEMENTATION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOMIMPLEMENTATION_IID; return iid; }
 
   NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn)=0;
 };

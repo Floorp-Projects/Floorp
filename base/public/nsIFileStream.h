@@ -36,7 +36,7 @@ class nsIFile
 : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IFILE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IFILE_IID; return iid; }
 	NS_IMETHOD                         Open(
                                            const nsFileSpec& inFile,
                                            int nsprMode,
@@ -67,7 +67,7 @@ class nsIFileInputStream
 : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IFILEINPUTSTREAM_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IFILEINPUTSTREAM_IID; return iid; }
 }; // class nsIFileInputStream
 
 /* a6cf90e7-15b3-11d2-932e-00805f8add32 */
@@ -84,7 +84,7 @@ class nsIFileOutputStream
 : public nsISupports
 {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IFILEOUTPUTSTREAM_IID; return iid; }
     NS_IMETHOD                         Flush() = 0;
                                            // Forces a write to disk.
 }; // class nsIFileOutputStream

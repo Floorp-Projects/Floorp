@@ -33,7 +33,7 @@ class nsIDOMNode;
 
 class nsIDOMRDFCore : public nsIDOMBaseAppCore {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMRDFCORE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMRDFCORE_IID; return iid; }
 
   NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource)=0;
 };

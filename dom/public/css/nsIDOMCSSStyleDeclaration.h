@@ -31,7 +31,7 @@
 
 class nsIDOMCSSStyleDeclaration : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMCSSSTYLEDECLARATION_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLEDECLARATION_IID; return iid; }
 
   NS_IMETHOD    GetCssText(nsString& aCssText)=0;
   NS_IMETHOD    SetCssText(const nsString& aCssText)=0;

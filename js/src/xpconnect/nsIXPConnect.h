@@ -85,7 +85,7 @@ class nsIXPConnectWrappedJS : public nsISupports
     // To manipulate this wrapper (as opposed to manipulating the wrapped
     // JSObject via this wrapper) do a QueryInterface for the
     // nsIXPConnectWrappedJSMethods interface 
-    // i.e. 'nsIXPConnectWrappedJSMethods::IID()'
+    // i.e. 'nsIXPConnectWrappedJSMethods::GetIID()'
     // and use the methods on that interface. (see below)
 };
 

@@ -102,7 +102,7 @@ public:
 
 class nsICSSStyleRule : public nsIStyleRule {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_ICSS_STYLE_RULE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_RULE_IID; return iid; }
 
   virtual nsCSSSelector* FirstSelector(void) = 0;
   virtual void AddSelector(const nsCSSSelector& aSelector) = 0;

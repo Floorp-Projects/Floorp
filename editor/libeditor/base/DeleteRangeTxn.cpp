@@ -395,7 +395,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommon
         // test if child is an ancestor of the other node.  If it is, don't process this parent anymore
         PRInt32 index;
         nsISupports *childAsISupports;
-        child->QueryInterface(nsISupports::IID(), (void **)&childAsISupports);
+        child->QueryInterface(nsISupports::GetIID(), (void **)&childAsISupports);
         index = ancestorList->IndexOf(childAsISupports);
         if (-1!=index)
           break;
@@ -521,7 +521,7 @@ NS_IMETHODIMP DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsAr
     while ((NS_SUCCEEDED(result)) && child && parent)
     {
       nsISupports * parentAsISupports;
-      parent->QueryInterface(nsISupports::IID(), (void **)&parentAsISupports);
+      parent->QueryInterface(nsISupports::GetIID(), (void **)&parentAsISupports);
       aList->AppendElement(parentAsISupports);
 #ifdef NS_DEBUG
         // begin debug output

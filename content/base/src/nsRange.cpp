@@ -49,7 +49,7 @@ nsresult
 NS_NewRange(nsIDOMRange** aInstancePtrResult)
 {
   nsRange * range = new nsRange();
-  return range->QueryInterface(nsIDOMRange::IID(), (void**) aInstancePtrResult);
+  return range->QueryInterface(nsIDOMRange::GetIID(), (void**) aInstancePtrResult);
 }
 
 
@@ -280,7 +280,7 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMRange::IID())) 
+  if (aIID.Equals(nsIDOMRange::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsIDOMRange*)this;
     NS_ADDREF_THIS();
@@ -328,7 +328,7 @@ nsresult nsRange::AddToListOf(nsCOMPtr<nsIDOMNode> aNode)
   
   nsCOMPtr<nsIContent> cN;
 
-  nsresult res = aNode->QueryInterface(nsIContent::IID(), getter_AddRefs(cN));
+  nsresult res = aNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cN));
   if (!NS_SUCCEEDED(res)) 
     return res;
 
@@ -344,7 +344,7 @@ nsresult nsRange::RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode)
   
   nsCOMPtr<nsIContent> cN;
 
-  nsresult res = aNode->QueryInterface(nsIContent::IID(), getter_AddRefs(cN));
+  nsresult res = aNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cN));
   if (!NS_SUCCEEDED(res)) 
     return res;
 
@@ -564,11 +564,11 @@ PRInt32 nsRange::IndexOf(nsCOMPtr<nsIDOMNode> aChildNode)
     return 0;
   
   // convert node and parent to nsIContent, so that we can find the child index
-  res = parentNode->QueryInterface(nsIContent::IID(), getter_AddRefs(contentParent));
+  res = parentNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(contentParent));
   if (!NS_SUCCEEDED(res)) 
     return 0;
 
-  res = aChildNode->QueryInterface(nsIContent::IID(), getter_AddRefs(contentChild));
+  res = aChildNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(contentChild));
   if (!NS_SUCCEEDED(res)) 
     return 0;
   
@@ -615,7 +615,7 @@ PRInt32 nsRange::GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOff
   
   // callers responsibility to make sure args are non-null and proper type
 
-  res = aNode->QueryInterface(nsIContent::IID(),getter_AddRefs(contentNode));
+  res = aNode->QueryInterface(nsIContent::GetIID(),getter_AddRefs(contentNode));
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::GetAncestorsAndOffsets");
@@ -714,7 +714,7 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr
   // or the first common ancestor from the leaf perspective
   i++;
   nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1->ElementAt(i));
-  node->QueryInterface(nsIDOMNode::IID(), getter_AddRefs(theParent));
+  node->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(theParent));
   return theParent;  
 }
 
@@ -722,7 +722,7 @@ nsresult nsRange::GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCO
 {
   if (!outDomNode) 
     return NS_ERROR_NULL_POINTER;
-  nsresult res = inContentNode->QueryInterface(nsIDOMNode::IID(), getter_AddRefs(*outDomNode));
+  nsresult res = inContentNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(*outDomNode));
   if (!NS_SUCCEEDED(res)) 
     return res;
   return NS_OK;
@@ -732,7 +732,7 @@ nsresult nsRange::GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr
 {
   if (!outContentNode) 
     return NS_ERROR_NULL_POINTER;
-  nsresult res = inDomNode->QueryInterface(nsIContent::IID(), getter_AddRefs(*outContentNode));
+  nsresult res = inDomNode->QueryInterface(nsIContent::GetIID(), getter_AddRefs(*outContentNode));
   if (!NS_SUCCEEDED(res)) 
     return res;
   return NS_OK;
@@ -1018,13 +1018,13 @@ nsresult nsRange::DeleteContents()
   nsCOMPtr<nsIContent> cEnd;
   
   // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(nsIContent::IID(), getter_AddRefs(cStart));
+  nsresult res = mStartParent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cStart));
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
     return NS_ERROR_UNEXPECTED;
   }
-  res = mEndParent->QueryInterface(nsIContent::IID(), getter_AddRefs(cEnd));
+  res = mEndParent->QueryInterface(nsIContent::GetIID(), getter_AddRefs(cEnd));
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::DeleteContents");
@@ -1059,7 +1059,7 @@ nsresult nsRange::DeleteContents()
     else // textnode -  offsets refer to data in node
     {
       nsCOMPtr<nsIDOMText> textNode;
-      res = mStartParent->QueryInterface(nsIDOMText::IID(), getter_AddRefs(textNode));
+      res = mStartParent->QueryInterface(nsIDOMText::GetIID(), getter_AddRefs(textNode));
       if (!NS_SUCCEEDED(res)) // if it's not a text node, punt
       {
         NS_NOTREACHED("nsRange::DeleteContents");
@@ -1130,7 +1130,7 @@ nsresult nsRange::DeleteContents()
   
   // If mStartParent is a text node, delete the text after start offset
   nsIDOMText *textNode;
-  res = mStartParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+  res = mStartParent->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
   if (NS_SUCCEEDED(res)) 
   {
     res = textNode->DeleteData(mStartOffset, 0xFFFFFFFF); // del to end
@@ -1139,7 +1139,7 @@ nsresult nsRange::DeleteContents()
   }
 
   // If mEndParent is a text node, delete the text before end offset
-  res = mEndParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+  res = mEndParent->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
   if (NS_SUCCEEDED(res)) 
   {
     res = textNode->DeleteData(0, mEndOffset); // del from start
@@ -1400,13 +1400,13 @@ nsresult nsRange::ToString(nsString& aReturn)
   aReturn.Truncate();
   
   // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(nsIContent::IID(), (void**)&cStart);
+  nsresult res = mStartParent->QueryInterface(nsIContent::GetIID(), (void**)&cStart);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::ToString");
     return NS_ERROR_UNEXPECTED;
   }
-  res = mEndParent->QueryInterface(nsIContent::IID(), (void**)&cEnd);
+  res = mEndParent->QueryInterface(nsIContent::GetIID(), (void**)&cEnd);
   if (!NS_SUCCEEDED(res)) 
   {
     NS_NOTREACHED("nsRange::ToString");
@@ -1418,7 +1418,7 @@ nsresult nsRange::ToString(nsString& aReturn)
   if (cStart == cEnd)
   {
     nsIDOMText *textNode;
-    res = mStartParent->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+    res = mStartParent->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
     if (!NS_SUCCEEDED(res)) // if it's not a text node, skip to iterator approach
     {
        goto toStringComplexLabel;
@@ -1455,7 +1455,7 @@ toStringComplexLabel:
   while (NS_COMFALSE == iter->IsDone())
   {
     nsIDOMText *textNode;
-    res = cN->QueryInterface(nsIDOMText::IID(), (void**)&textNode);
+    res = cN->QueryInterface(nsIDOMText::GetIID(), (void**)&textNode);
     if (NS_SUCCEEDED(res)) // if it's a text node, get the text
     {
       if (cN == cStart) // only include text past start offset

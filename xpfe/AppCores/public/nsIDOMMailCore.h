@@ -33,7 +33,7 @@ class nsIDOMWindow;
 
 class nsIDOMMailCore : public nsIDOMBaseAppCore {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMMAILCORE_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMMAILCORE_IID; return iid; }
 
   NS_IMETHOD    SendMail(const nsString& aAddrTo, const nsString& aSubject, const nsString& aMsg)=0;
 

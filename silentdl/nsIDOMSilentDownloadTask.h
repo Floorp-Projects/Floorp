@@ -31,7 +31,7 @@
 
 class nsIDOMSilentDownloadTask : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSILENTDOWNLOADTASK_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSILENTDOWNLOADTASK_IID; return iid; }
   enum {
     SDL_NOT_INITED = -2,
     SDL_NOT_ADDED = -1,

@@ -32,7 +32,7 @@ class nsIDOMSilentDownloadTask;
 
 class nsIDOMSilentDownload : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMSILENTDOWNLOAD_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMSILENTDOWNLOAD_IID; return iid; }
 
   NS_IMETHOD    GetByteRange(PRInt32* aByteRange)=0;
   NS_IMETHOD    SetByteRange(PRInt32 aByteRange)=0;

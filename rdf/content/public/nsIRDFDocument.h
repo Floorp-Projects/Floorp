@@ -49,7 +49,7 @@ class nsIRDFResource;
 class nsIRDFDocument : public nsIXMLDocument
 {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IRDFDOCUMENT_IID; return iid; }
 
   /**
    * Set the document's "root" resource.

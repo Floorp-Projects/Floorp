@@ -116,12 +116,12 @@ nsresult nsCaret::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsICaret::IID())) {
+  if (aIID.Equals(nsICaret::GetIID())) {
     *aInstancePtrResult = (void*)(nsICaret*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIDOMSelectionListener::IID())) {
+  if (aIID.Equals(nsIDOMSelectionListener::GetIID())) {
     *aInstancePtrResult = (void*)(nsIDOMSelectionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;

@@ -38,7 +38,7 @@
 class nsISelectionMgr : public nsISupports
 {
 public:
-  static const nsIID& IID()
+  static const nsIID& GetIID()
     { static nsIID iid = NS_ISELECTIONMGR_IID; return iid; }
     
   NS_IMETHOD GetCopyOStream(ostream** aStream) = 0;

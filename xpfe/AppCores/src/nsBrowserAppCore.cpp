@@ -62,8 +62,8 @@ static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIBrowserAppCoreIID,        NS_IDOMBROWSERAPPCORE_IID);
 
-static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::IID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::IID());
+static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
+static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
 
 
 static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);

@@ -39,7 +39,7 @@ nsRDFResource::nsRDFResource(void)
 
     if (gRefCnt++ == 0) {
         nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   nsIRDFService::IID(),
+                                                   nsIRDFService::GetIID(),
                                                    (nsISupports**) &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -70,8 +70,8 @@ nsRDFResource::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIRDFResource::IID()) ||
-        iid.Equals(nsIRDFNode::IID()) ||
+    if (iid.Equals(nsIRDFResource::GetIID()) ||
+        iid.Equals(nsIRDFNode::GetIID()) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFResource*, this);
         AddRef();
@@ -99,7 +99,7 @@ nsRDFResource::EqualsNode(nsIRDFNode* node, PRBool* result) const
 {
     nsresult rv;
     nsIRDFResource* resource;
-    if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::IID(), (void**)&resource))) {
+    if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource))) {
         rv = EqualsResource(resource, result);
         NS_RELEASE(resource);
     }

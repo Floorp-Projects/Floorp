@@ -35,7 +35,7 @@ class nsITableCellLayout : public nsISupports
 {
 public:
 
-  static const nsIID& IID() { static nsIID iid = NS_ITABLECELLAYOUT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITABLECELLAYOUT_IID; return iid; }
 
   /** return the mapped cell's row index (starting at 0 for the first row) */
   virtual nsresult GetRowIndex(PRInt32 &aRowIndex)=0;

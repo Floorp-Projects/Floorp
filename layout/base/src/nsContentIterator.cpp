@@ -105,7 +105,7 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentIterator();
-  return iter->QueryInterface(nsIContentIterator::IID(), (void**) aInstancePtrResult);
+  return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
 }
 
 
@@ -130,13 +130,13 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-/*  if (aIID.Equals(nsIEnumerator::IID())) 
+/*  if (aIID.Equals(nsIEnumerator::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }  */
-  if (aIID.Equals(nsIContentIterator::IID())) 
+  if (aIID.Equals(nsIContentIterator::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsIContentIterator*)this;
     NS_ADDREF_THIS();
@@ -528,7 +528,7 @@ nsresult nsContentIterator::CurrentNode(nsIContent **aNode)
     return NS_ERROR_FAILURE;
   if (mIsDone) 
     return NS_ERROR_FAILURE;
-  return mCurNode->QueryInterface(nsIContent::IID(), (void**) aNode);
+  return mCurNode->QueryInterface(nsIContent::GetIID(), (void**) aNode);
 }
 
 
@@ -591,7 +591,7 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentSubtreeIterator();
-  return iter->QueryInterface(nsIContentIterator::IID(), (void**) aInstancePtrResult);
+  return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
 }
 
 

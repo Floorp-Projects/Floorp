@@ -65,9 +65,9 @@ nsConjoiningEnumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
 
-  if (aIID.Equals(nsIBidirectionalEnumerator::IID()) || 
-      aIID.Equals(nsIEnumerator::IID()) || 
-      aIID.Equals(nsISupports::IID())) {
+  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
+      aIID.Equals(nsIEnumerator::GetIID()) || 
+      aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*) this; 
     NS_ADDREF_THIS(); 
     return NS_OK; 
@@ -113,7 +113,7 @@ nsConjoiningEnumerator:: Last(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
-  rv = mSecond->QueryInterface(nsIBidirectionalEnumerator::IID(), (void**)&be);
+  rv = mSecond->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
   if (NS_FAILED(rv)) return rv;
   mCurrent = mSecond;
   rv = be->Last();
@@ -126,12 +126,12 @@ nsConjoiningEnumerator:: Prev(void)
 {
   nsresult rv;
   nsIBidirectionalEnumerator* be;
-  rv = mCurrent->QueryInterface(nsIBidirectionalEnumerator::IID(), (void**)&be);
+  rv = mCurrent->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
   if (NS_FAILED(rv)) return rv;
   rv = be->Prev();
   NS_RELEASE(be);
   if (NS_FAILED(rv) && mCurrent == mSecond) {
-    rv = mFirst->QueryInterface(nsIBidirectionalEnumerator::IID(), (void**)&be);
+    rv = mFirst->QueryInterface(nsIBidirectionalEnumerator::GetIID(), (void**)&be);
     if (NS_FAILED(rv)) return rv;
     mCurrent = mFirst;
     rv = be->Last();

@@ -445,10 +445,10 @@ RDFTreeBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
     else if (iid.Equals(kIRDFObserverIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
     }
-    else if (iid.Equals(nsIDOMNodeObserver::IID())) {
+    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
     }
-    else if (iid.Equals(nsIDOMElementObserver::IID())) {
+    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIDOMElementObserver*, this);
     }
     else {
