@@ -81,27 +81,125 @@ public class Interpreter extends LabelTable {
         throws IOException
     {
         version = cx.getLanguageVersion();
-        itsData = new InterpreterData(securityDomain,
-                    cx.hasCompileFunctionsWithDynamicScope(), false);
+        itsData = new InterpreterData(cx, securityDomain);
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
             itsData.itsFunctionType = f.getFunctionType();
-            InterpretedFunction result =
-                generateFunctionICode(cx, scope, f, securityDomain);
+            InterpretedFunction result = generateFunctionICode(cx, scope, f);
             createFunctionObject(result, scope, false);
             return result;
         }
-        return generateScriptICode(cx, scope, tree, securityDomain);
+        return generateScriptICode(cx, scope, tree);
     }
 
-    private void generateICodeFromTree(Node tree,
-                                       VariableTable varTable,
-                                       boolean needsActivation,
-                                       Object securityDomain)
+    private InterpretedScript generateScriptICode(Context cx,
+                                                  Scriptable scope,
+                                                  Node tree)
     {
+        itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
+        itsData.itsSourceFile = itsSourceFile;
+        debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
+
+        generateNestedFunctions(cx, scope, tree);
+
+        generateRegExpLiterals(cx, scope, tree);
+
+        itsVariableTable = (VariableTable)tree.getProp(Node.VARS_PROP);
+        generateICodeFromTree(tree);
+        if (Context.printICode) dumpICode(itsData);
+
+        InterpretedScript result = new InterpretedScript(cx, itsData);
+        setArgNames(result);
+        if (cx.debugger != null) {
+            cx.debugger.handleCompilationDone(cx, result, debugSource);
+        }
+        return result;
+    }
+
+    private InterpretedFunction generateFunctionICode(Context cx,
+                                                      Scriptable scope,
+                                                      FunctionNode theFunction)
+    {
+        generateNestedFunctions(cx, scope, theFunction);
+
+        generateRegExpLiterals(cx, scope, theFunction);
+
+        itsData.itsNeedsActivation = theFunction.requiresActivation();
+
+        itsVariableTable = theFunction.getVariableTable();
+        generateICodeFromTree(theFunction.getLastChild());
+
+        itsData.itsName = theFunction.getFunctionName();
+        itsData.itsSourceFile = (String) theFunction.getProp(
+                                    Node.SOURCENAME_PROP);
+        itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
+        if (Context.printICode) dumpICode(itsData);
+
+        InterpretedFunction result = new InterpretedFunction(cx, itsData);
+        setArgNames(result);
+        if (cx.debugger != null) {
+            cx.debugger.handleCompilationDone(cx, result, debugSource);
+        }
+        return result;
+    }
+
+    private void setArgNames(NativeFunction f) {
+        String[] argNames = new String[itsVariableTable.size()];
+        itsVariableTable.getAllVariables(argNames);
+        f.argNames = argNames;
+        f.argCount = (short)itsVariableTable.getParameterCount();
+    }
+
+    private void generateNestedFunctions(Context cx, Scriptable scope,
+                                         Node tree)
+    {
+        ObjArray functionList = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
+        if (functionList == null) return;
+
+        int N = functionList.size();
+        InterpretedFunction[] array = new InterpretedFunction[N];
+        for (int i = 0; i != N; i++) {
+            FunctionNode def = (FunctionNode)functionList.get(i);
+            Interpreter jsi = new Interpreter();
+            jsi.itsSourceFile = itsSourceFile;
+            jsi.itsData = new InterpreterData(cx, itsData.securityDomain);
+            jsi.itsData.itsCheckThis = def.getCheckThis();
+            jsi.itsData.itsFunctionType = def.getFunctionType();
+            jsi.itsInFunctionFlag = true;
+            jsi.debugSource = debugSource;
+            array[i] = jsi.generateFunctionICode(cx, scope, def);
+            def.putIntProp(Node.FUNCTION_PROP, i);
+        }
+        itsData.itsNestedFunctions = array;
+    }
+
+    private void generateRegExpLiterals(Context cx,
+                                        Scriptable scope,
+                                        Node tree)
+    {
+        ObjArray regexps = (ObjArray)tree.getProp(Node.REGEXP_PROP);
+        if (regexps == null) return;
+
+        RegExpProxy rep = cx.getRegExpProxy();
+        if (rep == null) {
+            throw cx.reportRuntimeError0("msg.no.regexp");
+        }
+        int N = regexps.size();
+        Object[] array = new Object[N];
+        for (int i = 0; i != N; i++) {
+            Node regexp = (Node) regexps.get(i);
+            Node left = regexp.getFirstChild();
+            Node right = regexp.getLastChild();
+            String source = left.getString();
+            String global = (left != right) ? right.getString() : null;
+            array[i] = rep.newRegExp(cx, scope, source, global, false);
+            regexp.putIntProp(Node.REGEXP_PROP, i);
+        }
+        itsData.itsRegExpLiterals = array;
+    }
+
+    private void generateICodeFromTree(Node tree) {
         int theICodeTop = 0;
-        itsVariableTable = varTable;
-        itsData.itsNeedsActivation = needsActivation;
         theICodeTop = generateICode(tree, theICodeTop);
         for (int i = 0; i < itsLabelTableTop; i++) {
             itsLabelTable[i].fixGotos(itsData.itsICode);
@@ -128,120 +226,7 @@ public class Interpreter extends LabelTable {
 
     }
 
-    private Object[] generateRegExpLiterals(Context cx,
-                                            Scriptable scope,
-                                            ObjArray regexps)
-    {
-        Object[] result = new Object[regexps.size()];
-        RegExpProxy rep = cx.getRegExpProxy();
-        for (int i = 0; i < regexps.size(); i++) {
-            Node regexp = (Node) regexps.get(i);
-            Node left = regexp.getFirstChild();
-            Node right = regexp.getLastChild();
-            result[i] = rep.newRegExp(cx, scope, left.getString(),
-                                (left != right) ? right.getString() : null, false);
-            regexp.putIntProp(Node.REGEXP_PROP, i);
-        }
-        return result;
-    }
-
-    private InterpretedScript generateScriptICode(Context cx,
-                                                  Scriptable scope,
-                                                  Node tree,
-                                                  Object securityDomain)
-    {
-        itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
-        itsData.itsSourceFile = itsSourceFile;
-        itsFunctionList = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
-        if (itsFunctionList != null)
-            generateNestedFunctions(scope, cx, securityDomain);
-        Object[] regExpLiterals = null;
-        ObjArray regexps = (ObjArray)tree.getProp(Node.REGEXP_PROP);
-        if (regexps != null)
-            regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
-
-        VariableTable varTable = (VariableTable)tree.getProp(Node.VARS_PROP);
-        // The default is not to generate debug information
-        generateICodeFromTree(tree, varTable, false, securityDomain);
-        itsData.itsNestedFunctions = itsNestedFunctions;
-        itsData.itsRegExpLiterals = regExpLiterals;
-        if (Context.printICode) dumpICode(itsData);
-
-        String[] argNames = getArgNames(itsVariableTable);
-        short argCount = (short)itsVariableTable.getParameterCount();
-        InterpretedScript
-            result = new InterpretedScript(cx, itsData, argNames, argCount);
-        if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, result, debugSource);
-        }
-        return result;
-    }
-
-    private void generateNestedFunctions(Scriptable scope,
-                                         Context cx,
-                                         Object securityDomain)
-    {
-        itsNestedFunctions = new InterpretedFunction[itsFunctionList.size()];
-        for (short i = 0; i < itsFunctionList.size(); i++) {
-            FunctionNode def = (FunctionNode)itsFunctionList.get(i);
-            Interpreter jsi = new Interpreter();
-            jsi.itsSourceFile = itsSourceFile;
-            jsi.itsData = new InterpreterData(securityDomain,
-                            cx.hasCompileFunctionsWithDynamicScope(),
-                            def.getCheckThis());
-            jsi.itsData.itsFunctionType = def.getFunctionType();
-            jsi.itsInFunctionFlag = true;
-            jsi.debugSource = debugSource;
-            itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def,
-                                                              securityDomain);
-            def.putIntProp(Node.FUNCTION_PROP, i);
-        }
-    }
-
-    private InterpretedFunction
-    generateFunctionICode(Context cx, Scriptable scope,
-                          FunctionNode theFunction, Object securityDomain)
-    {
-        itsFunctionList = (ObjArray) theFunction.getProp(Node.FUNCTION_PROP);
-        if (itsFunctionList != null)
-            generateNestedFunctions(scope, cx, securityDomain);
-        Object[] regExpLiterals = null;
-        ObjArray regexps = (ObjArray)theFunction.getProp(Node.REGEXP_PROP);
-        if (regexps != null)
-            regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
-
-        VariableTable varTable = theFunction.getVariableTable();
-        generateICodeFromTree(theFunction.getLastChild(),
-                              varTable, theFunction.requiresActivation(),
-                              securityDomain);
-
-        itsData.itsName = theFunction.getFunctionName();
-        itsData.itsSourceFile = (String) theFunction.getProp(
-                                    Node.SOURCENAME_PROP);
-        itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
-        itsData.itsNestedFunctions = itsNestedFunctions;
-        itsData.itsRegExpLiterals = regExpLiterals;
-        if (Context.printICode) dumpICode(itsData);
-
-        String[] argNames = getArgNames(itsVariableTable);
-        short argCount = (short)itsVariableTable.getParameterCount();
-        InterpretedFunction
-            result = new InterpretedFunction(cx, itsData, argNames, argCount);
-        if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, result, debugSource);
-        }
-        return result;
-    }
-
-    private static String[] getArgNames(VariableTable vt) {
-        String[] argNames = new String[vt.size()];
-        vt.getAllVariables(argNames);
-        return argNames;
-    }
-
     boolean itsInFunctionFlag;
-    ObjArray itsFunctionList;
 
     InterpreterData itsData;
     VariableTable itsVariableTable;
@@ -249,7 +234,6 @@ public class Interpreter extends LabelTable {
     int itsStackDepth = 0;
     String itsSourceFile;
     int itsLineNumber = 0;
-    InterpretedFunction[] itsNestedFunctions = null;
 
     private int updateLineNumber(Node node, int iCodeTop)
     {

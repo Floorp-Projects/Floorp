@@ -41,13 +41,9 @@ import java.util.*;
 
 public class InterpretedScript extends NativeScript implements DebuggableScript {
 
-    InterpretedScript(Context cx,
-                      InterpreterData theData,
-                      String[] argNames, short argCount)
+    InterpretedScript(Context cx, InterpreterData theData)
     {
         itsData = theData;
-        this.argNames = argNames;
-        this.argCount = argCount;
         functionName = "";
         nestedFunctions = itsData.itsNestedFunctions;
         version = (short)cx.getLanguageVersion();

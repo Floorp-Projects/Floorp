@@ -44,13 +44,8 @@ class InterpretedFunction extends NativeFunction
 
     static final long serialVersionUID = -6235150451107527319L;
 
-    InterpretedFunction(Context cx,
-                        InterpreterData theData,
-                        String[] argNames, short argCount)
-    {
+    InterpretedFunction(Context cx, InterpreterData theData) {
         itsData = theData;
-        this.argNames = argNames;
-        this.argCount = argCount;
         init(cx);
     }
 

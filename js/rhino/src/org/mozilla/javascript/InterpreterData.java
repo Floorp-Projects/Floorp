@@ -46,16 +46,13 @@ class InterpreterData implements Serializable {
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(Object securityDomain,
-                    boolean useDynamicScope, boolean checkThis)
-    {
+    InterpreterData(Context cx, Object securityDomain) {
         itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
         itsICode = new byte[itsICodeTop];
 
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
 
-        itsUseDynamicScope = useDynamicScope;
-        itsCheckThis = checkThis;
+        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
         if (securityDomain == null)
             Context.checkSecurityDomainRequired();
         this.securityDomain = securityDomain;
