@@ -43,18 +43,17 @@
 #ifdef XP_WIN
 #include "nsWindowsHooks.h"
 #endif
-#ifdef MIGRATION_ENABLED
 #include "nsProfileMigrator.h"
-#include "nsOperaProfileMigrator.h"
-#include "nsSeamonkeyProfileMigrator.h"
 #include "nsDogbertProfileMigrator.h"
+#include "nsOperaProfileMigrator.h"
+#include "nsPhoenixProfileMigrator.h"
+#include "nsSeamonkeyProfileMigrator.h"
 #ifdef XP_WIN
 #include "nsIEProfileMigrator.h"
 #elif defined(XP_MACOSX)
 #include "nsSafariProfileMigrator.h"
 #include "nsOmniWebProfileMigrator.h"
 #include "nsMacIEProfileMigrator.h"
-#endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -64,10 +63,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif
 
-#ifdef MIGRATION_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoenixProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
@@ -75,7 +74,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafariProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOmniWebProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacIEProfileMigrator)
-#endif
 #endif
 /////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +95,6 @@ static const nsModuleComponentInfo components[] =
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
-#ifdef MIGRATION_ENABLED
   { "Profile Migrator",
     NS_PROFILEMIGRATOR_CID,
     NS_PROFILEMIGRATOR_CONTRACTID,
@@ -131,6 +128,11 @@ static const nsModuleComponentInfo components[] =
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera",
     nsOperaProfileMigratorConstructor },
 
+  { "Phoenix Profile Migrator",
+    NS_PHOENIXPROFILEMIGRATOR_CID,
+    NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix",
+    nsPhoenixProfileMigratorConstructor },
+
   { "Seamonkey Profile Migrator",
     NS_SEAMONKEYPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey",
@@ -140,8 +142,6 @@ static const nsModuleComponentInfo components[] =
     NS_DOGBERTPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert",
     nsDogbertProfileMigratorConstructor }
-
-#endif
 };
 
 NS_IMPL_NSGETMODULE(nsBrowserCompsModule, components)

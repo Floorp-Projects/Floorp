@@ -37,8 +37,6 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-#ifdef MIGRATION_ENABLED
-
 #define NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "@mozilla.org/profile/migrator;1?app=browser&type="
 
 #ifdef XP_WIN
@@ -66,4 +64,5 @@
 #define NS_SEAMONKEYPROFILEMIGRATOR_CID \
 { 0x9a28ffa7, 0xe6ef, 0x4b52, { 0xa1, 0x27, 0x6a, 0xd9, 0x51, 0xde, 0x8e, 0x9b } }
 
-#endif
+#define NS_PHOENIXPROFILEMIGRATOR_CID \
+{ 0x78481e4a, 0x50e4, 0x4489, { 0xb6, 0x8a, 0xef, 0x82, 0x67, 0xe, 0xd6, 0x3f } }
