@@ -274,7 +274,7 @@ public:
 #elif defined(XP_WIN) || defined(XP_OS2)
   #define FILE_PATH_SEPARATOR       "\\"
   #define FILE_ILLEGAL_CHARACTERS   "/:*?\"<>|"
-#elif (defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
   #define FILE_PATH_SEPARATOR       "/"
   #define FILE_ILLEGAL_CHARACTERS   ""
 #elif
