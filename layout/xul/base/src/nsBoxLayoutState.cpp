@@ -90,6 +90,7 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize):mPresContext(aPresContext),
                                                                       mReflowState(&aReflowState),                                                                    
                                                                       mType(Dirty),
+                                                                      mMaxElementWidth(nsnull),
                                                                       mScrolledBlockSizeConstraint(-1,-1),
                                                                       mLayoutFlags(0),
                                                                       mPaintingDisabled(PR_FALSE)
@@ -97,7 +98,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
                                                                                         
 
 {
-  mMaxElementWidth = &aDesiredSize.mMaxElementWidth;
+  if (aDesiredSize.mComputeMEW)
+    mMaxElementWidth = &aDesiredSize.mMaxElementWidth;
   NS_ASSERTION(mPresContext, "PresContext must be non-null");
 }
 
