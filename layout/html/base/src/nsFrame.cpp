@@ -3683,27 +3683,22 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   if we hit a header or footer thats ok just go into them,
 */
             PRBool searchTableBool = PR_FALSE;
-            if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
+            if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame ||
+                aPos->mResultFrame->GetType() == nsLayoutAtoms::tableCellFrame)
             {
               nsIFrame *frame = aPos->mResultFrame->GetFirstChild(nsnull);
-              result = NS_OK;
               //got the table frame now
               while(frame) //ok time to drill down to find iterator
               {
-                frame = frame->GetFirstChild(nsnull);
-                if (frame && NS_SUCCEEDED(result))
+                result = frame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
+                                                          getter_AddRefs(iter));
+                if (NS_SUCCEEDED(result))
                 {
-                  result = frame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
-                                                            getter_AddRefs(iter));
-                  if (NS_SUCCEEDED(result))
-                  {
-                    aPos->mResultFrame = frame;
-                    searchTableBool = PR_TRUE;
-                    break; //while aPos->mResultFrame
-                  }
+                  aPos->mResultFrame = frame;
+                  searchTableBool = PR_TRUE;
+                  break; //while(frame)
                 }
-                else
-                  break;
+                frame = frame->GetFirstChild(nsnull);
               }
             }
             if (!searchTableBool)
