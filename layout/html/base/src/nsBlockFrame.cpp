@@ -6270,6 +6270,12 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
                                                           &changed);
         if (changed) {
           kidRenumberedABullet = PR_TRUE;
+
+          nsRect damageRect;
+          listItem->mBullet->GetRect(damageRect);
+          damageRect.x = damageRect.y = 0;
+          if (damageRect.width > 0 || damageRect.height > 0)
+            listItem->mBullet->Invalidate(aPresContext, damageRect);
         }
       }
 
