@@ -81,11 +81,6 @@ public:
                            const PRUnichar* aURL) = 0;
  
 
-   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                              const PRUnichar* aURL,
-                              PRInt32 aProgress,
-                              PRInt32 aProgressMax) = 0;
- 
    NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
                          nsresult aStatus) = 0;
@@ -189,13 +184,6 @@ public:
   /* Set & Get Session History details */
   NS_IMETHOD SetIsInSHist(PRBool aIsFrame)       = 0;
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame)      = 0;
-
-  /**
-   * Get and set the history state for the document.
-   */
-  NS_IMETHOD CaptureHistoryState(nsISupports** aLayoutHistoryState) = 0;
-  NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState) = 0;
-  NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState) = 0;
 
   /**
    * Notify children to fire unload events before root data gone
