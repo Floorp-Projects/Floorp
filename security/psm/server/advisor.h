@@ -164,4 +164,7 @@ char* SSM_GetOCSPURL(CERTCertificate *cert, PrefSet *prefs);
 PRBool SSM_IsOCSPEnabled(SSMControlConnection *connection);
 SSMStatus SSM_DisplayCRLButton(SSMTextGenContext *cx);
 SSMStatus SSM_ListCRLs(SSMTextGenContext *cx);
+SSMStatus SSM_LayoutSMIMETab(SSMTextGenContext *cx);
+SSMStatus SSM_LayoutJavaJSTab(SSMTextGenContext *cx);
+SSMStatus SSM_LayoutOthersTab(SSMTextGenContext *cx);
 #endif
