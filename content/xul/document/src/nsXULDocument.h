@@ -48,6 +48,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
@@ -487,6 +488,8 @@ protected:
 
     static nsIXULContentUtils* gXULUtils;
     static nsIXULPrototypeCache* gXULCache;
+    static nsIScriptSecurityManager* gScriptSecurityManager;
+    static nsIPrincipal* gSystemPrincipal;
 
     static PRLogModuleInfo* gXULLog;
 

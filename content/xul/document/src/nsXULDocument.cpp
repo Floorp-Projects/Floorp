@@ -56,6 +56,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIContentViewer.h"
 #include "nsICSSStyleSheet.h"
@@ -205,6 +206,8 @@ PRInt32 nsXULDocument::kNameSpaceID_XUL;
 
 nsIXULContentUtils* nsXULDocument::gXULUtils;
 nsIXULPrototypeCache* nsXULDocument::gXULCache;
+nsIScriptSecurityManager* nsXULDocument::gScriptSecurityManager;
+nsIPrincipal* nsXULDocument::gSystemPrincipal;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
@@ -493,6 +496,13 @@ nsXULDocument::~nsXULDocument()
             nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
             gXULCache = nsnull;
         }
+
+        if (gScriptSecurityManager) {
+            nsServiceManager::ReleaseService(NS_SCRIPTSECURITYMANAGER_PROGID, gScriptSecurityManager);
+            gScriptSecurityManager = nsnull;
+        }
+
+        NS_IF_RELEASE(gSystemPrincipal);
     }
 }
 
@@ -3442,6 +3452,14 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
                                           NS_GET_IID(nsIXULPrototypeCache),
                                           (nsISupports**) &gXULCache);
         if (NS_FAILED(rv)) return rv;
+
+        rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_PROGID,
+                                          NS_GET_IID(nsIScriptSecurityManager),
+                                          (nsISupports**) &gScriptSecurityManager);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
+        if (NS_FAILED(rv)) return rv;
     }
 
 #ifdef PR_LOGGING
@@ -5191,15 +5209,40 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 		db->SetAllowNegativeAssertions(PR_FALSE);
 	}
 
-    // Add the local store as the first data source in the db. Note
-    // that we _might_ not be able to get a local store if we haven't
-    // got a profile to read from yet.
-    nsCOMPtr<nsIRDFDataSource> localstore;
-    rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-    if (NS_SUCCEEDED(rv)) {
-        rv = db->AddDataSource(localstore);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
-        if (NS_FAILED(rv)) return rv;
+    // Grab the doc's principal...
+    nsCOMPtr<nsIPrincipal> docPrincipal;
+    rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
+    if (NS_FAILED(rv)) return rv;
+
+    // If we're an untrusted document, this will get the codebase
+    // principal of the document for comparison to each URL that the
+    // XUL wants to load. If we're a trusted document, this will just
+    // be null.
+    nsCOMPtr<nsICodebasePrincipal> codebase;
+
+    if (docPrincipal.get() == gSystemPrincipal) {
+        // If we're a privileged (e.g., chrome) document, then add the
+        // local store as the first data source in the db. Note that
+        // we _might_ not be able to get a local store if we haven't
+        // got a profile to read from yet.
+        nsCOMPtr<nsIRDFDataSource> localstore;
+        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+        if (NS_SUCCEEDED(rv)) {
+            rv = db->AddDataSource(localstore);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+    else {
+        // We're not privileged. So grab our codebase for comparison
+        // with the pricipals of the datasource's we're about to
+        // load. If, for some reason, we don't have a codebase
+        // principal, then panic and abort the template setup.
+        codebase = do_QueryInterface(docPrincipal);
+
+        NS_ASSERTION(codebase != nsnull, "no codebase principal for non-privileged XUL doc");
+        if (! codebase)
+            return NS_ERROR_UNEXPECTED;
     }
 
     // Parse datasources: they are assumed to be a whitespace
@@ -5220,19 +5263,45 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         while (last < datasources.Length() && !nsString::IsSpace(datasources.CharAt(last)))
             ++last;
 
-        nsAutoString uri;
-        datasources.Mid(uri, first, last - first);
+        nsAutoString uriStr;
+        datasources.Mid(uriStr, first, last - first);
         first = last + 1;
 
         // A special 'dummy' datasource
-        if (uri.Equals("rdf:null"))
+        if (uriStr.Equals("rdf:null"))
             continue;
 
-        rv = rdf_MakeAbsoluteURI(docurl, uri);
+        rv = rdf_MakeAbsoluteURI(docurl, uriStr);
         if (NS_FAILED(rv)) return rv;
 
+        if (codebase) {
+            // Our document is untrusted, so check to see if we can
+            // load the datasource that they've asked for.
+            nsCOMPtr<nsIURI> uri;
+            rv = NS_NewURI(getter_AddRefs(uri), uriStr);
+            if (NS_FAILED(rv) || !uri)
+                continue; // Necko will barf if our URI is weird
+
+            nsCOMPtr<nsIPrincipal> principal;
+            rv = gScriptSecurityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get codebase principal");
+            if (NS_FAILED(rv)) return rv;
+
+            PRBool same;
+            rv = codebase->SameOrigin(principal, &same);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to test same origin");
+            if (NS_FAILED(rv)) return rv;
+
+            if (! same)
+                continue;
+
+            // If we get here, we've run the gauntlet, and the
+            // datasource's URI has the same origin as our
+            // document. Let it load!
+        }
+
         nsCOMPtr<nsIRDFDataSource> ds;
-        rv = gRDFService->GetDataSource(nsCAutoString(uri), getter_AddRefs(ds));
+        rv = gRDFService->GetDataSource(nsCAutoString(uriStr), getter_AddRefs(ds));
 
         if (NS_FAILED(rv)) {
             // This is only a warning because the data source may not
@@ -5241,7 +5310,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 #ifdef DEBUG
             nsCAutoString msg;
             msg += "unable to load datasource '";
-            msg += nsCAutoString(uri);
+            msg += nsCAutoString(uriStr);
             msg += '\'';
             NS_WARNING((const char*) msg);
 #endif
