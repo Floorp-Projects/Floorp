@@ -75,9 +75,10 @@ for $k (@revs) {
         next;
     }
     open( DIFF, "$rcsdiffcommand -c -r$prevrev -r$rev $fullname 2>&1|" );
-    $_ =~ s/&/&amp;/g;
-    $_ =~ s/</&lt;/g;
     while(<DIFF>){
+        $_ =~ s/&/&amp;/g;
+        $_ =~ s/</&lt;/g;
+        $_ =~ s/>/&gt;/g;
         print "$who:  $_";
     }
     $didone = 1;
