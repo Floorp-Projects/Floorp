@@ -175,8 +175,8 @@
   <P>
     <B>Testing basic xsl:apply-templates</B><BR/>
     <B>Test:</B>&lt;xsl:apply-templates/&gt;<BR/>
-    <B>Desired Result:</B>element x, element y, element z<BR/>
-    <B>Result:</B><xsl:apply-templates/>
+    <B>Desired Result:</B>element <B>x</B>, element <B>y</B>, element <B>z</B><BR/>
+    <B>Result:</B><xsl:apply-templates select="x|y|z"/>
   </P>
  <!-- new test -->
 
@@ -184,7 +184,7 @@
     <B>Testing basic xsl:apply-templates with mode</B><BR/>
     <B>Test:</B>&lt;xsl:apply-templates mode="mode-test"/&gt;<BR/>
     <B>Desired Result:</B>x, y, z<BR/>
-    <B>Result:</B><xsl:apply-templates mode="mode-test"/>
+    <B>Result:</B><xsl:apply-templates select="x|y|z" mode="mode-test"/>
   </P>
  <!-- new test -->
   <P>
@@ -831,13 +831,13 @@
 
 <!-- simple union expressions -->
 <xsl:template match="x | y | z" priority="1.0">
-   <xsl:if test="not(position()=3)">,</xsl:if>
    element<B><xsl:text> </xsl:text><xsl:value-of select="@*"/></B>
+   <xsl:if test="not(position()=3)">,</xsl:if>
 </xsl:template>
 
 <xsl:template match="x | y | z" mode="mode-test">
-   <xsl:if test="not(position()=3)"><xsl:text>, </xsl:text></xsl:if>
    <xsl:value-of select="@*"/>
+   <xsl:if test="not(position()=3)"><xsl:text>, </xsl:text></xsl:if>
 </xsl:template>
 
 <xsl:template match="z">
