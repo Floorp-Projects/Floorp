@@ -2325,7 +2325,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString mPropName, mPrefix;
     mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    mPrefix.SetString(mPropName, 2);
+    mPrefix.SetString(mPropName.GetUnicode(), 2);
     if (mPrefix == "on") {
       nsIEventListenerManager *mManager = nsnull;
 
