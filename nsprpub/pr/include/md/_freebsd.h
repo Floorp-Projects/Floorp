@@ -44,8 +44,14 @@
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_NO_LARGE_FILES
 #if ( __FreeBSD__ > 2 )
+#if !defined(_PR_PTHREADS)
+/*
+ * libc_r doesn't have poll().  Although libc has poll(), it is not
+ * thread-safe so we can't use it in the pthreads version.
+ */
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
+#endif
 #endif
 
 #define USE_SETJMP
