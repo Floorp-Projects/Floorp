@@ -231,6 +231,7 @@ NS_IMPL_RELEASE(CNavDTD)
  *  @param   
  *  @return  
  */
+static
 PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
   PRInt32         result=0;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
@@ -690,6 +691,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
  *  @param   eHTMLTags tag to be searched for in stack
  *  @return  topmost index of tag on stack
  */
+static
 PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
   int i=0;
   for(i=aTagStack.mCount-1;i>=0;i--){
@@ -709,6 +711,7 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
  *  @param   aTag -- tag enum of child to be tested
  *  @return  PR_TRUE if autoclosure should occur
  */  
+static
 eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
   int theTopIndex=aTagStack.mCount;
   eHTMLTags thePrevTag=aTagStack.Last();
@@ -774,6 +777,7 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
  *  @param   aTagStack -- ref to current tag stack in DTD.
  *  @return  PR_TRUE if child agrees to be opened here.
  */  
+static
 PRBool CanBeContained(eHTMLTags aChildTag,nsTagStack& aTagStack) {
   PRBool result=PR_TRUE;
 
@@ -1071,6 +1075,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
+static
 PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag) {
   PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
   CTagList* theCloseTags=gHTMLElements[aTag].GetAutoCloseStartTags();
@@ -1094,6 +1099,7 @@ PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eH
  *  @param   aTag -- tag to test for containership
  *  @return  index of kNotFound
  */
+static
 PRInt32 GetIndexOfChildOrSynonym(nsTagStack& aTagStack,eHTMLTags aChildTag) {
   PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
   if(kNotFound==theChildIndex) {
