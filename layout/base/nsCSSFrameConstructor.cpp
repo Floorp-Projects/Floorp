@@ -847,19 +847,19 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext  *aPresContext,
       rv = NS_NewImageControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
-      rv = ConstructTextControlFrame(aPresContext, aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame, aContent);
     }
     else if (val.EqualsIgnoreCase("radio")) {
       rv = ConstructRadioControlFrame(aPresContext, aFrame, aContent, aStyleContext);
     }
     else if (val.EqualsIgnoreCase("text")) {
-      rv = ConstructTextControlFrame(aPresContext, aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame, aContent);
     }
     else {
-      rv = ConstructTextControlFrame(aPresContext, aFrame);
+      rv = ConstructTextControlFrame(aPresContext, aFrame, aContent);
     }
   } else {
-    rv = ConstructTextControlFrame(aPresContext, aFrame);
+    rv = ConstructTextControlFrame(aPresContext, aFrame, aContent);
   }
 
   return rv;
@@ -2535,10 +2535,28 @@ nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresContext*     		aPresCo
 
 nsresult
 nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresContext*          aPresContext,
-                                                 nsIFrame*&               aNewFrame)
+                                                 nsIFrame*&               aNewFrame,
+                                                 nsIContent*              aContent)
 {
   if (!aPresContext) { return NS_ERROR_NULL_POINTER;}
   nsresult rv = NS_OK;
+
+  //Do we want an Autocomplete input text widget?
+  nsString val1;
+  nsString val2;
+  if ((NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::autocompletetimeout, val1)) ||
+  	  (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::autocompletetype, val2))) {
+    if (! val1.IsEmpty() || ! val2.IsEmpty()) {
+    	//ducarroz: How can I check if I am in a xul document?
+	      rv = NS_NewGfxAutoTextControlFrame(&aNewFrame);
+	      if (NS_FAILED(rv)) {
+	        aNewFrame = nsnull;
+	      }
+    	  else
+    	    return rv;
+    }
+  }
+
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
   if (eWidgetRendering_Gfx == mode) 
@@ -2771,7 +2789,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         isReplaced = PR_TRUE;
-        rv = ConstructTextControlFrame(aPresContext, newFrame);
+        rv = ConstructTextControlFrame(aPresContext, newFrame, aContent);
       }
       else if (nsHTMLAtoms::select == aTag) {
         isReplaced = PR_TRUE;
@@ -3047,7 +3065,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::radio)
       rv = ConstructRadioControlFrame(aPresContext, newFrame, aContent, aStyleContext);
     else if (aTag == nsXULAtoms::text)
-      rv = ConstructTextControlFrame(aPresContext, newFrame);
+      rv = ConstructTextControlFrame(aPresContext, newFrame, aContent);
     else if (aTag == nsXULAtoms::widget)
       rv = NS_NewObjectFrame(&newFrame);
   

@@ -427,7 +427,8 @@ protected:
                                      nsIFrame*&               aNewFrame);
 
   nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
-                                     nsIFrame*&               aNewFrame);
+                                     nsIFrame*&               aNewFrame,
+                                     nsIContent*              aContent);
 
   
   nsresult ConstructSelectFrame(nsIPresContext*          aPresContext,
