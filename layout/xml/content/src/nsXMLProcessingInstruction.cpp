@@ -230,7 +230,7 @@ nsXMLProcessingInstruction::GetAttrValue(const char *aAttr, nsString& aValue)
     if (pos < 0)
       return PR_FALSE;
 
-    aValue.Assign(data, pos);
+    data.Left(aValue, pos);
 
     return PR_TRUE;
   }
