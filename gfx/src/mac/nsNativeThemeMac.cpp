@@ -334,7 +334,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       ::SetThemeBackground(kThemeBrushWhite, 24, true);
       break;
       
-    case NS_THEME_MENU:
+    case NS_THEME_MENUPOPUP:
       ::SetThemeBackground(kThemeBrushDialogBackgroundActive, 24, true);
       ::EraseRect(&macRect);
       ::SetThemeBackground(kThemeBrushWhite, 24, true);
@@ -713,7 +713,7 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TAB_PANEL:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_DIALOG:
-    case NS_THEME_MENU:
+    case NS_THEME_MENUPOPUP:
       *aShouldRepaint = PR_FALSE;
       return NS_OK;
   }
@@ -764,7 +764,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
   switch ( aWidgetType ) {
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
-      //    case NS_THEME_MENU:     // no support for painting menu backgrounds
+      //    case NS_THEME_MENUPOPUP:     // no support for painting menu backgrounds
     case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:

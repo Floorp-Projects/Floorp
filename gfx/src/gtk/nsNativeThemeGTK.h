@@ -95,6 +95,7 @@ private:
   nsCOMPtr<nsIAtom> mFirstTabAtom;
   nsCOMPtr<nsIAtom> mCurPosAtom;
   nsCOMPtr<nsIAtom> mMaxPosAtom;
+  nsCOMPtr<nsIAtom> mMenuActiveAtom;
 
   PRUint8 mDisabledWidgetTypes[32];
   PRUint8 mSafeWidgetStates[1024];    // 256 widgets * 32 bits per widget

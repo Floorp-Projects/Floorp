@@ -84,6 +84,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mFirstTabAtom = do_GetAtom("first-tab");
   mCurPosAtom = do_GetAtom("curpos");
   mMaxPosAtom = do_GetAtom("maxpos");
+  mMenuActiveAtom = do_GetAtom("_moz-menuactive");
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
@@ -242,20 +243,25 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // reset the entire struct to zero
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
+
       // for dropdown textfields, look at the parent frame (the textbox)
       if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
         aFrame = aFrame->GetParent();
 
       PRInt32 eventState = GetContentState(aFrame);
 
-      aState->active = ((eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE);
+      aState->disabled = IsDisabled(aFrame);
+      aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
+      aState->focused = (eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS;
+      aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;
+      aState->isDefault = FALSE; // XXX fix me
+      aState->canDefault = FALSE; // XXX fix me
 
       if (aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-          aWidgetType == NS_THEME_RADIO_CONTAINER)
+          aWidgetType == NS_THEME_RADIO_CONTAINER) {
         aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
-      else
-        aState->focused = ((eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS);
+      }
 
       if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
           aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
@@ -267,10 +273,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         aState->maxpos = CheckIntegerAttr(tmpFrame, mMaxPosAtom);
       }
 
-      aState->inHover = ((eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER);
-      aState->disabled = IsDisabled(aFrame);
-      aState->isDefault = FALSE; // XXX fix me
-      aState->canDefault = FALSE; // XXX fix me
+      // menu item state is determined by the attribute "_moz-menuactive",
+      // and not by the mouse hovering (accessibility).
+      if (aWidgetType == NS_THEME_MENUITEM) {
+        aState->inHover = CheckBooleanAttr(aFrame, mMenuActiveAtom);
+        aState->active = FALSE;
+      }
     }
   }
 
@@ -339,7 +347,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_RADIO_CONTAINER:
     aGtkWidgetType = MOZ_GTK_RADIOBUTTON_CONTAINER;
     break;
-  case NS_THEME_TOOLBOX:
+  case NS_THEME_TOOLBAR:
     aGtkWidgetType = MOZ_GTK_TOOLBAR;
     break;
   case NS_THEME_TOOLTIP:
@@ -378,6 +386,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       aGtkWidgetType = MOZ_GTK_TAB;
     }
+    break;
+  case NS_THEME_MENUBAR:
+    aGtkWidgetType = MOZ_GTK_MENUBAR;
+    break;
+  case NS_THEME_MENUPOPUP:
+    aGtkWidgetType = MOZ_GTK_MENUPOPUP;
+    break;
+  case NS_THEME_MENUITEM:
+    aGtkWidgetType = MOZ_GTK_MENUITEM;
     break;
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
@@ -584,6 +601,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
+      aWidgetType == NS_THEME_MENUBAR ||
+      aWidgetType == NS_THEME_MENUPOPUP ||
       aWidgetType == NS_THEME_TOOLTIP ||
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
@@ -636,8 +655,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_BUTTON:
   case NS_THEME_RADIO:
   case NS_THEME_CHECKBOX:
-  case NS_THEME_TOOLBOX:
-    // case NS_THEME_TOOLBAR:  (not in skin)
+  case NS_THEME_TOOLBOX: // N/A
+  case NS_THEME_TOOLBAR:
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
     // case NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN:
@@ -694,11 +713,12 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
 #ifdef MOZ_WIDGET_GTK2
+  case NS_THEME_MENUBAR:
+  case NS_THEME_MENUPOPUP:
+  case NS_THEME_MENUITEM:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
 #endif
-    // case NS_THEME_MENU:
-    // case NS_THEME_MENUBAR:
     return PR_TRUE;
   }
 

@@ -13,7 +13,7 @@ classic.jar:
 +  skin/classic/global/linkTree.css
 +  skin/classic/global/listbox.css
 +  skin/classic/global/menulist.css
-+  skin/classic/global/popup.css
+*+ skin/classic/global/popup.css
 +  skin/classic/global/progressmeter.css
 +  skin/classic/global/radio.css
 +  skin/classic/global/scrollbars.css
@@ -26,7 +26,7 @@ classic.jar:
 +  skin/classic/global/tree.css
 +  skin/classic/global/wizard.css
 +  skin/classic/global/button.css
-+  skin/classic/global/menu.css
+*+ skin/classic/global/menu.css
    skin/classic/global/expander.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/globalBindings.xml
