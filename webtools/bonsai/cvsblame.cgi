@@ -57,19 +57,17 @@ require 'CGI.pl';
 require 'cvsblame.pl';
 use SourceChecker;
 
-
-
 $| = 1;
 
 # Cope with the cookie and print the header, first thing.  That way, if
 # any errors result, they will show up for the user.
 
 print "Content-Type:text/html\n";
-if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($::FORM{'set_line'})) {
+if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
     # Expire the cookie 5 months from now
-    print "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
+    print "Set-Cookie: line_nums=$::FORM{set_line}; expires="
         . toGMTString(time + 86400 * 152) . "; path=/\n";
-}     
+}
 print "\n";
 
 
@@ -81,15 +79,17 @@ my $SubHead = '';
 my @src_roots = getRepositoryList();
 
 # Do not use layers if the client does not support them.
-my $useLayers = 1;
-my $user_agent = $ENV{HTTP_USER_AGENT};
-if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
-  $useLayers = 0;
+my $use_layers = 1;
+if (defined $ENV{HTTP_USER_AGENT}) {
+  my $user_agent = $ENV{HTTP_USER_AGENT};
+  if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
+    $use_layers = 0;
+  }
 }
 
 # Init sanitiazation source checker
 #
-my $sanitization_dictionary = $::FORM{'sanitize'};
+my $sanitization_dictionary = $::FORM{sanitize};
 my $opt_sanitize = defined $sanitization_dictionary;
 if ( $opt_sanitize )
 {
@@ -104,7 +104,7 @@ my $opt_html_comments = &html_comments_init();
 # Handle the "file" argument
 #
 my $filename = '';
-$filename = $::FORM{'file'} if defined($::FORM{'file'});
+$filename = $::FORM{file} if defined $::FORM{file};
 if ($filename eq '') 
 {
     &print_usage;
@@ -115,16 +115,15 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 # Handle the "rev" argument
 #
 $::opt_rev = '';
-$::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
-my $browse_revtag = "HEAD";
+$::opt_rev = $::FORM{rev} if defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
+my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
 
-
 # Handle the "root" argument
 #
-my $root = $::FORM{'root'};
-if (defined $root && $root ne '') {
+my $root = $::FORM{root};
+if (defined $root and $root ne '') {
     $root =~ s|/$||;
     validateRepository($root);
     if (-d $root) {
@@ -142,25 +141,26 @@ if (defined $root && $root ne '') {
 # Find the rcs file
 #
 my $rcs_filename;
+my $found_rcs_file = 0;
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
     $rcs_filename = Fix_BonsaiLink($rcs_filename);
-    goto found_file if -r $rcs_filename;
+    $found_rcs_file = 1, last if -r $rcs_filename;
     $rcs_filename = "$root/${file_head}Attic/$file_tail,v";
-    goto found_file if -r $rcs_filename;
+    $found_rcs_file = 1, last if -r $rcs_filename;
 }
-# File not found
-&print_top;
-print "Rcs file, $filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
+
+unless ($found_rcs_file) {
+  &print_top;
+  print "Rcs file, $filename, doeHs not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
 print "</BODY></HTML>\n";
-&print_bottom;
-exit;
+  &print_bottom;
+  exit;
+}
 
-found_file:
-
-    my $rcs_path;
-    ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
+my $rcs_path;
+($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
 
 CheckHidden($rcs_filename);
 
@@ -170,42 +170,46 @@ CheckHidden($rcs_filename);
 $revision = &parse_cvs_file($rcs_filename);
 my $file_rev = $revision;
 
+my @text = &extract_revision($revision);
+die "$::progname: Internal consistency error" if $#text != $#::revision_map;
+
+
+# Raw data opt (so other scripts can parse and play with the data)
+&print_raw_data, exit if defined $::FORM{data};
+
 # Handle the "line_nums" argument
 #
 my $opt_line_nums = 1;
-if (exists($::COOKIE{'line_nums'})) {
-    $opt_line_nums = 1 if $::COOKIE{'line_nums'} eq 'on';
+if (defined $::COOKIE{line_nums}) {
+    $opt_line_nums = 1 if $::COOKIE{line_nums} eq 'on';
 }
-if (exists($::FORM{'line_nums'})) {
-     $opt_line_nums = 0 if $::FORM{'line_nums'} =~ /off|no|0/i;
-     $opt_line_nums = 1 if $::FORM{'line_nums'} =~ /on|yes|1/i;
+if (defined $::FORM{line_nums}) {
+     $opt_line_nums = 0 if $::FORM{line_nums} =~ /off|no|0/i;
+     $opt_line_nums = 1 if $::FORM{line_nums} =~ /on|yes|1/i;
 }
 
 # Option to make links to included files
 my $opt_includes = 0;
-$opt_includes = 1 if (exists($::FORM{'includes'}) && 
-                      $::FORM{'includes'} =~ /on|yes|1/i);
-$opt_includes = 1 if $opt_includes && $file_tail =~ /(.c|.h|.cpp)$/;
-
-my @text = &extract_revision($revision);
-die "$::progname: Internal consistency error" if ($#text != $#::revision_map);
+$opt_includes = 1 if defined $::FORM{includes} and
+  $::FORM{includes} =~ /on|yes|1/i;
+$opt_includes = 1 if $opt_includes and $file_tail =~ /(.c|.h|.cpp)$/;
 
 my $use_html = 0;
-$use_html = 1 if exists($::FORM{'use_html'}) && $::FORM{'use_html'} eq '1';
+$use_html = 1 if defined $::FORM{use_html} and $::FORM{use_html} eq '1';
 
 # Handle the "mark" argument
 #
 my %mark_line;
 my $mark_arg = '';
-$mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
-foreach my $mark (split(',',$mark_arg)) {
+$mark_arg = $::FORM{mark} if defined $::FORM{mark};
+foreach my $mark (split ',', $mark_arg) {
     my ($begin, $end);
     if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
         $begin = 1 if $begin eq '';
-        $end = $#text + 1 if $end eq '' || $end > $#text + 1;
+        $end = $#text + 1 if $end eq '' or $end > $#text + 1;
         next if $begin >= $end;
         $mark_line{$begin} = 'begin';
-        $mark_line{$end} = 'end';
+        $mark_line{$end}   = 'end';
     } else {
         $mark_line{$mark} = 'single';
     }
@@ -239,7 +243,7 @@ foreach my $path (split('/',$rcs_path)) {
 print "<A HREF='$link_path$file_tail'>$file_tail</a> ";
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
 print ">";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
@@ -317,8 +321,7 @@ foreach $revision (@::revision_map)
 
     # Highlight lines
     my $mark_cmd;
-    if (defined($mark_cmd = $mark_line{$line})
-        && $mark_cmd ne 'end') {
+    if (defined($mark_cmd = $mark_line{$line}) and $mark_cmd ne 'end') {
 	$output .= '</TD></TR><TR><TD BGCOLOR=LIGHTGREEN WIDTH="100%"><PRE>';
 	$inMark = 1;
     }
@@ -357,7 +360,7 @@ foreach $revision (@::revision_map)
 	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
           $::prev_revision{$revision} = '';
 	}
-	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $use_layers;
         $output .= ">";
 	my $author = $::revision_author{$revision};
 	$author =~ s/%.*$//;
@@ -376,11 +379,8 @@ foreach $revision (@::revision_map)
     $output .= "$text";
     
     # Close the highlighted section
-    if (defined($mark_cmd) and $mark_cmd ne 'begin') {
+    if (defined $mark_cmd and $mark_cmd ne 'begin') {
         chop($output);
-        #if( defined($::prev_revision{$file_rev})) {
-        #    $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$::prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($::prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
-        #}
         $output .= "</TD></TR><TR><TD colspan=3$row_color><PRE>";
 	$inMark = 0;
     }
@@ -389,7 +389,7 @@ foreach $revision (@::revision_map)
 }
 print "</TD></TR></TABLE>\n";
 
-if ($useLayers) {
+if ($use_layers) {
   # Write out cvs log messages as a JS variables
   #
   print "<SCRIPT>";
@@ -440,7 +440,7 @@ sub print_top {
 
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
-    print <<__TOP__ if $useLayers;
+    print <<__TOP__ if $use_layers;
 <SCRIPT>
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
@@ -512,7 +512,7 @@ initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 <LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
 __TOP__
-  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not $useLayers;
+  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not $use_layers;
 } # print_top
 
 sub print_usage {
@@ -520,16 +520,16 @@ sub print_usage {
     my ($new_linenum, $src_roots_list);
     my ($title_text) = "Usage";
 
-    if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($::FORM{'set_line'})) {
+    if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
   
         # Expire the cookie 5 months from now
-        my $set_cookie = "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
+        my $set_cookie = "Set-Cookie: line_nums=$::FORM{set_line}; expires="
             .&toGMTString(time + 86400 * 152)."; path=/";
 	# XXX Hey, nothing is done with this handy cookie string! ### XXX
     }
-    if (!defined($::COOKIE{'line_nums'}) && !defined($::FORM{'set_line'})) {
+    if ( not defined $::COOKIE{line_nums} and not defined $::FORM{set_line}) {
         $new_linenum = 'on';
-    } elsif ($::COOKIE{'line_nums'} eq 'off' || $::FORM{'set_line'} eq 'off') {
+    } elsif ($::COOKIE{line_nums} eq 'off' or $::FORM{set_line} eq 'off') {
         $linenum_message = 'Line numbers are currently <b>off</b>.';
         $new_linenum = 'on';
     } else {
@@ -634,6 +634,17 @@ Mail feedback to <A HREF="mailto:$maintainer?subject=About the cvsblame script">
 __BOTTOM__
 } # print_bottom
 
+sub print_raw_data {
+  my %revs_seen = ();
+  for my $rev (@::revision_map) {
+    print "$rev\n";
+    $revs_seen{$rev} = 1;
+  }
+  print "REVISION DETAILS\n";
+  for my $rev (sort keys %revs_seen) {
+    print "$rev|$::revision_ctime{$rev}|$::revision_author{$rev}|$::revision_log{$rev}";
+  }
+}
 
 sub link_includes {
     my ($text) = $_[0];
