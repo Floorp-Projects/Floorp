@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.25 $ ';
+$::UtilsVersion = '$Revision: 1.26 $ ';
 
 package TinderUtils;
 
@@ -269,8 +269,15 @@ sub LoadConfig {
 sub SetupEnv {
     umask 0;
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
-    $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
-                          . "$ENV{LD_LIBRARY_PATH}";
+
+	if ($Settings::ObjDir ne '') {
+	  $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+		                      . "$ENV{LD_LIBRARY_PATH}";
+	} else {
+	  $ENV{LD_LIBRARY_PATH} = "$topsrcdir/dist/bin:"
+		                      . "$ENV{LD_LIBRARY_PATH}";	  
+	}
+
     $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
                           . "$ENV{LIBPATH}";
     $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/dist/bin";
