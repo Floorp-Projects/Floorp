@@ -54,6 +54,10 @@ public:
 
   NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)=0;
 
+  NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem)=0;
+
+  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell)=0;
+
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)=0;
 
   NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)=0;
@@ -74,6 +78,8 @@ public:
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell);  \
+  NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem);  \
+  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem);  \
   NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem);  \
   NS_IMETHOD    SelectAll();  \
@@ -91,6 +97,8 @@ public:
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem) { return _to RemoveItemFromSelection(aTreeItem); }  \
   NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell) { return _to AddCellToSelection(aTreeCell); }  \
   NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell) { return _to RemoveCellFromSelection(aTreeCell); }  \
+  NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem) { return _to ToggleItemSelection(aTreeItem); }  \
+  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell) { return _to ToggleCellSelection(aTreeCell); }  \
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem) { return _to SelectItemRange(aStartItem, aEndItem); }  \
   NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem) { return _to SelectCellRange(aStartItem, aEndItem); }  \
   NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \

@@ -565,6 +565,118 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
 
 
 //
+// Native method ToggleItemSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULElementPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.toggleitemselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function toggleItemSelection requires 1 parameter");
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIXULElementIID,
+                                           "XULElement",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ToggleItemSelection(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ToggleCellSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULElementPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.togglecellselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function toggleCellSelection requires 1 parameter");
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIXULElementIID,
+                                           "XULElement",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->ToggleCellSelection(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SelectItemRange
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -819,6 +931,8 @@ static JSFunctionSpec XULTreeElementMethods[] =
   {"removeItemFromSelection",          XULTreeElementRemoveItemFromSelection,     1},
   {"addCellToSelection",          XULTreeElementAddCellToSelection,     1},
   {"removeCellFromSelection",          XULTreeElementRemoveCellFromSelection,     1},
+  {"toggleItemSelection",          XULTreeElementToggleItemSelection,     1},
+  {"toggleCellSelection",          XULTreeElementToggleCellSelection,     1},
   {"selectItemRange",          XULTreeElementSelectItemRange,     2},
   {"selectCellRange",          XULTreeElementSelectCellRange,     2},
   {"selectAll",          XULTreeElementSelectAll,     0},
