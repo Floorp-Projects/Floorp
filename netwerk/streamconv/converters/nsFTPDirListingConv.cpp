@@ -792,10 +792,6 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
                 continue;
             }
 
-			/* add a trailing slash to all directories */
-			if(thisEntry->mType == Dir)
-                thisEntry->mName.Append('/');
-
             break; // END UNIX, PETER_LEWIS, MACHTEN
         }
 
@@ -806,8 +802,10 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             thisEntry->mName = escName;
             nsAllocator::Free(escName);
 
-            if (thisEntry->mName.Last() == '/')
+            if (thisEntry->mName.Last() == '/') {
                 thisEntry->mType = Dir;
+                thisEntry->mName.Truncate(thisEntry->mName.Length()-1);
+            }
 
             break; // END NCSA, TCPC
         }
