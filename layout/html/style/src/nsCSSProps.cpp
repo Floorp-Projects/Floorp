@@ -62,7 +62,7 @@ public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     PropertyNode* one = (PropertyNode*)anItem1;
     PropertyNode* two = (PropertyNode*)anItem2;
-    return one->mStr.Compare(two->mStr, PR_TRUE);
+    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
   }
 }; 
 
