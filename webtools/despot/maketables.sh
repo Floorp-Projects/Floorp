@@ -44,7 +44,7 @@ create table repositories (
     cvsroot varchar(255) not null,
     ownersrepository smallint,
     ownerspath varchar(255),
-    
+    domailing tinyint not null,    
     
     unique(name)
 );
