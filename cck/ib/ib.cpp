@@ -799,6 +799,27 @@ CString GetBrowser(void)
 	return retflag;
 }
 
+void EraseDirectory(CString sPath)
+{
+	CFileFind finder;
+    CString  sFullPath = sPath + "\\*.*";
+
+	BOOL bWorking = finder.FindFile(sFullPath);
+	while (bWorking) 
+    {
+        bWorking = finder.FindNextFile();
+        if (finder.IsDots()) continue;
+        if (finder.IsDirectory()) 
+        {
+            CString dirPath = finder.GetFilePath();
+            EraseDirectory(dirPath);
+            _rmdir(finder.GetFilePath());
+            continue; 
+         }
+         _unlink( finder.GetFilePath() );
+     }
+}
+
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -1047,6 +1068,9 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	newprog.DestroyWindow();
+	EraseDirectory(tempPath);
+	_chdir(configPath);
+	_rmdir("Temp");
 	return TRUE;
 
 }
