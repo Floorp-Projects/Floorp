@@ -961,86 +961,86 @@ PRBool PR_CALLBACK nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *
 PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void *aData,
                                              void *closure)
 {
-    nsCOMPtr<nsIFolder> root;
-	nsIMsgIncomingServer *msgserver = (nsIMsgIncomingServer*)aData;
-    msgserver->GetRootFolder(getter_AddRefs(root));
-    nsXPIDLCString type;
-    msgserver->GetType(getter_Copies(type));
-    if (root)
-	{
-       nsCOMPtr<nsIMsgFolder> folder;
-       folder = do_QueryInterface(root);
-       if (folder)
-       {
-          nsXPIDLCString passwd;
-          PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :PR_FALSE);
-		  if (isImap) 
-		  {
-		   nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(msgserver);
-           if (imapserver)
-           {
-               PRBool cleanupInboxOnExit = PR_FALSE;
-    
-               imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
-               if (cleanupInboxOnExit)
-			   {
-                  msgserver->GetPassword(getter_Copies(passwd));
-                  if (isImap &&  passwd && nsCRT::strlen((const char*) passwd))
-				  {
-					nsresult rv;
-					nsCOMPtr<nsIEnumerator> aEnumerator;
-                    folder->GetSubFolders(getter_AddRefs(aEnumerator));
-                    nsCOMPtr<nsISupports> aSupport;
-                    rv = aEnumerator->First();
-                    while (NS_SUCCEEDED(rv))
-					{ 
-                        rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
-			            nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
-						PRUnichar *folderName = nsnull;
-            			inboxFolder->GetName(&folderName);
-						if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
-						{
-							nsCOMPtr<nsIUrlListener> urlListener;
-							NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-									kMsgAccountManagerCID, &rv);
-							if (NS_FAILED(rv)) return rv;
-							NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-								        kEventQueueServiceCID, &rv);
-
-							if (NS_FAILED(rv)) return rv;
-							nsCOMPtr<nsIEventQueue> eventQueue;
-							pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-								               getter_AddRefs(eventQueue)); 
-
-							accountManager->SetFolderDoingCleanupInbox(inboxFolder);
-							urlListener = do_QueryInterface(accountManager, &rv);
-                    
-							inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
-							if (NS_SUCCEEDED(rv) && isImap && urlListener)
-		                    {
-								PRBool inProgress = PR_FALSE;
-							  accountManager->GetCleanupInboxInProgress(&inProgress);
-							  while (inProgress)
-							  {
-								accountManager->GetCleanupInboxInProgress(&inProgress);
-								PR_CEnterMonitor(inboxFolder);
-								PR_CWait(folder, 1000UL);
-								PR_CExitMonitor(inboxFolder);
-								if (eventQueue)
-									rv = eventQueue->ProcessPendingEvents();
-							  }
-							}
-							break;
-						}
-						else
-							rv = aEnumerator->Next();
-					}
-				}
-			}
-		  }
+  nsCOMPtr<nsIFolder> root;
+  nsIMsgIncomingServer *msgserver = (nsIMsgIncomingServer*)aData;
+  msgserver->GetRootFolder(getter_AddRefs(root));
+  nsXPIDLCString type;
+  msgserver->GetType(getter_Copies(type));
+  if (root)
+  {
+    nsCOMPtr<nsIMsgFolder> folder;
+    folder = do_QueryInterface(root);
+    if (folder)
+    {
+      nsXPIDLCString passwd;
+      PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :PR_FALSE);
+      if (isImap) 
+      {
+        nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(msgserver);
+        if (imapserver)
+        {
+          PRBool cleanupInboxOnExit = PR_FALSE;
+          
+          imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
+          if (cleanupInboxOnExit)
+          {
+            msgserver->GetPassword(getter_Copies(passwd));
+            if (isImap &&  passwd && nsCRT::strlen((const char*) passwd))
+            {
+              nsresult rv;
+              nsCOMPtr<nsIEnumerator> aEnumerator;
+              folder->GetSubFolders(getter_AddRefs(aEnumerator));
+              nsCOMPtr<nsISupports> aSupport;
+              rv = aEnumerator->First();
+              while (NS_SUCCEEDED(rv))
+              { 
+                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+                nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
+                PRUnichar *folderName = nsnull;
+                inboxFolder->GetName(&folderName);
+                if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
+                {
+                  nsCOMPtr<nsIUrlListener> urlListener;
+                  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    kMsgAccountManagerCID, &rv);
+                  if (NS_FAILED(rv)) return rv;
+                  NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                    kEventQueueServiceCID, &rv);
+                  
+                  if (NS_FAILED(rv)) return rv;
+                  nsCOMPtr<nsIEventQueue> eventQueue;
+                  pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                    getter_AddRefs(eventQueue)); 
+                  
+                  urlListener = do_QueryInterface(accountManager, &rv);
+                  
+                  rv = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
+                  if (NS_SUCCEEDED(rv) && isImap && urlListener)
+                  {
+                    PRBool inProgress = PR_FALSE;
+                    accountManager->SetFolderDoingCleanupInbox(inboxFolder);
+                    accountManager->GetCleanupInboxInProgress(&inProgress);
+                    while (inProgress)
+                    {
+                      accountManager->GetCleanupInboxInProgress(&inProgress);
+                      PR_CEnterMonitor(inboxFolder);
+                      PR_CWait(folder, 1000UL);
+                      PR_CExitMonitor(inboxFolder);
+                      if (eventQueue)
+                        rv = eventQueue->ProcessPendingEvents();
+                    }
+                  }
+                  break;
+                }
+                else
+                  rv = aEnumerator->Next();
+              }
+            }
+          }
+        }
       }
-	   }
-	}
+	  }
+  }
   return PR_TRUE;
 }
 
