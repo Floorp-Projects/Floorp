@@ -41,6 +41,7 @@
 #include "nsFtpProtocolHandler.h"
 
 #include <limits.h>
+#include <ctype.h>
 
 #include "nsISocketTransport.h"
 #include "nsIStreamConverterService.h"
@@ -362,9 +363,7 @@ nsFtpState::nsFtpState() {
     mPort = 21;
 
     mReceivedControlData = PR_FALSE;
-    mControlStatus = NS_OK;            
-    mControlReadContinue = PR_FALSE;
-    mControlReadBrokenLine = PR_FALSE;
+    mControlStatus = NS_OK;
 
     mIPv6Checked = PR_FALSE;
     mIPv6ServerAddress = nsnull;
@@ -429,21 +428,24 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
     while (currLine < (buffer+aCount)) {
         char* eol = strstr(currLine, CRLF);
         if (!eol) {
-            mControlReadBrokenLine = PR_TRUE;
             mControlReadCarryOverBuf += currLine;
             break;
         }
 
-        mControlReadBrokenLine = PR_FALSE;
-
         // Append the current segment
         mControlReadCarryOverBuf.Append(currLine, eol - currLine + 1);
+
+        // Does this start with a response code?
+        PRBool startNum = (mControlReadCarryOverBuf.Length() >= 3 &&
+                           isdigit(mControlReadCarryOverBuf.get()[0]) &&
+                           isdigit(mControlReadCarryOverBuf.get()[1]) &&
+                           isdigit(mControlReadCarryOverBuf.get()[2]));
 
         if (mResponseMsg.IsEmpty()) {
             // If we get here, then we know that we have a complete line, and
             // that it is the first one
 
-            NS_ASSERTION(mControlReadCarryOverBuf.Length() > 4,
+            NS_ASSERTION(mControlReadCarryOverBuf.Length() > 4 && startNum,
                          "Read buffer doesn't include response code");
             
             // I can't use Substring + PromiseFlatCString - see bug 122727
@@ -455,16 +457,18 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
             mResponseCode = atoi(buf);
         }
 
-        // Is this the last line for this response?
-        mControlReadContinue = (mControlReadCarryOverBuf.get()[3] == '-');
-
-        // Append this line, but remove the response code
-        mResponseMsg.Append(Substring(mControlReadCarryOverBuf,
-                                      4,
-                                      mControlReadCarryOverBuf.Length()-4));
+        // Append this line, but remove the response code if it was present
+        if (startNum) {
+            mResponseMsg.Append(Substring(mControlReadCarryOverBuf,
+                                          4,
+                                          mControlReadCarryOverBuf.Length()-4));
+        } else {
+            mResponseMsg.Append(mControlReadCarryOverBuf);
+        }
         mControlReadCarryOverBuf.Truncate();
 
-        if (!mControlReadContinue) {
+        // This is the last line if its 3 numbers followed by a space
+        if (startNum && mControlReadCarryOverBuf.get()[3] == ' ') {
             // yup. last line, let's move on.
             if (mState == mNextState) {
                 NS_ASSERTION(0, "ftp read state mixup");
@@ -1938,8 +1942,6 @@ nsFtpState::SetWriteStream(nsIInputStream* aInStream) {
 
 void
 nsFtpState::KillControlConnection() {
-    mControlReadContinue = PR_FALSE;
-    mControlReadBrokenLine = PR_FALSE;
     mControlReadCarryOverBuf.Truncate(0);
 
     if (mDPipe) {
