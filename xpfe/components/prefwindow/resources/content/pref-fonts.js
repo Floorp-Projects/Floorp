@@ -168,11 +168,11 @@ function saveFontPrefs()
     if( top.hPrefWindow.wsm.contentArea.saveState )
       {
         saveState();
-        parent.hPrefWindow.wsm.dataManager.pageData["chrome://pref/content/pref-fonts.xul"] = GetFields();
+        parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"] = GetFields();
       }
       
     // saving font prefs
-    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://pref/content/pref-fonts.xul"];
+    var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
     var pref = parent.hPrefWindow.pref;
     for( var language in dataObject.languageData )
       {
