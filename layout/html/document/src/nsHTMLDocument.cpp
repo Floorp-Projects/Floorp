@@ -76,7 +76,8 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 
 nsHTMLDocument::nsHTMLDocument()
   : nsMarkupDocument(),
-    mAttrStyleSheet(nsnull)
+    mAttrStyleSheet(nsnull),
+    mStyleAttrStyleSheet(nsnull)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -87,6 +88,7 @@ nsHTMLDocument::nsHTMLDocument()
   mNamedItems = nsnull;
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
+  mDTDMode = eDTDMode_NoQuirks;
 
   // Find/Search Init
   mSearchStr             = nsnull;
@@ -124,6 +126,7 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mForms);
   NS_IF_RELEASE(mAttrStyleSheet);
+  NS_IF_RELEASE(mStyleAttrStyleSheet);
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
     nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
@@ -192,6 +195,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   mStyleSheets.Clear();
 
   NS_IF_RELEASE(mAttrStyleSheet);
+  NS_IF_RELEASE(mStyleAttrStyleSheet);
   NS_IF_RELEASE(mDocumentURL);
   if (nsnull != mDocumentTitle) {
     delete mDocumentTitle;
@@ -221,13 +225,11 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 #endif
 
     if (NS_OK == rv) {
-      nsIHTMLCSSStyleSheet* styleAttrSheet;
-      if (NS_OK == NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL)) {
-        AddStyleSheet(styleAttrSheet); // tell the world about our new style sheet
-        NS_RELEASE(styleAttrSheet);
-      }
       if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL)) {
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+      }
+      if (NS_OK == NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL)) {
+        AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
       }
 
       // Set the parser as the stream listener for the document loader...
@@ -381,12 +383,26 @@ NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult
 
 void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
 {
-  if ((nsnull != mAttrStyleSheet) && (aSheet != mAttrStyleSheet)) {
-    aSet->InsertDocStyleSheetBefore(aSheet, mAttrStyleSheet);
+  if ((nsnull != mStyleAttrStyleSheet) && (aSheet != mStyleAttrStyleSheet)) {
+    aSet->InsertDocStyleSheetAfter(aSheet, mStyleAttrStyleSheet);
   }
   else {
-    aSet->AppendDocStyleSheet(aSheet);
+    aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it in front
   }
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetDTDMode(nsDTDMode& aMode)
+{
+  aMode = mDTDMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
+{
+  mDTDMode = aMode;
+  return NS_OK;
 }
 
 //
