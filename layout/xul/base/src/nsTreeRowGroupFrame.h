@@ -25,13 +25,37 @@
 #include "nsIScrollbarListener.h"
 #include "nsIStyleContext.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
+#include "nsIContent.h"
 
 class nsTreeFrame;
 class nsTreeCellFrame;
 class nsCSSFrameConstructor;
-class nsISupportsArray;
 class nsTreeItemDragCapturer;
 
+class nsTreeRowGroupInfo {
+public:
+  PRInt32 mRowCount;
+  nsCOMPtr<nsISupportsArray> mTickArray;
+  nsIContent* mLastChild;
+
+  nsTreeRowGroupInfo() :mRowCount(-1),mLastChild(nsnull)
+  {
+    NS_NewISupportsArray(getter_AddRefs(mTickArray));
+  };
+
+  ~nsTreeRowGroupInfo() { Clear(); };
+
+  void Add(nsIContent* aContent) {
+    mTickArray->AppendElement(aContent);
+  }
+
+  void Clear() {
+    mLastChild = nsnull;
+    mRowCount = -1;
+    mTickArray->Clear();
+  }
+};
 
 class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarListener
 {
@@ -76,6 +100,8 @@ public:
   void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex);
   void OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame, PRInt32 aIndex);
   void ReflowScrollbar(nsIPresContext* aPresContext);
+
+  void ClearRowGroupInfo() { if (mRowGroupInfo) mRowGroupInfo->Clear(); };
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
@@ -142,7 +168,7 @@ protected:
 
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
-  static void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
+  void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
   void MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* aTreeFrame);
 
@@ -196,8 +222,6 @@ public:
   // cell is onscreen (use EnsureRowIsVisible to guarantee this).
   void GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, nsTreeCellFrame** aResult);
 
-  PRInt32 GetVisibleRowCount() { return mRowCount; };
-
   PRInt32 GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, PRBool& aDone);
   PRInt32 GetInsertionIndexForContent(nsTableFrame* aTableFrame,
                                       nsIPresContext* aPresContext,
@@ -237,8 +261,9 @@ protected: // Data Members
   nscoord mRowGroupWidth; // The width of the row group.
 
   PRInt32 mCurrentIndex; // Our current scrolled index.
-  PRInt32 mRowCount; // The current number of visible rows.
 
+  nsTreeRowGroupInfo* mRowGroupInfo;
+  
     // our event capturer registered with the content model. See the discussion
     // in Init() for why this is a weak ref.
   nsTreeItemDragCapturer* mDragCapturer;

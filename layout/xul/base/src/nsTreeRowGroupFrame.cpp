@@ -54,8 +54,9 @@
 #include "nsIView.h"
 
 // XXX This should probably be based off the height of a row in pixels
-#define SCROLL_FACTOR 16 
-
+#define SCROLL_FACTOR 16
+ 
+#define TICK_FACTOR 50
 
 //
 // Prototypes
@@ -117,7 +118,7 @@ nsTreeRowGroupFrame::nsTreeRowGroupFrame()
   mLinkupFrame(nsnull), mIsFull(PR_FALSE),
   mScrollbar(nsnull), mOuterFrame(nsnull),
   mContentChain(nsnull), mFrameConstructor(nsnull),
-  mRowGroupHeight(0), mCurrentIndex(0), mRowCount(0),
+  mRowGroupHeight(0), mCurrentIndex(0), mRowGroupInfo(nsnull),
   mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE),
   mTreeIsSorted(PR_FALSE)
 { }
@@ -125,6 +126,8 @@ nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 // Destructor
 nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
+  delete mRowGroupInfo;
+
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
@@ -519,61 +522,32 @@ nsTreeRowGroupFrame::FindRowContentAtIndex(PRInt32& aIndex,
   // Init to nsnull.
   *aResult = nsnull;
 
-  // It disappoints me that this function is completely tied to the content nodes,
-  // but I can't see any other way to handle this.  I don't have the frames, so I have nothing
-  // else to fall back on but the content nodes.
+  // Walk over the tick array.
+  if (mRowGroupInfo == nsnull)
+    return;
 
-  PRInt32 childCount;
-  aParent->ChildCount(childCount);
-
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> childContent;
-    aParent->ChildAt(i, *getter_AddRefs(childContent));
-    nsCOMPtr<nsIAtom> tag;
-    childContent->GetTag(*getter_AddRefs(tag));
-
-    // treerow - Count this row, if we're at 0, then we've found the row.
-    if (tag.get() == nsXULAtoms::treerow) {
-      aIndex--;
-      if (aIndex < 0) {
-        *aResult = childContent;
-        NS_IF_ADDREF(*aResult);
-        return;
-      }
-    }
-    else if (tag.get() == nsXULAtoms::treeitem) {
-      // Descend into this row group and try to find the next row.
-      FindRowContentAtIndex(aIndex, childContent, aResult);
-      if (aIndex < 0)
-        return;
-
-      // If it's open, descend into its treechildren.
-      nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
-      nsAutoString isOpen;
-      childContent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
-      if (isOpen.EqualsWithConversion("true")) {
-        // Find the <treechildren> node.
-        PRInt32 childContentCount;
-        nsCOMPtr<nsIContent> grandChild;
-        childContent->ChildCount(childContentCount);
-
-        PRInt32 j;
-        for (j = childContentCount-1; j >= 0; j--) {
-          
-          childContent->ChildAt(j, *getter_AddRefs(grandChild));
-          nsCOMPtr<nsIAtom> grandChildTag;
-          grandChild->GetTag(*getter_AddRefs(grandChildTag));
-          if (grandChildTag.get() == nsXULAtoms::treechildren)
-            break;
-        }
-        if (j >= 0 && grandChild)
-          FindRowContentAtIndex(aIndex, grandChild, aResult);
-      
-        if (aIndex < 0)
-          return;
-      }
-    }
+  PRUint32 index = 0;
+  PRUint32 arrayCount;
+  mRowGroupInfo->mTickArray->Count(&arrayCount);
+  nsCOMPtr<nsIContent> startContent;
+  PRUint32 location = aIndex/TICK_FACTOR + 1;
+  PRUint32 point = location*TICK_FACTOR;
+  if (location >= arrayCount) {
+    startContent = mRowGroupInfo->mLastChild;
+    point = mRowGroupInfo->mRowCount-1;
   }
+  else {
+    nsCOMPtr<nsISupports> supp = getter_AddRefs(mRowGroupInfo->mTickArray->ElementAt(location));
+    startContent = do_QueryInterface(supp);
+  }
+
+  if (!startContent) {
+    NS_ERROR("The tree's tick array is confused!");
+    return;
+  }
+
+  PRInt32 delta = (PRInt32)(point-aIndex);
+  FindPreviousRowContent(delta, startContent, nsnull, aResult);
 }
 
 void 
@@ -682,6 +656,11 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
     nsCOMPtr<nsIAtom> tag;
     childContent->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::treerow) {
+      if ((aCount%TICK_FACTOR) == 0)
+        mRowGroupInfo->Add(childContent);
+
+      mRowGroupInfo->mLastChild = childContent;
+
       aCount++;
     }
     else if (tag.get() == nsXULAtoms::treeitem) {
@@ -1055,6 +1034,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
                                            nsReflowReason       aReason)
 {
   nsresult rv = NS_OK;
+
   ReflowScrollbar(aPresContext);
 
   if ((mOuterFrame == this) && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
@@ -1423,6 +1403,9 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPr
 // Responses to changes
 void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext) 
 {
+  if (mRowGroupInfo)
+    mRowGroupInfo->Clear();
+
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
@@ -1485,6 +1468,9 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
                                            nsIFrame* aChildFrame,
                                            PRInt32 aIndex)
 {
+  if (mRowGroupInfo)
+    mRowGroupInfo->Clear();
+
   // if we're removing the top row, the new top row is the next row
   if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);
@@ -1539,13 +1525,21 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
 void
 nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
 {
-  PRInt32 count = 0;
-  ComputeTotalRowCount(count, mContent); // XXX This sucks! Needs to be cheap!
-  mRowCount = count;
-
   if (!mScrollbar)
     return;
-                                     
+ 
+  if (!mRowGroupInfo) {
+    mRowGroupInfo = new nsTreeRowGroupInfo();
+  }
+
+  PRInt32 count = mRowGroupInfo->mRowCount;
+  if (count == -1) {
+    count = 0;
+    mRowGroupInfo->Clear();
+    ComputeTotalRowCount(count, mContent);
+    mRowGroupInfo->mRowCount = count;
+  }
+
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
@@ -1786,7 +1780,7 @@ nsTreeRowGroupFrame::IndexOfRow(nsIPresContext* aPresContext,
 PRBool
 nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 {
-  if (aRowIndex >= 0 && aRowIndex < mRowCount)
+  if (aRowIndex >= 0 && aRowIndex < mRowGroupInfo->mRowCount)
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -1903,7 +1897,7 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
 
   PRInt32 scrollTo = mCurrentIndex + lines;
   PRInt32 visRows, totalRows;
-  totalRows = GetVisibleRowCount();
+  totalRows = mRowGroupInfo->mRowCount;
   GetRowCount(visRows);
 
   if (scrollTo < 0)

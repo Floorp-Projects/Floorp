@@ -86,31 +86,32 @@ nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
   if (!element)
     return NS_OK;
 
-  nsAutoString tagName;
-  element->GetTagName(tagName);
-  if (tagName.EqualsWithConversion("titledbutton")) {
-    // Find out if we're the twisty.
-    nsAutoString classAttr;
-    element->GetAttribute(NS_ConvertASCIItoUCS2("class"), classAttr);
-    if (classAttr.EqualsWithConversion("twisty")) {
-      // Retrieve the parent treeitem.
-      nsCOMPtr<nsIDOMElement> treeItem;
-      GetTreeItem(element, getter_AddRefs(treeItem));
+  // Find out if we're the twisty.
+  nsAutoString twistyAttr;
+  element->GetAttribute(NS_ConvertASCIItoUCS2("twisty"), twistyAttr);
+  if (twistyAttr.EqualsWithConversion("true")) {
+    // Retrieve the parent treeitem.
+    nsCOMPtr<nsIDOMElement> treeItem;
+    GetTreeItem(element, getter_AddRefs(treeItem));
 
-      if (!treeItem)
-        return NS_OK;
+    if (!treeItem)
+      return NS_OK;
 
-      // Eat the event.
-      aEvent->PreventCapture();
-      aEvent->PreventBubble();
-      aEvent->PreventDefault();
+    nsAutoString empty;
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("empty"), empty);
+    if (empty.EqualsWithConversion("true"))
+      return NS_OK;
 
-      nsAutoString open;
-      treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), open);
-      if (open.EqualsWithConversion("true"))
-        treeItem->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
-      else treeItem->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
-    }
+    // Eat the event.
+    aEvent->PreventCapture();
+    aEvent->PreventBubble();
+    aEvent->PreventDefault();
+
+    nsAutoString open;
+    treeItem->GetAttribute(NS_ConvertASCIItoUCS2("open"), open);
+    if (open.EqualsWithConversion("true"))
+      treeItem->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
+    else treeItem->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
   }
   return NS_OK;
 }

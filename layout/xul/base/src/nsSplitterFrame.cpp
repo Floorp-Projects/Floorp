@@ -51,6 +51,7 @@
 #include "nsIStyleContext.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
+#include "nsIBindableContent.h"
 
 #define REAL_TIME_DRAG
 
@@ -778,7 +779,13 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
     nsCOMPtr<nsIAtom> atom;
-    content->GetTag(*getter_AddRefs(atom));
+    nsCOMPtr<nsIBindableContent> bindable(do_QueryInterface(content));
+    if (bindable) {
+      bindable->GetBaseTag(getter_AddRefs(atom));
+    }
+    
+    if (!atom)
+      content->GetTag(*getter_AddRefs(atom));
 
     // skip over any splitters
     if (atom.get() != nsXULAtoms::splitter) { 
