@@ -33,6 +33,14 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 
+#include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
+
+NS_BEGIN_EXTERN_C
+
+nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
+
+NS_END_EXTERN_C
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
 // that multiply inherits from nsISupports
@@ -157,6 +165,7 @@ nsMsgAppCore::SetScriptObject(void* aScriptObject)
 nsresult
 nsMsgAppCore::Init(const nsString& aId)
 {
+	printf("Init\n");
   mId = aId;
   return NS_OK;
 }
@@ -165,6 +174,7 @@ nsMsgAppCore::Init(const nsString& aId)
 nsresult
 nsMsgAppCore::GetId(nsString& aId)
 {
+	printf("GetID\n");
   aId = mId;
   return NS_OK;
 }
@@ -272,10 +282,10 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 NS_IMETHODIMP
 nsMsgAppCore::OpenURL(nsAutoString& url)
 {
-    // here's where we call mscott's LoadURL
-    // LoadURL(mWebShell, url);
-    NS_ASSERTION(0, "not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // here's where we call mscott's LoadURL...
+	// mscott: right now, this only works for news urls!!!!
+	NS_MailNewsLoadUrl(url, mWebShell);
+	return NS_OK;
 }
 
 //  to load the webshell!
