@@ -74,11 +74,10 @@
         <label id="version"/>
       </hbox>
       <spacer flex="1"/>
-      <textbox id="userAgent" multiline="true" readonly="true" cols="60"
-               style="border: none; padding: none; margin: none;"/>
-      <html:a href="http://www.mozilla.org/projects/phoenix/"
-            target="_new"
-            style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
+      <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
+      <html:a href="&copyrightLink;"
+              target="_new"
+              style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
       <spacer flex="1"/>
     </vbox>
     <separator class="groove"/>
