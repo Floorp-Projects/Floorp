@@ -3,7 +3,7 @@ Name: %{name}
 Vendor: Sun Microsystems
 Version: %{version}
 Release: %{release}
-Copyright: MPL
+Copyright: MPL/GPL
 Group: System Environment/Base
 Source: %{name}-%{version}.tar.gz
 ExclusiveOS: Linux
