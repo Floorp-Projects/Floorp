@@ -43,6 +43,10 @@
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsIInputStreamTee.h"
+#endif
+
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -62,6 +66,10 @@ public:
     virtual ~DataRequestForwarder();
     nsresult Init(nsIRequest *request, nsIStreamListener *listener);
 
+#ifdef MOZ_NEW_CACHE
+    nsresult SetCacheEntryDescriptor(nsICacheEntryDescriptor *desc);
+#endif
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMOBSERVER
@@ -70,6 +78,11 @@ public:
     NS_FORWARD_NSICHANNEL(mChannel->)
 
 protected:
+#ifdef MOZ_NEW_CACHE
+    nsCOMPtr<nsICacheEntryDescriptor> mCacheWriteDescriptor;
+    nsCOMPtr<nsIOutputStream> mCacheOutputStream;
+#endif
+
     nsCOMPtr<nsIRequest> mRequest;
     nsCOMPtr<nsIChannel> mChannel;
     nsCOMPtr<nsIStreamListener> mListener;
@@ -93,6 +106,15 @@ DataRequestForwarder::~DataRequestForwarder()
 {
 }
 
+#ifdef MOZ_NEW_CACHE
+nsresult 
+DataRequestForwarder::SetCacheEntryDescriptor(nsICacheEntryDescriptor *desc)
+{
+    mCacheWriteDescriptor = desc; 
+    return NS_OK;
+}
+#endif
+
 nsresult 
 DataRequestForwarder::Init(nsIRequest *request, nsIStreamListener *listener)
 {
@@ -110,18 +132,69 @@ DataRequestForwarder::Init(nsIRequest *request, nsIStreamListener *listener)
 NS_IMETHODIMP 
 DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+#ifdef MOZ_NEW_CACHE
+
+    if (mCacheWriteDescriptor) {   
+        nsCOMPtr<nsITransport> transport;
+
+        nsresult rv = mCacheWriteDescriptor->GetTransport(getter_AddRefs(transport));
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "Could not create cache transport.");
+            return rv;
+        }
+        rv = transport->OpenOutputStream(0, (PRUint32) -1, 0, getter_AddRefs(mCacheOutputStream));
+        
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "Could not create cache output stream.");
+            return rv;
+        }
+        // make the output stream blocking.  
+        mCacheOutputStream->SetNonBlocking(PR_FALSE);
+    }
+#endif
     return mListener->OnStartRequest(this, ctxt); 
 }
 
 NS_IMETHODIMP 
 DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
 {
+
+#ifdef MOZ_NEW_CACHE
+    if (mCacheWriteDescriptor) {
+        nsresult rv;
+        if (NS_SUCCEEDED(statusCode))
+        {
+            // We have a write now, lets just mark this entry valid.
+            rv = mCacheWriteDescriptor->MarkValid();
+        }
+        else
+        {
+            rv = mCacheWriteDescriptor->Doom();
+        }
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "Modifing Cache during onStopRequest failed.");
+            return rv;
+        }
+    }
+#endif
     return mListener->OnStopRequest(this, ctxt, statusCode, statusText); 
 }
 
 NS_IMETHODIMP
 DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *input, PRUint32 offset, PRUint32 count)
 { 
+#ifdef MOZ_NEW_CACHE
+    if (mCacheWriteDescriptor) {
+        
+        nsCOMPtr<nsIInputStream> tee;
+        nsresult rv = NS_NewInputStreamTee(getter_AddRefs(tee), 
+                                           input,
+                                           mCacheOutputStream);
+        if (NS_FAILED(rv))
+            return rv;
+        return mListener->OnDataAvailable(this, ctxt, tee, offset, count); 
+    }
+#endif
     return mListener->OnDataAvailable(this, ctxt, input, offset, count); 
 } 
 
@@ -138,6 +211,9 @@ nsFtpState::nsFtpState() {
 
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
+#ifdef MOZ_NEW_CACHE
+    mReadingFromCache = PR_FALSE;
+#endif    
     mCanceled = mList = mRetryPass = PR_FALSE;
     mFireCallbacks = mBin = mKeepRunning = mAnonymous = PR_TRUE;
 
@@ -1298,6 +1374,9 @@ nsFtpState::R_mdtm() {
 nsresult
 nsFtpState::S_list() {
     nsresult rv;
+#ifdef MOZ_NEW_CACHE
+    if (!mReadingFromCache) {
+#endif
     char * string;
     
     if ( mList )
@@ -1310,6 +1389,9 @@ nsFtpState::S_list() {
     rv = ControlAsyncWrite(listString);
     if (NS_FAILED(rv)) return rv;
 
+#ifdef MOZ_NEW_CACHE
+    }
+#endif
 
     // setup a listener to push the data into. This listener sits inbetween the
     // unconverted data of fromType, and the final listener in the chain (in this case
@@ -1321,8 +1403,21 @@ nsFtpState::S_list() {
 
     nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
-    nsAutoString toStr; toStr.AssignWithConversion("application/http-index-format");
 
+#ifdef MOZ_NEW_CACHE
+    if ( mCacheEntry ) {
+        if (!mReadingFromCache) {
+            nsCString aString; aString.AssignWithConversion(fromStr);
+            mCacheEntry->SetMetaDataElement((const char*)"MimeType", (const char*) aString);
+        } else {
+            nsXPIDLCString aString;
+            mCacheEntry->GetMetaDataElement((const char*)"MimeType", getter_Copies(aString));
+            fromStr.AssignWithConversion(aString);
+        }
+    } 
+#endif
+
+    nsAutoString toStr; toStr.AssignWithConversion("application/http-index-format");
 
     rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(),
                                              mListener, mURL, getter_AddRefs(converterListener));
@@ -1342,6 +1437,25 @@ nsFtpState::S_list() {
 #else
     forwarder->Init(mChannel, converterListener);
 #endif
+
+#ifdef MOZ_NEW_CACHE
+    if (mCacheEntry && mReadingFromCache)
+    {            
+        nsCOMPtr<nsITransport> transport;
+        rv = mCacheEntry->GetTransport(getter_AddRefs(transport));
+        if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "Could not create cache transport.");
+            return rv;
+        }
+
+        rv = transport->AsyncRead(forwarder, mListenerContext, 0, -1, 0, getter_AddRefs(mDPipeRequest));
+        NS_RELEASE(forwarder); // let the transport worry about this objects lifespan
+        return rv;
+    }
+
+    (void) forwarder->SetCacheEntryDescriptor(mCacheEntry);
+#endif
+
     rv = mDPipe->AsyncRead(forwarder, mListenerContext, 0, -1, 0, getter_AddRefs(mDPipeRequest));
     NS_RELEASE(forwarder); // let the transport worry about this objects lifespan
     return rv;
@@ -1708,7 +1822,11 @@ nsFtpState::Cancel(nsresult status)
     if (mDPipeRequest) {
         mDPipeRequest->Cancel(status);
     }
-    
+#ifdef MOZ_NEW_CACHE
+    if (mCacheEntry)
+        mCacheEntry->Doom();
+#endif
+
     return NS_OK;
 }
 
@@ -1823,14 +1941,64 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (port > 0)
         mPort = port;
 
+#ifdef MOZ_NEW_CACHE
+    static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
+    NS_WITH_SERVICE(nsICacheService, serv, kCacheServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = serv->CreateSession("FTP Directory Listings",
+                             nsICache::STORE_IN_MEMORY,  //FIX this should be disk cache
+                             PR_TRUE,
+                             getter_AddRefs(mCacheSession));
+    if (NS_FAILED(rv)) return rv;
+#endif
+
     return NS_OK;
 }
 
 nsresult
 nsFtpState::Connect()
 {
+    nsresult rv;
+
+#ifdef MOZ_NEW_CACHE
+    nsXPIDLCString urlStr;
+    rv = mURL->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+
+    //FIX: SYNC call.  Should make this async!!!
+    rv = mCacheSession->OpenCacheEntry(urlStr,
+                                       nsICache::ACCESS_READ_WRITE,
+                                       getter_AddRefs(mCacheEntry));
+    if (NS_SUCCEEDED(rv)) {
+
+        // Decide if we should write over this cache entry or use it...
+    
+        nsCacheAccessMode accessMode;
+        mCacheEntry->GetAccessGranted(&accessMode);
+        
+        if (accessMode & nsICache::ACCESS_READ) {
+            // we can read from the cache.
+            PRUint32 aLoadAttributes;
+            mChannel->GetLoadAttributes(&aLoadAttributes);
+
+// FIX we should be honoring the load attributes!
+// aLoadAttributes & nsIChannel::FORCE_RELOAD
+
+            if (accessMode & nsICache::ACCESS_WRITE) {
+                // we said that we could validate, so here we do it.
+                mCacheEntry->MarkValid();
+            }
+            // we have a directory listing in our cache.  lets kick off a load
+            mReadingFromCache = PR_TRUE;
+            rv = S_list();
+            if (NS_SUCCEEDED(rv))
+                return rv;
+        }
+    } 
+#endif
+
     mState = FTP_COMMAND_CONNECT;
-    nsresult rv = Process();
+    rv = Process();
 
     // check for errors.
     if (NS_FAILED(rv)) {
