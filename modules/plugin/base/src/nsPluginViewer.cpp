@@ -53,6 +53,7 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
+#include "nsIPluginWidget.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestor.h"
@@ -173,11 +174,6 @@ private:
   nsCOMPtr<nsITimer> mPluginTimer;
   PRPackedBool       mWidgetVisible;    // used on Mac to store our widget's visible state
 };
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, 
-                                     nsRect& aClipRect, PRBool& aIsVisible);
-#endif
 
 
 //----------------------------------------------------------------------
@@ -622,6 +618,7 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
 #if defined(XP_MAC) || defined(XP_MACOSX)
         // On Mac we also need to add in the widget offset to the plugin window
         mOwner->FixUpPluginWindow();
+        mWindow->Invalidate(PR_FALSE);
 #endif        
         ((nsPluginNativeWindow *)win)->CallSetWindow(inst);
       }
@@ -1029,7 +1026,30 @@ PluginListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
+
+  nsresult rv = NS_OK;
+  
+#if defined (XP_MAC) || defined(XP_MACOSX)
+  NS_ASSERTION(mViewer, "Need plugin viewer");
+  nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mViewer->mWindow);
+  PRBool startDrawCalled = PR_FALSE;
+
+  if (pluginWidget)
+  {
+    rv = pluginWidget->StartDrawPlugin();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "StartDrawPlugin failed in OnDataAvailable!");
+    startDrawCalled = NS_SUCCEEDED(rv);
+  }
+#endif
+
+  rv = mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
+
+#if defined (XP_MAC) || defined(XP_MACOSX)  
+ if (pluginWidget && startDrawCalled)
+    pluginWidget->EndDrawPlugin();
+#endif 
+
+ return rv;
 }
 
 //----------------------------------------------------------------------
@@ -1295,7 +1315,10 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     return rv;
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    //if (mWidget != NULL) {  // check for null mWidget
+
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWindow);
+    if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
+    {
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
         if (event == NULL || event->what == nullEvent ||
             anEvent.message == NS_CONTEXTMENU_MESSAGE_START) {
@@ -1317,16 +1340,21 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                     mInstance->HandleEvent(&pluginEvent, &eventHandled);
                 }
             }
-            return nsEventStatus_eConsumeNoDefault;
-            
-        }
-        nsPluginPort* port = (nsPluginPort*)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
-        nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(&pluginEvent, &eventHandled);
-        if (eventHandled && anEvent.message != NS_MOUSE_LEFT_BUTTON_DOWN)
             rv = nsEventStatus_eConsumeNoDefault;
-   // }
+        }
+        else
+        {
+            nsPluginPort* port = (nsPluginPort*)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+            nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
+            PRBool eventHandled = PR_FALSE;
+            mInstance->HandleEvent(&pluginEvent, &eventHandled);
+            if (eventHandled && anEvent.message != NS_MOUSE_LEFT_BUTTON_DOWN)
+                rv = nsEventStatus_eConsumeNoDefault;
+        }
+    
+        pluginWidget->EndDrawPlugin();
+    }
+    
 #endif
 
 //~~~
@@ -1352,28 +1380,34 @@ NS_IMETHODIMP pluginInstanceOwner::Notify(nsITimer* /* timer */)
     // validate the plugin clipping information by syncing the plugin window info to
     // reflect the current widget location. This makes sure that everything is updated
     // correctly in the event of scrolling in the window.
-    if (mInstance != NULL) {
-        nsPluginPort* pluginPort = FixUpPluginWindow();
-        if (pluginPort) {
-            EventRecord idleEvent;
-            InitializeEventRecord(&idleEvent);
-            idleEvent.what = nullEvent;
-
-            // give a bogus 'where' field of our null event when hidden, so Flash
-            // won't respond to mouse moves in other tabs, see bug 120875
-            if (!mWidgetVisible)
-              idleEvent.where.h = idleEvent.where.v = 20000;
-
-            nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-
-            PRBool eventHandled = PR_FALSE;
-            mInstance->HandleEvent(&pluginEvent, &eventHandled);
+    if (mInstance != NULL)
+    {
+        nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWindow);
+        if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
+        {
+            nsPluginPort* pluginPort = FixUpPluginWindow();
+            if (pluginPort) {
+                EventRecord idleEvent;
+                InitializeEventRecord(&idleEvent);
+                idleEvent.what = nullEvent;
+    
+                // give a bogus 'where' field of our null event when hidden, so Flash
+                // won't respond to mouse moves in other tabs, see bug 120875
+                if (!mWidgetVisible)
+                  idleEvent.where.h = idleEvent.where.v = 20000;
+    
+                nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+    
+                PRBool eventHandled = PR_FALSE;
+                mInstance->HandleEvent(&pluginEvent, &eventHandled);
+            }
+    
+            pluginWidget->EndDrawPlugin();
         }
     }
-#endif // XP_MAC || XP_MACOSX
+#endif // XP_MAC
   return NS_OK;
 }
-
 
 void pluginInstanceOwner::CancelTimer()
 {
@@ -1412,116 +1446,53 @@ nsPluginPort* pluginInstanceOwner::GetPluginPort()
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 
-  // calculate the absolute position and clip for a widget 
-  // and use other windows in calculating the clip
-  // also find out if we are visible or not
-static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
-                                   nsRect& aClipRect, PRBool& aIsVisible) 
-{
-  if (aIsVisible)
-    aWidget->IsVisible(aIsVisible);
-
-  aWidget->GetBounds(aClipRect); 
-  aAbsX = aClipRect.x; 
-  aAbsY = aClipRect.y; 
-  
-  nscoord ancestorX = -aClipRect.x, ancestorY = -aClipRect.y; 
-  // Calculate clipping relative to the widget passed in 
-  aClipRect.x = 0; 
-  aClipRect.y = 0; 
-
-  // Gather up the absolute position of the widget, clip window, and visibilty 
-  nsCOMPtr<nsIWidget> widget = getter_AddRefs(aWidget->GetParent());
-  while (widget != nsnull) { 
-    if (aIsVisible)
-      widget->IsVisible(aIsVisible);
-
-    nsRect wrect; 
-    widget->GetClientBounds(wrect); 
-    nscoord wx, wy; 
-    wx = wrect.x; 
-    wy = wrect.y; 
-    wrect.x = ancestorX; 
-    wrect.y = ancestorY; 
-    aClipRect.IntersectRect(aClipRect, wrect); 
-    aAbsX += wx; 
-    aAbsY += wy; 
-    widget = getter_AddRefs(widget->GetParent());
-    if (widget == nsnull) { 
-      // Don't include the top-level windows offset 
-      // printf("Top level window offset %d %d\n", wx, wy); 
-      aAbsX -= wx; 
-      aAbsY -= wy; 
-    } 
-    ancestorX -=wx; 
-    ancestorY -=wy; 
-  } 
-
-  aClipRect.x += aAbsX; 
-  aClipRect.y += aAbsY; 
-
-  // if we are not visible, clear out the plugin's clip so it won't paint
-  if (!aIsVisible)
-    aClipRect.Empty();
-
-  //printf("--------------\n"); 
-  //printf("Widget clip X %d Y %d rect %d %d %d %d\n", aAbsX, aAbsY,  aClipRect.x,  aClipRect.y, aClipRect.width,  aClipRect.height ); 
-  //printf("--------------\n"); 
-} 
-
-
+// see also nsObjectFrame for a similar routine
 nsPluginPort* pluginInstanceOwner::FixUpPluginWindow()
 {
-  if (!mPluginWindow)
+  if (!mWindow || !mPluginWindow)
     return nsnull;
 
-  if (mWindow) {
-    nsPluginPort* pluginPort = GetPluginPort();
-    nscoord absWidgetX = 0;
-    nscoord absWidgetY = 0;
-    nsRect widgetClip(0,0,0,0);
-    PRBool isVisible = PR_TRUE;
-    GetWidgetPosClipAndVis(mWindow,absWidgetX,absWidgetY,widgetClip,isVisible);
+  nsPluginPort* pluginPort = GetPluginPort();
+  if (!pluginPort) return nsnull;
+    
+  nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWindow);
 
-#if defined(MOZ_WIDGET_COCOA)
-    // set the port coordinates
-    mPluginWindow->x = -pluginPort->portx;
-    mPluginWindow->y = -pluginPort->porty;
-    widgetClip.x += mPluginWindow->x - absWidgetX;
-    widgetClip.y += mPluginWindow->y - absWidgetY;
-#else
-    // set the port coordinates
-    mPluginWindow->x = absWidgetX;
-    mPluginWindow->y = absWidgetY;
-#endif
+  nsPoint pluginOrigin;
+  nsRect widgetClip;
+  PRBool isVisible;
+  pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, isVisible);
+  if (!isVisible)
+    widgetClip.Empty();
 
-    // fix up the clipping region
-    mPluginWindow->clipRect.top = widgetClip.y;
-    mPluginWindow->clipRect.left = widgetClip.x;
-    mPluginWindow->clipRect.bottom =  mPluginWindow->clipRect.top + widgetClip.height;
-    mPluginWindow->clipRect.right =  mPluginWindow->clipRect.left + widgetClip.width;  
+  // set the port coordinates
+  mPluginWindow->x = -pluginPort->portx;
+  mPluginWindow->y = -pluginPort->porty;
 
-    if (mWidgetVisible != isVisible) {
-      mWidgetVisible = isVisible;
-      // must do this to disable async Java Applet drawing
-      if (isVisible) {
-        mInstance->SetWindow(mPluginWindow);
-      } else {
-        mInstance->SetWindow(nsnull);
-        // switching states, do not draw
-        pluginPort = nsnull;
-      }
+  // fix up the clipping region
+  mPluginWindow->clipRect.top    = widgetClip.y;
+  mPluginWindow->clipRect.left   = widgetClip.x;
+  mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top  + widgetClip.height;
+  mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + widgetClip.width; 
+
+  if (mWidgetVisible != isVisible)
+  {
+    mWidgetVisible = isVisible;
+    // must do this to disable async Java Applet drawing
+    if (isVisible) {
+      mInstance->SetWindow(mPluginWindow);
+    } else {
+      mInstance->SetWindow(nsnull);
+      // switching states, do not draw
+      pluginPort = nsnull;
     }
-
-#if defined(MOZ_WIDGET_COCOA)
-    if (!mWidgetVisible) {
-      mPluginWindow->clipRect.right = mPluginWindow->clipRect.left;
-      mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
-    }
-#endif
-    return pluginPort;
   }
-  return nsnull;
+
+  if (!mWidgetVisible) {
+    mPluginWindow->clipRect.right = mPluginWindow->clipRect.left;
+    mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
+  }
+
+  return pluginPort;
 }
 
 #endif
