@@ -322,9 +322,9 @@
 <!ENTITY formatbkgdcolormenu.accesskey "b">
 <!ENTITY removeAllStylesCmd.label "Remove All Styles">
 <!ENTITY formatremovestyles.accesskey "r">
+<!ENTITY formatremovestyles.keybinding "k">
 <!ENTITY removeLinksCmd.label "Remove Link(s)">
 <!ENTITY formatremovelinks.accesskey "m">
-<!ENTITY formatremovelinks.keybinding "k">
 <!ENTITY formatindent.keybinding "=">
 <!ENTITY formatoutdent.keybinding "-">
 

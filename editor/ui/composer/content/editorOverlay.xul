@@ -70,7 +70,7 @@
     <key id="indentkb"      xulkey="true" key="&formatindent.keybinding;" onkeypress="EditorIndent('indent')" />
     <key id="outdentkb"     xulkey="true" key="&formatoutdent.keybinding;" onkeypress="EditorIndent('outdent')" />
 
-    <key id="removestyleskb" shift="true" xulkey="true" key="&formatremovelinks.keybinding;" onkeypress="EditorRemoveStyle('all')" />
+    <key id="removestyleskb" shift="true" xulkey="true" key="&formatremovestyles.keybinding;" onkeypress="EditorRemoveStyle('all')" />
     <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="DecreaseFontSize()" />
     <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="IncreaseFontSize()" />
 
@@ -561,13 +561,13 @@
   </menupopup>
   </menu>
 
-    <popup id="TextColorPicker">
+    <popup id="TextColorPicker"  popupanchor="bottomleft">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
       <colorpicker palettename="standard" onclick="EditorSelectTextColor(); window.close()"/>
     </popup>
 
-    <popup id="BackColorPicker">
+    <popup id="BackColorPicker"  popupanchor="bottomleft">
       <!-- Text Caption is filled in at runtime -->
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
@@ -664,8 +664,8 @@
 
     <!-- The new Color Picker UI -->
     <html:div id="ColorButtons">
-      <titledbutton id="TextColorPopupButton" popup="TextColorPicker" popupanchor="bottomleft"/>
-      <titledbutton id="BackColorPopupButton" popup="BackColorPicker" popupanchor="bottomleft"/>
+      <titledbutton id="TextColorPopupButton" popup="TextColorPicker"/>
+      <titledbutton id="BackColorPopupButton" popup="BackColorPicker"/>
     </html:div>
 
     <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
@@ -691,10 +691,10 @@
 
     <titledbutton id="outdentButton"    class="format"        onclick="EditorIndent('outdent')"/>
     <titledbutton id="indentButton"     class="format"        onclick="EditorIndent('indent')"/>
-    <titledbutton id="AlignPopupButton" class="format popup"  popupanchor="bottomleft"/>
+    <titledbutton id="AlignPopupButton" class="format popup"/>
     
     <!-- InsertPopupButton is used by messengercompose.xul -->
-    <titledbutton id="InsertPopupButton" class="format popup"  popupanchor="bottomleft"/>
+    <titledbutton id="InsertPopupButton" class="format popup"/>
 
 
     <!-- DEBUG only -->
