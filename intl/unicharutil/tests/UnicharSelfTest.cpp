@@ -375,7 +375,6 @@ static void TestEntityConversion(PRUint32 version)
   nsCOMPtr <nsIEntityConverter> entityConv;
   res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, nsIEntityConverter::GetIID(), getter_AddRefs(entityConv));
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n"; return;}
-  if (NULL == entityConv) {cout << "\tFailed!! instant null\n"; return;}
 
 
   // convert char by char
@@ -425,7 +424,6 @@ static void TestSaveAsCharset()
   nsCOMPtr <nsISaveAsCharset> saveAsCharset;
   res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, nsISaveAsCharset::GetIID(), getter_AddRefs(saveAsCharset));
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  if (NULL == saveAsCharset) {cout << "\tFailed!! instant null\n";}
   
   cout << "ISO-8859-1 " << "attr_plainTextDefault " << "entityNone " << "\n";
   res = saveAsCharset->Init("ISO-8859-1", 
