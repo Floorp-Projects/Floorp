@@ -1605,7 +1605,7 @@ function InitObjectPropertiesMenuitem(id)
   if (!menuItem) return null;
 
   var element;
-  var menuStr = GetString("ObjectProperties");
+  var menuStr = GetString("AdvancedProperties");
   var name;
 
   if (IsEditingRenderedHTML())
@@ -1653,15 +1653,13 @@ function InitObjectPropertiesMenuitem(id)
         }
         break;
     }
-    menuStr = menuStr.replace(/%obj%/,objStr);
+    if (objStr)
+      menuStr = GetString("ObjectProperties").replace(/%obj%/,objStr);
   }
   else
   {
     // We show generic "Properties" string, but disable menu item
     menuItem.setAttribute("disabled","true");
-    // Replace placeholder with "", then remaining space on left side
-    menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
-
   }
   menuItem.setAttribute("label", menuStr);
   menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
