@@ -785,9 +785,9 @@ sub DefCol {
     $::needquote{$name} = $q;
 }
 
-DefCol("opendate", "date_format(bugs.creation_ts,'%Y-%m-%d')", "Opened",
+DefCol("opendate", "unix_timestamp(bugs.creation_ts)", "Opened",
        "bugs.creation_ts");
-DefCol("changeddate", "date_format(bugs.delta_ts,'%Y-%m-%d')", "Changed",
+DefCol("changeddate", "unix_timestamp(bugs.delta_ts)", "Changed",
        "bugs.delta_ts");
 DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
        "bugs.bug_severity");
@@ -1040,6 +1040,8 @@ for (my $colcount = 0 ; $colcount < @collist ; $colcount++) {
     }
 }
 
+my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
+
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
     my $g = shift @row;         # Bug's group set.
@@ -1099,6 +1101,18 @@ while (@row = FetchSQLData()) {
                 }
                 if ($c eq "owner") {
                     $ownerhash{$value} = 1;
+		}elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
+		    my $age= time() - $value;
+		    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
+		    if( $age < 18*60*60 ) {
+			$value= sprintf "%02d:%02d:%02d", $h,$m,$s;
+		    }elsif( $age < 6*24*60*60 ) {
+			$value= sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
+		    }elsif( $age < 100*24*60*60 ) {
+			$value= sprintf "%02d-%02d", $mo+1,$d;
+		    }else {
+			$value= sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
+		    }
                 }
                 if ($::needquote{$c} || $::needquote{$c} == 5) {
                     $value = html_quote($value);
