@@ -73,25 +73,17 @@ imgLoader::~imgLoader()
   PR_DestroyLock(mLock);
 #endif
 }
-#include "nsString.h"
-#include "nsAReadableString.h"
-
-PRLogModuleInfo *testLog = PR_NewLogModule("test123");
 
 /* imgIRequest loadImage (in nsIURI uri, in imgIDecoderObserver aObserver, in nsISupports cx); */
 NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
 {
-  LOG_SCOPE("imgLoader::LoadImage");
-
-  NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
-
 #if defined(PR_LOGGING)
   nsXPIDLCString spec;
   aURI->GetSpec(getter_Copies(spec));
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgLoader::LoadImage (aURI=%s) {ENTER}\n",
-          this, spec.get()));
+  LOG_SCOPE_STRING_PARAM("imgLoader::LoadImage", "aURI", spec.get());
 #endif
+
+  NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
   imgRequest *request = nsnull;
 

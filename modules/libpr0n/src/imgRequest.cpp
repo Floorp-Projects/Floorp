@@ -81,8 +81,7 @@ nsresult imgRequest::Init(nsIChannel *aChannel)
 
 nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::AddObserver    (observer=%p)\n", this, observer));
+  LOG_SCOPE_PTR_PARAM("imgRequest::AddObserver", "observer", observer);
 
   mObservers.AppendElement(NS_STATIC_CAST(void*, observer));
 
@@ -98,24 +97,45 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
   if (mState & onStopDecode)
     observer->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
 
+  if (mObservers.Count() == 1) {
+    PRUint32 nframes;
+    mImage->GetNumFrames(&nframes);
+    if (nframes > 0) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
+
+      mImage->StartAnimation();
+    }
+  }
+
   return NS_OK;
 }
 
 nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult status)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::RemoveObserver (observer=%p) {ENTER}\n",
-          this, observer));
+  LOG_SCOPE_PTR_PARAM("imgRequest::RemoveObserver", "observer", observer);
 
   mObservers.RemoveElement(NS_STATIC_CAST(void*, observer));
 
-  if ((mObservers.Count() == 0) && mChannel && mProcessing) {
-    this->Cancel(NS_BINDING_ABORTED);
-  }
+  if (mObservers.Count() == 0) {
+    if (mImage) {
+      PRUint32 nframes;
+      mImage->GetNumFrames(&nframes);
+      if (nframes > 0) {
+        PR_LOG(gImgLog, PR_LOG_DEBUG,
+               ("[this=%p] imgRequest::RemoveObserver -- stopping animation\n", this));
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::RemoveObserver {EXIT}\n",
-          this));
+        mImage->StopAnimation();
+      }
+    }
+
+    if (mChannel && mProcessing) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgRequest::RemoveObserver -- load in progress.  canceling\n", this));
+
+      this->Cancel(NS_BINDING_ABORTED);
+    }
+  }
 
   return NS_OK;
 }

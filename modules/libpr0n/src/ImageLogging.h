@@ -38,6 +38,26 @@ public:
                                    mFrom, mFunc.get()));
   }
 
+  LogScope(void *from, const nsAReadableCString &fn,
+           const nsLiteralCString &paramName, const char *paramValue) :
+    mFrom(from), mFunc(fn)
+  {
+    PR_LOG(gImgLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=\"%s\") {ENTER}\n",
+                                   mFrom, mFunc.get(),
+                                   paramName.get(),
+                                   paramValue));
+  }
+
+  LogScope(void *from, const nsAReadableCString &fn,
+           const nsLiteralCString &paramName, void *paramValue) :
+    mFrom(from), mFunc(fn)
+  {
+    PR_LOG(gImgLog, PR_LOG_DEBUG, ("[this=%p] %s (%s=%p) {ENTER}\n",
+                                   mFrom, mFunc.get(),
+                                   paramName.get(),
+                                   paramValue));
+  }
+
   ~LogScope() {
     PR_LOG(gImgLog, PR_LOG_DEBUG, ("[this=%p] %s {EXIT}\n",
                                    mFrom, mFunc.get()));
@@ -53,7 +73,19 @@ private:
   LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (NS_STATIC_CAST(void *, this), \
                                          NS_LITERAL_CSTRING(s))
 
+#define LOG_SCOPE_STRING_PARAM(s, pn, pv) \
+  LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (NS_STATIC_CAST(void *, this), \
+                                         NS_LITERAL_CSTRING(s),        \
+                                         NS_LITERAL_CSTRING(pn), pv)
+
+#define LOG_SCOPE_PTR_PARAM(s, pn, pv) \
+  LogScope LOG_SCOPE_TMP_VAR ##__LINE__ (NS_STATIC_CAST(void *, this), \
+                                         NS_LITERAL_CSTRING(s),        \
+                                         NS_LITERAL_CSTRING(pn),       \
+                                         NS_STATIC_CAST(void*, pv))
+
 #else
 #define LOG_SCOPE(s)
+#define LOG_SCOPE_STRING_PARAM(s, pn, pv)
 #define gImgLog
 #endif
