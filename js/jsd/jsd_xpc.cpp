@@ -54,6 +54,89 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 const char jsdServiceContractID[] = "@mozilla.org/js/jsd/debugger-service;1";
 
 /*******************************************************************************
+ * global service
+ *******************************************************************************/
+
+static jsdIDebuggerService *jsds = 0;
+
+/*******************************************************************************
+ * c callbacks
+ *******************************************************************************/
+
+static void
+jsds_SetContextProc (JSDContext* jsdc, void* user)
+{
+    printf ("jsds_SetContextProc: called.\n");
+}
+
+static PRUint32
+jsds_BreakpointHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
+                         uintN type, void* callerdata, jsval* rval)
+{
+    NS_PRECONDITION (callerdata, "no callerdata for jsds_BreakpointHookProc.");
+    
+    nsCOMPtr<jsdIExecutionHook> hook;
+    jsds->GetBreakpointHook(getter_AddRefs(hook));
+    if (!hook)
+        return NS_OK;
+    
+    jsdIValue *js_rv = 0;
+    
+    PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
+    
+    hook->OnExecute (jsdContext::FromPtr(jsdc),
+                     jsdThreadState::FromPtr(jsdc, jsdthreadstate),
+                     type, &js_rv, &hook_rv);
+
+    if (js_rv)
+    {
+        JSDValue *jsdv;
+        js_rv->GetJSDValue (&jsdv);
+        *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
+    }
+    
+    return hook_rv;
+}
+
+static PRUint32
+jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
+                        uintN type, void* callerdata, jsval* rval)
+{
+    NS_PRECONDITION (callerdata, "no callerdata for jsds_ExecutionHookProc.");
+    
+    jsdIExecutionHook *hook = NS_STATIC_CAST(jsdIExecutionHook *, callerdata);
+    jsdIValue *js_rv = 0;
+    
+    PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
+    
+    hook->OnExecute (jsdContext::FromPtr(jsdc),
+                     jsdThreadState::FromPtr(jsdc, jsdthreadstate),
+                     type, &js_rv, &hook_rv);
+
+    if (js_rv)
+    {
+        JSDValue *jsdv;
+        js_rv->GetJSDValue (&jsdv);
+        *rval = JSD_GetValueWrappedJSVal(jsdc, jsdv);
+    }
+
+    return hook_rv;
+}
+
+static void
+jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
+                     void* callerdata)
+{
+    if (!callerdata)
+        return;
+    
+    jsdIScriptHook *hook = NS_STATIC_CAST(jsdIScriptHook *, callerdata);
+    hook->OnScriptLoaded (jsdContext::FromPtr(jsdc),
+                          jsdScript::FromPtr(jsdc, jsdscript),
+                          creating ? PR_TRUE : PR_FALSE);
+}
+
+/*******************************************************************************
  * reflected jsd data structures
  *******************************************************************************/
 
@@ -90,6 +173,72 @@ jsdObject::GetJSDObject(JSDObject **_rval)
         return NS_ERROR_NULL_POINTER;
     
     *_rval = mObject;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetCreatorURL(char **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = nsCString(JSD_GetObjectNewURL(mCx, mObject)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetCreatorLine(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetObjectNewLineNumber(mCx, mObject);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetConstructorURL(char **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = nsCString(JSD_GetObjectConstructorURL(mCx, mObject)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetConstructorLine(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetObjectConstructorLineNumber(mCx, mObject);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetValue(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetValueForObject (mCx, mObject);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+/* PC */
+NS_IMPL_THREADSAFE_ISUPPORTS1(jsdPC, jsdIPC); 
+
+NS_IMETHODIMP
+jsdPC::GetPc(jsuword *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mPC;
     return NS_OK;
 }
 
@@ -258,6 +407,57 @@ jsdScript::GetLineExtent(PRUint32 *_rval)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+jsdScript::PcToLine(jsdIPC *aPC, PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    jsuword pc;
+    aPC->GetPc(&pc);
+    *_rval = JSD_GetClosestLine (mCx, mScript, pc);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::LineToPc(PRUint32 aLine, jsdIPC **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
+    *_rval = jsdPC::FromPtr (pc);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::SetBreakpoint(jsdIPC *aPC)
+{
+    jsuword pc;
+    aPC->GetPc (&pc);
+    
+    JSD_SetExecutionHook (mCx, mScript, pc, jsds_BreakpointHookProc, NULL);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::ClearBreakpoint(jsdIPC *aPC)
+{
+    jsuword pc;
+    aPC->GetPc (&pc);
+    
+    JSD_ClearExecutionHook (mCx, mScript, pc);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::ClearAllBreakpoints()
+{
+    JSD_ClearAllExecutionHooksForScript (mCx, mScript);
+    return NS_OK;
+}
+
 /* Stack Frames */
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdStackFrame, jsdIStackFrame); 
 
@@ -318,12 +518,15 @@ jsdStackFrame::GetScript(jsdIScript **_rval)
 }
 
 NS_IMETHODIMP
-jsdStackFrame::GetPc(PRUint32 *_rval)
+jsdStackFrame::GetPc(jsdIPC **_rval)
 {
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
-    *_rval = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+    jsuword pc;
+    pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+    *_rval = jsdPC::FromPtr (pc);
+    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -337,30 +540,6 @@ jsdStackFrame::GetLine(PRUint32 *_rval)
                                                     mStackFrameInfo);
     jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
     *_rval = JSD_GetClosestLine (mCx, script, pc);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdStackFrame::PcToLine(PRUint32 aPc, PRUint32 *_rval)
-{
-    if (!_rval)
-        return NS_ERROR_NULL_POINTER;
-    
-    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
-                                                    mStackFrameInfo);
-    *_rval = JSD_GetClosestLine (mCx, script, aPc);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdStackFrame::LineToPc(PRUint32 aLine, PRUint32 *_rval)
-{
-    if (!_rval)
-        return NS_ERROR_NULL_POINTER;
-    
-    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
-                                                    mStackFrameInfo);
-    *_rval = JSD_GetClosestPC (mCx, script, aLine);
     return NS_OK;
 }
 
@@ -762,44 +941,16 @@ jsdValue::Refresh()
  ******************************************************************************/
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdService, jsdIDebuggerService); 
 
-static void
-jsds_SetContextProc (JSDContext* jsdc, void* user)
+jsdService::jsdService() : mOn(PR_FALSE), mNestedLoopLevel(0), mCx(0),
+                           mBreakpointHook(0), mDebugBreakHook(0),
+                           mDebuggerHook(0), mInterruptHook(0), mScriptHook(0)
 {
-    printf ("jsds_SetContextProc: called.\n");
-}
-
-static PRUint32
-jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
-                        uintN type, void* callerdata, jsval* rval)
-{
-    NS_PRECONDITION (callerdata, "no callerdata for jsds_ExecutionHookProc.");
-    
-    jsdIExecutionHook *hook = NS_STATIC_CAST(jsdIExecutionHook *, callerdata);
-    jsdIValue *js_rv = 0;
-    
-    PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
-    
-    hook->OnExecute (jsdContext::FromPtr(jsdc),
-                     jsdThreadState::FromPtr(jsdc, jsdthreadstate),
-                     type, &js_rv, &hook_rv);
-    return hook_rv;
-}
-
-static void
-jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
-                     void* callerdata)
-{
-    if (!callerdata)
-        return;
-    
-    jsdIScriptHook *hook = NS_STATIC_CAST(jsdIScriptHook *, callerdata);
-    hook->OnScriptLoaded (jsdContext::FromPtr(jsdc),
-                          jsdScript::FromPtr(jsdc, jsdscript),
-                          creating ? PR_TRUE : PR_FALSE);
+    NS_INIT_ISUPPORTS();
+    jsds = this;
 }
 
 NS_IMETHODIMP
-jsdService::Init (void)
+jsdService::On (void)
 {
     nsresult  rv;
 
@@ -815,13 +966,34 @@ jsdService::Init (void)
     rv = cc->GetJSContext (&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     
-    mJSrt = JS_GetRuntime (cx);
+    JSRuntime *rt = JS_GetRuntime (cx);
+    /*
     JSD_UserCallbacks jsd_uc;
     jsd_uc.size = sizeof(JSD_UserCallbacks);
     jsd_uc.setContext = jsds_SetContextProc;
+    */
+
+    mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
+    if (!mCx)
+        return NS_ERROR_FAILURE;
     
-    mJSDcx = JSD_DebuggerOnForUser (mJSrt, &jsd_uc, NULL);
+    mOn = PR_TRUE;
     
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::Off (void)
+{
+    JSD_DebuggerOff (mCx);
+    mOn = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::ClearAllBreakpoints (void)
+{
+    JSD_ClearAllExecutionHooks (mCx);
     return NS_OK;
 }
 
@@ -893,14 +1065,33 @@ jsdService::ExitNestedEventLoop (PRUint32 *_rval)
 /* hook attribute get/set functions */
 
 NS_IMETHODIMP
+jsdService::SetBreakpointHook (jsdIExecutionHook *aHook)
+{    
+    mBreakpointHook = aHook;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetBreakpointHook (jsdIExecutionHook **aHook)
+{   
+    if (!aHook)
+        return NS_ERROR_NULL_POINTER;
+
+    *aHook = mBreakpointHook;
+    NS_IF_ADDREF(*aHook);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdService::SetDebugBreakHook (jsdIExecutionHook *aHook)
 {    
     mDebugBreakHook = aHook;
     if (aHook)
-        JSD_SetDebugBreakHook (mJSDcx, jsds_ExecutionHookProc,
+        JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc,
                                NS_STATIC_CAST(void *, aHook));
     else
-        JSD_ClearDebugBreakHook (mJSDcx);
+        JSD_ClearDebugBreakHook (mCx);
     
     return NS_OK;
 }
@@ -922,10 +1113,10 @@ jsdService::SetDebuggerHook (jsdIExecutionHook *aHook)
 {    
     mDebuggerHook = aHook;
     if (aHook)
-        JSD_SetDebuggerHook (mJSDcx, jsds_ExecutionHookProc,
+        JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc,
                              NS_STATIC_CAST(void *, aHook));
     else
-        JSD_ClearDebuggerHook (mJSDcx);
+        JSD_ClearDebuggerHook (mCx);
     
     return NS_OK;
 }
@@ -947,10 +1138,10 @@ jsdService::SetInterruptHook (jsdIExecutionHook *aHook)
 {    
     mInterruptHook = aHook;
     if (aHook)
-        JSD_SetInterruptHook (mJSDcx, jsds_ExecutionHookProc,
+        JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc,
                               NS_STATIC_CAST(void *, aHook));
     else
-        JSD_ClearInterruptHook (mJSDcx);
+        JSD_ClearInterruptHook (mCx);
     
     return NS_OK;
 }
@@ -972,10 +1163,10 @@ jsdService::SetScriptHook (jsdIScriptHook *aHook)
 {    
     mScriptHook = aHook;
     if (aHook)
-        JSD_SetScriptHook (mJSDcx, jsds_ScriptHookProc,
+        JSD_SetScriptHook (mCx, jsds_ScriptHookProc,
                            NS_STATIC_CAST(void *, aHook));
     else
-        JSD_SetScriptHook (mJSDcx, NULL, NULL);
+        JSD_SetScriptHook (mCx, NULL, NULL);
     
     return NS_OK;
 }
