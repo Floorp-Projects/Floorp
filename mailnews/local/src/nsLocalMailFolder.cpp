@@ -107,6 +107,8 @@
 #include "nsILineInputStream.h"
 #include "nsIFileStreams.h"
 #include "nsAutoPtr.h"
+#include "nsIRssIncomingServer.h"
+
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -1344,7 +1346,7 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
   nsresult openErr=NS_ERROR_UNEXPECTED;
-  if(!db || !folderInfo || !mPath)
+  if(!db || !folderInfo || !mPath || mIsServer)
     return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 
   nsresult rv;
@@ -1356,7 +1358,27 @@ nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgD
   {
     nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
     if (msgDBService)
-      openErr = msgDBService->OpenFolderDB(this, PR_FALSE, PR_FALSE, getter_AddRefs(mDatabase));
+    {
+      PRBool folderEmpty = PR_FALSE;
+      nsCOMPtr <nsIFileSpec> fileSpec;
+      rv = GetPath(getter_AddRefs(fileSpec));
+      // check for case of trying to open db for 0 byte folder (i.e., new folder), 
+      // and in that case, tell msg db to create a new db and set it valid after opening it.
+      if (fileSpec)
+      {
+        PRUint32 mailboxSize;
+        if (NS_SUCCEEDED(fileSpec->GetFileSize(&mailboxSize)))
+          folderEmpty = !mailboxSize;
+      }
+
+      openErr = msgDBService->OpenFolderDB(this, folderEmpty, PR_FALSE, getter_AddRefs(mDatabase));
+      if (folderEmpty && openErr == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+      {
+        if (mDatabase)
+          mDatabase->SetSummaryValid(PR_TRUE);
+        openErr = NS_OK;
+      }
+    }
   }
 
   *db = mDatabase;
@@ -1933,7 +1955,9 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   rv = IsChildOfTrash(&isChildOfTrash);
   if (isChildOfTrash)  
   {
-    if (isMoveFolder) //do it just for the parent folder (isMoveFolder is true for parent only) if we are deleting/moving a folder tree
+    // do it just for the parent folder (isMoveFolder is true for parent only) if we are deleting/moving a folder tree
+    // don't confirm for rss folders.
+    if (isMoveFolder && strcmp(GetIncomingServerType(), "rss")) 
     {
       PRBool okToDelete = PR_FALSE;
       ConfirmFolderDeletion(msgWindow, &okToDelete);
@@ -2142,8 +2166,6 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
   }
   return rv;
 }
-
-#include "nsIRssIncomingServer.h"
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
@@ -3136,6 +3158,17 @@ nsMsgLocalMailFolder::GetIncomingServerType()
   if (NS_SUCCEEDED(rv) && server) 
   {
     mType = "pop3";
+    return mType;
+  }
+
+  // next try "rss"
+  rv = accountManager->FindServer(userPass.get(),
+                                  hostName.get(),
+                                  "rss",
+                                  getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server) 
+  {
+    mType = "rss";
     return mType;
   }
 
