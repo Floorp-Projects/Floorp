@@ -77,7 +77,6 @@
 #include "nsILookAndFeel.h"
 #include "nsColor.h"
 #include "nsWidgetSupport.h"
-#include "nsVector.h"
 
 
 // XXX For font setting below

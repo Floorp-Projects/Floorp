@@ -37,7 +37,6 @@ REQUIRES	= \
 
 CSRCS = \
 		pldhash.c \
-		plvector.c \
 		$(NULL)
 
 CPPSRCS		= \
@@ -106,10 +105,8 @@ EXPORTS		= \
 		nsTime.h \
 		nsUnitConversion.h \
 		nsVariant.h \
-		nsVector.h \
 		nsVoidArray.h \
 		pldhash.h \
-		plvector.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
 		nsArray.h \
