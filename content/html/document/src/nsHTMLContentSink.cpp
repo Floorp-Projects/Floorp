@@ -585,7 +585,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLSelect(aResult, aAtom, aForm);/* XXX old style */
     break;
   case eHTMLTag_spacer:
-    rv = NS_NewHTMLSpacer(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLSpacerElement(aResult, aAtom);
     break;
   case eHTMLTag_style:
     rv = NS_NewHTMLStyleElement(aResult, aAtom);
