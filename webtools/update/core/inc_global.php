@@ -221,4 +221,36 @@ function installtrigger($functionname) {
   }
 }
 
+/**
+   mozupd_buildDownloadlURL function
+   builds the URL for extensions/themes download
+   in the form /core/install.php/filename.$ext?passthrough=yes&uri=$uri
+   performing entities escaping as per W3C specification 
+   
+   @param string $uri the 'real' URI of the file
+   @param string $name file name
+   @param string $version file version
+   @param string $ext suggested file extension, including leading '.'
+   @param boolean $force should we force passed extension?
+   
+   @author: Giorgio Maone <g.maone at informaction dot com>
+   @version: 0.1
+*/
+function mozupd_buildDownloadURL($uri, $name, $version, 
+                                    $ext='.xpi', $force=FALSE) {
+                                      
+  if(preg_match('/.*\/(.*?)(\.[a-z]+)(\?|$)/i',$uri,$uri_parts) // uri parsing
+     && strcasecmp($autoext=$uri_parts[2],$ext)==0 // extension exact matching
+      || (!$force // autodetection for a set of reasonable download extensions
+          && preg_match('/^\.(jar|xpi|zip|exe|gz[\w]+|bz[\w+]|rpm)$/i',$autoext)
+       )
+  ) {
+    $filename=$uri_parts[1].$uri_parts[2];
+  } else { // fall back if $uri has not a recognized extension
+    $filename=preg_replace('/\W/','_',"$name $version").$ext;
+  }
+ 
+  return htmlspecialchars( // if we don't escape '&' and friends validator cries
+    "/core/install.php/$filename?passthrough=yes&uri=$uri");
+}
 ?>

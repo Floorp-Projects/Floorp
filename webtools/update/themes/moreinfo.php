@@ -349,7 +349,8 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<div class="key-point install-box"><div class="install"><?php 
 
             if ($appname=="Thunderbird") { 
-                echo"<A HREF=\"/core/install.php?passthrough=yes&amp;uri=$uri\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\"  TITLE=\"Right-Click to Download $name $version\">";
+              $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
+              echo"<a href=\"$downloadURL\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\"  title=\"Right-Click to Download $name $version\">";
             } else {
                 echo"<b><a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
             }
@@ -532,7 +533,8 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             echo"<DIV style=\"height: 34px\">";
             echo"<DIV class=\"iconbar\">";
             if ($appname=="Thunderbird") {
-                echo"<A HREF=\"/core/install.php?passthrough=yes&uri=$uri\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\">";
+              $downloadURL=mozupd_buildDownloadURL($uri,$name,$version);
+              echo "<a href=\"$downloadURL\" onclick=\"return installTheme(event,'$name $version for Thunderbird');\">";
             } else {
                 echo"<a href=\"$uri\" onclick=\"return installTheme(event,'$name $version');\">";
             }
