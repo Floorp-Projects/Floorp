@@ -39,10 +39,6 @@
   <menubar>
     <menu value="&menu.file.label;">
 	  <menupopup>
-      <menuitem value="&menuitem.newWindow.label;"
-                oncommand="window.open('chrome://bookmarks/content/',
-                                     'ManageBookmarks',
-                                     'chrome,menubar,resizable');" />
       <menuitem value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
       <menuitem value="&menuitem.newFolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
       <menuitem value="&menuitem.newSeparator.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
@@ -78,7 +74,6 @@
 <html:div style="width: 100px; height: 100px;" flex="1">
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-       onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
        onkeyup="if (event.keyCode == 8)	return doDelete(false);"
        style="width:100%;height:100%"
        ondragover="return DragOverTree(event);"
@@ -103,7 +98,8 @@
      </rule>
 
      <rule>
-      <treechildren>
+      <treechildren onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
+>
        <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
