@@ -59,7 +59,7 @@ DLLFLAGS = -OUT:"$@"
 OBJDIR_TAG = _OPT
 
 # Add symbolic information for use by a profiler
-ifdef MOZ_PROF
+ifdef MOZ_PROFILE
 OPTIMIZER += -Z7
 DLLFLAGS += -DEBUG -DEBUGTYPE:CV
 LDFLAGS += -DEBUG -DEBUGTYPE:CV
