@@ -3542,32 +3542,35 @@ nsXULElement::EnsureSlots()
     if (! mPrototype)
         return NS_OK;
 
-    mSlots->mNameSpace       = mPrototype->mNameSpace;
-    mSlots->mNameSpacePrefix = mPrototype->mNameSpacePrefix;
-    mSlots->mNameSpaceID     = mPrototype->mNameSpaceID;
-    mSlots->mTag             = mPrototype->mTag;
+    nsXULPrototypeElement* proto = mPrototype;
+    mPrototype = nsnull;
+
+    mSlots->mNameSpace       = proto->mNameSpace;
+    mSlots->mNameSpacePrefix = proto->mNameSpacePrefix;
+    mSlots->mNameSpaceID     = proto->mNameSpaceID;
+    mSlots->mTag             = proto->mTag;
 
     // Copy the attributes, if necessary. Arguably, we are over-eager
     // about copying attributes. But eagerly copying the attributes
     // vastly simplifies the "lookup" and "set" logic, which otherwise
     // would need to do some pretty tricky default logic.
-    if (mPrototype->mNumAttributes == 0)
+    if (proto->mNumAttributes == 0)
         return NS_OK;
 
     nsresult rv;
     rv = nsXULAttributes::Create(NS_STATIC_CAST(nsIStyledContent*, this), &(mSlots->mAttributes));
     if (NS_FAILED(rv)) return rv;
 
-    for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
-        nsXULPrototypeAttribute* proto = &(mPrototype->mAttributes[i]);
+    for (PRInt32 i = 0; i < proto->mNumAttributes; ++i) {
+        nsXULPrototypeAttribute* protoattr = &(proto->mAttributes[i]);
 
         // Create a CBufDescriptor to avoid copying the attribute's
         // value just to set it.
         nsXULAttribute* attr;
         rv = nsXULAttribute::Create(NS_STATIC_CAST(nsIStyledContent*, this),
-                                    proto->mNameSpaceID,
-                                    proto->mName,
-                                    proto->mValue,
+                                    protoattr->mNameSpaceID,
+                                    protoattr->mName,
+                                    protoattr->mValue,
                                     &attr);
 
         if (NS_FAILED(rv)) return rv;
@@ -3576,8 +3579,8 @@ nsXULElement::EnsureSlots()
         mSlots->mAttributes->AppendElement(attr);
     }
 
-    mSlots->mAttributes->SetClassList(mPrototype->mClassList);
-    mSlots->mAttributes->SetInlineStyleRule(mPrototype->mInlineStyleRule);
+    mSlots->mAttributes->SetClassList(proto->mClassList);
+    mSlots->mAttributes->SetInlineStyleRule(proto->mInlineStyleRule);
 
     return NS_OK;
 }
