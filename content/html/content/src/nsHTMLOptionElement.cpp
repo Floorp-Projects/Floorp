@@ -103,7 +103,6 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
-  nsIForm* mForm;
 
   // Get the primary frame associated with this content
   nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);
@@ -130,14 +129,10 @@ nsHTMLOptionElement::nsHTMLOptionElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
-  mForm = nsnull;
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
 {
-  if (mForm) {
-    NS_RELEASE(mForm);
-  }
 }
 
 // ISupports
@@ -188,16 +183,19 @@ nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  nsresult result = NS_OK;
-  *aForm = nsnull;
-  if (nsnull != mForm) {
-    nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
-    if (NS_OK == result) {
-      *aForm = formElem;
+  nsIDOMHTMLSelectElement* selectElement = nsnull;
+  nsresult res = GetSelect(selectElement);
+  if (NS_OK == res) {
+    nsIFormControl* selectControl = nsnull;
+    res = selectElement->QueryInterface(kIFormControlIID, (void**)&selectControl);
+    NS_RELEASE(selectElement);
+
+    if (NS_OK == res) {
+      res = selectControl->GetForm(aForm);
+      NS_RELEASE(selectControl);
     }
   }
-  return result;
+  return res;
 }
 
 NS_IMETHODIMP 
@@ -216,7 +214,6 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
       else
         *aValue = PR_FALSE;
     }
-    NS_RELEASE(formControlFrame);
   }
   return rv;      
 }
