@@ -19,6 +19,9 @@
 #define __nsMsgQuote_h__
 
 #include "nsIMsgQuote.h" 
+#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
+#include "nsIMsgMessageService.h"
 
 #define NS_MSGQUOTE_CID \
   {0x1C7ABF0C, 0x21E5, 0x11d3, \
@@ -36,10 +39,13 @@ public:
   NS_IMETHOD QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream);
 
   // 
-  // Private data...
+  // Implementation data...
   //
-private:
-
+  nsFileSpec      *mTmpFileSpec;
+  nsIFileSpec     *mTmpIFileSpec;
+  nsIOutputStream *mOutStream;
+  char            *mURI;
+  nsIMsgMessageService    *mMessageService;
 };
 
 // Will be used by factory to generate a nsMsgQuote class...

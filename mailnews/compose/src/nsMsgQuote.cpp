@@ -32,6 +32,10 @@
 #include "prprf.h"
 #include "nsMsgQuote.h" 
 #include "nsINetService.h"
+#include "nsMsgCompUtils.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
+#include "nsMsgDeliveryListener.h"
 
 //
 // Implementation...
@@ -39,10 +43,23 @@
 nsMsgQuote::nsMsgQuote()
 {
 	NS_INIT_REFCNT();
+
+  mTmpFileSpec = nsnull;
+  mTmpIFileSpec = nsnull;
+  mOutStream = nsnull;
+  mURI = nsnull;
+  mMessageService = nsnull;
 }
 
 nsMsgQuote::~nsMsgQuote()
 {
+  if (mMessageService)
+  {
+    ReleaseMessageServiceFromURI(mURI, mMessageService);
+    mMessageService = nsnull;
+  }
+
+  PR_FREEIF(mURI);
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
@@ -158,19 +175,6 @@ NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsIInputStream::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
 
-// Utility to make back slashes forward slashes...
-void
-FixURL(char *url)
-{
-  char *ptr = url;
-  while (*ptr != '\0')
-  {
-    if (*ptr == '\\')
-      *ptr = '/';
-    ++ptr;
-  }
-}
-
 // Utility to create a nsIURL object...
 nsresult 
 NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
@@ -190,20 +194,26 @@ NewURL(nsIURL** aInstancePtrResult, const nsString& aSpec)
 }
 
 nsresult
-nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream)
+SaveQuoteMessageCompleteCallback(nsIURL *aURL, nsresult aExitCode, void *tagData)
 {
-  char *filename = "n:\\mhtml\\enzo.eml";
+  nsresult        rv = NS_OK;
 
-  nsFilePath      inFilePath(filename, PR_TRUE); // relative path.
-  nsFileSpec      mySpec(inFilePath);
-  nsresult        rv;
-  char            newURL[1024] = ""; // URL for filename
-  nsIURL          *aURL = nsnull;
-
-  if (!mySpec.Exists())
+  if (!tagData)
   {
-    printf("Unable to open input file %s\n", filename);
     return NS_ERROR_FAILURE;
+  }
+
+  nsMsgQuote *ptr = (nsMsgQuote *) tagData;
+  if (ptr->mMessageService)
+  {
+    ReleaseMessageServiceFromURI(ptr->mURI, ptr->mMessageService);
+    ptr->mMessageService = nsnull;
+  }
+
+  if (NS_FAILED(aExitCode))
+  {
+    NS_RELEASE(ptr);
+    return aExitCode;
   }
 
   // Create a mime parser (nsIStreamConverter)!
@@ -213,36 +223,32 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream)
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {
+    NS_RELEASE(ptr);
     printf("Failed to create MIME stream converter...\n");
     return rv;
   }
   
   // This is the producer stream that will deliver data from the disk file...
+  // ...someday, we'll just get streams from Necko.
   nsCOMPtr<FileInputStreamImpl> in = do_QueryInterface(new FileInputStreamImpl());
-  if (!in )
+  if (!in)
   {
+    NS_RELEASE(ptr);
     printf("Failed to create nsIInputStream\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(in->OpenDiskFile(mySpec)))
+  if (NS_FAILED(in->OpenDiskFile(*(ptr->mTmpFileSpec))))
   {
-    printf("Unable to open input file %s\n", filename);
-    return NS_ERROR_FAILURE;
-  }
-  
-  // Create an nsIURL object needed for stream IO...
-  PR_snprintf(newURL, sizeof(newURL), "file://%s", filename);
-  FixURL(newURL);
-  if (NS_FAILED(NewURL(&aURL, nsString(newURL))))
-  {
+    NS_RELEASE(ptr);
     printf("Unable to open input file\n");
     return NS_ERROR_FAILURE;
   }
-
+  
   // Set us as the output stream for HTML data from libmime...
-  if (NS_FAILED(mimeParser->SetOutputStream(outStream, newURL)))
+  if (NS_FAILED(mimeParser->SetOutputStream(ptr->mOutStream, ptr->mURI)))
   {
+    NS_RELEASE(ptr);
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
     return NS_ERROR_FAILURE;
   }
@@ -259,6 +265,55 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream)
   }
 
   mimeParser->OnStopBinding(aURL, NS_OK, nsnull);
-  NS_RELEASE(aURL);
+  in->Close();
+  ptr->mTmpFileSpec->Delete(PR_FALSE);
+  NS_RELEASE(ptr);
+  return NS_OK;
+}
+
+nsresult
+nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream)
+{
+nsresult  rv;
+
+  if (!msgURI)
+    return NS_ERROR_FAILURE;
+
+  mOutStream = outStream;
+  mTmpFileSpec = nsMsgCreateTempFileSpec("nsquot.tmp"); 
+	if (!mTmpFileSpec)
+    return NS_ERROR_FAILURE;
+
+  NS_NewFileSpecWithSpec(*mTmpFileSpec, &mTmpIFileSpec);
+	if (!mTmpIFileSpec)
+    return NS_ERROR_FAILURE;
+
+  nsString                convertString(msgURI);
+  mURI = convertString.ToNewCString();
+
+  if (!mURI)
+    return NS_ERROR_FAILURE;
+
+  rv = GetMessageServiceFromURI(mURI, &mMessageService);
+  if (NS_FAILED(rv) && !mMessageService)
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(this);
+  nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveQuoteMessageCompleteCallback, 
+                                                                  nsFileSaveDelivery, this);
+  if (!sendListener)
+  {
+    ReleaseMessageServiceFromURI(mURI, mMessageService);
+    mMessageService = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = mMessageService->SaveMessageToDisk(mURI, mTmpIFileSpec, PR_FALSE, sendListener, nsnull);
+
+	if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;    
+
   return NS_OK;
 }
