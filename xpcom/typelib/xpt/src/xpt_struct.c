@@ -34,7 +34,7 @@
 uint32
 XPT_SizeOfHeader(XPTHeader *header)
 {
-    XPTAnnotation *ann;
+    XPTAnnotation *ann, *last;
     uint32 size = 16 /* magic */ +
         1 /* major */ + 1 /* minor */ +
         2 /* num_interfaces */ + 4 /* file_length */ +
@@ -46,7 +46,9 @@ XPT_SizeOfHeader(XPTHeader *header)
         size += 1; /* Annotation prefix */
         if (XPT_ANN_IS_PRIVATE(ann->flags))
             size += 2 + ann->creator->length + 2 + ann->private_data->length;
-    } while (!XPT_ANN_IS_LAST(ann->flags));
+	last = ann;
+	ann = ann->next;
+    } while (!XPT_ANN_IS_LAST(last->flags));
     
     fprintf(stderr, " (%d with annotations)\n", size);
     return size;

@@ -38,6 +38,11 @@
 #define TRY(msg, cond)		TRY_(msg, cond, 0)
 #define TRY_Q(msg, cond)	TRY_(msg, cond, 1);
 
+#define INDENT        "   "
+#define DOUBLE_INDENT "      "
+#define TRIPLE_INDENT "         "
+#define QUAD_INDENT   "            "
+
 struct nsID iid = {
     0x00112233,
     0x4455,
@@ -57,7 +62,7 @@ main(int argc, char **argv)
 
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
-    char *data;
+    char *data, *head;
     FILE *out;
     uint32 len, header_sz;
 
@@ -137,13 +142,102 @@ main(int argc, char **argv)
         return 1;
     }
     
-    XPT_GetXDRData(state, XPT_HEADER, &data, &len);
-    fwrite(data, len, 1, out);
+    XPT_GetXDRData(state, XPT_HEADER, &head, &len);
+    fwrite(head, len, 1, out);
 
     XPT_GetXDRData(state, XPT_DATA, &data, &len);
     fwrite(data, len, 1, out);
     fclose(out);
     XPT_DestroyXDRState(state);
+
+    fprintf(stderr, "\n'%s' Header:\n", argv[1]);
+    XPT_DumpHeader(header);
+
     /* XXX DestroyHeader */
     return 0;
 }
+
+PRBool
+XPT_DumpHeader(XPTHeader *header) 
+{
+    fprintf(stderr, "%sMagic beans:      %s\n", INDENT, header->magic);
+    fprintf(stderr, "%sMajor version:    %d\n", INDENT, header->major_version);
+    fprintf(stderr, "%sMinor version:    %d\n", INDENT, header->minor_version);
+    fprintf(stderr, "%s# of interfaces:  %d\n", INDENT, 
+            header->num_interfaces);
+    fprintf(stderr, "%sFile length:      %d\n", INDENT, header->file_length);
+    fprintf(stderr, "%sData pool offset: %d\n", INDENT, header->data_pool);
+
+    if (!XPT_DumpAnnotations(header->annotations))
+        return PR_FALSE;
+    
+    if (!XPT_DumpIDEs(header->interface_directory, header->num_interfaces))
+        return PR_FALSE;
+
+    return PR_TRUE;
+}    
+
+PRBool
+XPT_DumpAnnotations(XPTAnnotation *ann) 
+{
+    int i = 0, j = 0;
+    XPTAnnotation *last;
+
+    fprintf(stderr, "\n%sAnnotations:\n", INDENT);
+
+    do {
+        i++;
+        fprintf(stderr, "%sAnnotation #%d:\n", DOUBLE_INDENT, i);
+        if (XPT_ANN_IS_PRIVATE(ann->flags)) {
+            fprintf(stderr, "%sAnnotation #%d is private.\n", 
+                    TRIPLE_INDENT, i);
+            fprintf(stderr, "%sCreator:      ", QUAD_INDENT);
+            for (j=0; j<ann->creator->length; j++) {
+                fprintf(stderr, "%c", ann->creator->bytes[j]);
+            }
+            fprintf(stderr, "\n");
+            fprintf(stderr, "%sPrivate Data: ", QUAD_INDENT);            
+            for (j=0; j<ann->private_data->length; j++) {
+                fprintf(stderr, "%c", ann->private_data->bytes[j]);
+            }
+            fprintf(stderr, "\n");
+        } else {
+            fprintf(stderr, "%sAnnotation #%d is empty.\n", 
+                    TRIPLE_INDENT, i);
+        }
+        last = ann;
+        ann = ann->next;
+    } while (!XPT_ANN_IS_LAST(last->flags));
+        
+    fprintf(stderr, "%sAnnotation #%d is the last annotation.\n", 
+            TRIPLE_INDENT, i);
+    
+    return PR_TRUE;
+}    
+
+PRBool
+XPT_DumpIDEs(XPTInterfaceDirectoryEntry *ide, int num_interfaces)
+{
+    int i;
+    
+    fprintf(stderr, "\n%sInterface Directory:\n", INDENT);
+    for (i=0; i<num_interfaces; i++) {
+        fprintf(stderr, "%sInterface #%d:\n", DOUBLE_INDENT, i+1);
+        fprintf(stderr, "%sIID:                             "
+                "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n",
+                TRIPLE_INDENT,
+                ide->iid.m0, (PRUint32) ide->iid.m1,(PRUint32) ide->iid.m2,
+                (PRUint32) ide->iid.m3[0], (PRUint32) ide->iid.m3[1],
+                (PRUint32) ide->iid.m3[2], (PRUint32) ide->iid.m3[3],
+                (PRUint32) ide->iid.m3[4], (PRUint32) ide->iid.m3[5],
+                (PRUint32) ide->iid.m3[6], (PRUint32) ide->iid.m3[7]);
+
+        fprintf(stderr, "%sName:                            %s\n", 
+                TRIPLE_INDENT, ide->name);
+        fprintf(stderr, "%sNamespace:                       %s\n", 
+                TRIPLE_INDENT, ide->namespace);
+        fprintf(stderr, "%sAddress of interface descriptor: %d\n", 
+                TRIPLE_INDENT, ide->interface_descriptor);
+    }
+    return PR_TRUE;
+}    
