@@ -62,7 +62,7 @@ struct Symbol {
   TreeNode* root;
 
   void Init(const char* aName, u_long aAddress) {
-    name = aName ? strdup(aName) : "";
+    name = aName ? strdup(aName) : (char *)"";
     address = aAddress;
     root = NULL;
   }
