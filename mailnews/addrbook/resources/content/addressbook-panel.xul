@@ -67,6 +67,7 @@
     
   <popup id="composeMail">
     <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
+    <menuitem label="&copyAddress.label;" accesskey="&copyAddress.accesskey;" oncommand="AbCopyAddress();"/>
     <menuitem label="&deleteAddrBookCard.label;" accesskey="&deleteAddrBookCard.accesskey;" oncommand="AbDelete();"/>
     <menuseparator/>
     <menuitem label="&newAddrBookCard.label;" accesskey="&newAddrBookCard.accesskey;" oncommand="AbPanelNewCard();"/>

@@ -427,6 +427,25 @@ function AbNewMessage()
   }
 }
 
+function AbCopyAddress()
+{
+  var cards = GetSelectedAbCards();
+  if (!cards)
+    return;
+
+  var count = cards.length;
+  if (!count)
+    return;
+
+  var addresses = cards[0].primaryEmail;
+  for (var i = 1; i < count; i++)
+    addresses += "," + cards[i].primaryEmail;
+
+  Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+            .getService(Components.interfaces.nsIClipboardHelper)
+            .copyString(addresses);
+}
+
 function GetOneOrMoreCardsSelected()
 {
   return (gAbView && (gAbView.selection.getRangeCount() > 0));

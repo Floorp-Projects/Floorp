@@ -70,6 +70,8 @@
 <!-- context menu -->
 <!ENTITY composeEmail.label                    "Compose Email To">
 <!ENTITY composeEmail.accesskey                "C">
+<!ENTITY copyAddress.label                     "Copy Email Address">
+<!ENTITY copyAddress.accesskey                 "A">
 <!ENTITY deleteAddrBookCard.label              "Delete">
 <!ENTITY deleteAddrBookCard.accesskey          "D">
 <!ENTITY newAddrBookCard.label                 "New Card...">
