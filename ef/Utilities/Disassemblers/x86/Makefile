@@ -24,7 +24,6 @@ DEPTH = ../../..
 LIBRARY_NAME = DisassembleX86
 
 CSRCS = 	XDisAsm.c				\
-			XDisAsmTable.c				\
 			$(NULL)	
 
 LOCAL_MD_EXPORTS_x86 = 	XDisAsm.h				\
