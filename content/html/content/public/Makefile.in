@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 EXPORTS		= \
 		nsIFormControl.h \
 		nsIForm.h \
+		nsIHTMLContent.h \
 		nsILink.h \
 		nsIOptionElement.h \
 		nsIRadioControlElement.h \

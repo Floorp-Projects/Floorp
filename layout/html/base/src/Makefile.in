@@ -112,7 +112,6 @@ CPPSRCS		+= \
 endif
 
 EXPORTS		= \
-		nsIHTMLContent.h \
 		nsILineIterator.h \
 		nsHTMLParts.h \
 		$(NULL)
