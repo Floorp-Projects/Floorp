@@ -203,6 +203,14 @@ void InitMouseEvent(GdkEventButton *aGEB,
 }
 
 //==============================================================
+void UninitMouseEvent(GdkEventButton *aGEB,
+                        gpointer     p,
+                        nsMouseEvent &anEvent,
+                        PRUint32     aEventType)
+{
+}
+
+//==============================================================
 void InitDrawEvent(GdkRectangle *area,
                             gpointer   p,
                             nsPaintEvent &anEvent,
@@ -218,6 +226,19 @@ void InitDrawEvent(GdkRectangle *area,
     nsRect *rect = new nsRect(area->x, area->y, area->width, area->height);
     anEvent.rect = rect;
   }
+}
+//==============================================================
+void UninitDrawEvent(GdkRectangle *area,
+                              gpointer  p,
+                              nsPaintEvent &anEvent,
+                              PRUint32   aEventType)
+{
+  if (area != NULL) {
+    delete anEvent.rect;
+  }
+  // While I'd think you should NS_RELEASE(anEvent.widget) here,
+  // if you do, it is a NULL pointer.  Not sure where it is getting
+  // released.
 }
 
 //==============================================================
@@ -237,6 +258,17 @@ void InitExposeEvent(GdkEventExpose *aGEE,
                               aGEE->area.width, aGEE->area.height);
     anEvent.rect = rect;
     anEvent.time = gdk_event_get_time((GdkEvent*)aGEE);
+  }
+}
+
+//=============================================================
+void UninitExposeEvent(GdkEventExpose *aGEE,
+                              gpointer   p,
+                              nsPaintEvent &anEvent,
+                              PRUint32   aEventType)
+{
+  if (aGEE != NULL) {
+    delete anEvent.rect;
   }
 }
 
@@ -260,6 +292,14 @@ void InitMotionEvent(GdkEventMotion *aGEM,
 }
 
 //==============================================================
+void UninitMotionEvent(GdkEventMotion *aGEM,
+                              gpointer   p,
+                              nsMouseEvent &anEvent,
+                              PRUint32     aEventType)
+{
+}
+
+//==============================================================
 void InitCrossingEvent(GdkEventCrossing *aGEC,
                             gpointer   p,
                             nsMouseEvent &anEvent,
@@ -276,6 +316,14 @@ void InitCrossingEvent(GdkEventCrossing *aGEC,
     anEvent.point.y = nscoord(aGEC->y);
     anEvent.time = aGEC->time;
   }
+}
+
+//==============================================================
+void UninitCrossingEvent(GdkEventCrossing *aGEC,
+                              gpointer   p,
+                              nsMouseEvent &anEvent,
+                              PRUint32     aEventType)
+{
 }
 
 //==============================================================
@@ -302,6 +350,14 @@ void InitKeyEvent(GdkEventKey *aGEK,
   }
 }
 
+//=============================================================
+void UninitKeyEvent(GdkEventKey *aGEK,
+                              gpointer   p,
+                              nsKeyEvent &anEvent,
+                              PRUint32   aEventType)
+{
+}
+
 //==============================================================
 void InitFocusEvent(GdkEventFocus *aGEF,
                             gpointer   p,
@@ -317,6 +373,14 @@ void InitFocusEvent(GdkEventFocus *aGEF,
   anEvent.time = 0;
   anEvent.point.x = 0;
   anEvent.point.y = 0;
+}
+
+//==============================================================
+void UninitFocusEvent(GdkEventFocus *aGEF,
+                              gpointer   p,
+                              nsGUIEvent &anEvent,
+                              PRUint32   aEventType)
+{
 }
 
 /*==============================================================
@@ -416,6 +480,8 @@ gint handle_draw_event(GtkWidget *w, GdkRectangle *area, gpointer p)
 
   win->OnPaint(pevent);
 
+  UninitDrawEvent(area, p, pevent, NS_PAINT);
+
   return PR_TRUE;
 }
 
@@ -430,6 +496,8 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
   nsWindow *win = (nsWindow *)p;
 
   win->OnPaint(pevent);
+
+  UninitExposeEvent(event, p, pevent, NS_PAINT);
 
   return PR_TRUE;
 }
@@ -492,6 +560,8 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
+  UninitMouseEvent(event, p, mevent, b);
+
   return PR_TRUE;
 }
 
@@ -521,6 +591,8 @@ gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
+  UninitMouseEvent(event, p, mevent, b);
+
   return PR_TRUE;
 }
 
@@ -533,6 +605,8 @@ gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
 
+  UninitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
+
   return PR_TRUE;
 }
 
@@ -544,6 +618,8 @@ gint handle_enter_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
+
+  UninitCrossingEvent(event, p, mevent, NS_MOUSE_ENTER);
 
   return PR_TRUE;
 }
@@ -569,6 +645,8 @@ gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
   nsWindow *win = (nsWindow *)p;
   win->DispatchFocus(gevent);
 
+  UninitFocusEvent(event, p, gevent, NS_GOTFOCUS);
+
   return PR_TRUE;
 }
 
@@ -580,6 +658,8 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 
   nsWindow *win = (nsWindow *)p;
   win->DispatchFocus(gevent);
+
+  UninitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
 
   return PR_TRUE;
 }
