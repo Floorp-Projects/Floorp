@@ -39,39 +39,30 @@
         value="&sidebar.customize.label;" 
         oncommand="SidebarCustomize();"/>
     </splitter>
-    <box id="sidebar-panels-box" align="vertical" flex="1*" persist="height collapsed">
-      <box id="sidebar-panels" align="vertical"
-        datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf"
-        ref="urn:sidebar:current-panel-list" 
-        persist='open-panel-src'>
-        <template>
-          <rule>
-            <box uri="rdf:*" class="texttab" align="left" 
-              value="rdf:http://home.netscape.com/NC-rdf#title"
-              onclick="SidebarSelectPanel(this)"
-              hidden="true"
-              exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
-              iframe-src="rdf:http://home.netscape.com/NC-rdf#content" />
-          </rule>
-        </template>
-      </box>
-      <html:iframe id="sidebar-content" type="xxx-content" src="about:blank" 
-        name="sidebar-content" class="panel-frame" flex='1*'/>
-      <box id="sidebar-panels-bottom" align="vertical"
-        datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf">
-        <template>
-          <rule>
-            <box uri="rdf:*" class="texttab" align="left" 
-              value="rdf:http://home.netscape.com/NC-rdf#title"
-              onclick="SidebarSelectPanel(this)"
-              hidden="true"
-              exclude="rdf:http://home.netscape.com/NC-rdf#content" 
-              iframe-src="rdf:http://home.netscape.com/NC-rdf#content" />
-          </rule>
-        </template>
-      </box>
+    <box id="sidebar-panels" align="vertical"
+      datasources="rdf:null"
+      ref="urn:sidebar:current-panel-list" 
+      persist='open-panel-src height collapsed' flex="1*">
+      <template>
+        <rule>
+          <box uri="rdf:*" class="texttab" align="left" 
+            value="rdf:http://home.netscape.com/NC-rdf#title"
+            onclick="SidebarSelectPanel(this)"
+            exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
+            iframe-src="rdf:http://home.netscape.com/NC-rdf#content"
+            hidden="true"/>
+          <box uri="rdf:*" flex='1*' hidden="true">
+            <html:iframe class="panel-frame" flex='1*' hidden="true"
+              src="rdf:http://home.netscape.com/NC-rdf#content" />
+            <html:iframe class="panel-frame" flex='1*' hidden="true"
+              src="rdf:http://home.netscape.com/NC-rdf#content"
+              type="content" />
+          </box>
+        </rule>
+      </template>
     </box>
   </box>
+<!--            type="rdf:http://home.netscape.com/NC-rdf#sandbox" -->
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
