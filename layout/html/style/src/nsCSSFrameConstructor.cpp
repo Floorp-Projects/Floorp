@@ -10974,7 +10974,12 @@ keepLooking:
       // child frames, too.
       // We also need to search the child frame's children if the child frame
       // is a "special" frame
-      if (kidContent.get() == aParentContent || IsFrameSpecial(kidFrame)) {
+      // We also need to search if the child content is anonymous and scoped
+      // to the parent content.
+      nsCOMPtr<nsIContent> parentScope;
+      kidContent->GetBindingParent(getter_AddRefs(parentScope));
+      if (kidContent.get() == aParentContent || IsFrameSpecial(kidFrame) || 
+          (aParentContent && (aParentContent == parentScope.get()))) {
         nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, aParentContent,
                                                        aContent);
 
