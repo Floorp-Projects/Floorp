@@ -9,7 +9,7 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
+ *'
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is Netscape
@@ -115,6 +115,7 @@ nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 nsWindow *nsWindow::mLastLeaveWindow = NULL;
 
 PRBool gJustGotActivate = PR_FALSE;
+PRBool gJustGotDeactivate = PR_TRUE;
 
 static void printDepth(int depth) {
   int i;
@@ -1062,7 +1063,7 @@ nsWindow::SetFocus(void)
 #endif // USE_XIM 
 
   DispatchSetFocusEvent();
-  if (gJustGotActivate) {
+  if (/*gJustGotActivate &&*/ gJustGotDeactivate) {
     DispatchActivateEvent();
     gJustGotActivate = PR_FALSE;
   }
@@ -1121,9 +1122,12 @@ void nsWindow::DispatchLostFocusEvent(void)
 
 void nsWindow::DispatchActivateEvent(void)
 {
-#ifdef DEBUG_FOCUS
   printf("nsWindow::DispatchActivateEvent %p\n", this);
-#endif /* DEBUG_FOCUS */
+
+  if(!gJustGotDeactivate)
+    return;
+
+  gJustGotDeactivate = PR_FALSE;
 
   nsGUIEvent event;
   event.message = NS_ACTIVATE;
@@ -1142,9 +1146,9 @@ void nsWindow::DispatchActivateEvent(void)
 
 void nsWindow::DispatchDeactivateEvent(void)
 {
-#ifdef DEBUG_FOCUS
   printf("nsWindow::DispatchDeactivateEvent %p\n", this);
-#endif /* DEBUG_FOCUS */
+
+  gJustGotDeactivate = PR_TRUE;
 
   nsGUIEvent event;
   event.message = NS_DEACTIVATE;
