@@ -48,6 +48,20 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -121,25 +135,6 @@ protected:
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_ColInserted(nsIPresContext&          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus,
-                            nsTableColFrame *        aInsertedFrame,
-                            PRBool                   aReplace);
-
-  NS_IMETHOD IR_ColAppended(nsIPresContext&          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus,
-                            nsTableColFrame *        aAppendedFrame);
-
-  NS_IMETHOD IR_ColRemoved(nsIPresContext&          aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
-                           nsReflowStatus&          aStatus,
-                           nsTableColFrame *        aDeletedFrame);
-
   NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
@@ -152,6 +147,9 @@ protected:
                               nsReflowStatus&          aStatus,
                               nsIFrame *               aNextFrame);
 
+  nsresult AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIFrame*       aTableFrame);
 
 // data members
 
