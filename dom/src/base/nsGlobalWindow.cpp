@@ -433,10 +433,13 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
      bug 49615 describes a case.) */
   /* We only want to do this when we're setting a new document rather
      than going away.  See bug 61840.  */
+
   if (mDocShell && aDocument) {
     SetStatus(nsString());
     SetDefaultStatus(nsString());
   }
+
+  PRBool do_clear_scope = PR_FALSE;
 
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -449,7 +452,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
     if (doc) {
       doc->GetDocumentURL(getter_AddRefs(docURL));
-      doc = nsnull;             // Forces release now
     }
 
     if (aRemoveEventListeners && mListenerManager) {
@@ -470,13 +472,23 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         ClearAllTimeouts();
 
         if (mContext && mJSObject) {
-          ::JS_ClearScope((JSContext *)mContext->GetNativeContext(),
-                          mJSObject);
-
-          mIsScopeClear = PR_TRUE;
+          do_clear_scope = PR_TRUE;
         }
       }
     }
+  } else if (!aDocument) {
+    // If both mDocument and aDocument are null we've just left a
+    // full-page plugin page and we need to ensure that the scope is
+    // cleared so that the cached window.document property (which
+    // happens to be null in a full-page plugin window) is cleared.
+ 
+    do_clear_scope = PR_TRUE;
+  }
+
+  if (do_clear_scope) {
+    ::JS_ClearScope((JSContext *)mContext->GetNativeContext(), mJSObject);
+
+    mIsScopeClear = PR_TRUE;
   }
 
   if (mContext && aDocument) {

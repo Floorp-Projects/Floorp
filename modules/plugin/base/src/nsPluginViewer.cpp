@@ -435,6 +435,12 @@ PluginViewerImpl::Unload(void)
 NS_IMETHODIMP
 PluginViewerImpl::Close(void)
 {
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(mContainer));
+
+  if (sgo) {
+    sgo->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
+  }
+
   return NS_OK;
 }
 
