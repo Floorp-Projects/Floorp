@@ -14086,6 +14086,13 @@ EOF
 
 fi
 
+if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
+    cat >> confdefs.h <<\EOF
+#define MOZ_ACCESSIBILITY_ATK 1
+EOF
+
+fi
+
 # Used for LD_LIBRARY_PATH of run_viewer target
 LIBS_PATH=
 for lib_arg in $NSPR_LIBS $TK_LIBS; do
