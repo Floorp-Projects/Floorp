@@ -966,7 +966,6 @@ nsHTMLFrameInnerFrame::ReloadURL()
         TempMakeAbsURL(content, url, absURL);
 
         // Get the referrer from the currently executing script, if any.
-        nsresult rv;
         NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                         NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
         if (NS_FAILED(rv))
