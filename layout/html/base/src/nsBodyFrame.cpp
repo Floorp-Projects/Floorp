@@ -336,7 +336,9 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
       // since none of the frame classes know how to do this then
       // for the time being just repaint the entire frame
       damageArea.width = aDesiredSize.width;
-      damageArea.height = aDesiredSize.height;
+      // If the new height is smaller than the old height then make
+      // sure we erase whatever used to be displayed
+      damageArea.height = PR_MAX(aDesiredSize.height, mRect.height);
     }
   }
 
