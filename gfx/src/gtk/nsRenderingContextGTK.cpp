@@ -232,6 +232,9 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   nsGraphicsState *state = new nsGraphicsState;
 #endif
   // Push into this state object, add to vector
+  if (!state)
+    return NS_ERROR_FAILURE;
+
   state->mMatrix = mTMatrix;
 
   if (nsnull == mTMatrix)
@@ -240,14 +243,14 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
     mTMatrix = new nsTransform2D(mTMatrix);
 
   if (mClipRegion)
-    {
-      NS_IF_ADDREF(mClipRegion);
-      state->mClipRegion = mClipRegion;
+  {
+    NS_IF_ADDREF(mClipRegion);
+    state->mClipRegion = mClipRegion;
       
-      mClipRegion = new nsRegionGTK();
-      mClipRegion->Init();
-      mClipRegion->SetTo(state->mClipRegion);
-    }
+    mClipRegion = new nsRegionGTK();
+    mClipRegion->Init();
+    mClipRegion->SetTo(state->mClipRegion);
+  }
 
   NS_IF_ADDREF(mFontMetrics);
   state->mFontMetrics = mFontMetrics;
@@ -256,7 +259,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   state->mLineStyle = mCurrentLineStyle;
 
   mStateCache->AppendElement(state);
-
+  
   return NS_OK;
 }
 
