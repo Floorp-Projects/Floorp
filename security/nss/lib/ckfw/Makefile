@@ -30,11 +30,11 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:23:55 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.3 $ $Date: 2000/09/09 03:19:35 $ $Name:  $"
 
 include manifest.mn
-include config.mk
 include $(CORE_DEPTH)/coreconf/config.mk
+include config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 # This'll need some help from a build person.
