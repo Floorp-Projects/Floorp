@@ -230,30 +230,30 @@ sub getDefaultString {
 }
 
 
+# Get the relevant headers from the input service:
 
-# XXX The next four SO have to change...
 sub acceptType {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $app->input->acceptType;
+    return $app->input->getMetaData('acceptType');
 }
 
 sub acceptEncoding {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $app->input->acceptEncoding;
+    return $app->input->getMetaData('acceptEncoding');
 }
 
 sub acceptCharset {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $app->input->acceptCharset;
+    return $app->input->getMetaData('acceptCharset');
 }
 
 sub acceptLanguage {
     my $self = shift;
     my($app, $protocol) = @_;
-    return $app->input->acceptLanguage;
+    return $app->input->getMetaData('acceptLanguage');
 }
 
 
