@@ -3082,7 +3082,7 @@ nsBookmarksService::SetNewPersonalToolbarFolder(nsIRDFResource* aFolder)
 
 NS_IMETHODIMP
 nsBookmarksService::CreateBookmark(const PRUnichar* aName,
-                                   const char* aURL, 
+                                   const PRUnichar* aURL, 
                                    const PRUnichar* aShortcutURL,
                                    const PRUnichar* aDescription,
                                    const PRUnichar* aDocCharSet, 
@@ -3119,7 +3119,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
 
     // Resource: URL
     nsAutoString url;
-    url.AssignWithConversion(aURL);
+    url.Assign(aURL);
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
     rv = gRDF->GetLiteral(url.get(), getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv)) 
@@ -3181,7 +3181,7 @@ nsBookmarksService::CreateBookmark(const PRUnichar* aName,
 
 NS_IMETHODIMP
 nsBookmarksService::CreateBookmarkInContainer(const PRUnichar* aName,
-                                              const char* aURL, 
+                                              const PRUnichar* aURL, 
                                               const PRUnichar* aShortcutURL, 
                                               const PRUnichar* aDescription, 
                                               const PRUnichar* aDocCharSet, 
@@ -3275,7 +3275,7 @@ nsBookmarksService::CloneResource(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmarkImmediately(const char *aURI,
+nsBookmarksService::AddBookmarkImmediately(const PRUnichar *aURI,
                                            const PRUnichar *aTitle, 
                                            PRInt32 aBookmarkType, 
                                            const PRUnichar *aCharset)
@@ -3853,8 +3853,14 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
                 bookmarkName.Truncate(lnkExtStart);
 
             nsCOMPtr<nsIRDFResource> bookmark;
-            CreateBookmarkInContainer(bookmarkName.get(), spec.get(), nsnull,
-                nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
+            // NS_GetURLSpecFromFile on Windows returns url-escaped URL in 
+            // pure ASCII. However, in the future, we may return 'hostpart'
+            // of a remote file in UTF-8. Therefore, using UTF-8 in place of
+            // ASCII is not a bad idea.
+            CreateBookmarkInContainer(bookmarkName.get(),
+                                      NS_ConvertUTF8toUTF16(spec).get(),
+                                      nsnull, nsnull, nsnull, aParentResource,
+                                      -1, getter_AddRefs(bookmark));
             if (NS_FAILED(rv)) 
                 continue;
         }
@@ -3889,7 +3895,15 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
             ResolveShortcut(path, getter_Copies(resolvedURL));
 
             nsCOMPtr<nsIRDFResource> bookmark;
-            rv = CreateBookmarkInContainer(name.get(), resolvedURL.get(), nsnull, nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
+            // As far as I can tell, IUniformResourceLocator::GetURL()
+            // returns the URL in pure ASCII. However, it could be UTF-8 (I'm
+            // almost sure that it's not in any legacy encoding) so that I'm
+            // assuming it's in UTF-8.
+            // http://msdn.microsoft.com/library/default.asp?url=/workshop/misc/shortcuts/reference/iuniformresourcelocator.asp
+            rv = CreateBookmarkInContainer(name.get(),
+                 NS_ConvertUTF8toUTF16(resolvedURL).get(),
+                 nsnull, nsnull, nsnull, aParentResource, -1,
+                 getter_AddRefs(bookmark));
             if (NS_FAILED(rv)) 
                 continue;
         }

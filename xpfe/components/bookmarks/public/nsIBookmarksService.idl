@@ -60,7 +60,7 @@ interface nsIBookmarksService : nsISupports
     boolean isBookmarked(in string aURL);
     boolean isBookmarkedResource(in nsIRDFResource aSource);
 
-    void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    void addBookmarkImmediately(in wstring aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
     nsIRDFResource createFolder(in wstring aName);
     nsIRDFResource createFolderInContainer(in wstring aName, in nsIRDFResource aParentFolder, 
@@ -77,12 +77,12 @@ interface nsIBookmarksService : nsISupports
                     in boolean aRecurse);
 
     nsIRDFResource createBookmark(in wstring aName,
-                                  in string aURL,
+                                  in wstring aURL,
                                   in wstring aShortcutURL,
                                   in wstring aDescription,
                                   in wstring aDocCharSet);
     nsIRDFResource createBookmarkInContainer(in wstring aName,
-                                             in string aURL,
+                                             in wstring aURL,
                                              in wstring aShortcutURL,
                                              in wstring aDescription,
                                              in wstring aDocCharSet, 

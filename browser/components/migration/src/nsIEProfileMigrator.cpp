@@ -1150,8 +1150,14 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
           nsXPIDLString keywordDesc;
           rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
                                             descStrings, 2, getter_Copies(keywordDesc));
+          // XXX: Assume Windows stores URLs in ASCII (with everything escaped).
+          // It may change in the future, but we can't assume that it's UTF-8
+          // here. Unlike other places, it's likely to be in a legacy encoding.
+          // Assuming ASCII at least works for Latin-1 if URLs are stored
+          // without being escaped and Win32 supports IDN (it doesn't at the 
+          // moment.) Eventually, we have to use 'W' APIs when available.
           bms->CreateBookmarkInContainer(keywordName.get(), 
-                                         (char*)url, 
+                                         NS_ConvertASCIItoUTF16(url).get(), 
                                          keyword.get(), 
                                          keywordDesc.get(), 
                                          NS_LITERAL_STRING("").get(), 
@@ -1272,8 +1278,12 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
         bookmarkName.Truncate(lnkExtStart);
 
       nsCOMPtr<nsIRDFResource> bookmark;
+      // Here it's assumed that NS_GetURLSpecFromFile returns spec in UTF-8.
+      // It is very likely to be ASCII (with everything escaped beyond file://),
+      // but we don't lose much assuming that it's UTF-8. This is not perf.
+      // critical.
       aBookmarksService->CreateBookmarkInContainer(bookmarkName.get(), 
-                                                   spec.get(), 
+                                                   NS_ConvertUTF8toUTF16(spec).get(), 
                                                    nsnull,
                                                    nsnull, 
                                                    nsnull, 
@@ -1337,8 +1347,13 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       ResolveShortcut(path, getter_Copies(resolvedURL));
 
       nsCOMPtr<nsIRDFResource> bookmark;
+      // As far as I can tell reading the MSDN API document,
+      // IUniformResourceLocator::GetURL (used by ResolveShortcut) returns a 
+      // URL in ASCII (with non-ASCII characters escaped) and it doesn't yet
+      // support IDN (i18n) hostname. However, it may in the future so that
+      // using UTF8toUTF16 wouldn't be a bad idea.
       rv = aBookmarksService->CreateBookmarkInContainer(name.get(), 
-                                                        resolvedURL.get(), 
+                                                        NS_ConvertUTF8toUTF16(resolvedURL).get(), 
                                                         nsnull, 
                                                         nsnull, 
                                                         nsnull, 
