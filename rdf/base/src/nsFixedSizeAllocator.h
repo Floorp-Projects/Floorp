@@ -45,6 +45,10 @@ protected:
     PLArenaPool mPool;
 
     struct Bucket;
+    struct FreeEntry;
+  
+    friend struct Bucket;
+    friend struct FreeEntry;
 
     struct FreeEntry {
         Bucket*    mBucket;
