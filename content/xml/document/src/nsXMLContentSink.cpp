@@ -339,6 +339,13 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     mDocument->EndLoad();
   }
 
+  // Ref. Bug 49115
+  // Do this hack to make sure that the parser
+  // doesn't get destroyed, accidently, before 
+  // the circularity, between sink & parser, is
+  // actually borken. 
+  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
+
   // Drop our reference to the parser to get rid of a circular
   // reference.
   NS_IF_RELEASE(mParser);

@@ -23,6 +23,10 @@
 #include "nsHTTPSOAPTransport.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMEventTarget.h"
+
+#define LOADSTR NS_LITERAL_STRING("load")
+#define ERRORSTR NS_LITERAL_STRING("error")
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
@@ -106,10 +110,13 @@ nsHTTPSOAPTransport::AsyncCall(const char *url,
 
   mListener = listener;
 
-  mRequest->AddEventListener("load", 
-			     NS_STATIC_CAST(nsIDOMEventListener*, this));
-  mRequest->AddEventListener("error", 
-			     NS_STATIC_CAST(nsIDOMEventListener*, this));
+  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(mRequest, &rv));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  eventTarget->AddEventListener(LOADSTR, 
+			     NS_STATIC_CAST(nsIDOMEventListener*, this), PR_FALSE);
+  eventTarget->AddEventListener(ERRORSTR, 
+			     NS_STATIC_CAST(nsIDOMEventListener*, this), PR_FALSE);
   
   rv = mRequest->Send(messageDocument);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;

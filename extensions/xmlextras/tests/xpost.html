@@ -1,0 +1,127 @@
+<html>
+<head><title>POST test</title>
+<style type="text/css">
+.box {
+  display: box;
+  border: 1px solid black;
+  margin-bottom: 0.5em;
+}
+.boxheader {
+  font-weight: bold;
+  color: maroon;
+}
+pre {
+  margin-left: 2em;
+}
+</style>
+<script type="text/javascript">
+var p;
+try {
+  p = new XMLHttpRequest();
+} catch (e) {
+  p = new ActiveXObject("Msxml2.XMLHTTP");
+}
+
+// In Mozilla, you can only create the text string if you can bybass security, like in chrome
+var sendPlainTextData = false;
+
+var x;
+if (!sendPlainTextData) {
+  try {
+    x = document.implementation.createDocument("", "test", null);
+    x.documentElement.appendChild(document.createElement("Foo"));
+    x.documentElement.appendChild(document.createElement("Bar"));
+    x.documentElement.firstChild.appendChild(document.createTextNode("My Stuff\nYeah"));
+  } catch (e) {
+    x = new ActiveXObject("Msxml2.DOMDocument");
+    x.loadXML("<?xml version='1.0'?>\n<test><foo>My Stuff\nYeah</foo><bar/></test>");
+  }
+}
+
+function myfunc()
+{
+  //alert("myfunc readyState=" + p.readyState);
+  //if (p.readyState == 2) {
+  //  alert(p.getAllResponseHeaders());
+  //  alert(p.status);
+  //}
+  if (p.readyState != 4)
+    return;
+
+  var str;
+
+  if (!sendPlainTextData) {
+    try {
+      var s = new XMLSerializer();
+      var d = p.responseXML;
+      str = s.serializeToString(d);
+    } catch (e) {
+      str = "@@TODO@@";
+    }
+  } else {
+    str = p.responseText;
+  }
+  document.getElementById("id1").firstChild.nodeValue = p.responseText;
+  document.getElementById("id2").firstChild.nodeValue = str;
+  document.getElementById("id3").firstChild.nodeValue = p.getAllResponseHeaders();
+  document.getElementById("id4").firstChild.nodeValue = p.status;
+  document.getElementById("id5").firstChild.nodeValue = p.statusText;
+  document.getElementById("id6").firstChild.nodeValue = p.readyState;
+}
+
+// p.onload would also work in Mozilla
+p.onreadystatechange = myfunc;
+
+try {
+  // Needed for Mozilla if local file tries to access an http URL
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+} catch (e) {
+  // ignore
+}
+
+//alert("before open():" +p.readyState);// 0 = UNINITIALIZED
+p.open("POST", "http://green/cgi-bin/echo_xml.cgi");
+//alert("after open():" +p.readyState);//  1 = LOADING
+
+if (!sendPlainTextData) {
+  //alert("Going to send");
+  p.send(x);
+  //alert("Done to send");
+} else {
+  var mystr;
+  try {
+    var WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
+    mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+    mystr.data = "Heikki's data";
+  } catch (e) {
+    mystr = "Heikki's data";
+  }
+  p.send(mystr);
+}
+//alert("after send():" +p.readyState);//  1 = LOADING
+</script>
+</head>
+<body>
+<h1>POST test</h1>
+
+<div class="box"><span class="boxheader">responseText</span>
+<pre id="id1">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">responseXML serialized</span>
+<pre id="id2">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">getAllResponseHeaders()</span>
+<pre id="id3">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">status</span>
+<pre id="id4">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">statusText</span>
+<pre id="id5">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">readyState</span>
+<pre id="id6">@@No result@@</pre>
+</div>
+
+</body>
+</html>

@@ -45,12 +45,13 @@
 #include "nsIScriptContext.h"
 
 
-enum {
-  XML_HTTP_REQUEST_INITIALIZED,
-  XML_HTTP_REQUEST_OPENED,
-  XML_HTTP_REQUEST_SENT,
+enum nsXMLHttpRequestState {
+  XML_HTTP_REQUEST_UNINITIALIZED = 0,
+  XML_HTTP_REQUEST_OPENED, // aka LOADING
+  XML_HTTP_REQUEST_LOADED,
+  XML_HTTP_REQUEST_INTERACTIVE,
   XML_HTTP_REQUEST_COMPLETED,
-  XML_HTTP_REQUEST_ABORTED
+  XML_HTTP_REQUEST_SENT // This is Mozilla-internal only, LOADING in IE and external view
 };
 
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
@@ -102,6 +103,10 @@ protected:
                 PRUint32 toOffset,
                 PRUint32 count,
                 PRUint32 *writeCount);
+  // Change the state of the object with this. The broadcast member determines
+  // if the onreadystatechange listener should be called.
+  nsresult ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast = PR_TRUE);
+  nsresult RequestCompleted();
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
@@ -118,7 +123,11 @@ protected:
 
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
-  
+
+  nsCOMPtr<nsIOnReadystatechangeHandler> mOnReadystatechangeListener;
+
+  nsCOMPtr<nsIDOMEvent> mDelayedEvent;
+
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor {
   public:

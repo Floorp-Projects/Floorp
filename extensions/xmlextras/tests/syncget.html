@@ -30,6 +30,7 @@ function execute()
   document.getElementById("id3").firstChild.nodeValue = p.getAllResponseHeaders();
   document.getElementById("id4").firstChild.nodeValue = p.status;
   document.getElementById("id5").firstChild.nodeValue = p.statusText;
+  document.getElementById("id6").firstChild.nodeValue = p.readyState;
 }
 
 setTimeout(execute,0); // Enable the rest of this document to load before executing
@@ -52,6 +53,9 @@ setTimeout(execute,0); // Enable the rest of this document to load before execut
 </div>
 <div class="box"><span class="boxheader">statusText</span>
 <pre id="id5">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">readyState</span>
+<pre id="id6">@@No result@@</pre>
 </div>
 
 </body>

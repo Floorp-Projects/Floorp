@@ -45,6 +45,7 @@ function myfunc()
   document.getElementById("id3").firstChild.nodeValue = p.getAllResponseHeaders();
   document.getElementById("id4").firstChild.nodeValue = p.status;
   document.getElementById("id5").firstChild.nodeValue = p.statusText;
+  document.getElementById("id6").firstChild.nodeValue = p.readyState;
 }
 
 p.onload = myfunc;
@@ -77,6 +78,9 @@ if (!sendPlainTextData) {
 </div>
 <div class="box"><span class="boxheader">statusText</span>
 <pre id="id5">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">readyState</span>
+<pre id="id6">@@No result@@</pre>
 </div>
 
 </body>
