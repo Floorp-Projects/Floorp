@@ -64,8 +64,7 @@ XFE_BookmarkMenu::XFE_BookmarkMenu(Widget		cascade,
 	// Keep track of the submenu mapping
 	trackSubmenuMapping(_subMenu);
 
-    RDF_Resource bookmarks = RDF_GetResource(NULL,"NC:Bookmarks",PR_TRUE);
-    newPaneFromResource(bookmarks);
+    newBookmarksPane();
 }
 //////////////////////////////////////////////////////////////////////////
 void
