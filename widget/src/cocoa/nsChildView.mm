@@ -51,7 +51,7 @@
 
 #include "nsplugindefs.h"
 #include "nsMacResources.h"
-#include "nsRegionMac.h"
+#include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIEventSink.h"
 #include "nsIScrollableView.h"

@@ -50,7 +50,6 @@
 #include "nsGfxUtils.h"
 #include "DefProcFakery.h"
 #include "nsMacResources.h"
-#include "nsRegionMac.h"
 #include "nsIRollupListener.h"
 #include "nsCRT.h"
 #include "nsWidgetSupport.h"

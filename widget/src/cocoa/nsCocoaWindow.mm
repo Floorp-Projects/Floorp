@@ -48,7 +48,6 @@
 #include "nsCarbonHelpers.h"
 #include "nsGFXUtils.h"
 #include "nsMacResources.h"
-#include "nsRegionMac.h"
 #include "nsIRollupListener.h"
 #import "nsChildView.h"
 
