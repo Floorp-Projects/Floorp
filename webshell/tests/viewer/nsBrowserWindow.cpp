@@ -460,7 +460,8 @@ nsBrowserWindow::ForceRefresh()
   if (nsnull != shell) {
     nsIViewManager* vm = shell->GetViewManager();
     if (nsnull != vm) {
-      nsIView* root = vm->GetRootView();
+      nsIView* root;
+      vm->GetRootView(root);
       if (nsnull != root) {
         vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
       }
@@ -1343,7 +1344,8 @@ DumpViewsRecurse(nsBrowserWindow* aBrowser, nsIWebShell* aWebShell, FILE* out)
     if (nsnull != shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (nsnull != vm) {
-        nsIView* root = vm->GetRootView();
+        nsIView* root;
+        vm->GetRootView(root);
         if (nsnull != root) {
           root->List(out);
         }

@@ -916,7 +916,8 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
           if (nsnull != shell) {
             nsIViewManager* vm = shell->GetViewManager();
             if(vm) {
-              nsIView* rootView = vm->GetRootView();
+              nsIView* rootView;
+              vm->GetRootView(rootView);
               nsRect rect;
               rootView->GetBounds(rect);
               rect.x = 0;
@@ -1115,7 +1116,8 @@ HTMLContentSink::StartLayout()
         if (nsnull != shell) {
           nsIViewManager* vm = shell->GetViewManager();
           if (nsnull != vm) {
-            nsIView* rootView = vm->GetRootView();
+            nsIView* rootView;
+            vm->GetRootView(rootView);
             if (nsnull != rootView) {
               nsIScrollableView* sview = nsnull;
               rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
@@ -1158,7 +1160,8 @@ HTMLContentSink::ScrollToRef()
         if (nsnull != frame) {
           nsIViewManager* vm = shell->GetViewManager();
           if (nsnull != vm) {
-            nsIView* rootView = vm->GetRootView();
+            nsIView* rootView;
+            vm->GetRootView(rootView);
             if (nsnull != rootView) {
               nsIScrollableView* sview = nsnull;
               rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);

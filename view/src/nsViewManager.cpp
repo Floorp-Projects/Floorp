@@ -41,7 +41,8 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 
   //restart the timer
   
-  PRInt32 fr = vm->GetFrameRate();
+  PRUint32 fr;
+  vm->GetFrameRate(fr);
 
   vm->mFrameRate = 0;
   vm->SetFrameRate(fr);
@@ -126,7 +127,7 @@ nsrefcnt nsViewManager::Release(void)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-nsresult nsViewManager :: Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 {
   nsresult rv;
 
@@ -158,12 +159,13 @@ nsresult nsViewManager :: Init(nsIDeviceContext* aContext)
   return rv;
 }
 
-nsIView * nsViewManager :: GetRootView()
+NS_IMETHODIMP nsViewManager :: GetRootView(nsIView *&aView)
 {
-  return mRootView;
+  aView = mRootView;
+  return NS_OK;
 }
 
-void nsViewManager :: SetRootView(nsIView *aView)
+NS_IMETHODIMP nsViewManager :: SetRootView(nsIView *aView)
 {
   UpdateTransCnt(mRootView, aView);
   // Do NOT destroy the current root view. It's the caller's responsibility
@@ -175,14 +177,17 @@ void nsViewManager :: SetRootView(nsIView *aView)
 
   if (nsnull != mRootView)
     mRootWindow = mRootView->GetWidget();
+
+  return NS_OK;
 }
 
-PRUint32 nsViewManager :: GetFrameRate()
+NS_IMETHODIMP nsViewManager :: GetFrameRate(PRUint32 &aRate)
 {
-  return mFrameRate;
+  aRate = mFrameRate;
+  return NS_OK;
 }
 
-nsresult nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
+NS_IMETHODIMP nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
 {
   nsresult  rv;
 
@@ -208,7 +213,7 @@ nsresult nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
   return rv;
 }
 
-void nsViewManager :: GetWindowDimensions(nscoord *width, nscoord *height)
+NS_IMETHODIMP nsViewManager :: GetWindowDimensions(nscoord *width, nscoord *height)
 {
   if (nsnull != mRootView)
     mRootView->GetDimensions(width, height);
@@ -217,9 +222,10 @@ void nsViewManager :: GetWindowDimensions(nscoord *width, nscoord *height)
     *width = 0;
     *height = 0;
   }
+  return NS_OK;
 }
 
-void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
+NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
 {
   // Resize the root view
   if (nsnull != mRootView)
@@ -229,9 +235,10 @@ void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
   // Inform the presentation shell that we've been resized
   if (nsnull != mObserver)
     mObserver->ResizeReflow(mRootView, width, height);
+  return NS_OK;
 }
 
-void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
+NS_IMETHODIMP nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
 {
   if (nsnull != mRootView)
   {
@@ -244,28 +251,43 @@ void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
   }
   else
     *xoffset = *yoffset = 0;
+  return NS_OK;
 }
 
-void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
+NS_IMETHODIMP nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
 {
   if (nsnull != mRootView)
   {
     nsIScrollableView *scroller;
+    nsresult           retval;
 
-    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+    retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+    if (NS_SUCCEEDED(retval)) {
       scroller->SetVisibleOffset(xoffset, yoffset);
+    }
+
+    return retval;
   }
+
+  return NS_OK;
 }
 
-void nsViewManager :: ResetScrolling(void)
+NS_IMETHODIMP nsViewManager :: ResetScrolling(void)
 {
   if (nsnull != mRootView)
   {
     nsIScrollableView *scroller;
+    nsresult           retval;
 
-    if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+    retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+    if (NS_SUCCEEDED(retval)) {
       scroller->ComputeContainerSize();
+    }
+
+    return retval;
   }
+
+  return NS_OK;
 }
 
 void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRegion *region, PRUint32 aUpdateFlags)
@@ -454,7 +476,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   mPainting = PR_FALSE;
 }
 
-void nsViewManager :: Composite()
+NS_IMETHODIMP nsViewManager :: Composite()
 {
 #ifdef USE_DIRTY_RECT
 
@@ -467,9 +489,10 @@ void nsViewManager :: Composite()
     Refresh(mRootView, nsnull, mDirtyRegion, NS_VMREFRESH_DOUBLE_BUFFER);
 
 #endif
+  return NS_OK;
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
+NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
   if (aRegion == nsnull)
   {
@@ -479,16 +502,17 @@ void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aU
     trect.x = trect.y = 0;
     UpdateView(aView, trect, aUpdateFlags);
   }
+  return NS_OK;
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
+NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   nsRect  trect = aRect;
   nsIView *par = aView;
   nscoord x, y;
 
   if ((aRect.width == 0) || (aRect.height == 0))
-    return;
+    return NS_OK;
 
   if (gsDebug)
   {
@@ -553,7 +577,7 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
         varea = vrect.width * vrect.height;
 
         if (varea == 0)
-          return;
+          return NS_OK;
 
 #ifdef USE_DIRTY_RECT
         rrect = mDirtyRect;
@@ -596,11 +620,12 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
         Composite();
     }
   }
+  return NS_OK;
 }
 
-nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
+NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
 {
-  nsEventStatus result = nsEventStatus_eIgnore;
+  aStatus = nsEventStatus_eIgnore;
 
   switch(aEvent->message)
   {
@@ -646,7 +671,7 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
 
           SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
                               NSIntPixelsToTwips(height, p2t));
-          result = nsEventStatus_eConsumeNoDefault;
+          aStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
 
@@ -672,13 +697,13 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
                    NS_VMREFRESH_IMMEDIATE |
                    NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
 
-        result = nsEventStatus_eConsumeNoDefault;
+        aStatus = nsEventStatus_eConsumeNoDefault;
       }
       break;
     }
 
     case NS_DESTROY:
-      result = nsEventStatus_eConsumeNoDefault;
+      aStatus = nsEventStatus_eConsumeNoDefault;
       break;
 
     default:
@@ -708,9 +733,9 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
         aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
         
-        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
-                                           NS_VIEW_FLAG_CHECK_PARENT |
-                                           NS_VIEW_FLAG_CHECK_SIBLINGS);
+        aStatus = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
+                                            NS_VIEW_FLAG_CHECK_PARENT |
+                                            NS_VIEW_FLAG_CHECK_SIBLINGS);
 
         aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
         aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
@@ -718,33 +743,37 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
       break;
     }
   }
-  return result;
+  return NS_OK;
 }
 
-PRBool nsViewManager :: GrabMouseEvents(nsIView *aView)
+NS_IMETHODIMP nsViewManager :: GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
   mMouseGrabber = aView;
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_OK;
 }
 
-PRBool nsViewManager :: GrabKeyEvents(nsIView *aView)
+NS_IMETHODIMP nsViewManager :: GrabKeyEvents(nsIView *aView, PRBool &aResult)
 {
   mKeyGrabber = aView;
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_OK;
 }
 
-nsIView * nsViewManager :: GetMouseEventGrabber()
+NS_IMETHODIMP nsViewManager :: GetMouseEventGrabber(nsIView *&aView)
 {
-  return mMouseGrabber;
+  aView = mMouseGrabber;
+  return NS_OK;
 }
 
-nsIView * nsViewManager :: GetKeyEventGrabber()
+NS_IMETHODIMP nsViewManager :: GetKeyEventGrabber(nsIView *&aView)
 {
-  return mKeyGrabber;
+  aView = mKeyGrabber;
+  return NS_OK;
 }
 
-void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
-                                  PRBool above)
+NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
+                                           PRBool above)
 {
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
@@ -784,9 +813,10 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibl
     if (child->GetVisibility() != nsViewVisibility_kHide)
       UpdateView(child, nsnull, 0);
   }
+  return NS_OK;
 }
 
-void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zindex)
+NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zindex)
 {
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
@@ -825,9 +855,10 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zinde
     if (child->GetVisibility() != nsViewVisibility_kHide)
       UpdateView(child, nsnull, 0);
   }
+  return NS_OK;
 }
 
-void nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
+NS_IMETHODIMP nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
 {
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
@@ -838,17 +869,19 @@ void nsViewManager :: RemoveChild(nsIView *parent, nsIView *child)
     UpdateView(child, nsnull, NS_VMREFRESH_NO_SYNC);
     parent->RemoveChild(child);
   }
+  return NS_OK;
 }
 
-void nsViewManager :: MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsViewManager :: MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
 {
   nscoord x, y;
 
   aView->GetPosition(&x, &y);
   MoveViewTo(aView, aX + x, aY + y);
+  return NS_OK;
 }
 
-void nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
   nscoord oldX;
   nscoord oldY;
@@ -871,9 +904,10 @@ void nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
   	  UpdateView(parent, newArea, 0);
     }
   }
+  return NS_OK;
 }
 
-void nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
+NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
 {
   nscoord twidth, theight, left, top, right, bottom, x, y;
 
@@ -934,41 +968,49 @@ void nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
   trect.height = bottom - top;
 
   UpdateView(parent, trect, 0);
+  return NS_OK;
 }
 
-void nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
+NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
 {
+  return NS_OK;
 }
 
-void nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility visible)
+NS_IMETHODIMP nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility visible)
 {
   aView->SetVisibility(visible);
   UpdateView(aView, nsnull, 0);
+  return NS_OK;
 }
 
-void nsViewManager :: SetViewZindex(nsIView *aView, PRInt32 zindex)
+NS_IMETHODIMP nsViewManager :: SetViewZindex(nsIView *aView, PRInt32 zindex)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsViewManager :: MoveViewAbove(nsIView *aView, nsIView *other)
+NS_IMETHODIMP nsViewManager :: MoveViewAbove(nsIView *aView, nsIView *other)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsViewManager :: MoveViewBelow(nsIView *aView, nsIView *other)
+NS_IMETHODIMP nsViewManager :: MoveViewBelow(nsIView *aView, nsIView *other)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRBool nsViewManager :: IsViewShown(nsIView *aView)
+NS_IMETHODIMP nsViewManager :: IsViewShown(nsIView *aView, PRBool &aResult)
 {
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRBool nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect)
+NS_IMETHODIMP nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult)
 {
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
+NS_IMETHODIMP nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
   if (aTransparent != aView->HasTransparency())
   {
@@ -985,9 +1027,10 @@ void nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTranspa
 
     aView->SetContentTransparency(aTransparent);
   }
+  return NS_OK;
 }
 
-void nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
+NS_IMETHODIMP nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
 {
   PRBool  newopaque, oldopaque;
   float   oldopacity;
@@ -1019,6 +1062,7 @@ void nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
   }
 
   aView->SetOpacity(aOpacity);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: SetViewObserver(nsIViewObserver *aObserver)
@@ -1039,10 +1083,11 @@ NS_IMETHODIMP nsViewManager :: GetViewObserver(nsIViewObserver *&aObserver)
     return NS_ERROR_NO_INTERFACE;
 }
 
-nsIDeviceContext * nsViewManager :: GetDeviceContext()
+NS_IMETHODIMP nsViewManager :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
   NS_IF_ADDREF(mContext);
-  return mContext;
+  aContext = mContext;
+  return NS_OK;
 }
 
 nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds)
@@ -1063,7 +1108,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
   return mDrawingSurface;
 }
 
-void nsViewManager :: ClearDirtyRegion()
+NS_IMETHODIMP nsViewManager :: ClearDirtyRegion(void)
 {
 #ifdef USE_DIRTY_RECT
 
@@ -1078,35 +1123,47 @@ void nsViewManager :: ClearDirtyRegion()
     mDirtyRegion->SetTo(0, 0, 0, 0);
 
 #endif
+  return NS_OK;
 }
 
-void nsViewManager :: ShowQuality(PRBool aShow)
+NS_IMETHODIMP nsViewManager :: ShowQuality(PRBool aShow)
 {
   nsIScrollableView *scroller;
+  nsresult           retval;
 
-  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+  if (NS_SUCCEEDED(retval)) {
     scroller->ShowQuality(aShow);
-}
-
-PRBool nsViewManager :: GetShowQuality(void)
-{
-  nsIScrollableView *scroller;
-  PRBool            retval = PR_FALSE;
-
-  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
-    retval = scroller->GetShowQuality();
+  }
 
   return retval;
 }
 
-void nsViewManager :: SetQuality(nsContentQuality aQuality)
+NS_IMETHODIMP nsViewManager :: GetShowQuality(PRBool &aResult)
 {
   nsIScrollableView *scroller;
+  nsresult           retval;
 
-  if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+  if (NS_SUCCEEDED(retval)) {
+    aResult = scroller->GetShowQuality();
+  }
+
+  return retval;
+}
+
+NS_IMETHODIMP nsViewManager :: SetQuality(nsContentQuality aQuality)
+{
+  nsIScrollableView *scroller;
+  nsresult           retval;
+
+  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+  if (NS_SUCCEEDED(retval))
   {
     scroller->SetQuality(aQuality);
   }
+
+  return retval;
 }
 
 nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
@@ -1193,7 +1250,6 @@ void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
 NS_IMETHODIMP nsViewManager :: DisableRefresh(void)
 {
   mRefreshEnabled = PR_FALSE;
-
   return NS_OK;
 }
 

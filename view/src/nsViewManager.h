@@ -39,81 +39,81 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(nsIDeviceContext* aContext);
 
-  virtual nsIView *GetRootView();
-  virtual void SetRootView(nsIView *aView);
+  NS_IMETHOD  GetRootView(nsIView *&aView);
+  NS_IMETHOD  SetRootView(nsIView *aView);
 
-  virtual PRUint32 GetFrameRate();
-  virtual nsresult SetFrameRate(PRUint32 frameRate);
+  NS_IMETHOD  GetFrameRate(PRUint32 &aRate);
+  NS_IMETHOD  SetFrameRate(PRUint32 frameRate);
 
-  virtual void GetWindowDimensions(nscoord *width, nscoord *height);
-  virtual void SetWindowDimensions(nscoord width, nscoord height);
+  NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
+  NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
 
-  virtual void GetWindowOffsets(nscoord *xoffset, nscoord *yoffset);
-  virtual void SetWindowOffsets(nscoord xoffset, nscoord yoffset);
+  NS_IMETHOD  GetWindowOffsets(nscoord *xoffset, nscoord *yoffset);
+  NS_IMETHOD  SetWindowOffsets(nscoord xoffset, nscoord yoffset);
 
-  virtual void ResetScrolling(void);
+  NS_IMETHOD  ResetScrolling(void);
 
-  virtual void Composite();
+  NS_IMETHOD  Composite(void);
 
-  virtual void UpdateView(nsIView *aView, nsIRegion *aRegion,
-                          PRUint32 aUpdateFlags);
-  virtual void UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateView(nsIView *aView, nsIRegion *aRegion,
+                         PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
 
-  virtual nsEventStatus DispatchEvent(nsGUIEvent *aEvent);
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
-  virtual PRBool GrabMouseEvents(nsIView *aView);
-  virtual PRBool GrabKeyEvents(nsIView *aView);
+  NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
+  NS_IMETHOD  GrabKeyEvents(nsIView *aView, PRBool &aresult);
 
-  virtual nsIView* GetMouseEventGrabber();
-  virtual nsIView* GetKeyEventGrabber();
+  NS_IMETHOD  GetMouseEventGrabber(nsIView *&aView);
+  NS_IMETHOD  GetKeyEventGrabber(nsIView *&aView);
 
-  virtual void InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
-                           PRBool above);
+  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child, nsIView *sibling,
+                          PRBool above);
 
-  virtual void InsertChild(nsIView *parent, nsIView *child,
-                           PRInt32 zindex);
+  NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
+                          PRInt32 zindex);
 
-  virtual void RemoveChild(nsIView *parent, nsIView *child);
+  NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child);
 
-  virtual void MoveViewBy(nsIView *aView, nscoord x, nscoord y);
+  NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord x, nscoord y);
 
-  virtual void MoveViewTo(nsIView *aView, nscoord x, nscoord y);
+  NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord x, nscoord y);
 
-  virtual void ResizeView(nsIView *aView, nscoord width, nscoord height);
+  NS_IMETHOD  ResizeView(nsIView *aView, nscoord width, nscoord height);
 
-  virtual void SetViewClip(nsIView *aView, nsRect *rect);
+  NS_IMETHOD  SetViewClip(nsIView *aView, nsRect *rect);
 
-  virtual void SetViewVisibility(nsIView *aView, nsViewVisibility visible);
+  NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility visible);
 
-  virtual void SetViewZindex(nsIView *aView, PRInt32 zindex);
+  NS_IMETHOD  SetViewZindex(nsIView *aView, PRInt32 zindex);
 
-  virtual void MoveViewAbove(nsIView *aView, nsIView *other);
-  virtual void MoveViewBelow(nsIView *aView, nsIView *other);
+  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *other);
+  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *other);
 
-  virtual PRBool IsViewShown(nsIView *aView);
+  NS_IMETHOD  IsViewShown(nsIView *aView, PRBool& aResult);
 
-  virtual PRBool GetViewClipAbsolute(nsIView *aView, nsRect *rect);
+  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *rect, PRBool &aResult);
 
-  virtual void SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
-  virtual void SetViewOpacity(nsIView *aView, float aOpacity);
+  NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
+  NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity);
 
-  NS_IMETHOD SetViewObserver(nsIViewObserver *aObserver);
-  NS_IMETHOD GetViewObserver(nsIViewObserver *&aObserver);
+  NS_IMETHOD  SetViewObserver(nsIViewObserver *aObserver);
+  NS_IMETHOD  GetViewObserver(nsIViewObserver *&aObserver);
 
-  virtual nsIDeviceContext* GetDeviceContext();
+  NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext);
 
-  virtual void ClearDirtyRegion();
+  NS_IMETHOD  ClearDirtyRegion(void);
+
+  NS_IMETHOD  ShowQuality(PRBool aShow);
+  NS_IMETHOD  GetShowQuality(PRBool &aResult);
+  NS_IMETHOD  SetQuality(nsContentQuality aQuality);
+
+  NS_IMETHOD  DisableRefresh(void);
+  NS_IMETHOD  EnableRefresh(void);
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
-
-  virtual void ShowQuality(PRBool aShow);
-  virtual PRBool GetShowQuality(void);
-  virtual void SetQuality(nsContentQuality aQuality);
-
-  NS_IMETHOD DisableRefresh(void);
-  NS_IMETHOD EnableRefresh(void);
 
 private:
   virtual ~nsViewManager();
