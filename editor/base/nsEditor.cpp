@@ -315,6 +315,20 @@ nsEditor::PreDestroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = mFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::SetFlags(PRUint32 aFlags)
+{
+  mFlags = aFlags;
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
@@ -357,6 +371,13 @@ nsEditor::GetSelectionController(nsISelectionController **aSel)
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   NS_ADDREF(*aSel = selCon);
   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEditor::DeleteSelection(EDirection aAction)
+{
+  return DeleteSelectionImpl(aAction);
 }
 
 
@@ -680,6 +701,26 @@ NS_IMETHODIMP nsEditor::ShouldTxnSetSelection(PRBool *aResult)
 }
 
 
+NS_IMETHODIMP
+nsEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
+{
+  nsCOMPtr<nsIDOMElement> rootElement; 
+  nsresult res = GetRootElement(getter_AddRefs(rootElement)); 
+  if (NS_FAILED(res)) return res; 
+  if (!rootElement)   return NS_ERROR_NULL_POINTER; 
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
+  nsCOMPtr<nsIDOMNode> firstChild;
+  res = rootNode->GetFirstChild(getter_AddRefs(firstChild));
+
+  if(NS_SUCCEEDED(res))
+      *aDocumentIsEmpty = PR_TRUE;
+  else
+      *aDocumentIsEmpty = PR_FALSE;
+
+  return res;
+}
+
+
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
@@ -920,6 +961,63 @@ nsEditor::SaveFile(nsIFile *aFileSpec, PRBool aReplaceExisting,
 
   return rv;
 }
+
+
+
+NS_IMETHODIMP
+nsEditor::Cut()
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::CanCut(PRBool &aCanCut)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::Copy()
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::CanCopy(PRBool &aCanCopy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::Paste(PRInt32 aSelectionType)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::CanDrag(nsIDOMEvent *aEvent, PRBool &aCanDrag)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::DoDrag(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::InsertFromDrop(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
 
 NS_IMETHODIMP 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, const nsString& aValue)
