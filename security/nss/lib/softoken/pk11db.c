@@ -119,6 +119,7 @@ secmod_getSecmodName(char *param, PRBool *rw)
     char *configdir = NULL;
     char *secmodName = NULL;
     char *value = NULL;
+    char *save_params = param;
     param = pk11_argStrip(param);
 	
 
@@ -129,10 +130,10 @@ secmod_getSecmodName(char *param, PRBool *rw)
    }
 
    *rw = PR_TRUE;
-   if (pk11_argHasFlag("flags","readOnly",param) ||
-	pk11_argHasFlag("flags","noModDB",param)) *rw = PR_FALSE;
+   if (pk11_argHasFlag("flags","readOnly",save_params) ||
+	pk11_argHasFlag("flags","noModDB",save_params)) *rw = PR_FALSE;
 
-   if (secmodName == NULL) secmodName = PORT_Strdup(SECMOD_DB);
+   if (!secmodName || *secmodName == '\0') secmodName = PORT_Strdup(SECMOD_DB);
 
    if (configdir) {
 	value = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,secmodName);
