@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= abouturl
+MODULE			= abouturl
 LIBRARY_NAME	= abouturl
 
 CSRCS		= \
@@ -30,9 +30,6 @@ CSRCS		= \
 	$(NULL)
 
 EXPORTS= $(srcdir)/abouturl.h
-
-REQUIRES	= netcache network dbm util pref js java fileurl \
-	security layer img httpurl jtools
 
 NO_STATIC_LIB=1
 
