@@ -977,7 +977,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 #endif
 
   // XXX: This call will be replaced by a registry initialization...
-  NS_SetupRegistry_1( PR_FALSE );
+  NS_SetupRegistry_1( PR_TRUE );
 
   // remove the nativeApp as an XPCOM autoreg observer
   if (obsService)
