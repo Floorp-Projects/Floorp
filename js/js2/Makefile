@@ -6,6 +6,7 @@ objs = 	hash.o \
 	icodegenerator.o \
 	interpreter.o \
 	js2.o \
+	jstypes.o \
 	numerics.o \
 	parser.o \
 	utilities.o \
