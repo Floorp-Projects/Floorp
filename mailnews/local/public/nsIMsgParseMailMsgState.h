@@ -49,11 +49,11 @@ class nsIMsgParseMailMsgState : public nsISupports {
   /* long GetAllHeaders (out string headers); */
   NS_IMETHOD GetAllHeaders(char **headers, PRInt32 *_retval) = 0;
 
-  enum { ParseEnvelope = 0 };
+  enum { ParseEnvelopeState = 0 };
 
-  enum { ParseHeaders = 1 };
+  enum { ParseHeadersState = 1 };
 
-  enum { ParseBody = 2 };
+  enum { ParseBodyState = 2 };
 };
 
 #endif /* __gen_nsIMsgParseMailMsgState_h__ */
