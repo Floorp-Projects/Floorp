@@ -47,11 +47,16 @@ nsNNTPHost::~nsNNTPHost()
 {
 }
 
-nsresult nsNNTPHost::Initialize(const char *name, PRInt32 port)
+nsresult nsNNTPHost::Initialize(const char *username, const char *hostname, PRInt32 port)
 {
-    m_hostname = new char [PL_strlen(name) + 1];
-	PL_strcpy(m_hostname, name);
+    m_hostname = new char [PL_strlen(hostname) + 1];
+	PL_strcpy(m_hostname, hostname);
 
+    if (username) {
+        m_username = new char [PL_strlen(username) + 1];
+        PL_strcpy(m_username, username);
+    }
+    
 	PR_ASSERT(port);
 	if (port == 0) port = NEWS_PORT;
 	m_port = port;
@@ -86,6 +91,7 @@ nsNNTPHost::CleanUp() {
 	PR_FREEIF(m_optionLines);
 	delete [] m_filename;
 	delete [] m_hostname;
+    delete [] m_username;
 	PR_FREEIF(m_nameAndPort);
 	PR_FREEIF(m_fullUIName);
 	NS_IF_RELEASE(m_groups);
@@ -2454,7 +2460,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **_retval)
 		printf("%d = %s\n",i,newsgroupname?newsgroupname:"null");
 #endif
 
-		if (NS_SUCCEEDED(rv) && (newsgroupname != nsnull) && PL_strcmp(name,newsgroupname) == 0) {
+		if (NS_SUCCEEDED(rv) && newsgroupname && PL_strcmp(name,newsgroupname) == 0) {
 			*_retval = list;
             result = NS_OK;
 		}
@@ -2611,7 +2617,7 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
     rv = newsgroup->GetName(&name);
     if (NS_FAILED(rv)) return rv;
 
-    rv = newsgroupList->Initialize(this, newsgroup, name, m_hostname);
+    rv = newsgroupList->Initialize(this, newsgroup, m_username, m_hostname, name);
     PR_FREEIF(name);
     name = nsnull;
     if (NS_FAILED(rv)) return rv;

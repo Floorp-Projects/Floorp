@@ -92,11 +92,17 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 
 
 nsresult
-nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname)
+nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname)
 {
 	m_newsDB = nsnull;
-	m_groupName = PL_strdup(name);
-	m_url = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,name);
+	m_groupName = PL_strdup(groupname);
+        
+        if (username) {
+		m_uri = PR_smprintf("%s/%s@%s/%s",kNewsRootURI,username,hostname,groupname);
+	}
+        else {
+		m_uri = PR_smprintf("%s/%s/%s",kNewsRootURI,hostname,groupname);
+	}
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
 	m_set = nsnull;
@@ -126,7 +132,7 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, 
 
 nsresult
 nsNNTPNewsgroupList::CleanUp() {
-	PR_Free(m_url);
+	PR_Free(m_uri);
 	PR_Free(m_groupName);
     
 	if (m_newsDB) {
@@ -214,7 +220,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	if (!m_newsDB)
 	{
 		nsresult err;
-		if ((err = GetDatabase(GetURL(), &m_newsDB)) != NS_OK) {
+		if ((err = GetDatabase(GetURI(), &m_newsDB)) != NS_OK) {
             return err;
         }
 		else {

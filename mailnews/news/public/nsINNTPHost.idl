@@ -24,7 +24,7 @@ interface nsINNTPNewsgroupList;
 [scriptable, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
 interface nsINNTPHost : nsISupports {
 
-    void Initialize(in string name, in long port);
+    void Initialize(in string username, in string hostname, in long port);
     
     attribute boolean supportsExtensions;
     void AddExtension(in string extension);

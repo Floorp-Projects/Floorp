@@ -447,7 +447,8 @@ nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH), m_tempErrorF
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
-	delete m_lineStreamBuffer;
+    // leaking m_hostName and m_userName?
+    m_lineStreamBuffer = nsnull;
 }
 
 nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
@@ -490,7 +491,11 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
       return rv;
     }
 	
-	aURL->GetHost(getter_Copies(m_hostName));
+	rv = aURL->GetHost(getter_Copies(m_hostName));
+    if (NS_FAILED(rv)) return rv;
+    rv = aURL->GetPreHost(getter_Copies(m_userName));
+    if (NS_FAILED(rv)) return rv;
+    
 	// call base class to set up the transport
 	rv = OpenNetworkSocket(aURL);
 
@@ -554,7 +559,11 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   if (aURL)
   {
-	  aURL->GetHost(getter_Copies(m_hostName));
+	  rv = aURL->GetHost(getter_Copies(m_hostName));
+      if (NS_FAILED(rv)) return rv;
+      rv = aURL->GetPreHost(getter_Copies(m_userName));
+      if (NS_FAILED(rv)) return rv;
+      
 	  m_runningURL = do_QueryInterface(aURL);
 
 	  // okay, now fill in our event sinks...Note that each getter ref counts before
@@ -591,7 +600,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       if (NS_FAILED(rv) || (!m_newsHost)) 
           goto FAIL;
 
-      m_newsHost->Initialize(m_hostName, port ? port : NEWS_PORT);
+      m_newsHost->Initialize(m_userName, m_hostName, port ? port : NEWS_PORT);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
@@ -1852,8 +1861,16 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 				PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_messageID, key);
 				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
-            
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+
+            if (m_userName) {
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+            }
+            else {
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+            }
+#ifdef DEBUG_NEWS
+            printf("%s\n",outputBuffer);
+#endif            
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
         }
   

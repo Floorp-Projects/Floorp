@@ -64,7 +64,6 @@ class nsNNTPNewsgroupList : public nsINNTPNewsgroupList
 #endif
 {
 public:
-  nsNNTPNewsgroupList(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *hostname);
   nsNNTPNewsgroupList();
   virtual  ~nsNNTPNewsgroupList();
   NS_DECL_ISUPPORTS
@@ -87,7 +86,8 @@ public:
   NS_IMETHOD ClearXOVERState();
   NS_IMETHOD GetGroupName(char **_retval);
     
-  NS_IMETHOD Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *name, const char *url);
+  NS_IMETHOD Initialize(nsINNTPHost *host, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname);
+
 private:
   NS_METHOD CleanUp();
     
@@ -101,7 +101,7 @@ private:
 #endif
   PRBool          m_finishingXover;
   nsINNTPHost*	GetHost() {return m_host;}
-  const char *	GetURL() {return m_url;}
+  const char *	GetURI() {return m_uri;}
   
 #ifdef HAVE_CHANGELISTENER
   virtual void	OnAnnouncerGoingAway (ChangeAnnouncer *instigator);
@@ -125,7 +125,7 @@ protected:
   char			*m_groupName;
   nsINNTPHost	*m_host;
   nsINNTPNewsgroup *m_newsgroup;
-  char			*m_url;			// url we're retrieving
+  char			*m_uri;			
 #ifdef HAVE_MASTER
   MSG_Master		*m_master;
 #endif

@@ -28,12 +28,19 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h"
 
+#ifdef DEBUG_seth
+#define DEBUG_NEWS 1
+#endif
+
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 static nsresult
 nsGetNewsServer(const char* username, const char *hostname,
                 nsIMsgIncomingServer** aResult)
 {
+#ifdef DEBUG_NEWS
+  printf("nsGetNewsServer(%s,%s,??)\n",username,hostname);
+#endif
   nsresult rv = NS_OK;
 
   // retrieve the AccountManager
@@ -120,8 +127,12 @@ nsGetNewsUsername(const char *rootURI, const char *uriStr, char **userName)
 nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
-  nsresult rv;
+#ifdef DEBUG_NEWS
+  printf("nsNewsURI2Path(%s,%s,??)\n",rootURI,uriStr);
+#endif
+  nsresult rv = NS_OK;
   
+  pathResult = nsnull;
   nsAutoString sep = PR_GetDirectorySeparator();
 
   nsCAutoString uri = uriStr;
@@ -131,7 +142,6 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // verify that rootURI starts with "news:/" or "news_message:/"
   if ((PL_strcmp(rootURI, kNewsRootURI) != 0) && 
       (PL_strcmp(rootURI, kNewsMessageRootURI) != 0)) {
-    pathResult = nsnull;
     return NS_ERROR_FAILURE;
 	}
 
@@ -144,7 +154,10 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // skip past all //
   while (uri.CharAt(hostStart) =='/') hostStart++;
   
-  // cut news://[username@]hostname/newsgroup -> username@hostname/newsgroup
+  // cut 
+  // news://[username@]hostname -> username@hostname
+  // and
+  // news://[username@]hostname/newsgroup -> username@hostname/newsgroup
   nsCAutoString hostname;
   uri.Right(hostname, uri.Length() - hostStart);
 
@@ -157,48 +170,54 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // we have a username here
   // XXX do this right, this doesn't work -alecf@netscape.com
   if (atPos != -1) {
-
-    hostname.Left(username, hostEnd-atPos);
-    
-    username = "";
-    
-    hostEnd = hostname.FindChar('/');
+    hostname.Left(username, atPos);	
+#ifdef DEBUG_NEWS
+    printf("username = %s\n",username.GetBuffer());
+#endif
   }
 
   // newsgroup comes after the hostname, after the '/'
   nsCAutoString newsgroup;
- 
+  nsCAutoString exacthostname;
+
   if (hostEnd != -1) {
     hostname.Right(newsgroup, hostname.Length() - hostEnd - 1);
   }
 
   // cut off first '/' and everything following it
   // hostname/newsgroup -> hostname
-  if (hostEnd >0) {
+  if (hostEnd > 0) {
     hostname.Truncate(hostEnd);
   }
+ 
+  // if we had a username, remove it to get the exact hostname
+  if (atPos != -1) {
+    hostname.Right(exacthostname, hostname.Length() - atPos - 1);
+  }
+  else {
+    exacthostname = hostname.GetBuffer();
+#ifdef DEBUG_NEWS
+    printf("exacthostname = %s, hostname = %s\n",exacthostname.GetBuffer(),hostname.GetBuffer());
+#endif
+  } 
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = nsGetNewsServer(username.GetBuffer(),
-                       hostname.GetBuffer(), getter_AddRefs(server));
+                       exacthostname.GetBuffer(), getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
   // now ask the server what it's root is
   char *localPath = nsnull;
-  if (NS_SUCCEEDED(rv))
-    rv = server->GetLocalPath(&localPath);
+  rv = server->GetLocalPath(&localPath);
+  if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_NEWS
   printf("local path = %s\n", localPath);
 #endif
-  if (NS_SUCCEEDED(rv)) {
-    pathResult = localPath;
-  }
+  pathResult = localPath;
+
   // mismatched free?
   if (localPath) PL_strfree(localPath);
-
-  if (NS_FAILED(rv)) {
-    pathResult = nsnull;
-    return rv;
-  }
 
   if (!pathResult.Exists())
     pathResult.CreateDir();

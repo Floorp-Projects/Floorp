@@ -69,7 +69,7 @@ public:
 
     NS_DECL_ISUPPORTS
     // nsINNTPHost
-    NS_IMETHOD Initialize(const char *name, PRInt32 port);
+    NS_IMETHOD Initialize(const char *username, const char *hostname, PRInt32 port);
     
     NS_IMPL_CLASS_GETSET(SupportsExtensions, PRBool,
                          m_supportsExtensions);
@@ -350,6 +350,7 @@ protected:
     nsINNTPNewsgroup * SwitchCategoryContainerToNews(nsINNTPCategoryContainer *catContainerInfo);
 
 	char* m_hostname;
+    char* m_username;
 	PRInt32 m_port;
 
 	char* m_nameAndPort;

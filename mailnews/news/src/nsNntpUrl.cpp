@@ -278,11 +278,20 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 
     if (!m_newsgroupName) return NS_ERROR_FAILURE;
 
-	nsXPIDLCString hostName;
-	GetHost(getter_Copies(hostName));
+    nsXPIDLCString hostName;
+    rv = GetHost(getter_Copies(hostName));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString userName;
+    rv = GetPreHost(getter_Copies(userName));
+    if (NS_FAILED(rv)) return rv; 
 
     nsCString newsgroupURI(kNewsMessageRootURI);
     newsgroupURI.Append("/");
+    if (userName || (userName != "")) {
+	newsgroupURI.Append(userName);
+	newsgroupURI.Append("@");
+    }
     newsgroupURI.Append(hostName);
     newsgroupURI.Append("/");
     newsgroupURI.Append(m_newsgroupName);

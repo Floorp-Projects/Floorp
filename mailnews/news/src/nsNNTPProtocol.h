@@ -214,7 +214,8 @@ private:
 	PRInt32 	m_previousResponseCode; 
     char       *m_responseText;   /* text returned from NNTP server */
 	nsXPIDLCString m_hostName;
-
+    nsXPIDLCString m_userName;
+    
     char		*m_dataBuf;
     PRUint32	 m_dataBufSize;
 

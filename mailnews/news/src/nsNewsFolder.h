@@ -107,7 +107,6 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr);
 
-  PRBool isNewsHost(void);
   nsresult LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile);
   PRInt32 RememberLine(char *line);
   nsresult ForgetLine(void);
@@ -125,8 +124,6 @@ protected:
 	nsISupportsArray *mMessages;
   char      *mOptionLines;
   char      *mHostname;
-  PRBool    mIsNewsHost;
-  PRBool    mIsNewsHostInitialized;
 };
 
 #endif // nsMsgNewsFolder_h__

@@ -635,7 +635,7 @@ nsresult
 nsNntpService::RunNewsUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
-  printf("nsNntpService::RunNewsUrl(%s,%s,%u,...)\n", (const char *)nsAutoCString(urlString), (const char *)nsAutoCString(newsgroupName), key);
+  printf("nsNntpService::RunNewsUrl(%s,%s,%u,...)\n", urlString, newsgroupName, key);
 #endif
   
   nsCOMPtr <nsINntpUrl> nntpUrl;
@@ -731,14 +731,23 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   }
 #endif
 
-  nsCAutoString uriStr;
+  nsCAutoString uriStr = uri;
   nsCAutoString newsgroupName;
   
   NS_ASSERTION((uriStr.Find(kNewsRootURI) == 0), "uriStr didn't start with news:/");
   if (uriStr.Find(kNewsRootURI) == 0) {
-    // uriStr look like this:  "news://news.mcom.com/mcom.linux"
-    // 
-    uriStr.Right(newsgroupName, uriStr.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */ - PL_strlen(nntpHostName) /* for the hostname */ -1 /* for the next slash */);
+    // uriStr looks like this:  
+    // "news://news.mcom.com/mcom.linux"
+    // or this:
+    // "news://sspitzer@news.mcom.com/mcom.linux"
+
+    PRInt32 atPos = uriStr.FindChar('@');
+    if (atPos == -1) {
+	    uriStr.Right(newsgroupName, uriStr.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */ - PL_strlen(nntpHostName) /* for the hostname */ -1 /* for the next slash */);
+    }
+    else {
+	    uriStr.Right(newsgroupName, uriStr.Length() - atPos /* for "news://<username>" */ -1 /* for the @ */ - PL_strlen(nntpHostName) /* for the hostname */ -1 /* for the next slash */);
+    }
     
     rv = RunNewsUrl(uriStr, newsgroupName, nsMsgKey_None, nsnull, aUrlListener, _retval);
   }

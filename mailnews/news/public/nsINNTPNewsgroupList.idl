@@ -63,6 +63,6 @@ interface nsINNTPNewsgroupList : nsISupports {
   void ClearXOVERState();
   string GetGroupName();
 
-  void Initialize(in nsINNTPHost host, in nsINNTPNewsgroup newsgroup, in string name, in string url);
+  void Initialize(in nsINNTPHost host, in nsINNTPNewsgroup newsgroup, in string username, in string hostname, in string groupname);
 };
 

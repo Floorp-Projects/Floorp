@@ -71,8 +71,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
-  mIsNewsHost = PR_FALSE;
-  mIsNewsHostInitialized = PR_FALSE;
   /* we're parsing the newsrc file, and the line breaks are platform specific.
    * if MSG_LINEBREAK != CRLF, then we aren't looking for CRLF 
    */
@@ -122,48 +120,6 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 
 ////////////////////////////////////////////////////////////////////////////////
 
-PRBool
-nsMsgNewsFolder::isNewsHost() 
-{
-  if (mIsNewsHostInitialized) {
-    return mIsNewsHost;
-  }
-
-  // this will do for now.  Eventually, this will go away...
-  PRInt32 uriLen = PL_strlen(mURI);
-
-  // if we are shorter than news://, we are too short to be a host
-  if (uriLen <= kNewsRootURILen) {
-    mIsNewsHost = PR_FALSE;
-  }
-  else {
-    if (PL_strncmp(mURI, kNewsRootURI, kNewsRootURILen) == 0) {
-      // if we get here, mURI looks like this:  news://x
-      // where x is non-empty, and may contain "/"
-      char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
-#ifdef DEBUG_NEWS
-      printf("search for a slash in %s\n",rightAfterTheRoot);
-#endif
-      if (!PL_strstr(rightAfterTheRoot,"/")) {
-        // there is no slashes after news://,
-        // so mURI is of the form news://x
-        mIsNewsHost=PR_TRUE;
-      }
-      else {
-        // there is another slash, so mURI is of the form
-        // news://x/y, so it is not a host
-        mIsNewsHost=PR_FALSE;
-      }
-    }
-    else {
-      // mURI doesn't start with news:// so it can't be a host
-      mIsNewsHost=PR_FALSE;
-    }
-  }
-  mIsNewsHostInitialized = PR_TRUE;
-  return mIsNewsHost;
-}
-
 nsresult
 nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
@@ -172,8 +128,12 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   char *hostname;
   rv = GetHostname(&hostname);
   if (NS_FAILED(rv)) return rv;
-      
-  if (isNewsHost()) {  
+
+  PRBool isNewsServer = PR_FALSE;
+  rv = GetIsServer(&isNewsServer);
+  if (NS_FAILED(rv)) return rv;
+
+  if (isNewsServer) {  
 #ifdef DEBUG_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
@@ -719,7 +679,11 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(PRUnichar ** prettyName)
   //not ready for prime time yet, as I don't know how to test this yet.
 #ifdef NOT_READY_FOR_PRIME_TIME
   // only do this for newsgroup names, not for newsgroup hosts.
-  if (!isNewsHost()) {
+  PRBool isNewsServer = PR_FALSE;
+  rv = GetIsServer(&isNewsServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (!isNewsServer) {  
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
@@ -1074,10 +1038,12 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
   printf("GetNewMessages (for news)  uri = %s\n",mURI);
 #endif
 
-  if (isNewsHost()) {
-#ifdef DEBUG_NEWS
-		printf("sorry, can't get news for entire news server yet.  try it on a newsgroup by newsgroup level\n");
-#endif 
+  PRBool isNewsServer = PR_FALSE;
+  rv = GetIsServer(&isNewsServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (isNewsServer) {
+    // get new messages only works on a newsgroup, not a news server
 		return NS_OK;
   }
 
