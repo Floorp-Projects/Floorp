@@ -54,7 +54,10 @@ XPIDLSRCS	= \
 		nsISocketTransport.idl \
 		nsIURLParser.idl \
 		nsIProxy.idl \
+		nsIProxyAutoConfig.idl \
+		nsIProxyAutoConfigUtils.idl \
 		nsIProtocolProxyService.idl \
+		nsIWebFilters.idl \
 		$(NULL)
 
 EXPORTS		= \
