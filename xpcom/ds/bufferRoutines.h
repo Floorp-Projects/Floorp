@@ -255,22 +255,24 @@ CopyChars gCopyChars[2][2]={
  */
 inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
 
-  if(aIgnoreCase) {
-    char theChar=(char)nsCRT::ToUpper(aChar);
-    const char* ptr=aDest+(anOffset-1);
-    const char* last=aDest+aLength;
-    while(++ptr<last){
-      if(nsCRT::ToUpper(*ptr)==theChar)
-        return ptr-aDest;
+  if(aChar<256) {
+    if(aIgnoreCase) {
+      char theChar=(char)nsCRT::ToUpper(aChar);
+      const char* ptr=aDest+(anOffset-1);
+      const char* last=aDest+aLength;
+      while(++ptr<last){
+        if(nsCRT::ToUpper(*ptr)==theChar)
+          return ptr-aDest;
+      }
     }
-  }
-  else {
+    else {
 
-    const char* ptr = aDest+anOffset;
-    char theChar=(char)aChar;
-    const char* result=(const char*)memchr(ptr, theChar,aLength-anOffset);
-    if(result) {
-      return result-aDest;
+      const char* ptr = aDest+anOffset;
+      char theChar=(char)aChar;
+      const char* result=(const char*)memchr(ptr, theChar,aLength-anOffset);
+      if(result) {
+        return result-aDest;
+      }
     }
   }
   return kNotFound;
@@ -607,7 +609,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	gess 11/02/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -649,7 +651,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	gess 11/02/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -693,7 +695,7 @@ CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
 /**
  * This method strips chars in a given set from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	gess 11/02/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -724,7 +726,7 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
 /**
  * This method strips chars in a given set from the given buffer 
  *
- * @update	gess 01/04/99
+ * @update	gess 11/02/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -745,6 +747,7 @@ PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){
       //Note the test for ascii range below. If you have a real unicode char, 
       //and you're searching for chars in the (given) ascii string, there's no
       //point in doing the real search since it's out of the ascii range.
+
       if((255<theChar) || (kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
         *to++ = theChar;
       }

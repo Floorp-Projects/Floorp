@@ -241,7 +241,8 @@ public:
    *  @return *this 
    */
   nsCString& StripChars(const char* aSet);
-  nsCString& StripChar(char aChar);
+  nsCString& StripChar(PRUnichar aChar,PRInt32 anOffset=0);
+  nsCString& StripChar(char aChar,PRInt32 anOffset=0) { return StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
 
   /**
    *  This method strips whitespace throughout the string

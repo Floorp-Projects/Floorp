@@ -280,7 +280,9 @@ public:
    *  @return *this 
    */
   nsString& StripChars(const char* aSet);
-  nsString& StripChar(char aChar);
+  nsString& StripChar(PRUnichar aChar,PRInt32 anOffset=0);
+  nsString& StripChar(char aChar,PRInt32 anOffset=0) {return StripChar((PRUnichar) (unsigned char)aChar,anOffset); }
+  nsString& StripChar(PRInt32 anInt,PRInt32 anOffset=0) {return StripChar((PRUnichar)anInt,anOffset); }
 
   /**
    *  This method strips whitespace throughout the string
