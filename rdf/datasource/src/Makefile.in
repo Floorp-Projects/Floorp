@@ -28,6 +28,7 @@ LIBRARY_NAME = rdfdatasource_s
 
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
+	nsStreamDataSource.cpp		\
 	$(NULL)
 
 EXPORTS = \
