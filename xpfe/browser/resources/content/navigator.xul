@@ -201,7 +201,8 @@ Contributor(s): ______________________________________. -->
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
                   persist="hidden" value="&bookmarksButton.label;" hidden="false"
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-                  ref="NC:BookmarksRoot" container="true" flags="dont-test-empty">
+                  ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
+                  oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" >
         <template>
           <rule iscontainer="true">
             <menupopup>
@@ -219,8 +220,7 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" />
+                        value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </menupopup>
            </rule>
         </template>
@@ -235,8 +235,9 @@ Contributor(s): ______________________________________. -->
  
       <!-- Personal toolbar items -->
       <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
-            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
-            ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
+           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
+           ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+           oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
         <template>
           <rule parent="hbox" iscontainer="true">
             <menubutton class="button-toolbar bookmark-item" uri="rdf:*" 
@@ -251,10 +252,9 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule parent="hbox">
-            <button class="button-toolbar bookmark-item" uri="rdf:*"
-                    tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-                    value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
-                    oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
+            <button class="button-toolbar bookmark-item" uri="rdf:*" 
+              tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
+              value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
         
           <rule iscontainer="true">
@@ -273,8 +273,7 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
+                        value="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
           </rule>
         </template>
