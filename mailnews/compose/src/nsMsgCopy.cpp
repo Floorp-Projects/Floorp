@@ -25,7 +25,6 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
-#include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
@@ -46,7 +45,6 @@
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -261,7 +259,6 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     return NS_ERROR_INVALID_ARG;
 
 	//Call copyservice with dstFolder, disk file, and txnManager
-	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
     CopyListener    *tPtr = new CopyListener();
@@ -302,8 +299,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     // server to finish
     nsCOMPtr<CopyListener> aCopyListener = do_QueryInterface(tPtr);
 
-    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace,
-                                      aIsDraft, mCopyListener, msgWindow);
+    rv = dstFolder->CopyFileMessage(aDiskFile, aMsgToReplace,
+                                      aIsDraft, msgWindow, mCopyListener);
     // aCopyListener->mCopyInProgress can only be set when we are in the
     // middle of the shutdown process
     while (aCopyListener->mCopyInProgress)
