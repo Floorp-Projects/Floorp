@@ -742,19 +742,17 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   
   //Now we have a valid directory or we have returned.
   //Make sure the new folder name is valid
+  nsAutoString safeFolderName(folderName);
+  NS_MsgHashIfNecessary(safeFolderName);
   nsCAutoString nativeFolderName;
-  rv = nsMsgI18NCopyUTF16ToNative(folderName, nativeFolderName);
+  rv = nsMsgI18NCopyUTF16ToNative(safeFolderName, nativeFolderName);
   if (NS_FAILED(rv) || nativeFolderName.IsEmpty()) {
     ThrowAlertMsg("folderCreationFailed", msgWindow);
     // I'm returning this value so the dialog stays up
     return NS_MSG_FOLDER_EXISTS;
   }
   
-  nsCAutoString safeFolderName;
-  safeFolderName.Assign(nativeFolderName.get());
-  NS_MsgHashIfNecessary(safeFolderName);
-  
-  path += safeFolderName.get();   
+  path += nativeFolderName.get();   
   if (path.Exists()) //check this because localized names are different from disk names
   {
     ThrowAlertMsg("folderExists", msgWindow);
@@ -769,9 +767,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   }
   
   //GetFlags and SetFlags in AddSubfolder will fail because we have no db at this point but mFlags is set.
-  nsAutoString folderNameStr;
-  folderNameStr.AssignWithConversion(safeFolderName);
-  rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
+  rv = AddSubfolder(safeFolderName, getter_AddRefs(child));
   if (!child || NS_FAILED(rv))
   {
     path.Delete(PR_FALSE);
@@ -793,7 +789,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
       rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
       if(NS_SUCCEEDED(rv))
       {
-        folderInfo->SetMailboxName(folderNameStr);
+        folderInfo->SetMailboxName(safeFolderName);
       }
       unusedDB->SetSummaryValid(PR_TRUE);
       unusedDB->Close(PR_TRUE);
@@ -1109,15 +1105,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   // convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
   // function in nsIFileSpec
   
-  nsCAutoString convertedNewName;
-  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(aNewName, convertedNewName)))
-    return NS_ERROR_FAILURE;
-  
+  nsAutoString safeName(aNewName);
+  NS_MsgHashIfNecessary(safeName);
   nsCAutoString newDiskName;
-  newDiskName.Assign(convertedNewName.get());
-  NS_MsgHashIfNecessary(newDiskName);
-  nsAutoString safeFolderName;
-  safeFolderName.AssignWithConversion(newDiskName);
+  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(safeName, newDiskName)))
+    return NS_ERROR_FAILURE;
   
   nsXPIDLCString oldLeafName;
   oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
@@ -1172,7 +1164,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   nsCOMPtr<nsIMsgFolder> newFolder;
   if (parentSupport)
   {
-    rv = parentFolder->AddSubfolder(safeFolderName, getter_AddRefs(newFolder));
+    rv = parentFolder->AddSubfolder(safeName, getter_AddRefs(newFolder));
     if (newFolder) 
     {
       newFolder->SetPrettyName(aNewName);
@@ -1894,11 +1886,8 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   
   nsXPIDLString folderName;
   srcFolder->GetName(getter_Copies(folderName));
-  nsCAutoString tempSafeFolderName;
-  tempSafeFolderName.AssignWithConversion(folderName.get());
-  NS_MsgHashIfNecessary(tempSafeFolderName);
-  nsAutoString safeFolderName;
-  safeFolderName.AssignWithConversion(tempSafeFolderName);  
+  nsAutoString safeFolderName(folderName);
+  NS_MsgHashIfNecessary(safeFolderName);
   srcFolder->ForceDBClosed();   
   
   nsCOMPtr<nsIFileSpec> oldPathSpec;

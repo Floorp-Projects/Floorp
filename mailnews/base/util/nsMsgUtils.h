@@ -62,6 +62,7 @@ NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPrio
 
 NS_MSG_BASE nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriorityValue p, nsString *outName);
 
+NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsAutoString &name);
 NS_MSG_BASE nsresult NS_MsgHashIfNecessary(nsCAutoString &name);
 
 NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& pathString);
