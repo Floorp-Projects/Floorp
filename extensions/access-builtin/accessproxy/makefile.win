@@ -42,6 +42,7 @@ REQUIRES        = xpcom \
                   locale \
                   mozcomps \
                   pref \
+                  appstartup \
                   $(NULL)
 
 XPIDLSRCS= .\nsIAccessProxy.idl \

@@ -34,9 +34,10 @@
 
 #include "nsIAccessProxy.h"
 #include "nsIDOMEventListener.h"
-#include "nsIAppShellComponent.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
+#include "nsIObserver.h"
+#include "nsIAppStartupNotifier.h"
 
 
 /**
@@ -52,7 +53,7 @@
 
 
 class nsAccessProxy : public nsIDOMEventListener,
-                      public nsIAppShellComponent,
+                      public nsIObserver,
                       public nsIWebProgressListener,
                       public nsSupportsWeakReference
 {
@@ -63,7 +64,7 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_ACCESSPROXY_CID);
 
   NS_DECL_ISUPPORTS  // This macro expands into declaration of nsISupports interface
-  NS_DECL_NSIAPPSHELLCOMPONENT
+  NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   //NS_DECL_NSIACCESSPROXY

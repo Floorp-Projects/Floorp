@@ -38,15 +38,14 @@
   #include "nsIDOMEvent.h"
 
   #define NS_ACCESSPROXY_CID \
-	{ 0x28c13ee3, 0xca0c, 0x4395, { 0xbe, 0x98, 0xd1, 0x26, 0xea, 0xd3, 0xb9, 0x41 } }
+    { 0x5500c0d7, 0xdcc3, 0x4786, { 0xb4, 0x2f, 0xc2, 0x74, 0xb8, 0xc0, 0x7f, 0x72 } }
 
-
-  #define NS_ACCESSPROXY_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/accessproxy;1"
+  #define NS_ACCESSPROXY_CONTRACTID "@mozilla.org/accessproxy;1"
 %}
 
 interface nsIDOMEvent;
 
-[uuid(57e45180-7b41-4815-beec-6cac25dfac57)]
+[uuid(27B1B140-2939-432a-9B59-3A4C6B11B6C3)]
 interface nsIAccessProxy : nsISupports
 {
   void handleEvent(in nsIDOMEvent event);
