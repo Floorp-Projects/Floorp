@@ -43,13 +43,13 @@ sub provides {
 sub parse {
     my $self = shift;
     my($string) = @_;
-    return XML::Parser->new(Style => 'Tree')->parse($string);
+    return XML::Parser->new(Style => 'Tree', ErrorContext => 2)->parse($string);
 }
 
 sub parseNS {
     my $self = shift;
     my($string) = @_;
-    return XML::Parser->new(Style => __PACKAGE__, Namespaces => 1)->parse($string);
+    return XML::Parser->new(Style => __PACKAGE__, Namespaces => 1, ErrorContext => 1)->parse($string);
 }
 
 sub escape {
