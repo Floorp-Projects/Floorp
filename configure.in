@@ -3408,7 +3408,7 @@ dnl ========================================================
 
 MOZ_JSDEBUGGER=1
 
-MOZ_ARG_ENABLE_BOOL(jsd,
+MOZ_ARG_DISABLE_BOOL(jsd,
 [  --disable-jsd            Disable JavaScript debug library],
    MOZ_JSDEBUGGER=)
 
