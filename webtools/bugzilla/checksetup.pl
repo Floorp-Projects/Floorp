@@ -733,13 +733,15 @@ $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
     $dbh->do('INSERT INTO products(product, description) VALUES ("TestProduct",
-              "This is a test product.  This ought to be blown away and replaced with " .
-              "real stuff in a finished installation of bugzilla.")');
+              "This is a test product.  This ought to be blown away and ' .
+             'replaced with real stuff in a finished installation of ' .
+             'bugzilla.")');
     $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
-    $dbh->do('INSERT INTO components (value, program, description) VALUES ("TestComponent", 
-              "TestProduct", "This is a test component in the test product database.  " .
-              "This ought to be blown away and replaced with real stuff in a finished " .
-              "installation of bugzilla.")');
+    $dbh->do('INSERT INTO components (value, program, description) VALUES (' .
+             '"TestComponent", "TestProduct", ' .
+             '"This is a test component in the test product database.  ' .
+             'This ought to be blown away and replaced with real stuff in ' .
+             'a finished installation of bugzilla.")');
 }
 
 
