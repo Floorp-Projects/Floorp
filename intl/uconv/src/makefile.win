@@ -31,6 +31,7 @@ CPPSRCS =				\
 	nsUnicodeDecodeUtil.cpp		\
 	nsUnicodeEncodeHelper.cpp	\
 	nsWinCharset.cpp		\
+	nsCharsetAliasImp.cpp		\
 	nsUConvDll.cpp			\
 	$(NULL)
 
@@ -39,6 +40,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUnicodeEncodeHelper.obj 		\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
+	.\$(OBJDIR)\nsCharsetAliasImp.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
 	$(NULL)
 
