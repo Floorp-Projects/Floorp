@@ -16,7 +16,7 @@ export LD_LIBRARY_PATH
 JAVA=${JDK_LOCATION}/bin/java
 OUTPUT_DIR=${MOZILLA_DIST}/classes
 # JDK 1.2 CLASSES
-CLASSES=${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar:${OUTPUT_DIR}
+CLASSES=${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar:${OUTPUT_DIR}:${CLASSPATH}
 CLASSNAME=org.mozilla.webclient.test.EmbeddedMozilla
 #CLASSNAME=org.mozilla.webclient.test.EMWindow
 

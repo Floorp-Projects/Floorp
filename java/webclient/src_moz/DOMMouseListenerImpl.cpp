@@ -39,6 +39,13 @@
 
 #include <stdlib.h> // for itoa
 
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+
+#define WC_ITOA(intVal, buf, radix) sprintf(buf, "%d", intVal)
+#else
+#define WC_ITOA(intVal, buf, radix) itoa(intVal, buf, radix)
+#endif
+
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 
 //
@@ -344,7 +351,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     // PENDING(edburns): perhaps use a macro to speed this up?
     rv = mouseEvent->GetScreenX(&intVal);
     if (NS_SUCCEEDED(rv)) {
-        itoa(intVal, buf, 10);
+        WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_X_KEY,
                                          (jobject) strVal, 
@@ -353,7 +360,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     
     rv = mouseEvent->GetScreenY(&intVal);
     if (NS_SUCCEEDED(rv)) {
-        itoa(intVal, buf, 10);
+        WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_Y_KEY,
                                          (jobject) strVal, 
@@ -362,7 +369,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     
     rv = mouseEvent->GetClientX(&intVal);
     if (NS_SUCCEEDED(rv)) {
-        itoa(intVal, buf, 10);
+        WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_X_KEY,
                                          (jobject) strVal, 
@@ -371,7 +378,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     
     rv = mouseEvent->GetClientY(&intVal);
     if (NS_SUCCEEDED(rv)) {
-        itoa(intVal, buf, 10);
+        WC_ITOA(intVal, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_Y_KEY,
                                          (jobject) strVal, 
@@ -381,7 +388,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     int16Val = 0;
     rv = mouseEvent->GetButton(&int16Val);
     if (NS_SUCCEEDED(rv)) {
-        itoa(int16Val, buf, 10);
+        WC_ITOA(int16Val, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, BUTTON_KEY,
                                          (jobject) strVal,
@@ -391,7 +398,7 @@ void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aM
     int16Val = 0;
     rv = mouseEvent->GetClickCount(&int16Val);
     if (NS_SUCCEEDED(rv)) {
-        itoa(int16Val, buf, 10);
+        WC_ITOA(int16Val, buf, 10);
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLICK_COUNT_KEY,
                                          (jobject) strVal, 
