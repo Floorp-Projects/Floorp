@@ -3057,7 +3057,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     err = mCurrent->AliasCellYarn(mEnv, mQuery->groupBy, &groupColumnValue);
     if (err!=0) return PR_FALSE;
 
-    nsCStringKey key(nsLiteralCString((const char*)groupColumnValue.mYarn_Buf,
+    nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
                                       groupColumnValue.mYarn_Fill));
 
     void *otherRow = mUniqueRows.Get(&key);
@@ -3074,7 +3074,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     // we got this far, so we must have matched.
     // add ourselves to the hashtable so we don't match rows like this
     // in the future
-    nsCStringKey key(nsLiteralCString((const char*)groupColumnValue.mYarn_Buf,
+    nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
                                       groupColumnValue.mYarn_Fill));
     
     // note - weak ref, don't worry about releasing
