@@ -330,6 +330,14 @@ public class SetupPlugin extends Plugin
 			return null;
 	}
 	
+	final public String GetISPModemNumber( String isp, int popIndex )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.getISPModemNumber( isp, popIndex );
+		else
+			return null;
+	}
+	
 	final public String GetCurrentProfileDirectory()
 	{
 		if ( privilegeCheck() == true )

@@ -110,7 +110,7 @@ public class ISPDynamicData
             throw e;
         }
     }
-
+    
     public String getName()
     {
         if ( name != null )
@@ -159,16 +159,6 @@ public class ISPDynamicData
 		return this.getDynamicData( 0 );
 	}
 	
-	public int getDynamicDataSize()
-	{
-		if ( dynamicData == null )
-			this.parseDynamicData();
-		if ( dynamicData == null )
-			return 0;
-			
-		return dynamicData.size();
-	}
-	
 	public NameValueSet getDynamicData( int index )
 	{
 		
@@ -189,6 +179,16 @@ public class ISPDynamicData
 		}
 	}
 	
+	
+	public int getDynamicDataSize()
+	{
+		if ( dynamicData == null )
+			this.parseDynamicData();
+		if ( dynamicData == null )
+			return 0;
+			
+		return dynamicData.size();
+	}
 	
     public void parseDynamicData()
     {

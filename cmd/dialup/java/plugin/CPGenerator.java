@@ -242,6 +242,29 @@ public class CPGenerator
 		return null;
 	}
 	
+	public static String getISPModemNumber( String ispName, int popIndex )
+	{
+		ISPDynamicData		ispData = getISPDynamicData( ispName );
+
+		if ( ispData == null )
+		{
+			//Trace.TRACE( "isp not found: " + isp );
+			return null;
+		}
+			
+		int		size = ispData.getDynamicDataSize();
+			
+		//Trace.TRACE( "size: " + size );
+			
+		if ( size < popIndex )
+			return null;
+		
+		NameValueSet		nvSet = ispData.getDynamicData( popIndex );
+		String				phoneNum = nvSet.getValue( "phone" );
+		
+		return phoneNum;
+	}
+
 	/*
 		Takes the given inputFile and looks for strings in the form
 		"@@@string_to_replace@@@" and replaces them with the value
