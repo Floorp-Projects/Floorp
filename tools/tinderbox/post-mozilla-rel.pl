@@ -554,12 +554,11 @@ sub cacheit {
   TinderUtils::print_log "c_hour = $c_hour\n";
   TinderUtils::print_log "c_yday = $c_yday\n";
   TinderUtils::print_log "last_build_day = $last_build_day\n";
-  if (($c_hour > $target_hour) && 
-      (($last_build_day < $c_yday) || ($c_yday == 0))) {
-        return 1;
-      } else {
-	return 0;
-      }
+  if (($c_hour > $target_hour) && ($last_build_day != $c_yday)) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 sub reportRelease {
@@ -595,12 +594,7 @@ sub returnStatus{
 
 sub PreBuild {
     my $last_build_day;
-    my ($c_hour,$c_day,$c_month,$c_year,$c_yday) = (localtime(time))[2,3,4,5,7];
-    $c_year       = $c_year + 1900; # ftso perl
-    $c_month      = $c_month + 1; # ftso perl
-    $c_hour       = pad_digit($c_hour);
-    $c_day        = pad_digit($c_day);
-    $c_month      = pad_digit($c_month);
+    my ($c_hour,$c_yday) = (localtime(time))[2,7];
 
     if ( -e "last-built") {
 	($last_build_day) = (localtime((stat "last-built")[9]))[7];
