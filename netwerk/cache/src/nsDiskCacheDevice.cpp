@@ -321,6 +321,7 @@ struct MetaDataHeader {
     PRUint32        mHeaderSize;
     PRInt32         mFetchCount;
     PRUint32        mLastFetched;
+    PRUint32        mLastModified;
     PRUint32        mLastValidated;     // NOT NEEDED
     PRUint32        mExpirationTime;
     PRUint32        mDataSize;
@@ -332,6 +333,7 @@ struct MetaDataHeader {
         :   mHeaderSize(sizeof(MetaDataHeader)),
             mFetchCount(0),
             mLastFetched(0),
+            mLastModified(0),
             mLastValidated(0),
             mExpirationTime(0),
             mDataSize(0),
@@ -344,6 +346,7 @@ struct MetaDataHeader {
         :   mHeaderSize(sizeof(MetaDataHeader)),
             mFetchCount(entry->FetchCount()),
             mLastFetched(entry->LastFetched()),
+            mLastModified(entry->LastModified()),
             mLastValidated(entry->LastValidated()),
             mExpirationTime(entry->ExpirationTime()),
             mDataSize(entry->DataSize()),
@@ -416,6 +419,7 @@ nsresult MetaDataFile::Read(nsIInputStream* input)
     // read the header size used by this file.
     rv = input->Read((char*)&mHeaderSize, sizeof(mHeaderSize), &count);
     if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(mHeaderSize == sizeof(MetaDataHeader), "### CACHE FORMAT CHANGED!!! PLEASE DELETE YOUR CACHE DIRECTORY!!! ###");
     rv = input->Read((char*)&mFetchCount, mHeaderSize - sizeof(mHeaderSize), &count);
     if (NS_FAILED(rv)) return rv;
 
@@ -447,17 +451,23 @@ public:
     NS_DECL_NSICACHEENTRYINFO
 
     nsCacheEntryInfo()
+        :   mClientID(nsnull), mKey(nsnull)
     {
         NS_INIT_ISUPPORTS();
     }
 
-    virtual ~nsCacheEntryInfo() {}
+    virtual ~nsCacheEntryInfo()
+    {
+        delete[] mClientID;
+    }
     
     nsresult Read(nsIInputStream * input)
     {
         nsresult rv = mMetaDataFile.Read(input);
         if (NS_FAILED(rv)) return rv;
-        mClientID = mMetaDataFile.mKey;
+        delete[] mClientID;
+        mClientID = nsCRT::strdup(mMetaDataFile.mKey);
+        if (!mClientID) return NS_ERROR_OUT_OF_MEMORY;
         char* colon = ::strchr(mClientID, ':');
         if (!colon) return NS_ERROR_FAILURE;
         *colon = '\0';
@@ -466,6 +476,7 @@ public:
     }
     
     const char* ClientID() { return mClientID; }
+    const char* Key() { return mMetaDataFile.mKey; }
     
 private:
     MetaDataFile mMetaDataFile;
@@ -504,7 +515,8 @@ NS_IMETHODIMP nsCacheEntryInfo::GetLastFetched(PRTime *aLastFetched)
 
 NS_IMETHODIMP nsCacheEntryInfo::GetLastModified(PRTime *aLastModified)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aLastModified = ConvertSecondsToPRTime(mMetaDataFile.mLastModified);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsCacheEntryInfo::GetLastValidated(PRTime *aLastValidated)
@@ -533,6 +545,8 @@ NS_IMETHODIMP nsCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+static nsCOMPtr<nsIFileTransportService> gFileTransportService;
+
 nsDiskCacheDevice::nsDiskCacheDevice()
     :   mCacheCapacity(0), mCacheSize(0)
 {
@@ -541,6 +555,13 @@ nsDiskCacheDevice::nsDiskCacheDevice()
 nsDiskCacheDevice::~nsDiskCacheDevice()
 {
     removePrefListeners(this);
+
+    // XXX implement poor man's eviction strategy right here,
+    // keep deleting cache entries from oldest to newest, until
+    // cache usage is brought below limits.
+    evictDiskCacheEntries();
+    
+    gFileTransportService = nsnull;
 }
 
 nsresult
@@ -552,11 +573,8 @@ nsDiskCacheDevice::Init()
     rv = mBoundEntries.Init();
     if (NS_FAILED(rv)) return rv;
 
-    // XXX implement poor man's eviction strategy right here,
-    // keep deleting cache entries from oldest to newest, until
-    // cache usage is brought below limits.
-    nsCOMPtr<nsISupportsArray> metaDataFiles;
-    rv = scanDiskCacheEntries(getter_AddRefs(metaDataFiles));
+    gFileTransportService = do_GetService("@mozilla.org/network/file-transport-service;1", &rv);
+    if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
 }
@@ -836,10 +854,6 @@ nsresult nsDiskCacheDevice::getFileForDiskCacheEntry(DiskCacheEntry * diskEntry,
 
 nsresult nsDiskCacheDevice::getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result)
 {
-    nsresult rv;
-    static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
-    NS_WITH_SERVICE(nsIFileTransportService, service, kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
     PRInt32 ioFlags;
     switch (mode) {
     case nsICache::ACCESS_READ:
@@ -852,7 +866,7 @@ nsresult nsDiskCacheDevice::getTransportForFile(nsIFile* file, nsCacheAccessMode
         ioFlags = PR_RDWR | PR_CREATE_FILE;
         break;
     }
-    return service->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, result);
+    return gFileTransportService->CreateTransport(file, ioFlags, PR_IRUSR | PR_IWUSR, result);
 }
 
 
@@ -1053,7 +1067,7 @@ nsresult nsDiskCacheDevice::deleteDiskCacheEntry(DiskCacheEntry * diskEntry)
 {
     nsresult rv;
     
-    // delete the meta file.
+    // delete the metadata file.
     nsCOMPtr<nsIFile> metaFile;
     rv = getFileForDiskCacheEntry(diskEntry, PR_TRUE,
                                   getter_AddRefs(metaFile));
@@ -1201,20 +1215,59 @@ nsresult nsDiskCacheDevice::scavengeDiskCacheEntries(DiskCacheEntry * diskEntry)
     return NS_OK;
 }
 
+/**
+ * Helper class for implementing do_QueryElementAt() pattern. Thanks scc!
+ * Eventually this should become part of nsICollection.idl.
+ */
+class nsQueryElementAt : public nsCOMPtr_helper {
+public:
+    nsQueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr )
+        :   mCollection(aCollection),
+            mIndex(aIndex),
+            mErrorPtr(aErrorPtr)
+    {
+        // nothing else to do here
+    }
+
+    virtual nsresult operator()( const nsIID& aIID, void** aResult) const
+    {
+        nsresult status;
+        if ( mCollection ) {
+            if ( !NS_SUCCEEDED(status = mCollection->QueryElementAt(mIndex, aIID, aResult)) )
+            *aResult = 0;
+        } else
+            status = NS_ERROR_NULL_POINTER;
+        if ( mErrorPtr )
+            *mErrorPtr = status;
+        return status;
+    }
+    
+private:
+      nsICollection*  mCollection;
+      PRUint32        mIndex;
+      nsresult*       mErrorPtr;
+};
+
+inline const nsQueryElementAt
+do_QueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr = 0 )
+{
+    return nsQueryElementAt(aCollection, aIndex, aErrorPtr);
+}
+
 nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
 {
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    nsresult rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+    nsCOMPtr<nsISimpleEnumerator> files;
+    nsresult rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(files));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsISupportsArray> array = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    nsCOMPtr<nsISupportsArray> entries = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     PRUint32 newCacheSize = 0;
     
-    for (PRBool more; NS_SUCCEEDED(entries->HasMoreElements(&more)) && more;) {
+    for (PRBool more; NS_SUCCEEDED(files->HasMoreElements(&more)) && more;) {
         nsCOMPtr<nsISupports> next;
-        rv = entries->GetNext(getter_AddRefs(next));
+        rv = files->GetNext(getter_AddRefs(next));
         if (NS_FAILED(rv)) break;
         nsCOMPtr<nsIFile> file(do_QueryInterface(next, &rv));
         if (NS_FAILED(rv)) break;
@@ -1229,37 +1282,40 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
             rv = transport->OpenInputStream(0, ULONG_MAX, 0, getter_AddRefs(input));
             if (NS_FAILED(rv)) continue;
 
-            // read the metadata file.
-            MetaDataFile metaData;
-            rv = metaData.Read(input);
+            nsCacheEntryInfo* entryInfo = new nsCacheEntryInfo();
+            if (!entryInfo) return NS_ERROR_OUT_OF_MEMORY;
+            nsCOMPtr<nsISupports> ref(entryInfo);
+            rv = entryInfo->Read(input);
             input->Close();
-            if (NS_FAILED(rv)) break;
+            if (NS_FAILED(rv)) return rv;
 
             // update the cache size.
-            newCacheSize += metaData.mDataSize;
+            PRUint32 dataSize;
+            entryInfo->GetDataSize(&dataSize);
+            newCacheSize += dataSize;
             
             // initially, just sort them by file modification time.
-            PRInt64 modTime, modTime1;
-            file->GetLastModificationDate(&modTime);
+            PRTime modTime, modTime1;
+            entryInfo->GetLastModified(&modTime);
             PRUint32 count;
-            array->Count(&count);
+            entries->Count(&count);
             if (count == 0) {
-                rv = array->AppendElement(file);
+                rv = entries->AppendElement(entryInfo);
                 if (NS_FAILED(rv)) return rv;
                 continue;
             }
             PRInt32 low = 0, high = count - 1;
-            nsCOMPtr<nsIFile> file1;
             for (;;) {
                 PRInt32 middle = (low + high) / 2;
-                rv = array->QueryElementAt(middle, NS_GET_IID(nsIFile), getter_AddRefs(file1));
+                // rv = entries->QueryElementAt(middle, NS_GET_IID(nsICacheEntryInfo), getter_AddRefs(info));
+                nsCOMPtr<nsICacheEntryInfo> info = do_QueryElementAt(entries, middle, &rv);
                 if (NS_FAILED(rv)) return rv;
-                file1->GetLastModificationDate(&modTime1);
+                info->GetLastModified(&modTime1);
                 if (low >= high) {
                     if (LL_CMP(modTime, <=, modTime1))
-                        rv = array->InsertElementAt(file, middle);
+                        rv = entries->InsertElementAt(entryInfo, middle);
                     else
-                        rv = array->InsertElementAt(file, middle + 1);
+                        rv = entries->InsertElementAt(entryInfo, middle + 1);
                     if (NS_FAILED(rv)) return rv;
                     break;
                 } else {
@@ -1268,7 +1324,7 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
                     } else if (LL_CMP(modTime, >, modTime1)) {
                         low = middle + 1;
                     } else {
-                        rv = array->InsertElementAt(file, middle);
+                        rv = entries->InsertElementAt(entryInfo, middle);
                         if (NS_FAILED(rv)) return rv;
                         break;
                     }
@@ -1277,23 +1333,7 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
         }
     }
 
-#if 0
-    {
-        PRUint32 count;
-        array->Count(&count);
-        for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIFile> file;
-            rv = array->QueryElementAt(i, NS_GET_IID(nsIFile), getter_AddRefs(file));
-            nsXPIDLCString name;
-            rv = file->GetLeafName(getter_Copies(name));
-            PRInt64 modTime;
-            file->GetLastModificationDate(&modTime);
-            printf("%s (%08X%08X)\n", name.get(), modTime.hi, modTime.lo);
-        }
-    }
-#endif
-    
-    NS_ADDREF(*result = array);
+    NS_ADDREF(*result = entries);
 
     // we've successfully totaled the cache size.
     mCacheSize = newCacheSize;
@@ -1303,5 +1343,44 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
 
 nsresult nsDiskCacheDevice::evictDiskCacheEntries()
 {
+    nsCOMPtr<nsISupportsArray> entries;
+    nsresult rv = scanDiskCacheEntries(getter_AddRefs(entries));
+    if (NS_FAILED(rv)) return rv;
+
+    if (mCacheSize < mCacheCapacity) return NS_OK;
+    
+    // these are sorted in oldest to newest order.
+    PRUint32 count;
+    entries->Count(&count);
+    for (PRUint32 i = 0; i < count; ++i) {
+        // rv = entries->QueryElementAt(i, NS_GET_IID(nsICacheEntryInfo), getter_AddRefs(info));
+        nsCOMPtr<nsICacheEntryInfo> info = do_QueryElementAt(entries, i, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            PRUint32 dataSize;
+            info->GetDataSize(&dataSize);
+            
+            nsCacheEntryInfo* entryInfo = (nsCacheEntryInfo*) info.get();
+            const char* key = entryInfo->Key();
+            
+            // delete the metadata file.
+            nsCOMPtr<nsIFile> metaFile;
+            rv = getFileForKey(key, PR_TRUE, 0, getter_AddRefs(metaFile));
+            if (NS_SUCCEEDED(rv)) {
+                rv = metaFile->Delete(PR_FALSE);
+            }
+            
+            // delete the data file
+            nsCOMPtr<nsIFile> dataFile;
+            rv = getFileForKey(key, PR_FALSE, 0, getter_AddRefs(dataFile));
+            if (NS_SUCCEEDED(rv)) {
+                rv = dataFile->Delete(PR_FALSE);
+            }
+
+            mCacheSize -= dataSize;
+            if (mCacheSize <= mCacheCapacity)
+                break;
+        }
+    }
+    
     return NS_OK;
 }
