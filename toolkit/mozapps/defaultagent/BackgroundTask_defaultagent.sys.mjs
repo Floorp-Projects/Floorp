@@ -41,8 +41,8 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 
 // Should be slightly longer than NOTIFICATION_WAIT_TIMEOUT_MS in
 // Notification.cpp (divided by 1000 to convert millseconds to seconds) to not
-// cause race between timeouts. Currently 12 hours + 10 additional seconds.
-export const backgroundTaskTimeoutSec = 12 * 60 * 60 + 10;
+// cause race between timeouts. Currently 12 hours + 5 additional minutes.
+export const backgroundTaskTimeoutSec = 12 * 60 * 60 + 60 * 5;
 const kNotificationTimeoutMs = 12 * 60 * 60 * 1000;
 
 const kNotificationShown = Object.freeze({
