@@ -51,7 +51,8 @@
                 <label for="height">&heightEditField.label;</label>
               </td>
               <td colspan="2">
-                <input type="text" id="height" size="4" maxlength="4"/>
+                <input type="text" id="height" size="4" maxlength="4"
+                    onkeypress="forceInteger('height')" />
                 <label> &pixelsPopup.value; </label>
               </td>
             </tr>
@@ -60,7 +61,8 @@
                 <label for="height">&widthEditField.label;</label>
               </td>
               <td>
-                <input type="text" id="width" size="4" maxlength="4"/>
+                <input type="text" id="width" size="4" maxlength="4"
+                    onkeypress="forceInteger('width')" />
               </td>
               <td>
                 <xul:titledbutton class="popup PixelOrPercent" id="pixelOrPercentButton" value="&percentPopup.value;" align="left" popup="PixelOrPercentMenu" popupanchor="bottomleft"/>
