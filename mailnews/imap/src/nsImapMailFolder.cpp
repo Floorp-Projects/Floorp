@@ -668,10 +668,36 @@ NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelim
 NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
 {
 	m_boxFlags = aBoxFlags;
+    mFlags |= MSG_FOLDER_FLAG_IMAPBOX;
+
 	if (m_boxFlags & kNoinferiors)
 		mFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
 	else
 		mFlags &= ~MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
+    if (m_boxFlags & kImapTrash)
+        mFlags |= MSG_FOLDER_FLAG_TRASH;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_TRASH;
+    if (m_boxFlags & kImapSent)
+        mFlags |= MSG_FOLDER_FLAG_SENTMAIL;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
+    if (m_boxFlags & kNoselect)
+        mFlags |= MSG_FOLDER_FLAG_IMAP_NOSELECT;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_IMAP_NOSELECT;
+    if (m_boxFlags & kPublicMailbox)
+        mFlags |= MSG_FOLDER_FLAG_IMAP_PUBLIC;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_IMAP_PUBLIC;
+    if (m_boxFlags & kOtherUsersMailbox)
+        mFlags |= MSG_FOLDER_FLAG_IMAP_OTHER_USER;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_IMAP_OTHER_USER;
+    if (m_boxFlags & kPersonalMailbox)
+        mFlags |= MSG_FOLDER_FLAG_IMAP_PERSONAL;
+    else
+        mFlags &= ~MSG_FOLDER_FLAG_IMAP_PERSONAL;
 
 	return NS_OK;
 }
@@ -794,6 +820,47 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
+
+    rv = RenameLocal(newName);
+
+    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
+                                     nsnull);
+    return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::ForceDBClosed()
+{
+    PRUint32 cnt = 0, i;
+    if (mSubFolders)
+    {
+        nsCOMPtr<nsISupports> aSupport;
+        nsCOMPtr<nsIMsgFolder> child;
+        mSubFolders->Count(&cnt);
+        if (cnt > 0)
+            for (i = 0; i < cnt; i++)
+            {
+                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
+                child = do_QueryInterface(aSupport);
+                if (child)
+                    child->ForceDBClosed();
+            }
+    }
+    if (mDatabase)
+    {
+        mDatabase->ForceClosed();
+        mDatabase = null_nsCOMPtr();
+    }
+    return NS_OK;
+}
+
+nsresult nsImapMailFolder::RenameLocal(const char *newName)
+{
+    m_msgParser = null_nsCOMPtr();
+    ForceDBClosed();
+
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIFileSpec> oldPathSpec;
     rv = GetPath(getter_AddRefs(oldPathSpec));
     if (NS_FAILED(rv)) return rv;
@@ -801,37 +868,36 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
     rv = GetParent(getter_AddRefs(parent));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
-    Shutdown(PR_TRUE);
     PRUint32 cnt = 0;
     nsFileSpec dirSpec;
 
     if (mSubFolders)
         mSubFolders->Count(&cnt);
     if (cnt > 0)
-        rv = CreateDirectoryForFolder(dirSpec);
-
-    if (parentFolder)
     {
-        SetParent(nsnull);
-        parentFolder->PropagateDelete(this, PR_FALSE);
+        oldPathSpec->GetFileSpec(&dirSpec);
+        rv = CreateDirectoryForFolder(dirSpec);
     }
     nsFileSpec fileSpec;
     oldPathSpec->GetFileSpec(&fileSpec);
     nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
     nsCAutoString newNameStr = newName;
     newNameStr += ".msf";
-    oldSummarySpec.Rename(newNameStr.GetBuffer());
-    if (NS_SUCCEEDED(rv) && cnt> 0)
-    {
-        newNameStr = newName;
-        newNameStr += ".sbd";
-        dirSpec.Rename(newNameStr.GetBuffer());
-    }
-
-    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    rv = oldSummarySpec.Rename(newNameStr.GetBuffer());
     if (NS_SUCCEEDED(rv))
-        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
-                                     nsnull);
+    {
+        if (parentFolder)
+        {
+            SetParent(nsnull);
+            parentFolder->PropagateDelete(this, PR_FALSE);
+        }
+        if (cnt > 0)
+        {
+            newNameStr = newName;
+            newNameStr += ".sbd";
+            dirSpec.Rename(newNameStr.GetBuffer());
+        }
+    }
     return rv;
 }
 
@@ -2873,6 +2939,15 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     }
                 }
                 break;
+            case nsIImapUrl::nsImapRenameFolder:
+                if (NS_FAILED(aExitCode))
+                {
+                    char *oldName = nsnull;
+                    imapUrl->CreateServerDestinationFolderPathString(&oldName);
+                    RenameLocal(oldName);
+                    nsCRT::free(oldName);
+                }
+                break;
             default:
                 break;
             }
@@ -3677,3 +3752,4 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
 	*matches = mName.Equals(*name, isInbox);
 	return NS_OK;
 }
+

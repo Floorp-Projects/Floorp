@@ -71,6 +71,7 @@ PRLogModuleInfo *IMAP;
 #define FOUR_K ((PRUint32)4096)
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
+const char *kImapSentFolderName = "Sent";	// **** needs to be localized ****
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -241,6 +242,8 @@ nsImapProtocol::nsImapProtocol() :
     m_imapThreadIsRunning = PR_FALSE;
   m_currentServerCommandTagNumber = 0;
   m_active = PR_FALSE;
+  m_folderNeedsSubscribing = PR_FALSE;
+  m_folderNeedsACLRefreshed = PR_FALSE;
   m_threadShouldDie = PR_FALSE;
   m_pseudoInterrupted = PR_FALSE;
   m_nextUrlReadyToRun = PR_FALSE;
@@ -1110,8 +1113,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
     if (mailnewsurl && m_imapMiscellaneousSink)
     {
+        rv = GetServerStateParser().LastCommandSuccessful() ? NS_OK :
+             NS_ERROR_FAILURE;
         m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
-                                             NS_OK);  // we are done with this
+                                             rv);  // we are done with this
                                                       // url.
         WaitForFEEventCompletion();
     }
@@ -1576,7 +1581,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
     if (selectIssued)
     {
-//      RefreshACLForFolderIfNecessary(mailboxName);
+      RefreshACLForFolderIfNecessary(mailboxName);
     }
         
         PRBool uidValidityOk = PR_TRUE;
@@ -2016,7 +2021,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 {
 #ifdef HAVE_PORT
-  if (fFolderNeedsSubscribing)  // we don't know about this folder - we need to subscribe to it / list it.
+  if (m_folderNeedsSubscribing)  // we don't know about this folder - we need to subscribe to it / list it.
   {
     fHierarchyNameState = kListingForInfoOnly;
     List(mailboxName, PR_FALSE);
@@ -2052,7 +2057,7 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 
     // We should now be subscribed to it, and have it in our folder lists
     // and panes.  Even if something failed, we don't want to try this again.
-    fFolderNeedsSubscribing = PR_FALSE;
+    m_folderNeedsSubscribing = PR_FALSE;
 
   }
 #endif
@@ -3758,7 +3763,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
         PRUnichar slash = '/';
     canonicalSubDir = nsPrefix;
     if (canonicalSubDir.Length() && canonicalSubDir.Last() == slash)
-            canonicalSubDir.SetCharAt((PRUnichar)0, canonicalSubDir.Length());
+        canonicalSubDir.SetLength((PRUint32) canonicalSubDir.Length()-1);
   }
     
     switch (m_hierarchyNameState)
@@ -3892,7 +3897,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
             NS_ASSERTION(m_deletableChildren, 
                          "Oops .. null m_deletableChildren\n");
             m_deletableChildren->AppendElement((void*)
-                adoptedBoxSpec->allocatedPathName);
+                nsCRT::strdup(adoptedBoxSpec->allocatedPathName));
             PR_FREEIF(adoptedBoxSpec->hostName);
             NS_IF_RELEASE( adoptedBoxSpec);
         }
@@ -4686,6 +4691,16 @@ void nsImapProtocol::OnUnsubscribe(const char * sourceMailbox)
   GetServerStateParser().SetReportingErrors(lastReportingErrors);
 }
 
+void nsImapProtocol::RefreshACLForFolderIfNecessary(const char *mailboxName)
+{
+    if (m_folderNeedsACLRefreshed &&
+        GetServerStateParser().ServerHasACLCapability())
+    {
+        OnRefreshACLForFolder(mailboxName);
+        m_folderNeedsACLRefreshed = PR_FALSE;
+    }
+}
+
 void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
 {
     IncrementCommandTagNumber();
@@ -4705,8 +4720,37 @@ void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
 
 void nsImapProtocol::OnRefreshAllACLs()
 {
-  GetServerStateParser().SetReportingErrors(PR_TRUE);
-  // mscott - haven't ported this yet
+	m_hierarchyNameState = kListingForInfoOnly;
+	nsIMAPMailboxInfo *mb = NULL;
+
+	// This will fill in the list
+	List("*", PR_TRUE);
+
+	PRInt32 total = m_listedMailboxList.Count(), count = 0;
+	GetServerStateParser().SetReportingErrors(PR_FALSE);
+	do
+	{
+		mb = (nsIMAPMailboxInfo *) m_listedMailboxList.ElementAt(0);
+        m_listedMailboxList.RemoveElementAt(0);
+		if (mb)
+		{
+			char *onlineName = nsnull;
+            m_runningUrl->AllocateServerPath(mb->GetMailboxName(),
+                                             mb->GetDelimiter(), &onlineName);
+			if (onlineName)
+			{
+				OnRefreshACLForFolder(onlineName);
+				nsCRT::free(onlineName);
+			}
+			PercentProgressUpdateEvent(NULL, (count*100)/total);
+			delete mb;
+			count++;
+		}
+	} while (mb);
+	
+	PercentProgressUpdateEvent(NULL, 100);
+	GetServerStateParser().SetReportingErrors(PR_TRUE);
+	m_hierarchyNameState = kNoOperationInProgress;
 }
 
 // any state commands
@@ -4993,6 +5037,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
     {
             nsCString pattern = oldParentMailboxName;
             pattern += ns->GetDelimiter();
+            pattern += "*";
             PRBool isUsingSubscription = PR_FALSE;
             m_hostSessionList->GetHostIsUsingSubscription(GetImapServerKey(),
                                                           isUsingSubscription);

@@ -410,6 +410,8 @@ private:
 	// state ported over from 4.5
 	PRBool					m_pseudoInterrupted;
 	PRBool					m_active;
+    PRBool                  m_folderNeedsSubscribing;
+    PRBool                  m_folderNeedsACLRefreshed;
 	PRBool					m_threadShouldDie;
 	nsImapFlagAndUidState	*m_flagState;
 	nsMsgBiffState			m_currentBiffState;
@@ -441,6 +443,7 @@ private:
 	void OnCreateFolder(const char * aSourceMailbox);
 	void OnSubscribe(const char * aSourceMailbox);
 	void OnUnsubscribe(const char * aSourceMailbox);
+    void RefreshACLForFolderIfNecessary(const char * mailboxName);
 	void OnRefreshACLForFolder(const char * aSourceMailbox);
 	void OnRefreshAllACLs();
 	void OnListFolder(const char * aSourceMailbox, PRBool aBool);

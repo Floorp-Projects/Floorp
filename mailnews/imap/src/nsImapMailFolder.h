@@ -118,6 +118,7 @@ public:
 	NS_IMETHOD CreateSubfolder(const char *folderName);
 	NS_IMETHOD AddSubfolder(nsAutoString *name, nsIMsgFolder **child);
     
+    NS_IMETHOD ForceDBClosed();
     NS_IMETHOD Compact();
     NS_IMETHOD EmptyTrash();
 	NS_IMETHOD Delete ();
@@ -278,6 +279,7 @@ protected:
     PRBool InTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
 
+    nsresult RenameLocal(const char *newName);
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
