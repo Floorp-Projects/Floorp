@@ -23,6 +23,8 @@
 #include "nsIDOMSelection.h"
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
+#include "nsLayoutCID.h"
+static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
@@ -77,26 +79,22 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
 NS_IMETHODIMP IMETextTxn::Do(void)
 {
 
-#ifdef DEBUG_TAGUE
-  printf("Do IME Text element = %p\n", mElement.get());
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+  printf("Do IME Text element = %p replace = %d len = %d\n", mElement.get(), mReplaceLength, mStringToInsert.Length());
 #endif
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   // advance caret: This requires the presentation shell to get the selection.
-  nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-  NS_ASSERTION(selection,"Could not get selection in IMEtextTxn::Do\n");
-  if (NS_SUCCEEDED(result) && selection) {
-    if (mReplaceLength==0) {
+  nsresult result = NS_OK;
+  if (mReplaceLength==0) {
       result = mElement->InsertData(mOffset,mStringToInsert);
-    } else {
+  } else {
       result = mElement->ReplaceData(mOffset,mReplaceLength,mStringToInsert);
-    }
-    if (NS_SUCCEEDED(result)) {
-      result = CollapseTextSelection();
-    }
+  }
+  if (NS_SUCCEEDED(result)) {
+    result = CollapseTextSelection();
   }
 
   return result;
@@ -104,7 +102,7 @@ NS_IMETHODIMP IMETextTxn::Do(void)
 
 NS_IMETHODIMP IMETextTxn::Undo(void)
 {
-#ifdef DEBUG_TAGUE
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
   printf("Undo IME Text element = %p\n", mElement.get());
 #endif
 
@@ -134,7 +132,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   	return NS_ERROR_NULL_POINTER;
     
   nsresult  result;
-#ifdef DEBUG_TAGUE
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
   printf("Merge IME Text element = %p\n", mElement.get());
 #endif
 
@@ -168,7 +166,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     otherTxn->GetData(mStringToInsert,&newTextRangeList);
     mRangeList = do_QueryInterface(newTextRangeList);
     *aDidMerge = PR_TRUE;
-#ifdef DEBUG_TAGUE
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
     printf("IMETextTxn assimilated IMETextTxn:%p\n", aTransaction);
 #endif
     NS_RELEASE(otherTxn);
@@ -232,6 +230,23 @@ IMETextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 /* ============ protected methods ================== */
+static SelectionType TextRangeToSelection(int aTextRangeType)
+{
+   switch(aTextRangeType)
+   {
+      case nsIPrivateTextRange::TEXTRANGE_RAWINPUT:
+           return SELECTION_IME_RAWINPUT;
+      case nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT:
+           return SELECTION_IME_SELECTEDRAWTEXT;
+      case nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT:
+           return SELECTION_IME_CONVERTEDTEXT;
+      case nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT:
+           return SELECTION_IME_SELECTEDCONVERTEDTEXT;
+      case nsIPrivateTextRange::TEXTRANGE_CARETPOSITION:
+      default:
+           return SELECTION_NORMAL;
+   };
+}
 
 NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aTextRangeList)
 {
@@ -243,19 +258,23 @@ NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aT
   return NS_OK;
 }
 
+static SelectionType sel[4]=
+{
+ SELECTION_IME_RAWINPUT,
+ SELECTION_IME_SELECTEDRAWTEXT,
+ SELECTION_IME_CONVERTEDTEXT,
+ SELECTION_IME_SELECTEDCONVERTEDTEXT
+};
+
 NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 {
     nsresult      result;
-    PRBool        haveSelectedRange, haveCaretPosition;
     PRUint16      textRangeListLength,selectionStart,selectionEnd,
-              textRangeType, caretPosition, i;
+                  textRangeType, i;
     nsIPrivateTextRange*  textRange;
-
-    haveSelectedRange = PR_FALSE;
-    haveCaretPosition = PR_FALSE;
     
 
-#ifdef DEBUG_tague
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
     PRUint16 listlen,start,stop,type;
     nsIPrivateTextRange* rangePtr;
     result = mRangeList->GetLength(&listlen);
@@ -266,57 +285,123 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
       rangePtr->GetRangeEnd(&stop);
       rangePtr->GetRangeType(&type);
       printf("range[%d] start=%d end=%d type=",i,start,stop,type);
-      if (type==nsIPrivateTextRange::TEXTRANGE_RAWINPUT) printf("TEXTRANGE_RAWINPUT\n");
-      if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT) printf("TEXTRANGE_SELECTEDRAWTEXT\n");
-      if (type==nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT) printf("TEXTRANGE_CONVERTEDTEXT\n");
-      if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) printf("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
+      if (type==nsIPrivateTextRange::TEXTRANGE_RAWINPUT)
+                             printf("TEXTRANGE_RAWINPUT\n");
+      else if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT)
+                                  printf("TEXTRANGE_SELECTEDRAWTEXT\n");
+      else if (type==nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT)
+                                  printf("TEXTRANGE_CONVERTEDTEXT\n");
+      else if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT)
+                                  printf("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
+      else if (type==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
+                                  printf("TEXTRANGE_CARETPOSITION\n");
+      else printf("unknown constant\n");
     }
 #endif
         
     //
     // run through the text range list, if any
     //
-    if (mRangeList)
-    {
-      result = mRangeList->GetLength(&textRangeListLength);
-      if (NS_SUCCEEDED(result)) 
-      {
-        for(i=0;i<textRangeListLength;i++) {
-          result = mRangeList->Item(i,&textRange);
-          if (NS_SUCCEEDED(result))
-          {
-            result = textRange->GetRangeType(&textRangeType);
-            if (textRangeType==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) 
-            {
-              haveSelectedRange = PR_TRUE;
-              textRange->GetRangeStart(&selectionStart);
-              textRange->GetRangeEnd(&selectionEnd);
-            }
-            if (textRangeType==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
-            {
-              haveCaretPosition = PR_TRUE;
-              textRange->GetRangeStart(&caretPosition);
-            }
-          }
-        }
-      }
-    }
-
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
+    result = mRangeList->GetLength(&textRangeListLength);
+    if(NS_FAILED(result))
+        return result;
     nsCOMPtr<nsIDOMSelection> selection;
     result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-    if (NS_SUCCEEDED(result) && selection){
-      if (haveSelectedRange) {
-        result = selection->Collapse(mElement,mOffset+selectionStart);
-        result = selection->Extend(mElement,mOffset+selectionEnd);
-      } else {
-        if (haveCaretPosition)
-          result = selection->Collapse(mElement,mOffset+caretPosition);
-        else
+    nsCOMPtr<nsIDOMSelection> imeSel;
+    if(NS_SUCCEEDED(result))
+    {
+      result = selection->StartBatchChanges();
+      if (NS_SUCCEEDED(result))
+      {
+        for(PRInt8 selIdx = 0; selIdx < 4;selIdx++)
+        {
+          result = ps->GetSelection(sel[selIdx], getter_AddRefs(imeSel));
+            if(NS_SUCCEEDED(result))
+            {
+             result = imeSel->ClearSelection();
+               NS_ASSERTION(NS_SUCCEEDED(result), "Cannot ClearSelection");
+               // we just ignore the result and clean up the next one here
+            }
+        }
+        PRBool setCaret=PR_FALSE;
+        for(i=0;i<textRangeListLength;i++)
+        {
+          result = mRangeList->Item(i,&textRange);
+          NS_ASSERTION(NS_SUCCEEDED(result), "cannot get item");
+          if(NS_FAILED(result))
+               break;
+
+          result = textRange->GetRangeType(&textRangeType);
+          NS_ASSERTION(NS_SUCCEEDED(result), "cannot get range type");
+          if(NS_FAILED(result))
+               break;
+
+          result = textRange->GetRangeStart(&selectionStart);
+          NS_ASSERTION(NS_SUCCEEDED(result), "cannot get range start");
+          if(NS_FAILED(result))
+               break;
+          result = textRange->GetRangeEnd(&selectionEnd);
+          NS_ASSERTION(NS_SUCCEEDED(result), "cannot get range end");
+          if(NS_FAILED(result))
+               break;
+
+          if(nsIPrivateTextRange::TEXTRANGE_CARETPOSITION == textRangeType)
+          {
+             // Set the caret....
+             result = selection->Collapse(mElement,
+                      mOffset+selectionStart);
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot Collapse");
+             if(NS_SUCCEEDED(result))
+             setCaret = PR_TRUE;
+          } else {
+             // NS_ASSERTION(selectionStart != selectionEnd, "end == start");
+             if(selectionStart == selectionEnd)
+                continue;
+
+             nsCOMPtr<nsIDOMRange> newRange;
+
+             result= ps->GetSelection(TextRangeToSelection(textRangeType),
+                     getter_AddRefs(imeSel));
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot get selction");
+             if(NS_FAILED(result))
+                break;
+
+             result = nsComponentManager::CreateInstance(kRangeCID,
+                                   nsnull,
+                                   nsIDOMRange::GetIID(),
+                                   getter_AddRefs(newRange));
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot create new nsIDOMRange");
+             if(NS_FAILED(result))
+                break;
+
+             newRange->SetStart(mElement,mOffset+selectionStart);
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot SetStart");
+             if(NS_FAILED(result))
+                break;
+
+             newRange->SetEnd(mElement,mOffset+selectionEnd);
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot SetEnd");
+             if(NS_FAILED(result))
+                break;
+
+             imeSel->AddRange(newRange);
+             NS_ASSERTION(NS_SUCCEEDED(result), "Cannot AddRange");
+             if(NS_FAILED(result))
+                break;
+
+          } // if GetRangeEnd
+        } // for textRangeListLength
+        if(! setCaret) {
+          // set cursor
           result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
-      }
-    }
+          NS_ASSERTION(NS_SUCCEEDED(result), "Cannot Collapse");
+        }
+        result = selection->EndBatchChanges();
+        NS_ASSERTION(NS_SUCCEEDED(result), "Cannot EndBatchChanges");
+      } // if StartBatchChanges
+    } // if GetSelection
 
     return result;
 }
