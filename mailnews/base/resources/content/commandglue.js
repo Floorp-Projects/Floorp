@@ -961,20 +961,6 @@ function MsgToggleWorkOffline()
   }
 
 
-function  MsgSynchronizeOffline()
-  {
-  // this is just code for my testing purposes, and doesn't have the proper UI, as in the offline spec.
-  // we could use the account manager, or add a new service, the offline manager.
-  // what the heck, might as well bite the bullet and add a new service.
-  var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
-  if (offlineManager) {
-    // should use progress window here. params are:
-    // download news, download mail, send unsent messages, go offline when done, msg window
-    messenger.SetWindow(window, msgWindow);
-    offlineManager.synchronizeForOffline(false, true, true, false, msgWindow);
-  }
-}
-
 function MsgSettingsOffline()
 {
 }
