@@ -2461,7 +2461,7 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
 #define BREAK PRUnichar('\001')
 
 nsVoidArray * wallet_list;
-nsAutoString wallet_url;
+PRUnichar * wallet_url;
 
 void
 WLLT_GetPrefillListForViewer(nsAString& aPrefillList)
@@ -2481,7 +2481,7 @@ WLLT_GetPrefillListForViewer(nsAString& aPrefillList)
   }
 
   buffer.Append(BREAK);
-  buffer += wallet_url.get();
+  buffer += wallet_url;
   aPrefillList = buffer;
 }
 
@@ -3050,6 +3050,8 @@ WLLT_PrefillReturn(const nsAString& results)
   if (fillins.Length() == 0) { /* user pressed CANCEL */
     wallet_ReleasePrefillElementList(wallet_list);
     wallet_list = nsnull;
+    nsMemory::Free(wallet_url);
+    wallet_url = nsnull;
     return;
   }
 
@@ -3145,6 +3147,8 @@ WLLT_PrefillReturn(const nsAString& results)
   /* Release the prefill list that was generated when we walked thru the html content */
   wallet_ReleasePrefillElementList(wallet_list);
   wallet_list = nsnull;
+  nsMemory::Free(wallet_url);
+  wallet_url = nsnull;
 }
 
 /*
@@ -3360,7 +3364,8 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   } else {
     /* let user preview and verify the prefills first */
     wallet_list = wallet_PrefillElement_list;
-    wallet_url = urlName;
+    nsMemory::Free(wallet_url); 
+    wallet_url = ToNewUnicode(urlName);
 #ifdef DEBUG_morse
 ////wallet_DumpStopwatch();
 ////wallet_ClearStopwatch();
