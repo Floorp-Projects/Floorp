@@ -23,6 +23,7 @@ XPIDLSRCS = \
 	.\xpccomponents.idl \
 	.\xpcjsid.idl \
 	.\xpctest.idl \
+	.\xpctest2.idl \
 	.\xpcexception.idl \
 	.\nsIJSContextStack.idl \
 	.\nsIXPCSecurityManager.idl \
