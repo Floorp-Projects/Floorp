@@ -72,7 +72,7 @@ the detection of this.
 <h4>Class/Component Diagram</h4>
  
 <blockquote>   
-  <div align="Left"><img src="SpaceManagerClasses.gif" alt="SpaceManager Class Diagram" width="500" height="459" title="Example Class Diagram">
+  <div align="Left"><img src="SpaceManagerClasses.png" alt="SpaceManager Class Diagram" idth="500" eight="459" title="Example Class Diagram">
    <br>
    </div>
    </blockquote>
@@ -127,25 +127,40 @@ with  it, it is stored off before being replaced, and the returned to the
 BlockReflowState  instance after the new one has been destroyed. &nbsp;Thus,
 Space Managers  are effectively 'nested' during reflow, with each new block
 introducing its  own Space Manager.   
-  <h4>Use Case 2: Floater is added to the Space Manager</h4>
-  After a Space Manager is created for a block context's reflow chain, a
-floated  block may be added to it. &nbsp;This happens via the nsBlockFrame
-method UpdateSpaceManager. &nbsp;The general algorightm is:<br>
+
+  <h4>Use Case 2: Floater is added to the Space Manager</h4>  After a Space Manager is created for a block context's reflow chain, a
+floated  block may be added to it. &nbsp;This happens in the method <i>nsBlockReflowState::RecoverFloaters</i> and 
+<i>nsBlockReflowState::FlowAndPlaceFloater</i> (formerly this was done in nsBlockFrame::UpdateSpaceManager). &nbsp;<br>
+<br>
+The general algorightm in <i>nsBlockReflowState::RecoverFloaters</i> is:<br>
    
   <ul>
      <li>For each line in the block, see if it has floated blocks</li>
      <li>If floaters are in the line, iterate over the floaters and add each
  one to the Space Manger via the AddRectRegion method. &nbsp;The actual rect
- for the frame is cached in an nsFloaterCache so it does nto have to be recomputed.</li>
+ for the frame is cached in an nsFloaterCache so it does not have to be recomputed.</li>
      <li>If the block has any block children, then translate the Space Manager
  to the child block's origin and update the space manager in the context
-fo  the child block, recursively. When done with the child, restore the Space
+for the child block, recursively. When done with the child, restore the Space
  Managers coordinates by translating by the negative of the child block's
 origin.&nbsp;       <br>
      </li>
    
-  </ul>
-   
+  </ul><br>
+
+The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloater</i> is:<br>
+<ul>
+  <li>The band of available space is searched (with nsBlockReflowState::GetAvailableSpace);</li>
+  <li>The floater frame that is get from the passed nsFloaterCache argument is reflowed
+  and its rect is retriven with GetRect;</li>
+  <li>The floaters margins are added;</li>
+  <li>Check if the floater can be placed in the acutal band: if not advance to the next band;</li>
+  <li>Check the floater type and if it can be added to the space manager;</li>
+  <li>Align the floater to its containing block top if rule 
+      <a href="http://www.w3.org/TR/REC-CSS2/visuren.html#float-position">CSS2/9.5.1/4</a>
+      is not respected;</li>
+  <li>Add the floater using <i>nsSpaceManager::AddRectRegion</i> </li>
+</ul>
   <h4>Use Case 3: Space Manager is used to find available space to reflow
  into</h4>
   The nsBlockFrame makes use of the Space Manager indirectly to get the available
