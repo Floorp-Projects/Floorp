@@ -283,7 +283,8 @@ PR_GetLibraryPath()
     {
 	char *home;
 	char *local;
-	char *p;
+	char *p=NULL;
+    char * mozilla_home=NULL;
 	int len;
 
 	ev = getenv("LD_LIBRARY_PATH");
@@ -301,6 +302,11 @@ PR_GetLibraryPath()
 	    len += strlen(home) + 1;	/* +1 for the colon */
 	}
 
+	mozilla_home = getenv("MOZILLA_HOME");
+	if (mozilla_home && mozilla_home[0]) {
+	  len += strlen(mozilla_home) + 5 ;  /* +5 for initial : and trailing "/lib" */
+	}
+
 	local = ":/usr/local/netscape/lib/" PR_LINKER_ARCH;
 	len += strlen(local);		/* already got the : */
 	p = (char*) PR_MALLOC(len+50);
@@ -310,10 +316,18 @@ PR_GetLibraryPath()
 	        strcat(p, ":");
 	        strcat(p, home);
 	    }
+        if (mozilla_home && mozilla_home[0]) {
+          strcat(p, ":");
+          strcat(p, mozilla_home); 
+          strcat(p, "/lib");
+        }
 	    strcat(p, local);
-	}
+	}   /* if (p)  */
 	ev = p;
 	PR_LOG(_pr_io_lm, PR_LOG_NOTICE, ("linker path '%s'", ev));
+
+        printf("linker_path = %s\n", ev); 
+
     }
 #else
     /* AFAIK there isn't a library path with the HP SHL interface --Rob */
@@ -920,7 +934,7 @@ PR_FindSymbolAndLibrary(const char *raw_name, PRLibrary* *lib)
 PR_IMPLEMENT(PRLibrary*) 
 PR_LoadStaticLibrary(const char *name, const PRStaticLinkTable *slt)
 {
-    PRLibrary *lm;
+    PRLibrary *lm=NULL;
     PRLibrary* result = NULL;
 
     /* See if library is already loaded */
