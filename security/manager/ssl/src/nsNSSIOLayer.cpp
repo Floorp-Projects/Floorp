@@ -1014,8 +1014,7 @@ isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
 }
 
 static PRInt32
-checkHandshake(PRBool calledFromRead, PRInt32 bytesTransfered, 
-               PRFileDesc* fd, nsNSSSocketInfo *socketInfo)
+checkHandshake(PRInt32 bytesTransfered, PRFileDesc* fd, nsNSSSocketInfo *socketInfo)
 {
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
@@ -1059,13 +1058,7 @@ checkHandshake(PRBool calledFromRead, PRInt32 bytesTransfered,
 
         if (wantRetry) {
           // We want to cause the network layer to retry the connection.
-          if (calledFromRead) {
-            // This will cause a premature EOF
-            bytesTransfered = 0;
-          }
-          else { // called from write
-            PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-          }
+          PR_SetError(PR_CONNECT_RESET_ERROR, 0);
         }
       }
 
@@ -1113,7 +1106,7 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
   DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
 #endif
 
-  return checkHandshake(PR_TRUE, bytesRead, fd, socketInfo);
+  return checkHandshake(bytesRead, fd, socketInfo);
 }
 
 static PRInt32 PR_CALLBACK
@@ -1145,7 +1138,7 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
 #endif
 
-  return checkHandshake(PR_FALSE, bytesWritten, fd, socketInfo);
+  return checkHandshake(bytesWritten, fd, socketInfo);
 }
 
 static void InitNSSMethods()
