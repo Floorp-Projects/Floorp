@@ -187,8 +187,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
                case '\r':
                case '\n':
                  c = SkipWhiteSpace(c);
-                 value.Append((PRUnichar) c);
-                 break;
+                 continue;
                case 'u':
                case 'U':
                  state = 1;
