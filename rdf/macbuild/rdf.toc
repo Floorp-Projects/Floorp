@@ -14,3 +14,5 @@ mozilla/rdf/src/nsRDFSimpleContentSink.cpp
 mozilla/rdf/src/nsRDFTreeDocument.cpp
 mozilla/rdf/src/nsSimpleDataBase.cpp
 mozilla/rdf/src/rdfutil.cpp
+mozilla/rdf/src/nsContainerCursor.cpp
+mozilla/rdf/src/nsStreamDataSource.cpp

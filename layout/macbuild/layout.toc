@@ -174,3 +174,4 @@ mozilla/layout/html/table/src/nsTableRowGroupFrame.cpp
 mozilla/layout/xml/content/src/nsXMLElement.cpp
 mozilla/layout/xml/document/src/nsXMLContentSink.cpp
 mozilla/layout/xml/document/src/nsXMLDocument.cpp
+mozilla/layout/base/src/nsContentIterator.cpp
