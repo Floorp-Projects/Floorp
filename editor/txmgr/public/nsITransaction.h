@@ -18,8 +18,11 @@
 
 #ifndef nsITransaction_h__
 #define nsITransaction_h__
+
 #include "nsISupports.h"
 #include "nsIOutputStream.h"
+#include "nsString.h"
+
 /*
 Transaction interface to outside world
 */
@@ -33,34 +36,49 @@ Transaction interface to outside world
 /**
  * A transaction specific interface. 
  * <P>
- * It's implemented by an object that executes some behavior that must be tracked
- * by the transaction manager.
+ * It's implemented by an object that executes some behavior that must be
+ * tracked by the transaction manager.
  */
 class nsITransaction  : public nsISupports{
 public:
 
   /**
-   * Execute() tells the implementation of nsITransaction to execute itself.
+   * Executes the transaction.
    */
-  virtual nsresult Execute(void) = 0;
+  virtual nsresult Do(void) = 0;
 
   /**
-   * Undo() tells the implementation of nsITransaction to undo it's execution.
+   * Restores the state to what it was before the transaction was executed.
    */
   virtual nsresult Undo(void) = 0;
 
   /**
-   * Redo() tells the implementation of nsITransaction to redo it's execution.
+   * Executes the transaction again. Can only be called on a transaction that
+   * was previously undone.
+   * <P>
+   * In most cases, the Redo() method will actually call the Do() method to
+   * execute the transaction again.
    */
   virtual nsresult Redo(void) = 0;
 
   /**
-   * Write() tells the implementation of nsITransaction to write a representation
-   * of itself.
-   * @param nsIOutputStream *
+   * Write a stream representation of the current state of the transaction.
+   * @param aOutputStream the stream to write to.
    */
-  virtual nsresult Write(nsIOutputStream *) = 0;
+  virtual nsresult Write(nsIOutputStream *aOutputStream) = 0;
+
+  /**
+   * Returns the string to display for the undo menu item.
+   * @param aString will point to string to display.
+   */
+  virtual nsresult GetUndoString(nsString **aString) = 0;
+
+  /**
+   * Returns the string to display for the redo menu item.
+   * @param aString will point to string to display.
+   */
+  virtual nsresult GetRedoString(nsString **aString) = 0;
 };
 
-#endif // nsITransaction
+#endif // nsITransaction_h__
 

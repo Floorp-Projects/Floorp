@@ -39,12 +39,15 @@ public:
   /* Macro for AddRef(), Release(), and QueryInterface() */
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Execute(nsITransaction *tx);
-  virtual nsresult Undo(PRInt32 n);
-  virtual nsresult Redo(PRInt32 n);
-  virtual nsresult Write(nsIOutputStream *os);
-  // virtual nsresult AddListener(nsITransactionListener *l);
-  // virtual nsresult RemoveListener(nsITransactionListener *l);
+  /* nsITransactionManager method implementations. */
+  virtual nsresult Do(nsITransaction *aTransaction);
+  virtual nsresult Undo(void);
+  virtual nsresult Redo(void);
+  virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
+  virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
+  virtual nsresult Write(nsIOutputStream *aOutputStream);
+  virtual nsresult AddListener(nsITransactionListener *aListener);
+  virtual nsresult RemoveListener(nsITransactionListener *aListener);
 };
 
 #endif // nsTransactionManager_h__
