@@ -33,7 +33,12 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+]>
         
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -4,7 +4,13 @@
 <?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://help/locale/help.dtd">
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd" >
+%helpDTD;
+]>
+
 
 <window id="moz__help"
         windowtype="mozilla:help"
