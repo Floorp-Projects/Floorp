@@ -119,7 +119,8 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 
   HMENU nativeMenuHandle;
   void * voidData;
-  aMenu->GetNativeData(voidData);
+  aMenu->GetNativeData(&voidData);
+
   nativeMenuHandle = (HMENU)voidData;
 
   MENUITEMINFO menuInfo;
