@@ -36,7 +36,7 @@ interface nsISHTransaction : nsISupports
 	/**
      * The nsISHEntry for the current transaction
      */
-	readonly attribute nsISHEntry sHEntry;
+	attribute nsISHEntry sHEntry;
 
 	/**
 	 * The parent of this transaction
@@ -52,6 +52,12 @@ interface nsISHTransaction : nsISupports
 	 * The *other* children of this transaction.
 	 */
 	readonly attribute nsISHTransaction lrvList;
+
+	/**
+	 *	Specifies if this transaction should persist.  If not it will be replaced
+	 * by new additions to the list.
+	 */
+	attribute boolean persist;
 
 	/**
 	 * Create a transaction with parent and History Entry 
