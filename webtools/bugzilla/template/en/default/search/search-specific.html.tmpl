@@ -48,7 +48,7 @@ For example, if the [% terms.bug %] you are looking for is a browser crash when 
 for "crash secure SSL flash".
 </p>
 
-<form method="get" action="buglist.cgi">
+<form name="queryform" method="get" action="buglist.cgi">
 <input type="hidden" name="query_format" value="specific">
 <input type="hidden" name="order" value="relevance desc">
 
@@ -90,6 +90,10 @@ for "crash secure SSL flash".
     <td>
       <input name="content" size="40" 
              value="[% default.content.0 FILTER html %]">
+      <script language="JavaScript" type="text/javascript"> <!--
+          document.forms['queryform'].content.focus(); 
+      // -->
+      </script>
     </td>
   </tr>
   <tr>

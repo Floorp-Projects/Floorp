@@ -350,6 +350,10 @@ function selectProduct(f) {
     <td>
       <input name="short_desc" size="40" accesskey="s"
              value="[% default.short_desc.0 FILTER html %]">
+      <script language="JavaScript" type="text/javascript"> <!--
+          document.forms['queryform'].short_desc.focus(); 
+      // -->
+      </script>
     </td>
     <td>
       [% IF button_name %]
