@@ -149,6 +149,7 @@ main(int argc, char** argv)
     nsIRDFLiteral* theTitle      = nsnull;
     PRInt32 i;
 
+    // Get netlib off the floor...
     if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                                     kIEventQueueServiceIID,
                                                     (nsISupports**) &theEventQueueService)))
@@ -161,6 +162,9 @@ main(int argc, char** argv)
                                                                  &mainQueue)))
         goto done;
 
+    // Create a stream data source and initialize it on argv[1], which
+    // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
+    // URL, but only a "file:" URL will be written back to disk.)
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
@@ -176,6 +180,7 @@ main(int argc, char** argv)
         PL_HandleEvent(event);
     }
 
+    // Now take the graph and munge it a little bit...
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                     kIRDFServiceIID,
                                                     (nsISupports**) &theRDFService)))
@@ -193,6 +198,7 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = ds->Assert(theHomePage, NC_title, theTitle, PR_TRUE)))
         goto done;
 
+    // And finally, write it back out.
     if (NS_FAILED(rv = ds->Flush()))
         goto done;
 
