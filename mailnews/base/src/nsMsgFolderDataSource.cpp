@@ -61,7 +61,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_Move= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
-
+nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 
 
 nsMsgFolderDataSource::nsMsgFolderDataSource():
@@ -99,6 +99,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
   NS_RELEASE2(kNC_Compact, refcnt);
   NS_RELEASE2(kNC_Rename, refcnt);
+  NS_RELEASE2(kNC_EmptyTrash, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
@@ -142,6 +143,7 @@ nsresult nsMsgFolderDataSource::Init()
                              &kNC_MarkAllMessagesRead);
     mRDFService->GetResource(NC_RDF_COMPACT, &kNC_Compact);
     mRDFService->GetResource(NC_RDF_RENAME, &kNC_Rename);
+    mRDFService->GetResource(NC_RDF_EMPTYTRASH, &kNC_EmptyTrash);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -443,6 +445,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_MarkAllMessagesRead);
     cmds->AppendElement(kNC_Compact);
     cmds->AppendElement(kNC_Rename);
+    cmds->AppendElement(kNC_EmptyTrash);
   }
 
   if (cmds != nsnull)
@@ -482,7 +485,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
             (aCommand == kNC_GetNewMessages) ||
             (aCommand == kNC_MarkAllMessagesRead) ||
             (aCommand == kNC_Compact) || 
-            (aCommand == kNC_Rename))) 
+            (aCommand == kNC_Rename) ||
+            (aCommand == kNC_EmptyTrash) )) 
       {
         *aResult = PR_FALSE;
         return NS_OK;
@@ -543,6 +547,10 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       else if ((aCommand == kNC_Compact))
       {
         rv = folder->Compact();
+      }
+      else if ((aCommand == kNC_EmptyTrash))
+      {
+          rv = folder->EmptyTrash();
       }
     }
   }

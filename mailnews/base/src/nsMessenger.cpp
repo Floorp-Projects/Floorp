@@ -142,6 +142,8 @@ public:
                           const char* name);
   NS_IMETHOD CompactFolder(nsIRDFCompositeDataSource* db,
                            nsIDOMXULElement* folder);
+  NS_IMETHOD EmptyTrash(nsIRDFCompositeDataSource* db,
+                           nsIDOMXULElement* folder);
   NS_IMETHOD Undo();
   NS_IMETHOD Redo();
   NS_IMETHOD SendUnsentMessages();
@@ -1004,6 +1006,27 @@ nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
     if (NS_FAILED(rv)) return rv;
     folderArray->AppendElement(folderResource);
     rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::EmptyTrash(nsIRDFCompositeDataSource* db,
+                        nsIDOMXULElement* folder)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  
+  if (!db || !folder) return rv;
+  nsCOMPtr<nsISupportsArray> folderArray;
+  nsCOMPtr<nsIRDFResource> folderResource;
+
+  rv = folder->GetResource(getter_AddRefs(folderResource));
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+    if (NS_FAILED(rv)) return rv;
+    folderArray->AppendElement(folderResource);
+    rv = DoCommand(db, NC_RDF_EMPTYTRASH, folderArray, nsnull);
   }
   return rv;
 }

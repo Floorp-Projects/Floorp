@@ -178,6 +178,7 @@ protected:
   static nsIRDFResource* kNC_MarkAllMessagesRead;
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;
+  static nsIRDFResource* kNC_EmptyTrash;
 
 };
 
