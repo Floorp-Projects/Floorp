@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 //PROTOTYPES
 static void selectFrames(nsIFrame *aBegin, PRUint32 aBeginOffset, nsIFrame *aEnd, PRUint32 aEndOffset, nsDirection aDir, PRUint32 aFlags);
+static void unselectFrames(nsIFrame *aRootFrame);
 static PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
 static nsIFrame * getNextFrame(nsIFrame *aStart);
 static void printRange(nsIDOMRange *aDomRange);
@@ -667,7 +668,7 @@ getNextFrame(nsIFrame *aStart)
 {
   nsIFrame *result;
   nsIFrame *parent = aStart;
-  if (NS_SUCCEEDED(parent->FirstChild(nsnull, &result)) && result){
+  if (parent && NS_SUCCEEDED(parent->FirstChild(nsnull, &result)) && result){
     return result;
   }
   while(parent){
@@ -753,6 +754,18 @@ selectFrames(nsIFrame *aBegin, PRUint32 aBeginOffset, nsIFrame *aEnd, PRUint32 a
   }
 }
 
+// unselect all frames under the root frame
+void
+unselectFrames(nsIFrame *aRootFrame)
+{
+  nsIFrame *theFrame = aRootFrame;
+  nsSelectionStruct ss = {0};  // all that's important is that the selection_on flag is not lit.
+  while (theFrame)
+  {
+    theFrame->SetSelected(&ss);
+    theFrame = getNextFrame(theFrame);
+  }
+}
 
 /**
 hard to go from nodes to frames, easy the other way!
@@ -951,6 +964,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
     SetDirty();
     return NS_OK;
   }
+  
   //we will need to check if any "side" is the anchor and send a direction order to the frames.
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
@@ -965,6 +979,9 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   else
     res = NS_OK;
   if (NS_SUCCEEDED(res)){
+    // hack - joe 3/16/99: first tell all frames to unselect
+    unselectFrames(aStartFrame);
+  
     for (PRUint32 i =0; i<mRangeArray->Count(); i++){
       //end content and start content do NOT necessarily mean anchor and focus frame respectively
       PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
