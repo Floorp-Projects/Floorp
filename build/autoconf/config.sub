@@ -224,6 +224,9 @@ esac
 case $basic_machine in
 	# Recognize the basic CPU types without company name.
 	# Some are omitted here because they have special meanings below.
+#### MozillaHack 
+# mips*el
+#### End MozillaHack 
 	1750a | 580 \
 	| a29k \
 	| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] | alphapca5[67] \
@@ -238,7 +241,7 @@ case $basic_machine in
 	| mips | mips16 | mips64 | mips64el | mips64orion | mips64orionel \
 	| mips64vr4100 | mips64vr4100el | mips64vr4300 \
 	| mips64vr4300el | mips64vr5000 | mips64vr5000el \
-	| mipsbe | mipseb | mipsel | mipsle | mipstx39 | mipstx39el \
+	| mipsbe | mipseb | mips*el | mipsle | mipstx39 | mipstx39el \
 	| mipsisa32 | mipsisa64 \
 	| mn10200 | mn10300 \
 	| ns16k | ns32k \
@@ -276,6 +279,9 @@ case $basic_machine in
 		exit 1
 		;;
 	# Recognize the basic CPU types with company name.
+#### MozillaHack 
+# mips*el
+#### End MozillaHack 
 	580-* \
 	| a29k-* \
 	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
@@ -298,7 +304,7 @@ case $basic_machine in
 	| mips-* | mips16-* | mips64-* | mips64el-* | mips64orion-* \
 	| mips64orionel-* | mips64vr4100-* | mips64vr4100el-* \
 	| mips64vr4300-* | mips64vr4300el-* | mipsbe-* | mipseb-* \
-	| mipsle-* | mipsel-* | mipstx39-* | mipstx39el-* \
+	| mipsle-* | mips*el-* | mipstx39-* | mipstx39el-* \
 	| none-* | np1-* | ns16k-* | ns32k-* \
 	| orion-* \
 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
@@ -1082,6 +1088,9 @@ case $os in
 	# The portable systems comes first.
 	# Each alternative MUST END IN A *, to match a version number.
 	# -sysv* is not here because it comes later, after sysvr4.
+#### MozillaHack 
+# msvc | mksnt
+#### End MozillaHack 
 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
@@ -1097,6 +1106,7 @@ case $os in
 	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
 	      | -mingw32* | -linux-gnu* | -uxpv* | -beos* | -mpeix* | -udk* \
 	      | -interix* | -uwin* | -rhapsody* | -darwin* | -opened* \
+              | -msvc* | -mksnt* \
 	      | -openstep* | -oskit* | -conix* | -pw32* | -nonstopux* \
 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
