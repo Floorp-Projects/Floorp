@@ -185,7 +185,7 @@ pref("network.hosts.socks_server",          "");
 pref("network.hosts.socks_serverport",      1080);
 pref("network.hosts.socks_conf",            "");
 pref("network.proxy.autoconfig_url",        "");
-pref("network.proxy.type",                  3); /* Changed default by req of Jon Kalb */
+pref("network.proxy.type",                  0);
 pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
 pref("network.proxy.gopher",                "");
