@@ -1017,20 +1017,19 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
   PR_FREEIF(rsrcString);
 
+/**** RICHIE: When we get the addbook:add protocol into the product, we need to turn this stuff back on!
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
-	// RICHIE - Once this is completed in the back end, we can enable the button again
-	// htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
-	//	                        vEscCard, rsrcString);
-	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit disabled=\"true\" value=\"%s\"></INPUT></FORM>",
-		                        vEscCard, rsrcString);
-	
+	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
+		                       vEscCard, rsrcString);	
   PR_FREEIF(rsrcString);
 
 	if (!htmlLine1 && !htmlLine2)
-	{
+******/
+  if (!htmlLine1)
+  {
 		nsCRT::free (vEscCard);
 		PR_FREEIF (htmlLine1);
-		PR_FREEIF (htmlLine2);
+		// PR_FREEIF (htmlLine2);
 		return VCARD_OUT_OF_MEMORY;
 	}
 	
@@ -1054,15 +1053,19 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	status = WriteEachLineToStream (obj, "\")</SCRIPT>");
 	if (status < 0) goto FAIL;
 
-	status = WriteLineToStream (obj, htmlLine2, PR_FALSE);
-	if (status < 0) goto FAIL;
+  // RICHIE - this goes back in when the addcard feature is done!
+	// status = WriteLineToStream (obj, htmlLine2, PR_FALSE);
+	// if (status < 0) goto FAIL;
+
 	status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
 	if (status < 0) goto FAIL;
 
 	FAIL:
 	PR_FREEIF (vEscCard);
 	PR_FREEIF (htmlLine1);
-	PR_FREEIF (htmlLine2);
+
+  // RICHIE - this goes back in when the addcard feature is done!
+  // PR_FREEIF (htmlLine2);
 
 	return status;
 }
