@@ -439,12 +439,10 @@ NET_ExtViewerConverter   (int         format_out,
 		 * 0  No, don't stream data, play from the file
 		 * 1  Yes, stream the data from the network
 		 */
-		int XFE_AskStreamQuestion(MWContext * window_id); /* definition */
-
 		if (NET_URL_Type (URL_s->address) == ABOUT_TYPE_URL)
 		  yes_stream = 1;
 		else
-		  yes_stream = XFE_AskStreamQuestion(window_id);
+		  yes_stream = FE_AskStreamQuestion(window_id);
 
 		if(yes_stream == -1)
 		  {

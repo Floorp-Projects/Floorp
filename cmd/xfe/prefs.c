@@ -43,6 +43,9 @@
 #include <stddef.h>
 #include <pwd.h>
 
+#include <Xm/Xm.h>
+#undef Bool
+
 #include "mozilla.h"
 #include "xfe.h"
 #include "fonts.h"
@@ -1912,4 +1915,47 @@ Bool fe_CheckVersionAndSavePrefs(char            *filename,
 	else {
 		return (XFE_SavePrefs ((char *) fe_globalData.user_prefs_file, prefs));
 	}
+}
+
+extern
+XP_Bool
+FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic) 
+{
+    XmString *xm_str = (XmString*)v_xm_str;
+    KeySym *mnemonic = (KeySym*)v_mnemonic;
+    char buf[256];
+    char* _str;
+    char* p1;
+    char* p2;
+
+    XP_ASSERT(name);
+    XP_ASSERT(str);
+    XP_ASSERT(xm_str);
+
+    if ( name == NULL || str == NULL || xm_str == NULL ) return FALSE;
+
+    _str = NULL;
+	*str = NULL;
+    *xm_str = NULL;
+    *mnemonic = '\0';
+
+    strncpy(buf, name, 200);
+    strcat(buf, ".label");
+
+    PREF_CopyConfigString(buf, &_str);
+
+    if ( _str == NULL || *_str == '\0' ) return FALSE;
+
+    /* Strip out ampersands */
+    if ( strchr(_str, '&') != NULL ) {
+        for ( p1 = _str, p2 = _str; *p2; p1++, p2++ ) {
+            if ( *p1 == '&' && *(++p1) != '&' ) *mnemonic = *p1;
+            *p2 = *p1;
+        }
+    }
+
+    *str = _str;
+    *xm_str = XmStringCreateLtoR(_str, XmFONTLIST_DEFAULT_TAG);
+
+    return ( *xm_str != NULL );
 }

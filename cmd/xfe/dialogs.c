@@ -5623,7 +5623,7 @@ fe_PrintDialog (MWContext *context)
  */
 
 int
-XFE_AskStreamQuestion (MWContext *context)
+FE_AskStreamQuestion (MWContext *context)
 {
   struct fe_confirm_data data;
   Widget mainw = CONTEXT_WIDGET (context);

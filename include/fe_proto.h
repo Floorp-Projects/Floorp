@@ -1326,6 +1326,17 @@ PRBool FE_IsNetscapeDefault(void);
 PRBool FE_MakeNetscapeDefault(void);
 #endif
 
+#ifdef XP_UNIX
+/* This should be a FE specific feature. -cls */
+extern XP_Bool
+FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic
+);
+
+/* To stream or not to stream, that is the question to the FE. -cls */
+extern int 
+FE_AskStreamQuestion(MWContext* window_id);
+#endif
+
 XP_END_PROTOS
 
 #endif /* _FrontEnd_ */
