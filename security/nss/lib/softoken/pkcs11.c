@@ -738,7 +738,7 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
         CK_TRUST clientTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST emailTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
         CK_TRUST signTrust = CKT_NETSCAPE_TRUST_UNKNOWN;
- 	NSSLOWCERTCertTrust dbTrust;
+	NSSLOWCERTCertTrust dbTrust = { 0 } ;
 	SECStatus rv;
 
 
@@ -805,10 +805,10 @@ pk11_handleTrustObject(PK11Session *session,PK11Object *object)
 		cert->trust->objectSigningFlags & CERTDB_PRESERVE_TRUST_BITS;
 	}
 
-	dbTrust.sslFlags = pk11_MapTrust(sslTrust,PR_FALSE);
+	dbTrust.sslFlags |= pk11_MapTrust(sslTrust,PR_FALSE);
 	dbTrust.sslFlags |= pk11_MapTrust(clientTrust,PR_TRUE);
-	dbTrust.emailFlags = pk11_MapTrust(emailTrust,PR_FALSE);
-	dbTrust.objectSigningFlags = pk11_MapTrust(signTrust,PR_FALSE);
+	dbTrust.emailFlags |= pk11_MapTrust(emailTrust,PR_FALSE);
+	dbTrust.objectSigningFlags |= pk11_MapTrust(signTrust,PR_FALSE);
 
 	rv = nsslowcert_ChangeCertTrust(slot->certDB,cert,&dbTrust);
 	object->handle=pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_TRUST);
