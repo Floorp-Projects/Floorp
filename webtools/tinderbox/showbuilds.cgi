@@ -364,13 +364,6 @@ BEGIN {
           print" <A HREF=$binaryurl>D</A>";
       }
       
-      # Pageloader data
-      if (defined $td->{pageloader}{$logfile}) {
-        my ($pageloader_time)
-            = @{ $td->{pageloader}{$logfile} };
-        # ex: Tp:8.4s
-        print sprintf "<br>Tp:%dms", $pageloader_time;
-      }
 
       # Scrape data
       if (defined $td->{scrape}{$logfile}) {

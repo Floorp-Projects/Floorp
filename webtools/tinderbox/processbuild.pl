@@ -77,15 +77,6 @@ if (defined $warning_buildnames_pat
   system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
 }
 
-# Pageloader data
-#   Compare the name with $pageloader_buildnames_pat which is defined in
-#   $tinderbox{tree}/treedata.pl if at all.
-if (defined $pageloader_buildnames_pat
-    and $tinderbox{build} =~ /^$pageloader_buildnames_pat$/
-    and $tinderbox{status} eq 'success') {
-  system("./pageloader.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
-}
-
 # Scrape data
 #   Look for build name in scrapedata.pl.
 require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";

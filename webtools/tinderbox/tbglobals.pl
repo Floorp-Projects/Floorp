@@ -146,7 +146,6 @@ sub tb_load_data {
 
   make_build_table($td, $build_list);
 
-  $td->{pageloader} = load_pageloader($td);
   $td->{scrape}     = load_scrape($td);
   $td->{warnings}   = load_warnings($td);
 
@@ -389,28 +388,7 @@ sub load_who {
   #  $who_list->[$time_count] = {};
   #}
 }
-    
 
-
-
-# Load data about pageloader times.
-#   File format: <logfile>|<pageloader time>
-#
-sub load_pageloader {
-  my $treedata = $_[0];
-  local $_;
-
-  my $pageloader = {};
-  
-  open(PAGELOADERLOG, "<$treedata->{name}/pageloader.dat");
-  while (<PAGELOADERLOG>) {
-    chomp;
-    my ($logfile, $pageloader_time) = split /\|/;
-
-    $pageloader->{$logfile} = [ $pageloader_time ];
-  }
-  return $pageloader;
-}
 
 
 # Load data about scrape data.
