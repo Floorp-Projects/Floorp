@@ -63,6 +63,7 @@
 #include "nsEditorUtils.h"
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
+#include "nsLayoutErrors.h"
 
 
 
