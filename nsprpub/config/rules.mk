@@ -326,6 +326,8 @@ ifndef XP_OS2_EMX
 else
 	$(CCC) -o $@ -c $(CFLAGS) $< 
 endif
+else
+	$(CCC) -o $@ -c $(CCCFLAGS) $<
 endif
 
 WCCFLAGS1 = $(subst /,\\,$(CFLAGS))
