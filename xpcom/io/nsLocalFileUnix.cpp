@@ -436,7 +436,11 @@ nsLocalFile::AppendRelativePath(const char *fragment)
     if (*fragment == '/')
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    mPath.Append(NS_LITERAL_CSTRING("/") + nsDependentCString(fragment));
+    if (mPath.Equals("/")) {
+        mPath.Append(nsDependentCString(fragment));
+    } else {
+        mPath.Append(NS_LITERAL_CSTRING("/") + nsDependentCString(fragment));
+    }
 
     if (!mPath.get())
         return NS_ERROR_OUT_OF_MEMORY;
