@@ -1034,7 +1034,7 @@ MarkForDeath(PLDHashTable* aTable, PLDHashEntryHdr* aHdr, PRUint32 aNumber, void
     return PL_DHASH_NEXT; // Already marked for death.
 
   nsCAutoString path;
-  nsIURI* uri = binding->DocURI()->GetPath(path);
+  binding->DocURI()->GetPath(path);
 
   if (!strncmp(path.get(), "/skin", 5))
     binding->MarkForDeath();
