@@ -26,7 +26,10 @@
 #define DOM_PRIV_H
 
 #include "dom.h"
-#include "xp.h"
+#include "xp_mem.h"
+#include "xpassert.h"
+#include "xp_str.h"
+/* #include "xp.h" -- this pulls in half the freaking client...no thanks! */
 
 JSObject *
 dom_NodeInit(JSContext *cx, JSObject *obj);

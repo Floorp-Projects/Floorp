@@ -168,6 +168,7 @@ JSClass DOM_DOMClass = {
     JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  dom_finalize
 };
 
+#if 0
 static JSBool
 dom_hasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
            jsval *rval)
@@ -188,4 +189,5 @@ static JSFunctionSpec dom_methods[] = {
     {"hasFeature",  dom_hasFeature,     2},
     {0}
 };
+#endif
 

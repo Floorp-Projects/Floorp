@@ -18,6 +18,54 @@
 
 #include "domstyle.h"
 
+static int
+CompareSelectors(const void *v1, const void *v2)
+{
+    DOM_StyleSelector *s1 = (DOM_StyleSelector *)v1,
+        *s2 = (DOM_StyleSelector *)v2;
+
+    return s1->type == s2->type &&
+
+        /* compare base selector */
+        !XP_STRCMP(s1->selector, s2->selector) &&
+
+        /* if both have a psuedo, they have to match, else both must be NULL */
+        (s1->pseudo && s2->pseudo ?
+         XP_STRCMP(s1->pseudo, s2->pseudo) :
+         !(s1 || s2));
+}
+
+DOM_StyleDatabase *
+DOM_NewStyleDatabase(JSContext *cx)
+{
+    DOM_StyleDatabase *db = XP_NEW_ZAP(DOM_StyleDatabase);
+    if (!db)
+        return NULL;
+
+    db->ht = PL_NewHashTable(32, PL_HashString, PL_CompareStrings,
+                             CompareSelectors, NULL, NULL);
+    if (!db->ht) {
+        XP_FREE(db);
+        return NULL;
+    }
+
+    return db;
+}
+
+void
+DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db)
+{
+    PL_HashTableDestroy(db->ht);
+    XP_FREE(db);
+}
+
+static JSBool
+InsertBaseSelector(JSContext *cx, DOM_StyleDatabase *db,
+                   DOM_StyleSelector *sel)
+{
+    return PL_HashTableAdd(db->ht, sel->selector, sel) != NULL;
+}
+
 static DOM_StyleSelector *
 GetBaseSelector(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleToken type,
                 DOM_StyleToken pseudo)
@@ -30,16 +78,16 @@ GetBaseSelector(JSContext *cx, DOM_StyleDatabase *db, DOM_StyleToken type,
 static void
 DestroySelector(JSContext *cx, DOM_StyleSelector *sel)
 {
-    XP_FREE(sel->selector);
+    XP_FREE((char *)sel->selector);
     if (sel->pseudo)
-        XP_FREE(sel->pseudo);
+        XP_FREE((char *)sel->pseudo);
     if (sel->rules) {
         DOM_StyleRule *iter, *next;
         iter = sel->rules;
         do {
             next = iter->next;
-            XP_FREE(iter->entry.name);
-            XP_FREE(iter->entry.value);
+            XP_FREE((char *)iter->entry.name);
+            XP_FREE((char *)iter->entry.value);
             XP_FREE(iter);
             iter = next;
         } while (iter);
@@ -93,23 +141,24 @@ GetPseudo(JSContext *cx, DOM_Element *element)
     return entry ? entry->value : NULL;
 }
 
-#define ELEMENT_IS_TYPE(node, element) \
-  (!XP_STRCMP(((element))->tagName, (type)))
-
 #define PSEUDO_MATCHES(p1, p2) (!XP_STRCMP((p1), (p2)))
 
+#ifdef DEBUG_shaver
 #define MATCH()                                                               \
-#ifdef DEBUG_shaver                                                           \
         fprintf(stderr, "selector %s:%s matches element %s\n",                \
                 sel->selector, sel->pseudo ? sel->pseudo : "",                \
-                element->tagName);                                            \
+                element->tagName);
+#else
+#define MATCH()
 #endif
 
+#ifdef DEBUG_shaver
 #define NO_MATCH()                                                            \
-#ifdef DEBUG_shaver                                                           \
         fprintf(stderr, "selector %s:%s doesn't match element %s\n",          \
                 sel->selector, sel->pseudo ? sel->pseudo : "",                \
-                element->tagName);                                            \
+                element->tagName);
+#else
+#define NO_MATCH()
 #endif
 
 static JSBool
@@ -117,8 +166,11 @@ SelectorMatchesToken(JSContext *cx, DOM_StyleSelector *sel,
                      DOM_StyleToken token, DOM_StyleToken pseudo)
 {
     /* XXX handle #ID and .class */
-    return !XPSTRCMP(sel->type, token);
+    return !XP_STRCMP(sel->selector, token);
 }
+
+#define ELEMENT_IS_TYPE(element, type) \
+  (!XP_STRCMP(((element))->tagName, (type)))
 
 static JSBool
 SelectorMatchesElement(JSContext *cx, DOM_Element *element,
@@ -128,7 +180,7 @@ SelectorMatchesElement(JSContext *cx, DOM_Element *element,
     if (ELEMENT_IS_TYPE(element, sel->selector)) {
         /* check pseudo, if any */
         if (sel->pseudo) {
-            DOM_StyleToken elementPseudo = GetPseudo(element);
+            DOM_StyleToken elementPseudo = GetPseudo(cx, element);
             if (PSEUDO_MATCHES(sel->pseudo, elementPseudo)) {
                 MATCH();
                 return JS_TRUE;
@@ -163,7 +215,7 @@ AncestorOfType(JSContext *cx, DOM_Element *element, DOM_StyleSelector *sel)
         /* check type */
         if (SelectorMatchesElement(cx, element, sel))
             return element;
-        element = (DOM_Element *)element.node->parent;
+        element = (DOM_Element *)element->node.parent;
     } while (element);
 
     return NULL;
@@ -187,7 +239,7 @@ CheckSelector(JSContext *cx, DOM_Element *element, DOM_StyleSelector *sel,
         if (sel->rules) {
             uintN score = SELECTOR_SCORE(sel, specificity);
             if (score > *best) {        /* are we the best so far? */
-                entry = RuleValueFor(sel, property);
+                entry = RuleValueFor(cx, sel->rules, property);
                 if (entry) {    /* do we have a value for this property? */
 #ifdef DEBUG_shaver
                     fprintf(stderr, "- score %d, value %s\n",
@@ -220,7 +272,7 @@ CheckSelector(JSContext *cx, DOM_Element *element, DOM_StyleSelector *sel,
 
 JSBool
 DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db,
-                     DOM_Node *node, DOM_StyleToken property.
+                     DOM_Node *node, DOM_StyleToken property,
                      DOM_StyleToken pseudo, DOM_AttributeEntry **entryp)
 {
     DOM_StyleSelector *sel;
@@ -236,7 +288,7 @@ DOM_StyleGetProperty(JSContext *cx, DOM_StyleDatabase *db,
 
     *entryp = NULL;
 
-    sel = GetBaseSelector(db, element->tagName);
+    sel = GetBaseSelector(cx, db, element->tagName, GetPseudo(cx, element));
     if (!sel)
         return JS_TRUE;
 

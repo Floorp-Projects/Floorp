@@ -22,7 +22,8 @@
  */
 
 #include "jsapi.h"
-#include "dom.h"
+#include "dom_priv.h"
+#include "plhash.h"
 
 #ifndef DOM_STYLE_H
 #define DOM_STYLE_H
@@ -45,14 +46,14 @@ typedef const char *DOM_StyleToken;
 #define DOM_PSEUDOIZE(sel)              ((sel) | DOM_STYLE_PSEUDO_TAG)
 
 enum {
-    SELECTOR_UNKNOWN = 0
+    SELECTOR_UNKNOWN = 0,
     SELECTOR_ID,
     SELECTOR_CLASS,
     SELECTOR_TAG
 };
 
 struct DOM_StyleDatabase {
-    PRHashTable *hashtable;  /* PRHash, from js/ref or nsprpub, depending? */
+    PLHashTable *ht;  /* PRHash, from js/ref or nsprpub, depending? */
 };
 
 DOM_StyleDatabase *
@@ -99,8 +100,8 @@ struct DOM_StyleRule {
  *
  * Usage example:
  * 
- * DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db,
- *                  "A:visited { color: blue }", 0, DOM_STYLE_WEIGHT_AUTHOR);
+ * DOM_StyleParseRule(JSContext *cx, DOM_StyleDatabase *db,
+ *                    "A:visited { color: blue }", 0, DOM_STYLE_WEIGHT_AUTHOR);
  */
 
 #define DOM_STYLE_WEIGHT_NONE      0
@@ -109,8 +110,8 @@ struct DOM_StyleRule {
 #define DOM_STYLE_WEIGHT_AUTHOR    6
 
 JSBool
-DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
-                 uintN len, intN baseWeight);
+DOM_StyleParseRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
+                   uintN len, intN baseWeight);
 
 /*
  * Get a style property for a node.

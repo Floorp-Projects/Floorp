@@ -29,6 +29,7 @@ typedef struct DOM_DocumentFragmentStruct {
     void *data;
 } DOM_DocumentFragmentStruct;
 
+#if 0
 static JSBool
 docfrag_masterDoc_get(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -39,6 +40,7 @@ static JSPropertySpec docfrag_props[] = {
     {"masterDoc",   -1, 0,  docfrag_masterDoc_get},
     {0}
 };
+#endif
 
 /*
  * Document

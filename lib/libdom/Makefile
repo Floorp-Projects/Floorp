@@ -29,6 +29,7 @@ CSRCS =	  	  domattr.c \
 		  domdoc.c \
 		  domelement.c \
 		  domnode.c \
+		  domstyle.c \
 		  domtext.c \
 		  $(NULL)
 
