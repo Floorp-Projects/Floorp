@@ -94,6 +94,6 @@ EXPORTS         = \
 # static lib.
 FORCE_STATIC_LIB = 1
 
-include $(topsrcdir)/config/rules.mk
+ENABLE_CXX_EXCEPTIONS = 1
 
-CXXFLAGS += -GX
+include $(topsrcdir)/config/rules.mk

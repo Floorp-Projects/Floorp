@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= PalmSyncInstall$(BIN_SUFFIX)
 RESFILE		= PalmSyncInstall.res
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 LOCAL_INCLUDES += -I$(PALM_CDK_INC) \
 		   $(NULL)

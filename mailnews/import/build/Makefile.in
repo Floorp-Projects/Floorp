@@ -75,12 +75,10 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 REQUIRES += impEudra
 
-ifneq ($(_MSC_VER),1100)
 ifndef GNU_CC
 
 REQUIRES += importOE impOutlk
 
-endif
 endif
 
 endif
@@ -102,11 +100,9 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX) 
 
-ifneq ($(_MSC_VER),1100)
 ifndef GNU_CC
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)importOE_s.$(LIB_SUFFIX) 
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impOutlk_s.$(LIB_SUFFIX) 
-endif
 endif
 
 endif

@@ -76,14 +76,13 @@ FORCE_USE_PIC	= 1
 NO_DIST_INSTALL	= 1
 NO_INSTALL = 1
 
+ENABLE_CXX_EXCEPTIONS = 1
+
 include $(topsrcdir)/config/rules.mk
 
 _OS_LIBS	= version
 ifdef GNU_CC
-CXXFLAGS	+= -fexceptions
 _OS_LIBS	+= gdi32
-else
-CXXFLAGS	+= -GX
 endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 

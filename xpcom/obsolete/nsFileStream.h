@@ -146,8 +146,8 @@ class nsIFileSpec;
 // Unix currently does not support iostreams at all.  Their compilers do not support
 // ANSI C++, or even ARM C++.
 //
-// Windows supports them, but only if you turn on the -GX compile flag, to support
-// exceptions.
+// Windows supports them, but only if you turn on the -GX (VC5-VC7.x) or -EHsc (VC8+)
+// compile flag, to support exceptions.
 
 // Catch 22.
 #define NS_USE_PR_STDIO

@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= ds32$(BIN_SUFFIX)
 
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 CPPSRCS		= ds32.cpp
 

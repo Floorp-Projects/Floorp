@@ -46,7 +46,7 @@ PROGRAM		= nsinstall$(BIN_SUFFIX)
 RESFILE		= nsinstall.res
 REQUIRES	= $(ZLIB_REQUIRES)
 EXTRA_DSO_LIBS	= mozz_s
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 CPPSRCS		= nsinstall.cpp 
 

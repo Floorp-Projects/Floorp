@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= GetShortPathName$(BIN_SUFFIX)
 
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 CSRCS		= GetShortPathName.c
 

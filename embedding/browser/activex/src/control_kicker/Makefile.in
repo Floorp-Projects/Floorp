@@ -61,10 +61,12 @@ OS_LIBS	+= \
 	uuid.lib \
 	shell32.lib \
 	$(NULL)
+	
+ENABLE_CXX_EXCEPTIONS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += /D "WIN32" /GX /GF /MT /O1
+CXXFLAGS += /D "WIN32" /GF /MT /O1
 
 libs::
 ifdef MOZ_ACTIVEX_REGISTRATION

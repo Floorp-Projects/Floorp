@@ -53,7 +53,7 @@ REQUIRES = macmorefiles
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 endif
 
 CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS)

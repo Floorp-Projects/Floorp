@@ -246,7 +246,11 @@ endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
+ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
 CFLAGS += /Op
+else
+CFLAGS += /fp:precise
+endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),FreeBSD)

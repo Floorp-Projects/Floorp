@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= nsztool$(BIN_SUFFIX)
 REQUIRES	= $(ZLIB_REQUIRES)
 EXTRA_DSO_LIBS	= mozz_s
-USE_NON_MT_LIBS = 1
+USE_STATIC_LIBS = 1
 
 CSRCS		= nsztool.c
 

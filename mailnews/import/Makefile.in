@@ -55,10 +55,8 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= eudora
-ifneq ($(_MSC_VER),1100)
 ifndef GNU_CC
 DIRS		+= oexpress outlook
-endif
 endif
 endif
 
