@@ -166,35 +166,6 @@ nsXULContentUtils::Finish()
 // nsIXULContentUtils methods
 
 nsresult
-nsXULContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
-{
-    nsresult rv;
-
-    nsAutoString s;
-    rv = GetTextForNode(value, s);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsITextContent> text;
-    rv = nsComponentManager::CreateInstance(kTextNodeCID,
-                                            nsnull,
-                                            NS_GET_IID(nsITextContent),
-                                            getter_AddRefs(text));
-    if (NS_FAILED(rv)) return rv;
-
-
-    rv = text->SetText(s.get(), s.Length(), PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    // hook it up to the child
-    rv = parent->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(text) ),
-                               PR_FALSE, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-nsresult
 nsXULContentUtils::FindChildByTag(nsIContent* aElement,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aTag,
@@ -382,127 +353,6 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
 }
 
 nsresult
-nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& aResult)
-{
-    nsresult rv;
-
-    aResult.Assign(PRUnichar('<'));
-
-    nsCOMPtr<nsINameSpace> ns;
-
-    PRInt32 elementNameSpaceID;
-    rv = aElement->GetNameSpaceID(elementNameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
-    if (kNameSpaceID_HTML == elementNameSpaceID) {
-        aResult.Append(NS_LITERAL_STRING("html:"));
-    }
-    else {
-        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(aElement) );
-        NS_ASSERTION(xml != nsnull, "not an XML or HTML element");
-        if (! xml) return NS_ERROR_UNEXPECTED;
-
-        rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIAtom> prefix;
-        rv = ns->FindNameSpacePrefix(elementNameSpaceID, *getter_AddRefs(prefix));
-        if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
-            nsAutoString prefixStr;
-            prefix->ToString(prefixStr);
-            if (prefixStr.Length()) {
-                const PRUnichar *unicodeString;
-                prefix->GetUnicode(&unicodeString);
-                aResult.Append(unicodeString);
-                aResult.Append(NS_LITERAL_STRING(":"));
-            }
-        }
-    }
-
-    nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(*getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return rv;
-
-    const PRUnichar *unicodeString;
-    tag->GetUnicode(&unicodeString);
-    aResult.Append(unicodeString);
-
-    PRInt32 count;
-    rv = aElement->GetAttrCount(count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        aResult.Append(NS_LITERAL_STRING(" "));
-
-        PRInt32 nameSpaceID;
-        nsCOMPtr<nsIAtom> name, prefix;
-        rv = aElement->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString attr;
-        nsXULContentUtils::GetAttributeLogString(aElement, nameSpaceID, name, attr);
-
-        aResult.Append(attr);
-        aResult.Append(NS_LITERAL_STRING("=\""));
-
-        nsAutoString value;
-        rv = aElement->GetAttr(nameSpaceID, name, value);
-        if (NS_FAILED(rv)) return rv;
-
-        aResult.Append(value);
-        aResult.Append(NS_LITERAL_STRING("\""));
-    }
-
-    aResult.Append(NS_LITERAL_STRING(">"));
-    return NS_OK;
-}
-
-
-nsresult
-nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult)
-{
-    nsresult rv;
-
-    PRInt32 elementNameSpaceID;
-    rv = aElement->GetNameSpaceID(elementNameSpaceID);
-    if (NS_FAILED(rv)) return rv;
-
-    if ((kNameSpaceID_HTML == elementNameSpaceID) ||
-        (kNameSpaceID_None == aNameSpaceID)) {
-        aResult.Truncate();
-    }
-    else {
-        // we may have a namespace prefix on the attribute
-        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(aElement) );
-        NS_ASSERTION(xml != nsnull, "not an XML or HTML element");
-        if (! xml) return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsINameSpace> ns;
-        rv = xml->GetContainingNameSpace(*getter_AddRefs(ns));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIAtom> prefix;
-        rv = ns->FindNameSpacePrefix(aNameSpaceID, *getter_AddRefs(prefix));
-        if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
-            nsAutoString prefixStr;
-            prefix->ToString(prefixStr);
-            if (prefixStr.Length()) {
-                const PRUnichar *unicodeString;
-                prefix->GetUnicode(&unicodeString);
-                aResult.Append(unicodeString);
-                aResult.Append(NS_LITERAL_STRING(":"));
-            }
-        }
-    }
-
-    const PRUnichar *unicodeString;
-    aTag->GetUnicode(&unicodeString);
-    aResult.Append(unicodeString);
-    return NS_OK;
-}
-
-
-nsresult
 nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
@@ -605,27 +455,6 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString
 
     return NS_OK;
 }
-
-PRBool
-nsXULContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
-{
-    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
-    while (element) {
-        nsresult rv;
-
-        nsCOMPtr<nsIContent> parent;
-        rv = element->GetParent(*getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return PR_FALSE;
-
-        if (parent.get() == aContainer)
-            return PR_TRUE;
-
-        element = parent;
-    }
-
-    return PR_FALSE;
-}
-
 
 nsresult
 nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)

@@ -59,7 +59,6 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIContent.h"
-#include "nsIXMLContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
@@ -1072,30 +1071,35 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
         }
       }
 
-      nsCOMPtr<nsINameSpace> tagSpace;
+      nsAutoString nameSpace;
+
       if (prefix.Length() > 0) {
         nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
-        nsCOMPtr<nsINameSpace> nameSpace;
-        nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(child));
-        if (xmlContent) {
-          xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
-          if (nameSpace) {
-            nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
-            if (tagSpace) {
-              if (!hasDisplay) {
-                // We extend some widget/frame. We don't really have a base binding.
-                protoBinding->SetHasBasePrototype(PR_FALSE);
-              }
-              PRInt32 nameSpaceID;
-              tagSpace->GetNameSpaceID(nameSpaceID);
-              nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));
-              protoBinding->SetBaseTag(nameSpaceID, tagName);
+
+        nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(child));
+
+        if (node) {
+          node->LookupNamespaceURI(prefix, nameSpace);
+
+          if (!nameSpace.IsEmpty()) {
+            if (!hasDisplay) {
+              // We extend some widget/frame. We don't really have a
+              // base binding.
+
+              protoBinding->SetHasBasePrototype(PR_FALSE);
             }
+
+            PRInt32 nameSpaceID;
+
+            gNameSpaceManager->GetNameSpaceID(nameSpace, nameSpaceID);
+
+            nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));
+            protoBinding->SetBaseTag(nameSpaceID, tagName);
           }
         }
       }
 
-      if (hasExtends && (hasDisplay || (!hasDisplay && !tagSpace))) {
+      if (hasExtends && (hasDisplay || nameSpace.IsEmpty())) {
         // Look up the prefix.
         // We have a base class binding. Load it right now.
         nsCAutoString urlCString; urlCString.AssignWithConversion(value);

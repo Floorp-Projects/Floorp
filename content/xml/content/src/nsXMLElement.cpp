@@ -103,10 +103,8 @@ static nsIAtom* kOnLoadAtom;
 static nsIAtom* kEmbedAtom;
 static PRUint32 kElementCount;
 
-nsXMLElement::nsXMLElement() : mNameSpace(nsnull)
+nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
 {
-  mIsLink = PR_FALSE;
-
   if (0 == kElementCount++) {
     kSimpleAtom = NS_NewAtom("simple");
     kHrefAtom = NS_NewAtom("href");
@@ -131,8 +129,6 @@ nsXMLElement::~nsXMLElement()
     NS_RELEASE(kOnLoadAtom);
     NS_RELEASE(kEmbedAtom);
   }
-
-  NS_IF_RELEASE(mNameSpace);
 }
 
 
@@ -570,9 +566,6 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(this, it, aDeep);
 
-  it->mNameSpace = mNameSpace;
-  NS_IF_ADDREF(it->mNameSpace);
-
   return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
@@ -662,28 +655,6 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
   return res;
 }
 #endif
-
-NS_IMETHODIMP
-nsXMLElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
-{
-  NS_IF_RELEASE(mNameSpace);
-  
-  mNameSpace = aNameSpace;
-  
-  NS_IF_ADDREF(mNameSpace);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
-{
-  aNameSpace = mNameSpace;
-  NS_IF_ADDREF(aNameSpace);
-
-  return NS_OK;  
-}
-
 
 // nsIStyledContent implementation
 
