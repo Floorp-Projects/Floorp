@@ -2850,7 +2850,7 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
   si_RegisterSignonPrefCallbacks();
 
   /* unlock the database */
-  if (SI_LoadSignonData(PR_TRUE) != 0) {
+  if ((SI_LoadSignonData(PR_TRUE) != 0) || (Wallet_KeySize() < 0)) {
     aSignonList = "."; /* a list of length 1 tells viewer that database was not unlocked */ 
     /* don't display saved signons if user couldn't unlock the database */
     return;
