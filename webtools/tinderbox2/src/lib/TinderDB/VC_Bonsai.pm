@@ -90,7 +90,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -219,7 +219,7 @@ sub apply_db_updates {
   ($last_cvs_data) ||
    ($last_cvs_data = $main::TIME - $TinderDB::TRIM_SECONDS );
   
-  my $num_updates = 0;
+  my ($num_updates) = 0;
 
  # The data is returned from bonsai as a list of lists.  Each row is
  # one list.  We want to handle the data as little as possible in this
@@ -279,7 +279,7 @@ sub status_table_legend {
            "</td></tr></thead>\n");
 
   foreach $state (TreeData::get_all_tree_states()) {
-    my $color = TreeData::TreeState2color($state);
+    my ($color) = TreeData::TreeState2color($state);
     $out .= ("\t\t<tr bgcolor=\"$color\">".
              "<td>Tree State: $state</td></tr>\n");
   }
@@ -333,7 +333,7 @@ sub status_table_start {
 sub status_table_row {
   my ($self, $row_times, $row_index, $tree, ) = @_;
 
-  my @outrow = ();
+  my (@outrow) = ();
 
   # we assume that tree states only change rarely so there are very
   # few cells which have more then one state associated with them.
@@ -342,7 +342,7 @@ sub status_table_row {
   # find all the authors who changed code at any point in this cell
   # find the tree state for this cell.
 
-  my %authors = ();
+  my (%authors) = ();
   
   while (1) {
    my ($time) = $DB_TIMES[$NEXT_DB];
@@ -375,7 +375,7 @@ sub status_table_row {
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
 
-  my $color = TreeData::TreeState2color($LAST_TREESTATE);
+  my ($color) = TreeData::TreeState2color($LAST_TREESTATE);
 
   ($LAST_TREESTATE) && ($color) &&
     ($color = "bgcolor=$color");
@@ -394,13 +394,13 @@ sub status_table_row {
     } else {
       $maxdate = $main::TIME;
     }
-    my $format_maxdate = HTMLPopUp::timeHTML($maxdate);
-    my $format_mindate = HTMLPopUp::timeHTML($mindate);
-    my $time_interval_str = "$format_maxdate to $format_mindate",
+    my ($format_maxdate) = HTMLPopUp::timeHTML($maxdate);
+    my ($format_mindate) = HTMLPopUp::timeHTML($mindate);
+    my ($time_interval_str) = "$format_maxdate to $format_mindate",
 
     # create a string of all VC data for displaying with the checkin table
 
-    my $vc_info;
+    my ($vc_info);
     foreach $key ('module','branch',) {
       $vc_info .= "$key: $TreeData::VC_TREE{$tree}{$key} <br>\n";
     }
@@ -468,7 +468,7 @@ sub status_table_row {
       # link point to its query method otherwise you want a 'mailto:'
       # link
 
-      my $query_link = "";
+      my ($query_link) = "";
       if ( 
           ($TinderConfig::VCDisplayImpl) && 
           ($TinderConfig::VCDisplayImpl =~ 'None') 
