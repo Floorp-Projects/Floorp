@@ -96,7 +96,8 @@ public:
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                  nsString* aValues, nsString* aNames);
   virtual void SetFormFrame(nsFormFrame* aFrame);
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                           float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                              float aPixToTwip, 
@@ -145,7 +146,7 @@ public:
   //nsIDOMKeyListener
   virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent) { return NS_OK; }
+  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
     // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
