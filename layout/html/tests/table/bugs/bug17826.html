@@ -1,0 +1,340 @@
+<html>
+<head>
+<title>BasicTableLayoutStrategy.cpp</title>
+<style>
+td {
+  text-height: 1em;
+  font-family: Lucida Console;
+  font-size: 8pt;
+}
+td#title {
+  background-color: orange;
+  color:black;
+  font-family: serif;
+  font-size: 12pt;
+  font-weight: bold;
+}
+#a {
+  background-color: #DDFFDD;
+  color:black;
+}
+#d {
+  background-color: #FFDDFF;
+  color:black;
+}
+#c {
+  background-color: lightblue;
+  color:black;
+}
+#sp {
+  width: 2px;
+  background-color: black;
+  color:black;
+}
+td#sk {
+  background-color: lightgray;
+  color:black;
+  font-family: serif;
+  font-size: 12pt;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div style="background-color: #EEEEEE;"><H3>BasicTableLayoutStrategy.cpp - Revision 3.152</H3>
+There were 4 changes made.<br>
+<UL>
+<LI><a href="#change0">1 lines were changed.</a></LI>
+<LI><a href="#change1">1 lines were added.</a></LI>
+<LI><a href="#change2">1 lines were changed.</a></LI>
+<LI><a href="#change3">1 lines were changed.</a></LI>
+</UL>
+<table><tr><td><fieldset style="border: 2px inset">
+<legend style="border: 2px inset">Legend</legend>
+<table>
+<tr><td id=a>&nbsp;&nbsp;&nbsp;</td><td>Added lines</td></tr>
+<tr><td id=c>&nbsp;&nbsp;&nbsp;</td><td>Changed lines</td></tr>
+<tr><td id=d>&nbsp;&nbsp;&nbsp;</td><td>Removed lines</td></tr>
+</table>
+</fieldset></td></tr></table>
+<hr></div><table BGCOLOR=White CELLPADDING=0 CELLSPACING=0 WIDTH="100%" COLS=3>
+<td id=title><center>BasicTableLayoutStrategy.cpp,3.152</center></td><td id=sp></td><td id=title><center>Disk File</center></td>
+<tr><td id=sk>Skipping to line 27</td><td id=sp></td><td id=sk>&nbsp;</td></tr>
+<tr>
+<td id=white>
+<pre>#include "nsIStyleContext.h"</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>#include "nsIStyleContext.h"</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>#include "nsStyleConsts.h"</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>#include "nsStyleConsts.h"</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>#include "nsVoidArray.h"</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>#include "nsVoidArray.h"</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>#include "nsHTMLIIDs.h"</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>#include "nsHTMLIIDs.h"</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>&nbsp;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>&nbsp;</pre></td>
+</tr>
+<tr>
+<td id=c>
+<a name="change0"></a><pre>#if 1</pre></td>
+<td id=sp></td>
+<td id=c>
+<pre>#if 0</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>static PRBool gsDebugAssign  = PR_FALSE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>static PRBool gsDebugAssign  = PR_FALSE;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>static PRBool gsDebugBalance = PR_FALSE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>static PRBool gsDebugBalance = PR_FALSE;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>#else</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>#else</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>static PRBool gsDebugAssign  = PR_TRUE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>static PRBool gsDebugAssign  = PR_TRUE;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>static PRBool gsDebugBalance = PR_TRUE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>static PRBool gsDebugBalance = PR_TRUE;</pre></td>
+</tr>
+<tr><td id=sk>Skipping to line 39</td><td id=sp></td><td id=sk>&nbsp;</td></tr>
+<tr>
+<td id=a>
+<a name="change1"></a><pre>&nbsp</pre></td>
+
+<td id=sp></td>
+<td id=a>
+<pre>static PRInt32 gsDebugCount = 0;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>&nbsp;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>&nbsp;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>PRBool CanAllocate(PRInt32          aTypeToAllocate,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>PRBool CanAllocate(PRInt32          aTypeToAllocate,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                   PRInt32          aTypeAlreadyAllocated,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                   PRInt32          aTypeAlreadyAllocated,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                   nsTableColFrame* aColFrame,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                   nsTableColFrame* aColFrame,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                   PRBool&          aConsiderAdj)</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                   PRBool&          aConsiderAdj)</pre></td>
+</tr>
+<tr><td id=sk>Skipping to line 164</td><td id=sp></td><td id=sk>&nbsp;</td></tr>
+<tr>
+<td id=white>
+<pre>BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                                              nsIStyleContext*         aTableStyle,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                                              nsIStyleContext*         aTableStyle,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                                              const nsHTMLReflowState& aReflowState,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                                              const nsHTMLReflowState& aReflowState,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                                              nscoord                  aMaxWidthIn)</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                                              nscoord                  aMaxWidthIn)</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>{</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>{</pre></td>
+</tr>
+<tr>
+<td id=c>
+<a name="change2"></a><pre>  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d\n", aMaxWidthIn); mTableFrame-&gt;Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}</pre></td>
+<td id=sp></td>
+<td id=c>
+<pre>  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d count=%d \n", aMaxWidthIn, gsDebugCount++); mTableFrame-&gt;Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>&nbsp;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>&nbsp;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  ContinuingFrameCheck();</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  ContinuingFrameCheck();</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  if (!aTableStyle) {</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  if (!aTableStyle) {</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>    NS_ASSERTION(aTableStyle, "bad style arg");</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>    NS_ASSERTION(aTableStyle, "bad style arg");</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>    return PR_FALSE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>    return PR_FALSE;</pre></td>
+</tr>
+<tr><td id=sk>Skipping to line 696</td><td id=sp></td><td id=sk>&nbsp;</td></tr>
+<tr>
+<td id=white>
+<pre>// Determine min, desired, fixed, and proportional sizes for the cols and </pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>// Determine min, desired, fixed, and proportional sizes for the cols and </pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>// and calculate min/max table width</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>// and calculate min/max table width</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>                                                               nscoord         aMaxWidth)</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>                                                               nscoord         aMaxWidth)</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>{</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>{</pre></td>
+</tr>
+<tr>
+<td id=c>
+<a name="change3"></a><pre>  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d\n", aMaxWidth); mTableFrame-&gt;Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}</pre></td>
+<td id=sp></td>
+<td id=c>
+<pre>  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame-&gt;Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  PRBool rv = PR_FALSE;</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  PRBool rv = PR_FALSE;</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  PRInt32 numRows = mTableFrame-&gt;GetRowCount();</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  PRInt32 numRows = mTableFrame-&gt;GetRowCount();</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  PRInt32 numCols = mTableFrame-&gt;GetColCount();</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  PRInt32 numCols = mTableFrame-&gt;GetColCount();</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  nscoord spacingX = mTableFrame-&gt;GetCellSpacingX();</pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  nscoord spacingX = mTableFrame-&gt;GetCellSpacingX();</pre></td>
+</tr>
+<tr>
+<td id=white>
+<pre>  PRInt32 colX, rowX; </pre></td>
+<td id=sp></td>
+<td id=white>
+<pre>  PRInt32 colX, rowX; </pre></td>
+</tr>
+</table></body></html>
