@@ -138,9 +138,9 @@ var folderListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-    verifyAccounts();
+  verifyAccounts();
     
-    loadStartPage();
+  loadStartPage();
 	InitMsgWindow();
 
 	messenger.SetWindow(window, msgWindow);
@@ -148,9 +148,12 @@ function OnLoadMessenger()
 	AddDataSources();
 	InitPanes();
 
-    loadStartFolder();
+  loadStartFolder();
 
-    AddToSession();
+  AddToSession();
+
+  // FIX ME - later we will be able to use onload from the overlay
+  OnLoadMsgHeaderPane();
 
 	var id = null;
 	var headerchoice = null;
@@ -300,7 +303,8 @@ function InitMsgWindow()
 {
 	msgWindow.statusFeedback = statusFeedback;
 	msgWindow.messageView = messageView;
-	msgWindow.SetDOMWindow(window);
+	msgWindow.msgHeaderSink = messageHeaderSink;
+  msgWindow.SetDOMWindow(window);
 }
 
 function AddDataSources()
@@ -478,7 +482,6 @@ function ClearThreadTreeSelection()
 	var tree = GetThreadTree();
 	if(tree)
 	{
-		dump('before clearItemSelection\n');
 		tree.clearItemSelection();
 	}
 
@@ -487,7 +490,9 @@ function ClearThreadTreeSelection()
 function ClearMessagePane()
 {
     if (window.frames["messagepane"].location != "about:blank")
-        window.frames["messagepane"].location = "about:blank"
+        window.frames["messagepane"].location = "about:blank";
+    // hide the message header view AND the message pane...
+    HideMessageHeaderPane();
 }
 
 function StopUrls()
@@ -508,7 +513,6 @@ function GetSelectedFolder()
 
 function ThreadPaneOnClick(event)
 {
-	dump('In ThreadPaneOnClick\n');
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
