@@ -308,7 +308,7 @@ if ($::FORM{'keywords'}) {
         }
     }
     if (@list) {
-        $query =~ s/bugs,/bugs, keywords,/;
+        $query =~ s/where/, keywords where/;
         $query .= "and keywords.bug_id = bugs.bug_id and (" .
             join(" $::FORM{'keywords_type'} ", @list) . ")\n";
     }
@@ -435,7 +435,7 @@ if (defined $ref) {
 if (defined $ref && 0 < @$ref) {
     # Do surgery on the query to tell it to patch in the bugs_activity
     # table.
-    $query =~ s/bugs,/bugs, bugs_activity,/;
+    $query =~ s/where/, bugs_activity where/;
     
     my @list;
     foreach my $f (@$ref) {
