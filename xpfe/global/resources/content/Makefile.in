@@ -54,7 +54,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
+libs realchrome::
 	@$(REGCHROME) content global toolkit.jar
 	@$(REGCHROME) locale en-US/global en-US.jar
 
