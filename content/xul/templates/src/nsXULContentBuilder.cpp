@@ -47,7 +47,6 @@
 #include "nsIPrincipal.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
-#include "nsIXULContent.h"
 #include "nsIXULDocument.h"
 #include "nsIXULSortService.h"
 
@@ -551,10 +550,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // Mark the element's contents as being generated so
                 // that any re-entrant calls don't trigger an infinite
                 // recursion.
-                nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+                nsXULElement *xulcontent = nsXULElement::FromContent(realKid);
                 if (xulcontent) {
-                    rv = xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
-                    if (NS_FAILED(rv)) return rv;
+                    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
                 }
 
                 // Potentially remember the index of this element as the first
@@ -750,7 +748,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             
-            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(realKid);
+            nsXULElement *xulcontent = nsXULElement::FromContent(realKid);
             if (xulcontent) {
                 PRUint32 count2 = tmplKid->GetChildCount();
 
@@ -760,14 +758,14 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     // container contents built. This avoids a useless
                     // trip back to the template builder only to find
                     // that we've got no work to do!
-                    xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
-                    xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
+                    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
+                    xulcontent->SetLazyState(nsXULElement::eContainerContentsBuilt);
                 }
                 else {
                     // Just mark the XUL element as requiring more work to
                     // be done. We'll get around to it when somebody asks
                     // for it.
-                    xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                    xulcontent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
                 }
             }
             else {
@@ -949,11 +947,9 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     // See if we've generated kids for this node yet. If we have, then
     // recursively sync up template kids with content kids
     PRBool contentsGenerated = PR_TRUE;
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aRealElement);
+    nsXULElement *xulcontent = nsXULElement::FromContent(aRealElement);
     if (xulcontent) {
-        rv = xulcontent->GetLazyState(nsIXULContent::eTemplateContentsBuilt,
-                                      contentsGenerated);
-        if (NS_FAILED(rv)) return rv;
+        contentsGenerated = xulcontent->GetLazyState(nsXULElement::eTemplateContentsBuilt);
     }
     else {
         // HTML content will _always_ have been generated up-front
@@ -1182,18 +1178,14 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
     if (xulcontent) {
-        PRBool contentsGenerated;
-        rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
-        if (NS_FAILED(rv)) return rv;
-
-        if (contentsGenerated)
+        if (xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt))
             return NS_OK;
 
         // Now mark the element's contents as being generated so that
         // any re-entrant calls don't trigger an infinite recursion.
-        rv = xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
+        xulcontent->SetLazyState(nsXULElement::eContainerContentsBuilt);
     }
     else {
         // HTML is always needs to be generated.
@@ -1265,22 +1257,16 @@ nsXULContentBuilder::CreateTemplateContents(nsIContent* aElement,
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
+    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
     if (! xulcontent)
         return NS_OK; // HTML content is _always_ generated up-front
 
-    PRBool contentsGenerated;
-    rv = xulcontent->GetLazyState(nsIXULContent::eTemplateContentsBuilt, contentsGenerated);
-    if (NS_FAILED(rv)) return rv;
-
-    if (contentsGenerated)
+    if (xulcontent->GetLazyState(nsXULElement::eTemplateContentsBuilt))
         return NS_OK;
 
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
-    rv = xulcontent->SetLazyState(nsIXULContent::eTemplateContentsBuilt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set template-contents-generated attribute");
-    if (NS_FAILED(rv)) return rv;
+    xulcontent->SetLazyState(nsXULElement::eTemplateContentsBuilt);
 
     // Crawl up the content model until we find the "resource" element
     // that spawned this template.
@@ -1662,9 +1648,9 @@ nsXULContentBuilder::ReplaceMatch(nsIRDFResource* aMember,
         // closed folder in a tree widget or on a menu that hasn't
         // yet been dropped.
         PRBool contentsGenerated = PR_TRUE;
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(content);
+        nsXULElement *xulcontent = nsXULElement::FromContent(content);
         if (xulcontent)
-            xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+            contentsGenerated = xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt);
 
         if (contentsGenerated) {
             nsCOMPtr<nsIContent> tmpl;
@@ -1884,15 +1870,11 @@ nsXULContentBuilder::RebuildAll()
     // been generated. If so, short-circuit and bail; there's nothing
     // for us to "rebuild" yet. They'll get built correctly the next
     // time somebody asks for them. 
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(mRoot);
+    nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
 
-    if (xulcontent) {
-        PRBool containerContentsBuilt = PR_FALSE;
-        xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, containerContentsBuilt);
-
-        if (! containerContentsBuilt)
-            return NS_OK;
-    }
+    if (xulcontent &&
+        !xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt))
+        return NS_OK;
 
     // If we get here, then we've tried to generate content for this
     // element. Remove it.
@@ -1910,9 +1892,9 @@ nsXULContentBuilder::RebuildAll()
     // Forces the XUL element to remember that it needs to
     // re-generate its children next time around.
     if (xulcontent) {
-        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-        xulcontent->ClearLazyState(nsIXULContent::eTemplateContentsBuilt);
-        xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
+        xulcontent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
+        xulcontent->ClearLazyState(nsXULElement::eTemplateContentsBuilt);
+        xulcontent->ClearLazyState(nsXULElement::eContainerContentsBuilt);
     }
 
     // Now, regenerate both the template- and container-generated

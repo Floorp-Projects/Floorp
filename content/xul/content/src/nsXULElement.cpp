@@ -118,7 +118,6 @@
 #include "nsIURL.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsIXULContent.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULPrototypeDocument.h"
@@ -164,20 +163,17 @@
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 
-#define XUL_ELEMENT_LAZY_STATE_OFFSET ELEMENT_TYPE_SPECIFIC_BITS_OFFSET
-
 /**
  * Three bits are used for XUL Element's lazy state.
- * @see nsIXULContent
  */
 #define XUL_ELEMENT_CHILDREN_MUST_BE_REBUILT \
-  (nsIXULContent::eChildrenMustBeRebuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
+  (nsXULElement::eChildrenMustBeRebuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
 
 #define XUL_ELEMENT_TEMPLATE_CONTENTS_BUILT \
-  (nsIXULContent::eTemplateContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
+  (nsXULElement::eTemplateContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
 
 #define XUL_ELEMENT_CONTAINER_CONTENTS_BUILT \
-  (nsIXULContent::eContainerContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
+  (nsXULElement::eContainerContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
 
 class nsIDocShell;
 
@@ -559,8 +555,6 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         inst = NS_STATIC_CAST(nsIDOMElement *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIDOMXULElement))) {
         inst = NS_STATIC_CAST(nsIDOMXULElement *, this);
-    } else if (aIID.Equals(NS_GET_IID(nsIXULContent))) {
-        inst = NS_STATIC_CAST(nsIXULContent *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
         inst = NS_STATIC_CAST(nsIXMLContent *, this);
     } else if (aIID.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
@@ -693,38 +687,7 @@ nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIXULContent interface
-
-NS_IMETHODIMP_(PRUint32)
-nsXULElement::PeekChildCount() const
-{
-    return mAttrsAndChildren.ChildCount();
-}
-
-NS_IMETHODIMP
-nsXULElement::SetLazyState(LazyState aFlags)
-{
-    SetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::ClearLazyState(LazyState aFlags)
-{
-    UnsetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::GetLazyState(LazyState aFlag, PRBool& aResult)
-{
-    aResult = GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
+nsresult
 nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAString& aValue)
 {
     // XXX sXBL/XBL2 issue! Owner or current document?
@@ -2323,7 +2286,7 @@ nsXULElement::EnsureContentsGenerated(void) const
                 xulele->GetBuilder(getter_AddRefs(builder));
                 if (builder) {
                     if (HasAttr(kNameSpaceID_None, nsXULAtoms::xulcontentsgenerated)) {
-                        unconstThis->ClearLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
                         return NS_OK;
                     }
 

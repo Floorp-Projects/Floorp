@@ -95,7 +95,6 @@
 #include "nsIXULSortService.h"
 #include "nsContentCID.h"
 #include "nsRDFCID.h"
-#include "nsIXULContent.h"
 #include "nsXULContentUtils.h"
 #include "nsRDFSort.h"
 #include "nsRuleNetwork.h"
@@ -832,7 +831,7 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
 
     // Now set the database on the element, so that script writers can
     // access it.
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(mRoot);
+    nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
     if (! xulcontent) {
         // Hmm. This must be an HTML element. Try to set it as a
         // JS property "by hand".
