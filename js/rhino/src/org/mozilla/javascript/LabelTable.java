@@ -37,12 +37,6 @@ package org.mozilla.javascript;
 
 public class LabelTable {
 
-    private static final boolean DEBUGLABELS = false;
-
-    private static final int LabelTableSize = 32;
-    protected Label itsLabelTable[];
-    protected int itsLabelTableTop;
-
     public int acquireLabel()
     {
         if (itsLabelTable == null) {
@@ -63,6 +57,10 @@ public class LabelTable {
         }
     }
 
+    public short getLabelPC(int theLabel) {
+        return itsLabelTable[theLabel].getPC();
+    }
+
     public int markLabel(int theLabel, int pc)
     {
         if (DEBUGLABELS) {
@@ -76,5 +74,25 @@ public class LabelTable {
         itsLabelTable[theLabel].setPC((short)pc);
         return theLabel | 0x80000000;
     }
+
+    public void addLabelFixup(int theLabel, int fixupSite) {
+        itsLabelTable[theLabel].addFixup(fixupSite);
+    }
+
+    public void fixLabelGotos(byte[] codeBuffer) {
+        for (int i = 0; i < itsLabelTableTop; i++) {
+            itsLabelTable[i].fixGotos(codeBuffer);
+        }
+    }
+
+    public void clearLabels() {
+        itsLabelTableTop = 0;
+    }
+
+    private static final boolean DEBUGLABELS = false;
+
+    private static final int LabelTableSize = 32;
+    private Label itsLabelTable[];
+    private int itsLabelTableTop;
 
 }

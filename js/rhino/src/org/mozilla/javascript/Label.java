@@ -35,23 +35,23 @@
 
 package org.mozilla.javascript;
 
-public class Label {
+class Label {
 
     private static final int FIXUPTABLE_SIZE = 8;
 
     private static final boolean DEBUG = true;
 
-    public Label()
+    Label()
     {
         itsPC = -1;
     }
 
-    public short getPC()
+    short getPC()
     {
         return itsPC;
     }
 
-    public void fixGotos(byte theCodeBuffer[])
+    void fixGotos(byte theCodeBuffer[])
     {
         if (DEBUG) {
             if ((itsPC == -1) && (itsFixupTable != null))
@@ -69,7 +69,7 @@ public class Label {
         itsFixupTable = null;
     }
 
-    public void setPC(short thePC)
+    void setPC(short thePC)
     {
         if (DEBUG) {
             if ((itsPC != -1) && (itsPC != thePC))
@@ -78,7 +78,7 @@ public class Label {
         itsPC = thePC;
     }
 
-    public void addFixup(int fixupSite)
+    void addFixup(int fixupSite)
     {
         if (itsFixupTable == null) {
             itsFixupTableTop = 1;

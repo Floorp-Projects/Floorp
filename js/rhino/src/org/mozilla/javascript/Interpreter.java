@@ -201,9 +201,7 @@ public class Interpreter extends LabelTable {
     private void generateICodeFromTree(Node tree) {
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
-        for (int i = 0; i < itsLabelTableTop; i++) {
-            itsLabelTable[i].fixGotos(itsData.itsICode);
-        }
+        fixLabelGotos(itsData.itsICode);
         // add END_ICODE only to scripts as function always ends with RETURN
         if (itsData.itsFunctionType == 0) {
             theICodeTop = addByte(END_ICODE, theICodeTop);
@@ -867,7 +865,7 @@ public class Interpreter extends LabelTable {
                     if (finallyTarget != null) {
                         finallyHandler = acquireLabel();
                         int theLabel = finallyHandler & 0x7FFFFFFF;
-                        itsLabelTable[theLabel].addFixup(iCodeTop);
+                        addLabelFixup(theLabel, iCodeTop);
                     }
                     iCodeTop = addShort(0, iCodeTop);
 
@@ -1072,13 +1070,13 @@ public class Interpreter extends LabelTable {
         int gotoPC = iCodeTop;
         iCodeTop = addByte(gotoOp, iCodeTop);
         int theLabel = targetLabel & 0x7FFFFFFF;
-        int targetPC = itsLabelTable[theLabel].getPC();
+        int targetPC = getLabelPC(theLabel);
         if (targetPC != -1) {
             int offset = targetPC - gotoPC;
             iCodeTop = addShort(offset, iCodeTop);
         }
         else {
-            itsLabelTable[theLabel].addFixup(gotoPC + 1);
+            addLabelFixup(theLabel, gotoPC + 1);
             iCodeTop = addShort(0, iCodeTop);
         }
         return iCodeTop;
