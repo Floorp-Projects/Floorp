@@ -48,7 +48,8 @@ EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
 	-L$(DIST)/lib	\
 	-lraptorbase	\
-	-lxpcom		\
+	-lxpcom			\
+	-lrdfutil_s		\
 	$(NULL)
 
 
