@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-  * vim: ft=cpp tw=78 sw=4 et ts=4
+ * vim: ft=cpp tw=78 sw=4 et ts=4
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1089,11 +1089,12 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
             nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
             GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
 
-            if (sameTypeRoot != tmp) {
-                // The load was initiated in another toplevel window.
-                // Assume we'll need to make a new window until we
-                // find that the target, or one of its ancestors, are
-                // from the same origin as the loading docshell.
+            if (sameTypeRoot != tmp && treeItem != tmp) {
+                // The load was targeted at a frame and initiated in
+                // another toplevel window. Assume we'll need to make
+                // a new window until we find that the target, or one
+                // of its ancestors, are from the same origin as the
+                // loading docshell.
                 mustMakeNewWindow = PR_TRUE;
 
                 tmp = treeItem;
