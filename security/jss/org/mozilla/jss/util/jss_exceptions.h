@@ -48,6 +48,8 @@ PR_BEGIN_EXTERN_C
 
 #define BAD_PADDING_EXCEPTION "org/mozilla/jss/crypto/BadPaddingException"
 
+#define BIND_EXCEPTION "java/net/BindException"
+
 #define CERT_DATABASE_EXCEPTION "org/mozilla/jss/CertDatabaseException"
 
 #define CERTIFICATE_EXCEPTION "java/security/cert/CertificateException"

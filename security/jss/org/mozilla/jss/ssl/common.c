@@ -364,7 +364,8 @@ Java_org_mozilla_jss_ssl_SocketBase_socketBind
     /* do the bind() call */
     status = PR_Bind(sock->fd, &addr);
     if( status != PR_SUCCESS ) {
-        JSSL_throwSSLSocketException(env, "Failed to bind socket");
+        JSS_throwMsgPrErr(env, BIND_EXCEPTION,
+            "Could not bind to address");
         goto finish;
     }       
 
