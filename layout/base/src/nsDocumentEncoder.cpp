@@ -82,6 +82,8 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   NS_INIT_REFCNT();
   mDocument = 0;
   mSelection = 0;
+  mFlags = 0;
+  mWrapColumn = 0;
 }
 
 nsTextEncoder::~nsTextEncoder()
