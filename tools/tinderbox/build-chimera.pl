@@ -138,9 +138,7 @@ sub main {
   # Clean profile out, if set.
   # Assume Chimera always uses ~/Library/Chimera/Profiles/default for now.
   if ($Settings::CleanProfile) {
-    #my $chim_profile_dir = "$ENV{HOME}/Library/Chimera/Profiles/default";
-    # delete the whole chimera dir to work around bug 154815
-    my $chim_profile_dir = "$ENV{HOME}/Library/Chimera";
+    my $chim_profile_dir = "$ENV{HOME}/Library/Chimera/Profiles/default";
     
     TinderUtils::print_log "Deleting $chim_profile_dir...\n";
     File::Path::rmtree([$chim_profile_dir], 0, 0);
