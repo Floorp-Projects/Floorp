@@ -66,13 +66,11 @@ $cwdInstall    = GetCwd("install",  $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 $cwdPackager   = GetCwd("packager", $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 $cwdConfig     = GetCwd("config", $DEPTH, $ENV{MOZ_OBJDIR}, $cwdBuilder);
 
-#get version from configure.in
-open(FILENEW, "<$DEPTH/configure.in");
-do {
-$line = <FILENEW>;
-} while ($line !~ /MOZILLA_VERSION/);
-close(FILENEW);
-($therest, $version) =  split(/'/,$line);
+push(@INC,"$DEPTH/config");
+
+require "Moz/Milestone.pm";
+ 
+$version = Moz::Milestone::getOfficialMilestone("$DEPTH/config/milestone.txt");
 
 #get date from build_number file
 open(FILENEW, "<$cwdConfig/build_number");
