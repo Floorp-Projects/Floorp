@@ -127,7 +127,7 @@ public:
     nsCOMPtr<nsIInputStream>    mPostDataStream;
 
     nsresult formHeaders (PRUint32 capabilities);
-    nsresult formBuffer  (nsCString * reqBuffer);
+    nsresult formBuffer  (nsCString * reqBuffer, PRUint32 capabilities);
 
     nsHTTPPipelinedRequest*     mPipelinedRequest;
     nsHTTPChannel*              mConnection;
