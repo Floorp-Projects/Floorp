@@ -192,6 +192,34 @@ PopulateWelcWinKeys(char *cfgText)
 	** definition we require only one message string to be specified in the INI
 	** file. Msgs 2 and 3 are optional.
 	*/
+	
+	/* get readme file name and app to launch it with */
+	gControls->cfg->readmeFile = NewHandleClear(kValueMaxLen);
+	if (!gControls->cfg->readmeFile)
+	{
+		ErrorHandler();
+		return eParseFailed;
+	}
+	if (FillKeyValueUsingResID(sWelcDlg, sReadmeFilename, gControls->cfg->readmeFile, cfgText))
+		gControls->cfg->bReadme = true;
+	else
+		gControls->cfg->bReadme = false;
+	
+	if (gControls->cfg->bReadme)
+	{
+		gControls->cfg->readmeApp = NewHandleClear(kValueMaxLen);
+		if (!gControls->cfg->readmeApp)
+		{
+			ErrorHandler();
+			return eParseFailed;
+		}
+		
+		if (!FillKeyValueUsingResID(sWelcDlg, sReadmeApp, gControls->cfg->readmeApp, cfgText))
+		{
+			ErrorHandler();
+			return eParseFailed;
+		}
+	}
 		
 	return err;
 }
