@@ -546,137 +546,6 @@ TextFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-/**
- * This method computes the starting and ending offsets of the
- * selection for this frame. The results are placed into
- * aResult. There are 5 cases that we represent with a starting offset
- * (aResult.mStartOffset), ending offset (aResult.mEndOffset) and an
- * empty selection flag (aResult.mEmptySelection):
- *
- * case 1: The selection completely misses this content/frame. In this
- * case mStartOffset and mEndOffset will be set to aTextLength and
- * mEmptySelection will be false.
- *
- * case 2: The selection begins somewhere before or at this frame and
- * ends somewhere in this frame. In this case mStartOffset will be set
- * to 0 and mEndOffset will be set to the end of the selection and
- * mEmptySelection will be false.
- *
- * case 3: The selection begins somewhere in this frame and ends
- * somewhere in this frame. In this case mStartOffset and mEndOffset
- * are set accordingly and if they happen to be the same value then
- * mEmptySelection is set to true (otherwise it is set to false).
- *
- * case 4: The selection begins somewhere in this frame and ends
- * somewhere else. In this case mStartOffset is set to where the
- * selection begins and mEndOffset is set to aTextLength and
- * mEmptySelection is set to false.
- *
- * case 5: The selection covers the entire content/frame. In this case
- * mStartOffset is set to zero and mEndOffset is set to aTextLength and
- * mEmptySelection is set to false.
- */
-#if 0
-void
-TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
-                                nsIDocument* aDocument,
-                                PRInt32* aIndicies, PRInt32 aTextLength,
-                                SelectionInfo& aResult)
-{
-//DEBUG MJUDGE  HERE IS WHERE THE WORK IS
-  // Assume, for now, that the selection misses this section of
-  // content completely.
-  aResult.mStartOffset = aTextLength;
-  aResult.mEndOffset = aTextLength;
-  aResult.mEmptySelection = PR_FALSE;
-
-  nsISelection     * selection;
-  aDocument->GetSelection(selection);
-
-  nsSelectionRange * range     = selection->GetRange();
-  nsSelectionPoint * startPnt  = range->GetStartPoint();
-  nsSelectionPoint * endPnt    = range->GetEndPoint();
-  nsIContent       * startContent = startPnt->GetContent();
-  nsIContent       * endContent   = endPnt->GetContent();
-  PRInt32 startOffset = startPnt->GetOffset() - mContentOffset;
-  PRInt32 endOffset   = endPnt->GetOffset()   - mContentOffset;
-
-  // Check for the case that requires up to 3 sections first. This
-  // case also handles the empty selection.
-  if ((mContent == startContent) && (mContent == endContent)) {
-    // Selection starts and ends in this content (but maybe not this
-    // frame)
-    if ((startOffset >= mContentLength) || (endOffset <= 0)) {
-      // Selection doesn't intersect this frame
-    }
-    else if (endOffset < mContentLength) {
-      // End of selection is in this frame
-      aResult.mEndOffset = aIndicies[endOffset] - mContentOffset;
-      if (startOffset > 0) {
-        // Beginning of selection is also in this frame (this is the 3
-        // section case)
-        aResult.mStartOffset = aIndicies[startOffset] - mContentOffset;
-      }
-      else {
-        // This is a 2 section case
-        aResult.mStartOffset = 0;
-      }
-      if (startOffset == endOffset) {
-        aResult.mEmptySelection = PR_TRUE;
-      }
-    } else if (startOffset > 0) {
-      // This is a 2 section case
-      aResult.mStartOffset = aIndicies[startOffset] - mContentOffset;
-    } else {
-      // This is a 1 section case (where the entire section is
-      // selected)
-      aResult.mStartOffset = 0;
-    }
-  }
-  else if (aDocument->IsInRange(startContent, endContent, mContent)) {
-    if (mContent == startContent) {
-      // Selection starts (but does not end) in this content (but
-      // maybe not in this frame)
-      if (startOffset <= 0) {
-        // Selection starts before or at this frame
-        aResult.mStartOffset = 0;
-      }
-      else if (startOffset < mContentLength) {
-        // Selection starts somewhere in this frame
-        aResult.mStartOffset = aIndicies[startOffset] - mContentOffset;
-      }
-      else {
-        // Selection starts after this frame
-      }
-    }
-    else if (mContent == endContent) {
-      // Selection ends (but does not start) in this content (but
-      // maybe not in this frame)
-      if (endOffset <= 0) {
-        // Selection ends before this frame
-      }
-      else if (endOffset < mContentLength) {
-        // Selection ends in this frame
-        aResult.mStartOffset = 0;
-        aResult.mEndOffset = aIndicies[endOffset] - mContentOffset;
-      }
-      else {
-        // Selection ends after this frame (the entire frame is selected)
-        aResult.mStartOffset = 0;
-      }
-    }
-    else {
-      // Selection starts before this content and ends after this
-      // content therefore the entire frame is selected
-      aResult.mStartOffset = 0;
-    }
-  }
-
-  NS_IF_RELEASE(startContent);
-  NS_IF_RELEASE(endContent);
-  NS_RELEASE(selection);
-}
-#endif //0
 
 /**
  * Prepare the text in the content for rendering. If aIndexes is not nsnull
@@ -930,7 +799,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection || !mSelected) {
+    if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
+      //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
@@ -955,7 +825,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         selectionEnd = mSelectionOffset;
         selectionOffset = mSelectionEnd;
       }
-
+      if (selectionEnd > textLength)
+        selectionEnd = textLength;
       if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
         PaintTextDecorations(aRenderingContext, aStyleContext,
@@ -963,8 +834,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
-                              dx + textWidth, dy, mRect.height,
-                              CURSOR_COLOR);
+                            dx + textWidth, dy, mRect.height,
+                            CURSOR_COLOR);
       }
       else 
       {
@@ -1630,6 +1501,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   }
 
   aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  if (mFlags & TEXT_SKIP_LEADING_WS){ //we are really a little more "right" than we thought
+    aAcutalContentOffset ++;
+  }
   aOffset = index;
 
   return NS_OK;
@@ -1664,11 +1538,16 @@ TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffs
     return NS_ERROR_NULL_POINTER;
 
   PRInt32 beginOffset(aBeginContentOffset);
-  if (aBeginContentOffset != -1) //-1 signified the end of the current content
+  if (aBeginContentOffset != -1){ //-1 signified the end of the current content
     beginOffset = aBeginContentOffset - mContentOffset;
-
+    //haha you almost got me.  the content offset does include the ws but no one can see it.
+    //here is where we aknowledge that it doesnt exist.
+    if (mFlags & TEXT_SKIP_LEADING_WS) 
+      beginOffset --;
+  }
   if (beginOffset >= mContentLength){
     //this is not the droid we are looking for.
+    SetSelected(PR_FALSE, 0, 0, aForceRedraw);
     nsIFrame *nextInFlow =GetNextInFlow();
     if (nextInFlow)
       return nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
@@ -1679,16 +1558,31 @@ TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffs
     beginOffset = 0;  //start from the beginning
   *aActualSelected = this;
   PRInt32 endOffset(aEndContentOffset);
-  if (endOffset != -1) //-1 signified the end of the current content
+  if (endOffset != -1){ //-1 signified the end of the current content
     endOffset = aEndContentOffset - mContentOffset;
-  if (endOffset > mContentLength){
-    nsIFrame *nextInFlow =GetNextInFlow();
-    if (nextInFlow)
-      nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
-    else
-      return NS_ERROR_FAILURE;
+    if (mFlags & TEXT_SKIP_LEADING_WS) 
+      endOffset --;
   }
-  return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
+
+  nsIFrame *nextInFlow =GetNextInFlow();
+  if (nextInFlow){
+    if (endOffset == -1 || endOffset > mContentLength){ //-1 means until the end of the content
+        nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
+    }
+    else if (aSelected == PR_TRUE) { //we must shut off all folowing selected frames if we are selecting frames 
+      do {
+        nextInFlow->SetSelected(PR_FALSE, 0, 0, aForceRedraw);
+      }
+      while (NS_SUCCEEDED(nextInFlow->GetNextInFlow(nextInFlow)) && nextInFlow);//this is ok because frames arent reference counted this is not a leak!
+    }
+  }
+#ifdef NS_DEBUG
+  printf("mContentOffset:  %i  , mContentLength  %i \n", mContentOffset, mContentLength);
+#endif //NS_DEBUG
+  if (endOffset == beginOffset) //no single selection in this code.  this must be done on a per frame basis
+      return NS_OK;
+  else
+    return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
 }
 
 NS_IMETHODIMP
@@ -1700,6 +1594,9 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
   *aEndOffset = mSelectionEnd;
   *aSelected = mSelected;
   *aBeginContentOffset = mContentOffset;
+  if (mFlags & TEXT_SKIP_LEADING_WS){ //we are really a little more "right" than we thought
+    *aBeginContentOffset ++;
+  }
   return NS_OK;
 }
 
