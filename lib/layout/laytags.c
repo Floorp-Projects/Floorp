@@ -6718,7 +6718,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 						}
 						if (prefetchURL)
 						{
-							PRE_AddToList(context, prefetchURL, 1.0);
+							PRE_AddToList(context, prefetchURL);
 						}
 					}						
 

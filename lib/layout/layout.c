@@ -3856,6 +3856,9 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
      */
     if (context->compositor)
         lo_UpdateBlinkLayers(context);
+
+    /* Prefetch links of this context */
+    PRE_Fetch(context);
 }
 
 /*******************************************************************************
