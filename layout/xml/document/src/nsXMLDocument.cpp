@@ -102,7 +102,10 @@ nsXMLDocument::~nsXMLDocument()
     mInlineStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mInlineStyleSheet);
   }
-  NS_IF_RELEASE(mCSSLoader);
+  if (mCSSLoader) {
+    mCSSLoader->DropDocumentReference();
+    NS_RELEASE(mCSSLoader);
+  }
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
 #endif
@@ -463,6 +466,9 @@ nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
   nsresult result = NS_OK;
   if (! mCSSLoader) {
     result = NS_NewCSSLoader(this, &mCSSLoader);
+    if (mCSSLoader) {
+      mCSSLoader->SetCaseSensitive(PR_TRUE);
+    }
   }
   aLoader = mCSSLoader;
   NS_IF_ADDREF(aLoader);
