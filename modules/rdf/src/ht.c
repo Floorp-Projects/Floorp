@@ -179,7 +179,7 @@ updateViewItem(HT_Resource node)
 	if ((c = RDF_GetSources(node->view->pane->db, node->node, 
 		gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE,  true)) != NULL)
 	{
-		while (r = RDF_NextValue(c))
+		while ((r = RDF_NextValue(c)) != NULL)
 		{
 			foundFlag = PR_FALSE;
 			child = node->child;
@@ -824,8 +824,8 @@ refreshItemList1(HT_View view, HT_Resource node)
 	{
 		if ((numElements = c->numElements) > 0)
 		{
-			if (node->children = (HT_Resource *)getMem(
-						(numElements+1) * sizeof (HT_Resource *)))
+			if ((node->children = (HT_Resource *)getMem(
+						(numElements+1) * sizeof (HT_Resource *))) != NULL)
 			{
 				loop=0;
 				while (((node->children[loop]) = HT_GetNextItem(c)) != NULL)
@@ -2143,7 +2143,7 @@ resynchContainer (HT_Resource container)
 	if ((c = RDF_GetSources(container->view->pane->db, container->node,
 			gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, 1)) != NULL)
 	{
-		while (next = RDF_NextValue(c))
+		while ((next = RDF_NextValue(c)) != NULL)
 		{
 			tc = container->child;
 			found = 0;
@@ -2212,10 +2212,10 @@ refreshContainerIndexes(HT_Resource container)
 	RDF_Resource		next;
 	uint32			unsortedIndex=0;
 
-	if (c = RDF_GetSources(container->view->pane->db, container->node,
-  			gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, 1))
+	if ((c = RDF_GetSources(container->view->pane->db, container->node,
+  			gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, 1)) != NULL)
 	{
-		while (next = RDF_NextValue(c))
+		while ((next = RDF_NextValue(c)) != NULL)
 		{
 			child = container->child;
 			while (child)
@@ -2418,7 +2418,9 @@ fillContainer (HT_Resource node)
 	RDF_Cursor		c;
 	RDF_Resource		next;
 	uint32			numElements=0;
+#ifdef	WIN32
 	char			*advertURL;
+#endif
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->view != NULL);
@@ -2434,7 +2436,7 @@ fillContainer (HT_Resource node)
 				gCoreVocab->RDF_parent,
 				RDF_RESOURCE_TYPE,  true)) != NULL)
 	{
-		while (next = RDF_NextValue(c))
+		while ((next = RDF_NextValue(c)) != NULL)
 		{
 			if ((rn = newHTEntry(node->view, next)) == NULL)
 				break;
@@ -2568,7 +2570,7 @@ HT_SetColumnOrder(HT_View view, void *srcColToken, void *destColToken, PRBool af
 	XP_ASSERT(srcColToken != NULL);
 	XP_ASSERT(destColToken != NULL);
 
-	if (columnList = &(view->columns))
+	if ((columnList = &(view->columns)) != NULL)
 	{
 		while ((*columnList) != NULL)
 		{
@@ -4162,7 +4164,7 @@ htEmptyClipboard(RDF_Resource parent)
 		if ((c = RDF_GetSources(gNCDB, parent, gCoreVocab->RDF_parent,
 					RDF_RESOURCE_TYPE,  true)) != NULL)
 		{
-			while (node = RDF_NextValue(c))
+			while ((node = RDF_NextValue(c)) != NULL)
 			{
 				RDF_Unassert(gNCDB, node, gCoreVocab->RDF_parent,
 					parent, RDF_RESOURCE_TYPE);
@@ -4195,7 +4197,7 @@ htCopyReference(RDF_Resource original, RDF_Resource newParent, PRBool empty)
 			if ((c = RDF_GetSources(gNCDB, original, gCoreVocab->RDF_parent,
 						RDF_RESOURCE_TYPE,  true)) != NULL)
 			{
-				while (node = RDF_NextValue(c))
+				while ((node = RDF_NextValue(c)) != NULL)
 				{
 					RDF_Assert(gNCDB, node, gCoreVocab->RDF_parent,
 						newParent, RDF_RESOURCE_TYPE);
@@ -4499,7 +4501,7 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 	{
 		*nodeData = NULL;
 
-		if (values = node->values)
+		if ((values = node->values) != NULL)
 		{
 			while (values != NULL)
 			{
@@ -4540,7 +4542,7 @@ HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData
 			}
 		}
 
-		if (values = (HT_Value)getMem(sizeof(HT_ValueStruct)))
+		if ((values = (HT_Value)getMem(sizeof(HT_ValueStruct))) != NULL)
 		{
 			values->tokenType = tokenType;
 			values->token = token;
@@ -4956,11 +4958,12 @@ buildInternalIconURL(HT_Resource node, PRBool *volatileURLFlag,
 	}
 	if ((theURL = (HT_Icon)getMem(sizeof(_HT_Icon))) != NULL)
 	{
-		if (theURL->name = copyString(buffer))	{
+		if ((theURL->name = copyString(buffer)) != NULL)
+		{
 			theURL->next = urlList;
 			urlList = theURL;
 			return(theURL->name);
-			}
+		}
 		freeMem(theURL);
 	}
 	return(NULL);
@@ -5410,7 +5413,7 @@ addHtmlElement(HT_Resource node, RDF_Resource token, uint32 tokenType)
 {
 	_htmlElementPtr         htmlElement;
 
-	if (htmlElement = (_htmlElementPtr)getMem(sizeof(_htmlElement)))
+	if ((htmlElement = (_htmlElementPtr)getMem(sizeof(_htmlElement))) != NULL)
 	{
 		htmlElement->node = node;
 		htmlElement->token = token;
@@ -6552,7 +6555,7 @@ htSetFindResourceName(RDF db, RDF_Resource u)
 		if ((value = strcasestr(temp, "attribute=")) != NULL)
 		{
 			value += strlen("attribute=");
-			if (p = strstr(value, "&"))	*p = '\0';
+			if ((p = strstr(value, "&")) != NULL)	*p = '\0';
 			if ((name = unescapeURL(value)) != NULL)
 			{
 				if ((searchOn = RDF_GetResource(NULL, name, 0)) != NULL)
@@ -6573,7 +6576,7 @@ htSetFindResourceName(RDF db, RDF_Resource u)
 		if ((value = strcasestr(temp, "method=")) != NULL)
 		{
 			value += strlen("method=");
-			if (p = strstr(value, "&"))	*p = '\0';
+			if ((p = strstr(value, "&")) != NULL)	*p = '\0';
 			if ((name = unescapeURL(value)) != NULL)
 			{
 				if ((matchOn = RDF_GetResource(NULL, name, 0)) == NULL)
@@ -6595,7 +6598,7 @@ htSetFindResourceName(RDF db, RDF_Resource u)
 		if ((value = strcasestr(temp, "value=")) != NULL)
 		{
 			value += strlen("value=");
-			if (p = strstr(value, "&"))	*p = '\0';
+			if ((p = strstr(value, "&")) != NULL)	*p = '\0';
 			if ((name = unescapeURL(value)) != NULL)
 			{
 				if ((id = PR_smprintf(XP_GetString(RDF_FIND_FULLNAME_STR),
@@ -7317,7 +7320,9 @@ PR_PUBLIC_API(HT_Error)
 HT_SetSelectedView (HT_Pane pane, HT_View view)
 {
 	HT_Notification		ns;
+#ifdef	WIN32
 	char			*advertURL;
+#endif
 
 	XP_ASSERT(pane != NULL);
 	if (pane == NULL)	return(HT_NoErr);
@@ -7476,7 +7481,10 @@ HT_GetPane (HT_View view)
 HT_DropAction
 dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 {
-	HT_Resource		elders, parent;
+	HT_Resource		elders;
+#ifdef XP_WIN32
+	HT_Resource		parent;
+#endif
 	RDF_BT			targetType;
 	RDF_BT			objType;
 
@@ -8137,7 +8145,7 @@ populateSBProviders (HT_Pane htPane)
 	db = htPane->db;
 	c =  RDF_GetSources(htPane->db,  gNavCenter->RDF_SBProviders,
 				gCoreVocab->RDF_parent,	RDF_RESOURCE_TYPE, 1);
-	while (prov = RDF_NextValue(c))
+	while ((prov = RDF_NextValue(c)) != NULL)
 	{
 		sb = (SBProvider)getMem(sizeof(SBProviderStruct));
 		sb->name = RDF_GetResourceName(db, prov);

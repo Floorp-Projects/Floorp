@@ -342,6 +342,7 @@ RDF_Error
 AtalkDestroy (RDFT r)
 {
 	/* XXX to do - kill off any outstanding NBP lookups */
+	return(0);
 }
 
 
@@ -355,7 +356,6 @@ AtalkAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType ty
 	OSErr			err;
 	ParamBlockRec		pBlock;
 	PRBool			retVal = false, useTCP = false;
-	XP_Bool			noHierarchyFlag;
 	char			*url = NULL, *at, *colon, *slash, *msg = NULL;
 	char			*volume = NULL, *volPassword = NULL;
 	char			*server = NULL, *zone = NULL;
@@ -385,7 +385,10 @@ AtalkAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType ty
 			{
 				/* if AFP URL indicates TCP, AppleShare Client 3.7 or later is needed */
 				url = unescapeURL(resourceID(u) + strlen("afp:/tcp/"));
-				if ((err = Gestalt(kAppleShareVerGestalt, &result)))	return(retVal);
+				if ((err = Gestalt(kAppleShareVerGestalt, &result)) != noErr)
+				{
+					return(retVal);
+				}
 				if ((result & 0x0000FFFF) < kAppleShareVer_3_7)
 				{
 					FE_Alert(NULL, XP_GetString(RDF_AFP_CLIENT_37_STR));

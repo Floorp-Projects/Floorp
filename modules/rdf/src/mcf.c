@@ -89,6 +89,7 @@ getTranslator (char* url)
     return ans;
   } else if (startsWith("http://", url)) {
 	  ans = MakeFileDB(url);
+	  return(ans);
   } else
     return NULL;
   
@@ -107,7 +108,7 @@ RDF_GetDB (const char** dataSources)
   while (*(dataSources + n++)) {} 
   r->translators = (RDFT*)getMem((n-1) * sizeof(RDFT));
   n = 0;
-  while (next = (char*) *(dataSources + n)) {
+  while ((next = (char*) *(dataSources + n)) != NULL) {
     RDFL rl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
     r->translators[m] = getTranslator(next);
     if (r->translators[m] != NULL) { 
