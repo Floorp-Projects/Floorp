@@ -205,6 +205,14 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
         }
       }
     }
+    const nsStyleText* textStyle;
+    GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
+    if (!textStyle->WhiteSpaceIsSignificant()) {
+      value.CompressWhitespace();
+      if (value.Length() == 0) {
+        value = "  ";
+      }
+    }
 
     nsInputDimensionSpec btnSpec(NULL, PR_FALSE, nsnull, 
                                   &value,0, 
