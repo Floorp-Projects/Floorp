@@ -75,7 +75,6 @@ public:
 		// since the following url actions require us to be in the authenticated
 		// state, the high bit is left blank....
 		nsImapTest								= 0x00000001,
-		nsImapExpungeFolder						= 0x00000004,
 		nsImapCreateFolder						= 0x00000005,
 		nsImapDeleteFolder						= 0x00000006,
 		nsImapRenameFolder						= 0x00000007,
@@ -104,6 +103,7 @@ public:
 		// imap actions which require us to be in the selected state
 		nsImapSelectFolder						= 0x10000002,
 		nsImapLiteSelectFolder					= 0x10000003,
+		nsImapExpungeFolder						= 0x10000004,
 		nsImapMsgFetch							= 0x10000018,
 		nsImapMsgHeader							= 0x10000019,
 		nsImapSearch							= 0x1000001A,
@@ -118,7 +118,8 @@ public:
 		nsImapOnlineToOfflineMove				= 0x10000023,
 		nsImapOfflineToOnlineMove				= 0x10000024,
 		nsImapBiff								= 0x10000025,
-		nsImapSelectNoopFolder					= 0x10000026
+		nsImapSelectNoopFolder					= 0x10000026,
+        nsImapUidExpunge                        = 0x10000027
 	} nsImapAction;
 
 	/////////////////////////////////////////////////////////////////////////////// 
