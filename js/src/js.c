@@ -90,6 +90,8 @@
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
+
+size_t gStackChunkSize = 8192;
 int gExitCode = 0;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
@@ -390,7 +392,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-s] [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-s] [-w] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -423,6 +425,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 	    case 's':
 		JS_ToggleOptions(cx, JSOPTION_STRICT);
 		break;
+
+            case 'c':
+                /* set stack chunk size */
+                gStackChunkSize = atoi (argv[++i]);
+                break;
 
 	    case 'f':
 		if (i+1 == argc) {
@@ -1887,7 +1894,8 @@ main(int argc, char **argv)
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
 	return 1;
-    cx = JS_NewContext(rt, 8192);
+
+    cx = JS_NewContext(rt, gStackChunkSize);
     if (!cx)
 	return 1;
     JS_SetErrorReporter(cx, my_ErrorReporter);
