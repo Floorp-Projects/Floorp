@@ -868,11 +868,35 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     NS_RELEASE(subdoc);
   }
 
+  nsIContent* content;
+  PRInt32 count;
+  if (nsnull != mProlog) {
+    count = mProlog->Count();
+    for (index = 0; index < count; index++) {
+      content = (nsIContent*)mProlog->ElementAt(index);
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      ContentRemoved(nsnull, content, index);
+      NS_RELEASE(content);
+    }
+    delete mProlog;
+    mProlog = nsnull;
+  }
   if (nsnull != mRootContent) {
     // Ensure that document is nsnull to allow validity checks on content
     mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     ContentRemoved(nsnull, mRootContent, 0);
     NS_IF_RELEASE(mRootContent);
+  }
+  if (nsnull != mEpilog) {
+    count = mEpilog->Count();
+    for (index = 0; index < count; index++) {
+      content = (nsIContent*)mEpilog->ElementAt(index);
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      ContentRemoved(nsnull, content, index);
+      NS_RELEASE(content);
+    }
+    delete mEpilog;
+    mEpilog = nsnull;
   }
 
   // Delete references to style sheets
@@ -1325,13 +1349,16 @@ nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
     }
   }
   
-  if (aIndex == prolog) {
+  if ((aIndex == prolog) && mRootContent) {
     // It's the document element
     content = mRootContent;
   }
-  else if ((aIndex > prolog) && (nsnull != mEpilog)) {
-    // It's in the epilog
-    content = (nsIContent*)mEpilog->ElementAt(aIndex-prolog-1);
+  else {
+    prolog += mRootContent?1:0;
+    if ((aIndex >= prolog) && (nsnull != mEpilog)) {
+      // It's in the epilog
+      content = (nsIContent*)mEpilog->ElementAt(aIndex-prolog);
+    }
   }
 
   NS_IF_ADDREF(content);
@@ -1640,8 +1667,26 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   // reference to the document. This has to be done before we
   // actually set the script context owner to null so that the
   // content elements can remove references to their script objects.
-  if ((nsnull == aScriptGlobalObject) && (nsnull != mRootContent)) {
-    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  if (!aScriptGlobalObject) {
+    PRInt32 count, index;
+    nsIContent *content;
+    if (mProlog) {
+      count = mProlog->Count();
+      for (index = 0; index < count; index++) {
+        content = (nsIContent*)mProlog->ElementAt(index);
+        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      }
+    }
+    if (mRootContent) {
+      mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    }
+    if (mEpilog) {
+      count = mEpilog->Count();
+      for (index = 0; index < count; index++) {
+        content = (nsIContent*)mEpilog->ElementAt(index);
+        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      }
+    }
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
@@ -2768,6 +2813,7 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   PRInt32 index;
   PRUint16 nodeType;
   nsIContent *content, *refContent;
+  PRBool found = PR_FALSE;
   
   if ((nsnull == aNewChild) || (nsnull == aOldChild)) {
     return NS_ERROR_NULL_POINTER;
@@ -2799,45 +2845,55 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
     if (-1 != index) {
       nsIContent* oldContent;
       oldContent = (nsIContent*)mProlog->ElementAt(index);
+      oldContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      ContentRemoved(nsnull, oldContent, index);
       NS_RELEASE(oldContent);
       mProlog->ReplaceElementAt(content, index);
+      ContentInserted(nsnull, content, index);
       NS_ADDREF(content);
+      found = PR_TRUE;
     }
   }
 
-  if (refContent == mRootContent) {
+  if (!found && (refContent == mRootContent)) {
     if (ELEMENT_NODE == nodeType) {
       // Out with the old
-      mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-      ContentRemoved(nsnull, mRootContent, 0);
+      ContentRemoved(nsnull, mRootContent, mProlog->Count());
       
       // In with the new
       SetRootContent(content);
-      ContentInserted(nsnull, content, 0);      
+      ContentInserted(nsnull, content, mProlog->Count());
+      found = PR_TRUE;
     }
     else {
+      NS_RELEASE(refContent);
+      NS_RELEASE(content);
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
-  else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+  else if (!found && (nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(refContent);
     if (-1 != index) {
       nsIContent* oldContent;
       oldContent = (nsIContent*)mEpilog->ElementAt(index);
+      ContentRemoved(nsnull, oldContent, mProlog->Count()+(mRootContent?1:0)+index);
       NS_RELEASE(oldContent);
       mEpilog->ReplaceElementAt(content, index);
+      ContentInserted(nsnull, content, mProlog->Count()+(mRootContent?1:0)+index);
       NS_ADDREF(content);
+      found = PR_TRUE;
     }
   }
 
-  if (NS_OK == result) {
+  if (found) {
     content->SetDocument(this, PR_TRUE, PR_TRUE);
     refContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    *aReturn = aNewChild;
-    NS_ADDREF(aNewChild);
+    *aReturn = aOldChild;
+    NS_ADDREF(aOldChild);
   }
   else {
     *aReturn = nsnull;
+    result = NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
   NS_RELEASE(content);
@@ -2853,6 +2909,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   nsresult result = NS_OK;
   PRInt32 index;
   nsIContent *content;
+  PRBool found = PR_FALSE;
   
   if (nsnull == aOldChild) {
     return NS_ERROR_NULL_POINTER;
@@ -2868,29 +2925,39 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     if (-1 != index) {
       // Don't drop reference count since we're going
       // to return this element anyway.
+      ContentRemoved(nsnull, content, index);
       mProlog->RemoveElementAt(index);
+      found = PR_TRUE;
     }
   }
 
-  if (content == mRootContent) {
+  if (!found && (content == mRootContent)) {
     // Out with the old
-    mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    ContentRemoved(nsnull, mRootContent, 0);
+    ContentRemoved(nsnull, mRootContent, mProlog->Count());
+    NS_ADDREF(mRootContent); // for return, since next line releases
     SetRootContent(nsnull);
+    found = PR_TRUE;
   }
-  else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
+  else if (!found && (nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(content);
     if (-1 != index) {
+      // Don't drop reference count since we're going
+      // to return this element anyway.
+      ContentRemoved(nsnull, content, mProlog->Count()+(mRootContent?1:0)+index);
       mEpilog->RemoveElementAt(index);
+      found = PR_TRUE;
     }
   }
 
-  if (NS_OK == result) {
+  if (found) {
     content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    // The refcount return was AddRef'd / not released above.
     *aReturn = aOldChild;
+    result = NS_OK;
   }
   else {
     *aReturn = nsnull;
+    result = NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
   NS_RELEASE(content);
