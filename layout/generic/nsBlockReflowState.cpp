@@ -2375,24 +2375,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
 #endif
         aMetrics.width = xMost;
-        // If we're supposed to compute our maximum width, keep it in sync
-        if (aState.GetFlag(BRS_COMPUTEMAXWIDTH) &&
-           (aMetrics.mMaximumWidth < aMetrics.width)) {
-#ifdef NOISY_MAXIMUM_WIDTH
-          printf("nsBlockFrame::CFS %p changing maximumWidth from %d to %d\n",
-                 this, aMetrics.mMaximumWidth, aMetrics.width);
-#endif
-          aMetrics.mMaximumWidth = aMetrics.width;
-        }
-        // If we're supposed to compute our max element size, keep it in sync
-        if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
-           (aMetrics.maxElementSize->width < aMetrics.width)) {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("nsBlockFrame::CFS %p changing MES->width from %d to %d\n", 
-                 this, aMetrics.maxElementSize->width, aMetrics.width);
-#endif
-          aMetrics.maxElementSize->width = aMetrics.width;
-        }
       }
       nscoord yMost = aMetrics.mOverflowArea.YMost();
       if (yMost > aMetrics.height) {
@@ -2403,15 +2385,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         aMetrics.height = yMost;
         // adjust descent to absorb any excess difference
         aMetrics.descent = aMetrics.height - aMetrics.ascent;
-        // If we're supposed to compute our max element size, keep it in sync
-        if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
-           (aMetrics.maxElementSize->height < aMetrics.height)) {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("nsBlockFrame::CFS %p changing MES->height from %d to %d\n", 
-                 this, aMetrics.maxElementSize->height, aMetrics.height);
-#endif
-          aMetrics.maxElementSize->height = aMetrics.height;
-        }
       }
     }
   }
