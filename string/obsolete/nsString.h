@@ -544,6 +544,8 @@ public:
     char mBuffer[kDefaultStringSize];
 };
 
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCAutoString, char)
+
 /**
  * A helper class that converts a UCS2 string to UTF8
  */

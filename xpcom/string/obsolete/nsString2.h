@@ -620,6 +620,8 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsAutoString, PRUnichar)
+
 class NS_COM NS_ConvertASCIItoUCS2
       : public nsAutoString
     /*
