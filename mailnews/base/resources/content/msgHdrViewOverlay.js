@@ -390,12 +390,12 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       else
         parentDiv.appendChild(item);
 
-      AddExtraAddressProcessing(emailAddress, item);
-
       var addressInfo = new Object;
       addressInfo.emailAddress = emailAddress;
       addressInfo.fullAddress = fullAddress;
       currentAddressData[item] = addressInfo;
+
+      AddExtraAddressProcessing(emailAddress, item);
 
       hdrViewSetVisible(parentBox, true);
     } 
