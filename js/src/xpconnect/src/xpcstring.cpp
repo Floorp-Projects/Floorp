@@ -77,6 +77,11 @@ XPCReadableJSStringWrapper::~XPCReadableJSStringWrapper()
 const nsSharedBufferHandle<PRUnichar>*
 XPCReadableJSStringWrapper::BufferHandle(JSBool shared) const
 {
+    if (!mStr) {
+        // This is a "void" string, no buffer handle available
+        return nsnull;
+    }
+
     XPCReadableJSStringWrapper * mutable_this =
         NS_CONST_CAST(XPCReadableJSStringWrapper *, this);
 

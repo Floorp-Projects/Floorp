@@ -172,8 +172,10 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
   // Fetch the ID.
   mColElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, mID);
 
-  // Cache the ID as an atom.
-  mIDAtom = getter_AddRefs(NS_NewAtom(mID));
+  // If we have an ID, cache the ID as an atom.
+  if (!mID.IsEmpty()) {
+    mIDAtom = getter_AddRefs(NS_NewAtom(mID));
+  }
 
   nsCOMPtr<nsIStyleContext> styleContext;
   aFrame->GetStyleContext(getter_AddRefs(styleContext));

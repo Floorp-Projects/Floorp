@@ -45,15 +45,13 @@
 
 inline PRBool DOMStringIsNull(const nsAReadableString& aString)
 {
-  // Null string code goes here.
-
-  return PR_FALSE;
+  return aString.IsVoid();
 }
 
 inline void SetDOMStringToNull(nsAWritableString& aString)
 {
   aString.Truncate();
-  // Set aString to null here.
+  aString.SetIsVoid(PR_TRUE);
 }
 
 %}

@@ -1750,7 +1750,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                         // Is an 'out' DOMString. Make a new nsAWritableString
                         // now and then continue in order to skip the call to
                         // JSData2Native
-                        if(!(dp->val.p = new nsString()))
+                        if(!(dp->val.p = new XPCVoidableString()))
                         {
                             JS_ReportOutOfMemory(ccx);
                             goto done;

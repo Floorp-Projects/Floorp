@@ -290,11 +290,18 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
                 if(!p)
                     break;
 
-                JSString *str = XPCStringConvert::ReadableToJSString(cx, *p);
-                if(!str)
-                    return JS_FALSE;
+                if(!p->IsVoid()) {
+                    JSString *str =
+                        XPCStringConvert::ReadableToJSString(cx, *p);
+                    if(!str)
+                        return JS_FALSE;
 
-                *d = STRING_TO_JSVAL(str);
+                    *d = STRING_TO_JSVAL(str);
+                }
+
+                // *d is defaulted to JSVAL_NULL so no need to set it
+                // again if p is a "void" string
+
                 break;
             }
 
@@ -535,7 +542,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         case nsXPTType::T_DOMSTRING:
         {
             static const NS_NAMED_LITERAL_STRING(sEmptyString, "");
-            static const NS_NAMED_LITERAL_STRING(sNullString, "null");
             static const NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
 
             const PRUnichar* chars;
@@ -548,14 +554,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                chars  = sVoidString.get();
                length = sVoidString.Length();
             }
-            else if(JSVAL_IS_NULL(s))
-            {
-                // XXX We don't yet have a way to represent a null nsAXXXString
-                // XXX Do we *want* to use "null"?
-               chars  = sNullString.get();
-               length = sNullString.Length();
-            }
-            else
+            else if(!JSVAL_IS_NULL(s))
             {
                 str = JS_ValueToString(cx, s);
                 if(!str)
@@ -577,8 +576,6 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 }
             }
 
-            NS_ASSERTION(chars, "I must be really confused");
-
             if(useAllocator)
             {
                 if(str)
@@ -591,13 +588,22 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     // Ask for the shared buffer handle, which will root the
                     // string.
                     if(isNewString && ! wrapper->GetSharedBufferHandle())
-                            return JS_FALSE;
+                        return JS_FALSE;
+
+                    *((nsAReadableString**)d) = wrapper;
+                }
+                else if(JSVAL_IS_NULL(s))
+                {
+                    XPCReadableJSStringWrapper *wrapper =
+                        new XPCReadableJSStringWrapper();
+                    if(!wrapper)
+                        return JS_FALSE;
 
                     *((nsAReadableString**)d) = wrapper;
                 }
                 else
                 {
-                    nsAReadableString *rs = new nsString(chars, length);
+                    nsAReadableString *rs = new nsAutoString(chars, length);
                     if(!rs)
                         return JS_FALSE;
                     *((nsAReadableString**)d) = rs;
@@ -606,7 +612,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
             else
             {
                 nsAWritableString* ws = *((nsAWritableString**)d);
-                ws->Assign(chars);
+
+                if(JSVAL_IS_NULL(s))
+                    ws->SetIsVoid(PR_TRUE);
+                else
+                    ws->Assign(chars);
             }
             return JS_TRUE;
         }

@@ -68,7 +68,7 @@ AtomTableGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 PR_STATIC_CALLBACK(PLDHashNumber)
 AtomTableHashKey(PLDHashTable *table, const void *key)
 {
-  return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*,key));
+  return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*, key));
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -273,6 +273,12 @@ static AtomTableEntry* GetAtomHashEntry(const nsAString& aString)
 
 NS_COM nsIAtom* NS_NewAtom( const nsAString& aString )
 {
+  if (aString.IsEmpty()) {
+    NS_ERROR("Atom requested for empty string!");
+
+    return nsnull;
+  }
+
   AtomTableEntry *he = GetAtomHashEntry(aString);
   AtomImpl* atom = he->mAtom;
 
