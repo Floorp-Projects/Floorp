@@ -1,0 +1,43 @@
+en-US.jar:
++  locale/en-US/global/contents.rdf
++  locale/en-US/global/about.xhtml
++  locale/en-US/global/accept2locale.properties
++  locale/en-US/global/brand.dtd
+*+ locale/en-US/global/brand.properties
++  locale/en-US/global/build.dtd
++  locale/en-US/global/charsetOverlay.dtd
++  locale/en-US/global/commonDialog.dtd
++  locale/en-US/global/commonDialogs.properties
+*+ locale/en-US/global/customizeCharset.dtd
++  locale/en-US/global/customizeToolbar.dtd
++  locale/en-US/global/customizeToolbar.properties
++  locale/en-US/global/editMenuOverlay.dtd
++  locale/en-US/global/finddialog.dtd
++  locale/en-US/global/finddialog.properties
++  locale/en-US/global/intl.css
++  locale/en-US/global/keys.properties
++  locale/en-US/global/languageNames.properties
++  locale/en-US/global/regionNames.properties
++  locale/en-US/global/dialog.properties                (widgets/dialog.properties)
++  locale/en-US/global/tabbrowser.dtd                   (widgets/tabbrowser.dtd)
++  locale/en-US/global/tabbrowser.properties            (widgets/tabbrowser.properties)
++  locale/en-US/global/textcontext.dtd                  (widgets/textcontext.dtd)
++  locale/en-US/global/wizard.properties                (widgets/wizard.properties)
+
+en-win.jar:
++  locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties
+
+en-unix.jar:
++  locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties
+
+en-mac.jar:
++  locale/en-US/global-platform/contents.rdf		(contents-platform.rdf)
++  locale/en-US/global-platform/platformKeys.properties (platformKeys-mac.properties)
+
+US.jar:
++  locale/US/global-region/contents.rdf                 (contents-region.rdf) 
++  locale/US/global-region/region.dtd
++  locale/US/global-region/region.properties
++  locale/US/global-region/builtinURLs.rdf
