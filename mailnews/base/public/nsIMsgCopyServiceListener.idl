@@ -16,11 +16,8 @@
  * Reserved.
  */
 
-#include "nsISupports.idl"
 #include "nsrootidl.idl"
-
-%{C++
-%}
+#include "nsISupports.idl"
 
 [scriptable, uuid(1caa10b6-29a6-11d3-afb2-001083002da8)]
 interface nsIMsgCopyServiceListener : nsISupports {

@@ -42,7 +42,7 @@ interface nsIMsgCopyService : nsISupports {
 					 in nsIMsgFolder dstFolder, /* destination folder */
 					 in nsITransactionManager txnMgr); /* undo manager */
 
-	void NotifyCompletion(in nsIMsgFolder srcFolder, /* storage src folder */
+	void NotifyCompletion(in nsISupports aSupport, /* a src folder or file spec */
 						  in nsIMsgFolder dstFolder); /* destination folder */
 
     void RegisterListener(in nsIMsgCopyServiceListener listener,
