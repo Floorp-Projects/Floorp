@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  A basic content sink implementation that builds an in-memory RDF
+  graph.
+
+ */
+
 #include "nsRDFContentSink.h"
 static NS_DEFINE_IID(kIRDFContentSinkIID, NS_IRDFCONTENTSINK_IID);
 

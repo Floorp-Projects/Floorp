@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  Class declaration for an implementation of the nsIRDFDocument
+  interface.
+
+ */
+
 #ifndef nsRDFDocument_h___
 #define nsRDFDocument_h___
 

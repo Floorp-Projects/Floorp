@@ -16,6 +16,17 @@
  * Reserved.
  */
 
+/*
+
+  A data source that reads the 4.x "bookmarks.html" file and
+  constructs an in-memory data source.
+
+  TO DO
+
+  1) Write the modified bookmarks file back to disk.
+
+ */
+
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"

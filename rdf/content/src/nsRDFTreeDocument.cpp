@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  An nsIRDFDocument implementation that builds a tree widget XUL
+  content model that is to be used with a tree control.
+
+ */
+
 #include "nsIRDFContent.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"

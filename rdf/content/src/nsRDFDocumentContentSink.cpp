@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  A content sink implementation that builds a feeds a content model
+  via the nsIRDFDocument interface.
+
+ */
+
 #include "nsICSSParser.h"
 #include "nsIContent.h"
 #include "nsIDOMComment.h"

@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  An abstract base class that serves as the basis for the
+  implementation of the nsIRDFContentSink interface.
+
+ */
+
 #ifndef nsRDFContentSink_h__
 #define nsRDFContentSink_h__
 

@@ -19,9 +19,9 @@
 
 /*
 
-  This builds an HTML-like model, complete with text nodes, that can
-  be displayed in a vanilla HTML content viewer. You can apply CSS2
-  styles to the text, etc.
+  An nsIRDFDocument implementation that builds an HTML-like model,
+  complete with text nodes. The model can be displayed in a vanilla
+  HTML content viewer by applying CSS2 styles to the text.
 
  */
 

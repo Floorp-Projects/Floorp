@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+/*
+
+  A catch-all header file for miscellaneous RDF stuff. Currently
+  contains error codes and vocabulary macros.
+
+ */
 
 #ifndef rdf_h___
 #define rdf_h___

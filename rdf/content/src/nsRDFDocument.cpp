@@ -17,6 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  An implementation for the nsIRDFDocument interface. This
+  implementation serves as the basis for generating an NGLayout
+  content model.
+
+ */
+
 #include "nsIArena.h"
 #include "nsIContent.h"
 #include "nsIDTD.h"
