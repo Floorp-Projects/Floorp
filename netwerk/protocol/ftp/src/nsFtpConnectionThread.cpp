@@ -1686,9 +1686,8 @@ nsFtpConnectionThread::StopProcessing() {
             rv = NS_NewAsyncStreamObserver(mObserver, mEventQueue, getter_AddRefs(asyncObserver));
             if(NS_FAILED(rv)) return rv;
 
-            rv = asyncObserver->OnStartRequest(mChannel, mObserverContext);
-            if (NS_FAILED(rv)) return rv;
-
+            // we only want to fire OnStop. No OnStart has been fired, and
+            // we only want to propagate an error.
             rv = asyncObserver->OnStopRequest(mChannel, mObserverContext, mInternalError, errorMsg);
             if (NS_FAILED(rv)) return rv;
         }
@@ -1698,9 +1697,8 @@ nsFtpConnectionThread::StopProcessing() {
             rv = NS_NewAsyncStreamListener(mListener, mEventQueue, getter_AddRefs(asyncListener));
             if(NS_FAILED(rv)) return rv;
 
-            rv = asyncListener->OnStartRequest(mChannel, mListenerContext);
-            if (NS_FAILED(rv)) return rv;
-
+            // we only want to fire OnStop. No OnStart has been fired, and
+            // we only want to propagate an error.
             rv = asyncListener->OnStopRequest(mChannel, mListenerContext, mInternalError, errorMsg);
             if (NS_FAILED(rv)) return rv;
         }
