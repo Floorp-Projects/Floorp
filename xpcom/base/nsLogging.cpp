@@ -62,7 +62,9 @@ nsLoggingService::nsLoggingService()
 
 nsLoggingService::~nsLoggingService()
 {
+#ifdef DEBUG_warren
     DescribeLogs(LogInfo);
+#endif
 }
 
 NS_IMPL_QUERY_INTERFACE1(nsLoggingService, nsILoggingService)
@@ -380,7 +382,33 @@ nsLog::~nsLog()
     if (mName) nsCRT::free(mName);
 }
 
-NS_IMPL_ISUPPORTS1(nsLog, nsILog)
+// !!! We don't use NS_IMPL_ISUPPORTS for nsLog because logs always appear to 
+// leak due to the way NS_IMPL_LOG works.
+
+NS_IMETHODIMP_(nsrefcnt)
+nsLog::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  NS_ASSERT_OWNINGTHREAD(nsLog);
+  ++mRefCnt;
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsLog::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  NS_ASSERT_OWNINGTHREAD(nsLog);
+  --mRefCnt;
+  if (mRefCnt == 0) {
+    mRefCnt = 1; /* stabilize */
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE1(nsLog, nsILog)
 
 nsresult
 nsLog::Init(const char* name, PRUint32 controlFlags, nsILogEventSink* sink)
@@ -534,9 +562,9 @@ nsLog::Printf(const char* format, ...)
     
     va_list args;
     va_start(args, format);
-    const char* msg = PR_vsmprintf(format, args);
+    nsresult rv = Vprintf(format, args);
     va_end(args);
-    return mSink->Print(this, msg);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -544,8 +572,11 @@ nsLog::Vprintf(const char* format, va_list args)
 {
     nsAutoMonitor monitor(gLogMonitor);
     
-    const char* msg = PR_vsmprintf(format, args);
-    return mSink->Print(this, msg);
+    char* msg = PR_vsmprintf(format, args);
+    if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = mSink->Print(this, msg);
+    PR_smprintf_free(msg);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,5 +751,13 @@ nsFileLogEventSink::Flush(nsILog* log)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#else
+
+PR_IMPLEMENT(nsILog*)
+NS_GetLog(const char* name, PRUint32 controlFlags)
+{
+    return nsnull;
+}
 
 #endif // NS_ENABLE_LOGGING
