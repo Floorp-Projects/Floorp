@@ -122,13 +122,9 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                      ("enter nsContainerFrame::DidReflow: status=%d",
                       aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsFrameState state;
     nsIFrame* kid = mFirstChild;
     while (nsnull != kid) {
-      kid->GetFrameState(state);
-      if (0 != (state & NS_FRAME_IN_REFLOW)) {
-        kid->DidReflow(aPresContext, aStatus);
-      }
+      kid->DidReflow(aPresContext, aStatus);
       kid->GetNextSibling(kid);
     }
   }
