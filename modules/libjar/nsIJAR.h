@@ -30,13 +30,14 @@
 #include "nsJARIIDs.h"
 #include "nsIZip.h"
 #include "nsISupports.h"
+#include "nsISupportsUtils.h"
 #include "nsIFactory.h"
 
 
 class nsIJAR : public nsIZip 
 {
   public:
-    static const nsIID& IID() { static nsIID iid = NS_IJAR_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR( NS_IJAR_IID );
 
   /* This interface will be filled with other "JAR"-related functions. */
   /* The term "JAR" is in reference to security as opposed to "Zip" 

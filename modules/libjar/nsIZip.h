@@ -29,6 +29,7 @@
 
 #include "nsZipIIDs.h"
 #include "nsISupports.h"
+#include "nsISupportsUtils.h"
 #include "nsIFactory.h"
 
 #include "nsZipArchive.h"
@@ -37,14 +38,13 @@
 class nsIZip : public nsISupports 
 {
   public:
-    static const nsIID& IID() { static nsIID iid = NS_IZip_IID; return iid; }
-
+    NS_DEFINE_STATIC_IID_ACCESSOR( NS_IZip_IID );
 
     NS_IMETHOD Open(const char * zipFileName, PRInt32 *result)=0;
    
     NS_IMETHOD Extract(const char * aFilename,const char * aOutname, PRInt32 *result)=0;
    
-    NS_IMETHOD Find(  const char * aPattern, nsZipFind *aResult )=0;
+    NS_IMETHOD Find( const char * aPattern, nsZipFind *aResult )=0;
 };
 
 #endif // nsIZip_h__

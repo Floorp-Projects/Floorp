@@ -49,7 +49,7 @@ class nsJAR : public nsIJAR
     nsJAR();
     ~nsJAR();
     
-    static const nsIID& IID() { static nsIID iid = NS_JAR_CID; return iid; }
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_JAR_CID );
   
     NS_DECL_ISUPPORTS
     
