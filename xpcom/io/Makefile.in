@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsScriptableInputStream.cpp \
 		nsByteArrayInputStream.cpp \
 		nsAppFileLocationProvider.cpp \
+        nsInputStreamTee.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -97,6 +98,7 @@ XPIDLSRCS	= \
 		nsIStorageStream.idl \
 		nsIDirectoryService.idl \
 		nsIByteArrayInputStream.idl \
+        nsIInputStreamTee.idl \
                 $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
