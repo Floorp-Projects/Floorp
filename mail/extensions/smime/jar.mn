@@ -7,8 +7,5 @@ messenger.jar:
 *+  content/messenger/am-smime.js                                    (content/am-smime.js)
 *+  content/messenger-smime/contents.rdf                             (content/contents.rdf)
 
-classic.jar:
-+   skin/classic/messenger/smime/msgCompSMIMEOverlay.css             (skin/msgCompSMIMEOverlay.css)
-
 en-US.jar:
 +   locale/en-US/messenger/am-smime.dtd                              (locale/am-smime.dtd)

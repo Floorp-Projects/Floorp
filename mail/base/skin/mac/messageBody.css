@@ -1,0 +1,271 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== messageBody.css =================================================
+  == Styles for the body of a mail message.
+  ======================================================================= */
+
+/* XXX Breaks the HTML rules below (.moz-class stuff), at least on Linux.
+   "html|.class" doesn't work.
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); 
+*/
+
+window {
+  overflow: auto;
+}
+
+mailattachcount {
+  border: blue;
+}
+
+/* :::: message header ::::: */
+
+header {
+  text-align: left;
+}
+
+headerdisplayname {
+  font-weight: bold;
+  white-space: pre;
+}
+
+.header-part1 {
+  background-color: #EFEFEF;
+}
+
+.header-part2,
+.header-part3 {
+  background-color: #DEDEDE;
+}
+
+div.headerdisplayname {
+  display: inline;
+  font-weight: bold;
+  white-space: pre;
+}
+
+/* ::::: message text, incl. quotes ::::: */
+
+blockquote {
+  margin: inherit;
+  border-width: 2px;
+  border-color: gray;
+}
+
+.moz-text-plain pre {
+  margin: inherit;
+  font-family: inherit;
+}
+
+.moz-text-plain[wrap="true"] {
+  white-space: -moz-pre-wrap;
+}
+
+.moz-text-plain[wrap="false"] {
+  white-space: pre;
+}
+
+.moz-text-plain[wrap="flow"] .moz-txt-sig {
+  white-space: -moz-pre-wrap;
+}
+
+.moz-text-plain[graphical-quote="false"] blockquote {
+  margin: inherit;
+  border-left: inherit;
+  padding-left: inherit;
+}
+
+.moz-text-plain[graphical-quote="true"] blockquote {
+  margin: inherit;
+  border-width: 2px;
+  border-color: gray;
+}
+
+.moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
+  display: none;
+}
+
+span.moz-txt-underscore {
+  text-decoration: underline;
+}
+
+/* ::::: signature ::::: */
+
+.moz-txt-sig,
+.moz-signature {
+  color: #505050;
+}
+
+.moz-txt-sig > a,
+.moz-signature > a {
+  color: #7777FF; /* light blue */
+}
+
+/* ::::: we also represent smilies inside of spans ::::: */
+
+span.moz-smiley-s1,
+span.moz-smiley-s2,
+span.moz-smiley-s3,
+span.moz-smiley-s4,
+span.moz-smiley-s5,
+span.moz-smiley-s6,
+span.moz-smiley-s7, 
+span.moz-smiley-s8, 
+span.moz-smiley-s9, 
+span.moz-smiley-s10, 
+span.moz-smiley-s11, 
+span.moz-smiley-s12, 
+span.moz-smiley-s13, 
+span.moz-smiley-s14, 
+span.moz-smiley-s15, 
+span.moz-smiley-s16 
+{
+  font-size: 18px;
+  padding-left: 20px; 
+  margin-left: 2px; 
+  margin-top: 2px;
+  background-repeat: no-repeat; 
+  -moz-user-select: all;
+  background-position: center center;
+}
+
+span.moz-smiley-s1 > span,
+span.moz-smiley-s2 > span,
+span.moz-smiley-s3 > span,
+span.moz-smiley-s4 > span,
+span.moz-smiley-s5 > span,
+span.moz-smiley-s6 > span,
+span.moz-smiley-s7 > span,
+span.moz-smiley-s8 > span, 
+span.moz-smiley-s9 > span, 
+span.moz-smiley-s10 > span, 
+span.moz-smiley-s11 > span, 
+span.moz-smiley-s12 > span, 
+span.moz-smiley-s13 > span, 
+span.moz-smiley-s14 > span, 
+span.moz-smiley-s15 > span, 
+span.moz-smiley-s16 > span 
+{
+    display: none;
+}
+
+/* smile */
+span.moz-smiley-s1{
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-smile.png");
+}
+
+/* frown */
+span.moz-smiley-s2 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-frown.png");}
+
+/* wink */
+span.moz-smiley-s3 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-wink.png");
+}
+
+/* tongue */
+span.moz-smiley-s4 { 
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-tongue-out.png");
+}
+
+/* laughing */
+span.moz-smiley-s5 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-laughing.png");
+}
+
+/* embarassed */
+span.moz-smiley-s6 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-embarassed.png");
+}
+
+/* undecided */
+span.moz-smiley-s7 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-undecided.png");
+}
+
+/* suprise */
+span.moz-smiley-s8 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-surprised.png");
+}
+
+/* kiss */
+span.moz-smiley-s9 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-kiss.png");
+}
+
+/* yell */
+span.moz-smiley-s10 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-yell.png");
+}
+
+/* cool */
+span.moz-smiley-s11 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-cool.png");
+}
+
+/* money */
+span.moz-smiley-s12 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-money-mouth.png");
+}
+
+/* foot */
+span.moz-smiley-s13 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-foot-in-mouth.png");
+}
+
+/* innocent */
+span.moz-smiley-s14 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-innocent.png");
+}
+
+/* cry */
+span.moz-smiley-s15 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-cry.png");
+}
+
+/* sealed */
+span.moz-smiley-s16 {
+  background-image: url("chrome://communicator/skin/icons/smileys/smiley-sealed.png");
+}
+
+
+/* Quote Levels Colors */
+blockquote[type=cite] {   color: blue !important;
+   border-color: blue !important;}blockquote[type=cite] > blockquote {   color: green !important;
+   border-color: green !important;}blockquote[type=cite] > blockquote > blockquote {   color: maroon !important;
+   border-color: maroon !important;}

@@ -1,0 +1,258 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== messageHeader.css ==============================================
+  == Styles for the header toolbars of a mail message.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+
+/* ::::: msg header toolbars ::::: */
+
+#attachmentView,
+#collapsedHeaderView,
+#expandedHeaderView {
+  min-width: 1px;
+}
+
+/* ::::: msg header buttons ::::: */
+.headerContainer
+{
+  min-width: 1px;
+}
+
+/* ::::: attachment view ::::: */
+
+#attachmentList
+{
+  margin: 5px 30px 5px 15px;
+}
+
+/* XXX: Move all of the description attributes to the toolkit */
+
+description[selectable="true"]
+{
+  margin              : 1px 5px 4px 5px;
+}
+
+descriptionitem
+{
+  padding: 0px;
+  margin: 1px 1px 1px 1px;
+  text-decoration: underline;
+  color: blue;
+}
+
+description[selectable="true"]:focus > descriptionitem[selected="true"][current="true"] 
+{
+  border: 1px solid #B8B8B8;
+  background-color: #C8C8C8;
+}
+
+descriptionitem[selected="true"] 
+{
+  border: 1px solid #B8B8B8;
+  background-color: #C8C8C8;
+}
+
+description[selectable="true"]:focus > descriptionitem[selected="true"] 
+{
+  border: 1px solid #B8B8B8;
+  background-color: #C8C8C8;
+}
+
+.descriptioncell-icon {
+}
+
+.attachmentBox 
+{
+  width: 15em;
+  max-width: 10em;
+  text-align: left;
+}
+
+.attachmentBox[largeView="true"]
+{
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#attachmentView {
+  background-color: #E6E6E6;
+  border: 1px solid #C8C8C8;
+  -moz-border-radius: 7px;
+  margin: 6px;
+  padding: 4px;
+}
+
+#attachmentLabel {
+  color: #505050;
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+}
+
+
+/* ::::: msg header captions ::::: */
+
+#msgHeaderView {
+  background-color: #FFFFFF;
+  border: none;
+}
+
+#msgHeaderView > vbox {
+  background-color: #E6E6E6;
+  border: 1px solid #C8C8C8;
+  -moz-border-radius: 7px;
+  margin: 6px;
+  padding: 6px 6px 4px 4px;
+}
+
+.headerNameBox {
+  width: 7.7em;
+  background-color: transparent;
+  color: #505050;
+}
+
+.headerName {
+  margin: 0 .5em 0 0;
+  min-height: 18px;
+  font-weight: bold;
+  text-align: right;
+  background-color: transparent;
+  padding: 0px;
+}
+
+.headerValue {
+  margin: 0 0 .25em 0;
+  min-width: 50px;
+  white-space: normal;
+  background-color: transparent;
+  padding: 0px;
+}
+
+.subjectvalue {
+  font-weight: bold;
+  background-color: transparent;
+}
+
+/* ::::: msg header email addresses ::::: */
+
+.emailDisplayButton {
+  margin: 0;
+  background-color: transparent;
+}
+
+.emailDisplayButton:hover {
+  margin: 0px;
+  padding: 0px;
+  cursor: pointer;
+  text-decoration: underline;
+  color: blue;
+}
+
+
+.emailDisplayImage {
+  padding-left: 4px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette.png");
+  max-height: 16px !important;
+  cursor: pointer;
+}
+
+.emailDisplayImage:hover, .emailDisplayImage[open] {
+list-style-image: url("chrome://messenger/skin/addressbook/icons/silhouette-hover.png");
+}
+ 
+/* ::::: email address twisty ::::: */
+
+.addresstwisty {
+
+  padding-right: 5px;
+
+  padding-top: 3px;
+  list-style-image:url("chrome://global/skin/tree/treetwisty.png");
+  height: 9px !important;
+  width: 9px !important;
+  margin: 3px;
+}
+
+.addresstwisty[open] {
+  list-style-image:url("chrome://global/skin/tree/treetwisty-open.png");
+  height: 9px !important;
+  width: 9px !important;
+  margin: 3px;
+}
+
+/* ::::: view expand and collapse twisties  ::::: */
+
+.expandHeaderViewButton,
+.collapsedHeaderViewButton  {
+  margin: 4px .5em 0 .5em;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+.expandHeaderViewButton {
+  list-style-image:url("chrome://global/skin/tree/treetwisty-open.png");
+  height: 9px !important;
+  width: 9px !important;
+  margin: 3px;
+}
+
+.collapsedHeaderViewButton  {
+  list-style-image:url("chrome://global/skin/tree/treetwisty.png");
+  height: 9px !important;
+  width: 9px !important;  
+  margin:  3px;
+}
+
+/* ::::: collapsed view styles ::::: */
+
+#collapseddateValue {
+  margin: 0 .5em;
+  text-align: right;
+  background-color: transparent;
+}
+
+#collapsedfromBox {
+  width: 18em;
+  background-color: transparent;
+}
+
+#collapseddateBox {
+  width: 12em;
+  background-color: transparent;
+}
+
+.collapsedHeaderDisplayName { 
+  margin: 0 .5em 0 .8em;
+  min-height: 16px;
+  font-weight: bold;
+  background-color: transparent;
+  color: #505050;
+}
+
+.collapsedHeaderValue {
+  margin: 0;
+  background-color: transparent;
+}

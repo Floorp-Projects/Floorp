@@ -37,9 +37,3 @@ en-US.jar:
 
 en-win.jar:
 +   locale/en-US/messenger-mapi/pref-mailnewsOverlay.dtd               (locale/pref-mailnewsOverlay.dtd)
-
-classic.jar:
-+   skin/classic/communicator/pref/pref.css                            (skin/pref.css)
-    skin/classic/messenger/icons/mail-options.png                      (skin/mail-options.png)
-    skin/classic/messenger/icons/mailPaneConfig.png                    (skin/mailPaneConfig.png)
-

@@ -1,0 +1,169 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ */
+
+/* ===== accountCentral.css ==========================================
+  == Styles for the Messenger Account Central panel.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#acctCentralGrid {
+  background-color: #F4F4F4;
+  margin: 0px;
+}
+
+separator {
+  display: none;
+}
+
+separator.thin {
+}
+
+
+/* ::::: rows ::::: */
+
+#acctCentralHeaderRow {
+  padding: 10px 0px 5px 10px;
+  font: menu;
+  font-weight: bold;
+  font-size: 150%;
+  color: #000000;
+  margin: 0px;
+  
+}
+
+.acctCentralRow {
+  color: #000000;
+  height: 48px;
+  margin: 0px 20px !important;
+  
+  
+}
+
+.acctCentralRow > hbox {
+ margin: 0px 6px;
+padding: 8px 7px;
+}
+
+
+.row-iconic-icon {
+  list-style-image: inherit;
+  margin-right: 10px;
+}
+
+.acctCentralRowTitleBox {
+  background-color: #E6E6E6;
+  border: 1px solid #C8C8C8;
+  margin: 15px 6px 0px 6px;
+  -moz-border-radius-topleft: 7px;
+  -moz-border-radius-topright: 7px;
+  color: #505050;
+  padding: 4px 4px 2px 8px;
+  font-weight: bold;
+  font: menu;
+}
+
+/* ::::: links ::::: */
+
+.acctCentralLinkText {
+  cursor: pointer;
+}
+
+.acctCentralLinkText:hover {
+  color: blue;
+  text-decoration: underline;
+}
+
+.acctCentralLinkText:hover:active {
+  color: #000000;
+}
+
+#ReadMessages label {
+  background: url("chrome://messenger/skin/accountcentral/mailbox.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#ComposeMessage label {
+  background: url("chrome://messenger/skin/accountcentral/writemail.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#JunkSettingsMail label {
+  background: url("chrome://messenger/skin/accountcentral/junk.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+  visibility: visible;
+}
+
+#SubscribeNewsgroups label {
+  background: url("chrome://messenger/skin/accountcentral/mailbox.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#AccountSettings label {
+  background: url("chrome://messenger/skin/accountcentral/accountsettings.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#CreateAccount label {
+  background: url("chrome://messenger/skin/accountcentral/newaccount.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#SearchMessages label {
+  background: url("chrome://messenger/skin/accountcentral/search-messages.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#CreateFilters label {
+  background: url("chrome://messenger/skin/accountcentral/mailbox.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#SubscribeImapFolders label {
+  background: url("chrome://messenger/skin/accountcentral/folder.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}
+
+#OfflineSettings label {
+  background: url("chrome://messenger/skin/accountcentral/offline.png")  no-repeat !important;
+  padding-left: 50px;
+  font-size: 11px;
+  padding-top: 7px;
+}

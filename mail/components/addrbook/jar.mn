@@ -1,14 +1,3 @@
-classic.jar:
-+   skin/classic/messenger/addressbook/addressbook.css          (skin/addressbook.css)
-+   skin/classic/messenger/addressbook/abContactsPanel.css      (skin/abContactsPanel.css)
-+   skin/classic/messenger/addressbook/cardDialog.css           (skin/cardDialog.css)
-+   skin/classic/messenger/addressbook/abResultsPane.css        (skin/abResultsPane.css)
-    skin/classic/messenger/addressbook/icons/abcard.png         (skin/icons/abcard.png)
-    skin/classic/messenger/addressbook/icons/addrbook.png       (skin/icons/addrbook.png) 
-    skin/classic/messenger/addressbook/icons/ablist.png         (skin/icons/ablist.png) 
-    skin/classic/messenger/addressbook/icons/addressbook-toolbar.png         (skin/icons/addressbook-toolbar.png)
-    skin/classic/messenger/addressbook/icons/addressbook-toolbar-small.png   (skin/icons/addressbook-toolbar-small.png)
-
 messenger.jar:
 *+  content/messenger/addressbook/abCardViewOverlay.js          (content/abCardViewOverlay.js)
 *+  content/messenger/addressbook/addressbook.js                (content/addressbook.js)
