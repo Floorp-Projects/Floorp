@@ -24,10 +24,10 @@
  *  IBM Corp.
  */
 
-#include "nsLookAndFeel.h"
-#include "nsXPLookAndFeel.h"
 #define INCL_WIN
 #include <os2.h>
+#include "nsLookAndFeel.h"
+#include "nsXPLookAndFeel.h"
 #include "nsFont.h"
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
