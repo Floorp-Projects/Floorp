@@ -69,6 +69,7 @@
 static PRLogModuleInfo *nsXPrintContextLM = PR_NewLogModule("nsXPrintContext");
 #endif /* PR_LOGGING */
 
+PR_BEGIN_EXTERN_C
 static 
 int xerror_handler( Display *display, XErrorEvent *ev )
 {
@@ -78,6 +79,7 @@ int xerror_handler( Display *display, XErrorEvent *ev )
     fprintf(stderr, "nsGfxXprintModule: Warning (X Error) -  %s\n", errmsg);
     return 0;
 }
+PR_END_EXTERN_C
 
 /** ---------------------------------------------------
  *  Default Constructor
