@@ -4194,7 +4194,9 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
                         nsLineList::iterator aLineBefore)
 {
   nsLineList::iterator overBegin(aLineBefore.next());
-  NS_ASSERTION(overBegin != begin_lines(), "bad push");
+
+  // PushTruncatedPlaceholderLine sometimes pushes the first line.  Ugh.
+  PRBool firstLine = overBegin == begin_lines();
 
   if (overBegin != end_lines()) {
     // XXXldb use presshell arena!
@@ -4220,7 +4222,8 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
   }
 
   // Break frame sibling list
-  aLineBefore->LastChild()->SetNextSibling(nsnull);
+  if (!firstLine)
+    aLineBefore->LastChild()->SetNextSibling(nsnull);
 
 #ifdef DEBUG
   VerifyOverflowSituation(aState.mPresContext);
