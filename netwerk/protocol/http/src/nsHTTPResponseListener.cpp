@@ -181,6 +181,8 @@ nsHTTPCacheListener::OnDataAvailable(nsIRequest *aRequest,
                                      PRUint32 aSourceOffset,
                                      PRUint32 aCount) 
 {
+    LOG(("nsHTTPCacheListener::OnDataAvailable [this=%x count=%u]\n", this, aCount));
+
     nsresult channelStatus = NS_OK, rv = NS_OK;
     
     if (mChannel) 

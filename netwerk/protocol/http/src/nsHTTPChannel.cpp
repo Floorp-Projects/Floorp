@@ -68,8 +68,8 @@ static PRTime
 SecondsToPRTime(PRUint32 t_sec)
 {
     PRTime t_usec, usec_per_sec;
-    LL_L2I(t_usec, t_sec);
-    LL_L2I(usec_per_sec, PR_USEC_PER_SEC);
+    LL_I2L(t_usec, t_sec);
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
     LL_MUL(t_usec, t_usec, usec_per_sec);
     return t_usec;
 }
@@ -79,9 +79,9 @@ PRTimeToSeconds(PRTime t_usec)
 {
     PRTime usec_per_sec;
     PRUint32 t_sec;
-    LL_L2I(usec_per_sec, PR_USEC_PER_SEC);
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
     LL_DIV(t_usec, t_usec, usec_per_sec);
-    LL_I2L(t_sec, t_usec);
+    LL_L2I(t_sec, t_usec);
     return t_sec;
 }
 
@@ -97,7 +97,7 @@ SecondsToTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
 static void
 TimeStringToSeconds(const char *str, PRUint32 *t_sec)
 {
-    PRTime t_usec = 0;
+    PRTime t_usec = LL_ZERO;
     PR_ParseTimeString(str, PR_TRUE, &t_usec);
     *t_sec = PRTimeToSeconds(t_usec);
 }
@@ -246,6 +246,9 @@ nsHTTPChannel::Cancel(nsresult status)
 {
     nsresult rv;
 
+    printf(">>>> nsHTTPChannel::Cancel [this=%x]\n", this);
+    LOG(("nsHTTPChannel::Cancel [this=%x status=%x]\n", this, status));
+
     //
     // If this channel is currently waiting for a transport to become available.
     // Notify the HTTPHandler that this request has been cancelled...
@@ -261,6 +264,11 @@ nsHTTPChannel::Cancel(nsresult status)
         nsHTTPFinalListener *fl = NS_STATIC_CAST(nsHTTPFinalListener*, sl);
         fl->FireNotifications();
     }
+
+    // XXX should we be destroying the cache entry on Cancel ??
+    //mResponseDataListener = 0;
+    //CacheAbort(status);
+
     return rv;
 }
 
@@ -927,14 +935,16 @@ nsHTTPChannel::SetResponseTime(PRUint32 value)
 //    currentAge = max(max(0, responseTime - dateValue), ageValue)
 //               + now - requestTime
 //
+// This is typically a very small number.
+//
 nsresult
 nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
                                  PRUint32 *result)
 {
     NS_ENSURE_TRUE(mResponse, NS_ERROR_NOT_AVAILABLE);
 
-    PRUint32 requestTime, responseTime, dateValue, diff;
-    PRUint32 ageValue;
+    PRUint32 requestTime, responseTime, dateValue;
+    PRUint32 ageValue = 0;
     PRBool avail = PR_FALSE;
     nsresult rv;
 
@@ -949,33 +959,27 @@ nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
         dateValue = now;
     }
 
-    rv = mResponse->GetAgeValue(&ageValue, &avail);
-    if (NS_FAILED(rv)) return rv;
-
     rv = GetRequestTime(&requestTime);
     if (NS_FAILED(rv)) return rv;
 
     rv = GetResponseTime(&responseTime);
     if (NS_FAILED(rv)) return rv;
 
+    rv = mResponse->GetAgeValue(&ageValue, &avail);
+    if (NS_FAILED(rv)) return rv;
+
     // Compute apparent age
-    LL_SUB(diff, responseTime, dateValue);
-    LL_DIV(diff, diff, 1000000); // convert u-sec to sec
-    LL_L2UI(*result, diff);
-    *result = PR_MAX(0, *result);
+    if (responseTime > dateValue)
+        *result = responseTime - dateValue;
 
     // Compute corrected received age
-    if (ageValue)
+    if (avail)
         *result = PR_MAX(*result, ageValue);
 
-    // Compute resident time
-    LL_SUB(diff, now, requestTime);
-    LL_DIV(diff, diff, 1000000); // convert u-sec to sec
+    NS_ASSERTION(now >= requestTime, "bogus request time");
 
     // Compute current age
-    PRUint32 temp;
-    LL_L2UI(temp, diff);
-    *result += temp;
+    *result += (now - requestTime);
 
     return NS_OK;
 }
@@ -988,14 +992,19 @@ nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
 //     freshnessLifetime = expires_value - date_value
 // <or>
 //     freshnessLifetime = (date - lastModified) * 0.10
+// <or>
+//     freshnessLifetime = 0
 //
 nsresult
 nsHTTPChannel::ComputeFreshnessLifetime(PRUint32 *result)
 {
+    NS_ENSURE_ARG_POINTER(result);
     NS_ENSURE_TRUE(mResponse, NS_ERROR_NOT_AVAILABLE);
 
     nsresult rv;
     PRBool avail = PR_FALSE;
+
+    *result = 0;
 
     // Try HTTP/1.1 style max-age directive...
     rv = mResponse->GetMaxAge(result, &avail);
@@ -1048,7 +1057,7 @@ nsHTTPChannel::UpdateExpirationTime()
 {
     nsresult rv;
     PRUint32 now = NowInSeconds();
-    PRUint32 freshnessLifetime, currentAge, timeRemaining;
+    PRUint32 freshnessLifetime, currentAge, timeRemaining = 0;
 
     rv = SetResponseTime(now);
     if (NS_FAILED(rv)) return rv;
@@ -1062,8 +1071,8 @@ nsHTTPChannel::UpdateExpirationTime()
     LOG(("freshnessLifetime = %u, currentAge = %u\n",
         freshnessLifetime, currentAge));
 
-    timeRemaining = freshnessLifetime - currentAge;
-    timeRemaining = PR_MAX(0, timeRemaining);
+    if (freshnessLifetime > currentAge)
+        timeRemaining = freshnessLifetime - currentAge;
 
     return mCacheEntry->SetExpirationTime(now + timeRemaining);
 }
@@ -1108,6 +1117,25 @@ nsHTTPChannel::CheckCache()
         return NS_OK;
     }
 
+    // If the cached content-length is set and it does not match the data size
+    // of the cached content, then refetch.
+    //
+    // XXX this logic may be horked by decoders inserted in the listener chain.
+    PRInt32 contentLength;
+    rv = mCachedResponse->GetContentLength(&contentLength);
+    if (NS_SUCCEEDED(rv)) {
+        PRUint32 size;
+        rv = mCacheEntry->GetDataSize(&size);
+        if (NS_FAILED(rv)) return rv;
+
+        LOG(("Content-length=%d, CacheEntryDataSize=%u\n", contentLength, size));
+
+        if (size != contentLength) {
+            NS_NOTREACHED("Cached data size does not match the Content-Length header");
+            return NS_OK; // must re-fetch
+        }
+    }
+
     // If validation is inhibited, we'll just use whatever data is in
     // the cache, regardless of whether or not it has expired.
     if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
@@ -1127,13 +1155,20 @@ nsHTTPChannel::CheckCache()
     mCachedResponse->GetHeader(nsHTTPAtoms::Last_Modified,
                                getter_Copies(lastModified));
     if (!lastModified) {
-        doIfModifiedSince = PR_FALSE;
-        goto end;
+        LOG(("No Last-Lodified header sent, try using the Date header.\n"));
+        mCachedResponse->GetHeader(nsHTTPAtoms::Date,
+                                   getter_Copies(lastModified));
+        if (!lastModified) {
+            LOG(("BAD SERVER!!  No Date header sent... reloading the document.\n"));
+            doIfModifiedSince = PR_FALSE;
+            goto end;
+        }
     }
 
     // If the FORCE_VALIDATION flag is set, any cached data won't be used until
     // it's revalidated with the server.
     if (mLoadAttributes & nsIChannel::FORCE_VALIDATION) {
+        LOG(("honoring nsIChannel::FORCE_VALIDATION\n"));
         doIfModifiedSince = PR_TRUE;
         goto end;
     }
@@ -1157,6 +1192,7 @@ nsHTTPChannel::CheckCache()
         if ((haystack.Find("*", PR_TRUE) != kNotFound) || 
             (haystack.Find("accept-charset", PR_TRUE) != kNotFound) ||
             (haystack.Find("accept-language", PR_TRUE) != kNotFound)) {
+            LOG(("Need to validate content based on Vary header\n"));
             doIfModifiedSince = PR_TRUE;
             goto end;
         }
@@ -1175,8 +1211,9 @@ nsHTTPChannel::CheckCache()
         if (NS_FAILED(rv)) return rv;
 
         sessionStartTime = PRTimeToSeconds(mHandler->GetSessionStartTime());
-        if (sessionStartTime > lastWritten)
-            firstAccessThisSession = PR_TRUE;
+        firstAccessThisSession = (sessionStartTime > lastWritten);
+
+        LOG(("firstAccessThisSession = %u\n", firstAccessThisSession));
 
         // Check to see if we can use the cache data without revalidating 
         // it with the server.
@@ -1205,11 +1242,6 @@ end:
         // Specify the need to validate this cache entry with the server.
         mCachedContentIsValid = PR_FALSE;
     }
-    else if (mCacheAccess & nsICache::ACCESS_WRITE)
-        // We have write access to the cache, but we don't need to go to the
-        // server to validate at this time, so just mark the cache entry as
-        // valid to allow others access to this cache entry.
-        mCacheEntry->MarkValid();
 
     LOG(("nsHTTPChannel::CheckCache [this=%x if-modified-since=%d"
         " cache-entry-is-valid=%d]\n",
@@ -1234,6 +1266,12 @@ nsHTTPChannel::ReadFromCache()
 
     LOG(("nsHTTPChannel::ReadFromCache [this=%x] "
          "Using cache copy for: %s\n", this, mRequest->Spec()));
+
+    if (mCacheAccess & nsICache::ACCESS_WRITE)
+        // We have write access to the cache, but we don't need to go to the
+        // server to validate at this time, so just mark the cache entry as
+        // valid in order to allow others access to this cache entry.
+        mCacheEntry->MarkValid();
 
     // Get a transport to the cached data...
     rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
@@ -1267,6 +1305,38 @@ nsHTTPChannel::ReadFromCache()
     return rv;
 }
 
+PRBool
+nsHTTPChannel::ResponseIsCacheable()
+{
+    nsXPIDLCString str;
+
+    // The no-store directive within the 'Cache-Control:' header indicates
+    // that we should not store the response in the cache
+    GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(str));
+    if (str) {
+        nsSubsumeCStr ss((char *) (const char *) str, PR_FALSE);
+        if (ss.Find("no-store", PR_TRUE) != kNotFound) {
+            LOG(("Not caching since response has \"Cache-Control: no-store\"\n"));
+            return PR_FALSE;
+        }
+    }
+    str = 0;
+
+    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+    // a request header), caching is inhibited when this header is present so
+    // as to match existing Navigator behavior.
+    GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(str));
+    if (str) {
+        nsSubsumeCStr ss((char *) (const char *) str, PR_FALSE);
+        if (ss.Find("no-cache", PR_TRUE) != kNotFound) {
+            LOG(("Not caching since response has \"Pragma: no-cache\"\n"));
+            return PR_FALSE;
+        }
+    }
+
+    return PR_TRUE;
+}
+
 nsresult
 nsHTTPChannel::CacheAbort(PRUint32 statusCode)
 {
@@ -1291,9 +1361,11 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
                                      nsIStreamListener **aResult)
 {
     nsresult rv;
-    nsXPIDLCString str;
 
     NS_ENSURE_ARG_POINTER(aListener);
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    *aResult = nsnull;
 
     // Don't cache the response again if already cached... FinishResponseHeaders
     // calls ProcessStatusCode for handling cached redirects.
@@ -1307,36 +1379,17 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     LOG(("nsHTTPChannel::CacheReceivedResponse [this=%x entry=%x]\n",
         this, mCacheEntry.get()));
 
+    if (!ResponseIsCacheable()) {
+        // XXX we should cache these as well, but doom them immediately.
+        CacheAbort(0);
+        return NS_OK;
+    }
+
     // Store secure data in memory only
     nsCOMPtr<nsISupports> securityInfo;
     rv = GetSecurityInfo(getter_AddRefs(securityInfo));
     if (NS_SUCCEEDED(rv) && securityInfo)
         mCacheEntry->SetSecurityInfo(securityInfo);
-
-    // The no-store directive within the 'Cache-Control:' header indicates
-    // that we should not store the response in the cache
-    rv = GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(str));
-    if (NS_FAILED(rv)) return rv;
-    if (str) {
-        nsSubsumeCStr ss((char *) (const char *) str, PR_FALSE);
-        if (ss.Find("no-store", PR_TRUE) != kNotFound) {
-            LOG(("Not caching since response has \"Cache-Control: no-store\"\n"));
-            goto dont_cache;
-        }
-    }
-
-    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
-    // a request header), caching is inhibited when this header is present so
-    // as to match existing Navigator behavior.
-    rv = GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(str));
-    if (NS_FAILED(rv)) return rv;
-    if (str) {
-        nsSubsumeCStr ss((char *) (const char *) str, PR_FALSE);
-        if (ss.Find("no-cache", PR_TRUE) != kNotFound) {
-            LOG(("Not caching since response has \"Pragma: no-cache\"\n"));
-            goto dont_cache;
-        }
-    }
 
     // Set the expiration time for this cache entry
     rv = UpdateExpirationTime();
@@ -1344,45 +1397,41 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 
     // Store the received HTTP headers with the cache entry as an element of
     // the meta data.
-    {
-        nsCString allHeaders;
-        rv = mResponse->EmitHeaders(allHeaders);
-        if (NS_FAILED(rv)) return rv;
 
-        rv = mCacheEntry->SetMetaDataElement("http-headers", allHeaders.get());
-        if (NS_FAILED(rv)) return rv;
-    }
+    nsCString allHeaders;
+    rv = mResponse->EmitHeaders(allHeaders);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mCacheEntry->SetMetaDataElement("http-headers", allHeaders.get());
+    if (NS_FAILED(rv)) return rv;
 
     // Open an output stream to the cache entry and insert a listener tee into
     // the chain of response listeners.
-    {
-        LOG(("Preparing to write data into the cache [url=%s]\n", mRequest->Spec()));
+    
+    LOG(("Preparing to write data into the cache [url=%s]\n", mRequest->Spec()));
 
-        rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
-        if (NS_FAILED(rv)) return rv;
+    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+    if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIOutputStream> out;
-        rv = mCacheTransport->OpenOutputStream(0, ULONG_MAX, 0, getter_AddRefs(out));
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIOutputStream> out;
+    rv = mCacheTransport->OpenOutputStream(0, ULONG_MAX, 0, getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
 
-        // Mark entry valid inorder to allow simultaneous reading...
-        rv = mCacheEntry->MarkValid();
-        if (NS_FAILED(rv)) return rv;
+    // XXX disk cache does not support overlapped i/o yet
+#if 0
+    // Mark entry valid inorder to allow simultaneous reading...
+    rv = mCacheEntry->MarkValid();
+    if (NS_FAILED(rv)) return rv;
+#endif
 
-        nsCOMPtr<nsIStreamListenerTee> tee =
-            do_CreateInstance(kStreamListenerTeeCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStreamListenerTee> tee =
+        do_CreateInstance(kStreamListenerTeeCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = tee->Init(aListener, out);
-        if (NS_FAILED(rv)) return rv;
+    rv = tee->Init(aListener, out);
+    if (NS_FAILED(rv)) return rv;
 
-        return CallQueryInterface(tee, aResult);
-    }
-
-dont_cache:
-    CacheAbort(0);
-    *aResult = nsnull;
-    return NS_OK;
+    return CallQueryInterface(tee, aResult);
 }
 
 #else
@@ -2081,7 +2130,7 @@ nsHTTPChannel::Connect()
     }
     
 #ifdef MOZ_NEW_CACHE
-    SetRequestTime(PR_Now());
+    SetRequestTime(NowInSeconds());
 #endif
 
     mState = HS_WAITING_FOR_RESPONSE;
@@ -2265,6 +2314,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 {
     nsresult rv = NS_OK;
 
+    printf(">>>> nsHTTPChannel::ResponseCompleted [this=%x]\n", this);
     LOG(("nsHTTPChannel::ResponseComplete() [this=%x] "
          "mDataListenet=%x, Status=%o\n",
          this, (void*)mResponseDataListener, aStatus));
@@ -2346,6 +2396,14 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
 #endif
     }
 
+#ifdef MOZ_NEW_CACHE
+    // Mark the cache entry valid before calling our listener
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
+        mCacheEntry->MarkValid();
+    mCacheReadRequest = 0;
+    mCacheTransport = 0;
+#endif
+
     //
     // Call the consumer OnStopRequest(...) to end the request...
     //----------------------------------------------------------------
@@ -2358,16 +2416,14 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                  "OnStopRequest to consumer failed! Status:%x\n", this, rv));
     }
 
-#ifdef MOZ_NEW_CACHE
-    mCacheReadRequest = 0;
-    mCacheTransport = 0;
-#endif
-
     // Release the cache entry as soon as we are done. This helps as it can
     // flush any cache records and do maintenance. But do this only after
     // stopRequest has been fired as the stopListeners could want to use
     // the cache entry like the plugin listener.
     mCacheEntry = 0;
+#ifdef MOZ_NEW_CACHE
+    mCacheAccess = nsICache::ACCESS_NONE;
+#endif
 
     //
     // After the consumer has been notified, remove the channel from its 
@@ -3327,6 +3383,19 @@ nsHTTPChannel::GetCacheToken(nsISupports **token)
 
 NS_IMETHODIMP
 nsHTTPChannel::SetCacheToken(nsISupports *token)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetCacheKey(nsISupports **key)
+{
+    NS_ENSURE_ARG_POINTER(key);
+    return CallQueryInterface(mURI, key);
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetCacheKey(nsISupports *key)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

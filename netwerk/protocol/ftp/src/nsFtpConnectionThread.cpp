@@ -44,7 +44,7 @@
 #include "nsIStringStream.h"
 #include "nsIPref.h"
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
 #include "nsIInputStreamTee.h"
 #endif
 
@@ -68,7 +68,7 @@ public:
     virtual ~DataRequestForwarder();
     nsresult Init(nsIRequest *request, nsIStreamListener *listener);
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     nsresult SetCacheEntryDescriptor(nsICacheEntryDescriptor *desc);
 #endif
 
@@ -80,7 +80,7 @@ public:
     NS_FORWARD_NSICHANNEL(mChannel->)
 
 protected:
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     nsCOMPtr<nsICacheEntryDescriptor> mCacheWriteDescriptor;
     nsCOMPtr<nsIOutputStream> mCacheOutputStream;
 #endif
@@ -108,7 +108,7 @@ DataRequestForwarder::~DataRequestForwarder()
 {
 }
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
 nsresult 
 DataRequestForwarder::SetCacheEntryDescriptor(nsICacheEntryDescriptor *desc)
 {
@@ -134,7 +134,7 @@ DataRequestForwarder::Init(nsIRequest *request, nsIStreamListener *listener)
 NS_IMETHODIMP 
 DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
 
     if (mCacheWriteDescriptor) {   
         nsCOMPtr<nsITransport> transport;
@@ -159,7 +159,7 @@ NS_IMETHODIMP
 DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
 {
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if (mCacheWriteDescriptor) {
         nsresult rv;
         if (NS_SUCCEEDED(statusCode))
@@ -183,7 +183,7 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
 NS_IMETHODIMP
 DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *input, PRUint32 offset, PRUint32 count)
 { 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if (mCacheWriteDescriptor) {
         
         nsCOMPtr<nsIInputStream> tee;
@@ -211,7 +211,7 @@ nsFtpState::nsFtpState() {
 
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     mReadingFromCache = PR_FALSE;
 #endif    
     mCanceled = mList = mRetryPass = PR_FALSE;
@@ -1382,7 +1382,7 @@ nsFtpState::R_mdtm() {
 nsresult
 nsFtpState::S_list() {
     nsresult rv;
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if (!mReadingFromCache) {
 #endif
     char * string;
@@ -1397,7 +1397,7 @@ nsFtpState::S_list() {
     rv = ControlAsyncWrite(listString);
     if (NS_FAILED(rv)) return rv;
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     }
 #endif
 
@@ -1412,7 +1412,7 @@ nsFtpState::S_list() {
     nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
     SetDirMIMEType(fromStr);
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if ( mCacheEntry ) {
         if (!mReadingFromCache) {
             nsCString aString; aString.AssignWithConversion(fromStr);
@@ -1447,7 +1447,7 @@ nsFtpState::S_list() {
 
     forwarder->Init(mChannel, converterListener);
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if (mCacheEntry && mReadingFromCache)
     {            
         if (mGenerateHTMLContent)
@@ -1833,7 +1833,7 @@ nsFtpState::Cancel(nsresult status)
     if (mDPipeRequest) {
         mDPipeRequest->Cancel(status);
     }
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     if (mCacheEntry)
         mCacheEntry->Doom();
 #endif
@@ -1952,14 +1952,14 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (port > 0)
         mPort = port;
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     // if there is no cache, it is NOT an error.
 
     static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
     NS_WITH_SERVICE(nsICacheService, serv, kCacheServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
         (void) serv->CreateSession("FTP Directory Listings",
-                                    nsICache::STORE_ON_DISK,  //FIX this should be disk cache
+                                    nsICache::STORE_IN_MEMORY,
                                     PR_TRUE,
                                     getter_AddRefs(mCacheSession));
     }
@@ -1973,13 +1973,14 @@ nsFtpState::Connect()
 {
     nsresult rv;
 
-#ifdef MOZ_NEW_CACHE
-    nsXPIDLCString urlStr;
-    rv = mURL->GetSpec(getter_Copies(urlStr));
-    if (NS_FAILED(rv)) return rv;
-
+#ifdef DOUGT_NEW_CACHE
     //FIX: SYNC call.  Should make this async!!!
     if (mCacheSession) {
+
+        nsXPIDLCString urlStr;
+        rv = mURL->GetSpec(getter_Copies(urlStr));
+        if (NS_FAILED(rv)) return rv;
+
         rv = mCacheSession->OpenCacheEntry(urlStr,
                                            nsICache::ACCESS_READ_WRITE,
                                            getter_AddRefs(mCacheEntry));
@@ -2150,7 +2151,7 @@ nsFtpState::StopProcessing() {
     mPrompter = 0;
     mChannel = 0;
 
-#ifdef MOZ_NEW_CACHE
+#ifdef DOUGT_NEW_CACHE
     mCacheEntry = 0;
 #endif
 

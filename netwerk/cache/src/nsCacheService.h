@@ -33,13 +33,14 @@
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
 #include "nsIObserver.h"
+#include "nsString.h"
 
 class nsCacheRequest;
 
 
-/**
+/******************************************************************************
  *  nsCacheService
- */
+ ******************************************************************************/
 
 class nsCacheService : public nsICacheService, public nsIObserver
 {
@@ -65,17 +66,6 @@ public:
                                     nsICacheListener *         listener,
                                     nsICacheEntryDescriptor ** result);
 
-#if 0
-    nsresult       OpenCacheEntry(nsCacheSession *           session,
-                                  const char *               clientKey, 
-                                  nsCacheAccessMode          accessRequested,
-                                  nsICacheEntryDescriptor ** result);
-
-    nsresult       AsyncOpenCacheEntry(nsCacheSession *   session,
-                                       const char *       key, 
-                                       nsCacheAccessMode  accessRequested,
-                                       nsICacheListener * listener);
-#endif
     /**
      * Methods called by nsCacheEntryDescriptor
      */
@@ -93,7 +83,6 @@ public:
     nsresult         GetFileForEntry(nsCacheEntry *         entry,
                                      nsIFile **             result);
 
-
     /**
      * Methods called by any cache classes
      */
@@ -104,6 +93,12 @@ public:
     nsresult         DoomEntry(nsCacheEntry * entry);
 
     nsresult         DoomEntry_Locked(nsCacheEntry * entry);
+
+    /**
+     * static utility methods
+     */
+    static nsresult  ClientID(const nsAReadableCString&  clientID, char **  result);
+    static nsresult  ClientKey(const nsAReadableCString& clientKey, char ** result);
 
 private:
 
@@ -176,17 +171,5 @@ private:
     PRUint32                mDeactivatedUnboundEntries;
 };
 
-
-/**
- * Cache Service Utility Functions
- */
-
-// time conversion utils from nsCachedNetData.cpp
-
-          // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-PRUint32  ConvertPRTimeToSeconds(PRTime time64);
-
-          // Convert unix-style time_t, i.e. seconds since the epoch, to PRTime
-PRTime    ConvertSecondsToPRTime(PRUint32 seconds);
 
 #endif // _nsCacheService_h_

@@ -30,6 +30,7 @@
 interface nsICacheDeviceInfo;
 interface nsICacheEntryInfo;
 
+
 [scriptable, uuid(f8c08c4b-d778-49d1-a59b-866fdc500d95)]
 interface nsICacheVisitor : nsISupports
 {
@@ -49,7 +50,6 @@ interface nsICacheVisitor : nsISupports
      * Called to provide information about a cache entry.
      *
      * @param deviceID - specifies the device being visited.
-     # @param clientID - specifies the client who created this entry.
      * @param entryInfo - specifies information about this entry.
      * 
      * @return true to visit the next entry on the current device, or if the
@@ -57,9 +57,9 @@ interface nsICacheVisitor : nsISupports
      * @return false to advance to the next device.
      */
     boolean visitEntry(in string                deviceID,
-                       in string                clientID,
                        in nsICacheEntryInfo     entryInfo);
 };
+
 
 [scriptable, uuid(31d1c294-1dd2-11b2-be3a-c79230dca297)]
 interface nsICacheDeviceInfo : nsISupports
@@ -90,6 +90,7 @@ interface nsICacheDeviceInfo : nsISupports
      */
     readonly attribute unsigned long  maximumSize;
 };
+
 
 [scriptable, uuid(72c64022-1dd2-11b2-b3a5-b8b859e0a1b2)]
 interface nsICacheEntryInfo : nsISupports
