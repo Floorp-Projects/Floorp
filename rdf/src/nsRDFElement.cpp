@@ -1045,6 +1045,9 @@ nsRDFElement::GetAttributeCount(PRInt32& aResult) const
     nsresult rv = NS_OK;
     aResult = 0;
 
+    if (mAttributes)
+        aResult += mAttributes->Count();
+
 #if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     PR_ASSERT(0);     // XXX need to write this...
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
@@ -1062,9 +1065,6 @@ rdf_Indent(FILE* out, PRInt32 aIndent)
 NS_IMETHODIMP
 nsRDFElement::List(FILE* out, PRInt32 aIndent) const
 {
-    if (! mResource)
-        return NS_ERROR_NOT_INITIALIZED;
-
     nsresult rv;
 
     {
@@ -1219,9 +1219,12 @@ nsRDFElement::Init(nsIRDFDocument* doc,
                    PRBool childrenMustBeGenerated)
 {
     NS_PRECONDITION(doc, "null ptr");
-    NS_PRECONDITION(resource, "null ptr");
 
-    if (!doc || !resource)
+    // XXX Not using this because of a hack in nsRDFTreeDocument: need
+    // to expose generic XML elements!
+    //NS_PRECONDITION(resource, "null ptr");
+
+    if (!doc /* || !resource // XXX ibid */)
         return NS_ERROR_NULL_POINTER;
 
     mTag = aTag;
@@ -1229,15 +1232,13 @@ nsRDFElement::Init(nsIRDFDocument* doc,
     mDocument = doc; // not refcounted
 
     mResource = resource;
-    NS_ADDREF(mResource);
+    NS_IF_ADDREF(mResource);
 
     mChildrenMustBeGenerated = childrenMustBeGenerated;
 
-    if (! childrenMustBeGenerated) {
-        nsresult rv;
-        if (NS_FAILED(rv = NS_NewISupportsArray(&mChildren)))
-            return rv;
-    }
+    nsresult rv;
+    if (NS_FAILED(rv = NS_NewISupportsArray(&mChildren)))
+        return rv;
 
     return NS_OK;
 }
@@ -1383,11 +1384,17 @@ nsRDFElement::GenerateChildren(void) const
         unconstThis->mChildren->Clear();
     }
 
-    if (NS_FAILED(rv = mDocument->CreateChildren(unconstThis,
-                                                 unconstThis->mChildren)))
-        return rv;
-
+    // Clear this value *first*, so we can re-enter the nsIContent
+    // getters if needed.
     unconstThis->mChildrenMustBeGenerated = PR_FALSE;
+
+    if (NS_FAILED(rv = mDocument->CreateChildren(unconstThis))) {
+        // Well, maybe it was a transient error. This'll let use try
+        // again some time in the future.
+        unconstThis->mChildrenMustBeGenerated = PR_TRUE;
+        return rv;
+    }
+
     return NS_OK;
 }
 

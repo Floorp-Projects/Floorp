@@ -194,7 +194,7 @@ public:
     NS_IMETHOD Init(void);
     NS_IMETHOD SetRootResource(nsIRDFNode* resource);
     NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
-    NS_IMETHOD CreateChildren(nsIRDFContent* element, nsISupportsArray* children);
+    NS_IMETHOD CreateChildren(nsIRDFContent* element);
     NS_IMETHOD AddTreeProperty(nsIRDFNode* resource);
     NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource);
 
@@ -214,9 +214,9 @@ protected:
                       nsIRDFContent*& result,
                       PRBool childrenMustBeGenerated);
 
-    virtual nsresult CreateChild(nsIRDFNode* property,
-                                 nsIRDFNode* value,
-                                 nsIRDFContent*& result) = 0;
+    virtual nsresult AddChild(nsIRDFContent* parent,
+                              nsIRDFNode* property,
+                              nsIRDFNode* value) = 0;
 
     nsIArena*              mArena;
     nsVoidArray            mObservers;

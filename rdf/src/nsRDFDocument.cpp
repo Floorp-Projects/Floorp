@@ -1157,7 +1157,7 @@ nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)
 
 
 NS_IMETHODIMP
-nsRDFDocument::CreateChildren(nsIRDFContent* element, nsISupportsArray* children)
+nsRDFDocument::CreateChildren(nsIRDFContent* element)
 {
     nsresult rv;
 
@@ -1205,24 +1205,16 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element, nsISupportsArray* children
         PRBool moreValues;
         while (NS_SUCCEEDED(rv = values->HasMoreElements(moreValues)) && moreValues) {
             nsIRDFNode* value = nsnull;
-            if (NS_FAILED(rv = values->GetNext(value, tv /* ignored */)))
-                break;
-
-            // XXX At this point, we need to decide exactly what kind
-            // of kid to create in the content model. For example, for
-            // leaf nodes, we probably want to create some kind of
-            // text element.
-            nsIRDFContent* child;
-            if (NS_FAILED(rv = CreateChild(property, value, child))) {
+            if (NS_SUCCEEDED(rv = values->GetNext(value, tv /* ignored */))) {
+                // At this point, the specific nsRDFDocument
+                // implementations will create an appropriate child
+                // element (or elements).
+                rv = AddChild(element, property, value);
                 NS_RELEASE(value);
-                break;
             }
 
-            // And finally, add the child into the content model
-            children->AppendElement(child);
-
-            NS_RELEASE(child);
-            NS_RELEASE(value);
+            if (NS_FAILED(rv))
+                break;
         }
 
         NS_RELEASE(values);
