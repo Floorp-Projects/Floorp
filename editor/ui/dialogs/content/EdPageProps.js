@@ -38,7 +38,7 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  dialog = new Object;
+  var dialog = new Object;
   if (!dialog)
   {
     dump("Failed to create dialog object!!!\n");
