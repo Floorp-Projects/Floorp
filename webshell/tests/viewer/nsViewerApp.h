@@ -29,7 +29,7 @@ class nsWebCrawler;
 class nsBrowserWindow;
 class nsIBrowserWindow;
 
-class nsViewerApp : public nsDispatchListener
+class nsViewerApp : public nsISupports, public nsDispatchListener
 {
 public:
   void* operator new(size_t sz) {
