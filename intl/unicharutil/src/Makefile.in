@@ -32,6 +32,7 @@ CPPSRCS		= nsCaseConversionImp2.cpp \
 		  nsUnicharUtilFactory.cpp \
 		  nsCategoryImp.cpp \
 		  nsHankakuToZenkaku.cpp \
+		  nsEntityConverter.cpp  \
 		  $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
