@@ -42,8 +42,8 @@ CControlSite::CControlSite()
 
 	// Initialise ambient properties
 	m_nAmbientLocale = 0;
-	m_clrAmbientForeColor = RGB(255,255,255);
-	m_clrAmbientBackColor = RGB(255,0,0);
+	m_clrAmbientForeColor = ::GetSysColor(COLOR_WINDOWTEXT);
+	m_clrAmbientBackColor = ::GetSysColor(COLOR_WINDOW);
 	m_bAmbientUserMode = true;
 	m_bAmbientShowHatching = true;
 	m_bAmbientShowGrabHandles = true;
