@@ -69,7 +69,7 @@ LIBS = \
 	-lmozutil \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
-	-lz \
+	-lzlib \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
