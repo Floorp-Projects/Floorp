@@ -478,7 +478,7 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in the same window
     showOnlyThisFrame : function () {
-        window._content.location.href = this.target.ownerDocument.location.href;
+        window.loadURI(this.target.ownerDocument.location.href);
     },
     // View Partial Source
     viewPartialSource : function ( context ) {
