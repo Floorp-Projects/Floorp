@@ -19,111 +19,99 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
-
 use lib qw(.);
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once".  "use vars" just
-# doesn't work for me.
+use vars qw($userid $usergroupset @legal_keywords %FORM);
 
-sub sillyness {
-    my $zz;
-    $zz = $::legal_keywords;
-    $zz = $::userid;
-    $zz = $::usergroupset;
-    $zz = %::FORM;
-}
-
-print "Content-type: text/html\n";
-#Changing attachment to inline to resolve 46897
-#zach@zachlipton.com
-print "Content-disposition: inline; filename=bugzilla_bug_list.html\n\n";
-PutHeader ("Full Text Bug Listing");
+# Use global template variables.
+use vars qw($template $vars);
 
 ConnectToDatabase();
+
 quietly_check_login();
 
 GetVersionTable();
 
-my $generic_query  = "
-select
-  bugs.bug_id,
-  bugs.product,
-  bugs.version,
-  bugs.rep_platform,
-  bugs.op_sys,
-  bugs.bug_status,
-  bugs.bug_severity,
-  bugs.priority,
-  bugs.resolution,
-  assign.login_name,
-  report.login_name,
-  bugs.component,
-  bugs.bug_file_loc,
-  bugs.short_desc,
-  bugs.target_milestone,
-  bugs.qa_contact,
-  bugs.status_whiteboard,
-  bugs.keywords
-from bugs,profiles assign,profiles report
-where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and";
+my $generic_query = "
+  SELECT 
+    bugs.bug_id, 
+    bugs.product, 
+    bugs.version, 
+    bugs.rep_platform,
+    bugs.op_sys, 
+    bugs.bug_status, 
+    bugs.resolution, 
+    bugs.priority,
+    bugs.bug_severity, 
+    bugs.component, 
+    assign.login_name, 
+    report.login_name,
+    bugs.bug_file_loc, 
+    bugs.short_desc, 
+    bugs.target_milestone,
+    bugs.qa_contact, 
+    bugs.status_whiteboard, 
+    bugs.keywords
+  FROM bugs,profiles assign,profiles report
+  WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter";
 
-$::FORM{'buglist'} = "" unless exists $::FORM{'buglist'};
-foreach my $bug (split(/:/, $::FORM{'buglist'})) {
-    detaint_natural($bug) || next;
-    SendSQL(SelectVisible("$generic_query bugs.bug_id = $bug",
+my $buglist = $::FORM{'buglist'} || 
+              $::FORM{'bug_id'}  || 
+              $::FORM{'id'}      || "";
+
+my @bugs;
+
+foreach my $bug_id (split(/[:,]/, $buglist)) {
+    detaint_natural($bug_id) || next;
+    SendSQL(SelectVisible("$generic_query AND bugs.bug_id = $bug_id",
                           $::userid, $::usergroupset));
 
-    my @row;
-    if (@row = FetchSQLData()) {
-        my ($id, $product, $version, $platform, $opsys, $status, $severity,
-            $priority, $resolution, $assigned, $reporter, $component, $url,
-            $shortdesc, $target_milestone, $qa_contact,
-            $status_whiteboard, $keywords) = (@row);
-        print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
-        print "<TABLE WIDTH=100%>\n";
-        print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
-            html_quote($shortdesc) .
-                "</B></FONT></DIV>\n";
-        print "<TR><TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>\n";
-        print "<TD><B>Product:</B> $product\n";
-        print "<TD><B>Version:</B> $version\n";
-        print "<TD><B>Platform:</B> $platform\n";
-        print "<TR><TD><B>OS/Version:</B> $opsys\n";
-        print "<TD><B>Status:</B> $status\n";
-        print "<TD><B>Severity:</B> $severity\n";
-        print "<TD><B>Priority:</B> $priority\n";
-        print "<TR><TD><B>Resolution:</B> $resolution</TD>\n";
-        print "<TD><B>Assigned To:</B> $assigned\n";
-        print "<TD><B>Reported By:</B> $reporter\n";
-        if (Param("useqacontact")) {
-            my $name = "";
-            if ($qa_contact > 0) {
-                $name = DBID_to_name($qa_contact);
-            }
-            print "<TD><B>QA Contact:</B> $name\n";
-        }
-        print "<TR><TD COLSPAN=2><B>Component:</B> $component\n";
-        if (Param("usetargetmilestone")) {
-            print "<TD COLSPAN=2><B>Target Milestone:</B> $target_milestone\n";
-        }
-        print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
-        print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
-        print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
-        if (@::legal_keywords) {
-            print "<TR><TD><B>Keywords: </B>$keywords</TD></TR>\n";
-        }
-        if (Param("usestatuswhiteboard")) {
-            print "<TR><TD COLSPAN=6><B>Status Whiteboard:" .
-                html_quote($status_whiteboard) . "\n";
-        }
-        print "<TR><TD><B>Description:</B>\n</TABLE>\n";
-        print GetLongDescriptionAsHTML($bug);
-        print "<HR>\n";
+    my %bug;
+    my @row = FetchSQLData();
+
+    foreach my $field ("bug_id", "product", "version", "rep_platform",
+                       "op_sys", "bug_status", "resolution", "priority",
+                       "bug_severity", "component", "assigned_to", "reporter",
+                       "bug_file_loc", "short_desc", "target_milestone",
+                       "qa_contact", "status_whiteboard", "keywords") 
+    {
+        $bug{$field} = shift @row;
+    }
+    
+    if ($bug{'bug_id'}) {
+        $bug{'comments'} = GetComments($bug{'bug_id'});
+        $bug{'qa_contact'} = $bug{'qa_contact'} > 0 ? 
+                                          DBID_to_name($bug{'qa_contact'}) : "";
+
+        push (@bugs, \%bug);
     }
 }
+
+# Add the list of bug hashes to the variables
+$vars->{'bugs'} = \@bugs;
+
+$vars->{'use_keywords'} = 1 if (@::legal_keywords);
+
+$vars->{'quoteUrls'} = \&quoteUrls;
+$vars->{'time2str'} = \&time2str;
+$vars->{'str2time'} = \&str2time;
+
+# Work out a sensible filename for Content-Disposition.
+# Sadly, I don't think we can tell if this was a named query.
+my @time = localtime(time());
+my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+my $filename = "bugs-$date.html";
+
+print "Content-Type: text/html\n";
+print "Content-Disposition: inline; filename=$filename\n\n";
+
+# Generate and return the UI (HTML page) from the appropriate template.
+$template->process("show/multiple.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;

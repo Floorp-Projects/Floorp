@@ -986,15 +986,13 @@ sub detaint_natural {
 # expressions.
 
 sub quoteUrls {
-    my ($knownattachments, $text) = (@_);
+    my ($text) = (@_);
     return $text unless $text;
     
     my $base = Param('urlbase');
 
     my $protocol = join '|',
     qw(afs cid ftp gopher http https mid news nntp prospero telnet wais);
-
-    my %options = ( metachars => 1, @_ );
 
     my $count = 0;
 
@@ -1046,9 +1044,9 @@ sub quoteUrls {
         $item = GetBugLink($num, $item);
         $things[$count++] = $item;
     }
-    while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
+    while ($text =~ s/\b(Created an )?attachment(\s|%\#)*(\(id=)?(\d+)\)?/"##$count##"/ei) {
         my $item = $&;
-        my $num = $2;
+        my $num = $4;
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
         $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
@@ -1060,14 +1058,6 @@ sub quoteUrls {
         my $bug_link;
         $bug_link = GetBugLink($num, $num);
         $item =~ s@\d+@$bug_link@;
-        $things[$count++] = $item;
-    }
-    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
-        my $item = $&;
-        my $num = $1;
-        if ($knownattachments->{$num}) {
-            $item = qq{<A HREF="attachment.cgi?id=$num&action=view">$item</A>};
-        }
         $things[$count++] = $item;
     }
 
@@ -1155,9 +1145,9 @@ sub GetLongDescriptionAsText {
     my $count = 0;
     my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
                    "       longdescs.thetext " .
-                   "FROM longdescs, profiles " .
-                   "WHERE profiles.userid = longdescs.who " .
-                   "      AND longdescs.bug_id = $id ");
+                   "FROM   longdescs, profiles " .
+                   "WHERE  profiles.userid = longdescs.who " .
+                   "AND    longdescs.bug_id = $id ");
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
@@ -1189,11 +1179,6 @@ sub GetLongDescriptionAsHTML {
     my ($id, $start, $end) = (@_);
     my $result = "";
     my $count = 0;
-    my %knownattachments;
-    SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $id");
-    while (MoreSQLData()) {
-        $knownattachments{FetchOneColumn()} = 1;
-    }
 
     my ($query) = ("SELECT profiles.realname, profiles.login_name, longdescs.bug_when, " .
                    "       longdescs.thetext " .
@@ -1226,12 +1211,39 @@ sub GetLongDescriptionAsHTML {
               
             $result .= time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------</I><BR>\n";
         }
-        $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
+        $result .= "<PRE>" . quoteUrls($text) . "</PRE>\n";
         $count++;
     }
 
     return $result;
 }
+
+
+sub GetComments {
+    my ($id) = (@_);
+    my @comments;
+    
+    SendSQL("SELECT  profiles.realname, profiles.login_name, 
+                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
+                     longdescs.thetext
+            FROM     longdescs, profiles
+            WHERE    profiles.userid = longdescs.who 
+              AND    longdescs.bug_id = $id 
+            ORDER BY longdescs.bug_when");
+             
+    while (MoreSQLData()) {
+        my %comment;
+        ($comment{'name'}, $comment{'email'}, $comment{'time'}, $comment{'body'}) = FetchSQLData();
+        
+        $comment{'email'} .= Param('emailsuffix');
+        $comment{'name'} = $comment{'name'} || $comment{'email'};
+         
+        push (@comments, \%comment);
+    }
+    
+    return \@comments;
+}
+
 
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
