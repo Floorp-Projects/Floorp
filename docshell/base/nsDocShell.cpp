@@ -3957,6 +3957,22 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
 
         mEODForCurrentDocument = PR_TRUE;
     }
+    /* Check if the httpChannel has any cache-control related response headers,
+     * like no-store, no-cache. If so, update SHEntry so that 
+     * when a user goes back/forward to this page, we appropriately do 
+     * form value restoration or load from server.
+     */
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+    if (!httpChannel) // HttpChannel could be hiding underneath a Multipart channel.    
+        GetHttpChannel(aChannel, getter_AddRefs(httpChannel));
+
+    if (httpChannel) {
+        // figure out if SH should be saving layout state.
+        PRBool discardLayoutState = ShouldDiscardLayoutState(httpChannel);       
+        if (mLSHE && discardLayoutState && (mLoadType & LOAD_CMD_NORMAL) && (mLoadType != LOAD_BYPASS_HISTORY))
+            mLSHE->SetSaveLayoutStateFlag(PR_FALSE);            
+    }
+
     // Clear mLSHE after calling the onLoadHandlers. This way, if the
     // onLoadHandler tries to load something different in
     // itself or one of its children, we can deal with it appropriately.
@@ -5601,15 +5617,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             httpChannel->GetReferrer(getter_AddRefs(referrerURI));
 
-            // figure out if SH should be saving layout state (see bug 112564)
-            nsCOMPtr<nsISupports> securityInfo;
-            PRBool noStore = PR_FALSE, noCache = PR_FALSE;
-
-            httpChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
-            httpChannel->IsNoStoreResponse(&noStore);
-            httpChannel->IsNoCacheResponse(&noCache);
-
-            discardLayoutState = noStore || (noCache && securityInfo);
+            discardLayoutState = ShouldDiscardLayoutState(httpChannel);
         }
     }
 
@@ -5874,6 +5882,23 @@ nsDocShell::GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn)
         NS_IF_ADDREF(*aReturn);
     }
     return NS_OK;
+}
+
+PRBool 
+nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel * aChannel)
+{    
+    // By default layout State will be saved. 
+    if (!aChannel)
+        return PR_FALSE;
+
+    // figure out if SH should be saving layout state 
+    nsCOMPtr<nsISupports> securityInfo;
+    PRBool noStore = PR_FALSE, noCache = PR_FALSE;
+    aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+    aChannel->IsNoStoreResponse(&noStore);
+    aChannel->IsNoCacheResponse(&noCache);
+
+    return (noStore || (noCache && securityInfo));
 }
 
 //*****************************************************************************

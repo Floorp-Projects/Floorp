@@ -233,6 +233,7 @@ protected:
         nsISHEntry * areplaceEntry, nsISHEntry ** destEntry);
     nsresult GetRootSessionHistory(nsISHistory ** aReturn);
     nsresult GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn);
+    PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
     
     // Global History
     NS_IMETHOD ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
