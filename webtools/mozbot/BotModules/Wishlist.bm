@@ -1,0 +1,55 @@
+################################
+# Wishlist Module              #
+################################
+
+package BotModules::Wishlist;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    my $reply = {
+        '' => 'A module to store wishlist items, typically used to file bugs on the bot, but really for that you should use Bugzilla -- http://bugzilla.mozilla.org/ -- component MozBot in product WebTools.',
+        'wish' => 'Adds an item to the wishlist. Please use Bugzilla for this purpose though, see http://bugzilla.mozilla.org/ product WebTools, component Mozbot. Syntax: \'wish <text of wish>\'',
+        'wishes' => 'Causes the bot to list all the wishes that have been made. Since this may be long, it may only be done in a /msg. Syntax: \'wishes\'',
+    };
+    $$reply{''} .= ' To remove wishes, use the following command: vars Wishlist wishes \'-<full text of the wish to remove>\'' if $self->isAdmin($event);
+    return $reply;
+}
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['wishes', 1, 1, []],
+        ['reply', 1, 1, 'Noted!'],
+    );
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*(?:i\s+)?wish(?:list)?[-\s:.,;!]+(...+?)\s*$/osi) {
+        push(@{$self->{'wishes'}}, "<$event->{'from'}> $1");
+        $self->say($event, "$event->{'from'}: $self->{'reply'}");
+        $self->saveConfig();
+    } elsif ($message =~ /^\s*wishes[\s?]*$/osi) {
+        if (@{$self->{'wishes'}}) {
+            $self->directSay($event, 'Wishes:');
+            foreach (@{$self->{'wishes'}}) {
+                $self->directSay($event, " $_");
+            }
+            $self->directSay($event, 'End of wishes.');
+        } else {
+            $self->directSay($event, 'Noone has wished for anything!');
+        }
+        $self->channelSay($event, "$event->{'from'}: wishlist /msg'ed");
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}

@@ -1,0 +1,242 @@
+################################
+# Bugzilla Module              #
+################################
+
+package BotModules::Bugzilla;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+# there is a minor error in this module: bugsHistory->$target->$bug is
+# accessed even when bugsHistory->$target doesn't yet exist. XXX
+
+# This is ported straight from techbot, so some of the code is a little convoluted. So sue me. I was lazy.
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['bugsURI', 1, 1, 'http://bugzilla.mozilla.org/'], 
+        ['bugsDWIMQueryDefault', 1, 1, 'short_desc_type=substring&short_desc='], 
+        ['bugsHistory', 0, 0, {}], 
+        ['backoffTime', 1, 1, 120], 
+        ['ignoreCommentsTo', 1, 1, ['techbot1']],
+        ['ignoreCommentsFrom', 1, 1, ['|']],
+        ['skipPrefixFor', 1, 1, []],
+        ['mutes', 1, 1, ''],  # "channel channel channel"
+    );
+}
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    my %commands = (
+        '' => 'The Bugzilla module provides an interface to the bugzilla bug database. It will spot anyone mentioning bugs, too, and report on what they are. For example if someone says \'I think that\'s a dup of bug 5693, the :hover thing\', then this module will display information about bug 5693.',
+        'bug' => 'Fetches a summary of bugs from bugzilla. Expert syntax: \'bugzilla [bugnumber[,]]*[&bugzillaparameter=value]*\', bug_status: UNCONFIRMED|NEW|ASSIGNED|REOPENED; *type*=substring|; bugtype: include|exclude; order: Assignee|; chfield[from|to|value] short_desc\'  long_desc\' status_whiteboard\' bug_file_loc\' keywords\'; \'_type; email[|type][1|2] [reporter|qa_contact|assigned_to|cc]',
+        'bug-total' => 'Same as bug (which see) but only displays the total line.',
+        'bugs' => 'A simple DWIM search. Not very clever. ;-) Syntax: \'<query string> bugs\' e.g. \'mozbot bugs\'.'
+    );
+    if ($self->isAdmin($event)) {
+        $commands{'mute'} = 'Disable watching for bug numbers in a channel. Syntax: mute bugzilla in <channel>';
+        $commands{'unmute'} = 'Enable watching for bug numbers in a channel. Syntax: unmute bugzilla in <channel>';
+    }
+    return \%commands;
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*(?:please\s+)?(?:(?:could\s+you\s+)?(?:please\s+)?show\s+me\s+|what\s+is\s+|what's\s+)?bug(?:\s*id)?s?[#\s]+([0-9].*?|&.+?)(?:\s+please)?[?!.]*\s*$/osi) {
+        my $target = $event->{'target'};
+        my $bug = $1;
+        $self->FetchBug($event, $bug, 'bugs', 0, 0);
+        $self->{'bugsHistory'}->{$target}->{$bug} = time() if $bug =~ /^[0-9]+$/os;
+    } elsif ($message =~ /^\s*(...+?)\s+bugs\s*$/osi) {
+        my $target = $event->{'target'};
+        $self->FetchBug($event, $1, 'dwim', 0, 0);
+    } elsif ($message =~ /^\s*bug-?total\s+(.+?)\s*$/osi) {
+        $self->FetchBug($event, $1, 'total', 0, 0);
+    } elsif ($self->isAdmin($event)) {
+        if ($message =~ /^\s*mute\s+bugzilla\s+in\s+(\S+?)\s*$/osi) {
+            $self->{'mutes'} .= " $1";
+            $self->saveConfig();
+            $self->say($event, "$event->{'from'}: Watching for bug numbers disabled in channel $1.");
+        } elsif ($message =~ /^\s*unmute\s+bugzilla\s+in\s+(\S+)\s*$/osi) {
+            my %mutedChannels = map { $_ => 1 } split(/ /o, $self->{'mutes'});
+            delete($mutedChannels{$1}); # get rid of any mentions of that channel
+            $self->{'mutes'} = join(' ', keys(%mutedChannels));
+            $self->saveConfig();
+            $self->say($event, "$event->{'from'}: Watching for bug numbers reenabled in channel $1.");
+        } else {
+            return $self->SUPER::Told(@_);
+        }
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # dealt with it...
+}
+
+sub CheckForBugs {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my $bug;
+    my $skipURI;
+    if ($message =~ /^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?bug[\s#]*([0-9]+)(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/osi) {
+        $bug = $1;
+        $skipURI = 0;
+    } elsif ($message =~ /\Q$self->{'bugsURI'}\Eshow_bug.cgi\?id=([0-9]+)(?:[^0-9&].*)?$/si) {
+        $bug = $1;
+        $skipURI = 1;
+    }
+    if (($bug) and ((not $event->{'channel'}) or ($self->{'mutes'} !~ /^(.*\s|)\Q$event->{'channel'}\E(|\s.*)$/si)) and 
+        (not $self->ignoringCommentsFrom($event->{'from'})) and (not $self->ignoringCommentsTo($message))) {
+        $self->debug("Noticed someone mention bug $bug -- investigating...");
+        my $last = 0;
+        $last = $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} if defined($self->{'bugsHistory'}->{$event->{'target'}}->{$bug});
+        if ((time()-$last) > $self->{'backoffTime'}) {
+            $self->FetchBug($event, $bug, 'bugs', $skipURI, 1);
+        }
+        $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = time();
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    unless ($self->CheckForBugs($event, $message)) {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Felt {
+    my $self = shift;
+    my ($event, $message) = @_;
+    unless ($self->CheckForBugs($event, $message)) {
+        return $self->SUPER::Felt(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Saw {
+    my $self = shift;
+    my ($event, $message) = @_;
+    unless ($self->CheckForBugs($event, $message)) {
+        return $self->SUPER::Saw(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub FetchBug {
+    my $self = shift;
+    my ($event, $bugParams, $type, $skipURI, $skipZaroo) = @_;
+    my $uri;
+    if ($type eq 'dwim') {
+        # XXX should escape query string
+        $uri = "$self->{'bugsURI'}$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
+        $type = 'bugs';
+    } else {
+        $uri = "$self->{'bugsURI'}buglist.cgi?bug_id=".join(',',split(' ',$bugParams));
+    }
+    $self->getURI($event, $uri, 'bugs', $type, $skipURI, $skipZaroo);
+}
+
+sub GotURI {
+    my $self = shift;
+    my ($event, $uri, $output, $type, $subtype, $skipURI, $skipZaroo) = @_;
+    if ($type eq 'bugs') {
+
+        my $lots;
+        my @qp;
+
+        # magicness
+        { no warnings; # this can go _very_ wrong easily
+
+        $lots = ($output !~ /<FORM\s+METHOD=POST\s+ACTION="long_list.cgi">/osi); # if we got truncated, then this will be missing
+        $output =~ s/<\/TABLE><TABLE .+?<\/A><\/TH>//gosi;
+        (undef, $output) = split(/Summary<\/A><\/TH>/osi, $output);
+        ($output, undef) = split(/<\/TABLE>/osi, $output);
+        $output =~ s/[\n\r]//gosi;
+        @qp = split(/<TR VALIGN=TOP ALIGN=LEFT CLASS=[-A-Za-z0-9]+ ><TD>/osi, $output); }
+
+        # loop through output, constructing output string
+        my @output;
+        unless (@qp) {
+            unless ($skipZaroo) {
+                @output = ('Zarro boogs found.');
+            } else {
+                @output = ();
+            }
+        } else {
+            if ($lots) {
+                @output = ('Way too many bugs found. I gave up so as to not run out of memory. Try to narrow your search or something!');
+                $subtype = 'lots';
+            } elsif ($#qp > 1) {
+                @output = ($#qp.' bugs found.'); # @qp will contain one more item than there are bugs
+                if ((@qp > 5) and ($event->{'channel'}) and ($subtype ne 'total')) {
+                    $output[0] .= ' Five shown, please message me for the complete list.';
+                    @qp = @qp[0..4];
+                }
+            }
+            if ($subtype eq 'bugs') {
+                local $" = ', ';
+                foreach (@qp) {
+                    if ($_) {
+                        # more magic
+                        if (my @d = m|<A HREF="show_bug.cgi\?id=([0-9]+)">\1</A> <td class=severity><nobr>(.*?)</nobr><td class=priority><nobr>(.*?)</nobr><td class=platform><nobr>(.*?)</nobr><td class=owner><nobr>(.*?)</nobr><td class=status><nobr>(.*?)</nobr><td class=resolution><nobr>(.*?)</nobr><td class=summary>(.*)|osi) {
+                            # bugid severity priority platform owner status resolution subject
+                            my $bugid = shift @d;
+                            if ($skipURI) {
+                                push(@output, $self->unescapeXML("Bug $bugid: @d"));
+                            } else {
+                                push(@output, $self->unescapeXML("Bug $self->{'bugsURI'}show_bug.cgi?id=$bugid @d"));
+                            }
+                            $output[$#output] =~ s/, (?:, )+/, /gosi;
+                            $self->{'bugsHistory'}->{$event->{'target'}}->{$d[0]} = time();
+                        }
+                    }
+                }
+            }
+        }
+
+        my $prefix;
+        if (grep({$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}})) {
+            # they don't want to have the report prefixed with their name
+            $prefix = '';
+        } else {
+            $prefix = "$event->{'from'}: ";
+        }
+
+        # now send out the output
+        foreach (@output) {
+            $self->say($event, "$prefix$_");
+        }
+
+    } else {
+        return $self->SUPER::GotURI(@_);
+    }
+}
+
+sub ignoringCommentsTo {
+    my $self = shift;
+    my ($who) = @_;
+    foreach (@{$self->{'ignoreCommentsTo'}}) {
+        return 1 if $who =~ /^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?\Q$_\E(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/is;
+    }
+    return 0;
+}
+
+sub ignoringCommentsFrom {
+    my $self = shift;
+    my ($who) = @_;
+    foreach (@{$self->{'ignoreCommentsFrom'}}) {
+        return 1 if $_ eq $who;
+    }
+    return 0;
+}
+

@@ -1,0 +1,463 @@
+################################
+# Tinderbox Module             #
+################################
+
+package BotModules::Tinderbox;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['trees', 1, 1, ['SeaMonkey', 'SeaMonkey-Ports', 'MozillaTest', 'Grendel']], 
+        ['treesAnnounced', 1, 1, ['SeaMonkey', 'SeaMonkey-Ports']], 
+        ['treesDefault', 1, 1, ['SeaMonkey']], 
+        ['treeStates', 0, 0, {}], # ->tree->(current, previous, lastupdate)
+        ['lasttreesStates', 0, 0, []], # copy of trees in last test
+        ['tinderboxStates', 0, 0, {}], # ->tree->build->(current, previous, lastupdate)
+        ['updateDelay', 1, 1, 120],
+        ['_lastupdate', 0, 0, 0],
+        ['preferredLineLength', 1, 1, 100], 
+        ['mutes', 1, 1, {}],  # tree -> "channel channel channel"
+        ['states', 1, 1, {'success' => 'Success', 'testfailed' => 'Test Failed', 'busted' => 'Burning', }],
+        ['maxInChannel', 1, 1, 5], # maximum number of lines to report in a channel
+    );
+}
+
+# Schedule - called when bot connects to a server, to install any schedulers
+# use $self->schedule($event, $delay, $times, $data)
+# where $times is 1 for a single event, -1 for recurring events,
+# and a +ve number for an event that occurs that many times.
+sub Schedule {
+    my $self = shift;
+    my ($event) = @_;
+    $self->schedule($event, \$self->{'updateDelay'}, -1, 'tinderbox');
+    $self->SUPER::Schedule($event);
+}
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    my %commands = (
+        '' => 'The Tinderbox module monitors who the state of the tinderboxen.',
+        'qt' => 'Quick trees, same as \'trees terse\'. You can give it a <tree> argument if you like, for example \'qt seamonkey\'.',
+        'builds' => 'Gives the status of all the builds in all the trees that match a particular pattern. Syntax: \'builds <build>\'. For example: \'builds Mac\'.',
+        'trees' => 'Reports on the current state of the tinderboxen. Syntax: \'trees <options> <tree>\' where <options> is any number of: '.
+                   'all (show all trees and all builds), main (show only main trees), burning (show only burning builds), '.
+                   'long, medium, short, terse (how much detail to include), and <tree> is the name of the tree to show (or a regexp matching it).',
+    );
+    if ($self->isAdmin($event)) {
+        $commands{'mute'} = 'Disable reporting of a tree in a channel. (Only does something if the given tree exists.) Syntax: mute <tree> in <channel>';
+        $commands{'unmute'} = 'Enable reporting of a tree in a channel. By default, trees are reported in all channels that the module is active in. Syntax: unmute <tree> in <channel>';
+    }
+    return \%commands;
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*trees?(?:\s+(.*?))?\s*(?:[, ]\s*please)?\?*\s*$/osi) {
+
+        # initial setup
+        my $trees = -1; # 0=default; 1=all; 'x'=pattern match
+        my $builds = -1; # 0=all; 1=horked and test failed; 2=horked only
+        my $verbosity = -1; # 1=terse; 2; 3; 4=verbose
+
+        # parse parameters
+        if (defined($1)) {
+            foreach (split(/\s+/, $1)) {
+                   if (/^all$/osi) { $trees = '1' if $trees < 0; $builds = 0 if $builds < 0; }
+                elsif (/^main$/osi) { $trees = '0'; }
+                elsif (/^burning$/osi) { $builds = 2; }
+                elsif (/^long$/osi) { $verbosity = 4; }
+                elsif (/^medium$/osi) { $verbosity = 3; }
+                elsif (/^short$/osi) { $verbosity = 2; }
+                elsif (/^terse$/osi) { $verbosity = 1; }
+                else { $trees = $_; }
+            }
+        }
+
+        # defaults
+        $trees = '0' if $trees < 0;
+        $builds = 1 if $builds < 0;
+        $verbosity = 2 if $verbosity < 0;
+
+        # go
+        $self->GetTrees($event, 1, $trees, $builds, $verbosity);
+
+    } elsif ($message =~ /^\s*builds?\s+(.*?)\s*\?*\s*$/osi) {
+        $self->GetTrees($event, 2, $1);
+    } elsif ($message =~ /^\s*qt(?:\s+(.+?))?\s*$/osi) {       
+        $self->GetTrees($event, 1, defined($1) ? $1 : 0, 1, 1);
+    } elsif ($self->isAdmin($event)) {
+        if ($message =~ /^\s*mute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
+            my $tree = $1 eq 'Tinderbox' ? '' : $1;
+            my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
+            if (($tree eq '') or (grep($_ eq $tree, @{$self->{'trees'}}))) {
+                $self->{'mutes'}->{$tree} .= " $2";
+                $self->saveConfig();
+                $self->say($event, "$event->{'from'}: Tinderbox notifications for $treeName muted in channel $2.");
+            } else {
+                $self->say($event, "$event->{'from'}: There is no tree called $tree is there?.");
+            }
+        } elsif ($message =~ /^\s*unmute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
+            my $tree = $1 eq 'Tinderbox' ? '' : $1;
+            my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
+            if (($tree eq '') or (grep($_ eq $tree, @{$self->{'trees'}}))) {
+                my %mutedChannels = map { lc($_) => 1 } split(/ /o, $self->{'mutes'}->{$1});
+                delete($mutedChannels{lc($2)}); # get rid of any mentions of that channel
+                $self->{'mutes'}->{$1} = join(' ', keys(%mutedChannels));
+                $self->saveConfig();
+                $self->say($event, "$event->{'from'}: Tinderbox notifications for trees named $1 resumed in channel $2.");
+            } else {
+                $self->say($event, "$event->{'from'}: There is no tree called $tree is there?.");
+            }
+        } else {
+            return $self->SUPER::Told(@_);
+        }
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # dealt with it...
+}
+
+sub GetTrees {
+    my $self = shift;
+    my ($event, $requested, @mode) = @_;
+    my @trees = @{$self->{'trees'}};
+    local $" = ','; # XXX %-escape this 
+    my $uri = "http://tinderbox.mozilla.org/showbuilds.cgi?quickparse=1&tree=@trees";
+    $self->getURI($event, $uri, $requested, @mode);
+}
+
+sub GotURI {
+    my $self = shift;
+    my ($event, $uri, $output, $requested, @mode) = @_;
+    if ($output) {
+        my $now = time();
+        $self->{'_lastupdate'} = $now;
+        my @lines = split(/\n/os, $output);
+
+        # NOTE. There is a box in Tinderbox whereby if you pass it an invalid tree name, it
+        # will stop at that tree and not give you any others. It won't give you an error
+        # message, either. So do not give it the wrong trees!!!  (XXX should fix this)
+
+        # loop through quickparse output
+        foreach my $line (@lines) {
+            my ($type, $tree, $build, $state) = split(/\|/os, $line);
+            if ($type eq 'State') {
+                $self->{'treeStates'}->{$tree}->{'lastupdate'} = $now;
+                if (defined($self->{'treeStates'}->{$tree}->{'current'})) {
+                    $self->{'treeStates'}->{$tree}->{'previous'} = $self->{'treeStates'}->{$tree}->{'current'};
+                }
+                $self->{'treeStates'}->{$tree}->{'current'} = $state;
+                $self->{'states'}->{$state} = $state unless defined($self->{'states'}->{$state});
+            } elsif ($type eq 'Build') {
+                $self->{'tinderboxStates'}->{$tree}->{$build}->{'lastupdate'} = $now;
+                if (defined($self->{'tinderboxStates'}->{$tree}->{$build}->{'current'})) {
+                    $self->{'tinderboxStates'}->{$tree}->{$build}->{'previous'} = $self->{'tinderboxStates'}->{$tree}->{$build}->{'current'};
+                }
+                $self->{'tinderboxStates'}->{$tree}->{$build}->{'current'} = $state;
+                $self->{'states'}->{$state} = $state unless defined($self->{'states'}->{$state});
+            } # else unsupported type XXX
+        }
+        $self->CheckForUpdates($event, $requested);
+        if ($requested == 1) {
+            $self->ReportState($event, @mode);
+        } elsif ($requested == 2) {
+            $self->ReportBuild($event, @mode);
+        }
+        # update list of active trees
+        @{$self->{'lasttreesState'}} = @{$self->{'trees'}};
+    } else {
+        if ($requested) {
+            $self->say($event, "$event->{'from'}: I can't access tinderbox right now, sorry.");
+        }
+        $self->debug('failed to get tinderbox data');
+    }
+}
+
+
+sub Scheduled {
+    my $self = shift;
+    my ($event, @data) = @_;
+    if ($data[0] eq 'tinderbox') {
+        $self->GetTrees($event, 0);
+    } else {
+        $self->SUPER::Scheduled($event, @data);
+    }
+}
+
+sub CheckForUpdates {
+    my $self = shift;
+    my ($event, $avoidTarget) = @_;
+    my $a; # disclaimer: I was asleep when I wrote the next line. I've no longer any idea what it does.
+    my @trees = map { $a = $_; grep { $_ eq $a } @{$self->{'lasttreesState'}}; } @{$self->{'treesAnnounced'}};
+    # After staring at it for a few minutes, I think what it does is get a list of the trees that should
+    # be announced, AND that have already been found to exist. But I'm not 100% sure.
+    foreach my $tree (@trees) {
+        my @newTrees;
+        my @newBuilds;
+        my @lostBuilds;
+        my @lostTrees;
+        my @changes;
+
+        # check trees
+        if (defined($self->{'treeStates'}->{$tree})) {
+            if ($self->{'treeStates'}->{$tree}->{'lastupdate'} == $self->{'_lastupdate'}) {
+                if (defined($self->{'treeStates'}->{$tree}->{'previous'})) {
+                    if ($self->{'treeStates'}->{$tree}->{'previous'} ne $self->{'treeStates'}->{$tree}->{'current'}) {
+                        push(@changes, "$tree has changed state from $self->{'states'}->{$self->{'treeStates'}->{$tree}->{'previous'}} to $self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}.");
+                    }
+                } else {
+                    push(@newTrees, "New tree added to tinderbox: $tree (state: $self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}).");
+                }
+            } else {
+                # tree has dissappeared!
+                delete($self->{'treeStates'}->{$tree});
+                push(@lostTrees, "Eek!!! Tree '$tree' has been removed from tinderbox!");
+            }
+        } # else tree doesn't exist
+
+        # check builds
+        if (defined($self->{'tinderboxStates'}->{$tree})) {
+            foreach my $build (keys(%{$self->{'tinderboxStates'}->{$tree}})) {                
+                if ($self->{'tinderboxStates'}->{$tree}->{$build}->{'lastupdate'} == $self->{'_lastupdate'}) {
+                    if (defined($self->{'tinderboxStates'}->{$tree}->{$build}->{'previous'})) {
+                        if ($self->{'tinderboxStates'}->{$tree}->{$build}->{'previous'} ne $self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}) {
+                            push(@changes, "$tree: '$build' has changed state from $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'previous'}} to $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}.");
+                        }
+                    } else {
+                        push(@newBuilds, "New build added to $tree: $build (status: $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}).");
+                    }
+                } else {
+                    # build has dissappeared!
+                    delete($self->{'tinderboxStates'}->{$tree}->{$build});
+                    push(@lostBuilds, "Build '$build' has dropped from the '$tree' tinderbox.");
+                }
+            }
+        } # else tree doesn't exist
+
+        # sort out which channels to talk to
+        my %mutedChannels = ();
+        if (defined($self->{'mutes'}->{$tree})) {
+            %mutedChannels = map { lc($_) => 1 } split(/\s+/os, $self->{'mutes'}->{$tree});
+        }
+        if (defined($self->{'mutes'}->{''})) {
+            %mutedChannels = (%mutedChannels, map { lc($_) => 1 } split(/\s+/os, $self->{'mutes'}->{''}));
+        }
+        if (($avoidTarget) and ($event->{'target'} eq $event->{'channel'})) {
+            $mutedChannels{$event->{'channel'}} = 1;
+        }
+
+        # speak!
+        foreach (@{$self->{'channels'}}) {
+            unless ($mutedChannels{$_}) {
+                local $event->{'target'} = $_;
+                foreach (@newTrees, @lostTrees, @newBuilds, @lostBuilds, @changes) {
+                    $self->say($event, $_);
+                }
+            }
+        }
+    }
+}
+
+sub ReportState {
+    my $self = shift;
+    my ($event, $trees, $builds, $verbosity) = @_;
+
+    # $trees: 0=default; 1=all; 'x'=pattern match
+    # $builds: 0=all; 1=horked and test failed; 2=horked only
+    # $verbosity: 1=terse; 2; 3; 4=verbose
+
+    # the complete output 
+    my @lines;
+
+    # work out which trees we want
+    my @trees;
+    if ($trees eq '0') {
+        @trees = @{$self->{'treesDefault'}};
+    } elsif ($trees eq '1') {
+        @trees = @{$self->{'trees'}};
+    } else {
+        my $pattern = $self->sanitizeRegexp($trees);
+        foreach my $tree (keys %{$self->{'treeStates'}}) {
+            push(@trees, $tree) if $tree =~ /$pattern/si;
+        }
+    }
+
+    if (@trees) {
+
+        foreach my $tree (@trees) {
+            if ((defined($self->{'treeStates'}->{$tree})) and ($self->{'treeStates'}->{$tree}->{'lastupdate'} == $self->{'_lastupdate'})) {
+ 
+                # setup
+                my @output;
+                my ($redShort) = ($self->{'states'}->{'bustedShort'} or split(//osi, $self->{'states'}->{'busted'}));
+                my $red = 0; 
+                my ($orangeShort) = ($self->{'states'}->{'testfailedShort'} or split(//osi, $self->{'states'}->{'testfailed'}));
+                my $orange = 0; 
+                my ($greenShort) = ($self->{'states'}->{'successShort'} or split(//osi, $self->{'states'}->{'success'}));
+                my $green = 0;
+
+                # foreach build
+                if (defined($self->{'tinderboxStates'}->{$tree})) {
+                    foreach my $build (keys(%{$self->{'tinderboxStates'}->{$tree}})) {
+                        if ($self->{'tinderboxStates'}->{$tree}->{$build}->{'lastupdate'} == $self->{'_lastupdate'}) {
+
+                            my $state = $self->{'tinderboxStates'}->{$tree}->{$build}->{'current'};
+
+                            # count results
+                            if ($state eq 'success') {
+                                $green++;
+                            } elsif ($state eq 'testfailed') {
+                                $orange++;
+                            } else {
+                                $red++;
+                            }
+
+                            # make sure we should list this build
+                            if ($state eq 'success') {
+                                next if $builds >= 1;
+                            } elsif ($state eq 'testfailed') {
+                                next if $builds >= 2;
+                            }
+
+                            if ($verbosity == 1) {
+                                my($minibuild) = split(/\s/osi, $build);
+                                my $ministate = $self->{'states'}->{$state.'Short'};
+                                if (not $ministate) {
+                                   ($ministate) = split(//osi, $self->{'states'}->{$state});
+                                }
+                                push(@output, "$minibuild: $ministate;");
+                            } elsif (($verbosity == 2) || ($verbosity == 3)) {
+                                my($minibuild) = $verbosity == 2 ? split(/\s/osi, $build) : ($build);
+                                my $ministate = $self->{'states'}->{$state.'Medium'};
+                                if (not $ministate) {
+                                   $ministate = $self->{'states'}->{$state};
+                                }
+                                push(@output, "$minibuild ($ministate),"); 
+                            } else {
+                                push(@output, "[$build: $self->{'states'}->{$state}]")
+                            }
+
+                        } # else build is dead
+                    } # (foreach build)
+                } # else tree is dead
+
+                # pretty print it
+                my @newoutput;
+                if ($verbosity == 1) {
+                    if (@output == 0) {
+                        unless ($red + $green + $orange) {
+                            push(@output, "(none)");
+                        } elsif ($builds <= 1) {
+                            push(@output, "(all green)");
+                        } else {
+                            push(@output, "(none red)");
+                        }
+                    }
+                    my $ministate = $self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}.'Short'};
+                    if (not $ministate) {
+                        ($ministate) = split(//osi, $self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}});
+                    }
+                    @newoutput = $self->wordWrap($self->{'preferredLineLength'}, 
+                        "$tree <$ministate> $redShort:${red} $orangeShort:${orange} $greenShort:${green} ",
+                        '  ', ' ', @output);
+                    $newoutput[0] =~ s/^  //o;
+                    $newoutput[$#newoutput] =~ s/;$//o;
+                    push(@lines, @newoutput);
+                } elsif (($verbosity == 2) || ($verbosity == 3)) {
+                    unless ($red+$orange+$green) {
+                        push(@lines, "$tree <$self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}>: no tinderboxen for this tree.");
+                    } elsif (($red) or ($orange)) {
+                        if (@output == 0) {
+                            # can only happen if $red is 0 and $builds is 1.
+                            push(@output, "all tinderboxen compile");
+                        }
+                        my @newoutput = $self->wordWrap($self->{'preferredLineLength'}, 
+                            "$tree <$self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}> $red red, $orange orange, $green green: ", 
+                            '  ', ' ', @output);
+                        $newoutput[0] =~ s/^  //o;
+                        $newoutput[$#newoutput] =~ s/,$//o;
+                        # if (length(@newoutput[$#newoutput]) < $self->{'preferredLineLength'} - 33) {
+                        #     $newoutput[$#newoutput] .= "     Summary: $red red, $orange orange, $green green";
+                        # } else {
+                        #     push(@newoutput, "  Summary: $red red, $orange orange, $green green");
+                        # }
+                        push(@lines, @newoutput);
+                    } else {
+                        push(@lines, "$tree <$self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}>: all $green tinderboxen green!");
+                    }
+                } else {
+                    if (@output == 0) {
+                        unless ($red + $green + $orange) {
+                            push(@output, "no tinderboxen for this tree.");
+                        } elsif ($builds <= 1) {
+                            push(@output, "all tinderboxen for this tree are green!");
+                        } else {
+                            push(@output, "all tinderboxen for this tree compile successfully.");
+                        }
+                    }
+                    @newoutput = $self->wordWrap($self->{'preferredLineLength'}, 
+                        "$tree <$self->{'states'}->{$self->{'treeStates'}->{$tree}->{'current'}}> $red red, $orange orange, $green green: ", 
+                        '  ', ' ', @output);
+                    $newoutput[0] =~ s/^  //o;
+                    push(@lines, @newoutput);
+                }
+
+            } # else tree is dead
+
+        } # (foreach tree)
+
+    } else { # no tree selected
+        @lines = ("No tree matches the pattern '$trees', sorry!");
+    }
+
+    $self->Report($event, 'tree status', @lines);
+}
+
+sub ReportBuild {
+    my $self = shift;
+    my ($event, $pattern) = @_;
+
+    # the complete output 
+    my @output;
+
+    foreach my $tree (@{$self->{'trees'}}) {
+        if ((defined($self->{'treeStates'}->{$tree})) and 
+            ($self->{'treeStates'}->{$tree}->{'lastupdate'} == $self->{'_lastupdate'}) and
+            (defined($self->{'tinderboxStates'}->{$tree}))) {
+            foreach my $build (keys(%{$self->{'tinderboxStates'}->{$tree}})) {
+                if (($self->{'tinderboxStates'}->{$tree}->{$build}->{'lastupdate'} == $self->{'_lastupdate'}) and 
+                    ($build =~ /\Q$pattern\E/is)) {
+                    push(@output, "[$build: $self->{'states'}->{$self->{'tinderboxStates'}->{$tree}->{$build}->{'current'}}]")
+                }
+            }
+        }
+    }
+
+    @output = ('There are no matching builds.') unless @output;
+    @output = $self->prettyPrint($self->{'preferredLineLength'}, undef, "$event->{'from'}: ", '  ', @output);
+
+    $self->Report($event, 'tree status', @output);
+}
+
+sub Report {
+    my $self = shift;
+    my ($event, $what, @output) = @_;
+    if (scalar(@output) > $self->{'maxInChannel'}) {
+        foreach (@output) {
+            $self->directSay($event, $_);
+        }
+        $self->channelSay($event, "$event->{'from'}: $what /msg'ed");
+    } else {
+        foreach (@output) {
+            $self->say($event, $_);
+        }
+    }
+}

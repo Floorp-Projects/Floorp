@@ -1,0 +1,83 @@
+################################
+# Rude Module                  #
+################################
+
+package BotModules::Rude;
+use vars qw(@ISA);
+use Net::Telnet;
+@ISA = qw(BotModules);
+1;
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'The Rude Module is... rude. Very rude! So rude!!!',
+        'insult' => 'Insults someone. Syntax: \'insult <who>\'',
+        'excuse' => 'Gives you an excuse for the system being down. Syntax: \'excuse\'',
+    };
+}
+
+# -- timeless was here --
+#   <timeless> Rude module is missing a jar jar quote ~how wude~
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['insultHost', 1, 1, 'insulthost.colorado.edu'],
+        ['insultPort', 1, 1, '1695'],
+        ['excuseHost', 1, 1, 'bofh.engr.wisc.edu'], # or bofh.jive.org
+        ['excusePort', 1, 1, '666'],
+        ['insultOverrides', 1, 1, { # overrides for the insults (keys must be lowercase)
+                                   'mozilla' => 'You are nothing but the best browser on the planet.',
+                                   'mozilla.org' => 'You are nothing but the best caretaker Mozilla ever had.',
+                                   'c++' => 'you are evil',
+                                  }],
+    );
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*insult\s+(\S+?)\s*$/osi) {
+        my $line;
+        if (defined($self->{'insultOverrides'}->{lc $1})) {
+            $line = "$1: ".$self->{'insultOverrides'}->{lc $1};
+        } else {
+            my $t = new Net::Telnet (Timeout => 3);
+            $t->Net::Telnet::open(Host => $self->{'insultHost'}, Port => $self->{'insultPort'});
+            $line = "$1: ".$t->Net::Telnet::getline(Timeout => 4);
+        }
+        if ($line) {
+            $self->say($event, $line);
+        } else {
+            $self->say($event, "$event->{'from'}: What have they ever done to you! Leave 'em alone!");
+            $self->debug("yikes, $self->{'insultHost'}:$self->{'insultPort'} is down!");
+        }
+    } elsif ($message =~ /^\s*(?:please\s+)?(?:can\s+i\s+have\s+an\s+|(?:(?:can|could)\s+you\s+)?give\s+me\s+an\s+)?excuse(?:[?,.!1\s]+please)?\s*[!?,.1]*\s*$/osi) {
+        my $t = new Net::Telnet (Timeout => 3);
+        $t->Net::Telnet::open(Host => $self->{'excuseHost'}, Port => $self->{'excusePort'}); 
+        # print "=== The BOFH-style Excuse Server --- Feel The Power!\n";
+        $t->Net::Telnet::getline(Timeout => 4); 
+        # print "=== By Jeff Ballard <ballard\@cs.wisc.edu>\n";  
+        $t->Net::Telnet::getline(Timeout => 4);
+        # print "=== See http://www.cs.wisc.edu/~ballard/bofh/ for more info.\n";  
+        $t->Net::Telnet::getline(Timeout => 4);
+        # print "Your excuse is: $excuses[$j]";
+        my $line = $t->Net::Telnet::getline(Timeout => 4);
+        if ($line) {
+            # $line =~ s/^.*?Your excuse is: //gosi;
+            # $self->say($event, "$event->{'from'}: '$line'");
+            $self->say($event, "$line");
+        } else {
+            $self->say($event, "$event->{'from'}: Don't ask *me* for an excuse! Sheesh!");
+            $self->debug("yikes, $self->{'insultHost'}:$self->{'insultPort'} is down!");
+        }
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}

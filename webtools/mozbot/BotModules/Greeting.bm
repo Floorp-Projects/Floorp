@@ -1,0 +1,255 @@
+################################
+# Greeting Module              #
+################################
+
+package BotModules::Greeting;
+use vars qw(@ISA);
+@ISA = qw(BotModules);
+1;
+
+# SpottedNickChange would be a nice one to do if you 
+# can solve the problem of working out which channel
+# to say stuff in...
+
+sub Help {
+    my $self = shift;
+    my ($event) = @_;
+    return {
+        '' => 'A polite module for saying hello and goodbye and so on.',
+        'hi' => 'To greet the bot.',
+        'bye' => 'To say good bye to the bot.',
+        'ping' => 'To check the bot is alive.',
+        'uptime' => 'Gives the amount of time that the bot has been active.',
+    };
+}
+
+# RegisterConfig - Called when initialised, should call registerVariables
+sub RegisterConfig {
+    my $self = shift;
+    $self->SUPER::RegisterConfig(@_);
+    $self->registerVariables(
+      # [ name, save?, settable? ]
+        ['greetings', 1, 1, ['hi %', 'yo %', 'salut %', '%! dude!', '%: hello', '%', 'bonjour %']],
+        ['greetingsIndex', 1, 1, 0],
+        ['byes', 1, 1, ['seeya %', 'bye %', 'night %', '/me waves goodbye to %']],
+        ['byesIndex', 1, 1, 0],
+        ['ow', 1, 1, ['%!! stop it!!', '%? You want something?', 'I\'m working! Leave me alone!', 'ow!', 'Leave me out of it!', '%: mean!']],
+        ['owIndex', 1, 1, 0],
+        ['veryow', 1, 1, ['OOOOWWWW!!!', 'GETOFF!!!', '/me fights back', 'Yikes! I\'m being attacked!!', '/me hits % over the head with a 2-by-4']],
+        ['veryowIndex', 1, 1, 0],
+        ['yousuck', 1, 1, ['%: no, *you* suck!', '/me pouts', '/me cries']],
+        ['yousuckIndex', 1, 1, 0],
+        ['thanks', 1, 1, ['sure thing %', 'np', '%: np', '%: just doing my job!']],
+        ['thanksIndex', 1, 1, 0],
+        ['listen', 1, 1, ['(*', '%: I\'m listening.', '%?']],
+        ['listenIndex', 1, 1, 0],
+        ['unhappy', 1, 1, [':)', '/me cries', 'but... but...', '/me is all sad', ':(']],
+        ['unhappyIndex', 1, 1, 0],
+        ['happy', 1, 1, [':)', '/me smiles']],
+        ['happyIndex', 1, 1, 0],
+        ['vhappy', 1, 1, ['OOoh! %!', 'I love you too, %.']],
+        ['vhappyIndex', 1, 1, 0],
+        ['whoami', 1, 1, 'I am a bot. /msg me the word \'help\' for a list of commands.'],
+        ['lastrheet', 0, 0, 0], # time of last rheet
+        ['rheetbuffer', 1, 1, 10], # max of 1 rheet per this many seconds 
+        ['rheetMaxEs', 1, 1, 100], # number of es at which to stop responding.
+        ['autoGreetMute', 1, 1, []], # channels to mute in
+        ['autoGreetings', 1, 1, {}], # people to greet and their greeting
+        ['autoGreeted', 0, 0, {}], # people to NOT greet, and the last time
+        ['autoGreetedBackoffTime', 1, 1, 20], # how long to not greet people (seconds)
+        ['evil', 1, 1, ['c++ is evil', '/me mumbles something about c++ being evil', 'c++ is e-- ah, nevermind.', 'c++ sucks', '/me frowns at %']],
+        ['evilIndex', 1, 1, 0],
+        ['evilBackoffTime', 1, 1, 36000], # how long to not insult c++ (10 hours by default)
+        ['lastEvil', 1, 0, 0], # when the last c++ insult took place
+        ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
+        ['_lastSpoken', 0, 0, {}], # who has spoken to us
+    );
+}
+
+sub Told {
+    my $self = shift;
+    my ($event, $message) = @_;
+    $self->{'_lastSpoken'}->{$event->{'user'}} = time();
+    my $me = quotemeta($event->{'bot'}->nick);
+    my $expandedme = join('+', split(//gos, $me)).'+';
+    if ($message =~ /^\s*(?:mornin[g']?|hi|heya?|w+a+[sz]+u+p+|hello|greetings|yo(?:\s+dude)?|m+[ay]+(?:\s+m+a+i+n+)?\s+m+a+n+|d+u+d+e+)[?!1.\s]*$/osi) {
+        if ($self->canGreet($event)) {
+            $self->Perform($event, 'greetings');
+        }
+    } elsif ($message =~ /^\s*(?:bye|'?night|seeya)[?!1.\s]*$/osi) {
+        $self->Perform($event, 'byes');
+    } elsif ($message =~ /^\s*say[\s:,"']+(hi|hello|good\s*bye|seeya)(?:\s+to\s+(\S+))(?:[,\s]*please)?[?!1.\s]*$/osi) {
+        if ($2) {
+            $self->say($event, "$2: $1");
+        } else {
+            $self->say($event, "$1");
+        }
+    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*\s*$/osi) {
+        $self->Perform($event, 'yousuck');
+    } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+        $self->Perform($event, 'thanks');
+    } elsif ($message =~ /^\s*(?::-?\)|good\s+bot[.!1\s]*|you\s+rock|have\s+a\s+bot\s*snack[.!1\s]*)\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+        $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*(?:i|we)\s+love\s+you\s*[.!1]*\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+        $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*die[!1.\s]*$/osi) {
+        $self->Perform($event, 'unhappy');
+    } elsif ($message =~ /^\s*(?:how\s+are\s+you|how\s+do\s+you\s+do|how'?s\s+things|are\s+you\s+ok)(?:[?!1.,\s]+$expandedme)?\s*[?!1.\s]*$/osi) {
+        $uptime = $self->days($^T);
+        $self->say($event, "$event->{'from'}: fine thanks! I've been up $uptime so far!");
+    } elsif ($message =~ /^\s*(?:who\s+are\s+you)\s*[?!1.\s]*$/osi) {
+        $self->say($event, "$event->{'from'}: $self->{'whoami'}");
+    } elsif ($message =~ /^\s*up\s*(?:time)?[?!1.\s]*$/osi) {
+        $uptime = $self->days($^T);
+        $self->say($event, "$event->{'from'}: I've been up $uptime.");
+    } elsif ($message =~ /^\s*r+h(e+)t+[!1.\s]*\s*$/osi) {
+        if (length($1) < $self->{'rheetMaxEs'}) {
+            $self->say($event, "$event->{'from'}: rhe$1$1t!");
+        } else {
+            $self->say($event, "$event->{'from'}: uh, whatever.");
+        }
+    } elsif ($message =~ /^\s*ping\s*$/osi) {
+        $self->say($event, "$event->{'from'}: pong");
+        # XXX CCTP ping $event->{'from'}
+    } else {
+        return $self->SUPER::Told(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Heard {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my $me = quotemeta($event->{'bot'}->nick);
+    my $expandedme = join('+', split(//gos, $me)).'+';
+    if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)!*1*\s*$/si) {
+        if ($self->canGreet($event)) {
+            $self->Perform($event, 'greetings');
+        }
+    } elsif ($message =~ /^\s*(?:bye|night|seeya|ciao)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'byes');
+    } elsif ($message =~ /^\s*(?:oh[!1?,.\s]*)?(?:thanks|cheers)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
+        $self->Perform($event, 'thanks');
+    } elsif (($message =~ /^\s*(?:oh[!1?,.\s]*)?(?:thanks|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) and ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'thanks');
+    } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) and ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'happy');
+    } elsif (($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*\s*$/osi) and 
+             ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'yousuck');
+    } elsif ($message =~ /^\s*(?:good|yay[\s!1.]*)\s+$me[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/si) {
+        $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*(?:$me\s*[.?\/]+)\s*$/si) {
+        $self->Perform($event, 'listen');
+    } elsif ($message =~ /^\s*r+h(e+)t+[!1.\s]*\s*$/osi) {
+        if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
+            if (length($1) < $self->{'rheetMaxEs'}) {
+                $self->say($event, "rhe$1$1t!");
+            }
+            $self->{'lastrheet'} = time();
+        }
+    } elsif ($message =~ /^.+\s+c\+\+\s+.+$/osi) {
+        if ((time() - $self->{'lastEvil'}) > $self->{'evilBackoffTime'}) {
+            $self->{'lastEvil'} = time();
+            $self->Perform($event, 'evil'); # calls GetNext which calls saveConfig
+        }
+    } else {
+        return $self->SUPER::Heard(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Felt {
+    my $self = shift;
+    my ($event, $message) = @_;
+    my $me = quotemeta($event->{'bot'}->nick);
+    if ($message =~ /^\s*(?:pokes|prods)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'ow');
+    } elsif ($message =~ /^\s*(?:stabs|slaps|kicks|kills|hits|punches)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'veryow');
+    } elsif ($message =~ /^\s*lights\s+$me\s+on\s+fire\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'veryow');
+    } elsif ($message =~ /^\s*(?:pats|strokes|pets)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'happy');
+    } elsif ($message =~ /^\s*slaps\s+$me\s+(?:around\s+)?(?:a\s+(?:bit|lot|little|while)\s+)?with\s+a\s+(?:(?:big|fat|large|wet|and)[\s,]+)*trout\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'ow');
+    } elsif ($message =~ /^\s*(?:slaps|kicks|smacks)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'yousuck');
+    } elsif ($message =~ /^\s*(?:hugs|kisses)\s+$me\s*[!1.]*\s*$/si) {
+        $self->Perform($event, 'vhappy');
+    } else {
+        return $self->SUPER::Felt(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+sub Saw {
+    my $self = shift;
+    my ($event, $message) = @_;
+    if ($message =~ /^\s*r+h(e+)t+s?[!1.]*\s*$/osi) {
+        if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
+           $self->say($event, "rhe$1$1t!");
+           $self->{'lastrheet'} = time();
+        }
+    } elsif (($message =~ /^\s*(?:smiles)\s*[!1.]*\s*$/si) and ($self->canAssumeThanks($event))) {
+        $self->Perform($event, 'happy');
+    } else {
+        return $self->SUPER::Felt(@_);
+    }
+    return 0; # we've dealt with it, no need to do anything else.
+}
+
+# SpottedJoin - Called when someone joins a channel
+sub SpottedJoin {
+    my $self = shift;
+    my ($event, $channel, $who) = @_;
+    return if grep(lc($_) eq $channel, @{$self->{'autoGreetMute'}});
+    my $user = $event->{'user'};
+    if ($self->canGreet($event) and $self->{'autoGreetings'}->{$who}) {
+        $self->sayOrEmote($event, $self->Expand($event, $self->{'autoGreetings'}->{$who}));
+        $self->{'autoGreeted'}->{$user} = time();
+    }
+    return 1; # don't block other modules...
+}
+
+sub GetNext {
+    my $self = shift;
+    my ($list) = @_;
+    $self->{"${list}Index"} = 0 if $self->{"${list}Index"} > $#{$self->{$list}};
+    my $reply = $self->{$list}->[$self->{"${list}Index"}++];
+    $self->saveConfig();
+    return $reply;
+}
+
+sub canGreet {
+    my $self = shift;
+    my ($event) = @_;
+    my $user = $event->{'user'};
+    my $reply = 1;
+    if (defined($self->{'autoGreeted'}->{$user})) {
+       $reply = ((time() - $self->{'autoGreeted'}->{$user}) > $self->{'autoGreetedBackoffTime'});
+       delete($self->{'autoGreeted'}->{$user});
+    }
+    return $reply;
+}
+
+sub canAssumeThanks {
+    my $self = shift;
+    my ($event) = @_;
+    my $who = $event->{'user'};
+    return ((defined($self->{'_lastSpoken'}->{$who})) and ((time() - $self->{'_lastSpoken'}->{$who}) <= $self->{'assumeThanksTime'}));
+}
+
+sub Perform {
+    my $self = shift;
+    my ($event, $list) = @_;
+    $self->sayOrEmote($event, $self->Expand($event, $self->GetNext($list))); 
+}
+
+# replaces '%' with the target nick (XXX cannot escape a "%"!!!)
+sub Expand {
+    my $self = shift;
+    my ($event, $data) = @_;
+    $data =~ s/%/$event->{'from'}/gos;
+    return $data;
+}
