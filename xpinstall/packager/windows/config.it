@@ -80,7 +80,7 @@ Verify Existance=
 [Legacy Check0]
 Filename=[SETUP PATH]\mozilla.exe
 Version=6.0.0.0
-Message=Setup has detected an old version of Mozilla in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to chose a different path?
+Message=Setup has detected an old version of Mozilla in the chosen destination path that may pose compatibility issues.  It is highly recommended that a different destination path be used.  Would you like to choose a different path?
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -412,13 +412,13 @@ Description=Mozilla Seamonkey
 Icon Path=[SETUP PATH]\mozilla.exe
 Icon Id=0
 
-;[Program Folder0-Shortcut1]
-;File=[SETUP PATH]\bin\viewer.exe
-;Arguments=
-;Working Dir=[SETUP PATH]
-;Description=Mozilla Viewer
-;Icon Path=[SETUP PATH]\bin\viewer.exe
-;Icon Id=0
+[Program Folder0-Shortcut1]
+File=[SETUP PATH]\mozilla.exe
+Arguments=-ProfileManager
+Working Dir=[SETUP PATH]
+Description=Profile Manager
+Icon Path=[SETUP PATH]\mozilla.exe
+Icon Id=0
 
 ;[Program Folder0-Shortcut2]
 ;File=[SETUP PATH]\bin\Net2fone.exe

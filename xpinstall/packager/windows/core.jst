@@ -7,7 +7,7 @@ var fileComponentRegStr;
 var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Xpinstall Engine", "", "$Version$"); 
+err    = startInstall("Mozilla XPCom", "XPCom", "$Version$"); 
 logComment("startInstall: " + err);
 
 communicatorFolder = getFolder("Communicator");
@@ -16,7 +16,8 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if(verifyDiskSpace(communicatorFolder, srDest) == true)
 {
-  err = addDirectory("Program",
+  setPackageFolder(communicatorFolder);
+  err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
                      communicatorFolder, // Where to put this file (Returned from GetFolder) 
