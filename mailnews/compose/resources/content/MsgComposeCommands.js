@@ -28,7 +28,6 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
-var tabIntoBodyPhase = 0;
 var documentLoaded = false;
 
 var Bundle = srGetStrBundle("chrome://messengercompose/locale/composeMsgs.properties"); 
@@ -733,34 +732,4 @@ function RemoveSelectedAttachment()
 function AttachVCard()
 {
 	dump("AttachVCard()\n");
-}
-
-function ShouldITabIntoBody(phase)
-{
-	if (phase != tabIntoBodyPhase)
-	{
-		tabIntoBodyPhase = 0;
-		return;
-	}
-	
-	switch (phase)
-	{
-		case 0:
-			tabIntoBodyPhase ++;
-			setTimeout("tabIntoBodyPhase = 0;", 250);
-			break;
-	
-		case 1:
-			tabIntoBodyPhase ++;
-			break;
-	
-		case 2:
-			contentWindow.focus();
-			tabIntoBodyPhase = 0;
-			break;
-
-		default:
-			tabIntoBodyPhase = 0;
-			break;		
-	}
 }

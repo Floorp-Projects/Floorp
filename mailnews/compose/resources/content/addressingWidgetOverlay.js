@@ -178,20 +178,28 @@ function awSetInputAndPopupFromArray(firstRow, inputArray, popupValue)
 function awClickRow()
 {
 	dump("awClickRow\n");
-	
-	return false;
+	if (! top.notAnEmptyArea)
+		awClickEmptySpace(true);
+	top.notAnEmptyArea=false;
+	return;
 }
 
-function awClickEmptySpace()
+function awNotAnEmptyArea()
 {
-	// FIX ME - not currently using this because of a bug in the tree
-	
+	dump("awNotAnEmptyArea\n");
+	top.notAnEmptyArea=true;
+	return;
+}
+
+function awClickEmptySpace(setFocus)
+{
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
 	if ( lastInput && lastInput.value )
-		awAppendNewRow();
+		awAppendNewRow(setFocus);
 	else
-		awSetFocus(top.MAX_RECIPIENTS, lastInput);
+		if (setFocus)
+			awSetFocus(top.MAX_RECIPIENTS, lastInput);
 }
 
 function awReturnHit(inputElement)
@@ -202,17 +210,21 @@ function awReturnHit(inputElement)
 	{
 		var nextInput = awGetInputElement(row+1);
 		if ( !nextInput )
-			awAppendNewRow();
+			awAppendNewRow(true);
 		else
 			awSetFocus(row+1, nextInput);
 	}
-	else
-	{
-		// FIX ME - should tab to next field after addressing widget...probably subjec
-	}
 }
 
-function awAppendNewRow()
+function awInputChanged(inputElement)
+{
+	dump("awInputChanged\n");
+	AutoCompleteAddress(inputElement);
+	//call awClickEmptySpace to add a new row if needed
+	awClickEmptySpace(false);
+}
+
+function awAppendNewRow(setFocus)
 {
 	var body = document.getElementById('addressWidgetBody');
 	var treeitem1 = awGetTreeItem(1);
@@ -223,9 +235,12 @@ function awAppendNewRow()
 		top.MAX_RECIPIENTS++;
 
 		// focus on new input widget
-		var newInput = awGetInputElement(top.MAX_RECIPIENTS);
-		if ( newInput )
-			awSetFocus(top.MAX_RECIPIENTS, newInput);
+		if (setFocus)
+		{
+			var newInput = awGetInputElement(top.MAX_RECIPIENTS);
+			if ( newInput )
+				awSetFocus(top.MAX_RECIPIENTS, newInput);
+		}
 	}
 }
 
@@ -320,7 +335,6 @@ function awCopyNode(node, parentNode, beforeNode)
 function awCopyNodeAndChildren(node)
 {
 	var newNode;
-	
 	if ( node.nodeName == "#text" )
 	{
 		// create new text node
@@ -346,7 +360,6 @@ function awCopyNodeAndChildren(node)
 				attrNode = attributes.item(index);
 				name = attrNode.nodeName;
 				value = attrNode.nodeValue;
-				
 				if ( name != 'id' )
 					newNode.setAttribute(name, value);
 			}
@@ -430,6 +443,11 @@ function _awSetFocus()
 	var tree = document.getElementById('addressingWidgetTree');
 	try
 	{
+		//temporary patch for bug 26344
+		//top.awInputElement.setAttribute("onclick", top.awInputElement.getAttribute("onclick"));
+		//top.awInputElement.setAttribute("onkeyup", top.awInputElement.getAttribute("onkeyup"));
+		//end of patch
+
 		tree.ensureElementIsVisible(awGetTreeRow(top.awRow));
 		top.awInputElement.focus();
 	}

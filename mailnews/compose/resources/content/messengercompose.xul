@@ -4,7 +4,6 @@
 <?xul-overlay href="chrome://messengercompose/content/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
-<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 
 <!--
@@ -31,6 +30,7 @@ Rights Reserved.
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
 		onunload="ComposeUnload()"
 		onload="ComposeLoad()"
 		width="640" height="480"
@@ -50,6 +50,11 @@ Rights Reserved.
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_close" oncommand="CloseWindow()"/>
+	<broadcaster id="cmd_attachFile" oncommand="AttachFile()"/>
+	<broadcaster id="cmd_selectAddress" oncommand="SelectAddress()"/>
+	<broadcaster id="cmd_sendNow" oncommand="SendMessage()"/>
+	<broadcaster id="cmd_sendLater" oncommand="SendMessageLater()"/>
+	<broadcaster id="cmd_print" oncommand="nsCmd:BrowserPrint"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
 	<broadcaster id="cmd_undo"/>
@@ -59,6 +64,8 @@ Rights Reserved.
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
+	<broadcaster id="cmd_find" oncommand="nsCmd:ComposeNYI"/>
+	<broadcaster id="cmd_findAgain" oncommand="nsCmd:ComposeNYI"/>
 	<broadcaster id="cmd_preferences"/>
 
 	<broadcaster id="broadcaster_throbber" busy="false"/>
@@ -70,11 +77,22 @@ Rights Reserved.
 <broadcaster id="dialog.start" ready="false"/>
 <observes element="dialog.start" attribute="ready" onbroadcast="ComposeStartup()"/>
 
+<popupset>
+	<popup id="TextColorPopup"/>
+	<popup id="BackColorPopup"/>
+</popupset>
+
 <keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_newMessage"/>
 	<key id="key_close"/>
+	<key id="key_save" xulkey="true" key="&saveCmd.key;" disabled="true"/>
+	<key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/>
+	<key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/>
+	<key id="key_sendNow" xulkey="true" key="&sendNowCmd.key;" observes="cmd_sendNow"/>
+	<key id="key_sendLater" xulkey="true" key="&sendLaterCmd.key;" shift="true" observes="cmd_sendLater"/>
+	<key id="key_print" xulkey="true" key="&printCmd.key;" disabled="true" observes="cmd_print"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
 	<key id="key_undo"/>
@@ -84,7 +102,10 @@ Rights Reserved.
 	<key id="key_paste"/>
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
+	<key id="key_find" xulkey="true" key="&findCmd.key;" disabled="true" observes="cmd_find"/>
+	<key id="key_findAgain" xulkey="true" key="&findAgainCmd.key;" disabled="true" observes="cmd_findAgain"/>
 	<key id="key_preferences"/>
+	
 </keyset>
 
 <!--- REMOVE KEYSET UNTIL IT WORKS CORRECTLY ON MAC!
@@ -122,31 +143,35 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
             <menuitem id="menu_newNavigator"/>
             <menuitem id="menu_newMessage"/>
             <menuitem id="cmd_newCard"/>
+            <menuitem id="menu_newEditor"/>
           </menupopup>
         </menu>
 		<menuseparator/>
+
 		<menuitem id="menu_close"/>
-		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
-		<menuitem value="&saveAsCmd.label;" oncommand="SaveAsDraft()"/>
-		<menuitem value="&saveAsTemplateCmd.label;" oncommand="SaveAsTemplate()"/>
-			<menu value="&attachMenu.label;">
-			<menupopup>
-			<menuitem value="&attachFileCmd.label;" oncommand="AttachFile()"/>
-			<menuitem value="&attachPageCmd.label;" oncommand="AttachPage()"/>
-			<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveSelectedAttachment()"/>
-			<menuseparator/>
-			<menuitem value="&attachVCardCmd.label;" oncommand="AttachVCard()"/>
-			</menupopup>
+		<menuitem value="&saveCmd.label;" disabled="true" key="key_save"/>
+		<menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
+          <menupopup>
+            <menuitem value="&saveAsFileCmd.label;" disabled="true" accessKey="&saveAsFileCmd.accesskey;"/>
+            <menuseparator/>
+            <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" oncommand="SaveAsDraft()"/>
+            <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" oncommand="SaveAsTemplate()"/>
+          </menupopup>
 		</menu>
 		<menuseparator/>
-		<menuitem value="&sendNowCmd.label;" oncommand="SendMessage()"/>
-		<menuitem value="&sendLaterCmd.label;" oncommand="SendMessageLater()"/>
-		<menuitem value="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
-		<menuitem value="&selectAddressCmd.label;" oncommand="SelectAddress()"/>
+
+		<menuitem value="&attachFileCmd.label;" key="key_attachFile" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
+		<menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" oncommand="AttachPage()"/>
+		<!-- the next menu item is TEMPORARY until we figure how to hook up the deleted key in the attachment tree -->
+		<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveSelectedAttachment()"/>
+	    <menuseparator/>
+		
+		<menuitem value="&sendNowCmd.label;" key="key_sendNow" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
+		<menuitem value="&sendLaterCmd.label;" key="key_sendLater" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
 		<menuseparator/>
-		<menuitem id="menu_pageSetup"/>
-		<menuitem value="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
-		<menuitem value="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
+		<menuitem id="menu_pageSetup" disabled="true"/>
+		<menuitem value="&printPreviewCmd.label;" disabled="true" accessKey="&printPreviewCmd.accesskey;" oncommand="nsCmd:BrowserPrintPreview"/>
+		<menuitem value="&printCmd.label;" disabled="true" key="key_print" accessKey="&printCmd.accesskey;" observes="cmd_print"/>
 		<menuseparator/>
 		</menupopup>
 	</menu>
@@ -158,23 +183,21 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
-			<menuitem value="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
-			<menuseparator/>
+			<menuitem value="&pasteAsQuotCmd.label;" disabled="true" accesskey="&pasteAsQuotCmd.accesskey;" oncommand="nsCmd:ComposeNYI"/>
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-			<menuitem value="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
-			<menuitem value="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&findCmd.label;" disabled="true" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+			<menuitem value="&findAgainCmd.label;" disabled="true" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
-			<menuitem value="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
-			<menuitem value="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&EditHtmlCmd.label;" disabled="true" oncommand="nsCmd:ComposeNYI"/>
 			<menuseparator/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('messengercompose.xul', 'chrome://messengercompose/content/pref-messages.xul')"/>
 		</menupopup>
 	</menu>
 	<menu id="menu_View">
-		<menupopup>
+	<menupopup>
 			<menu id="menu_Toolbars">
 				<menupopup>
 		            <menuitem id="menu_showComposeToolbar"
@@ -182,14 +205,23 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 		                      accesskey="&showComposeToolbarCmd.accesskey;"
 		                      oncommand="goToggleToolbar('composeToolbar', 'menu_showComposeToolbar')"
 		                      checked="true"/>
+		            <menuitem id="menu_showFormatToolbar"
+		                      value="&showFormatToolbarCmd.label;"
+		                      accesskey="&showFormatToolbarCmd.accesskey;"
+		                      oncommand="goToggleToolbar('FormatToolbar', 'menu_showFormatToolbar')"
+		                      checked="true"/>
+		            <menuitem id="menu_showStatusbar"
+		                      value="&showStatusbarCmd.label;"
+		                      accesskey="&showStatusbarCmd.accesskey;"
+		                      oncommand="goToggleToolbar('status-bar', 'menu_showStatusbar')"
+		                      checked="true" disabled="true"/>
 					<menuitem id="menu_showTaskbar"/>
 				</menupopup>
 			</menu>
+			<menuitem value="&showParagraphMarksCmd.label;" disabled="true" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
-			<menuitem value="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
-			<menuitem value="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
-			<menuseparator/>
-			<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&pageSourceCmd.label;" disabled="true" accesskey="&pageSourceCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
+			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
 			<menu value="&dcharMenu.label;">
 			<menupopup>
@@ -226,15 +258,58 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	</menupopup>
     </menu>
 
-	<!-- entire menus come from editorOverlay -->
+	<!-- entire menus comes from editorOverlay -->
 	<menu id="insertMenu"/>
-  <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
-    <menupopup id="formatMenuPopup"/>
-  </menu>
-  <menu id="tableMenu"/>
+	
+	<!-- menu items come from editorOverlay -->
+	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
+    <menupopup id="formatMenuPopup"/> <!--TEMPORARY UNTIL I CAN CHECKIN MODIFICATION IN EDITOROVERLAY.XUL-->
+	<!--menupopup>
+	    <menu id="fontFaceMenu"/>
+	    <menu id="fontSizeMenu"/>
+	    <menu id="fontStyleMenu"/>
+	    
+	    --><!-- TODO: REPLACE WITH COLORPICKER --><!--
+	    <menu id="fontColorMenu"/>
+	    <menu id="backgroundColorMenu"/>
+    	<menuseparator/>
 
-	<menu value="&messageMenu.label;">
-		<menupopup>
+    	<menuitem id="removeAllStylesMenuitem"/>
+    	<menuitem id="removeLinksMenuitem"/>
+    	<menuseparator/>
+    	
+	    <menu id="headingMenu"/>
+	    <menu id="paragraphMenu"/>
+	    <menuitem id="listProps"/>
+    	<menu id="alignMenu"/>
+		<menu id="tableMenu"/>
+    	<menuseparator/>
+
+	    <menuitem id="increaseIndent"/>
+	    <menuitem id="decreaseIndent"/>
+	    <menuseparator/>
+
+	    <menuitem id="objectProperties"/>
+	    <menuitem id="colorsAndBackground"/>
+    </menupopup-->
+	</menu>
+	
+
+	<menu value="&optionsMenu.label;">
+    <menupopup>	
+		<menuitem value="&selectAddressCmd.label;" key="key_selectAddresses" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+		<menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" disabled="true" oncommand="nsCmd:ComposeQuote"/>
+	    <menuseparator/>
+	    
+	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
+    		<menupopup>
+			<menuitem value="&askmeFormatCmd.label;" disabled="true" id="1"/>
+    		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
+    		<menuitem value="&htmlFormatCmd.label;" id="3"/>
+    		<menuitem value="&bothFormatCmd.label;" id="4"/>
+			</menupopup>
+	   	</menu>
+    	<menuitem value="&returnReceiptCmd.label;" oncommand="ReturnReceiptMenuSelect();"/>
 		<menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
     		<menupopup>
 			<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
@@ -244,36 +319,67 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
     		<menuitem value="&highestPriorityCmd.label;" id="highest"/>
 			</menupopup>
 	   	</menu>
-    	<menuitem value="&returnReceiptCmd.label;" oncommand="ReturnReceiptMenuSelect();"/>
-	   	<menuitem value="&uuEncodeCmd.label;" oncommand="UUEncodeMenuSelect();"/>
-	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
-    		<menupopup>
-			<menuitem value="&askmeFormatCmd.label;" id="1"/>
-    		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
-    		<menuitem value="&htmlFormatCmd.label;" id="3"/>
-    		<menuitem value="&bothFormatCmd.label;" id="4"/>
-			</menupopup>
-	   	</menu>
-    	<menuseparator/>
-		<menu value="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
-			oncommand="MessageFcc(event.target)">
+
+		<menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+        <menupopup/>
+		<template> 
+		<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+            <menupopup>
+              <menuitem value="[current selection]" disabled="true"/>
+              <menuseparator/>
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                <menupopup>
+                  <menuitem uri="..." value="&fileHereMenu.label;" 
+				oncommand="MessageFcc(event.target)"
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+            </menupopup>
+		</rule>
+		<rule nc:CanFileMessages="false" nc:ServerType="nntp">
+                <!-- don't show nntp servers in the file and copies menus -->
+		</rule>
+		<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+            <!-- note, there is no "file here" -->
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
 			<menupopup/>
-                  <template>
-                    <rule iscontainer="true" isempty="false">
-                      <menupopup>
-					  <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-					  </menupopup>
-                    </rule>
-                    <rule>
-                      <menupopup>
-					  <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgCopyMessage(event.target)" />
-					  </menupopup>
-                    </rule>
-                  </template>
-		</menu>
-	  </menupopup>
-    </menu>
-    <menu id="debugMenu"/>
+              </menu>
+            </menupopup>
+		</rule>
+		<rule nc:CanFileMessages="true">
+            <menupopup>
+			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MessageFcc(event.target)" 
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+            </menupopup>
+          </rule>
+        </template>
+		</menu>	    
+
+	   	<menuitem value="&uuEncodeCmd.label;" accesskey="&uuEncodeCmd.accesskey;" oncommand="UUEncodeMenuSelect();"/>
+    	<menuseparator/>
+    	
+		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
+		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
+    </menupopup>
+	</menu>
+
+    <!-- menu id="debugMenu"/ -->
 	<menu id="tasksMenu"/>
 	<menu id="menu_Help"/>
 	<spring flex="100%"/>
@@ -306,9 +412,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<box align="horizontal">
 					<html:div>&fromAddr.label;</html:div>
 					<spring style="width:0.5em"/>
-					<html:select id="msgIdentity" flex="100%"
-						onkeyup="if (event.which == 9) ShouldITabIntoBody(2);"
-						onfocus="ShouldITabIntoBody(1);"/>
+					<html:select id="msgIdentity" flex="100%"/>
 				</box>
 				<spring style="height:0.5em"/>
 
@@ -321,7 +425,8 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 					<spring style="width:0.5em"/>
 				    <html:input id="msgSubject" type="text" flex="100%"
 						onkeyup="SetComposeWindowTitle(event.which);"
-						onblur="ShouldITabIntoBody(0);"/>
+						onkeydown="if (event.which == 9) contentWindow.focus();"
+						/>
 				</box>
 				<spring style="height:0.5em"/>
 			</box>

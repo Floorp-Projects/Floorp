@@ -40,6 +40,7 @@ var AddressAutoCompleteListener = {
 			dump("aMatch = " + aMatch + "\n");
 
 			aItem.value = aMatch;
+			aItem.lastValue = aMatch;
 		}
 	}
 };
@@ -49,6 +50,10 @@ function AutoCompleteAddress(inputElement)
 	///////////// (select_doc_id, doc_id)
 
 	dump("inputElement = " + inputElement + "\n");
+
+	//Do we really have to autocomplete?
+	if (inputElement.lastValue && inputElement.lastValue == inputElement.value)
+		return;
 
 	var row = awGetRowByInputElement(inputElement);	
 

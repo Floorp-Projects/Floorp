@@ -9,37 +9,61 @@
 
 <!-- File menu items -->
 <!ENTITY newMessage.label				"New Message">  
-<!ENTITY newMessage.accesskey			"n">  
+	<!ENTITY newMessage.accesskey			"n">  
 <!ENTITY saveCmd.label ".Save">
-<!ENTITY saveAsCmd.label "Save As (Draft)">
-<!ENTITY saveAsTemplateCmd.label "Save As (Template)">
-<!ENTITY attachMenu.label "Attach...">
-<!ENTITY attachFileCmd.label "File...">
-<!ENTITY attachPageCmd.label "Web Page...">
+	<!ENTITY saveCmd.key "S">
+<!ENTITY saveAsCmd.label "Save As">
+	<!ENTITY saveAsCmd.accesskey "s">
+<!ENTITY saveAsFileCmd.label ".File...">
+	<!ENTITY saveAsFileCmd.accesskey "F">
+<!ENTITY saveAsDraftCmd.label "Draft">
+	<!ENTITY saveAsDraftCmd.accesskey "D">
+<!ENTITY saveAsTemplateCmd.label "Stationery">
+	<!ENTITY saveAsTemplateCmd.accesskey "S">
+<!ENTITY attachFileCmd.label "Attach File...">
+	<!ENTITY attachFileCmd.key "">
+	<!ENTITY attachFileCmd.accesskey "F">
+<!ENTITY attachPageCmd.label "Attach Web Page...">
+	<!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY removeLastAttachmentCmd.label "Remove Selected Attachment">
-<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
-<!ENTITY attachVCardCmd.label ".Personal Card (vCard)">
-<!ENTITY sendNowCmd.label "Send Now">
+<!ENTITY sendNowCmd.label "Send">
+	<!ENTITY sendNowCmd.key "">
+	<!ENTITY sendNowCmd.accesskey "d">
 <!ENTITY sendLaterCmd.label "Send Later">
-<!ENTITY quoteOrigCmd.label ".Quote Original Message">
-<!ENTITY selectAddressCmd.label "Select Addresses...">
+	<!ENTITY sendLaterCmd.key "">
+	<!ENTITY sendLaterCmd.accesskey "L">
 <!ENTITY printPreviewCmd.label ".Print Preview">
-<!ENTITY printCmd.label ".Print">
+	<!ENTITY printPreviewCmd.accesskey "v">
+<!ENTITY printCmd.label ".Print...">
+	<!ENTITY printCmd.key "P">
+	<!ENTITY printCmd.accesskey "P">
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
 <!ENTITY pasteAsQuotCmd.label ".Paste as Quotation">
+	<!ENTITY pasteAsQuotCmd.accesskey "Q">
 <!ENTITY findCmd.label ".Find">
+	<!ENTITY findCmd.key "F">
+	<!ENTITY findCmd.accesskey "F">
 <!ENTITY findAgainCmd.label ".Find Again">
-<!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
-<!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
+	<!ENTITY findAgainCmd.key "G">
+	<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY EditHtmlCmd.label ".Edit HTML Source...">
 
 <!-- View menu items -->
-<!ENTITY showComposeToolbarCmd.label			"Show Message Toolbar">
-<!ENTITY showComposeToolbarCmd.accesskey		"m">
-<!ENTITY addressCmd.label ".Address">
-<!ENTITY attachmentsCmd.label ".Attachments">
-<!ENTITY wrapCmd.label ".Wrap Long Lines">
+<!ENTITY showComposeToolbarCmd.label "Show Message Toolbar">
+	<!ENTITY showComposeToolbarCmd.accesskey "M">
+<!ENTITY showFormatToolbarCmd.label "Show Formatting Toolbar">
+	<!ENTITY showFormatToolbarCmd.accesskey "F">
+<!ENTITY showStatusbarCmd.label ".Show Statusbar">
+	<!ENTITY showStatusbarCmd.accesskey "S">
+<!ENTITY showTaskbarCmd.label "Show Taskbar">
+	<!ENTITY showTaskbarCmd.accesskey "T">
+<!ENTITY showParagraphMarksCmd.label ".Show Paragraph Marks">
+<!ENTITY pageSourceCmd.label ".Page Source">
+	<!ENTITY pageSourceCmd.accesskey "u">
+<!ENTITY pageInfoCmd.label ".Page Info">
+	<!ENTITY pageInfoCmd.accesskey "I">
 <!ENTITY dcharMenu.label "Character Set">
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
@@ -65,8 +89,22 @@
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatmenu.accesskey "o">
 
-<!-- Message menu items -->
-<!ENTITY messageMenu.label "Message">
+<!-- Options menu items -->
+<!ENTITY optionsMenu.label "Options">
+
+<!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
+<!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
+
+<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
+<!ENTITY addSignatureCmd.label ".Add Signature File">
+<!ENTITY attachVCardCmd.label ".Include Personal Card (vCard)">
+	<!ENTITY attachVCardCmd.accesskey "P">
+
+<!ENTITY quoteOrigCmd.label ".Quote Original Message">
+	<!ENTITY quoteOrigCmd.accesskey "Q">
+<!ENTITY selectAddressCmd.label "Select Addresses...">
+	<!ENTITY selectAddressCmd.key "">
+	<!ENTITY selectAddressCmd.accesskey "c">
 
 <!ENTITY priorityMenu.label "Priority">
 <!ENTITY lowestPriorityCmd.label "Lowest">
@@ -76,7 +114,8 @@
 <!ENTITY highestPriorityCmd.label "Highest">
 
 <!ENTITY returnReceiptCmd.label "Return receipt">
-<!ENTITY uuEncodeCmd.label "Use uuencode instead of MIME for attachments">
+<!ENTITY uuEncodeCmd.label "Uuencode instead of MIME for Attachments">
+	<!ENTITY uuEncodeCmd.accesskey "U">
 
 <!ENTITY outputFormatMenu.label "Format">
 <!ENTITY askmeFormatCmd.label ".Ask me">
@@ -84,7 +123,8 @@
 <!ENTITY htmlFormatCmd.label "HTML only">
 <!ENTITY bothFormatCmd.label "Plain Text and HTML">
 
-<!ENTITY fileCarbonCopyCmd.label "File Carbon Copy">
+<!ENTITY fileCarbonCopyCmd.label "File Sent Message">
+<!ENTITY fileHereMenu.label "File Here">
 
 <!--LOCALIZATION NOTE Debug Menu Don't translate anything in the Debug menu section -->
 <!-- Debug Menu, imported from editorAppShell.dtd -->

@@ -1,4 +1,6 @@
 @import url(chrome://global/skin/);
+@import url(chrome://editor/skin/);
+@import url(chrome://messenger/skin/);
 
 spring.spacer {
 	width: 5px;
