@@ -68,3 +68,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../../content/src \
 		$(NULL)
 
+install:: $(TARGETS)
+	$(INSTALL) $(srcdir)/HtmlForm.properties $(DIST)/bin/chrome/layout/locale/en-US
