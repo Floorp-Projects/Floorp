@@ -293,6 +293,11 @@ GetStyleDimension(nsIPresContext* aPresContext,
     aResult = aCoord.GetCoordValue();
     rv = PR_TRUE;
   }
+  // XXX This isn't correct to use the containg block's width for a percentage
+  // height. According to the CSS2 spec: "The percentage is calculated with respect
+  // to the height of the generated box's containing block. If the height of the
+  // containing block is not specified explicitly (i.e., it depends on content
+  // height), the value is interpreted like 'auto'".
   else if (eStyleUnit_Percent == unit) {
     // CSS2 has specified that percentage width/height values are basd
     // on the containing block's <B>width</B>.
