@@ -10,7 +10,7 @@
      width of the letter 'm' in the selected font.
      XUL/FE DEVELOPERS: DO NOT MODIFY THIS VALUE. It represents the correct
      size of this window for en-US. -->
-<!ENTITY  prefWindow.size             "width: 52em; height: 41em;">
+<!ENTITY  prefWindow.size             "width: 52.3em; height: 41em;">
 <!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
 <!ENTITY fonts.label "Fonts and Colors">
 <!ENTITY themes.label "Themes and Extensions">
