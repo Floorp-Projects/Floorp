@@ -66,9 +66,9 @@ sub get {
     }
     my $response = $self->{ua}->request($request);
     if (wantarray) {
-        return ($response->{content}, $response);
+        return ($response->content, $response);
     } else {
-        return $response->{content};
+        return $response->content;
     }
 }
 
