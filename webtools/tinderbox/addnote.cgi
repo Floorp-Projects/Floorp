@@ -127,13 +127,13 @@ Go back to the Error Log</a>
 for $other_build (@names){
     if( $other_build ne "" ){
       
-      if( $other_build eq $buildname ){
-        print "<INPUT TYPE=checkbox NAME=\"$other_build\" CHECKED>";
-      } else {
-        print "<INPUT TYPE=checkbox NAME=\"$other_build\">";
-      }
-
       if (not exists ${$ignore_builds}{$other_build}) {
+        if( $other_build eq $buildname ){
+          print "<INPUT TYPE=checkbox NAME=\"$other_build\" CHECKED>";
+        } else {
+          print "<INPUT TYPE=checkbox NAME=\"$other_build\">";
+        }
+
         print "$other_build<BR>\n";
       } #EndIf
     }
