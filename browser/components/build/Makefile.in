@@ -18,6 +18,7 @@ REQUIRES = \
 	autocomplete \
 	mork \
 	profile \
+	profilemanager \
 	pref \
 	rdf \
 	intl \
