@@ -386,13 +386,16 @@ nsresult nsPrefsCore::InitializeOneWidget(
             // Check the subtree first, then the real tree.
             // If the preference value is not set at all, let the HTML
             // determine the setting.
-            nsFileSpec specVal;
-            if (NS_SUCCEEDED(mPrefs->GetFilePref(tempPrefName, &specVal))
-            || NS_SUCCEEDED(mPrefs->GetFilePref(inPrefName, &specVal)))
-            {
-                nsString newValue = specVal.GetCString();
+            nsFileSpec *specVal;
+            nsresult rv = mPrefs->GetFilePref(tempPrefName, &specVal);
+            if (NS_FAILED(rv))
+              rv = mPrefs->GetFilePref(inPrefName, &specVal);
+            
+            if NS_SUCCEEDED(rv) {
+                nsString newValue = specVal->GetCString();
                 inElement->SetValue(newValue);
-            }
+                delete specVal;
+            } 
             break;
         }
     }
