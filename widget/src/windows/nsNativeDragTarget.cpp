@@ -261,6 +261,17 @@ STDMETHODIMP nsNativeDragTarget::DragLeave() {
 
   if (DRAG_DEBUG) printf("DragLeave\n");
 	if (mDragService) {
+    // tell anyone interested to stop tracking drags, but only when we're
+    // leaving a window, not a child widget
+    nsCOMPtr<nsIWidget> parent ( dont_AddRef(mWindow->GetParent()) );
+    if ( !parent ) {
+      printf("stopping\n");
+      nsCOMPtr<nsIDragSession> session;
+      mDragService->GetCurrentSession ( getter_AddRefs(session) );
+      if ( session )
+        session->StopTracking();
+    }
+    
     // dispatch the event into Gecko
     DispatchDragDropEvent(NS_DRAGDROP_EXIT, gDragLastPoint);
 		return S_OK;
@@ -307,7 +318,13 @@ STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource,
     // Set the native data object into drage service
     winDragService->SetIDataObject(pIDataSource);
 
-    // Now process the native drag state and then dispatch the event
+    // tell anyone interested to stop tracking drags
+    nsCOMPtr<nsIDragSession> session;
+    mDragService->GetCurrentSession ( getter_AddRefs(session) );
+    if ( session )
+      session->StopTracking();
+
+   // Now process the native drag state and then dispatch the event
     ProcessDrag(NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
 
     return S_OK;
