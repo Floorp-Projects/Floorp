@@ -14,6 +14,11 @@ file:///s|/mozilla/layout/html/tests/table/printing/bug153785-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug153785-3.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug153785-4.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug153785-5.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug165772-1.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug165772-2.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug165772-3.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug165772-4.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug165772-5.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug24000-1.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug24000-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug53690.html
