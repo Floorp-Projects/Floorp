@@ -57,7 +57,7 @@ NodeSet::NodeSet() : mElements(0),
 NodeSet::NodeSet(Node* aNode) : mBufferSize(1), 
                                 mElementCount(1)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::add")
+    NS_ASSERTION(aNode, "missing node to NodeSet::add");
     mElements = new Node*[1];
     if (!mElements) {
         NS_ASSERTION(0, "out of memory");
@@ -88,7 +88,7 @@ NodeSet::NodeSet(const NodeSet& aSource) : mElements(0),
  */
 nsresult NodeSet::add(Node* aNode)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::add")
+    NS_ASSERTION(aNode, "missing node to NodeSet::add");
     if (!aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -150,7 +150,7 @@ nsresult NodeSet::add(Node* aNode)
  */
 nsresult NodeSet::add(const NodeSet* aNodes)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::add")
+    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::add");
     if (!aNodes)
         return NS_ERROR_NULL_POINTER;
 
@@ -265,7 +265,7 @@ nsresult NodeSet::add(const NodeSet* aNodes)
  */
 nsresult NodeSet::append(Node* aNode)
 {
-    NS_ASSERTION(aNode, "missing node to NodeSet::append")
+    NS_ASSERTION(aNode, "missing node to NodeSet::append");
     if (!aNode)
         return NS_ERROR_NULL_POINTER;
 
@@ -284,7 +284,7 @@ nsresult NodeSet::append(Node* aNode)
  */
 nsresult NodeSet::append(const NodeSet* aNodes)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::append")
+    NS_ASSERTION(aNodes, "missing nodeset to NodeSet::append");
     if (!aNodes)
         return NS_ERROR_NULL_POINTER;
 
@@ -337,7 +337,7 @@ MBool NodeSet::indexOf(Node* aNode) const
 Node* NodeSet::get(int aIndex) const
 {
     NS_ASSERTION(aIndex >= 0 && aIndex < mElementCount,
-                 "invalid index in NodeSet::get")
+                 "invalid index in NodeSet::get");
     if (aIndex < 0 || aIndex >= mElementCount)
         return 0;
 
