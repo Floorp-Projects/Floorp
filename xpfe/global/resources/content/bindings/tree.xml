@@ -643,7 +643,7 @@
            if (row.value == -1)
              return;
 
-           if (obj.value != "twisty") {
+           if (col.value && obj.value != "twisty") {
              var column = document.getElementById(col.value);
              var cycler = column.hasAttribute('cycler');
 
