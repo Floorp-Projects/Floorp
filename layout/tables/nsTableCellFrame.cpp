@@ -677,10 +677,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   if (eCompatibility_NavQuirks == compatMode) {
     if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
         (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
-      if (border.left > 0) 
-        smallestMinWidth += onePixel;
-      if (border.right > 0) 
-        smallestMinWidth += onePixel;
+      if (PR_TRUE == GetContentEmpty()) {
+        if (border.left > 0) 
+          smallestMinWidth += onePixel;
+        if (border.right > 0) 
+          smallestMinWidth += onePixel;
+      }
     }
   }
   PRInt32 colspan = GetColSpan();
