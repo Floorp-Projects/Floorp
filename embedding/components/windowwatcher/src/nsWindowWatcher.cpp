@@ -505,7 +505,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     featuresSpecified = PR_TRUE;
   }
 
-  chromeFlags = CalculateChromeFlags(features, featuresSpecified, aDialog);
+  chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified, aDialog);
 
   // try to find an extant window with the given name
   if (nameSpecified) {
@@ -602,7 +602,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     /* at the moment, the strings "height=" or "width=" never happen
        outside a size specification, so we can do this the Q&D way. */
 
-    if (PL_strcasestr(features, "width=") || PL_strcasestr(features, "height=")) {
+    if (PL_strcasestr(features.get(), "width=") || PL_strcasestr(features.get(), "height=")) {
 
       nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
       newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
@@ -699,7 +699,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   }
 
   if (windowIsNew)
-    SizeOpenedDocShellItem(newDocShellItem, aParent, features, chromeFlags);
+    SizeOpenedDocShellItem(newDocShellItem, aParent, features.get(), chromeFlags);
 
   if (windowIsModal) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
