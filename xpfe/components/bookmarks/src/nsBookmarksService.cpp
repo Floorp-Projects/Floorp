@@ -594,18 +594,22 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	// 2. Parse the name
 
 	start = aLine.FindChar(PRUnichar('>'), PR_FALSE,end + 1); // 'end' still points to the end of the URL
-	NS_ASSERTION(start >= 0, "open anchor tag not terminated");
 	if (start < 0)
+	{
+		NS_WARNING("open anchor tag not terminated");
 		return NS_ERROR_UNEXPECTED;
-
+	}
+	
 	nsAutoString name;
 	aLine.Right(name, aLine.Length() - (start + 1));
 
 	end = name.Find(kCloseAnchor, PR_TRUE);
-	NS_ASSERTION(end >= 0, "anchor tag not terminated");
 	if (end < 0)
+	{
+		NS_WARNING("anchor tag not terminated");
 		return NS_ERROR_UNEXPECTED;
-
+	}
+	
 	name.Truncate(end);
 
 	// 3. Parse the target
@@ -1014,7 +1018,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 	// And now recursively parse the rest of the file...
 
 	if (NS_FAILED(rv = Parse(folder, nodeType))) {
-		NS_ERROR("recursive parse of bookmarks file failed");
+		NS_WARNING("recursive parse of bookmarks file failed");
 		return rv;
 	}
 
