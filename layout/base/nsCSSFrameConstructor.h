@@ -555,6 +555,7 @@ protected:
                              PRInt32                  aNameSpaceID,
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
+                             PRBool                   aXBLBaseTag,
                              PRBool&                  aHaltProcessing);
 
 #endif
@@ -636,7 +637,8 @@ protected:
                    nsIFrame*                aScrolledFrame,
                    nsIFrame*                aParentFrame,
                    nsIFrame*&               aNewFrame,
-                   nsIStyleContext*&        aScrolledChildStyle);
+                   nsIStyleContext*&        aScrolledChildStyle,
+                   nsIFrame*                aScrollPort = nsnull);
 
   // Builds the initial ScrollFrame: 
   //  if Gfx scrollbasrs in ares, it creates a GfxScrollFrame, otherwise it creates a ScrollFrame
@@ -653,7 +655,8 @@ protected:
                            PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame, 
                            nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
-                           nsIFrame*&               aScrollableFrame);
+                           nsIFrame*&               aScrollableFrame,
+                           nsIFrame*                aScrollPort = nsnull);
 
   // Completes the building of the scrollframe:
   //  Creates and necessary views for the scrollframe and sets up the initial child list
@@ -678,7 +681,8 @@ protected:
                       nsIStyleContext*         aStyleContext,
                       PRBool                   aIsRoot,
                       nsIFrame*&               aNewFrame,
-                      nsFrameItems&            aAnonymousFrames);
+                      nsFrameItems&            aAnonymousFrames,
+                      nsIFrame*                aScrollPort = nsnull);
 
 
   nsresult
