@@ -88,9 +88,7 @@ protected:
                                    PRInt32* aResult);
 protected:
     nsRDFDOMNodeList* mSelectedItems;
-    nsRDFDOMNodeList* mSelectedCells;
     nsIDOMXULElement* mCurrentItem;
-    nsIDOMXULElement* mCurrentCell;
 };
 
 

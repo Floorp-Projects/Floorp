@@ -42,35 +42,19 @@ public:
 
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems)=0;
 
-  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells)=0;
-
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem)=0;
-
-  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell)=0;
 
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem)=0;
 
-  NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell)=0;
-
   NS_IMETHOD    ClearItemSelection()=0;
-
-  NS_IMETHOD    ClearCellSelection()=0;
 
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem)=0;
 
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)=0;
 
-  NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell)=0;
-
-  NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)=0;
-
   NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem)=0;
 
-  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell)=0;
-
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)=0;
-
-  NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)=0;
 
   NS_IMETHOD    SelectAll()=0;
 
@@ -84,21 +68,13 @@ public:
 
 #define NS_DECL_IDOMXULTREEELEMENT   \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems);  \
-  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells);  \
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem);  \
-  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell);  \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem);  \
-  NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    ClearItemSelection();  \
-  NS_IMETHOD    ClearCellSelection();  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem);  \
-  NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell);  \
-  NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem);  \
-  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem);  \
-  NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem);  \
   NS_IMETHOD    SelectAll();  \
   NS_IMETHOD    InvertSelection();  \
   NS_IMETHOD    EnsureElementIsVisible(nsIDOMXULElement* aElement);  \
@@ -108,21 +84,13 @@ public:
 
 #define NS_FORWARD_IDOMXULTREEELEMENT(_to)  \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems) { return _to GetSelectedItems(aSelectedItems); } \
-  NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells) { return _to GetSelectedCells(aSelectedCells); } \
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem) { return _to GetCurrentItem(aCurrentItem); } \
-  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell) { return _to GetCurrentCell(aCurrentCell); } \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem) { return _to SelectItem(aTreeItem); }  \
-  NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell) { return _to SelectCell(aTreeCell); }  \
   NS_IMETHOD    ClearItemSelection() { return _to ClearItemSelection(); }  \
-  NS_IMETHOD    ClearCellSelection() { return _to ClearCellSelection(); }  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem) { return _to AddItemToSelection(aTreeItem); }  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem) { return _to RemoveItemFromSelection(aTreeItem); }  \
-  NS_IMETHOD    AddCellToSelection(nsIDOMXULElement* aTreeCell) { return _to AddCellToSelection(aTreeCell); }  \
-  NS_IMETHOD    RemoveCellFromSelection(nsIDOMXULElement* aTreeCell) { return _to RemoveCellFromSelection(aTreeCell); }  \
   NS_IMETHOD    ToggleItemSelection(nsIDOMXULElement* aTreeItem) { return _to ToggleItemSelection(aTreeItem); }  \
-  NS_IMETHOD    ToggleCellSelection(nsIDOMXULElement* aTreeCell) { return _to ToggleCellSelection(aTreeCell); }  \
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem) { return _to SelectItemRange(aStartItem, aEndItem); }  \
-  NS_IMETHOD    SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem) { return _to SelectCellRange(aStartItem, aEndItem); }  \
   NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
   NS_IMETHOD    InvertSelection() { return _to InvertSelection(); }  \
   NS_IMETHOD    EnsureElementIsVisible(nsIDOMXULElement* aElement) { return _to EnsureElementIsVisible(aElement); }  \
