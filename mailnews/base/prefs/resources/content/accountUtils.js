@@ -59,6 +59,45 @@ function getInvalidAccounts(accounts)
     return invalidAccounts;
 }
 
+// This function gets called from verifyAccounts.
+// We do not have to do anything on
+// unix and mac but on windows we have to bring up a 
+// dialog based on the settings the user has.
+// This will bring up the dialog only once per session and only if we
+// are not the default mail client.
+function showMailIntegrationDialog() {
+      try {
+        var mapiRegistry = Components.classes[ "@mozilla.org/mapiregistry;1" ].
+                       getService( Components.interfaces.nsIMapiRegistry );
+    }
+    catch (ex) { 
+        mapiRegistry = null;
+    }
+    // showDialog is TRUE only if we did not bring up this dialog already
+    // and we are not the default mail client
+    var prefLocked = false;
+    if (mapiRegistry && mapiRegistry.showDialog) {
+        const prefbase = "system.windows.lock_ui.";
+        try {
+            prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService()
+                          .QueryInterface(Components.interfaces.nsIPrefService);
+            prefBranch = prefService.getBranch(prefbase);
+        
+            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
+                prefLocked = true;
+                if (prefBranch.getBoolPref("defaultMailClient"))
+                    mapiRegistry.setDefaultMailClient();
+                else
+                    mapiRegistry.unsetDefaultMailClient();
+            }
+        }
+        catch (ex) {}
+        if (!prefLocked && !mapiRegistry.isDefaultMailClient)
+            mapiRegistry.showMailIntegrationDialog();
+    }
+}
+
 function verifyAccounts(wizardcallback) {
 //check to see if the function is called with the callback and if so set the global variable returnmycall to true
     if(wizardcallback)
@@ -104,7 +143,8 @@ function verifyAccounts(wizardcallback) {
             MsgAccountWizard(prefillAccount);
 		        ret = false;
         }
-		return ret;
+        showMailIntegrationDialog();
+        return ret;
     }
     catch (ex) {
         dump("error verifying accounts " + ex + "\n");

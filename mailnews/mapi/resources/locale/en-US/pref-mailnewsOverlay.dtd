@@ -1,0 +1,3 @@
+<!ENTITY enableMapiTitle.label        "When sending mail from other applications">
+<!ENTITY enableMapi.label             "Use &vendorShortName; Mail as the default mail application.">
+<!ENTITY enableMapi.accesskey         "u">

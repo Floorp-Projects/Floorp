@@ -30,7 +30,7 @@ Contributor(s):
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
-        onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
+        onload="Init();"
         orient="vertical">
 
   <script type="application/x-javascript">
@@ -65,6 +65,7 @@ Contributor(s):
                 pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
                 prefattribute="checked"/>
     </hbox>
+    <hbox autostretch="never" id="mapi"/>
 
   </groupbox>
 

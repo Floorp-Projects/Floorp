@@ -1,0 +1,4 @@
+messenger.jar:
+     content/messenger/pref-mailnewsOverlay.xul
++    content/messenger/contents.rdf 
+     content/messenger/pref-mailnewsOverlay.js
