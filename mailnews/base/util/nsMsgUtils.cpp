@@ -56,6 +56,7 @@
 #include "prprf.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
+#include "nsIRDFService.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -484,4 +485,27 @@ PRBool WeAreOffline()
     ioService->GetOffline(&offline);
 
   return offline;
+}
+
+PRBool IsValidFolderURI(const char *aFolderURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdf->GetResource(aFolderURI, getter_AddRefs(resource));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr <nsIMsgFolder> thisFolder;
+  thisFolder = do_QueryInterface(resource, &rv);
+  if (NS_FAILED(rv) || !thisFolder)
+    return PR_FALSE;
+
+  // Parent doesn't exist means that this folder doesn't exist.
+  nsCOMPtr<nsIFolder> parentFolder;
+  rv = thisFolder->GetParent(getter_AddRefs(parentFolder));
+  return (NS_SUCCEEDED(rv) && parentFolder);
 }

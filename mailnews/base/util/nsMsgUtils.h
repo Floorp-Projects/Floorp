@@ -76,5 +76,8 @@ NS_MSG_BASE nsresult NS_MsgDecodeUnescapeURLPath(const char *path, PRUnichar **r
 
 NS_MSG_BASE PRBool WeAreOffline();
 
+// Check if a given folder uri is valid and exists
+NS_MSG_BASE PRBool IsValidFolderURI(const char *aFolderURI);
+
 #endif
 

@@ -96,7 +96,7 @@
 #include "nsMsgSendReport.h"
 #include "nsMsgSimulateError.h"
 #include "nsNetCID.h"
-
+#include "nsMsgUtils.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -3996,7 +3996,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkeley "From - " delimiter at the head of 
   // the file for parsing...
   //
-  if ((mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) && fcc_header)
+  if ((mode == nsMsgDeliverNow || mode == nsMsgSendUnsent) && IsValidFolderURI(fcc_header))
     turi = PL_strdup(fcc_header);
   else
     turi = GetFolderURIFromUserPrefs(mode, mUserIdentity);
