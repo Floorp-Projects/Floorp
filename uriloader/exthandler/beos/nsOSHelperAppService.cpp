@@ -274,11 +274,12 @@ nsresult nsOSHelperAppService::GetMimeInfoFromExtension(const char *aFileExt,
 			mimeIndex++;
 		}
 		if (found) {
-			rv = SetMIMEInfoForType(mimeStr.String(), _retval);
+			return SetMIMEInfoForType(mimeStr.String(), _retval);
 		}
 	}
 
-	return rv;
+	// Extension not found
+	return NS_ERROR_FAILURE;
 }
 
 nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
@@ -303,11 +304,11 @@ nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
 				index++;
 		}
 		if (found) {
-			rv = SetMIMEInfoForType(aMIMEType, _retval);
+			return SetMIMEInfoForType(aMIMEType, _retval);
 		}
 	}
 
-	return rv;
+	return NS_ERROR_FAILURE;
 }
 
 already_AddRefed<nsIMIMEInfo>
