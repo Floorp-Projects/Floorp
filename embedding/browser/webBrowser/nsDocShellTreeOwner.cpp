@@ -266,11 +266,9 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
     return NS_OK;
   }
 
-  // finally, failing everything else, search all windows, if we're not already
-  if (mWebBrowser->mDocShellAsItem != aRequestor)
-    return FindItemWithNameAcrossWindows(aName, aOriginalRequestor, aFoundItem);
-
-  return NS_OK; // failed
+  // finally, failing everything else, search all windows
+  return FindItemWithNameAcrossWindows(aName, aRequestor, aOriginalRequestor,
+                                       aFoundItem);
 }
 
 nsresult
@@ -318,6 +316,7 @@ nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
 
 nsresult
 nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
+                                                   nsIDocShellTreeItem* aRequestor,
                                                    nsIDocShellTreeItem* aOriginalRequestor,
                                                    nsIDocShellTreeItem** aFoundItem)
 {
@@ -346,9 +345,22 @@ nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
         nsCOMPtr<nsIDocShellTreeItem> item =
           do_QueryInterface(sgo->GetDocShell());
         if (item) {
-          rv = item->FindItemWithName(aName, item, aOriginalRequestor, aFoundItem);
-          if (NS_FAILED(rv) || *aFoundItem)
-            break;
+          // Get the root tree item of same type, since roots are the only
+          // things that call into the treeowner to look for named items.
+          nsCOMPtr<nsIDocShellTreeItem> root;
+          item->GetSameTypeRootTreeItem(getter_AddRefs(root));
+          NS_ASSERTION(root, "Must have root tree item of same type");
+          // Make sure not to call back into our kid if we got called from it
+          if (root != aRequestor) {
+            // Get the tree owner so we can pass it in as the
+            // requestor so the child knows not to call back up.
+            nsCOMPtr<nsIDocShellTreeOwner> rootOwner;
+            root->GetTreeOwner(getter_AddRefs(rootOwner));
+            rv = root->FindItemWithName(aName, rootOwner, aOriginalRequestor,
+                                        aFoundItem);
+            if (NS_FAILED(rv) || *aFoundItem)
+              break;
+          }
         }
       }
     }
