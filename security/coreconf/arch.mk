@@ -319,7 +319,7 @@ endif
 # files.
 #
 # CPU_TAG is defined if the CPU is not the most common CPU.
-# COMPILER_TAG is defined if the compiler is not the native compiler.
+# COMPILER_TAG is defined if the compiler is not the default compiler.
 # IMPL_STRATEGY may be defined too.
 #
 
