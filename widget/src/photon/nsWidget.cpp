@@ -1464,9 +1464,11 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
                                       nsEventStatus &aStatus)
 {
+#if 0
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent this=<%p> widget=<%p> eventType=<%d> message=<%d> <%s>\n", 
      this, aEvent->widget, aEvent->eventStructType, aEvent->message,
 	 (const char *) nsCAutoString(GuiEventToString(aEvent)) ));
+#endif
 
 /* Stolen from GTK */
 
@@ -1965,9 +1967,11 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 
 //printf("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
 //	this, mWidget, (event->processing_flags & Ph_CONSUMED), (const char *) nsCAutoString(PhotonEventToString(event)) );
- 
+
+#if 0 
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::HandleEvent entering this=<%p> mWidget=<%p> Event Consumed=<%d>  Event=<%s>\n",
-	this, mWidget, (event->processing_flags & Ph_CONSUMED),  (const char *) nsCAutoString(PhotonEventToString(event)) ));
+	this, mWidget, (event->processing_flags & Ph_CONSUMED),  (const char *) nsCAutoString( (const PRUnichar *) PhotonEventToString(event)) ));
+#endif
     
     /* Photon 2 added a Consumed flag which indicates a  previous receiver of the */
     /* event has processed it */
@@ -2655,10 +2659,10 @@ nsAutoString nsWidget::GuiEventToString(nsGUIEvent * aGuiEvent)
 {
   NS_ASSERTION(nsnull != aGuiEvent,"cmon, null gui event.");
 
-  nsAutoString eventName = "UNKNOWN";
+  nsAutoString eventName = (const PRUnichar *) "UNKNOWN";
 
 #define _ASSIGN_eventName(_value,_name)\
-case _value: eventName = _name ; break
+case _value: eventName = (const PRUnichar *)  _name ; break
 
   switch(aGuiEvent->message)
   {
@@ -2725,7 +2729,7 @@ case _value: eventName = _name ; break
       
       sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
       
-      eventName = buf;
+      eventName = (const PRUnichar *) buf;
     }
     break;
   }
@@ -2739,10 +2743,10 @@ nsAutoString nsWidget::PhotonEventToString(PhEvent_t * aPhEvent)
 {
   NS_ASSERTION(nsnull != aPhEvent,"cmon, null photon gui event.");
 
-  nsAutoString eventName = "UNKNOWN";
+  nsAutoString eventName = (const PRUnichar *) "UNKNOWN";
 
 #define _ASSIGN_eventName(_value,_name)\
-case _value: eventName = _name ; break
+case _value: eventName = (const PRUnichar *) _name ; break
  
    switch ( aPhEvent->type )
     {
@@ -2764,7 +2768,7 @@ case _value: eventName = _name ; break
       
       sprintf(buf,"UNKNOWN: %d",aPhEvent->type);
       
-      eventName = buf;
+      eventName = (const PRUnichar *) buf;
     }
     break;
   }

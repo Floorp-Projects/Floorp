@@ -104,7 +104,7 @@ PRBool nsFileWidget::Show()
   for(i=0; i<(mNumberOfFilters-1); i++)
   {
     mFilterList.Append(mFilters[i]);
-	mFilterList.Append(";");
+    mFilterList.AppendWithConversion(";");
   }
 
   mFilterList.Append(mFilters[i]);  /* Add the last one */
@@ -123,7 +123,7 @@ PRBool nsFileWidget::Show()
     if (info.ret == Pt_FSDIALOG_BTN1)
 	{
 		mSelectedFile.SetLength(0);
-        mSelectedFile.Append(info.path);
+   mSelectedFile.AppendWithConversion(info.path);
 
         char *str = mSelectedFile.ToNewCString();
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create Success from PtFileSelection str=<%s>\n", str));
@@ -221,7 +221,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec & aDirectory)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetDisplayDirectory to <%s> - Not Implemented\n", aDirectory.GetCString()));
   
-  mDisplayDirectory = aDirectory;
+  mDisplayDirectory = (const PRUnichar *) aDirectory.GetCString(); /* LEAK? */
   return NS_OK;
 }
 
