@@ -125,13 +125,26 @@ function storeSettings(aSettings, aLoggingEnabled)
 
 function conditionallyEnableUI(id)
 {
-  var enabled;
+  if (!document.getElementById("level").checked) {
+    document.getElementById("useWhiteList").disabled = true;
+    document.getElementById("whiteListAbURI").disabled = true;
+    document.getElementById("moveOnSpam").disabled = true;
 
-  if (!id || id == "level") {
-    enabled = document.getElementById("level").checked;
-    dump("XXX enabled = " + enabled + "\n");
+    document.getElementById("moveTargetMode0").disabled = true;
+    document.getElementById("actionTargetAccount").disabled = true;
+    document.getElementById("moveTargetMode1").disabled = true;
+    document.getElementById("actionTargetFolder").disabled = true;
+
+    document.getElementById("purge").disabled = true;
+    document.getElementById("purgeInterval").disabled = true;
+    document.getElementById("purgeLabel").disabled = true;
+    return;
   }
 
+  document.getElementById("useWhiteList").disabled = false;
+  document.getElementById("moveOnSpam").disabled = false;
+
+  var enabled;
   if (!id || id == "moveOnSpam") {
     enabled = document.getElementById("moveOnSpam").checked;
     document.getElementById("moveTargetMode").disabled = !enabled;
@@ -140,6 +153,11 @@ function conditionallyEnableUI(id)
  
     document.getElementById("actionTargetAccount").disabled = !enabled || (choice == 1);
     document.getElementById("actionTargetFolder").disabled = !enabled || (choice == 0);
+
+    var checked = document.getElementById("purge").checked;
+    document.getElementById("purge").disabled = !enabled;
+    document.getElementById("purgeInterval").disabled = !enabled || !checked;
+    document.getElementById("purgeLabel").disabled = !enabled || !checked;
   }
 
   if (!id || id == "purge") {

@@ -56,7 +56,7 @@
   <description>&info2.label;</description>
   <separator/>
 
-  <checkbox id="level" oncommand="conditionallyEnableUI('label');" accesskey="&level.accesskey;" label="&level.label;"/>
+  <checkbox id="level" oncommand="conditionallyEnableUI(null);" accesskey="&level.accesskey;" label="&level.label;"/>
 
   <separator/>
 
@@ -87,7 +87,7 @@
       <grid class="specialFolderPickerGrid">
         <columns>
           <column flex="1"/>
-          <column flex="2"/>
+          <column flex="1"/>
         </columns>
         <rows>
           <row align="center">
@@ -109,7 +109,6 @@
       </grid>
     </radiogroup>
   </vbox>
-
 
 </vbox>
 
