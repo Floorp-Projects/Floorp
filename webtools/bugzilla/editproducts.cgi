@@ -385,7 +385,7 @@ if ($action eq 'new') {
             push @login_list, $this_login;
         }
         foreach $this_login (@login_list) {
-            if($this_login =~ /$userregexp/) {
+            if($this_login =~ /$userregexp/i) {
                 SendSQL("UPDATE profiles " .
                         "SET groupset = groupset | " . $bit . " " .
                         "WHERE login_name = " . SqlQuote($this_login));
