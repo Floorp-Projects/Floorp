@@ -25,6 +25,7 @@
  *                 Mike Norton <xor@ivwnet.com>
  *                 ArentJan Banck <ajbanck@planet.nl> 
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1012,12 +1013,16 @@ function deleteEventCommand( DoNotConfirm )
          if ( !DoNotConfirm )
          {
             var calendarEvent = SelectedItems[0];
+            var confirmText
 
-            if ( SelectedItems.length > 1 && !confirm( confirmDeleteAllEvents ) )
-               break outerLoop;
-            else if ( calendarEvent.title != "" && !confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) )
-               break outerLoop;
-            else if ( !confirm( confirmDeleteUntitledEvent ) )
+            if ( SelectedItems.length > 1 )
+               confirmText = confirmDeleteAllEvents;
+            else if ( calendarEvent.title )
+               confirmText = (confirmDeleteEvent+" "+calendarEvent.title+"?" );
+            else 
+               confirmText = confirmDeleteUntitledEvent;
+
+            if ( !confirm( confirmText ) )
                break outerLoop;
          }
 
@@ -1056,8 +1061,13 @@ function deleteEventCommand( DoNotConfirm )
          gICalLib.batchMode = true;
          for( i = 0; i < SelectedItems.length; i++ )
          {
-            gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
-            gICalLib.deleteEvent( SelectedItems[i].id );
+            try {
+               gCalendarWindow.clearSelectedEvent( SelectedItems[i] );
+               gICalLib.deleteEvent( SelectedItems[i].id );
+            }
+            catch (ex) {
+               dump("*** deleteEventCommand failed: "+ ex + "\n");
+            }
          }
          gICalLib.batchMode = false;
 
