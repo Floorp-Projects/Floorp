@@ -61,6 +61,7 @@ public:
   NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
   NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+  NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
   // nsIStyledContent
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -77,7 +78,6 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsresult GetXMLBaseURI(nsIURI **aURI);  // XXX This should perhaps be moved to nsIXMLContent
   PRBool mIsLink;
   nsINameSpace* mNameSpace;
 };

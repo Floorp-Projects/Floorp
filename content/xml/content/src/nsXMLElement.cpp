@@ -162,19 +162,16 @@ static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
   return service->NewURI(aSpec,aBase,aURI);
 }
 
-nsresult 
+NS_IMETHODIMP
 nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 {
-  NS_ABORT_IF_FALSE(aURI,"null ptr");
-  if (!aURI)
-    return NS_ERROR_NULL_POINTER;
-
+  NS_ENSURE_ARG_POINTER(aURI);
   *aURI = nsnull;
   
   nsresult rv;
 
   nsAutoString base;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(NS_STATIC_CAST(nsIXMLContent*,this),&rv);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIXMLContent*,this),&rv));
   while (NS_SUCCEEDED(rv) && content) {
     nsAutoString value;
     rv = content->GetAttribute(kNameSpaceID_XML,kBaseAtom,value);
@@ -228,7 +225,11 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
   if (NS_SUCCEEDED(rv)) {
     if (!*aURI && mDocument) {
-      nsCOMPtr<nsIURI> docBase = dont_AddRef(mDocument->GetDocumentURL());
+      nsCOMPtr<nsIURI> docBase;
+      mDocument->GetBaseURL(*getter_AddRefs(docBase));
+      if (!docBase) {
+        docBase = dont_AddRef(mDocument->GetDocumentURL());
+      }
       if (base.IsEmpty()) {
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once

@@ -47,7 +47,6 @@
 #include "prprf.h"
 #include "nsCOMPtr.h"
 
-
 //----------------------------------------------------------------------
 
 nsGenericDOMDataNode::nsGenericDOMDataNode()
@@ -237,6 +236,25 @@ nsGenericDOMDataNode::IsSupported(const nsAReadableString& aFeature,
                                   PRBool* aReturn)
 {
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
+}
+
+nsresult
+nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
+{
+  aURI.Truncate();
+  nsresult rv = NS_OK;
+  // DOM Data Node inherits the base from its parent element/document
+  nsCOMPtr<nsIDOMNode> node;
+  if (mParent) {
+    node = do_QueryInterface(mParent);
+  } else if (mDocument) {
+    node = do_QueryInterface(mDocument);
+  }
+
+  if (node)
+    rv = node->GetBaseURI(aURI);
+
+  return rv;
 }
 
 #if 0

@@ -527,6 +527,16 @@ nsDOMAttribute::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
+NS_IMETHODIMP
+nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
+{
+  aURI.Truncate();
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  if (node)
+    rv = node->GetBaseURI(aURI);
+  return rv;
+}
 
 //----------------------------------------------------------------------
 

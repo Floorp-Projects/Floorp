@@ -101,6 +101,8 @@ public:
                             PRBool* aReturn)
   { return nsGenericContainerElement::IsSupported(aFeature, aVersion,
                                                   aReturn); }
+  NS_IMETHOD    GetBaseURI(nsAWritableString& aURI)
+  { return nsGenericContainerElement::GetBaseURI(aURI); }
 
   // interface nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);

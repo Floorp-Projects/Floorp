@@ -1791,6 +1791,36 @@ nsXULElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULElement::GetXMLBaseURI(nsIURI **aURI)
+{
+  // XXX TODO, should share the impl with nsXMLElement
+  NS_ENSURE_ARG_POINTER(aURI);
+  *aURI=nsnull;
+  if (mDocument) {
+    mDocument->GetBaseURL(*aURI);
+    if (!*aURI) {
+      *aURI = mDocument->GetDocumentURL();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetBaseURI(nsAWritableString &aURI)
+{
+  // XXX TODO, should share the impl with nsXMLElement
+  aURI.Truncate();
+  nsresult rv = NS_OK;
+  if (mDocument) {
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
+    if (doc) {
+      rv = doc->GetBaseURI(aURI);
+    }
+  }
+  return rv;
+}
+
 
 //----------------------------------------------------------------------
 // nsIXULContent interface

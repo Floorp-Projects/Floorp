@@ -124,6 +124,7 @@ struct nsGenericDOMDataNode {
   nsresult    IsSupported(const nsAReadableString& aFeature,
                           const nsAReadableString& aVersion,
                           PRBool* aReturn);
+  nsresult    GetBaseURI(nsAWritableString& aURI);
 
   // Implementation for nsIDOMCharacterData
   nsresult    GetData(nsAWritableString& aData);
@@ -352,6 +353,9 @@ struct nsGenericDOMDataNode {
                       const nsAReadableString& aVersion,                \
                       PRBool* aReturn) {                                \
     return _g.IsSupported(aFeature, aVersion, aReturn);                 \
+  }                                                                     \
+  NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {                      \
+    return _g.GetBaseURI(aURI);                                         \
   }                                                                     \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 

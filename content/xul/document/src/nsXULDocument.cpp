@@ -3487,6 +3487,20 @@ nsXULDocument::IsSupported(const nsAReadableString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULDocument::GetBaseURI(nsAWritableString &aURI)
+{
+  aURI.Truncate();
+  if (mDocumentURL) {
+    nsXPIDLCString spec;
+    mDocumentURL->GetSpec(getter_Copies(spec)); // XUL documents do not have base URL?
+    if (spec) {
+      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+    }
+  }
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 //

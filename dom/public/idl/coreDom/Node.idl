@@ -56,6 +56,9 @@ interface Node {
    readonly attribute DOMString        localName;
    // Introduced in DOM Level 2:
    boolean            hasAttributes();
+
+   // Introduced in DOM Level 3:
+   readonly attribute DOMString        baseURI;
 };
 
  interface EventTarget {
