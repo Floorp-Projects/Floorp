@@ -406,7 +406,7 @@ private:
   nsresult
   SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
-  void
+  nsresult
   AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                           nsIPluginInstance* aInstance,
                           nsIURI* aURL, PRBool aDefaultPlugin,
