@@ -27,7 +27,7 @@ static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif

@@ -21,7 +21,7 @@
 #include "nsIContent.h"
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
