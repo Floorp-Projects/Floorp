@@ -40,8 +40,14 @@ srcdir     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CHROME_DIR	= packages/xmlterm
-CHROME_CONTENT_DIR = xmlterm/content
 
+CHROME_TYPE = content skin
+CHROME_MISC_DIR = .
+CHROME_MISC = \
+	manifest.rdf \
+	$(NULL)
+
+CHROME_CONTENT_DIR = xmlterm/content
 CHROME_CONTENT	= \
 		xmlterm.html \
 		xmlterm.xul \
@@ -60,6 +66,7 @@ CHROME_SKIN	= \
 		wheel.gif \
 		$(NULL)
 
+CHROME_L10N_DIR = xmlterm/locale
 CHROME_L10N	= \
 		$(NULL)
 
