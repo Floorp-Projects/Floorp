@@ -28,7 +28,8 @@ class nsIDOMElement;
 typedef enum {
     eXULPopupType_popup,
     eXULPopupType_context,
-    eXULPopupType_tooltip
+    eXULPopupType_tooltip,
+    eXULPopupType_blur
 } XULPopupType;
 
 class nsIXULPopupListener: public nsISupports {

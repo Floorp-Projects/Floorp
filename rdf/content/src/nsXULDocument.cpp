@@ -2995,22 +2995,11 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     NS_IF_ADDREF(mPopup);
     popupDoc->mPopup = mPopup;
 
-    // Our root content is the first child of the popup 
-    // node.
-    nsCOMPtr<nsIContent> firstChild;
-    PRInt32 childCount;
-    aPopupElement->ChildCount(childCount);
-    if (childCount == 0)
-      return NS_OK;
-    
-    aPopupElement->ChildAt(0, *getter_AddRefs(firstChild));
-
-    // Our root is firstChild. Suck all of this
-    // content into our document.
+    // Suck all of the root's content into our document.
     // We need to make the XUL builder instantiate this node.
     // Retrieve the resource that corresponds to this node.
     nsAutoString idValue;
-    nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(firstChild);
+    nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(aPopupElement);
     domRoot->GetAttribute("id", idValue);
     const char* url;
     mDocumentURL->GetSpec(&url);
