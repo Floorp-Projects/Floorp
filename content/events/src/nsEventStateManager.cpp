@@ -3373,7 +3373,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       // so we could store this and change behavior when it changes.
       // But until the pref is exposed, that doesn't matter.
       if (sTabFocusModel == eTabFocus_unset) {
-        sTabFocusModel = (eTabFocus_textControlsMask | eTabFocus_formElementsMask
+        sTabFocusModel = (eTabFocus_textControlsMask
+                          | eTabFocus_formElementsMask
                           | eTabFocus_linksMask);
         nsresult rv = getPrefService();
         if (NS_SUCCEEDED(rv))
@@ -3391,8 +3392,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
             nsAutoString type;
             nextInput->GetType(type);
-            if (type.EqualsIgnoreCase("text")) {
-              // It's a text field
+            if (type.EqualsIgnoreCase("text")
+                || type.EqualsIgnoreCase("password")) {
+              // It's a text field or password field
               disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
             }
             else if (type.EqualsIgnoreCase("hidden")) {
@@ -3411,99 +3413,100 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
           // Select counts as form but not as text
           disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
-          nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
-          if (nextSelect) {
-            nextSelect->GetDisabled(&disabled);
-            nextSelect->GetTabIndex(&tabIndex);
+            nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
+            if (nextSelect) {
+              nextSelect->GetDisabled(&disabled);
+              nextSelect->GetTabIndex(&tabIndex);
+            }
           }
-        }
         }
         else if (nsHTMLAtoms::textarea==tag) {
           // it's a textarea
           disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
           if (!disabled) {
-          nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
-          if (nextTextArea) {
-            nextTextArea->GetDisabled(&disabled);
-            nextTextArea->GetTabIndex(&tabIndex);
+            nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
+            if (nextTextArea) {
+              nextTextArea->GetDisabled(&disabled);
+              nextTextArea->GetTabIndex(&tabIndex);
+            }
           }
-        }
         }
         else if (nsHTMLAtoms::a==tag) {
           // it's a link
           disabled = !(sTabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
           if (!disabled) {
-          if (nextAnchor)
-            nextAnchor->GetTabIndex(&tabIndex);
-          nsAutoString href;
-          nextAnchor->GetAttribute(NS_LITERAL_STRING("href"), href);
-          if (href.IsEmpty()) {
-            disabled = PR_TRUE; // Don't tab unless href, bug 17605
-          } else {
-            disabled = PR_FALSE;
+            if (nextAnchor)
+              nextAnchor->GetTabIndex(&tabIndex);
+            nsAutoString href;
+            nextAnchor->GetAttribute(NS_LITERAL_STRING("href"), href);
+            if (href.IsEmpty()) {
+              disabled = PR_TRUE; // Don't tab unless href, bug 17605
+            } else {
+              disabled = PR_FALSE;
+            }
           }
-        }
         }
         else if (nsHTMLAtoms::button==tag) {
           // Button counts as a form element but not as text
           disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
-          nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
-          if (nextButton) {
-            nextButton->GetTabIndex(&tabIndex);
-            nextButton->GetDisabled(&disabled);
+            nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
+            if (nextButton) {
+              nextButton->GetTabIndex(&tabIndex);
+              nextButton->GetDisabled(&disabled);
+            }
           }
-        }
         }
         else if (nsHTMLAtoms::img==tag) {
           // Images are treated like links for tab focus purposes.
           disabled = !(sTabFocusModel & eTabFocus_linksMask);
           if (!disabled) {
-          nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
-          nsAutoString usemap;
-          if (nextImage) {
-            nsCOMPtr<nsIDocument> doc;
-            if (NS_SUCCEEDED(child->GetDocument(*getter_AddRefs(doc))) && doc) {
-              nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
-              nsCOMPtr<nsIDOMHTMLMapElement> imageMap;
-              if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(imageMap))) && imageMap) {
-                nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
-                if (map) {
-                  nsCOMPtr<nsIContent> childArea;
-                  PRInt32 count, index;
-                  map->ChildCount(count);
-                  //First see if mCurrentFocus is in this map
-                  for (index = 0; index < count; index++) {
-                    map->ChildAt(index, *getter_AddRefs(childArea));
-                    if (childArea.get() == mCurrentFocus) {
-                      PRInt32 val = 0;
-                      TabIndexFrom(childArea, &val);
-                      if (mCurrentTabIndex == val) {
+            nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
+            nsAutoString usemap;
+            if (nextImage) {
+              nsCOMPtr<nsIDocument> doc;
+              if (NS_SUCCEEDED(child->GetDocument(*getter_AddRefs(doc))) && doc) {
+                nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
+                nsCOMPtr<nsIDOMHTMLMapElement> imageMap;
+                if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(imageMap))) && imageMap) {
+                  nsCOMPtr<nsIContent> map(do_QueryInterface(imageMap));
+                  if (map) {
+                    nsCOMPtr<nsIContent> childArea;
+                    PRInt32 count, index;
+                    map->ChildCount(count);
+                    //First see if mCurrentFocus is in this map
+                    for (index = 0; index < count; index++) {
+                      map->ChildAt(index, *getter_AddRefs(childArea));
+                      if (childArea.get() == mCurrentFocus) {
+                        PRInt32 val = 0;
+                        TabIndexFrom(childArea, &val);
+                        if (mCurrentTabIndex == val) {
                           // mCurrentFocus is in this map so we must start
                           // iterating past it.
                           // We skip the case where mCurrentFocus has the
                           // same tab index as mCurrentTabIndex since the
                           // next tab ordered element might be before it
                           // (or after for backwards) in the child list.
-                        break;
+                          break;
+                        }
                       }
                     }
-                  }
-                  PRInt32 increment = forward ? 1 : - 1;
-                  PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
-                  for (index = start; index < count && index >= 0; index += increment) {
-                    //Iterate over the children.
-                    map->ChildAt(index, *getter_AddRefs(childArea));
+                    PRInt32 increment = forward ? 1 : - 1;
+                    PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
+                    for (index = start; index < count && index >= 0; index += increment) {
+                      //Iterate over the children.
+                      map->ChildAt(index, *getter_AddRefs(childArea));
 
-                    //Got the map area, check its tabindex.
-                    PRInt32 val = 0;
-                    TabIndexFrom(childArea, &val);
-                    if (mCurrentTabIndex == val) {
-                      //tabindex == the current one, use it.
-                      *aResult = childArea;
-                      NS_IF_ADDREF(*aResult);
-                      return NS_OK;
+                      //Got the map area, check its tabindex.
+                      PRInt32 val = 0;
+                      TabIndexFrom(childArea, &val);
+                      if (mCurrentTabIndex == val) {
+                        //tabindex == the current one, use it.
+                        *aResult = childArea;
+                        NS_IF_ADDREF(*aResult);
+                        return NS_OK;
+                      }
                     }
                   }
                 }
@@ -3511,16 +3514,15 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             }
           }
         }
-        }
         else if (nsHTMLAtoms::object==tag) {
           // OBJECT is treated as a form element.
           disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
           if (!disabled) {
-          nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
-          if (nextObject) 
-            nextObject->GetTabIndex(&tabIndex);
-          disabled = PR_FALSE;
-        }
+            nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
+            if (nextObject) 
+              nextObject->GetTabIndex(&tabIndex);
+            disabled = PR_FALSE;
+          }
         }
         else if (nsHTMLAtoms::iframe==tag) {
           disabled = PR_FALSE;
