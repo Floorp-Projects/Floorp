@@ -1452,7 +1452,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   }
 
   float t2p;
-  presContext()->GetTwipsToPixels(&t2p);
+  presContext->GetTwipsToPixels(&t2p);
   origin.x = NSTwipsToIntPixels(origin.x, t2p);
   origin.y = NSTwipsToIntPixels(origin.y, t2p);
 
@@ -1591,7 +1591,6 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     nsPluginWindow    window;
     nsPoint           origin;
     float             t2p;
-    nsMargin          margin(0,0,0,0);
     window.window =   nsnull;
 
     // prepare embedded mode printing struct
