@@ -41,7 +41,7 @@
  * DLL Export macro
  */
 
-#ifdef XP_PC
+#if defined(XP_PC)
 
 #define NS_EXPORT _declspec(dllexport)
 #define NS_EXPORT_(type) _declspec(dllexport) type __stdcall
@@ -54,7 +54,20 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_METHOD nsresult __stdcall
 
-#else  /* !XP_PC */
+#elif defined(XP_MAC)
+
+#define NS_EXPORT __declspec(export)
+#define NS_EXPORT_(type) __declspec(export) type
+
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHOD virtual nsresult
+#define NS_IMETHODIMP_(type) type
+#define NS_IMETHODIMP nsresult
+
+#define NS_METHOD_(type) type
+#define NS_METHOD nsresult
+
+#else  /* !XP_PC && !XP_MAC */
 
 #define NS_EXPORT
 #define NS_EXPORT_(type) type

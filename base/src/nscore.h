@@ -64,6 +64,14 @@ typedef PRUcs2 PRUnichar;
 // is placed. It needs to be done this way to make the 4.x compiler happy...
 #undef NS_EXPORT_
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
+#elif defined(XP_MAC)
+
+#define NS_IMPORT __declspec(import)
+#define NS_IMPORT_(type) __declspec(import) type
+
+#define NS_EXPORT __declspec(export)
+#define NS_EXPORT_(type) __declspec(export) type
+
 #else
 /* XXX do something useful? */
 #define NS_IMPORT
