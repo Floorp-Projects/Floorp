@@ -3867,7 +3867,7 @@ fi
 
 AR_FLAGS='cr $@'
 AR_LIST='$(AR) t'
-AR_EXTRACT='$(AR) t'
+AR_EXTRACT='$(AR) x'
 AS='$(CC)'
 AS_DASH_C_FLAG='-c'
 DLL_SUFFIX=so
