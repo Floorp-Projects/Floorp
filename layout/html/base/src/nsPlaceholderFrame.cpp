@@ -45,15 +45,6 @@ nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  if (nsnull != aReflowState.lineLayout) {
-    if (eReflowReason_Initial == aReflowState.reason) {
-      aReflowState.lineLayout->InitFloater(this);
-    }
-    else {
-      aReflowState.lineLayout->AddFloater(this);
-    }
-  }
-
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;

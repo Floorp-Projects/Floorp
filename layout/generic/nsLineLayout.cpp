@@ -26,6 +26,7 @@
 #include "nsIPresContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -834,6 +835,22 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
   htmlReflow->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
+
+  // XXX 
+  nsIAtom* frameType;
+  aFrame->GetFrameType(&frameType);
+  if (frameType) {
+    if (frameType == nsLayoutAtoms::placeholderFrame) {
+      if (eReflowReason_Incremental == reason) {
+        InitFloater((nsPlaceholderFrame*)aFrame);
+      }
+      else {
+        AddFloater((nsPlaceholderFrame*)aFrame);
+      }
+    }
+    NS_RELEASE(frameType);
+  }
+
   mSpaceManager->Translate(-tx, -ty);
 
 #ifdef DEBUG
