@@ -703,9 +703,10 @@ function loadPage(pageId)
 //
 // save the values of the widgets to the given server
 //
-function savePage(serverId) {
-
-  if (!serverId) return;
+function savePage(serverId) 
+{
+  if (!serverId) 
+    return;
 
   // tell the page that it's about to save
   if ("onSave" in top.frames["contentFrame"])
@@ -713,11 +714,11 @@ function savePage(serverId) {
 
   var accountValues = getValueArrayFor(serverId);
   if (!accountValues) 
-    return true;
+    return;
 
   var pageElements = getPageFormElements();
-
-  if (pageElements == null) return;
+  if (!pageElements) 
+    return;
 
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
@@ -733,7 +734,6 @@ function savePage(serverId) {
          }
       }
   }
-
 }
 
 function setAccountValue(accountValues, type, slot, value) {
@@ -823,15 +823,18 @@ function getAccountValue(account, accountValues, type, slot, preftype, isGeneric
 //
 // restore the values of the widgets from the given server
 //
-function restorePage(pageId, serverId) {
-  if (!serverId) return;
+function restorePage(pageId, serverId) 
+{
+  if (!serverId) 
+    return;
+
   var accountValues = getValueArrayFor(serverId);
   if (!accountValues) 
-    return true;
+    return;
 
   var pageElements = getPageFormElements();
-
-  if (pageElements == null) return;
+  if (!pageElements) 
+    return;
 
   var account = getAccountFromServerId(serverId);
 
