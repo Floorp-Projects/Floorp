@@ -27,18 +27,37 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
+#include "nsIPref.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
     NS_INIT_REFCNT();
+    mEnabled = PR_FALSE;
 }
 
 nsresult
 nsKeywordProtocolHandler::Init() {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetBoolPref("keyword.enabled", &mEnabled);
+    // if we're not enabled, don't init.
+    if (NS_FAILED(rv) || (PR_FALSE == mEnabled)) return NS_ERROR_FAILURE;
+
+    nsXPIDLCString url;
+    rv = prefs->CopyCharPref("keyword.URL", getter_Copies(url));
+    // if we can't find a keyword.URL keywords won't work.
+    if (NS_FAILED(rv) || !url || !*url) return NS_ERROR_FAILURE;
+
+    mKeywordURL = url;
+
     return NS_OK;
 }
 
@@ -82,14 +101,14 @@ nsKeywordProtocolHandler::GetDefaultPort(PRInt32 *result) {
 
 // digests a spec _without_ the preceeding "keyword:" scheme.
 static char *
-MangleKeywordIntoHTTPURL(const char *aSpec) {
+MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
     // build up a request to the keyword server.
     nsCAutoString query;
 
     // pull out the "go" action word, or '?', if any
     char one = aSpec[0], two = aSpec[1];
-    if ( ((one == '?') && (two == ' ')) ) {      // "? blah"
-        query = aSpec+2;
+    if (one == '?') {                            // "?blah"
+        query = aSpec+1;
     } else if ( (one == 'g' || one == 'G')       //
                             &&                   //
                 (two == 'o' || two == 'O')       // "g[G]o[O] blah"
@@ -111,7 +130,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec) {
 
     // prepend the query with the keyword url
     // XXX this url should come from somewhere else
-    query.Insert("http://keyword.netscape.com/keyword/", 0);
+    query.Insert(aHTTPURL, 0);
 
     return query.ToNewCString();
 }
@@ -140,12 +159,13 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsIChannel* *result) {
     nsresult rv;
 
-    char *path = nsnull;
-    rv = uri->GetPath(&path);
+    NS_ASSERTION(mEnabled && (mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
+
+    nsXPIDLCString path;
+    rv = uri->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
-    char *httpSpec = MangleKeywordIntoHTTPURL(path);
-    nsAllocator::Free(path);
+    char *httpSpec = MangleKeywordIntoHTTPURL(path, mKeywordURL.GetBuffer());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
