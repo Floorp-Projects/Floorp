@@ -549,6 +549,20 @@ StackArena::Pop()
   // pop off the mark
   NS_ASSERTION(mStackTop > 0, "Error Pop called 1 too many times");
   mStackTop--;
+
+#ifdef DEBUG
+  // Mark the "freed" memory with 0xdd to help with debugging of memory
+  // allocation problems.
+  {
+    StackBlock *block = mMarks[mStackTop].mBlock, *block_end = mCurBlock;
+    size_t pos = mMarks[mStackTop].mPos;
+    for (; block != block_end; block = block->mNext, pos = 0) {
+      memset(block->mBlock + pos, 0xdd, sizeof(block->mBlock) - pos);
+    }
+    memset(block->mBlock + pos, 0xdd, mPos - pos);
+  }
+#endif
+
   mCurBlock = mMarks[mStackTop].mBlock;
   mPos      = mMarks[mStackTop].mPos;
 
@@ -1870,11 +1884,7 @@ PresShell::PushStackMemory()
 NS_IMETHODIMP
 PresShell::PopStackMemory()
 {
-  if (!mStackArena) {
-    mStackArena = new StackArena();
-    if (!mStackArena)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_ENSURE_TRUE(mStackArena, NS_ERROR_UNEXPECTED);
 
   return mStackArena->Pop();
 }
