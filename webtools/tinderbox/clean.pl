@@ -33,10 +33,11 @@ $expire_time  = $now - 7 * 24 * 60 * 60;
 
 chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
 
-# Remove files older than 7 days
-#
 sub files_to_remove {
-  unlink if /(?:\.gz|\.brief\.html|tbx.[0-9]+)$/ and int(-M $_) > 7;
+  # Remove files older than 7 days
+  unlink if /^\d+\.\d+\.gz$|^tbx.[0-9]+$|^warn\d.*\.html$/ and int(-M $_) > 7;
+  # Remove files older than 1 day
+  unlink if /^\d+\.\d+\.brief\.html$/ and int(-M $_) > 1;
 }
 &find(\&files_to_remove, $tinderboxdir);
 
