@@ -77,11 +77,9 @@ interface nsIPluginHost : nsIFactory
 
   void isPluginEnabledForExtension(in string aExtension, in constCharStarRef aMimeType);
 
-  void getPluginCount(out unsigned long aPluginCount);
+  readonly attribute unsigned long pluginCount;
   
-%{C++
-  NS_IMETHOD GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]) = 0;
-%}
+  [noscript] void getPlugins(in unsigned long aPluginCount, out /*array*/ nsIDOMPlugin aPluginArray);
 
   void stopPluginInstance(in nsIPluginInstance aInstance);
 
