@@ -63,7 +63,7 @@
       <html:td colspan="2">
         <html:input name="identity.attachVCard" type="checkbox"/>
         &attachVCard.label;
-      <titledbutton value="&editVCard.label;"/>
+      <button value="&editVCard.label;"/>
       </html:td>
       </html:tr>    
 -->
@@ -71,7 +71,7 @@
         <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
         <html:label for="identity.attachSignature">&signature.label;</html:label>
         <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
-        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
+        <button class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </html:div>
 
 <!--
@@ -80,7 +80,7 @@
          <html:option value="sig2">&sampleSig2.label;</html:option>
          <html:option value="sig3">&sampleSig3.label;</html:option>
       </html:select>
-      <titledbutton value="&edit.label;"/>
+      <button value="&edit.label;"/>
 
 -->
 
