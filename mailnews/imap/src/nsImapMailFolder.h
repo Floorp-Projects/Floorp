@@ -252,6 +252,12 @@ protected:
                                      nsMsgKeyArray &keysToFetch, 
                                      mailbox_spec *boxSpec);
 	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe);
+
+	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
+	virtual PRBool ShowDeletedMessages();
+
+	void ParseUidString(char *uidString, nsMsgKeyArray &keys);
+
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);

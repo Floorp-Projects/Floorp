@@ -404,7 +404,6 @@ nsresult nsImapMailFolder::GetDatabase()
 
 		if(m_mailDatabase)
 		{
-
 			m_mailDatabase->AddListener(this);
 
 			// if we have to regenerate the folder, run the parser url.
@@ -1514,21 +1513,149 @@ NS_IMETHODIMP
 nsImapMailFolder::NotifyMessageFlags(nsIImapProtocol* aProtocol,
                                      FlagsKeyStruct* aKeyStruct)
 {
-    return NS_ERROR_FAILURE;
+    nsMsgKey msgKey = aKeyStruct->key;
+    imapMessageFlagsType flags = aKeyStruct->flags;
+	if (NS_SUCCEEDED(GetDatabase()) && m_mailDatabase)
+    {
+        m_mailDatabase->MarkRead(msgKey, (flags & kImapMsgSeenFlag) != 0, nsnull);
+        m_mailDatabase->MarkReplied(msgKey, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
+        m_mailDatabase->MarkMarked(msgKey, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
                                        delete_message_struct* aStruct)
 {
-    return NS_ERROR_FAILURE;
+	PRBool deleteAllMsgs = aStruct->deleteAllMsgs;
+	const char *doomedKeyString = aStruct->msgIdString;
+
+	PRBool showDeletedMessages = ShowDeletedMessages();
+
+	if (deleteAllMsgs)
+	{
+#ifdef HAVE_PORT		
+		TNeoFolderInfoTransfer *originalInfo = NULL;
+		nsIMsgDatabase *folderDB;
+		if (ImapMailDB::Open(GetPathname(), FALSE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
+		{
+			originalInfo = new TNeoFolderInfoTransfer(*folderDB->m_neoFolderInfo);
+			folderDB->ForceClosed();
+		}
+			
+		// Remove summary file.
+		XP_FileRemove(GetPathname(), xpMailFolderSummary);
+		
+		// Create a new summary file, update the folder message counts, and
+		// Close the summary file db.
+		if (ImapMailDB::Open(GetPathname(), TRUE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
+		{
+			if (originalInfo)
+			{
+				originalInfo->TransferFolderInfo(*folderDB->m_neoFolderInfo);
+				delete originalInfo;
+			}
+			SummaryChanged();
+			folderDB->Close();
+		}
+#endif
+		// ### DMB - how to do this? Reload any thread pane because it's invalid now.
+		return NS_OK;
+	}
+
+	char *keyTokenString = PL_strdup(doomedKeyString);
+	nsMsgKeyArray affectedMessages;
+	ParseUidString(keyTokenString, affectedMessages);
+
+	if (doomedKeyString && !showDeletedMessages)
+	{
+		if (affectedMessages.GetSize() > 0)	// perhaps Search deleted these messages
+		{
+			GetDatabase();
+			if (m_mailDatabase)
+				m_mailDatabase->DeleteMessages(&affectedMessages, nsnull);
+		}
+		
+	}
+	else if (doomedKeyString)	// && !imapDeleteIsMoveToTrash
+	{
+		GetDatabase();
+		if (m_mailDatabase)
+			SetIMAPDeletedFlag(m_mailDatabase, affectedMessages, nsnull);
+	}
+	PR_FREEIF(keyTokenString);
+	return NS_OK;
 }
+
+PRBool nsImapMailFolder::ShowDeletedMessages()
+{
+//	return (m_host->GetIMAPDeleteModel() == MSG_IMAPDeleteIsIMAPDelete);
+	return PR_FALSE;
+}
+
+
+void nsImapMailFolder::ParseUidString(char *uidString, nsMsgKeyArray &keys)
+{
+	// This is in the form <id>,<id>, or <id1>:<id2>
+	char curChar = *uidString;
+	PRBool isRange = PR_FALSE;
+	int32	curToken;
+	int32	saveStartToken=0;
+
+	for (char *curCharPtr = uidString; curChar && *curCharPtr;)
+	{
+		char *currentKeyToken = curCharPtr;
+		curChar = *curCharPtr;
+		while (curChar != ':' && curChar != ',' && curChar != '\0')
+			curChar = *curCharPtr++;
+		*(curCharPtr - 1) = '\0';
+		curToken = atoi(currentKeyToken);
+		if (isRange)
+		{
+			while (saveStartToken < curToken)
+				keys.Add(saveStartToken++);
+		}
+		keys.Add(curToken);
+		isRange = (curChar == ':');
+		if (isRange)
+			saveStartToken = curToken + 1;
+	}
+}
+
+
+// store MSG_FLAG_IMAP_DELETED in the specified mailhdr records
+void nsImapMailFolder::SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted)
+{
+	nsresult markStatus = 0;
+	PRUint32 total = msgids.GetSize();
+
+	for (PRUint32 index=0; !markStatus && (index < total); index++)
+	{
+		markStatus = mailDB->MarkImapDeleted(msgids[index], markDeleted, nsnull);
+	}
+}
+
 
 NS_IMETHODIMP
 nsImapMailFolder::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                        MessageSizeInfo* sizeInfo)
 {
-    return NS_ERROR_FAILURE;
+	nsresult rv = NS_ERROR_FAILURE;
+	if (sizeInfo && sizeInfo->id && m_mailDatabase)
+	{
+		PRUint32 key = atoi(sizeInfo->id);
+		nsIMsgDBHdr *mailHdr = nsnull;
+		NS_ASSERTION(sizeInfo->idIsUid, "ids must be uids to get message size");
+		if (sizeInfo->idIsUid)
+			rv = m_mailDatabase->GetMsgHdrForKey(key, &mailHdr);
+		if (NS_SUCCEEDED(rv) && mailHdr)
+		{
+			rv = mailHdr->GetMessageSize(&sizeInfo->size);
+			NS_RELEASE(mailHdr);
+		}
+	}
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1650,7 +1777,7 @@ nsImapMailFolder::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
