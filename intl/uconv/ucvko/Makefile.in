@@ -38,7 +38,7 @@ CPPSRCS		= \
 		nsUnicodeToCP949.cpp \
 		nsUnicodeToX11Johab.cpp \
 		nsUCvKOSupport.cpp \
-		nsUCvKODll.cpp \
+		nsUCvKoModule.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvKOCID.h

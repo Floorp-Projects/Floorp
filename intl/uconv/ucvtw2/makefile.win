@@ -37,7 +37,7 @@ CPPSRCS =				\
 	nsUnicodeToCNS11643p6.cpp		\
 	nsUnicodeToCNS11643p7.cpp		\
 	nsUCvTW2Support.cpp		\
-	nsUCvTW2Dll.cpp			\
+	nsUCvTw2Module.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -51,7 +51,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCNS11643p6.obj		\
 	.\$(OBJDIR)\nsUnicodeToCNS11643p7.obj		\
 	.\$(OBJDIR)\nsUCvTW2Support.obj			\
-	.\$(OBJDIR)\nsUCvTW2Dll.obj 			\
+	.\$(OBJDIR)\nsUCvTw2Module.obj 			\
 	$(NULL)
 
 EXPORTS=nsUCvTW2CID.h			\

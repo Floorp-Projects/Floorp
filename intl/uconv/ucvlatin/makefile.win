@@ -136,7 +136,7 @@ CPPSRCS =				\
 	nsUnicodeToSymbol.cpp		\
 	nsUnicodeToZapfDingbat.cpp		\
 	nsUCvLatinSupport.cpp		\
-	nsUCvLatinDll.cpp		\
+	nsUCvLatinModule.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -249,7 +249,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToSymbol.obj			\
 	.\$(OBJDIR)\nsUnicodeToZapfDingbat.obj			\
 	.\$(OBJDIR)\nsUCvLatinSupport.obj		\
-	.\$(OBJDIR)\nsUCvLatinDll.obj 			\
+	.\$(OBJDIR)\nsUCvLatinModule.obj 			\
 	$(NULL)
 
 EXPORTS=nsUCvLatinCID.h			\
