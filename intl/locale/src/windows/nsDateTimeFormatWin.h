@@ -45,7 +45,21 @@ public:
                           const struct tm*  tmTime, 
                           nsString& stringOut); 
 
-  nsDateTimeFormatWin() {NS_INIT_REFCNT();};
+  // performs a locale sensitive date formatting operation on the PRTime parameter
+  NS_IMETHOD FormatPRTime(nsILocale* locale, 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const PRTime  prTime, 
+                          nsString& stringOut);
+
+  // performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+  NS_IMETHOD FormatPRExplodedTime(nsILocale* locale, 
+                                  const nsDateFormatSelector  dateFormatSelector, 
+                                  const nsTimeFormatSelector timeFormatSelector, 
+                                  const PRExplodedTime*  explodedTime, 
+                                  nsString& stringOut); 
+
+  nsDateTimeFormatWin() {NS_INIT_REFCNT();}
 
 private:
   // util function to call unicode converter

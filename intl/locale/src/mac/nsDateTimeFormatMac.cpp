@@ -239,8 +239,6 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   NS_ASSERTION(tmTime->tm_sec >= 0, "tm is not set correctly");
   NS_ASSERTION(tmTime->tm_wday >= 0, "tm is not set correctly");
 
-  // Mac need a number from 1904 to 2040 
-  // tm only provide the last two digit of the year */
   macDateTime.year = tmTime->tm_year + 1900;	
 
   // Mac use 1 for Jan and 12 for Dec
@@ -362,3 +360,34 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   
   return res;
 }
+
+// performs a locale sensitive date formatting operation on the PRTime parameter
+nsresult nsDateTimeFormatMac::FormatPRTime(nsILocale* locale, 
+                                           const nsDateFormatSelector  dateFormatSelector, 
+                                           const nsTimeFormatSelector timeFormatSelector, 
+                                           const PRTime  prTime, 
+                                           nsString& stringOut)
+{
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(prTime, PR_LocalTimeParameters, &explodedTime);
+
+  return FormatPRExplodedTime(locale, dateFormatSelector, timeFormatSelector, &explodedTime, stringOut);
+}
+
+// performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+nsresult nsDateTimeFormatMac::FormatPRExplodedTime(nsILocale* locale, 
+                                                   const nsDateFormatSelector  dateFormatSelector, 
+                                                   const nsTimeFormatSelector timeFormatSelector, 
+                                                   const PRExplodedTime*  explodedTime, 
+                                                   nsString& stringOut)
+{
+  struct tm  tmTime;
+  tmTime.tm_mon = explodedTime->tm_month;
+  tmTime.tm_mday = explodedTime->tm_mday;
+  tmTime.tm_hour = explodedTime->tm_hour;
+  tmTime.tm_min = explodedTime->tm_min;
+  tmTime.tm_sec = explodedTime->tm_sec;
+
+  return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, &tmTime, stringOut);
+}
+

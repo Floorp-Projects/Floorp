@@ -42,7 +42,21 @@ public:
                         const struct tm*  tmTime, 
                         nsString& stringOut); 
 
-  nsDateTimeFormatUnix() {NS_INIT_REFCNT();};
+  // performs a locale sensitive date formatting operation on the PRTime parameter
+  NS_IMETHOD FormatPRTime(nsILocale* locale, 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const PRTime  prTime, 
+                          nsString& stringOut);
+
+  // performs a locale sensitive date formatting operation on the PRExplodedTime parameter
+  NS_IMETHOD FormatPRExplodedTime(nsILocale* locale, 
+                                  const nsDateFormatSelector  dateFormatSelector, 
+                                  const nsTimeFormatSelector timeFormatSelector, 
+                                  const PRExplodedTime*  explodedTime, 
+                                  nsString& stringOut); 
+
+  nsDateTimeFormatUnix() {NS_INIT_REFCNT();}
 };
 
 #endif  /* nsDateTimeFormatUnix_h__ */
