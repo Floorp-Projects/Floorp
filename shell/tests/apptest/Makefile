@@ -53,8 +53,8 @@ $(OBJDIR)/%.o: %.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),linux)
-	$(CCC) -rdynamic -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 -lXp -lXext
+ifeq ($(OS_ARCH),Linux)
+	$(CCC) -rdynamic -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
 	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
@@ -63,4 +63,6 @@ export::
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
+
+
 
