@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kCMenuManagerCID, NS_MENU_MANAGER_CID);
 
 static NS_DEFINE_IID(kCXPFCToolbarCID, NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCXPFCDialogCID, NS_XPFC_DIALOG_CID);
+static NS_DEFINE_IID(kCUserCID, NS_USER_CID);
 static NS_DEFINE_IID(kCXPFCButtonCID, NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCXPItemCID, NS_XP_ITEM_CID);
@@ -80,6 +81,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     nsRepository::RegisterFactory(kCMenuItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCToolbarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCDialogCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCUserCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPFCButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCXPItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);

@@ -101,6 +101,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)(nsIXPFCToolbar *)new nsXPFCToolbar(aOuter);
   } else if (mClassID.Equals(kCXPFCDialog)) {
     inst = (nsISupports *)(nsIXPFCDialog *)new nsXPFCDialog(aOuter);
+  } else if (mClassID.Equals(kCUserCID)) {
+    inst = (nsISupports *)(nsIUser *)new nsUser(aOuter);
   } else if (mClassID.Equals(kCXPFCButton)) {
     inst = (nsISupports *)(nsIXPFCButton *)new nsXPFCButton(aOuter);
   } else if (mClassID.Equals(kCXPButton)) {

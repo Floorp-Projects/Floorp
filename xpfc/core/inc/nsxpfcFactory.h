@@ -60,6 +60,7 @@
 #include "nsCommandServer.h"
 #include "nsXPFCHTMLCanvas.h"
 #include "nsXPFolderCanvas.h"
+#include "nsUser.h"
 
 static NS_DEFINE_IID(kCShellInstance,             NS_XPFC_SHELL_INSTANCE_CID);
 static NS_DEFINE_IID(kCMenuItem,                  NS_MENUITEM_CID);
@@ -101,6 +102,7 @@ static NS_DEFINE_IID(kCStack,                     NS_STACK_CID);
 static NS_DEFINE_IID(kCXPFCMethodInvokerCommand,  NS_XPFC_METHODINVOKER_COMMAND_CID);
 static NS_DEFINE_IID(kCXPFCCommandServerCID,      NS_XPFC_COMMAND_SERVER_CID);
 static NS_DEFINE_IID(kCXPFCActionCommand,         NS_XPFC_ACTION_COMMAND_CID);
+static NS_DEFINE_IID(kCUserCID,                   NS_USER_CID);
 
 class nsxpfcFactory : public nsIFactory
 {   
