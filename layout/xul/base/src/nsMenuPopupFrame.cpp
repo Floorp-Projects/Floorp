@@ -219,6 +219,17 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
   nsRect parentRect;
   aFrame->GetRect(parentRect);
 
+  const nsStyleDisplay* disp; 
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+  PRBool viewIsVisible = (NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible);
+  nsViewVisibility  oldVisibility;
+  view->GetVisibility(oldVisibility);
+  PRBool viewWasVisible = (oldVisibility == nsViewVisibility_kShow);
+
+  if (viewWasVisible && (! viewIsVisible)) {
+    view->SetVisibility(nsViewVisibility_kHide);
+  }
+
   viewManager->ResizeView(view, mRect.width, mRect.height);
   if (aXPos != -1 || aYPos != -1) {
     // Convert the screen coords to twips
@@ -232,6 +243,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
   else if (aOnMenuBar)
     viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + parentRect.height + offset.y );
   else viewManager->MoveViewTo(view, parentPos.x + parentRect.width + offset.x, parentPos.y + offset.y );
+
+  if ((! viewWasVisible) && viewIsVisible) {
+    view->SetVisibility(nsViewVisibility_kShow);
+  }
 
   return NS_OK;
 }
