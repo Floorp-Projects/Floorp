@@ -132,10 +132,6 @@ function ComposeStartup()
 
     if (identitySelect) {
         fillIdentitySelect(identitySelect);
-
-	// because of bug #14312, a default option was in the select widget
-	// remove it now
- 	identitySelect.remove(0);   
     }
 
     var identity;
