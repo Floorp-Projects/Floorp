@@ -261,6 +261,7 @@ BookmarksUIElement.prototype = {
   
   execCommand: function (aCommandID) 
   {
+    var args = [];
     var selection = this.getSelection ();
     if (selection.length >= 1) 
       var selectedItem = selection[0];
@@ -284,8 +285,8 @@ BookmarksUIElement.prototype = {
     case "setnewbookmarkfolder":
     case "setpersonaltoolbarfolder":
     case "setnewsearchfolder":
-      var args = [];
-      BookmarksUtils.doBookmarksCommand(NODE_ID(selectedItem), NC_NS_CMD + aCommandID, []);
+      BookmarksUtils.doBookmarksCommand(NODE_ID(selectedItem),
+                                        NC_NS_CMD + aCommandID, args);
       // XXX - The containing node seems to be closed here and the 
       //       focus/selection is destroyed.
       this.selectElement(selectedItem);
@@ -321,8 +322,8 @@ BookmarksUIElement.prototype = {
     case "newseparator":
       nfseln = this.getBestItem ();
       var parentNode = this.findRDFNode(aSelectedItem, false);
-      var args = [{ property: NC_NS + "parent", 
-                    resource: NODE_ID(parentNode) }];
+      args = [{ property: NC_NS + "parent", 
+                resource: NODE_ID(parentNode) }];
       BookmarksUtils.doBookmarksCommand(NODE_ID(aSelectedItem), 
                                         NC_NS_CMD + "newseparator", args);
       break;
@@ -348,7 +349,7 @@ BookmarksUIElement.prototype = {
         break;
       }
       var seln = this.getBestItem();
-      var args = [{ property: NC_NS + "URL", literal: fileName}];
+      args = [{ property: NC_NS + "URL", literal: fileName}];
       BookmarksUtils.doBookmarksCommand(NODE_ID(seln), NC_NS_CMD + aCommandID, args);
       break;
     }
