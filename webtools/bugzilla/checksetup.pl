@@ -1315,7 +1315,7 @@ if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
     if(-x Param('webdotbase')) {
         print "ok: found\n" unless $silent;
     } else {
-        print "not a valid executable: " . Param{'webdotbase'} . "\n";
+        print "not a valid executable: " . Param('webdotbase') . "\n";
     }
 
     # Check .htaccess allows access to generated images
