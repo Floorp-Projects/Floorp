@@ -943,7 +943,8 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       }
     }
     if (doShape) {
-      rv = ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen);
+      rv = ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen,
+                         PR_FALSE, PR_FALSE);
       if (NS_SUCCEEDED(rv) ) {
         aTextLength = newLen;
         memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
