@@ -2268,16 +2268,6 @@ fe_DestroyContext (MWContext *context)
   if (context->is_grid_cell)
     CONTEXT_DATA (context)->being_destroyed = True;
 
-  if (context->type == MWContextSaveToDisk) {
-    /* We might be in an extend text selection on the text widgets.
-       If we destroy this now, we will dump core. So before destroying
-       we will disable extend of the selection. */
-    XtCallActionProc(CONTEXT_DATA (context)->url_label, "extend-end",
-				NULL, NULL, 0);
-    XtCallActionProc(CONTEXT_DATA (context)->url_text, "extend-end",
-				NULL, NULL, 0);
-  }
-
 #ifdef EDITOR
   if (context->type == MWContextEditor)
       fe_EditorCleanup(context);
@@ -2462,7 +2452,7 @@ fe_delete_cb (Widget widget, XtPointer closure, XtPointer call_data)
 				&WM_SAVE_YOURSELF,1);
         XmAddWMProtocolCallback(CONTEXT_WIDGET(someGlobalContext),
                 WM_SAVE_YOURSELF,
-                fe_wm_save_self_cb, someGlobalContext);
+                fe_wm_save_self_cb, (XtPointer)someGlobalContext);
      }
      else
      {
@@ -2649,12 +2639,12 @@ fe_StrEndsWith(char *s, char *endstr)
 }
 
 char *
-fe_Basename (const char *s)
+fe_Basename (char *s)
 {
     int len;
     char *p;
 
-    if (!s) return (s);
+    if (!s) return (NULL);
     len = strlen(s);
     p = &s[len-1];
     
@@ -4698,7 +4688,7 @@ fe_ButtonAddDocStringCallback(MWContext* context, Widget widget,
 	
 	if (callback != NULL) {
 		info = TipInfoNew((XtPointer)widget, callback, closure);
-		info->m_key = (TipInfo*)context;
+		info->m_key = (XtPointer)context;
 		XtAddCallback(widget, XmNdestroyCallback, tips_button_death_cb, info);
 		XtAddCallback(widget, XmNarmCallback, fe_docString_hascb_arm_cb, info);
 		XtAddCallback(widget, XmNdisarmCallback,
