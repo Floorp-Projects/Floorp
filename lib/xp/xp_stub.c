@@ -31,7 +31,7 @@ NOT_NULL (const char *x)
 #endif
 
 
-#ifdef DEBUG
+#if 0
 void XP_AssertAtLine( char *pFileName, int iLine )
 {
     PR_Assert("XP Assert", pFileName, iLine);
@@ -53,15 +53,16 @@ void XP_AssertAtLine( char *pFileName, int iLine )
  * versions of the Navigator do it), then you can define your own
  * wrapper function like this:
  */
+static char * XP_GetBuiltinString(int16 i);
 char *
 XP_GetString(int16 i)
 {
-	extern char * XP_GetBuiltinString(int16 i);
 
 	return XP_GetBuiltinString(i);
 }
 #endif /* ! MOZILLA_CLIENT */
 
+static
 char *
 XP_GetBuiltinString(int16 i)
 {
@@ -98,6 +99,7 @@ XP_GetBuiltinString(int16 i)
 
 #include "xp_mcom.h"
 
+#if 0
 int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
                         uint32 desired_buffer_size,
                         char **bufferP, uint32 *buffer_sizeP,
@@ -112,11 +114,11 @@ int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
   return(0); 
 }
 
-
 void XP_Trace( const char *message, ... ) 
 { 
   printf("XP_Trace not implemented, stubbed in lib/xp/xp_stubs.c\n"); 
 }
+#endif
 
 #endif
 
