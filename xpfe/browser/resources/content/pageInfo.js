@@ -384,8 +384,6 @@ function makeGeneralTab()
   for (var i = 0; i < length; i++)
     metaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv, metaNodes[i].content]);
 
-  metaView.rowCountChanged(0, length);
-  
   // get the document characterset
   var encoding = theDocument.characterSet;
   document.getElementById("encodingtext").value = encoding;
@@ -661,8 +659,6 @@ function onFormSelect()
             fieldView.setCellText(j, "field-label", labeltext);
       }
     }
-
-    fieldView.rowCountChanged(0, length);
   }
 }
 
