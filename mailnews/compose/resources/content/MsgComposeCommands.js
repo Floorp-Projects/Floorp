@@ -486,7 +486,7 @@ function GetCharsetUIString()
 
   return "";
 }
-			
+
 function GenericSendMessage( msgType )
 {
 	dump("GenericSendMessage from XUL\n");
@@ -512,8 +512,8 @@ function GenericSendMessage( msgType )
 			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
 			{
 			  //Do we need to check the spelling?
-			  if (prefs.GetBoolPref("mail.SpellCheckBeforeSend"))
-			    goDoCommand('cmd_spelling');
+        if (prefs.GetBoolPref("mail.SpellCheckBeforeSend"))
+	        goDoCommand('cmd_spelling');
 			  
 				//Check if we have a subject, else ask user for confirmation
 				if (subject == "")
@@ -1043,9 +1043,11 @@ function DetermineHTMLAction()
         
         if (noHtmlRecipients != "" || noHtmlnewsgroups != "")
         {
-            
-            //Do we really need to send in HTML?
-            //FIX ME: need to ask editor is the body containg any formatting or non plaint text elements.
+            try {
+                var bodyContainsHTML = msgCompose.BodyContainsHTMLTag(window.editorShell.contentWindow.document.childNodes[1]);
+                if (! bodyContainsHTML)
+                  return msgCompSendFormat.PlainText;
+            } catch(ex) {}
             
             if (noHtmlnewsgroups == "")
             {

@@ -148,6 +148,10 @@ interface nsIMsgCompose : nsISupports {
     */
     wstring GetNoHtmlNewsgroups(in wstring newsgroups);
     
+    /* BodyContainsHTMLTag: will return true if the node passed contains any HTML tag that really affect the formating 
+    */
+    boolean BodyContainsHTMLTag(in nsIDOMNode node);
+
     /* ResetNodeEventHandlers: Temporary API to go around bug 26528. THis API will be removed when bug 26528 is fixed.
     */
     void ResetNodeEventHandlers(in nsIDOMNode node);

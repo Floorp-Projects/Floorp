@@ -2459,6 +2459,135 @@ nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnicha
     return rv;
 }
 
+nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
+{
+    nsresult rv;
+    nsAutoString aStr;
+    PRUint32 i;
+    PRUint32 nbrOfElements;
+    nsCOMPtr<nsIDOMNode> pItem;
+    PRBool hasChild;
+
+    if (nsnull == node || nsnull == _retval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_retval = PR_TRUE;
+  
+    rv = node->GetNodeName(aStr);
+    if (NS_FAILED(rv))
+      return rv;
+    
+    if (aStr.CompareWithConversion("A") == 0)
+    {
+      //We can ignore an anchore tag if the link is the same than the text
+      nsAutoString href;
+      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+
+      rv = node->GetAttributes(getter_AddRefs(pAttributes));
+      if (NS_SUCCEEDED(rv) && pAttributes)
+      {
+        nsString attributeName; attributeName.AssignWithConversion("href");
+        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
+        if (NS_SUCCEEDED(rv) && pItem)
+        {
+          rv = pItem->GetNodeValue(href);
+          if (NS_SUCCEEDED(rv))
+          {           
+            rv = node->HasChildNodes(&hasChild);
+            if (NS_SUCCEEDED(rv) && hasChild)
+            {
+              nsCOMPtr<nsIDOMNodeList> children;
+              rv = node->GetChildNodes(getter_AddRefs(children));
+              if (NS_SUCCEEDED(rv) && children)
+              {
+                rv = children->Item(0, getter_AddRefs(pItem));
+                if (NS_SUCCEEDED(rv) && pItem)
+                {
+                  rv = pItem->GetNodeValue(aStr);
+                  if (NS_SUCCEEDED(rv))
+                  {
+                    if (aStr.Compare(href) == 0)
+                      *_retval = PR_FALSE;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (aStr.CompareWithConversion("BLOCKQUOTE") == 0)
+    {
+      //skip <blockquote> only if the type is "cite"
+      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+      rv = node->GetAttributes(getter_AddRefs(pAttributes));
+      if (NS_SUCCEEDED(rv) && pAttributes)
+      {
+        nsString attributeName; attributeName.AssignWithConversion("type");
+        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
+        if (NS_SUCCEEDED(rv) && pItem)
+        {
+          rv = pItem->GetNodeValue(aStr);
+          if (NS_SUCCEEDED(rv) && aStr.CompareWithConversion("cite", PR_TRUE) == 0)
+            *_retval = PR_FALSE;
+        }
+      }
+    }
+    else if (aStr.CompareWithConversion("HTML") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("HEAD") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("BODY") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("P") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("BR") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("PRE") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    else if (aStr.CompareWithConversion("#text") == 0)
+    {
+      *_retval = PR_FALSE;
+    }
+    
+    if (NS_FAILED(rv) || *_retval)
+      return rv;
+
+    rv = node->HasChildNodes(&hasChild);
+    if (NS_SUCCEEDED(rv) && hasChild)
+    {
+        nsCOMPtr<nsIDOMNodeList> children;
+        rv = node->GetChildNodes(getter_AddRefs(children));
+        if (NS_SUCCEEDED(rv) && children)
+        {
+            rv = children->GetLength(&nbrOfElements);
+            if (NS_FAILED(rv))
+                return rv;
+            
+            for (i = 0; i < nbrOfElements && *_retval == PR_FALSE && NS_SUCCEEDED(rv); i ++)
+            {
+                rv = children->Item(i, getter_AddRefs(pItem));
+                if (NS_SUCCEEDED(rv) && pItem)
+                   rv = BodyContainsHTMLTag(pItem, _retval);
+            }
+        }
+    }
+    
+    return rv;
+}
+
 nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
 {
 	// Because event handler attributes set into a node before this node is inserted 
