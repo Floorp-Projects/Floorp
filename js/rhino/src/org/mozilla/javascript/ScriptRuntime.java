@@ -1050,9 +1050,7 @@ public class ScriptRuntime {
     {
         Scriptable scope = cx.currentActivationCall;
         if (scope == null) {
-            scope = cx.topCallScope;
-            if (scope == null)
-                throw new IllegalStateException();
+            scope = getTopCallScope(cx);
         }
 
         XMLLib xmlLib = currentXMLLib(cx);
@@ -1075,9 +1073,7 @@ public class ScriptRuntime {
     {
         Scriptable scope = cx.currentActivationCall;
         if (scope == null) {
-            scope = cx.topCallScope;
-            if (scope == null)
-                throw new IllegalStateException();
+            scope = getTopCallScope(cx);
         }
         Object nsObject;
         for (;;) {
@@ -2833,6 +2829,15 @@ public class ScriptRuntime {
     public static boolean hasTopCall(Context cx)
     {
         return (cx.topCallScope != null);
+    }
+
+    public static Scriptable getTopCallScope(Context cx)
+    {
+        Scriptable scope = cx.topCallScope;
+        if (scope == null) {
+            throw new IllegalStateException();
+        }
+        return scope;
     }
 
     public static Object doTopCall(Callable callable,

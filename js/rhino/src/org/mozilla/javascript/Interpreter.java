@@ -3822,10 +3822,10 @@ switch (op) {
                                             int stackTop)
     {
         Continuation c = new Continuation();
-        Scriptable libScope = ScriptRuntime.getLibraryScopeOrNull(frame.scope);
-        c.setParentScope(libScope);
+        Scriptable topScope = ScriptRuntime.getTopCallScope(cx);
+        c.setParentScope(topScope);
         c.setPrototype(
-            ScriptableObject.getClassPrototype(libScope, c.getClassName()));
+            ScriptableObject.getClassPrototype(topScope, c.getClassName()));
 
         // Make sure that all frames upstack frames are frozen
         CallFrame x = frame.parentFrame;
