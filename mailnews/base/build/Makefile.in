@@ -47,7 +47,6 @@ EXTRA_DSO_LDOPTS = \
 		-lraptorbase	\
 		-lrdfutil_s		\
 		-lmsgbaseutil	\
-		-lxp			\
 		-lgmbasegtk		\
 		-lgtk			\
 		-lgdk			\
