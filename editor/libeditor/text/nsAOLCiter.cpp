@@ -65,7 +65,7 @@ nsAOLCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   PRUnichar newline ('\n');
   if (aOutString.Last() == newline)
   {
-    aOutString[aOutString.Length() - 1] = ' ';
+    aOutString.SetCharAt(' ',aOutString.Length());
     aOutString += "<<\n";
   }
   else
