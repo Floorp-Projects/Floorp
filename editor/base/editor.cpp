@@ -208,8 +208,16 @@ nsEditor::~nsEditor()
 
 NS_IMPL_ADDREF(nsEditor)
 
-NS_IMPL_RELEASE(nsEditor)
 
+nsrefcnt nsEditor::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
 
 
 nsresult
