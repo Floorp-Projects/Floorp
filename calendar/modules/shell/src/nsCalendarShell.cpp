@@ -540,6 +540,7 @@ typedef struct
 static JULIAN_KEY_VAL KVPairs[] =
 {
   CAL_STRING_PREF_JULIAN_UI_XML_MENUBAR,  CAL_STRING_RESOURCE_UI_MENUBAR,
+  CAL_STRING_PREF_JULIAN_UI_XML_TOOLBAR,  CAL_STRING_RESOURCE_UI_TOOLBAR,
   CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR, CAL_STRING_RESOURCE_UI_CALENDAR,
   CAL_STRING_PREF_LOCAL_ADDRESS,          CAL_STRING_PREF_LOCAL_ADDRESS_DEFAULT,
   CAL_STRING_PREF_PREFERRED_ADDR,         CAL_STRING_PREF_PREFERRED_ADDR_DEFAULT,
@@ -790,11 +791,15 @@ nsresult nsCalendarShell::LoadUI()
    */
 #ifdef XP_UNIX
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR,pUI,&i);
+  res = mDocumentContainer->LoadURL(pUI,nsnull);
 #else
   mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_MENUBAR,pUI,&i);
-#endif
-
   res = mDocumentContainer->LoadURL(pUI,nsnull);
+  mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_CALENDAR,pUI,&i);
+  res = mDocumentContainer->LoadURL(pUI,nsnull);
+  mShellInstance->GetPreferences()->GetCharPref(CAL_STRING_PREF_JULIAN_UI_XML_TOOLBAR,pUI,&i);
+  res = mDocumentContainer->LoadURL(pUI,nsnull);
+#endif
 
   mShellInstance->ShowApplicationWindow(PR_TRUE) ;
 

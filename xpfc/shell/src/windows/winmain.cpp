@@ -52,6 +52,7 @@ static NS_DEFINE_IID(kCXPFCTabWidgetCID, NS_XPFC_TABWIDGET_CID);
 
 static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBAR_MANAGER_CID);
 static NS_DEFINE_IID(kCStreamManagerCID, NS_STREAM_MANAGER_CID);
+static NS_DEFINE_IID(kCStreamObjectCID, NS_STREAM_OBJECT_CID);
 static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
 static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
 static NS_DEFINE_IID(kCstackCID, NS_STACK_CID);
@@ -79,6 +80,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     nsRepository::RegisterFactory(kCXPFCTabWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCStreamManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCStreamObjectCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCstackCID, XPFC_DLL, PR_FALSE, PR_FALSE);

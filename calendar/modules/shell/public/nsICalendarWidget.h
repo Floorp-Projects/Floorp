@@ -60,8 +60,6 @@ public:
 
   NS_IMETHOD BindToDocument(nsISupports *aDoc, const char *aCommand) = 0;
 
-  NS_IMETHOD_(nsIStreamListener *) GetParserStreamInterface() = 0;
-
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
                      nsIStreamObserver* aListener,
                      nsIPostData* aPostData = 0) = 0;

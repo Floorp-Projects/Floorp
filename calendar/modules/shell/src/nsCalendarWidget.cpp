@@ -55,7 +55,6 @@ class nsICalendarShell;
 #include "nsCalXMLDTD.h"
 #include "nsXPFCXMLContentSink.h"
 #include "nsXPFCXMLDTD.h"
-#include "nsCalStreamListener.h"
 #include "nsCurlParser.h"
 #include "nsCalToolkit.h"
 #include "nsBoxLayout.h"
@@ -213,14 +212,6 @@ nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* 
   if (stream_manager == nsnull)
     return NS_OK;
 
-  static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-
-  nsIStreamListener * stream_listener;
-
-  NS_NewCalStreamListener(&stream_listener);
-
-  ((nsCalStreamListener *)stream_listener)->SetWidget(this);
-
   nsIID * iid_dtd = nsnull;
   nsIID * iid_sink = nsnull ;
 
@@ -236,7 +227,6 @@ nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* 
 
   res = stream_manager->LoadURL(((nsCalendarShell*)mCalendarShell)->mDocumentContainer,
                               aURLSpec, 
-                              stream_listener, 
                               aPostData,iid_dtd,iid_sink);
 
   return res;
@@ -268,25 +258,6 @@ nsIWidget* nsCalendarWidget::GetWWWindow()
 nsEventStatus nsCalendarWidget::HandleEvent(nsGUIEvent *aEvent)
 {  
   return (mRootCanvas->HandleEvent(aEvent));
-}
-
-nsIStreamListener * nsCalendarWidget::GetParserStreamInterface()
-{  
-  NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-
-  nsIStreamManager * stream_manager  = ((nsCalendarShell *)mCalendarShell)->mShellInstance->GetStreamManager();
-
-  if (stream_manager == nsnull)
-    return nsnull;
-
-  nsIStreamListener * aStreamListener ;
-
-  nsresult res = ((nsStreamManager *)stream_manager)->mParser->QueryInterface(kIStreamListenerIID, (void **)&aStreamListener);
-
-  if (NS_OK != res)
-    return (nsnull);
-
-  return (aStreamListener);
 }
 
 nsresult nsCalendarWidget::GetRootCanvas(nsIXPFCCanvas ** aCanvas)

@@ -13,6 +13,7 @@ EXPORTS = \
 	nsShellInstance.h \
 	nsApplicationManager.h \
     nsStreamManager.h \
+    nsStreamObject.h \
 	$(NULL)
 
 MODULE = xpfc

@@ -10,7 +10,7 @@
 GDEPTH = ../../..
 DEPTH  = ../../..
 
-DIRS =  stream capi
+DIRS =  capi
 
 LIBRARY_NAME = calnetwork
 

@@ -74,8 +74,6 @@ public:
 
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
-  NS_IMETHOD_(nsIStreamListener *) GetParserStreamInterface();
-
   NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas) ;
 
 private:

@@ -23,6 +23,7 @@ CPPSRCS = \
 	nsApplicationManager.cpp \
 	nsShellInstance.cpp \
     nsStreamManager.cpp \
+    nsStreamObject.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor pref js netlib

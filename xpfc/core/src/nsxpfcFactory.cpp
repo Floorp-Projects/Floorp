@@ -110,6 +110,8 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)(nsIToolbarManager *)new nsToolbarManager();
   } else if (mClassID.Equals(kCStreamManager)) {
     inst = (nsISupports *)(nsIStreamManager *)new nsStreamManager();
+  } else if (mClassID.Equals(kCStreamObject)) {
+    inst = (nsISupports *)(nsIStreamObject *)new nsStreamObject();
   } else if (mClassID.Equals(kCMenuItem)) {
     inst = (nsISupports *)(nsIMenuItem *)new nsMenuItem();
   } else if (mClassID.Equals(kCXPFCDTD)) {

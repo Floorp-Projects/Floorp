@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsIStreamManager_h___
-#define nsIStreamManager_h___
+#ifndef nsIStreamObject_h___
+#define nsIStreamObject_h___
 
 #include "nscore.h"
 #include "nsxpfc.h"
@@ -26,29 +26,22 @@
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 
-// 5f680140-360f-11d2-9248-00805f8a7ab6
-#define NS_ISTREAM_MANAGER_IID      \
- { 0x5f680140, 0x360f, 0x11d2, \
-   {0x92, 0x48, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+// 38acdab0-4914-11d2-924a-00805f8a7ab6
+#define NS_ISTREAM_OBJECT_IID      \
+ { 0x38acdab0, 0x4914, 0x11d2, \
+   {0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
 // Application Shell Interface
-class nsIStreamManager : public nsISupports 
+class nsIStreamObject : public nsISupports 
 {
 public:
 
   /**
-   * Initialize the StreamManager
+   * Initialize the StreamObject
    * @result The result of the initialization, NS_OK if no errors
    */
   NS_IMETHOD Init() = 0;
 
-  NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
-                     const nsString& aURLSpec, 
-                     nsIPostData * aPostData,
-                     nsIID *aDTDIID = nsnull,
-                     nsIID *aSinkIID = nsnull) = 0;
-
-
 };
 
-#endif /* nsIStreamManager_h___ */
+#endif /* nsIStreamObject_h___ */

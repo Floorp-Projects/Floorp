@@ -27,10 +27,19 @@
 #include "nspr.h"
 #include "nsParserCIID.h"
 #include "nsXPFCXMLContentSink.h"
+#include "nsStreamObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCStreamManager, NS_STREAM_MANAGER_CID);
+
+static NS_DEFINE_IID(kIDTDIID,          NS_IDTD_IID);
+static NS_DEFINE_IID(kIContentSinkIID,  NS_ICONTENT_SINK_IID);
+static NS_DEFINE_IID(kCCalXPFCXMLDTD,            NS_IXPFCXML_DTD_IID);
+static NS_DEFINE_IID(kCCalXPFCXMLContentSinkCID, NS_XPFCXMLCONTENTSINK_IID); 
+
+static NS_DEFINE_IID(kIStreamObjectIID,  NS_ISTREAM_OBJECT_IID);
+static NS_DEFINE_IID(kCStreamObjectCID,  NS_STREAM_OBJECT_CID);
 
 nsStreamManager::nsStreamManager()
 {
@@ -46,6 +55,12 @@ nsStreamManager::~nsStreamManager()
   NS_IF_RELEASE(mUrl);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mSink);
+
+  if (mStreamObjects != nsnull) {
+    mStreamObjects->RemoveAll();
+    NS_RELEASE(mStreamObjects);
+  }
+
 }
 
 NS_DEFINE_IID(kIStreamManagerIID, NS_ISTREAM_MANAGER_IID);
@@ -53,28 +68,27 @@ NS_IMPL_ISUPPORTS(nsStreamManager,kIStreamManagerIID);
 
 nsresult nsStreamManager::Init()
 {
+  static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+
+  nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+                                              nsnull, 
+                                              kCVectorCID, 
+                                              (void **)&mStreamObjects);
+
+  if (NS_OK != res)
+    return res;
+
+  mStreamObjects->Init();
+
   return NS_OK;
 }
 
 nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
                                   const nsString& aURLSpec, 
-                                  nsIStreamListener* aListener, 
                                   nsIPostData * aPostData,
                                   nsIID *aDTDIID,
                                   nsIID *aSinkIID)
 {
-/*
- * If we can find the file, then use it, else use the HARDCODE.
- * We'll need to change the way we deal with this since the file
- * could be gotten over the network.
- */
-
-  static NS_DEFINE_IID(kIDTDIID,          NS_IDTD_IID);
-  static NS_DEFINE_IID(kIContentSinkIID,  NS_ICONTENT_SINK_IID);
-
-  static NS_DEFINE_IID(kCCalXPFCXMLDTD,            NS_IXPFCXML_DTD_IID);
-  static NS_DEFINE_IID(kCCalXPFCXMLContentSinkCID, NS_XPFCXMLCONTENTSINK_IID); 
-
   nsIID * iid_dtd  = aDTDIID;
   nsIID * iid_sink = aSinkIID;
 
@@ -83,22 +97,40 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   if (iid_sink == nsnull)
     iid_sink = (nsIID*)&kCCalXPFCXMLContentSinkCID;
 
-  nsresult rv = NS_OK;
-
   char * pUI = aURLSpec.ToNewCString();
+
+  nsStreamObject * stream_object = nsnull;
+  nsresult res = NS_OK;
+
+  res = nsRepository::CreateInstance(kCStreamObjectCID, 
+                                     nsnull, 
+                                     kIStreamObjectIID,
+                                     (void**) &stream_object);
+
+  if (NS_OK != res) {
+      return res;
+  }
+
+  stream_object->Init();
+
+  mStreamObjects->Append(stream_object);
 
   /*
    * Create a nsIURL representing the interface ...
    */
 
-  nsresult res = NS_OK;
   nsUrlParser urlParser(pUI);
   
+
+  /*
+   * Create a StreamObject
+   */
+
   if (urlParser.IsLocalFile() == PR_TRUE) {
     char * pURL = urlParser.LocalFileToURL();
-    res = NS_NewURL(&mUrl, pURL);
+    res = NS_NewURL(&(stream_object->mUrl), pURL);
   } else {
-    res = NS_NewURL(&mUrl, pUI);
+    res = NS_NewURL(&(stream_object->mUrl), pUI);
   }
 
 
@@ -122,15 +154,17 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  rv = nsRepository::CreateInstance(kCParserCID, 
+  res = nsRepository::CreateInstance(kCParserCID, 
                                     nsnull, 
                                     kCParserIID, 
-                                    (void **)&mParser);
+                                    (void **)&(stream_object->mParser));
 
 
   if (NS_OK != res) {
       return res;
   }
+
+  res = stream_object->mParser->QueryInterface(kIStreamListenerIID, (void **)&(stream_object->mStreamListener));
 
   /*
    * Create the DTD and Sink
@@ -139,7 +173,7 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   res = nsRepository::CreateInstance(*iid_dtd, 
                                      nsnull, 
                                      kIDTDIID,
-                                     (void**) &mDTD);
+                                     (void**) &(stream_object->mDTD));
 
   if (NS_OK != res) {
       return res;
@@ -149,7 +183,7 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   res = nsRepository::CreateInstance(*iid_sink, 
                                      nsnull, 
                                      kIContentSinkIID,
-                                     (void**) &mSink);
+                                     (void**) &(stream_object->mSink));
 
   if (NS_OK != res) {
       return res;
@@ -159,7 +193,7 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
 
   static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
 
-  res = mSink->QueryInterface(kIXPFCXMLContentSinkIID,(void**)&sink);
+  res = stream_object->mSink->QueryInterface(kIXPFCXMLContentSinkIID,(void**)&sink);
 
   if (NS_OK == res)
   {
@@ -171,35 +205,35 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
    * Register the DTD
    */
 
-  mParser->RegisterDTD(mDTD);
+  stream_object->mParser->RegisterDTD(stream_object->mDTD);
 
 
   /*
    * Register the Context Sink, Parser, etc...
    */
 
-  mParser->SetContentSink(mSink);
+  stream_object->mParser->SetContentSink(stream_object->mSink);
 
 
-  mDTD->SetContentSink(mSink);
-  mDTD->SetParser(mParser);
+  stream_object->mDTD->SetContentSink(stream_object->mSink);
+  stream_object->mDTD->SetParser(stream_object->mParser);
 
 
   /*
    * Open the URL
    */
 
-  res = mUrl->Open(aListener);
+  res = stream_object->mUrl->Open(stream_object->mStreamListener);
 
 
   /*
    * We want to parse when the Stream has data?
    */
 
-  mParser->Parse(mUrl);
+  stream_object->mParser->Parse(stream_object->mUrl);
 
   delete pUI;
 
-  return rv;
+  return res;
 
 }
