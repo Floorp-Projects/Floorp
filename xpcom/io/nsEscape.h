@@ -45,18 +45,27 @@
 #include "nsError.h"
 #include "nsString.h"
 
-/* valid mask values for NET_Escape() and NET_EscapedSize(). */
+/**
+ * Valid mask values for nsEscape
+ */
 typedef enum {
-	url_XAlphas		= PR_BIT(0)
-,	url_XPAlphas	= PR_BIT(1)
-,	url_Path		= PR_BIT(2)
+	url_XAlphas   = PR_BIT(0) /**< Normal escape - leave alphas intact, escape the rest */
+,	url_XPAlphas  = PR_BIT(1) /**< As url_XAlphas, but convert spaces (0x20) to '+' and plus to %2B */
+,	url_Path      = PR_BIT(2) /**< As url_XAlphas, but don't escape slash ('/') */
 } nsEscapeMask;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * Escape the given string according to mask
+ * @param str The string to escape
+ * @param mask How to escape the string
+ * @return A newly allocated escaped string that must be free'd with
+ *         nsCRT::free, or null on failure
+ */
 NS_COM char * nsEscape(const char * str, nsEscapeMask mask);
-	/* Caller must use nsCRT::free() on the result */
 
 NS_COM char * nsUnescape(char * str);
 	/* decode % escaped hex codes into character values,
