@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIX509CERTDB
 
   nsNSSCertificateDB(); 
-  ~nsNSSCertificateDB();
+  virtual ~nsNSSCertificateDB();
 
 private:
 
