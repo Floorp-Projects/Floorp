@@ -31,13 +31,6 @@
 
 static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
-static nsGenericHTMLElement::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { 0 }
-};
-
 class nsHTMLIFrameElement : public nsIDOMHTMLIFrameElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
@@ -201,7 +194,7 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {
+    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -223,7 +216,7 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
+      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -274,6 +267,9 @@ nsHTMLIFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
