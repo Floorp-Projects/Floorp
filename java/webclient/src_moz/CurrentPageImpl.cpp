@@ -76,7 +76,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
     }
     
     nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-    rv = contentViewerEdit->CopySelection();
+
+    if (initContext->initComplete) {
+           wsCopySelectionEvent * actionEvent = new wsCopySelectionEvent(contentViewerEdit);
+           PLEvent			* event       = (PLEvent*) *actionEvent;      
+           ::util_PostEvent(initContext, event);
+    }	
  
 }
 
@@ -107,8 +112,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   if (initContext->docShell != nsnull) {
       nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
       nsCOMPtr<nsIURI> url = nsnull;
-      // PENDING(edburns): commented out for 52883
-      // rv = initContext->docShell->GetCurrentURI(getter_AddRefs(url));
+
+      rv = initContext->webNavigation->GetCurrentURI(getter_AddRefs(url));
       if (NS_FAILED(rv) || nsnull == url)  {
           ::util_ThrowExceptionToJava(env, "Exception: NULL URL passed to Find call");
           return;
@@ -169,7 +174,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   // Pass searchContext to findComponent for the actual find call
   PRBool found = PR_TRUE;
-  findComponent->FindNext(srchcontext, &found);
+
+  if (initContext->initComplete) {
+     wsFindEvent * actionEvent = new wsFindEvent(findComponent, srchcontext);
+      PLEvent			* event       = (PLEvent*) *actionEvent;      
+      ::util_PostEvent(initContext, event);
+    }
 
   // Save in initContext struct for future findNextInPage calls
   initContext->searchContext = srchcontext;
@@ -212,7 +222,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
   // Pass searchContext to findComponent for the actual find call
   PRBool found = PR_TRUE;
-  findComponent->FindNext(searchContext, &found);
+
+  if (initContext->initComplete) {
+     wsFindEvent * actionEvent = new wsFindEvent(findComponent, searchContext);
+      PLEvent			* event       = (PLEvent*) *actionEvent;      
+      ::util_PostEvent(initContext, event);
+    }
 
 }
 
@@ -348,7 +363,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 {
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
   initContext->searchContext = nsnull;
+
 }
+
+
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
@@ -369,8 +387,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         }
 
         nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_QueryInterface(contentViewer));
-        rv = contentViewerEdit->SelectAll();
-        if (NS_FAILED(rv)) {
-            ::util_ThrowExceptionToJava(env, "Exception: can't do SelectAll through contentViewerEdit");
-        }
+
+	if (initContext->initComplete) {
+           wsSelectAllEvent * actionEvent = new wsSelectAllEvent(contentViewerEdit);
+           PLEvent			* event       = (PLEvent*) *actionEvent;      
+           ::util_PostEvent(initContext, event);
+        }	
 }

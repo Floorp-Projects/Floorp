@@ -39,6 +39,9 @@
 #include "nsIURI.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
+#include "nsIFindComponent.h"
+#include "nsISearchContext.h"
+#include "nsIContentViewerEdit.h"
 
 #include "ns_util.h"
 
@@ -749,6 +752,66 @@ wsDeallocateInitContextEvent::handleEvent ()
     NS_TermEmbedding();
     return (void *) NS_OK;
 } // handleEvent()
+
+
+
+void *
+wsFindEvent::handleEvent ()
+{
+    void *result = nsnull;
+    
+    if (mFindComponent && mSearchContext) {
+        PRBool found = PR_TRUE;
+        nsresult rv = mFindComponent->FindNext(mSearchContext, &found);
+        result = (void *) rv;
+    }
+    return result;
+}
+
+wsFindEvent::wsFindEvent(nsIFindComponent * findcomponent, nsISearchContext * srchcontext) :
+        nsActionEvent(),
+        mFindComponent(findcomponent),
+	mSearchContext(srchcontext)
+{
+}
+
+
+void *
+wsSelectAllEvent::handleEvent ()
+{
+    void *result = nsnull;
+    
+    if (mContentViewerEdit) {
+        nsresult rv = mContentViewerEdit->SelectAll();
+        result = (void *) rv;
+    }
+    return result;
+}
+
+wsSelectAllEvent::wsSelectAllEvent(nsIContentViewerEdit * contentViewerEdit) :
+        nsActionEvent(),
+        mContentViewerEdit(contentViewerEdit)
+{
+}
+
+
+void *
+wsCopySelectionEvent::handleEvent ()
+{
+    void *result = nsnull;
+    
+    if (mContentViewerEdit) {
+        nsresult rv = mContentViewerEdit->CopySelection();
+        result = (void *) rv;
+    }
+    return result;
+}
+
+wsCopySelectionEvent::wsCopySelectionEvent(nsIContentViewerEdit * contentViewerEdit) :
+        nsActionEvent(),
+        mContentViewerEdit(contentViewerEdit)
+{
+}
 
 
 // EOF

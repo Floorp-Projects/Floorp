@@ -41,6 +41,9 @@
 #include "nsISHistory.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebNavigation.h"
+#include "nsIFindComponent.h"
+#include "nsISearchContext.h"
+#include "nsIContentViewerEdit.h"
 #include "nsString.h"
 #include "plevent.h"
 
@@ -354,6 +357,37 @@ public:
 
 protected:
     WebShellInitContext *mInitContext;
+};
+
+class wsFindEvent : public nsActionEvent {
+public:
+    wsFindEvent(nsIFindComponent *findComponent, 
+		  nsISearchContext * srchcontext);
+    void * handleEvent (void);
+
+protected:
+    nsIFindComponent * mFindComponent;
+    nsISearchContext * mSearchContext;
+};
+
+
+class wsSelectAllEvent : public nsActionEvent {
+public:
+    wsSelectAllEvent(nsIContentViewerEdit * contentViewerEdit);
+    void * handleEvent (void);
+
+protected:
+    nsIContentViewerEdit * mContentViewerEdit;
+};
+
+
+class wsCopySelectionEvent : public nsActionEvent {
+public:
+    wsCopySelectionEvent(nsIContentViewerEdit * contentViewerEdit);
+    void * handleEvent (void);
+
+protected:
+    nsIContentViewerEdit * mContentViewerEdit;
 };
 
 
