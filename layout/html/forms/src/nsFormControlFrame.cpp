@@ -709,10 +709,10 @@ nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
   return result;
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsFormControlFrame::GetType() const
 {
-  return nsFormControlHelper::GetType(mContent, aType);
+  return nsFormControlHelper::GetType(mContent);
 }
 
 NS_IMETHODIMP

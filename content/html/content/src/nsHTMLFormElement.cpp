@@ -394,15 +394,11 @@ private:
 static PRBool
 ShouldBeInElements(nsIFormControl* aFormControl)
 {
-  PRInt32 type;
-
-  aFormControl->GetType(&type);
-
   // For backwards compatibility (with 4.x and IE) we must not add
   // <input type=image> elements to the list of form controls in a
   // form.
 
-  switch (type) {
+  switch (aFormControl->GetType()) {
   case NS_FORM_BUTTON_BUTTON :
   case NS_FORM_BUTTON_RESET :
   case NS_FORM_BUTTON_SUBMIT :
@@ -1246,8 +1242,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
   //
   // Notify the radio button it's been added to a group
   //
-  PRInt32 type;
-  aChild->GetType(&type);
+  PRInt32 type = aChild->GetType();
   if (type == NS_FORM_INPUT_RADIO) {
     nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
     nsresult rv = radio->AddedToRadioGroup();
@@ -1287,9 +1282,7 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
   //
   // Remove it from the radio group if it's a radio button
   //
-  PRInt32 type;
-  aChild->GetType(&type);
-  if (type == NS_FORM_INPUT_RADIO) {
+  if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
     nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
     nsresult rv = radio->WillRemoveFromRadioGroup();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1508,9 +1501,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
     GetElementCount(&len);
     for (PRUint32 i=0; i<len; i++) {
       GetElementAt(i, getter_AddRefs(control));
-      PRInt32 type;
-      control->GetType(&type);
-      if (type == NS_FORM_INPUT_RADIO) {
+      if (control->GetType() == NS_FORM_INPUT_RADIO) {
         nsCOMPtr<nsIContent> controlContent(do_QueryInterface(control));
         if (controlContent) {
           //
@@ -1542,9 +1533,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
       //
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(item));
       if (formControl) {
-        PRInt32 type;
-        formControl->GetType(&type);
-        if (type == NS_FORM_INPUT_RADIO) {
+        if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
           aVisitor->Visit(formControl, &stopIterating);
         }
       } else {
@@ -1557,9 +1546,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
             nodeList->Item(i, getter_AddRefs(node));
             nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
             if (formControl) {
-              PRInt32 type;
-              formControl->GetType(&type);
-              if (type == NS_FORM_INPUT_RADIO) {
+              if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
                 aVisitor->Visit(formControl, &stopIterating);
                 if (stopIterating) {
                   break;

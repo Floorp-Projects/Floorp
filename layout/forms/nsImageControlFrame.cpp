@@ -121,7 +121,7 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetType(PRInt32* aType) const;
+  NS_IMETHOD_(PRInt32) GetType() const;
 
   NS_IMETHOD GetName(nsAString* aName);
 
@@ -392,11 +392,10 @@ nsImageControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRe
   aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
 }
 
-NS_IMETHODIMP
-nsImageControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsImageControlFrame::GetType() const
 {
-  *aType = NS_FORM_INPUT_IMAGE;
-  return NS_OK;
+  return NS_FORM_INPUT_IMAGE;
 }
 
 NS_IMETHODIMP

@@ -88,7 +88,7 @@ public:
   NS_DECL_NSIDOMNSHTMLBUTTONELEMENT
 
   // overrided nsIFormControl method
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return mType; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -633,14 +633,6 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
   } //if
 
   return ret;
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "Null pointer bad!");
-  *aType = mType;
-  return NS_OK;
 }
 
 #ifdef DEBUG

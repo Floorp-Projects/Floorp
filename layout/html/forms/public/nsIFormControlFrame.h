@@ -61,7 +61,7 @@ class nsIFormControlFrame : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
 
-  NS_IMETHOD GetType(PRInt32* aType) const =  0;
+  NS_IMETHOD_(PRInt32) GetType() const =  0;
 
   NS_IMETHOD GetName(nsAString* aName) = 0;
 

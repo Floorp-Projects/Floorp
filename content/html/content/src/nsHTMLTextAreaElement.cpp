@@ -108,7 +108,7 @@ public:
   NS_DECL_NSITEXTAREAELEMENT
 
   // nsIFormControl
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -772,15 +772,6 @@ nsHTMLTextAreaElement::DoneAddingChildren()
   return NS_OK;
 }
 
-// nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "Null pointer bad!");
-  *aType = NS_FORM_TEXTAREA;
-  return NS_OK;
-}
 
 nsresult
 nsHTMLTextAreaElement::GetInnerHTML(nsAString& aInnerHTML)

@@ -206,10 +206,10 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
 #endif
 
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsHTMLButtonControlFrame::GetType() const
 {
-  return nsFormControlHelper::GetType(mContent, aType);
+  return nsFormControlHelper::GetType(mContent);
 }
 
 NS_IMETHODIMP

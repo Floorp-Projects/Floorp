@@ -162,7 +162,7 @@ public:
   NS_DECL_NSIPHONETIC
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return mType; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -664,11 +664,8 @@ nsHTMLInputElement::SetType(const nsAString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAString& aValue)
 {
-  PRInt32 type;
-  GetType(&type);
-
-  if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
-      type == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD ||
+      mType == NS_FORM_INPUT_FILE) {
     // No need to flush here, if there's no frame created for this
     // input yet, there won't be a value in it (that we don't already
     // have) even if we force it to be created
@@ -704,7 +701,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE &&
-      (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX)) {
+      (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
     // The default value of a radio or checkbox input is "on".
     aValue.Assign(NS_LITERAL_STRING("on"));
 
@@ -889,9 +886,7 @@ nsHTMLInputElement::SetChecked(PRBool aChecked)
   //
   // Set checked
   //
-  PRInt32 type;
-  GetType(&type);
-  if (type == NS_FORM_INPUT_RADIO) {
+  if (mType == NS_FORM_INPUT_RADIO) {
     //
     // For radio button, we need to do some extra fun stuff
     //
@@ -989,19 +984,16 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
     return NS_OK;
   }
 
-  PRInt32 type;
-  GetType(&type);
-
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
 
-  if (type == NS_FORM_INPUT_CHECKBOX) {
+  if (mType == NS_FORM_INPUT_CHECKBOX) {
     nsICheckboxControlFrame* checkboxFrame = nsnull;
     CallQueryInterface(frame, &checkboxFrame);
     if (checkboxFrame) {
       checkboxFrame->OnChecked(presContext, aChecked);
     }
-  } else if (type == NS_FORM_INPUT_RADIO) {
+  } else if (mType == NS_FORM_INPUT_RADIO) {
     nsIRadioControlFrame* radioFrame = nsnull;
     CallQueryInterface(frame, &radioFrame);
     if (radioFrame) {
@@ -1150,12 +1142,7 @@ nsHTMLInputElement::Select()
     return rv;
   }
 
-  // see what type of input we are.  Only select for texts and passwords
-  PRInt32 type;
-  GetType(&type);
-
-  if (NS_FORM_INPUT_PASSWORD == type ||
-      NS_FORM_INPUT_TEXT == type) {
+  if (mType == NS_FORM_INPUT_PASSWORD || mType == NS_FORM_INPUT_TEXT) {
     // XXX Bug?  We have to give the input focus before contents can be
     // selected
 
@@ -1250,13 +1237,9 @@ nsHTMLInputElement::Click()
 
   // see what type of input we are.  Only click button, checkbox, radio,
   // reset, submit, & image
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_BUTTON == type ||
-      NS_FORM_INPUT_CHECKBOX == type ||
-      NS_FORM_INPUT_RADIO == type ||
-      NS_FORM_INPUT_RESET == type ||
-      NS_FORM_INPUT_SUBMIT == type) {
+  if (mType == NS_FORM_INPUT_BUTTON || mType == NS_FORM_INPUT_CHECKBOX ||
+      mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_RESET ||
+      mType == NS_FORM_INPUT_SUBMIT) {
 
     nsCOMPtr<nsIDocument> doc; // Strong
     rv = GetDocument(*getter_AddRefs(doc));
@@ -1673,8 +1656,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
                 currentControl = do_QueryInterface(currentControlSupports);
                 if (currentControl) {
-                  PRInt32 type;
-                  currentControl->GetType(&type);
+                  PRInt32 type = currentControl->GetType();
                   if (!submitControl &&
                       (type == NS_FORM_INPUT_SUBMIT ||
                        type == NS_FORM_BUTTON_SUBMIT ||
@@ -2060,14 +2042,6 @@ nsHTMLInputElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapR
 
 // nsIFormControl
 
-NS_IMETHODIMP
-nsHTMLInputElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "aType must not be null!");
-  *aType = mType;
-  return NS_OK;
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLInputElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
@@ -2086,11 +2060,8 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  PRInt32 type;
-  GetType(&type);
-
   //XXX: what about type "file"?
-  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type)
+  if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD)
   {
     if (!mControllers)
     {
@@ -2278,12 +2249,10 @@ nsresult
 nsHTMLInputElement::Reset()
 {
   nsresult rv = NS_OK;
-  PRInt32 type;
-  GetType(&type);
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
-  switch (type) {
+  switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
     {
@@ -2341,18 +2310,9 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   }
 
   //
-  // Get the type (many ops depend on the type)
-  //
-  PRInt32 type;
-  rv = GetType(&type);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  //
   // For type=reset, and type=button, we just never submit, period.
   //
-  if (type == NS_FORM_INPUT_RESET || type == NS_FORM_INPUT_BUTTON) {
+  if (mType == NS_FORM_INPUT_RESET || mType == NS_FORM_INPUT_BUTTON) {
     return rv;
   }
 
@@ -2360,7 +2320,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // For type=image and type=button, we only submit if we were the button
   // pressed
   //
-  if ((type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE)
+  if ((mType == NS_FORM_INPUT_SUBMIT || mType == NS_FORM_INPUT_IMAGE)
       && aSubmitElement != this) {
     return rv;
   }
@@ -2368,7 +2328,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   // For type=radio and type=checkbox, we only submit if checked=true
   //
-  if (type == NS_FORM_INPUT_RADIO || type == NS_FORM_INPUT_CHECKBOX) {
+  if (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX) {
     PRBool checked;
     rv = GetChecked(&checked);
     if (NS_FAILED(rv) || !checked) {
@@ -2389,7 +2349,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   // Submit .x, .y for input type=image
   //
-  if (type == NS_FORM_INPUT_IMAGE) {
+  if (mType == NS_FORM_INPUT_IMAGE) {
     // Go to the frame to find out where it was clicked.  This is the only
     // case where I can actually see using the frame, because you're talking
     // about a value--mouse click--that is rightfully the domain of the frame.
@@ -2448,7 +2408,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   // Submit file if it's input type=file and this encoding method accepts files
   //
-  if (type == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_FILE) {
     //
     // Open the file
     //
@@ -2550,7 +2510,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
 
   // Submit
   // (for type=image, only submit if value is non-null)
-  if (type != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
+  if (mType != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
     rv = aFormSubmission->AddNameValuePair(this, name, value);
   }
 
@@ -2563,11 +2523,8 @@ nsHTMLInputElement::SaveState()
 {
   nsresult rv = NS_OK;
 
-  PRInt32 type;
-  GetType(&type);
-  
   nsCOMPtr<nsIPresState> state;
-  switch (type) {
+  switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {
@@ -2578,7 +2535,7 @@ nsHTMLInputElement::SaveState()
         // Only save if checked != defaultChecked (bug 62713)
         // (always save if it's a radio button so that the checked
         // state of all radio buttons is restored)
-        if (type == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
+        if (mType == NS_FORM_INPUT_RADIO || checked != defaultChecked) {
           rv = GetPrimaryPresState(this, getter_AddRefs(state));
           if (state) {
             if (checked) {
@@ -2669,10 +2626,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
 {
   nsresult rv = NS_OK;
 
-  PRInt32 type;
-  GetType(&type);
-  
-  switch (type) {
+  switch (mType) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
       {

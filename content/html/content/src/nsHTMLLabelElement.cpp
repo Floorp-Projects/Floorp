@@ -170,7 +170,7 @@ public:
   NS_DECL_NSIDOMHTMLLABELELEMENT
 
   // nsIFormControl
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_LABEL; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -285,17 +285,6 @@ NS_IMETHODIMP
 nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   return nsGenericHTMLContainerFormElement::GetForm(aForm);
-}
-
-
-// nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLLabelElement::GetType(PRInt32* aType)
-{
-  *aType = NS_FORM_LABEL;
-
-  return NS_OK;
 }
 
 

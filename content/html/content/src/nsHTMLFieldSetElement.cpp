@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMHTMLFIELDSETELEMENT
 
   // nsIFormControl
-  NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_FIELDSET; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -173,15 +173,6 @@ nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 // nsIFormControl
-
-NS_IMETHODIMP
-nsHTMLFieldSetElement::GetType(PRInt32* aType)
-{
-  NS_ASSERTION(aType, "Null pointer bad");
-  *aType = NS_FORM_FIELDSET;
-  return NS_OK;
-}
-
 
 
 #ifdef DEBUG

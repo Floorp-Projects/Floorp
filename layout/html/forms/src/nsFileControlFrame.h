@@ -103,7 +103,7 @@ public:
                               PRInt32         aHint);
 
   NS_IMETHOD     GetName(nsAString* aName);
-  NS_IMETHOD     GetType(PRInt32* aType) const;
+  NS_IMETHOD_(PRInt32) GetType() const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
   void           ScrollIntoView(nsIPresContext* aPresContext);
 

@@ -329,9 +329,7 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   //
   if (!mWarnedFileControl) {
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
-    PRInt32 type;
-    formControl->GetType(&type);
-    if (type == NS_FORM_INPUT_FILE) {
+    if (formControl->GetType() == NS_FORM_INPUT_FILE) {
       nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aSource);
       SendJSWarning(content, NS_LITERAL_STRING("ForgotFileEnctypeWarning"));
       mWarnedFileControl = PR_TRUE;
@@ -1460,9 +1458,7 @@ nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
   if (aName == NS_LITERAL_STRING("_charset_")) {
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl) {
-      PRInt32 type;
-      formControl->GetType(&type);
-      if (type == NS_FORM_INPUT_HIDDEN) {
+      if (formControl->GetType() == NS_FORM_INPUT_HIDDEN) {
         return new nsString(mCharset);
       }
     }

@@ -428,11 +428,10 @@ nsComboboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP 
-nsComboboxControlFrame::GetType(PRInt32* aType) const
+NS_IMETHODIMP_(PRInt32)
+nsComboboxControlFrame::GetType() const
 {
-  *aType = NS_FORM_SELECT;
-  return NS_OK;
+  return NS_FORM_SELECT;
 }
 
 //--------------------------------------------------------------
@@ -2423,17 +2422,15 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     InitTextStr();
 
     nsIFrame * child = aChildList;
-    while (child != nsnull) {
+    while (child) {
       nsIFormControlFrame* fcFrame = nsnull;
-      rv = child->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
-      if (NS_FAILED(rv) && fcFrame == nsnull) {
+      CallQueryInterface(child, &fcFrame);
+      if (fcFrame) {
+        if (fcFrame->GetType() == NS_FORM_INPUT_BUTTON) {
+          mButtonFrame = child;
+        }
+      } else {
         mDisplayFrame = child;
-      } else if (fcFrame != nsnull) {
-          PRInt32 type;
-          fcFrame->GetType(&type);
-          if (type == NS_FORM_INPUT_BUTTON) {
-            mButtonFrame = child;
-          }
       }
       child->GetNextSibling(&child);
     }

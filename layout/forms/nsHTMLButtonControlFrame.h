@@ -128,7 +128,7 @@ public:
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
 
-  NS_IMETHOD GetType(PRInt32* aType) const;
+  NS_IMETHOD_(PRInt32) GetType() const;
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetValue(nsAString* aName);
   virtual void MouseClicked(nsIPresContext* aPresContext);

@@ -130,7 +130,7 @@ public:
                                   nsIFrame*       aChildList);
 
 //==== BEGIN NSIFORMCONTROLFRAME
-  NS_IMETHOD GetType(PRInt32* aType) const; //*
+  NS_IMETHOD_(PRInt32) GetType() const; //*
   NS_IMETHOD GetName(nsAString* aName);//*
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
