@@ -167,7 +167,8 @@ public:
     * Perform opertations after the widget associated with this frame has been
     * created.
     */
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth, nscoord& aHeight);
   void SetColors(nsIPresContext& aPresContext);
   
   virtual void Reset();

@@ -97,7 +97,7 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 void 
-nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
   nsIRadioButton* radio = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&radio))) {

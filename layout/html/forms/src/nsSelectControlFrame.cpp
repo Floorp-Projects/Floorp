@@ -64,7 +64,9 @@ public:
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   virtual const nsIID& GetCID();
 
@@ -99,6 +101,8 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
   
+  void GetWidgetSize(nsIPresContext& aPresContext, nscoord& aWidth, nscoord& aHeight);
+
   PRBool mIsComboBox;
   PRBool mOptionsAdded;
 };
@@ -145,7 +149,7 @@ nsSelectControlFrame::GetVerticalInsidePadding(float aPixToTwip,
                                                nscoord aInnerHeight) const
 {
 #ifdef XP_PC
-  return (nscoord)NSToIntRound(float(aInnerHeight) * 0.15f);
+  return (nscoord)NSToIntRound(float(aInnerHeight) * 0.10f);
 #endif
 #ifdef XP_UNIX
   return NSIntPixelsToTwips(1, aPixToTwip); // XXX this is probably wrong
@@ -206,6 +210,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (!options) {
     return;
   }
+
   // get the css size 
   nsSize styleSize;
   GetStyleSize(*aPresContext, aReflowState, styleSize);
@@ -250,23 +255,34 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       ((1 >= sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
     mIsComboBox = PR_TRUE;
   }
+    
+  float p2t = aPresContext->GetPixelsToTwips();
 
   aDesiredLayoutSize.width = calcSize.width;
   // account for vertical scrollbar, if present  
   if (!widthExplicit && ((numRows < numOptions) || mIsComboBox)) {
-    float p2t = aPresContext->GetPixelsToTwips();
     aDesiredLayoutSize.width += GetScrollbarWidth(p2t);
   }
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
-  aDesiredLayoutSize.height = mIsComboBox ? 350 : calcSize.height; 
+  aDesiredLayoutSize.height = (mIsComboBox)
+    ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
+    : calcSize.height; 
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
   if (mIsComboBox) {  // add in pull down size
-    aDesiredWidgetSize.height += (rowHeight * (numOptions > 20 ? 20 : numOptions)) + 100;
+    PRInt32 extra = NSIntPixelsToTwips(10, p2t);
+    aDesiredWidgetSize.height += (rowHeight * (numOptions > 20 ? 20 : numOptions)) + extra;
+  }
+
+  // override the width and height for a combo box that has already got a widget
+  if (mWidget && mIsComboBox) {
+    nscoord ignore;
+    GetWidgetSize(*aPresContext, ignore, aDesiredLayoutSize.height);
+    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   }
 
   NS_RELEASE(options);
@@ -341,11 +357,33 @@ nsSelectControlFrame::GetOptions(nsIDOMHTMLSelectElement* aSelect)
   }
 }
 
+void
+nsSelectControlFrame::GetWidgetSize(nsIPresContext& aPresContext, nscoord& aWidth, nscoord& aHeight)
+{
+  nsRect bounds;
+  mWidget->GetBounds(bounds);
+  float p2t = aPresContext.GetPixelsToTwips();
+  aWidth  = NSIntPixelsToTwips(bounds.width, p2t);
+  aHeight = NSTwipsToIntPixels(bounds.height, p2t);
+}
+
 void 
-nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
+                                       nscoord& aWidth,
+                                       nscoord& aHeight)
 {
   if (!mWidget) {
     return;
+  }
+
+  // get the size of the combo box and let Reflow change its desired size 
+  if (mIsComboBox) {  // hack
+    nscoord ignore;
+    nscoord height;
+    GetWidgetSize(*aPresContext, ignore, height);
+    if (height > aHeight) {
+      aHeight = height;
+    }
   }
 
   nsIListWidget* listWidget;

@@ -270,7 +270,9 @@ nsTextControlFrame::GetText(nsString* aText)
 }
 
 void 
-nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
+                                     nscoord& aWidth, 
+                                     nscoord& aHeight)
 {
   if (!mWidget) {
     return;

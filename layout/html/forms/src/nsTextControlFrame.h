@@ -30,7 +30,9 @@ public:
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   virtual const nsIID& GetCID();
 

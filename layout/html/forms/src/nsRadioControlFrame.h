@@ -31,7 +31,9 @@ class nsRadioControlFrame : public nsFormControlFrame
 public:
   nsRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   virtual PRBool GetChecked(PRBool aGetInitialValue);
   virtual void   SetChecked(PRBool aValue, PRBool aSetInitialValue);

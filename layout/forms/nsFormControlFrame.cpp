@@ -270,15 +270,19 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
         formControl->SetWidget(mWidget);
         NS_RELEASE(formControl);
       }
-      PostCreateWidget(&aPresContext);
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
 	  } else {
 	    NS_ASSERTION(0, "could not get widget");
 	  }
 
     viewMan->InsertChild(parView, view, 0);
-
     SetView(view);
+
+    if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
+      viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
+    }
+
 	  NS_IF_RELEASE(viewMan);  
   }
   else {
@@ -331,7 +335,7 @@ nsFormControlFrame::SetColors(nsIPresContext& aPresContext)
 }
 
 void 
-nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsFormControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
 }
 
