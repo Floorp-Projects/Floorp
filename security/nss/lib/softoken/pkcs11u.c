@@ -572,6 +572,8 @@ static PK11Attribute *
 pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
     NSSLOWKEYPublicKey *key;
+    PK11Attribute *att = NULL;
+    char *label;
 
     switch (type) {
     case CKA_PRIVATE:
@@ -582,6 +584,15 @@ pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_MODIFIABLE:
     case CKA_EXTRACTABLE:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
+    case CKA_LABEL:
+        label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
+				&object->dbKey, object->obj.slot->password);
+	if (label == NULL) {
+	   return (PK11Attribute *)&pk11_StaticNullAttr;
+	}
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	PORT_Free(label);
+	return att;
     default:
 	break;
     }
@@ -590,6 +601,7 @@ pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     if (key == NULL) {
 	return NULL;
     }
+
     switch (key->keyType) {
     case NSSLOWKEYRSAKey:
 	return pk11_FindRSAPublicKeyAttribute(key,type);
@@ -608,6 +620,9 @@ static PK11Attribute *
 pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
     NSSLOWKEYPrivateKey *key;
+    char *label;
+    PK11Attribute *att;
+
     switch (type) {
     case CKA_PRIVATE:
     case CKA_SENSITIVE:
@@ -624,8 +639,15 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_NEVER_EXTRACTABLE:
     case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
-    case CKA_VALUE:
-	return (PK11Attribute *) &pk11_StaticNullAttr;
+    case CKA_LABEL:
+        label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
+				&object->dbKey, object->obj.slot->password);
+	if (label == NULL) {
+	   return (PK11Attribute *)&pk11_StaticNullAttr;
+	}
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	PORT_Free(label);
+	return att;
     default:
 	break;
     }
@@ -761,6 +783,9 @@ static PK11Attribute *
 pk11_FindPrivateKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
     NSSLOWKEYPrivateKey *key;
+    char *label;
+    PK11Attribute *att;
+
     switch (type) {
     case CKA_PRIVATE:
     case CKA_SENSITIVE:
@@ -770,6 +795,17 @@ pk11_FindPrivateKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
     case CKA_NEVER_EXTRACTABLE:
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
+    case CKA_SUBJECT:
+	   return (PK11Attribute *)&pk11_StaticNullAttr;
+    case CKA_LABEL:
+        label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
+				&object->dbKey, object->obj.slot->password);
+	if (label == NULL) {
+	   return (PK11Attribute *)&pk11_StaticNullAttr;
+	}
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	PORT_Free(label);
+	return att;
     default:
 	break;
     }
@@ -1003,9 +1039,11 @@ pk11_FindTokenAttribute(PK11TokenObject *object,CK_ATTRIBUTE_TYPE type)
     case CKA_TOKEN:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
     case CKA_LABEL:
-	return (object->obj.objclass != CKO_CERTIFICATE) ? 
-			(PK11Attribute *) &pk11_StaticNullAttr :
-				pk11_FindCertAttribute(object,type);
+	if ((object->obj.objclass == CKO_CERTIFICATE) 
+				&& (object->obj.objclass == CKO_PRIVATE_KEY)) {
+	    break;
+	}
+	return (PK11Attribute *) &pk11_StaticNullAttr;
     default:
 	break;
     }
@@ -1207,6 +1245,47 @@ pk11_nullAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
     }
     pk11_FreeAttribute(attribute);
 }
+static CK_RV
+pk11_SetPrivateKeyAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type, 
+						void *value, unsigned int len)
+{
+    NSSLOWKEYPrivateKey *privKey;
+    char *nickname = NULL;
+    SECStatus rv;
+
+    /* we can't change the ID and we don't store the subject, but let the
+     * upper layers feel better about the fact we tried to set these */
+    if ((type == CKA_ID) || (type == CKA_SUBJECT)) {
+	return CKR_OK;
+    }
+
+    if (to->obj.slot->keyDB == NULL) {
+	return CKR_TOKEN_WRITE_PROTECTED;
+    }
+    if (type != CKA_LABEL) {
+	return CKR_ATTRIBUTE_READ_ONLY;
+    }
+
+    privKey = pk11_GetPrivateKey(to);
+    if (privKey == NULL) {
+	return CKR_OBJECT_HANDLE_INVALID;
+    }
+    if (value != NULL) {
+	nickname = PORT_ZAlloc(len+1);
+	if (nickname == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+	PORT_Memcpy(nickname,value,len);
+	nickname[len] = 0;
+    }
+    rv = nsslowkey_UpdateNickname(to->obj.slot->keyDB, privKey, &to->dbKey, 
+					nickname, to->obj.slot->password);
+    if (nickname) PORT_Free(nickname);
+    if (rv != SECSuccess) {
+	return CKR_DEVICE_ERROR;
+    }
+    return CKR_OK;
+}
 
 static CK_RV
 pk11_SetTrustAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type, 
@@ -1292,6 +1371,10 @@ pk11_forceTokenAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type,
 	break;
     case CKO_NETSCAPE_TRUST:
 	crv = pk11_SetTrustAttribute(to,type,value,len);
+	break;
+    case CKO_PRIVATE_KEY:
+    case CKO_SECRET_KEY:
+	crv = pk11_SetPrivateKeyAttribute(to,type,value,len);
 	break;
     }
     pk11_FreeAttribute(attribute);

@@ -2667,6 +2667,8 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
     NSSPKCS5PBEParameter *params;
     SECItem salt;
 
+    *pbe = NULL;
+
     oid = SECOID_FindOIDByMechanism(pMechanism->mechanism);
     if (oid == NULL) {
 	return CKR_MECHANISM_INVALID;
@@ -2688,18 +2690,20 @@ nsc_SetupPBEKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter  **pbe,
 	break;
     case SEC_OID_DES_EDE3_CBC:
 	*key_type = params->is2KeyDES ? CKK_DES2 : CKK_DES3;
-    case CKM_PBE_MD5_DES_CBC:
-	*key_type = CKK_DES;
 	break;
     case SEC_OID_RC2_CBC:
-	*key_type = CKK_RC4;
+	*key_type = CKK_RC2;
 	break;
     case SEC_OID_RC4:
 	*key_type = CKK_RC4;
 	break;
     default:
 	crv = CKR_MECHANISM_INVALID;
+	nsspkcs5_DestroyPBEParameter(params);
 	break;
+    }
+    if (crv == CKR_OK) {
+    	*pbe = params;
     }
     return crv;
 }
@@ -2835,6 +2839,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case nsc_pbe:
 	crv = nsc_pbe_key_gen(pbe_param, pMechanism, buf, &key_length,
 			       faultyPBE3DES);
+	nsspkcs5_DestroyPBEParameter(pbe_param);
 	break;
     case nsc_ssl:
 	rsa_pms = (SSL3RSAPreMasterSecret *)buf;

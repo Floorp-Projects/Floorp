@@ -49,7 +49,7 @@
 #include "sechash.h"
 #include "cert.h"
 #include "secerr.h"
-/*#include "secpkcs5.h" */
+#include "secpkcs5.h" 
 
 #define PAIRWISE_SECITEM_TYPE			siBuffer
 #define PAIRWISE_DIGEST_LENGTH			SHA1_LENGTH /* 160-bits */
@@ -4097,9 +4097,7 @@ SECAlgorithmID *
 PK11_CreatePBEAlgorithmID(SECOidTag algorithm, int iteration, SECItem *salt)
 {
     SECAlgorithmID *algid = NULL;
-#ifdef notdef
     algid = SEC_PKCS5CreateAlgorithmID(algorithm, salt, iteration);
-#endif
     return algid;
 }
 
@@ -4394,9 +4392,7 @@ PK11_ExportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, SECOidTag algTag,
 	goto loser;
     }
     epki->arena = arena;
-#ifdef notdef
     algid = SEC_PKCS5CreateAlgorithmID(algTag, NULL, iteration);
-#endif
     if(algid == NULL) {
 	rv = SECFailure;
 	goto loser;

@@ -32,7 +32,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: lowkeyi.h,v 1.2 2001/11/08 00:15:35 relyea%netscape.com Exp $
+ * $Id: lowkeyi.h,v 1.3 2001/11/08 05:39:54 relyea%netscape.com Exp $
  */
 
 #ifndef _LOWKEYI_H_
@@ -208,6 +208,13 @@ nsslowkey_ChangeKeyDBPasswordAlg(NSSLOWKEYDBHandle *handle,
 			      SECItem *oldpwitem, SECItem *newpwitem,
 			      SECOidTag old_algorithm);
 
+SECStatus
+nsslowkey_UpdateNickname(NSSLOWKEYDBHandle *handle,
+                           NSSLOWKEYPrivateKey *privkey,
+                           SECItem *pubKeyData,
+                           char *nickname,
+                           SECItem *arg);
+
 /* Store key by modulus and specify an encryption algorithm to use.
  *   handle is the pointer to the key database,
  *   privkey is the private key to be stored,
@@ -222,7 +229,8 @@ nsslowkey_StoreKeyByPublicKeyAlg(NSSLOWKEYDBHandle *handle,
 			      SECItem *pubKeyData,
 			      char *nickname,
 			      SECItem *arg,
-			      SECOidTag algorithm); 
+			      SECOidTag algorithm,
+                              PRBool update); 
 
 /* Find key by modulus.  This function is the inverse of store key
  * by modulus.  An attempt to locate the key with "modulus" is 
@@ -233,6 +241,11 @@ nsslowkey_StoreKeyByPublicKeyAlg(NSSLOWKEYDBHandle *handle,
 extern NSSLOWKEYPrivateKey *
 nsslowkey_FindKeyByPublicKey(NSSLOWKEYDBHandle *handle, SECItem *modulus, 
 			  SECItem *arg);
+
+extern char *
+nsslowkey_FindKeyNicknameByPublicKey(NSSLOWKEYDBHandle *handle,
+                                        SECItem *modulus, SECItem *pwitem);
+
 
 /* Make a copy of a low private key in it's own arena.
  * a return of NULL indicates an error.
