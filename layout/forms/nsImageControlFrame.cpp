@@ -329,6 +329,11 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
+  // Don't do anything if the event has already been handled by someone
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
+    return NS_OK;
+  }
+
   // do we have user-input style?
   const nsStyleUserInterface* uiStyle;
   GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
