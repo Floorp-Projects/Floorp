@@ -586,6 +586,7 @@
           <label id="attachmentBucketText" value="&attachments.label;" crop="right"
                  accesskey="&attachments.accesskey;" control="attachmentBucket"/>
           <listbox seltype="multiple" id="attachmentBucket" flex="1" rows="4"
+                   style="-moz-user-focus: none;"
                    context="msgComposeAttachmentContext"
                    onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
                    onclick="AttachmentBucketClicked(event);"/>
@@ -659,7 +660,7 @@
   <!-- The mail message body frame -->
   <vbox id="appcontent" flex="1">
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
-            onkeypress="editorKeyPress(event);" context="msgComposeContext"/>
+            context="msgComposeContext"/>
   </vbox>
   
   </vbox>
