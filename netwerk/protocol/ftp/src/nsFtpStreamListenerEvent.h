@@ -42,12 +42,12 @@ protected:
     nsISupports*                mContext;
 };
 
-class nsFtpOnStartBindingEvent : public nsFtpStreamListenerEvent
+class nsFtpOnStartRequestEvent : public nsFtpStreamListenerEvent
 {
 public:
-    nsFtpOnStartBindingEvent(nsIStreamListener* listener, nsISupports* context)
+    nsFtpOnStartRequestEvent(nsIStreamListener* listener, nsISupports* context)
         : nsFtpStreamListenerEvent(listener, context) {}
-    virtual ~nsFtpOnStartBindingEvent() {}
+    virtual ~nsFtpOnStartRequestEvent() {}
 
     NS_IMETHOD HandleEvent();
 };
@@ -71,13 +71,13 @@ protected:
 };
 
 
-class nsFtpOnStopBindingEvent : public nsFtpStreamListenerEvent
+class nsFtpOnStopRequestEvent : public nsFtpStreamListenerEvent
 {
 public:
-    nsFtpOnStopBindingEvent(nsIStreamListener* listener, nsISupports* context)
+    nsFtpOnStopRequestEvent(nsIStreamListener* listener, nsISupports* context)
         : nsFtpStreamListenerEvent(listener, context),
           mStatus(NS_OK), mMessage(nsnull) {}
-    virtual ~nsFtpOnStopBindingEvent();
+    virtual ~nsFtpOnStopRequestEvent();
 
     nsresult Init(nsresult status, PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();

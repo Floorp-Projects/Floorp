@@ -63,7 +63,6 @@ interface nsIURL : nsIURI
 
 %{C++
 
-
 /**
  * Protocol writers can obtain a default nsIURL implementation by calling the
  * component manager with NS_STANDARDURL_CID. The implementation returned will 

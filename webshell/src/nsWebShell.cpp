@@ -24,7 +24,9 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsIPrompt.h"
+#else
 #include "nsINetSupport.h"
 #include "nsIRefreshUrl.h"
 #endif
@@ -133,7 +135,9 @@ class nsWebShell : public nsIWebShell,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
-#ifndef NECKO
+#ifdef NECKO
+                   public nsIPrompt,
+#else
                    public nsIRefreshUrl,
                    public nsINetSupport,
 #endif
@@ -216,7 +220,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType = nsURLReload,
 #endif
@@ -226,7 +230,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType = nsURLReload,
 #endif
@@ -234,7 +238,7 @@ public:
 
   NS_IMETHOD Stop(void);
 #ifdef NECKO
-  NS_IMETHOD Reload(PRUint32 aType);
+  NS_IMETHOD Reload(nsLoadFlags aType);
 #else
   NS_IMETHOD Reload(nsURLReloadType aType);
 #endif
@@ -352,13 +356,21 @@ public:
 
 #if 0
   // nsIStreamObserver
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 #endif  /* 0 */
 
-
+#ifdef NECKO
+  // nsIPrompt
+  NS_IMETHOD Alert(const PRUnichar *text);
+  NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
+  NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+  NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
+  NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
+  NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
+#else
 	// nsINetSupport interface methods
   NS_IMETHOD_(void) Alert(const nsString &aText);
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
@@ -370,6 +382,7 @@ public:
                                             nsString &aPassword);
   NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
                                      nsString &aPassword);
+#endif
 
   // nsIClipboardCommands 
   NS_IMETHOD CanCutSelection  (PRBool* aResult);
@@ -437,7 +450,9 @@ protected:
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
-#ifndef NECKO
+#ifdef NECKO
+  nsIPrompt* mPrompter;
+#else
   nsINetSupport* mNetSupport;
 #endif
 
@@ -475,7 +490,7 @@ protected:
                      const char* aCommand,
                      nsIPostData* aPostData,
 #ifdef NECKO
-                     PRUint32 aType,
+                     nsLoadFlags aType,
 #else
                      nsURLReloadType aType,
 #endif
@@ -617,6 +632,11 @@ nsWebShell::nsWebShell()
   mHintCharsetSource = kCharsetUninitialized;
   mForceCharacterSet = "";
   mHistoryService = nsnull;
+#ifdef NECKO
+  mPrompter = nsnull;
+#else
+  mNetSupport = nsnull;
+#endif
 }
 
 nsWebShell::~nsWebShell()
@@ -646,7 +666,9 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
-#ifndef NECKO
+#ifdef NECKO
+  NS_IF_RELEASE(mPrompter);
+#else
   NS_IF_RELEASE(mNetSupport);
 #endif
 
@@ -787,6 +809,14 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+#endif
+#ifdef NECKO
+  if (aIID.Equals(nsIPrompt::GetIID())) {
+    *aInstancePtr = (void*) ((nsIPrompt*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+#else
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtr = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
@@ -1243,13 +1273,17 @@ NS_IMETHODIMP
 nsWebShell::SetObserver(nsIStreamObserver* anObserver)
 {
   NS_IF_RELEASE(mObserver);
-#ifndef NECKO
+#ifdef NECKO
+  NS_IF_RELEASE(mPrompter);
+#else
   NS_IF_RELEASE(mNetSupport);
 #endif
 
   mObserver = anObserver;
   if (nsnull != mObserver) {
-#ifndef NECKO
+#ifdef NECKO
+    mObserver->QueryInterface(nsIPrompt::GetIID(), (void**)&mPrompter);
+#else
     mObserver->QueryInterface(kINetSupportIID, (void **) &mNetSupport);
 #endif
     NS_ADDREF(mObserver);
@@ -1700,7 +1734,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
                     PRBool aModifyHistory,
 #ifdef NECKO
-                    PRUint32 aType,
+                    nsLoadFlags aType,
 #else
                     nsURLReloadType aType,
 #endif
@@ -1718,7 +1752,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
                       const char* aCommand,
                       nsIPostData* aPostData,
 #ifdef NECKO
-                      PRUint32 aType,
+                      nsLoadFlags aType,
 #else
                       nsURLReloadType aType,
 #endif
@@ -1833,7 +1867,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
                     PRBool aModifyHistory,
 #ifdef NECKO
-                    PRUint32 aType,
+                    nsLoadFlags aType,
 #else
                     nsURLReloadType aType,
 #endif
@@ -1966,7 +2000,7 @@ NS_IMETHODIMP nsWebShell::Stop(void)
 }
 
 #ifdef NECKO
-NS_IMETHODIMP nsWebShell::Reload(PRUint32 aType)
+NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
 #else
 NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
 #endif
@@ -3160,12 +3194,12 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
 
 #if 0
 NS_IMETHODIMP
-nsWebShell::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsWebShell::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
   nsresult rv = NS_OK;
 
   if (nsnull != mObserver) {
-    rv = mObserver->OnStartBinding(aURL, aContentType);
+    rv = mObserver->OnStartRequest(aURL, aContentType);
   }
   return rv;
 }
@@ -3216,12 +3250,12 @@ nsWebShell::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsWebShell::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
 
   if (nsnull != mObserver) {
-    rv = mObserver->OnStopBinding(aURL, aStatus, aMsg);
+    rv = mObserver->OnStopRequest(aURL, aStatus, aMsg);
   }
   return rv;
 }
@@ -3230,11 +3264,18 @@ nsWebShell::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 
 //----------------------------------------------------------------------
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::Alert(const PRUnichar *text)
+#else
 NS_IMETHODIMP_(void)
 nsWebShell::Alert(const nsString &aText)
+#endif
 {
 #ifdef NECKO
-  NS_ASSERTION(0, "help");
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->Alert(text);
 #else
   if (nsnull != mNetSupport) {
     mNetSupport->Alert(aText);
@@ -3242,69 +3283,117 @@ nsWebShell::Alert(const nsString &aText)
 #endif
 }
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::Confirm(const PRUnichar *text,
+                    PRBool *result)
+#else
 NS_IMETHODIMP_(PRBool)
 nsWebShell::Confirm(const nsString &aText)
+#endif
 {
+#ifdef NECKO
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->Confirm(text, result);
+#else
   PRBool bResult = PR_FALSE;
 
-#ifdef NECKO
-  NS_ASSERTION(0, "help");
-#else
   if (nsnull != mNetSupport) {
     bResult = mNetSupport->Confirm(aText);
   }
-#endif
   return bResult;
+#endif
 }
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::ConfirmCheck(const PRUnichar *text, 
+                         const PRUnichar *checkMsg, 
+                         PRBool *checkValue, 
+                         PRBool *result)
+{
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->ConfirmCheck(text, checkMsg, checkValue, result);
+}
+#endif
+
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::Prompt(const PRUnichar *text,
+                   const PRUnichar *defaultText, 
+                   PRUnichar **result,
+                   PRBool *_retval)
+#else
 NS_IMETHODIMP_(PRBool)
 nsWebShell::Prompt(const nsString &aText,
                    const nsString &aDefault,
                    nsString &aResult)
+#endif
 {
-  PRBool bResult = PR_FALSE;
-
 #ifdef NECKO
-  NS_ASSERTION(0, "help");
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->Prompt(text, defaultText, result, _retval);
 #else
+  PRBool bResult = PR_FALSE;
   if (nsnull != mNetSupport) {
     bResult = mNetSupport->Prompt(aText, aDefault, aResult);
   }
-#endif
   return bResult;
+#endif
 }
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::PromptUsernameAndPassword(const PRUnichar *text,
+                                      PRUnichar **user,
+                                      PRUnichar **pwd,
+                                      PRBool *_retval)
+#else
 NS_IMETHODIMP_(PRBool) 
 nsWebShell::PromptUserAndPassword(const nsString &aText,
                                   nsString &aUser,
                                   nsString &aPassword)
+#endif
 {
-  PRBool bResult = PR_FALSE;
-
 #ifdef NECKO
-  NS_ASSERTION(0, "help");
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->PromptUsernameAndPassword(text, user, pwd, _retval);
 #else
+  PRBool bResult = PR_FALSE;
   if (nsnull != mNetSupport) {
     bResult = mNetSupport->PromptUserAndPassword(aText, aUser, aPassword);
   }
-#endif
   return bResult;
+#endif
 }
 
+#ifdef NECKO
+NS_IMETHODIMP
+nsWebShell::PromptPassword(const PRUnichar *text, 
+                           PRUnichar **pwd, 
+                           PRBool *_retval)
+#else
 NS_IMETHODIMP_(PRBool) 
 nsWebShell::PromptPassword(const nsString &aText,
                            nsString &aPassword)
+#endif
 {
+#ifdef NECKO
+  if (mPrompter == nsnull)
+    return NS_OK;
+  return mPrompter->PromptPassword(text, pwd, _retval);
+#else
   PRBool bResult = PR_FALSE;
 
-#ifdef NECKO
-  NS_ASSERTION(0, "help");
-#else
   if (nsnull != mNetSupport) {
     bResult = mNetSupport->PromptPassword(aText, aPassword);
   }
-#endif
   return bResult;
+#endif
 }
 
 //----------------------------------------------------

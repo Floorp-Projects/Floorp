@@ -451,10 +451,10 @@ GtkMozillaContainer::StartStream(const char *base_url, const char *action,
   }
 
   /*
-   * Pass the OnStartBinding(...) notification out to the document 
+   * Pass the OnStartRequest(...) notification out to the document 
    * IStreamListener.
    */
-  rv = listener->OnStartBinding(url, content_type);
+  rv = listener->OnStartRequest(url, content_type);
   if (NS_FAILED(rv)) {
     goto done;
   }
@@ -504,7 +504,7 @@ GtkMozillaContainer::EndStream(void)
   if (NS_FAILED(rv))
     return;
   
-  rv = mListener->OnStopBinding(mStreamURL, NS_OK, NULL);
+  rv = mListener->OnStopRequest(mStreamURL, NS_OK, NULL);
   if (NS_FAILED(rv))
     return;
   

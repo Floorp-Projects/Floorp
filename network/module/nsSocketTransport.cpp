@@ -166,7 +166,7 @@ nsSocketTransport::GetOutputStream(nsIOutputStream ** aOutputStream)
 
 
 NS_IMETHODIMP 
-nsSocketTransport::OnStartBinding(nsIURI* pURL, const char *aContentType)
+nsSocketTransport::OnStartRequest(nsIURI* pURL, const char *aContentType)
 {
   return NS_OK;
 }
@@ -186,11 +186,11 @@ nsSocketTransport::OnStatus(nsIURI* pURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP 
-nsSocketTransport::OnStopBinding(nsIURI* pURL, 
+nsSocketTransport::OnStopRequest(nsIURI* pURL, 
 				 nsresult aStatus, 
 				 const PRUnichar* aMsg)
 {
-// if the protocol instance called OnStopBinding then they are effectively asking us
+// if the protocol instance called OnStopRequest then they are effectively asking us
 // to close the connection. But they don't want US to go away.....
 // so we need to close the underlying socket....
   CloseCurrentConnection();

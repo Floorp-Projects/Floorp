@@ -41,6 +41,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsIRequest:
 
+    /* boolean IsPending (); */
+    NS_IMETHOD IsPending(PRBool *result);
+    
     /* void Cancel (); */
     NS_IMETHOD Cancel();
 

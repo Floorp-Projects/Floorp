@@ -102,7 +102,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStartBinding(nsISupports* context) {
+    NS_IMETHOD OnStartRequest(nsISupports* context) {
         PR_EnterMonitor(mMonitor);
         printf("start binding\n"); 
         mStartTime = PR_IntervalNow();
@@ -128,7 +128,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopBinding(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg) {
         nsresult rv;
@@ -143,16 +143,6 @@ public:
         if (NS_FAILED(rv)) return rv;
 
         return rv;
-    }
-
-    NS_IMETHOD OnStartRequest(nsISupports* context) {
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD OnStopRequest(nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg) {
-        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
 protected:
@@ -202,7 +192,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     nsFileSpec spec(path);
     PRUint32 sourceOffset = 0;
 
-    rv = reader->OnStartBinding(nsnull);
+    rv = reader->OnStartRequest(nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
 
     rv = NS_NewTypicalInputFileStream(&fs, spec);
@@ -242,7 +232,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     NS_IF_RELEASE(bufStr);
     NS_IF_RELEASE(fileStr);
 
-    rv = reader->OnStopBinding(nsnull, rv, nsnull);
+    rv = reader->OnStopRequest(nsnull, rv, nsnull);
     return rv;
 }
 

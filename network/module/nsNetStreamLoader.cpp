@@ -38,10 +38,10 @@ public:
   
   NS_IMETHOD GetNumCharsRead(PRInt32* aNumBytes);
 
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                              PRUint32 aLength);
@@ -128,7 +128,7 @@ nsUnicharStreamLoader::GetNumCharsRead(PRInt32* aNumBytes)
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStartBinding(nsIURI* aURL, 
+nsUnicharStreamLoader::OnStartRequest(nsIURI* aURL, 
                                       const char *aContentType)
 {
   return NS_OK;
@@ -149,7 +149,7 @@ nsUnicharStreamLoader::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStopBinding(nsIURI* aURL, 
+nsUnicharStreamLoader::OnStopRequest(nsIURI* aURL, 
                                      nsresult aStatus, 
                                      const PRUnichar* aMsg)
 {

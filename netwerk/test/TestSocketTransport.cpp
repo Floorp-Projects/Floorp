@@ -122,26 +122,16 @@ public:
   NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
-  NS_IMETHOD OnStartBinding(nsISupports* context);
+  NS_IMETHOD OnStartRequest(nsISupports* context);
 
   NS_IMETHOD OnDataAvailable(nsISupports* context,
                              nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
-  NS_IMETHOD OnStopBinding(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
-
-  NS_IMETHOD OnStartRequest(nsISupports* context) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           const PRUnichar* aMsg) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+                           const PRUnichar* aMsg);
 
   TestConnection* mConnection;
   PRInt32 mBytesRead;
@@ -168,9 +158,9 @@ NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 
 NS_IMETHODIMP
-InputConsumer::OnStartBinding(nsISupports* context)
+InputConsumer::OnStartRequest(nsISupports* context)
 {
-  printf("\n+++ InputConsumer::OnStartBinding +++. Context = %p\n", context);
+  printf("\n+++ InputConsumer::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
 }
 
@@ -204,11 +194,11 @@ InputConsumer::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-InputConsumer::OnStopBinding(nsISupports* context,
+InputConsumer::OnStopRequest(nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg)
 {
-  printf("\n+++ InputConsumer::OnStopBinding (status = %x) +++.  Context = %p\n", aStatus, context);
+  printf("\n+++ InputConsumer::OnStopRequest (status = %x) +++.  Context = %p\n", aStatus, context);
   mConnection->Lock();
   mConnection->Notify();
   mConnection->Unlock();
@@ -233,21 +223,11 @@ public:
   NS_DECL_ISUPPORTS
 
   // IStreamObserver interface...
-  NS_IMETHOD OnStartBinding(nsISupports* context);
-
-  NS_IMETHOD OnStopBinding(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
-
-  NS_IMETHOD OnStartRequest(nsISupports* context) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  NS_IMETHOD OnStartRequest(nsISupports* context);
 
   NS_IMETHOD OnStopRequest(nsISupports* context,
                            nsresult aStatus,
-                           const PRUnichar* aMsg) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+                           const PRUnichar* aMsg);
 
 protected:
   TestConnection* mConnection;
@@ -272,21 +252,21 @@ NS_IMPL_ISUPPORTS(OutputObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 
 NS_IMETHODIMP
-OutputObserver::OnStartBinding(nsISupports* context)
+OutputObserver::OnStartRequest(nsISupports* context)
 {
-  printf("\n+++ OutputObserver::OnStartBinding +++. Context = %p\n", context);
+  printf("\n+++ OutputObserver::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-OutputObserver::OnStopBinding(nsISupports* context,
+OutputObserver::OnStopRequest(nsISupports* context,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {
 ///  mConnection->Lock();
 
-  printf("\n+++ OutputObserver::OnStopBinding (status = %x) +++.  Context = %p\n", aStatus, context);
+  printf("\n+++ OutputObserver::OnStopRequest (status = %x) +++.  Context = %p\n", aStatus, context);
 ///  mConnection->Notify();
 
 ///  mConnection->Unlock();

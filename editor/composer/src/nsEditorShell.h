@@ -28,6 +28,7 @@
 #include "nsIEditorShell.h"
 #include "nsIDocumentLoaderObserver.h"
 #ifdef NECKO
+#include "nsIPrompt.h"
 #else
 #include "nsINetSupport.h"
 #endif

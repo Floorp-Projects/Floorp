@@ -52,6 +52,6 @@ extern nsresult
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 
 extern nsresult
-NS_NewLoadGroup(nsILoadGroup* *result);
+NS_NewLoadGroup(nsILoadGroup* parent, nsILoadGroup* *result);
 
 #endif // nsNeckoUtil_h__

@@ -126,6 +126,12 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsFTPChannel::IsPending(PRBool *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFTPChannel::Cancel(void)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -266,19 +272,6 @@ nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
-
-NS_IMETHODIMP
-nsFTPChannel::OnStartBinding(nsISupports* context) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::OnStopBinding(nsISupports* context,
-                            nsresult aStatus,
-                            const PRUnichar* aMsg) {
-    // Release the lock so the user get's the data stream
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 nsFTPChannel::OnStartRequest(nsISupports* context) {

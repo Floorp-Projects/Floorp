@@ -24,7 +24,7 @@ class nsIChannel;
 
 /* 
     The nsHTTPRequestObserver class is the request writer observer that 
-    receives notifications of OnStartBinding and OnStopBinding as the
+    receives notifications of OnStartRequest and OnStopRequest as the
     request is being written out to the server. Each instance of this 
     class is tied to the corresponding transport that it writes the 
     request to. 
@@ -51,9 +51,9 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver functions
-    NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnStartRequest(nsISupports* context);
 
-    NS_IMETHOD OnStopBinding(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsISupports* context,
                nsresult aStatus,
                const PRUnichar* aMsg);
 

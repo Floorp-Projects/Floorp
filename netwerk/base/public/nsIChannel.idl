@@ -24,6 +24,8 @@ interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 
+typedef unsigned long nsLoadFlags;
+
 /**
  * nsIChannel is the abstract base class for transports and URLs.
  * It's abstract in that it doesn't provide a means to specify the
@@ -100,7 +102,7 @@ interface nsIChannel : nsIRequest
      * attributes with the LOAD_QUIET bit set causes the loading process to
      * not deliver status notifications to the program performing the load.
      */
-    attribute unsigned long LoadAttributes;
+    attribute nsLoadFlags LoadAttributes;
 
     /**
      * Returns the content MIME type of the channel if available. Note that the 

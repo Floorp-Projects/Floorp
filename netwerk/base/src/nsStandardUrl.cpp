@@ -48,6 +48,7 @@ nsStandardURL::~nsStandardURL()
     if (mScheme)        delete[] mScheme;
     if (mPreHost)       delete[] mPreHost;
     if (mHost)          delete[] mHost;
+    if (mPath)          delete[] mPath;
     if (mRef)           delete[] mRef;
     if (mQuery)         delete[] mQuery;
     if (mSpec)          delete[] mSpec;
@@ -248,12 +249,6 @@ nsStandardURL::Clone(nsIURI* *result)
     *result = url;
     NS_ADDREF(url);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStandardURL::MakeAbsolute(const char *relativePart, char **_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,7 +592,7 @@ nsStandardURL::ReconstructSpec()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIURI methods:
+// nsIURL methods:
 
 NS_IMETHODIMP
 nsStandardURL::GetDirectory(char * *aDirectory)

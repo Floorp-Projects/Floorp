@@ -23,20 +23,9 @@ interface nsIEventQueue;
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIStreamObserver : nsISupports
 {
-    void OnStartBinding(in nsISupports ctxt);
-
-    void OnStopBinding(in nsISupports ctxt, 
-                       in nsresult status,
-                       in wstring errorMsg);
-
-    /**
-     * Called after the stream is opened for reading or writing.
-     * The content type or headers may be accessed after this method
-     * is called.
-     */
     void OnStartRequest(in nsISupports ctxt);
 
-    void OnStopRequest(in nsISupports ctxt,
+    void OnStopRequest(in nsISupports ctxt, 
                        in nsresult status,
                        in wstring errorMsg);
 };
@@ -51,7 +40,7 @@ NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           nsIEventQueue* eventQueue,
                           nsIStreamObserver* receiver);
 
-// Generic status codes for OnStopBinding:
+// Generic status codes for OnStopRequest:
 #define NS_BINDING_SUCCEEDED    NS_OK
 #define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
 #define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)

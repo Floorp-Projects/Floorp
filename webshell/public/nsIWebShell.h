@@ -338,7 +338,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
@@ -352,7 +352,7 @@ public:
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
-                     PRUint32 aType = nsIChannel::LOAD_NORMAL,
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
 #else
                      nsURLReloadType aType=nsURLReload,
 #endif
@@ -368,7 +368,7 @@ public:
    * Reload the current document.
    */
 #ifdef NECKO
-  NS_IMETHOD Reload(PRUint32 aType) = 0;
+  NS_IMETHOD Reload(nsLoadFlags aType) = 0;
 #else
   NS_IMETHOD Reload(nsURLReloadType aType) = 0;
 #endif

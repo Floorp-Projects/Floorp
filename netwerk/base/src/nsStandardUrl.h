@@ -68,11 +68,8 @@ public:
     /* nsIURI Clone (); */
     NS_IMETHOD Clone(nsIURI **_retval);
 
-    /* string MakeAbsolute (in string relativePart); */
-    NS_IMETHOD MakeAbsolute(const char *relativePart, char **_retval);
-
     ////////////////////////////////////////////////////////////////////////////
-    // nsIURI methods:
+    // nsIURL methods:
 
     /* attribute string Directory; */
     NS_IMETHOD GetDirectory(char * *aDirectory);

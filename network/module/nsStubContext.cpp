@@ -518,7 +518,7 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
     /*
      * XXX: Currently this function never calls OnProgress(...) because
      *      netlib calls FE_GraphProgressDestroy(...) after closing the
-     *      stream...  So, OnStopBinding(...) has already been called and
+     *      stream...  So, OnStopRequest(...) has already been called and
      *      the nsConnectionInfo->pConsumer has been released and NULLed...
      */
     nsIStreamListener *pListener;
@@ -769,7 +769,7 @@ void stub_complete(NET_StreamClass *stream)
     /* Notify the Data Consumer that the Binding has completed... */
     if (pConn->pConsumer) {
         nsAutoString status;
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
+        pConn->pConsumer->OnStopRequest(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
         pConn->mStatus = nsConnectionSucceeded;
     }
 
@@ -808,12 +808,12 @@ void stub_abort(NET_StreamClass *stream, int status)
     if (pConn->pConsumer) {
         nsAutoString status;
 
-		// mscott --> this code used to pass in NS_BINDING_ABORTED into the OnStopBinding
+		// mscott --> this code used to pass in NS_BINDING_ABORTED into the OnStopRequest
 		// call. But NS_BINDING_ABORTED is an error code!!! And aborting a stream
-		// is NOT an error condition. nsDocumentLoader::OnStopBinding was issuing
+		// is NOT an error condition. nsDocumentLoader::OnStopRequest was issuing
 		// printfs complaining that the status code was a failure code.
 		// I'm going to pass in NS_BINDING_SUCCEEDED instead.
-        pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
+        pConn->pConsumer->OnStopRequest(pConn->pURL, NS_BINDING_SUCCEEDED, status.GetUnicode());
         pConn->mStatus = nsConnectionAborted;
     }
 
@@ -961,9 +961,9 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
             if (nsnull != pConn->pConsumer) {
                 nsresult rv;
 
-                rv = pConn->pConsumer->OnStartBinding(pConn->pURL, URL_s->content_type);
+                rv = pConn->pConsumer->OnStartRequest(pConn->pURL, URL_s->content_type);
                 /*
-                 * If OnStartBinding fails, then tear down the NET_StreamClass
+                 * If OnStartRequest fails, then tear down the NET_StreamClass
                  * and release all references...
                  */
                 if (NS_OK != rv) {

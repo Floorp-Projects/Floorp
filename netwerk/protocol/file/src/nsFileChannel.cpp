@@ -140,6 +140,13 @@ nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
+nsFileChannel::IsPending(PRBool *result)
+{
+    *result = mState != QUIESCENT;
+    return NS_OK; 
+}
+
+NS_IMETHODIMP
 nsFileChannel::Cancel()
 {
     nsAutoLock lock(mLock);
@@ -490,7 +497,7 @@ nsFileChannel::Process(void)
           NS_ASSERTION(mSourceOffset == 0, "implement seek");
 
           if (mListener) {
-              mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+              mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
               if (NS_FAILED(mStatus)) goto error;
           }
 
@@ -532,7 +539,7 @@ nsFileChannel::Process(void)
           nsISupports* fs;
 
           if (mListener) {
-              mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+              mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
               if (NS_FAILED(mStatus)) goto error;
           }
 
@@ -566,7 +573,7 @@ nsFileChannel::Process(void)
           mBufferOutputStream->Flush();
           if (mListener) {
               // XXX where do we get the error message?
-              (void)mListener->OnStopBinding(mContext, mStatus, nsnull);
+              (void)mListener->OnStopRequest(mContext, mStatus, nsnull);
           }
 
           NS_IF_RELEASE(mBufferOutputStream);

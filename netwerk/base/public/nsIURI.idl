@@ -116,12 +116,34 @@ interface nsIURI : nsISupports
      * channel is opened the URI may get redirected to a new location.
      */
     nsIURI Clone();
-
-    /**
-     * Returns a new URI string that merges the relative part with defaults
-     * from the current URI's location. If the relative part actually
-     * specifies an absolute URI, the string is returned as is.
-     */
-    string MakeAbsolute(in string relativePart);
 };
 
+%{C++
+
+/**
+ * Protocol writers can obtain a very basic (ok, degenerate) implementation
+ * of nsIURI by calling the component manager with NS_SIMPLEURI_CID. The
+ * implementation returned will only parse things of the form:
+ *
+ *    about:cache
+ *    \   / \   /
+ *     ---   ---
+ *      |     |
+ *   Scheme  Path
+ *
+ * where the path is everything after the colon. Note that this is probably 
+ * only useful for cases like about: or javascript: URIs. 
+ *
+ * *** What you most likely will want is NS_STANDARDURL_CID which is much more 
+ * full featured. Look at nsIURL.idl for more details on it.
+ */
+
+#define NS_SIMPLEURI_CID                             \
+{ /* e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3 */         \
+    0xe0da1d70,                                      \
+    0x2f7b,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+%}

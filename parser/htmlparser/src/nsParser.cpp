@@ -51,7 +51,7 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
-static const char* kOnStartNotCalled = "Error: OnStartBinding() must be called before OnDataAvailable()";
+static const char* kOnStartNotCalled = "Error: OnStartRequest() must be called before OnDataAvailable()";
 static const char* kBadListenerInit  = "Error: Parser's IStreamListener API was not setup correctly in constructor.";
 
 //-------------------------------------------------------------------
@@ -1035,18 +1035,18 @@ nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 #ifdef NECKO
-nsresult nsParser::OnStartBinding(nsISupports* aContext)
+nsresult nsParser::OnStartRequest(nsISupports* aContext)
 #else
-nsresult nsParser::OnStartBinding(nsIURI* aURL, const char *aSourceType)
+nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
 #endif
 {
   NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {
 #ifdef NECKO
-    mObserver->OnStartBinding(aContext);
+    mObserver->OnStartRequest(aContext);
 #else
-    mObserver->OnStartBinding(aURL, aSourceType);
+    mObserver->OnStartRequest(aURL, aSourceType);
 #endif
   }
   mParserContext->mStreamListenerState=eOnStart;
@@ -1076,20 +1076,6 @@ nsresult nsParser::OnStartBinding(nsIURI* aURL, const char *aSourceType)
 
   return NS_OK;
 }
-
-#ifdef NECKO
-NS_IMETHODIMP
-nsParser::OnStartRequest(nsISupports *ctxt)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsParser::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#endif // NECKO
 
 /**
  *  
@@ -1173,9 +1159,9 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
  *  @return  
  */
 #ifdef NECKO
-nsresult nsParser::OnStopBinding(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+nsresult nsParser::OnStopRequest(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 #else
-nsresult nsParser::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
   mParserContext->mStreamListenerState=eOnStop;
@@ -1193,9 +1179,9 @@ nsresult nsParser::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar*
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
 #ifdef NECKO
-    mObserver->OnStopBinding(aContext, status, aMsg);
+    mObserver->OnStopRequest(aContext, status, aMsg);
 #else
-    mObserver->OnStopBinding(aURL, status, aMsg);
+    mObserver->OnStopRequest(aURL, status, aMsg);
 #endif
   }
 

@@ -1098,6 +1098,7 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 #else
+  // XXX I don't think so...
   if (aIID.Equals(kINetSupportIID)) {
     *aInstancePtrResult = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
@@ -1920,9 +1921,9 @@ nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnStartBinding(nsISupports *ctxt)
+nsBrowserWindow::OnStartRequest(nsISupports *ctxt)
 #else
-nsBrowserWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsBrowserWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   nsresult rv;
@@ -1961,9 +1962,9 @@ nsBrowserWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsBrowserWindow::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 #else
-nsBrowserWindow::OnStopBinding(nsIURI* aURL,
+nsBrowserWindow::OnStopRequest(nsIURI* aURL,
                                nsresult status,
                                const PRUnichar* aMsg)
 #endif

@@ -922,7 +922,7 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStartBinding(nsISupports* i_pContext)
+nsHTTPRequest::OnStartRequest(nsISupports* i_pContext)
 {
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
@@ -932,7 +932,7 @@ nsHTTPRequest::OnStartBinding(nsISupports* i_pContext)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
+nsHTTPRequest::OnStopRequest(nsISupports* i_pContext,
                                  nsresult iStatus,
                                  const PRUnichar* i_pMsg)
 {
@@ -961,7 +961,7 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
     //
     // An error occurred when trying to write the request to the server!
     //
-    // Call the consumer OnStopBinding(...) to end the request...
+    // Call the consumer OnStopRequest(...) to end the request...
     //
     else {
         nsCOMPtr<nsIStreamListener> consumer;
@@ -975,27 +975,13 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
         (void) m_pConnection->GetResponseContext(getter_AddRefs(consumerContext));
         rv = m_pConnection->GetResponseDataListener(getter_AddRefs(consumer));
         if (consumer) {
-            consumer->OnStopBinding(consumerContext, iStatus, i_pMsg);
+            consumer->OnStopRequest(consumerContext, iStatus, i_pMsg);
         }
 
         rv = iStatus;
     }
  
     return rv;
-}
-
-NS_IMETHODIMP
-nsHTTPRequest::OnStartRequest(nsISupports* i_pContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPRequest::OnStopRequest(nsISupports* i_pContext,
-                             nsresult iStatus,
-                             const PRUnichar* i_pMsg)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

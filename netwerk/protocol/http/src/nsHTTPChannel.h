@@ -55,6 +55,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
+    NS_IMETHOD IsPending(PRBool *result);
     NS_IMETHOD Cancel();
     NS_IMETHOD Suspend();
     NS_IMETHOD Resume();

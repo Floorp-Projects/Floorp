@@ -562,7 +562,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
 #ifndef NECKO   // XXX I'm assuming necko will do this now
     // XXX shouldn't netlib be doing this???
-    aConsumer->OnStartBinding(aURL, "text/rdf");
+    aConsumer->OnStartRequest(aURL, "text/rdf");
 #endif
     while (PR_TRUE) {
         char buf[1024];
@@ -588,7 +588,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     }
 #ifndef NECKO   // XXX I'm assuming necko will do this now
     // XXX shouldn't netlib be doing this???
-    aConsumer->OnStopBinding(aURL, 0, nsnull);
+    aConsumer->OnStopRequest(aURL, 0, nsnull);
 #endif
 
 done:

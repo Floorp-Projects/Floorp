@@ -29,6 +29,7 @@
 #endif
 
 #ifdef NECKO
+#include "nsIPrompt.h"
 #else
 #include "nsINetSupport.h"
 #endif
@@ -601,9 +602,9 @@ NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 //----------------------------------------
 #ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsISupports *ctxt)
+NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsISupports *ctxt)
 #else
-NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   return NS_OK;
@@ -611,15 +612,16 @@ NS_IMETHODIMP nsXPBaseWindow::OnStartBinding(nsIURI* aURL, const char *aContentT
 
 //----------------------------------------
 #ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsISupports *ctxt, nsresult status, 
+NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsISupports *ctxt, nsresult status, 
                                             const PRUnichar *errorMsg)
 #else
-NS_IMETHODIMP nsXPBaseWindow::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
   return NS_OK;
 }
 
+#ifndef NECKO
 //----------------------------------------
 NS_IMETHODIMP_(void) nsXPBaseWindow::Alert(const nsString &aText)
 {
@@ -710,7 +712,7 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptPassword(const nsString &aText,
   return PR_TRUE;
 }
 
-
+#endif // NECKO
 
 
 //----------------------------------------------------------------------

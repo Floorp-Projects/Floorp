@@ -110,19 +110,17 @@ public:
   
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; }
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
   // nsIStreamListener methods:
   NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
+  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
-  NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 #endif
   
   void Interrupt();
@@ -185,9 +183,9 @@ ImageConsumer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnStartBinding(nsISupports* aContext)
+ImageConsumer::OnStartRequest(nsISupports* aContext)
 #else
-ImageConsumer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+ImageConsumer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   if (mInterrupted) {
@@ -311,16 +309,16 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
   if (consumer->mURL) {
     consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
   }
-  consumer->OnStopBinding(url, NS_BINDING_SUCCEEDED, status.GetUnicode());
+  consumer->OnStopRequest(url, NS_BINDING_SUCCEEDED, status.GetUnicode());
 
   NS_IF_RELEASE(url);
 }
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnStopBinding(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+ImageConsumer::OnStopRequest(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 #else
-ImageConsumer::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
 {
   if (mTimer != nsnull) {

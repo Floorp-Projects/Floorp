@@ -445,10 +445,10 @@ CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCo
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartBinding(nsIURI* aURL, const char *aContentType)
+CWebShellContainer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 {
 	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::OnStartBinding(..., \"%s\")\n"), A2CT(aContentType));
+	NG_TRACE(_T("CWebShellContainer::OnStartRequest(..., \"%s\")\n"), A2CT(aContentType));
 	return NS_OK;
 }
 
@@ -478,10 +478,10 @@ CWebShellContainer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+CWebShellContainer::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
 	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::OnStopBinding(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
+	NG_TRACE(_T("CWebShellContainer::OnStopRequest(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
 
 	// Fire a DownloadComplete event
 	m_pEvents1->Fire_DownloadComplete();

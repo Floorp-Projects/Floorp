@@ -270,9 +270,9 @@ nsDownloadProgressDialog::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnStartBinding(nsISupports* aContext)
+nsDownloadProgressDialog::OnStartRequest(nsISupports* aContext)
 #else
-nsDownloadProgressDialog::OnStartBinding(nsIURI* aURL, const char *aContentType)
+nsDownloadProgressDialog::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
   //nsresult rv = NS_OK;
@@ -310,9 +310,9 @@ nsDownloadProgressDialog::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnStopBinding(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+nsDownloadProgressDialog::OnStopRequest(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
 #else
-nsDownloadProgressDialog::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+nsDownloadProgressDialog::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 #endif
 {
     nsresult rv = NS_OK;

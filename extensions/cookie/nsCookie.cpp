@@ -147,9 +147,9 @@ static int cookie_lock_count = 0;
 
 PRIVATE char*
 cookie_Localize(char* genericString) {
+#ifdef newI18NFinished
   nsresult ret;
   nsAutoString v("");
-#ifdef newI18NFinished
   /* create a URL for the string resource file *//*
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,

@@ -21,14 +21,46 @@
 [scriptable, uuid(a63f70c0-148b-11d3-9333-00104ba0fd40)]
 interface nsIPrompt : nsISupports
 {
-    boolean Confirm(in nsISupports ctxt, in wstring text);
+    /**
+     * Puts up an alert dialog with an OK button.
+     */
+    void Alert(in wstring text);
 
-    boolean Prompt(in nsISupports ctxt, in wstring text,
-                   in wstring defaultText, out wstring result);
+    /**
+     * Puts up a dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean Confirm(in wstring text);
 
-    boolean PromptUsernameAndPassword(in nsISupports ctxt, in wstring text,
-                                      out wstring user, out wstring pwd);
+    /**
+     * Puts up a dialog with OK and Cancel buttons, and
+     * a message with a single checkbox.
+     * @return true for OK, false for Cancel
+     */
+    boolean ConfirmCheck(in wstring text,
+                         in wstring checkMsg,
+                         out boolean checkValue);
 
-    boolean PromptPassword(in nsISupports ctxt, in wstring text, 
+    /**
+     * Puts up a text input dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean Prompt(in wstring text,
+                   in wstring defaultText, 
+                   out wstring result);
+
+    /**
+     * Puts up a username/password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean PromptUsernameAndPassword(in wstring text,
+                                      out wstring user, 
+                                      out wstring pwd);
+
+    /**
+     * Puts up a password dialog with OK and Cancel buttons.
+     * @return true for OK, false for Cancel
+     */
+    boolean PromptPassword(in wstring text, 
                            out wstring pwd);
 };
