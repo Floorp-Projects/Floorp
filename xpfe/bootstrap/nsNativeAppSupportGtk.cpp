@@ -25,7 +25,7 @@
 
 #include "nsNativeAppSupportBase.h"
 #include "gdk/gdk.h"
-#include "splash.xpm"
+#include SPLASH_XPM
 
 class nsSplashScreenGtk : public nsISplashScreen {
 public:
