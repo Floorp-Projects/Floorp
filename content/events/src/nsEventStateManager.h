@@ -174,7 +174,6 @@ protected:
                                   nsIFrame** aResultFrame);
   nsIContent *GetNextTabbableMapArea(PRBool aForward, nsIContent *imageContent);
 
-  void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   nsresult SendFocusBlur(nsPresContext* aPresContext, nsIContent *aContent, PRBool aEnsureWindowHasFocus);
   PRBool CheckDisabled(nsIContent* aContent);

@@ -3167,7 +3167,9 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   }
 
   if (aStart) {
-    TabIndexFrom(aStart, &mCurrentTabIndex);
+    if (aStart->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+      aStart->IsFocusable(&mCurrentTabIndex);
+    }
   } else if (!mCurrentFocus) {  // Get tabindex ready
     if (aForward) {
       mCurrentTabIndex = docHasFocus && selectionFrame ? 0 : 1;
@@ -3182,7 +3184,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsIFrame* nextFocusFrame;
   if (aForward || !docHasFocus || selectionFrame)
     GetNextTabbableContent(rootContent, startContent, curFocusFrame,
-                           aForward, ignoreTabIndex,
+                           aForward, ignoreTabIndex || mCurrentTabIndex < 0,
                            getter_AddRefs(nextFocus), &nextFocusFrame);
 
   // Clear out mCurrentTabIndex. It has a garbage value because of GetNextTabbableContent()'s side effects
@@ -3373,18 +3375,6 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   }
 
   return NS_OK;
-}
-
-void
-nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
-{
-  nsAutoString tabIndexStr;
-  aFrom->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
-  if (!tabIndexStr.IsEmpty()) {
-    PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
-    if (NS_SUCCEEDED(ec))
-      *aOutIndex = tabIndexVal;
-  }
 }
 
 nsresult
