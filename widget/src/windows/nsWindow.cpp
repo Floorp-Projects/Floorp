@@ -2870,12 +2870,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 		}
 		case WM_IME_STARTCOMPOSITION: {
-			HIMC hIMEContext;
-
-			mIMEIsComposing = PR_TRUE;
 #if defined(DEBUG_tague) || defined(DEBUG_ftang)
 			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
 #endif
+			HIMC hIMEContext;
+
+			mIMEIsComposing = PR_TRUE;
 			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
 				return PR_FALSE;
 			}
@@ -2891,6 +2891,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			break;
 
 		case WM_IME_COMPOSITION: {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+			printf("IME: Recieved WM_IME_COMPOSITION\n");
+#endif
+                        PRBool bSendEvent = PR_FALSE;
 			HIMC hIMEContext;
 
 			result = PR_FALSE;					// will change this if an IME message we handle
@@ -2904,6 +2908,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			// This provides us with the attribute string necessary for doing hiliting
 			//
 			if (lParam & GCS_COMPATTR) {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPATTR\n");
+#endif
 				long attrStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPATTR,NULL,0);
 				if (attrStrLen+1>mIMEAttributeStringSize) {
 					if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
@@ -2917,6 +2924,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_COMPCLAUSE) {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPCLAUSE\n");
+#endif
 				long compClauseLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPCLAUSE,NULL,0);
 				if (compClauseLen+1>mIMECompClauseStringSize) {
 					if (mIMECompClauseString!=NULL) delete [] mIMECompClauseString;
@@ -2932,6 +2942,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_CURSORPOS) {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_CURSORPOS\n");
+#endif
 				mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,GCS_CURSORPOS,NULL,0);
 			}
 			//
@@ -2953,6 +2966,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompositionString[compStrLen]='\0';
 				HandleTextEvent(hIMEContext);
 				result = PR_TRUE;
+                                bSendEvent = PR_TRUE;
 			}
 
 			//
@@ -2973,10 +2987,21 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
 				result = PR_TRUE;
+			        mIMEIsComposing = PR_FALSE;
 				HandleTextEvent(hIMEContext);
 				HandleEndComposition();
 				HandleStartComposition(hIMEContext);
+                                bSendEvent = PR_TRUE;
 			}
+                        if(! bSendEvent)
+                        {
+#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: haandle 0 length TextEvent. \n");
+#endif
+				mIMECompositionStringLength = 0;
+				HandleTextEvent(hIMEContext);
+                                bSendEvent = PR_TRUE;
+                        }
 			
 			::ImmReleaseContext(mWnd,hIMEContext);
 
@@ -3757,7 +3782,13 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
   // we need to convert the attribute array, which is alligned with the mutibyte text into an array of offsets
   // mapped to the unicode text
   //
-  MapDBCSAtrributeArrayToUnicodeOffsets(&(event.rangeCount),&(event.rangeArray));
+  
+  if(mIMEIsComposing) {
+     MapDBCSAtrributeArrayToUnicodeOffsets(&(event.rangeCount),&(event.rangeArray));
+  } else {
+     event.rangeCount = 0;
+     event.rangeArray = nsnull;
+  }
 
   event.theText = mIMECompositionUniString;
   event.isShift	= mIsShiftDown;
