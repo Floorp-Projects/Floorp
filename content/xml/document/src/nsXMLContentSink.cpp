@@ -444,7 +444,7 @@ nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
       // should we be doing that? If so then it needs to live in two places (bad)
       // so we should add a translate numeric entity method from the parser...
       char cbuf[100];
-      PRInt32 index = 0;
+      PRUint32 index = 0;
       while (index < aResult.Length()) {
         // If we have the start of an entity (and it's not at the end of
         // our string) then translate the entity into it's unicode value.
@@ -457,7 +457,7 @@ nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
             char* cp = cbuf;
             char* limit = cp + sizeof(cbuf) - 1;
             PRBool ok = PR_FALSE;
-            PRInt32 slen = aResult.Length();
+            PRUint32 slen = aResult.Length();
             while ((index < slen) && (cp < limit)) {
               PRUnichar ch = aResult.CharAt(index);
               if (ch == ';') {
@@ -498,7 +498,7 @@ nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
             char* limit = cp + sizeof(cbuf) - 1;
             *cp++ = char(e);
             PRBool ok = PR_FALSE;
-            PRInt32 slen = aResult.Length();
+            PRUint32 slen = aResult.Length();
             while ((index < slen) && (cp < limit)) {
               PRUnichar ch = aResult.CharAt(index);
               if (ch == ';') {

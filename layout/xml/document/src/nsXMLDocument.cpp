@@ -907,23 +907,6 @@ nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
   return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
 }
 
-NS_IMETHODIMP
-nsXMLDocument::GetElementById(const nsString& aElementId,
-                              nsIDOMElement** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsCOMPtr<nsIContent> cont;
-  nsresult rv = GetContentById(aElementId,getter_AddRefs(cont));
-  if (NS_SUCCEEDED(rv) && cont) {
-    rv = cont->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
-  }
-
-  return rv;
-}
-
-// nsIXMLDocument interface
 static nsIContent *
 MatchName(nsIContent *aContent, const nsString& aName)
 {
@@ -955,21 +938,32 @@ MatchName(nsIContent *aContent, const nsString& aName)
   return result;
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::GetContentById(const nsString& aName, nsIContent** aContent)
+NS_IMETHODIMP
+nsXMLDocument::GetElementById(const nsString& aElementId,
+                             nsIDOMElement** aReturn)
 {
   // XXX Since we don't have a validating parser, the only content
   // that this applies to is HTML content.
-  nsIContent *content;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
-  content = MatchName(mRootContent, aName);
+  NS_WARN_IF_FALSE(!aElementId.IsEmpty(),"getElementById(\"\"), fix caller?");
+  if (aElementId.IsEmpty())
+    return NS_OK;
 
-  NS_IF_ADDREF(content);
-  *aContent = content;
+  // XXX For now, we do a brute force search of the content tree.
+  // We should come up with a more efficient solution.
+  nsCOMPtr<nsIContent> content = do_QueryInterface(MatchName(mRootContent,aElementId));
 
-  return NS_OK;
+  nsresult rv = NS_OK;
+  if (content) {
+    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
+  }
+
+  return rv;
 }
 
+// nsIXMLDocument
 #ifdef MOZ_XSL
 NS_IMETHODIMP 
 nsXMLDocument::SetTransformMediator(nsITransformMediator* aMediator)

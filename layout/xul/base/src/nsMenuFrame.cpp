@@ -1316,6 +1316,9 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   nsAutoString keyValue;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::key, keyValue);
 
+  if (keyValue.IsEmpty())
+    return;
+
   nsCOMPtr<nsIDocument> document;
   mContent->GetDocument(*getter_AddRefs(document));
 

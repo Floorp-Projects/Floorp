@@ -2204,20 +2204,23 @@ nsHTMLDocument::MatchName(nsIContent *aContent, const nsString& aName)
 NS_IMETHODIMP    
 nsHTMLDocument::GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)
 {
-  nsIContent *content;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+  
+  NS_WARN_IF_FALSE(!aElementId.IsEmpty(),"getElementById(\"\"), fix caller?");
+  if (aElementId.IsEmpty())
+    return NS_OK;
 
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
-  content = MatchName(mRootContent, aElementId);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(MatchName(mRootContent,aElementId));
 
-  if (nsnull != content) {
-    return content->QueryInterface(kIDOMElementIID, (void **)aReturn);
+  nsresult rv = NS_OK;
+  if (content) {
+    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement),(void**)aReturn);
   }
-  else {
-    *aReturn = nsnull;
-  }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 NS_IMETHODIMP
