@@ -108,11 +108,31 @@ import java.util.zip.CRC32;
  */
 public class LDAPCache implements Serializable {
     static final long serialVersionUID = 6275167993337814294L;
+    
+    /**
+     * A hashtable of search results. The key is created from the search
+     * request parameters (see createKey() method). The value is a Vector
+     * where the first element is a Long integer representing the size
+     * of all entries, followed by the actual search result entries (of type
+     * LDAPEntry).
+     */    
     private Hashtable m_cache;
+    
+    /**
+     * A list of cached entries ordered by time (augments m_cache). Each
+     * element in the list is a 2 element Vector where the element at index
+     * 0 is the key in the m_cache table, and the element at index 1 is the
+     * time when the entry was created.
+     * The list is used to track the time-to-live limit and to implement the
+     * FIFO algorithm when adding new entries; if the size of the new entry
+     * exceeds the cache available space, the extra space is made by removing
+     * existing cached results in the order of their entry in the cache.
+     */
+    private Vector m_orderedStruct;
+
     private long m_timeToLive;
     private long m_maxSize;
     private String[] m_dns;
-    private Vector m_orderedStruct;
     private long m_remainingSize = 0;
 
     // Count of LDAPConnections that share this cache
@@ -269,6 +289,8 @@ public class LDAPCache implements Serializable {
             Long key = (Long)e.nextElement();
             Vector val = (Vector)m_cache.get(key);
 
+            // LDAPEntries start at idx 1, at idx 0 is a Long
+            // (size of all LDAPEntries returned by search())
             int j=1;
             int size2=val.size();
 
@@ -298,7 +320,8 @@ public class LDAPCache implements Serializable {
                         break;
                     }
                 }
-                m_cache.remove(key);
+                Vector entry = (Vector)m_cache.remove(key);
+                m_remainingSize += ((Long)entry.firstElement()).longValue();
                 if (m_debug)
                     System.out.println("DEBUG: Successfully removed entry ->"+key);
 
@@ -500,7 +523,7 @@ public class LDAPCache implements Serializable {
                 if (m_debug)
                     System.out.println("DEBUG: Timer flush entry whose key is "+key);
                 Vector entry = (Vector)m_cache.remove(key);
-                m_remainingSize = m_remainingSize + ((Long)entry.firstElement()).longValue();
+                m_remainingSize += ((Long)entry.firstElement()).longValue();
 
                 // always delete the first one
                 m_orderedStruct.removeElementAt(0);
@@ -553,16 +576,15 @@ public class LDAPCache implements Serializable {
 
                 // always remove the first one
                 m_orderedStruct.removeElementAt(0);
-                m_remainingSize = m_remainingSize +
-                    ((Long)val.elementAt(0)).longValue();
+                m_remainingSize += ((Long)val.elementAt(0)).longValue();
                 if (m_remainingSize >= size)
                     break;
             }
         }
 
-        m_remainingSize = m_remainingSize - size;
+        m_remainingSize -= size;
         m_cache.put(key, v);
-        Vector element = new Vector();
+        Vector element = new Vector(2);
         element.addElement(key);
         element.addElement(new Long(System.currentTimeMillis()));
         m_orderedStruct.addElement(element);
