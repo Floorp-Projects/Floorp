@@ -19,11 +19,15 @@
  Contributor(s): 
 */
 
-#ifndef __nsJavaDOMCID_h__
-#define __nsJavaDOMCID_h__
+package org.mozilla.dom;
 
-#define NS_JAVADOMFACTORY_CID \
-  {0x12c2fa66, 0x0fef, 0x11d3, \
-    {0x87, 0x14, 0x00, 0x04, 0xac, 0x56, 0xc4, 0xa5}}
+import org.w3c.dom.Text;
 
-#endif /* __nsJavaDOMCID_h__ */
+public class TextImpl extends CharacterDataImpl implements Text {
+
+    // instantiated from JNI or Document.createTextNode()
+    protected TextImpl() {}
+
+    public native Text splitText(int offset);
+}    
+

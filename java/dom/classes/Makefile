@@ -18,13 +18,25 @@
 #
 # Contributor(s): 
 
-DEPTH	= ../..
-topsrcdir	= ../..
+DEPTH	= ../../..
+topsrcdir	= ../../..
 VPATH		= .
 srcdir		= .
 
+IGNORE_MANIFEST=1 
+JAVA_OR_NSJVM=1
+NO_CAFE=1
+
+JDIRS = org/mozilla/dom 	\
+	org/mozilla/dom/events	\
+	$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = src jni classes
-
 include $(topsrcdir)/config/rules.mk
+
+JAVAC_PROG = $(JDKHOME)/bin/javac
+JAVAC_FLAGS = -classpath $(CLASSPATH) -d $(JAVA_DESTPATH)
+JAVAC = $(JAVAC_PROG) $(JAVAC_FLAGS)
+
+
+

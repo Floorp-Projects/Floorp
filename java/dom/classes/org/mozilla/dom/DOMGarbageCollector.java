@@ -19,27 +19,10 @@
  Contributor(s): 
 */
 
-#ifndef __nsJavaDOMFactory_h__
-#define __nsJavaDOMFactory_h__
+package org.mozilla.dom;
 
-#include "nsIFactory.h"
+public class DOMGarbageCollector {
 
-#define NS_JAVADOMFACTORY_IID \
-  {0x6a07c434, 0x0e58, 0x11d3, \
-    {0x86, 0xea, 0x00, 0x04, 0xac, 0x56, 0xc4, 0xa5}}
-
-class nsJavaDOMFactory : public nsIFactory {
-  NS_DECL_ISUPPORTS
-
-  public:
-
-  nsJavaDOMFactory();
-
-  NS_IMETHOD CreateInstance(nsISupports* aOuter,
-			    const nsIID& iid,
-			    void** retval);
-  
-  NS_IMETHOD LockFactory(PRBool lock);
-};
-
-#endif /* __nsJavaDOMFactory_h__ */
+    //    private static native void doGC();
+    public static native void doGC();
+}

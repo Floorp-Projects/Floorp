@@ -55,10 +55,3 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: classes
-
-#XXX - assume that DOM2 java-bindings are in CLASSPATH 
-classes: $(JAVA_DESTPATH)
-	@echo "Making java classes ..."
-	$(JAVAHOME)/bin/javac -d $(JAVA_DESTPATH) *.java
-

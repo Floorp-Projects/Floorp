@@ -19,14 +19,20 @@
 # Contributor(s): 
 
 IGNORE_MANIFEST=1 
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
-DEPTH = ..\..
+DEPTH = ..\..\..
 
-DIRS  =  src jni classes
+JAVA_OR_NSJVM=1
+NO_CAFE=1
 
+include <$(DEPTH)\config\config.mak>
+
+# for compatibility
+include <$(DEPTH)\java\config\localdefs.mak>
+
+JDIRS = org\mozilla\dom \
+	org\mozilla\dom\events \
+	$(NULL)
+
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH) -d $(JAVA_DESTPATH)
 include <$(DEPTH)\config\rules.mak>
