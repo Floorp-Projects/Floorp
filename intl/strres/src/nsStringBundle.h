@@ -66,7 +66,7 @@ protected:
     nsresult GetStringFromID(PRInt32 aID, nsAString& aResult);
     nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
 
-    nsresult GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
+    nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
                                     nsISimpleEnumerator** aResult);
 private:
     nsCString              mPropertiesURL;
