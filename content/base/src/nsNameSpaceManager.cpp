@@ -47,7 +47,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsContentCID.h"
-#include "rdf.h"
 
 static nsINameSpaceManager* gNameSpaceManager = nsnull;
 
@@ -60,7 +59,7 @@ extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 #define kXSLTNameSpaceURI "http://www.w3.org/1999/XSL/Transform"
 #define kXBLNameSpaceURI "http://www.mozilla.org/xbl"
 #define kMathMLNameSpaceURI "http://www.w3.org/1998/Math/MathML"
-#define kRDFNameSpaceURI RDF_NAMESPACE_URI
+#define kRDFNameSpaceURI "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 #define kXULNameSpaceURI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 
@@ -99,7 +98,7 @@ private:
   NameSpaceImpl(const NameSpaceImpl& aCopy);
   NameSpaceImpl& operator=(const NameSpaceImpl& aCopy);
 
-  nsCOMPtr<NameSpaceImpl> mParent;
+  NameSpaceImpl* mParent;
   nsCOMPtr<nsIAtom> mPrefix;
   PRInt32 mID;
 };
@@ -110,6 +109,7 @@ NameSpaceImpl::NameSpaceImpl(NameSpaceImpl* aParent,
   : mParent(aParent),
     mPrefix(aPrefix)
 {
+  NS_IF_ADDREF(mParent);
   gNameSpaceManager->RegisterNameSpace(aURI, mID);
 }
 
@@ -120,10 +120,12 @@ NameSpaceImpl::NameSpaceImpl(NameSpaceImpl* aParent,
     mPrefix(aPrefix),
     mID(aNameSpaceID)
 {
+  NS_IF_ADDREF(mParent);
 }
 
 NameSpaceImpl::~NameSpaceImpl()
 {
+  NS_IF_RELEASE(mParent);
 }
 
 NS_IMPL_ISUPPORTS1(NameSpaceImpl, nsINameSpace)
