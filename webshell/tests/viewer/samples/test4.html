@@ -173,44 +173,119 @@ column widths and collapsing borders.</CAPTION>
 <BR>
 This is a table formed from a list with display of table-row and
 list items with display of table-cell.
-<DIV style="background-color: orange; width: 230px;">
-<UL style="display: table-row;">
-<LI style="display: table-cell;">ONE</LI>
-<LI style="display: table-cell;">TWO</LI>
-<LI style="display: table-cell;">THREE</LI>
-<LI style="display: table-cell;">FOUR</LI>
-<LI style="display: table-cell;">FIVE</LI>
+<UL style="display: table-row; background-color:orange;">
+<LI style="display: table-cell; background-color:orange;">ONE</LI>
+<LI style="display: table-cell; background-color:orange;">TWO</LI>
+<LI style="display: table-cell; background-color:orange;">THREE</LI>
+<LI style="display: table-cell; background-color:orange;">FOUR</LI>
+<LI style="display: table-cell; background-color:orange;">FIVE</LI>
 </UL>
-</DIV>
 <BR>
 
 This is a table formed from a list with display of table-row-group and
 list items with display of table-cell. 
 <BR>
-<DIV style="background-color: orange; width: 100px;">
-<UL style="display:table-row-group">
-<LI style="display:table-cell;">ONE</LI>
-<LI style="display:table-cell;">TWO</LI>
-<LI style="display:table-cell;">THREE</LI>
-<LI style="display:table-cell;">FOUR</LI>
-<LI style="display:table-cell;">FIVE</LI>
-<LI style="display:table-cell;">SIX</LI>
+<UL style="display:table-row-group;">
+<LI style="display:table-cell;  background-color:orange;">ONE</LI>
+<LI style="display:table-cell;  background-color:orange;">TWO</LI>
+<LI style="display:table-cell;  background-color:orange;">THREE</LI>
+<LI style="display:table-cell;  background-color:orange;">FOUR</LI>
+<LI style="display:table-cell;  background-color:orange;">FIVE</LI>
+<LI style="display:table-cell;  background-color:orange;">SIX</LI>
 </UL>
-</DIV>
 <BR>
 
 This is like the previous table plus the list's overflow property set
-<DIV style="background-color:orange; width:50px; height: 50px;">
 <UL style="display:table-row-group; overflow:auto; height: 50px;">
-<LI style="display:table-cell;">ONE</LI>
-<LI style="display:table-cell;">TWO</LI>
-<LI style="display:table-cell;">THREE</LI>
-<LI style="display:table-cell;">FOUR</LI>
-<LI style="display:table-cell;">FIVE</LI>
-<LI style="display:table-cell;">SIX</LI>
+<LI style="display:table-cell;  background-color:orange;">ONE</LI>
+<LI style="display:table-cell;  background-color:orange;">TWO</LI>
+<LI style="display:table-cell;  background-color:orange;">THREE</LI>
+<LI style="display:table-cell;  background-color:orange;">FOUR</LI>
+<LI style="display:table-cell;  background-color:orange;">FIVE</LI>
+<LI style="display:table-cell;  background-color:orange;">SIX</LI>
 </UL>
-</DIV>
 <BR>
+<P> The following table will have its rows and columns in red collapsed 
+<BR>
+<table border=1 style="background-color:orange;">
+<caption><b>before</b></caption>
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<tr><td>C11<td style="background-color:red;">C12<td>C13 large
+<tr style="background-color:red;"><td>C21<td>C22<td>C23
+<tr><td>C31<td style="background-color:red;">C32<td>C33
+</table>
+
+<BR>
+<table border=1 style="background-color:orange;">
+<caption><b>after</b></caption>
+<colgroup>
+<col>
+<col style="visibility:collapse;">
+<col>
+</colgroup>
+<tr><td>C11<td>C12<td>C13 large
+<tr style="visibility:collapse;"><td>C21<td>C22<td>C23
+<tr><td>C31<td>C32<td>C33
+</table>
+
+<P> The following table will have its 2nd row and 2nd col collapsed. A window resize may be necessary to see it properly.
+<BR>
+<table cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>before</b></caption>
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr><td>C21<td rowspan=2 colspan=2>C12 C13 C22 C23<td>C14
+<tr><td>C31<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
+
+<table cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>after</b></caption>
+<colgroup>
+<col>
+<col style="visibility:collapse;">
+<col>
+<col>
+</colgroup>
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr style="visibility:collapse;"><td>C21<td rowspan=2 colspan=2>C12 C13 C22 C23<td>C14
+<tr><td>C31<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
+
+<P> The following table will have its 1st row group collapsed (rows 1 and 2)
+<BR>
+<table cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>before</b></caption>
+<tbody style="background-color:red;">
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr><td>C21<td>C22<td>C23<td>C24
+</tbody>
+<tbody>
+<tr><td>C31<td>C32<td>C33<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
+
+<BR>
+<table cellspacing=0 border=1 style="background-color:orange;">
+<caption><b>after</b></caption>
+<tbody style="visibility:collapse;">
+<tr><td>C11<td>C12<td>C13<td>C14
+<tr><td>C21<td>C22<td>C23<td>C24
+</tbody>
+<tbody>
+<tr><td>C31<td>C32<td>C33<td>C34
+<tr><td>C41<td>C42<td>C43<td>C44
+</table>
 
 </BODY>
 </HTML>
