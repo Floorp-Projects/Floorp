@@ -71,9 +71,7 @@ static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
-
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, FileSystemObject);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
@@ -88,12 +86,9 @@ nsIRDFResource		*FileSystemDataSource::kNC_FileSystemRoot;
 nsIRDFResource		*FileSystemDataSource::kNC_Child;
 nsIRDFResource		*FileSystemDataSource::kNC_Name;
 nsIRDFResource		*FileSystemDataSource::kNC_URL;
-nsIRDFResource		*FileSystemDataSource::kNC_Columns;
-nsIRDFResource		*FileSystemDataSource::kNC_Folder;
-
+nsIRDFResource		*FileSystemDataSource::kNC_FileSystemObject;
 nsIRDFResource		*FileSystemDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FileSystemDataSource::kRDF_type;
-nsIRDFResource		*FileSystemDataSource::kRDF_Seq;
 
 
 
@@ -150,11 +145,10 @@ FileSystemDataSource::FileSystemDataSource(void)
 	gRDFService->GetResource(kURINC_child, &kNC_Child);
 	gRDFService->GetResource(kURINC_Name, &kNC_Name);
 	gRDFService->GetResource(kURINC_URL, &kNC_URL);
-	gRDFService->GetResource(kURINC_Folder, &kNC_Folder);
+	gRDFService->GetResource(kURINC_FileSystemObject, &kNC_FileSystemObject);
 
 	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
 	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
-	gRDFService->GetResource(kURIRDF_Seq, &kRDF_Seq);
 
         gFileSystemDataSource = this;
     }
@@ -183,11 +177,9 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kNC_Child);
         NS_RELEASE(kNC_Name);
         NS_RELEASE(kNC_URL);
-        NS_RELEASE(kNC_Folder);
-
+	NS_RELEASE(kNC_FileSystemObject);
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
-        NS_RELEASE(kRDF_Seq);
 
         gFileSystemDataSource = nsnull;
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -210,13 +202,9 @@ FileSystemDataSource::Init(const char *uri)
 	if ((mURI = PL_strdup(uri)) == nsnull)
 		return rv;
 
-	//   if (NS_FAILED(rv = AddColumns()))
-	//       return rv;
-
 	// register this as a named data source with the service manager
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
 		return rv;
-
 	return NS_OK;
 }
 
@@ -259,6 +247,7 @@ nsresult	GetVolumeList(nsVoidArray **array);
 nsresult	GetFolderList(nsIRDFResource *source, nsVoidArray **array /* out */);
 nsresult	GetName(nsIRDFResource *source, nsVoidArray **array);
 nsresult	GetURL(nsIRDFResource *source, nsVoidArray **array);
+PRBool		isVisible(nsNativeFileSpec file);
 
 
 
@@ -288,8 +277,16 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-			*target = kRDF_Seq;
-			rv = NS_OK;
+			const char	*uri;
+			kNC_FileSystemObject->GetValue(&uri);
+			if (uri)
+			{
+				nsAutoString	url(uri);
+				nsIRDFLiteral	*literal;
+				gRDFService->GetLiteral(url, &literal);
+				*target = literal;
+				rv = NS_OK;
+			}
 			return(rv);
 		}
 		if (array != nsnull)
@@ -339,10 +336,27 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		{
 			rv = GetURL(source, &array);
 		}
+		else if (peq(property, kRDF_type))
+		{
+			const char	*uri;
+			kNC_FileSystemObject->GetValue(&uri);
+			if (uri)
+			{
+				nsAutoString	url(uri);
+				nsIRDFLiteral	*literal;
+				gRDFService->GetLiteral(url, &literal);
+				array = new nsVoidArray();
+				if (array)
+				{
+					array->AppendElement(literal);
+					rv = NS_OK;
+				}
+			}
+		}
 	}
 	if ((rv == NS_OK) && (nsnull != array))
 	{
-		*targets = new FileSystemCursor(source, property, array);
+		*targets = new FileSystemCursor(source, property, PR_FALSE, array);
 		NS_ADDREF(*targets);
 	}
 	return(rv);
@@ -388,7 +402,7 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 	{
 		if (peq(property, kRDF_type))
 		{
-			if (peq((nsIRDFResource *)target, kRDF_Seq))
+			if (peq((nsIRDFResource *)target, kRDF_type))
 			{
 				*hasAssertion = PR_TRUE;
 				rv = NS_OK;
@@ -425,8 +439,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
-//		temp->AppendElement(kRDF_type);
-		*labels = new FileSystemCursor(source, kNC_Child, temp);
+		*labels = new FileSystemCursor(source, kNC_Child, PR_TRUE, temp);
 		if (nsnull != *labels)
 		{
 			NS_ADDREF(*labels);
@@ -439,12 +452,20 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 		if (nsnull == temp)
 			return NS_ERROR_OUT_OF_MEMORY;
 
-		temp->AppendElement(kNC_Child);
-//		temp->AppendElement(kRDF_type);
-//		temp->AppendElement(kNC_Name);
-//		temp->AppendElement(kNC_URL);
-//		temp->AppendElement(kNC_Columns);
-		*labels = new FileSystemCursor(source, kNC_Child, temp);
+		const char *uri;
+		source->GetValue(&uri);
+		if (uri)
+		{
+			nsFileURL	fileURL(uri);
+			nsFileSpec	fileSpec(fileURL);
+			if (fileSpec.IsDirectory())
+			{
+				temp->AppendElement(kNC_Child);
+			}
+		}
+
+		temp->AppendElement(kRDF_type);
+		*labels = new FileSystemCursor(source, kRDF_type, PR_TRUE, temp);
 		if (nsnull != *labels)
 		{
 			NS_ADDREF(*labels);
@@ -498,6 +519,8 @@ FileSystemDataSource::Flush()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+
 NS_IMETHODIMP
 FileSystemDataSource::GetEnabledCommands(nsISupportsArray* aSources,
                                          nsISupportsArray* aArguments,
@@ -507,6 +530,8 @@ FileSystemDataSource::GetEnabledCommands(nsISupportsArray* aSources,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+
 NS_IMETHODIMP
 FileSystemDataSource::DoCommand(nsISupportsArray* aSources,
                                 nsIRDFResource*   aCommand,
@@ -515,6 +540,8 @@ FileSystemDataSource::DoCommand(nsISupportsArray* aSources,
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 
 nsresult
 NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)
@@ -554,7 +581,6 @@ GetVolumeList(nsVoidArray **array)
 	FSSpec			fss;
 	OSErr			err;
 	ParamBlockRec		pb;
-	char			*url;
 	int16			volNum = 1;
 
 	do
@@ -629,9 +655,11 @@ GetVolumeList(nsVoidArray **array)
 
 FileSystemCursor::FileSystemCursor(nsIRDFResource *source,
 				nsIRDFResource *property,
+				PRBool isArcsOut,
 				nsVoidArray *array)
 	: mSource(source),
 	  mProperty(property),
+	  mArcsOut(isArcsOut),
 	  mArray(array),
 	  mCount(0),
 	  mTarget(nsnull),
@@ -668,7 +696,7 @@ FileSystemCursor::Advance(void)
 	NS_IF_RELEASE(mValue);
 	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
 	NS_ADDREF(mValue);
-    NS_ADDREF(mTarget);
+	NS_ADDREF(mTarget);
 	return NS_OK;
 }
 
@@ -709,8 +737,18 @@ FileSystemCursor::GetSubject(nsIRDFResource **aResource)
 NS_IMETHODIMP
 FileSystemCursor::GetPredicate(nsIRDFResource **aPredicate)
 {
-	NS_ADDREF(mProperty);
-	*aPredicate = mProperty;
+	if (mArcsOut == PR_FALSE)
+	{
+		NS_ADDREF(mProperty);
+		*aPredicate = mProperty;
+	}
+	else
+	{
+		if (nsnull == mValue)
+			return NS_ERROR_NULL_POINTER;
+		NS_ADDREF(mValue);
+		*(nsIRDFNode **)aPredicate = mValue;
+	}
 	return NS_OK;
 }
 
@@ -769,7 +807,6 @@ isVisible(nsNativeFileSpec file)
 
 #ifdef	XP_MAC
 
-	FInfo		fndrInfo;
 	FSSpec		fss = file;
 	OSErr		err;
 
