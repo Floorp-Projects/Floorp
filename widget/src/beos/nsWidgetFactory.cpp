@@ -42,6 +42,9 @@
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
 #include "nsFontRetrieverService.h"
+#ifdef IBMBIDI
+#include "nsBidiKeyboard.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
@@ -84,6 +87,9 @@ static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 // Sound services (just Beep for now)
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
 
+#ifdef IBMBIDI
+static NS_DEFINE_IID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+#endif
 
 class nsWidgetFactory : public nsIFactory
 {   
@@ -226,6 +232,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*) (nsIDragService *) new nsDragService();
     }
+#ifdef IBMBIDI
+    else if (mClassID.Equals(kCBidiKeyboard)) {
+        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
+    }
+#endif // IBMBIDI
     else {
         printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
     }
