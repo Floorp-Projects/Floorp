@@ -4721,7 +4721,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
     else {
         // If it's a XUL element, it'll be lightweight until somebody
         // monkeys with it.
-        rv = nsXULElement::Create(aPrototype, this, getter_AddRefs(result));
+        rv = nsXULElement::Create(aPrototype, this, PR_TRUE, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         // We also need to pay special attention to the keyset tag to set up a listener
@@ -4763,7 +4763,7 @@ nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype, nsIConten
     // element. I'd use an XML element, but it gets its knickers in a
     // knot with DOM ranges when you try to remove its children.
     nsCOMPtr<nsIContent> element;
-    rv = nsXULElement::Create(aPrototype, this, getter_AddRefs(element));
+    rv = nsXULElement::Create(aPrototype, this, PR_FALSE, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
     OverlayForwardReference* fwdref = new OverlayForwardReference(element);

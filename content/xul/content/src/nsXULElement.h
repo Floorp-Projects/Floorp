@@ -276,7 +276,7 @@ protected:
 
 public:
     static nsresult
-    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, nsIContent** aResult);
+    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, PRBool aIsScriptable, nsIContent** aResult);
 
     static nsresult
     Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
