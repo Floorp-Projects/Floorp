@@ -4,6 +4,8 @@
 <!ENTITY feedFolder.label "Store Feed Articles in: ">
 <!ENTITY feedFolder.accesskey "S">
 
+<!ENTITY choosethisfolder.label  "choose this folder">
+
 <!ENTITY feedLocation.label "Feed URL: ">
 <!ENTITY feedLocation.accesskey "F">
 

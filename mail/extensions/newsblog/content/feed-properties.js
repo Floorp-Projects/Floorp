@@ -59,7 +59,7 @@ function onOk()
   feedLocation = feedLocation.replace( /^\s+/, "").replace( /\s+$/, ""); 
 
   window.arguments[0].feedLocation = feedLocation;
-  window.arguments[0].folderURI = document.getElementById('selectFolder').value;
+  window.arguments[0].folderURI = document.getElementById('selectFolder').getAttribute("uri");; 
   window.arguments[0].quickMode = document.getElementById('quickMode').checked;
   window.arguments[0].result = true;
 

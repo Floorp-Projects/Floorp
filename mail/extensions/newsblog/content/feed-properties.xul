@@ -84,14 +84,17 @@
                 <menupopup>
                   <menu uri="..."
                         class="folderMenuItem menu-iconic"
-                        oncommand="PickedMsgFolder(event.target,'selectFolder')"
                         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                         BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                         IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                         IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                         ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
                         label="rdf:http://home.netscape.com/NC-rdf#Name">
-			              <menupopup class="menulist-menupopup"/>
+			              <menupopup class="menulist-menupopup">
+                      <menuitem label="&choosethisfolder.label;"
+                                oncommand="PickedMsgFolder(event.target.parentNode.parentNode,'selectFolder')"/>
+                      <menuseparator/>
+                    </menupopup>
                   </menu>
                 </menupopup>
               </rule>
