@@ -518,6 +518,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   // Nodes we know we want to treat as block
   // even though the parser says they're not:
   if (tagAtom==nsIEditProperty::body       ||
+      tagAtom==nsIEditProperty::head       ||
       tagAtom==nsIEditProperty::tbody      ||
       tagAtom==nsIEditProperty::thead      ||
       tagAtom==nsIEditProperty::tfoot      ||

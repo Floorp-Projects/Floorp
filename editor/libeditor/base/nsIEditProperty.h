@@ -122,6 +122,7 @@ public:
   static nsIAtom *address;   
   // Assumed to be block:
   static nsIAtom *body;      
+  static nsIAtom *head;      
   static nsIAtom *tr;        
   static nsIAtom *td;        
   static nsIAtom *th;        
