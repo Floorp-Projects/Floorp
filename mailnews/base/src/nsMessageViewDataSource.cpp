@@ -21,6 +21,7 @@
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsMsgRDFUtils.h"
 
 
 #include "plstr.h"
@@ -40,13 +41,6 @@ nsIRDFResource* nsMessageViewDataSource::kNC_Subject;
 nsIRDFResource* nsMessageViewDataSource::kNC_Sender;
 nsIRDFResource* nsMessageViewDataSource::kNC_Date;
 nsIRDFResource* nsMessageViewDataSource::kNC_Status;
-
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
 
 NS_IMPL_ADDREF(nsMessageViewDataSource)
 NS_IMPL_RELEASE(nsMessageViewDataSource)

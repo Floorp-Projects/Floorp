@@ -42,6 +42,7 @@ CPPSRCS=                     \
 	nsMsgAccount.cpp		\
 	nsMsgFolderDataSource.cpp \
 	nsMsgMessageDataSource.cpp \
+	nsMsgRDFUtils.obj \
 	$(NULL)
 
 
@@ -62,6 +63,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgAccount.obj		\
 	.\$(OBJDIR)\nsMsgFolderDataSource.obj \
 	.\$(OBJDIR)\nsMsgMessageDataSource.obj \
+	.\$(OBJDIR)\nsMsgRDFUtils.obj \
 	$(NULL)
 
 

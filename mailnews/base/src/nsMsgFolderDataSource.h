@@ -129,25 +129,18 @@ protected:
 														nsIRDFNode *object, PRBool assert);
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
-  void createNode(nsString& str, nsIRDFNode **node) const;
-  void createNode(PRUint32 value, nsIRDFNode **node) const;
-  
-  nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
+	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
                             nsIRDFNode **target);
-  nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
-  nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
-  nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
-  nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
-  nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
+	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
                              nsIRDFNode **target);
 
-
-
-  static nsresult getMessageArcLabelsOut(nsIMessage *message,
-                                         nsISupportsArray **arcs);
   static nsresult getFolderArcLabelsOut(nsIMsgFolder *folder,
                                         nsISupportsArray **arcs);
   

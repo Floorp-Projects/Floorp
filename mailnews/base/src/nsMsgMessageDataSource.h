@@ -113,8 +113,6 @@ protected:
 
 	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
 
-	void createNode(nsString& str, nsIRDFNode **node) const;
-	void createNode(PRUint32 value, nsIRDFNode **node) const;
 
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);

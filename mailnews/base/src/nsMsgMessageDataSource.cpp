@@ -19,38 +19,14 @@
 #include "msgCore.h"    // precompiled header...
 
 #include "nsMsgMessageDataSource.h"
-//#include "prlog.h"
+#include "nsMsgRDFUtils.h"
 #include "nsIRDFService.h"
-//#include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
-//#include "nsIRDFResourceFactory.h"
-//#include "nsIRDFObserver.h"
-//#include "nsIRDFNode.h"
-//#include "plstr.h"
-//#include "prmem.h"
-//#include "prio.h"
-//#include "prprf.h"
-//#include "nsString.h"
-//#include "nsIMsgFolder.h"
-//#include "nsISupportsArray.h"
-//#include "nsFileSpec.h"
-//#include "nsMsgFolderFlags.h"
 #include "nsRDFCursorUtils.h"
 #include "nsIMessage.h"
-//#include "nsMsgFolder.h"
-//#include "nsIMsgHeaderParser.h"
-//#include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-
-// this is used for notification of observers using nsVoidArray
-typedef struct _nsMsgRDFNotification {
-  nsIRDFResource *subject;
-  nsIRDFResource *property;
-  nsIRDFNode *object;
-} nsMsgRDFNotification;
-                                                
 
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -69,85 +45,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Date;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status;
 
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
-
-
-////////////////////////////////////////////////////////////////////////
-// Utilities
-
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-  PRBool result;
-  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
-static PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
-{
-	if(!isSort)
-		return PR_FALSE;
-
-	char *r1Str, *r2Str;
-	nsString r1nsStr, r2nsStr, r1nsSortStr;
-
-	r1->GetValue(&r1Str);
-	r2->GetValue(&r2Str);
-
-	r1nsStr = r1Str;
-	r2nsStr = r2Str;
-	r1nsSortStr = r1Str;
-
-	delete[] r1Str;
-	delete[] r2Str;
-
-	//probably need to not assume this will always come directly after property.
-	r1nsSortStr +="?sort=true";
-
-	if(r1nsStr == r2nsStr)
-	{
-		*isSort = PR_FALSE;
-		return PR_TRUE;
-	}
-	else if(r1nsSortStr == r2nsStr)
-	{
-		*isSort = PR_TRUE;
-		return PR_TRUE;
-	}
-  else
-	{
-		//In case the resources are equal but the values are different.  I'm not sure if this
-		//could happen but it is feasible given interface.
-		*isSort = PR_FALSE;
-		return(peq(r1, r2));
-	}
-}
-
-void nsMsgMessageDataSource::createNode(nsString& str, nsIRDFNode **node) const
-{
-	nsIRDFLiteral * value;
-	*node = nsnull;
-	if(NS_SUCCEEDED(mRDFService->GetLiteral((const PRUnichar*)str, &value))) {
-		*node = value;
-	}
-}
-
-void nsMsgMessageDataSource::createNode(PRUint32 value, nsIRDFNode **node) const
-{
-	char *valueStr = PR_smprintf("%d", value);
-	nsString str(valueStr);
-	createNode(str, node);
-	PR_smprintf_free(valueStr);
-}
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
   mURI(nsnull),
