@@ -167,9 +167,11 @@ function Startup()
     resolution = document.getElementById( "screenResolution" );
     var dpi = resolution.getAttribute( "dpi" );
     resolution = document.getElementById( "otherResolution" );
-    resolution.setAttribute( "value", dpi.replace(/\$val/, "72" ) );
+    resolution.setAttribute( "value", "72" );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, "72" ) );
     resolution = document.getElementById( "defaultResolution" );
-    resolution.setAttribute( "value", dpi.replace(/\$val/, "96" ) );
+    resolution.setAttribute( "value", "96" );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, "96" ) );
   }
 
 function listElement( aListID )

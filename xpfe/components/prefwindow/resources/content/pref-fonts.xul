@@ -228,11 +228,11 @@
               oncommand="changeScreenResolution()"
               dpi="&resolution.dpival;">
       <menupopup>
-        <menuitem value="&resolution.72.value;" 
-                  label="&resolution.72.value; &resolution.dpi;"
+        <menuitem value="" 
+                  label="&resolution.dpival;"
                   id="otherResolution"/>
-        <menuitem value="&resolution.96.value;" 
-                  label="&resolution.96.value; &resolution.dpi;" 
+        <menuitem value="" 
+                  label="&resolution.dpival;" 
                   id="defaultResolution"/>
         <menuitem value="0"
                   label="&resolution.system.label;" 
