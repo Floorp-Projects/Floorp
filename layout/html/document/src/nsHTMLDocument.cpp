@@ -152,10 +152,8 @@ nsHTMLDocument::~nsHTMLDocument()
     nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
     NS_RELEASE(map);
   }
-  if (mForms) {
-    mForms->Reset();
-    NS_RELEASE(mForms);
-  }
+  NS_IF_RELEASE(mForms);
+
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
 
@@ -228,10 +226,7 @@ nsHTMLDocument::Reset(nsIURL *aURL)
     nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
     NS_RELEASE(map);
   }
-  if (mForms) {
-    mForms->Reset();
-    NS_RELEASE(mForms);
-  }
+  NS_IF_RELEASE(mForms);
 
   if (nsnull != mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nsnull);
@@ -2284,6 +2279,8 @@ nsHTMLDocument::GetBodyContent()
 NS_IMETHODIMP 
 nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
 {
+#if 0
+  // Not necessary anymore since forms are real content now
   NS_PRECONDITION(nsnull != aForm, "null ptr");
   if (nsnull == aForm) {
     return NS_ERROR_NULL_POINTER;
@@ -2304,6 +2301,8 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
     NS_RELEASE(iContent);
   }
   return result;
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

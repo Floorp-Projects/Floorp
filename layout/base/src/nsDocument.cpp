@@ -883,6 +883,12 @@ nsDocument::BeginLoad()
   for (i = 0; i < count; i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->BeginLoad(this);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -894,6 +900,12 @@ nsDocument::EndLoad()
   for (i = 0; i < count; i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
     observer->EndLoad(this);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -906,6 +918,12 @@ nsDocument::ContentChanged(nsIContent* aContent,
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentChanged(this, aContent, aSubContent);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -918,6 +936,12 @@ nsDocument::ContentAppended(nsIContent* aContainer,
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentAppended(this, aContainer, aNewIndexInContainer);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -931,6 +955,12 @@ nsDocument::ContentInserted(nsIContent* aContainer,
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -946,6 +976,12 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                               aIndexInContainer);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -960,6 +996,12 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->ContentRemoved(this, aContainer, 
                              aChild, aIndexInContainer);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -973,6 +1015,12 @@ nsDocument::AttributeChanged(nsIContent* aChild,
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->AttributeChanged(this, aChild, aAttribute, aHint);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -986,6 +1034,12 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -997,6 +1051,12 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule)
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
@@ -1008,6 +1068,12 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
+    // Make sure that the observer didn't remove itself during the
+    // notification. If it did, update our index and count.
+    if (observer != (nsIDocumentObserver*)mObservers[i]) {
+      i--;
+      count--;
+    }
   }
   return NS_OK;
 }
