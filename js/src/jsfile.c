@@ -653,9 +653,7 @@ utf8_to_ucs2_char(const unsigned char *utf8p, int16 buflen, uint16 *ucs2p)
 
 typedef struct JSFile {
     char        *path;          /* the path to the file. */
-    PRFileDesc* handle;         /* the handle for the file, if open.  */
-    FILE        *nativehandle;  /* native handle, for stuff NSPR doesn't do. */
-    JSBool      open;
+    JSBool      isOpen;
     JSString    *linebuffer;    /* temp buffer used by readln. */
     int32       mode;           /* mode used to open the file: read, write, append, create, etc.. */
     int32       type;           /* Asciiz, utf, unicode */
@@ -666,6 +664,12 @@ typedef struct JSFile {
     JSBool      randomAccess;   /* can the file be randomly accessed? false for stdin, and
                                  UTF-encoded files. */
     JSBool      autoflush;      /* should we force a flush for each line break? */
+    JSBool      isNative;       /* if the file is using OS-specific file FILE type */
+
+    union{                      /* anonymous union */
+        PRFileDesc *handle;        /* the handle for the file, if open.  */
+        FILE       *nativehandle;  /* native handle, for stuff NSPR doesn't do. */
+    };
     JSBool      isAPipe;        /* if the file is really an OS pipe */
 } JSFile;
 
@@ -719,10 +723,11 @@ js_ResetBuffers(JSFile * file)
 /* Reset file attributes */
 static void
 js_ResetAttributes(JSFile * file){
-    file->open = JS_FALSE;
+    file->isOpen = JS_FALSE;
     file->handle = NULL;
     file->nativehandle = NULL;
-    file->open = JS_FALSE;
+    file->randomAccess = JS_TRUE; /* innocent until proven guilty */
+    file->isNative = JS_FALSE;
     file->isAPipe = JS_FALSE;
     js_ResetBuffers(file);
 }
@@ -746,7 +751,7 @@ js_FileOpen(JSContext *cx, JSObject *obj, JSFile *file, char *mode){
 
 /* Buffered version of PR_Read. Used by js_FileRead */
 static int32
-js_BufferedRead(JSFile * f, char*buf, int32 len)
+js_BufferedRead(JSFile * f, char *buf, int32 len)
 {
     int32 count = 0;
     while (f->nbBytesInBuf>0&&len>0) {
@@ -990,48 +995,39 @@ js_canWrite(JSFile *file)
 static JSBool
 js_isFile(JSFile *file)
 {
-    JSStatus status;
     PRFileInfo info;
 
     /* SECURITY */
-    if(file->handle){
-        if (file->open) {
-            status = PR_GetOpenFileInfo(file->handle, &info);
-        } else {
-            status = PR_GetFileInfo(file->path, &info);
-        }
+    if(!file->isNative){
+        if ((file->isOpen)?
+                        PR_GetOpenFileInfo(file->handle, &info):
+                        PR_GetFileInfo(file->path, &info)!=PR_SUCCESS){
+            /* TODO: report error */
+            return JS_FALSE;
+        }else
+            return (info.type==PR_FILE_FILE);
     }else{
         /* TODO: can't really do much at this point */
     }
-    if (status==PR_FAILURE){
-        /* TODO: report error */
-        return JS_FALSE;
-    }else
-        return (info.type==PR_FILE_FILE);
 }
 
 static JSBool
 js_isDirectory(JSFile *file)
 {
-    JSStatus status;
     PRFileInfo info;
 
     /* SECURITY */
-    if(file->handle){
-        if (file->open){
-            status = PR_GetOpenFileInfo(file->handle, &info);
-        }else{
-            status = PR_GetFileInfo(file->path, &info);
-        }
+    if(!file->isNative){
+        if ((file->isOpen)?
+                        PR_GetOpenFileInfo(file->handle, &info):
+                        PR_GetFileInfo(file->path, &info)!=PR_SUCCESS){
+            /* TODO: report error */
+            return JS_FALSE;
+        }else
+            return (info.type==PR_FILE_DIRECTORY);
     }else{
-        /* TODO: */
+        /* TODO: can't really do much at this point */
     }
-
-    if (status==PR_FAILURE){
-        /* TODO: report error */
-        return JS_FALSE;
-    }else
-        return (info.type==PR_FILE_DIRECTORY);
 }
 
 /* -------------------------------- File methods ------------------------------ */
@@ -1049,12 +1045,13 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
     /* A native file that is already open */
-    if(file->open && file->nativehandle){
+    if(file->isOpen && file->isNative){
         return JS_TRUE;
     }
 
     /* Close before proceeding */
-    if (file->open) {
+    if (file->isOpen) {
+        JS_ReportWarning(cx, "File %s is already open, we will close it and reopen, proceeding");
         file_close(cx, obj, 0, NULL, rval);
     }
 
@@ -1164,7 +1161,8 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 file->nativehandle = POPEN(command, pipemode);
 				JS_free(cx, command);
             }
-            /* set the pipe flag */
+            /* set the flags */
+            file->isNative = JS_TRUE;
             file->isAPipe = JS_TRUE;
         }
     }else{
@@ -1177,11 +1175,11 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Set the open flag and return result */
     if (file->handle==NULL && file->nativehandle==NULL){
-        file->open = JS_TRUE;
+        file->isOpen = JS_TRUE;
 		/* TODO: error */
         return JS_FALSE;
     }else{
-        file->open = JS_TRUE;
+        file->isOpen = JS_TRUE;
         return JS_TRUE;
     }
 }
@@ -1191,10 +1189,15 @@ file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile  *file;
 
+    /* SECURITY ? */
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
+    if(!file->isOpen){
+        JS_ReportWarning(cx, "File %s is not open, can't close it, proceeding", file->path);
+    }
+
     if(!file->isAPipe){
-        if ((file->handle)?
+        if ((!file->isNative)?
                 PR_Close(file->handle):
                 fclose(file->nativehandle)!=0){
             /* TODO: error reporting */
@@ -1251,17 +1254,17 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* SECURITY */
     /* make sure we are not reading a file open for writing */
-    if (file->open && (file->mode&PR_WRONLY)) {
+    if (file->isOpen && (file->mode&PR_WRONLY)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                 JSFILEMSG_CANNOT_COPY_FILE_OPEN_FOR_WRITING_ERROR, file->path);
         return JS_FALSE;
     }
 
     /* open a closed file */
-    if(!file->open){
+    if(!file->isOpen){
         file->handle = PR_Open(file->path, PR_RDONLY, 0644);
 
-        if(!file->handle){
+        if(file->isNative){
             /* TODO: error */
             return JS_FALSE;
         }
@@ -1369,14 +1372,14 @@ file_flush(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
-    if (!file->open) {
+    if (!file->isOpen) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
            JSFILEMSG_CANNOT_FLUSH_CLOSE_FILE_ERROR, file->path);
         return JS_FALSE;
     }
 
     /* SECURITY */
-    if (file->handle?PR_Sync(file->handle):fflush(file->nativehandle)==PR_SUCCESS)
+    if ((!file->isNative)?PR_Sync(file->handle):fflush(file->nativehandle)==PR_SUCCESS)
       *rval = JSVAL_TRUE;
     else{
        return JS_FALSE;
@@ -1395,7 +1398,7 @@ file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* SECURITY */
     /* open file if necessary */
-    if (!file->open) {
+    if (!file->isOpen) {
         js_FileOpen(cx, obj, file, "create, append, writeOnly");
     }
 
@@ -1490,7 +1493,7 @@ file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     /* SECURITY */
-    if (!file->open) {
+    if (!file->isOpen) {
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
@@ -1532,7 +1535,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
     /* SECURITY */
-    if (!file->open){
+    if (!file->isOpen){
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
@@ -1609,18 +1612,18 @@ file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     array = JS_NewArrayObject(cx, 0, NULL);
     len = 0;
 
-    if (!file->open) {
+    if (!file->isOpen) {
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
-    if (file->handle ? PR_GetOpenFileInfo(file->handle, &info) : PR_GetFileInfo(file->path, &info)){
+    if ((!file->isNative) ? PR_GetOpenFileInfo(file->handle, &info) : PR_GetFileInfo(file->path, &info)){
         /* TODO: error */
         return JS_FALSE;
     }
 
     while (ok&&
             (info.size>(JSUint32)
-                ((file->handle)?
+                ((!file->isNative)?
                     PR_Seek(file->handle, 0, PR_SEEK_CUR):
                     fseek(file->nativehandle, 0, SEEK_CUR)))) {
         if(!file_readln(cx, obj, 0, NULL, &line)) return JS_FALSE;
@@ -1640,7 +1643,7 @@ file_skip(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     /* SECURITY */
-    if (!file->open) {
+    if (!file->isOpen) {
         js_FileOpen(cx, obj, file, "readOnly");
     }
 
@@ -1692,7 +1695,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* TODO: native support? */
-    if(!file->handle){
+    if(file->isNative){
         /* TODO: error */
         return JS_FALSE;
     }
@@ -1761,6 +1764,11 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile      *file;
 
+    if (argc!=1){
+        /* TODO: error reporting */
+        return JS_FALSE;
+    }
+
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     /* SECURITY */
 
@@ -1775,14 +1783,20 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!file_mkdir(cx, dirObj, argc, argv, rval)) {
             return JS_FALSE;
         }
-    }
-
-    if (PR_MkDir(file->path, 0755)==PR_SUCCESS){
-        *rval = JSVAL_TRUE;
-        return JS_TRUE;
     }else{
-        /* TODO: error */
-        return JS_FALSE;
+        char *dirName = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+        char *fullName;
+
+        fullName = combinePath(cx, file->path, dirName);
+        if (PR_MkDir(fullName, 0755)==PR_SUCCESS){
+            *rval = JSVAL_TRUE;
+            JS_free(cx, fullName);
+            return JS_TRUE;
+        }else{
+            /* TODO: error */
+            JS_free(cx, fullName);
+            return JS_FALSE;
+        }
     }
 }
 
@@ -1827,7 +1841,7 @@ enum file_tinyid {
     FILE_EXISTS             = -8,
     FILE_CANREAD            = -9,
     FILE_CANWRITE           = -10,
-    FILE_OPENED             = -11,
+    FILE_OPEN               = -11,
     FILE_TYPE               = -12,
     FILE_MODE               = -13,
     FILE_CREATED            = -14,
@@ -1848,7 +1862,7 @@ static JSPropertySpec file_props[] = {
     {"exists",      FILE_EXISTS,        JSPROP_ENUMERATE | JSPROP_READONLY },
     {"canRead",     FILE_CANREAD,       JSPROP_ENUMERATE | JSPROP_READONLY },
     {"canWrite",    FILE_CANWRITE,      JSPROP_ENUMERATE | JSPROP_READONLY },
-    {"open",        FILE_OPENED,        JSPROP_ENUMERATE | JSPROP_READONLY },
+    {"isOpen",        FILE_OPEN,          JSPROP_ENUMERATE | JSPROP_READONLY },
     {"type",        FILE_TYPE,          JSPROP_ENUMERATE | JSPROP_READONLY },
     {"mode",        FILE_MODE,          JSPROP_ENUMERATE | JSPROP_READONLY },
     {"creationTime",FILE_CREATED,       JSPROP_ENUMERATE | JSPROP_READONLY },
@@ -1874,6 +1888,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     tiny = JSVAL_TO_INT(id);
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
+    if(!file) return JS_TRUE;
 
     /* SECURITY ??? */
     switch (tiny) {
@@ -1905,8 +1920,8 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     case FILE_CANWRITE:
         *vp = BOOLEAN_TO_JSVAL(js_canWrite(file));
         break;
-    case FILE_OPENED:
-        *vp = BOOLEAN_TO_JSVAL(file->open);
+    case FILE_OPEN:
+        *vp = BOOLEAN_TO_JSVAL(file->isOpen);
         break;
     case FILE_TYPE:
         switch (file->type) {
@@ -1967,8 +1982,8 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         JS_free(cx, str);
         break;
     case FILE_CREATED:
-        if(file->handle){
-            if(((file->open)?
+        if(!file->isNative){
+            if(((file->isOpen)?
                             PR_GetOpenFileInfo(file->handle, &info):
                             PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
                 /* TODO: error */
@@ -1988,8 +2003,8 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                     expandedTime.tm_sec));
         break;
     case FILE_MODIFIED:
-        if(file->handle){
-            if(((file->open)?
+        if(!file->isNative){
+            if(((file->isOpen)?
                             PR_GetOpenFileInfo(file->handle, &info):
                             PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
                 /* TODO: error */
@@ -2009,7 +2024,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                                     expandedTime.tm_sec));
         break;
     case FILE_LENGTH:
-        if(file->handle){
+        if(!file->isNative){
             if (js_isDirectory(file)) { /* XXX debug me */
                 PRDir       *dir;
                 PRDirEntry  *entry;
@@ -2033,7 +2048,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 break;
             }else{
                 /* return file size */
-                if(((file->open)?
+                if(((file->isOpen)?
                         PR_GetOpenFileInfo(file->handle, &info):
                         PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
 						/* TODO: error */
@@ -2051,8 +2066,8 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = BOOLEAN_TO_JSVAL(file->randomAccess);
         break;
     case FILE_POSITION:
-        if (file->open) {
-            *vp = INT_TO_JSVAL(file->handle?
+        if (file->isOpen) {
+            *vp = INT_TO_JSVAL(!file->isNative?
                         PR_Seek(file->handle, 0, PR_SEEK_CUR):
                         fseek(file->nativehandle, 0, SEEK_CUR));
         }else {
@@ -2062,9 +2077,6 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
     default:{
         char *prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
-        /* TODO: ugly! */
-        /*if(!strcmp(prop_name, "constructor") || !strcmp(prop_name, "toString"))
-            break;*/
 		/* this is some other property -- try to use the dir["file"] syntax */
 		if(js_isDirectory(file)){
 			PRDir *dir = NULL;
@@ -2114,7 +2126,7 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     case FILE_POSITION:
         if (file->randomAccess) {
             offset = JSVAL_TO_INT(*vp);
-            count = (file->handle)?
+            count = (!file->isNative)?
                         PR_Seek( file->handle, offset, PR_SEEK_SET):
                         fseek(file->nativehandle, offset, SEEK_SET);
             js_ResetBuffers(file);
@@ -2202,13 +2214,7 @@ file_init(JSContext *cx, JSObject *obj, char *bytes)
     /* canonize the path */
     file->path = canonicalPath(cx, bytes);
 
-    file->open = JS_FALSE;
-    file->handle = NULL;
-    file->nativehandle = NULL;
-    file->nbBytesInBuf = 0;
-    file->charBufferUsed = JS_FALSE;
-    file->randomAccess = JS_TRUE; /* innocent until proven guilty */
-    file->isAPipe = JS_FALSE;
+    js_ResetAttributes(file);
 
     if (!JS_SetPrivate(cx, obj, file)) {
         /* TODO: report error */
@@ -2252,7 +2258,8 @@ js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBo
 
     file->nativehandle = nativehandle;
     file->path = strdup(filename);
-    file->open = open;
+    file->isOpen = open;
+    file->isNative = JS_TRUE;
     return obj;
 }
 
@@ -2293,6 +2300,7 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
         file_props, file_functions, NULL, NULL);
     if (!file) return NULL;
 
+    /* SECURITY -- need to make sure we want to have default streams */
     ctor = JS_GetConstructor(cx, file);
     if (!ctor)  return NULL;
 
@@ -2307,32 +2315,32 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
     JS_DefinePropertyWithTinyId(cx, ctor, CURRENTDIR_PROPERTY, 0, vp,
                 JS_PropertyStub, file_currentDirSetter, JSPROP_ENUMERATE);
 
-	/* Code to create stdin, stdout, and stderr. Insert in the appropriate place. */
-	/* Define input */
-    afile = js_NewFileObjectFromFILE(cx, stdin, SPECIAL_FILE_STRING, JS_TRUE);
-    if (!afile) return NULL;
-    fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    fileObj->randomAccess = JS_FALSE;
-    vp = OBJECT_TO_JSVAL(afile);
-    JS_SetProperty(cx, ctor, "input", &vp);
+#ifdef JS_HAS_STANDARD_STREAMS
+        /* Code to create stdin, stdout, and stderr. Insert in the appropriate place. */
+        /* Define input */
+        afile = js_NewFileObjectFromFILE(cx, stdin, SPECIAL_FILE_STRING, JS_TRUE);
+        if (!afile) return NULL;
+        fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
+        fileObj->randomAccess = JS_FALSE;
+        vp = OBJECT_TO_JSVAL(afile);
+        JS_SetProperty(cx, ctor, "input", &vp);
 
-	/* Define output */
-    afile = js_NewFileObjectFromFILE(cx, stdout, SPECIAL_FILE_STRING, JS_TRUE);
-    if (!afile) return NULL;
-    fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    fileObj->randomAccess = JS_FALSE;
-    vp = OBJECT_TO_JSVAL(afile);
-    JS_SetProperty(cx, ctor, "output", &vp);
+        /* Define output */
+        afile = js_NewFileObjectFromFILE(cx, stdout, SPECIAL_FILE_STRING, JS_TRUE);
+        if (!afile) return NULL;
+        fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
+        fileObj->randomAccess = JS_FALSE;
+        vp = OBJECT_TO_JSVAL(afile);
+        JS_SetProperty(cx, ctor, "output", &vp);
 
-	/* Define error */
-    afile = js_NewFileObjectFromFILE(cx, stderr, SPECIAL_FILE_STRING, JS_TRUE);
-    if (!afile)
-    return NULL;
-    fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    fileObj->randomAccess = JS_FALSE;
-    vp = OBJECT_TO_JSVAL(afile);
-    JS_SetProperty(cx, ctor, "error", &vp);
-
-    return file;
+        /* Define error */
+        afile = js_NewFileObjectFromFILE(cx, stderr, SPECIAL_FILE_STRING, JS_TRUE);
+        if (!afile)
+        return NULL;
+        fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
+        fileObj->randomAccess = JS_FALSE;
+        vp = OBJECT_TO_JSVAL(afile);
+        JS_SetProperty(cx, ctor, "error", &vp);
+#endif
 }
 #endif /* JS_HAS_FILE_OBJECT */
