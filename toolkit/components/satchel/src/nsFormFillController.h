@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -47,6 +48,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
+#include "nsIDOMMouseListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
@@ -59,16 +61,15 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIAutoCompleteSearch,
                              public nsIDOMFocusListener,
                              public nsIDOMKeyListener,
-                             public nsIDOMFormListener
+                             public nsIDOMFormListener,
+                             public nsIDOMMouseListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFORMFILLCONTROLLER
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETEINPUT
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_DECL_NSIDOMEVENTLISTENER
 
   // nsIDOMFocusListener
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
@@ -86,12 +87,20 @@ public:
   NS_IMETHOD Select(nsIDOMEvent* aEvent);
   NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
+  // nsIDOMMouseListener
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
+
   nsFormFillController();
   virtual ~nsFormFillController();
 
 protected:
-  void AddFocusListener(nsIDOMWindow *aWindow);
-  void RemoveFocusListener(nsIDOMWindow *aWindow);
+  void AddWindowListeners(nsIDOMWindow *aWindow);
+  void RemoveWindowListeners(nsIDOMWindow *aWindow);
   
   void AddKeyListener(nsIDOMHTMLInputElement *aInput);
   void RemoveKeyListener();
@@ -121,6 +130,7 @@ protected:
   PRPackedBool mCompleteDefaultIndex;
   PRPackedBool mForceComplete;
   PRPackedBool mSuppressOnInput;
+  PRPackedBool mIgnoreClick;
 };
 
 #endif // __nsFormFillController__
