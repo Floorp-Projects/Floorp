@@ -26,8 +26,14 @@
 // platform independent native handle to application instance
 typedef void * nsNativeApplicationInstance ;
 
-class nsShellInstance : public nsIShellInstance {
+class nsShellInstance : public nsIShellInstance 
+{
 public:
+
+  /**
+   * Constructor and Destructor
+   */
+
   nsShellInstance();
   ~nsShellInstance();
 
@@ -37,34 +43,94 @@ public:
     return rv;
   }
 
+  /**
+   * ISupports Interface
+   */
   NS_DECL_ISUPPORTS
 
+  /**
+   * Initialize Method
+   * @result The result of the initialization, NS_OK if no errors
+   */
   NS_IMETHOD Init();
 
+  /**
+   * Event Loop Execution
+   * @result The result of the initialization, NS_OK if no errors
+   */
   NS_IMETHOD Run();
 
+  /**
+   * Application Wide Factory Registration
+   * @result The result of the initialization, NS_OK if no errors
+   */
   NS_IMETHOD RegisterFactories();
 
+  /**
+   * Get the native instance associated with this shell instance
+   * @result An opaque native instance pointer
+   */
   NS_IMETHOD_(void *) GetNativeInstance(); 
+
+  /**
+   * Set the Native Instance associated with this shell instance
+   * @param aNativeInstance The native instance
+   * @result None
+   */
   NS_IMETHOD_(void)   SetNativeInstance(void * aNativeInstance);
 
+  /**
+   * Get the Application Shell
+   * @result nsIApplicationShell Application Shell
+   */
   NS_IMETHOD_(nsIApplicationShell *) GetApplicationShell(); 
-  NS_IMETHOD_(void)   SetApplicationShell(nsIApplicationShell * aApplicationShell);
 
+  /**
+   * Set the Application Shell for this Instance
+   * @param aApplicationShell the Application Shell
+   * @result None
+   */
+  NS_IMETHOD_(void) SetApplicationShell(nsIApplicationShell * aApplicationShell);
+
+  /**
+   * Create a toplevel Application Window for this application
+   * @param nsRect Rect in screen coordinates of toplevel window
+   * @param aHandleEventFunction Event Loop Callbacl function
+   * @result a Pointer to the nsIWidget representing the toplevel Window
+   */
   NS_IMETHOD_(nsIWidget *) CreateApplicationWindow(const nsRect &aRect,
                                                    EVENT_CALLBACK aHandleEventFunction) ;
 
+  /**
+   * Show/Hide the toplevel Application Window
+   * @param show Boolean of PR_TRUE/PR_FALSE on whether to Show/Hide the window
+   * @result nsresult NS_OK upon successful completion
+   */
   NS_IMETHOD ShowApplicationWindow(PRBool show) ;
 
+  /**
+   * Get the native window associated with the toplevel Application Instance
+   * @result Opaque handle to the application window native instance
+   */
   NS_IMETHOD_(void *) GetApplicationWindowNativeInstance() ; 
+
+  /**
+   * Get the widget associated with the toplevel Application Instance
+   * @result a Pointer to the nsIWidget representing the toplevel Window
+   */  
   NS_IMETHOD_(nsIWidget *) GetApplicationWidget() ; 
 
+  /**
+   * Exit this application
+   * @result nsresult NS_OK upon succcessful completion
+   */  
   NS_IMETHOD ExitApplication() ;
 
 private:
   nsNativeApplicationInstance mNativeInstance ;
-  nsIApplicationShell * mApplicationShell ;
-  nsIWidget *           mApplicationWindow ;
+  nsIApplicationShell *       mApplicationShell ;
+  nsIWidget *                 mApplicationWindow ;
+
 };
 
 

@@ -33,37 +33,72 @@
 
 
 /**
- * ModalMessage enums
+ * ModalMessage enumerations
  */
-
-enum nsModalMessageType {   
-                  ///OK Modal Message
-                eModalMessage_ok,
-                  ///OK/CANCEL Modal Message
-                eModalMessage_ok_cancel,
-              }; 
+enum nsModalMessageType 
+{   
+  eModalMessage_ok,
+  eModalMessage_ok_cancel,
+}; 
 
 
-class NS_SHELL nsApplicationManager {
-private:
-  static PRMonitor *monitor;
-  static nsHashtable * applications;
-
-  static nsresult checkInitialized();
-
+// Application Manager - Manages Application Instances
+class NS_SHELL nsApplicationManager 
+{
 public:
+   
+  /**
+   * Initialize the ApplicationManager
+   * @result The result of the initialization, NS_OK if no errors
+   */
   static nsresult Initialize();
 
+  /**
+   * Get the ShellInstance associated with an Application
+   * @param aApplicationShell - The Application Shell
+   * @param aShellInstance = The returned shell instance for this application
+   * @result The result of the initialization, NS_OK if no errors
+   */
   static nsresult GetShellInstance(nsIApplicationShell * aApplicationShell,
-                                nsIShellInstance **aShellInstance);
+                                   nsIShellInstance **aShellInstance);
 
+  /**
+   * Set the ShellInstance associated with an Application
+   * @param aApplicationShell - The Application Shell
+   * @param aShellInstance =The Shell instance for this application
+   * @result The result of the initialization, NS_OK if no errors
+   */
   static nsresult SetShellAssociation(nsIApplicationShell * aApplicationShell,
                                       nsIShellInstance *aShellInstance);
 
+  /**
+   * Delete the Association of the ShellInstance with the Application
+   * @param aApplicationShell - The Application Shell
+   * @param aShellInstance =The Shell instance for this application
+   * @result The result of the initialization, NS_OK if no errors
+   */
   static nsresult DeleteShellAssociation(nsIApplicationShell * aApplicationShell,
                                          nsIShellInstance *aShellInstance);
 
+  /**
+   * Display an Application-wide Modal Message Box
+   * @param aMessage The Message  String to display
+   * @param aTitle The String to display in title area
+   * @param aModalMessageType The type of Modal Message
+   * @result The result of the initialization, NS_OK if no errors
+   */
   static nsresult ModalMessage(const nsString &aMessage, const nsString &aTitle, nsModalMessageType aModalMessageType);
+
+private:
+
+  static nsresult checkInitialized();
+
+private:
+
+  static PRMonitor *    monitor;
+  static nsHashtable *  applications;
+
+
 };
 
 #endif
