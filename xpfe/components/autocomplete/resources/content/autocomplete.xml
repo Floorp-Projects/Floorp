@@ -1420,7 +1420,6 @@
               this.tree.removeAttribute("collapsed");
             this.tree.setAttribute("height", height);
           }
-          this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);
         ]]></body>
       </method>
 
@@ -1493,13 +1492,6 @@
   </binding>
 
   <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
-    <content>
-      <children includes="treecols"/>
-      <xul:treerows class="autocomplete-treerows tree-rows" xbl:inherits="hidescrollbar" flex="1">
-        <children/>
-      </xul:treerows>
-    </content>
-
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
@@ -1541,15 +1533,6 @@
         }
       ]]></handler>
     </handlers>
-  </binding>
-
-  <binding id="autocomplete-treerows">
-    <content>
-      <xul:hbox flex="1" class="tree-bodybox">
-        <children/>
-      </xul:hbox>
-      <xul:scrollbar xbl:inherits="hidescrollbar" orient="vertical" class="tree-scrollbar"/>
-    </content>
   </binding>
 
   <binding id="autocomplete-history-popup"

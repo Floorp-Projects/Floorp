@@ -654,10 +654,6 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
 }
 
-.autocomplete-treerows {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treerows");
-}
-
 .autocomplete-history-dropmarker {
   -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
 }
