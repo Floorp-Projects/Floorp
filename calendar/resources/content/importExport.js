@@ -20,6 +20,7 @@
  *
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
  *                 Steve Hampton <mvgrad78@yahoo.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,26 +54,24 @@ const MODE_TRUNCATE = 0x20;
 const MODE_SYNC     = 0x40;
 const MODE_EXCL     = 0x80;
 
-const filterCalendar    = "Calendar Files";
+const filterCalendar    = gCalendarBundle.getString( "filterCalendar" );
 const extensionCalendar = ".ics";
-const filtervCalendar    = "vCalendar Files";
+const filtervCalendar    = gCalendarBundle.getString( "filtervCalendar" );
 const extensionvCalendar = ".vcs";
-const filterXcs         = "iCalendar XML Document";
+const filterXcs         = gCalendarBundle.getString("filterXcs");
 const extensionXcs      = ".xcs";
-const filterXml         = "XML Document";
+const filterXml         = gCalendarBundle.getString("filterXml");
 const extensionXml      = ".xml";
-const filterRtf         = "Rich Text Format (RTF)";
+const filterRtf         = gCalendarBundle.getString("filterRtf");
 const extensionRtf      = ".rtf";
-const filterHtml        = "HTML Files";
+const filterHtml        = gCalendarBundle.getString("filterHtml");
 const extensionHtml     = ".html";
-const filterCsv         = "Comma Separated";
-const filterOutlookCsv  = "Outlook Comma Separated";
+const filterCsv         = gCalendarBundle.getString("filterCsv");
+const filterOutlookCsv  = gCalendarBundle.getString("filterOutlookCsv");
 const extensionCsv      = ".csv";
-const filterRdf         = "iCalendar RDF";
+const filterRdf         = gCalendarBundle.getString("filterRdf");
 const extensionRdf      = ".rdf";
 
-calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-      
 if( opener && opener.gICalLib )
    gICalLib = opener.gICalLib;
 
@@ -115,7 +114,7 @@ function loadEventsFromFile()
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  fp.init(window, "Open", nsIFilePicker.modeOpenMultiple);
+  fp.init(window, gCalendarBundle.getString("Open"), nsIFilePicker.modeOpenMultiple);
   fp.defaultExtension = "ics";
    
   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
@@ -164,7 +163,7 @@ function loadEventsFromFile()
       // If there are no events to import, let the user know
       //
       if (calendarEventArray.length == 0 && (duplicateEventArray.length == 0 || dupResult.discard == true) ) {
-        alert( calendarStringBundle.GetStringFromName( "noEventsToImport" ) );
+        alert( gCalendarBundle.getString( "noEventsToImport" ) );
         return false;
       }
       
@@ -177,7 +176,7 @@ function loadEventsFromFile()
 
         var buttonPressed =      
           promptService.confirmEx(window, 
-                                  "Import", calendarStringBundle.GetStringFromName( "aboutToImport" ) + " "+ calendarEventArray.length + " " + calendarStringBundle.GetStringFromName( "aboutToImportEnd" ), 
+                                  "Import", gCalendarBundle.getFormattedString( "aboutToImport", [calendarEventArray.length]), 
                                   (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
                                   (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
                                   (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
@@ -208,7 +207,7 @@ function loadEventsFromFile()
         if (dupResult.discard == false) {
 
           if (dupResult.prompt)
-            alert(calendarStringBundle.GetStringFromName( "duplicateImport" ));
+            alert(gCalendarBundle.getString( "duplicateImport" ));
 
           addEventsToCalendar( duplicateEventArray, !dupResult.prompt );
         }
@@ -413,10 +412,10 @@ function entryExists( date, subject) {
 function promptToKeepEntry(title, startTime, endTime) 
 {
   return confirm(
-                 calendarStringBundle.GetStringFromName( "addDuplicate" )+"\n\n" + 
-                 calendarStringBundle.GetStringFromName( "eventTitle" )+ title + "\n" +
-                 calendarStringBundle.GetStringFromName( "eventStartTime" )+ startTime.toString() + "\n" +
-                 calendarStringBundle.GetStringFromName( "eventEndTime" )+ endTime.toString() + "\n" 
+                 gCalendarBundle.getString( "addDuplicate" )+"\n\n" + 
+                 gCalendarBundle.getString( "eventTitle" )+ title + "\n" +
+                 gCalendarBundle.getString( "eventStartTime" )+ startTime.toString() + "\n" +
+                 gCalendarBundle.getString( "eventEndTime" )+ endTime.toString() + "\n" 
                  );
 
 }
@@ -561,7 +560,7 @@ function readDataFromFile( aFilePath, charset )
    }
    catch(ex)
    {
-      alert( calendarStringBundle.GetStringFromName( "unableToRead" ) + aFilePath + "\n"+ex );
+      alert( gCalendarBundle.getString( "unableToRead" ) + aFilePath + "\n"+ex );
    }
 
    return aDataStream;
@@ -581,7 +580,7 @@ function saveEventsToFile( calendarEventArray )
 
    if (calendarEventArray.length == 0)
    {
-      alert( calendarStringBundle.GetStringFromName( "noEventsToSave" ) );
+      alert( gCalendarBundle.getString( "noEventsToSave" ) );
       return;
    }
 
@@ -592,12 +591,12 @@ function saveEventsToFile( calendarEventArray )
 
    // caller can force disable of sand box, even if ON globally
 
-   fp.init(window, "Save As", nsIFilePicker.modeSave);
+   fp.init(window,  gCalendarBundle.getString("SaveAs"), nsIFilePicker.modeSave);
 
    if(calendarEventArray.length == 1 && calendarEventArray[0].title)
       fp.defaultString = calendarEventArray[0].title;
    else
-      fp.defaultString = calendarStringBundle.GetStringFromName( "defaultFileName" );
+      fp.defaultString = gCalendarBundle.getString( "defaultFileName" );
 
    fp.defaultExtension = "ics";
 
@@ -731,7 +730,7 @@ function patchICalStringForExport( sTextiCalendar )
 function eventArrayToHTML( calendarEventArray )
 {
    sHTMLHeader = 
-      "<html>\n" + "<head>\n" + "<title>"+calendarStringBundle.GetStringFromName( "HTMLTitle" )+"</title>\n" +
+      "<html>\n" + "<head>\n" + "<title>"+gCalendarBundle.getString( "HTMLTitle" )+"</title>\n" +
       "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
       "</head>\n"+ "<body bgcolor=\"#FFFFFF\" text=\"#000000\">\n";
    sHTMLFooter =
@@ -743,10 +742,10 @@ function eventArrayToHTML( calendarEventArray )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
       sHTMLText += "<p>";
-      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventTitle" )+"</B>\t" + calendarEvent.title + "<BR>\n";
-      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventDescription" )+"</B>\t" + calendarEvent.description + "<BR>\n";
-      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventWhen" )+"</B>" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>\n";
-      sHTMLText += "<B>"+calendarStringBundle.GetStringFromName( "eventWhere" )+"</B>" + calendarEvent.location + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventTitle" )+"</B>\t" + calendarEvent.title + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventDescription" )+"</B>\t" + calendarEvent.description + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhen" )+"</B>" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>\n";
+      sHTMLText += "<B>"+gCalendarBundle.getString( "eventWhere" )+"</B>" + calendarEvent.location + "<BR>\n";
       // sHTMLText += "<B>Organiser: </B>\t" + Event.???
       sHTMLText += "</p>";
    }
@@ -773,8 +772,8 @@ function eventArrayToRTF( calendarEventArray )
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
-      sRTFText += "\\b\\f0\\fs20 " + calendarStringBundle.GetStringFromName( "eventTitle" ) + "\\b0\\tab " + calendarEvent.title + "\\par\n";
-      sRTFText += "\\b\\f0\\fs20 " + calendarStringBundle.GetStringFromName( "eventDescription" ) + "\\b0\\tab " + calendarEvent.description + "\\par\n";
+      sRTFText += "\\b\\f0\\fs20 " + gCalendarBundle.getString( "eventTitle" ) + "\\b0\\tab " + calendarEvent.title + "\\par\n";
+      sRTFText += "\\b\\f0\\fs20 " + gCalendarBundle.getString( "eventDescription" ) + "\\b0\\tab " + calendarEvent.description + "\\par\n";
 
       sRTFText += "\\b When:\\b0\\tab " + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "\\par\n";
 
@@ -885,7 +884,7 @@ function saveDataToFile(aFilePath, aDataStream, charset)
    }
    catch(ex)
    {
-      alert(calendarStringBundle.GetStringFromName( "unableToWrite" ) + aFilePath );
+      alert(gCalendarBundle.getString( "unableToWrite" ) + aFilePath );
    }
 }
 
@@ -1298,7 +1297,7 @@ function startImport() {
         onAlarm : function( calendarEvent ) {},
         onError : function( severity, errorid, errorstring ) 
         {
-            this.errorreport=this.errorreport+calendarStringBundle.GetStringFromName( errorid )+"\n";
+            this.errorreport=this.errorreport+gCalendarBundle.getString( errorid )+"\n";
         },
         showErrors : function () {
             if( this.errorreport != "" )

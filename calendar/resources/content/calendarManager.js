@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mike Potter <mikep@oeone.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -117,9 +118,7 @@ function calendarManager( CalendarWindow )
    
    /* Refresh remote calendars */
 
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
-   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", categoriesStringBundle.GetStringFromName("reloadServersOnLaunch" ) );
+   var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", gCalendarBundle.getString("reloadServersOnLaunch" ) );
    
    if( RefreshServers == true )
       this.refreshAllRemoteCalendars( );
@@ -890,15 +889,13 @@ function deleteCalendar( )
    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
    var result = {value:0}; 
 
-   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
    var buttonPressed =      
       promptService.confirmEx(window, 
-                            calendarStringBundle.GetStringFromName( "deleteCalendarTitle" ), calendarStringBundle.GetStringFromName( "deleteCalendarMessage" ), 
+                            gCalendarBundle.getString( "deleteCalendarTitle" ), gCalendarBundle.getString( "deleteCalendarMessage" ), 
                             (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) + 
                             (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) + 
                             (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2), 
-                            calendarStringBundle.GetStringFromName( "deleteCalendarOnly" ),null,calendarStringBundle.GetStringFromName( "deleteCalendarAndFile" ),null, result); 
+                            gCalendarBundle.getString( "deleteCalendarOnly" ),null,gCalendarBundle.getString( "deleteCalendarAndFile" ),null, result); 
    
    var IdToDelete = gCalendarWindow.calendarManager.getSelectedCalendarId()
    

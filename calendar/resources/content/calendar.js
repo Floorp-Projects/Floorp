@@ -45,7 +45,6 @@
 *   Garth Smedley
 *
 * REQUIRED INCLUDES 
-*        <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 *        <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 *
 * NOTES
@@ -670,9 +669,7 @@ function newEvent( startDate, endDate )
    
    if( !endDate )
    {
-      var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
-      var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
+     var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
    
       var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
@@ -1026,11 +1023,10 @@ function launchWizard()
 *  Called when a user hovers over a todo element and the text for the mouse over is changed.
 */
 
-function getPreviewTextForTask( calendarEventDisplay )
+function getPreviewTextForTask( toDoItem )
 {
-  var toDoItem = calendarEventDisplay ;
-
    var HolderBox = document.createElement( "vbox" );
+   var textString ;
 
    if( toDoItem )
    {
@@ -1039,26 +1035,32 @@ function getPreviewTextForTask( calendarEventDisplay )
       if (toDoItem.title)
       {
          var TitleHtml = document.createElement( "description" );
-         var TitleText = document.createTextNode( "Title: "+toDoItem.title );
+	 textString = gCalendarBundle.getFormattedString("tooltipTitleElement", [toDoItem.title]);
+	 var TitleText = document.createTextNode( textString );
          TitleHtml.appendChild( TitleText );
          HolderBox.appendChild( TitleHtml );
       }
    
       var DateHtml = document.createElement( "description" );
       var startDate = new Date( toDoItem.start.getTime() );
-      var DateText = document.createTextNode( "Start Date: "+gCalendarWindow.dateFormater.getFormatedDate( startDate ) );
+      textString = gCalendarBundle.getFormattedString("tooltipTaskStart", 
+						   [gCalendarWindow.dateFormater.getFormatedDate( startDate )]);
+      var DateText = document.createTextNode( textString );
       DateHtml.appendChild( DateText );
       HolderBox.appendChild( DateHtml );
    
       DateHtml = document.createElement( "description" );
       var dueDate = new Date( toDoItem.due.getTime() );
-      DateText = document.createTextNode( "Due Date: "+gCalendarWindow.dateFormater.getFormatedDate( dueDate ) );
+      textString = gCalendarBundle.getFormattedString("tooltipTaskEnd", 
+						      [gCalendarWindow.dateFormater.getFormatedDate( dueDate )]);
+      DateText = document.createTextNode( textString );
       DateHtml.appendChild( DateText );
       HolderBox.appendChild( DateHtml );
    
       if (toDoItem.description)
       {
-	var text = "Description: "+toDoItem.description ;
+	var text = gCalendarBundle.getFormattedString("tooltipTaskDescription", [toDoItem.description]);
+	
 	var lines = text.split("\n");
 	var nbmaxlines = 5 ;
 	var nblines = lines.length ;
@@ -1073,10 +1075,6 @@ function getPreviewTextForTask( calendarEventDisplay )
 	  DescriptionHtml.appendChild(DescriptionText);
 	  HolderBox.appendChild(DescriptionHtml);
 	}
-//          var DescriptionHtml = document.createElement( "description" );
-//          var DescriptionText = document.createTextNode( "Description: "+toDoItem.description );
-//          DescriptionHtml.appendChild( DescriptionText );
-//          HolderBox.appendChild( DescriptionHtml );
       }
       
       return ( HolderBox );
@@ -1096,11 +1094,12 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 	showTooltip = true;
       
    var HolderBox = document.createElement( "vbox" );
+  var textString ;
     
    if (calendarEventDisplay.event.title)
    {
       var TitleHtml = document.createElement( "description" );
-      var TitleText = "Title: "+calendarEventDisplay.event.title;
+      textString = gCalendarBundle.getFormattedString("tooltipTitleElement", [calendarEventDisplay.event.title]);
       
       /*
       if( calendarEventDisplay.event.recurUnits == "years" )
@@ -1109,28 +1108,47 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
          
          TitleText = TitleText+" "+getNumberOfRepeatTimes( calendarEventDisplay.event, false );
       }*/
-      var TitleTextNode = document.createTextNode( TitleText );
+      var TitleTextNode = document.createTextNode( textString );
       TitleHtml.appendChild( TitleTextNode );
       HolderBox.appendChild( TitleHtml );
    }
 
-   var DateHtml = document.createElement( "description" );
    var startDate = new Date( calendarEventDisplay.displayDate );
-   var DateText = document.createTextNode( "Start: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   var endDate = new Date( calendarEventDisplay.displayEndDate );
+
+   var DateHtml = document.createElement( "description" );
+   if (!calendarEventDisplay.event.allDay) {
+     textString = gCalendarBundle.getFormattedString("tooltipEventStart", 
+						  ["",
+					           gCalendarWindow.dateFormater.getFormatedTime( startDate )]);
+   
+     var DateText = document.createTextNode( textString );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
    DateHtml = document.createElement( "description" );
-   startDate = new Date( calendarEventDisplay.displayEndDate );
-   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+     textString = gCalendarBundle.getFormattedString("tooltipEventEnd", 
+						  ["",
+						   gCalendarWindow.dateFormater.getFormatedTime( endDate )]);
+
+     DateText = document.createTextNode( textString );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
+   }
    
+   if (calendarEventDisplay.event.location)
+   {
+      var LocationHtml = document.createElement( "description" );
+      textString = gCalendarBundle.getFormattedString("tooltipEventLocation", [calendarEventDisplay.event.location]);
+      var LocationText = document.createTextNode( textString );
+      LocationHtml.appendChild( LocationText );
+      HolderBox.appendChild( LocationHtml );
+   }
 
    if (calendarEventDisplay.event.description)
    {
-     var Description =  "Description: "+calendarEventDisplay.event.description;
-     var lines = Description.split("\n");
+     textString = gCalendarBundle.getFormattedString("tooltipEventDescription", [calendarEventDisplay.event.description]);
+     var lines = textString.split("\n");
      var nbmaxlines = 5 ;
      var nblines = lines.length ;
      if( nblines > nbmaxlines ) {
@@ -1224,15 +1242,17 @@ function print()
    args.selectedEvents = gCalendarWindow.EventSelection.selectedEvents ;
    args.selectedDate=gNewDateVariable = gCalendarWindow.getSelectedDate();
 
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
-   var Offset = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
-   var defaultWeeksInView = categoriesStringBundle.GetStringFromName("defaultWeeksInView" );
-   var WeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "weeks.inview", defaultWeeksInView );
+   var Offset = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
+			   "week.start", 
+			   gCalendarBundle.getString("defaultWeekStart" ) );
+   var WeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
+				"weeks.inview", 
+				gCalendarBundle.getString("defaultWeeksInView" ) );
    WeeksInView = ( WeeksInView >= 6 ) ? 6 : WeeksInView ;
 
-   var defaultPreviousWeeksInView = categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
-   var PreviousWeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "previousweeks.inview", defaultPreviousWeeksInView );
+   var PreviousWeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
+					"previousweeks.inview", 
+					gCalendarBundle.getString("defaultPreviousWeeksInView" ) );
    PreviousWeeksInView = ( PreviousWeeksInView >= WeeksInView - 1 ) ? WeeksInView - 1 : PreviousWeeksInView ;
 
    args.startOfWeek=Offset;
@@ -1240,8 +1260,6 @@ function print()
    args.prevWeeksInView=PreviousWeeksInView;
 
    window.openDialog("chrome://calendar/content/printDialog.xul","printdialog","chrome",args);
-   
-   //printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }
 
 

@@ -175,22 +175,24 @@ function launchFilePicker()
    // No show the 'Save As' dialog and ask for a filename to save to
    const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
+   var gCalendarBundle = document.getElementById("bundle_calendar");
+
    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
 
    // caller can force disable of sand box, even if ON globally
 
-   fp.init(window, "Save", nsIFilePicker.modeSave);
+   fp.init(window, gCalendarBundle.getString( "Save" ), nsIFilePicker.modeSave);
 
    var ServerName = document.getElementById( "server-name-textbox" ).value;
 
    if( ServerName == "" )
-      fp.defaultString = "MozillaCalendarFile.ics";
+      fp.defaultString = gCalendarBundle.getString( "filepickerDefString" );
    else
-      fp.defaultString = "MozillaCalendar"+ServerName+".ics";
+      fp.defaultString = gCalendarBundle.getFormattedString( "filepickerDefServerString", [ServerName] );
    
    fp.defaultExtension = "ics";
 
-   const filterCalendar    = "Calendar Files";
+   const filterCalendar    = gCalendarBundle.getString( "filterCalendar" );
    const extensionCalendar = ".ics";
    fp.appendFilter( filterCalendar, "*" + extensionCalendar );
    

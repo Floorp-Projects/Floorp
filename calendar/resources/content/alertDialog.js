@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,6 +72,8 @@ function buildEventBoxes()
 {
    //remove all the old event boxes.
    var EventContainer = document.getElementById( "event-container-rows" );
+   var tooManyDescValue ;
+
    if( EventContainer )
    {
       var NumberOfChildElements = EventContainer.childNodes.length;
@@ -79,9 +82,9 @@ function buildEventBoxes()
          EventContainer.removeChild( EventContainer.lastChild );
       }
       
-      //start at length - 10 or 0 if that is < 0
+      //start at length - 6 or 0 if that is < 0
    
-      var Start = gAllEvents.length - 10;
+      var Start = gAllEvents.length - 6;
       if( Start < 0 )
          Start = 0;
    
@@ -92,11 +95,12 @@ function buildEventBoxes()
       }
       
       //reset the text
-      if( gAllEvents.length > 10 )
+      if( gAllEvents.length > 6 )
       {
          var TooManyDesc = document.getElementById( "too-many-alarms-description" );
          TooManyDesc.removeAttribute( "collapsed" );         
-         TooManyDesc.setAttribute( "value", "You have "+ (gAllEvents.length )+" total alarms. We've shown you the last 10. Click Acknowledge All to clear them all." );
+	 tooManyDescValue = gCalendarBundle.getFormattedString("TooManyAlarmsMessage", [gAllEvents.length]);
+         TooManyDesc.setAttribute( "value", tooManyDescValue );
       }
       else
       {
@@ -148,9 +152,7 @@ function createAlarmBox( Event )
    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
    
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
-   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = getIntPref(prefService.getBranch("calendar."), "alarms.defaultsnoozelength", categoriesStringBundle.GetStringFromName("defaultSnoozeAlarmLength" ) );
+    OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = getIntPref(prefService.getBranch("calendar."), "alarms.defaultsnoozelength", gCalendarBundle.getString("defaultSnoozeAlarmLength" ) );
       
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
    

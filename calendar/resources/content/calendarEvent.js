@@ -425,7 +425,7 @@ CalendarEventDataSource.prototype.getAllEvents = function calEvent_getAllEvents(
 
 CalendarEventDataSource.prototype.getEventsForRange = function calEvent_getEventsForRange( StartDate, EndDate )
 {
-   dump( "\n->get events from "+StartDate+"\n"+EndDate );
+  //dump( "\n->get events from "+StartDate+"\n"+EndDate );
    var eventList = this.gICalLib.getFirstEventsForRange( StartDate, EndDate );
    
    this.currentEvents = new Array();
@@ -699,9 +699,10 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
       return;
    }
       
-   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
-   if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.playsound", categoriesStringBundle.GetStringFromName("playAlarmSound" ) ) )
+   if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, 
+		   "alarms.playsound", 
+		   gCalendarBundle.getString("playAlarmSound") ) 
+       )
    {
       playSound();
    }
@@ -710,11 +711,10 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
    
    if ( calendarEvent.alarmEmailAddress )
    {
-      var EmailBody = "Calendar Event Alarm Went Off!\n----------------------------\n";
-      EmailBody += "Title: "+calendarEvent.title + " at " + calendarEvent.start.toString() +  "\n";
-      EmailBody += "This message sent to you from the Mozilla Calendar.\nhttp://www.mozilla.org/projects/calendar/";
+     var EmailBody = gCalendarEmailBundle.getFormattedString("AlarmEmailBody", [calendarEvent.title, calendarEvent.start.toString()]);
+     var EmailSubject = gCalendarEmailBundle.getFormattedString("AlarmEmailSubject", [calendarEvent.title]);
          
       //send an email for the event
-      sendEmail( "Mozilla Calendar Alarm: "+calendarEvent.title, EmailBody, calendarEvent.alarmEmailAddress, null, null, null, null );
+      sendEmail( EmailSubject, EmailBody, calendarEvent.alarmEmailAddress, null, null, null, null );
    }
 }

@@ -77,6 +77,14 @@ DateUtils.getLastDayOfMonth = function( year, month  )
    return lastDayOfMonth;
  
 }
+// Number of full days corrected by the TimezoneOffset in order to adapt to 
+// Daylight Saving Time changes.
+DateUtils.getDifferenceInDays = function(StartDate, EndDate)
+{
+  var msOffset = ( StartDate.getTimezoneOffset() - EndDate.getTimezoneOffset() ) * kDate_MillisecondsInMinute ;
+  return( (EndDate.getTime() + msOffset - StartDate.getTime() ) / kDate_MillisecondsInDay) ; 
+}
+
 DateUtils.getWeekNumber = function(date)
 {
   //ISO Week Number(01-53) for any date

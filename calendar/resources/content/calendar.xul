@@ -164,16 +164,19 @@
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
   var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
   var defaultCalendarFileName = "&calendar.file.default.name;";
-  var unifinderAlldayLabel = "&calendar.unifinder.allday.label;";
-  var unifinderTitleLabel = "&calendar.unifinder.title.label;";
-  var unifinderStartLabel = "&calendar.unifinder.start.label;";
-  var unifinderEndLabel = "&calendar.unifinder.end.label;";
-  var unifinderDescriptionLabel = "&calendar.unifinder.description.label;";
 </script>
 
-<!-- Javascript includes -->
+<!-- STRING BUNDLE for calendar properties -->
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+  <stringbundle id="bundle_calendar_email" src="chrome://calendar/locale/email.properties"/>
+</stringbundleset>
+<script type="application/x-javascript">
+   var gCalendarBundle = document.getElementById("bundle_calendar");
+   var gCalendarEmailBundle = document.getElementById("bundle_calendar_email");
+</script>  
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
 

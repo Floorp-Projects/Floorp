@@ -64,10 +64,17 @@
    
 <!-- Javascript includes -->
 
-<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/alertDialog.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
+
+<!-- STRING BUNDLE for calendar properties -->
+<stringbundleset id="stringbundleset">
+   <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
+</stringbundleset>
+<script type="application/x-javascript">
+   var gCalendarBundle = document.getElementById("bundle_calendar");
+</script>  
 
 <!-- Picker popups -->
 
