@@ -32,45 +32,49 @@ MODULE=layout
 
 REQUIRES=xpcom raptor dom js
 
-CPPSRCS=dlldeps.cpp nsLayoutFactory.cpp
+CPPSRCS=nsLayoutFactory.cpp
+
+ifndef MKSHLIB_FORCE_ALL
+CPPSRCS += dlldeps.cpp
+endif
 
 EXPORTS=nsLayoutCID.h
 
 INCLUDES +=  -I$(srcdir)/../html/base/src
 
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
 BASE_DSO_FLAGS = $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
-EXTRA_DSO_LDOPTS = \
-	-L$(DIST)/bin           \
-	-L$(DIST)/lib		\
-	-lraptorhtmldoc_s	\
-	-lnglhtmlcon_s		\
-	-lraptorhtmlstyle_s	\
-	-lraptorhtmlforms_s	\
-	-lraptorhtmlstyle_s	\
-	-lraptorhtmlbase_s	\
-	-lraptorhtmltable_s	\
-	-lraptorxmldoc_s	\
-	-lraptorxmlcontent_s	\
-	-lraptorxulbase_s	\
-	-lraptorxulcontent_s	\
-	-lraptorlayout_s        \
-	-lraptorevents_s	\
-	-lraptorhtmlpars	\
-	-lraptorgfx	\
-	-lraptorbase	\
-	$(BASE_DSO_FLAGS) \
-	-ljsdom		\
-	-ljs		\
-	-lnetlib	\
-	-lxpcom		\
-	$(NSPR_LIBS)	\
+SHARED_LIBRARY_LIBS =			    \
+	$(DIST)/lib/libraptorlayout_s.a	    \
+	$(DIST)/lib/libraptorevents_s.a	    \
+	$(DIST)/lib/libraptorhtmlbase_s.a   \
+	$(DIST)/lib/libnglhtmlcon_s.a	    \
+	$(DIST)/lib/libraptorhtmldoc_s.a    \
+	$(DIST)/lib/libraptorhtmlforms_s.a  \
+	$(DIST)/lib/libraptorhtmlstyle_s.a  \
+	$(DIST)/lib/libraptorhtmltable_s.a  \
+	$(DIST)/lib/libraptorxmlcontent_s.a \
+	$(DIST)/lib/libraptorxmldoc_s.a	    \
+	$(DIST)/lib/libraptorxulcontent_s.a \
+	$(DIST)/lib/libraptorxulbase_s.a    \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	-L$(DIST)/bin	       \
+	-lraptorhtmlpars       \
+	-lraptorgfx	       \
+	-lraptorbase	       \
+	$(BASE_DSO_FLAGS)      \
+	-ljsdom		       \
+	-ljs		       \
+	-lnetlib	       \
+	-lxpcom		       \
+	$(NSPR_LIBS)	       \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile

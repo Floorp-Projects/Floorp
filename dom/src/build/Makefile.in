@@ -42,35 +42,35 @@ CPPSRCS=nsDOMFactory.cpp \
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(srcdir)/../base -I$(PUBLIC)/jsurl
 
-ifeq ($(OS_ARCH),IRIX)
-LD = $(CCC)
-LD_ALL = -all
-LD_NONE = -none
-endif
-
 GFX_DSO_FLAGS = $(addprefix -lgfx, $(MOZ_TOOLKIT))
 BASE_DSO_FLAGS= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
 
-EXTRA_DSO_LDOPTS = \
-	-L$(DIST)/bin	\
-	-L$(DIST)/lib \
-	-ljsdombase_s	\
-	-ljsdomcore_s	\
-	-ljsdomevents_s	\
-	-ljsdomhtml_s	\
-	-ljsdomcss_s	\
-	-ljsdomcore_s	\
-	-ljsurl		\
-	-lraptorbase	\
-	-lraptorgfx	\
-	$(GFX_DSO_FLAGS) \
-	$(BASE_DSO_FLAGS) \
-	-lnetlib	\
-	-ljs		\
-	-lxpcom		\
-	$(NSPR_LIBS)	\
+SHARED_LIBRARY_LIBS =		       \
+	$(DIST)/lib/libjsdombase_s.a   \
+	$(DIST)/lib/libjsdomcore_s.a   \
+	$(DIST)/lib/libjsdomevents_s.a \
+	$(DIST)/lib/libjsdomhtml_s.a   \
+	$(DIST)/lib/libjsdomcss_s.a    \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL) \
+	-L$(DIST)/bin	       \
+	-ljsurl		       \
+	-lraptorbase	       \
+	-lraptorgfx	       \
+	$(GFX_DSO_FLAGS)       \
+	$(BASE_DSO_FLAGS)      \
+	-lnetlib	       \
+	-ljs		       \
+	-lxpcom		       \
+	$(NSPR_LIBS)	       \
 	$(NULL)
 
 NO_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
+
+$(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
