@@ -4079,7 +4079,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     if (NS_FAILED(rv))
       return rv;
 
-    rv = editSession->MakeWindowEditable(domwindow, "html", false);
+    rv = editSession->MakeWindowEditable(domwindow, "html", PR_FALSE);
     if (NS_FAILED(rv))
       return rv;
 
