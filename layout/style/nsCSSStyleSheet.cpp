@@ -3123,7 +3123,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
           result = localFalse;
         }
         else {
-          PRBool isCaseSensitive = (attr->mCaseSensitive && !data.mIsHTMLContent); // Bug 24390: html attributes should not be case-sensitive
+          PRBool isCaseSensitive = attr->mCaseSensitive;
           switch (attr->mFunction) {
             case NS_ATTR_FUNC_SET:    break;
             case NS_ATTR_FUNC_EQUALS: 
