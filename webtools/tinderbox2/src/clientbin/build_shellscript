@@ -32,9 +32,9 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.7 $
-# $Date: 2001/03/30 22:44:54 $
-# $Author: kestes%tradinglinx.com $
+# $Revision: 1.8 $
+# $Date: 2001/07/27 20:38:50 $
+# $Author: kestes%walrus.com $
 # $Name:  $
 
 
@@ -157,6 +157,13 @@ build name based on both the command line arguments and the
 environment.  These functions will need to return strings which are
 meaningful and informative for your local environment.
 
+EXAMPLES
+
+	build_shellscript	--buildcf ./generic.sample.buildcf  \
+				--build construct --once 	    \
+					--                          \
+				--tree seamonkey --depend
+
 
 
 EOF
@@ -185,13 +192,13 @@ sub set_static_vars {
 
   # $MAILER = '/bin/true';
   # $MAILER = 'cat > /tmp/mail.out';
+  # $MAILER = '/export/home/tinderbox2/bin/processmail_builds';
 
   # Usually we send mail to the tinderbox webserver but it is possible
   # to deliver mail directly if the build is running on the same
   # machine as the server.
 
   $MAILER = '/usr/lib/sendmail -t';
-  $MAILER = '/export/home/tinderbox2/bin/processmail_builds';
 
   $ERROR_LOG= "/var/log/tinderbox2/build.log";
 
@@ -276,7 +283,8 @@ sub fatal_error {
   }
   print LOG "\n";
 
-  die("\n");
+  # propagate the error so we can catch it in an eval
+  die("@error\n");
 }
 
 
@@ -358,10 +366,10 @@ sub set_server_args {
   
 
   # person responsible for the build machines.
-  $ADMINISTRATOR = UserDef::build_administrator();
+  $ADMINISTRATOR = UserDef::build_administrator(%args);
 
-  $MAIL_FROM = UserDef::mail_from();
-  $MAIL_TO = UserDef::mail_to();
+  $MAIL_FROM = UserDef::mail_from(%args);
+  $MAIL_TO = UserDef::mail_to(%args);
 
   check_builds();
 
@@ -674,6 +682,25 @@ sub system3 {
 
 
 
+sub safe_run_shell_commands {
+  my ($phase) = @_;
+
+    # catch problems within run_shell_commands and send them to the
+    # tinderbox server.  This catches problems with chdir or system3.
+
+    eval {
+        $error_status = run_shell_commands($phase);
+    };
+
+    if ($@) {
+        push @CMD_LOG, $@;
+        push @CMD_LOG, "\n";
+        return $phase->{'error_status'};
+    }
+
+  return $error_status;
+}
+
 # Run one phase of the build process and report the status, stop if
 # any command fails.
 
@@ -731,11 +758,13 @@ sub run_shell_commands {
 #    $shell_status = $?;
 
     $shell_status = system3(
-                          'cmd_vec' => [$shell_command],
-                         );
+                            'cmd_vec' => [$shell_command],
+                            );
 
-    ($shell_status) &&
-      return $error_status;
+    if ($shell_status) {
+        return $error_status;
+    }
+
   }
   
   push @CMD_LOG, "\n";
@@ -791,7 +820,7 @@ sub slow_build_speed {
       ($MAIL_EACH_PHASE) && 
 	mail_tinderbox_cmdlog('building');
       
-      $status = run_shell_commands($phase);
+      $status = safe_run_shell_commands($phase);
       
       ($status ne 'success') && 
 	last;
