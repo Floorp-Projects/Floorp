@@ -445,7 +445,12 @@ PRInt32
 nsWinReg::FinalDeleteKey(PRInt32 root, const nsString& subkey, PRInt32* aReturn)
 {
 	SetRootKey(root);
-	*aReturn = NativeDeleteKey(subkey);
+  if ( PR_TRUE == NativeKeyExists(subkey) )
+    *aReturn = NativeDeleteKey(subkey);
+  else {
+    NS_WARNING("Trying to delete a key that doesn't exist anymore. Possible causes include calling deleteKey for the same key multiple times, or key+subkey are not unique");
+    *aReturn = ERROR_SUCCESS;
+  }
   return NS_OK;
 }
   
