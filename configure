@@ -4345,8 +4345,8 @@ EOF
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
-	  	  cat >> confdefs.h <<\EOF
-#define HAVE_BOOLEAN 1
+	  cat >> confdefs.h <<\EOF
+#define MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES 1
 EOF
 
        fi
