@@ -58,8 +58,6 @@ static PK11SymKey *pk11_DeriveWithTemplate(PK11SymKey *baseKey,
 	CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target, 
 	CK_ATTRIBUTE_TYPE operation, int keySize, CK_ATTRIBUTE *userAttr, 
 	unsigned int numAttrs);
-static PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE * attr, 
-	unsigned int numAttrs, CK_ATTRIBUTE_TYPE target);
 
 
 /*
@@ -382,7 +380,7 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 		  unsigned int templateCount, SECItem *key, void *wincx)
 {
     PK11SymKey *    symKey;
-    SECStatus       status;
+    SECStatus	    rv;
 
     symKey = PK11_CreateSymKey(slot,type,wincx);
     if (symKey == NULL) {
@@ -390,11 +388,9 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     }
 
     symKey->size = key->len;
-    if (!pk11_FindAttrInTemplate(keyTemplate, templateCount, CKA_VALUE)) {
-        CK_ATTRIBUTE *attrs = keyTemplate + templateCount;
-        PK11_SETATTRS(attrs, CKA_VALUE, key->data, key->len); 
-        templateCount++;
-    }
+
+    PK11_SETATTRS(&keyTemplate[templateCount], CKA_VALUE, key->data, key->len);
+    templateCount++;
 
     if (SECITEM_CopyItem(NULL,&symKey->data,key) != SECSuccess) {
 	PK11_FreeSymKey(symKey);
@@ -404,11 +400,11 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     symKey->origin = origin;
 
     /* import the keys */
-    status = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
-		 	          templateCount, PR_FALSE, &symKey->objectID);
-    if (status != SECSuccess) {
+    rv = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
+		 	templateCount, PR_FALSE, &symKey->objectID);
+    if ( rv != SECSuccess) {
 	PK11_FreeSymKey(symKey);
-	return NULL;	/* PK11_CreateNewObject has set the error code. */
+	return NULL;
     }
 
     return symKey;
@@ -432,7 +428,7 @@ PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
     PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
     PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_VALUE, key->data, key->len); attrs++;
+    /* PK11_SETATTRS(attrs, CKA_VALUE, key->data, key->len); attrs++; */
     templateCount = attrs - keyTemplate;
     PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
 
@@ -459,7 +455,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
     CK_ATTRIBUTE *attrs = theTemplate;
     int signedcount = 0;
     int templateCount = 0;
-    CK_RV crv;
+    SECStatus rv;
 
     /* if we already have an object in the desired slot, use it */
     if (!isToken && pubKey->pkcs11Slot == slot) {
@@ -547,10 +543,9 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	for (attrs=signedattr; signedcount; attrs++, signedcount--) {
 		pk11_SignedToUnsigned(attrs);
 	} 
-        crv = PK11_CreateNewObject(slot, CK_INVALID_SESSION, theTemplate,
+        rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION, theTemplate,
 				 	templateCount, isToken, &objectID);
-	if ( crv != CKR_OK) {
-	    PORT_SetError (PK11_MapError(crv));
+	if ( rv != SECSuccess) {
 	    return CK_INVALID_KEY;
 	}
     }
@@ -674,7 +669,8 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 
         pk11KeyType = PK11_ReadULongAttribute(slot,id,CKA_KEY_TYPE);
 	if (pk11KeyType ==  CK_UNAVAILABLE_INFORMATION) {
-	    return NULL;  /* PK11_ReadULongAttribute has set error code */
+	    PORT_SetError( PK11_MapError(crv) );
+	    return NULL;
 	}
 	switch (pk11KeyType) {
 	case CKK_RSA:
@@ -2640,6 +2636,11 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     PRBool bool = PR_TRUE;
     CK_SESSION_HANDLE session;
 
+    /* remove any VALUE_LEN parameters */
+    if (keyTemplate[templateCount-1].type == CKA_VALUE_LEN) {
+        templateCount--;
+    }
+
     /* keys are almost always aligned, but if we get this far,
      * we've gone above and beyond anyway... */
     outKey.data = (unsigned char*)PORT_Alloc(inKey->len);
@@ -2738,14 +2739,18 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 	PK11_SETATTRS(attrs, CKA_KEY_TYPE,  &keyType,  sizeof keyType ); 
 	attrs++;
     }
+    if (!pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
+	PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
+    }
+
+    /*
+     * must be last in case we need to use this template to import the key
+     */
     if (keySize > 0 &&
     	  !pk11_FindAttrInTemplate(keyTemplate, numAttrs, CKA_VALUE_LEN)) {
 	valueLen = (CK_ULONG)keySize;
 	PK11_SETATTRS(attrs, CKA_VALUE_LEN, &valueLen, sizeof valueLen); 
 	attrs++;
-    }
-    if (!pk11_FindAttrInTemplate(keyTemplate, numAttrs, operation)) {
-	PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
     }
 
     templateCount = attrs - keyTemplate;
