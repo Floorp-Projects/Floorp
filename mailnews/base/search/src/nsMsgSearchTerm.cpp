@@ -1346,7 +1346,7 @@ nsresult nsMsgSearchScopeTerm::GetMailPath(nsIFileSpec **aFileSpec)
 
 nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 {
-	return NS_OK;
+	return m_adapter->Search(aDone);
 }
 
 

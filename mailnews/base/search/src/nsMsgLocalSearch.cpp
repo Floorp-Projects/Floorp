@@ -31,6 +31,7 @@
 #include "nsMsgSearchBoolExpression.h"
 #include "nsMsgSearchTerm.h"
 #include "nsMsgResultElement.h"
+#include "nsIDBFolderInfo.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgSearchValue.h"
@@ -348,21 +349,31 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
     nsCOMPtr <nsIMsgDatabase> mailDB ;
 
     nsresult err = NS_OK;
-#ifdef HAVE_SEARCH_PORT
     // do password protection of local cache thing.
+#ifdef DOING_FOLDER_CACHE_PASSWORDS
     if (m_scope->m_folder && m_scope->m_folder->UserNeedsToAuthenticateForFolder(PR_FALSE) && m_scope->m_folder->GetMaster()->PromptForHostPassword(m_scope->m_frame->GetContext(), m_scope->m_folder) != 0)
     {
         m_scope->m_frame->StopRunning();
         return SearchError_ScopeDone;
     }
+#endif
+    nsCOMPtr <nsIDBFolderInfo>  folderInfo;
+    nsCOMPtr <nsIMsgFolder> scopeFolder;
+    err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
+    if (NS_SUCCEEDED(err) && scopeFolder)
+    {
+      err = scopeFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), &m_db);
+    }
+    else
+      return err; // not sure why m_folder wouldn't be set.
 
-    nsresult dbErr = MailDB::Open (m_scope->GetMailPath(), PR_FALSE /*create?*/, &mailDb);
-    switch (dbErr)
+    switch (err)
     {
         case NS_OK:
             break;
         case NS_MSG_ERROR_FOLDER_SUMMARY_MISSING:
         case NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE:
+#ifdef HANDLE_OUT_OF_DATE_SUMMARY_FILES  // which we don't yet.
             m_mailboxParser = new nsMsgMailboxParser (m_scope->GetMailPath());
             if (!m_mailboxParser)
                 err = NS_ERROR_OUT_OF_MEMORY;
@@ -381,21 +392,14 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
                 m_mailboxParser->SetIgnoreNonMailFolder(PR_TRUE);
                 err = NS_OK;
             }
+#endif // HANDLE_OUT_OF_DATE_SUMMARY_FILES
             break;
         default:
         {
-#ifdef _DEBUG
-            char *buf = PR_smprintf ("Failed to open '%s' with error 0x%08lX", m_scope->m_folder->GetName(), (long) dbErr);
-            FE_Alert (m_scope->m_frame->GetContext(), buf);
-            XP_FREE (buf);
-#endif
-            err = SearchError_DBOpenFailed;
+          NS_ASSERTION(PR_FALSE, "unexpected error opening db");
         }
     }
 
-    if (mailDb && err == NS_OK)
-        m_db = mailDb;
-#endif // HAVE_SEARCH_PORT
     return err;
 }
 
@@ -651,6 +655,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
   nsresult dbErr = NS_OK;
 	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 
+  *aDone = PR_FALSE;
   // If we need to parse the mailbox before searching it, give another time
   // slice to the parser
   if (m_mailboxParser)
@@ -809,7 +814,11 @@ NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         }
         if (!pValue)
             err = NS_ERROR_OUT_OF_MEMORY;
-//        m_scope->m_frame->AddResultElement (newResult);
+
+        nsCOMPtr<nsIMsgSearchSession> searchSession;
+        m_scope->GetSearchSession(getter_AddRefs(searchSession));
+        if (searchSession)
+          searchSession->AddResultElement(newResult);
     }
     return err;
 }
