@@ -303,11 +303,14 @@ nsBrowserStatusHandler.prototype =
     if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
       return;
 
+    this.status = aMessage;
+
     if (!this.statusTimeoutInEffect) {
       this.statusTimeoutInEffect = true;
-      this.status = aMessage;
       this.updateStatusField();
-      setTimeout(function(aClosure) { aClosure.statusTimeoutInEffect = false; }, 400, this);
+      setTimeout(function(aClosure) { aClosure.updateStatusField();
+                                      aClosure.statusTimeoutInEffect = false; },
+                 400, this);
     }
   },
 
