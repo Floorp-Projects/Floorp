@@ -2,9 +2,7 @@
 
   <property environment="myenv" />
 
-
-  <target name="main">
-
+  <target name="props">
     <condition property="PATH_SEP" value=";">
       <and>
         <os family="windows" />
@@ -17,14 +15,58 @@
       </and>
     </condition>
 
-    <java classname="org.mozilla.webclient.test.TestBrowser"
+    <condition property="gre.dir" 
+               value="${myenv.HOMEDRIVE}\PROGRA~1\COMMON~1\mozilla.org\GRE\1.7_2004061609">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="gre.dir" value=":">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <condition property="java.libpath" 
+               value="${basedir}${PATH_SEP}${basedir}\components${PATH_SEP}${gre.dir}${PATH_SEP}${gre.dir}\components">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="java.libpath" 
+               value="${basedir}${PATH_SEP}${basedir}/components${PATH_SEP}${gre.dir}${PATH_SEP}${gre.dir}/components">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+
+  </target>
+
+
+  <target name="test" depends="props">
+
+  <echo message="ANT_HOME = ${myenv.ANT_HOME}"/>
+  <echo message="HOMEDRIVE = ${myenv.HOMEDRIVE}"/>
+  <echo message="gre.dir = ${gre.dir}"/>
+  <echo message="java.libpath = ${java.libpath}"/>
+
+  </target>
+
+  <target name="main" depends="props">
+
+    <java newenvironment="true"
+          classname="org.mozilla.webclient.test.TestBrowser"
           classpath="${basedir}/webclient.jar" fork="true">
-        <jvmarg value="-Djava.library.path=${basedir}${PATH_SEP}${basedir}/components"/>
-        <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
-        <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
-        <jvmarg value="-DBROWSER_BIN_DIR=${basedir}"/>
+        <jvmarg value="-Djava.library.path=${java.libpath}"/>
+        <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4"/>
+        <jvmarg value="-DNSPR_LOG_FILE=webclient.log"/>
+        <jvmarg value="-DBROWSER_BIN_DIR=${gre.dir}"/>
     </java>
 
   </target>
+
 
 </project>

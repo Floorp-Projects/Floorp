@@ -43,11 +43,7 @@
   <property name="source.home" value="${basedir}/.." />
   <property name="moz.dist" value="${myenv.MOZ_SRC}/mozilla/dist" />
 
-  <target name="prepare">
-  
-    <mkdir dir="${dist.home}" />
-    <mkdir dir="${dist.home}/components" />
-
+  <target name="props">
     <condition property="so.prefix" value="">
       <and>
         <os family="windows" />
@@ -71,6 +67,24 @@
         <os family="unix" />
       </and>
     </condition>
+
+    <condition property="platform" value="win32">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="platform" value="linux">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+  </target>
+
+  <target name="prepare" depends="props">
+  
+    <mkdir dir="${dist.home}" />
+    <mkdir dir="${dist.home}/components" />
 
   </target>
 
@@ -104,9 +118,10 @@
 
     <copy tofile="${dist.home}/build.xml" file="webclient-dist.xml" />
 
-    <zip destfile="${name}_${version}.zip" basedir="${dist.home}" />
-    <copy todir="${dist.home}" file="${name}_${version}.zip" />
-    <delete file="${name}_${version}.zip" />
+    <zip destfile="${name}_${version}_${platform}.zip" 
+         basedir="${dist.home}" />
+    <copy todir="${dist.home}" file="${name}_${version}_${platform}.zip" />
+    <delete file="${name}_${version}_${platform}.zip" />
 
   </target>
 
@@ -123,21 +138,21 @@
 
   <target name="test.dist" depends="prepare,clean.dev.build">
 
-    <unzip dest="${moz.dist}/bin" src="${dist.home}/${name}_${version}.zip" />
+    <unzip dest="${moz.install.dir}" src="${dist.home}/${name}_${version}_${platform}.zip" />
 
-    <ant inheritAll="false" dir="${moz.dist}/bin"/>
+    <ant inheritAll="false" dir="${moz.install.dir}"/>
 
     <antcall target="clean.test.dist" />
 
   </target>
 
-  <target name="clean.test.dist">
+  <target name="clean.test.dist" depends="props">
 
-    <delete file="${moz.dist}/bin/build.xml" />
-    <delete file="${moz.dist}/bin/components/${so.prefix}javadom.${so.extension}" />
-    <delete file="${moz.dist}/bin/${so.prefix}javadomjni.${so.extension}" />
-    <delete file="${moz.dist}/bin/${so.prefix}${name}.${so.extension}" />
-    <delete file="${moz.dist}/bin/${name}.jar" />
+    <delete file="${moz.install.dir}/build.xml" />
+    <delete file="${moz.install.dir}/components/${so.prefix}javadom.${so.extension}" />
+    <delete file="${moz.install.dir}/${so.prefix}javadomjni.${so.extension}" />
+    <delete file="${moz.install.dir}/${so.prefix}${name}.${so.extension}" />
+    <delete file="${moz.install.dir}/${name}.jar" />
 
   </target>
 
