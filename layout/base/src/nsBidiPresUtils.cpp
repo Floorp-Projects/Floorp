@@ -67,16 +67,6 @@ static const PRUnichar ALEF              = 0x05D0;
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
-#define ARABIC_TO_HINDI_DIGIT_INCREMENT (START_HINDI_DIGITS - START_ARABIC_DIGITS)
-#define NUM_TO_ARABIC(c) \
-  ((((c)>=START_HINDI_DIGITS) && ((c)<=END_HINDI_DIGITS)) ? \
-   ((c) - (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT) : \
-   (c))
-#define NUM_TO_HINDI(c) \
-  ((((c)>=START_ARABIC_DIGITS) && ((c)<=END_ARABIC_DIGITS)) ? \
-   ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
-   (c))
-
 extern nsresult
 NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult
@@ -1148,40 +1138,4 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   return NS_OK;
 }
   
-nsresult nsBidiPresUtils::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32 aNumFlag)
-{
-  PRUint32 i;
-  // IBMBIDI_NUMERAL_REGULAR *
-  // IBMBIDI_NUMERAL_HINDICONTEXT
-  // IBMBIDI_NUMERAL_ARABIC
-  // IBMBIDI_NUMERAL_HINDI
-  mNumflag=aNumFlag;
-
-  switch (aNumFlag) {
-    case IBMBIDI_NUMERAL_HINDI:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-      break;
-    case IBMBIDI_NUMERAL_ARABIC:
-      for (i=0;i<aSize;i++)
-        aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      break;
-    default : // IBMBIDI_NUMERAL_REGULAR, IBMBIDI_NUMERAL_HINDICONTEXT for HandleNum() which is called for clipboard handling
-      for (i=1;i<aSize;i++) {
-        if (IS_ARABIC_CHAR(aBuffer[i-1])) 
-          aBuffer[i] = NUM_TO_HINDI(aBuffer[i]);
-        else 
-          aBuffer[i] = NUM_TO_ARABIC(aBuffer[i]);
-      }
-      break;
-  }
-  return NS_OK;
-}
-
-nsresult nsBidiPresUtils::HandleNumbers(const nsString& aSrc, nsString& aDst)
-{
-  aDst = aSrc;
-  return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(),mNumflag);
-}
-
 #endif // IBMBIDI
