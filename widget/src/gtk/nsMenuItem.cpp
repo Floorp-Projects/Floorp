@@ -246,7 +246,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
     widget = nsnull;
   }
 
-  Create(widget, GetNativeParent(), aLabel, false);
+  Create(widget, GetNativeParent(), aLabel, PR_FALSE);
 //  aParent->AddItem(this);
 
   return NS_OK;
