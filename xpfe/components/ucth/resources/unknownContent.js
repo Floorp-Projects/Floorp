@@ -26,15 +26,17 @@ var dialog;
 function initData() {
     // Create data object and initialize.
     data = new Object;
-    data.location      = window.arguments[0];
-    data.contentType   = window.arguments[1];
+    data.channel     = window.arguments[0];
+    data.contentType = window.arguments[1];
+
+    // Get location from channel.
+    data.location = data.channel.URI.spec;
 }
 
 function initDialog() {
     // Create dialog object and initialize.
     dialog = new Object;
     dialog.contentType = document.getElementById("dialog.contentType");
-dump("dialog.contentType="+dialog.contentType+"\n");
     dialog.more        = document.getElementById("dialog.more");
     dialog.pick        = document.getElementById("dialog.pick");
     dialog.save        = document.getElementById("dialog.save");
@@ -58,7 +60,6 @@ function onLoad() {
 }
 
 function onUnload() {
-    // Nothing for now.
 }
 
 function more() {
@@ -84,7 +85,7 @@ function save() {
         xfer.SelectFileAndTransferLocationSpec( data.location, window.opener );
     } catch( exception ) {
         // Failed (or cancelled), give them another chance.
-        dump( "SelectFileAndTransferLocationSpec failed, rv=" + exception + "\n" );
+        alert( "Save failed, rv=" + exception + "\n" );
         return;
     }
     // Save underway, close this dialog.
@@ -92,6 +93,6 @@ function save() {
 }
 
 function cancel() {
-    // Close the window.
+    // Close this dialog.
     window.close();
 }

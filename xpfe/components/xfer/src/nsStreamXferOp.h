@@ -22,13 +22,16 @@
 #ifndef __nsStreamXferOp_h
 #define __nsStreamXferOp_h
 
-#include "nsString.h"
 #include "nsIStreamTransferOperation.h"
-#include "nsIStreamListener.h"
+#include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
+#include "nsIStreamListener.h"
+
+#include "nsCOMPtr.h"
 
 class nsIDOMWindow;
-class nsOutputFileStream;
+class nsIChannel;
+class nsIFileSpec;
 
 // Implementation of the stream transfer operation interface.
 //
@@ -37,20 +40,26 @@ class nsOutputFileStream;
 // passed to a newly-created downloadProgress.xul dialog.  That dialog "owns"
 // the object (and the creator releases it immediately).  The object's dtor
 // should get called when the dialog closes.
+//
 class nsStreamXferOp : public nsIStreamTransferOperation,
+                       public nsIEventSinkGetter,
                        public nsIProgressEventSink,
                        public nsIStreamListener {
 public:
     // ctor/dtor
-    nsStreamXferOp( const nsString &source, const nsString &target );
+    nsStreamXferOp( nsIChannel *source, nsIFileSpec *target );
     virtual ~nsStreamXferOp();
 
     // Implementation.
     NS_IMETHOD OpenDialog( nsIDOMWindow *parent );
+    NS_IMETHOD OnError( int operation, nsresult rv );
 
     // Declare inherited interfaces.
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMTRANSFEROPERATION
+
+    // nsIEventSinkGetter methods:
+    NS_DECL_NSIEVENTSINKGETTER
 
     // nsIProgressEventSink methods:
     NS_DECL_NSIPROGRESSEVENTSINK
@@ -62,15 +71,14 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
 private:
-    nsCString           mSource;
-    nsCString           mTarget;
-    nsIObserver        *mObserver; // Not owned; owner should call SetObserver(0) prior
-                                   // to this object getting destroyed.
-    PRUint32            mBufLen;
-    char               *mBuffer;   // Owned; deleted in dtor.
-    PRBool              mStopped;
-    nsOutputFileStream *mOutput;   // Owned; deleted in dtor.
+    nsCOMPtr<nsIChannel>      mInputChannel;
+    nsCOMPtr<nsIChannel>      mOutputChannel;
+    nsCOMPtr<nsIOutputStream> mOutputStream;
+    nsCOMPtr<nsIFileSpec>     mOutputSpec;
+    nsIObserver              *mObserver; // Not owned; owner should call SetObserver(0) prior
+                                         // to this object getting destroyed.
+    int                       mContentLength;
+    unsigned long             mBytesProcessed;
 }; // nsStreamXferOp
-
 
 #endif

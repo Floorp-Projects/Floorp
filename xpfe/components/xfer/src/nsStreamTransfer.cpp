@@ -23,17 +23,14 @@
 
 #include "nsIAppShellComponentImpl.h"
 #include "nsStreamXferOp.h"
-#include "nsIFileWidget.h"
-#include "nsWidgetsCID.h"
-#include "nsIURL.h"
+#include "nsIFileSpecWithUI.h"
 #include "nsNeckoUtil.h"
+#include "nsIPref.h"
+#include "nsIURL.h"
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
     { 0xbeba91c0, 0x70f, 0x11d3, { 0x80, 0x68, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
-
-static NS_DEFINE_IID( kCFileWidgetCID, NS_FILEWIDGET_CID  );
-static NS_DEFINE_IID( kIFileWidgetIID, NS_IFILEWIDGET_IID );
 
 // Implementation of the stream transfer component interface.
 class nsStreamTransfer : public nsIStreamTransfer,
@@ -59,31 +56,36 @@ public:
 
 private:
     // Put up file picker dialog.
-    NS_IMETHOD SelectFile( nsFileSpec &result );
+    NS_IMETHOD SelectFile( nsIFileSpec **result, const nsCString &suggested );
+    nsCString  SuggestNameFor( nsIChannel *aChannel );
 
     // Objects of this class are counted to manage library unloading...
     nsInstanceCounter instanceCounter;
 }; // nsStreamTransfer
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFileAndTransferLocation( nsIURI *aURL, nsIDOMWindow *parent ) {
+nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWindow *parent ) {
     // Prompt the user for the destination file.
-    nsFileSpec outputFileName;
-    nsresult rv = SelectFile( outputFileName );
+    nsCOMPtr<nsIFileSpec> outputFile;
+    PRBool isValid = PR_FALSE;
+    nsresult rv = SelectFile( getter_AddRefs( outputFile ),
+                              SuggestNameFor( aChannel ).GetBuffer() );
 
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Open a downloadProgress dialog.
-        char *source = 0;
-        aURL->GetSpec( &source );
+    if ( NS_SUCCEEDED( rv )
+         &&
+         outputFile
+         &&
+         NS_SUCCEEDED( outputFile->IsValid( &isValid ) )
+         &&
+         isValid ) {
+        // Construct stream transfer operation to be given to dialog.
+        nsStreamXferOp *p= new nsStreamXferOp( aChannel, outputFile );
 
-        nsStreamXferOp *p= new nsStreamXferOp( source, (const char*)outputFileName );
-        nsCOMPtr<nsIStreamTransferOperation> op = dont_QueryInterface( (nsIStreamTransferOperation*)p ); 
-
-        nsCRT::free( source );
-
-        if ( op ) {
+        if ( p ) {
             // Open download progress dialog.
+            NS_ADDREF(p);
             rv = p->OpenDialog( parent );
+            NS_RELEASE(p);
             if ( NS_FAILED( rv ) ) {
                 DEBUG_PRINTF( PR_STDOUT, "%s %d : Error opening dialog, rv=0x%08X\n",
                               (char *)__FILE__, (int)__LINE__, (int)rv );
@@ -94,7 +96,11 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIURI *aURL, nsIDOMWindow *par
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "Failed to select file, rv=0x%X\n", (int)rv );
+        if ( NS_FAILED( rv ) ) {
+            DEBUG_PRINTF( PR_STDOUT, "Failed to select file, rv=0x%X\n", (int)rv );
+        } else {
+            // User cancelled.
+        }
     }
 
     return rv;
@@ -105,43 +111,105 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL, nsIDOMWin
     nsresult rv = NS_OK;
 
     // Construct URI from spec.
-    nsIURI *uri;
-    rv = NS_NewURI( &uri, aURL );
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI( getter_AddRefs( uri ), aURL );
 
     if ( NS_SUCCEEDED( rv ) && uri ) {
-        rv = this->SelectFileAndTransferLocation( uri,parent );
-        NS_RELEASE( uri );
+        // Construct channel from URI.
+        nsCOMPtr<nsIChannel> channel;
+        rv = NS_OpenURI( getter_AddRefs( channel ), uri, nsnull );
+
+        if ( NS_SUCCEEDED( rv ) && channel ) {
+            // Transfer channel to output file chosen by user.
+            rv = this->SelectFileAndTransferLocation( channel, parent );
+        } else {
+            DEBUG_PRINTF( PR_STDOUT, "Failed to open URI, rv=0x%X\n", (int)rv );
+        }
+    } else {
+        DEBUG_PRINTF( PR_STDOUT, "Failed to create URI, rv=0x%X\n", (int)rv );
     }
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFile( nsFileSpec &aResult ) {
+nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested ) {
     nsresult rv = NS_OK;
 
-    // Prompt user for file name.
-    nsIFileWidget* fileWidget;
-  
-    nsString title("Save File");
+    if ( aResult ) {
+        *aResult = 0;
 
-    rv = nsComponentManager::CreateInstance( kCFileWidgetCID,
-                                             nsnull,
-                                             kIFileWidgetIID,
-                                             (void**)&fileWidget );
-    
-    if ( NS_SUCCEEDED( rv ) && fileWidget ) {
-        nsFileDlgResults result = fileWidget->PutFile( nsnull, title, aResult );
-        if ( result == nsFileDlgResults_OK || result == nsFileDlgResults_Replace ) {
+        // Prompt user for file name.
+        nsCOMPtr<nsIFileSpecWithUI> result;
+        result = getter_AddRefs( NS_CreateFileSpecWithUI() );
+      
+        if ( result ) {
+            // Prompt for file name.
+            nsCOMPtr<nsIFileSpec> startDir;
+
+            // Pull in the user's preferences and get the default download directory.
+            NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_PROGID, &rv );
+            if ( NS_SUCCEEDED( rv ) && prefs ) {
+                prefs->GetFilePref( "browser.download.dir", getter_AddRefs( startDir ) );
+                if ( startDir ) {
+                    PRBool isValid = PR_FALSE;
+                    startDir->IsValid( &isValid );
+                    if ( isValid ) {
+                        // Set result so startDir is used.
+                        result->FromFileSpec( startDir );
+                    }
+                }
+            }
+
+            //XXX l10n
+            nsAutoCString title("Save File");
+        
+            rv = result->ChooseOutputFile( title,
+                                           suggested.IsEmpty() ? 0 : suggested.GetBuffer(),
+                                           nsIFileSpecWithUI::eAllFiles );
+
+            if ( NS_SUCCEEDED( rv ) ) {
+                // Give result to caller.
+                rv = result->QueryInterface( nsIFileSpec::GetIID(), (void**)aResult );
+
+                if ( NS_SUCCEEDED( rv ) && prefs ) {
+                    // Save selected directory for next time.
+                    rv = result->GetParent( getter_AddRefs( startDir ) );
+                    if ( NS_SUCCEEDED( rv ) && startDir ) {
+                        prefs->SetFilePref( "browser.download.dir", startDir, PR_FALSE );
+                    }
+                }
+            }
         } else {
-            rv = NS_ERROR_ABORT;
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error creating file widget, rv=0x%X\n",
+                          __FILE__, (int)__LINE__, (int)rv );
         }
-        NS_RELEASE( fileWidget );
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: Error creating file widget, rv=0x%X\n",
-                      __FILE__, (int)__LINE__, (int)rv );
+        rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
+}
+
+nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel ) {
+    nsCString result;
+    if ( aChannel ) {
+        // Get URI from channel and spec from URI.
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = aChannel->GetURI( getter_AddRefs( uri ) );
+        if ( NS_SUCCEEDED( rv ) && uri ) {
+            // Try to get URL from URI.
+            nsCOMPtr<nsIURL> url( do_QueryInterface( uri, &rv ) );
+            if ( NS_SUCCEEDED( rv ) && url ) {
+                char *nameFromURL = 0;
+                rv = url->GetFileName( &nameFromURL );
+                if ( NS_SUCCEEDED( rv ) && nameFromURL ) {
+                    result = nameFromURL;
+                    nsCRT::free( nameFromURL );
+                }
+            }
+        }
+    }
+    return result;
 }
 
 // Generate base nsIAppShellComponent implementation.

@@ -103,7 +103,8 @@ class nsFileSpecWithUIImpl
 		{ return mBaseFileSpec ? mBaseFileSpec->GetParent(aParent) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean equals(in nsIFileSpec spec); */
-	NS_IMETHOD Equals(nsIFileSpec *spec, PRBool *result)                               		   { return mBaseFileSpec ? mBaseFileSpec->Equals(spec, result) : NS_ERROR_NOT_INITIALIZED; } 
+	NS_IMETHOD Equals(nsIFileSpec *spec, PRBool *result)
+        { return mBaseFileSpec ? mBaseFileSpec->Equals(spec, result) : NS_ERROR_NOT_INITIALIZED; } 
 
 	/* nsIFileSpec makeUnique (); */
 	NS_IMETHOD MakeUnique()
@@ -252,11 +253,13 @@ class nsFileSpecWithUIImpl
 
 	// Data
 protected:
-    // helper 
-  void SetFileWidgetFilterList(nsIFileWidget* fileWidget,
-                               nsIFileSpecWithUI::StandardFilterMask mask,
-                               const char *inExtraFilterTitle, 
-                               const char *inExtraFilter);
+    // helpers
+    void SetFileWidgetFilterList(nsIFileWidget* fileWidget,
+                                 PRUint32 mask,
+                                 const char *inExtraFilterTitle, 
+                                 const char *inExtraFilter);
+
+    void SetFileWidgetStartDir(nsIFileWidget* fileWidget);
 
 	nsCOMPtr<nsIFileSpec>	mBaseFileSpec;
 
