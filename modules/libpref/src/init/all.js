@@ -273,7 +273,7 @@ pref("network.http.pipelining.firstrequest", false);
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);
 
-pref("network.http.proxy.ssl.connect",false);
+pref("network.http.proxy.ssl.connect",true);
 // </ruslan>
 
 // sspitzer:  change this back to "news" when we get to beta.
