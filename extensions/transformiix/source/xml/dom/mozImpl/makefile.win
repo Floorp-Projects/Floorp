@@ -27,6 +27,7 @@ REQUIRES	= string \
 		  widget \
 		  necko \
 		  content \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
