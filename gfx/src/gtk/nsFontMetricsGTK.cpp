@@ -1257,7 +1257,12 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 
     if (aStretch->mScalable) {
       double ratio = (s->mActualSize / ((double) desiredSize));
-      if ((ratio > 1.2) || (ratio < 0.8)) {
+
+      /*
+       * XXX Maybe revisit this. Upper limit deliberately set high (1.8) in
+       * order to avoid scaling Japanese fonts (ugly).
+       */
+      if ((ratio > 1.8) || (ratio < 0.8)) {
         scalable = 1;
       }
     }
@@ -1280,6 +1285,10 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     if (p == endScaled) {
       s = new nsFontGTK;
       if (s) {
+        /*
+         * XXX Instead of passing desiredSize, we ought to take underline
+         * into account. (Extra space for underline for Asian fonts.)
+         */
         s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
         if (!s->mName) {
           delete s;
@@ -1680,7 +1689,6 @@ GetFontNames(char* aPattern)
   nsFontFamily* family = nsnull;
 
   int count;
-  //printf("XListFonts %s\n", aPattern);
   char** list = ::XListFonts(GDK_DISPLAY(), aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return nsnull;
@@ -1733,11 +1741,23 @@ GetFontNames(char* aPattern)
     if (pixelSize[0] == '0') {
       scalable = 1;
     }
-    SKIP_FIELD(pointSize);
-    SKIP_FIELD(resolutionX);
-    SKIP_FIELD(resolutionY);
+    FIND_FIELD(pointSize);
+    if (pointSize[0] == '0') {
+      scalable = 1;
+    }
+    FIND_FIELD(resolutionX);
+    if (resolutionX[0] == '0') {
+      scalable = 1;
+    }
+    FIND_FIELD(resolutionY);
+    if (resolutionY[0] == '0') {
+      scalable = 1;
+    }
     FIND_FIELD(spacing);
-    SKIP_FIELD(averageWidth);
+    FIND_FIELD(averageWidth);
+    if (averageWidth[0] == '0') {
+      scalable = 1;
+    }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
       continue;
