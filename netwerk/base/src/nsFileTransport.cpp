@@ -902,7 +902,9 @@ nsFileTransport::Process(void)
         if (mProgress) {
             // XXX fix up this message for i18n
             nsAutoString msg = "Read ";
+#ifdef PR_LOGGING
             msg += (const char*)mSpec;
+#endif
             (void)mProgress->OnStatus(this, mContext, msg.mUStr);
         }
         mContext = null_nsCOMPtr();
@@ -1040,7 +1042,9 @@ nsFileTransport::Process(void)
         if (mProgress) {
             // XXX fix up this message for i18n
             nsAutoString msg = "Wrote ";
+#ifdef PR_LOGGING
             msg += (const char*)mSpec;
+#endif
             (void)mProgress->OnStatus(this, mContext, msg.mUStr);
         }
         mContext = null_nsCOMPtr();
