@@ -62,6 +62,11 @@ public:
     NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
     NS_IMETHOD           Show(PRBool aShow);
     NS_IMETHOD           ShowMenuBar(PRBool aShow);
+
+    NS_IMETHOD           Minimize(void);
+    NS_IMETHOD           Maximize(void);
+    NS_IMETHOD           Restore(void);
+
     NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
 
     NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);

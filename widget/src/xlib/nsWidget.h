@@ -66,6 +66,10 @@ public:
   NS_IMETHOD Show(PRBool bState);
   NS_IMETHOD IsVisible(PRBool &aState);
 
+  NS_IMETHOD Minimize(void);
+  NS_IMETHOD Maximize(void);
+  NS_IMETHOD Restore(void);
+
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Resize(PRInt32 aWidth,
                     PRInt32 aHeight,
