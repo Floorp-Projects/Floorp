@@ -258,8 +258,6 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
 
     aDesiredSize.width   = desiredSize.width;
     aDesiredSize.height  = desiredSize.height;
-    aDesiredSize.ascent  = aDesiredSize.height;
-    aDesiredSize.descent = 0;
   } else {
     // XXX ASSERT HERE
     desiredSize.width = 0;
@@ -305,7 +303,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     }
   }
 
-  // now reflow the first child (genertaed content)
+  // now reflow the first child (generated content)
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, desiredSize, reason);
   reflowState.mComputedWidth  = desiredSize.width;
   reflowState.mComputedHeight = desiredSize.height;
@@ -314,6 +312,10 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
   nsRect kidRect;
   firstKid->GetRect(kidRect);
   ReflowChild(firstKid, aPresContext, childReflowMetrics, reflowState, kidRect.x, kidRect.y, 0, aStatus);
+
+  aDesiredSize.ascent = childReflowMetrics.ascent +
+    aReflowState.mComputedBorderPadding.top;
+  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
   // Center the child and add back in the border and badding
   // our inner area frame is already doing centering so we only need to center vertically.

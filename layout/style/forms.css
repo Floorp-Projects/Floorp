@@ -81,7 +81,6 @@ input {
   font: -moz-field;
   text-align: start;
   text-transform: none;
-  vertical-align: text-bottom;
   cursor: text;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
@@ -261,7 +260,6 @@ input[type="image"] {
   background-color: transparent;
   font-family: sans-serif;
   font-size: small;
-  vertical-align: baseline;
   cursor: pointer;
   -moz-binding: none;
 }
@@ -309,7 +307,6 @@ input[type="radio"] {
   height: 13px;
   margin: 3px 3px 0px 5px;
   padding: 0;
-  vertical-align: baseline;
   cursor: default;
   -moz-binding: none;
 
