@@ -86,6 +86,10 @@ public:
   // This is an experiement and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
 
+  // Access Key Registration
+  NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey);
+  NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame);
+
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
