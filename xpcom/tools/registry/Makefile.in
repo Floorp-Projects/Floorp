@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 CPPSRCS		= regExport.cpp regxpcom.cpp
+REQUIRES	= string
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
