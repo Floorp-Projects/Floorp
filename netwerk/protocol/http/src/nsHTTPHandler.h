@@ -87,8 +87,8 @@ public:
                                 nsIProtocolConnection* *o_Result);
     
     NS_IMETHOD               NewUrl(const char* i_URL,
-                                nsIURL* i_BaseUrl,
-                                nsIURL* *o_Result) const;
+                                nsIURL* *o_Result,
+                                nsIURL* i_BaseUrl=0) const;
 
     //Functions from nsIHTTPHandler
 
