@@ -38,10 +38,6 @@
  * OS (and machine, and compiler XXX) dependent information.
  */
 
-#ifdef MOZILLA_CLIENT
-#include "platform.h"
-#endif
-
 #ifdef XP_PC
 
 #if defined(_WIN32) || defined (XP_OS2)

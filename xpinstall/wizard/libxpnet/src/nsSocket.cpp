@@ -47,9 +47,6 @@
 
 #define MAXSOCKADDR 128
 
-#ifndef macintosh
-#include "platform.h" // for SOLARIS define
-#endif
 #if defined(SOLARIS) || defined(_WINDOWS) || defined(IRIX)
 #define socklen_t int
 #endif

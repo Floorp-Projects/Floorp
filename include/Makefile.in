@@ -25,7 +25,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 EXPORTS         = \
-                platform.h \
 		xp_path.h \
 		xp_str.h \
                 $(NULL)
