@@ -3651,6 +3651,8 @@ GlobalWindowImpl::Unescape(const nsAString& aStr,
   // 3)  Convert the byte buffer back into Unicode.
   
   aReturn.Truncate();
+  if (aStr.IsEmpty())
+      return NS_OK;
 
   // encode
   nsXPIDLCString encodedString;
