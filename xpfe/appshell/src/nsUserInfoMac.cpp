@@ -94,7 +94,7 @@ nsUserInfo::GetDomain(char * *aDomain)
   if (atOffset != kNotFound)
   {
     nsCAutoString domainString;
-    tempString.Right(domainString, atOffset + 1);
+    tempString.Right(domainString, tempString.Length() - (atOffset + 1));
     *aDomain = domainString.ToNewCString();
     return NS_OK;
   }

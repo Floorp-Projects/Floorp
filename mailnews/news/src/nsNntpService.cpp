@@ -676,7 +676,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       if (slashpos > 0 ) {
         // theRest is "host/group"
         theRest.Left(currentHost, slashpos);
-        theRest.Right(currentGroup, slashpos);
+        theRest.Right(currentGroup, theRest.Length() - slashpos);
       }
       else {
         // str is "group"

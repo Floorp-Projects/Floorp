@@ -1558,7 +1558,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
     PRInt32 err, sep;
     sep = aInfoStr.FindChar((PRUnichar)',');
     aInfoStr.Left(numstr1, sep);
-    aInfoStr.Right(numstr2, sep+1);
+    aInfoStr.Right(numstr2, aInfoStr.Length() - (sep+1));
     *outRangeStartHint = numstr1.ToInteger(&err) + contextDepth;
     *outRangeEndHint   = numstr2.ToInteger(&err) + contextDepth;
   }
