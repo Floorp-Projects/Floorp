@@ -371,18 +371,26 @@ net_pop3_free_state(Pop3UidlHost* host)
 
 nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
     : nsMsgProtocol(aURL, aURL),
-      nsMsgLineBuffer(NULL, PR_FALSE)
+	nsMsgLineBuffer(NULL, PR_FALSE),
+	m_totalBytesReceived(0),
+	m_bytesInMsgReceived(0), 
+	m_totalFolderSize(0),    
+	m_totalDownloadSize(0),
+	m_lineStreamBuffer(nsnull),
+	m_pop3ConData(nsnull)
 {
 	SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
-	Initialize(aURL);
 }
 
-void nsPop3Protocol::Initialize(nsIURI * aURL)
+nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
 {
   nsresult rv = NS_OK;
 
   m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
   PR_ASSERT(m_pop3ConData);
+
+  if(!m_pop3ConData)
+	  return NS_ERROR_OUT_OF_MEMORY;
 
   m_totalBytesReceived = 0;
   m_bytesInMsgReceived = 0; 
@@ -406,12 +414,18 @@ void nsPop3Protocol::Initialize(nsIURI * aURL)
 
     m_url = do_QueryInterface(aURL);
     rv = OpenNetworkSocket(aURL);
+	if(NS_FAILED(rv))
+		return rv;
   } // if we got a url...
   
   if (!POP3LOGMODULE)
       POP3LOGMODULE = PR_NewLogModule("POP3");
 
   m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
+  if(!m_lineStreamBuffer)
+	  return NS_ERROR_OUT_OF_MEMORY;
+
+  return rv;
 }
 
 nsPop3Protocol::~nsPop3Protocol()

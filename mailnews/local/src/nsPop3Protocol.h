@@ -245,6 +245,7 @@ public:
     nsPop3Protocol(nsIURI* aURL);  
     virtual ~nsPop3Protocol();
     
+	nsresult Initialize(nsIURI * aURL);
     virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
 
     const char* GetUsername() { return m_username.GetBuffer(); };
@@ -278,7 +279,6 @@ private:
 									      PRUint32 sourceOffset, PRUint32 length);
 	virtual nsresult CloseSocket();
 	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
-	void Initialize(nsIURI * aURL);
 
     nsCOMPtr<nsIURI> m_url;
     nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;

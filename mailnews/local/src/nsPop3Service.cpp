@@ -127,7 +127,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 	}
     
 	if (NS_SUCCEEDED(rv) && url) 
-		RunPopUrl(server, url);
+		rv = RunPopUrl(server, url);
 
     if (popHost) PL_strfree(popHost);
 
@@ -223,6 +223,12 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 			nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
 			if (protocol)
 			{
+				rv = protocol->Initialize(aUrlToRun);
+				if(NS_FAILED(rv))
+				{
+					delete protocol;
+					return rv;
+				}
 				protocol->SetUsername(userName);
 				rv = protocol->LoadUrl(aUrlToRun);
 			}
