@@ -97,9 +97,10 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
     else {
         nsCOMPtr<nsIFile> file;
-        rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentRegistry", 
-                                    getter_AddRefs(file));
+        rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentDirectory", 
+                                    getter_AddRefs(file));       
         if (NS_FAILED(rv)) return rv;
+
         rv = file->Append("bloatlogs");
         if (NS_FAILED(rv)) return rv;
 
@@ -108,7 +109,10 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         if (NS_FAILED(rv)) return rv;
 
         if (!exists) {
-            rv = file->Create(nsIFile::DIRECTORY_TYPE, 0664);
+            // On all the platforms that I know use permissions,
+            // directories need to have the executable flag set
+            // if you want to do anything inside the directory.
+            rv = file->Create(nsIFile::DIRECTORY_TYPE, 0755);
             if (NS_FAILED(rv)) return rv;
         }
 
