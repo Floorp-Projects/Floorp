@@ -78,12 +78,13 @@ typedef struct  BrokenServersTable_s
 class   nsHTTPPipelinedRequest;
 class   nsIHTTPChannel;
 
-class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsSupportsWeakReference
+class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsIObserver, public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIHTTPPROTOCOLHANDLER
+    NS_DECL_NSIOBSERVER
 
     nsHTTPHandler();
     nsresult Init();
