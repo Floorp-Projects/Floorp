@@ -45,7 +45,10 @@ extern "C" {
 
 // Remember that these 'words' are 32bit DWORDS
 
-static PRUint32
+#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+static
+#endif
+PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
     PRUint32 result = 0;
@@ -69,7 +72,10 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
     return result;
 }
 
-static void
+#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+static
+#endif
+void
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
     for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
@@ -99,6 +105,7 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 
 }
 
+#if !defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
@@ -154,48 +161,9 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     );
     
   return result;
-#elif defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
-
-asm(
-	"\n\t /: PRUint32 n = invoke_count_words (paramCount, params) * 4;"
-
-	"\n\t pushl %ebx / preserve ebx"
-	"\n\t pushl %esi / preserve esi"
-	"\n\t movl  %esp, %ebx / save address of pushed esi and ebx"
-
-	"\n\t pushl 20(%ebp) / \"params\""
-	"\n\t pushl 16(%ebp) / \"paramCount\""
-	"\n\t call  invoke_count_words"
-	"\n\t mov   %ebx, %esp / restore esp"
-
-	"\n\t sall  $2,%eax"
-	"\n\t subl  %eax, %esp / make room for arguments"
-	"\n\t movl  %esp, %esi / save new esp"
-
-	"\n\t pushl %esp"
-	"\n\t pushl 20(%ebp) / \"params\""
-	"\n\t pushl 16(%ebp) / \"paramCount\""
-	"\n\t call  invoke_copy_to_stack  /  copy params"
-	"\n\t movl  %esi, %esp / restore new esp"
-
-	"\n\t movl  8(%ebp),%ecx / \"that\""
-	"\n\t pushl %ecx / \"that\""
-	"\n\t movl  (%ecx), %edx" 
-	"\n\t movl  12(%ebp), %eax / function index: \"methodIndex\""
-	"\n\t movl  8(%edx,%eax,4), %edx"
-
-	"\n\t call  *%edx"
-	"\n\t mov   %ebx, %esp"
-	"\n\t popl  %esi"
-	"\n\t popl  %ebx"
-);
-
-/* result == %eax */
-  if(0) /* supress "*** is expected to return a value." error */
-     return 0;
-
 #else
 #error "can't find a compiler to use"
 #endif /* __GNUC__ */
 
-}    
+}
+#endif
