@@ -26,8 +26,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-INCLUDES += -I$(srcdir)/../../../base
-
 CPPSRCS = MozillaAttr.cpp \
         MozillaCDATASection.cpp \
         MozillaCharacterData.cpp \
@@ -48,7 +46,7 @@ CPPSRCS = MozillaAttr.cpp \
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../../../base
+INCLUDES += -I$(srcdir)/../../../base -I$(srcdir)/../../
 DEFINES += -DMOZILLA
 
 install:: $(OBJS)
