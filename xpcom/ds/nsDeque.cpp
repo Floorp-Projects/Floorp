@@ -249,7 +249,7 @@ nsDequeIterator::nsDequeIterator(const nsDequeIterator& aCopy) :
  * @param   aCopy is an iterator to be copied from
  * @return  *this
  */
-nsDequeIterator& nsDequeIterator::operator=(nsDequeIterator& aCopy) {
+nsDequeIterator& nsDequeIterator::operator=(const nsDequeIterator& aCopy) {
   //queue's are already equal.
   mIndex=aCopy.mIndex;
   return *this;

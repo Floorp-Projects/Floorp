@@ -247,7 +247,7 @@ public:
    * @param 
    * @return
    */
-  nsDequeIterator& operator=(nsDequeIterator& aCopy);
+  nsDequeIterator& operator=(const nsDequeIterator& aCopy);
 
   /**
    * preform ! operation against to iterators to test for equivalence
