@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_com,v 1.6 2004/07/21 23:22:23 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: prototype3_com,v 1.1 2004/07/21 23:22:23 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -35,3 +35,7 @@ f none usr/lib/mps/libjss4.so 755 root bin
 f none usr/share/lib/mps/jss4.jar 644 root bin
 s none usr/lib/mps/secv1/libjss4.so=../libjss4.so
 s none usr/share/lib/mps/secv1/jss4.jar=../jss4.jar
+f none usr/lib/mps/libjss3.so 755 root bin
+f none usr/share/lib/mps/jss3.jar 644 root bin
+s none usr/lib/mps/secv1/libjss3.so=../libjss3.so
+s none usr/share/lib/mps/secv1/jss3.jar=../jss3.jar
