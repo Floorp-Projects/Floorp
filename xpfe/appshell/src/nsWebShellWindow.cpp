@@ -963,8 +963,45 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 {
   nsresult rv = NS_OK;
 
-  // Find out if we're a menu.
+  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
+  contentViewerContainer = do_QueryInterface(mWebShell);
+  if (!contentViewerContainer) {
+      NS_ERROR("Webshell doesn't support the content viewer container interface");
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
+      NS_ERROR("Unable to retrieve content viewer.");
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocumentViewer> docViewer;
+  docViewer = do_QueryInterface(contentViewer);
+  if (!docViewer) {
+      NS_ERROR("Document viewer interface not supported by the content viewer.");
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresContext> presContext;
+  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
+      return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
+  
+  // Fire the CONSTRUCT DOM event to give JS/C++ a chance to build the popup
+  // dynamically.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_POPUP_CONSTRUCT;
+  rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  if (rv != NS_OK)
+    return rv;
+
+  // Find out if we're a menu.
   PRInt32 childCount;
   popupContent->ChildCount(childCount);
   if (childCount == 0)
@@ -985,7 +1022,13 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     // XXX Need to distinguish between popup menus and context menus?
     DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos);
 
-    return NS_OK; // Yes yes. It's ok.
+    // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_POPUP_DESTRUCT;
+    rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    return rv;
   }
   
   if (tagName != "window")
@@ -1097,6 +1140,12 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsCOMPtr<nsIXULChildDocument> popupChild = do_QueryInterface(popupDocument);
   popupChild->LayoutPopupDocument();
 
+  // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
+  status = nsEventStatus_eIgnore;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_POPUP_DESTRUCT;
+  rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  
   // XXX Do we return the popup document? Might want to, since it's kind of like
   // a sick and twisted distortion of a window.open call.
   return rv;
