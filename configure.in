@@ -1688,12 +1688,28 @@ fi
 
 if test "$MOZ_ENABLE_QT"
 then
-	AC_ARG_WITH(qtdir,
-	[  --with-qtdir=\$dir       Specify Qt directory ],
-	[ QTDIR=$withval],
-	[ QTDIR="/usr"])
+    QTINCDIR="/include"
+    AC_ARG_WITH(qtdir,
+    [  --with-qtdir=\$dir       Specify Qt directory ],
+    [ QTDIR=$withval])
 
-    QT_CFLAGS="-I${QTDIR}/include -DQT_GENUINE_STR"
+    if test -z "$QTDIR"; then
+      QTDIR="/usr"
+      QTINCDIR="/include/qt"
+    fi
+
+    if test -x "$QTDIR/bin/moc"; then
+      HOST_MOC="$QTDIR/bin/moc"
+    else
+      AC_CHECK_PROGS(HOST_MOC, moc, "")
+    fi
+    if test -z "$HOST_MOC"; then
+      AC_MSG_ERROR([no acceptable moc preprocessor found])
+    fi
+    AC_MSG_RESULT([$HOST_MOC])
+    MOC=$HOST_MOC
+
+    QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR"
     QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
@@ -1831,6 +1847,8 @@ XCFLAGS="$X_CFLAGS"
 AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
+
+AC_SUBST(MOC)
 
 if test "$MOZ_ENABLE_GTK" || test "$MOZ_ENABLE_QT" \
 || test "$MOZ_ENABLE_XLIB" || test "$MOZ_ENABLE_MOTIF"
