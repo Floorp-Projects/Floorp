@@ -59,7 +59,7 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsAuthEngine.obj		\
 	$(NULL)
 
-LOCAL_INCLUDES=-I.	
+LOCAL_INCLUDES=-I. -I../../../streamconv/converters
 
 INCLUDES = $(LOCAL_INCLUDES)
 
@@ -68,6 +68,7 @@ REQUIRES= necko
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \
         -I..\public \
+	-I../../../streamconv/converters \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 

@@ -26,6 +26,9 @@
 #include "nsIStreamConverter.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+#include "nsHashtable.h"
+#include "nsString.h"
 
 #include "nsISupportsPrimitives.h"
 
@@ -54,11 +57,16 @@ typedef	enum enum_ChunkState
 			CHUNK_STATE_DATA,
 			CHUNK_STATE_CR_FINAL,
 			CHUNK_STATE_LF_FINAL,
-			CHUNK_STATE_FINAL
+			CHUNK_STATE_FINAL,
+            CHUNK_STATE_TRAILER_HEADER,
+            CHUNK_STATE_TRAILER_VALUE,
+            CHUNK_STATE_TRAILER
 		}	ChunkState;
 
 #define	HTTP_CHUNK_TYPE		"chunked"
 #define	HTTP_UNCHUNK_TYPE	"unchunked"
+
+class nsHTTPChunkConvContext;
 
 class nsHTTPChunkConv	: public nsIStreamConverter	{
 public:
@@ -87,7 +95,94 @@ private:
 	char mLenBuf[20];
 	PRUint32	mLenBufCnt;
     
-    nsCOMPtr<nsISupportsPRBool> mAsyncConvContext;
+    nsCOMPtr<nsISupportsVoid> mAsyncConvContext;
+
+    char        mValueBuf [4096];
+    PRUint32    mValueBufLen;
+
+    char        mHeaderBuf [400];
+    PRUint32    mHeaderBufLen;
+
+    PRUint32    mHeadersCount;
+    PRUint32    mHeadersExpected;
+
+    nsHTTPChunkConvContext  *mChunkContext;
+};
+
+class nsHTTPChunkConvHeaderEntry {
+public:
+
+    nsHTTPChunkConvHeaderEntry (const char *aName, const char* aValue)
+    {
+        mName  = aName;
+        mValue = aValue;
+    }
+
+    nsHTTPChunkConvHeaderEntry::~nsHTTPChunkConvHeaderEntry()
+    {
+    }
+
+    nsCString   mName;
+    nsCString   mValue;
+};
+
+class nsHTTPChunkConvContext    {
+public:
+
+    nsHTTPChunkConvContext ()
+            : mEof (PR_FALSE), mHeadersCount (0)
+    {
+    }
+
+    ~nsHTTPChunkConvContext ()
+    {
+        PRInt32 i = mHeaders.Count ();
+
+        while (i > 0)
+        {
+            nsHTTPChunkConvHeaderEntry *e = (nsHTTPChunkConvHeaderEntry *)mHeaders.RemoveElementAt (i - 1);
+            delete e;
+        }
+    }
+
+    void SetEOF (PRBool eof)
+    {
+        mEof = eof;
+    }
+
+    PRBool  GetEOF ()   {   return mEof;    }
+
+    nsVoidArray * GetAllHeaders ()
+    {
+        return &mHeaders;
+    }
+
+    PRUint32 GetTrailerHeaderCount ()
+    {
+        return mHeadersCount;
+    }
+    
+    void AddTrailerHeader (const char *header)
+    {
+        nsStringKey key (header);
+        mTrailer.Put (&key, (void *) 1);
+
+        mHeadersCount++;
+    }
+
+    void SetResponseHeader (const char *header, const char *value)
+    {
+        nsHTTPChunkConvHeaderEntry *e = new nsHTTPChunkConvHeaderEntry (header, value);
+        mHeaders.AppendElement (e);
+    }
+
+private:
+
+    PRBool  mEof;
+    nsVoidArray mHeaders;
+    nsHashtable mTrailer;
+
+    PRUint32    mHeadersCount;
 };
 
 

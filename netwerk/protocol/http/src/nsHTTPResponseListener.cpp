@@ -32,6 +32,7 @@
 #include "nsCRT.h"
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
+#include "nsRepository.h"
 
 #include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
@@ -224,6 +225,9 @@ nsresult nsHTTPCacheListener::Abort()
 }
 
 
+static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID);
+static NS_DEFINE_IID(kSupportsVoidIID, NS_ISUPPORTSVOID_IID); 
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // nsHTTPServerListener Implementation
@@ -247,10 +251,11 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
 {
     mChannel -> mHTTPServerListener = this;
 
-    NS_NewISupportsPRBool (getter_AddRefs (mChunkHeaderEOF));
+    nsRepository::CreateInstance (kSupportsVoidCID, NULL, 
+                kSupportsVoidIID, getter_AddRefs (mChunkHeaderEOF));
 
     if (mChunkHeaderEOF)
-        mChunkHeaderEOF -> SetData (PR_FALSE);
+        mChunkHeaderEOF -> SetData (&mChunkHeaderCtx);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Creating nsHTTPServerListener [this=%x].\n", this));
@@ -468,6 +473,9 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                     nsXPIDLCString chunkHeader;
                     rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
                     
+                    nsXPIDLCString trailerHeader;
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Trailer, getter_Copies (trailerHeader));
+
                     if (NS_SUCCEEDED (rv) && chunkHeader)
                     {
     					NS_WITH_SERVICE (nsIStreamConverterService, 
@@ -477,8 +485,31 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 			    		nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
 				    	nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
 
-                        if (mChunkHeaderEOF)
-                            mChunkHeaderEOF -> SetData (PR_FALSE);
+                        mChunkHeaderCtx.SetEOF (PR_FALSE);
+                        if (trailerHeader)
+                        {
+                            nsCString ts (trailerHeader);
+                            ts.StripWhitespace ();
+
+                            char *cp = ts;
+
+                            while (*cp)
+                            {
+                                char * pp = PL_strchr (cp , ',');
+                                if (pp == NULL)
+                                {
+                                    mChunkHeaderCtx.AddTrailerHeader (cp);
+                                    break;
+                                }
+                                else
+                                {
+                                    *pp = 0;
+                                    mChunkHeaderCtx.AddTrailerHeader (cp);
+                                    *pp = ',';
+                                    cp = pp + 1;
+                                }
+                            }
+                        }
 
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
@@ -507,13 +538,25 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                     if (NS_FAILED(rv)) return rv;
                 }
 
-                PRBool eof = PR_FALSE;
-                if (mChunkHeaderEOF)
-                    mChunkHeaderEOF -> GetData (&eof);
+                PRBool eof = mChunkHeaderCtx.GetEOF ();
 
                 if (mPipelinedRequest
                     && (cl != -1 && cl - mBodyBytesReceived == 0 || eof))
                 {
+                    if (eof && mResponse)
+                    {
+                        nsVoidArray *mh = mChunkHeaderCtx.GetAllHeaders ();
+
+                        for (int i = mh -> Count () - 1; i >= 0; i--)
+                        {
+                            nsHTTPChunkConvHeaderEntry *he = (nsHTTPChunkConvHeaderEntry *) mh -> ElementAt (i);
+                            if (he)
+                            {
+                                nsCOMPtr<nsIAtom> hAtom = dont_AddRef (NS_NewAtom (he -> mName));
+                                mResponse -> SetHeader (hAtom, he -> mValue);
+                            }
+                        }
+                    }
                     nsresult rv1 = mPipelinedRequest -> AdvanceToNextRequest ();
 
                     if (NS_FAILED (rv1))
@@ -580,8 +623,7 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mChannel  = nsnull;
     mResponseDataListener = null_nsCOMPtr ();
 
-    if (mChunkHeaderEOF)
-        mChunkHeaderEOF -> SetData (PR_FALSE);
+    mChunkHeaderCtx.SetEOF (PR_FALSE);
 
     nsHTTPRequest * req;
     mPipelinedRequest -> GetCurrentRequest (&req);
