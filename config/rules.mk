@@ -1139,7 +1139,11 @@ chrome::
 
 install:: chrome
 
-REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt
+ifdef MOZ_DISABLE_JAR_PACKAGING
+REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt 1
+else
+REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt 0
+endif
 
 ##############################################################################
 
