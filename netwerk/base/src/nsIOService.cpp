@@ -33,6 +33,7 @@
 #include "nsLoadGroup.h"
 #include "nsIFileChannel.h"
 #include "nsInputStreamChannel.h"
+#include "nsXPIDLString.h" 
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -60,12 +61,12 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsIOService* ios = new nsIOService();
-    if (ios == nsnull)
+    nsIOService* _ios = new nsIOService();
+    if (_ios == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ios);
-    nsresult rv = ios->QueryInterface(aIID, aResult);
-    NS_RELEASE(ios);
+    NS_ADDREF(_ios);
+    nsresult rv = _ios->QueryInterface(aIID, aResult);
+    NS_RELEASE(_ios);
     return rv;
 }
 
@@ -103,54 +104,41 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     return NS_OK;
 }
 
-static nsresult
-GetScheme(const char* inURI, char* *scheme)
-{
-    // search for something up to a colon, and call it the scheme
-    NS_ASSERTION(inURI, "null pointer");
-    if (!inURI) return NS_ERROR_NULL_POINTER;
-    char c;
-    const char* URI = inURI;
-    PRUint32 i = 0;
-    PRUint32 length = 0;
-    while ((c = *URI++) != '\0') {
-        if (c == ':') {
-            char* newScheme = (char *)PR_Malloc(length+1);
-            if (newScheme == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            nsCRT::memcpy(newScheme, inURI, length);
-            newScheme[length] = '\0';
-            *scheme = newScheme;
-            return NS_OK;
-        }
-        else if (isalpha(c)) {
-            length++;
-        }
-    }
-    return NS_ERROR_FAILURE;    // no colon
-}
-
 NS_IMETHODIMP
 nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
                     nsIURI* *result)
 {
     nsresult rv;
-    char* scheme;
-    rv = GetScheme(aSpec, &scheme);
-    if (NS_FAILED(rv)) {
-        if (aBaseURI)
-            rv = aBaseURI->GetScheme(&scheme);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
-    nsCRT::free(scheme);
-    if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewURI(aSpec, aBaseURI, result);
-    return rv;
+	nsAutoString scheme(aSpec);
+	scheme.CompressWhitespace(); // remove any leading/trailing spaces;
+	int firstColon = scheme.Find(":");
+	if (-1 == firstColon)
+	{
+		if (aBaseURI) 
+		{
+			nsXPIDLCString sch;
+			rv = aBaseURI->GetScheme(getter_Copies(sch));
+			if (NS_FAILED(rv) || !sch || (0 == nsCRT::strlen(sch)))
+				return NS_ERROR_MALFORMED_URI;
+			scheme = sch;
+		}
+		else
+			return NS_ERROR_MALFORMED_URI; // Must have a scheme
+	}
+	else 
+		scheme.Truncate(firstColon);
+
+	// Use the scheme to find the handler and ask it to create a new URI
+	nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(nsCAutoString(scheme), 
+		getter_AddRefs(handler));
+   	if (NS_FAILED(rv))
+	{
+		// Didn't find any handler for this scheme
+		return rv; 
+	}
+    return handler->NewURI(aSpec, aBaseURI, result);
 }
 
 NS_IMETHODIMP
@@ -160,12 +148,12 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
 {
     nsresult rv;
 
-    char* scheme;
-    rv = aURI->GetScheme(&scheme);
+    nsXPIDLCString scheme;
+    rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
+    rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -206,32 +194,33 @@ nsIOService::MakeAbsolute(const char *aSpec,
 {
     nsresult rv;
     NS_ASSERTION(aBaseURI, "It doesn't make sense to not supply a base URI");
+	if (!aBaseURI) 
+		return NS_ERROR_FAILURE;
 
-    if (aSpec == nsnull) {
-        return aBaseURI->GetSpec(result);
-    }
+	if (aSpec == nsnull)
+		return aBaseURI->GetSpec(result);
+	
+	nsAutoString scheme(aSpec);
+	scheme.CompressWhitespace(); // remove any leading/trailing spaces;
+	int firstColon = scheme.Find(":");
+	if (-1 != firstColon)
+	{
+		// if aSpec has a scheme, then it's already absolute
+		*result = nsCRT::strdup(aSpec);
+		return (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+	}
 
-    char* scheme;
-    rv = GetScheme(aSpec, &scheme);
-    if (NS_SUCCEEDED(rv)) {
-        // if aSpec has a scheme, then it's already absolute
-        *result = nsCRT::strdup(aSpec);
-        if (*result == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        return NS_OK;
-    }
-
-    // else ask the protocol handler for the base URI to deal with it
-    rv = aBaseURI->GetScheme(&scheme);
+	// else ask the protocol handler for the base URI to deal with it
+    nsXPIDLCString baseScheme;
+    rv = aBaseURI->GetScheme(getter_Copies(baseScheme));
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
-    nsCRT::free(scheme);
+    rv = GetProtocolHandler((const char*)baseScheme, 
+		getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->MakeAbsolute(aSpec, aBaseURI, result);
-    return rv;
+    return handler->MakeAbsolute(aSpec, aBaseURI, result);
 }
 
 NS_IMETHODIMP
@@ -338,6 +327,7 @@ nsIOService::NewLoadGroup(nsILoadGroup* parent, nsILoadGroup **result)
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
                                    nsIInputStream *inStr, nsIChannel **result)
@@ -353,9 +343,6 @@ nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType,
         return rv;
     }
     *result = channel;
-    return NS_OK;
+	return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
     
