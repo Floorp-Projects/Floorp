@@ -177,20 +177,18 @@ public:
   NS_IMETHOD  VerifyTree() const;
 
   /**
-   * This is used to propagate this frame's mFirstContentOffset, mLastContentOffset,
-   * and mLastContentIsComplete to its geometric parent frame. Recurses if the
-   * geometric parent is a pseudo-frame.
-   *
-   * If this frame is the parent's first child then the parent's mFirstContentOffset
-   * is set to be this frame's mFirstContentOffset.
-   *
-   * If this frame is the parent's last child then the parent's mLastContentOffset
-   * is set to be this frame's mLastContentOffset, and the parent's
-   * mLastContentIsComplete is set to be this frame's mLastContentIsComplete.
-   *
-   * It's a precondition that this frame must be a pseudo-frame.
+   * When aChild's content mapping offsets change and the child is a
+   * pseudo-frame (meaning that it is mapping content on the behalf of its
+   * geometric parent) then the geometric needs to have its content
+   * mapping offsets updated. This method is used to do just that. The
+   * object is responsible for updating its content mapping offsets and
+   * then if it is a pseudo-frame propogating the update upwards to its
+   * parent.
    */
-  virtual void PropagateContentOffsets();
+  virtual void PropagateContentOffsets(nsIFrame* aChild,
+                                       PRInt32 aFirstContentOffset,
+                                       PRInt32 aLastContentOffset,
+                                       PRBool aLastContentIsComplete);
 
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
