@@ -40,14 +40,7 @@ public:
                           nsIFrame** aFrame,
                           nsIContent** aContent,
                           PRInt32& aCursor);
-  // XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             nsIContent*     aChild,
-                             PRInt32         aIndexInParent);
-#endif
+
   NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
                             nsIContent*     aContainer,

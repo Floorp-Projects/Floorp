@@ -477,45 +477,6 @@ public:
                         nsDidReflowStatus aStatus) = 0;
 
   /**
-   * This call is invoked when content is appended to the content tree.
-   *
-   * This frame is the frame that maps the content object that has appended
-   * content. A typical response to this notification is to generate a
-   * FrameAppended incremental reflow command. You then handle the incremental
-   * reflow command by creating frames for the appended content.
-   */
-  // XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer) = 0;
-#endif
-
-  // XXX CONSTRUCTION
-#if 0
-  /**
-   * This call is invoked when content is inserted in the content
-   * tree.
-   *
-   * This frame is the frame that maps the content object that has inserted
-   * content. A typical response to this notification is to update the
-   * index-in-parent values for the affected child frames, create and insert
-   * new frame(s), and generate a FrameInserted incremental reflow command.
-   *
-   * You respond to the incremental reflow command by reflowing the newly
-   * inserted frame and any impacted frames.
-   *
-   * @param aIndexInParent the index in the content container where
-   *          the new content was inserted.
-   */
-  NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer,
-                              nsIContent*     aChild,
-                              PRInt32         aIndexInParent) = 0;
-#endif
-
-  /**
    * This call is invoked when content is replaced in the content
    * tree. The container frame that maps that content is asked to deal
    * with the replaced content by deleting old frames and then

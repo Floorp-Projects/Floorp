@@ -244,14 +244,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
-  // XXX CONSTRUCTION
-#if 0
-  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent*     aContainer,
-                             nsIContent*     aChild,
-                             PRInt32         aIndexInParent);
-#endif
   NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
                             nsIContent*     aContainer,
@@ -3528,71 +3520,6 @@ nsBlockFrame::InsertNewFrame(nsBlockFrame* aParentFrame,
 
   return NS_OK;
 }
-
-// XXX CONSTRUCTION
-#if 0
-// XXX we assume that the insertion is really an assertion and never an append
-// XXX what about zero lines case
-NS_IMETHODIMP
-nsBlockFrame::ContentInserted(nsIPresShell*   aShell,
-                                 nsIPresContext* aPresContext,
-                                 nsIContent*     aContainer,
-                                 nsIContent*     aChild,
-                                 PRInt32         aIndexInParent)
-{
-  // Find the frame that precedes this frame
-  nsIFrame* prevSibling = nsnull;
-  if (aIndexInParent > 0) {
-    nsIContent* precedingContent;
-    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
-    prevSibling = aShell->FindFrameWithContent(precedingContent);
-    NS_ASSERTION(nsnull != prevSibling, "no frame for preceding content");
-    NS_RELEASE(precedingContent);
-
-    // The frame may have a next-in-flow. Get the last-in-flow; we do
-    // it the hard way because we can't assume that prevSibling is a
-    // subclass of nsSplittableFrame.
-    nsIFrame* nextInFlow;
-    do {
-      prevSibling->GetNextInFlow(nextInFlow);
-      if (nsnull != nextInFlow) {
-        prevSibling = nextInFlow;
-      }
-    } while (nsnull != nextInFlow);
-  }
-
-  // Get the parent of the previous sibling (which will be the proper
-  // next-in-flow for the child). We expect it to be this frame or one
-  // of our next-in-flow(s).
-  nsBlockFrame* flow = this;
-  if (nsnull != prevSibling) {
-    prevSibling->GetGeometricParent((nsIFrame*&)flow);
-  }
-
-  // Now that we have the right flow block we can create the new
-  // frame; test and see if the inserted frame is a block or not.
-  // XXX create-frame could return that fact
-  nsIFrame* newFrame;
-  nsresult rv = nsHTMLContainerFrame::CreateFrame(aPresContext, flow, aChild,
-                                        nsnull, newFrame);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  InsertNewFrame(flow, newFrame, prevSibling);
-
-  // Generate a reflow command
-  nsIReflowCommand* cmd;
-  rv = NS_NewHTMLReflowCommand(&cmd, flow, nsIReflowCommand::FrameInserted);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  aShell->AppendReflowCommand(cmd);
-  NS_RELEASE(cmd);
-
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 nsBlockFrame::ContentDeleted(nsIPresShell*   aShell,
