@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.4 $ $Date: 2001/09/19 21:49:52 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -46,6 +46,10 @@ static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.3 $ 
 #ifndef DEV_H
 #include "dev.h"
 #endif /* DEV_H */
+
+#ifndef CKHELPER_H
+#include "ckhelper.h"
+#endif /* CKHELPER_H */
 
 NSS_IMPLEMENT NSSTrustDomain *
 NSSTrustDomain_Create
@@ -79,7 +83,7 @@ NSSTrustDomain_Destroy
 )
 {
     if (--td->refCount == 0) {
-	NSSModule_Destroy(td->module);
+	nssModule_Destroy(td->module);
 	nssArena_Destroy(td->arena);
     }
     return PR_SUCCESS;
@@ -123,11 +127,11 @@ NSSTrustDomain_LoadModule
      * correct.  Therefore, I won't comment further.
      */
     if (moduleOpt) {
-	module = NSSModule_Create(moduleOpt, uriOpt, opaqueOpt, reserved);
-	NSSModule_Load(module);
+	module = nssModule_Create(moduleOpt, uriOpt, opaqueOpt, reserved);
+	nssModule_Load(module);
 	td->module = module;
 #ifdef DEBUG
-	NSSModule_Debug(td->module);
+	nssModule_Debug(td->module);
 #endif
     }
     return PR_SUCCESS;
@@ -332,6 +336,7 @@ NSSTrustDomain_FindBestCertificateByNickname
     return NULL;
 }
 
+/* THIS IS A TEST IMPLEMENTATION ONLY */
 NSS_IMPLEMENT NSSCertificate **
 NSSTrustDomain_FindCertificatesByNickname
 (
@@ -342,8 +347,26 @@ NSSTrustDomain_FindCertificatesByNickname
   NSSArena *arenaOpt
 )
 {
-    nss_SetError(NSS_ERROR_NOT_FOUND);
-    return NULL;
+    PRStatus nssrv;
+    NSSCertificate **certs;
+    NSSToken *tok = td->module->slots[0]->token;
+    CK_ATTRIBUTE cert_template[] =
+    {
+	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size },
+	{ CKA_LABEL, NULL,                 0                    }
+    };
+    CK_ULONG ctsize;
+    ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
+    cert_template[1].pValue = (CK_VOID_PTR)name;
+    cert_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
+    certs = nssToken_FindCertificatesByTemplate(tok, NULL, NULL, 0, NULL,
+                                                cert_template, ctsize);
+    if (!certs) {
+	cert_template[1].ulValueLen++;
+	certs = nssToken_FindCertificatesByTemplate(tok, NULL, NULL, 0, NULL,
+                                                    cert_template, ctsize);
+    }
+    return certs;
 }
 
 NSS_IMPLEMENT NSSCertificate *
@@ -568,7 +591,7 @@ NSSTrustDomain_TraverseCertificates
 )
 {
     /* Do module->slot->token, or just slotarray->tokens? */
-    return NSSModule_TraverseCertificates(td->module, callback, arg);
+    return nssModule_TraverseCertificates(td->module, callback, arg);
 }
 
 NSS_IMPLEMENT PRStatus
