@@ -24,13 +24,14 @@
  */
 
 #include "nsExpatTokenizer.h"
-//#include "nsParser.h"
 #include "nsScanner.h"
 #include "nsDTDUtils.h"
-#include "nsParser.h"
+#include "nsParserError.h"
+// #include "nsParser.h"
 #include "nsIParser.h"
 
-/************************************************************************
+
+ /************************************************************************
   And now for the main class -- nsExpatTokenizer...
  ************************************************************************/
 
@@ -38,6 +39,9 @@ static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
+
+static CTokenRecycler* gTokenRecycler=0;
+static nsDeque* gTokenDeque=0;
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -148,14 +152,38 @@ nsExpatTokenizer::~nsExpatTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
+/* Called immediately after an error has occurred in expat.  Creates
+   an error token and pushes it onto the token queue.  The DTD
+   will process this token and either try to correct the error or 
+   propagate the error to the content sink. 
+   
+   Creates an nsParserError o
+*/
+void nsExpatTokenizer::PushXMLErrorToken(void)
+{
+  CErrorToken* token= (CErrorToken *) gTokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
+  nsParserError *error = new nsParserError;
+  
+  error->code = XML_GetErrorCode(mExpatParser);
+  error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+  error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);
+  // XXX Does the copy constructor of nsString free the passed in char *?
+  error->description = XML_ErrorString(error->code);
+  // XXX Not setting a source buffer and error offset for now
+  error->offset = 0;
+  error->sourceBuffer = "";
+
+  token->SetError(error);
+
+  CToken* theToken = (CToken* )token;
+  AddToken(theToken, NS_OK, *gTokenDeque);
+}
+
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char *buffer){
   nsresult result=NS_OK;
   if (mExpatParser) {
-    if (!XML_Parse(mExpatParser, buffer, strlen(buffer), PR_FALSE)) {
-      // XXX Add code here to implement error propagation to the
-      // content sink.
-      NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::ParseXMLBuffer(): Error propogation from expat not yet implemented.");
-      result = NS_ERROR_FAILURE;
+    if (!XML_Parse(mExpatParser, buffer, strlen(buffer), PR_FALSE)) {      
+      PushXMLErrorToken();      
     }
   }
   else {
@@ -164,8 +192,6 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *buffer){
   return result;
 }
 
-static CTokenRecycler* gTokenRecycler=0;
-static nsDeque* gTokenDeque=0;
 
 /**
  *  This method repeatedly called by the tokenizer. 

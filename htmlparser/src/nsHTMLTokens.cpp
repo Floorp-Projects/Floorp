@@ -1656,3 +1656,30 @@ PRInt32 CInstructionToken::GetTokenType(void){
   return eToken_instruction;
 }
 
+
+CErrorToken::CErrorToken(nsParserError *aError) : CHTMLToken(eHTMLTag_unknown)
+{
+  mError = aError;
+}
+
+CErrorToken::~CErrorToken() 
+{
+  delete mError;
+}
+
+PRInt32 CErrorToken::GetTokenType(void){
+  return eToken_error;
+}
+
+const char* CErrorToken::GetClassName(void){
+  return "error";
+}
+
+void CErrorToken::SetError(nsParserError *aError) {
+  mError = aError;
+}
+
+const nsParserError * CErrorToken::GetError(void) 
+{ 
+  return mError; 
+}
