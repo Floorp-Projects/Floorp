@@ -4779,8 +4779,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
                             nsRect& aCombinedRectResult,
                             nsMargin& aMarginResult,
-                            nsMargin& aComputedOffsetsResult,
-                            nscoord& aMaxElementWidthResult)
+                            nsMargin& aComputedOffsetsResult)
 {
   // Reflow the floater.
   nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
@@ -4794,39 +4793,25 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 #endif
 
   // Compute the available width. By default, assume the width of the
-  // available space rect.
-  nscoord availWidth = aState.mAvailSpaceRect.width;
+  // containing block.
+  nscoord availWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)
+                        ? NS_UNCONSTRAINEDSIZE
+                        : aState.mContentArea.width;
 
   // If the floater's width is automatic, we can't let the floater's
   // width shrink below its maxElementSize.
   const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, NS_REINTERPRET_CAST(const nsStyleStruct*&, position));
-
+  floater->GetStyleData(eStyleStruct_Position,
+                        NS_REINTERPRET_CAST(const nsStyleStruct*&, position));
   PRBool isAutoWidth = (eStyleUnit_Auto == position->mWidth.GetUnit());
-  if (isAutoWidth) {
-    // It's auto-width. Have we computed a max element size yet? (If
-    // not, the floater cache will have NS_UNCONSTRAINEDSIZE as the
-    // initial value.) If we _have_ computed a max element size, and
-    // its larger then the available width, pin the avaiable width to
-    // the maxElementSize.
-    if ((NS_UNCONSTRAINEDSIZE != aMaxElementWidthResult) &&
-        (aMaxElementWidthResult > availWidth)) {
-      availWidth = aMaxElementWidthResult;
-    }
-  }
 
   // We'll need to compute the max element size if either 1) we're
-  // auto-width and we've not yet cached the value, or 2) the state
-  // wanted us to compute it anyway.
+  // auto-width or 2) the state wanted us to compute it anyway.
   PRBool computeMaxElementSize =
-    (isAutoWidth && (NS_UNCONSTRAINEDSIZE == aMaxElementWidthResult)) ||
-    aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE);
+    isAutoWidth || aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE);
 
-  // XXX Why do we have to add in our border/padding?
-  // XXXldb Shouldn't the width of this rect be
-  // availWidth - aState.BorderPadding().left - aState.BorderPadding().right ?
-  nsRect availSpace(aState.mAvailSpaceRect.x + aState.BorderPadding().left,
-                    aState.mAvailSpaceRect.y + aState.BorderPadding().top,
+  nsRect availSpace(aState.BorderPadding().left,
+                    aState.BorderPadding().top,
                     availWidth, NS_UNCONSTRAINEDSIZE);
 
   // Setup a block reflow state to reflow the floater.
@@ -4843,17 +4828,13 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
 
-  if (NS_SUCCEEDED(rv) && isAutoWidth && (NS_UNCONSTRAINEDSIZE == aMaxElementWidthResult)) {
-    // We've just flowed an auto-width floater, but have not yet cached
-    // the maxElementSize. Do so now.
-    nsSize maxElementSize = brc.GetMaxElementSize();
-    aMaxElementWidthResult = maxElementSize.width;
-
-    if (aMaxElementWidthResult > availSpace.width) {
+  if (NS_SUCCEEDED(rv) && isAutoWidth) {
+    nscoord maxElementWidth = brc.GetMaxElementSize().width;
+    if (maxElementWidth > availSpace.width) {
       // The floater's maxElementSize is larger than the available
       // width. Reflow it again, this time pinning the width to the
       // maxElementSize.
-      availSpace.width = aMaxElementWidthResult;
+      availSpace.width = maxElementWidth;
       rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
                            aComputedOffsetsResult, frameReflowStatus);
     }
@@ -4898,7 +4879,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // If we computed it, then stash away the max-element-size for later
-  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+  if (computeMaxElementSize) {
     nsSize mes = brc.GetMaxElementSize();
     mes.SizeBy(aMarginResult.left + aMarginResult.right, 
                aMarginResult.top  + aMarginResult.bottom);

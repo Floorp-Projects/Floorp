@@ -1097,7 +1097,6 @@ nsFloaterCache::nsFloaterCache()
     mMargins(0, 0, 0, 0),
     mOffsets(0, 0, 0, 0),
     mCombinedArea(0, 0, 0, 0),
-    mMaxElementWidth(NS_UNCONSTRAINEDSIZE),
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsFloaterCache);

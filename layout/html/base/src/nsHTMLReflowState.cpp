@@ -1654,8 +1654,11 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           mComputedWidth = NS_SHRINKWRAPWIDTH;
 
           // Limnit the width to the containing block width
-          if (mComputedMaxWidth > aContainingBlockWidth) {
-            mComputedMaxWidth = aContainingBlockWidth;
+          nscoord widthFromCB = aContainingBlockWidth - 
+                  mComputedBorderPadding.left - mComputedBorderPadding.right -
+                  mComputedMargin.left - mComputedMargin.right;
+          if (mComputedMaxWidth > widthFromCB) {
+            mComputedMaxWidth = widthFromCB;
           }
         }
 

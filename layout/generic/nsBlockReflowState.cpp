@@ -771,6 +771,7 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
   // then by definition the floater fits.
   PRBool result = PR_TRUE;
   if (0 != mBand.GetFloaterCount()) {
+    // XXX We should allow overflow by up to half a pixel here (bug 21193).
     if (mAvailSpaceRect.width < aFloaterRect.width) {
       // The available width is too narrow (and its been impacted by a
       // prior floater)
@@ -887,62 +888,57 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   // ``above'' another float that preceded it in the flow.
   mY = NS_MAX(mLastFloaterY, mY);
 
-  while (1) {
-    // See if the floater should clear any preceeding floaters...
-    if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
-      // XXXldb Does this handle vertical margins correctly?
-      ClearFloaters(mY, floaterDisplay->mBreakType);
-    }
-    else {
-      // Get the band of available space
-      GetAvailableSpace();
-    }
+  // See if the floater should clear any preceeding floaters...
+  if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
+    // XXXldb Does this handle vertical margins correctly?
+    ClearFloaters(mY, floaterDisplay->mBreakType);
+  }
+  else {
+    // Get the band of available space
+    GetAvailableSpace();
+  }
 
-    // Reflow the floater
-    mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
-                          aFloaterCache->mMargins, aFloaterCache->mOffsets,
-                          aFloaterCache->mMaxElementWidth);
+  // Reflow the floater
+  mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
+			aFloaterCache->mMargins, aFloaterCache->mOffsets);
 
-    // Get the floaters bounding box and margin information
-    floater->GetRect(region);
+  // Get the floaters bounding box and margin information
+  floater->GetRect(region);
 
 #ifdef DEBUG
-    if (nsBlockFrame::gNoisyReflow) {
-      nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-      printf("flowed floater: ");
-      nsFrame::ListTag(stdout, floater);
-      printf(" (%d,%d,%d,%d), max-element-width=%d\n",
-             region.x, region.y, region.width, region.height,
-             aFloaterCache->mMaxElementWidth);
-    }
+  if (nsBlockFrame::gNoisyReflow) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    printf("flowed floater: ");
+    nsFrame::ListTag(stdout, floater);
+    printf(" (%d,%d,%d,%d)\n",
+	   region.x, region.y, region.width, region.height);
+  }
 #endif
 
-    // Adjust the floater size by its margin. That's the area that will
-    // impact the space manager.
-    region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
-    region.height += aFloaterCache->mMargins.top + aFloaterCache->mMargins.bottom;
+  // Adjust the floater size by its margin. That's the area that will
+  // impact the space manager.
+  region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
+  region.height += aFloaterCache->mMargins.top + aFloaterCache->mMargins.bottom;
 
-    // Find a place to place the floater. The CSS2 spec doesn't want
-    // floaters overlapping each other or sticking out of the containing
-    // block if possible (CSS2 spec section 9.5.1, see the rule list).
-    NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
-                 (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
-                 "invalid float type");
+  // Find a place to place the floater. The CSS2 spec doesn't want
+  // floaters overlapping each other or sticking out of the containing
+  // block if possible (CSS2 spec section 9.5.1, see the rule list).
+  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
+	       (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
+	       "invalid float type");
 
-    // In backwards compatibility mode, we don't bother to see if a
-    // floated table can ``really'' fit: in old browsers, floating
-    // tables are horizontally stacked regardless of available space.
-    // (See bug 43086 about tables vs. non-tables.)
-    if ((eCompatibility_NavQuirks == mode) &&
-        (NS_STYLE_DISPLAY_TABLE == floaterDisplay->mDisplay))
-      break;
-
+  // In backwards compatibility mode, we don't bother to see if a
+  // floated table can ``really'' fit: in old browsers, floating
+  // tables are horizontally stacked regardless of available space.
+  // (See bug 43086 about tables vs. non-tables.)
+  if ((eCompatibility_NavQuirks != mode) ||
+      (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay)) {
     // Can the floater fit here?
-    if (CanPlaceFloater(region, floaterDisplay->mFloats))
-        break;
-
-    // Nope. Advance to the next band.
-    mY += mAvailSpaceRect.height;
+    while (! CanPlaceFloater(region, floaterDisplay->mFloats)) {
+      // Nope. Advance to the next band.
+      mY += mAvailSpaceRect.height;
+      GetAvailableSpace();
+    }
   }
 
   // Assign an x and y coordinate to the floater. Note that the x,y
