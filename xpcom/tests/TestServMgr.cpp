@@ -29,17 +29,17 @@ static NS_DEFINE_IID(kIMyServiceIID, NS_IMYSERVICE_IID);
 IMyService* myServ = NULL;
 
 nsresult
-BeginTest(int testNumber, nsIShutdownListener* listener)
+BeginTest(int testNumber)
 {
     nsresult err;
     NS_ASSERTION(myServ == NULL, "myServ not reset");
     err = nsServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
-                                       (nsISupports**)&myServ, listener);
+                                       (nsISupports**)&myServ);
     return err;
 }
 
 nsresult
-EndTest(int testNumber, nsIShutdownListener* listener)
+EndTest(int testNumber)
 {
     nsresult err = NS_OK;
 
@@ -47,7 +47,7 @@ EndTest(int testNumber, nsIShutdownListener* listener)
         err = myServ->Doit();
         if (err != NS_OK) return err;
 
-        err = nsServiceManager::ReleaseService(kIMyServiceCID, myServ, listener);
+        err = nsServiceManager::ReleaseService(kIMyServiceCID, myServ);
         if (err != NS_OK) return err;
         myServ = NULL;
     }
@@ -62,38 +62,13 @@ SimpleTest(int testNumber)
     // This test just gets a service, uses it and releases it.
 
     nsresult err;
-    err = BeginTest(testNumber, NULL);
+    err = BeginTest(testNumber);
     if (err != NS_OK) return err;
-    err = EndTest(testNumber, NULL);
+    err = EndTest(testNumber);
     return err;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class HandleMyServiceShutdown : public nsIShutdownListener {
-public:
-
-    NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
-
-    HandleMyServiceShutdown(void) { NS_INIT_REFCNT(); }
-    virtual ~HandleMyServiceShutdown(void) {}
-
-    NS_DECL_ISUPPORTS
-};
-
-static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
-NS_IMPL_ISUPPORTS(HandleMyServiceShutdown, kIShutdownListenerIID);
-
-nsresult
-HandleMyServiceShutdown::OnShutdown(const nsCID& cid, nsISupports* service)
-{
-    if (cid.Equals(kIMyServiceCID)) {
-        NS_ASSERTION(service == myServ, "wrong service!");
-        nsrefcnt cnt = myServ->Release();
-        myServ = NULL;
-    }
-    return NS_OK;
-}
 
 nsresult
 AsyncShutdown(int testNumber)
@@ -117,29 +92,6 @@ AsyncShutdown(int testNumber)
 }
 
 nsresult
-AsyncShutdownTest(int testNumber)
-{
-    // This test gets a service, but then gets an async request for 
-    // shutdown before it gets a chance to use it. This causes the myServ
-    // variable to become NULL and EndTest to do nothing. The async request
-    // will actually unload the DLL in this test.
-
-    nsresult err;
-    HandleMyServiceShutdown* listener = new HandleMyServiceShutdown();
-    listener->AddRef();
-
-    err = BeginTest(testNumber, listener);
-    if (err != NS_OK) return err;
-    err = AsyncShutdown(testNumber);
-    if (err != NS_OK) return err;
-    err = EndTest(testNumber, listener);
-
-    nsrefcnt cnt = listener->Release();
-    NS_ASSERTION(cnt == 0, "failed to release listener");
-    return err;
-}
-
-nsresult
 AsyncNoShutdownTest(int testNumber)
 {
     // This test gets a service, and also gets an async request for shutdown,
@@ -150,10 +102,8 @@ AsyncNoShutdownTest(int testNumber)
     // it should.
 
     nsresult err;
-    HandleMyServiceShutdown* listener = new HandleMyServiceShutdown();
-    listener->AddRef();
 
-    err = BeginTest(testNumber, listener);
+    err = BeginTest(testNumber);
     if (err != NS_OK) return err;
 
     // Create some other user of kIMyServiceCID, preventing it from
@@ -165,14 +115,11 @@ AsyncNoShutdownTest(int testNumber)
 
     err = AsyncShutdown(testNumber);
     if (err != NS_OK) return err;
-    err = EndTest(testNumber, listener);
+    err = EndTest(testNumber);
 
     // Finally, release the other client.
     err = nsServiceManager::ReleaseService(kIMyServiceCID, otherClient);
-    if (err != NS_OK) return err;
 
-    nsrefcnt cnt = listener->Release();
-    NS_ASSERTION(cnt == 0, "failed to release listener");
     return err;
 }
 
@@ -197,10 +144,6 @@ main(void)
     SetupFactories();
 
     err = SimpleTest(++testNumber);
-    if (err != NS_OK)
-        goto error;
-
-    err = AsyncShutdownTest(++testNumber);
     if (err != NS_OK)
         goto error;
 
