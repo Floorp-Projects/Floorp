@@ -30,14 +30,17 @@ Mozilla.org FTP site at
 
   ftp://ftp.mozilla.org/pub/mozilla/nightly/
 
-For the very latest builds, see the /latest directory at this
-site. Keep in mind that nightly builds, which are used
-by Mozilla.org developers for testing, may be buggy. If you
-want a more polished version of Mozilla, Mozilla.org
+For the very latest builds, see
+
+  ftp://ftp.mozilla.org/pub/mozilla/nightly/latest
+
+Keep in mind that nightly builds, which are used by
+Mozilla.org developers for testing, may be buggy. If you are
+looking for a more polished version of Mozilla, Mozilla.org
 releases Milestone builds of Mozilla every six weeks or so
 that you can download from
 
- http://www.mozilla.org/releases
+  http://www.mozilla.org/releases
  
 Be sure to read the Mozilla release notes for information
 on known problems and installation issues with Mozilla.
@@ -78,7 +81,7 @@ information to our crash-data newsgroup.
 
 *Windows
 
-	-Windows 9x/ME, Windows NT 4 or Windows 2000
+	-Windows 9x/Me or Windows NT 4/2000/XP
 	-Intel Pentium-class 233 MHz (or faster) processor
 	-64 MB RAM
 	-26 MB free hard disk space
@@ -123,7 +126,7 @@ For info on building the Mozilla source, see
 Windows Installation Instructions
 ---------------------------------
 
-Note: For Windows NT/2000 systems, you must have Administrator
+Note: For Windows NT/2000/XP systems, you need Administrator
 privileges to install Mozilla. If you see an "Error 5" message
 during installation, make sure you're running the installation
 with Administrator privileges.
@@ -162,7 +165,7 @@ with Administrator privileges.
 	about the program at www.winzip.com.
 
 	3. Extract the .zip file to a directory such as
-	C:/Program Files/ Mozilla.
+	C:\Program Files\mozilla.org\Mozilla.
 
 	4. To start Mozilla, navigate to the directory you
 	extracted Mozilla to and double-click the Mozilla.exe
