@@ -688,6 +688,11 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
     return rv;
 }
 
+/*
+    Dispatch Tables for mapping between theme:object URIs and
+    the button kind / action functions.
+ */
+
 struct ButtonEntry {
     const char* name;
     ThemeButtonKind kind;
@@ -717,7 +722,33 @@ public:
     }
 };
 
-static ButtonMap gButtonActions(kButtonEntries, sizeof(kButtonEntries) / sizeof(ButtonEntry));
+static ButtonMap gButtonKinds(kButtonEntries, sizeof(kButtonEntries) / sizeof(ButtonEntry));
+
+typedef nsresult (*ThemeAction) (Arguments& args, nsIInputStream **result, PRInt32 *length);
+
+struct ThemeEntry {
+    const char* name;
+    ThemeAction action;
+};
+
+static ThemeEntry kThemeEntries[] = {
+    "menu", &drawThemeMenu,
+    "menuitem", &drawThemeMenuItem,
+    "menuseperator", &drawThemeMenuSeperator,
+    "scrollbar", &drawThemeScrollbar
+};
+
+class ThemeMap : public map<string, ThemeAction> {
+public:
+    ThemeMap(ThemeEntry entries[], size_t count)
+    {
+        ThemeEntry* limit = entries + count;
+        for (ThemeEntry* entry = entries; entry < limit; ++entry)
+            (*this)[entry->name] = entry->action;
+    }
+};
+
+static ThemeMap gThemeActions(kThemeEntries, sizeof(kThemeEntries) / sizeof(ThemeEntry));
 
 /*
     1.  Parse the URL path, which will be of the form:
@@ -730,7 +761,7 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
     nsresult rv;
     Arguments args;
-    string action;
+    string object;
     {
         nsXPIDLCString buffer;
         rv = url->GetPath(getter_Copies(buffer));
@@ -740,29 +771,26 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         if (NS_FAILED(rv)) return rv;
         string::size_type questionMark = path.find('?');
         if (questionMark != string::npos) {
-            action.resize(questionMark);
-            copy(path.begin(), path.begin() + questionMark, action.begin());
+            object.resize(questionMark);
+            copy(path.begin(), path.begin() + questionMark, object.begin());
         } else {
-            action = path;
+            object = path;
         }
     }
     
     PRInt32 contentLength = 0;
     nsCOMPtr<nsIInputStream> input;
 
-    ButtonMap::const_iterator ba = gButtonActions.find(action);
-    if (ba != gButtonActions.end()) {
-        rv = drawThemeButton(ba->second, args, getter_AddRefs(input), &contentLength);
-    } else if (action == "menu") {
-        rv = drawThemeMenu(args,  getter_AddRefs(input), &contentLength);
-    } else if (action == "menuitem") {
-        rv = drawThemeMenuItem(args,  getter_AddRefs(input), &contentLength);
-    } else if (action == "menuseperator") {
-        rv = drawThemeMenuSeperator(args,  getter_AddRefs(input), &contentLength);    
-    } else if (action == "scrollbar") {
-        rv = drawThemeScrollbar(args, getter_AddRefs(input), &contentLength);
+    ButtonMap::const_iterator buttonKind = gButtonKinds.find(object);
+    if (buttonKind != gButtonKinds.end()) {
+        rv = drawThemeButton(buttonKind->second, args, getter_AddRefs(input), &contentLength);
     } else {
-        rv = NS_ERROR_NOT_IMPLEMENTED;
+        ThemeMap::const_iterator themeAction = gThemeActions.find(object);
+        if (themeAction != gThemeActions.end()) {
+            rv = (themeAction->second) (args, getter_AddRefs(input), &contentLength);
+        } else {
+            rv = NS_ERROR_NOT_IMPLEMENTED;
+        }
     }
     if (NS_FAILED(rv)) return rv;
     
