@@ -37,5 +37,7 @@ messenger.jar:
 *   content/messenger/preferences/fontscaling.js
 *   content/messenger/preferences/fontscaling.xul
 *   content/messenger/preferences/fontbuilder.js
+*   content/messenger/preferences/notifications.xul
+*   content/messenger/preferences/notifications.js
 *   content/messenger/preferences/preferences.xml
 *   content/messenger/preferences/preferences.css

@@ -23,10 +23,6 @@
 <!ENTITY reuseExpRadio0.accesskey      "n">
 <!ENTITY reuseExpRadio1.label          "An existing message window">
 <!ENTITY reuseExpRadio1.accesskey      "x">
-<!ENTITY showConnections.label         "Connection Settings...">
-<!ENTITY showConnections.accesskey     "C">
-<!ENTITY proxiesInfo.label             "Determine how &brandShortName; connects to the Internet.">
-<!ENTITY connectionsInfo.caption       "Connection">
 
 <!-- Update -->
 <!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">

@@ -67,8 +67,6 @@
       <preference id="mailnews.start_page.url" name="mailnews.start_page.url" type="wstring"/>
       <preference id="mail.biff.show_alert" name="mail.biff.show_alert" type="bool"/>
       <preference id="mail.biff.play_sound" name="mail.biff.play_sound" type="bool"/>
-      <preference id="mail.biff.play_sound.type" name="mail.biff.play_sound.type" type="int"/>
-      <preference id="mail.biff.play_sound.url" name="mail.biff.play_sound.url" type="string"/>  
 #ifdef XP_MACOSX
       <preference id="mail.biff.animate_dock_icon" name="mail.biff.animate_dock_icon" type="bool"/>
 #endif
@@ -123,10 +121,7 @@
           </rows>
         </grid>
       </vbox>
-      
-      <separator class="thin"/>
 #endif
-    
     </groupbox>
 
 <!--
@@ -162,7 +157,7 @@
     </groupbox>
 
 
-    <groupbox align="start">
+    <groupbox flex="1">
       <caption label="&newMessagesArrive.label;"/>
 
       <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
@@ -173,29 +168,21 @@
                 preference="mail.biff.animate_dock_icon"
                 accesskey="&bounceSystemDockIcon.accesskey;"/>
 #endif
-      <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
-           preference="mail.biff.play_sound" label="&playSound.label;"
-           oncommand="gGeneralPane.playSoundCheck();"/>
-
-      <hbox>
-        <radiogroup id="newMailNotificationType" preference="mail.biff.play_sound.type" orient="vertical">
-          <radio value="0" oncommand="gGeneralPane.playSoundCheck();" label="&systemsound.label;" 
-                 accesskey="&systemsound.accesskey;" id="system"/>
-          <radio value="1" oncommand="gGeneralPane.playSoundCheck();" label="&customsound.label;" 
-                 accesskey="&customsound.accesskey;" id="custom"/>
-        </radiogroup>
-
-        <vbox>
-          <spacer flex="1"/>
-          <hbox align="center">
-            <textbox readonly="true" flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl"
-                     preference="mail.biff.play_sound.url"/>
-            <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
-                    accesskey="&browse.accesskey;" oncommand="gGeneralPane.browseForSoundFile();"/>
-            <button id="preview" label="&preview.label;"
-                    accesskey="&preview.accesskey;" oncommand="gGeneralPane.previewSound();"/>
-          </hbox>
-        </vbox>
+      <hbox align="center" flex="1">
+        <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
+             preference="mail.biff.play_sound" label="&playSound.label;" flex="1"/>
+          <button label="&soundbutton.label;" accesskey="&soundbutton.accesskey;"
+                  oncommand="gGeneralPane.showAdvancedSound();"/>
+       </hbox>
+    </groupbox>
+    
+    <groupbox>
+      <caption label="&connectionsInfo.caption;"/>
+      <hbox align="center">
+        <description flex="1">&proxiesInfo.label;</description>
+        <button id="catProxiesButton" label="&showConnections.label;" 
+                accesskey="&showConnections.accesskey;" 
+                oncommand="gGeneralPane.showConnections();"/>
       </hbox>
     </groupbox>
 

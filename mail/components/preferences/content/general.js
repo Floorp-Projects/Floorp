@@ -47,8 +47,6 @@ var gGeneralPane = {
     this.mBrandBundle = document.getElementById("brandBundle");
     this.mMapiBundle = document.getElementById("mapiBundle"); 
 
-    this.playSoundCheck();
-
 #ifdef XP_WIN
     this.onReadDefaultMailPref();
     this.onReadDefaultNewsPref();
@@ -173,57 +171,6 @@ var gGeneralPane = {
   },
 #endif
 
-  playSoundCheck: function()
-  {
-    var playSound = document.getElementById("newMailNotification").checked;
-    var playSoundType = document.getElementById("newMailNotificationType");
-    playSoundType.disabled = !playSound;
-
-    var disableCustomUI = !(playSound && playSoundType.value == 1);
-    var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
-
-    mailnewsSoundFileUrl.disabled = disableCustomUI;
-    document.getElementById("preview").disabled = disableCustomUI || (mailnewsSoundFileUrl.value == "");
-    document.getElementById("browse").disabled = disableCustomUI;
-  },
-
-  browseForSoundFile: function ()
-  {
-    const nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-
-    // XXX todo, persist the last sound directory and pass it in
-    // XXX todo filter by .wav
-    fp.init(window, document.getElementById("browse").getAttribute("filepickertitle"), nsIFilePicker.modeOpen);
-    fp.appendFilters(nsIFilePicker.filterAll);
-
-    var ret = fp.show();
-    if (ret == nsIFilePicker.returnOK) 
-    {
-      var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
-
-      // convert the nsILocalFile into a nsIFile url 
-      mailnewsSoundFileUrl.value = fp.fileURL.spec;
-    }
-
-    document.getElementById("preview").disabled = !document.getElementById("mailnewsSoundFileUrl").value;
-  },
-
-  previewSound: function ()
-  {  
-    if (!this.mSound)
-      this.mSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
-    
-    var soundURL = document.getElementById("mailnewsSoundFileUrl").value;
-    if (soundURL.indexOf("file://") == -1) 
-      this.mSound.playSystemSound(soundURL);
-    else 
-    {
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-      this.mSound.play(ioService.newURI(soundURL, null, null));
-    }
-  },
-
   startPageCheck: function() 
   {
     document.getElementById("mailnewsStartPageUrl").disabled = !document.getElementById("mailnewsStartPageEnabled").checked;
@@ -240,5 +187,17 @@ var gGeneralPane = {
     startPageUrlField.value = url;
     
     this.mPane.userChangedValue(startPageUrlField);
+  },
+
+  showConnections: function ()
+  {
+    document.documentElement.openSubDialog("chrome://messenger/content/preferences/connection.xul",
+                                           "", null);
+  },
+
+  showAdvancedSound: function()
+  {
+     document.documentElement.openSubDialog("chrome://messenger/content/preferences/notifications.xul",
+                                           "", null);
   },
 };

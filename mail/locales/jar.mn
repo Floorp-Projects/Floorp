@@ -129,6 +129,7 @@
   locale/@AB_CD@/messenger/preferences/changeaction.dtd                 (@AB_CD@/chrome/messenger/preferences/changeaction.dtd)
   locale/@AB_CD@/messenger/preferences/fonts.dtd                        (@AB_CD@/chrome/messenger/preferences/fonts.dtd)
   locale/@AB_CD@/messenger/preferences/fontscaling.dtd                  (@AB_CD@/chrome/messenger/preferences/fontscaling.dtd)
+  locale/@AB_CD@/messenger/preferences/notifications.dtd                (@AB_CD@/chrome/messenger/preferences/notifications.dtd)
   locale/@AB_CD@/messenger/preferences/preferences.properties           (@AB_CD@/chrome/messenger/preferences/preferences.properties)
   locale/@AB_CD@/messenger/migration/migration.dtd                      (@AB_CD@/chrome/messenger/migration/migration.dtd)
   locale/@AB_CD@/messenger/migration/migration.properties               (@AB_CD@/chrome/messenger/migration/migration.properties)

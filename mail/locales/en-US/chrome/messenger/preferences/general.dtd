@@ -28,20 +28,18 @@
 <!ENTITY useDefault.label                 "Restore Default">
 <!ENTITY useDefault.accesskey             "R">
 
-<!ENTITY bounceSystemDockIcon.label "Animate the dock icon">
-<!ENTITY bounceSystemDockIcon.accesskey "A">
+<!ENTITY bounceSystemDockIcon.label       "Animate the dock icon">
+<!ENTITY bounceSystemDockIcon.accesskey   "i">
 
 <!ENTITY newMessagesArrive.label          "When new messages arrive:">
 <!ENTITY playSound.label                  "Play a sound">
 <!ENTITY playSound.accesskey              "P">
 <!ENTITY showAnimatedAlert.label          "Show an alert">
 <!ENTITY showAnimatedAlert.accesskey      "S">
-<!ENTITY preview.label                    "Preview">
-<!ENTITY preview.accesskey                "v">
-<!ENTITY systemsound.label                "System New Mail Sound">
-<!ENTITY systemsound.accesskey            "y">
-<!ENTITY customsound.label                "Custom .wav file">
-<!ENTITY customsound.accesskey            "C">
-<!ENTITY browse.label                     "Browse...">
-<!ENTITY browse.accesskey                 "B">
-<!ENTITY browse.title                     "Choose file">
+<!ENTITY soundbutton.label                "Advanced">
+<!ENTITY soundbutton.accesskey            "A">
+
+<!ENTITY showConnections.label         "Connection Settings...">
+<!ENTITY showConnections.accesskey     "C">
+<!ENTITY proxiesInfo.label             "Determine how &brandShortName; connects to the Internet.">
+<!ENTITY connectionsInfo.caption       "Connection">
