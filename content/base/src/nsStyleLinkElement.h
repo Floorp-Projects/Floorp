@@ -26,16 +26,14 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsICSSStyleSheet.h"
-#include "nsICSSLoaderObserver.h"
+#include "nsIStyleSheet.h"
 #include "nsIParser.h"
 
 class nsIDocument;
 class nsStringArray;
 
 class nsStyleLinkElement : public nsIDOMLinkStyle,
-                           public nsIStyleSheetLinkingElement,
-                           public nsICSSLoaderObserver
+                           public nsIStyleSheetLinkingElement
 {
 public:
   nsStyleLinkElement();
@@ -52,9 +50,6 @@ public:
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
   NS_IMETHOD UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument = nsnull, PRInt32 aDocIndex = -1);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
-
-  // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
   static void ParseLinkTypes(const nsAReadableString& aTypes, nsStringArray& aResult);
   static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams);
