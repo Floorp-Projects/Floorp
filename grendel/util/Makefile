@@ -15,6 +15,9 @@
 # The Initial Developer of the Original Code is Netscape Communications
 # Corporation.  Portions created by Netscape are Copyright (C) 1997
 # Netscape Communications Corporation.  All Rights Reserved.
+#
+# Contributors: Edwin Woudt <edwin@woudt.nl>
+
 
 SRCS=					\
 	Constants.java			\
