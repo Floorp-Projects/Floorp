@@ -28,8 +28,10 @@
 class nsString;
 class nsIURL;
 class nsIFactory;
+class nsIPostData;
 class nsIDocumentWidget;
 class nsIStreamListener;
+class nsIStreamObserver;
 
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
