@@ -45,6 +45,11 @@
 #include "plvector.h"
 #include "htrdf.h"
 
+#ifdef LAYPROBE_API
+#include "layprobe.h"
+#endif
+
+
 /* WEBFONTS are defined only in laytags.c and layout.c */
 #define WEBFONTS
 
@@ -430,6 +435,7 @@ lo_NewTopState(MWContext *context, char *url)
     top_state->wedged_on_mocha = FALSE;
 	top_state->in_cell_relayout = FALSE;  /* Used for resize without reload stuff */
 	top_state->metaTags = NULL;
+	top_state->LAPIprobe = NULL;
 	
 	return(top_state);
 }
@@ -3718,13 +3724,29 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
             lo_use_default_doc_background(context, state);
 	}
 
-        if (state && state->top_state)
-            ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
-                             LO_DOCUMENT_LAYER_ID, 
-                             state->top_state->resize_reload);
-        else
-            ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
-                             LO_DOCUMENT_LAYER_ID, FALSE);
+#ifdef LAYPROBE_API
+	{
+		/* Send a notification when a frame has finished loading */
+		XP_List* pList = GetCallbackFuncList((int32)FRAME_DOCUMENT_COMPLETE);
+		
+		if (pList)
+		{
+			while (pList = pList->next)
+			{
+				if (pList->object)
+					(*((ID_NOTIFY_PT)(pList->object)))((void*)context);
+			}
+		}
+	}
+#endif /* LAYPROBE_API */
+
+    if (state && state->top_state)
+        ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
+                         LO_DOCUMENT_LAYER_ID, 
+                         state->top_state->resize_reload);
+    else
+        ET_SendLoadEvent(context, mocha_event, NULL, NULL, 
+                         LO_DOCUMENT_LAYER_ID, FALSE);
 
 	/* Reset state for force loading images. */
 	LO_SetForceLoadImage(NULL, FALSE);
@@ -6062,6 +6084,29 @@ lo_InternalDiscardDocument(MWContext *context, lo_DocState *state,
 			state->top_state->doc_data = NULL;
 		}
 	}
+
+#ifdef LAYPROBE_API
+	{
+		/* Send a notification when a frame unloads */
+		XP_List * pList = GetCallbackFuncList((int32)FRAME_ON_UNLOAD);
+		
+		if (pList)
+		{
+			while (pList = pList->next)
+			{
+				if (pList->object)
+					(*((ID_NOTIFY_PT)pList->object))((void*)context);
+			}
+		}
+		
+		/* clean up allocated memory */
+		if (state->top_state->LAPIprobe)
+		{
+			LAPIDestroyProbe(state->top_state->LAPIprobe);
+			state->top_state->LAPIprobe = NULL;
+		}
+	}
+#endif /* LAYPROBE_API */
 
 	if ( state->top_state->trash != NULL)
 	{

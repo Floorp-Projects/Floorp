@@ -36,6 +36,9 @@
 #define Z_CELL_BACKGROUND_LAYER   -1000  /* Table cell backgrounds */
 #define Z_BACKGROUND_LAYER        -1001  /* Layer/document backgrounds */
 
+#ifdef LAYPROBE_API
+#include "layprobe.h"
+#endif
 
 #ifdef PROFILE
 #pragma profile on
@@ -521,6 +524,15 @@ lo_html_event_handler_func(CL_Layer *layer,
 	event_closure->event->fe_event = XP_ALLOC(event->fe_event_size);
 	XP_MEMCPY(event_closure->event->fe_event, event->fe_event, event->fe_event_size);
     }
+
+#ifdef LAYPROBE_API
+	{		
+		LAPIEventInfo ei;
+		LAPI_COPY_JS2API_EVENT(&ei,jsevent);
+		ei.Context = closure->context;
+		LAPINotificationHandler(&ei);
+	}
+#endif /* LAYPROBE_API */
 
     ET_SendEvent(closure->context, pElement, jsevent, lo_html_event_callback, event_closure);
 

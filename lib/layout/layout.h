@@ -855,6 +855,7 @@ struct lo_TopState_struct {
     void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
     void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
 #endif
+	void*	LAPIprobe;
 };
 
 /* Script type codes, stored in top_state->in_script. */
