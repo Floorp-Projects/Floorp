@@ -48,6 +48,7 @@ Exporter::export_ok_tags('deprecated');
 use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::DB::Schema;
 
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
 # circular dependencies on Bugzilla.pm
@@ -277,6 +278,31 @@ sub bz_get_field_defs {
 }
 
 #####################################################################
+# Database Setup
+#####################################################################
+
+sub bz_setup_database {
+    my ($self) = @_;
+
+    # Get a list of the existing tables (if any) in the database
+    my $table_sth = $self->table_info(undef, undef, undef, "TABLE");
+    my @current_tables =
+        @{$self->selectcol_arrayref($table_sth, { Columns => [3] })};
+
+    my @desired_tables = $self->_bz_schema->get_table_list();
+
+    foreach my $table_name (@desired_tables) {
+        next if grep /^$table_name$/, @current_tables;
+        print "Creating table $table_name ...\n";
+
+        my @table_sql = $self->_bz_schema->get_table_ddl($table_name);
+        foreach my $sql_statement (@table_sql) {
+            $self->do($sql_statement);
+        }
+    }
+}
+
+#####################################################################
 # Schema Modification Methods
 #####################################################################
 
@@ -383,6 +409,14 @@ sub bz_rename_field ($$$) {
 # Schema Information Methods
 #####################################################################
 
+sub _bz_schema {
+    my ($self) = @_;
+    return $self->{private_bz_schema} if exists $self->{private_bz_schema};
+    $self->{private_bz_schema} = 
+        Bugzilla::DB::Schema->new($self->MODULE_NAME);
+    return $self->{private_bz_schema};
+}
+
 # XXX - Needs to be made cross-db compatible.
 sub bz_get_field_def ($$) {
     my ($self, $table, $field) = @_;
@@ -417,7 +451,7 @@ sub bz_get_index_def ($$) {
     $sth->execute;
 
     while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[2] ne $field;
+        next if $$ref[4] ne $field;
         return $ref;
    }
 }
@@ -449,7 +483,6 @@ sub bz_start_transaction {
     } else {
         # Turn AutoCommit off and start a new transaction
         $self->begin_work();
-
         $self->{privateprivate_bz_in_transaction} = 1;
     }
 }
@@ -557,7 +590,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
   # Schema Information
   my @fields    = $dbh->bz_get_field_defs();
   my @fieldinfo = $dbh->bz_get_field_def($table, $column);
-  my @indexinfo = $dbh->bz_get_index_def($table, $index);
+  my @indexinfo = $dbh->bz_get_index_def($table, $field);
   my $exists    = $dbh->bz_table_exists($table);
 
 =head1 DESCRIPTION
@@ -594,6 +627,11 @@ The human-readable name of this database. For example, for MySQL, this
 would be 'MySQL.' You should not depend on this variable to know what
 type of database you are running on; this is intended merely for displaying
 to the admin to let them know what DB they're running.
+
+=item C<MODULE_NAME>
+
+The name of the Bugzilla::DB module that we are. For example, for the MySQL
+Bugzilla::DB module, this would be "Mysql." For PostgreSQL it would be "Pg."
 
 =head1 CONNECTION
 
@@ -898,11 +936,11 @@ These methods return info about the current Bugzilla database schema.
  Params:      $table = the table that you want to count indexes on
  Returns:     The number of indexes on the table.
 
-=item C<bz_get_index_def>
+=item C<bz_get_index_def($table, $field)>
 
  Description: Returns information about an index on a table in the database.
  Params:      $table = name of table containing the index (scalar)
-              $index = name of the index (scalar)
+              $field = name of a field that the index is on (scalar)
  Returns:     A reference to an array containing information about the
               index, with the following information in each array place:
               0 = name of the table that the index is on

@@ -47,8 +47,9 @@ use Carp;
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
 
-use constant REQUIRED_VERSION => '7.02.0000';
+use constant REQUIRED_VERSION => '7.03.0000';
 use constant PROGRAM_NAME => 'PostgreSQL';
+use constant MODULE_NAME  => 'Pg';
 
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port) = @_;

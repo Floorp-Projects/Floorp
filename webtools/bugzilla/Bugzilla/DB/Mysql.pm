@@ -49,6 +49,7 @@ use base qw(Bugzilla::DB);
 
 use constant REQUIRED_VERSION => '3.23.41';
 use constant PROGRAM_NAME => 'MySQL';
+use constant MODULE_NAME  => 'Mysql';
 
 sub new {
     my ($class, $user, $pass, $host, $dbname, $port, $sock) = @_;
@@ -187,6 +188,41 @@ sub bz_commit_transaction {
 
 sub bz_rollback_transaction {
     die("Attempt to rollback transaction on DB without transaction support");
+}
+
+#####################################################################
+# Database Setup
+#####################################################################
+
+sub bz_setup_database {
+    my ($self) = @_;
+
+    # Figure out if any existing tables are of type ISAM and convert them
+    # to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
+    # which Bugzilla now requires, and they don't support more than 16
+    # indexes per table, which Bugzilla needs.
+    my $sth = $self->prepare("SHOW TABLE STATUS");
+    $sth->execute;
+    my @isam_tables = ();
+    while (my ($name, $type) = $sth->fetchrow_array) {
+        push(@isam_tables, $name) if $type eq "ISAM";
+    }
+
+    if(scalar(@isam_tables)) {
+        print "One or more of the tables in your existing MySQL database are\n"
+              . "of type ISAM. ISAM tables are deprecated in MySQL 3.23 and\n"
+              . "don't support more than 16 indexes per table, which \n"
+              . "Bugzilla needs.\n  Converting your ISAM tables to type"
+              . " MyISAM:\n\n";
+        foreach my $table (@isam_tables) {
+            print "Converting table $table... ";
+            $self->do("ALTER TABLE $table TYPE = MYISAM");
+            print "done.\n";
+        }
+        print "\nISAM->MyISAM table conversion done.\n\n";
+    }
+
+    $self->SUPER::bz_setup_database();
 }
 
 1;
