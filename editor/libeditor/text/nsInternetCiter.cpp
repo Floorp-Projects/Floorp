@@ -427,22 +427,14 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       // Special case: maybe we should have wrapped last time.
       // If the first breakpoint here makes the current line too long,
       // then if we already have text on the current line,
-      // break and loop around again;
-      // otherwise, the new text is too long and has no break points,
-      // so we have to decide to break hard or else don't break this line.
-      // But if we're at all close to the wrap column,
-      // just add the whole thing, and let it slop over a bit:
+      // break and loop around again.
+      // If we're at the beginning of the current line, though,
+      // don't force a break since the long word might be a url
+      // and breaking it would make it unclickable on the other end.
       const int SLOP = 6;
-      if (outStringCol + breakPt > aWrapCol + SLOP)
+      if (outStringCol + breakPt > aWrapCol + SLOP
+          && outStringCol > citeLevel+1)
       {
-        if (outStringCol <= citeLevel+1)
-        {
-          // Break hard, with a hyphen, and loop around again.
-          aOutString += Substring(tString, posInString,
-                                  aWrapCol - outStringCol - 1);
-          aOutString += hyphen;
-          posInString += aWrapCol - outStringCol - 1;
-        }
         BreakLine(aOutString, outStringCol, citeLevel);
         continue;
       }
