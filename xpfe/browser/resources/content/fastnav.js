@@ -672,7 +672,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
         try {
           var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
           if (searchEngineURI) {
-            var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+            var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
           if (searchURL)
               defaultSearchURL = searchURL;
           }
