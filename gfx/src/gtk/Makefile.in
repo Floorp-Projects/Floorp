@@ -128,6 +128,11 @@ endif
 
 GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
+ifdef MOZ_ENABLE_FREETYPE2
+# the SHARED_LIBRARY_LIBS line must be before the rules.mk include
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)gfxft2_s.$(LIB_SUFFIX)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_GTK
@@ -193,9 +198,6 @@ LOCAL_INCLUDES	= \
 ifdef MOZ_ENABLE_FREETYPE2
 DEFINES         += -DMOZ_ENABLE_FREETYPE2
 INCLUDES        += $(FT2_CFLAGS)
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) -lgfxft2
-# due to runtime linking with PR_LoadLibrary
-# EXTRA_DSO_LDOPTS does not need $(FT2_LIBS)
 endif
 
 ifdef MOZ_ENABLE_XPRINT

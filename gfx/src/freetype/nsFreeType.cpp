@@ -52,9 +52,6 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_TRUETYPE_IDS_H
 
-#include "freetype/ftcache.h"
-#include "freetype/cache/ftcimage.h"
-
 # define FREETYPE_PRINTF(x) \
             PR_BEGIN_MACRO \
               if (gFreeTypeDebug) { \
@@ -65,18 +62,19 @@
 
 PRUint32 gFreeTypeDebug = 0;
 
-char*             nsFreeType::gFreeType2SharedLibraryName = nsnull;
-PRBool            nsFreeType::gEnableFreeType2 = PR_FALSE;
-PRBool            nsFreeType::gFreeType2Autohinted = PR_FALSE;
-PRBool            nsFreeType::gFreeType2Unhinted = PR_TRUE;
-PRUint8           nsFreeType::gAATTDarkTextMinValue = 64;
-double            nsFreeType::gAATTDarkTextGain = 0.8;
-PRInt32           nsFreeType::gAntiAliasMinimum = 8;
-PRInt32           nsFreeType::gEmbeddedBitmapMaximumHeight = 1000000;
-nsHashtable*      nsFreeType::sFontFamilies = nsnull;
-nsHashtable*      nsFreeType::sRange1CharSetNames = nsnull;
-nsHashtable*      nsFreeType::sRange2CharSetNames = nsnull;
-nsICharsetConverterManager2* nsFreeType::sCharSetManager = nsnull;
+//
+// these belong in nsFontFreeType
+//
+PRBool       nsFreeType2::gFreeType2Autohinted = PR_FALSE;
+PRBool       nsFreeType2::gFreeType2Unhinted = PR_TRUE;
+PRUint8      nsFreeType2::gAATTDarkTextMinValue = 64;
+double       nsFreeType2::gAATTDarkTextGain = 0.8;
+PRInt32      nsFreeType2::gAntiAliasMinimum = 8;
+PRInt32      nsFreeType2::gEmbeddedBitmapMaximumHeight = 1000000;
+nsHashtable* nsFreeType2::sFontFamilies = nsnull;
+nsHashtable* nsFreeType2::sRange1CharSetNames = nsnull;
+nsHashtable* nsFreeType2::sRange2CharSetNames = nsnull;
+nsICharsetConverterManager2* nsFreeType2::sCharSetManager = nsnull;
 
 extern nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[];
 extern nsulCodePageRangeCharSetName ulCodePageRange2CharSetNames[];
@@ -86,65 +84,35 @@ typedef int Error;
 
 /*FT_CALLBACK_DEF*/ FT_Error nsFreeTypeFaceRequester(FTC_FaceID, FT_Library, 
                                                  FT_Pointer, FT_Face*);
-static FT_Error nsFreeType__DummyFunc();
+static FT_Error nsFreeType2__DummyFunc();
 
 static nsHashtable* gFreeTypeFaces = nsnull;
 
 static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //
-// Since the Freetype2 library may not be available on the user's
-// system we cannot link directly to it otherwise we would fail
-// to run on those systems.  Instead we use function pointers to 
-// access its functions.
+// Define the FreeType2 functions we resolve at run time.
+// see the comment near nsFreeType2::DoneFace() for more info
 //
-// If we can load the Freetype2 library with PR_LoadLIbrary 
-// we to load these with pointers to its functions. If not, then
-// they point to a dummy function which always returns an error.
-//
-// These are the Freetype2 the functions pointers
-
-FT_Done_Face_t            nsFreeType::nsFT_Done_Face;
-FT_Done_FreeType_t        nsFreeType::nsFT_Done_FreeType;
-FT_Done_Glyph_t           nsFreeType::nsFT_Done_Glyph;
-FT_Get_Char_Index_t       nsFreeType::nsFT_Get_Char_Index;
-FT_Get_Glyph_t            nsFreeType::nsFT_Get_Glyph;
-FT_Get_Sfnt_Table_t       nsFreeType::nsFT_Get_Sfnt_Table;
-FT_Glyph_Get_CBox_t       nsFreeType::nsFT_Glyph_Get_CBox;
-FT_Init_FreeType_t        nsFreeType::nsFT_Init_FreeType;
-FT_Load_Glyph_t           nsFreeType::nsFT_Load_Glyph;
-FT_New_Face_t             nsFreeType::nsFT_New_Face;
-FT_Set_Charmap_t          nsFreeType::nsFT_Set_Charmap;
-FTC_Image_Cache_Lookup_t  nsFreeType::nsFTC_Image_Cache_Lookup;
-FTC_Manager_Lookup_Size_t nsFreeType::nsFTC_Manager_Lookup_Size;
-FTC_Manager_Done_t        nsFreeType::nsFTC_Manager_Done;
-FTC_Manager_New_t         nsFreeType::nsFTC_Manager_New;
-FTC_Image_Cache_New_t     nsFreeType::nsFTC_Image_Cache_New;
-
-
-typedef struct {
-  const char *FuncName;
-  PRFuncPtr  *FuncPtr;
-} FtFuncList;
-
-static FtFuncList FtFuncs [] = {
-  {"FT_Done_Face",            (PRFuncPtr*)&nsFreeType::nsFT_Done_Face},
-  {"FT_Done_FreeType",        (PRFuncPtr*)&nsFreeType::nsFT_Done_FreeType},
-  {"FT_Done_Glyph",           (PRFuncPtr*)&nsFreeType::nsFT_Done_Glyph},
-  {"FT_Get_Char_Index",       (PRFuncPtr*)&nsFreeType::nsFT_Get_Char_Index},
-  {"FT_Get_Glyph",            (PRFuncPtr*)&nsFreeType::nsFT_Get_Glyph},
-  {"FT_Get_Sfnt_Table",       (PRFuncPtr*)&nsFreeType::nsFT_Get_Sfnt_Table},
-  {"FT_Glyph_Get_CBox",       (PRFuncPtr*)&nsFreeType::nsFT_Glyph_Get_CBox},
-  {"FT_Init_FreeType",        (PRFuncPtr*)&nsFreeType::nsFT_Init_FreeType},
-  {"FT_Load_Glyph",           (PRFuncPtr*)&nsFreeType::nsFT_Load_Glyph},
-  {"FT_New_Face",             (PRFuncPtr*)&nsFreeType::nsFT_New_Face},
-  {"FT_Set_Charmap",          (PRFuncPtr*)&nsFreeType::nsFT_Set_Charmap},
-  {"FTC_Image_Cache_Lookup",  (PRFuncPtr*)&nsFreeType::nsFTC_Image_Cache_Lookup},
-  {"FTC_Manager_Lookup_Size", (PRFuncPtr*)&nsFreeType::nsFTC_Manager_Lookup_Size},
-  {"FTC_Manager_Done",        (PRFuncPtr*)&nsFreeType::nsFTC_Manager_Done},
-  {"FTC_Manager_New",         (PRFuncPtr*)&nsFreeType::nsFTC_Manager_New},
-  {"FTC_Image_Cache_New",     (PRFuncPtr*)&nsFreeType::nsFTC_Image_Cache_New},
-  {nsnull,                    (PRFuncPtr*)nsnull},
+#define NS_FT2_OFFSET(f) (int)&((nsFreeType2*)0)->f
+FtFuncList nsFreeType2::FtFuncs [] = {
+  {"FT_Done_Face",            NS_FT2_OFFSET(nsFT_Done_Face)},
+  {"FT_Done_FreeType",        NS_FT2_OFFSET(nsFT_Done_FreeType)},
+  {"FT_Done_Glyph",           NS_FT2_OFFSET(nsFT_Done_Glyph)},
+  {"FT_Get_Char_Index",       NS_FT2_OFFSET(nsFT_Get_Char_Index)},
+  {"FT_Get_Glyph",            NS_FT2_OFFSET(nsFT_Get_Glyph)},
+  {"FT_Get_Sfnt_Table",       NS_FT2_OFFSET(nsFT_Get_Sfnt_Table)},
+  {"FT_Glyph_Get_CBox",       NS_FT2_OFFSET(nsFT_Glyph_Get_CBox)},
+  {"FT_Init_FreeType",        NS_FT2_OFFSET(nsFT_Init_FreeType)},
+  {"FT_Load_Glyph",           NS_FT2_OFFSET(nsFT_Load_Glyph)},
+  {"FT_New_Face",             NS_FT2_OFFSET(nsFT_New_Face)},
+  {"FT_Set_Charmap",          NS_FT2_OFFSET(nsFT_Set_Charmap)},
+  {"FTC_Image_Cache_Lookup",  NS_FT2_OFFSET(nsFTC_Image_Cache_Lookup)},
+  {"FTC_Manager_Lookup_Size", NS_FT2_OFFSET(nsFTC_Manager_Lookup_Size)},
+  {"FTC_Manager_Done",        NS_FT2_OFFSET(nsFTC_Manager_Done)},
+  {"FTC_Manager_New",         NS_FT2_OFFSET(nsFTC_Manager_New)},
+  {"FTC_Image_Cache_New",     NS_FT2_OFFSET(nsFTC_Image_Cache_New)},
+  {nsnull,                    0},
 };
 
 nsTTFontEncoderInfo FEI_Adobe_Symbol_Encoding = {
@@ -187,88 +155,245 @@ nsTTFontEncoderInfo FEI_windows_1252 = {
 
 ///////////////////////////////////////////////////////////////////////
 //
-// class nsFreeType data/functions
+// class nsFreeType2 data/functions
 //
 ///////////////////////////////////////////////////////////////////////
 
-// Public Functions
-void
-nsFreeTypeFreeGlobals()
+NS_IMPL_ISUPPORTS1(nsFreeType2, nsIFreeType2);
+
+//
+// Since the Freetype2 library may not be available on the user's
+// system we cannot link directly to it otherwise the whole app would
+// fail to run on those systems.  Instead we access the FreeType2
+// functions via function pointers.
+//
+// If we can load the Freetype2 library with PR_LoadLIbrary we to load 
+// pointers to the Ft2 functions. If not, then the function pointers
+// point to a dummy function which always returns an error.
+//
+ 
+NS_IMETHODIMP
+nsFreeType2::DoneFace(FT_Face face)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Done_Face(face);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::DoneFreeType(FT_Library library)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Done_FreeType(library);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::DoneGlyph(FT_Glyph glyph)
+{ 
+  // call the FreeType2 function via the function pointer
+  nsFT_Done_Glyph(glyph);
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GetCharIndex(FT_Face face, FT_ULong charcode, FT_UInt *index)
+{ 
+  // call the FreeType2 function via the function pointer
+  *index = nsFT_Get_Char_Index(face, charcode);
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GetGlyph(FT_GlyphSlot slot, FT_Glyph *glyph)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Get_Glyph(slot, glyph);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GetSfntTable(FT_Face face, FT_Sfnt_Tag tag, void** table)
+{ 
+  // call the FreeType2 function via the function pointer
+  *table = nsFT_Get_Sfnt_Table(face, tag);
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GlyphGetCBox(FT_Glyph glyph, FT_UInt mode, FT_BBox *bbox)
+{ 
+  // call the FreeType2 function via the function pointer
+  nsFT_Glyph_Get_CBox(glyph, mode, bbox);
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::InitFreeType(FT_Library *library)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Init_FreeType(library);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::LoadGlyph(FT_Face face, FT_UInt glyph, FT_Int flags)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Load_Glyph(face, glyph, flags);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::NewFace(FT_Library library, const char *path,
+                         FT_Long face_index, FT_Face *face)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_New_Face(library, path, face_index, face);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::OutlineDecompose(FT_Outline *outline,
+                              const FT_Outline_Funcs *funcs, void *user)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Outline_Decompose(outline, funcs, user);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::SetCharmap(FT_Face face, FT_CharMap  charmap)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFT_Set_Charmap(face, charmap);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::ImageCacheLookup(FTC_Image_Cache cache, FTC_Image_Desc *desc,
+                              FT_UInt glyphID, FT_Glyph *glyph)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFTC_Image_Cache_Lookup(cache, desc, glyphID, glyph);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::ManagerLookupSize(FTC_Manager manager, FTC_Font font,
+                               FT_Face *face, FT_Size *size)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFTC_Manager_Lookup_Size(manager, font, face, size);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::ManagerDone(FTC_Manager manager)
+{ 
+  // call the FreeType2 function via the function pointer
+  nsFTC_Manager_Done(manager);
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::ManagerNew(FT_Library library, FT_UInt max_faces,
+                        FT_UInt max_sizes, FT_ULong max_bytes,
+                        FTC_Face_Requester requester, FT_Pointer req_data,
+                        FTC_Manager *manager)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFTC_Manager_New(library, max_faces, max_sizes, max_bytes,
+                                     requester, req_data, manager);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::ImageCacheNew(FTC_Manager manager, FTC_Image_Cache *cache)
+{ 
+  // call the FreeType2 function via the function pointer
+  FT_Error error = nsFTC_Image_Cache_New(manager, cache);
+  return error ? NS_ERROR_FAILURE : NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GetImageCache(FTC_Image_Cache *aCache)
 {
-  nsFreeType::FreeGlobals();
+  *aCache = mImageCache;
+  return NS_OK;
 }
 
-nsresult
-nsFreeTypeInitGlobals()
-{
-  FREETYPE_PRINTF(("initialize freetype"));
-
-  nsresult rv = nsFreeType::InitGlobals();
-
-  return rv;
-}
-
-
-// FREETYPE Globals
-PRLibrary      *nsFreeType::sSharedLib;
-PRBool          nsFreeType::sInited;
-PRBool          nsFreeType::sAvailable;
-FT_Library      nsFreeType::sFreeTypeLibrary;
-FT_Error        nsFreeType::sInitError;
-FTC_Manager     nsFreeType::sFTCacheManager;
-FTC_Image_Cache nsFreeType::sImageCache;
+NS_IMETHODIMP
+nsFreeType2::GetFTCacheManager(FTC_Manager *aManager)
+{ 
+  *aManager = mFTCacheManager;
+  return NS_OK;
+} 
+ 
+NS_IMETHODIMP
+nsFreeType2::GetLibrary(FT_Library *aLibrary)
+{ 
+  *aLibrary = mFreeTypeLibrary;
+  return NS_OK;
+} 
 
 void
-nsFreeType::ClearFunctions()
+nsFreeType2::ClearFunctions()
 {
   FtFuncList *p;
+  void *ptr = this;
   for (p=FtFuncs; p->FuncName; p++) {
-    *p->FuncPtr = (PRFuncPtr)&nsFreeType__DummyFunc;
+    *((PRFuncPtr*)((char*)ptr+p->FuncOffset)) = 
+                        (PRFuncPtr)&nsFreeType2__DummyFunc;
   }
 }
 
 void
-nsFreeType::ClearGlobals()
+nsFreeType2::ClearGlobals()
 {
-  sSharedLib = nsnull;
-  sInited = PR_FALSE;
-  sAvailable = PR_FALSE;
-  sFreeTypeLibrary = nsnull;
-  sInitError = 0;
-  sFTCacheManager  = nsnull;
-  sImageCache      = nsnull;
+  mSharedLib = nsnull;
+  mFreeTypeLibrary = nsnull;
+  mFTCacheManager  = nsnull;
+  mImageCache      = nsnull;
 }
 
 // I would like to make this a static member function but the compilier 
 // warning about converting a data pointer to a function pointer cannot
 // distinguish static member functions from static data members
 static FT_Error
-nsFreeType__DummyFunc()
+nsFreeType2__DummyFunc()
 {
-  NS_ERROR("nsFreeType__DummyFunc should never be called");
+  NS_ERROR("nsFreeType2__DummyFunc should never be called");
   return 1;
 }
 
-void
-nsFreeType::FreeGlobals()
+nsFreeType2::~nsFreeType2()
 {
-  if (gFreeType2SharedLibraryName) {
-    free(gFreeType2SharedLibraryName);
-    gFreeType2SharedLibraryName = nsnull;
+  FreeGlobals();
+}
+
+void
+nsFreeType2::FreeGlobals()
+{
+  if (mFreeType2SharedLibraryName) {
+    free(mFreeType2SharedLibraryName);
+    mFreeType2SharedLibraryName = nsnull;
   }
   if (gFreeTypeFaces) {
     gFreeTypeFaces->Reset(nsFreeTypeFace::FreeFace, nsnull);
     delete gFreeTypeFaces;
     gFreeTypeFaces = nsnull;
   }
-  // sImageCache released by cache manager
-  if (sFTCacheManager) {
-    (*nsFreeType::nsFTC_Manager_Done)(sFTCacheManager);
-    sFTCacheManager = nsnull;
+  // mImageCache released by cache manager
+  if (mFTCacheManager) {
+    // use "this->" to make sure it is obivious we are calling the member func
+    this->ManagerDone(mFTCacheManager);
+    mFTCacheManager = nsnull;
   }
-  if (sFreeTypeLibrary) {
-    (*nsFreeType::nsFT_Done_FreeType)(sFreeTypeLibrary);
-    sFreeTypeLibrary = nsnull;
+  if (mFreeTypeLibrary) {
+    // use "this->" to make sure it is obivious we are calling the member func
+    this->DoneFreeType(mFreeTypeLibrary);
+    mFreeTypeLibrary = nsnull;
   }
   
   if (sRange1CharSetNames)
@@ -294,9 +419,8 @@ nsFreeType::FreeGlobals()
 }
 
 nsresult
-nsFreeType::InitGlobals(void)
+nsFreeType2::Init()
 {
-  NS_ASSERTION(sInited==PR_FALSE, "InitGlobals called more than once");
   // set all the globals to default values
   ClearGlobals();
 
@@ -313,17 +437,17 @@ nsFreeType::InitGlobals(void)
   PRBool enable_freetype2 = PR_TRUE;
   rv = mPref->GetBoolPref("font.FreeType2.enable", &enable_freetype2);
   if (NS_SUCCEEDED(rv)) {
-    gEnableFreeType2 = enable_freetype2;
-    FREETYPE_PRINTF(("gEnableFreeType2 = %d", gEnableFreeType2));
+    mEnableFreeType2 = enable_freetype2;
+    FREETYPE_PRINTF(("mEnableFreeType2 = %d", mEnableFreeType2));
   }
 
   rv = mPref->GetCharPref("font.freetype2.shared-library",
-                          &gFreeType2SharedLibraryName);
+                          &mFreeType2SharedLibraryName);
   if (NS_FAILED(rv)) {
     enable_freetype2 = PR_FALSE;
     FREETYPE_PRINTF((
-                  "gFreeType2SharedLibraryName missing, FreeType2 disabled"));
-    gFreeType2SharedLibraryName = nsnull;
+                  "mFreeType2SharedLibraryName missing, FreeType2 disabled"));
+    mFreeType2SharedLibraryName = nsnull;
   }
 
   PRBool freetype2_autohinted = PR_FALSE;
@@ -371,10 +495,8 @@ nsFreeType::InitGlobals(void)
   }
   
   if (NS_FAILED(rv)) {
-    gEnableFreeType2 = PR_FALSE;
-    gFreeType2SharedLibraryName = nsnull;
-    gFreeType2SharedLibraryName = nsnull;
-    gEnableFreeType2 = PR_FALSE;
+    mEnableFreeType2 = PR_FALSE;
+    mFreeType2SharedLibraryName = nsnull;
     gFreeType2Autohinted = PR_FALSE;
     gFreeType2Unhinted = PR_TRUE;
     gAATTDarkTextMinValue = 64;
@@ -385,10 +507,9 @@ nsFreeType::InitGlobals(void)
   
   mPref = nsnull;
   
-  if (!nsFreeType::InitLibrary()) {
-    // since the library may not be available on any given system
-    // failing to load is not considered a fatal error
-    // return NS_ERROR_OUT_OF_MEMORY;
+  if (!InitLibrary()) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   gFreeTypeFaces = new nsHashtable();
   if (!gFreeTypeFaces) {
@@ -441,77 +562,75 @@ nsFreeType::InitGlobals(void)
 }
 
 PRBool
-nsFreeType::InitLibrary()
+nsFreeType2::InitLibrary()
 {
-  if (!sInited) {
-    sInited = PR_TRUE;
-
+  FT_Error error;
 #ifdef MOZ_MATHML
-    // do not yet support MathML
-    // goto cleanup_and_return;
+  // do not yet support MathML
+  // goto cleanup_and_return;
 #endif
 
-    if (!gEnableFreeType2)
-      return PR_FALSE;
+  if (!mEnableFreeType2)
+    return PR_FALSE;
 
-    // since the library may not be available on any given system
-    // failing to load is not considered a fatal error
-    if (!LoadSharedLib())
-      return PR_FALSE;
+  // since the library may not be available on any given system
+  // failing to load is not considered a fatal error
+  if (!LoadSharedLib())
+    return PR_FALSE;
 
-    sInitError = (*nsFreeType::nsFT_Init_FreeType)(&sFreeTypeLibrary);
-    if (sInitError) {
-      FREETYPE_PRINTF(("\n\n*********\nFreeType initialization error = %d",
-                           sInitError));
-      sFreeTypeLibrary = nsnull;
-      goto cleanup_and_return;
-    }
-    FT_Error error = (*nsFreeType::nsFTC_Manager_New)(sFreeTypeLibrary,
-                       0, 0, 0, nsFreeTypeFaceRequester, 0, &sFTCacheManager);
-    NS_ASSERTION(error==0, "failed to create FreeType Cache manager");
-    if (error)
-      goto cleanup_and_return;
-    error = (*nsFreeType::nsFTC_Image_Cache_New)(sFTCacheManager,
-                                                     &sImageCache);
-    NS_ASSERTION(error==0, "failed to create FreeType image cache");
-    if (error)
-      goto cleanup_and_return;
-    sAvailable = PR_TRUE;
+  // use "this->" to make sure it is obivious we are calling the member func
+  nsresult rv = this->InitFreeType(&mFreeTypeLibrary);
+  if (NS_FAILED(rv)) {
+    FREETYPE_PRINTF(("\n\n*********\nFreeType initialization error = %d",
+                         error));
+    mFreeTypeLibrary = nsnull;
+    goto cleanup_and_return;
   }
-  return sAvailable;
+  // use "this->" to make sure it is obivious we are calling the member func
+  rv = this->ManagerNew(mFreeTypeLibrary, 0, 0, 0, nsFreeTypeFaceRequester,
+                         this, &mFTCacheManager);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create FreeType Cache manager");
+  if (NS_FAILED(rv))
+    goto cleanup_and_return;
+  // use "this->" to make sure it is obivious we are calling the member func
+  rv = this->ImageCacheNew(mFTCacheManager, &mImageCache);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create FreeType image cache");
+  if (NS_FAILED(rv))
+    goto cleanup_and_return;
+  return PR_TRUE;
 
 cleanup_and_return:
   // clean everything up but note that init was called
   FreeGlobals();
-  sInited = PR_TRUE;
-  return(sAvailable);
+  return(PR_FALSE);
 }
 
 PRBool
-nsFreeType::LoadSharedLib()
+nsFreeType2::LoadSharedLib()
 {
-  NS_ASSERTION(sSharedLib==nsnull, "library already loaded");
+  NS_ASSERTION(mSharedLib==nsnull, "library already loaded");
 
-  if (!gFreeType2SharedLibraryName)
+  if (!mFreeType2SharedLibraryName)
     return PR_FALSE;
-  sSharedLib = PR_LoadLibrary(gFreeType2SharedLibraryName);
+  mSharedLib = PR_LoadLibrary(mFreeType2SharedLibraryName);
   // since the library may not be available on any given system
   // failing to load is not considered a fatal error
-  if (!sSharedLib) {
+  if (!mSharedLib) {
     NS_WARNING("freetype library not found");
     return PR_FALSE;
   }
 
   FtFuncList *p;
   PRFuncPtr func;
+  void *ptr = this;
   for (p=FtFuncs; p->FuncName; p++) {
-    func = PR_FindFunctionSymbol(sSharedLib, p->FuncName);
+    func = PR_FindFunctionSymbol(mSharedLib, p->FuncName);
     if (!func) {
-      NS_WARNING("nsFreeType::LoadSharedLib Error");
+      NS_WARNING("nsFreeType2::LoadSharedLib Error");
       ClearFunctions();
       return PR_FALSE;
     }
-    *p->FuncPtr = func;
+    *((PRFuncPtr*)((char*)ptr+p->FuncOffset)) = func;
   }
 
   return PR_TRUE;
@@ -519,15 +638,15 @@ nsFreeType::LoadSharedLib()
 }
 
 void
-nsFreeType::UnloadSharedLib()
+nsFreeType2::UnloadSharedLib()
 {
-  if (sSharedLib)
-    PR_UnloadLibrary(sSharedLib);
-  sSharedLib = nsnull;
+  if (mSharedLib)
+    PR_UnloadLibrary(mSharedLib);
+  mSharedLib = nsnull;
 }
 
 const char *
-nsFreeType::GetRange1CharSetName(unsigned long aBit)
+nsFreeType2::GetRange1CharSetName(unsigned long aBit)
 {
   char buf[32];
   sprintf(buf, "0x%08lx", aBit);
@@ -537,7 +656,7 @@ nsFreeType::GetRange1CharSetName(unsigned long aBit)
 }
 
 const char *
-nsFreeType::GetRange2CharSetName(unsigned long aBit)
+nsFreeType2::GetRange2CharSetName(unsigned long aBit)
 {
   char buf[32];
   sprintf(buf, "0x%08lx", aBit);
@@ -547,7 +666,7 @@ nsFreeType::GetRange2CharSetName(unsigned long aBit)
 }
 
 nsTTFontFamilyEncoderInfo*
-nsFreeType::GetCustomEncoderInfo(const char * aFamilyName)
+nsFreeType2::GetCustomEncoderInfo(const char * aFamilyName)
 {
   if (!sFontFamilies)
     return nsnull;
@@ -582,7 +701,7 @@ nsFreeType::GetCustomEncoderInfo(const char * aFamilyName)
 }
 
 nsICharsetConverterManager2*
-nsFreeType::GetCharSetManager()
+nsFreeType2::GetCharSetManager()
 {
   if (!sCharSetManager) {
     //
@@ -597,7 +716,7 @@ nsFreeType::GetCharSetManager()
 }
 
 PRUint16*
-nsFreeType::GetCCMap(nsFontCatalogEntry *aFce)
+nsFreeType2::GetCCMap(nsFontCatalogEntry *aFce)
 {
   nsCompressedCharMap ccmapObj;
   ccmapObj.SetChars(aFce->mCCMap);
@@ -772,7 +891,7 @@ NS_IMETHODIMP nsFreeTypeFace::GetFileModTime(PRInt64 *aTime)
 NS_IMETHODIMP nsFreeTypeFace::GetCCMap(
                               PRUint32 *size, PRUint16 **ccMaps)
 {
-  *ccMaps = nsFreeType::GetCCMap(mFce);
+  *ccMaps = nsFreeType2::GetCCMap(mFce);
   *size = CCMAP_SIZE(*ccMaps);
   return NS_OK;
 }
@@ -800,7 +919,7 @@ PRUint16 *
 nsFreeTypeFace::GetCCMap()
 {
   if (!mCCMap) {
-    mCCMap = nsFreeType::GetCCMap(mFce);
+    mCCMap = nsFreeType2::GetCCMap(mFce);
   }
   return mCCMap;
 }
@@ -817,15 +936,12 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
                   FT_Pointer request_data, FT_Face* aFace)
 {
   nsFreeTypeFace *faceID = (nsFreeTypeFace *)face_id;
-  FT_Error fterror;
+  FT_Error fterror = 0;
+  nsFreeType2 *ft2 = (nsFreeType2 *)request_data;
+  nsresult rv;
 
-  FT_UNUSED(request_data);
-  // since all interesting data is in the nsFreeTypeFace object
-  // we do not currently need to use request_data
-  fterror = (*nsFreeType::nsFT_New_Face)(nsFreeType::GetLibrary(),
-                     faceID->GetFilename(),
-                     faceID->GetFaceIndex(), aFace);
-  if (fterror)
+  rv = ft2->NewFace(lib, faceID->GetFilename(), faceID->GetFaceIndex(), aFace);
+  if (NS_FAILED(rv))
     return fterror;
 
   FT_Face face = *aFace;
@@ -833,7 +949,7 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
   FT_UShort encoding_id = TT_MS_ID_UNICODE_CS;
   nsFontCatalogEntry* fce = faceID->GetFce();
   nsTTFontFamilyEncoderInfo *ffei =
-                     nsFreeType::GetCustomEncoderInfo(fce->mFamilyName);
+                     nsFreeType2::GetCustomEncoderInfo(fce->mFamilyName);
   if (ffei) {
     platform_id = ffei->mEncodingInfo->mCmapPlatformID;
     encoding_id = ffei->mEncodingInfo->mCmapEncoding;
@@ -841,11 +957,12 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
   for (int i=0; i < face->num_charmaps; i++) {
     if (   (face->charmaps[i]->platform_id == platform_id)
         && (face->charmaps[i]->encoding_id == encoding_id)) {
-      fterror = (*nsFreeType::nsFT_Set_Charmap)(face, face->charmaps[i]);
-      if (fterror) {
+      rv = ft2->SetCharmap(face, face->charmaps[i]);
+      if (NS_FAILED(rv)) {
         FREETYPE_PRINTF(("failed to set cmap"));
-        (*nsFreeType::nsFT_Done_Face)(face);
+        ft2->DoneFace(face);
         *aFace = nsnull;
+        fterror = 1;
       }
     }
   }

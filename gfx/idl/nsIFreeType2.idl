@@ -1,0 +1,112 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Golden Hills Computer Services code.
+ *
+ * The Initial Developer of the Original Code is Brian Stell.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *      Brian Stell <bstell@ix.netcom.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+%{C++
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_CACHE_H
+#include FT_CACHE_IMAGE_H
+#include FT_OUTLINE_H
+#include FT_TRUETYPE_TABLES_H
+#define NS_FREETYPE2_CONTRACTID "@mozilla.org/freetype2;1"
+#define NS_FREETYPE2_CID NS_IFREETYPE2_IID
+%}
+
+
+[ptr] native constCharPtr(const char);
+native FT_Int(FT_Int);
+native FT_Long(FT_Long);
+native FT_UInt(FT_UInt);
+native FT_ULong(FT_ULong);
+
+native FT_BBox(FT_BBox);
+native FT_CharMap(FT_CharMap);
+native FT_Error(FT_Error);
+native FT_Face(FT_Face);
+native FT_Glyph(FT_Glyph);
+native FT_GlyphSlot(FT_GlyphSlot);
+native FT_Library(FT_Library);
+[ptr] native FT_Outline_p(FT_Outline);
+[ptr] native const_FT_Outline_Funcs_p(const FT_Outline_Funcs);
+native FT_Pointer(FT_Pointer);
+native FT_Sfnt_Tag(FT_Sfnt_Tag);
+native FT_Size(FT_Size);
+
+[ptr] native FTC_Image_Desc_p(FTC_Image_Desc);
+native FTC_Face_Requester(FTC_Face_Requester);
+native FTC_Font(FTC_Font);
+native FTC_Image_Cache(FTC_Image_Cache);
+native FTC_Manager(FTC_Manager);
+
+/*
+ * A XPCOM interface to the run-time loaded functions
+ */
+[uuid(606eac78-16d4-486a-9f0e-f180aebd449b)]
+interface nsIFreeType2 : nsISupports
+{
+
+    readonly attribute FT_Library library;
+    readonly attribute FTC_Manager FTCacheManager;
+    readonly attribute FTC_Image_Cache ImageCache;
+
+    void    doneFace(in FT_Face face);
+    void    doneFreeType(in FT_Library lib);
+    void    doneGlyph(in FT_Glyph glyph);
+    FT_UInt getCharIndex(in FT_Face face, in FT_ULong charcode);
+    void    getGlyph(in FT_GlyphSlot slot, out FT_Glyph glyph);
+    voidPtr getSfntTable(in FT_Face face, in FT_Sfnt_Tag tag);
+    void    glyphGetCBox(in FT_Glyph glyph, in FT_UInt mode, out FT_BBox box);
+    void    initFreeType(out FT_Library lib);
+    void    loadGlyph(in FT_Face face, in FT_UInt gindex, in FT_Int flags);
+    void    newFace(in FT_Library lib, in constCharPtr filename,
+                    in FT_Long face_num, out FT_Face face);
+    void    outlineDecompose(in FT_Outline_p outline,
+                             in const_FT_Outline_Funcs_p funcs, in voidPtr p);
+    void    setCharmap(in FT_Face face, in FT_CharMap charmap);
+    void    imageCacheLookup(in FTC_Image_Cache cache, in FTC_Image_Desc_p desc,
+                             in FT_UInt gindex, out FT_Glyph glyph);
+    void    managerLookupSize(in FTC_Manager manager, in FTC_Font font,
+                              out FT_Face face, out FT_Size size);
+    void    managerDone(in FTC_Manager manager);
+    void    managerNew(in FT_Library lib, in FT_UInt max_faces,
+                       in FT_UInt max_sizes, in FT_ULong max_bytes,
+                       in FTC_Face_Requester requester, in FT_Pointer req_data,
+                       out FTC_Manager manager);
+    void    imageCacheNew(in FTC_Manager manager, out FTC_Image_Cache cache);
+};
+

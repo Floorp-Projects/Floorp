@@ -26,13 +26,11 @@
 
 #if (defined(MOZ_ENABLE_FREETYPE2))
 
-void     nsFreeTypeFreeGlobals(void);
-nsresult nsFreeTypeInitGlobals(void);
-
 #include "nspr.h"
 #include "nsHashtable.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsIFontCatalogService.h"
+#include "nsIFreeType2.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_CACHE_H
@@ -95,10 +93,12 @@ typedef FT_Error (*FT_Done_FreeType_t)(FT_Library);
 typedef FT_Error (*FT_Done_Glyph_t)(FT_Glyph);
 typedef FT_Error (*FT_Get_Char_Index_t)(FT_Face, FT_ULong);
 typedef FT_Error (*FT_Get_Glyph_t)(FT_GlyphSlot, FT_Glyph*);
-typedef FT_Error (*FT_Get_Sfnt_Table_t)(FT_Face, FT_Sfnt_Tag);
+typedef void*    (*FT_Get_Sfnt_Table_t)(FT_Face, FT_Sfnt_Tag);
 typedef FT_Error (*FT_Glyph_Get_CBox_t)(FT_Glyph, FT_UInt, FT_BBox*);
 typedef FT_Error (*FT_Init_FreeType_t)(FT_Library*);
 typedef FT_Error (*FT_Load_Glyph_t)(FT_Face, FT_UInt, FT_Int);
+typedef FT_Error (*FT_Outline_Decompose_t)
+                      (FT_Outline*, const FT_Outline_Funcs*, void*);
 typedef FT_Error (*FT_New_Face_t)(FT_Library, const char*, FT_Long, FT_Face*);
 typedef FT_Error (*FT_Set_Charmap_t)(FT_Face face, FT_CharMap  charmap);
 typedef FT_Error (*FTC_Image_Cache_Lookup_t)
@@ -114,41 +114,56 @@ class nsFreeTypeFace;
 
 nsFreeTypeFace * nsFreeTypeGetFaceID(nsFontCatalogEntry *aFce);
 
-// class nsFreeType class definition
-class nsFreeType {
-public:
-  inline PRBool FreeTypeAvailable() { return sAvailable; };
-  inline static FTC_Manager GetFTCacheManager() { return sFTCacheManager; };
-  inline static FT_Library GetLibrary() { return sFreeTypeLibrary; };
-  inline static FTC_Image_Cache GetImageCache() { return sImageCache; };
-  static void FreeGlobals();
-  static nsresult InitGlobals();
+typedef struct {
+  const char *FuncName;
+  int  FuncOffset;
+} FtFuncList;
 
+// class nsFreeType class definition
+class nsFreeType2 : nsIFreeType2 {
+  NS_DECL_ISUPPORTS
+
+public:
+  void FreeGlobals();
+  nsresult Init();
+  virtual ~nsFreeType2();
+
+  NS_DECL_NSIFREETYPE2
+
+  // these belong in nsFT2FontCatalog
   static PRUint16*   GetCCMap(nsFontCatalogEntry *aFce);
   static const char* GetRange1CharSetName(unsigned long aBit);
   static const char* GetRange2CharSetName(unsigned long aBit);
   static nsTTFontFamilyEncoderInfo* GetCustomEncoderInfo(const char *);
 
-  // run time loaded (function pointers)
-  static FT_Done_Face_t            nsFT_Done_Face;
-  static FT_Done_FreeType_t        nsFT_Done_FreeType;
-  static FT_Done_Glyph_t           nsFT_Done_Glyph;
-  static FT_Get_Char_Index_t       nsFT_Get_Char_Index;
-  static FT_Get_Glyph_t            nsFT_Get_Glyph;
-  static FT_Get_Sfnt_Table_t       nsFT_Get_Sfnt_Table;
-  static FT_Glyph_Get_CBox_t       nsFT_Glyph_Get_CBox;
-  static FT_Init_FreeType_t        nsFT_Init_FreeType;
-  static FT_Load_Glyph_t           nsFT_Load_Glyph;
-  static FT_New_Face_t             nsFT_New_Face;
-  static FT_Set_Charmap_t          nsFT_Set_Charmap;
-  static FTC_Image_Cache_Lookup_t  nsFTC_Image_Cache_Lookup;
-  static FTC_Manager_Lookup_Size_t nsFTC_Manager_Lookup_Size;
-  static FTC_Manager_Done_t        nsFTC_Manager_Done;
-  static FTC_Manager_New_t         nsFTC_Manager_New;
-  static FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
+protected:
+  // run time loaded function pointers
+  FT_Done_Face_t            nsFT_Done_Face;
+  FT_Done_FreeType_t        nsFT_Done_FreeType;
+  FT_Done_Glyph_t           nsFT_Done_Glyph;
+  FT_Get_Char_Index_t       nsFT_Get_Char_Index;
+  FT_Get_Glyph_t            nsFT_Get_Glyph;
+  FT_Get_Sfnt_Table_t       nsFT_Get_Sfnt_Table;
+  FT_Glyph_Get_CBox_t       nsFT_Glyph_Get_CBox;
+  FT_Init_FreeType_t        nsFT_Init_FreeType;
+  FT_Load_Glyph_t           nsFT_Load_Glyph;
+  FT_New_Face_t             nsFT_New_Face;
+  FT_Outline_Decompose_t    nsFT_Outline_Decompose;
+  FT_Set_Charmap_t          nsFT_Set_Charmap;
+  FTC_Image_Cache_Lookup_t  nsFTC_Image_Cache_Lookup;
+  FTC_Manager_Lookup_Size_t nsFTC_Manager_Lookup_Size;
+  FTC_Manager_Done_t        nsFTC_Manager_Done;
+  FTC_Manager_New_t         nsFTC_Manager_New;
+  FTC_Image_Cache_New_t     nsFTC_Image_Cache_New;
+  // this array needs to be big enough to hold all the function pointers
+  static FtFuncList FtFuncs[17];
   
-  static PRBool gEnableFreeType2;
-  static char* gFreeType2SharedLibraryName;
+protected:
+  PRBool mEnableFreeType2;
+  char*  mFreeType2SharedLibraryName;
+
+public:
+  // these belong in the nsFontFreeType code
   static PRBool  gFreeType2Autohinted;
   static PRBool  gFreeType2Unhinted;
   static PRUint8 gAATTDarkTextMinValue;
@@ -157,20 +172,19 @@ public:
   static PRInt32 gEmbeddedBitmapMaximumHeight;
 
 protected:
-  static void ClearGlobals();
-  static void ClearFunctions();
-  static PRBool InitLibrary();
-  static PRBool LoadSharedLib();
-  static void UnloadSharedLib();
+  void ClearGlobals();
+  void ClearFunctions();
+  PRBool InitLibrary();
+  PRBool LoadSharedLib();
+  void UnloadSharedLib();
+
+  // this belongs in nsFT2FontCatalog
   static nsICharsetConverterManager2* GetCharSetManager();
 
-  static PRLibrary      *sSharedLib;
-  static PRBool          sInited;
-  static PRBool          sAvailable;
-  static FT_Error        sInitError;
-  static FT_Library      sFreeTypeLibrary;
-  static FTC_Manager     sFTCacheManager;
-  static FTC_Image_Cache sImageCache;
+  PRLibrary      *mSharedLib;
+  FT_Library      mFreeTypeLibrary;
+  FTC_Manager     mFTCacheManager;
+  FTC_Image_Cache mImageCache;
 
   static nsHashtable   *sFontFamilies;
   static nsHashtable   *sRange1CharSetNames;
@@ -178,7 +192,6 @@ protected:
   static nsICharsetConverterManager2* sCharSetManager;
 };
 
-// class nsFreeTypeFace definition
 /* this simple record is used to model a given `installed' face */
 class nsFreeTypeFace : public nsITrueTypeFontCatalogEntry {
 public:

@@ -58,6 +58,7 @@ nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *, PRUint16, const char *)
 #include "nsX11AlphaBlend.h"
 #include "nsAntiAliasedGlyph.h"
 #include "nsFontDebug.h"
+#include "nsIServiceManager.h"
 
 // macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
 #define FT_CEIL(x) (((x) + 63) & -64)
@@ -137,6 +138,14 @@ nsFreeTypeFont *
 nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *aFaceID,
                         PRUint16 aPixelSize, const char *aName)
 {
+  // Make sure FreeType is available
+  nsresult rv;
+  nsCOMPtr<nsIFreeType2> ft2 = do_GetService(NS_FREETYPE2_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("FreeType2 routines not available");
+    return nsnull;
+  }
+
   // for now we only support ximage (XGetImage/alpha-blend/XPutImage) display
   // when we support XRender then we will need to test if it is
   // available and if so use it since it is faster than ximage.
@@ -146,7 +155,7 @@ nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *aFaceID,
   nsCAutoString familyName;
   aFaceID->GetFamilyName(familyName);
   nsTTFontFamilyEncoderInfo *ffei =
-    nsFreeType::GetCustomEncoderInfo(familyName.get());
+    nsFreeType2::GetCustomEncoderInfo(familyName.get());
   if (ximage) {
     if (ffei) {
       ftfont = new nsFreeTypeXImageSBC(aFaceID, aPixelSize, aName);
@@ -168,11 +177,12 @@ FT_Face
 nsFreeTypeFont::getFTFace()
 {
   FT_Face face = nsnull;
-  FT_Error error = (*nsFreeType::nsFTC_Manager_Lookup_Size)(
-                                     nsFreeType::GetFTCacheManager(),
-                                     &mImageDesc.font, &face, nsnull);
-  NS_ASSERTION(error==0, "failed to get face/size");
-  if (error)
+  FTC_Manager mgr;
+  nsresult rv;
+  mFt2->GetFTCacheManager(&mgr);
+  rv = mFt2->ManagerLookupSize(mgr, &mImageDesc.font, &face, nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get face/size");
+  if (NS_FAILED(rv))
     return nsnull;
   return face;
 }
@@ -189,15 +199,15 @@ nsFreeTypeFont::nsFreeTypeFont(nsITrueTypeFontCatalogEntry *aFaceID,
   mImageDesc.font.pix_height = aPixelSize;
   mImageDesc.image_type = 0;
 
-  if (aPixelSize < nsFreeType::gAntiAliasMinimum) {
+  if (aPixelSize < nsFreeType2::gAntiAliasMinimum) {
     mImageDesc.image_type |= ftc_image_mono;
     anti_alias = PR_FALSE;
   }
 
-  if (nsFreeType::gFreeType2Autohinted)
+  if (nsFreeType2::gFreeType2Autohinted)
     mImageDesc.image_type |= ftc_image_flag_autohinted;
 
-  if (nsFreeType::gFreeType2Unhinted)
+  if (nsFreeType2::gFreeType2Unhinted)
     mImageDesc.image_type |= ftc_image_flag_unhinted;
 
   PRUint32  num_embedded_bitmaps, i;
@@ -205,7 +215,7 @@ nsFreeTypeFont::nsFreeTypeFont(nsITrueTypeFontCatalogEntry *aFaceID,
   mFaceID->GetEmbeddedBitmapHeights(&num_embedded_bitmaps,
                                     &embedded_bitmapheights);
   // check if we have an embedded bitmap
-  if (aPixelSize <= nsFreeType::gEmbeddedBitmapMaximumHeight) {
+  if (aPixelSize <= nsFreeType2::gEmbeddedBitmapMaximumHeight) {
     if (num_embedded_bitmaps) {
       for (i=0; i<num_embedded_bitmaps; i++) {
         if (embedded_bitmapheights[i] == aPixelSize) {
@@ -218,12 +228,17 @@ nsFreeTypeFont::nsFreeTypeFont(nsITrueTypeFontCatalogEntry *aFaceID,
     }
   }
 
+  nsresult rv;
+  // we checked for this earlier so it should not fail now
+  mFt2 = do_GetService(NS_FREETYPE2_CONTRACTID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to find FreeType routines");
+
   FREETYPE_FONT_PRINTF(("anti_alias=%d, embedded_bitmap=%d, "
                         "AutoHinted=%d, gFreeType2Unhinted = %d, "
                         "size=%dpx, \"%s\"",
                         anti_alias, embedded_bimap,
-                        nsFreeType::gFreeType2Autohinted,
-                        nsFreeType::gFreeType2Unhinted,
+                        nsFreeType2::gFreeType2Autohinted,
+                        nsFreeType2::gFreeType2Unhinted,
                         aPixelSize, aName));
 }
 
@@ -276,6 +291,8 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
                                      PRInt32* aDescent,
                                      PRInt32* aWidth)
 {
+  nsresult rv;
+
   *aLeftBearing = 0;
   *aRightBearing = 0;
   *aAscent = 0;
@@ -298,26 +315,26 @@ nsFreeTypeFont::doGetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
   if (!face)
     return NS_ERROR_FAILURE;
 
+  FTC_Image_Cache icache;
+  mFt2->GetImageCache(&icache);
+  if (!icache)
+    return NS_ERROR_FAILURE;
+
   // get the text size
   PRUint32 i;
   for (i=0; i<aLength; i++) {
     FT_UInt glyph_index;
     FT_Glyph glyph;
-    FT_Error error;
     FT_BBox glyph_bbox;
     FT_Pos advance;
-    glyph_index = (*nsFreeType::nsFT_Get_Char_Index)(face,
-                                  (FT_ULong)aString[i]);
+    mFt2->GetCharIndex(face, (FT_ULong)aString[i], &glyph_index);
     //NS_ASSERTION(glyph_index,"failed to get glyph");
     if (glyph_index) {
-      error = (*nsFreeType::nsFTC_Image_Cache_Lookup)(
-                                   nsFreeType::GetImageCache(),
-                                   &mImageDesc, glyph_index, &glyph);
-      NS_ASSERTION(error==0,"error loading glyph");
+      rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
+      NS_ASSERTION(NS_SUCCEEDED(rv),"error loading glyph");
     }
-    if ((glyph_index) && (!error)) {
-      (*nsFreeType::nsFT_Glyph_Get_CBox)(glyph, ft_glyph_bbox_pixels,
-                                             &glyph_bbox);
+    if ((glyph_index) && (NS_SUCCEEDED(rv))) {
+      mFt2->GlyphGetCBox(glyph, ft_glyph_bbox_pixels, &glyph_bbox);
       advance = FT_16_16_TO_REG(glyph->advance.x);
     }
     else {
@@ -375,14 +392,17 @@ nsFreeTypeFont::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   if (!face)
     return 0;
 
+  FTC_Image_Cache icache;
+  mFt2->GetImageCache(&icache);
+  if (!icache)
+    return 0;
+
   for (PRUint32 i=0; i<aLength; i++) {
-    glyph_index = (*nsFreeType::nsFT_Get_Char_Index)((FT_Face)face,
-                                   (FT_ULong)aString[i]);
-    FT_Error error = (*nsFreeType::nsFTC_Image_Cache_Lookup)(
-                                   nsFreeType::GetImageCache(),
-                                   &mImageDesc, glyph_index, &glyph);
-    NS_ASSERTION(error==0,"error loading glyph");
-    if (error) {
+    mFt2->GetCharIndex((FT_Face)face, (FT_ULong)aString[i], &glyph_index);
+    nsresult rv;
+    rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"error loading glyph");
+    if (NS_FAILED(rv)) {
       origin_x += face->size->metrics.x_ppem/2 + 2;
       continue;
     }
@@ -447,8 +467,8 @@ nsFreeTypeFont::max_ascent()
   if (!face)
     return 0;
 
-  TT_OS2 * tt_os2 = (TT_OS2 *)(*nsFreeType::nsFT_Get_Sfnt_Table)(face,
-                                                             ft_sfnt_os2);
+  TT_OS2 * tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
     max_ascent = FT_16_16_TO_REG(tt_os2->sTypoAscender
@@ -469,8 +489,8 @@ nsFreeTypeFont::max_descent()
   if (!face)
     return 0;
 
-  TT_OS2 *tt_os2 = (TT_OS2 *)(*nsFreeType::nsFT_Get_Sfnt_Table)(face,
-                                                             ft_sfnt_os2);
+  TT_OS2 *tt_os2;
+  mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
     max_descent = FT_16_16_TO_REG(-tt_os2->sTypoDescender *
@@ -685,6 +705,11 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
     if (y%4==0) (*blendPixelFunc)(sub_image, y, ascent-1, black, 255/2);
 #endif
 
+  FTC_Image_Cache icache;
+  mFt2->GetImageCache(&icache);
+  if (!icache)
+    return 0;
+
   //
   // Get aa glyphs and blend with background
   //
@@ -693,18 +718,14 @@ nsFreeTypeXImage::DrawString(nsRenderingContextGTK* aContext,
   for (i=0; i<aLength; i++) {
     FT_UInt glyph_index;
     FT_Glyph glyph;
-    FT_Error error;
+    nsresult rv;
     FT_BBox glyph_bbox;
-    glyph_index = (*nsFreeType::nsFT_Get_Char_Index)(face,
-                                                   (FT_ULong)aString[i]);
+    mFt2->GetCharIndex(face, (FT_ULong)aString[i], &glyph_index);
     if (glyph_index) {
-      error = (*nsFreeType::nsFTC_Image_Cache_Lookup)(
-                                   nsFreeType::GetImageCache(),
-                                   &mImageDesc, glyph_index, &glyph);
+      rv = mFt2->ImageCacheLookup(icache, &mImageDesc, glyph_index, &glyph);
     }
-    if ((glyph_index) && (!error)) {
-      (*nsFreeType::nsFT_Glyph_Get_CBox)(glyph, ft_glyph_bbox_pixels,
-                                             &glyph_bbox);
+    if ((glyph_index) && (NS_SUCCEEDED(rv))) {
+      mFt2->GlyphGetCBox(glyph, ft_glyph_bbox_pixels, &glyph_bbox);
     }
     else {
       // draw an empty box for the missing glyphs
@@ -807,7 +828,7 @@ nsFreeTypeXImageSBC::GetBoundingMetrics(const PRUnichar*   aString,
   nsCAutoString familyName;
   mFaceID->GetFamilyName(familyName);
   nsTTFontFamilyEncoderInfo *ffei =
-    nsFreeType::GetCustomEncoderInfo(familyName.get());
+    nsFreeType2::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;
@@ -839,7 +860,7 @@ nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   nsCAutoString familyName;
   mFaceID->GetFamilyName(familyName);
   nsTTFontFamilyEncoderInfo *ffei =
-    nsFreeType::GetCustomEncoderInfo(familyName.get());
+    nsFreeType2::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;
@@ -874,7 +895,7 @@ nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
   nsCAutoString familyName;
   mFaceID->GetFamilyName(familyName);
   nsTTFontFamilyEncoderInfo *ffei =
-    nsFreeType::GetCustomEncoderInfo(familyName.get());
+    nsFreeType2::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
     return NS_ERROR_FAILURE;
