@@ -1,5 +1,5 @@
 #################################################################################
-# 12/03/01, ChatZilla 0.8.5-rc1, <rginda@netscape.com>
+# 12/03/01, ChatZilla 0.8.5, <rginda@netscape.com>
 
 Shipped with 0.9.7.  Again, thanks to Samuel Sieb <samuel@sieb.net> for
 contributing many of the fixes (the most obvious of which is mIRC color code
@@ -102,6 +102,8 @@ contributing many of the fixes, and reviewing the rest.
 
 =================================================================================
 = Bugs fixed
+
+superbug: 103386
 
 41337,44447,69296,72272,72702,73652,73767,74408,79322,85573,89692,89717,92327,92403,95781,96567
 
