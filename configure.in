@@ -2439,7 +2439,7 @@ MOZ_ARG_WITH_STRING(extensions,
         MOZ_EXTENSIONS="cookie irc wallet"
     elif test "$withval" = "no" || test "$withval" = "none"; then
         MOZ_EXTENSIONS=""
-    elif "$withval" != ""; then
+    elif test "$withval" != ""; then
         MOZ_EXTENSIONS=`echo $withval | sed 's/,/ /g'`
     fi ] )
 dnl ========================================================
