@@ -43,6 +43,7 @@
 #include "nsIAtom.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
+#include "nsISupportsArray.h"
 
 nsNodeInfoManager* nsNodeInfoManager::gAnonymousNodeInfoManager = nsnull;
 PRUint32 nsNodeInfoManager::gNodeManagerCount = 0;
@@ -334,7 +335,6 @@ nsNodeInfoManager::GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsNodeInfoManager::GetDocument(nsIDocument*& aDocument)
 {
@@ -374,6 +374,44 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
   NS_ENSURE_FALSE(mDocument, NS_ERROR_UNEXPECTED);
   mPrincipal = aPrincipal;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNodeInfoManager::GetNodeInfoArray(nsISupportsArray** aArray)
+{
+  *aArray = nsnull;
+
+  nsCOMPtr<nsISupportsArray> array;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PL_HashTableEnumerateEntries(mNodeInfoHash,
+                               GetNodeInfoArrayEnumerator,
+                               array);
+  PRUint32 n;
+  array->Count(&n);
+  NS_ENSURE_TRUE(n == mNodeInfoHash->nentries, NS_ERROR_OUT_OF_MEMORY);
+
+  *aArray = array;
+  NS_ADDREF(*aArray);
+
+  return NS_OK;
+}
+
+//static
+PRIntn
+nsNodeInfoManager::GetNodeInfoArrayEnumerator(PLHashEntry* he, PRIntn i,
+                                              void* arg)
+{
+  NS_ASSERTION(arg, "missing array");
+  nsISupportsArray* array = (nsISupportsArray*)arg;
+
+  nsresult rv = array->AppendElement((nsINodeInfo*)he->value);
+  if (NS_FAILED(rv)) {
+    return HT_ENUMERATE_STOP;
+  }
+
+  return HT_ENUMERATE_NEXT;
 }
 
 void

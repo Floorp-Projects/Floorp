@@ -201,11 +201,12 @@ public:
           
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext) = 0;
+                               nsIScriptContext* aContext,
+                               nsISupportsArray* aNodeInfos) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsINodeInfoManager* aNimgr) = 0;
+                                 nsISupportsArray* aNodeInfos) = 0;
 
     void AddRef() { mRefCnt++; };
     void Release() 
@@ -258,11 +259,12 @@ public:
     }
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext);
+                               nsIScriptContext* aContext,
+                               nsISupportsArray* aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsINodeInfoManager* aNimgr);
+                                 nsISupportsArray* aNodeInfos);
 
     PRInt32                  mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
@@ -304,14 +306,14 @@ public:
     virtual ~nsXULPrototypeScript();
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext);
+                               nsIScriptContext* aContext,
+                               nsISupportsArray* aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsINodeInfoManager* aNimgr);
+                                 nsISupportsArray* aNodeInfos);
     virtual nsresult DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
-                                                nsIScriptContext* aContext,
-                                                nsINodeInfoManager* aNimgr);
+                                                nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRInt32 aLineNo,
@@ -356,11 +358,12 @@ public:
     }
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                               nsIScriptContext* aContext);
+                               nsIScriptContext* aContext,
+                               nsISupportsArray* aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsINodeInfoManager* aNimgr);
+                                 nsISupportsArray* aNodeInfos);
 
     nsString                 mValue;
 };

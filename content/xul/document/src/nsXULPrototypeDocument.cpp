@@ -367,13 +367,30 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     NS_ASSERTION(scriptContext != nsnull,
                  "no prototype script context!");
 
+    // nsINodeInfo table
+    nsCOMPtr<nsISupportsArray> nodeInfos;
+    rv |= NS_NewISupportsArray(getter_AddRefs(nodeInfos));
+    NS_ENSURE_TRUE(nodeInfos, rv);
+
+    rv |= aStream->Read32(&referenceCount);
+    nsXPIDLString namespaceURI, qualifiedName;
+    for (i = 0; i < referenceCount; ++i) {
+        rv |= aStream->ReadWStringZ(getter_Copies(namespaceURI));
+        rv |= aStream->ReadWStringZ(getter_Copies(qualifiedName));
+
+        nsCOMPtr<nsINodeInfo> nodeInfo;
+        rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(nodeInfo));
+        rv |= nodeInfos->AppendElement(nodeInfo);
+    }
+
+    // Document contents
     PRUint32 type;
     rv |= aStream->Read32(&type);
 
     if ((nsXULPrototypeNode::Type)type != nsXULPrototypeNode::eType_Element)
         return NS_ERROR_FAILURE;
 
-    rv |= mRoot->Deserialize(aStream, scriptContext, mURI, mNodeInfoManager);
+    rv |= mRoot->Deserialize(aStream, scriptContext, mURI, nodeInfos);
     rv |= NotifyLoadDone();
 
     return rv;
@@ -417,6 +434,27 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     // nsIPrincipal mDocumentPrincipal
     rv |= NS_WriteOptionalObject(aStream, mDocumentPrincipal, PR_TRUE);
     
+    // nsINodeInfo table
+    nsCOMPtr<nsISupportsArray> nodeInfos;
+    rv |= mNodeInfoManager->GetNodeInfoArray(getter_AddRefs(nodeInfos));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 nodeInfoCount;
+    nodeInfos->Count(&nodeInfoCount);
+
+    rv |= aStream->Write32(nodeInfoCount);
+    for (i = 0; i < nodeInfoCount; ++i) {
+        nsCOMPtr<nsINodeInfo> nodeInfo = do_QueryElementAt(nodeInfos, i);
+        NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+
+        nsAutoString namespaceURI;
+        rv |= nodeInfo->GetNamespaceURI(namespaceURI);
+        rv |= aStream->WriteWStringZ(namespaceURI.get());
+
+        nsAutoString qualifiedName;
+        rv |= nodeInfo->GetQualifiedName(qualifiedName);
+        rv |= aStream->WriteWStringZ(qualifiedName.get());
+    }
+
     // Now serialize the document contents
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     rv |= GetScriptGlobalObject(getter_AddRefs(globalObject));
@@ -425,7 +463,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     rv |= globalObject->GetContext(getter_AddRefs(scriptContext));
     
     if (mRoot)
-        rv |= mRoot->Serialize(aStream, scriptContext);
+        rv |= mRoot->Serialize(aStream, scriptContext, nodeInfos);
  
     return rv;
 }

@@ -4926,7 +4926,8 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
-                                 nsIScriptContext* aContext)
+                                 nsIScriptContext* aContext,
+                                 nsISupportsArray* aNodeInfos)
 {
     nsresult rv;
 
@@ -4935,25 +4936,19 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     rv |= aStream->Write32(mLineNo);
 
     // Write Node Info
-    nsAutoString namespaceURI;
-    rv |= mNodeInfo->GetNamespaceURI(namespaceURI);
-    rv |= aStream->WriteWStringZ(namespaceURI.get());
-
-    nsAutoString qualifiedName;
-    rv |= mNodeInfo->GetQualifiedName(qualifiedName);
-    rv |= aStream->WriteWStringZ(qualifiedName.get());
+    PRInt32 index = aNodeInfos->IndexOf(mNodeInfo);
+    NS_ASSERTION(index >= 0, "unknown nsINodeInfo index");
+    rv |= aStream->Write32(index);
 
     // Write Attributes
     rv |= aStream->Write32(mNumAttributes);    
 
-    nsAutoString attributeValue, attributeNamespaceURI, attributeName;
+    nsAutoString attributeValue;
     PRInt32 i;
     for (i = 0; i < mNumAttributes; ++i) {
-        rv |= mAttributes[i].mNodeInfo->GetNamespaceURI(attributeNamespaceURI);
-        rv |= aStream->WriteWStringZ(attributeNamespaceURI.get());
-
-        rv |= mAttributes[i].mNodeInfo->GetQualifiedName(attributeName);
-        rv |= aStream->WriteWStringZ(attributeName.get());
+        index = aNodeInfos->IndexOf(mAttributes[i].mNodeInfo);
+        NS_ASSERTION(index >= 0, "unknown nsINodeInfo index");
+        rv |= aStream->Write32(index);
 
         rv |= mAttributes[i].mValue.GetValue(attributeValue);
         rv |= aStream->WriteWStringZ(attributeValue.get());
@@ -4966,7 +4961,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         switch (child->mType) {
         case eType_Element:
         case eType_Text:
-            rv |= child->Serialize(aStream, aContext);
+            rv |= child->Serialize(aStream, aContext, aNodeInfos);
             break;
         case eType_Script:
             rv |= aStream->Write32(child->mType);
@@ -4975,7 +4970,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
             if (script) {
                 rv |= aStream->WriteBoolean(script->mOutOfLine);
                 if (! script->mOutOfLine)
-                    rv |= script->Serialize(aStream, aContext);
+                    rv |= script->Serialize(aStream, aContext, aNodeInfos);
                 else
                     rv |= aStream->WriteCompoundObject(script->mSrcURI, 
                                                        NS_GET_IID(nsIURI), 
@@ -4992,9 +4987,9 @@ nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsIScriptContext* aContext, 
                                    nsIURI* aDocumentURI,
-                                   nsINodeInfoManager* aNimgr)
+                                   nsISupportsArray* aNodeInfos)
 {
-    NS_PRECONDITION(aNimgr, "missing nsINodeInfoManager");
+    NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
     nsresult rv;
 
     PRUint32 number;
@@ -5002,13 +4997,10 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     mLineNo = (PRInt32)number;
 
     // Read Node Info
-    nsXPIDLString namespaceURI;
-    rv |= aStream->ReadWStringZ(getter_Copies(namespaceURI));
-    
-    nsXPIDLString qualifiedName;
-    rv |= aStream->ReadWStringZ(getter_Copies(qualifiedName));
-
-    rv |= aNimgr->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(mNodeInfo));
+    rv |= aStream->Read32(&number);
+    mNodeInfo = do_QueryElementAt(aNodeInfos, number);
+    if (!mNodeInfo)
+        return NS_ERROR_UNEXPECTED;
 
     // Read Attributes
     rv |= aStream->Read32(&number);
@@ -5022,11 +5014,10 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
         nsXPIDLString attributeValue, attributeNamespaceURI, attributeName;
         for (i = 0; i < mNumAttributes; ++i) {
-            rv |= aStream->ReadWStringZ(getter_Copies(attributeNamespaceURI));
-            rv |= aStream->ReadWStringZ(getter_Copies(attributeName));
-
-            rv |= aNimgr->GetNodeInfo(attributeName, attributeNamespaceURI, 
-                                      *getter_AddRefs(mAttributes[i].mNodeInfo));
+            rv |= aStream->Read32(&number);
+            mAttributes[i].mNodeInfo = do_QueryElementAt(aNodeInfos, number);
+            if (!mAttributes[i].mNodeInfo)
+                return NS_ERROR_UNEXPECTED;
 
             rv |= aStream->ReadWStringZ(getter_Copies(attributeValue));
             mAttributes[i].mValue.SetValue(attributeValue);
@@ -5074,7 +5065,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 child->mType = childType;
 
                 rv |= child->Deserialize(aStream, aContext, aDocumentURI,
-                                         aNimgr);
+                                         aNodeInfos);
                 break;
             case eType_Text:
                 child = new nsXULPrototypeText(-1);
@@ -5083,7 +5074,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 child->mType = childType;
           
                 rv |= child->Deserialize(aStream, aContext, aDocumentURI,
-                                         aNimgr);
+                                         aNodeInfos);
                 break;
             case eType_Script:
                 // language version obtained during deserialization.
@@ -5097,12 +5088,12 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     rv |= aStream->ReadBoolean(&script->mOutOfLine);
                     if (! script->mOutOfLine) {
                         rv |= script->Deserialize(aStream, aContext,
-                                                  aDocumentURI, aNimgr);
+                                                  aDocumentURI, aNodeInfos);
                     }
                     else {
                         rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
 
-                        rv |= script->DeserializeOutOfLineScript(aStream, aContext, aNimgr);
+                        rv |= script->DeserializeOutOfLineScript(aStream, aContext);
                     }
                 }
 
@@ -5168,7 +5159,8 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
-                                nsIScriptContext* aContext)
+                                nsIScriptContext* aContext,
+                                nsISupportsArray* aNodeInfos)
 {
     nsresult rv;
 
@@ -5230,7 +5222,7 @@ nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIScriptContext* aContext, 
                                   nsIURI* aDocumentURI,
-                                  nsINodeInfoManager* aNimgr)
+                                  nsISupportsArray* aNodeInfos)
 {
     NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
     nsresult rv;
@@ -5316,8 +5308,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
-                                                 nsIScriptContext* aContext,
-                                                 nsINodeInfoManager* aNimgr)
+                                                 nsIScriptContext* aContext)
 {
     // Keep track of FastLoad failure via rv, so we can
     // AbortFastLoads if things look bad.
@@ -5378,7 +5369,7 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
             // We're better off slow-loading than bailing out due to a
             // FastLoad error.
             if (NS_SUCCEEDED(rv))
-                rv = Deserialize(objectInput, aContext, nsnull, aNimgr);
+                rv = Deserialize(objectInput, aContext, nsnull, nsnull);
 
             if (NS_SUCCEEDED(rv) && mSrcURI) {
                 rv = fastLoadService->EndMuxedDocument(mSrcURI);
@@ -5503,7 +5494,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                 nsCOMPtr<nsIObjectOutputStream> objectOutput;
                 fastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
                 if (objectOutput) {
-                    rv = Serialize(objectOutput, context);
+                    rv = Serialize(objectOutput, context, nsnull);
                     if (NS_FAILED(rv))
                         cache->AbortFastLoads();
                 }
@@ -5522,7 +5513,8 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
-                              nsIScriptContext* aContext)
+                              nsIScriptContext* aContext,
+                              nsISupportsArray* aNodeInfos)
 {
     nsresult rv;
 
@@ -5539,7 +5531,7 @@ nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
                                 nsIScriptContext* aContext, 
                                 nsIURI* aDocumentURI,
-                                nsINodeInfoManager* aNimgr)
+                                nsISupportsArray* aNodeInfos)
 {
     nsresult rv;
 
