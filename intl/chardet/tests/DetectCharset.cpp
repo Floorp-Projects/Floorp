@@ -22,7 +22,12 @@
 #include "nsICharsetDetectionObserver.h"
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef XP_PC
 #include <io.h>
+#endif
+#ifdef XP_UNIX
+#include <unistd.h>
+#endif
 
 
 #define MAXBSIZE (1L << 13)
