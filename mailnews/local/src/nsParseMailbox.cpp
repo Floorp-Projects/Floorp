@@ -110,10 +110,13 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 
 //		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
-		for (PRUint32 index = 0; index < keys.GetSize(); index++)
+        PRUint32 size = keys.GetSize();
+		for (PRUint32 keyindex = 0; keyindex < size; keyindex++)
 		{
 			nsCOMPtr<nsIMsgDBHdr> msgHdr;
-			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], getter_AddRefs(msgHdr));
+			nsresult ret =
+                m_mailDB->GetMsgHdrForKey(keys[keyindex],
+                                          getter_AddRefs(msgHdr));
 			if (NS_SUCCEEDED(ret) && msgHdr)
 			{
 				nsMsgKey key;
