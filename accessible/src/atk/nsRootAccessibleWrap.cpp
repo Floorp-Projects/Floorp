@@ -72,3 +72,9 @@ NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
     }
     return rv;
 }
+
+NS_IMETHODIMP nsRootAccessibleWrap::GetRole(PRUint32 *_retval)
+{
+    *_retval = ROLE_FRAME;
+    return NS_OK;
+}

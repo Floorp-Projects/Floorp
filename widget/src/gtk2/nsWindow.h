@@ -297,6 +297,9 @@ private:
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;
     void                CreateRootAccessible();
+    void                GetRootAccessible(nsIAccessible** aAccessible);
+    void                DispatchActivateEvent(void);
+    void                DispatchDeactivateEvent(void);
     NS_IMETHOD_(PRBool) DispatchAccessibleEvent(nsIAccessible** aAccessible);
 #endif
 

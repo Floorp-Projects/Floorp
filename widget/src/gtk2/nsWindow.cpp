@@ -62,6 +62,8 @@
 
 #ifdef ACCESSIBILITY
 #include "nsPIAccessNode.h"
+#include "nsPIAccessible.h"
+#include "nsIAccessibleEvent.h"
 #include "prenv.h"
 #include "stdlib.h"
 static PRBool sAccessibilityChecked = PR_FALSE;
@@ -3771,6 +3773,25 @@ nsWindow::CreateRootAccessible()
     }
 }
 
+void
+nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
+{
+    nsCOMPtr<nsIAccessible> docAcc, parentAcc;
+    DispatchAccessibleEvent(getter_AddRefs(docAcc));
+    PRUint32 role;
+
+    while (docAcc) {
+        docAcc->GetRole(&role);
+        if (role == nsIAccessible::ROLE_FRAME) {
+            *aAccessible = docAcc;
+            NS_ADDREF(*aAccessible);
+            break;
+        } 
+        docAcc->GetParent(getter_AddRefs(parentAcc));
+        docAcc = parentAcc;
+    }
+}
+
 /**
  * void
  * nsWindow::DispatchAccessibleEvent
@@ -3798,6 +3819,35 @@ nsWindow::DispatchAccessibleEvent(nsIAccessible** aAccessible)
     return result;
 }
 
+void
+nsWindow::DispatchActivateEvent(void)
+{
+    nsCommonWidget::DispatchActivateEvent();
+
+    nsCOMPtr<nsIAccessible> rootAcc;
+    GetRootAccessible(getter_AddRefs(rootAcc));
+    nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
+    if (privAcc) {
+        privAcc->FireToolkitEvent(
+                     nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE,
+                     rootAcc, nsnull);
+    }
+ }
+
+void
+nsWindow::DispatchDeactivateEvent(void)
+{
+    nsCommonWidget::DispatchDeactivateEvent();
+
+    nsCOMPtr<nsIAccessible> rootAcc;
+    GetRootAccessible(getter_AddRefs(rootAcc));
+    nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
+    if (privAcc) {
+        privAcc->FireToolkitEvent(
+                     nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE,
+                     rootAcc, nsnull);
+    }
+}
 #endif /* #ifdef ACCESSIBILITY */
 
 // nsChildWindow class

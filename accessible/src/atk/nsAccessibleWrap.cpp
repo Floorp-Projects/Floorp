@@ -55,6 +55,18 @@
 
 /* MaiAtkObject */
 
+enum {
+  ACTIVATE,
+  CREATE,
+  DEACTIVATE,
+  DESTROY,
+  MAXIMIZE,
+  MINIMIZE,
+  RESIZE,
+  RESTORE,
+  LAST_SIGNAL
+};
+
 /**
  * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
  */
@@ -72,6 +84,8 @@ struct MaiAtkObjectClass
 {
     AtkObjectClass parent_class;
 };
+
+static guint mai_atk_object_signals [LAST_SIGNAL] = { 0, };
 
 #ifdef MAI_LOGGING
 PRInt32 sMaiAtkObjCreated = 0;
@@ -554,6 +568,72 @@ classInitCB(AtkObjectClass *aClass)
     aClass->initialize = initializeCB;
 
     gobject_class->finalize = finalizeCB;
+
+    mai_atk_object_signals [ACTIVATE] =
+    g_signal_new ("activate",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [CREATE] =
+    g_signal_new ("create",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [DEACTIVATE] =
+    g_signal_new ("deactivate",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [DESTROY] =
+    g_signal_new ("destroy",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [MAXIMIZE] =
+    g_signal_new ("maximize",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [MINIMIZE] =
+    g_signal_new ("minimize",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [RESIZE] =
+    g_signal_new ("resize",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+    mai_atk_object_signals [RESTORE] =
+    g_signal_new ("restore",
+                  MAI_TYPE_ATK_OBJECT,
+                  G_SIGNAL_RUN_LAST,
+                  0, /* default signal handler */
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
 }
 
 void

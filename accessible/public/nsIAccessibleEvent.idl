@@ -136,4 +136,12 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_ATK_TABLE_COLUMN_DELETE    = 0x0115;
   const unsigned long EVENT_ATK_TABLE_COLUMN_REORDER   = 0x0116;
   const unsigned long EVENT_ATK_LINK_SELECTED          = 0x0117;
+  const unsigned long EVENT_ATK_WINDOW_ACTIVATE        = 0x0118;
+  const unsigned long EVENT_ATK_WINDOW_CREATE          = 0x0119;
+  const unsigned long EVENT_ATK_WINDOW_DEACTIVATE      = 0x0120;
+  const unsigned long EVENT_ATK_WINDOW_DESTROY         = 0x0121;
+  const unsigned long EVENT_ATK_WINDOW_MAXIMIZE        = 0x0122;
+  const unsigned long EVENT_ATK_WINDOW_MINIMIZE        = 0x0123;
+  const unsigned long EVENT_ATK_WINDOW_RESIZE          = 0x0124;
+  const unsigned long EVENT_ATK_WINDOW_RESTORE         = 0x0125;
 };
