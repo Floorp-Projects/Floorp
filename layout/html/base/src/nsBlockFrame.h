@@ -274,6 +274,14 @@ protected:
 
 #define nsBlockFrameSuper nsBaseIBFrame
 
+/**
+ * The block frame has two additional named child lists:
+ * - "Floater-list" which contains the floated frames
+ * - "Bullet-list" which contains the bullet frame
+ *
+ * @see nsLayoutAtoms::bulletList
+ * @see nsLayoutAtoms::floaterList
+ */
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:

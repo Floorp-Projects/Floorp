@@ -43,6 +43,7 @@
 #include "nsDOMEvent.h"
 #include "nsIHTMLContent.h"
 #include "prprf.h"
+#include "nsLayoutAtoms.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
@@ -395,9 +396,6 @@ nsBlockReflowState::GetAvailableSpace()
 
 //----------------------------------------------------------------------
 
-nsIAtom* nsBaseIBFrame::gFloaterAtom;
-nsIAtom* nsBaseIBFrame::gBulletAtom;
-
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
 #define NS_BLOCK_FRAME_CID \
 { 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -406,13 +404,6 @@ static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsBaseIBFrame::nsBaseIBFrame()
 {
-  // XXX for now these are a memory leak
-  if (nsnull == gFloaterAtom) {
-    gFloaterAtom = NS_NewAtom("Floater-list");
-  }
-  if (nsnull == gBulletAtom) {
-    gBulletAtom = NS_NewAtom("Bullet-list");
-  }
 }
 
 nsBaseIBFrame::~nsBaseIBFrame()
@@ -4208,11 +4199,11 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
     aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
     return NS_OK;
   }
-  else if (aListName == gFloaterAtom) {
+  else if (aListName == nsLayoutAtoms::floaterList) {
     aFirstChild = mFloaters;
     return NS_OK;
   }
-  else if (aListName == gBulletAtom) {
+  else if (aListName == nsLayoutAtoms::bulletList) {
     aFirstChild = mBullet;
     return NS_OK;
   }
@@ -4230,11 +4221,11 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
   nsIAtom* atom = nsnull;
   switch (aIndex) {
   case NS_BLOCK_FRAME_FLOATER_LIST_INDEX:
-    atom = gFloaterAtom;
+    atom = nsLayoutAtoms::floaterList;
     NS_ADDREF(atom);
     break;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    atom = gBulletAtom;
+    atom = nsLayoutAtoms::bulletList;
     NS_ADDREF(atom);
     break;
   }
@@ -4701,13 +4692,13 @@ nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
     return NS_OK;
   }
   if (nsnull != mBullet) {
-    rv = GetFrameForPointUsing(aPoint, gBulletAtom, aFrame);
+    rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::bulletList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
   }
   if (nsnull != mFloaters) {
-    rv = GetFrameForPointUsing(aPoint, gFloaterAtom, aFrame);
+    rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::floaterList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }

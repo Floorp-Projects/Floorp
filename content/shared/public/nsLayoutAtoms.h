@@ -33,23 +33,23 @@ public:
   static void AddrefAtoms();
   static void ReleaseAtoms();
 
-  // Alphabetical list of atoms
+  // Alphabetical list of media type atoms
   static nsIAtom* all;
   static nsIAtom* aural;
-
   static nsIAtom* braille;
-
   static nsIAtom* embossed;
-
   static nsIAtom* handheld;
-
   static nsIAtom* print;
   static nsIAtom* projection;
-
   static nsIAtom* screen;
-
   static nsIAtom* tty;
   static nsIAtom* tv;
+
+  // Alphabetical list of frame additional child list names
+  static nsIAtom* absoluteList;
+  static nsIAtom* colGroupList;
+  static nsIAtom* floaterList;
+  static nsIAtom* bulletList;
 };
 
 #endif /* nsLayoutAtoms_h___ */

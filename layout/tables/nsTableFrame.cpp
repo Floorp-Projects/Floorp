@@ -41,6 +41,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIReflowCommand.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -266,8 +267,6 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
 /* --------------------- nsTableFrame -------------------- */
 
 
-nsIAtom* nsTableFrame::gColGroupAtom=nsnull;
-
 nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mCellMap(nsnull),
@@ -288,10 +287,6 @@ nsTableFrame::nsTableFrame()
   mColGroups=nsnull;
   mDefaultCellSpacing=0;
   mDefaultCellPadding=0;
-  // XXX for now these are a memory leak
-  if (nsnull == gColGroupAtom) {
-    gColGroupAtom = NS_NewAtom("ColGroup-list");
-  }
 }
 
 NS_IMETHODIMP
@@ -1370,7 +1365,7 @@ nsTableFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
     aFirstChild = mFirstChild;
     return NS_OK;
   }
-  else if (aListName == gColGroupAtom) {
+  else if (aListName == nsLayoutAtoms::colGroupList) {
     aFirstChild = mColGroups;
     return NS_OK;
   }
@@ -1388,7 +1383,7 @@ nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
   nsIAtom* atom = nsnull;
   switch (aIndex) {
   case NS_TABLE_FRAME_COLGROUP_LIST_INDEX:
-    atom = gColGroupAtom;
+    atom = nsLayoutAtoms::colGroupList;
     NS_ADDREF(atom);
     break;
   }
