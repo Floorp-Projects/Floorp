@@ -2974,9 +2974,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
         nsIComboboxControlFrame* comboBox = nsnull;
         if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
-
-          // XXX added for Rods code. -EDV
-          //comboBox->SetFrameConstructor(this);
+          comboBox->SetFrameConstructor(this);
 
             // Create a listbox
           nsIFrame * listFrame;
