@@ -22,31 +22,32 @@
 #include "nsISupports.h"
 #include "plevent.h"
 
+PR_BEGIN_EXTERN_C
+
 typedef void (*nsProxyMethodHandler)(nsISupports *, void *);
 
-// this is a pretty generic structure, can probably be
-// generalized by making nsISample into an nsISupports and
-// making nsISampleMethod into an integer
 struct nsProxyEvent {
-    // must be the first entry in this structure so that
-    // a nsProxyEvent* is compatible with a PLEvent*
+    /* must be the first entry in this structure so that
+     * a nsProxyEvent* is compatible with a PLEvent*     */
     PLEvent e;
-    nsIID* iid;                 // sanity check, make
-                                // sure we have the right interface
-    nsISupports *realObject;     // the non-proxy object that this
-                                // event is referring to
-    nsProxyMethodHandler methodHandler; // which method was called?
-    void *paramBuffer;          // parameter buffer
+    nsIID* iid;                 /* sanity check, make
+                                   sure we have the right interface */
+    nsISupports *realObject;    /* the non-proxy object that this
+                                   event is referring to */
+    PLEventQueue *destQueue;    /* destination queue */
+    nsProxyMethodHandler methodHandler; /* which method was called? */
+    void *paramBuffer;          /* marshalled parameter buffer */
 };
 
-// this is also pretty generic, can probably
 
-nsProxyEvent *NewProxyEvent(PLEventQueue *, nsISupports *,
-                            nsProxyMethodHandler, int);
-nsresult PostProxyEvent(PLEventQueue *eventQueue,
-                        nsProxyEvent *event);
-void *ProxyEventHandler(PLEvent *self);
-void ProxyDestroyHandler(PLEvent *self);
+nsProxyEvent *nsProxyEventCreate(PLEventQueue *, nsISupports *,
+                                 nsProxyMethodHandler, int);
+nsresult nsProxyEventPost(PLEventQueue *eventQueue,
+                          nsProxyEvent *event);
+
+/* utility routines */
+void* nsProxyEventHandler(PLEvent *self);
+void  nsProxyEventDestroyHandler(PLEvent *self);
 
 #define NS_DECL_PROXY(_class, _interface) \
 public: \
@@ -62,5 +63,5 @@ _class::_class(PLEventQueue *eventQueue, _interface *realObject) {\
   m_realObject = realObject;\
 }\
 
-
+PR_END_EXTERN_C
 #endif

@@ -19,11 +19,22 @@
 #include "nsProxyEvent.h"
 #include "prmem.h"
 
-// thse are helper routines and are not nsISampleProxy specific
-// you MUST call finishMarshalling() when this event is done,
-// otherwise you'll lock the Event Queue monitor
+/*
+ * nsProxyEventCreate
+ * Returns a pointer to a data structure which will be placed on
+ * the given event queue.
+ * PLEventQueue *eventQueue - event queue of the remote thread
+ * nsISupports  *realObject - the actual object which will recieve this event
+ * nsProxyMethodHandler methodHandler - the callback which will be run
+ *                            to demarshal the arguments
+ * int           buffersize - the size of the buffer required to marshall
+ *                            the arguments
+ *
+ * you MUST call PostProxyEvent() when this event is ready
+ * otherwise you'll lock the Event Queue monitor
+ */
 nsProxyEvent *
-NewProxyEvent(PLEventQueue *eventQueue, // queue where the event is going
+nsProxyEventCreate(PLEventQueue *eventQueue, // queue where the event is going
               nsISupports *realObject, // real object this is a proxy for
               nsProxyMethodHandler methodHandler, // callback
               int bufferSize) { // marshaled method parameter buffer
@@ -38,36 +49,61 @@ NewProxyEvent(PLEventQueue *eventQueue, // queue where the event is going
     if (event == NULL) return NULL;
     
     PL_InitEvent((PLEvent *)event, NULL,
-                 ProxyEventHandler,
-                 ProxyDestroyHandler);
+                 nsProxyEventHandler,
+                 nsProxyEventDestroyHandler);
     
     realObject->AddRef();
     event->realObject = realObject;
     event->methodHandler = methodHandler;
+    event->destQueue = eventQueue;
     event->paramBuffer = PR_Malloc(bufferSize);
     
     return event;
 }
 
+/*
+ * PostProxyEvent
+ * This function posts the event to the Event Queue and returns immediately
+ * all results and out parameters are lost
+ * PLEventQueue *eventQueue - Event Queue to post this message to
+ *                            (eventually this should be
+ *                            inside the eventQueue)
+ * nsProxyEvent *event      - Event to be posted
+ */
 nsresult
-PostProxyEvent(PLEventQueue *eventQueue,
-               nsProxyEvent *event) {
+nsProxyEventPost(nsProxyEvent *event) {
     // post the event to the queue
     if (event)
-        PL_PostEvent(eventQueue, (PLEvent *)event);
-    PL_EXIT_EVENT_QUEUE_MONITOR(eventQueue);
+        PL_PostEvent(event->destQueue, (PLEvent *)event);
+    PL_EXIT_EVENT_QUEUE_MONITOR(event->destQueue);
     
     return NS_OK;
 }
 
-void* ProxyEventHandler(PLEvent *self) {
+
+/*
+ * ProxyEventHandler
+ * 
+ * this is the generic event handler callback which will be run
+ * when the event is processed. This routine will will
+ * break apart the nsProxyEvent to call the correct callback
+ */
+void* nsProxyEventHandler(PLEvent *self) {
     nsProxyEvent *event = (nsProxyEvent *)self;
     event->methodHandler(event->realObject,
                          event->paramBuffer);
     return NULL;
 }
 
-void ProxyDestroyHandler(PLEvent *self) {
+/*
+ * ProxyDestroyHandler
+ *
+ * this is the generic destroy callback which will be run
+ * after the event has been processed. This allows us to free
+ * up the event structure and release references
+ * 
+ */
+void nsProxyEventDestroyHandler(PLEvent *self) {
     nsProxyEvent *event = (nsProxyEvent *)self;
     
     NS_RELEASE(event->realObject);
