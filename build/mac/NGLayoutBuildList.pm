@@ -1220,7 +1220,7 @@ sub BuildClientDist()
     print("--- Starting Client Dist export ----\n");
 
     _InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",                          "$distdirectory:mac:common:");
-#   _InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",               "$distdirectory:mac:inst:");
+    _InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",               "$distdirectory:mac:inst:");
 
     #INCLUDE
 
