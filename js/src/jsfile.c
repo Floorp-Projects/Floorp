@@ -61,7 +61,6 @@ typedef enum JSFileErrNum {
 #undef MSGDEF
 } JSFileErrNum;
 
-
 #define SPECIAL_FILE_STRING "Special File"
 #define CURRENTDIR_PROPERTY "currentDir"
 #define FILE_CONSTRUCTOR    "File"
@@ -75,10 +74,10 @@ typedef enum JSFileErrNum {
 #define utfstring     "binary"
 #define unicodestring "unicode"
 
-
 /* Platform dependent code goes here. */
 
 #define MAX_PATH_LENGTH 1024 /* XXX dirty */
+#define URL_PREFIX      "file://"
 
 #ifdef XP_MAC
 #  define LINEBREAK             "\012"
@@ -96,13 +95,11 @@ isAbsolute(char*name)
 /* We assume: base is a valid absolute path, not ending with :
           name is a valid relative path. */
 static char *
-combinePath(JSContext *cx, char *base, char*name)
+combinePath(JSContext *cx, char *base, char *name)
 {
-    tmp = (char*)JS_malloc(cx, strlen(base)+strlen(name)+2);
-    if (!tmp) {
-    JS_ReportOutOfMemory(cx);
-    return NULL;
-    }
+    char* tmp = (char*)JS_malloc(cx, strlen(base)+strlen(name)+2);
+
+    if (!tmp)  return NULL;
     strcpy(tmp, base);
     i=strlen(base)-1;
     if (base[i]!=FILESEPARATOR) {
@@ -124,10 +121,7 @@ fileBaseName(JSContext *cx, char * pathname)
     aux=index;
     while ((index>=0)&&(pathname[index]!=FILESEPARATOR)) index--;
     basename = (char*)JS_malloc(cx, aux-index+1);
-    if (!basename) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
+    if (!basename)  return NULL;
     strncpy(basename,&pathname[index+1],aux-index);
     basename[aux-index]='\0';
     return basename;
@@ -145,10 +139,7 @@ fileDirectoryName(JSContext *cx, char * pathname)
 
     if (index>=0) {
         dirname=(char*)JS_malloc(cx, index+2);
-        if (!dirname) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
+        if (!dirname) return NULL;
         strncpy(dirname, pathname, index);
         dirname[index]=FILESEPARATOR;
         dirname[index+1]='\0';
@@ -165,6 +156,17 @@ fileDirectoryName(JSContext *cx, char * pathname)
 #    define FILESEPARATOR2      '/'
 #    define CURRENT_DIR "c:\\"
 #    define POPEN _popen
+
+static JSBool
+filenameHasAPipe(char *filename){
+#ifdef XP_MAC
+    /* pipes are not supported on the MAC */
+    return JS_FALSE;
+#else
+    if(!filename) return JS_FALSE;
+    return filename[0]==PIPE_SYMBOL || filename[strlen(filename)-1]==PIPE_SYMBOL;
+#endif
+}
 
 static JSBool
 isAbsolute(char*name)
@@ -192,10 +194,7 @@ combinePath(JSContext *cx, char *base, char*name)
     tmp1=name;
 
     tmp = (char*)JS_malloc(cx, strlen(base)+strlen(tmp1)+2);
-    if (!tmp) {
-    JS_ReportOutOfMemory(cx);
-    return NULL;
-    }
+    if (!tmp) return NULL;
     strcpy(tmp, base);
     i=strlen(base)-1;
     if ((base[i]!=FILESEPARATOR)&&(base[i]!=FILESEPARATOR2)) {
@@ -204,7 +203,6 @@ combinePath(JSContext *cx, char *base, char*name)
     }
     strcat(tmp, tmp1);
     return tmp;
-
 }
 
 /* returned string must be freed */
@@ -226,10 +224,7 @@ fileBaseName(JSContext *cx, char * pathname)
     while ((index>=0)&&(pathname[index]!=FILESEPARATOR)&&
                       (pathname[index]!=FILESEPARATOR2)) index--;
     basename = (char*)JS_malloc(cx, aux-index+3);
-    if (!basename) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
+    if (!basename)  return NULL;
     strncpy(basename,&pathname[index+1],aux-index);
     basename[aux-index]='\0';
     return basename;
@@ -240,9 +235,8 @@ static char *
 fileDirectoryName(JSContext *cx, char * pathname)
 {
     jsint index;
-    char *dirname;
-    char *backpathname;
-    char drive='\0';
+    char  *dirname, *backpathname;
+    char  drive='\0';
 
     backpathname=pathname;
     /* First, get rid of the drive selector */
@@ -257,12 +251,10 @@ fileDirectoryName(JSContext *cx, char * pathname)
     while ((index>0)&&(pathname[index]!=FILESEPARATOR)&&
                       (pathname[index]!=FILESEPARATOR2)) index--;
 
-    if (index>=0) {
+    if (index>=0){
         dirname=(char*)JS_malloc(cx, index+4);
-        if (!dirname) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
+        if (!dirname)  return NULL;
+
         if (drive!='\0') {
             dirname[0]=toupper(drive);
             dirname[1]=':';
@@ -302,10 +294,7 @@ combinePath(JSContext *cx, char *base, char*name)
     jsint i;
     char * tmp;
     tmp = (char*)JS_malloc(cx, strlen(base)+strlen(name)+2);
-    if (!tmp) {
-    JS_ReportOutOfMemory(cx);
-    return NULL;
-    }
+    if (!tmp) return NULL;
     strcpy(tmp, base);
     i=strlen(base)-1;
     if (base[i]!=FILESEPARATOR) {
@@ -330,10 +319,7 @@ fileBaseName(JSContext *cx, char * pathname)
     while ((index>=0)&&(pathname[index]!=FILESEPARATOR)&&
                       (pathname[index]!=FILESEPARATOR2)) index--;
     basename = (char*)JS_malloc(cx, aux-index+1);
-    if (!basename) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
+    if (!basename)  return NULL;
     strncpy(basename,&pathname[index+1],aux-index);
     basename[aux-index]='\0';
     return basename;
@@ -354,10 +340,7 @@ fileDirectoryName(JSContext *cx, char * pathname)
 
     if (index>=0) {
         dirname=(char*)JS_malloc(cx, index+2);
-        if (!dirname) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
+        if (!dirname)  return NULL;
         strncpy(dirname, pathname, index);
         dirname[index]=FILESEPARATOR;
         dirname[index+1]='\0';
@@ -411,7 +394,7 @@ canonicalPath(JSContext *cx, char *path)
     char *base, *dir, *current, *result;
     jsint c;
     jsint back=0;
-	int i=0, j=strlen(path)-1;
+	unsigned int i=0, j=strlen(path)-1;
 
 	/* TODO: this is probably optional */
 	/* Remove possible spaces in the beginning and end */
@@ -425,11 +408,12 @@ canonicalPath(JSContext *cx, char *path)
 	strcpy(path, tmp);
 	JS_free(cx, tmp);
 
-
-    /*
-        We may want to add the ability to accept net URLs of
-		type "file://". Will also neet to call unescapeURL(bytes).
-    */
+    /* pipe support */
+    if(filenameHasAPipe(path))
+        return JS_strdup(cx, path);
+    /* file:// support */
+    if(!strncmp(path, URL_PREFIX, strlen(URL_PREFIX)))
+        return strdup(&path[strlen(URL_PREFIX)-1]);
 
     if (!isAbsolute(path))
         tmp1=absolutePath(cx, path);
@@ -446,7 +430,8 @@ canonicalPath(JSContext *cx, char *path)
         if (!strcmp(base,"..")) {
             back++;
         } else
-        if (!strcmp(base,".")) {
+        if(!strcmp(base,".")){
+
         } else {
             if (back>0)
                 back--;
@@ -454,7 +439,6 @@ canonicalPath(JSContext *cx, char *path)
                 tmp=result;
                 result=JS_malloc(cx, strlen(base)+1+strlen(tmp)+1);
                 if (!result) {
-                    JS_ReportOutOfMemory(cx);
                     JS_free(cx, dir);
                     JS_free(cx, base);
                     JS_free(cx, current);
@@ -479,7 +463,6 @@ canonicalPath(JSContext *cx, char *path)
     tmp=result;
     result=JS_malloc(cx, strlen(dir)+1+strlen(tmp)+1);
     if (!result) {
-        JS_ReportOutOfMemory(cx);
         JS_free(cx, dir);
         JS_free(cx, base);
         JS_free(cx, current);
@@ -501,14 +484,6 @@ canonicalPath(JSContext *cx, char *path)
 
     return result;
 }
-
-/*
-static JSBool
-filenanameHasAPipe(char *filename){
-    if(!filename) return JS_FALSE;
-
-    return filename[0]==PIPE_SYMBOL || filename[strlen(filename)-1]==PIPE_SYMBOL;
-}*/
 
 /* ---------------- text format conversion ------------------------- */
 /* The following is ripped from libi18n/unicvt.c and include files.. */
@@ -675,8 +650,8 @@ utf8_to_ucs2_char(const unsigned char *utf8p, int16 buflen, uint16 *ucs2p)
     }
 }
 
-/* ---------------- file methods declared here  ------------------------- */
-/* a few forward declarations.. */
+/* ------------------- file methods declared here  ------------------------- */
+/* a few forward declarations... */
 static JSClass file_class;
 JSObject* NewFileObject(JSContext *cx, char *bytes);
 JSObject* NewFileObjectFromFILE(JSContext *cx, FILE *f, char *filename, JSBool open);
@@ -685,12 +660,12 @@ static JSBool file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 typedef struct JSFile {
     char        *path;          /* the path to the file. */
     PRFileDesc* handle;         /* the handle for the file, if opened.  */
-    FILE*       nativehandle;   /* native handle, for stuff NSPR doesn't do. */
+    FILE        *nativehandle;  /* native handle, for stuff NSPR doesn't do. */
     JSBool      opened;
     JSString    *linebuffer;    /* temp buffer used by readln. */
     int32       mode;           /* mode used to open the file: read, write, append, create, etc.. */
     int32       type;           /* Asciiz, utf, unicode */
-    char        byteBuffer[3];  /* bytes read in advance by JS_FileRead ( UTF8 encoding ) */
+    char        byteBuffer[3];  /* bytes read in advance by js_FileRead ( UTF8 encoding ) */
     jsint       nbBytesInBuf;   /* number of bytes stored in the buffer above */
     jschar      charBuffer;     /* character read in advance by readln ( mac files only ) */
     JSBool      charBufferUsed; /* flag indicating if the buffer above is being used */
@@ -699,16 +674,50 @@ typedef struct JSFile {
     JSBool      autoflush;      /* should we force a flush for each line break? */
 } JSFile;
 
+/* ------------------------------- Helper functions ---------------------------- */
+/* Ripped off from lm_win.c .. */
+/* where is strcasecmp?.. for now, it's case sensitive..
+ *
+ * strcasecmp is in strings.h, but on windows it's called _stricmp...
+ * will need to #ifdef this
+ * */
+static int32
+file_has_option(char *options, char *name)
+{
+    char *comma, *equal;
+    int32 found = 0;
+
+    for (;;) {
+        comma = strchr(options, ',');
+        if (comma) *comma = '\0';
+        equal = strchr(options, '=');
+        if (equal) *equal = '\0';
+        if (strcmp(options, name) == 0) {
+            if (!equal || strcmp(equal + 1, "yes") == 0)
+                found = 1;
+            else
+                found = atoi(equal + 1);
+        }
+        if (equal) *equal = '=';
+        if (comma) *comma = ',';
+        if (found || !comma)
+            break;
+        options = comma + 1;
+    }
+    return found;
+}
+
+
 static void
-resetBuffers(JSFile * file)
+js_ResetBuffers(JSFile * file)
 {
     file->charBufferUsed=JS_FALSE;
     file->nbBytesInBuf=0;
 }
 
-/* Helper function. buffered version of PR_Read. used by JS_FileRead */
+/* Buffered version of PR_Read. Used by js_FileRead */
 static int32
-JS_BufferedRead(JSFile * f, char*buf, int32 len)
+js_BufferedRead(JSFile * f, char*buf, int32 len)
 {
     int32 count=0;
     while (f->nbBytesInBuf>0&&len>0) {
@@ -731,7 +740,7 @@ JS_BufferedRead(JSFile * f, char*buf, int32 len)
 }
 
 static int32
-JS_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
+js_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
 {
     unsigned char*aux;
     int32 count, i;
@@ -749,10 +758,9 @@ JS_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
     case ASCII:
       aux = (unsigned char*)JS_malloc(cx, len);
       if (!aux) {
-        JS_ReportOutOfMemory(cx);
         return 0;
       }
-      count=JS_BufferedRead(f, aux, len);
+      count=js_BufferedRead(f, aux, len);
       if (count==-1) {
         JS_free(cx, aux);
         return 0;
@@ -765,7 +773,7 @@ JS_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
     case UTF8:
         remainder = 0;
         for (count=0;count<len;count++) {
-            i=JS_BufferedRead(f, utfbuf+remainder, 3-remainder);
+            i=js_BufferedRead(f, utfbuf+remainder, 3-remainder);
             if (i<=0) {
                 return count;
             }
@@ -795,7 +803,7 @@ JS_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
         }
       break;
     case UCS2:
-      count=JS_BufferedRead(f,(char*)buf, len*2)>>1;
+      count=js_BufferedRead(f,(char*)buf, len*2)>>1;
       if (count==-1) {
           return 0;
       }
@@ -805,7 +813,7 @@ JS_FileRead(JSContext *cx, JSFile * f, jschar*buf, int32 len, int32 mode)
 }
 
 static int32
-JS_FileSkip(JSFile * f, int32 len, int32 mode)
+js_FileSkip(JSFile * f, int32 len, int32 mode)
 {
     int32 count, i;
     jsint remainder;
@@ -823,7 +831,7 @@ JS_FileSkip(JSFile * f, int32 len, int32 mode)
     case UTF8:
         remainder = 0;
         for (count=0;count<len;count++) {
-            i=JS_BufferedRead(f, utfbuf+remainder, 3-remainder);
+            i=js_BufferedRead(f, utfbuf+remainder, 3-remainder);
             if (i<=0) {
                 return 0;
             }
@@ -865,7 +873,7 @@ JS_FileSkip(JSFile * f, int32 len, int32 mode)
 }
 
 static int32
-JS_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
+js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
 {
     unsigned char*aux;
     int32 count, i,j;
@@ -873,10 +881,8 @@ JS_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
     switch (mode) {
     case ASCII:
         aux = (unsigned char*)JS_malloc(cx, len);
-        if (!aux) {
-            JS_ReportOutOfMemory(cx);
-            return 0;
-        }
+        if (!aux)  return 0;
+
         for (i=0; i<len; i++) {
             aux[i]=buf[i]%256;
         }
@@ -893,10 +899,7 @@ JS_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
         break;
     case UTF8:
         utfbuf = (unsigned char*)JS_malloc(cx, len*3);
-        if (!utfbuf) {
-            JS_ReportOutOfMemory(cx);
-            return 0;
-        }
+        if (!utfbuf)  return 0;
         i=0;
         for (count=0;count<len;count++) {
             j=one_ucs2_to_utf8_char(utfbuf+i, utfbuf+len*3, buf[count]);
@@ -931,49 +934,16 @@ JS_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
     return count;
 }
 
+/* -------------------------------- File methods ------------------------------ */
 static JSBool
 file_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSFile *file;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, file->path));
     return JS_TRUE;
-}
-
-/* Ripped off from lm_win.c .. */
-/* where is strcasecmp?.. for now, it's case sensitive..
- *
- * strcasecmp is in strings.h, but on windows it's called _stricmp...
- * will need to #ifdef this
- * */
-static int32
-file_has_option(char *options, char *name)
-{
-    char *comma, *equal;
-    int32 found = 0;
-
-    for (;;) {
-        comma = strchr(options, ',');
-        if (comma) *comma = '\0';
-        equal = strchr(options, '=');
-        if (equal) *equal = '\0';
-        if (strcmp(options, name) == 0) {
-            if (!equal || strcmp(equal + 1, "yes") == 0)
-                found = 1;
-            else
-                found = atoi(equal + 1);
-        }
-        if (equal) *equal = '=';
-        if (comma) *comma = ',';
-        if (found || !comma)
-            break;
-        options = comma + 1;
-    }
-    return found;
 }
 
 static JSBool
@@ -988,7 +958,6 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     int         len;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file) return JS_FALSE;
 
     /* A native file that is already open */
     if(file->opened && file->nativehandle){
@@ -1068,21 +1037,22 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     file->nativehandle=NULL;
     file->randomAccess=(type!=UTF8);
 
-    /* Deal with pipes here. We can't use NSPR for pipes, have to use POPEN */
+    /*
+		Deal with pipes here. We can't use NSPR for pipes,
+		so we have to use POPEN
+	*/
     if(file->path[0]==PIPE_SYMBOL || file->path[len-1]==PIPE_SYMBOL){
-        if(file->path[0]==PIPE_SYMBOL && file->path[strlen(file->path)-1]){
-            if(len==1){
-                /* TODO: open("-") too bad */
-            }else{
-                /* TODO: bidirectional pipes are not supported */
-            }
-            return JS_FALSE;
-
+        if(file->path[0]==PIPE_SYMBOL && file->path[len-1]){
+			JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+				JSFILEMSG_BIDIRECTIONAL_PIPE_NOT_SUPPORTED);
+				return JS_FALSE;
         }else{
             char pipemode[3];
             if(file->path[0] == PIPE_SYMBOL){
                 if(mask & (PR_RDONLY | PR_APPEND | PR_CREATE_FILE | PR_TRUNCATE)){
-                    /* TODO: this open mode is not supported with pipes */
+					JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+						JSFILEMSG_OPEN_MODE_NOT_SUPPORTED_WITH_PIPES,
+						mode, file->path);
                     return JS_FALSE;
                 }
                 /* open(SPOOLER, "| cat -v | lpr -h 2>/dev/null") -- pipe for writing */
@@ -1091,12 +1061,17 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 pipemode[2] = '\0';
                 file->nativehandle = POPEN(&file->path[1], pipemode);
             }else
-            if(file->path[strlen(file->path)-1] == PIPE_SYMBOL){
+            if(file->path[len-1] == PIPE_SYMBOL){
+                char *command = JS_malloc(cx, len);
+
+                strncpy(command, file->path, len-1);
+				command[len-1]='\0';
                 /* open(STATUS, "netstat -an 2>&1 |") */
                 pipemode[0] = 'r';
                 pipemode[1] = file->type==UTF8?'b':'t';
                 pipemode[2] = '\0';
-                file->nativehandle = POPEN(&file->path[1], pipemode);
+                file->nativehandle = POPEN(command, pipemode);
+				JS_free(cx, command);
             }
         }
     }else{
@@ -1104,17 +1079,16 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         file->handle = PR_Open(file->path, mask, 0644);
     }
 
-    resetBuffers(file);
+    js_ResetBuffers(file);
 
     /* Set the open flag and return result */
     if (file->handle==NULL && file->nativehandle==NULL){
-        *rval=BOOLEAN_TO_JSVAL(JS_FALSE);
+		/* TODO: error */
+        return JS_FALSE;
     }else{
         file->opened=JS_TRUE;
-        *rval=BOOLEAN_TO_JSVAL(JS_TRUE);
+        return JS_TRUE;
     }
-
-    return JS_TRUE;
 }
 
 static JSBool
@@ -1124,39 +1098,29 @@ file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStatus status;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
-    if (file->handle==NULL) {
-        *rval=JSVAL_FALSE;
-        return JS_TRUE;
-    }
+    status=(file->handle)?PR_Close(file->handle):fclose(file->nativehandle);
 
-    if (file->handle){
-        status=PR_Close(file->handle);
-    }else{
-        status=fclose(file->nativehandle);
+    if (status!=0){
+      /* TODO: error reporting */
+      return JS_FALSE;
     }
-    if (status!=0) {
-      *rval=JSVAL_FALSE;
-      return JS_TRUE;
-    }
+    /* Reset values */
     file->handle=NULL;
     file->nativehandle=NULL;
     file->opened=JS_FALSE;
-    resetBuffers(file);
+    js_ResetBuffers(file);
     *rval=JSVAL_TRUE;
 
     return JS_TRUE;
 }
-
 
 static JSBool
 file_exists(JSFile*file)
 {
     JSStatus status;
     status = PR_Access(file->path, PR_ACCESS_EXISTS);
-    return (status==JS_SUCCESS);
+    return (status==PR_SUCCESS);
 }
 
 static JSBool
@@ -1164,7 +1128,7 @@ file_canRead(JSFile*file)
 {
     JSStatus status;
     status = PR_Access(file->path, PR_ACCESS_READ_OK);
-    return (status==JS_SUCCESS);
+    return (status==PR_SUCCESS) /* TODO: && (file->mode&PR_RDONLY) */;
 }
 
 static JSBool
@@ -1172,7 +1136,7 @@ file_canWrite(JSFile*file)
 {
     JSStatus status;
     status = PR_Access(file->path, PR_ACCESS_WRITE_OK);
-    return (status==JS_SUCCESS);
+    return (status==PR_SUCCESS) /* TODO: && (file->mode&PR_WRONLY) */;
 }
 
 static JSBool
@@ -1196,11 +1160,12 @@ file_isDirectory(JSFile*file)
 {
     JSStatus status;
     PRFileInfo info;
-    if (file->opened&&file->handle) {
+    if (file->opened && file->handle){
       status=PR_GetOpenFileInfo(file->handle,&info);
-    } else {
+    }else{
           status=PR_GetFileInfo(file->path,&info);
     }
+
     if (status==JS_FAILURE)
         return JS_FALSE;
     return (info.type==PR_FILE_DIRECTORY);
@@ -1213,15 +1178,13 @@ file_remove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStatus status;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (file_isDirectory(file)) {
       status = PR_RmDir(file->path);
     } else {
       status = PR_Delete(file->path);
     }
-    if (status==JS_SUCCESS) {
+    if (status==PR_SUCCESS) {
         file->opened=JS_FALSE; /* I'm not sure I should do that.. */
         *rval = JSVAL_TRUE;
     } else {
@@ -1246,8 +1209,6 @@ file_copyTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     str=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
 
@@ -1312,8 +1273,6 @@ file_renameTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     }
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     str=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
     status = PR_Rename(file->path, str);
@@ -1332,8 +1291,6 @@ file_flush(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStatus status;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (!file->opened) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1368,8 +1325,6 @@ file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     *rval = BOOLEAN_TO_JSVAL(JS_FALSE);
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (!file->opened) {
         JSString *type,*mask;
@@ -1390,7 +1345,7 @@ file_write(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     for (i=0;i<argc;i++) {
         str=JS_ValueToString(cx, argv[i]);
-        count=JS_FileWrite(cx, file, JS_GetStringChars(str),JS_GetStringLength(str),file->type);
+        count=js_FileWrite(cx, file, JS_GetStringChars(str),JS_GetStringLength(str),file->type);
         if (count==-1)
           return JS_TRUE;
     }
@@ -1408,15 +1363,13 @@ file_writeln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsint         count;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     b=file_write(cx, obj, argc, argv, rval);
     if (!b)
     return JS_FALSE;
 
     str=JS_NewStringCopyZ(cx, LINEBREAK);
-    count=JS_FileWrite(cx, file, JS_GetStringChars(str),JS_GetStringLength(str),file->type);
+    count=js_FileWrite(cx, file, JS_GetStringChars(str),JS_GetStringLength(str),file->type);
 
     if (file->autoflush)
         file_flush(cx, obj, 0,NULL, NULL);
@@ -1436,8 +1389,6 @@ file_writeAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     jsval       elemval;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (argc<1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1476,8 +1427,6 @@ file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jschar      *buf;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (!file->opened) {
         JSString *type,*mask;
@@ -1505,7 +1454,7 @@ file_read(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!buf)
     return JS_FALSE;
 
-    count= JS_FileRead(cx, file, buf, want, file->type);
+    count= js_FileRead(cx, file, buf, want, file->type);
     if (count>0) {
       str = JS_NewUCStringCopyN(cx, buf, count);
       *rval=STRING_TO_JSVAL(str);
@@ -1531,10 +1480,8 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool  endofline;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
-    if (!file->opened) {
+    if (!file->opened){
         JSString *type,*mask;
         jsval v[2];
         jsval rval;
@@ -1553,10 +1500,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!file->linebuffer) {
         buf = JS_malloc(cx, 128*(sizeof data));
-        if (!buf) {
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
+        if (!buf) return JS_FALSE;
         file->linebuffer=JS_NewUCString(cx, buf, 128);
     }
     room=JS_GetStringLength(file->linebuffer);
@@ -1564,7 +1508,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* XXX TEST ME!! */
     for(;;) {
-        if (!JS_FileRead(cx, file,&data, 1,file->type)) {
+        if (!js_FileRead(cx, file,&data, 1,file->type)) {
             endofline=JS_FALSE;
             goto loop;
         }
@@ -1573,7 +1517,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             endofline=JS_TRUE;
             goto loop;
         case '\r' :
-            if (!JS_FileRead(cx, file,&data2, 1,file->type)) {
+            if (!js_FileRead(cx, file,&data2, 1,file->type)) {
                 endofline=JS_TRUE;
                 goto loop;
             }
@@ -1586,10 +1530,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         default:
             if (--room < 0) {
                 buf = JS_malloc(cx, (offset+ 128)*sizeof data);
-                if (!buf) {
-                    JS_ReportOutOfMemory(cx);
-                    return JS_FALSE;
-                }
+                if (!buf) return JS_FALSE;
                 room = 127;
                 memcpy(buf, JS_GetStringChars(file->linebuffer),
                     JS_GetStringLength(file->linebuffer));
@@ -1625,8 +1566,6 @@ file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     array=JS_NewArrayObject(cx, 0, NULL);
     *rval = OBJECT_TO_JSVAL(array);
@@ -1656,8 +1595,7 @@ file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         status=PR_GetFileInfo(file->path,&info);
     }
 
-    if (status==JS_FAILURE)
-    return JS_FALSE;
+    if (status==JS_FAILURE)  return JS_FALSE;
 
     if (file->handle) {
         while (ok&&(info.size>(JSUint32)PR_Seek(file->handle, 0, PR_SEEK_CUR))) {
@@ -1683,8 +1621,6 @@ file_skip(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     int32       toskip, count;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (!file->opened) {
         JSString *type,*mask;
@@ -1706,9 +1642,8 @@ file_skip(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_ValueToInt32(cx, argv[0], &toskip))
     return JS_FALSE;
 
-    count= JS_FileSkip(file, toskip, file->type);
-    if (count!=toskip)
-        return JS_FALSE;
+    count= js_FileSkip(file, toskip, file->type);
+    if (count!=toskip)  return JS_FALSE;
 
     return JS_TRUE;
 }
@@ -1742,22 +1677,19 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     if (!file_isDirectory(file)) {
         *rval = JSVAL_FALSE;
         return JS_TRUE; /* or return an empty array? or do a readAll?  */
     }
     dir=PR_OpenDir(file->path);
-    /* Create JSArray here.. */
+    /* Create JSArray here... */
     array=JS_NewArrayObject(cx, 0, NULL);
     *rval = OBJECT_TO_JSVAL(array);
     len=0;
 
     entry=NULL;
-    if (dir==NULL)
-    return JS_TRUE;
+    if (dir==NULL)  return JS_TRUE;
 
     while ((entry=PR_ReadDir(dir, PR_SKIP_BOTH))!=NULL) {
         /* First, check if we have a filter */
@@ -1807,8 +1739,6 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_FALSE;
 
     str = fileDirectoryName(cx, file->path);
     if (strcmp(str, file->path)) {
@@ -1907,8 +1837,6 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     tiny=JSVAL_TO_INT(id);
     file= JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-    return JS_TRUE;
 
     switch (tiny) {
     case FILE_PARENT:
@@ -2115,9 +2043,6 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     int32 count;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file) {
-        return JS_TRUE;
-    }
 
     if (JSVAL_IS_STRING(id)){
         return JS_TRUE;
@@ -2134,7 +2059,7 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             } else {
                 count = fseek( file->nativehandle, offset, SEEK_SET);
             }
-            resetBuffers(file);
+            js_ResetBuffers(file);
             *vp = INT_TO_JSVAL(count);
         }
         break;
@@ -2145,13 +2070,11 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static void JS_DLL_CALLBACK
+static void
 file_finalize(JSContext *cx, JSObject *obj)
 {
     JSFile *file;
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    if (!file)
-        return;
     JS_free(cx, file->path);
     if (file->linebuffer)
         JS_free(cx, file->linebuffer);
@@ -2173,7 +2096,10 @@ file_init(JSContext *cx, JSObject *obj, char *bytes)
     JSFile      *file;
 
     file=JS_malloc(cx, sizeof *file);
-    if (!file) return NULL;
+    if (!file) {
+        /* TODO: report error */
+        return NULL;
+    }
     memset(file, 0 , sizeof *file);
 
     /* canonize the path */
@@ -2253,14 +2179,14 @@ File(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     file = file_init(cx, obj, JS_GetStringBytes(str));
     if (!file) {
         *rval=JSVAL_VOID;
-        return JS_TRUE;
+        return JS_FALSE;
     }
 
     return JS_TRUE;
 }
 
 /*
-    File.currentDir = "D:\"
+    File.currentDir = new File("D:\") or File.currentDir = "D:\"
 */
 static JSBool
 file_currentDirSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
@@ -2332,7 +2258,6 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
     afile=NewFileObjectFromFILE(cx, stdin, SPECIAL_FILE_STRING, JS_TRUE);
     if (!afile) return NULL;
     fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    if (!fileObj) return NULL;
     fileObj->randomAccess=JS_FALSE;
     vp=OBJECT_TO_JSVAL(afile);
     JS_SetProperty(cx, ctor, "input", &vp);
@@ -2341,8 +2266,6 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
     afile=NewFileObjectFromFILE(cx, stdout, SPECIAL_FILE_STRING, JS_TRUE);
     if (!afile) return NULL;
     fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    if (!fileObj)
-    return NULL;
     fileObj->randomAccess=JS_FALSE;
     vp=OBJECT_TO_JSVAL(afile);
     JS_SetProperty(cx, ctor, "output", &vp);
@@ -2352,8 +2275,6 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
     if (!afile)
     return NULL;
     fileObj = JS_GetInstancePrivate(cx, afile, &file_class, NULL);
-    if (!fileObj)
-    return NULL;
     fileObj->randomAccess=JS_FALSE;
     vp=OBJECT_TO_JSVAL(afile);
     JS_SetProperty(cx, ctor, "error", &vp);
