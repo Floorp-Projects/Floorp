@@ -887,10 +887,11 @@ nsBrowserAppCore::OpenWindow()
   printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL));
 #else  // New Way
   nsFileSpec fileSpec;
-  fileWidget->GetFile(fileSpec);
+  if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
 
   nsFileURL fileURL(fileSpec);
   printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL.GetAsString()));
+  }
 #endif
   NS_RELEASE(fileWidget);
 
