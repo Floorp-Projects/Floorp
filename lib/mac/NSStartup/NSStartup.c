@@ -27,6 +27,8 @@
 #include <CodeFragments.h>
 #include <stdio.h>
 
+#include "gc_fragments.h"
+
 extern char __code_start__[];				/*	(defined by linker)	*/
 extern char	__code_end__[];					/*	(defined by linker)	*/
 extern char __data_start__[];				/*	(defined by linker)	*/
@@ -36,16 +38,15 @@ extern char __data_end__[];					/*	(defined by linker)	*/
 extern pascal OSErr __initialize(const CFragInitBlock* initBlock);
 extern pascal void __terminate(void);
 
-extern void GC_add_roots(char *begin, char *end);
-extern void GC_remove_roots(char *begin, char *end);
-
 pascal OSErr __NSInitialize(const CFragInitBlock* initBlock);
 pascal void __NSTerminate(void);
 
 pascal OSErr __NSInitialize(const CFragInitBlock* initBlock)
 {
 	//  let the GC know about this library.	
-	GC_add_roots(__data_start__, __data_end__ + sizeof(char*));
+	GC_register_fragment(__data_start__, __data_end__ + sizeof(char*),
+	                     __code_start__, __code_end__,
+	                     initBlock->fragLocator.u.onDisk.fileSpec);
 
 	return __initialize(initBlock);
 }
@@ -55,14 +56,18 @@ pascal void __NSTerminate()
 	__terminate();
 
 	// remove this library's global roots.
-	GC_remove_roots(__data_start__, __data_end__ + sizeof(char*));
+	GC_unregister_fragment(__data_start__, __data_end__ + sizeof(char*),
+	                       __code_start__, __code_end__);
 }
 
 #ifndef GC_LEAK_DETECTOR
 // stub implementations, when GC leak detection isn't on. these are needed so that
 // NSStdLib has something to export for these functions, even when the GC isn't used.
-void GC_add_roots(char *begin, char *end) {}
-void GC_remove_roots(char *begin, char *end) {}
+void GC_register_fragment(char* dataStart, char* dataEnd,
+                          char* codeStart, char* codeEnd,
+                          const FSSpec* fragmentSpec) {}
+void GC_unregister_fragment(char* dataStart, char* dataEnd,
+                            char* codeStart, char* codeEnd) {}
 void GC_clear_roots() {}
 void GC_generic_init_threads() {}
 void GC_gcollect() {}

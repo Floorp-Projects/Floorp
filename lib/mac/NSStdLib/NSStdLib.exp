@@ -994,8 +994,8 @@ scalbn
 #__initialize
 
 # GC exports.
-GC_add_roots
-GC_remove_roots
+GC_register_fragment
+GC_unregister_fragment
 GC_clear_roots
 GC_generic_init_threads
 GC_gcollect
