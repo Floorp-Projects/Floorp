@@ -341,6 +341,10 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 	if (nsnull == str)	return(found);
 	nsAutoString	value(str);
 
+	// XXX Note: nsString.Find() is currently only case-significant.
+	//           We really want a case insignificant Find() for all
+	//           the comparisons below.
+
 	if (!PL_strcmp(matchMethod, "contains"))
 	{
 		if (value.Find(matchText) >= 0)
