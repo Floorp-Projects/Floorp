@@ -95,6 +95,7 @@ struct nsBlockReflowState {
   // the previous line contains a block element)
   nscoord mPrevNegBottomMargin;
   nscoord mPrevPosBottomMargin;
+  PRBool mPrevMarginSynthetic;
 
   // Block frame border+padding information
   nsMargin mBorderPadding;
