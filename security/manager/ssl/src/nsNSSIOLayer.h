@@ -49,12 +49,6 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISSLSTATUSPROVIDER
 
-  nsresult SetHostName(const char *aHostName);
-  nsresult SetProxyName(const char *aName);
-  
-  nsresult SetHostPort(PRInt32 aPort);
-  nsresult SetProxyPort(PRInt32 aPort);
-
   nsresult SetSecurityState(PRInt32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
 
@@ -68,12 +62,6 @@ public:
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
 
 protected:
-  nsString mHostName;
-  PRInt32 mHostPort;
-  
-  nsString mProxyName;
-  PRInt32 mProxyPort;
-  
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
   PRInt32 mSecurityState;
