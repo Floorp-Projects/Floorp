@@ -259,6 +259,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         // default button border color
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
         break;
+    case eColor__moz_gtk2_hovertext:
+        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
+        break;
     default:
         /* default color is BLACK */
         aColor = 0;

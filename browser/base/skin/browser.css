@@ -53,7 +53,6 @@ toolbarbutton.bookmark-item {
   min-width: 0;
   max-width: 13em;
   padding: 2px 3px;
-  color: -moz-DialogText !important;
 }
 
 toolbarbutton.bookmark-item:hover:active,
@@ -151,13 +150,6 @@ menuitem.bookmark-item {
   -moz-box-orient: vertical;
   min-width: 0px;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-
-toolbarbutton:not([disabled="true"]):hover,
-menubutton:not([disabled="true"]):hover,
-toolbarbutton:not([disabled="true"]):hover:active,
-menubutton:not([disabled="true"]):hover:active {
-  color: ButtonText !important;
 }
 
 .toolbarbutton-menubutton-stack,

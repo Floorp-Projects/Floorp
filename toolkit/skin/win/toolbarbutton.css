@@ -52,12 +52,18 @@ toolbarbutton {
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+#ifdef MOZ_WIDGET_GTK2
+  color: -moz-gtk2-hovertext;
+#endif
 }
 
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   padding: 5px 3px 3px 5px;
+#ifdef MOZ_WIDGET_GTK2
+  color: ButtonText;
+#endif
 }
 
 toolbarbutton[disabled="true"],

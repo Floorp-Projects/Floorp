@@ -406,6 +406,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_dialogtext, nsILookAndFeel::eColor__moz_dialogtext,
   eCSSKeyword__moz_dragtargetzone, nsILookAndFeel::eColor__moz_dragtargetzone,
   eCSSKeyword__moz_hyperlinktext, NS_COLOR_MOZ_HYPERLINKTEXT,
+  eCSSKeyword__moz_gtk2_hovertext, nsILookAndFeel::eColor__moz_gtk2_hovertext,
   eCSSKeyword__moz_mac_focusring, nsILookAndFeel::eColor__moz_mac_focusring,
   eCSSKeyword__moz_mac_menuselect, nsILookAndFeel::eColor__moz_mac_menuselect,
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
