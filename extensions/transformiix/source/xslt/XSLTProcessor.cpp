@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.22 2000/08/26 04:34:50 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.23 2000/08/26 04:56:49 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.22 $ $Date: 2000/08/26 04:34:50 $
+ * @version $Revision: 1.23 $ $Date: 2000/08/26 04:56:49 $
 **/
 
 /**
@@ -420,22 +420,16 @@ void XSLTProcessor::processTopLevel
                     //-- get document base
                     String realHref;
                     String thisDocBase = ps->getDocumentBase();
-                    URIUtils::resolveHref(href,thisDocBase,realHref);
-		    
-                    String errMsg,voidBase;
-                    istream* xslInput = URIUtils::getInputStream(realHref,voidBase,errMsg);
-
-                    Document* xslDoc = 0;
+                    String errMsg;
                     XMLParser xmlParser;
-                    if ( xslInput ) {
-                        xslDoc = xmlParser.parse(*xslInput);
-                        delete xslInput;
-                    }
+
+                    Document* xslDoc = xmlParser.getDocumentFromURI(realHref, thisDocBase, errMsg);
+
                     if (!xslDoc) {
                         String err("error including XSL stylesheet: ");
                         err.append(href);
                         err.append("; ");
-                        err.append(xmlParser.getErrorString());
+                        err.append(errMsg);
                         notifyError(err);
                     }
                     else {
