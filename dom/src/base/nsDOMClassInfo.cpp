@@ -139,6 +139,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
+#include "nsIDOMRect.h"
 
 // XBL related includes.
 #include "nsIXBLService.h"
@@ -796,6 +797,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // DOM Traversal classes
   NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // We are now trying to preserve binary compat in classinfo.  No
+  // more putting things in those categories up there.  New entries
+  // are to be added to the end of the list
+  NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -1666,6 +1673,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ROCSSPrimitiveValue,
                                       nsIDOMCSSPrimitiveValue)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSPrimitiveValue)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSRect, nsIDOMRect)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRect)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Range, nsIDOMRange)
