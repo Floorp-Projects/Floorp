@@ -167,6 +167,7 @@
     <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
+    <command id="cmd_quit" oncommand="goQuitApplication()"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
