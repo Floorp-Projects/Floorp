@@ -234,7 +234,9 @@ nsMouseEvent	mouseevent;
 		thewindow = (nsWindow*)(((WindowPeek)whichwindow)->refCon);
 			
 		if(thewindow != nsnull)
+		{
 			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
+		}
 
 		switch(partcode)
 			{
@@ -265,7 +267,15 @@ nsMouseEvent	mouseevent;
 				InsetRect(&therect, 3,3);
 				therect.top += 20;    /* Allow space for menu bar */
 				DragWindow(whichwindow, aTheEvent->where, &therect);
+				therect = whichwindow->portRect;
+				if (thewindow != nsnull)
+				{
+					LocalToGlobal(&topLeft(therect));
+					LocalToGlobal(&botRight(therect));
+					thewindow->SetBounds(therect);
+				}
 				break;
+				
 			case inGrow:
 				SetPort(whichwindow);
 				therect = whichwindow->portRect;
@@ -286,6 +296,15 @@ nsMouseEvent	mouseevent;
 				therect.top = therect.bottom - 16;
 				DrawGrowIcon(whichwindow);
 				ValidRect(&therect);
+				
+				if (thewindow != nsnull)
+				{
+					therect = whichwindow->portRect;
+					LocalToGlobal(&topLeft(therect));
+					LocalToGlobal(&botRight(therect));
+					thewindow->SetBounds(therect);
+				}
+
 				break;
 			case inGoAway:
 				if(TrackGoAway(whichwindow,aTheEvent->where))
