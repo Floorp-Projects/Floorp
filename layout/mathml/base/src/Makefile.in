@@ -76,9 +76,9 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) mathfont.properties $(DIST)/bin/res/fonts
-	$(INSTALL) mathfontCMSY10.properties $(DIST)/bin/res/fonts
-	$(INSTALL) mathfontCMEX10.properties $(DIST)/bin/res/fonts
-	$(INSTALL) mathfontMTExtra.properties $(DIST)/bin/res/fonts
-	$(INSTALL) mathfontMath4.properties $(DIST)/bin/res/fonts
-	$(INSTALL) mathfontSymbol.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfont.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontCMSY10.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontCMEX10.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontMTExtra.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontMath4.properties $(DIST)/bin/res/fonts
+	$(INSTALL) $(srcdir)/mathfontSymbol.properties $(DIST)/bin/res/fonts
