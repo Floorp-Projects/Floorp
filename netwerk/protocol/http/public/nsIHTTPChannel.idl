@@ -56,6 +56,7 @@ interface nsIHTTPChannel : nsIChannel
         protocol instance. 
     */
     string GetResponseHeader(in nsIAtom headerAtom);
+    void   SetResponseHeader(in nsIAtom headerAtom, in string headerValue);
     nsISimpleEnumerator GetResponseHeaderEnumerator();
 
     readonly attribute unsigned long ResponseStatus;

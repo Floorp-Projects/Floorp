@@ -443,6 +443,28 @@ nsHTTPChannel::GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult)
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::SetResponseHeader(nsIAtom* i_Header, const char* i_HeaderValue) {
+    nsresult rv = NS_OK;
+
+    if (!mConnected) {
+        rv = Open();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mResponse) {
+        // we need to set the header and ensure that observers are notified again.
+        rv = mResponse->SetHeader(i_Header, i_HeaderValue);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = OnHeadersAvailable();
+
+    } else {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::GetResponseStatus(PRUint32  *o_Status)
 {
     if (!mConnected) 
@@ -875,6 +897,50 @@ nsresult nsHTTPChannel::SetCharset(const char *aCharset)
 {
   mCharset = aCharset;
   return NS_OK;
+}
+
+nsresult nsHTTPChannel::OnHeadersAvailable()
+{
+    nsresult rv = NS_OK;
+
+    // Notify the event sink that response headers are available...
+    if (mEventSink) {
+        rv = mEventSink->OnHeadersAvailable(this);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Check for any modules that want to receive headers once they've arrived.
+    NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsISimpleEnumerator> pModules;
+    rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, getter_AddRefs(pModules));
+    if (NS_FAILED(rv)) return rv;
+
+    // Go through the external modules and notify each one.
+    nsISupports *supEntry;
+    rv = pModules->GetNext(&supEntry);
+    while (NS_SUCCEEDED(rv)) 
+    {
+        nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        nsCOMPtr<nsINetNotify> syncNotifier;
+        entry->GetSyncProxy(getter_AddRefs(syncNotifier));
+        nsCOMPtr<nsIHTTPNotify> pNotify = do_QueryInterface(syncNotifier, &rv);
+
+        if (NS_SUCCEEDED(rv)) 
+        {
+            // send off the notification, and block.
+            // make the nsIHTTPNotify api call
+            pNotify->AsyncExamineResponse(this);
+            // we could do something with the return code from the external
+            // module, but what????            
+        }
+        rv = pModules->GetNext(&supEntry); // go around again
+    }
+    return NS_OK;
 }
 
 

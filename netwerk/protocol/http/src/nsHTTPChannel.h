@@ -78,6 +78,8 @@ public:
     nsresult            SetContentType(const char* aContentType);
     nsresult            SetCharset(const char *aCharset);
 
+    nsresult            OnHeadersAvailable();
+
     // Set if this channel is using proxy to connect
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 

@@ -256,46 +256,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
     NS_ASSERTION(mHeadersDone, "Headers have not been received!");
 
     if (mHeadersDone) {
-
-        // Notify the event sink that response headers are available...
-        nsCOMPtr<nsIHTTPEventSink> sink;
-        mConnection->GetEventSink(getter_AddRefs(sink));
-        if (sink) {
-            sink->OnHeadersAvailable(mConnection);
-        }
-
-        // Check for any modules that want to receive headers once they've arrived.
-        NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISimpleEnumerator> pModules;
-        rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, getter_AddRefs(pModules));
-        if (NS_FAILED(rv)) return rv;
-
-        // Go through the external modules and notify each one.
-        nsISupports *supEntry;
-        rv = pModules->GetNext(&supEntry);
-        while (NS_SUCCEEDED(rv)) 
-        {
-            nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
-            if (NS_FAILED(rv)) 
-                return rv;
-
-            nsCOMPtr<nsINetNotify> syncNotifier;
-            entry->GetSyncProxy(getter_AddRefs(syncNotifier));
-            nsCOMPtr<nsIHTTPNotify> pNotify = do_QueryInterface(syncNotifier, &rv);
-
-            if (NS_SUCCEEDED(rv)) 
-            {
-                // send off the notification, and block.
-                // make the nsIHTTPNotify api call
-                pNotify->AsyncExamineResponse(mConnection);
-                // we could do something with the return code from the external
-                // module, but what????            
-            }
-            rv = pModules->GetNext(&supEntry); // go around again
-        }
-
+        rv = mConnection->OnHeadersAvailable();
     } else {
         rv = NS_ERROR_FAILURE;
     }
