@@ -102,6 +102,9 @@
 
   function findParentNode(node, parentNode)
   {
+    if (node && node.nodeType == Node.TEXT_NODE) {
+      node = node.parentNode;
+    }
     while (node) {
       var nodeName = node.localName;
       if (!nodeName)
