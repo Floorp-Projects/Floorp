@@ -268,7 +268,12 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
                                   PR_FALSE);
     }
 
-    // drop the ref to mImageElement, in case it has a ref to us
+    // Break reference cycle with mImageElement, if we have one
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageElement);
+    if (imageLoader) {
+      imageLoader->RemoveObserver(this);
+    }
+    
     mImageElement = nsnull;
   }
 
