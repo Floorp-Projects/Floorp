@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= signed
 LIBRARY_NAME	= signed
 IS_COMPONENT	= 1
-REQUIRES	= xpcom mime msgbase msgbaseutil pref js necko uconv intl
+REQUIRES	= xpcom mime msgbase msgbaseutil pref js necko uconv intl locale
 
 CPPSRCS		= \
 		mimexpcom.cpp \
