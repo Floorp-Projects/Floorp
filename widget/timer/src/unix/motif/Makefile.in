@@ -29,22 +29,22 @@ REQUIRES	= xpcom
 CPPSRCS		= nsTimerMotif.cpp
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-
 TIMER_SUFFIX	= motif
 IS_COMPONENT	= 1
 CPPSRCS		+= nsTimerMotifFactory.cpp
-INCLUDES	+= $(MOZ_MOTIF_CFLAGS) -I$(srcdir)/..
 EXTRA_DSO_LDOPTS = $(MOZ_MOTIF_LDFLAGS)
-
 else
-
 TIMER_SUFFIX	= s
-CXXFLAGS	+= $(TK_CFLAGS)
-INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
-
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifndef MOZ_MONOLITHIC_TOOLKIT
+INCLUDES	+= $(MOZ_MOTIF_CFLAGS) -I$(srcdir)/..
+else
+CXXFLAGS	+= $(TK_CFLAGS)
+INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
+endif
 
