@@ -686,8 +686,8 @@ process_buffered_gif_input_data(gif_struct* gs)
     if (gs->destroy_pending &&
         ((state == gif_done) || (state == gif_error) || (state == gif_oom))) {
 
-
         il_gif_abort(ic);
+
         if(ic->imgdcb)
           ic->imgdcb->ImgDCBHaveImageAll();
     }
@@ -1507,6 +1507,7 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                    subsequent images.  Block until the appointed time. */
                 if(gs->delay_time < MINIMUM_DELAY_TIME )
                     gs->delay_time = MINIMUM_DELAY_TIME;
+
                 if (gs->delay_time){
                     if(ic->imgdcb){
                           gs->delay_timeout = (void *)
@@ -1627,9 +1628,10 @@ il_gif_complete(il_container *ic)
             process_buffered_gif_input_data(gs);
             return;
         }
-        
-        il_gif_abort(ic);
+        if(!(ic->is_multipart))
+            il_gif_abort(ic);
     }
+    
     if (ic->imgdcb)
        ic->imgdcb->ImgDCBHaveImageAll();
     else

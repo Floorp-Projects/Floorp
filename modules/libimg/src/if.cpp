@@ -636,8 +636,6 @@ il_size(il_container *ic)
     }
 
     ic->state = IC_SIZED;
-    if (ic->state == IC_MULTI)
-        return 0;
 
     if(ic->display_type == IL_Printer){
         req_w = ic->dest_width;
@@ -778,13 +776,12 @@ il_size(il_container *ic)
        will need to supply information on the image type. */
     il_description_notify(ic);
 
-
     /* If the display front-end doesn't support scaling, IMGCBIF_NewPixmap will
        set the image and mask dimensions to scaled_width and scaled_height. */
     nsresult rv = img_cx->img_cb->NewPixmap(img_cx->dpy_cx, ic->dest_width,
                               ic->dest_height, ic->image, ic->mask);
     if (NS_FAILED(rv))
-           return MK_OUT_OF_MEMORY;
+           return MK_OUT_OF_MEMORY;   
 
     if (!ic->image->haveBits)
         return MK_OUT_OF_MEMORY;
@@ -1446,8 +1443,10 @@ il_image_complete(il_container *ic)
         case IC_STREAM:
             /* If we didn't size the image, but the stream finished loading, the
                image must be corrupt or truncated. */
-            ic->state = IC_BAD;
-            il_bad_container(ic);
+            if(!(ic->is_multipart)){
+                ic->state = IC_BAD;
+                il_bad_container(ic);
+            }
             break;
 
         case IC_SIZED:
