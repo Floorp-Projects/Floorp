@@ -24,6 +24,13 @@
 #include "nsCOMPtr.h"
 #include "nsOutlinerSelection.h"
 #include "nsIOutlinerBoxObject.h"
+#include "nsIOutlinerView.h"
+#include "nsString.h"
+#include "nsIDOMElement.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
 
 // A helper class for managing our ranges of selection.
 struct nsOutlinerRange
@@ -37,14 +44,74 @@ struct nsOutlinerRange
   nsOutlinerSelection* mSelection;
 
   nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aSingleVal)
-    :mSelection(aSel), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
-  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aMin, PRInt32 aMax) :mNext(nsnull), mMin(aMin), mMax(aMax) {};
+    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
+  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aMin, PRInt32 aMax) 
+    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aMin), mMax(aMax) {};
 
   ~nsOutlinerRange() { delete mNext; };
 
   void Connect(nsOutlinerRange* aPrev = nsnull, nsOutlinerRange* aNext = nsnull) {
+    if (aPrev)
+      aPrev->mNext = this;
+    else
+      mSelection->mFirstRange = this;
+
+    if (aNext)
+      aNext->mPrev = this;
+
     mPrev = aPrev;
     mNext = aNext;
+  };
+
+  void Remove(PRInt32 aIndex) {
+    if (aIndex >= mMin && aIndex <= mMax) {
+      // We have found the range that contains us.
+      if (mMin == mMax) {
+        // Delete the whole range.
+        if (mPrev)
+          mPrev->mNext = mNext;
+        if (mNext)
+          mNext->mPrev = mPrev;
+        nsOutlinerRange* first = mSelection->mFirstRange;
+        if (first == this)
+          mSelection->mFirstRange = mNext;
+        mNext = mPrev = nsnull;
+        delete this;
+      }
+      else if (aIndex == mMin)
+        mMin++;
+      else if (aIndex == mMax)
+        mMax--;
+    }
+    else if (mNext)
+      mNext->Remove(aIndex);
+  };
+
+  void Add(PRInt32 aIndex) {
+    if (aIndex < mMin) {
+      // We have found a spot to insert.
+      if (aIndex + 1 == mMin)
+        mMin = aIndex;
+      else if (mPrev && mPrev->mMax+1 == aIndex)
+        mPrev->mMax = aIndex;
+      else {
+        // We have to create a new range.
+        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex);
+        newRange->Connect(mPrev, this);
+      }
+    }
+    else if (mNext)
+      mNext->Add(aIndex);
+    else {
+      // Insert on to the end.
+      if (mMax+1 == aIndex)
+        mMax = aIndex;
+      else {
+        // We have to create a new range.
+        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex);
+        newRange->Connect(this, nsnull);
+      }
+    }
   };
 
   PRBool Contains(PRInt32 aIndex) {
@@ -72,6 +139,10 @@ struct nsOutlinerRange
 
   void RemoveAllBut(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax) {
+
+      // Invalidate everything in this list.
+      mSelection->mFirstRange->Invalidate();
+
       mMin = aIndex;
       mMax = aIndex;
       
@@ -82,10 +153,10 @@ struct nsOutlinerRange
         mNext->mPrev = mPrev;
       mNext = mPrev = nsnull;
       
-      // Invalidate everything in this list.
-      mSelection->mFirstRange->Invalidate();
-      delete mSelection->mFirstRange;
-      mSelection->mFirstRange = this;
+      if (first != this) {
+        delete mSelection->mFirstRange;
+        mSelection->mFirstRange = this;
+      }
     }
     else if (mNext)
       mNext->RemoveAllBut(aIndex);
@@ -105,7 +176,7 @@ nsOutlinerSelection::~nsOutlinerSelection()
   delete mFirstRange;
 }
 
-NS_IMPL_ISUPPORTS1(nsOutlinerSelection, nsIOutlinerSelection)
+NS_IMPL_ISUPPORTS2(nsOutlinerSelection, nsIOutlinerSelection, nsISecurityCheckedComponent)
 
 NS_IMETHODIMP nsOutlinerSelection::GetOutliner(nsIOutlinerBoxObject * *aOutliner)
 {
@@ -139,46 +210,116 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
       if (count > 1) {
         // We need to deselect everything but our item.
         mFirstRange->RemoveAllBut(aIndex);
-        return NS_OK;
+        FireOnSelectHandler();
       }
+      return NS_OK;
+    }
+    else {
+       // Clear out our selection.
+       mFirstRange->Invalidate();
+       delete mFirstRange;
     }
   }
 
-  delete mFirstRange;
+  // Create our new selection.
   mFirstRange = new nsOutlinerRange(this, aIndex);
+  mFirstRange->Invalidate();
 
-  // XXX Fire the select event if not suppressed!
+  // Fire the select event
+  FireOnSelectHandler();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 index)
+NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // There are six cases that can occur on a ToggleSelect with our
+  // range code.
+  // (1) A new range should be made for a selection.
+  // (2) A single range is removed from the selection.
+  // (3) The item is added to an existing range.
+  // (4) The item is removed from an existing range.
+  // (5) The addition of the item causes two ranges to be merged.
+  // (6) The removal of the item causes two ranges to be split.
+  if (!mFirstRange)
+    Select(aIndex);
+  else {
+    if (!mFirstRange->Contains(aIndex))
+      mFirstRange->Add(aIndex);
+    else 
+      mFirstRange->Remove(aIndex);
+
+    mOutliner->InvalidateRow(aIndex);
+
+    FireOnSelectHandler();
+  }
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 startIndex, PRInt32 endIndex)
+NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // Clear our selection.
+  mFirstRange->Invalidate();
+  delete mFirstRange;
+  
+  if (aStartIndex == -1)
+    aStartIndex = mCurrentIndex;
+    
+  PRInt32 start = aStartIndex < aEndIndex ? aStartIndex : aEndIndex;
+  PRInt32 end = aStartIndex < aEndIndex ? aEndIndex : aStartIndex;
+
+  mFirstRange = new nsOutlinerRange(this, start, end);
+  mFirstRange->Invalidate();
+
+  FireOnSelectHandler();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  mFirstRange->Invalidate();
+  delete mFirstRange;
+  mFirstRange = nsnull;
+
+  FireOnSelectHandler();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::InvertSelection()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::SelectAll()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // Invalidate not necessary when clearing selection, since 
+  // we're going to invalidate the world on the SelectAll.
+  delete mFirstRange;
+  
+  nsCOMPtr<nsIOutlinerView> view;
+  mOutliner->GetView(getter_AddRefs(view));
+  if (!view)
+    return NS_OK;
+
+  PRInt32 rowCount;
+  view->GetRowCount(&rowCount);
+
+  if (rowCount == 0)
+    return NS_OK;
+
+  mFirstRange = new nsOutlinerRange(this, 0, rowCount-1);
+  mFirstRange->Invalidate();
+
+  FireOnSelectHandler();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32 *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 i, PRInt32 *min, PRInt32 *max)
@@ -207,6 +348,72 @@ NS_IMETHODIMP nsOutlinerSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
 NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aCurrentIndex)
 {
   mCurrentIndex = aCurrentIndex;
+  return NS_OK;
+}
+
+nsresult
+nsOutlinerSelection::FireOnSelectHandler()
+{
+  if (mSuppressed)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> elt;
+  mOutliner->GetOutlinerBody(getter_AddRefs(elt));
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+ 
+  PRInt32 count = document->GetNumberOfShells();
+	for (PRInt32 i = 0; i < count; i++) {
+		nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
+		if (nsnull == shell)
+				continue;
+
+		// Retrieve the context in which our DOM event will fire.
+		nsCOMPtr<nsIPresContext> aPresContext;
+		shell->GetPresContext(getter_AddRefs(aPresContext));
+				
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_FORM_SELECTED;
+
+    content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  }
+
+  return NS_OK;
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP nsOutlinerSelection::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP nsOutlinerSelection::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP nsOutlinerSelection::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
+  return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP nsOutlinerSelection::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  nsCAutoString str("AllAccess");
+  *_retval = str.ToNewCString();
   return NS_OK;
 }
 

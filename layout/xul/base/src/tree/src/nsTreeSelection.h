@@ -36,8 +36,12 @@ public:
    
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTLINERSELECTION
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
   friend struct nsOutlinerRange;
+
+protected:
+  nsresult FireOnSelectHandler();
 
 protected:
   // Members

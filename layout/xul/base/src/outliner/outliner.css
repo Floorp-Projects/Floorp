@@ -1,19 +1,24 @@
 outlinerbody {
   background-color: white;
   color: black;
+  -moz-user-select: none;
 }
 
-:-moz-outliner-row
+:-moz-outliner-row(selected)
 {
-  height: 19px;
+  background-color: blue;
 }
 
-:-moz-outliner-cell
+:-moz-outliner-cell(selected)
 {
   
 }
 
 :-moz-outliner-cell-text
 {
-  color: inherit;
+}
+
+:-moz-outliner-cell-text(selected)
+{
+  color: white;  
 }

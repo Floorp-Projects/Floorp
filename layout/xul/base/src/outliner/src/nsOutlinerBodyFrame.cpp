@@ -36,8 +36,11 @@
 
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
+#include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsICSSStyleRule.h"
 #include "nsCSSRendering.h"
@@ -77,8 +80,8 @@ nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
 
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
-    mNextState++;
     currState = new nsDFAState(mNextState);
+    mNextState++;
     mTransitionTable->Put(&key, currState);
   }
 
@@ -292,7 +295,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 
     mView->SetSelection(sel);
   }
-
+  
   // Changing the view causes us to refetch our data.  This will
   // necessarily entail a full invalidation of the outliner.
   mTopRowIndex = 0;
@@ -300,6 +303,21 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   mColumns = nsnull;
   Invalidate();
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsOutlinerBodyFrame::GetOutlinerBody(nsIDOMElement** aElement)
+{
+  return mContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aElement);
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::GetSelection(nsIOutlinerSelection** aSelection)
+{
+  if (mView)
+    return mView->GetSelection(aSelection);
+
+  *aSelection = nsnull;
   return NS_OK;
 }
 
@@ -324,16 +342,37 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Invalidate()
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRow(PRInt32 aIndex)
 {
+  if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
+    return NS_OK;
+
+  nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aIndex-mTopRowIndex), mInnerBox.width, mRowHeight);
+  nsLeafBoxFrame::Invalidate(mPresContext, rowRect, PR_FALSE);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aRow, const PRUnichar *aColID)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 {
+  if (aStart == aEnd)
+    return InvalidateRow(aStart);
+
+  
+  if (aEnd < mTopRowIndex || aStart > mTopRowIndex + mPageCount + 1)
+    return NS_OK;
+
+  if (aStart < mTopRowIndex)
+    aStart = mTopRowIndex;
+
+  if (aEnd > mTopRowIndex + mPageCount + 1)
+    aEnd = mTopRowIndex + mPageCount + 1;
+
+  nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
+  nsLeafBoxFrame::Invalidate(mPresContext, rangeRect, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -371,8 +410,47 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID)
+NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID)
 {
+  // Ensure we have a row height.
+  if (mRowHeight == 0)
+    mRowHeight = GetRowHeight();
+
+  // Convert our x and y coords to twips.
+  float pixelsToTwips = 0.0;
+  mPresContext->GetPixelsToTwips(&pixelsToTwips);
+  aX = NSToIntRound(aX * pixelsToTwips);
+  aY = NSToIntRound(aY * pixelsToTwips);
+  
+  // Get our box object.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
+  
+  nsCOMPtr<nsIBoxObject> boxObject;
+  nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
+  
+  PRInt32 x;
+  PRInt32 y;
+  boxObject->GetX(&x);
+  boxObject->GetY(&y);
+
+  x = NSToIntRound(x * pixelsToTwips);
+  y = NSToIntRound(y * pixelsToTwips);
+
+  // Adjust into our coordinate space.
+  x = aX-x;
+  y = aY-y;
+
+  // Adjust y by the inner box y, so that we're in the inner box's
+  // coordinate space.
+  y += mInnerBox.y;
+
+  // Now just mod by our total inner box height and add to our top row index.
+  *aRow = (y/mRowHeight)+mTopRowIndex;
+
+  // XXX Determine the column hit!
   return NS_OK;
 }
 
@@ -407,13 +485,13 @@ nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aC
 }
 
 
-PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
+PRInt32 nsOutlinerBodyFrame::GetRowHeight()
 {
   // Look up the correct height.  It is equal to the specified height
   // + the specified margins.
   nsCOMPtr<nsIStyleContext> rowContext;
   mScratchArray->Clear();
-  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(mPresContext, nsXULAtoms::mozoutlinerrow, getter_AddRefs(rowContext));
   if (rowContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           rowContext->GetStyleData(eStyleStruct_Position);
@@ -432,7 +510,7 @@ PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
       return val;
     }
   }
-  return 16; // As good a default as any.
+  return 19*15; // As good a default as any.
 }
 
 nsRect nsOutlinerBodyFrame::GetInnerBox()
@@ -476,7 +554,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
 
   // Update our page count, our available height and our row height.
   PRInt32 oldRowHeight = mRowHeight;
-  mRowHeight = GetRowHeight(aPresContext);
+  mRowHeight = GetRowHeight();
   mInnerBox = GetInnerBox();
   mPageCount = mInnerBox.height/mRowHeight;
 
@@ -487,11 +565,11 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   mView->GetRowCount(&rowCount);
   
   // Ensure our column info is built.
-  EnsureColumns(aPresContext);
+  EnsureColumns();
 
   // Loop through our on-screen rows.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
-    nsRect rowRect(0, mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
+    nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, rowRect)) {
       PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
@@ -562,7 +640,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
 {
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
-  mScratchArray->Clear();
+  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING(""));
   mView->GetCellProperties(aRowIndex, aColumn->GetID(), mScratchArray);
 
   // Resolve style for the cell.  It contains all the info we need to lay ourselves
@@ -803,7 +881,7 @@ nsOutlinerBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBo
       mScratchArray->GetIndexOf(curr->mAtom, &index);
       if (index == -1) {
         *aResult = PR_FALSE;
-        break;
+        return NS_OK;
       }
       curr = curr->mNext;
     }
@@ -816,7 +894,7 @@ nsOutlinerBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBo
 }
 
 void
-nsOutlinerBodyFrame::EnsureColumns(nsIPresContext* aPresContext)
+nsOutlinerBodyFrame::EnsureColumns()
 {
   if (!mColumns) {
     nsCOMPtr<nsIContent> parent;
@@ -827,7 +905,7 @@ nsOutlinerBodyFrame::EnsureColumns(nsIPresContext* aPresContext)
     elt->GetElementsByTagName(NS_LITERAL_STRING("outlinercol"), getter_AddRefs(cols));
 
     nsCOMPtr<nsIPresShell> shell; 
-    aPresContext->GetShell(getter_AddRefs(shell));
+    mPresContext->GetShell(getter_AddRefs(shell));
 
     PRUint32 count;
     cols->GetLength(&count);
