@@ -125,7 +125,9 @@ struct nsCSSFont : public nsCSSStruct {
   nsCSSFont(const nsCSSFont& aCopy);
   ~nsCSSFont(void);
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mFamily;
   nsCSSValue mStyle;
@@ -150,7 +152,9 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(const nsCSSColor& aCopy);
   ~nsCSSColor(void);
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue      mColor;
   nsCSSValue      mBackColor;
@@ -179,7 +183,9 @@ struct nsCSSText : public nsCSSStruct  {
   ~nsCSSText(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mWordSpacing;
   nsCSSValue mLetterSpacing;
@@ -198,8 +204,10 @@ struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
+#ifdef DEBUG
   void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
   void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
+#endif
 
   nsCSSValue mTop;
   nsCSSValue mRight;
@@ -213,7 +221,9 @@ struct nsCSSDisplay : public nsCSSStruct  {
   ~nsCSSDisplay(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mDirection;
   nsCSSValue mDisplay;
@@ -238,7 +248,9 @@ struct nsCSSMargin : public nsCSSStruct  {
   ~nsCSSMargin(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   void EnsureBorderColors();
 
@@ -262,7 +274,9 @@ struct nsCSSPosition : public nsCSSStruct  {
   ~nsCSSPosition(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue  mWidth;
   nsCSSValue  mMinWidth;
@@ -281,7 +295,9 @@ struct nsCSSList : public nsCSSStruct  {
   ~nsCSSList(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mType;
   nsCSSValue mImage;
@@ -295,7 +311,9 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   ~nsCSSTable(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mBorderCollapse;
   nsCSSValue mBorderSpacingX;
@@ -316,7 +334,9 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
   ~nsCSSBreaks(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mOrphans;
   nsCSSValue mWidows;
@@ -332,7 +352,9 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
   ~nsCSSPage(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mMarks;
   nsCSSValue mSizeWidth;
@@ -365,7 +387,9 @@ struct nsCSSContent : public nsCSSStruct  {
   ~nsCSSContent(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValueList*   mContent;
   nsCSSCounterData* mCounterIncrement;
@@ -380,7 +404,9 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   ~nsCSSUserInterface(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue      mUserInput;
   nsCSSValue      mUserModify;
@@ -398,7 +424,9 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   ~nsCSSAural(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mAzimuth;
   nsCSSValue mElevation;
@@ -428,7 +456,9 @@ struct nsCSSXUL : public nsCSSStruct  {
   ~nsCSSXUL(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue  mBoxAlign;
   nsCSSValue  mBoxDirection;
@@ -446,7 +476,9 @@ struct nsCSSSVG : public nsCSSStruct {
   ~nsCSSSVG(void);
 
   const nsID& GetID(void);
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
 
   nsCSSValue mFill;
   nsCSSValue mFillOpacity;
