@@ -432,8 +432,9 @@ protected:
                                    void* aClosure);
 
     static nsresult
-    GetElementsByTagName(nsIDOMNode* aNode,
+    GetElementsByTagName(nsIContent* aContent,
                          const nsString& aTagName,
+                         PRInt32 aNamespaceID,
                          nsRDFDOMNodeList* aElements);
 
     static nsresult
