@@ -293,6 +293,8 @@ xptiInterfaceInfoManager::GetCloneOfManifestDir(nsILocalFile** aDir)
         // To be sure after the stuff above.
         if(!mManifestDir)
             return PR_FALSE;
+
+        mManifestDir->Create(nsIFile::DIRECTORY_TYPE, 0666);
     }
     return NS_SUCCEEDED(xptiCloneLocalFile(mManifestDir, aDir));
 }
