@@ -31,6 +31,7 @@ install::
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-mailnews.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-winsetting.xul $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-receipts.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) custreceipt.xul		$(DIST)\bin\chrome\messenger\content\default
@@ -66,6 +67,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accname.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-done.xul
 	rm -f $(DIST)\chrome\messenger\content\default\pref-mailnews.xul
+	rm -f $(DIST)\chrome\messenger\content\default\pref-mailnews.js
 	rm -f $(DIST)\chrome\messenger\content\default\pref-winsetting.xul
 	rm -f $(DIST)\chrome\messenger\content\default\pref-receipts.xul
 	rm -f $(DIST)\chrome\messenger\content\default\custreceipt.xul

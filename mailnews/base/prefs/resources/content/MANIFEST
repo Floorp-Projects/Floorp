@@ -27,6 +27,7 @@ am-copies.js
 am-advanced.xul
 am-smtp.xul
 pref-mailnews.xul
+pref-mailnews.js
 pref-winsetting.xul
 pref-receipts.xul
 custreceipt.xul
