@@ -54,7 +54,6 @@
 #include "nsIFontPackageProxy.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
-#include "nsIURI.h"
 #include "prmem.h"
 #include "plhash.h"
 #include "prprf.h"
@@ -260,29 +259,6 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 }
 
 static nsFontCleanupObserver *gFontCleanupObserver;
-
-static nsresult
-InitFontEncodingProperties(void)
-{
-  nsresult rv;
-  // load the special encoding resolver
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), "resource:/res/fonts/fontEncoding.properties");
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIInputStream> in;
-    rv = NS_OpenURI(getter_AddRefs(in), uri);
-    if (NS_SUCCEEDED(rv)) {
-      rv = nsComponentManager::
-           CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-                          NS_GET_IID(nsIPersistentProperties),
-                          (void**)&gFontEncodingProperties);
-      if (NS_SUCCEEDED(rv)) {
-        rv = gFontEncodingProperties->Load(in);
-      }
-    }
-  }
-  return rv;
-}
 
 static nsresult
 InitGlobals(void)
@@ -1290,8 +1266,9 @@ GetEncoding(const char* aFontName, nsCString& aValue)
   ToLowerCase(name);
 
   // if we have not init the property yet, init it right now.
-  if (! gFontEncodingProperties)
-    InitFontEncodingProperties();
+  if (!gFontEncodingProperties)
+    NS_LoadPersistentPropertiesFromURISpec(&gFontEncodingProperties,
+      NS_LITERAL_CSTRING("resource:/res/fonts/fontEncoding.properties"));
 
   if (gFontEncodingProperties) {
     nsAutoString prop;

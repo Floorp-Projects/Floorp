@@ -40,7 +40,6 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsNetUtil.h"
-#include "nsIURI.h"
 
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
@@ -195,24 +194,13 @@ static nsresult
 LoadProperties(const nsString& aName,
                nsCOMPtr<nsIPersistentProperties>& aProperties)
 {
-  nsresult rv;
   nsAutoString uriStr;
   uriStr.Assign(NS_LITERAL_STRING("resource:/res/fonts/mathfont"));
   uriStr.Append(aName);
   uriStr.StripWhitespace(); // that may come from aName
   uriStr.Append(NS_LITERAL_STRING(".properties"));
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), uriStr);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_OpenURI(getter_AddRefs(in), uri);
-  if (NS_FAILED(rv)) return rv;
-  rv = nsComponentManager::
-       CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-                      NS_GET_IID(nsIPersistentProperties),
-                      getter_AddRefs(aProperties));
-  if (NS_FAILED(rv)) return rv;
-  return aProperties->Load(in);
+  return NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(aProperties), 
+                                                NS_ConvertUTF16toUTF8(uriStr));
 }
 
 // helper to get the stretchy direction of a char

@@ -437,7 +437,6 @@ public:
   void settitle(PRUnichar * aTitle);
 
   FILE * GetPrintFile();
-  PRBool  InitUnixPrinterProps();
   PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
   PrintSetup            *mPrintSetup;
 private:
