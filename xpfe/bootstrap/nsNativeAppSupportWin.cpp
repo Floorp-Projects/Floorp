@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
- 
+
 class nsSplashScreenWin : public nsISplashScreen {
 public:
     nsSplashScreenWin();
@@ -71,6 +71,7 @@ public:
     }
 
     void SetDialog( HWND dlg );
+    void LoadBitmap();
     static void CheckConsole();
     static nsSplashScreenWin* GetPointer( HWND dlg );
 
@@ -79,11 +80,12 @@ public:
     static DWORD WINAPI ThreadProc( LPVOID );
 
     HWND mDlg;
+    HBITMAP mBitmap;
     nsrefcnt mRefCnt;
 }; // class nsSplashScreenWin
 
 nsSplashScreenWin::nsSplashScreenWin()
-    : mRefCnt( 0 ), mDlg( 0 ) {
+    : mDlg( 0 ), mBitmap( 0 ), mRefCnt( 0 ) {
 }
 
 nsSplashScreenWin::~nsSplashScreenWin() {
@@ -131,6 +133,11 @@ nsSplashScreenWin::Hide() {
     if ( mDlg ) {
         // Dismiss the dialog.
         EndDialog( mDlg, 0 );
+        // Release custom bitmap (if there is one).
+        if ( mBitmap ) {
+            BOOL ok = DeleteObject( mBitmap );
+        }
+        mBitmap = 0;
         mDlg = 0;
     }
     return NS_OK;
@@ -147,6 +154,42 @@ nsSplashScreenWin::PhantomDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
     return 0;
 }
 
+void
+nsSplashScreenWin::LoadBitmap() {
+    // Check for '<program-name>.bmp" in same directory as executable.
+    char fileName[ _MAX_PATH ];
+    int fileNameLen = ::GetModuleFileName( NULL, fileName, sizeof fileName );
+    if ( fileNameLen >= 3 ) {
+        fileName[ fileNameLen - 3 ] = 0;
+        strcat( fileName, "bmp" );
+        // Try to load bitmap from that file.
+        HBITMAP bitmap = (HBITMAP)::LoadImage( NULL,
+                                               fileName,
+                                               IMAGE_BITMAP,
+                                               0,
+                                               0,
+                                               LR_LOADFROMFILE );
+        if ( bitmap ) {
+            HWND bitmapControl = GetDlgItem( mDlg, IDB_SPLASH );
+            if ( bitmapControl ) {
+                HBITMAP old = (HBITMAP)SendMessage( bitmapControl,
+                                                    STM_SETIMAGE,
+                                                    IMAGE_BITMAP,
+                                                    (LPARAM)bitmap );
+                // Remember bitmap so we can delete it later.
+                mBitmap = bitmap;
+                // Delete old bitmap.
+                if ( old ) {
+                    BOOL ok = DeleteObject( old );
+                }
+            } else {
+                // Delete bitmap since it isn't going to be used.
+                DeleteObject( bitmap );
+            }
+        }
+    }
+}
+
 BOOL CALLBACK
 nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
     if ( msg == WM_INITDIALOG ) {
@@ -154,7 +197,11 @@ nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
         nsSplashScreenWin *splashScreen = (nsSplashScreenWin*)lp;
         if ( lp ) {
             splashScreen->SetDialog( dlg );
+
+            // Try to load customized bitmap.
+            splashScreen->LoadBitmap();
         }
+
         /* Size and center the splash screen correctly. The flags in the 
          * dialog template do not do the right thing if the user's 
          * machine is using large fonts.
