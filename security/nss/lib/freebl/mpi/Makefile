@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.13 2000/12/13 01:22:21 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.14 2000/12/15 03:01:23 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -175,6 +175,23 @@ CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
 # -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX $(MPICMN)
 endif
 
+ifeq ($(TARGET),32AIX)
+#
+CC = xlC_r
+MPICMN += -DMP_USE_UINT_DIGIT
+MPICMN += -DMP_USE_LONG_LONG_MULTIPLY
+CFLAGS = -O -DAIX -DSYSV -qarch=com -DAIX4_3 -DXP_UNIX -UDEBUG -DNDEBUG  $(MPICMN)
+#CFLAGS = -g -DAIX -DSYSV -qarch=com -DAIX4_3 -DXP_UNIX -UDEBUG -DNDEBUG  $(MPICMN)
+endif
+
+ifeq ($(TARGET),64AIX)
+#
+CC = xlC_r
+MPICMN += -DMP_USE_UINT_DIGIT
+CFLAGS = -O -O2 -DAIX -DSYSV -qarch=com -DAIX_64BIT -DAIX4_3 -DXP_UNIX -UDEBUG -DNDEBUG $(MPICMN)
+OBJECT_MODE=64
+export OBJECT_MODE
+endif
 
 ifeq ($(TARGET),x86LINUX)
 #Linux
