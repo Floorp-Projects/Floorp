@@ -6639,6 +6639,7 @@ HT_Find(char *hint)
 {
 	XPDialogStrings		*strings = NULL;
 	char			*dynStr = NULL, *postHTMLdynStr = NULL;
+	MWContext		*context;
 
 	dynStr = constructBasicHTML(dynStr, RDF_FIND_STR1, "", "");
 
@@ -6735,7 +6736,8 @@ HT_Find(char *hint)
 		{
 			XP_CopyDialogString(strings, 1, postHTMLdynStr);
 		}
-		XP_MakeHTMLDialog(NULL, &rdfFindDialogInfo, RDF_FIND_TITLE,
+		context = gRDFMWContext();
+		XP_MakeHTMLDialog(context, &rdfFindDialogInfo, RDF_FIND_TITLE,
 			strings, NULL, PR_FALSE);
 	}
 	if (dynStr != NULL)	XP_FREE(dynStr);
@@ -6754,6 +6756,7 @@ HT_Properties (HT_Resource node)
 	XP_Bool			mcEnabled = false;
 	XPDialogStrings		*strings = NULL;
 	char			*dynStr = NULL, *postHTMLdynStr = NULL, *title;
+	MWContext		*context;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
@@ -6954,15 +6957,20 @@ HT_Properties (HT_Resource node)
 		{
 			XP_CopyDialogString(strings, 1, postHTMLdynStr);
 		}
+
+		if ((context = XP_GetNavCenterContext(node->view->pane)) == NULL)
+		{
+			context = gRDFMWContext();
+		}
 		if (node->parent == NULL)
 		{
-			XP_MakeHTMLDialog(NULL, &rdfWorkspacePropDialogInfo, RDF_MAIN_TITLE,
-				strings, node, PR_FALSE);
+			XP_MakeHTMLDialog(context, &rdfWorkspacePropDialogInfo,
+				RDF_MAIN_TITLE, strings, node, PR_FALSE);
 		}
 		else
 		{
-			XP_MakeHTMLDialog(NULL, &rdfPropDialogInfo, RDF_MAIN_TITLE,
-				strings, node, PR_FALSE);
+			XP_MakeHTMLDialog(context, &rdfPropDialogInfo,
+				RDF_MAIN_TITLE, strings, node, PR_FALSE);
 		}
 	}
 	else
