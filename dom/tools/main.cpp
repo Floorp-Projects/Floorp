@@ -26,6 +26,7 @@
 #include "Exceptions.h"
 #include "IdlSpecification.h"
 #include "XPCOMGen.h"
+#include "JSStubGen.h"
 
 int main(int argc, char *argv[])
 {
@@ -111,6 +112,22 @@ int main(int argc, char *argv[])
           return -1;
         }
         delete xpcomgen;
+      }
+
+      if (gen_js) {
+        JSStubGen *jsgen = new JSStubGen();
+        
+        try {
+          jsgen->Generate(argv[i], op_dir ? argv[op_dir_arg] : NULL,
+                             *specification);
+        }
+        catch(CantOpenFileException &exc) {
+          cout << exc;
+          delete jsgen;
+          delete parser;
+          return -1;
+        }
+        delete jsgen;
       }
 
       delete parser;
