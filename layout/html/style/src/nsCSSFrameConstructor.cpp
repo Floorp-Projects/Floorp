@@ -9930,111 +9930,13 @@ static PRBool gInApplyRenderingChangeToTree = PR_FALSE;
 static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
-                             nsIViewManager* aViewManager);
-
-static void
-SyncAndInvalidateView(nsIPresContext* aPresContext,
-                      nsIView*        aView,
-                      nsIFrame*       aFrame, 
-                      nsIViewManager* aViewManager)
-{
-  NS_PRECONDITION(gInApplyRenderingChangeToTree,
-                  "should only be called within ApplyRenderingChangeToTree");
-
-  const nsStyleBackground* bg;
-  const nsStyleDisplay* disp; 
-  const nsStyleVisibility* vis;
-  PRBool isCanvas;
-  PRBool hasBG =
-      nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
-  aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-
-  aViewManager->SetViewOpacity(aView, vis->mOpacity);
-
-  // See if the view should be hidden or visible
-  PRBool  viewIsVisible = PR_TRUE;
-  PRBool  viewHasTransparentContent =
-      !isCanvas &&
-      (!hasBG ||
-       (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
-
-  if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
-    viewIsVisible = PR_FALSE;
-  }
-  else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
-    // If it has a widget, hide the view because the widget can't deal with it
-    nsIWidget* widget = nsnull;
-    aView->GetWidget(widget);
-    if (widget) {
-      viewIsVisible = PR_FALSE;
-      NS_RELEASE(widget);
-    }
-    else {
-      // If it's a scroll frame, then hide the view. This means that
-      // child elements can't override their parent's visibility, but
-      // it's not practical to leave it visible in all cases because
-      // the scrollbars will be showing
-      nsIAtom*  frameType;
-      aFrame->GetFrameType(&frameType);
-
-      if (frameType == nsLayoutAtoms::scrollFrame) {
-        viewIsVisible = PR_FALSE;
-      } else {
-        // If it's a container element, then leave the view visible, but
-        // mark it as having transparent content. The reason we need to
-        // do this is that child elements can override their parent's
-        // hidden visibility and be visible anyway
-        nsIFrame* firstChild;
-  
-        aFrame->FirstChild(aPresContext, nsnull, &firstChild);
-        if (firstChild) {
-          // It's not a left frame, so the view needs to be visible, but
-          // marked as having transparent content
-          viewHasTransparentContent = PR_TRUE;
-        } else {
-          // It's a leaf frame so go ahead and hide the view
-          viewIsVisible = PR_FALSE;
-        }
-      }
-      NS_IF_RELEASE(frameType);
-    }
-  } else {
-    // if the view is for a popup, don't show the view if the popup is closed
-    nsCOMPtr<nsIWidget> widget;
-    aView->GetWidget(*getter_AddRefs(widget));
-    if (widget) {
-      nsWindowType windowType;
-      widget->GetWindowType(windowType);
-      if (windowType == eWindowType_popup)
-        widget->IsVisible(viewIsVisible);
-    }
-  }
-
-  // If the frame has visible content that overflows the content area, then we
-  // need the view marked as having transparent content
-  if (NS_STYLE_OVERFLOW_VISIBLE == disp->mOverflow) {
-    nsFrameState  frameState;
-
-    aFrame->GetFrameState(&frameState);
-    if (frameState & NS_FRAME_OUTSIDE_CHILDREN) {
-      viewHasTransparentContent = PR_TRUE;
-    }
-  }
-  
-  if (viewIsVisible) {
-    aViewManager->SetViewContentTransparency(aView, viewHasTransparentContent);
-    aViewManager->SetViewVisibility(aView, nsViewVisibility_kShow);
-    aViewManager->UpdateView(aView, NS_VMREFRESH_NO_SYNC);
-  }
-  else {
-    aViewManager->SetViewVisibility(aView, nsViewVisibility_kHide); 
-  }
-}
+                             nsIViewManager* aViewManager,
+                             nsChangeHint aChange);
 
 static void
 UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                   nsIViewManager* aViewManager, nsRect& aBoundsRect)
+                   nsIViewManager* aViewManager, nsRect& aBoundsRect,
+                   nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
@@ -10043,7 +9945,12 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
   aFrame->GetView(aPresContext, &view);
 
   if (view) {
-    SyncAndInvalidateView(aPresContext, view, aFrame, aViewManager);
+    if (aChange & nsChangeHint_RepaintFrame) {
+      aViewManager->UpdateView(view, NS_VMREFRESH_NO_SYNC);
+    }
+    if (aChange & nsChangeHint_SyncFrameView) {
+      nsContainerFrame::SyncFrameViewProperties(aPresContext, aFrame, nsnull, view);
+    }
   }
 
   nsRect bounds;
@@ -10071,11 +9978,11 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
           nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-          DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager);
+          DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager, aChange);
         }
         else {  // regular frame
           nsRect  childBounds;
-          UpdateViewsForTree(aPresContext, child, aViewManager, childBounds);
+          UpdateViewsForTree(aPresContext, child, aViewManager, childBounds, aChange);
           bounds.UnionRect(bounds, childBounds);
         }
         NS_IF_RELEASE(frameType);
@@ -10093,7 +10000,8 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
 static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
-                             nsIViewManager* aViewManager)
+                             nsIViewManager* aViewManager,
+                             nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
@@ -10114,9 +10022,9 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
       aFrame->GetOffsetFromView(aPresContext, viewOffset, &parentView);
       NS_ASSERTION(nsnull != parentView, "no view");
     }
-    UpdateViewsForTree(aPresContext, aFrame, aViewManager, invalidRect);
+    UpdateViewsForTree(aPresContext, aFrame, aViewManager, invalidRect, aChange);
 
-    if (! view) { // if frame has view, will already be invalidated
+    if (! view && (aChange & nsChangeHint_RepaintFrame)) { // if frame has view, will already be invalidated
       // XXX Instead of calling this we should really be calling
       // Invalidate on on the nsFrame (which does this)
       const nsStyleOutline* outline;
@@ -10138,14 +10046,20 @@ DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 static void
 ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                            nsIFrame* aFrame,
-                           nsIViewManager* aViewManager)
+                           nsIViewManager* aViewManager,
+                           nsChangeHint aChange)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   PRBool isPaintingSuppressed = PR_FALSE;
   shell->IsPaintingSuppressed(&isPaintingSuppressed);
-  if (isPaintingSuppressed)
-    return; // Don't allow synchronous rendering changes when painting is turned off.
+  if (isPaintingSuppressed) {
+    // Don't allow synchronous rendering changes when painting is turned off.
+    aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
+    if (!aChange) {
+      return;
+    }
+  }
 
   // If the frame's background is propagated to an ancestor, walk up to
   // that ancestor.
@@ -10179,7 +10093,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_TRUE;
 #endif
-  DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager);
+  DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager, aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
@@ -10250,7 +10164,7 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
   // This isn't the most efficient way to do it, but it saves code
   // size and doesn't add much cost compared to the reflow..
   if (ancestor != aFrame)
-    ApplyRenderingChangeToTree(aPresContext, ancestor, nsnull);
+    ApplyRenderingChangeToTree(aPresContext, ancestor, nsnull, nsChangeHint_RepaintFrame);
 
   return NS_OK;
 }
@@ -10349,11 +10263,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       if (hint & nsChangeHint_ReflowFrame) {
         StyleChangeReflow(aPresContext, frame, nsnull);
       }
-      if (hint & nsChangeHint_RepaintFrame) {
-        ApplyRenderingChangeToTree(aPresContext, frame, nsnull);
-      }
-      if (hint & nsChangeHint_SyncFrameView) {
-        // TBD: split out view sync from ApplyRenderingChange and friends
+      if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)) {
+        ApplyRenderingChangeToTree(aPresContext, frame, nsnull, hint);
       }
     }
   }
@@ -10463,7 +10374,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame1, app1))
             theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
           if (repaint)
-            ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull);
+            ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull, nsChangeHint_RepaintFrame);
         }
 
         if (!(frameChange1 & nsChangeHint_ReconstructDoc) && (primaryFrame2)) {
@@ -10477,7 +10388,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
               theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
             if (repaint) 
-              ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
+              ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
           }
         }
 
@@ -10523,7 +10434,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           if (theme)
             theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
           if (repaint)
-            ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
+            ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
         }
 
          // max change needed for top level frames
@@ -10701,7 +10612,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         PRBool repaint = PR_FALSE;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
         if (repaint)
-          ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull);
+          ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull, nsChangeHint_RepaintFrame);
       }
     }
   }
@@ -10791,11 +10702,6 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
 
   PRBool reframe = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
                              | nsChangeHint_Unknown)) != 0;
-  PRBool reflow = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
-                            | nsChangeHint_ReflowFrame | nsChangeHint_Unknown)) != 0;
-  PRBool render = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
-                            | nsChangeHint_ReflowFrame | nsChangeHint_RepaintFrame
-                            | nsChangeHint_Unknown)) != 0;
   PRBool restyle = (aHint & ~(nsChangeHint_AttrChange)) != 0;
   // TBD: add "review" to update view?
 
@@ -10809,14 +10715,20 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
     result = ReconstructDocElementHierarchy(aPresContext);
   }
   else {
+    PRBool reflow = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
+                              | nsChangeHint_ReflowFrame | nsChangeHint_Unknown)) != 0;
+    PRBool renderOrSync = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
+                                    | nsChangeHint_ReflowFrame | nsChangeHint_RepaintFrame
+                                    | nsChangeHint_Unknown | nsChangeHint_SyncFrameView)) != 0;
+
     // XXX hack, skip the root and scrolling frames
     frame->FirstChild(aPresContext, nsnull, &frame);
     frame->FirstChild(aPresContext, nsnull, &frame);
     if (reflow) {
       StyleChangeReflow(aPresContext, frame, nsnull);
     }
-    else if (render) {
-      ApplyRenderingChangeToTree(aPresContext, frame, nsnull);
+    if (renderOrSync) {
+      ApplyRenderingChangeToTree(aPresContext, frame, nsnull, aHint);
     }
   }
 

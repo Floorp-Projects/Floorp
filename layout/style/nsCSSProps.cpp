@@ -1286,7 +1286,7 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 }
 
 // define array of all CSS property hints
-#define CSS_PROP(_name, _id, _method, _hint) NS_STYLE_HINT_##_hint,
+#define CSS_PROP(_name, _id, _method, _hint) _hint,
 const nsChangeHint nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
 #include "nsCSSPropList.h"
 };

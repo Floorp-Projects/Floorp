@@ -91,15 +91,14 @@ nsCSSPropList.h</a>
   Insert the property in the list alphabetically, using the existing
 property names as a template. The format of the entry you will create is:
 </p>
-  <pre>CSS_PROP(-moz-force-broken-image-iconst, force_broken_image_icons, FRAMECHANGE) // bug 58646</pre>
+  <pre>CSS_PROP(-moz-force-broken-image-iconst, force_broken_image_icons, NS_STYLE_HINT_FRAMECHANGE) // bug 58646</pre>
 
 <p>The first value is the formal property name, in other words the property
 name as it is seen by the CSS parser.<br>
 The second value is the name of the property as it will appear internally.<br>
 The last value indicates what must change when the value of the property
-changes. It should be one of (<a href="http://lxr.mozilla.org/seamonkey/source/layout/base/public/nsStyleConsts.h#46">
-VISUAL, AURAL, REFLOW, CONTENT, FRAMECHANGE</a>
-).</p>
+changes. It should be an
+<a href="http://lxr.mozilla.org/seamonkey/source/content/shared/public/nsChangeHint.h">nsChangeHint</a>.</p>
  
 <p>If you need to introduce new constants for the values of the property, they
 must be added to <a href="http://lxr.mozilla.org/seamonkey/source/layout/base/public/nsStyleConsts.h">

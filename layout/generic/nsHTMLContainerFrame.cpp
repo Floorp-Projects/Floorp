@@ -427,21 +427,6 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-static PRBool
-IsContainerContent(nsIFrame* aFrame)
-{
-  nsIContent* content;
-  PRBool      result = PR_FALSE;
-
-  aFrame->GetContent(&content);
-  if (content) {
-    content->CanContainChildren(result);
-    NS_RELEASE(content);
-  }
-
-  return result;
-}
-
 nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
@@ -449,244 +434,92 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {
-  PRBool isTopMostView = PR_FALSE;
   nsIView* view;
   aFrame->GetView(aPresContext, &view);
+  if (nsnull != view) {
+    return NS_OK;
+  }
+
   // If we don't yet have a view, see if we need a view
-  if (nsnull == view) {
-    PRBool  fixedBackgroundAttachment = PR_FALSE;
+  if (!(aForce || FrameNeedsView(aPresContext, aFrame, aStyleContext))) {
+    // don't need a view
+    return NS_OK;
+  }
 
-    // Get nsStyleColor and nsStyleDisplay
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
-    const nsStylePosition* position = (const nsStylePosition*)
-      aStyleContext->GetStyleData(eStyleStruct_Position);
-    const nsStyleVisibility* vis = (const nsStyleVisibility*)
-      aStyleContext->GetStyleData(eStyleStruct_Visibility);
+  // Create a view
+  nsIFrame* parent = nsnull;
+  aFrame->GetParentWithView(aPresContext, &parent);
+  NS_ASSERTION(parent, "GetParentWithView failed");
+
+  nsIView* parentView = nsnull;
+  parent->GetView(aPresContext, &parentView);
+  NS_ASSERTION(parentView, "no parent with view");
+
+  // Create a view
+  static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
+  nsresult result = CallCreateInstance(kViewCID, &view);
+  if (NS_FAILED(result)) {
+    return result;
+  }
     
-    if (vis->mOpacity != 1.0f) {
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
-         aFrame, vis->mOpacity));
-      aForce = PR_TRUE;
-    }
-
-    // See if the frame has a fixed background attachment
-    const nsStyleBackground *color;
-    PRBool isCanvas;
-    PRBool hasBackground = 
-      nsCSSRendering::FindBackground(aPresContext, aFrame, &color, &isCanvas);
-    if (hasBackground &&
-        NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
-      aForce = PR_TRUE;
-      fixedBackgroundAttachment = PR_TRUE;
-    }
+  nsCOMPtr<nsIViewManager> viewManager;
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
+  NS_ASSERTION(nsnull != viewManager, "null view manager");
     
-    // See if the frame is being relatively positioned or absolutely
-    // positioned
-    if (!aForce) {
-      if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
-          aFrame));
-        aForce = PR_TRUE;
-        isTopMostView = PR_TRUE;
-      } else if (display->IsAbsolutelyPositioned()) {
-        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p absolutely positioned",
-          aFrame));
-        aForce = PR_TRUE;
-        isTopMostView = PR_TRUE;
-      } 
-    }
+  // Initialize the view
+  nsRect bounds;
+  aFrame->GetRect(bounds);
+  view->Init(viewManager, bounds, parentView);
 
-    if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-      isTopMostView = PR_TRUE;
-    }
+  SyncFrameViewProperties(aPresContext, aFrame, aStyleContext, view);
 
-    // See if the frame is a scrolled frame
-    if (!aForce) {
-      nsIAtom*  pseudoTag;
-      aStyleContext->GetPseudoType(pseudoTag);
-      if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
-        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLContainerFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
-        aForce = PR_TRUE;
-      }
-      NS_IF_RELEASE(pseudoTag);
-    }
+  // Insert the view into the view hierarchy. If the parent view is a
+  // scrolling view we need to do this differently
+  nsIScrollableView*  scrollingView;
+  if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollingView))) {
+    scrollingView->SetScrolledView(view);
+  } else {
+    // XXX Drop it at the end of the document order until we can do better
+    viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
-    // See if the frame is block-level and has 'overflow' set to 'hidden'. If
-    // so and it can have child frames, then we need to give it a view so clipping
-    // of any child views works correctly. Note that if it's floated it is also
-    // block-level, but we can't trust that the style context 'display' value is
-    // set correctly
-    if (!aForce) {
-      if ((display->IsBlockLevel() || display->IsFloating()) &&
-          (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)) {
-
-        // The reason for the check of whether it can contain children is just
-        // to avoid giving it a view unnecessarily
-        if (::IsContainerContent(aFrame)) {
-          // XXX Check for the frame being a block frame and only force a view
-          // in that case, because adding a view for box frames seems to cause
-          // problems for XUL...
-          nsIAtom*  frameType;
-
-          aFrame->GetFrameType(&frameType);
-          if ((frameType == nsLayoutAtoms::blockFrame) ||
-              (frameType == nsLayoutAtoms::areaFrame)) {
-            aForce = PR_TRUE;
-          }
-          NS_IF_RELEASE(frameType);
-        }
-      }
-    }
-
-    if (aForce) {
-      // Create a view
-      nsIFrame* parent = nsnull;
-      nsIView* parentView = nsnull;
-
-      aFrame->GetParentWithView(aPresContext, &parent);
-      NS_ASSERTION(parent, "GetParentWithView failed");
-      parent->GetView(aPresContext, &parentView);
-      NS_ASSERTION(parentView, "no parent with view");
-
-      // Create a view
-      static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
-
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, 
-                                                     nsnull, 
-                                                     NS_GET_IID(nsIView), 
-                                                     (void **)&view);
-      if (NS_OK == result) {
-        nsIViewManager* viewManager;
-        parentView->GetViewManager(viewManager);
-        NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-        // Initialize the view
-        nsRect bounds;
-        aFrame->GetRect(bounds);
-        view->Init(viewManager, bounds, parentView);
-
-        // If the frame has a fixed background attachment, then indicate that the
-        // view's contents should be repainted and not bitblt'd
-        if (fixedBackgroundAttachment) {
-          viewManager->SetViewBitBltEnabled(view, PR_FALSE);
-        }
+    if (nsnull != aContentParentFrame) {
+      // If, for some reason, GetView below fails to initialize zParentView,
+      // then ensure that we completely bypass InsertZPlaceholder below.
+      // The effect will be as if we never knew about aContentParentFrame
+      // in the first place, so at least this code won't be doing any damage.
+      nsIView* zParentView = parentView;
+      
+      aContentParentFrame->GetView(aPresContext, &zParentView);
+      
+      if (nsnull == zParentView) {
+        nsIFrame* zParentFrame = nsnull;
         
-        // Insert the view into the view hierarchy. If the parent view is a
-        // scrolling view we need to do this differently
-        nsIScrollableView*  scrollingView;
-        if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
-          scrollingView->SetScrolledView(view);
-        } else {
-          PRInt32 zIndex = 0;
-          PRBool  autoZIndex = PR_FALSE;
-
-          // Get the z-index to use
-          if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
-            zIndex = position->mZIndex.GetIntValue();
-          } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
-            autoZIndex = PR_TRUE;
-          }
-          
-          viewManager->SetViewZIndex(view, autoZIndex, zIndex, isTopMostView);
-          // XXX Drop it at the end of the document order until we can do better
-          viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
-
-          if (nsnull != aContentParentFrame) {
-            // If, for some reason, GetView below fails to initialize zParentView,
-            // then ensure that we completely bypass InsertZPlaceholder below.
-            // The effect will be as if we never knew about aContentParentFrame
-            // in the first place, so at least this code won't be doing any damage.
-            nsIView* zParentView = parentView;
-            
-            aContentParentFrame->GetView(aPresContext, &zParentView);
-            
-            if (nsnull == zParentView) {
-              nsIFrame* zParentFrame = nsnull;
-
-              aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
-              NS_ASSERTION(zParentFrame, "GetParentWithView failed");
-              zParentFrame->GetView(aPresContext, &zParentView);
-              NS_ASSERTION(zParentView, "no parent with view");
-            }
-            
-            if (zParentView != parentView) {
-              viewManager->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
-            }
-          }
-        }
-
-        // See if the view should be hidden
-        PRBool  viewIsVisible = PR_TRUE;
-        PRBool  viewHasTransparentContent =
-            !isCanvas &&
-            (!hasBackground ||
-             (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
-              
-
-        if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
-          viewIsVisible = PR_FALSE;
-        }
-        else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
-          // If it has a widget, hide the view because the widget can't deal with it
-          nsIWidget* widget = nsnull;
-          view->GetWidget(widget);
-          if (widget) {
-            viewIsVisible = PR_FALSE;
-            NS_RELEASE(widget);
-          }
-          else {
-            // If it's a container element, then leave the view visible, but
-            // mark it as having transparent content. The reason we need to
-            // do this is that child elements can override their parent's
-            // hidden visibility and be visible anyway.
-            //
-            // Because this function is called before processing the content
-            // object's child elements, we can't tell if it's a leaf by looking
-            // at whether the frame has any child frames
-            if (::IsContainerContent(aFrame)) {
-              // The view needs to be visible, but marked as having transparent
-              // content
-              viewHasTransparentContent = PR_TRUE;
-            } else {
-              // Go ahead and hide the view
-              viewIsVisible = PR_FALSE;
-            }
-          }
-        }
-
-        if (viewIsVisible) {
-          if (viewHasTransparentContent) {
-            viewManager->SetViewContentTransparency(view, PR_TRUE);
-          }
-
-        } else {
-          viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-        }
-
-        // XXX If it's fixed positioned, then create a widget so it floats
-        // above the scrolling area
-        if (NS_STYLE_POSITION_FIXED == display->mPosition) {
-          view->CreateWidget(kCChildCID);
-        }
-
-        viewManager->SetViewOpacity(view, vis->mOpacity);
-        NS_RELEASE(viewManager);
+        aContentParentFrame->GetParentWithView(aPresContext, &zParentFrame);
+        NS_ASSERTION(zParentFrame, "GetParentWithView failed");
+        zParentFrame->GetView(aPresContext, &zParentView);
+        NS_ASSERTION(zParentView, "no parent with view");
       }
-
-      // Remember our view
-      aFrame->SetView(aPresContext, view);
-
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",
-         aFrame));
-      return result;
+      
+      if (zParentView != parentView) {
+        viewManager->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
+      }
     }
   }
+
+  // XXX If it's fixed positioned, then create a widget so it floats
+  // above the scrolling area
+  const nsStyleDisplay* display;
+  ::GetStyleData(aStyleContext, &display);
+  if (NS_STYLE_POSITION_FIXED == display->mPosition) {
+    view->CreateWidget(kCChildCID);
+  }
+
+  // Remember our view
+  aFrame->SetView(aPresContext, view);
+
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",
+                aFrame));
   return NS_OK;
 }
 
