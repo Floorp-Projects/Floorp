@@ -57,16 +57,16 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
     return NS_ERROR_FAILURE;
   }
 
-  mInitalized = PR_TRUE;
+  nsresult rv;
 
   mOffset.MoveTo(aX, aY);
   mSize.SizeTo(aWidth, aHeight);
 
   mFormat = aFormat;
 
-  mImage = do_CreateInstance("@mozilla.org/gfx/image;1");
-
+  mImage = do_CreateInstance("@mozilla.org/gfx/image;1", &rv);
   NS_ASSERTION(mImage, "creation of image failed");
+  if (NS_FAILED(rv)) return rv;
 
   gfx_depth depth = 24;
   nsMaskRequirements maskReq;
@@ -102,11 +102,13 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
     break;
   }
 
-  mImage->Init(aWidth, aHeight, depth, maskReq);
+  rv = mImage->Init(aWidth, aHeight, depth, maskReq);
+  if (NS_FAILED(rv)) return rv;
 
   mImage->SetNaturalWidth(aWidth);
   mImage->SetNaturalHeight(aHeight);
 
+  mInitalized = PR_TRUE;
   return NS_OK;
 }
 
@@ -114,6 +116,9 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 /* attribute boolean mutable */
 NS_IMETHODIMP gfxImageFrame::GetMutable(PRBool *aMutable)
 {
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ASSERTION(mInitalized, "gfxImageFrame::GetMutable called on non-inited gfxImageFrame");
   *aMutable = mMutable;
   return NS_OK;
@@ -121,7 +126,14 @@ NS_IMETHODIMP gfxImageFrame::GetMutable(PRBool *aMutable)
 
 NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
 {
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
   mMutable = aMutable;
+
+  if (!aMutable)
+    mImage->Optimize(nsnull);
+
   return NS_OK;
 }
 
@@ -466,6 +478,9 @@ NS_IMETHODIMP gfxImageFrame::SetTransparentColor(gfx_color aTransparentColor)
 
 NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
 {
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
   NS_ENSURE_ARG_POINTER(result);
 
   if (NS_SUCCEEDED(QueryInterface(aIID, result)))
