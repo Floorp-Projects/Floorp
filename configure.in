@@ -3437,6 +3437,19 @@ MOZ_ARG_ENABLE_BOOL(ctl,
     SUNCTL= )
 
 dnl ========================================================
+dnl view source support on by default
+dnl ========================================================
+MOZ_VIEW_SOURCE=1
+MOZ_ARG_DISABLE_BOOL(view-source,
+[  --disable-view-source     Disable view source support],
+    MOZ_VIEW_SOURCE=,
+    MOZ_VIEW_SOURCE=1 )
+if test "$MOZ_VIEW_SOURCE"; then
+    AC_DEFINE(MOZ_VIEW_SOURCE)
+fi
+
+
+dnl ========================================================
 dnl accessibility support on by default
 dnl ========================================================
 ACCESSIBILITY=1
@@ -5065,6 +5078,7 @@ AC_SUBST(IBMBIDI)
 AC_SUBST(SUNCTL)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
+AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SINGLE_PROFILE)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
