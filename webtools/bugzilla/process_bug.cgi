@@ -273,6 +273,12 @@ foreach my $id (@idlist) {
     foreach my $col (@::log_columns) {
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
+        if (!defined $old) {
+            $old = "";
+        }
+        if (!defined $new) {
+            $new = "";
+        }
         if ($old ne $new) {
             if (!defined $whoid) {
                 $whoid = DBNameToIdAndCheck($::FORM{'who'});
