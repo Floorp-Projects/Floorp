@@ -574,7 +574,7 @@ int sqlite3OsOpenDirectory(
 ** name of a directory, then that directory will be used to store
 ** temporary files.
 */
-const char *sqlite3_temp_directory = 0;
+char *sqlite3_temp_directory = 0;
 
 /*
 ** Create a temporary file name in zBuf.  zBuf must be big enough to
@@ -616,6 +616,22 @@ int sqlite3OsTempFileName(char *zBuf){
   return SQLITE_OK; 
 }
 
+#ifndef SQLITE_OMIT_PAGER_PRAGMAS
+/*
+** Check that a given pathname is a directory and is writable 
+**
+*/
+int sqlite3OsIsDirWritable(char *zBuf){
+  struct stat buf;
+  if( zBuf==0 ) return 0;
+  if( zBuf[0]==0 ) return 0;
+  if( stat(zBuf, &buf) ) return 0;
+  if( !S_ISDIR(buf.st_mode) ) return 0;
+  if( access(zBuf, 07) ) return 0;
+  return 1;
+}
+#endif /* SQLITE_OMIT_PAGER_PRAGMAS */
+
 /*
 ** Read data from a file into a buffer.  Return SQLITE_OK if all
 ** bytes were read successfully and SQLITE_IOERR if anything goes
@@ -628,7 +644,7 @@ int sqlite3OsRead(OsFile *id, void *pBuf, int amt){
   TIMER_START;
   got = read(id->h, pBuf, amt);
   TIMER_END;
-  TRACE4("READ    %-3d %7d %d\n", id->h, last_page, TIMER_ELAPSED);
+  TRACE5("READ    %-3d %5d %7d %d\n", id->h, got, last_page, TIMER_ELAPSED);
   SEEK(0);
   /* if( got<0 ) got = 0; */
   if( got==amt ){
@@ -645,6 +661,7 @@ int sqlite3OsRead(OsFile *id, void *pBuf, int amt){
 int sqlite3OsWrite(OsFile *id, const void *pBuf, int amt){
   int wrote = 0;
   assert( id->isOpen );
+  assert( amt>0 );
   SimulateIOError(SQLITE_IOERR);
   SimulateDiskfullError;
   TIMER_START;
@@ -653,7 +670,7 @@ int sqlite3OsWrite(OsFile *id, const void *pBuf, int amt){
     pBuf = &((char*)pBuf)[wrote];
   }
   TIMER_END;
-  TRACE4("WRITE   %-3d %7d %d\n", id->h, last_page, TIMER_ELAPSED);
+  TRACE5("WRITE   %-3d %5d %7d %d\n", id->h, wrote, last_page, TIMER_ELAPSED);
   SEEK(0);
   if( amt>0 ){
     return SQLITE_FULL;
@@ -671,19 +688,60 @@ int sqlite3OsSeek(OsFile *id, i64 offset){
   return SQLITE_OK;
 }
 
+#ifdef SQLITE_TEST
+/*
+** Count the number of fullsyncs and normal syncs.  This is used to test
+** that syncs and fullsyncs are occuring at the right times.
+*/
+int sqlite3_sync_count = 0;
+int sqlite3_fullsync_count = 0;
+#endif
+
+
 /*
 ** The fsync() system call does not work as advertised on many
 ** unix systems.  The following procedure is an attempt to make
 ** it work better.
+**
+** The SQLITE_NO_SYNC macro disables all fsync()s.  This is useful
+** for testing when we want to run through the test suite quickly.
+** You are strongly advised *not* to deploy with SQLITE_NO_SYNC
+** enabled, however, since with SQLITE_NO_SYNC enabled, an OS crash
+** or power failure will likely corrupt the database file.
 */
-static int full_fsync(int fd){
+static int full_fsync(int fd, int fullSync){
   int rc;
+
+  /* Record the number of times that we do a normal fsync() and 
+  ** FULLSYNC.  This is used during testing to verify that this procedure
+  ** gets called with the correct arguments.
+  */
+#ifdef SQLITE_TEST
+  if( fullSync ) sqlite3_fullsync_count++;
+  sqlite3_sync_count++;
+#endif
+
+  /* If we compiled with the SQLITE_NO_SYNC flag, then syncing is a
+  ** no-op
+  */
+#ifdef SQLITE_NO_SYNC
+  rc = SQLITE_OK;
+#else
+
 #ifdef F_FULLFSYNC
-  rc = fcntl(fd, F_FULLFSYNC, 0);
+  if( fullSync ){
+    rc = fcntl(fd, F_FULLFSYNC, 0);
+  }else{
+    rc = 1;
+  }
+  /* If the FULLSYNC failed, try to do a normal fsync() */
   if( rc ) rc = fsync(fd);
+
 #else
   rc = fsync(fd);
-#endif
+#endif /* defined(F_FULLFSYNC) */
+#endif /* defined(SQLITE_NO_SYNC) */
+
   return rc;
 }
 
@@ -702,12 +760,12 @@ int sqlite3OsSync(OsFile *id){
   assert( id->isOpen );
   SimulateIOError(SQLITE_IOERR);
   TRACE2("SYNC    %-3d\n", id->h);
-  if( full_fsync(id->h) ){
+  if( full_fsync(id->h, id->fullSync) ){
     return SQLITE_IOERR;
   }
   if( id->dirfd>=0 ){
     TRACE2("DIRSYNC %-3d\n", id->dirfd);
-    full_fsync(id->dirfd);
+    full_fsync(id->dirfd, id->fullSync);
     close(id->dirfd);  /* Only need to sync once, so close the directory */
     id->dirfd = -1;    /* when we are done. */
   }
@@ -717,6 +775,10 @@ int sqlite3OsSync(OsFile *id){
 /*
 ** Sync the directory zDirname. This is a no-op on operating systems other
 ** than UNIX.
+**
+** This is used to make sure the master journal file has truely been deleted
+** before making changes to individual journals on a multi-database commit.
+** The F_FULLFSYNC option is not needed here.
 */
 int sqlite3OsSyncDirectory(const char *zDirname){
   int fd;
@@ -879,7 +941,7 @@ int sqlite3OsLock(OsFile *id, int locktype){
   int s;
 
   assert( id->isOpen );
-  TRACE7("LOCK %d %s was %s(%s,%d) pid=%d\n", id->h, locktypeName(locktype), 
+  TRACE7("LOCK    %d %s was %s(%s,%d) pid=%d\n", id->h, locktypeName(locktype), 
       locktypeName(id->locktype), locktypeName(pLock->locktype), pLock->cnt
       ,getpid() );
 
@@ -888,7 +950,7 @@ int sqlite3OsLock(OsFile *id, int locktype){
   ** sqlite3OsEnterMutex() hasn't been called yet.
   */
   if( id->locktype>=locktype ){
-    TRACE3("LOCK %d %s ok (already held)\n", id->h, locktypeName(locktype));
+    TRACE3("LOCK    %d %s ok (already held)\n", id->h, locktypeName(locktype));
     return SQLITE_OK;
   }
 
@@ -1009,7 +1071,7 @@ int sqlite3OsLock(OsFile *id, int locktype){
 
 end_lock:
   sqlite3OsLeaveMutex();
-  TRACE4("LOCK %d %s %s\n", id->h, locktypeName(locktype), 
+  TRACE4("LOCK    %d %s %s\n", id->h, locktypeName(locktype), 
       rc==SQLITE_OK ? "ok" : "failed");
   return rc;
 }
@@ -1031,7 +1093,7 @@ int sqlite3OsUnlock(OsFile *id, int locktype){
   int rc = SQLITE_OK;
 
   assert( id->isOpen );
-  TRACE7("UNLOCK %d %d was %d(%d,%d) pid=%d\n", id->h, locktype, id->locktype, 
+  TRACE7("UNLOCK  %d %d was %d(%d,%d) pid=%d\n", id->h, locktype, id->locktype, 
       id->pLock->locktype, id->pLock->cnt, getpid());
 
   assert( locktype<=SHARED_LOCK );
@@ -1157,10 +1219,16 @@ int sqlite3OsRandomSeed(char *zBuf){
   memset(zBuf, 0, 256);
 #if !defined(SQLITE_TEST)
   {
-    int pid;
-    time((time_t*)zBuf);
-    pid = getpid();
-    memcpy(&zBuf[sizeof(time_t)], &pid, sizeof(pid));
+    int pid, fd;
+    fd = open("/dev/urandom", O_RDONLY);
+    if( fd<0 ){
+      time((time_t*)zBuf);
+      pid = getpid();
+      memcpy(&zBuf[sizeof(time_t)], &pid, sizeof(pid));
+    }else{
+      read(fd, zBuf, 256);
+      close(fd);
+    }
   }
 #endif
   return SQLITE_OK;
