@@ -86,13 +86,17 @@ EmbedEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // Return FALSE to this function to mark the event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_KEY_DOWN],
 		  (void *)keyEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -102,13 +106,17 @@ EmbedEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_KEY_UP],
 		  (void *)keyEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -118,13 +126,17 @@ EmbedEventListener::KeyPress(nsIDOMEvent* aDOMEvent)
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_KEY_PRESS],
 		  (void *)keyEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -134,13 +146,17 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_DOWN],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -150,13 +166,17 @@ EmbedEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // Return FALSE to this function to mark the event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_UP],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -166,13 +186,17 @@ EmbedEventListener::MouseClick(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // Return FALSE to this function to mark the event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_CLICK],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -182,13 +206,17 @@ EmbedEventListener::MouseDblClick(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_DBL_CLICK],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -198,13 +226,17 @@ EmbedEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_OVER],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -214,13 +246,17 @@ EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
-  // return NS_OK to this function to mark this event as not
+  // return FALSE to this function to mark this event as not
   // consumed...
-  gint return_val = NS_OK;
+  gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
 		  moz_embed_signals[DOM_MOUSE_OUT],
 		  (void *)mouseEvent, &return_val);
-  return return_val;
+  if (return_val) {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
