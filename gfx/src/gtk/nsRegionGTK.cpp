@@ -250,6 +250,8 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
     rect++;
   }
 
+  *aRects = rects;
+
   return NS_OK;
 }
 
