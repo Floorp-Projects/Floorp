@@ -26,6 +26,7 @@ function Feed(resource) {
   
     this.request = null;
     this.folder = null;
+    this.server = null;
 
     this.downloadCallback = null;
 
@@ -454,7 +455,7 @@ function storeNextItem()
   item.markValid();
 
   // if the listener is tracking progress for storing each item, report it here...
-  if (item.feed.downloadCallback.onFeedItemStored)
+  if (item.feed.downloadCallback && item.feed.downloadCallback.onFeedItemStored)
     item.feed.downloadCallback.onFeedItemStored(item.feed, gItemsToStoreIndex, gItemsToStore.length);
  
   gItemsToStoreIndex++

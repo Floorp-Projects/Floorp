@@ -60,6 +60,7 @@ var nsNewsBlogFeedDownloader =
         feed = new Feed(id);
         feed.urlListener = aUrlListener;
         feed.folder = aFolder;
+        feed.server = aFolder.server;
         feed.msgWindow = aMsgWindow;
         feed.download();
       }

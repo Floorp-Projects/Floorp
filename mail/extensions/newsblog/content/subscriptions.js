@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var kFeedUrlDelimiter = '|'; // the delimiter used to delimit feed urls in the msg folder database "feedUrl" property
+var gRSSServer = null;
 
 function doLoad() {
     // Display the list of feed subscriptions.
@@ -43,6 +44,10 @@ function doLoad() {
     var tree = document.getElementById('subscriptions');
     tree.database.AddDataSource(ds);
     tree.builder.rebuild();
+
+    // extract the server argument
+    if (window.arguments[0].server)
+        gRSSServer = window.arguments[0].server;
 }
 
 // opens the feed properties dialog
@@ -78,10 +83,9 @@ var feedDownloadCallback = {
     {
       updateStatusItem('progressMeter', 100);
 
-      var server = getIncomingServer();
       // if we get here...we should always have a folder by now...either
       // in feed.folder or FeedItems created the folder for us....
-      var folder = feed.folder ? feed.folder : server.rootMsgFolder.getChildNamed(feed.name);
+      var folder = feed.folder ? feed.folder : gRSSServer.rootMsgFolder.getChildNamed(feed.name);
 
       updateFolderFeedUrl(folder, feed.url, false);
 
@@ -133,8 +137,7 @@ function updateFolderFeedUrl(aFolder, aFeedUrl, aRemoveUrl)
 
 function doAdd() {
     var userAddedFeed = false; 
-    var server = getIncomingServer();
-    var feedProperties = { feedName: "", feedLocation: "", serverURI: server.serverURI, folderURI: "", result: userAddedFeed};
+    var feedProperties = { feedName: "", feedLocation: "", serverURI: gRSSServer.serverURI, folderURI: "", result: userAddedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
 
@@ -155,6 +158,9 @@ function doAdd() {
       if (folderResource)
         feed.folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     }
+
+    // set the server for the feed
+    feed.server = gRSSServer;
 
     // update status text
     updateStatusItem('statusText', document.getElementById("bundle_newsblog").getString('subscribe-validating'));
@@ -184,9 +190,8 @@ function doEdit() {
 
     currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
    
-    var server = getIncomingServer();
     var userModifiedFeed = false; 
-    var feedProperties = { feedLocation: old_url, serverURI: server.serverURI, folderURI: currentFolderURI, result: userModifiedFeed};
+    var feedProperties = { feedLocation: old_url, serverURI: gRSSServer.serverURI, folderURI: currentFolderURI, result: userModifiedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
     if (!feedProperties.result) // did the user cancel?
@@ -269,23 +274,12 @@ function doRemove() {
     if (!oldFeedUrl) // no more feeds pointing to the folder?
     {
       try {
-        var server = getIncomingServer();
-        var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+        var openerResource = gRSSServer.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         var folderResource = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
       } catch (e) { }
     }
 }
-
-
-function getIncomingServer() {
-    return window.opener.getIncomingServer();
-}
-
-function getMessageWindow() {
-  return window.opener.getMessageWindow();
-}
-
 
 /*
  * Disabled/Future Stuff

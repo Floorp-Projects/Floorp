@@ -167,12 +167,7 @@ FeedItem.prototype.isStored = function() {
 
   debug(this.identity + " checking to see if stored");
 
-  var server;
-  if (this.feed.folder)
-    server = this.feed.folder.server;
-  else
-    server = getIncomingServer();
-
+  var server = this.feed.server;
   var folder = this.feed.folder;
 
   try {
@@ -184,7 +179,7 @@ FeedItem.prototype.isStored = function() {
   {
     debug(this.feed.name + " folder doesn't exist; creating");
 		debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
-    server.rootMsgFolder.createSubfolder(this.feed.name, getMessageWindow());
+    server.rootMsgFolder.createSubfolder(this.feed.name, null /* supposed to be a msg window */);
     folder = server.rootMsgFolder.FindSubFolder(this.feed.name);
     debug(this.identity + " not stored (folder didn't exist)");
     return false;
@@ -294,11 +289,7 @@ FeedItem.prototype.toUtf8 = function(str) {
 FeedItem.prototype.writeToFolder = function() {
   debug(this.identity + " writing to message folder" + this.feed.name + "\n");
   
-  var server;
-  if (this.feed.folder)
-    server = this.feed.folder.server;
-  else
-    server = getIncomingServer();
+  var server = this.feed.server;
 
   // XXX Should we really be modifying the original data here instead of making
   // a copy of it?  Currently we never use the item object again after writing it

@@ -45,7 +45,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= newsblog
 
-include $(DEPTH)/config/autoconf.mk
+EXPORT_DIR	= $(DIST)/bin/defaults/isp
+EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/US
+
+libs::
+	$(INSTALL) $(addprefix $(srcdir)/, rss.rdf) $(EXPORT_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, rss.rdf) $(EXPORT_DIR_L10N)
 
 DIRS  += skin
 
@@ -53,8 +58,3 @@ EXTRA_COMPONENTS = js/newsblog.js
 
 include $(topsrcdir)/config/rules.mk
 
-#libs::
-#	@$(REGCHROME) content messenger-newsblog messenger.jar
-
-#install::
-#	@$(REGCHROME_INSTALL) content messenger-newsblog messenger.jar

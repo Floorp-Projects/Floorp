@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<RDF:RDF
+    xmlns:NC="http://home.netscape.com/NC-rdf#"
+    xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <RDF:Description about="NC:ispinfo">
+    <NC:providers>
+      <NC:nsIMsgAccount about="domain:">
+
+        <!-- server info -->
+        <NC:incomingServer>
+          <NC:nsIMsgIncomingServer>
+            <NC:hostName>News &amp; Blogs</NC:hostName>
+            <NC:type>rss</NC:type>
+            <NC:username>nobody</NC:username>
+          </NC:nsIMsgIncomingServer>
+        </NC:incomingServer>
+
+        <!-- identity defaults -->
+        <NC:identity>
+          <NC:nsIMsgIdentity>
+          </NC:nsIMsgIdentity>
+        </NC:identity>
+
+        <NC:wizardHideIncoming>true</NC:wizardHideIncoming>
+	  <NC:wizardAccountName>News &amp; Blogs</NC:wizardAccountName>
+        <NC:wizardSkipPanels>identitypage,serverpage,loginpage</NC:wizardSkipPanels>
+        <NC:wizardShortName>RSS</NC:wizardShortName>
+        <NC:wizardLongName>RSS News &amp; Blogs Account</NC:wizardLongName>
+        <NC:wizardShow>true</NC:wizardShow>
+        <NC:emailProviderName>RSS</NC:emailProviderName>
+        <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary> 
+      </NC:nsIMsgAccount>
+    </NC:providers>
+  </RDF:Description>
+
+</RDF:RDF>

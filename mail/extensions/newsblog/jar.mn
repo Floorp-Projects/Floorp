@@ -1,7 +1,5 @@
 newsblog.jar:
 *  content/messenger-newsblog/toolbar-icon.xul                  (content/toolbar-icon.xul)
-*  content/messenger-newsblog/forumzilla.xul                    (content/forumzilla.xul)
-*  content/messenger-newsblog/forumzilla.js                     (content/forumzilla.js)
 *  content/messenger-newsblog/subscriptions.xul                 (content/subscriptions.xul)
 *  content/messenger-newsblog/edittree.xml                      (content/edittree.xml)
 *  content/messenger-newsblog/debug-utils.js                    (content/debug-utils.js)

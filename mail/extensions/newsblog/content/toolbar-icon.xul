@@ -4,7 +4,7 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript">
-  function openSubscriptionsDialog() {
+  function openSubscriptionsDialog(aRSSServer) {
 
     //check for an existing subscriptions window and focus it.
     const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
@@ -16,24 +16,16 @@
       lastSubscriptionWindow.focus();
     else 
       window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
-                        "centerscreen,resizable=yes");
+                        "centerscreen,resizable=yes", { server: aRSSServer});
+  }
+
+  function openSubscriptionsDialogFromFolderPane()
+  {
+    // get the incoming server for the seleted folder
+    var selectedFolders = GetSelectedMsgFolders();
+    openSubscriptionsDialog(selectedFolders[0].server);
   }
 </script>
-
-<menupopup id="taskPopup">
-  <menuitem id="newsAndBlogsCmd"
-            label="&newsBlogMenu.label;"
-            insertbefore="menu_preferences"
-            accesskey="&newsBlogMenu.accesskey;"
-            oncommand="openSubscriptionsDialog();"/>
-</menupopup>
-
-<toolbarpalette id="MailToolbarPalette">
-    <toolbarbutton id="button-newsandblogs"
-                   label="&newsBlogMenu.label;"
-                   tooltiptext="&newsBlogMenu.tooltip;"
-                   oncommand="openSubscriptionsDialog();"/>
-</toolbarpalette>
 
 <!-- Overlay into the folder pane context menu. If you change the id for the menu item, please
      update mailContextMenus.js 
@@ -43,7 +35,7 @@
     insertafter="folderPaneContext-subscribe"
     label="&folderContextRSSSubscribe.label;"
     accesskey="&folderContextRSSSubscribe.accesskey;"
-    oncommand="openSubscriptionsDialog();"/>
+    oncommand="openSubscriptionsDialogFromFolderPane();"/>
 </popup>
 
 </overlay>
