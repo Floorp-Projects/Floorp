@@ -54,7 +54,11 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#include "nsIIOService.h"
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
+#include "nsHTTPEnums.h"
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #else
 #include "nsIPostToServer.h"
 #endif // NECKO
@@ -233,6 +237,7 @@ static PRBool		isSearchURI(nsIRDFResource* aResource);
 static nsresult		BeginSearchRequest(nsIRDFResource *source);
 static nsresult		DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsString text);
 static nsresult		GetSearchEngineList();
+static nsresult		GetSearchFolder(nsFileSpec &spec);
 static nsresult		ReadFileContents(char *baseFilename, nsString & sourceContents);
 static nsresult		GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
 static nsresult		GetInputs(nsString data, nsString text, nsString &input);
@@ -1004,56 +1009,83 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		action += "?";
 		action += input;
 	}
+
 	char	*searchURL = action.ToNewCString();
-	if (searchURL)
+	if (!searchURL)
+		return(NS_ERROR_NULL_POINTER);
+
+#ifdef	NECKO
+	SearchDataSourceCallback *callback = new SearchDataSourceCallback(mInner, source, engine);
+	if (nsnull != callback)
 	{
-		nsIURI		*url = nsnull;
-#ifndef NECKO
-        rv = NS_NewURL(&url, (const char*) searchURL);
-#else
-        rv = NS_NewURI(&url, (const char*) searchURL);
-#endif // NECKO
-		if (NS_SUCCEEDED(rv))
+		nsCOMPtr<nsIURI>	url;
+		if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), (const char*) searchURL)))
 		{
-#ifndef NECKO // XXX NECKO this is crucial to repair
 			if (method.EqualsIgnoreCase("post"))
 			{
-				// HTTP Post method support
-			        nsCOMPtr<nsIPostToServer>	pts = do_QueryInterface(url);
-				if (pts)
-			        {
-			        	// construct post data to send
-			        	nsAutoString	postStr(POSTHEADER_PREFIX);
-			        	postStr.Append(input.Length(), 10);
-			        	postStr += POSTHEADER_SUFFIX;
-			        	postStr += input;
-					char	*postData = postStr.ToNewCString();
-					if (postData)
+				nsCOMPtr<nsIChannel>	channel;
+				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url)))
+				{
+					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+					if (httpChannel)
 					{
-						rv = pts->SendData(postData, (PRUint32)strlen(postData));
-						delete []postData;
-						postData = nsnull;
-					}
-			        }
-			}
-#endif // NECKO
+						httpChannel->SetRequestMethod(HM_POST);
 
-			SearchDataSourceCallback *callback = new SearchDataSourceCallback(mInner, source, engine);
-			if (nsnull != callback)
+				        	// construct post data to send
+				        	nsAutoString	postStr(POSTHEADER_PREFIX);
+				        	postStr.Append(input.Length(), 10);
+				        	postStr += POSTHEADER_SUFFIX;
+				        	postStr += input;
+				        	
+						char	*postData = postStr.ToNewCString();
+						if (postData)
+						{
+							nsCOMPtr<nsIInputStream>	postDataStream;
+							if (NS_SUCCEEDED(rv = NS_NewPostDataStream(PR_FALSE, postData,
+								0, getter_AddRefs(postDataStream))))
+							{
+								httpChannel->SetPostDataStream(postDataStream);
+								/* postData is now owned by the postDataStream instance... ? */
+								rv = channel->AsyncRead(0, -1, nsnull, callback);
+							}
+							else
+							{
+								delete []postData;
+								postData = nsnull;
+							}
+						}
+					}
+				}
+			}
+			else if (method.EqualsIgnoreCase("get"))
 			{
-#ifdef NECKO
 				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url);
-#else
-				rv = NS_OpenURL(url, NS_STATIC_CAST(nsIStreamListener *, callback));
-#endif
 			}
 		}
-		delete [] searchURL;
-		searchURL = nsnull;
-#ifdef NECKO
-        NS_RELEASE(url);
-#endif // NECKO
 	}
+#endif
+
+	delete [] searchURL;
+	searchURL = nsnull;
+	return(rv);
+}
+
+
+
+nsresult
+SearchDataSource::GetSearchFolder(nsFileSpec &spec)
+{
+#ifdef	XP_MAC
+	// on Mac, use system's search files
+	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
+#else
+	// on other platforms, use our search files
+	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	searchSitesDir += "res";
+	searchSitesDir += "rdf";
+	searchSitesDir += "datasets";
+#endif
+	spec = searchSitesDir;
 	return(NS_OK);
 }
 
@@ -1069,19 +1101,11 @@ SearchDataSource::GetSearchEngineList()
 		return(NS_RDF_NO_VALUE);
 	}
 
-#ifdef	XP_MAC
-	// on Mac, use system's search files
-	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-#else
-	// on other platforms, use our search files
-	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	// XXX we should get this from prefs?
-	searchSitesDir += "res";
-	searchSitesDir += "rdf";
-	searchSitesDir += "datasets";
-#endif
-
-	nsFileSpec 			nativeDir(searchSitesDir);
+	nsFileSpec			nativeDir;
+	if (NS_FAILED(rv = GetSearchFolder(nativeDir)))
+	{
+		return(rv);
+	}
 	for (nsDirectoryIterator i(nativeDir, PR_FALSE); i.Exists(); i++)
 	{
 		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
@@ -1208,15 +1232,11 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 {
 	nsresult			rv = NS_OK;
 
-#ifdef	XP_MAC
-	nsSpecialSystemDirectory	searchEngine(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-#else
-	nsSpecialSystemDirectory	searchEngine(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	// XXX we should get this from prefs.
-	searchEngine += "res";
-	searchEngine += "rdf";
-	searchEngine += "datasets";
-#endif
+	nsFileSpec			searchEngine;
+	if (NS_FAILED(rv = GetSearchFolder(searchEngine)))
+	{
+		return(rv);
+	}
 	searchEngine += baseFilename;
 
 #ifdef	XP_MAC
