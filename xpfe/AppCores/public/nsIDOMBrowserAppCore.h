@@ -54,6 +54,12 @@ public:
 
   NS_IMETHOD    LoadInitialPage()=0;
 
+  NS_IMETHOD    BackButtonPopup()=0;
+
+  NS_IMETHOD    ForwardButtonPopup()=0;
+
+  NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex)=0;
+
   NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)=0;
 
   NS_IMETHOD    CookieViewer(nsIDOMWindow* aWin)=0;
@@ -106,6 +112,9 @@ public:
   NS_IMETHOD    Stop();  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
   NS_IMETHOD    LoadInitialPage();  \
+  NS_IMETHOD    BackButtonPopup();  \
+  NS_IMETHOD    ForwardButtonPopup();  \
+  NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex);  \
   NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);  \
   NS_IMETHOD    CookieViewer(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SignonViewer(nsIDOMWindow* aWin);  \
@@ -135,6 +144,9 @@ public:
   NS_IMETHOD    Stop() { return _to Stop(); }  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to LoadUrl(aUrl); }  \
   NS_IMETHOD    LoadInitialPage() { return _to LoadInitialPage(); }  \
+  NS_IMETHOD    BackButtonPopup() { return _to BackButtonPopup(); }  \
+  NS_IMETHOD    ForwardButtonPopup() { return _to ForwardButtonPopup(); }  \
+  NS_IMETHOD    GotoHistoryIndex(PRInt32 aIndex) { return _to GotoHistoryIndex(aIndex); }  \
   NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm) { return _to WalletPreview(aWin, aForm); }  \
   NS_IMETHOD    CookieViewer(nsIDOMWindow* aWin) { return _to CookieViewer(aWin); }  \
   NS_IMETHOD    SignonViewer(nsIDOMWindow* aWin) { return _to SignonViewer(aWin); }  \
