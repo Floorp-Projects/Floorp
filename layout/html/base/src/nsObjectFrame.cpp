@@ -85,6 +85,8 @@ public:
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
+  
+  NS_IMETHOD GetDocument(nsIDocument* *aDocument);
 
   //nsIPluginTagInfo interface
 
@@ -1842,6 +1844,18 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const char *aStatusMsg)
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  if (nsnull != mContext) {
+    nsCOMPtr<nsIPresShell> shell;
+    mContext->GetShell(getter_AddRefs(shell));
+
+    rv = shell->GetDocument(aDocument);
+  }
   return rv;
 }
 
