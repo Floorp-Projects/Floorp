@@ -26,7 +26,7 @@ EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
     nsIListBox.h nsIFileWidget.h nsIScrollbar.h nsGUIEvent.h \
     nsIRadioButton.h nsIRadioGroup.h nsIMouseListener.h \
     nsIEventListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
-    nsITooltipWidget.h nsIAppShell.h
+    nsITooltipWidget.h nsIAppShell.h nsStringUtil.h
 
 include <$(DEPTH)\config\rules.mak>
 

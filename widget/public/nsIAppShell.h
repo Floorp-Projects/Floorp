@@ -21,21 +21,16 @@
 
 #include "nsString.h"
 
+/**
+ * Flags for the getNativeData function.
+ * See GetNativeData()
+ */
+#define NS_NATIVE_SHELL   0
+
+
+
 #define NS_IAPPSHELL_IID \
 { 0xa0757c31, 0xeeac, 0x11d1, { 0x9e, 0xc1, 0x0, 0xaa, 0x0, 0x2f, 0xb8, 0x21 } };
-
-
-/**
- * During the nsIAppShell Run method notify this listener 
- * after each message dispatch.
- * @see SetDispatchListener member function of nsIAppShell 
- */
-
-class nsDispatchListener {
-  public:
-    virtual void AfterDispatch() = 0;
-};
-
 
 /**
  * Application shell used for Test applications
@@ -50,7 +45,7 @@ public:
   * Creates an application shell
   */ 
 
-  virtual void Create() = 0;
+  virtual void Create(int* argc, char ** argv) = 0;
 
  /**
   * Enter an event loop.
@@ -59,17 +54,18 @@ public:
   
   virtual nsresult Run() = 0;
 
- /**
-  * After event dispatch execute app specific code
-  */
-  
-  virtual void SetDispatchListener(nsDispatchListener* aDispatchListener) = 0;
-
   /**
    * Exit the handle event loop
    */
 
   virtual void Exit() = 0;
+
+  /**
+   * Returns the Native Data
+   */
+
+  virtual void* GetNativeData(PRUint32 aDataType) = 0;
+
 
 };
 
