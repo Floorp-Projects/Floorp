@@ -307,3 +307,4 @@ NS_NewXBLBinding(nsIXBLBinding** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
