@@ -43,7 +43,6 @@
   <stringbundle id="bundle_prefutilities"
                src="chrome://browser/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-help.js"/>
 
   <hbox flex="1">
