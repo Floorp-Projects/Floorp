@@ -4069,7 +4069,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
     if (useCSS) {
       res = mHTMLEditor->RemoveAttribute(divElem, attr);
-      mHTMLEditor->SetCSSEquivalentToHTMLStyle(divElem, attr, *alignType); 
+      mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
@@ -4086,7 +4086,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
     if (useCSS) {
       res = mHTMLEditor->RemoveAttribute(divElem, attr);
-      mHTMLEditor->SetCSSEquivalentToHTMLStyle(divElem, attr, *alignType); 
+      mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
@@ -7395,7 +7395,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
       {
         if (nsHTMLEditUtils::IsTable(child) || nsHTMLEditUtils::IsHR(child))
         {
-          mHTMLEditor->SetCSSEquivalentToHTMLStyle(curElem, NS_LITERAL_STRING("align"), aAlignType); 
+          mHTMLEditor->SetAttributeOrEquivalent(curElem, NS_LITERAL_STRING("align"), aAlignType); 
         }
         else
         {
@@ -7533,7 +7533,7 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * 
     // and text-align for other block-level elements
     res = mHTMLEditor->RemoveAttribute(aElement, attr);
     if (NS_FAILED(res)) return res;
-    mHTMLEditor->SetCSSEquivalentToHTMLStyle(aElement, attr, *aAlignType); 
+    mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType); 
   }
   else {
     // HTML case; this code is supposed to be called ONLY if the element

@@ -444,5 +444,12 @@ interface nsIHTMLEditor : nsISupports
 
   void   SetCSSEnabled(in boolean aIsCSSPrefChecked);
 
+  /** IsCSSEnabled answers a boolean which is true is the HTMLEditor has been
+    * instantiated with CSS knowledge and if the CSS pref is currently checked
+    *
+    * @param aIsCSSEnabled [OUT] true if CSS handled and enabled
+    */
+  void   IsCSSEnabled(out boolean aIsCSSEnabled);
+
 };
 

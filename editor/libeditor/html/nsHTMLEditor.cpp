@@ -4990,9 +4990,9 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
 // add to aElement the CSS inline styles corresponding to the HTML attribute
 // aAttribute with its value aValue
 nsresult
-nsHTMLEditor::SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
-                                          const nsAReadableString & aAttribute,
-                                          const nsAReadableString & aValue)
+nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
+                                       const nsAReadableString & aAttribute,
+                                       const nsAReadableString & aValue)
 {
   PRBool useCSS;
   nsresult res = NS_OK;

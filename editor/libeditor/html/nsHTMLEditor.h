@@ -190,6 +190,7 @@ public:
   NS_IMETHOD GetLinkedObjects(nsISupportsArray** aNodeList);
 
   NS_IMETHOD SetCSSEnabled(PRBool aIsCSSPrefChecked);
+  NS_IMETHOD IsCSSEnabled(PRBool  * aIsCSSEnabled);
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -379,10 +380,9 @@ public:
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
-  NS_IMETHOD IsCSSEnabled(PRBool * aIsSet);
-  NS_IMETHOD SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
-                                         const nsAReadableString & aAttribute,
-                                         const nsAReadableString & aValue);
+  NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
+                                      const nsAReadableString & aAttribute,
+                                      const nsAReadableString & aValue);
 
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);

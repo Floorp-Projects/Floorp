@@ -1810,13 +1810,13 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
 // can handle CSS styles (for instance, Composer can, Messenger can't) and if
 // the CSS preference is checked
 nsresult
-nsHTMLEditor::IsCSSEnabled(PRBool *aIsSet)
+nsHTMLEditor::IsCSSEnabled(PRBool *aIsCSSEnabled)
 {
-  *aIsSet = PR_FALSE;
+  *aIsCSSEnabled = PR_FALSE;
   if (mCSSAware) {
     // TBD later : removal of mCSSAware and use only the presence of mHTMLCSSUtils
     if (mHTMLCSSUtils) {
-      *aIsSet = mHTMLCSSUtils->IsCSSPrefChecked();
+      *aIsCSSEnabled = mHTMLCSSUtils->IsCSSPrefChecked();
     }
   }
   return NS_OK;
