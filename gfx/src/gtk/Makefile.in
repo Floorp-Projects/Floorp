@@ -118,6 +118,12 @@ CPPSRCS		+= \
 		nsFontMetricsXft.cpp
 endif
 
+ifdef MOZ_ENABLE_PANGO
+CPPSRCS		+= \
+		nsFontMetricsPango.cpp \
+		mozilla-decoder.cpp
+endif
+
 ifdef MOZ_ENABLE_GTK
 CPPSRCS 	+= \
 		nsRegionGTK.cpp \
