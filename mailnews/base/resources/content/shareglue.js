@@ -33,9 +33,24 @@ function Print() {}
 
 function OnLoadMessenger()
 {
+	var pref = Components.classes['component://netscape/preferences'];
+	var startpage = "about:blank";
+
+	if (pref) {
+          pref = pref.getService();
+        }
+        if (pref) {
+          pref = pref.QueryInterface(Components.interfaces.nsIPref);
+        }
+	if (pref) {
+		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
+		if (startpageenabled) {
+			startpage = pref.CopyCharPref("mailnews.start_page.url");
+		}
+	}
 	messenger.SetWindow(window);
-    window.frames["messagepane"].location =
-      "http://people.netscape.com/sspitzer/startpage.html";
+	dump("start message pane with: " + startpage + "\n");
+	window.frames["messagepane"].location = startpage;
 }
 
 function OnUnloadMessenger()
