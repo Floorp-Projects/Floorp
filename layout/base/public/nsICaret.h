@@ -54,7 +54,7 @@ class nsIDOMNode;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID       \
-{ 0xa6cf90e1, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0x43d789e0, 0x21b7, 0x4fb4, { 0xb6, 0xfc, 0x4a, 0x41, 0x49, 0x3e, 0x40, 0xf0 } }
 
 class nsICaret: public nsISupports
 {
@@ -108,11 +108,6 @@ public:
    *  this will erase the caret if its drawn and reset drawn status
    */
   NS_IMETHOD EraseCaret() = 0;
-
-  /** Set Caret Width
-   *  this will set the caret width to the passed in value.
-   */
-  NS_IMETHOD SetCaretWidth(nscoord aPixels) = 0;
 
   NS_IMETHOD SetVisibilityDuringSelection(PRBool aVisibilityDuringSelection) = 0;
   

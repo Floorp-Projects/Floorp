@@ -100,10 +100,10 @@
 /* XXX the following CID's are not in order. This needs
    to be fixed. */
 
-/* 21B51DE0-21A3-11d2-B6E0-00805F8A2676 */
+/* A61E6398-2057-40fd-9C81-873B908D24E7 */
 #define NS_LOOKANDFEEL_CID \
-{ 0x21b51de0, 0x21a3, 0x11d2, \
-    { 0xb6, 0xe0, 0x0, 0x80, 0x5f, 0x8a, 0x26, 0x76 } }
+{ 0xa61e6398, 0x2057, 0x40fd,  \
+    { 0x9c, 0x81, 0x87, 0x3b, 0x90, 0x8d, 0x24, 0xe7 } }
 
 /* 4A781D61-3D28-11d2-8DB8-00609703C14E */
 #define NS_DIALOG_CID \

@@ -1021,23 +1021,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         editor->GetSelectionController(getter_AddRefs(selCon));
         if (selCon)
         {
-          if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask))
-          { // only enable caret if the editor is not readonly
-            nsresult result;
-
-            nsCOMPtr<nsILookAndFeel> look = 
-                     do_GetService("@mozilla.org/widget/lookandfeel;1", &result);
-            if (NS_SUCCEEDED(result) && look)
-            {
-              PRInt32 pixelWidth;
-
-              if(flags & nsIPlaintextEditor::eEditorSingleLineMask)
-                look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
-              else
-                look->GetMetric(nsILookAndFeel::eMetric_MultiLineCaretWidth, pixelWidth);
-              selCon->SetCaretWidth(pixelWidth);
-            }
-
+          if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
             selCon->SetCaretEnabled(PR_TRUE);
           }
 

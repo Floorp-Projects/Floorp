@@ -1225,7 +1225,6 @@ public:
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
-  NS_IMETHOD SetCaretWidth(PRInt16 aPixels);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
@@ -3049,13 +3048,6 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
   }
 
   return result;
-}
-
-NS_IMETHODIMP PresShell::SetCaretWidth(PRInt16 pixels)
-{
-  if (mCaret)
-    mCaret->SetCaretWidth(pixels);
-  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)

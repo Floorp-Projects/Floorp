@@ -713,17 +713,6 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 pixelWidth;
-  nsresult result;
-
-  nsCOMPtr<nsILookAndFeel> look(do_GetService(kLookAndFeelCID, &result));
-
-  if (NS_SUCCEEDED(result) && look) {
-    look->GetMetric(nsILookAndFeel::eMetric_SingleLineCaretWidth, pixelWidth);
-
-    selCon->SetCaretWidth(pixelWidth);
-  }
-
   selCon->SetCaretEnabled(PR_TRUE);
   selCon->SetCaretReadOnly(PR_FALSE);
 

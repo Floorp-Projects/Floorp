@@ -555,7 +555,6 @@ public:
   NS_IMETHOD RepaintSelection(PRInt16 type);
   NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
   NS_IMETHOD SetCaretEnabled(PRBool enabled);
-  NS_IMETHOD SetCaretWidth(PRInt16 twips);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *_retval);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
@@ -734,23 +733,6 @@ nsTextInputSelectionImpl::SetCaretEnabled(PRBool enabled)
   selCon->SetCaretEnabled(enabled);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextInputSelectionImpl::SetCaretWidth(PRInt16 pixels)
-{
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result;
-  nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShellWeak, &result);
-  if (shell)
-  {
-    nsCOMPtr<nsICaret> caret;
-    if (NS_SUCCEEDED(result = shell->GetCaret(getter_AddRefs(caret))))
-    {
-        return caret->SetCaretWidth(pixels);
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
