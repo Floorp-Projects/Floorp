@@ -99,10 +99,8 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull;
 
-  rv = proxyPrompt->PromptPassword(nsnull, promptString,
-                                   NS_LITERAL_STRING(" ").get(),
-                                   nsIPrompt::SAVE_PASSWORD_NEVER,
-                                   &password, &value);
+  rv = proxyPrompt->PromptPassword(nsnull, promptString.get(),
+                                   &password, nsnull, nsnull, &value);
   if (NS_SUCCEEDED(rv) && value) {
     char* str = nsString(password).ToNewCString();
     Recycle(password);
