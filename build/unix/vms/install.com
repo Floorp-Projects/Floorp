@@ -12,9 +12,9 @@ $ if p1 .eqs. "" then p1 = "add /open /head /share"
 $ me = f$envir("procedure")
 $ here = f$parse(me,,,"device") + f$parse(me,,,"directory")
 $!
-$! Mozilla-Bin
+$! Main image(s).
 $!
-$ call do_one "''p1'" "''here'mozilla-bin."
+$ call do_many "''p1'" "''here'*-bin."
 $!
 $! All the .so files in the main directory.
 $!
