@@ -29,6 +29,7 @@ netwerk/socket/base/Makefile
 netwerk/streamconv/Makefile
 netwerk/streamconv/public/Makefile
 netwerk/streamconv/src/Makefile
+netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
 netwerk/util/Makefile
