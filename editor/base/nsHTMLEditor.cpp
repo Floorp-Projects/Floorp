@@ -1634,6 +1634,7 @@ nsHTMLEditor::DeleteSelectionAndCreateNode(const nsString& aTag,
                       getter_AddRefs(newNode));
   // XXX: ERROR_HANDLING  check result, and make sure aNewNode is set correctly in success/failure cases
   *aNewNode = newNode;
+  NS_IF_ADDREF(*aNewNode);
 
   // we want the selection to be just after the new node
   nsCOMPtr<nsIDOMSelection> selection;
