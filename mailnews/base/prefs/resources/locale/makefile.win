@@ -19,4 +19,44 @@ DEPTH=..\..\..\..\..
 
 DIRS= en-US
 
+#
+# PLS DO NOT edit the following locale block;
+#     talk to tao@netscape.com first, thanks!
+#
+# locale: begin
+CHROME_DIR          = messenger
+CHROME_L10N_DIR     = locale
+CHROME_SOURCE_DIR   = $(srcdir)
+
+DA_DK=1
+!ifdef DA_DK
+CHROME_L10N = $(CHROME_L10N)\
+	.\da-DK\AccountManager.dtd \
+	.\da-DK\AccountWizard.dtd \
+	.\da-DK\accounttree.dtd \
+	.\da-DK\am-advanced.dtd \
+	.\da-DK\am-copies.dtd \
+	.\da-DK\am-main.dtd \
+	.\da-DK\am-server-pop3.dtd \
+	.\da-DK\am-server-top.dtd \
+	.\da-DK\aw-accname.dtd \
+	.\da-DK\aw-accounttype.dtd \
+	.\da-DK\aw-done.dtd \
+	.\da-DK\aw-email.dtd \
+	.\da-DK\aw-fullname.dtd \
+	.\da-DK\aw-identity.dtd \
+	.\da-DK\aw-login.dtd \
+	.\da-DK\aw-mailtype.dtd \
+	.\da-DK\aw-server.dtd \
+	.\da-DK\custreceipt.dtd \
+	.\da-DK\pref-diskspace.dtd \
+	.\da-DK\pref-mailnews.dtd \
+	.\da-DK\pref-receipts.dtd \
+	.\da-DK\pref-winsetting.dtd \
+	$(NULL)
+!endif
+#
+# locale: end
+#
+
 include <$(DEPTH)\config\rules.mak>
