@@ -59,8 +59,10 @@ protected:
   // helper methods
   PRBool IsBlockNode(nsCOMPtr <nsIContent> aContent);
   nsCOMPtr<nsIContent> GetBlockNodeParent(nsCOMPtr<nsIContent> aContent);
-  nsCOMPtr<nsIDOMNode> GetStartNode(nsIDOMSelection *aSelection);
+  nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
   nsresult IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult);
+  nsresult IsNextCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, PRInt32 aOffset, PRBool *aResult);
+  nsresult IsPrevCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, PRInt32 aOffset, PRBool *aResult);
 
   // data
   static nsIAtom *sAAtom;

@@ -216,9 +216,13 @@ nsTextEditRules::WillInsertText(nsIDOMSelection  *aSelection,
                                 nsString       *outString,
                                 TypeInState    typeInState)
 {
-  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
-  // initialize out param
+  if (!aSelection || !aCancel || !inString || !outString) 
+    return NS_ERROR_NULL_POINTER;
+    
+  // initialize out params
   *aCancel = PR_FALSE;
+  *outString = *inString;
+  
   if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
   {
     nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);

@@ -748,7 +748,7 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
-    result = nsEditor::InsertText(aStringToInsert);
+    result = nsEditor::InsertText(resultString);
     // post-process 
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   }
