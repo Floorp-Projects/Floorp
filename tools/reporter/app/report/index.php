@@ -53,7 +53,7 @@ $db =& DB::connect($config['db_dsn']);
 
 $data =& $db->getRow("SELECT *
                       FROM report, host
-                      WHERE report.report_id = '".$_GET['report_id']."' 
+                      WHERE report.report_id = '".$db->escapeSimple($_GET['report_id'])."' 
                       AND host.host_id = report_host_id", DB_FETCHMODE_ASSOC);
 
 // disconnect database
