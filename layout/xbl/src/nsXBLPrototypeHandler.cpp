@@ -402,7 +402,7 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* 
 
   unsigned short button;
   aMouseEvent->GetButton(&button);
-  if (mDetail != 0 && (button != mDetail)) {
+  if (mDetail != -1 && (button != mDetail)) {
     *aResult = PR_FALSE;
     return NS_OK;
   }
