@@ -82,7 +82,7 @@ static char encode_basic(punycode_uint bcp, int flag)
 /*** Platform-specific constants ***/
 
 /* maxint is the maximum value of a punycode_uint variable: */
-static const punycode_uint maxint = -1;
+static const punycode_uint maxint = (punycode_uint) -1;
 /* Because maxint is unsigned, -1 becomes the maximum value. */
 
 /*** Bias adaptation function ***/
