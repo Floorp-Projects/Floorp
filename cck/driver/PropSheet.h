@@ -45,10 +45,15 @@ public:
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CPropSheet)
+public:
+	virtual BOOL OnInitDialog();
+
 	//}}AFX_VIRTUAL
 
 // Implementation
 public:
+	void OnButtonCopy();
+	CButton m_ButtonCopy;
 	virtual ~CPropSheet();
 
 	// Generated message map functions

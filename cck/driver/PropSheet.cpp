@@ -26,6 +26,9 @@
 #include "stdafx.h"
 #include "WizardMachine.h"
 #include "PropSheet.h"
+#include "globals.h" //To access global variables
+#include "Interpret.h" //Adding to enable OpenBrowser function.
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,7 +60,43 @@ BEGIN_MESSAGE_MAP(CPropSheet, CPropertySheet)
 	//{{AFX_MSG_MAP(CPropSheet)
 		// NOTE - the ClassWizard will add and remove mapping macros here.
 	//}}AFX_MSG_MAP
+	ON_BN_CLICKED(IDC_FEEDBACK_BUTTON, OnButtonCopy)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CPropSheet message handlers
+extern CInterpret *theInterpreter;
+BOOL CPropSheet::OnInitDialog() 
+{
+	BOOL bResult = CPropertySheet::OnInitDialog();
+	
+	// TODO: Add your specialized code here
+	CRect rect, tabrect;// = CRect (800, 440, 950, 645);//, tabrect;
+	int width;
+
+	//Get button sizes and positions
+	GetDlgItem(IDCANCEL)->GetWindowRect(rect);
+	GetTabControl()->GetWindowRect(tabrect);
+	ScreenToClient(rect); ScreenToClient(tabrect);
+	
+	//New button - width, height and Y-coordiate of IDOK
+	//           - X-coordinate of tab control
+	width = rect.Width();
+	rect.left = tabrect.left; rect.right = tabrect.left + width;
+	
+	//Create new "Add" button and set standard font
+	m_ButtonCopy.Create("Feedback",
+			BS_PUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
+			rect, this, IDC_FEEDBACK_BUTTON);
+	m_ButtonCopy.SetFont(GetFont());
+	
+	return bResult;
+}
+
+void CPropSheet::OnButtonCopy()
+{
+	CString Feedback = GetGlobal("Feedback");
+
+	theInterpreter->OpenBrowser((char*)(LPCTSTR)Feedback);
+
+}

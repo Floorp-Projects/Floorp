@@ -32,6 +32,7 @@
 #define IDD_HELP_DLG                    1537
 #define IDD_SUMMARY                     1538
 #define IDD_WIZ_HELP                    1539
+#define IDC_FEEDBACK_BUTTON				0x02000
 
 // Next default values for new objects
 // 
