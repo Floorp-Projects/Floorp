@@ -73,10 +73,30 @@ sub expand {
     # ok, let's try to process it
     my $result = '';
     if (not $template->process($document, $data, \$result)) {
-        $self->error(1, 'Error processing template: '.$template->error());
+        my $exception = $template->error();
+        if ($exception->isa('PLIF::Service::TemplateToolkit::Exception')) {
+            $exception->PLIFException()->raise;
+        } else {
+            $self->error(1, "Error processing template: $exception");
+        }
     }
     return $result;
 }
+
+
+package PLIF::Service::TemplateToolkit::Exception;
+use strict;
+use vars qw(@ISA);
+@ISA = qw(Template::Exception);
+1;
+
+sub new {
+    my $class = shift;
+    my($PLIFException, $type, $info, $textref) = @_;
+    bless [ $type, $info, $textref, $PLIFException ], $class;
+}
+
+sub PLIFException { $_[0]->[3]; }
 
 
 package PLIF::Service::TemplateToolkit::Context;
@@ -112,6 +132,28 @@ sub new {
         $self->{'__PLIF__protocol'} = $protocol;
     } # else failed
     return $self;
+}
+
+# throw an exception, preserving PLIF exceptions
+sub throw {
+    my $self = shift;
+    my($error, $info, $output) = @_;
+    if (UNIVERSAL::isa($info, 'PLIF::Exception')) {
+	die PLIF::Service::TemplateToolkit::Exception->new($info, $error, $info, $output);
+    } else {
+        $self->SUPER::throw($error, $info, $output);
+    }
+}
+
+# catch an exception, preserving PLIF exceptions
+sub catch {
+    my $self = shift;
+    my($error, $output) = @_;
+    if (UNIVERSAL::isa($error, 'PLIF::Exception')) {
+	return PLIF::Service::TemplateToolkit::Exception->new($error, 'PLIF', $error, $output);
+    } else {
+        $self->SUPER::catch($error, $output);
+    }
 }
 
 # compile a template
