@@ -1628,6 +1628,34 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
 }
 
 /*
+ * This method is meant to be used by view-source to consume invalid attributes.
+ * For the purposes of this method, an invalid attribute is an attribute that
+ * starts with either ' or ". We consume all ' or " and the following whitespace.
+ * 
+ * @param aScanner -- the scanner we're reading our data from.
+ * @param aChar -- the character we're skipping
+ * @param aCurrent -- the current position that we're looking at.
+ * @param aNewlineCount -- a count of the newlines we've consumed.
+ * @return error result.
+ */
+static
+nsresult ConsumeInvalidAttribute(nsScanner& aScanner,
+                                 PRUnichar aChar,
+                                 nsScannerIterator& aCurrent,
+                                 PRInt32& aNewlineCount) {
+  NS_ASSERTION(aChar=='\'' || aChar=='"', "aChar must be a quote or apostrophe");
+  nsScannerIterator end, wsbeg;
+  aScanner.EndReading(end);
+
+  while (aCurrent!=end && *aCurrent==aChar) {
+    ++aCurrent;
+  }
+
+  aScanner.SetPosition(aCurrent);
+  return aScanner.ReadWhitespace(wsbeg,aCurrent,aNewlineCount);
+}
+
+/*
  *  Consume the key and value portions of the attribute.
  *  
  *  @update  rickg 03.23.2000
@@ -1655,7 +1683,8 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       PRUnichar('='), PRUnichar('\n'), 
       PRUnichar('\r'), PRUnichar('\t'), 
       PRUnichar('>'), PRUnichar('<'),
-      PRUnichar('\b'), PRUnichar(0) };
+      PRUnichar('\b'), PRUnichar('\''),
+      PRUnichar(0) };
     static const nsReadEndCondition theEndCondition(theTerminalsChars);
 
     nsScannerIterator start, end;
@@ -1747,12 +1776,20 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             //My best guess is to grab the next non-ws char. We know it's not '=',
             //so let's see what it is. If it's a '"', then assume we're reading
             //from the middle of the value. Try stripping the quote and continuing...
-            if (kQuote==aChar){
+            if (kQuote==aChar || kApostrophe==aChar){
+
               if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
                 result=aScanner.SkipOver(aChar); //strip quote.
+                if (NS_SUCCEEDED(result)) {
+                  result=aScanner.SkipWhitespace(mNewlineCount);
+                }
               } else {
-                aScanner.BindSubstring(mTextKey, wsstart, ++wsend);
-                // I've just incremented wsend.
+                //We want to collect whitespace here so that following 
+                //attributes can have the right line number (and for
+                //parity with the non-view-source code above).
+                result=ConsumeInvalidAttribute(aScanner,aChar,wsend,mNewlineCount);
+
+                aScanner.BindSubstring(mTextKey, wsstart, wsend);
                 aScanner.SetPosition(wsend);
               } 
             }
@@ -1762,17 +1799,17 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
     }//if (consume optional value)
 
     if (NS_OK==result) {
-      result=aScanner.Peek(aChar);
-
       if (mTextValue.Length() == 0 && mTextKey.Length() == 0 && 
-          aChar == kLessThan) {
-        // This attribute is completely bogus, tell the tokenizer.
-        // This happens when we have stuff like:
-        // <script>foo()</script  <p>....
+          mNewlineCount == 0) {
+        //This attribute contains no useful information for us, so there is no
+        //use in keeping it around. Attributes that are otherwise empty, but
+        //have newlines in them are passed on the the DTD so it can get line
+        //numbering right.
         return NS_ERROR_HTMLPARSER_BADATTRIBUTE;
       }
 
 #ifdef DEBUG
+      result = aScanner.Peek(aChar);
       mLastAttribute = (kGreaterThan == aChar || kEOF == result);
 #endif
     }
