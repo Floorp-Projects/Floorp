@@ -30,7 +30,6 @@ MODULE		= editor
 
 EXPORTS		= \
 		nsEditorCID.h \
-		nsIEditorLogging.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -16,10 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998-2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Akkana Peck <akkana@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,33 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIEditorLogging_h__
-#define nsIEditorLogging_h__
-#include "nsISupports.h"
-#include "nscore.h"
+#include "nsISupports.idl"
 
+interface nsIFile;
 
-#define NS_IEDITORLOGGING_IID                            \
-{ /* 4805e681-49b9-11d3-9ce4-ed60bd6cb5bc} */            \
-0x4805e681, 0x49b9, 0x11d3,                              \
-{ 0x9c, 0xe4, 0xed, 0x60, 0xbd, 0x6c, 0xb5, 0xbc } }
+[scriptable, uuid(4805e681-49b9-11d3-9ce4-ed60bd6cb5bc)]
 
-
-class nsIFileSpec;
-
-class nsIEditorLogging : public nsISupports
+interface nsIEditorLogging : nsISupports
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORLOGGING_IID)
+  /** Start logging.
+    */
+  void startLogging(in nsIFile aLogFile);
 
-
-  /* Start logging */
-  NS_IMETHOD StartLogging(nsIFile *aLogFile)=0;
-
-  /* Stop logging */
-  NS_IMETHOD StopLogging()=0;
-  
+  /** Stop logging.
+    */
+  void stopLogging();
 };
 
-
-#endif // nsIEditorLogging_h__
