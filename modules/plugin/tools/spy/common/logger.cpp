@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "xp.h"
-#include <windowsx.h>
 
 #include "resource.h"
 #include "logger.h"
@@ -53,7 +52,7 @@ Logger::Logger() :
 {
   if(0 != GetPluginsDir(szFile, strlen(szFile)))
   {
-    strcat(szFile, "\\");
+    strcat(szFile, DIR_SEPARATOR);
     strcat(szFile, DEFAULT_LOG_FILE_NAME);
   }
   else
