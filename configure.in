@@ -964,6 +964,12 @@ dnl the qsort routine under solaris is faulty
 	  AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
        fi
     fi
+    case $OS_TEST in
+	sun4u)
+            ASFLAGS="$ASFLAGS -DULTRA_SPARC"
+            AC_DEFINE(ULTRA_SPARC)
+	    ;;
+    esac
     if test "$OS_RELEASE" = "5.5.1"; then
        AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     fi
