@@ -593,7 +593,7 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
                 element->GetType(widgetType);
                 char* prefNameString = GetSubstitution(prefName);
                 FinalizeOneWidget(element, widgetType, prefNameString, prefType, ordinal);
-                delete [] prefNameString;
+                PR_Free(prefNameString);
             }
         }
     }
