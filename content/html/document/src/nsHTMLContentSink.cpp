@@ -338,7 +338,6 @@ public:
 
   PRBool IsTimeToNotify();
   PRBool IsInScript();
-  void ReduceEntities(nsString& aString);
   const nsDependentSubstring GetAttributeValueAt(const nsIParserNode& aNode,
                                                  PRInt32 aIndex);
   nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
@@ -689,47 +688,6 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 }
 #endif
 
-/**
-  * Helper to find identifiers that can terminate an entity
-  *
-  * harishd 06/23/00
-  *
-  * @param aSource      - Search for entity terminator in this string
-  * @param aChar        - Holds the terminated character
-  * @param aStartOffset - Beings search, in aSource, from this offset.
-  */
- 
-PRInt32
-GetEntityTerminator(nsString& aSource,PRUnichar& aChar,PRInt32 aStartOffset=0) {
- 
-  PRUnichar         theChar=aChar=0;
-  PRInt32           theOffset=aStartOffset;
-  PRInt32           theLength=aSource.Length();
-  PRBool            found=PR_FALSE; 
-
-  while(theOffset<theLength) {
- 
-    theChar=aSource[theOffset++];
-
-    if(('a'<=theChar) && (theChar<='z'))
-      found=PR_TRUE;
-    else if(('A'<=theChar) && (theChar<='Z'))
-      found=PR_TRUE;
-    else if(('0'<=theChar) && (theChar<='9'))
-      found=PR_TRUE;
-    else if('#'==theChar) 
-      found=PR_TRUE;
-    else 
-      found=PR_FALSE;
-
-    if(!found) {
-      aChar=theChar;
-      return theOffset-1;
-    }
-  }
-  return -1;
-}
-
 // Temporary factory code to create content objects
 
 /**
@@ -836,37 +794,6 @@ void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
     NS_RELEASE(formControl);
   }
 }
-
-#if 0
-// XXX is this logic needed by nsDOMHTMLOptionElement?
-void
-GetOptionText(const nsIParserNode& aNode, nsString& aText)
-{
-  aText.SetLength(0);
-  switch (aNode.GetTokenType()) {
-  case eToken_text:
-  case eToken_whitespace:
-  case eToken_newline:
-    aText.Append(aNode.GetText());
-    break;
-
-  case eToken_entity:
-    {
-      nsAutoString tmp2("");
-      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
-      if (unicode < 0) {
-        aText.Append(aNode.GetText());
-      } else {
-        aText.Append(tmp2);
-      }
-    }
-    break;
-  }
-    nsAutoString x;
-    char* y = ToNewCString(aText);
-    printf("foo");
-}
-#endif
 
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType,
@@ -1980,7 +1907,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         // Map carriage returns to newlines
         if(tmp.Length() > 0) {
           if(tmp.CharAt(0) == '\r') {
-            tmp.AssignWithConversion("\n");
+            tmp.Assign((PRUnichar)'\n');
           }
           rv = AddText(tmp);
         }
