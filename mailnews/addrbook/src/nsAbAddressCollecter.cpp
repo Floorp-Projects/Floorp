@@ -121,7 +121,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 							PRInt32 atSignIndex = senderFromEmail.FindChar('@');
 							if (atSignIndex > 0)
 							{
-								senderFromEmail.Truncate(atSignIndex + 1);
+								senderFromEmail.Truncate(atSignIndex);
 								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.GetUnicode());
 							}
 						}
