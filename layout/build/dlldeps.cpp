@@ -44,4 +44,5 @@ void XXXNeverCalled()
   NS_NewSpacerFrame(nsnull, nsnull, f);
   NS_NewHTMLFramesetFrame(nsnull, nsnull, f);
   NS_NewHTMLFrame(nsnull, nsnull, f);
+  NS_NewScrollFrame(nsnull, nsnull, f);
 }
