@@ -351,7 +351,7 @@ nsSchemaComplexType::GetArrayDimension(PRUint32* aDimension)
   NS_ENSURE_ARG_POINTER(aDimension);
 
   *aDimension = 0;
-  if (!mArrayInfo) {
+  if (mArrayInfo) {
     *aDimension = mArrayInfo->GetDimension();
   }
   else {
