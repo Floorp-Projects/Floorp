@@ -2012,10 +2012,12 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
 
   return inQueue;
 }
+static int gShellCounter = 0;
 
 NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
+  printf("gShellCounter: %d\n", gShellCounter++);
 #ifdef DEBUG
   if (mInVerifyReflow) {
     return NS_OK;

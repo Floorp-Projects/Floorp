@@ -126,6 +126,7 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
                           nsIFrame* aFrame,
                           PRUint32 aStatus)
 {
+  //printf("---------------------> nsHTMLImageLoader::Update\n");
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, aFrame);
   printf(": update: status=%x [loader=%p] callBack=%p squelch=%s\n",

@@ -92,8 +92,16 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+nsImageFrame::nsImageFrame() :
+  mLowSrcImageLoader(nsnull)
+{
+}
+
 nsImageFrame::~nsImageFrame()
 {
+  if (mLowSrcImageLoader != nsnull) {
+    delete mLowSrcImageLoader;
+  }
 }
 
 NS_METHOD
@@ -103,6 +111,9 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
 
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(aPresContext);
+  if (mLowSrcImageLoader != nsnull) {
+    mLowSrcImageLoader->StopAllLoadImages(aPresContext);
+  }
 
   return nsLeafFrame::Destroy(aPresContext);
 }
@@ -133,6 +144,10 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     NS_IF_RELEASE(tag);
   }
 
+  nsAutoString lowSrc;
+  nsresult lowSrcResult;
+  lowSrcResult = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lowsrc, lowSrc);
+
   // Set the image loader's source URL and base URL
   nsIURI* baseURL = nsnull;
   nsIHTMLContent* htmlContent;
@@ -149,7 +164,14 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
       NS_RELEASE(doc);
     }
   }
-  mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
+
+  if (NS_SUCCEEDED(lowSrcResult)) {
+    mLowSrcImageLoader = new nsHTMLImageLoader;
+    if (mLowSrcImageLoader != nsnull) {
+      mLowSrcImageLoader->Init(this, UpdateImageFrame, (void*)mLowSrcImageLoader, baseURL, lowSrc);
+    }
+  }
+  mImageLoader.Init(this, UpdateImageFrame, (void*)&mImageLoader, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
   mInitialLoadCompleted = PR_FALSE;
@@ -164,28 +186,55 @@ nsImageFrame::UpdateImageFrame(nsIPresContext* aPresContext,
                                PRUint32 aStatus)
 {
   nsImageFrame* frame = (nsImageFrame*) aFrame;
-  return frame->UpdateImage(aPresContext, aStatus);
+  return frame->UpdateImage(aPresContext, aStatus, aClosure);
 }
 
 nsresult
-nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
+nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure)
 {
 #ifdef NOISY_IMAGE_LOADING
   ListTag(stdout);
   printf(": UpdateImage: status=%x\n", aStatus);
 #endif
+
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
 
-  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {    
-    nsAutoString usemap;
-    mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
-    // We failed to load the image. Notify the pres shell if we aren't an image map
-    if (presShell && usemap.Length() == 0) {
-      presShell->CantRenderReplacedElement(aPresContext, this);      
+  // check to see if an image error occurred
+  PRBool imageFailedToLoad = PR_FALSE;
+  if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) { // We failed to load the image. Notify the pres shell
+
+    // One of the two images didn't load, which one?
+    // see if we are loading the lowsrc image
+    if (mLowSrcImageLoader != nsnull) {
+      // We ARE loading the lowsrc image
+      // check to see if the closure data is the lowsrc
+      if (aClosure == mLowSrcImageLoader) {
+        // The lowsrc failed to load, but only set the bool to true
+        // true if the src image failed.
+        imageFailedToLoad = mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR;
+      } else { 
+        // src failed to load, 
+        // see if the lowsrc is here so we can paint it instead
+        imageFailedToLoad = (mLowSrcImageLoader->GetLoadStatus() & NS_IMAGE_LOAD_STATUS_ERROR) != 0;
+      }
+    } else {
+      imageFailedToLoad = PR_TRUE;
     }
   }
-  else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+
+  // if src failed and there is no lowsrc
+  // or both failed to load, then notify the PresShell
+  if (imageFailedToLoad) {    
+    if (presShell) {
+      nsAutoString usemap;
+      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
+      // We failed to load the image. Notify the pres shell if we aren't an image map
+      if (usemap.Length() == 0) {
+        presShell->CantRenderReplacedElement(aPresContext, this);      
+      }
+    }
+  } else if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     if (mParent) {
       mState |= NS_FRAME_IS_DIRTY;
 	    mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
@@ -195,6 +244,23 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus)
     }
   }
 
+#if 0 // ifdef'ing out the deleting of the lowsrc image
+      // if the "src" image was change via script to an iage that
+      // didn't exist, the the author would expect the lowsrc to be displayed.
+  // now check to see if we have the entire low
+  if (mLowSrcImageLoader != nsnull) {
+    nsIImage * image = mImageLoader.GetImage();
+    if (image) {
+      PRInt32 imgSrcLinesLoaded = image != nsnull?image->GetDecodedY2():-1;
+      if (image->GetDecodedY2() == image->GetHeight()) {
+        delete mLowSrcImageLoader;
+        mLowSrcImageLoader = nsnull;
+      }
+      NS_RELEASE(image);
+    }
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -203,14 +269,34 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
+  PRBool cancelledReflow = PR_FALSE;
+
+  if (mLowSrcImageLoader != nsnull && !(mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
+    PRBool gotDesiredSize = mLowSrcImageLoader->GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
+    /*if (gotDesiredSize) {
+      // We have our "final" desired size. Cancel any pending
+      // incremental reflows aimed at this frame.
+      nsIPresShell* shell;
+      aPresContext->GetShell(&shell);
+      if (shell) {
+        shell->CancelReflowCommand(this, nsnull);
+        NS_RELEASE(shell);
+      }
+    }*/
+  }
+
+  // Must ask for desiredSize to start loading of image
+  // that seems like a bogus API
   if (mImageLoader.GetDesiredSize(aPresContext, &aReflowState, aDesiredSize)) {
-    // We have our "final" desired size. Cancel any pending
-    // incremental reflows aimed at this frame.
-    nsIPresShell* shell;
-    aPresContext->GetShell(&shell);
-    if (shell) {
-      shell->CancelReflowCommand(this, nsnull);
-      NS_RELEASE(shell);
+    if (!cancelledReflow) {
+      // We have our "final" desired size. Cancel any pending
+      // incremental reflows aimed at this frame.
+      nsIPresShell* shell;
+      aPresContext->GetShell(&shell);
+      if (shell) {
+        shell->CancelReflowCommand(this, nsnull);
+        NS_RELEASE(shell);
+      }
     }
   }
 }
@@ -481,8 +567,22 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
 
-    nsIImage* image = mImageLoader.GetImage();
-    if (nsnull == image) {
+    // first get to see if lowsrc image is here
+    PRInt32 lowSrcLinesLoaded = -1;
+    PRInt32 imgSrcLinesLoaded = -1;
+    nsIImage * lowImage = nsnull;
+    nsIImage * image    = nsnull;
+
+    // if lowsrc is here 
+    if (mLowSrcImageLoader != nsnull) {
+      lowImage = mLowSrcImageLoader->GetImage();
+      lowSrcLinesLoaded = lowImage != nsnull?lowImage->GetDecodedY2():-1;
+    }
+
+    image = mImageLoader.GetImage();
+    imgSrcLinesLoaded = image != nsnull?image->GetDecodedY2():-1;
+
+    if (nsnull == image && nsnull == lowImage) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
@@ -503,10 +603,19 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
         if (mImageLoader.GetLoadImageFailed()) {
           float p2t;
           aPresContext->GetScaledPixelsToTwips(&p2t);
-          inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
+          inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
           inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
         }
-        aRenderingContext.DrawImage(image, inner);
+
+        if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
+          //inner.height = lowSrcLinesLoaded;
+          aRenderingContext.DrawImage(lowImage, inner);
+        }
+
+        if (image != nsnull && imgSrcLinesLoaded > 0) {
+          //inner.height = imgSrcLinesLoaded;
+          aRenderingContext.DrawImage(image, inner);
+        }
       }
 
 #ifdef DEBUG
@@ -527,6 +636,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 #endif
     }
 
+    NS_IF_RELEASE(lowImage);
     NS_IF_RELEASE(image);
 
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {

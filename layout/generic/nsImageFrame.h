@@ -39,6 +39,8 @@ struct nsSize;
 
 class nsImageFrame : public ImageFrameSuper {
 public:
+  nsImageFrame();
+
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -82,7 +84,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  nsresult UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus);
+  nsresult UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure);
 
   nsImageMap* GetImageMap();
 
@@ -125,11 +127,12 @@ protected:
                                    void* aClosure,
                                    PRUint32 aStatus);
 
-  nsHTMLImageLoader mImageLoader;
-  nsImageMap* mImageMap;
-  PRPackedBool mSizeFrozen;
-  PRPackedBool mInitialLoadCompleted;
-  nsMargin mBorderPadding;
+  nsHTMLImageLoader   mImageLoader;
+  nsHTMLImageLoader * mLowSrcImageLoader;
+  nsImageMap*         mImageMap;
+  PRPackedBool        mSizeFrozen;
+  PRPackedBool        mInitialLoadCompleted;
+  nsMargin            mBorderPadding;
 };
 
 #endif /* nsImageFrame_h___ */
