@@ -111,6 +111,9 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
     mInst->GetCallbacks(&callbacks);
     mInst->GetNPP(&npp);
 
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
     error = CallNPP_NewStreamProc(callbacks->newstream,
                                           npp,
                                           (char *)contentType,
@@ -119,7 +122,8 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
                                           &streamType);
 	if(error != NPERR_NO_ERROR)
 		return NS_ERROR_FAILURE;
-
+#endif
+	
 	// translate the old 4x style stream type to the new one
 	switch(streamType)
 	{
@@ -170,10 +174,14 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     {
 		if (callbacks->writeready != NULL)
 		{
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
 		numtowrite = CallNPP_WriteReadyProc(callbacks->writeready,
                                             npp,
                                             &mNPStream);
-
+#endif
+		
 		if (numtowrite > amountRead)
 			numtowrite = amountRead;
 		}
@@ -184,6 +192,9 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 		// so just skip the Write until WriteReady returns a >0 value
 		if(numtowrite > 0)
 		{
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
 			writeCount = CallNPP_WriteProc(callbacks->write,
                                        npp,
                                        &mNPStream, 
@@ -192,7 +203,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                        (void *)buffer);
 			if(writeCount < 0)
 				return NS_ERROR_FAILURE;
-
+#endif
 			amountRead -= numtowrite;
 			mPosition += numtowrite;
 		}
@@ -215,11 +226,15 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const
     if (callbacks->asfile == NULL)
         return NS_OK;
 
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
     CallNPP_StreamAsFileProc(callbacks->asfile,
                              npp,
                              &mNPStream,
                              fileName);
-
+#endif
+ 
     return NS_OK;
 }
 
@@ -239,22 +254,30 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresul
     if (callbacks->destroystream != NULL)
     {
 		// XXX need to convert status to NPReason
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
         error = CallNPP_DestroyStreamProc(callbacks->destroystream,
                                   npp,
                                   &mNPStream,
                                   NPRES_DONE);
 		if(error != NPERR_NO_ERROR)
 			return NS_ERROR_FAILURE;
+#endif
     }
 
 	// check to see if we have a call back
     if (callbacks->urlnotify != NULL && mNotifyData != nsnull)
     {
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
         CallNPP_URLNotifyProc(callbacks->urlnotify,
                               npp,
                               mNPStream.url,
                               nsPluginReason_Done,
                               mNotifyData);
+#endif
     }
 
     return NS_OK;
@@ -359,8 +382,12 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   NPSavedData *sdata;
 
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
   error = (nsresult)CallNPP_DestroyProc(fCallbacks->destroy,
                                         &fNPP, &sdata); // saved data
+#endif
 
   mStarted = PR_FALSE;
   if(error != NPERR_NO_ERROR)
@@ -403,6 +430,9 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   fPeer->GetMode(&mode);
   fPeer->GetMIMEType(&mimetype);
 
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
   error = CallNPP_NewProc(fCallbacks->newp,
                       (char *)mimetype,
                       &fNPP,
@@ -411,6 +441,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                       (char**)names,
                       (char**)values,
                       NULL); // saved data
+#endif
 
 	if(error != NPERR_NO_ERROR)
 		rv = NS_ERROR_FAILURE;
@@ -441,10 +472,14 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
         // XXX Turns out that NPPluginWindow and NPWindow are structurally
         // identical (on purpose!), so there's no need to make a copy.
 
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
         error = CallNPP_SetWindowProc(fCallbacks->setwindow,
                                                  &fNPP,
                                                  (NPWindow*) window);
-
+#endif
+		
         // XXX In the old code, we'd just ignore any errors coming
         // back from the plugin's SetWindow(). Is this the correct
         // behavior?!?
