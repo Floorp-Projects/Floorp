@@ -38,16 +38,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBaseWidgetAccessible.h"
+#include "nsIAccessibilityService.h"
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
-#include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
 #include "nsIServiceManager.h"
-#include "nsIAccessibilityService.h"
 
 // ------------
 // nsBlockAccessible
@@ -217,42 +214,15 @@ NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
 }
 
 /* long GetAccState (); */
-NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *aState)
 {
-  nsAccessible::GetAccState(_retval);
-  *_retval |= STATE_READONLY | STATE_SELECTABLE;
+  nsAccessible::GetAccState(aState);
   if (IsALink()) {
-    *_retval |= STATE_LINKED;
+    *aState |= STATE_LINKED;
     if (mIsLinkVisited)
-      *_retval |= STATE_TRAVERSED;
+      *aState |= STATE_TRAVERSED;
   }
   
-  // Get current selection and find out if current node is in it
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell) {
-     return NS_ERROR_FAILURE;  
-  }
-
-  nsCOMPtr<nsIPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame = nsnull;
-  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
-    nsCOMPtr<nsISelectionController> selCon;
-    frame->GetSelectionController(context,getter_AddRefs(selCon));
-    if (selCon) {
-      nsCOMPtr<nsISelection> domSel;
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-      if (domSel) {
-        PRBool isSelected = PR_FALSE, isCollapsed = PR_TRUE;
-        domSel->ContainsNode(mDOMNode, PR_TRUE, &isSelected);
-        domSel->GetIsCollapsed(&isCollapsed);
-        if (isSelected && !isCollapsed)
-          *_retval |=STATE_SELECTED;
-      }
-    }
-  }
-
   if (IsALink()) {
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
@@ -263,11 +233,19 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
       if (parentAccessible) {
         PRUint32 orState = 0;
         parentAccessible->GetAccState(&orState);
-        *_retval |= orState;
+        *aState |= orState;
       }
     }
   }
 
+  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
+  if (docAccessible) {
+    PRBool isEditable;
+    docAccessible->GetIsEditable(&isEditable);
+    if (isEditable) {
+      *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
+    }
+  }
   return NS_OK;
 }
 

@@ -46,6 +46,7 @@ LIBRARY_NAME = accessibility_toolkit_s
 REQUIRES	= content \
 		  docshell \
 		  dom \
+		  editor \
 		  gfx \
 		  htmlparser \
 		  intl \

@@ -45,6 +45,8 @@
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationListener.h"
+#include "nsIEditor.h"
+#include "nsIObserver.h"
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
@@ -59,6 +61,7 @@ class nsDocAccessible : public nsAccessibleWrap,
                         public nsIAccessibleDocument,
                         public nsIAccessibleEventReceiver,
                         public nsIWebProgressListener,
+                        public nsIObserver,
                         public nsIDOMMutationListener,
                         public nsIScrollPositionListener,
                         public nsSupportsWeakReference
@@ -68,6 +71,7 @@ class nsDocAccessible : public nsAccessibleWrap,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSIACCESSIBLEEVENTRECEIVER
+  NS_DECL_NSIOBSERVER
 
   public:
     nsDocAccessible(nsIDOMNode *aNode, nsIWeakReference* aShell);
@@ -96,6 +100,7 @@ class nsDocAccessible : public nsAccessibleWrap,
 
     // nsIAccessNode
     NS_IMETHOD Shutdown();
+    NS_IMETHOD Init();
 
   protected:
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
@@ -105,10 +110,13 @@ class nsDocAccessible : public nsAccessibleWrap,
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
     void FireDocLoadFinished();
-    void InvalidateCacheSubtree(nsIDOMNode *aStartNode);
     void HandleMutationEvent(nsIDOMEvent *aEvent, PRUint32 aEventType);
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
+    void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
+    void GetEventDocAccessible(nsIDOMNode *aNode, 
+                               nsIAccessibleDocument **aAccessibleDoc);
+    void CheckForEditor();
 
 #ifdef OLD_HASH
     nsSupportsHashtable *mAccessNodeCache;
@@ -120,6 +128,7 @@ class nsDocAccessible : public nsAccessibleWrap,
     nsCOMPtr<nsITimer> mScrollWatchTimer;
     nsCOMPtr<nsITimer> mDocLoadTimer;
     nsCOMPtr<nsIWebProgress> mWebProgress;
+    nsCOMPtr<nsIEditor> mEditor; // Editor, if there is one
     EBusyState mBusy;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsNewDocument;

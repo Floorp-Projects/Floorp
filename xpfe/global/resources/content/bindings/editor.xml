@@ -6,7 +6,7 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
   
   <binding id="editor">
-    <implementation>
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
       <constructor>
         <![CDATA[
           // Make window editable immediately only
@@ -18,6 +18,16 @@
         ]]>
       </constructor>
       <destructor/>
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createOuterDocAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
       <method name="makeEditable">
         <parameter name="editortype"/>
         <parameter name="waitForUrlLoad"/>
