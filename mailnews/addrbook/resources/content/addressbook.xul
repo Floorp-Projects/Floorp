@@ -106,12 +106,10 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&addressbookWindow.title;"
-    style="width:100%;height:100%">
+    style="width:100%;height:100%"
+    onload="OnLoadAddressBook()">
 
-<html:script src="chrome://messenger/content/widgetglue.js"/>
-<html:script src="chrome://messenger/content/commandglue.js"/>
-<html:script src="chrome://messenger/content/shareglue.js"/>
-<html:script src="chrome://addressbook/content/addressbook.js"/>
+<html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 
   <menubar>
     <menu name="&fileMenu.label;">

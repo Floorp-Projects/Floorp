@@ -27,11 +27,13 @@ div[class="CardViewHeading"] {
 	color: white;
 	background-color: #5050ff;
 	font-weight: bold;
+	display: none;
 }
 
 div[class="CardViewText"] {
 	padding-left: 20px;
 	padding-right: 2px;
+	display: none;
 }
 
 box[class="CardView"] {
@@ -39,6 +41,7 @@ box[class="CardView"] {
 	padding-top: 12px;
 	padding-bottom: 4px;
 	border: none;
+	display: block;
 }
 
 spring[class="CardViewHeadingSpace"] {
