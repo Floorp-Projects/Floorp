@@ -1,3 +1,15 @@
+Allow users to backdate notices
+
+autmate regeneration of HTML when user uses CGI 
+interface
+	
+Put the C in all build cells.
+
+VC code did the wrong thing when generating old pages and there was
+no TreeState data.
+
+Fix Spelling mistakes thoughout code.	
+	
 Add support for build machines to tell the server to add text/links 
 into build cells (TinderboxPrint).
 

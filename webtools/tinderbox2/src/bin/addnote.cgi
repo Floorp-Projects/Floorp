@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2002/04/27 02:31:08 $ 
+# $Revision: 1.17 $ 
+# $Date: 2002/04/27 03:23:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -135,6 +135,11 @@ sub get_params {
 
   if (param("effectivetime")) {
       $EFFECTIVE_TIME = timestring2time( param("effectivetime") );
+
+      # allow people to backdate notices but not forward date them.
+      if ($EFFECTIVE_TIME > $TIME) {
+          $EFFECTIVE_TIME = $TIME;
+      }
   } else {
       $EFFECTIVE_TIME = time();
   }
