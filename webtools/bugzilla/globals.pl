@@ -112,12 +112,12 @@ sub SendSQL {
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
     }
-    if ($str =~ /^LOCK TABLES/ && $str !~ /shadowlog/) {
-        $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /;
+    if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/) {
+        $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
     }
     SqlLog($str);
     $::currentquery = $::db->query($str)
-	|| die "$str: $::db_errstr";
+	|| die "$str: " . $::db->errmsg;
     SqlLog("Done");
     if (!$dontshadow && $iswrite && Param("shadowdb")) {
         my $q = SqlQuote($str);
