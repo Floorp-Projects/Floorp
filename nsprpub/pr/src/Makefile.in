@@ -194,6 +194,7 @@ OBJS = \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prolock.$(OBJ_SUFFIX)	 \
+    misc/$(OBJDIR)/prrng.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prtrace.$(OBJ_SUFFIX) \
