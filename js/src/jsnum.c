@@ -726,11 +726,12 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     } else {
 	errno = 0;
 	d = JS_strtod(cstr, &estr);
-	if (errno == ERANGE)
+	if (errno == ERANGE) {
 	    if (d == HUGE_VAL)
 		d = *cx->runtime->jsPositiveInfinity;
 	    else if (d == -HUGE_VAL)
 		d = *cx->runtime->jsNegativeInfinity;
+        }
 #ifdef HPUX
         if (d == 0.0 && negative) {
             /*
@@ -831,7 +832,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	s1++;
     }
 
-    if (value >= 9007199254740992.0)
+    if (value >= 9007199254740992.0) {
 	if (base == 10) {
 	    /* If we're accumulating a decimal number and the number is >= 2^53, then
 	     * the result from the repeated multiply-add above may be inaccurate.  Call
@@ -905,6 +906,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	      done:;
 	    }
 	}
+    }
     /* We don't worry about inaccurate numbers for any other base. */
 
     if (s1 == start) {
