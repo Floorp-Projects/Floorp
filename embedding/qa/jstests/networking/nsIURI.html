@@ -1,0 +1,377 @@
+<html>
+
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ashish Bhatt <ashishbhatt@netscape.com>
+ *
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+  -->
+
+<title>nsIURI Tets case</title>
+
+<head>
+
+<script type="text/javascript" src="http://mozilla.org/quality/embed/jstests/bridge.js"></script>
+<script type="text/javascript" src="nsIURI.js"></script>
+
+<script type="text/javascript">
+
+var scheme = new Array("http","https", "ftp","file","javascript","data","about","gopher","chrome", "jar");
+
+var url = new Array("http://mozilla.org",
+						"https://ec.aoltw.net",
+						"ftp://ftp.mozilla.org",
+						"file://c:/",
+						"javascript:alert('e');",
+						"data:",
+						"about:",
+						"ghoper://",
+						"chrome://communicator/skin/communicator.css",
+						"jar://resource");
+
+var uri ;
+var buffer ;
+var i;
+
+function WritePassFail()
+{
+
+  if (uri.success)
+  {
+	  buffer += "<td>"+ uri.returnvalue +"</td>" ;
+	  buffer += "<td>Pass</td>"
+  }
+  else
+  {
+	  buffer += "<td>" +"Exception: " + uri.exception + "</td>" ;
+	  buffer += "<td bgcolor='#FF0000'>Fail</td>"
+  }
+
+  buffer += "</tr>"
+  uri.exception= null;
+
+}
+
+
+function WriteTableRow(name,params)
+{
+	buffer += "<tr>" ;
+	buffer += "<td>" + name + "</td>" ;
+	buffer += "<td>" + params + "</td>" ;
+}
+
+
+function WriteHeader()
+{
+
+	buffer = "<b>Results for <a href='http://lxr.mozilla.org/seamonkey/source/netwerk/base/public/nsIURI.idl'>nsIURI :</a></b><br><br>"
+	buffer += "<table border cols=4 width='70%'>"
+	buffer += "<tr>"
+	buffer += "<td><b>Property/Method</b></td>"
+	buffer += "<td><b>Params</b></td>"
+	buffer += "<td><b>Output/Bug/Error</b></td>"
+	buffer += "<td><b>Result</b></td>"
+	buffer += "</tr>"
+
+}
+
+
+function WriteFooter()
+{
+	buffer += "</table>"
+}
+
+
+function Writebuffer(buffer)
+{
+
+	if (isRunningStandalone())
+	{
+	   document.clear();
+	   document.write(buffer);
+	}
+	else
+		WriteResults(buffer);
+
+}
+
+
+function RunAllTests()
+{
+
+	WriteHeader();
+
+	//for (i=0;i<scheme.length;i++)
+	//{
+
+		//uri =  new URI("http://lxr.mozilla.org/seamonkey/source/netwerk/base/public/nsIURI.idl") ;
+		uri =  new URI("http://slip.mcom.com") ;
+		if (uri.exception)
+		{
+		  Writebuffer(uri.exception);
+		  return ;
+		}
+
+   	    //WriteTableRow("<b>Test for <b>" + scheme[i]+  "</b> Protocol Handler</b>","");
+
+
+		getspec();
+		getprePath();
+		getscheme();
+		getuserPass();
+		getusername();
+		getpassword();
+		gethostPort();
+		gethost();
+		getport();
+		getpath();
+		//equals();
+		schemeIs();
+		clone();
+		resolve();
+		asciiSpec();
+		asciiHost();
+		originCharset();
+		setspec();
+		setscheme();
+		setuserPass();
+		setusername();
+		setpassword();
+		sethostPort();
+		sethost();
+		setport();
+		setpath();
+
+	//}
+
+	WriteFooter();
+
+	Writebuffer(buffer) ;
+}
+
+
+function getspec()
+{
+	uri.spec;
+
+	WriteTableRow("spec(get)","");
+	WritePassFail();
+}
+
+function setspec()
+{
+	uri.spec = "ftp://mozilla.org";
+
+	WriteTableRow("spec(set)","");
+	WritePassFail();
+}
+
+function getprePath()
+{
+	uri.prePath;
+
+	WriteTableRow("prePath(readonly)","");
+	WritePassFail();
+}
+
+function getscheme()
+{
+	uri.scheme ;
+
+	WriteTableRow("scheme(get)","");
+	WritePassFail();
+}
+function setscheme()
+{
+	uri.scheme = "ftp" ;
+
+	WriteTableRow("scheme(set)","");
+	WritePassFail();
+}
+
+
+function getuserPass()
+{
+
+	uri.userPass;
+	WriteTableRow("userPass(get)","");
+	WritePassFail();
+}
+function setuserPass()
+{
+
+	uri.userPass = "ashish:netscape" ;
+	WriteTableRow("userPass(get)","");
+	WritePassFail();
+}
+
+function getusername()
+{
+
+	uri.username;
+
+	WriteTableRow("username(get)","");
+	WritePassFail();
+}
+function setusername()
+{
+
+	uri.username = "ashish" ;
+
+	WriteTableRow("username(get)","");
+	WritePassFail();
+}
+
+function getpassword()
+{
+	uri.password;
+	WriteTableRow("password(get)","");
+	WritePassFail();
+}
+
+function setpassword()
+{
+	uri.password = "netscape" ;
+	WriteTableRow("password(get)","");
+	WritePassFail();
+}
+function gethostPort()
+{
+	uri.hostPort ;
+	WriteTableRow("hostPort(get)","");
+	WritePassFail();
+}
+function sethostPort()
+{
+	uri.hostPort = 200;
+	WriteTableRow("hostPort(get)","");
+	WritePassFail();
+}
+
+function gethost()
+{
+	uri.host ;
+	WriteTableRow("host(get)","");
+	WritePassFail();
+}
+function sethost()
+{
+	uri.host = "ftp.mozilla.org";
+	WriteTableRow("host(get)","");
+	WritePassFail();
+}
+
+function getport()
+{
+	uri.port ;
+	WriteTableRow("port(get)","");
+	WritePassFail();
+}
+
+function setport()
+{
+	uri.port = 200 ;
+	WriteTableRow("port(get)","");
+	WritePassFail();
+}
+
+function getpath()
+{
+	uri.path;
+	WriteTableRow("path(get)","");
+	WritePassFail();
+}
+function setpath()
+{
+	uri.path ="/" ;
+	WriteTableRow("path(get)","");
+	WritePassFail();
+}
+
+function schemeIs()
+{
+	uri.schemeIs("ftp");
+	WriteTableRow("schemeIs()","ftp");
+	WritePassFail();
+}
+
+function clone()
+{
+	uri.clone();
+	WriteTableRow("clone()","");
+	WritePassFail();
+}
+
+function resolve()
+{
+	var relativeurl= "embed/docs"
+	uri.resolve(relativeurl);
+	WriteTableRow("resolve()",relativeurl);
+	WritePassFail();
+}
+
+function asciiSpec()
+{
+	uri.asciiSpec();
+	WriteTableRow("asciiSpec(readonly)","");
+	WritePassFail();
+}
+function asciiHost()
+{
+	uri.asciiHost();
+	WriteTableRow("asciiHost(readonly)","");
+	WritePassFail();
+}
+function originCharset()
+{
+	uri.originCharset();
+	WriteTableRow("originCharset(readonly)","");
+	WritePassFail();
+}
+
+
+</script>
+
+</head>
+
+<body>
+
+<script type="text/javascript">
+   RunAllTests();
+</script>
+</body>
+
+</html>
