@@ -387,10 +387,10 @@ ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_TARGET),OS2)
-	$(RC) -DOS2 -r $(RESNAME) $(RES)
+	$(RC) -DOS2 -r $< $@
 else
 # The resource compiler does not understand the -U option.
-	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$(RES) $(RESNAME)
+	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
 endif
 	@echo $(RES) finished
 endif
