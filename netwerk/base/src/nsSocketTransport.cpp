@@ -1652,6 +1652,8 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
     if (GetReadType() != eSocketRead_None)
         rv = NS_ERROR_IN_PROGRESS;
     
+    NS_ENSURE_TRUE(aListener, NS_ERROR_INVALID_ARG);
+
     nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsIRequestObserver> observer;
 
@@ -1729,6 +1731,8 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
     // If a write is already in progress then fail...
     if (GetWriteType() != eSocketWrite_None)
         rv = NS_ERROR_IN_PROGRESS;
+
+    NS_ENSURE_TRUE(aProvider, NS_ERROR_INVALID_ARG);
 
     nsCOMPtr<nsIStreamProvider> provider;
     nsCOMPtr<nsIRequestObserver> observer;

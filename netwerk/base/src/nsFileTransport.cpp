@@ -509,7 +509,8 @@ nsFileTransport::AsyncRead(nsIStreamListener *aListener,
     if (mXferState != CLOSED)
         return NS_ERROR_IN_PROGRESS;
 
-    NS_ASSERTION(aListener, "need to supply an nsIStreamListener");
+    NS_ENSURE_TRUE(aListener, NS_ERROR_INVALID_ARG);
+
     rv = NS_NewStreamListenerProxy(getter_AddRefs(mListener),
                                    aListener, nsnull,
                                    mBufferSegmentSize,
@@ -555,7 +556,8 @@ nsFileTransport::AsyncWrite(nsIStreamProvider *aProvider,
     if (mXferState != CLOSED)
         return NS_ERROR_IN_PROGRESS;
 
-    NS_ASSERTION(aProvider, "need to supply an nsIStreamProvider");
+    NS_ENSURE_TRUE(aProvider, NS_ERROR_INVALID_ARG);
+
     rv = NS_NewStreamProviderProxy(getter_AddRefs(mProvider),
                                    aProvider, nsnull,
                                    mBufferSegmentSize,
@@ -746,10 +748,14 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
 
         // Give the listener a chance to read at most transferAmt bytes from
         // the source input stream.
-        nsresult status = mListener->OnDataAvailable(this, mContext,
-                                                     mSourceWrapper,
-                                                     mOffset, transferAmt);
-
+        nsresult status = NS_ERROR_NOT_INITIALIZED;
+        if (mListener)
+            status = mListener->OnDataAvailable(this, 
+                                                mContext,
+                                                mSourceWrapper,
+                                                mOffset, 
+                                                transferAmt);
+        
         if (NS_SUCCEEDED(status)) {
             // Find out what was read.
             total = mSourceWrapper->GetBytesRead() - offset;
@@ -947,9 +953,13 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         PRUint32 total = 0, offset = mSinkWrapper->GetBytesWritten();
 
         // Ask the provider for data
-        nsresult status = mProvider->OnDataWritable(this, mContext,
-                                                    mSinkWrapper,
-                                                    mOffset, transferAmt);
+        nsresult status = NS_ERROR_NOT_INITIALIZED;
+        if (mProvider)
+            mProvider->OnDataWritable(this, 
+                                      mContext,
+                                      mSinkWrapper,
+                                      mOffset, 
+                                      transferAmt);
 
         if (NS_SUCCEEDED(status)) {
             // Find out what was written.
