@@ -985,56 +985,58 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 
-	if (NS_FAILED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))	return(rv);
-	char *uri = sortResource.ToNewCString();
-	if (uri)
+	PRBool			childAdded = PR_FALSE;
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, sortDirection)))
 	{
-		rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
-		delete [] uri;
-		if (NS_FAILED(rv))	return(rv);
-	}
-	if (sortDirection.EqualsIgnoreCase("natural"))
-	{
-		sortInfo.naturalOrderSort = PR_TRUE;
-		sortInfo.descendingSort = PR_FALSE;
-		// no need to sort for natural order
-		container->AppendChildTo(node, PR_TRUE);
-	}
-	else
-	{
-		sortInfo.naturalOrderSort = PR_FALSE;
-		if (sortDirection.EqualsIgnoreCase("descending"))
-			sortInfo.descendingSort = PR_TRUE;
-		else
-			sortInfo.descendingSort = PR_FALSE;
-// crap
-		// figure out where to insert the node when a sort order is being imposed
-		PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
-	        nsCOMPtr<nsIContent>	child;
-		nsresult		rv;
-		PRBool			childAdded = PR_FALSE;
-
-		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-		for (childIndex=0; childIndex<numChildren; childIndex++)
+		char *uri = sortResource.ToNewCString();
+		if (uri)
 		{
-			if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
-			if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
-			if (nameSpaceID == kNameSpaceID_XUL)
+			rv = gRDFService->GetResource(uri, &sortInfo.sortProperty);
+			delete [] uri;
+			if (NS_FAILED(rv))	return(rv);
+		}
+		if (sortDirection.EqualsIgnoreCase("natural"))
+		{
+			sortInfo.naturalOrderSort = PR_TRUE;
+			sortInfo.descendingSort = PR_FALSE;
+			// no need to sort for natural order
+			container->AppendChildTo(node, PR_TRUE);
+		}
+		else
+		{
+			sortInfo.naturalOrderSort = PR_FALSE;
+			if (sortDirection.EqualsIgnoreCase("descending"))
+				sortInfo.descendingSort = PR_TRUE;
+			else
+				sortInfo.descendingSort = PR_FALSE;
+
+			// figure out where to insert the node when a sort order is being imposed
+			PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+		        nsCOMPtr<nsIContent>	child;
+			nsresult		rv;
+
+			if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+			for (childIndex=0; childIndex<numChildren; childIndex++)
 			{
-				nsIContent	*theChild = child.get();
-				PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
-				if (sortVal <= 0)
+				if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+				if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
+				if (nameSpaceID == kNameSpaceID_XUL)
 				{
-					container->InsertChildAt(node, childIndex, PR_TRUE);
-					childAdded = PR_TRUE;
-					break;
+					nsIContent	*theChild = child.get();
+					PRInt32 sortVal = inplaceSortCallback(&node, &theChild, &sortInfo);
+					if (sortVal <= 0)
+					{
+						container->InsertChildAt(node, childIndex, PR_TRUE);
+						childAdded = PR_TRUE;
+						break;
+					}
 				}
 			}
 		}
-		if (childAdded == PR_FALSE)
-		{
-			container->AppendChildTo(node, PR_TRUE);
-		}
+	}
+	if (childAdded == PR_FALSE)
+	{
+		container->AppendChildTo(node, PR_TRUE);
 	}
 	return(NS_OK);
 }
