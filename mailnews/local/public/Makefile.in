@@ -26,6 +26,7 @@ EXPORTS= \
 	nsIRDFMSGFolderDataSource.h \
 	nsIPop3Sink.h \
 	nsIPop3URL.h \
+	nsIMailboxUrl.h \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
