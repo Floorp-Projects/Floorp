@@ -184,7 +184,7 @@ function (request, ctxt)
 }
 
 StreamListener.prototype.onStopRequest =
-function (request, ctxt, status, errorMsg)
+function (request, ctxt, status)
 {
     ctxt = ctxt.wrappedJSObject;
     if (!ctxt)
@@ -196,8 +196,7 @@ function (request, ctxt, status, errorMsg)
 
     ctxt.isConnected = false;
 
-    dd ("onStopRequest: " + request + ", " + ctxt + ", " + status + ", " +
-        errorMsg);
+    dd ("onStopRequest: " + request + ", " + ctxt + ", " + status);
 
     var ev = new CEvent ("server", "disconnect", this.server,
                          "onDisconnect");
