@@ -741,6 +741,8 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 {
     nsresult rv;
 
+    if (mPrePopulationDone)
+        return NS_OK;
     // Read in all CID entries and populate the mFactories
     nsCOMPtr<nsIEnumerator> cidEnum;
     rv = mRegistry->EnumerateSubtrees( mCLSIDKey, getter_AddRefs(cidEnum));
@@ -773,7 +775,6 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         char *library = NULL;
         rv = mRegistry->GetString(cidKey, inprocServerValueName, &library);
         if (NS_FAILED(rv)) continue;
-        autoStringFree delete_library(library, autoStringFree::NSPR_Delete);
         nsCID aClass;
         if (!(aClass.Parse(cidString))) continue;
 
@@ -783,9 +784,8 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
             continue;
 
         nsFactoryEntry* entry = 
-            new nsFactoryEntry(aClass, PL_strdup(library),
-                               /* hand off */
-                               componentType, 
+            /* hand off componentType and library to factory */
+            new nsFactoryEntry(aClass, library, componentType,
                                nsCRT::strcmp(componentType,
                                              nativeComponentType) ?
                                0 : mNativeComponentLoader);
@@ -1556,6 +1556,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         goto out;
     }
 
+    /* hand off aRegistryName to entry */
     newEntry = new nsFactoryEntry(aClass, aRegistryName,
                                   nsCRT::strdup(aType),
                                   loader);
