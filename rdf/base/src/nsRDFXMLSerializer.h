@@ -115,6 +115,7 @@ protected:
 
     static PRInt32 gRefCnt;
     static nsIRDFResource* kRDF_instanceOf;
+    static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kRDF_nextVal;
     static nsIRDFResource* kRDF_Bag;
     static nsIRDFResource* kRDF_Seq;
