@@ -2356,9 +2356,10 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
          *
          * This code is complicated by the need to handle duplicate parameter
          * names, as required by ECMA (bah!).  A duplicate parameter is stored
-         * as a duplicate entry in the double hash table, which collides with
-         * the first parameter of the same name, and any other duplicates and
-         * differently-named colliding entries.
+         * as another node with the same id (the parameter name) but different
+         * shortid (the argument index) along the property tree ancestor line
+         * starting at SCOPE_LAST_PROP(scope).  Only the last duplicate param
+         * is mapped by the scope's hash table.
          */
         cx = jp->sprinter.context;
         nargs = fun->nargs;
