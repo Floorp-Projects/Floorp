@@ -281,6 +281,9 @@ NSPR_LIBS	= @NSPR_LIBS@
 LDAP_CFLAGS	= @LDAP_CFLAGS@
 LDAP_LIBS	= @LDAP_LIBS@
 
+# UNIX98 iconv support
+LIBICONV = @LIBICONV@
+
 # MKSHLIB_FORCE_ALL is used to force the linker to include all object
 # files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker
 # to normal behavior. Makefile's that create shared libraries out of

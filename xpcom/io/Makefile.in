@@ -55,6 +55,7 @@ CPPSRCS		= \
 		nsSpecialSystemDirectory.cpp \
 		nsStorageStream.cpp \
 		nsUnicharInputStream.cpp \
+		nsNativeCharsetUtils.cpp \
 		$(NULL)
 
 #ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
