@@ -48,6 +48,9 @@ LCFLAGS = \
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
 	-I$(PUBLIC)\js -I..\..\style\src -I..\html\base\src -I..\base\src \
 	-I..\xul\content\src \
+!ifdef MOZ_MATHML
+	-I..\mathml\content\src \
+!endif
 !ifdef NECKO
 	-I$(PUBLIC)\necko \
 !else
@@ -71,6 +74,10 @@ LLIBS=					\
 !endif
  $(DIST)\lib\raptorxulbase_s.lib \
  $(DIST)\lib\raptorxulcontent_s.lib	\
+!ifdef MOZ_MATHML
+ $(DIST)\lib\raptormathmlbase_s.lib \
+ $(DIST)\lib\raptormathmlcontent_s.lib	\
+!endif
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\raptorgfxwin.lib		\
