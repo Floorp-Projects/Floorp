@@ -20,8 +20,8 @@ MODULE=profile
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-        userChrome.css    \
-	userContent.css \
+        userChrome-example.css    \
+	userContent-example.css \
 	$(NULL)
 
 libs::
