@@ -44,6 +44,7 @@ LIBS		= \
 		$(DIST)/lib/libgkconhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconhtmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlforms_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmltable_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkhtmlbase_s.$(LIB_SUFFIX) \
