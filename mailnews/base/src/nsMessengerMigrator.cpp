@@ -42,8 +42,6 @@
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 
-#include "nsINetSupportDialogService.h"
-
 #include "nsMessengerMigrator.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"

@@ -25,7 +25,6 @@
 #include "nsProxiedService.h"
 #include "nsIEventQueueService.h"
 #include "nsPSMUICallbacks.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIFilePicker.h"
 
 #include "nsAppShellCIDs.h"
@@ -43,12 +42,12 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIWindowWatcher.h"
 #include "nsIURL.h"
 #include "nsIXULWindow.h"
 #include "nsIPref.h"
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 
 // Happy callbacks
@@ -374,13 +373,13 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
       csi->GetNotificationCallbacks(getter_AddRefs(callbacks));
     }
 
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    if (!proxyman) return nsnull;
+
     if (csi && callbacks) {
 
       // The notification callbacks object may not be safe, so
       // proxy the call to get the nsIPrompt.
-
-      nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-      if (!proxyman) return nsnull;
 
       nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
       proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
@@ -405,13 +404,23 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
         NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
         return nsnull;
       }
-
     } else {
-      NS_WITH_PROXIED_SERVICE(nsIPrompt, tmpPrompt, kNetSupportDialogCID, 
-                              NS_UI_THREAD_EVENTQ, &rv);
-      proxyPrompt = tmpPrompt;
-    
+      nsCOMPtr<nsIPrompt> prompter;
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch)
+        wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+      if (prompter)
+        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                    NS_GET_IID(nsIPrompt),
+                                    prompter,
+                                    PROXY_SYNC,
+                                    getter_AddRefs(proxyPrompt));
+      if (!proxyPrompt) {
+        NS_ASSERTION(PR_FALSE, "failed to get proxied generic prompter");
+        return nsnull;
+      }
     }
+
     if (proxyPrompt) {
       rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
                                        NS_LITERAL_STRING(" ").get(),      // hostname

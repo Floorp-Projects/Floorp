@@ -31,7 +31,6 @@
 #include <nsIScriptGlobalObject.h>
 #include <nsIScriptGlobalObjectOwner.h>
 #include <nsLayoutCID.h>
-#include <nsINetSupportDialogService.h>
 #include <nsICommonDialogs.h>
 
 // ****************************************************************************

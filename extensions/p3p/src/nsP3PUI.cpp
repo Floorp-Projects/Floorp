@@ -46,7 +46,6 @@
 #include <nsIURI.h>
 #include <nsIScriptGlobalObject.h>
 #include <nsIScriptGlobalObjectOwner.h>
-#include <nsINetSupportDialogService.h>
 #include <nsIPrompt.h>
 #include <nsICommonDialogs.h>
 
