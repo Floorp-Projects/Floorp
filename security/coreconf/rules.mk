@@ -88,7 +88,7 @@ import::
 		"$(MDHEADER_JAR)=$(IMPORT_MD_DIR)|$(SOURCE_MD_DIR)/include|"        \
 		"$(MDBINARY_JAR)=$(IMPORT_MD_DIR)|$(SOURCE_MD_DIR)|"
 
-export::
+export:: 
 	+$(LOOP_OVER_DIRS)
 
 private_export::
@@ -239,28 +239,8 @@ endif
 
 endif
 
-ifneq ($(POLICY),)
-release_policy::
-ifdef LIBRARY
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(LIBRARY)
-endif
-ifdef SHARED_LIBRARY
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(SHARED_LIBRARY)
-endif
-ifdef IMPORT_LIBRARY
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(IMPORT_LIBRARY)
-endif
-ifdef PROGRAM
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(PROGRAM)
-endif
-ifdef PROGRAMS
-	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $(PROGRAMS)
-endif
-	+$(LOOP_OVER_DIRS)
-else
 release_policy::
 	+$(LOOP_OVER_DIRS)
-endif
 
 release_md::
 ifdef LIBRARY
@@ -286,10 +266,10 @@ alltags:
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs ctags -a
 
-$(PROGRAM): $(OBJS) $(EXTRA_LIBS)
+$(PROGRAM): $(BUILT_SRCS) $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),WINNT)
-	$(MKPROG) $(OBJS) -Fe$@ -link $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
+	$(MKPROG) $(subst /,\\,$(OBJS)) -Fe$@ -link $(LDFLAGS) $(subst /,\\,$(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS))
 else
 ifdef XP_OS2_VACPP
 	$(MKPROG) -Fe$@ $(CFLAGS) $(OBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
@@ -301,15 +281,16 @@ endif
 get_objs:
 	@echo $(OBJS)
 
-$(LIBRARY): $(OBJS)
+$(LIBRARY): $(BUILT_SRCS) $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(AR) $(OBJS)
+	$(AR) $(subst /,\\,$(OBJS))
 	$(RANLIB) $@
+	echo $(BUILT_SRCS) $(OBJS)
 
 
 ifeq ($(OS_ARCH),OS2)
-$(IMPORT_LIBRARY): $(OBJS)
+$(IMPORT_LIBRARY): $(BUILT_SRCS) $(OBJS)
 	rm -f $@
 	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
 	$(RANLIB) $@
@@ -323,7 +304,7 @@ SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $
 endif
 endif
 
-$(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
+$(SHARED_LIBRARY): $(BUILT_SRCS) $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
@@ -336,7 +317,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 else
 ifeq ($(OS_ARCH), WINNT)
-	$(LINK_DLL) -MAP $(DLLBASE) $(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS)
+	$(LINK_DLL) -MAP $(DLLBASE) $(subst /,\\,$(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS))
 else
 ifeq ($(OS_ARCH),OS2)
 	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
@@ -405,21 +386,13 @@ WCCFLAGS1 := $(subst /,\\,$(CFLAGS))
 WCCFLAGS2 := $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 
-
-$(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): $(OBJDIR)/%.c
-	@$(MAKE_OBJDIR)
-ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $(OBJDIR)/$*.c
-else
-	$(CC) -o $@ -c $(CFLAGS) $(OBJDIR)/$*.c
-endif
-
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
+	@echo vpath=$(VPATH)
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $*.c
+	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
 else
-	$(CC) -o $@ -c $(CFLAGS) $*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -769,7 +742,7 @@ $(PUBLIC_EXPORT_DIR)::
 		$(NSINSTALL) -D $@; \
 	fi
 
-export:: $(EXPORTS) $(PUBLIC_EXPORT_DIR)
+export:: $(EXPORTS) $(PUBLIC_EXPORT_DIR) $(BUILT_SRCS)
 	$(INSTALL) -m 444 $(EXPORTS) $(PUBLIC_EXPORT_DIR)
 endif
 
@@ -929,5 +902,5 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean release $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs program realclean release $(OBJDIR) $(DIRS)
 

@@ -42,13 +42,13 @@
 ifdef BUILD_TREE
 BUILD         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
 OBJDIR        = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
-VPATH         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
+#VPATH         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
 DEPENDENCIES  = $(BUILD_TREE)/nss/$(LIBRARY_NAME)/.md
 else
 
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
-VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
+#VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
 DEPENDENCIES  = $(PLATFORM)/.md
 endif
 
