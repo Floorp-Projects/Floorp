@@ -90,6 +90,10 @@ function LoadMessageByUri(uri)
 
 function ChangeFolderByDOMNode(folderNode)
 {
+  if (folderNode.getAttribute('NoSelect') == "true" ) {
+  ClearThreadPane();
+  return;
+  }
   var uri = folderNode.getAttribute('id');
   dump(uri + "\n");
   
