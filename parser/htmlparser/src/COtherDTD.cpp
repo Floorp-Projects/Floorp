@@ -558,6 +558,19 @@ PRBool COtherDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
 
 /**
  *  This method gets called to determine whether a given 
+ *  tag can contain newlines. Most do not.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool COtherDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+/**
+ *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  
  *  @update  gess 4/8/98
