@@ -1146,7 +1146,8 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/universalchardet/tests/Makefile
             " ;;
         venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/venkman/Makefile"
+            extensions/venkman/Makefile
+            extensions/venkman/resources/Makefile"
             ;;
         wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/wallet/Makefile
