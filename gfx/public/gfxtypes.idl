@@ -33,5 +33,4 @@
 typedef PRInt32             nscoord;
 
 [ptr] native nsRect(nsRect);
-[ref] native nsRectRef(nsRect);
 

@@ -152,14 +152,14 @@ NS_IMETHODIMP gfxImageFrame::GetHeight(nscoord *aHeight)
   return NS_OK;
 }
 
-/* readonly attribute nsRect rect; */
-NS_IMETHODIMP gfxImageFrame::GetRect(nsRect **aRect)
+/* void getRect(in nsRectRef rect); */
+NS_IMETHODIMP gfxImageFrame::GetRect(nsRect &aRect)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsRect rect(mOffset.x, mOffset.y, mSize.width, mSize.height);
-  *aRect = &rect;
+  aRect.SetRect(mOffset.x, mOffset.y, mSize.width, mSize.height);
+
   return NS_OK;
 }
 
