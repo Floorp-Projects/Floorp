@@ -46,7 +46,7 @@ if (!defined $::FORM{'product'}) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
-    if (AnyDefaultGroups()) {
+    if (AnyEntryGroups()) {
         # OK, now only add products the user can see
         confirm_login() unless $::userid;
         foreach my $p (@::legal_product) {
