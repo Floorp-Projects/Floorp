@@ -25,7 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install::
 	$(MAKE_INSTALL) pref-advanced.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-advanced-imageblocking.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-imageblocking.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-appearance.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-applications.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-cache.dtd  $(DIST)\bin\chrome\communicator\locale\pref
