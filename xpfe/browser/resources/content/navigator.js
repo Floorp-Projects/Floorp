@@ -411,6 +411,7 @@ function Startup()
     {
 	    contentArea.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
+      contentArea.addEventListener("load", checkForDirectoryListing, true);
       contentArea.addEventListener("load", getContentAreaFrameCount, true);
       contentArea.addEventListener("focus", contentAreaFrameFocus, true);
       contentArea.addEventListener("load",postURLToNativeWidget, true);
@@ -1584,6 +1585,17 @@ function postURLToNativeWidget() {
         } catch( exception ) {
             dump( " SetURLToHiddenControl failed: " + exception + "\n" );
         }
+    }
+}
+
+function checkForDirectoryListing() {
+    if ( window._content.HTTPIndex == "[xpconnect wrapped nsIHTTPIndex]"
+         &&
+         typeof window._content.HTTPIndex == "object"
+         &&
+         !window._content.HTTPIndex.constructor ) {
+        // Give directory .xul/.js access to browser instance.
+        window._content.defaultCharacterset = appCore.GetDocumentCharset();
     }
 }
 
