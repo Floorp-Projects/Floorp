@@ -29,15 +29,18 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
 
 <dialog id="cookieviewer"
+        buttons="accept,cancel,help"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
         onload="Startup()"
-        ondialogaccept="onAccept();">
+        ondialogaccept="onAccept();"
+        ondialoghelp="doHelpButton();">
 
   <script src="chrome://communicator/content/wallet/CookieViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js" />
 
   <keyset id="dialogKeys"/>
   <stringbundle id="cookieBundle"

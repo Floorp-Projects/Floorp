@@ -436,3 +436,24 @@ function onAccept() {
 
   return true;
 }
+
+/*** ============ CODE FOR HELP BUTTON =================== ***/
+
+
+function getSelectedTab()
+{
+  var selTab = document.getElementById('tabbox').selectedTab;
+  var selTabID = selTab.getAttribute('id');
+  if (selTabID == 'cookiesTab') {
+    key = "cookies_stored";
+  } else {
+    key = "cookie_sites";
+  }  
+  return key;
+}
+
+
+function doHelpButton() {
+   var uri = getSelectedTab();
+   openHelp(uri);
+}
