@@ -45,7 +45,7 @@ if (Param('enablequips') eq "off") {
     ThrowUserError("quips_disabled");
 }
     
-my $action = $::FORM{'action'} || "";
+my $action = $cgi->param('action') || "";
 
 if ($action eq "show") {
     # Read in the entire quip list
@@ -81,7 +81,7 @@ if ($action eq "add") {
     # Add the quip 
     my $approved = (Param('enablequips') eq "on") ? '1' : '0';
     $approved = 1 if(UserInGroup('admin'));
-    my $comment = $::FORM{"quip"};
+    my $comment = $cgi->param("quip");
     $comment || ThrowUserError("need_quip");
     $comment !~ m/</ || ThrowUserError("no_html_in_quips");
 
@@ -104,7 +104,7 @@ if ($action eq 'approve') {
     my @approved;
     my @unapproved;
     foreach my $quipid (keys %quips) {
-       my $form = ($::FORM{'quipid_'.$quipid}) ? 1 : 0;
+       my $form = $cgi->param('quipid_'.$quipid) ? 1 : 0;
        if($quips{$quipid} ne $form) {
            if($form) { push(@approved, $quipid); }
            else { push(@unapproved, $quipid); }
@@ -122,7 +122,7 @@ if ($action eq "delete") {
     if (!UserInGroup('admin')) {
         ThrowUserError("quips_edit_denied");
     }
-    my $quipid = $::FORM{"quipid"};
+    my $quipid = $cgi->param("quipid");
     ThrowCodeError("need_quipid") unless $quipid =~ /(\d+)/; 
     $quipid = $1;
 
