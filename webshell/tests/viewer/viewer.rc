@@ -45,6 +45,7 @@ VIEWER MENU DISCARDABLE
 	POPUP "Test &Widgets"
 	{
 		MENUITEM "&Tree View", VIEWER_TREEVIEW
+    MENUITEM "Tool&bar Test", VIEWER_TOOLBARDEMO
 	}
     MENUITEM SEPARATOR
     POPUP "Print &Preview"
