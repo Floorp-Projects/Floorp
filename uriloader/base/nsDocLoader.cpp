@@ -35,6 +35,8 @@
 #include "nsCOMPtr.h"
 #include "nsCom.h"
 
+#include "nsIDOMWindow.h"
+
 // XXX ick ick ick
 #include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
@@ -964,6 +966,26 @@ nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
 
   // XXX this method incorrectly returns a bool    
   rv = mListenerList.RemoveElement(aListener) ? NS_OK : NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::GetDOMWindow(nsIDOMWindow **aResult)
+{
+  nsresult rv = NS_OK;
+
+  *aResult = nsnull;
+  //
+  // The DOM Window is available from the associated container (ie DocShell)
+  // if one is available...
+  //
+  if (mContainer) {
+    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(mContainer, &rv));
+
+    *aResult = window;
+    NS_IF_ADDREF(*aResult);
+  }
 
   return rv;
 }

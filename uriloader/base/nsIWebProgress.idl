@@ -22,37 +22,44 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindow;
 interface nsIWebProgressListener;
 
 /**
- * The nsIWebProgress interface is used to look at the progress of a given 
- * browser loading.
+ * The nsIWebProgress interface is used to look at the progress of document
+ * loading in a particular DOM Window.
  */
 
 [scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]
 interface nsIWebProgress : nsISupports
-{	
-	/*
-	Registers a listener to be notified of Progress Events
+{
+  /**
+   * Registers a listener to be notified of Progress Events
+   *
+   * @param listener - The listener interface to be called when a progress
+   *                   event occurs.
+   *
+   * @return  NS_OK - Listener was registered successfully.
+   *          NS_INVALID_ARG - The listener passed in was either nsnull, 
+   *                            or was already registered with this progress
+   *                            interface.
+   */
+  void addProgressListener(in nsIWebProgressListener listener);
 
-	@param listener - The listener interface to be called when a progress event
-			occurs.
+  /**
+   * Removes a previously registered listener of Progress Events
+   *
+   * @param listener - The listener interface previously registered with 
+   *                   AddListener().
+   *
+   * @return  NS_OK - Listener was successfully unregistered.
+   *          NS_ERROR_INVALID_ARG - The listener was not previously
+   *                                 registered listener.
+   */
+  void removeProgressListener(in nsIWebProgressListener listener);
 
-	@return	NS_OK - Listener was registered successfully.
-				NS_INVALID_ARG - The listener passed in was either nsnull, 
-						or was already registered with this progress interface.
-	 */
-	void addProgressListener(in nsIWebProgressListener listener);
-
-	/* 
-	Removes a previously registered listener of Progress Events
-		
-	@param listener - The listener interface previously registered with 
-			AddListener() this may be nsnull if a valid cookie is provided.
-
-	@return	NS_OK - Listener was successfully unregistered.
-				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
-					to a previously registered listener.
-	*/
-	void removeProgressListener(in nsIWebProgressListener listener);
+  /**
+   * The DOM Window associated with the WebProgress instance.
+   */
+  readonly attribute nsIDOMWindow DOMWindow;
 };
