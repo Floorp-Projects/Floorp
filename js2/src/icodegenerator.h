@@ -156,7 +156,7 @@ namespace JavaScript {
 
     typedef Instruction_2<Register, StringAtom*> LoadName;
     typedef Instruction_2<StringAtom*, Register> SaveName;
-    typedef Instruction_2<float64, Register> LoadImmediate;
+    typedef Instruction_2<Register, float64> LoadImmediate;
     typedef Instruction_2<Register, uint32> LoadVar;
     typedef Instruction_2<uint32, Register> SaveVar;
     typedef Instruction_2<Label *, Register> BranchCond;
