@@ -31,7 +31,8 @@ MISCDEP=			\
 
 OBJS =                                  \
 	.\$(OBJDIR)\winmain.obj         \
-        .\$(OBJDIR)\JSConsole.obj       \
+    .\$(OBJDIR)\JSConsole.obj       \
+    .\$(OBJDIR)\nsDocLoader.obj       \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\dom -I$(PUBLIC)\js

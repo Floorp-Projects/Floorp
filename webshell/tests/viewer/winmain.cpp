@@ -47,6 +47,7 @@
 #include "plevent.h"
 #include <malloc.h>
 #include "nsIScriptContext.h"
+#include "nsDocLoader.h"
 
 // JSConsole window
 JSConsole *gConsole = NULL;
@@ -161,6 +162,50 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
 }
 
 //----------------------------------------------------------------------
+
+
+
+/*
+*
+* BEGIN PURIFY METHODS
+*
+*/
+
+
+
+PRBool  DoPurifyTest()
+{
+#ifdef NS_WIN32
+  char*               name = "MOZ_PURIFY_TEST";
+  char                buffer[256];
+  int                 result;
+
+  result = GetEnvironmentVariable(name, buffer, 256);
+  return PRBool(result != 0);
+#endif
+  return PR_FALSE;
+}
+
+
+void AddTestDocs(nsDocLoader* aDocLoader)
+{
+  char url[500];
+  for (int docnum = 0; docnum < 9; docnum++)
+  {
+    PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
+    aDocLoader->AddURL(url);
+  }
+}
+
+/*
+*
+* END PURIFY METHODS
+*
+*/
+
+
+
+
 
 static nsresult ShowPrintPreview(nsIWebWidget* ww, PRIntn aColumns);
 
@@ -533,8 +578,25 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   wd->ww->Show();
   wd->observer = NewObserver(wd->ww);
 
-  // Load the starting url if we have one
-  wd->ww->LoadURL(startURL ? startURL : START_URL);
+
+  // Determine if we should run the purify test
+  PRBool  purify = DoPurifyTest();
+  nsDocLoader* dl = nsnull;
+  if (purify)
+  {
+    dl = new nsDocLoader(wd->ww);
+
+    // Add the documents to the loader
+    AddTestDocs(dl);
+
+    // Start the timer
+    dl->StartTimedLoading();
+  }
+  else
+  {
+    // Load the starting url if we have one
+    wd->ww->LoadURL(startURL ? startURL : START_URL);
+  }
 
   // Process messages
   MSG msg;
