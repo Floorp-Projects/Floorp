@@ -83,11 +83,8 @@ nsMemCache::GetDescription(PRUnichar * *aDescription)
 NS_IMETHODIMP
 nsMemCache::Contains(const char *aKey, PRUint32 aKeyLength, PRBool *aFound)
 {
-    nsOpaqueKey *opaqueKey = new nsOpaqueKey(aKey, aKeyLength);
-    if (!opaqueKey)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *aFound = mHashTable->Exists(opaqueKey);
-    delete opaqueKey;
+    nsOpaqueKey opaqueKey(aKey, aKeyLength);
+    *aFound = mHashTable->Exists(&opaqueKey);
     return NS_OK;
 }
 
@@ -97,15 +94,9 @@ nsMemCache::GetCachedNetData(const char *aKey, PRUint32 aKeyLength,
 {
     nsresult rv;
     nsMemCacheRecord* record = 0;
-    nsOpaqueKey *opaqueKey2 = 0;
-    nsOpaqueKey *opaqueKey3 = 0;
-    nsOpaqueKey *opaqueKey;
+    nsOpaqueKey opaqueKey(aKey, aKeyLength);
 
-    opaqueKey = new nsOpaqueKey(aKey, aKeyLength);
-    if (!opaqueKey)
-        goto out_of_memory;
-    record = (nsMemCacheRecord*)mHashTable->Get(opaqueKey);
-    delete opaqueKey;
+    record = (nsMemCacheRecord*)mHashTable->Get(&opaqueKey);
 
     // No existing cache database entry was found.  Create a new one.
     // This requires two mappings in the hash table:
@@ -119,26 +110,16 @@ nsMemCache::GetCachedNetData(const char *aKey, PRUint32 aKeyLength,
         if (NS_FAILED(rv)) goto out_of_memory;
 
         // Index the record by opaque key
-        opaqueKey2 = new nsOpaqueKey(record->mKey, record->mKeyLength);
-        if (!opaqueKey2) goto out_of_memory;
-        mHashTable->Put(opaqueKey2, record);
+        nsOpaqueKey opaqueKey2(record->mKey, record->mKeyLength);
+        mHashTable->Put(&opaqueKey2, record);
         
         // Index the record by it's record ID
         char *recordIDbytes = NS_REINTERPRET_CAST(char *, &record->mRecordID);
-        opaqueKey3 = new nsOpaqueKey(recordIDbytes,
-                                      sizeof record->mRecordID);
-        if (!opaqueKey3) {
-            // Clean up the first record from the hash table
-            mHashTable->Remove(opaqueKey);
-            goto out_of_memory;
-        }
-        mHashTable->Put(opaqueKey3, record);
+        nsOpaqueKey opaqueKey3(recordIDbytes, sizeof record->mRecordID);
+        mHashTable->Put(&opaqueKey3, record);
         
         // The hash table holds on to the record
         record->AddRef();
-        
-        delete opaqueKey2;
-        delete opaqueKey3;
         mNumEntries++;
     }
 
@@ -147,8 +128,6 @@ nsMemCache::GetCachedNetData(const char *aKey, PRUint32 aKeyLength,
     return NS_OK;
 
  out_of_memory:
-    delete opaqueKey2;
-    delete opaqueKey3;
     delete record;
     return NS_ERROR_OUT_OF_MEMORY;
 }
