@@ -149,6 +149,7 @@ nsWelcomeDlg::Show(int aDirection)
         gtk_text_insert (GTK_TEXT(text), font, &text->style->black, NULL,
                           readmeContents, -1);
         gtk_text_thaw(GTK_TEXT(text));
+        gtk_text_set_word_wrap(GTK_TEXT(text), TRUE);
         gtk_widget_show(text);
 
         // Add a vertical scrollbar to the GtkText widget 
