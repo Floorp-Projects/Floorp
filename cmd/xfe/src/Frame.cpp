@@ -1515,6 +1515,22 @@ XFE_Frame::doClose()
 		fe_DisposeColormap(m_context);
 							
 							
+#ifdef EDITOR
+		/*
+		 *  NOTE:  is_editor is set for both PageCompose & MailCompose...
+		 */
+        /* We have to call fe_EditorCleanup() before calling
+         * fe_DestroyLayoutData(), because the latter routine zeros
+         * the lo_topState, which prevents EDT_DestroyEditBuffer
+         * from actually deleting memory or calling any destructors,
+         * which leads to memory leaks and crashes.
+         */
+		if (EDT_IS_EDITOR(m_context))
+		{
+			fe_EditorCleanup(m_context);
+		}
+#endif /*EDITOR*/
+
 		/*
 		** We have to destroy the layout before calling XtUnmanageChild so that
 		** we have a chance to reparent the applet windows to a safe
@@ -1540,16 +1556,6 @@ XFE_Frame::doClose()
 							
 		if (CONTEXT_DATA (m_context)->ftd) free (CONTEXT_DATA (m_context)->ftd);
 		if (CONTEXT_DATA (m_context)->sd) free (CONTEXT_DATA (m_context)->sd);
-							
-#ifdef EDITOR
-		/*
-		 *  NOTE:  is_editor is set for both PageCompose & MailCompose...
-		 */
-		if (m_context->is_editor) 
-		{
-			fe_EditorCleanup(m_context);
-		}
-#endif /*EDITOR*/
 	}
 
 	{
@@ -3512,7 +3518,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 				if (info != NULL && *info->nparams > 0)
 					fe_EditorNew(m_context, this, NULL, info->params[0]);
 				else
-					fe_EditorOpen(m_context, this, /*chromespec=*/NULL);
+					fe_EditorNew(m_context, this, NULL, NULL);
 			}
 		else if (cmd == xfeCmdNewBlank)
 			{
