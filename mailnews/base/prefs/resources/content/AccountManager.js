@@ -167,7 +167,7 @@ function onLoad() {
   setDefaultButton = document.getElementById("setDefaultButton");
 
   sortAccountList(accounttree);
-  setTimeout(selectServer, 0, selectedServer.serverURI, selectPage);
+  setTimeout(selectServer, 0, selectedServer ? selectedServer.serverURI : "", selectPage);
 }
 
 function sortAccountList(accounttree)
