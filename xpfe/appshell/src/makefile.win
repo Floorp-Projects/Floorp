@@ -31,6 +31,7 @@ CPPSRCS=                                \
  nsJSXPConnectFactory.cpp              \
  nsAppShellNameSet.cpp                 \
  nsFileLocations.cpp                    \
+ nsGlobalHistory.cpp			\
  $(NULL)
 
 CPP_OBJS=                               \
@@ -43,6 +44,8 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsJSXPConnectFactory.obj  \
  .\$(OBJDIR)\nsAppShellNameSet.obj     \
  .\$(OBJDIR)\nsFileLocations.obj        \
+ .\$(OBJDIR)\nsGlobalHistory.obj        \
+
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
@@ -52,7 +55,8 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\js                    \
       -I$(PUBLIC)\pref                  \
       -I$(PUBLIC)\appcores              \
-      -I$(PUBLIC)\netlib
+      -I$(PUBLIC)\netlib		\
+      -I$(PUBLIC)\rdf
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = nsappshell
