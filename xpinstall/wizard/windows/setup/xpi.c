@@ -407,10 +407,10 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, TRUE);
 			CenterWindow(hWndDlg);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
 			return FALSE;
 
 		case WM_COMMAND:

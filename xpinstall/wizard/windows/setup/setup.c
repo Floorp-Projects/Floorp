@@ -104,7 +104,7 @@ dsN             *gdsnComponentDSRequirement = NULL;
 char *SetupFileList[] = {"setuprsc.dll",
                          "config.ini",
                          "setup.ini",
-                         "installer.ini",
+                         "install.ini",
                          ""};
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)

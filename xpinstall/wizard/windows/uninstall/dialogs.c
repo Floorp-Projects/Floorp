@@ -93,9 +93,9 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       SetDlgItemText(hDlg, IDWIZNEXT, szBuf);
       GetPrivateProfileString("Dialog Uninstall", "Cancel", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       SetDlgItemText(hDlg, IDCANCEL, szBuf);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -155,14 +155,14 @@ LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
       GetPrivateProfileString("Dialog Uninstall", "YesToAll", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       SetDlgItemText(hDlg, ID_YES_TO_ALL, szBuf);
 
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, IDC_STATIC_SHARED_FILENAME, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, ID_NO, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, ID_NO_TO_ALL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, ID_YES, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
-      SendDlgItemMessage (hDlg, ID_YES_TO_ALL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_STATIC_SHARED_FILENAME, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, ID_NO, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, ID_NO_TO_ALL, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, ID_YES, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, ID_YES_TO_ALL, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -210,7 +210,7 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   switch(msg)
   {
     case WM_INITDIALOG:
-          SendDlgItemMessage (hDlg, IDC_MESSAGE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L); 
+          SendDlgItemMessage (hDlg, IDC_MESSAGE, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
       break;
 
     case WM_COMMAND:
@@ -312,15 +312,4 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   }
 
   return(hDlg);
-}
-
-HFONT myGetSysFont()
-{
-  LOGFONT lf;
-  HFONT fontDlg;
-
-  SystemParametersInfo(SPI_GETICONTITLELOGFONT,sizeof(LOGFONT),&lf,0);
-  fontDlg = CreateFontIndirect( &lf ); 
-
-  return fontDlg;
 }

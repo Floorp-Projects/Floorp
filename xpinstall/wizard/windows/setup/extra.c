@@ -968,7 +968,7 @@ HRESULT GetInstallIni()
   AppendBackSlash(szFileIniSetupDir, sizeof(szFileIniSetupDir));
   lstrcat(szFileIniSetupDir, FILE_INI_INSTALL);
 
-  /* if installer.ini exists, then use it, else download installer.ini from the net */
+  /* if install.ini exists, then use it, else download install.ini from the net */
   if(!FileExists(szFileIniTempDir))
   {
     if(FileExists(szFileIniSetupDir))
@@ -2366,7 +2366,9 @@ void DeInitDlgAdvancedSettings(diAS *diDialog)
 
 HRESULT InitDlgStartInstall(diSI *diDialog)
 {
-  diDialog->bShowDialog = FALSE;
+  diDialog->bShowDialog        = FALSE;
+  diDialog->bTurboMode         = FALSE;
+  diDialog->bTurboModeEnabled  = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessageInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2407,6 +2409,8 @@ void DeInitDlgDownload(diD *diDialog)
 DWORD InitDlgReboot(diR *diDialog)
 {
   diDialog->dwShowDialog = FALSE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF_MEDIUM)) == NULL)
+    return(1);
   if(!GetPrivateProfileString("Messages", "DLG_REBOOT_TITLE", "", diDialog->szTitle, MAX_BUF, szFileIniInstall))
     return(1);
 
@@ -5162,6 +5166,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgDownload(&diDownload))
     return(1);
+  if(InitDlgReboot(&diReboot))
+    return(1);
   if(InitSDObject())
     return(1);
   if(InitSXpcomFile())
@@ -5441,6 +5447,15 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diStartInstall.bShowDialog = TRUE;
+  GetPrivateProfileString("Dialog Start Install",       "Turbo Mode",         "", szBuf,                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diStartInstall.bTurboMode = TRUE;
+  GetPrivateProfileString("Dialog Start Install",       "Turbo Mode Enabled", "", szBuf,                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diStartInstall.bTurboModeEnabled = TRUE;
+  else
+    /* sinde turbo mode is disabled, make sure bTurboMode is FALSE */
+    diStartInstall.bTurboMode = FALSE;
 
   /* Download dialog */
   GetPrivateProfileString("Dialog Download",       "Show Dialog",        "", szShowDialog,                   sizeof(szShowDialog),        szFileIniConfig);
@@ -5637,6 +5652,25 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
 HRESULT ParseInstallIni()
 {
+  LOGFONT lf;
+  NONCLIENTMETRICS ncm;
+
+  /* get system font */
+  memset(&ncm, 0, sizeof(ncm));
+  ncm.cbSize = sizeof(ncm);
+  SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+  sgInstallGui.systemFont = CreateFontIndirect( &ncm.lfMessageFont ); 
+
+  /* get defined font */
+  GetPrivateProfileString("General", "FONTNAME", "", sgInstallGui.szFontName, sizeof(sgInstallGui.szFontName), szFileIniInstall);
+  GetPrivateProfileString("General", "FONTSIZE", "", sgInstallGui.szFontSize, sizeof(sgInstallGui.szFontSize), szFileIniInstall);
+  GetPrivateProfileString("General", "CHARSET", "", sgInstallGui.szCharSet, sizeof(sgInstallGui.szCharSet), szFileIniInstall);
+  memset(&lf, 0, sizeof(lf));
+  strcpy(lf.lfFaceName, sgInstallGui.szFontName);
+  lf.lfHeight = -MulDiv(atoi(sgInstallGui.szFontSize), GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
+  lf.lfCharSet = atoi(sgInstallGui.szCharSet);
+  sgInstallGui.definedFont = CreateFontIndirect( &lf ); 
+  
   GetPrivateProfileString("General", "OK_", "", sgInstallGui.szOk_, sizeof(sgInstallGui.szOk_), szFileIniInstall);
   GetPrivateProfileString("General", "OK", "", sgInstallGui.szOk, sizeof(sgInstallGui.szOk), szFileIniInstall);
   GetPrivateProfileString("General", "CANCEL_", "", sgInstallGui.szCancel_, sizeof(sgInstallGui.szCancel_), szFileIniInstall);
@@ -6767,10 +6801,13 @@ void DeInitialize()
   FreeMemory(&szOSTempDir);
   FreeMemory(&szSetupDir);
   FreeMemory(&szFileIniConfig);
+  FreeMemory(&szFileIniInstall);
   FreeMemory(&szEGlobalAlloc);
   FreeMemory(&szEDllLoad);
   FreeMemory(&szEStringLoad);
   FreeMemory(&szEStringNull);
+  DeleteObject(sgInstallGui.systemFont);
+  DeleteObject(sgInstallGui.definedFont);
 
   FreeLibrary(hSetupRscInst);
 }

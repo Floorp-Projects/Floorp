@@ -86,6 +86,16 @@ char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char 
 void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
 void        CleanupPreviousVersionRegKeys(void);
 DWORD       ParseRestrictedAccessKey(LPSTR szKey);
+void        AppendWinReg(HKEY hkRootKey,
+                      LPSTR szKey,
+                      LPSTR szName,
+                      DWORD dwType,
+                      LPBYTE lpbData,
+                      BYTE delimiter,
+                      DWORD dwSize,
+                      BOOL bLogForUninstall,
+                      BOOL bDnu);
+HRESULT     CleanupArgsRegistry();
 
 #endif /* _IFUNCNS_H_ */
 

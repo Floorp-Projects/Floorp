@@ -120,6 +120,7 @@ typedef struct uninstallStruct
   HKEY      hWrRoot;
   LPSTR     szWrKey;
   LPSTR     szUserAgent;
+  HFONT     definedFont;
 } uninstallGen;
 
 typedef struct sInfoLine sil;

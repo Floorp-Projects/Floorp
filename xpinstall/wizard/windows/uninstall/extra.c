@@ -736,6 +736,7 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
   FreeMemory(&(ugUninstall.szWrMainKey));
+  DeleteObject(ugUninstall.definedFont);
 }
 
 sil *CreateSilNode()
@@ -1199,6 +1200,10 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   char szBuf[MAX_BUF];
   char szKeyCrypted[MAX_BUF];
   char szShowDialog[MAX_BUF];
+  LOGFONT lf;
+  char fontName[MAX_BUF];
+  char fontSize[MAX_BUF];
+  char charSet[MAX_BUF];
 
   if(CheckInstances())
     return(1);
@@ -1263,6 +1268,16 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
       diUninstall.bShowDialog = FALSE;
       break;
   }
+
+  /* get defined font */
+  GetPrivateProfileString("Dialog Uninstall", "FONTNAME", "", fontName, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("Dialog Uninstall", "FONTSIZE", "", fontSize, MAX_BUF, szFileIniUninstall);
+  GetPrivateProfileString("Dialog Uninstall", "CHARSET", "", charSet, MAX_BUF, szFileIniUninstall);
+  memset(&lf, 0, sizeof(lf));
+  strcpy(lf.lfFaceName, fontName);
+  lf.lfHeight = -MulDiv(atoi(fontSize), GetDeviceCaps(GetDC(NULL), LOGPIXELSY), 72);
+  lf.lfCharSet = atoi(charSet);
+  ugUninstall.definedFont = CreateFontIndirect( &lf ); 
 
   return(GetUninstallLogPath());
 }

@@ -313,10 +313,11 @@ Message Download=Setup has enough information to start downloading and copying t
 ; Turbo Mode values: TRUE, FALSE
 ; Defaults to FALSE if not set
 Turbo Mode=TRUE
-; Turbo Mode Settings value: ENABLED, DISABLED
+; Turbo Mode Settings value: TRUE, FALSE
+; Defaults to FALSE if not set.
 ; This will hide the turbo mode checkbox in the Start Install dialog
-; and ignore the Turbo Mode= key, this disabling it
-Turbo Mode Settings=ENABLED
+; and ignore the Turbo Mode= key, thus disabling it.
+Turbo Mode Enabled=TRUE
 
 [Dialog Download]
 Show Dialog=TRUE
