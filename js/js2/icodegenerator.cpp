@@ -84,9 +84,9 @@ namespace ICG {
 
     ICodeModule *ICodeGenerator::complete()
     {
-#ifdef DEBUG
         ASSERT(stitcher.empty());
-        // ASSERT(statementLabels.empty());
+        ASSERT(labelSet == NULL);
+#ifdef DEBUG
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
             ASSERT((*i)->mBase == iCode);
@@ -112,7 +112,7 @@ namespace ICG {
         }
         */
         markMaxRegister();            
-        return new ICodeModule(iCode, maxRegister);
+        return new ICodeModule(iCode, variableList, maxRegister, 0);
     }
     
     TryCodeState::TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg) 
@@ -156,7 +156,7 @@ namespace ICG {
         return dest;
     }
 
-    Register ICodeGenerator::loadName(StringAtom &name)
+    Register ICodeGenerator::loadName(const StringAtom &name)
     {
         Register dest = getRegister();
         LoadName *instr = new LoadName(dest, &name);
@@ -164,13 +164,13 @@ namespace ICG {
         return dest;
     }
     
-    void ICodeGenerator::saveName(StringAtom &name, Register value)
+    void ICodeGenerator::saveName(const StringAtom &name, Register value)
     {
         SaveName *instr = new SaveName(&name, value);
         iCode->push_back(instr);
     }
 
-    Register ICodeGenerator::getProperty(Register base, StringAtom &name)
+    Register ICodeGenerator::getProperty(Register base, const StringAtom &name)
     {
         Register dest = getRegister();
         GetProp *instr = new GetProp(dest, base, &name);
@@ -178,7 +178,7 @@ namespace ICG {
         return dest;
     }
 
-    void ICodeGenerator::setProperty(Register base, StringAtom &name,
+    void ICodeGenerator::setProperty(Register base, const StringAtom &name,
                                      Register value)
     {
         SetProp *instr = new SetProp(base, &name, value);
