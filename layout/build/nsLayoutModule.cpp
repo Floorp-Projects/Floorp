@@ -49,6 +49,8 @@
 // XXX
 #include "nsIServiceManager.h"
 
+#include "nsTextTransformer.h"
+
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -224,6 +226,11 @@ nsLayoutModule::Initialize()
     }
   }
 
+  rv = nsTextTransformer::Initialize();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return rv;
 }
 
@@ -246,6 +253,8 @@ nsLayoutModule::Shutdown()
   nsMathMLOperators::ReleaseTable();
   nsMathMLAtoms::ReleaseAtoms();
 #endif
+
+  nsTextTransformer::Shutdown();
 
   NS_IF_RELEASE(gRegistry);
   NS_IF_RELEASE(gUAStyleSheet);
