@@ -136,7 +136,7 @@ EmbedContentListener::CanHandleContent(const char        *aContentType,
       PRUint32 canHandle;
       nsresult rv =
 	webNavInfo->IsTypeSupported(nsDependentCString(aContentType),
-				    mOwner ? mOwner->mNavigation : nsnull,
+				    mOwner ? mOwner->mNavigation.get() : nsnull,
 				    &canHandle);
       NS_ENSURE_SUCCESS(rv, rv);
       *_retval = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
