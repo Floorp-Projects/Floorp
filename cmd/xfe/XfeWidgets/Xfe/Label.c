@@ -579,24 +579,28 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 }
 /*----------------------------------------------------------------------*/
 static void
-GetValuesHook(Widget w,ArgList args,Cardinal* nargs)
+GetValuesHook(Widget w,ArgList av,Cardinal * pav)
 {
     XfeLabelPart *	lp = _XfeLabelPart(w);
     Cardinal		i;
     
-    for (i = 0; i < *nargs; i++)
+    for (i = 0; i < *pav; i++)
     {
-		/* label_string */
-		if (strcmp(args[i].name,XmNlabelString) == 0)
+		/* XmNlabelString */
+		if (strcmp(av[i].name,XmNlabelString) == 0)
 		{
-			*((XtArgVal *) args[i].value) = 
-				(XtArgVal) XmStringCopy(lp->label_string);
+			XmString label_copy = XmStringCopy(lp->label_string);
+			
+			/* av[i] = label_copy */
+			_XfeGetValuesCastAndAssign(av,i,label_copy);
 		}
-		/* font_list */
-		else if (strcmp(args[i].name,XmNfontList) == 0)
+		/* XmNfontList */
+		else if (strcmp(av[i].name,XmNfontList) == 0)
 		{
-			*((XtArgVal *) args[i].value) = 
-				(XtArgVal) XmFontListCopy(lp->font_list);
+			XmFontList font_copy = XmFontListCopy(lp->font_list);
+
+			/* av[i] = font_copy */
+			_XfeGetValuesCastAndAssign(av,i,font_copy);
 		}      
     }
 }
