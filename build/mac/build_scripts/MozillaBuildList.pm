@@ -571,7 +571,6 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:accessible:src:base:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:content:html:style:src:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:docshell:resources:content:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:docshell:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
