@@ -55,7 +55,7 @@
 GtkWidget* nsClipboard::sWidget = 0;
 
 
-#if defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
+#if defined(DEBUG_pavlov)
 #define DEBUG_CLIPBOARD
 #endif
 
