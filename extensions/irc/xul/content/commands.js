@@ -1682,7 +1682,8 @@ function cmdGotoURL(e)
         return;
     }
 
-    window.focus();
+    if (client.prefs["link.focus"])
+        window.focus();
     if (e.command.name == "goto-url-newtab")
     {
         if (client.host == "Mozilla") {

@@ -119,6 +119,7 @@ function initPrefs()
          ["initialURLs",        [],       "startup.initialURLs"],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)],
                                           "startup.initialScripts"],
+         ["link.focus",         true,     "global.links"],
          ["log",                false,                                  ".log"],
          ["logFileName",        makeLogNameClient,                      ".log"],
          ["logFile.client",     "client.$y-$m-$d.log",                  ".log"],
