@@ -51,6 +51,7 @@ static const char * kURINC_BSCharsetMenuRoot = "NC:BSCharsetMenuRoot";
 static const char * kURINC_BDCharsetMenuRoot = "NC:BDCharsetMenuRoot";
 static const char * kURINC_BMCharsetMenuRoot = "NC:BMCharsetMenuRoot";
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Checked);
 
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [declaration]
@@ -70,6 +71,7 @@ private:
   static nsIRDFResource * kNC_BDCharsetMenuRoot;
   static nsIRDFResource * kNC_BMCharsetMenuRoot;
   static nsIRDFResource * kNC_Name;
+  static nsIRDFResource * kNC_Checked;
 
   static nsIRDFDataSource * mInner;
 
@@ -87,6 +89,8 @@ private:
 
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
       nsIRDFResource * aResource, nsIRDFContainer ** aResult);
+
+  nsresult SetCharsetCheckmark(nsString * aCharset, PRBool aValue);
 
   nsresult GetAppLocale(nsILocale ** aLocale);
 
@@ -186,6 +190,7 @@ nsIRDFResource * nsCharsetMenu::kNC_BSCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BDCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BMCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Name = NULL;
+nsIRDFResource * nsCharsetMenu::kNC_Checked = NULL;
 
 nsCharsetMenu::nsCharsetMenu() 
 {
@@ -217,6 +222,7 @@ nsresult nsCharsetMenu::Init()
   rdfServ->GetResource(kURINC_BDCharsetMenuRoot, &kNC_BDCharsetMenuRoot);
   rdfServ->GetResource(kURINC_BMCharsetMenuRoot, &kNC_BMCharsetMenuRoot);
   rdfServ->GetResource(kURINC_Name, &kNC_Name);
+  rdfServ->GetResource(kURINC_Checked, &kNC_Checked);
 
   res = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull, 
     kIRDFDataSourceIID, (void**) &mInner);
@@ -262,6 +268,7 @@ done:
   NS_IF_RELEASE(kNC_BDCharsetMenuRoot);
   NS_IF_RELEASE(kNC_BMCharsetMenuRoot);
   NS_IF_RELEASE(kNC_Name);
+  NS_IF_RELEASE(kNC_Checked);
   NS_IF_RELEASE(mInner);
 
   return res;
@@ -286,7 +293,7 @@ nsresult nsCharsetMenu::FillRDFContainer(nsIRDFService * aRDFServ,
 
     // Make up a unique ID and create the RDF NODE
     char csID[256];
-    cs->ToCString(csID, 256);
+    cs->ToCString(csID, sizeof(csID));
     res = aRDFServ->GetResource(csID, getter_AddRefs(node));
     if (NS_FAILED(res)) continue;
 
@@ -299,6 +306,7 @@ nsresult nsCharsetMenu::FillRDFContainer(nsIRDFService * aRDFServ,
     if (title == NULL) 
       title = (PRUnichar *)cs->GetUnicode();
 
+    // set node's title
     nsCOMPtr<nsIRDFLiteral> titleLiteral;
     res = aRDFServ->GetLiteral(title, getter_AddRefs(titleLiteral));
     if (NS_FAILED(res)) continue;
@@ -312,6 +320,37 @@ nsresult nsCharsetMenu::FillRDFContainer(nsIRDFService * aRDFServ,
 
   return res;
 }
+
+nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset, 
+                                            PRBool aValue)
+{
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIRDFContainer> container;
+  nsCOMPtr<nsIRDFResource> node;
+
+  NS_WITH_SERVICE(nsIRDFService, rdfServ, kRDFServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  res = NewRDFContainer(mInner, kNC_BSCharsetMenuRoot, getter_AddRefs(container));
+  if (NS_FAILED(res)) return res;
+
+  // find RDF node for given charset
+  char csID[256];
+  aCharset->ToCString(csID, sizeof(csID));
+  res = rdfServ->GetResource(csID, getter_AddRefs(node));
+  if (NS_FAILED(res)) return res;
+
+  // set checkmark value
+  nsCOMPtr<nsIRDFLiteral> checkedLiteral;
+  nsAutoString checked((aValue == PR_TRUE) ? "true" : "false");
+  res = rdfServ->GetLiteral(checked.GetUnicode(), getter_AddRefs(checkedLiteral));
+  if (NS_FAILED(res)) return res;
+  res = Assert(node, kNC_Checked, checkedLiteral, PR_TRUE);
+  if (NS_FAILED(res)) return res;
+
+  return res;
+}
+
 
 nsresult nsCharsetMenu::RemoveFlaggedCharsets(nsString ** aList, PRInt32 aCount,
                                               nsIStringBundle * aData, 
@@ -410,6 +449,9 @@ nsresult nsCharsetMenu::CreateBrowserStaticMenu(nsIRDFService * aRDFServ,
 
   res = FillRDFContainer(aRDFServ, kNC_BSCharsetMenuRoot, aTitles, decs, count);
   if (NS_FAILED(res)) goto done;
+
+  // bit of test code
+  // SetCharsetCheckmark(decs[0], PR_TRUE);
 
 done:
   if (decs != NULL) {
