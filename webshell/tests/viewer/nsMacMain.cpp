@@ -33,6 +33,10 @@
 #include <PP_Messages.h>		// for PP standard menu commands
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
 
+#if DEBUG
+#include "macstdlibextras.h"
+#endif
+
 enum
 {
 	menu_First = 128,
@@ -271,6 +275,11 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 //----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+
+#if DEBUG
+	// Set up the console
+	InitializeSIOUX(false);
+#endif	// DEBUG
 
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;
