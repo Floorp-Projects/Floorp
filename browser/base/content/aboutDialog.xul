@@ -57,8 +57,6 @@
         function onLoad() {
           var userAgentField = document.getElementById("userAgent");
           userAgentField.value = navigator.userAgent;
-          var versionField = document.getElementById("version");
-          versionField.setAttribute("value", navigator.userAgent.match(/rv:([^;)]+)/)[1]);
         }
       ]]>
     </script>
@@ -68,7 +66,7 @@
       <separator class="thin"/>
       <hbox>
         <label value="&brandShortName;" style="font-weight: bold;"/>
-        <label id="version"/>
+        <label value="0.1"/>
       </hbox>
       <spacer flex="1"/>
       <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
