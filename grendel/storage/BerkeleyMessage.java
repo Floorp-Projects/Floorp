@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Terry Weissman <terry@netscape.com>, 28 Aug 1997.
+ *
+ * Contributors: Will Scullin <scullin@meer.net> 
  */
 
 package grendel.storage;
@@ -165,12 +167,14 @@ class BerkeleyMessage extends MessageBase {
       xms = X_MOZILLA_FLAG_READ;
     } else {
       for (int i=0 ; i<FLAGDEFS.length ; i++) {
-        MessageBase mb = (MessageBase) m;
-        if (FLAGDEFS[i].builtin != null
-            ? mb.isSet(FLAGDEFS[i].builtin)
-            : mb.isSet(FLAGDEFS[i].non_builtin)) {
-          xms |= FLAGDEFS[i].flag;
-        }
+        try {
+          Flags f = m.getFlags();
+          if (FLAGDEFS[i].builtin != null
+              ? f.contains(FLAGDEFS[i].builtin)
+              : f.contains(FLAGDEFS[i].non_builtin)) {
+            xms |= FLAGDEFS[i].flag;
+          }
+        } catch (MessagingException e) {      }
       }
       xms = internalFlagsToMozillaFlags(xms);
     }
