@@ -78,9 +78,12 @@ typedef struct JSInlineFrame {
     void            *hookData;      /* debugger call hook data */
 } JSInlineFrame;
 
-/* JS stack frame special flags. */
+/* JS stack frame flags.  Only those < 0x100 are stored in fp->special. */
 #define JSFRAME_DEBUGGER    0x1     /* frame for JS_EvaluateInStackFrame */
 #define JSFRAME_EVAL        0x2     /* frame for obj_eval */
+#define JSFRAME_VAROBJBUG   0x100   /* API compatibility: JS_EvaluateScript's
+                                       obj param, not the last object on obj's
+                                       scope chain, becomes fp->varobj */
 
 /*
  * Property cache for quickened get/set property opcodes.
@@ -245,8 +248,8 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
-js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
-	   JSStackFrame *down, uintN flags, jsval *result);
+js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
+           JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,

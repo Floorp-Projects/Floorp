@@ -3110,7 +3110,9 @@ JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 {
     CHECK_REQUEST(cx);
-    if (!js_Execute(cx, obj, script, NULL, NULL, 0, rval)) {
+    if (!js_Execute(cx, obj, script, NULL,
+                    (cx->options & JSOPTION_VAROBJFIX) ? 0 : JSFRAME_VAROBJBUG,
+                    rval)) {
 #if JS_HAS_EXCEPTIONS
         js_ReportUncaughtException(cx);
 #endif
@@ -3214,7 +3216,9 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 					     filename, lineno);
     if (!script)
 	return JS_FALSE;
-    ok = js_Execute(cx, obj, script, NULL, NULL, 0, rval);
+    ok = js_Execute(cx, obj, script, NULL,
+                    (cx->options & JSOPTION_VAROBJFIX) ? 0 : JSFRAME_VAROBJBUG,
+                    rval);
 #if JS_HAS_EXCEPTIONS
     if (!ok)
         js_ReportUncaughtException(cx);

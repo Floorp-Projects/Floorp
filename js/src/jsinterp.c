@@ -886,10 +886,11 @@ out:
 }
 
 JSBool
-js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
+js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN special, jsval *result)
 {
     JSStackFrame *oldfp, frame;
+    JSObject *obj, *tmp;
     JSBool ok;
     JSInterpreterHook hook;
     void *hookData;
@@ -899,10 +900,10 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     oldfp = cx->fp;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
-    frame.fun = fun;
     if (down) {
         /* Propagate arg/var state for eval and the debugger API. */
         frame.varobj = down->varobj;
+        frame.fun = down->fun;
         frame.thisp = down->thisp;
         frame.argc = down->argc;
         frame.argv = down->argv;
@@ -911,7 +912,13 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
         frame.annotation = down->annotation;
         frame.sharpArray = down->sharpArray;
     } else {
-        frame.varobj = chain;
+        obj = chain;
+        if (!(special & JSFRAME_VAROBJBUG)) {
+            while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+                obj = tmp;
+        }
+        frame.varobj = obj;
+        frame.fun = NULL;
         frame.thisp = chain;
         frame.argc = frame.nvars = 0;
         frame.argv = frame.vars = NULL;
