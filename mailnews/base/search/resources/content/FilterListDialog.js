@@ -322,6 +322,9 @@ function getServerThatCanHaveFilters()
 
 function onFilterDoubleClick(event)
 {
+    // we only care about button 0 (left click) events
+    if (event.button != 0) return;
+
     var t = event.originalTarget;
 
     if (t.parentNode.parentNode.localName == "treeitem")
