@@ -88,7 +88,7 @@ void nsTableCell::Init()
   // col style context into one, unless there is a unique HTML attribute set
   char out[40];
   PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsString value(out);
+  const nsAutoString value(out);
   if (nsnull==HACKattribute)
     HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
   SetAttribute(HACKattribute, value);
