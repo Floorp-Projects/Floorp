@@ -229,29 +229,6 @@ XFE_RDFBase::updateRoot()
 {
 }
 //////////////////////////////////////////////////////////////////////////
-/*static*/ XP_Bool
-XFE_RDFBase::ht_IsFECommand(HT_Resource item)
-{
-    const char* url = HT_GetNodeURL(item);
-
-    return (XP_STRNCMP(url, "command:", 8) == 0);
-}
-//////////////////////////////////////////////////////////////////////////
-/*static*/ CommandType
-XFE_RDFBase::ht_GetFECommand(HT_Resource item)
-{
-    const char* url = HT_GetNodeURL(item);
-
-    if (url && XP_STRNCMP(url, "command:", 8) == 0)
-    {
-        return Command::convertOldRemote(url + 8);
-    }
-    else 
-    {
-        return NULL;
-    }
-}
-//////////////////////////////////////////////////////////////////////////
 /*virtual*/ void
 XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
 {

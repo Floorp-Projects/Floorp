@@ -80,13 +80,6 @@ public:
     // Update the current view from the root.
     virtual void          updateRoot            ();
 
-
-    // Is the URL a 'special' command url that
-    //    translates to an FE command?
-    static XP_Bool        ht_IsFECommand        (HT_Resource  item);
-    static CommandType    ht_GetFECommand       (HT_Resource  item);
-
-
     // Handle HT events
     virtual void          notify      (HT_Resource n, HT_Event whatHappened);
 

@@ -31,6 +31,7 @@
 #include "IconGroup.h"
 #include "View.h"
 #include "ToolbarDrop.h"
+#include "RDFUtils.h"
 
 #include "felocale.h"
 #include "intl_csi.h"
@@ -318,7 +319,7 @@ XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
 #ifdef NOT_YET
         if (hasCustomIcon(entry)) {} /*else {*/
 #endif /*NOT_YET*/
-        if (ht_IsFECommand(entry))
+        if (XFE_RDFUtils::ht_IsFECommand(entry))
         {
             const char* url = HT_GetNodeURL(entry);
             
@@ -554,7 +555,7 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
 {
     if (entry)
     {
-        if (ht_IsFECommand(entry)) 
+        if (XFE_RDFUtils::ht_IsFECommand(entry)) 
         {
             Cardinal numparams = 1;
             CommandType cmd;
@@ -563,7 +564,7 @@ XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
             if (HT_IsURLBar(entry)) {
                 cmd = xfeCmdOpenPage;
             } else {
-                cmd = ht_GetFECommand(entry);
+                cmd = XFE_RDFUtils::ht_GetFECommand(entry);
             }
 
             XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION,
@@ -1479,7 +1480,7 @@ XFE_RDFMenuToolbarBase::getStyleAndLayout(HT_Resource  entry, int32 * toolbar_st
        else {
           // Value not provided. It is top for command buttons and side 
           // for personal
-          if (ht_IsFECommand(entry))
+          if (XFE_RDFUtils::ht_IsFECommand(entry))
              *layout = XmBUTTON_LABEL_ON_BOTTOM;
           else
              *layout = XmBUTTON_LABEL_ON_RIGHT;
