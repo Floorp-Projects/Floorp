@@ -129,8 +129,6 @@ CK_MECHANISM_TYPE PK11_GetKeyGenWithSize(CK_MECHANISM_TYPE type, int size);
 /**********************************************************************
  *                   Symetric, Public, and Private Keys 
  **********************************************************************/
-PK11SymKey *PK11_CreateSymKey(PK11SlotInfo *slot, 
-			CK_MECHANISM_TYPE type, PRBool owner, void *wincx);
 /* Key Generation specialized for SDR (fixed DES3 key) */
 PK11SymKey *PK11_GenDES3TokenKey(PK11SlotInfo *slot, SECItem *keyid, void *cx);
 SECKEYPublicKey *PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType,
