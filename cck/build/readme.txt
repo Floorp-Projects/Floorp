@@ -18,16 +18,17 @@ by CCKBuild.bat.
 
 WizardMachine.mak - Make file for WizardMachine.  Details below.....
 
-WizardMachine.dep - The dependancy file for WizardMachine.mak  Put both WizardMachine.mak 
+WizardMachine.dep - The dependancy file for WizardMachine.mak.  Put both WizardMachine.mak 
 and WizardMachine.dep in the mozilla/cck/driver folder to build the WizardMachine project. 
-Issue the commands:
+To build this project issue the commands:
 
 NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Debug"
 or
 NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Release"
 
-And you should end up with nice shiny new .exe, .obj's, .pch and .res files in a "release" or "debug" 
-folder, depending on the command issued from above.
+The commands above should be executed in the same folder as the WizardMachine.mak and .dep 
+files. When complete, you should end up with nice shiny new .exe, .obj's, .pch and .res files in a
+"release" or "debug" folder, depending on the command issued from above.
 
 
 
