@@ -133,7 +133,13 @@ moz_get_debugger()
 	done="no"
 	for d in $debuggers
 	do
-		dpath=`which ${d}`
+		moz_test_binary /bin/type
+		if [ $? -eq 1 ]
+		then
+			dpath=`type ${d} | awk '{print $3;}'`	
+		else 	
+			dpath=`which ${d}`	
+		fi
 		if [ -x "$dpath" ]
 		then
 			debugger=$dpath
@@ -158,7 +164,13 @@ moz_run_program()
 	## Use md5sum to crc a core file.  If md5sum is not found on the system,
 	## then dont debug core files.
 	##
-	crc_prog=`which md5sum`
+	moz_test_binary /bin/type
+	if [ $? -eq 1 ]
+	then
+		crc_prog=`type md5sum | awk '{print $3;}'`
+	else
+		crc_prog=`which md5sum`
+	fi
 	if [ -x "$crc_prog" ]
 	then
 		DEBUG_CORE_FILES=1
@@ -219,7 +231,13 @@ moz_debug_program()
 	fi
 	if [ -n "$moz_debugger" ]
 	then
-		debugger=`which $moz_debugger`
+		moz_test_binary /bin/type
+		if [ $? -eq 1 ]
+		then	
+			debugger=`type $moz_debugger | awk '{print $3;}'` 
+		else
+			debugger=`which $moz_debugger` 
+		fi	
 	else
 		debugger=`moz_get_debugger`
 	fi
