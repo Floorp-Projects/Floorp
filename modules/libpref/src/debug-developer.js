@@ -20,4 +20,3 @@
  * Contributor(s): 
  */
 
-pref("javascript.options.strict", true);
