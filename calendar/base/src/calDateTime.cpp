@@ -308,7 +308,7 @@ calDateTime::GetIcalString(nsACString& aResult)
     ToIcalTime(&t);
 
     // note that ics is owned by libical, so we don't need to free
-    char *ics = icaltime_as_ical_string(t);
+    const char *ics = icaltime_as_ical_string(t);
     
     if (ics) {
         aResult.Assign(ics);
@@ -343,7 +343,10 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
 void
 calDateTime::FromIcalTime(icaltimetype *icalt)
 {
-    NS_ASSERTION(icalt->zone == NULL, "Got icaltimetype with a non-null zone!");
+     if (icalt->zone) {
+         NS_ASSERTION(icalt->zone == icaltimezone_get_utc_timezone(),
+                      "Got icaltimetype with a non-null and non-utc zone!");
+     }
 
     mYear = icalt->year;
     mMonth = icalt->month - 1;

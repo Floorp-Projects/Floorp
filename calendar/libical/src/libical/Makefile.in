@@ -43,9 +43,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = calical
-LIBRARY_NAME     = calical_s
-MODULE_NAME      = calIcalModule
+MODULE           = ical
+LIBRARY_NAME     = mozical
+MODULE_NAME      = mozIcalModule
 FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 

@@ -46,8 +46,8 @@ interface calIDateTime;
 
 interface calIIcalProperty;
 
-[ptr] native icalpropertyptr(void);
-[ptr] native icalcomponentptr(void);
+[ptr] native icalpropertyptr(struct icalproperty_impl);
+[ptr] native icalcomponentptr(struct icalcomponent_impl);
 
 /**
  * General notes:

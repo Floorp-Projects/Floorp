@@ -43,14 +43,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = calicalss
-LIBRARY_NAME     = calicalss_s
-MODULE_NAME      = calIcalssModule
+MODULE           = icalss
+LIBRARY_NAME     = mozicalss
+MODULE_NAME      = mozIcalssModule
 FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 
+EXPORTS = icalss.h
+
 REQUIRES =			\
-	calical 		\
+	ical			\
 	$(NULL)
 
 CSRCS =				\
@@ -73,7 +75,6 @@ DESIGNDATA = $(srcdir)/../../design-data
 ICALSCRIPTS = $(srcdir)/../../scripts
 
 CFLAGS += -DHAVE_CONFIG_H -I$(srcdir)/../.. -I$(srcdir)/../libical
-EXPORTS = icalss.h
 
 # ORDERING OF HEADERS IS SIGNIFICANT. Don't change this ordering. It
 # is required to make the combined header ical.h properly
@@ -88,17 +89,17 @@ COMBINEDHEADERS =                        \
 	$(srcdir)/icalspanlist.h \
 	$(srcdir)/icalmessage.h
 
-rebuild:
-	echo '#ifdef __cplusplus'         >  $(srcdir)/icalss.h
-	echo 'extern "C" {'               >> $(srcdir)/icalss.h
-	echo '#endif'                     >> $(srcdir)/icalss.h
-	echo '/*'                         >> $(srcdir)/icalss.h
-	echo ' $$''Id''$$'                >> $(srcdir)/icalss.h
-	echo '*/'                         >> $(srcdir)/icalss.h
+icalss.h: $(COMBINEDHEADERS)
+	echo '#ifdef __cplusplus'         >  icalss.h
+	echo 'extern "C" {'               >> icalss.h
+	echo '#endif'                     >> icalss.h
+	echo '/*'                         >> icalss.h
+	echo ' $$''Id''$$'                >> icalss.h
+	echo '*/'                         >> icalss.h
 	cat $(COMBINEDHEADERS)				\
 	| egrep -v "#include.*\"ical"			\
 	| egrep -v "#include.*\"pvl\.h\""		\
-	| egrep -v '\$$(Id|Locker): .+\$$'>> $(srcdir)/icalss.h
-	echo '#ifdef __cplusplus'         >> $(srcdir)/icalss.h
-	echo '};'                         >> $(srcdir)/icalss.h
-	echo '#endif'                     >> $(srcdir)/icalss.h
+	| egrep -v '\$$(Id|Locker): .+\$$'>> icalss.h
+	echo '#ifdef __cplusplus'         >> icalss.h
+	echo '};'                         >> icalss.h
+	echo '#endif'                     >> icalss.h

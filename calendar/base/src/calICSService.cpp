@@ -99,7 +99,7 @@ calIcalProperty::SetStringValue(const nsACString &str)
 NS_IMETHODIMP
 calIcalProperty::GetPropertyName(nsACString &name)
 {
-    const char *icalstr = icalproperty_get_name(mProperty);
+    const char *icalstr = icalproperty_get_property_name(mProperty);
     if (!icalstr) {
 #ifdef DEBUG
         fprintf(stderr, "Error getting property name: %d (%s)\n",
