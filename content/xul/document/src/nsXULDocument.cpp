@@ -7099,7 +7099,6 @@ nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
     nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(ir);
     if (windowPrivate) {
         windowPrivate->GetRootFocusController(aFocusController);
-        NS_IF_ADDREF(*aFocusController);
     } else
         *aFocusController = nsnull;
 }
