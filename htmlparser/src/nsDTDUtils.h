@@ -234,6 +234,26 @@ struct CRCStruct {
   PRInt32   mOperation; //usually open or close
 };
 
+/******************************************************************************
+  This class is used to store ref's to token observers during the parse phase.
+  Note that for simplicity, this is a singleton that is constructed in the
+  CNavDTD and shared for the duration of the application session. Later on it
+  might be nice to use a more dynamic approach that would permit observers to
+  come and go on a document basis.
+ ******************************************************************************/
+class CObserverDictionary {
+public:
+  CObserverDictionary();
+  ~CObserverDictionary();
+
+  void      RegisterObservers();
+  void      UnregisterObservers();
+  nsDeque*  GetObserversForTag(eHTMLTags aTag);
+
+protected:
+  nsDeque*  mObservers[NS_HTML_TAG_MAX];
+};
+
 #endif
 
 

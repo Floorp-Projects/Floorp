@@ -161,6 +161,7 @@ public:
 //CTagHandlerRegister gTagHandlerRegister;
 
 
+
 /************************************************************************
   And now for the main class -- CNavDTD...
  ************************************************************************/
@@ -1008,6 +1009,7 @@ void WriteTokenToLog(CToken* aToken) {
 }
 #endif
 
+
 /**
  * This gets called before we've handled a given start tag.
  * It's a generic hook to let us do pre processing.
@@ -1024,6 +1026,23 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   if(gHTMLElements[aTag].mSkipTarget) {
     result=CollectSkippedContent(aNode,theAttrCount);
   }
+
+  /**********************************************************
+     THIS WILL ULTIMATELY BECOME THE REAL OBSERVER API...
+   **********************************************************
+  static CObserverDictionary gObserverDictionary;
+  nsDeque*  theDeque=gObserverDictionary.GetObserversForTag(aTag);
+  if(theDeque){
+    int theSize=theDeque->GetSize();
+    int theIndex=0;
+    for(theIndex=0;theIndex<theSize;theIndex++){
+      nsIObserver* theObserver=theDeque->ObjectAt(theIndex);
+      if(theObserver){
+        theObserver->Notify();
+      }
+    }
+  }
+  */
 
   //**********************************************************
   //XXX Hack until I get the node observer API in place...
@@ -2917,4 +2936,7 @@ nsresult CNavDTD::DoFragment(PRBool aFlag)
 {
   return NS_OK;
 }
+
+
+
 

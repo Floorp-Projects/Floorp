@@ -513,3 +513,64 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
   return crc_accum; 
 }
 
+/******************************************************************************
+  This class is used to store ref's to tag observers during the parse phase.
+  Note that for simplicity, this is a singleton that is constructed in the
+  CNavDTD and shared for the duration of the application session. Later on it
+  might be nice to use a more dynamic approach that would permit observers to
+  come and go on a document basis.
+ ******************************************************************************/
+
+CObserverDictionary::CObserverDictionary() {
+  nsCRT::zero(mObservers,sizeof(mObservers));
+  RegisterObservers();
+}
+
+CObserverDictionary::~CObserverDictionary() {
+  UnregisterObservers();
+}
+
+void CObserverDictionary::UnregisterObservers() {
+  int theIndex=0;
+  for(theIndex=0;theIndex<NS_HTML_TAG_MAX;theIndex++){
+    if(mObservers[theIndex]){
+      /*
+      nsIObserver* theObserver=0;
+      while(theObserver=mObserver[theIndex]->Pop()){
+        NS_RELEASE(theObserver);
+      }
+      */
+    }
+  }
+}
+
+void CObserverDictionary::RegisterObservers() {
+  /*
+    nsIObserverService* theObserverService=GetService("observer"); //or whatever the call is here...
+    if(theObserverService){
+      nsIObserverEnumerator* theEnum=theObserverService->GetObserversForTopic("htmlparser"); //again, put the real call here!
+      if(theEnum){
+        nsIObserver* theObserver=theEnum->First();
+        while(theObserver){
+          const char* theTagStr=theObserver->GetTag();
+          if(theTagStr){
+            eHTMLTags theTag=NS_TagToEnum(theTagStr);
+            if(eHTMLTag_userdefined!=theTag){
+              nsDeque* theDeque=mObservers[theTag];
+              if(theDeque){
+                NS_ADDREF(theObserver);
+                theDeque->Push(theObserver);
+              }
+            }
+          }
+          theObserver=theEnum->Next();
+        }
+      }
+    }
+  */
+}
+
+nsDeque* CObserverDictionary::GetObserversForTag(eHTMLTags aTag) {
+  nsDeque* result=mObservers[aTag];
+  return result;
+}
