@@ -66,7 +66,7 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_REG        12
 #define NS_ERROR_MODULE_FILES      13
 #define NS_ERROR_MODULE_DOM        14
-
+#define NS_ERROR_MODULE_IMGLIB     15
 #define NS_ERROR_MODULE_MAILNEWS   16
 #define NS_ERROR_MODULE_EDITOR     17
 #define NS_ERROR_MODULE_XPCONNECT  18
