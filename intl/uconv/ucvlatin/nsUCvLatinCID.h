@@ -563,6 +563,11 @@
 #define NS_UNICODETOUTF32LE_CID \
   { 0xba6151b6, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
+// Class ID for our UTF16ToUnicode charset converter
+// {d673255d-1184-400a-b0b5-ee9d1295bd85}
+#define NS_UTF16TOUNICODE_CID \
+  { 0xd673255d, 0x1184, 0x400a, {0xb0, 0xb5, 0xee,0x9d, 0x12, 0x95, 0xbd, 0x85}}
+
 // Class ID for our UTF16LEToUnicode charset converter
 // {BA6151B7-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UTF16LETOUNICODE_CID \
