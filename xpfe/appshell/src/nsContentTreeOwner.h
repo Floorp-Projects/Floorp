@@ -25,6 +25,7 @@
 
 // Helper Classes
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
@@ -62,6 +63,7 @@ protected:
    nsXULWindow*      mXULWindow;
    PRBool            mPrimary;
    PRUint32          mChromeMask;
+   nsString          mDefaultStatus;
 };
 
 #endif /* nsContentTreeOwner_h__ */

@@ -192,14 +192,27 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   nsAutoString status(aStatus);
+
+   if(!status.Length())
+      status = mDefaultStatus;
+
+   nsAutoString statusName("status");
+   NS_ENSURE_SUCCESS(mXULWindow->NotifyObservers(statusName.GetUnicode(), 
+      status.GetUnicode()), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mDefaultStatus = aStatus;
+
+   nsAutoString statusName("defaultStatus");
+   NS_ENSURE_SUCCESS(mXULWindow->NotifyObservers(statusName.GetUnicode(), 
+      aStatus), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
