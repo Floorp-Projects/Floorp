@@ -69,7 +69,7 @@ namespace JavaScript {
 
 
 //
-// Unicode UTF-16 strings
+// Unicode UTF-16 characters and strings
 //
 
 	// A UTF-16 character
@@ -102,6 +102,93 @@ namespace JavaScript {
 	}
 	
 	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
+
+
+	class CharInfo {
+		// Unicode character attribute lookup tables
+		static const uint8 x[];
+		static const uint8 y[];
+		static const uint32 a[];
+	
+	  public:
+		// Enumerated Unicode general category types
+		enum Type {
+		    Unassigned            = 0,	// Cn
+		    UppercaseLetter       = 1,	// Lu
+		    LowercaseLetter       = 2,	// Ll
+		    TitlecaseLetter       = 3,	// Lt
+		    ModifierLetter        = 4,	// Lm
+		    OtherLetter           = 5,	// Lo
+		    NonSpacingMark        = 6,	// Mn
+		    EnclosingMark         = 7,	// Me
+		    CombiningSpacingMark  = 8,	// Mc
+		    DecimalDigitNumber    = 9,	// Nd
+		    LetterNumber          = 10,	// Nl
+		    OtherNumber           = 11,	// No
+		    SpaceSeparator        = 12,	// Zs
+		    LineSeparator         = 13,	// Zl
+		    ParagraphSeparator    = 14,	// Zp
+		    Control               = 15,	// Cc
+		    Format                = 16,	// Cf
+		    PrivateUse            = 18,	// Co
+		    Surrogate             = 19,	// Cs
+		    DashPunctuation       = 20,	// Pd
+		    StartPunctuation      = 21,	// Ps
+		    EndPunctuation        = 22,	// Pe
+		    ConnectorPunctuation  = 23,	// Pc
+		    OtherPunctuation      = 24,	// Po
+		    MathSymbol            = 25,	// Sm
+		    CurrencySymbol        = 26,	// Sc
+		    ModifierSymbol        = 27,	// Sk
+		    OtherSymbol           = 28	// So
+		};
+
+		enum Group {
+		    NonIdGroup,			// 0  May not be part of an identifier
+		    FormatGroup,		// 1  Format control
+		    IdGroup,			// 2  May start or continue a JS identifier (includes $ and _)
+		    IdContinueGroup,	// 3  May continue a JS identifier  [IdContinueGroup & -2 == IdGroup]
+		    WhiteGroup,			// 4  White space character (but not line break)
+		    LineBreakGroup		// 5  Line break character  [LineBreakGroup & -2 == WhiteGroup]
+		};
+
+		// Character classifying and mapping macros, based on java.lang.Character
+		static uint32 cCode(char16 c) {return a[y[x[static_cast<uint16>(c)>>6]<<6 | c&0x3F]];}
+		static Type cType(char16 c) {return static_cast<Type>(cCode(c) & 0x1F);}
+		static Group cGroup(char16 c) {return static_cast<Group>(cCode(c) >> 16 & 7);}
+	};
+
+	inline bool isAlpha(char16 c)
+	{
+		return ((((1 << CharInfo::UppercaseLetter) | (1 << CharInfo::LowercaseLetter) | (1 << CharInfo::TitlecaseLetter) |
+				  (1 << CharInfo::ModifierLetter) | (1 << CharInfo::OtherLetter))
+				 >> CharInfo::cType(c)) & 1) != 0;
+	}
+
+	inline bool isAlphanumeric(char16 c)
+	{
+		return ((((1 << CharInfo::UppercaseLetter) | (1 << CharInfo::LowercaseLetter) | (1 << CharInfo::TitlecaseLetter) |
+				  (1 << CharInfo::ModifierLetter) | (1 << CharInfo::OtherLetter) | (1 << CharInfo::DecimalDigitNumber))
+				 >> CharInfo::cType(c)) & 1) != 0;
+	}
+
+	// Return true if c can start a JavaScript identifier
+	inline bool isIdLeading(char16 c) {return CharInfo::cGroup(c) == CharInfo::IdGroup;}
+	// Return true if c can continue a JavaScript identifier
+	inline bool isIdContinuing(char16 c) {return CharInfo::cGroup(c) & -2 == CharInfo::IdGroup;}
+
+	// Return true if c is a Unicode decimal digit (Nd) character
+	inline bool isDecimalDigit(char16 c) {return CharInfo::cType(c) == CharInfo::DecimalDigitNumber;}
+	// Return true if c is a Unicode white space or line break character
+	inline bool isSpace(char16 c) {return CharInfo::cGroup(c) & -2 == CharInfo::WhiteGroup;}
+	// Return true if c is a Unicode line break character (LF, CR, LS, or PS)
+	inline bool isLineBreak(char16 c) {return CharInfo::cGroup(c) == CharInfo::LineBreakGroup;}
+
+	inline bool isUpper(char16 c) {return CharInfo::cType(c) == CharInfo::UppercaseLetter;}
+	inline bool isLower(char16 c) {return CharInfo::cType(c) == CharInfo::LowercaseLetter;}
+
+	char16 toUpper(char16 c);
+	char16 toLower(char16 c);
 
 
 //
