@@ -273,12 +273,18 @@ depend:
 	set CLIENT_DIRS=1
 	nmake -f makefile.win depend 
 
-build_nspr:
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 !ifdef USE_NSPR_AUTOCONF
+nsprpub\config.status: nsprpub\configure nsprpub\configure.in
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	sh $(NSPR_CONFIGURE)
+
+build_nspr: nsprpub\config.status
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake
 !else
+
+build_nspr: 
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	nmake -f makefile.win export
 !endif
 
