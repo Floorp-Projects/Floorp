@@ -64,7 +64,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
 
-static NS_DEFINE_IID(kFormProcessorCID, NS_IFORMPROCESSOR_CID); 
+static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID); 
  
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";

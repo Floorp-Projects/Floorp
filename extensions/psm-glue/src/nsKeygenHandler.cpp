@@ -66,6 +66,20 @@ nsKeygenFormProcessor::~nsKeygenFormProcessor()
   NS_IF_RELEASE(mPSM);
 }
 
+NS_METHOD
+nsKeygenFormProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
+{
+  nsresult rv;
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+  nsKeygenFormProcessor* formProc = new nsKeygenFormProcessor();
+  if (formProc == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(formProc);
+  rv = formProc->QueryInterface(aIID, aResult);
+  NS_RELEASE(formProc);
+  return rv;
+}
+
 char *
 nsKeygenFormProcessor::ChooseToken(PCMT_CONTROL control, 
 				   CMKeyGenTagArg *psmarg,
