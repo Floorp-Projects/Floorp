@@ -100,7 +100,7 @@ static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
-//#undef VIEWER_UI
+#define VIEWER_UI
 #define VIEWER_UI
 #undef INSET_WEBWIDGET
 
@@ -1384,7 +1384,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   nsIButton* back;
   nsRect rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
   NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID,
-                               (LPVOID*)&back);
+                               (void**)&back);
   back->Create(wd->windowWidget, rect, HandleBackEvent, NULL);
   back->SetLabel("Back");
   back->Show(PR_TRUE);
@@ -1394,7 +1394,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   nsIButton* forward;
   rect.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
   NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID,
-                               (LPVOID*)&forward);
+                               (void**)&forward);
   forward->Create(wd->windowWidget, rect, HandleForwardEvent, NULL);
   forward->SetLabel("Forward");
   forward->Show(PR_TRUE);
@@ -1404,7 +1404,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   rect.SetRect(2*BUTTON_WIDTH, 0,
                bounds.width - 2*BUTTON_WIDTH, BUTTON_HEIGHT);
   NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID,
-                               (LPVOID*)&mLocation);
+                               (void**)&mLocation);
   mLocation->Create(wd->windowWidget, rect, HandleLocationEvent, NULL);
   mLocation->SetText("");
   mLocation->Show(PR_TRUE);
