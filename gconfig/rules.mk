@@ -82,12 +82,15 @@ private_export::
 release_export::
 	+$(LOOP_OVER_DIRS)
 
+libs::
+	+$(LOOP_OVER_DIRS)
+
 libs program install:: $(TARGETS)
 ifdef LIBRARY
 	$(INSTALL) -m 664 $(LIBRARY) $(SOURCE_LIB_DIR)
 endif
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_BIN_DIR)
 endif
 ifdef IMPORT_LIBRARY
 	$(INSTALL) -m 775 $(IMPORT_LIBRARY) $(SOURCE_LIB_DIR)
@@ -98,7 +101,6 @@ endif
 ifdef PROGRAMS
 	$(INSTALL) -m 775 $(PROGRAMS) $(SOURCE_BIN_DIR)
 endif
-	+$(LOOP_OVER_DIRS)
 
 tests::
 	+$(LOOP_OVER_DIRS)
@@ -229,10 +231,13 @@ else
 	$(LINK_PROGRAM) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(OS_LIBS)
 endif
 
-$(LIBRARY): $(OBJS)
+$(LIBRARY): $(OBJS) $(AR_LIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(AR) $(OBJS)
+	$(AR) $(OBJS) $(AR_LIBS)
+ifdef AR_LIBS
+	+$(EXTRACT_OBJS)
+endif
 	$(RANLIB) $@
 
 ifeq ($(OS_TARGET), WIN16)
@@ -240,9 +245,10 @@ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	wlib +$(SHARED_LIBRARY)
 endif
 
-$(SHARED_LIBRARY): $(OBJS)
+$(SHARED_LIBRARY): $(OBJS) $(AR_LIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+	+$(AR_OBJS)
 ifeq ($(OS_ARCH), AIX)
 	echo "#!" > $(OBJDIR)/lib$(LIBRARY_NAME)_syms
 	nm -B -C -g $(OBJS) \
@@ -267,7 +273,11 @@ ifeq ($(OS_TARGET), WIN16)
 		$(LINK) @w16link.
 		rm w16link
 else
-		$(LINK_DLL) -MAP $(DLLBASE) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS) $(LDFLAGS)
+ifdef AR_LIBS
+		$(LINK_DLL) -MAP $(DLLBASE) $(AR_LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS) $(LDFLAGS) @$(OBJDIR)\\$(LIBRARY_NAME).lst
+else
+		$(LINK_DLL) -MAP $(DLLBASE) $(AR_LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS) $(LDFLAGS) 
+endif
 endif
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS)

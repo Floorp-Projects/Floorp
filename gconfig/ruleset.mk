@@ -150,11 +150,18 @@ ifdef EXTRA_LIBS
 	EXTRA_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(EXTRA_LIBS:%=%$(LIB_SUFFIX)))
 endif
 
+# Rules to convert EXTRA_LIBS to platform-dependent naming scheme
+ifdef AR_LIBS
+	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(AR_LIBS:%=%$(LIB_SUFFIX)))
+endif
+
 ifdef LIBRARY
 #	LIBRARY := $(addprefix $(OBJDIR)/, $(LIBRARY))
 	ifdef MKSHLIB
 		ifeq ($(OS_ARCH),WINNT)
+ifndef LIBRARY_NAME
 			SHARED_LIBRARY = $(LIBRARY:.lib=.dll)
+endif
 		else
 			ifeq ($(OS_ARCH),HP-UX)
 				SHARED_LIBRARY = $(LIBRARY:.a=.sl)
@@ -288,6 +295,15 @@ ifdef DIRS
 		done
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifdef AR_LIBS
+EXTRACT_OBJS =  \
+    lib /list:$(OBJDIR)\\$(LIBRARY_NAME).lst $(LIBRARY) ; \
+    perl -I$(GDEPTH)/gconfig $(GDEPTH)/gconfig/extract_objs.pl \
+    "LIST=$(OBJDIR)\\$(LIBRARY_NAME).lst" \
+    "LIBRARY=$(LIBRARY)"
+endif
+endif
 
 
 # special stuff for tests rule in rules.mk
