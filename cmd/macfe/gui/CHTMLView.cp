@@ -2361,9 +2361,10 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 
 		case cmd_ViewSource:
 		{
+			// there is no need to dispose of |url| because layout takes care of it (I think).
+			// All I know is that if we do dispose it here, bad things happen later...(pinkerton).
 			URL_Struct* url = NET_CreateURLStruct(mContext->GetCurrentURL(), NET_DONT_RELOAD);
 			mContext->ImmediateLoadURL(url, FO_VIEW_SOURCE);
-			NET_FreeURLStruct ( url );
 			cmdHandled = true;
 			break;
 		}
