@@ -82,9 +82,8 @@ var progressListener = {
           // right now, all that supports restarting downloads is ftp (rfc959)    
           ftpChannel = aRequest.QueryInterface(Components.interfaces.nsIFTPChannel);
           if (ftpChannel) {
-            dialog.pause.setAttribute("hidden", false);
-            dialog.pause.setAttribute("label", getString("pause"));
-           }
+            dialog.pauseResumeDeck.setAttribute("index", "1");
+          }
         }
         catch (ex) {}
       }
@@ -332,7 +331,9 @@ function onLoad() {
     dialog.timeLeft    = document.getElementById("dialog.timeLeft");
     dialog.timeElapsed = document.getElementById("dialog.timeElapsed");
     dialog.cancel      = document.getElementById("cancel");
-    dialog.pause       = document.getElementById("pause")
+    dialog.pause       = document.getElementById("pause");
+    dialog.resume      = document.getElementById("resume");
+    dialog.pauseResumeDeck = document.getElementById("pauseResumeDeck");
     dialog.request     = 0;
     dialog.downloadPaused = false;
     keepProgressWindowUpBox = document.getElementById('keepProgressDialogUp');
@@ -428,7 +429,8 @@ function setupPostProgressUI()
     openButton.removeAttribute("disabled");
   }
 
-  dialog.pause.setAttribute("disabled", true);
+  dialog.pause.disabled = true; // setAttribute("disabled", true);
+  dialog.resume.disabled = true;
   keepProgressWindowUpBox.disabled = true;
   
 }
@@ -468,14 +470,14 @@ function doPauseButton() {
     {
         // resume
         dialog.downloadPaused = false;
-        dialog.pause.setAttribute("label", getString("pause"));
+        dialog.pauseResumeDeck.setAttribute("index", "1");
         dialog.request.resume()
     }
     else
     {
         // suspend
         dialog.downloadPaused = true;
-        dialog.pause.setAttribute("label", getString("resume"));
+        dialog.pauseResumeDeck.setAttribute("index", "2");
         dialog.request.suspend()
     }
 }
