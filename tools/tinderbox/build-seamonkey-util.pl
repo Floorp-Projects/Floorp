@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.85 $ ';
+$::UtilsVersion = '$Revision: 1.86 $ ';
 
 package TinderUtils;
 
@@ -793,8 +793,7 @@ sub run_all_tests {
     }
 
     # Bloat test
-    if (($Settings::BloatStats or $Settings::BloatTest)
-        and $test_result eq 'success') {
+    if ($Settings::BloatTest and $test_result eq 'success') {
         $test_result = BloatTest($binary, $build_dir, $Settings::BloatTestTimeout);
     }
     
