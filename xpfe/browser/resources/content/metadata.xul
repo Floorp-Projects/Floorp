@@ -137,6 +137,10 @@
             <spacer flex="1"/>
           </hbox>
         </row>
+	<row id="image-filesize">
+	  <label value="&image-filesize.label; "/>
+	  <label id="image-filesize-text" value="&filesize-unknown.label;"/>
+	</row>
       </rows>
     </grid>
   </groupbox>
