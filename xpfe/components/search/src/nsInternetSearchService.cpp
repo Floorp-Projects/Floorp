@@ -533,7 +533,9 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 
 	if (mInner)
 	{	
-		if ((source == kNC_SearchRoot) && (property == kNC_Child) && (mEngineListBuilt == PR_FALSE))
+		// defer search engine discovery until needed; small startup time improvement
+		if (((source == kNC_SearchRoot) || isSearchURI(source)) && (property == kNC_Child)
+			&& (mEngineListBuilt == PR_FALSE))
 		{
 			// get available search engines
 			nsFileSpec			nativeDir;
