@@ -122,6 +122,7 @@ function SetUpTree(forceToServer)
 	var server = folder.server;
 
 	try {
+          CleanUpSearchView();
           gSubscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
           gSubscribeTree.setAttribute('ref',null);
 
@@ -152,6 +153,7 @@ function SetUpTree(forceToServer)
 function SubscribeOnUnload()
 {
   try {
+    CleanUpSearchView();
     gSubscribeTree.database.RemoveDataSource(subscribeDS);
   }
   catch (ex) {
@@ -203,6 +205,7 @@ function SubscribeOnLoad()
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
 		try {
+                        CleanUpSearchView();
 			gSubscribableServer = folder.server.QueryInterface(Components.interfaces.nsISubscribableServer);
                         // enable (or disable) the search related UI
                         EnableSearchUI();
@@ -210,6 +213,7 @@ function SubscribeOnLoad()
 		}
 		catch (ex) {
 			//dump("not a subscribable server\n");
+                        CleanUpSearchView();
 			gSubscribableServer = null;
 			gServerURI = null;
 		}
@@ -328,6 +332,9 @@ function SearchOnClick(event)
       // double clicked on a row, reverse state
       ReverseStateFromRow(row.value);
     }
+
+    // invalidate the row
+    InvalidateSearchOutlinerRow(row.value);
   }
 }
 
@@ -448,6 +455,11 @@ function Refresh()
 	SetUpTree(true);
 }
 
+function InvalidateSearchOutlinerRow(row)
+{
+    gSearchOutlinerBoxObject.invalidateRow(row);
+}
+
 function InvalidateSearchOutliner()
 {
     gSearchOutlinerBoxObject.invalidate();
@@ -472,10 +484,21 @@ function Search()
     SwitchToSearchView();
     gSubscribableServer.setSearchValue(searchValue);
 
+    if (!gSearchView && gSubscribableServer) {
     gSearchView = gSubscribableServer.QueryInterface(Components.interfaces.nsIOutlinerView);
+      gSearchView.selection = null;
     gSearchOutlinerBoxObject.view = gSearchView;
+  }
   }
   else {
     SwitchToNormalView();
+  }
+}
+
+function CleanUpSearchView()
+{
+  if (gSearchView) {
+    gSearchView.selection = null;
+    gSearchView = null;
   }
 }
