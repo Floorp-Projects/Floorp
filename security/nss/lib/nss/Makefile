@@ -42,8 +42,6 @@ include manifest.mn
 # (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################
 
-include $(CORE_DEPTH)/coreconf/arch.mk
-
 include $(CORE_DEPTH)/coreconf/config.mk
 
 #######################################################################
