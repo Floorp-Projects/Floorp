@@ -769,7 +769,10 @@ nsLocalFile::CopyToFollowingLinks(nsIFile *newParent, const char *newName)
 NS_IMETHODIMP
 nsLocalFile::MoveTo(nsIFile *newParent, const char *newName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = CopyTo(newParent, newName);
+    if (NS_SUCCEEDED(rv))
+      rv = Delete(PR_TRUE);
+    return rv;
 }
 
 NS_IMETHODIMP
