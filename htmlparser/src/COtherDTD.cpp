@@ -20,9 +20,9 @@
  * Contributor(s): rickg@netscape.com
  */          
       
-//#define ENABLE_CRC           
+//#define ENABLE_CRC            
 //#define RICKG_DEBUG          
-    
+     
         
 #include "nsDebug.h"  
 #include "nsIDTDDebug.h"    
@@ -544,9 +544,9 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
             break;
           }
         }//while
-        mTokenizer=oldTokenizer;
+        mTokenizer=oldTokenizer; 
       }
-    }
+    } 
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
@@ -832,8 +832,8 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
             mSink->OpenHTML(*theNode);
             mBodyContext->Push(theNode,0);
           }
-          theTagWasHandled=PR_TRUE;  
-          break;      
+          theTagWasHandled=PR_TRUE;   
+          break;       
                 
         default:    
           CElement* theElement=gElementTable->mElements[theParent];
@@ -849,7 +849,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       }
    
     } //if          
-  }//if         
+  }//if          
       
   RecycleNode(theNode);          
   return result;        
@@ -901,13 +901,13 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
  
   return result;          
 }         
-       
+        
 /**
  * Retrieve the attributes for this node, and add then into
  * the node.
  *
  * @update  gess4/22/98
- * @param   aNode is the node you want to collect attributes for
+ * @param   aNode is the node you want to collect attributes for 
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
@@ -917,8 +917,8 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
   nsresult result=NS_OK;
   int theAvailTokenCount=mTokenizer->GetCount();
   if(aCount<=theAvailTokenCount) {
+    //gElementTable->mElements[aTag]->GetSkipTarget();
     CToken* theToken=0; 
-    eHTMLTags theSkipTarget=gElementTable->mElements[aTag]->GetSkipTarget();
     for(attr=0;attr<aCount;attr++){  
       theToken=mTokenizer->PopToken(); 
       if(theToken)  {
