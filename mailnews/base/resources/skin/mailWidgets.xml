@@ -268,9 +268,12 @@
             var searchOperator=this.searchoperator;
             var searchValue=this.searchvalue;
 
+            // now reflect all attributes of the searchterm into the widgets
             if (searchAttribute) searchAttribute.value = term.attrib;
             if (searchOperator) searchOperator.value = val.op;
             if (searchValue) searchValue.value = term.value;
+
+            this.booleanAnd = val.booleanAnd;
           ]]>
         </setter>
       </property>
@@ -302,20 +305,41 @@
       <property name="searchvalue" 
                 onget="return document.getElementById(this.getAttribute('searchvalue'));"
                 onset="this.setAttribute('searchvalue',val.id)"/>
-
-      <!-- takes an nsIMsgSearchValue and initializes the appropriate widget
-           with the right value
-        -->
-      <!-- right now only handles filters - need to abstract termlist -->
-      <method name="initialize">
-        <argument name="filter"/>
-        <argument name="termIndex"/>
-        <argument name="scope"/>
-        <body>
+      <property name="booleanNodes">
+        <![CDATA[
+          null;
+        ]]>
+      </property>
+      <property name="stringBundle">
           <![CDATA[
+             srGetStrBundle("chrome://messenger/locale/search.properties");
           ]]>
-        </body>
-      </method>
+      </property>
+      <property name="booleanAnd" onget="return this.internalBooleanAnd">
+        <setter>
+          <![CDATA[
+            // whenever you set this, all nodes in booleanNodes
+            // are updated to reflect the string
+
+            if (this.internalBooleanAnd == val) return;
+            this.internalBooleanAnd = val;
+
+            var booleanNodes = this.booleanNodes;
+            if (!booleanNodes) return;
+
+            var stringBundle = this.stringBundle;
+            var andString = booleanAnd ? "And" : "Or";
+            for (var i=0; i<booleanNodes.length; i++) {
+              try {              
+                var staticString =
+                    stringBundle.GetStringFromName("search" + andString + i);
+                if (staticString && staticString.length>0)
+                    booleanNodes[i].setAttribute("value", staticString);
+              } catch (ex) { /* no error, means string not found */}
+            }
+          ]]>
+        </setter>
+      </property>
     </interface>
   </binding>
 </bindings>
