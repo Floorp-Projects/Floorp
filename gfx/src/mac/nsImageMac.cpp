@@ -33,7 +33,6 @@
 
 #define IsFlagSet(a,b) (a & b)
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
@@ -88,7 +87,7 @@ nsImageMac::~nsImageMac()
 		
 }
 
-NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
+NS_IMPL_ISUPPORTS2(nsImageMac, nsIImage, nsIImageMac);
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
@@ -287,7 +286,7 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 			// image directly, since the transparent pixels come out black.
 			
 			// We do all this because Copy{Deep}Mask is not supported when printing
-			if (AllocateGWorld(mImagePixmap.packSize, nsnull, srcRect, &tempGWorld) == noErr)
+			if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, srcRect, &tempGWorld) == noErr)
 			{
 			  // erase it to white
 				ClearGWorld(tempGWorld);
@@ -649,3 +648,87 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 
 	return memFullErr;
 }
+
+
+#pragma mark -
+
+
+//
+// ConvertToPICT
+//
+// Convert from image bits to a PICT, probably for placement on the clipboard.
+// Blit the transparent image into a new GWorld which is just white, and
+// then blit that into the picture. We can't just blit directly into
+// the picture because CopyDeepMask isn't supported on PICTs.
+//
+NS_IMETHODIMP
+nsImageMac :: ConvertToPICT ( PicHandle* outPicture )
+{
+  *outPicture = nsnull;
+
+  Rect picFrame = mImagePixmap.bounds;
+  Rect maskFrame = mMaskPixmap.bounds;
+  GWorldPtr	tempGWorld;
+  if (AllocateGWorld(mImagePixmap.pixelSize, nsnull, picFrame, &tempGWorld) == noErr) 
+  {
+    // erase it to white
+  	ClearGWorld(tempGWorld);
+
+  	PixMapHandle tempPixMap = GetGWorldPixMap(tempGWorld);
+  	if (tempPixMap) {
+  		StPixelLocker tempPixLocker(tempPixMap);			// locks the pixels
+  	
+  		// copy from the destination into our temp GWorld, to get the background
+  		if (mMaskBitsHandle) {
+    		if (mAlphaDepth > 1)
+    			::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap, 
+    			                  &picFrame, &maskFrame, &picFrame, srcCopy, nsnull);
+    		else
+    			::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)*tempPixMap,
+    			              &picFrame, &maskFrame, &picFrame);
+      }
+      else
+        ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)*tempPixMap,
+  		               &picFrame, &picFrame, srcCopy, nsnull);
+
+      
+  		// now copy into the picture
+  		GWorldPtr currPort;
+  		GDHandle currDev;
+      ::GetGWorld(&currPort, &currDev);
+      ::SetGWorld(tempGWorld, nil);    
+      PicHandle thePicture = ::OpenPicture(&picFrame);
+      OSErr err = noErr;
+      if ( thePicture ) {
+        ::ForeColor(blackColor);
+        ::BackColor(whiteColor);
+      
+  		  ::CopyBits((BitMap*)*tempPixMap, (BitMap*)*tempPixMap,
+  		               &picFrame, &picFrame, srcCopy, nsnull);
+      
+        ::ClosePicture();
+        err = QDError();
+      }
+      
+      ::SetGWorld(currPort, currDev);     // restore to the way things were
+      
+      if ( err == noErr )       
+        *outPicture = thePicture;
+  	}
+	
+	  ::DisposeGWorld(tempGWorld);	      // do this after dtor of tempPixLocker!
+  }
+  else
+    return NS_ERROR_FAILURE;
+  
+  return NS_OK;
+ 
+} // ConvertToPICT
+
+
+NS_IMETHODIMP
+nsImageMac :: ConvertFromPICT ( PicHandle inPicture )
+{
+  return NS_ERROR_FAILURE;
+ 
+} // ConvertFromPICT
