@@ -201,7 +201,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   }
   // call the base class in case we're not sorting by thread
   rv = nsMsgDBView::Sort(sortType, sortOrder);
-
+  SaveSortInfo(sortType, sortOrder);
   // the sort may have changed the number of rows
   // before we restore the selection, tell the outliner
   // do this before we call restore selection
