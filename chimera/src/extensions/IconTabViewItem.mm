@@ -79,6 +79,7 @@ static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the 
 {
   [mTabIcon release];
   [mLabelAttributes release];
+  [mLabelString release];
   [mTruncLabelString release];
   [super dealloc];
 }
@@ -119,7 +120,8 @@ static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the 
     if (numTabs < kMinTabsForSpacing)
       numTabs = kMinTabsForSpacing;
     theWidth = NSWidth([[self tabView] frame]) / numTabs - 16.0; // 16 works - don't know why. Maybe 8px on each side of the label?
-    if (shouldTruncateLabel) {
+    if (shouldTruncateLabel)
+    {
       //I have really no clue what this is for.
       //it only gets set YES when the tabs have
       //reached the edge of the screen area.
@@ -140,8 +142,9 @@ static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the 
 
 -(void)drawLabel:(BOOL)shouldTruncateLabel inRect:(NSRect)tabRect
 {
-  if ([self tabIcon]) {
-    NSPoint	drawPoint = NSMakePoint( (tabRect.origin.x), (tabRect.origin.y + 15.0) );
+  if ([self tabIcon])
+  {
+    NSPoint drawPoint = NSMakePoint( (tabRect.origin.x), (tabRect.origin.y + 15.0) );
     [[self tabIcon] compositeToPoint:drawPoint operation:NSCompositeSourceOver];
     tabRect = NSMakeRect(NSMinX(tabRect) + 18.0,
                          NSMinY(tabRect),
@@ -151,7 +154,7 @@ static const int kMinTabsForSpacing = 4;		// with 1-4 tabs, each tab is 1/4 the 
   
   // Check if we have to rebuild the cached label string - either because the
   // size changed, or the label changed, or because we never set the label before.
-  int width = NSWidth(tabRect);
+  int width = (int)NSWidth(tabRect);
   if (mLabelStringWidth != width || !mTruncLabelString) {
     [mTruncLabelString release];
     mTruncLabelString = [[NSMutableString alloc] initWithString:mLabelString];

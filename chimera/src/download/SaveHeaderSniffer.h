@@ -55,7 +55,7 @@ class nsHeaderSniffer : public nsIWebProgressListener
 public:
     nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, nsIURI* aURL,
                     nsIDOMDocument* aDocument, nsIInputStream* aPostData,
-                    const nsCString& aSuggestedFilename, PRBool aBypassCache,
+                    const nsAString& aSuggestedFilename, PRBool aBypassCache,
                     NSView* aFilterView, NSPopUpButton* aFilterList);
     virtual ~nsHeaderSniffer();
 
@@ -74,7 +74,7 @@ private:
     nsCOMPtr<nsIURI>          mURL;
     nsCOMPtr<nsIDOMDocument>  mDocument;
     nsCOMPtr<nsIInputStream>  mPostData;
-    nsCString                 mDefaultFilename;
+    nsString                  mDefaultFilename;
     PRBool                    mBypassCache;
     nsCString                 mContentType;
     nsCString                 mContentDisposition;

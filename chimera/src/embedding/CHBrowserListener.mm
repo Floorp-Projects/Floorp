@@ -67,9 +67,7 @@ CHBrowserListener::~CHBrowserListener()
 {
   [mListeners release];
   mView = nsnull;
-  if (mContainer) {
-    [mContainer release];
-  }
+  [mContainer release];
 }
 
 NS_IMPL_ISUPPORTS9(CHBrowserListener,
@@ -224,6 +222,7 @@ CHBrowserListener::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP 
 CHBrowserListener::DestroyBrowserWindow()
 {
+#if 0
   // XXX Could send this up to the container, but for now,
   // we just destroy the enclosing window.
   NSWindow* window = [mView window];
@@ -231,7 +230,10 @@ CHBrowserListener::DestroyBrowserWindow()
   if (window) {
     [window close];
   }
-
+#endif
+  // tell the container we want to close the window and let it do the
+  // right thing.
+  [mContainer closeBrowserWindow];
   return NS_OK;
 }
 
@@ -311,7 +313,8 @@ CHBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 c
   if (!window)
     return NS_ERROR_FAILURE;
 
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
+  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)
+  {
     NSPoint origin;
     origin.x = (float)x;
     origin.y = (float)y;
@@ -326,13 +329,24 @@ CHBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 c
     [window setFrameTopLeftPoint:origin];
   }
 
-  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
+  if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+  {
     NSRect frame = [window frame];
+    
+    float newWidth  = (float)cx;
+    float newHeight = (float)cy;
+    
+    // should we allow resizes larger than the screen, or smaller
+    // than some min size here?
+    
+    // keep the top of the window in the same place
+    frame.origin.y += (frame.size.height - (float)cy);
     frame.size.width = (float)cx;
     frame.size.height = (float)cy;
     [window setFrame:frame display:YES];
   }
-  else if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER) {
+  else if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
+  {
     NSSize size;
     size.width = (float)cx;
     size.height = (float)cy;
@@ -357,8 +371,15 @@ CHBrowserListener::GetDimensions(PRUint32 flags,  PRInt32 *x,  PRInt32 *y, PRInt
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
     if ( x )
       *x = (PRInt32)frame.origin.x;
-    if ( y )
-      *y = (PRInt32)frame.origin.y;
+    if ( y ) {
+      // websites (and gecko) expect the |y| value to be in "quickdraw" coordinates 
+      // (topleft of window, origin is topleft of main device). Convert from cocoa -> 
+      // quickdraw coord system.
+      GDHandle screenDevice = ::GetMainDevice();
+      Rect screenRect = (**screenDevice).gdRect;
+      short screenHeight = screenRect.bottom - screenRect.top;
+      *y = screenHeight - (PRInt32)(frame.origin.y + frame.size.height);
+    }
   }
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
     if ( cx )
@@ -382,16 +403,22 @@ CHBrowserListener::GetDimensions(PRUint32 flags,  PRInt32 *x,  PRInt32 *y, PRInt
 NS_IMETHODIMP 
 CHBrowserListener::SetFocus()
 {
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
   NSWindow* window = [mView window];
-  if (!window) {
+  if (!window) 
     return NS_ERROR_FAILURE;
+  
+  // if we're already the keyWindow, we certainly don't need to do it again. This
+  // ends up fixing a problem where we try to bring ourselves to the front while we're
+  // in the process of miniaturizing the window
+  if ([window isVisible] && (window != [NSApp keyWindow]))
+  {
+    BOOL suppressed = NO;
+    if ([window respondsToSelector:@selector(suppressMakeKeyFront)])
+      suppressed = (BOOL)[window suppressMakeKeyFront];
+  
+    if (!suppressed)
+      [window makeKeyAndOrderFront:window];
   }
-
-  [window makeKeyAndOrderFront:window];
 
   return NS_OK;
 }
@@ -411,29 +438,34 @@ CHBrowserListener::GetVisibility(PRBool *aVisibility)
     return NS_ERROR_FAILURE;
   }
 
-  *aVisibility = [window isMiniaturized];
+  *aVisibility = [window isVisible];
 
   return NS_OK;
 }
+
 NS_IMETHODIMP 
 CHBrowserListener::SetVisibility(PRBool aVisibility)
 {
-  if (!mView) {
-    return NS_ERROR_FAILURE;
-  }
-
   NSWindow* window = [mView window];
-  if (!window) {
+  if (!window)
     return NS_ERROR_FAILURE;
-  }
 
-  if (aVisibility) {
-    [window deminiaturize:window];
+  // we rely on this callback to show gecko-created windows
+  if (aVisibility)	// showing
+  {
+    BOOL suppressed = NO;
+    if ([window respondsToSelector:@selector(suppressMakeKeyFront)])
+      suppressed = [window suppressMakeKeyFront];
+    
+    if (![window isVisible] && !suppressed)
+      [window makeKeyAndOrderFront:nil];
   }
-  else {
-    [window miniaturize:window];
+  else						// hiding
+  {
+    if ([window isVisible])
+      [window orderOut:nil];
   }
-
+  
   return NS_OK;
 }
 
@@ -448,17 +480,10 @@ CHBrowserListener::GetTitle(PRUnichar * *aTitle)
   }
 
   NSString* title = [mContainer title];
-  unsigned int length = [title length];
-  if (length) {
-    *aTitle = (PRUnichar*)nsMemory::Alloc((length+1)*sizeof(PRUnichar));
-    if (!*aTitle) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    [title getCharacters:*aTitle];
-  }
-  else {
+  if ([title length] > 0)
+    *aTitle = [title createNewUnicodeBuffer];
+  else
     *aTitle = nsnull;
-  }
   
   return NS_OK;
 }
@@ -508,7 +533,7 @@ CHBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequ
                                         PRUint32 aStateFlags, PRUint32 aStatus)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
+  id<CHBrowserListener> obj;
   
   if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) {
     if (aStateFlags & nsIWebProgressListener::STATE_START) {
@@ -531,7 +556,7 @@ CHBrowserListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aR
                                           PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
+  id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
     [obj onProgressChange:aCurTotalProgress outOf:aMaxTotalProgress];
   
@@ -551,7 +576,7 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
   NSString* str = [NSString stringWithCString:spec.get()];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj;
+  id<CHBrowserListener> obj;
   while ((obj = [enumerator nextObject]))
     [obj onLocationChange:str];
 
@@ -566,7 +591,7 @@ CHBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   NSString* str = [NSString stringWithPRUnichars:aMessage];
   
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj; 
+  id<CHBrowserListener> obj; 
   while ((obj = [enumerator nextObject]))
     [obj onStatusChange: str];
 
@@ -578,7 +603,7 @@ NS_IMETHODIMP
 CHBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
-  id<NSBrowserListener> obj; 
+  id<CHBrowserListener> obj; 
   while ((obj = [enumerator nextObject]))
     [obj onSecurityStateChange: state];
 
@@ -586,24 +611,22 @@ CHBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aR
 }
 
 void 
-CHBrowserListener::AddListener(id <NSBrowserListener> aListener)
+CHBrowserListener::AddListener(id <CHBrowserListener> aListener)
 {
   [mListeners addObject:aListener];
 }
 
 void 
-CHBrowserListener::RemoveListener(id <NSBrowserListener> aListener)
+CHBrowserListener::RemoveListener(id <CHBrowserListener> aListener)
 {
   [mListeners removeObject:aListener];
 }
 
 void 
-CHBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
+CHBrowserListener::SetContainer(id <CHBrowserContainer> aContainer)
 {
   [mContainer autorelease];
-
   mContainer = aContainer;
-
   [mContainer retain];
 }
 

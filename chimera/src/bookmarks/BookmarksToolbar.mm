@@ -23,70 +23,98 @@
 *   David Haas  <haasd@cae.wisc.edu>
 */
 
-#import "BookmarksButton.h"
 #import "BookmarksToolbar.h"
-#import "BookmarksService.h"
+
+#import "CHBrowserService.h"
+#import "BookmarksButton.h"
+#import "BrowserWindowController.h"
 #import "BookmarksDataSource.h"
 
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
+#include "nsIAtom.h"
 
 @interface BookmarksToolbar(Private)
+
+- (void)cleanup;
+- (void)registerForShutdownNotification;
+- (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
+- (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
 - (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element;
+
 @end
 
 @implementation BookmarksToolbar
 
 - (id)initWithFrame:(NSRect)frame
 {
-  if ( (self = [super initWithFrame:frame]) ) {
-    mBookmarks = nsnull;
+  if ( (self = [super initWithFrame:frame]) )
+  {
+    [self registerForShutdownNotification];
     mButtons = [[NSMutableArray alloc] init];
     mDragInsertionButton = nil;
     mDragInsertionPosition = BookmarksService::CHInsertNone;
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, nil]];
+    mDrawBorder = YES;
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
     mIsShowing = YES;
   }
   return self;
 }
 
--(void)initializeToolbar
+- (void)initializeToolbar
 {
-  // Initialization code here.
-  mBookmarks = new BookmarksService(self);
-  mBookmarks->AddObserver();
-  mBookmarks->EnsureToolbarRoot();
   [self buildButtonList];
 }
 
--(void) dealloc
+- (void)dealloc
 {
-  [mButtons autorelease];
-  mBookmarks->RemoveObserver();
-  delete mBookmarks;
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [self cleanup];
   [super dealloc];
 }
 
-- (void)drawRect:(NSRect)aRect {
-  // Fill the background with our background color.
-  //[[NSColor colorWithCalibratedWhite: 0.98 alpha: 1.0] set];
-  //NSRectFill(aRect);
+- (void)cleanup
+{
+  [mButtons release];
+  mButtons = nil;
+}
 
-  //printf("The rect is: %f %f %f %f\n", aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
-  
-  if (aRect.origin.y + aRect.size.height ==
-      [self bounds].size.height) {
-    // The personal toolbar is 21 pixels tall.  The bottom two pixels
-    // are a separator.
-    [[NSColor colorWithCalibratedWhite: 0.90 alpha: 1.0] set];
-    //NSRectFill(NSMakeRect(aRect.origin.x, [self bounds].size.height-2, aRect.size.width, [self bounds].size.height));
+- (void)registerForShutdownNotification
+{
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(shutdown:)
+                                        name:         XPCOMShutDownNotificationName
+                                        object:       nil];
+}
+
+-(void)shutdown: (NSNotification*)aNotification
+{
+  [self cleanup];
+}
+
+- (void)viewWillMoveToWindow:(NSWindow *)newWindow
+{
+  if (newWindow)	// moving to window
+    [[BookmarksManager sharedBookmarksManager] addBookmarksClient:self];  
+  else						// leaving window
+    [[BookmarksManager sharedBookmarksManagerDontAlloc] removeBookmarksClient:self];
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+  if (mDrawBorder)
+  {
+    [[NSColor controlShadowColor] set];
+    float height = [self bounds].size.height;
+    NSRectFill(NSMakeRect(aRect.origin.x, height - 1.0, aRect.size.width, height));
   }
 
   // The buttons will paint themselves. Just call our base class method.
   [super drawRect: aRect];
   
   // draw a separator at drag n drop insertion point if there is one
-  if (mDragInsertionPosition) {
+  if (mDragInsertionPosition)
+  {
     [[[NSColor controlShadowColor] colorWithAlphaComponent:0.6] set];
     NSRectFill([self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]);
   }
@@ -94,23 +122,40 @@
 
 -(void)buildButtonList
 {
-  // Build the buttons, and then lay them all out.
-  nsCOMPtr<nsIDOMNode> child;
-  BookmarksService::gToolbarRoot->GetFirstChild(getter_AddRefs(child));
-  while (child) {
-    nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(child));
-    if (childElt) {
-      BookmarksButton* button = [self makeNewButtonWithElement:childElt];
-      [self addSubview: button];
-      [mButtons addObject: button];
+  // gToolbarRoot may be nil
+  if (BookmarksService::gToolbarRoot)
+  {
+    // Build the buttons, and then lay them all out.
+    nsCOMPtr<nsIDOMNode> child;
+    BookmarksService::gToolbarRoot->GetFirstChild(getter_AddRefs(child));
+    while (child) {
+      nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(child));
+      if (childElt) {
+        BookmarksButton* button = [self makeNewButtonWithElement:childElt];
+        [self addSubview: button];
+        [mButtons addObject: button];
+      }
+  
+      nsCOMPtr<nsIDOMNode> temp = child;
+      temp->GetNextSibling(getter_AddRefs(child));
     }
-
-    nsCOMPtr<nsIDOMNode> temp = child;
-    temp->GetNextSibling(getter_AddRefs(child));
   }
-
+  
   if ([self isShown])
     [self reflowButtons];
+}
+
+- (void)resetButtonList
+{
+  int count = [mButtons count];
+  for (int i = 0; i < count; i++)
+  {
+    BookmarksButton* button = [mButtons objectAtIndex: i];
+    [button removeFromSuperview];
+  }
+
+  [mButtons removeAllObjects];
+  [self setNeedsDisplay:YES];
 }
 
 -(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex
@@ -135,7 +180,7 @@
     }
   }
 
-  [self setNeedsDisplay: [self isShown]];
+  [self setNeedsDisplay:YES];
 }
 
 -(void)removeButton: (nsIDOMElement*)aElt
@@ -152,7 +197,7 @@
     }
   }
 
-  [self setNeedsDisplay: [self isShown]];
+  [self setNeedsDisplay:YES];
 }
 
 -(void)reflowButtons
@@ -160,56 +205,69 @@
   [self reflowButtonsStartingAtIndex: 0];
 }
 
+#define kBookmarkButtonHeight            16.0
+#define kMinBookmarkButtonWidth          16.0
+#define kMaxBookmarkButtonWidth         150.0
+#define kBookmarkButtonHorizPadding       2.0
+#define kBookmarkButtonVerticalPadding    1.0
+#define kBookmarkToolbarBottomPadding     1.0
+
 -(void)reflowButtonsStartingAtIndex: (int)aIndex
 {
+  if (![self isShown])
+    return;
+
+  // coordinates for this view are flipped, making it easier to lay out from top left
+  // to bottom right.
   float oldHeight = [self frame].size.height;
-  float computedHeight = 18;
-  int count = [mButtons count];
-  float currY = 1.0;
-  float prevX = 2.0;
-  if (aIndex > 0) {
-    BookmarksButton* prevButton = [mButtons objectAtIndex: (aIndex-1)];
-    prevX += [prevButton frame].origin.x + [prevButton frame].size.width;
-    currY = [prevButton frame].origin.y;
-  }
-  for (int i = aIndex; i < count; i++) {
+  int   count         = [mButtons count];
+  float curRowYOrigin = 0.0;
+  float curX          = kBookmarkButtonHorizPadding;
+  
+  for (int i = 0; i < count; i ++)
+  {
     BookmarksButton* button = [mButtons objectAtIndex: i];
-    [button sizeToFit];
-    float width = [button frame].size.width;
-    float height = [button frame].size.height;
-    if (width > 150)
-      width = 150;
-    if (height < 16)
-      height = 16; // Our folder tiff is only 15 pixels for some reason.
-    [button setFrame: NSMakeRect(prevX, currY, width, height)];
-
-    prevX += [button frame].size.width + 2;
-
-    if ([self bounds].size.width < prevX) {
-      // The previous button didn't fit.  We need to make a new row. There's no need to adjust the
-      // view's frame yet, we'll do that below.
-      currY += 18;
-      computedHeight += 18;
-      
-      prevX = 2;
-      [button setFrame: NSMakeRect(prevX, currY, width, height)];
-      prevX += [button frame].size.width + 2;
+    NSRect           buttonRect;
+  
+    if (i < aIndex)
+    {
+      buttonRect = [button frame];
+      curRowYOrigin = NSMinY(buttonRect) - kBookmarkButtonVerticalPadding;
+      curX = NSMaxX(buttonRect) + kBookmarkButtonHorizPadding;
     }
- 
-    [button setNeedsDisplay: YES];
+    else
+    {
+      [button sizeToFit];
+      float width = [button frame].size.width;
+  
+      if (width > kMaxBookmarkButtonWidth)
+        width = kMaxBookmarkButtonWidth;
+  
+      buttonRect = NSMakeRect(curX, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
+      curX += NSWidth(buttonRect) + kBookmarkButtonHorizPadding;
+      
+      if (NSMaxX(buttonRect) > NSWidth([self bounds]))
+      {
+        curRowYOrigin += (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding);
+        buttonRect = NSMakeRect(kBookmarkButtonHorizPadding, curRowYOrigin + kBookmarkButtonVerticalPadding, width, kBookmarkButtonHeight);
+        curX = NSWidth(buttonRect);
+      }
+      
+      [button setFrame: buttonRect];
+    }
   }
   
-  // our size has changed, readjust our view's frame and the content area
-  if (computedHeight != oldHeight) {
-    [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
-                               [self frame].size.width, computedHeight)];
-    [self setNeedsDisplay: [self isShown]];
+  float computedHeight = curRowYOrigin + (kBookmarkButtonHeight + 2 * kBookmarkButtonVerticalPadding + kBookmarkToolbarBottomPadding);
     
-    // adjust the content area.
-    float sizeChange = computedHeight - oldHeight;
-    NSView* view = [[[self window] windowController] getTabBrowser];
-    [view setFrame: NSMakeRect([view frame].origin.x, [view frame].origin.y,
-                               [view frame].size.width, [view frame].size.height - sizeChange)];  
+  // our size has changed, readjust our view's frame and the content area
+  if (computedHeight != oldHeight)
+  {
+    [super setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
+                                [self frame].size.width, computedHeight)];
+    [self setNeedsDisplay:YES];
+    
+    // tell the superview to resize its subviews
+    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
   }
 }
 
@@ -227,31 +285,23 @@
     return;
 
   int count = [mButtons count];
-  if (count <= 2)
-    return; // We have too few buttons to care.
+  int reflowStart = 0;
   
-  // Do some optimizations when we have only one row.
-  if (aRect.size.height < 25) // We have only one row.
+  // find out where we need to start reflowing
+  for (int i = 0; i < count; i ++)
   {
-    if (oldFrame.size.width < aRect.size.width)
-      // We got bigger.  If we already only have one row, just bail.
-      //	This will optimize for a common resizing case.
-      return;
-    else {
-      // We got smaller.  Just go to the last button and see if it is outside
-      // our bounds.
-      BookmarksButton* button = [mButtons objectAtIndex:(count-1)];
-      if ([button frame].origin.x + [button frame].size.width >
-          [self bounds].size.width - 2) {
-        // The button doesn't fit any more.  Reflow starting at this index.
-        [self reflowButtonsStartingAtIndex:(count-1)];
-      }
+    BookmarksButton* button = [mButtons objectAtIndex:i];
+    NSRect           buttonFrame = [button frame];
+    
+    if ((NSMaxX(buttonFrame) > NSMaxX(aRect)) ||       // we're overhanging the right
+        (NSMaxY(buttonFrame) > kBookmarkButtonHeight)) // we're on the second row
+    {
+      reflowStart = i;
+      break;
     }
   }
-  else {
-    // See if we got bigger or smaller.  We could gain or lose a row.
-    [self reflowButtons];
-  }
+  
+  [self reflowButtonsStartingAtIndex:reflowStart];
 }
 
 -(BOOL)isShown
@@ -259,61 +309,123 @@
   return mIsShowing;
 }
 
--(void)showBookmarksToolbar: (BOOL)aShow
+-(void)setDrawBottomBorder:(BOOL)drawBorder
 {
-  if (!aShow) {
-    float height = [self bounds].size.height;
-    [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + height,
-                               [self frame].size.width, 0)];
-    // We need to adjust the content area.
-    NSView* view = [[[self window] windowController] getTabBrowser];
-    [view setFrame: NSMakeRect([view frame].origin.x, [view frame].origin.y,
-                               [view frame].size.width, [view frame].size.height + height)];
+  if (mDrawBorder != drawBorder)
+  {
+    mDrawBorder = drawBorder;
+    NSRect dirtyRect = [self bounds];
+    dirtyRect.origin.y = dirtyRect.size.height - 1.0;
+    dirtyRect.size.height = 1.0;
+    [self setNeedsDisplayInRect:dirtyRect];
   }
-  else
-    // Reflowing the buttons will do the right thing.
-    [self reflowButtons];
-    
-  mIsShowing = aShow;
 }
 
-- (void)setButtonInsertionPoint:(NSPoint)aPoint
+-(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
-  int count = [mButtons count];
+  // Make a copy of the context menu but change it to target us
+  // FIXME - this will stop to work as soon as we add items to the context menu
+  // that have different targets. In that case, we probably should add code to
+  // BookmarksToolbar that manages the context menu for the CHBookmarksButtons.
+  
+  NSMenu* myMenu = [[[super menu] copy] autorelease];
+  [[myMenu itemArray] makeObjectsPerformSelector:@selector(setTarget:) withObject: self];
+  [myMenu update];
+  return myMenu;
+}
+
+-(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+{
+  // we'll only get here if the user clicked on empty space in the toolbar
+  // in which case, Add Folder is the only thing they can do
+  if (([aMenuItem action] == @selector(addFolder:)))
+    return YES;
+
+  return NO;
+}
+
+-(IBAction)addFolder:(id)aSender
+{
+  BookmarksManager* 		bmManager = [BookmarksManager sharedBookmarksManager];
+  BookmarksDataSource* 	bmDataSource = [(BrowserWindowController*)[[self window] delegate] bookmarksDataSource];
+  BookmarkItem* 				toolbarRootItem = [bmManager getWrapperForContent:[bmManager getToolbarRoot]];
+  [bmDataSource addBookmark:aSender withParent:toolbarRootItem isFolder:YES URL:@"" title:@""]; 
+}
+
+-(void)showBookmarksToolbar: (BOOL)aShow
+{
+  mIsShowing = aShow;
+
+  if (!aShow)
+  {
+    [[self superview] setNeedsDisplayInRect:[self frame]];
+    NSRect newFrame = [self frame];
+    newFrame.origin.y += newFrame.size.height;
+    newFrame.size.height = 0;
+    [self setFrame: newFrame];
+
+    // tell the superview to resize its subviews
+    [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
+  }
+  else
+  {
+    [self reflowButtons];
+    [self setNeedsDisplay:YES];
+  }
+  
+}
+
+- (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender
+{
+  NSPoint   dragLocation  = [sender draggingLocation];
+  NSPoint   superviewLoc  = [[self superview] convertPoint:dragLocation fromView:nil]; // convert from window
+  NSButton* sourceButton  = [sender draggingSource];
   
   mDragInsertionButton = nsnull;
   mDragInsertionPosition = BookmarksService::CHInsertAfter;
   
-  for (int i = 0; i < count; ++i) {
-    BookmarksButton* button = [mButtons objectAtIndex: i];
-    //NSLog(@"check %d - %d,%d %d,%d\n", i, [button frame].origin.x, [button frame].origin.y, aPoint.x, aPoint.y);
-    // XXX origin.y is coming up zero here! Need that to check the row we're dragging in :(
-    
+  NSView* foundView = [self hitTest:superviewLoc];
+  if (foundView && [foundView isMemberOfClass:[BookmarksButton class]])
+  {
+    BookmarksButton* targetButton = foundView;
+
     nsCOMPtr<nsIAtom> tagName;
-    nsCOMPtr<nsIContent> contentNode = do_QueryInterface([button element]);
+    nsCOMPtr<nsIContent> contentNode = do_QueryInterface([targetButton element]);
     contentNode->GetTag(*getter_AddRefs(tagName));
-    
-    if (tagName == BookmarksService::gFolderAtom) {
-      if (([button frame].origin.x+([button frame].size.width) > aPoint.x)) {
-        mDragInsertionButton = button;
-        mDragInsertionPosition = BookmarksService::CHInsertInto;
-        return;
-      }
-    } else if (([button frame].origin.x+([button frame].size.width/2) > aPoint.x)) {
-      mDragInsertionButton = button;
-      mDragInsertionPosition = BookmarksService::CHInsertBefore;
-      return;
-    } else if (([button frame].origin.x+([button frame].size.width) > aPoint.x)) {
-      mDragInsertionButton = button;
-      mDragInsertionPosition = BookmarksService::CHInsertAfter;
-      return;
+
+    if (tagName == BookmarksService::gFolderAtom)
+    {
+      mDragInsertionButton = targetButton;
+      mDragInsertionPosition = BookmarksService::CHInsertInto;
     }
+    else if (targetButton != sourceButton)
+    {
+      NSPoint	localLocation = [[self superview] convertPoint:superviewLoc toView:foundView];
+      
+      mDragInsertionButton = targetButton;
+      
+      if (localLocation.x < NSWidth([targetButton bounds]) / 2.0)
+        mDragInsertionPosition = BookmarksService::CHInsertBefore;
+      else
+        mDragInsertionPosition = BookmarksService::CHInsertAfter;
+    }
+  }
+  else
+  {
+    // throw it in at the end
+    mDragInsertionButton   = ([mButtons count] > 0) ? [mButtons objectAtIndex:[mButtons count] - 1] : 0;
+    mDragInsertionPosition = BookmarksService::CHInsertAfter;
   }
 }
 
-- (BOOL)dropDestinationValid:(NSPasteboard*)draggingPasteboard
+- (BOOL)dropDestinationValid:(id <NSDraggingInfo>)sender
 {
-  NSArray*  types = [draggingPasteboard types];
+  NSPasteboard* draggingPasteboard = [sender draggingPasteboard];
+  NSArray*      types  = [draggingPasteboard types];
+  BOOL          isCopy = ([sender draggingSourceOperationMask] == NSDragOperationCopy);
+
+  if (!BookmarksService::gToolbarRoot)
+    return NO;
 
   if ([types containsObject: @"MozBookmarkType"]) 
   {
@@ -334,10 +446,14 @@
       nsCOMPtr<nsIDOMElement> toolbarRoot = BookmarksService::gToolbarRoot;
       destinationContent = do_QueryInterface(toolbarRoot);
       index = [mButtons indexOfObject: mDragInsertionButton];
+      if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
+        ++index;
     }
 
+    // we rely on IsBookmarkDropValid to filter out drops where the source
+    // and destination are the same. 
     BookmarkItem* toolbarFolderItem = BookmarksService::GetWrapperFor(destinationContent);
-    if (!BookmarksService::IsBookmarkDropValid(toolbarFolderItem, index, draggedIDs)) {
+    if (!BookmarksService::IsBookmarkDropValid(toolbarFolderItem, index, draggedIDs, isCopy)) {
       return NO;
     }
   }
@@ -349,9 +465,15 @@
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
-  if (![self dropDestinationValid:[sender draggingPasteboard]])
+  // we have to set the drag target before we can test for drop validation
+  [self setButtonInsertionPoint:sender];
+
+  if (![self dropDestinationValid:sender]) {
+    mDragInsertionButton = nil;
+    mDragInsertionPosition = BookmarksService::CHInsertNone;
     return NSDragOperationNone;
-  
+  }
+    
   return NSDragOperationGeneric;
 }
 
@@ -369,10 +491,14 @@
   if (mDragInsertionPosition)
     [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
 
-  if (![self dropDestinationValid:[sender draggingPasteboard]])
+  // we have to set the drag target before we can test for drop validation
+  [self setButtonInsertionPoint:sender];
+  
+  if (![self dropDestinationValid:sender]) {
+    mDragInsertionButton = nil;
+    mDragInsertionPosition = BookmarksService::CHInsertNone;
     return NSDragOperationNone;
-
-  [self setButtonInsertionPoint:[sender draggingLocation]];
+  }
   
   if (mDragInsertionPosition)
     [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
@@ -390,14 +516,19 @@
   BookmarkItem* parent = nsnull;
   int index = 0;
 
-  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {						// drop onto folder
+  if (!BookmarksService::gToolbarRoot)
+    return NO;
+  
+  if (mDragInsertionPosition == BookmarksService::CHInsertInto)							// drop onto folder
+  {
     nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
     nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
     parent = BookmarksService::GetWrapperFor(parentContent);
     index = 0;
   }
   else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
-             mDragInsertionPosition == BookmarksService::CHInsertAfter) {		// drop onto toolbar
+           mDragInsertionPosition == BookmarksService::CHInsertAfter)				// drop onto toolbar
+  {
     nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
     nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
     parent = BookmarksService::GetWrapperFor(rootContent);
@@ -406,41 +537,49 @@
       rootContent->ChildCount(index);
     else if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
       index++;
-    } else {
-      mDragInsertionButton = nil;
-      mDragInsertionPosition = BookmarksService::CHInsertNone;
-      [self setNeedsDisplay:YES];
-      return NO;
-    }
+  }
+  else
+  {
+    mDragInsertionButton = nil;
+    mDragInsertionPosition = BookmarksService::CHInsertNone;
+    [self setNeedsDisplay:YES];
+    return NO;
+  }
 
   BOOL dropHandled = NO;
+  BOOL isCopy = ([sender draggingSourceOperationMask] == NSDragOperationCopy);
+    
   NSArray	*draggedTypes = [[sender draggingPasteboard] types];
+
+  nsCOMPtr<nsIContent> beforeContent;
+  [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
+  BookmarkItem* beforeItem = BookmarksService::GetWrapperFor(beforeContent);		// can handle nil content
+
   if ( [draggedTypes containsObject:@"MozBookmarkType"] )
   {
     NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    dropHandled = BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+    dropHandled = BookmarksService::PerformBookmarkDrop(parent, beforeItem, index, draggedItems, isCopy);
   }
   else if ( [draggedTypes containsObject:@"MozURLType"] )
   {
     NSDictionary* proxy = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
-    nsCOMPtr<nsIContent> beforeContent;
-    [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
-    BookmarkItem* beforeItem = mBookmarks->GetWrapperFor(beforeContent);		// can handle nil content
     dropHandled = BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
 	}
   else if ( [draggedTypes containsObject:NSStringPboardType] )
   {
     NSString* draggedText = [[sender draggingPasteboard] stringForType:NSStringPboardType];
-    nsCOMPtr<nsIContent> beforeContent;
-    [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
-    BookmarkItem* beforeItem = mBookmarks->GetWrapperFor(beforeContent);		// can handle nil content
     // maybe fix URL drags to include the selected text as the title
     dropHandled = BookmarksService::PerformURLDrop(parent, beforeItem, draggedText, draggedText);
+  }
+  else if ([draggedTypes containsObject: NSURLPboardType])
+  {
+    NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
+    dropHandled = BookmarksService::PerformURLDrop(parent, beforeItem, [urlData absoluteString], [urlData absoluteString]);
   }
   
   mDragInsertionButton = nil;
   mDragInsertionPosition = BookmarksService::CHInsertNone;
-  [self setNeedsDisplay: [self isShown]];
+  [self setNeedsDisplay:YES];
 
   return dropHandled;
 }
@@ -458,7 +597,51 @@
 
 - (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element
 {
-	return [[[BookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element bookmarksService:mBookmarks] autorelease];
+	return [[[BookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element] autorelease];
+}
+
+#pragma mark -
+
+- (void)bookmarkAdded:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
+{
+  //NSLog(@"Toolbar notified that %x added in %x, is root %d", bookmark, container, isRoot);
+  nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
+  if (container == toolbarRootContent.get())
+  {
+    // We only care about changes that occur to the personal toolbar's immediate
+    // children.
+    PRInt32 index = -1;
+    container->IndexOf(bookmark, index);
+    nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(bookmark);
+    [self addButton: elt atIndex:index];
+  }
+}
+
+- (void)bookmarkRemoved:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
+{
+  nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
+  if (container == toolbarRootContent.get())
+  {
+    // We only care about changes that occur to the personal toolbar's immediate
+    // children.
+    nsCOMPtr<nsIDOMElement> childElt = do_QueryInterface(bookmark);
+    [self removeButton: childElt];
+  }
+}
+
+- (void)bookmarkChanged:(nsIContent*)bookmark
+{
+  nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(bookmark);
+  [self editButton:elt];
+}
+
+- (void)specialFolder:(EBookmarksFolderType)folderType changedTo:(nsIContent*)newFolderContent
+{
+  if (folderType == eBookmarksFolderToolbar)
+  {
+    [self resetButtonList];
+    [self buildButtonList];
+  }
 }
 
 @end

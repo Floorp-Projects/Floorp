@@ -50,16 +50,16 @@
 #include "nsEmbedAPI.h"
 #include "nsIDownload.h"
 #include "nsIExternalHelperAppService.h"
+#include "nsIPref.h"
+
+NSString* TermEmbeddingNotificationName = @"TermEmbedding";
+NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 
 nsAlertController* CHBrowserService::sController = nsnull;
 CHBrowserService* CHBrowserService::sSingleton = nsnull;
 PRUint32 CHBrowserService::sNumBrowsers = 0;
 PRBool CHBrowserService::sCanTerminate = PR_FALSE;
 
-// This method should return a nsModuleComponentInfo array of
-// application-provided XPCOM components to register.  The implementation
-// is in AppComponents.mm.
-extern const nsModuleComponentInfo* GetAppModuleComponentInfo(int* outNumComponents);
 
 // CHBrowserService implementation
 CHBrowserService::CHBrowserService()
@@ -101,31 +101,11 @@ CHBrowserService::InitEmbedding()
     return NS_ERROR_FAILURE;
   watcher->SetWindowCreator(sSingleton);
 
-  // Register application-provided Gecko components.  This includes our security dialog implementation.
-
-  int numComponents;
-  const nsModuleComponentInfo* componentInfo = GetAppModuleComponentInfo(&numComponents);
-  nsresult rv;
-  for (int i = 0; i < numComponents; ++i) {
-    nsCOMPtr<nsIGenericFactory> componentFactory;
-    rv = NS_NewGenericFactory(getter_AddRefs(componentFactory), &(componentInfo[i]));
-    if (NS_FAILED(rv)) {
-      NS_ASSERTION(PR_FALSE, "Unable to create factory for component");
-      continue;
-    }
-
-    rv = cr->RegisterFactory(componentInfo[i].mCID,
-                             componentInfo[i].mDescription,
-                             componentInfo[i].mContractID,
-                             componentFactory);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
-  }
-
   // replace the external helper app dialog with our own
   #define NS_HELPERAPPLAUNCHERDIALOG_CID \
           {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
   static NS_DEFINE_CID(kHelperDlgCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
-  rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
+  nsresult rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
                             sSingleton);
   
   // replace the downloader with our own which does not rely on the xpfe downlaod manager
@@ -143,36 +123,46 @@ CHBrowserService::InitEmbedding()
 void
 CHBrowserService::BrowserClosed()
 {
-    sNumBrowsers--;
-    if (sCanTerminate && sNumBrowsers == 0) {
-        // The app is terminating *and* our count dropped to 0.
-        NS_IF_RELEASE(sSingleton);
-        NS_TermEmbedding();
-#if DEBUG
-        NSLog(@"Shutting down embedding!");
-#endif
-    }
+  sNumBrowsers--;
+  if (sCanTerminate && sNumBrowsers == 0) {
+    // The app is terminating *and* our count dropped to 0.
+    ShutDown();
+  }
 }
 
 /* static */
 void
 CHBrowserService::TermEmbedding()
 {
-    sCanTerminate = PR_TRUE;
-    if (sNumBrowsers == 0) {
-        NS_IF_RELEASE(sSingleton);
-        NS_TermEmbedding();
+  // phase 1 notification (we're trying to terminate)
+  [[NSNotificationCenter defaultCenter] postNotificationName:TermEmbeddingNotificationName object:nil];
+
+  sCanTerminate = PR_TRUE;
+  if (sNumBrowsers == 0) {
+    ShutDown();
+  }
+  else {
 #if DEBUG
-        NSLog(@"Shutting down embedding.");
+  	NSLog(@"Cannot yet shut down embedding.");
 #endif
-    }
-    else {
+    // Otherwise we cannot yet terminate.  We have to let the death of the browser views
+    // induce termination.
+  }
+}
+
+/* static */
+void CHBrowserService::ShutDown()
+{
+  NS_ASSERTION(sCanTerminate, "Should be able to terminate here!");
+  
+  // phase 2 notifcation (we really are about to terminate)
+  [[NSNotificationCenter defaultCenter] postNotificationName:XPCOMShutDownNotificationName object:nil];
+
+  NS_IF_RELEASE(sSingleton);
+  NS_TermEmbedding();
 #if DEBUG
-        NSLog(@"Cannot yet shut down embedding.");
+  NSLog(@"Shutting down embedding.");
 #endif
-        // Otherwise we cannot yet terminate.  We have to let the death of the browser windows
-        // induce termination.
-    }
 }
 
 #define NS_ALERT_NIB_NAME "alert"
@@ -243,7 +233,25 @@ CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 NS_IMETHODIMP
 CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
 {
-  return inLauncher->SaveToDisk(nsnull, PR_FALSE);
+  PRBool autoDownload = PR_FALSE;
+  
+  // See if pref enabled to allow automatic download
+  nsCOMPtr<nsIPref> prefService (do_GetService(NS_PREF_CONTRACTID));
+  if (prefService) {
+    prefService->GetBoolPref("browser.download.autoDownload", &autoDownload);
+  }
+  
+  if (autoDownload) {
+    // Pref is enabled so just save the file to disk in download folder
+    // If browser.download.autoDownload is set to true helper app will be called by uriloader
+    // XXX fix me. When we add UI to enable this pref it needs to be clear it carries
+    // a security risk
+    return inLauncher->LaunchWithApplication(nsnull, PR_FALSE);
+  }
+  else {
+    // Pref not enabled so do it old way - prompt to save file to disk
+    return inLauncher->SaveToDisk(nsnull, PR_FALSE);
+  }
 }
 
 NS_IMETHODIMP
@@ -272,3 +280,34 @@ CHBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupport
   NSLog(@"CHBrowserService::ShowProgressDialog");
   return NS_OK;
 }
+
+
+//
+// RegisterAppComponents
+//
+// Register application-provided Gecko components.
+//
+void
+CHBrowserService::RegisterAppComponents(const nsModuleComponentInfo* inComponents, const int inNumComponents)
+{
+  nsCOMPtr<nsIComponentRegistrar> cr;
+  NS_GetComponentRegistrar(getter_AddRefs(cr));
+  if ( !cr )
+    return;
+
+  for (int i = 0; i < inNumComponents; ++i) {
+    nsCOMPtr<nsIGenericFactory> componentFactory;
+    nsresult rv = NS_NewGenericFactory(getter_AddRefs(componentFactory), &(inComponents[i]));
+    if (NS_FAILED(rv)) {
+      NS_ASSERTION(PR_FALSE, "Unable to create factory for component");
+      continue;
+    }
+
+    rv = cr->RegisterFactory(inComponents[i].mCID,
+                             inComponents[i].mDescription,
+                             inComponents[i].mContractID,
+                             componentFactory);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
+  }
+}
+

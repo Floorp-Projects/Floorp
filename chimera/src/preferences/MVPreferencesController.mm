@@ -1,3 +1,39 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Chimera code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #import <PreferencePanes/PreferencePanes.h>
 #import "MVPreferencesController.h"
 #import "MVPreferencesMultipleIconView.h"
@@ -126,13 +162,13 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   if ( currentPaneIdentifier && [[loadedPanes objectForKey:currentPaneIdentifier] shouldUnselect] != NSUnselectNow ) {
     /* more to handle later */
 #if DEBUG
-    NSLog( @"can't unselect current" );
+    NSLog(@"can't unselect current preferences pane");
 #endif
     return;
   }
   [window setContentView:[[[NSView alloc] initWithFrame:[mainView frame]] autorelease]];
 
-  [window setTitle:[NSString stringWithFormat:NSLocalizedString( @"%@ Preferences", nil ), [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"]]];
+  [window setTitle:[NSString stringWithFormat:NSLocalizedString( @"PrefsWindowTitleFormat", @"" ), [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"]]];
   [self _resizeWindowForContentView:mainView];
 
   [[loadedPanes objectForKey:currentPaneIdentifier] willUnselect];
@@ -245,7 +281,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 {
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier] autorelease];
   if ( [itemIdentifier isEqualToString:MVToolbarShowAllItemIdentifier] ) {
-    [toolbarItem setLabel:NSLocalizedString( @"Show All", nil )];
+    [toolbarItem setLabel:NSLocalizedString( @"ShowAllPrefItems", @"" )];
     [toolbarItem setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector( showAll: )];
@@ -299,15 +335,13 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 - (void) _resizeWindowForContentView:(NSView *) view
 {
-  NSRect windowFrame, newWindowFrame;
-  unsigned int newWindowHeight;
+  NSRect windowFrame = [NSWindow contentRectForFrameRect:[window frame] styleMask:[window styleMask]];
+  float  newWindowHeight = NSHeight( [view frame] );
 
-  windowFrame = [NSWindow contentRectForFrameRect:[window frame] styleMask:[window styleMask]];
-  newWindowHeight = NSHeight( [view frame] );
   if ( [[window toolbar] isVisible] )
     newWindowHeight += NSHeight( [[[window toolbar] _toolbarView] frame] );
-  newWindowFrame = [NSWindow frameRectForContentRect:NSMakeRect( NSMinX( windowFrame ), NSMaxY( windowFrame ) - newWindowHeight, NSWidth( windowFrame ), newWindowHeight ) styleMask:[window styleMask]];
-
+    
+  NSRect newWindowFrame = [NSWindow frameRectForContentRect:NSMakeRect( NSMinX( windowFrame ), NSMaxY( windowFrame ) - newWindowHeight, NSWidth( windowFrame ), newWindowHeight ) styleMask:[window styleMask]];
   [window setFrame:newWindowFrame display:YES animate:[window isVisible]];
 }
 

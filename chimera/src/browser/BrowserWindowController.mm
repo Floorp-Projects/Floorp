@@ -40,6 +40,7 @@
 #import "BrowserWindowController.h"
 
 #import "BrowserWrapper.h"
+#import "BrowserContentViews.h"
 #import "PreferenceManager.h"
 #import "BookmarksDataSource.h"
 #import "HistoryDataSource.h"
@@ -48,15 +49,14 @@
 #import "PageProxyIcon.h"
 
 #include "nsIWebNavigation.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMLocation.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrefBranch.h"
 #include "nsIContextMenuListener.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocShell.h"
-#include "nsIMarkupDocumentViewer.h"
-#include "nsIContentViewer.h"
 #include "CHBrowserService.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -65,10 +65,15 @@
 #include "nsIWebBrowserChrome.h"
 
 #include "nsIClipboardCommands.h"
+#include "nsICommandManager.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsIRDFRemoteDataSource.h"
+#include "nsIURI.h"
+#include "nsIURIFixup.h"
+#include "nsIBrowserHistory.h"
 
 #include <QuickTime/QuickTime.h>
 
@@ -84,6 +89,13 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 static NSString *ViewSourceToolbarItemIdentifier = @"View Source Toolbar Item";
+static NSString *BookmarkToolbarItemIdentifier = @"Bookmark Toolbar Item";
+static NSString *TextBiggerToolbarItemIdentifier = @"Text Bigger Toolbar Item";
+static NSString *TextSmallerToolbarItemIdentifier = @"Text Smaller Toolbar Item";
+static NSString *NewTabToolbarItemIdentifier = @"New Tab Toolbar Item";
+static NSString *CloseTabToolbarItemIdentifier = @"Close Tab Toolbar Item";
+static NSString *SendURLToolbarItemIdentifier = @"Send URL Toolbar Item";
+
 
 static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
 
@@ -93,30 +105,86 @@ static NSArray* sToolbarDefaults = nil;
 
 #define kMaxBrowserWindowTabs 16
 
+//////////////////////////////////////
+@interface AutoCompleteTextFieldEditor : NSTextView
+{
+}
+@end
+
+@implementation AutoCompleteTextFieldEditor
+
+-(void)paste:(id)sender
+{
+  NSPasteboard *pboard = [NSPasteboard generalPasteboard];
+  NSEnumerator *dataTypes = [[pboard types] objectEnumerator];
+  NSString *aType;
+  while ((aType = [dataTypes nextObject])) {
+    if ([aType isEqualToString:NSStringPboardType]) {
+      NSString *oldText = [pboard stringForType:NSStringPboardType];
+      NSString *newText = [oldText stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+      NSRange aRange = [self selectedRange];
+      if ([self shouldChangeTextInRange:aRange replacementString:newText]) {
+        [[self textStorage] replaceCharactersInRange:aRange withString:newText];
+        [self didChangeText];
+      }
+      // after a paste, the insertion point should be after the pasted text
+      unsigned int newInsertionPoint = aRange.location + [newText length];
+      [self setSelectedRange:NSMakeRange(newInsertionPoint,0)];
+      return;
+    }
+  }
+}
+
+@end
+//////////////////////////////////////
+
+
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
 - (void)setupSidebarTabs;
+- (NSString*)getContextMenuNodeDocumentURL;
+- (void)loadSourceOfURL:(NSString*)urlStr;
 @end
 
 @implementation BrowserWindowController
 
-//
-// enterModalSession
-//
-// We have to load the window synchronously so windows coming from a JS
-// window.open() can be inspected or modified inline in JS. The way we
-// force this is by pretending we're a modal dialog just up to the point
-// where we finish creating the window. 
-//
-// This is icky, and there are several bugs that are caused by this hack
-// (bugzilla 159410, 159661)
-//
--(void)enterModalSession
+- (id)initWithWindowNibName:(NSString *)windowNibName
 {
-    mModalSession = [NSApp beginModalSessionForWindow: [self window]];
-    [NSApp runModalSession: mModalSession];
-    [NSApp endModalSession: mModalSession];
-    mModalSession = nil;
+  if ( (self = [super initWithWindowNibName:(NSString *)windowNibName]) )
+  {
+    // we cannot rely on the OS to correctly cascade new windows (RADAR bug 2972893)
+    // so we turn off the cascading. We do it at the end of |windowDidLoad|
+    [self setShouldCascadeWindows:NO];
+    mInitialized = NO;
+    mMoveReentrant = NO;
+    mShouldAutosave = YES;
+    mShouldLoadHomePage = YES;
+    mChromeMask = 0;
+    mContextMenuFlags = 0;
+    mContextMenuEvent = nsnull;
+    mContextMenuNode = nsnull;
+    mThrobberImages = nil;
+    mThrobberHandler = nil;
+    mURLFieldEditor = nil;
+    mProgressSuperview = nil;
+    mBookmarkToolbarItem = nil;
+    mSidebarToolbarItem = nil;
+  
+    // register for services
+    NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
+    NSArray* returnTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
+    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
+    
+    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;1");
+    mGlobalHistory = globalHist;
+    if ( mGlobalHistory )
+      NS_ADDREF(mGlobalHistory);
+    nsCOMPtr<nsIURIFixup> fixer ( do_GetService("@mozilla.org/docshell/urifixup;1") );
+    mURIFixer = fixer;
+    if ( fixer )
+      NS_ADDREF(mURIFixer);
+  }
+  return self;
 }
 
 - (BOOL)isResponderGeckoView:(NSResponder*) responder
@@ -168,7 +236,6 @@ static NSArray* sToolbarDefaults = nil;
   [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
 }
 
-
 -(void)mouseMoved:(NSEvent*)aEvent
 {
     if (mMoveReentrant)
@@ -179,30 +246,6 @@ static NSArray* sToolbarDefaults = nil;
     [view mouseMoved: aEvent];
     [super mouseMoved: aEvent];
     mMoveReentrant = NO;
-}
-
-- (id)initWithWindowNibName:(NSString *)windowNibName
-{
-    if ( (self = [super initWithWindowNibName:(NSString *)windowNibName]) ) {
-        // this won't correctly cascade windows on multiple monitors. RADAR bug 2972893 
-        // filed since it also happens in Terminal.app
-        if ( CHBrowserService::sNumBrowsers == 0 )
-            [self setShouldCascadeWindows:NO];
-        else
-            [self setShouldCascadeWindows:YES];
-        mInitialized = NO;
-        mMoveReentrant = NO;
-        mShouldAutosave = YES;
-        mShouldLoadHomePage = YES;
-        mChromeMask = 0;
-        mContextMenuFlags = 0;
-        mContextMenuEvent = nsnull;
-        mContextMenuNode = nsnull;
-        mThrobberImages = nil;
-        mThrobberHandler = nil;
-        mURLFieldEditor = nil;
-    }
-    return self;
 }
 
 -(void)autosaveWindowFrame
@@ -223,14 +266,39 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)windowWillClose:(NSNotification *)notification
 {
+  mClosingWindow = YES;
+    
 #if DEBUG
   NSLog(@"Window will close notification.");
 #endif
   [mSidebarBookmarksDataSource windowClosing];
 
   [self autosaveWindowFrame];
+  
+  { // scope...
+    nsCOMPtr<nsIRDFRemoteDataSource> dataSource ( do_QueryInterface(mGlobalHistory) );
+    if (dataSource)
+      dataSource->Flush();
+    NS_IF_RELEASE(mGlobalHistory);
+    NS_IF_RELEASE(mURIFixer);
+  } // matters
+  
+  // Loop over all tabs, and tell them that the window is closed. This
+  // stops gecko from going any further on any of its open connections
+  // and breaks all the necessary cycles between Gecko and the BrowserWrapper.
+  int numTabs = [mTabBrowser numberOfTabViewItems];
+  for (int i = 0; i < numTabs; i++) {
+    NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
+    [[item view] windowClosed];
+  }
+
+  // autorelease just in case we're here because of a window closing
+  // initiated from gecko, in which case this BWC would still be on the 
+  // stack and may need to stay alive until it unwinds. We've already
+  // shut down gecko above, so we can safely go away at a later time.
   [self autorelease];
 }
+
 
 - (void)dealloc
 {
@@ -238,12 +306,11 @@ static NSArray* sToolbarDefaults = nil;
   NSLog(@"Browser controller died.");
 #endif
 
-  // Loop over all tabs, and tell them that the window is closed.
-  int numTabs = [mTabBrowser numberOfTabViewItems];
-  for (int i = 0; i < numTabs; i++) {
-    NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
-    [[item view] windowClosed];
-  }
+  // active Gecko connections have already been shut down in |windowWillClose|
+  // so we don't need to worry about that here. We only have to be careful
+  // not to access anything related to the document, as it's been destroyed. The
+  // superclass dealloc takes care of our child NSView's, which include the 
+  // BrowserWrappers and their child CHBrowserViews.
   
   //if (mSidebarBrowserView)
   //  [mSidebarBrowserView windowClosed];
@@ -261,17 +328,17 @@ static NSArray* sToolbarDefaults = nil;
 {
     [super windowDidLoad];
 
+    BOOL mustResizeChrome = NO;
+    
     // hide the resize control if specified by the chrome mask
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) )
       [[self window] setShowsResizeIndicator:NO];
     
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ) {
-      // remove the status bar at the bottom and adjust the height of the content area.
-      float height = [mStatusBar frame].size.height;
+      // remove the status bar at the bottom
       [mStatusBar removeFromSuperview];
-      [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y - height,
-                               [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
-
+      mustResizeChrome = YES;
+      
       // clear out everything in the status bar we were holding on to. This will cause us to
       // pass nil for these status items into the CHBrowserwWrapper which is what we want. We'll
       // crash if we give them things that have gone away.
@@ -280,18 +347,28 @@ static NSArray* sToolbarDefaults = nil;
       mLock = nil;
     }
     else {
-      // Retain with a single extra refcount.  This allows the CHBrowserWrappers
-      // to remove the progress meter from its superview without having to 
-      // worry about retaining and releasing it.
+      // Retain with a single extra refcount. This allows us to remove
+      // the progress meter from its superview without having to worry
+      // about retaining and releasing it. Cache the superview of the
+      // progress. Dynamically fetch the superview so as not to burden
+      // someone rearranging the nib with this detail.
       [mProgress retain];
+      mProgressSuperview = [mProgress superview];
+      
+      // due to a cocoa issue with it updating the bounding box of two rects
+      // that both needing updating instead of just the two individual rects
+      // (radar 2194819), we need to make the text area opaque.
+      [mStatus setBackgroundColor:[NSColor windowBackgroundColor]];
+      [mStatus setDrawsBackground:YES];
     }
 
     // Get our saved dimensions.
+    NSRect oldFrame = [[self window] frame];
     [[self window] setFrameUsingName: NavigatorWindowFrameSaveName];
     
-    if (mModalSession)
-      [NSApp stopModal];
-      
+    if (NSEqualSizes(oldFrame.size, [[self window] frame].size))
+      mustResizeChrome = YES;
+    
     mInitialized = YES;
 
     mDrawerCachedFrame = NO;
@@ -312,7 +389,7 @@ static NSArray* sToolbarDefaults = nil;
     // create ourselves a new tab and fill it with the appropriate content. If we
     // have a URL pending to be opened here, don't load anything in it, otherwise,
     // load the homepage if that's what the user wants (or about:blank).
-    [self newTab:(mPendingURL ? eNewTabEmpty : (mShouldLoadHomePage ? eNewTabHomepage : eNewTabAboutBlank))];
+    [self createNewTab:(mPendingURL ? eNewTabEmpty : (mShouldLoadHomePage ? eNewTabHomepage : eNewTabAboutBlank))];
     
     // we have a url "pending" from the "open new window with link" command. Deal
     // with it now that everything is loaded.
@@ -328,18 +405,46 @@ static NSArray* sToolbarDefaults = nil;
 
     [self setupSidebarTabs];
 
-    [mPersonalToolbar initializeToolbar];
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
       // remove the personal toolbar and adjust the content area upwards. Removing it
       // from the parent view releases it, so we have to clear out the member var.
-      float height = [mPersonalToolbar frame].size.height;
+      //float height = [mPersonalToolbar frame].size.height;
       [mPersonalToolbar removeFromSuperview];
-      [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y,
-                               [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
-      mPersonalToolbar = nil;      
+      mPersonalToolbar = nil;
+      mustResizeChrome = YES;
     }
-    else if (![self shouldShowBookmarkToolbar]) {
-      [mPersonalToolbar showBookmarksToolbar:NO];
+    else
+    {
+      [mPersonalToolbar initializeToolbar];
+    
+      if (![self shouldShowBookmarkToolbar])
+        [mPersonalToolbar showBookmarksToolbar:NO];
+    }
+    
+    if (mustResizeChrome)
+      [mContentView resizeSubviewsWithOldSize:[mContentView frame].size];
+      
+    // stagger window from last browser, if there is one. we can't just use autoposition
+    // because it doesn't work on multiple monitors (radar bug 2972893). |getFrontmostBrowserWindow|
+    // only gets fully chromed windows, so this will do the right thing for popups (yay!).
+    NSWindow* lastBrowser = [[NSApp delegate] getFrontmostBrowserWindow];
+    if ( lastBrowser != [self window] ) {
+      NSRect lastBrowserFrame = [lastBrowser frame];
+      NSPoint topLeft = NSMakePoint(NSMinX(lastBrowserFrame), NSMaxY(lastBrowserFrame));
+      topLeft.x += 15; topLeft.y -= 15;
+      [[self window] setFrameTopLeftPoint:topLeft];
+      
+      // check if this new topLeft will overlap the dock or go off the screen, if so,
+      // force to 0,0 of the current monitor. We test this by unioning the window rect
+      // with the visible screen rect (excluding dock). If the result isn't the same
+      // as the screen rect, the window juts out somewhere and needs to be repositioned.
+      NSRect newBrowserFrame = [[self window] frame];
+      NSRect screenRect = [[lastBrowser screen] visibleFrame];
+      NSRect unionRect = NSUnionRect(newBrowserFrame, screenRect);
+      if ( !NSEqualRects(unionRect, screenRect) ) {
+        topLeft = NSMakePoint(NSMinX(screenRect), NSMaxY(screenRect));
+        [[self window] setFrameTopLeftPoint:topLeft];
+      }
     }
 }
 
@@ -351,59 +456,36 @@ static NSArray* sToolbarDefaults = nil;
 }
 
 
-#define RESIZE_WINDOW_FOR_DRAWER
-
 - (void)drawerWillOpen: (NSNotification*)aNotification
 {
   [mSidebarBookmarksDataSource ensureBookmarks];
-  [mHistoryDataSource ensureDataSourceLoaded];
 
-#ifdef RESIZE_WINDOW_FOR_DRAWER
-  // Force the window to shrink and move if necessary in order to accommodate the sidebar.
-  NSRect screenFrame = [[[self window] screen] visibleFrame];
-  NSRect windowFrame = [[self window] frame];
-  NSSize drawerSize = [mSidebarDrawer contentSize];
-  int fudgeFactor = 12; // Not sure how to get the drawer's border info, so we fudge it for now.
-  drawerSize.width += fudgeFactor;
-  if (windowFrame.origin.x + windowFrame.size.width + drawerSize.width >
-       screenFrame.origin.x + screenFrame.size.width) {
-    // We need to adjust the window so that it can fit.
-    float shrinkDelta = (windowFrame.size.width + drawerSize.width) - screenFrame.size.width;
-    if (shrinkDelta < 0) shrinkDelta = 0;
-    float newWidth = (windowFrame.size.width - shrinkDelta);
-    float newPosition = screenFrame.size.width - newWidth - drawerSize.width;
-    if (newPosition < 0) newPosition = 0;
-    mCachedFrameBeforeDrawerOpen = windowFrame;
-    windowFrame.origin.x = newPosition;
-    windowFrame.size.width = newWidth;
-    mCachedFrameAfterDrawerOpen = windowFrame;
-    [[self window] setFrame: windowFrame display: YES animate:NO];		// animation  would be nice, but is too slow
-    mDrawerCachedFrame = YES;
+  if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
+    [mHistoryDataSource ensureDataSourceLoaded];
+    [mHistoryDataSource enableObserver];
   }
-#endif
 
+  // we used to resize the window here, but we can't if we want any chance of it
+  // being allowed to open on the left side. it's too late once we get here.
 }
 
 - (void)drawerDidOpen:(NSNotification *)aNotification
 {
-  // XXXdwh This is temporary.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html" referrer: nil flags:NSLoadFlagsNone];
-
   // Toggle the sidebar icon.
-  if(mSidebarToolbarItem)
+  if (mSidebarToolbarItem)
     [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarOpened"]];
 }
 
 - (void)drawerDidClose:(NSNotification *)aNotification
 {
+  if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"])
+    [mHistoryDataSource disableObserver];
+
   // Unload the Gecko web page in "My Panels" to save memory.
   if(mSidebarToolbarItem)
     [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
 
-  // XXXdwh ignore for now.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" referrer:nil flags:NSLoadFlagsNone];
-
-#ifdef RESIZE_WINDOW_FOR_DRAWER
+  // restore the frame we cached in |toggleSidebar:|
   if (mDrawerCachedFrame) {
     mDrawerCachedFrame = NO;
     NSRect frame = [[self window] frame];
@@ -411,17 +493,11 @@ static NSArray* sToolbarDefaults = nil;
         frame.origin.y == mCachedFrameAfterDrawerOpen.origin.y &&
         frame.size.width == mCachedFrameAfterDrawerOpen.size.width &&
         frame.size.height == mCachedFrameAfterDrawerOpen.size.height) {
-#if 0
-      printf("Got here too.\n");
-      printf("Xes are %f %f\n", frame.origin.x, mCachedFrameAfterDrawerOpen.origin.x);
-      printf("Widths are %f %f\n", frame.size.width, mCachedFrameAfterDrawerOpen.size.width);
-#endif
+
       // Restore the original frame.
       [[self window] setFrame: mCachedFrameBeforeDrawerOpen display: YES animate:NO];	// animation would be nice
     }
   }
-#endif
-
 }
 
 - (void)setupToolbar
@@ -450,6 +526,8 @@ static NSArray* sToolbarDefaults = nil;
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
   if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
     mSidebarToolbarItem = item;
+  else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
+    mBookmarkToolbarItem = item;
 }
 
 //
@@ -466,6 +544,8 @@ static NSArray* sToolbarDefaults = nil;
     mSidebarToolbarItem = nil;
   else if ( [[item itemIdentifier] isEqual:ThrobberToolbarItemIdentifier] )
     [self stopThrobber];
+  else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
+    mBookmarkToolbarItem = nil;
 }
 
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
@@ -481,6 +561,12 @@ static NSArray* sToolbarDefaults = nil;
                                         SearchToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
                                         ViewSourceToolbarItemIdentifier,
+                                        BookmarkToolbarItemIdentifier,
+                                        NewTabToolbarItemIdentifier,
+                                        CloseTabToolbarItemIdentifier,
+                                        TextBiggerToolbarItemIdentifier,
+                                        TextSmallerToolbarItemIdentifier,
+                                        SendURLToolbarItemIdentifier,
                                         NSToolbarCustomizeToolbarItemIdentifier,
                                         NSToolbarFlexibleSpaceItemIdentifier,
                                         NSToolbarSpaceItemIdentifier,
@@ -529,71 +615,87 @@ static NSArray* sToolbarDefaults = nil;
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
 {
     NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
-    if ( [itemIdent isEqual:BackToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Back"];
-        [toolbarItem setPaletteLabel:@"Go Back"];
-        [toolbarItem setToolTip:@"Go back one page"];
+    if ( [itemIdent isEqual:BackToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
+        [toolbarItem setToolTip:NSLocalizedString(@"BackToolTip", @"Go back one page")];
         [toolbarItem setImage:[NSImage imageNamed:@"back"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(back:)];
-    } else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Forward"];
-        [toolbarItem setPaletteLabel:@"Go Forward"];
-        [toolbarItem setToolTip:@"Go forward one page"];
+    }
+    else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
+        [toolbarItem setToolTip:NSLocalizedString(@"ForwardToolTip", @"Go forward one page")];
         [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(forward:)];
-    } else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Reload"];
-        [toolbarItem setPaletteLabel:@"Reload Page"];
-        [toolbarItem setToolTip:@"Reload current page"];
+    }
+    else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Reload", @"Reload")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", @"Reload Page")];
+        [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", @"Reload current page")];
         [toolbarItem setImage:[NSImage imageNamed:@"reload"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(reload:)];
-    } else if ( [itemIdent isEqual:StopToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Stop"];
-        [toolbarItem setPaletteLabel:@"Stop Loading"];
-        [toolbarItem setToolTip:@"Stop loading this page"];
+    }
+    else if ( [itemIdent isEqual:StopToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Stop", @"Stop")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", @"Stop Loading")];
+        [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", @"Stop loading this page")];
         [toolbarItem setImage:[NSImage imageNamed:@"stop"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(stop:)];
-    } else if ( [itemIdent isEqual:HomeToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Home"];
-        [toolbarItem setPaletteLabel:@"Go Home"];
-        [toolbarItem setToolTip:@"Go to home page"];
+    }
+    else if ( [itemIdent isEqual:HomeToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Home", @"Home")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", @"Go Home")];
+        [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", @"Go to home page")];
         [toolbarItem setImage:[NSImage imageNamed:@"home"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(home:)];
-    } else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Sidebar"];
-        [toolbarItem setPaletteLabel:@"Toggle Sidebar"];
-        [toolbarItem setToolTip:@"Show or hide the Sidebar"];
+    }
+    else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Sidebar", @"Sidebar")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Sidebar", @"Toggle Sidebar")];
+        [toolbarItem setToolTip:NSLocalizedString(@"SidebarToolTip", @"Show or hide the Sidebar")];
         [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(toggleSidebar:)];
-    } else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Search"];
-        [toolbarItem setPaletteLabel:@"Search"];
-        [toolbarItem setToolTip:@"Search the Internet"];
-        [toolbarItem setImage:[NSImage imageNamed:@"saveShowFile.tif"]];
+    }
+    else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Search", @"Search")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Search", @"Search")];
+        [toolbarItem setToolTip:NSLocalizedString(@"SearchToolTip", @"Search the Internet")];
+        [toolbarItem setImage:[NSImage imageNamed:@"searchWeb.tif"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(performSearch:)];
-    } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
+    }
+    else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] )
+    {
         [toolbarItem setLabel:@""];
-        [toolbarItem setPaletteLabel:@"Progress"];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", @"Progress")];
         [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
         [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
         [toolbarItem setTarget:self];
         [toolbarItem setTag:'Thrb'];
         [toolbarItem setAction:@selector(clickThrobber:)];
-    } else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] ) {
-        
+    }
+    else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] )
+    {
         NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
         
-        [toolbarItem setLabel:@"Location"];
-        [toolbarItem setPaletteLabel:@"Location"];
+        [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
         [toolbarItem setView:mLocationToolbarView];
-        [toolbarItem setMinSize:NSMakeSize(128,32)];
+        [toolbarItem setMinSize:NSMakeSize(128,20)];
         [toolbarItem setMaxSize:NSMakeSize(2560,32)];
         
         [menuFormRep setTarget:self];
@@ -601,21 +703,81 @@ static NSArray* sToolbarDefaults = nil;
         [menuFormRep setTitle:[toolbarItem label]];
         
         [toolbarItem setMenuFormRepresentation:menuFormRep];
-    } else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Print"];
-        [toolbarItem setPaletteLabel:@"Print"];
-        [toolbarItem setToolTip:@"Print this page"];
+    }
+    else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Print", @"Print")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", @"Print")];
+        [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", @"Print this page")];
         [toolbarItem setImage:[NSImage imageNamed:@"print"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(printDocument:)];
-    } else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"View Source"];
-        [toolbarItem setPaletteLabel:@"View Page Source"];
-        [toolbarItem setToolTip:@"Display the HTML source of this page"];
+    }
+    else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"View Source", @"View Source")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", @"View Page Source")];
+        [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", @"Display the HTML source of this page")];
         [toolbarItem setImage:[NSImage imageNamed:@"showsource"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(viewSource:)];
-    } else {
+    }
+    else if ( [itemIdent isEqual:BookmarkToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"Bookmark", @"Bookmark")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", @"Bookmark Page")];
+        [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
+        [toolbarItem setImage:[NSImage imageNamed:@"add_to_bookmark.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(bookmarkPage:)];
+    }
+    else if ( [itemIdent isEqual:TextBiggerToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
+        [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
+        [toolbarItem setImage:[NSImage imageNamed:@"textBigger.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(biggerTextSize:)];
+    }
+    else if ( [itemIdent isEqual:TextSmallerToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
+        [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
+        [toolbarItem setImage:[NSImage imageNamed:@"textSmaller.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(smallerTextSize:)];
+    }
+    else if ( [itemIdent isEqual:NewTabToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", @"New Tab")];
+        [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", @"Create a new tab")];
+        [toolbarItem setImage:[NSImage imageNamed:@"newTab.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(newTab:)];
+    }
+    else if ( [itemIdent isEqual:CloseTabToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
+        [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", @"Close the current tab")];
+        [toolbarItem setImage:[NSImage imageNamed:@"closeTab.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(closeCurrentTab:)];
+    }
+    else if ( [itemIdent isEqual:SendURLToolbarItemIdentifier] )
+    {
+        [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
+        [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLink", @"Send Link")];
+        [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
+        [toolbarItem setImage:[NSImage imageNamed:@"sendLink.tif"]];
+        [toolbarItem setTarget:self];
+        [toolbarItem setAction:@selector(sendURL:)];
+    }
+    else
+    {
         toolbarItem = nil;
     }
     
@@ -627,7 +789,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   // Check the action and see if it matches.
   SEL action = [theItem action];
-  //NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
+//  NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
   if (action == @selector(back:))
     return [[mBrowserView getBrowserView] canGoBack];
   else if (action == @selector(forward:))
@@ -636,25 +798,44 @@ static NSArray* sToolbarDefaults = nil;
     return [mBrowserView isBusy] == NO;
   else if (action == @selector(stop:))
     return [mBrowserView isBusy];
+  else if (action == @selector(bookmarkPage:))
+    return ![mBrowserView isEmpty];
+  else if (action == @selector(biggerTextSize:))
+    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextBigger];
+  else if ( action == @selector(smallerTextSize:))
+    return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextSmaller];
+  else if (action == @selector(newTab:))
+    return [self newTabsAllowed];
+  else if (action == @selector(closeCurrentTab:))
+    return ([mTabBrowser numberOfTabViewItems] > 1);
+  else if (action == @selector(sendURL:))
+  {
+    NSString* curURL = [[self getBrowserWrapper] getCurrentURLSpec];
+    return [curURL length] > 0 && ![curURL isEqualToString:@"about:blank"];
+  }
   else
     return YES;
 }
    
 - (void)updateToolbarItems
 {
-    [[[self window] toolbar] validateVisibleItems];
+  [[[self window] toolbar] validateVisibleItems];
 }
 
 - (void)performAppropriateLocationAction
 {
   NSToolbar *toolbar = [[self window] toolbar];
-  if ( [toolbar isVisible] ) {
+  if ( [toolbar isVisible] )
+  {
     if ( ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconAndLabel) ||
-          ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) ) {
+          ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) )
+    {
       NSArray *itemsWeCanSee = [toolbar visibleItems];
       
-      for (unsigned int i=0;i<[itemsWeCanSee count];i++) {
-        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier]) {
+      for (unsigned int i = 0; i < [itemsWeCanSee count]; i++)
+      {
+        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier])
+        {
           [self focusURLBar];
           return;
         }
@@ -707,7 +888,7 @@ static NSArray* sToolbarDefaults = nil;
   [mCachedBMDS endAddBookmark: 1];
 }
 
-- (void)cacheBookmarkDS: (id)aDS
+- (void)cacheBookmarkDS:(BookmarksDataSource*)aDS
 {
   mCachedBMDS = aDS;
 }
@@ -718,6 +899,14 @@ static NSArray* sToolbarDefaults = nil;
     [self toggleSidebar: self];
 
   [mSidebarTabView selectFirstTabViewItem:self];
+}
+
+-(IBAction)manageHistory: (id)aSender
+{
+  if ([mSidebarDrawer state] == NSDrawerClosedState)
+    [self toggleSidebar: self];
+
+  [mSidebarTabView selectTabViewItemAtIndex:1];
 }
 
 - (void)importBookmarks: (NSString*)aURLSpec
@@ -736,15 +925,44 @@ static NSArray* sToolbarDefaults = nil;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
   // trim off any whitespace around url
-  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
-  CFStringTrimWhitespace((CFMutableStringRef)theURL);
-  [self loadURL:theURL referrer:nil activate:YES];
-  [theURL release];
+  NSString *theURL = [[sender stringValue] stringByTrimmingWhitespace];
+  
+  // look for bookmarks keywords match
+  NSArray *resolvedURLs = [[BookmarksManager sharedBookmarksManager] resolveBookmarksKeyword:theURL];
+
+  NSString* resolvedURL = nil;
+  if ([resolvedURLs count] == 1)
+  {
+    resolvedURL = [resolvedURLs lastObject];
+    [self loadURL:resolvedURL referrer:nil activate:YES];
+  }
+  else
+  {
+  	[self openTabGroup:resolvedURLs replaceExistingTabs:YES];
+  }
+    
+  // global history needs to know the user typed this url so it can present it
+  // in autocomplete. We use the URI fixup service to strip whitespace and remove
+  // invalid protocols, etc. Don't save keyword-expanded urls.
+  if (resolvedURL && [theURL isEqualToString:resolvedURL] && mGlobalHistory && mURIFixer && [theURL length] > 0)
+  {
+    nsAutoString url;
+    [theURL assignTo_nsAString:url];
+
+    nsCOMPtr<nsIURI> fixedURI;
+    mURIFixer->CreateFixupURI(url, 0, getter_AddRefs(fixedURI));
+    if (fixedURI)
+    {
+      nsCAutoString spec;
+      fixedURI->GetSpec(spec);
+      mGlobalHistory->MarkPageAsTyped(spec.get());
+    }
+  }
 }
 
-- (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
 {
-  [[mBrowserView getBrowserView] saveDocument: aFilterView filterList: aFilterList];
+  [[mBrowserView getBrowserView] saveDocument:focusedFrame filterView:aFilterView filterList:aFilterList];
 }
 
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
@@ -754,9 +972,8 @@ static NSArray* sToolbarDefaults = nil;
                                      url: aURLSpec suggestedFilename: aFilename];
 }
 
-- (IBAction)viewSource:(id)aSender
+- (void)loadSourceOfURL:(NSString*)urlStr
 {
-  NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
   NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
 
   PRBool loadInBackground;
@@ -769,32 +986,61 @@ static NSArray* sToolbarDefaults = nil;
     [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
 }
 
+- (IBAction)viewSource:(id)aSender
+{
+  NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
+  [self loadSourceOfURL:urlStr];
+}
+
+- (IBAction)viewPageSource:(id)aSender
+{
+  NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURLSpec];
+  [self loadSourceOfURL:urlStr];
+}
+
 - (IBAction)printDocument:(id)aSender
 {
   [[mBrowserView getBrowserView] printDocument];
 }
 
-- (void)printPreview
+- (IBAction)pageSetup:(id)aSender
 {
-  NS_WARNING("Print Preview stopped in BrowserWindowController, not implemented");
-  //XXX there is no printPreview on CHBrowserView...so this isn't implemented
-  //[[mBrowserView getBrowserView] printPreview];
+  [[mBrowserView getBrowserView] pageSetup];
 }
 
 - (IBAction)performSearch:(id)aSender
 {
-  NSString *searchEngine = NSLocalizedStringFromTable(@"SearchPageDefault", @"WebsiteDefaults", nil);
-
-  // Get the users preferred search engine from IC
-  if (!searchEngine || [searchEngine isEqualToString:@"SearchPageDefault"]) {
-    searchEngine = [[PreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
-      if (!searchEngine || ([searchEngine length] == 0))
-        searchEngine = @"http://dmoz.org/";
-  }
-
-  [mBrowserView loadURI:searchEngine  referrer: nil flags:NSLoadFlagsNone activate:NO];
+  [mBrowserView loadURI:[[PreferenceManager sharedInstance] searchPage] referrer: nil flags:NSLoadFlagsNone activate:NO];
 }
 
+- (IBAction)sendURL:(id)aSender
+{
+  NSString* titleString = nil;
+  NSString* urlString = nil;
+
+  [[self getBrowserWrapper] getTitle:&titleString andHref:&urlString];
+  
+  if (!titleString) titleString = @"";
+  if (!urlString)   urlString   = @"";
+  
+  // we need to encode entities in the title and url strings first. For some reason
+  // CFURLCreateStringByAddingPercentEscapes is only happy with UTF-8 strings.
+  CFStringRef urlUTF8String   = CFStringCreateWithCString(kCFAllocatorDefault, [urlString   UTF8String], kCFStringEncodingUTF8);
+  CFStringRef titleUTF8String = CFStringCreateWithCString(kCFAllocatorDefault, [titleString UTF8String], kCFStringEncodingUTF8);
+  
+  CFStringRef escapedURL   = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, urlUTF8String,   NULL, CFSTR("&?="), kCFStringEncodingUTF8);
+  CFStringRef escapedTitle = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, titleUTF8String, NULL, CFSTR("&?="), kCFStringEncodingUTF8);
+    
+  NSString* mailtoURLString = [NSString stringWithFormat:@"mailto:?subject=%@&body=%@", (NSString*)escapedTitle, (NSString*)escapedURL];
+
+  [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:mailtoURLString]];
+  
+  CFRelease(urlUTF8String);
+  CFRelease(titleUTF8String);
+  
+  CFRelease(escapedURL);
+  CFRelease(escapedTitle);
+}
 
 - (NSToolbarItem*)throbberItem
 {
@@ -815,7 +1061,8 @@ static NSArray* sToolbarDefaults = nil;
 {
   // Simply load an array of NSImage objects from the files "throbber-NN.tif". I used "Quicktime Player" to
   // save all of the frames of the animated gif as individual .tif files for simplicity of implementation.
-  if (mThrobberImages == nil) {
+  if (mThrobberImages == nil)
+  {
     NSImage* images[64];
     int i;
     for (i = 0;; ++i) {
@@ -918,7 +1165,12 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)reload:(id)aSender
 {
-  [[mBrowserView getBrowserView] reload: 0];
+  unsigned int reloadFlags = NSLoadFlagsNone;
+  
+  if (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0)
+    reloadFlags = NSLoadFlagsBypassCacheAndProxy;
+  
+  [[mBrowserView getBrowserView] reload: reloadFlags];
 }
 
 - (IBAction)stop:(id)aSender
@@ -931,14 +1183,107 @@ static NSArray* sToolbarDefaults = nil;
   [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO];
 }
 
+- (NSString*)getContextMenuNodeDocumentURL
+{
+  if (!mContextMenuNode) return @"";
+  
+  nsCOMPtr<nsIDOMDocument> ownerDoc;
+  mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+
+  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(ownerDoc);
+  if (!nsDoc) return @"";
+
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location) return @"";
+	
+  nsAutoString urlStr;
+  location->GetHref(urlStr);
+  return [NSString stringWith_nsAString:urlStr];
+}
+
+- (IBAction)frameToNewWindow:(id)sender
+{
+  // assumes mContextMenuNode has been set
+  NSString* frameURL = [self getContextMenuNodeDocumentURL];
+  if ([frameURL length] > 0)
+    [self openNewWindowWithURL:frameURL referrer:nil loadInBackground:NO];		// follow the pref?
+}
+
+- (IBAction)frameToNewTab:(id)sender
+{
+  // assumes mContextMenuNode has been set
+  NSString* frameURL = [self getContextMenuNodeDocumentURL];
+  if ([frameURL length] > 0)
+    [self openNewTabWithURL:frameURL referrer:nil loadInBackground:NO];		// follow the pref?
+}
+
+- (IBAction)frameToThisWindow:(id)sender
+{
+  // assumes mContextMenuNode has been set
+  NSString* frameURL = [self getContextMenuNodeDocumentURL];
+  if ([frameURL length] > 0)
+    [self loadURL:frameURL referrer:nil activate:YES];
+}
+
+
 - (IBAction)toggleSidebar:(id)aSender
 {
-  if ( ([mSidebarDrawer state] == NSDrawerClosedState) || ([mSidebarDrawer state] == NSDrawerClosingState) ) {
-    // XXXHack to bypass sidebar crashes.
-    [mSidebarDrawer openOnEdge: NSMaxXEdge];
+  // Force the window to shrink and move if necessary in order to accommodate the sidebar. We check
+  // if it will fit on either the left or on the right, and if it won't, shrink the window. We 
+  // used to do this in |drawerWillOpen:| but the problem is that as soon as wel tell cocoa to 
+  // toggle, it makes up its mind about what side it's going to open on. On multiple monitors, 
+  // if the window was on the secondary this could end up having the sidebar across the fold of
+  // the monitors. By placing the code here, we guarantee that if we are going to resize the
+  // window, we leave space for the drawer on the right BEFORE it starts, and cocoa will put it there.
+  
+  NSRect screenFrame = [[[self window] screen] visibleFrame];
+  NSRect windowFrame = [[self window] frame];
+  NSSize drawerSize = [mSidebarDrawer contentSize];
+  int fudgeFactor = 12; // Not sure how to get the drawer's border info, so we fudge it for now.
+  drawerSize.width += fudgeFactor;
+
+  // check that opening on the right won't flow off the edge of the screen on the right AND
+  // opening on the left won't flow off the edge of the screen on the left. If both are true,
+  // we have to resize the window.
+  if (windowFrame.origin.x + windowFrame.size.width + drawerSize.width > screenFrame.origin.x + screenFrame.size.width &&
+        windowFrame.origin.x - drawerSize.width < screenFrame.origin.x) {
+    // We need to adjust the window so that it can fit.
+    float shrinkDelta = (windowFrame.size.width + drawerSize.width) - screenFrame.size.width;
+    if (shrinkDelta < 0) shrinkDelta = 0;
+    float newWidth = (windowFrame.size.width - shrinkDelta);
+    float newPosition = screenFrame.size.width - newWidth - drawerSize.width + screenFrame.origin.x;
+    if (newPosition < screenFrame.origin.x) newPosition = screenFrame.origin.x;
+    mCachedFrameBeforeDrawerOpen = windowFrame;
+    windowFrame.origin.x = newPosition;
+    windowFrame.size.width = newWidth;
+    mCachedFrameAfterDrawerOpen = windowFrame;
+    [[self window] setFrame: windowFrame display: YES animate:NO];		// animation  would be nice, but is too slow
+    mDrawerCachedFrame = YES;
   }
+
+  [mSidebarDrawer toggle:aSender];
+}
+
+// map command-left arrow to 'back'
+- (void)moveToBeginningOfLine:(id)sender
+{
+  [self back:sender];
+}
+
+// map command-right arrow to 'forward'
+- (void)moveToEndOfLine:(id)sender
+{
+  [self forward:sender];
+}
+
+// map delete key to Back
+- (void)deleteBackward:(id)sender
+{
+  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+    [self forward:sender];
   else
-    [mSidebarDrawer close];
+    [self back:sender];
 }
 
 -(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate
@@ -959,9 +1304,17 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)updateLocationFields:(NSString *)locationString
 {
-    if ( [locationString isEqual:@"about:blank"] ) 			// don't show about:blank to users
+    if ( [locationString isEqual:@"about:blank"] )
       locationString = @"";
-    [mURLBar setStringValue:locationString];
+
+    // if the urlbar has focus (actually if its field editor has focus), we
+    // need to use one of its routines to update the autocomplete status or
+    // we could find ourselves with stale results and the popup still open. If
+    // it doesn't have focus, we can bypass all that and just use normal routines.
+    if ( [[self window] firstResponder] == [mURLBar fieldEditor] )
+      [mURLBar setStringUndoably:locationString fromLocation:0];		// updates autocomplete correctly
+    else
+      [mURLBar setStringValue:locationString];
     [mLocationSheetURLField setStringValue:locationString];
 
     // don't call [window display] here, no matter how much you might want
@@ -977,11 +1330,36 @@ static NSArray* sToolbarDefaults = nil;
 	[mProxyIcon setImage:siteIconImage];
 }
 
-- (void)newTab:(ENewTabContents)contents;
+//
+// closeBrowserWindow:
+//
+// Some gecko view in this window wants to close the window. If we have
+// a bunch of tabs, only close the relevant tab, otherwise close the
+// window as a whole.
+//
+- (void)closeBrowserWindow:(BrowserWrapper*)inBrowser
 {
-    BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
-    BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
+  if ( [mTabBrowser numberOfTabViewItems] > 1 ) {
+    // close the appropriate browser (it may not be frontmost) and
+    // remove it from the tab UI
+    [inBrowser windowClosed];
+    [mTabBrowser removeTabViewItem:[inBrowser tab]];
+  }
+  else
+  {
+    // if a window unload handler calls window.close(), we
+    // can get here while the window is already being closed,
+    // so we don't want to close it again (and recurse).
+    if (!mClosingWindow)
+      [[self window] close];
+  }
+}
 
+- (void)createNewTab:(ENewTabContents)contents;
+{
+    BrowserTabViewItem* newTab  = [self createNewTabItem];
+    BrowserWrapper*     newView = [newTab view];
+    
     BOOL loadHomepage = NO;
     if (contents == eNewTabHomepage)
     {
@@ -992,7 +1370,6 @@ static NSArray* sToolbarDefaults = nil;
     }
 
     [newTab setLabel: (loadHomepage ? NSLocalizedString(@"TabLoading", @"") : NSLocalizedString(@"UntitledPageTitle", @""))];
-    [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
     
     BOOL focusURLBar = NO;
@@ -1019,7 +1396,12 @@ static NSArray* sToolbarDefaults = nil;
       [self focusURLBar];
 }
 
--(void)closeTab
+- (IBAction)newTab:(id)sender
+{
+  [self createNewTab:eNewTabHomepage];  // we'll look at the pref to decide whether to load the home page
+}
+
+-(IBAction)closeCurrentTab:(id)sender
 {
   if ( [mTabBrowser numberOfTabViewItems] > 1 ) {
     [[[mTabBrowser selectedTabViewItem] view] windowClosed];
@@ -1027,35 +1409,123 @@ static NSArray* sToolbarDefaults = nil;
   }
 }
 
-- (void)previousTab
+- (IBAction)previousTab:(id)sender
 {
   if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == 0)
-    [mTabBrowser selectLastTabViewItem:self];
+    [mTabBrowser selectLastTabViewItem:sender];
   else
-    [mTabBrowser selectPreviousTabViewItem:self];
+    [mTabBrowser selectPreviousTabViewItem:sender];
 }
 
-- (void)nextTab
+- (IBAction)nextTab:(id)sender
 {
   if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == [mTabBrowser numberOfTabViewItems] - 1)
-    [mTabBrowser selectFirstTabViewItem:self];
+    [mTabBrowser selectFirstTabViewItem:sender];
   else
-    [mTabBrowser selectNextTabViewItem:self];
+    [mTabBrowser selectNextTabViewItem:sender];
+}
+
+- (IBAction)closeSendersTab:(id)sender
+{
+  if ([sender isMemberOfClass:[NSMenuItem class]])
+  {
+    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
+    if (tabViewItem)
+    {
+      [[tabViewItem view] windowClosed];
+      [mTabBrowser removeTabViewItem:tabViewItem];
+    }
+  }
+}
+
+- (IBAction)closeOtherTabs:(id)sender
+{
+  if ([sender isMemberOfClass:[NSMenuItem class]])
+  {
+    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
+    if (tabViewItem)
+    {
+      while ([mTabBrowser numberOfTabViewItems] > 1)
+      {
+        NSTabViewItem* doomedItem = nil;
+        if ([mTabBrowser indexOfTabViewItem:tabViewItem] == 0)
+          doomedItem = [mTabBrowser tabViewItemAtIndex:1];
+        else
+          doomedItem = [mTabBrowser tabViewItemAtIndex:0];
+        
+        [[doomedItem view] windowClosed];
+        [mTabBrowser removeTabViewItem:doomedItem];
+      }
+    }
+  }
+}
+
+- (IBAction)reloadSendersTab:(id)sender
+{
+  if ([sender isMemberOfClass:[NSMenuItem class]])
+  {
+    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
+    if (tabViewItem)
+    {
+      [[[tabViewItem view] getBrowserView] reload: NSLoadFlagsNone];
+    }
+  }
+}
+
+- (IBAction)moveTabToNewWindow:(id)sender
+{
+  if ([sender isMemberOfClass:[NSMenuItem class]])
+  {
+    BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
+    if (tabViewItem)
+    {
+      NSString* url = [[tabViewItem view] getCurrentURLSpec];
+
+      PRBool backgroundLoad = PR_FALSE;
+      nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+      if (pref)
+        pref->GetBoolPref("browser.tabs.loadInBackground", &backgroundLoad);
+
+      [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad];
+
+      [[tabViewItem view] windowClosed];
+      [mTabBrowser removeTabViewItem:tabViewItem];
+    }
+  }
+}
+
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
+{
+  // we'll get called for browser tab views as well. ignore any calls coming from
+  // there, we're only interested in the sidebar.
+  if (tabView != mSidebarTabView)
+    return;
+
+  if ([[tabViewItem identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
+    [mHistoryDataSource ensureDataSourceLoaded];
+    [mHistoryDataSource enableObserver];
+  }
+  else
+    [mHistoryDataSource disableObserver];
 }
 
 - (void)tabView:(NSTabView *)aTabView didSelectTabViewItem:(NSTabViewItem *)aTabViewItem
 {
-    // Disconnect the old view, if one has been designated.
-    // If the window has just been opened, none has been.
-    if ( mBrowserView ) {
-        [mBrowserView disconnectView];
-    }
-    // Connect up the new view
-    mBrowserView = [aTabViewItem view];
-       
-    // Make the new view the primary content area.
-    [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus
-        progress: mProgress windowController: self];
+  // we'll get called for the sidebar tabs as well. ignore any calls coming from
+  // there, we're only interested in the browser tabs.
+  if (aTabView != mTabBrowser)
+    return;
+
+  // Disconnect the old view, if one has been designated.
+  // If the window has just been opened, none has been.
+  if ( mBrowserView )
+    [mBrowserView disconnectView];
+
+  // Connect up the new view
+  mBrowserView = [aTabViewItem view];
+      
+  // Make the new view the primary content area.
+  [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus windowController: self];
 }
 
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView
@@ -1083,15 +1553,20 @@ static NSArray* sToolbarDefaults = nil;
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
 
-  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
+  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];  
   [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG];
+  
   if (aLoadInBG)
+  {
+    [[browser window] setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
     [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
+    [[browser window] setSuppressMakeKeyFront:NO];
+  }
   else
-    [browser enterModalSession];
+    [browser showWindow:self];
 }
 
--(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG
+- (void)openNewWindowWithGroup: (nsIContent*)aFolderContent loadInBackground: (BOOL)aLoadInBG
 {
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
@@ -1099,55 +1574,107 @@ static NSArray* sToolbarDefaults = nil;
   // Tell the Tab Browser in the newly created window to load the group
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   if (aLoadInBG)
+  {
+    [[browser window] setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
     [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
+    [[browser window] setSuppressMakeKeyFront:NO];
+  }
   else
-    [browser enterModalSession];
+    [browser showWindow:self];
 
-  id tabBrowser = [browser getTabBrowser];
-  [mSidebarBookmarksDataSource openBookmarkGroup: tabBrowser groupElement: aFolderElement];
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
+  BookmarkItem*     item			= [bmManager getWrapperForContent:aFolderContent];
+
+  NSArray* groupURLs = [bmManager getBookmarkGroupURIs:item];
+	[browser openTabGroup:groupURLs replaceExistingTabs:YES];
 }
 
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
-    BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
+  BrowserTabViewItem* newTab  = [self createNewTabItem];
+  BrowserWrapper*     newView = [newTab view];
 
-    // hyatt originally made new tabs open on the far right and tabs opened from a content
-    // link open to the right of the current tab. The idea was to keep the new tab
-    // close to the tab that spawned it, since they are related. Users, however, got confused
-    // as to why tabs appeared in different places, so now all tabs go on the far right.
+  // hyatt originally made new tabs open on the far right and tabs opened from a content
+  // link open to the right of the current tab. The idea was to keep the new tab
+  // close to the tab that spawned it, since they are related. Users, however, got confused
+  // as to why tabs appeared in different places, so now all tabs go on the far right.
 #ifdef OPEN_TAB_TO_RIGHT_OF_SELECTED    
-    NSTabViewItem* selectedTab = [mTabBrowser selectedTabViewItem];
-    int index = [mTabBrowser indexOfTabViewItem: selectedTab];
-    [mTabBrowser insertTabViewItem: newTab atIndex: index+1];
+  NSTabViewItem* selectedTab = [mTabBrowser selectedTabViewItem];
+  int index = [mTabBrowser indexOfTabViewItem: selectedTab];
+  [mTabBrowser insertTabViewItem: newTab atIndex: index+1];
 #else
-    [mTabBrowser addTabViewItem: newTab];
+  [mTabBrowser addTabViewItem: newTab];
 #endif
 
-    BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
-    [newView setTab: newTab];
-    
-    [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
-    [newTab setView: newView];
+  [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
 
-    [newView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
+  [newView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
 
-    if (!aLoadInBG)
-      [mTabBrowser selectTabViewItem: newTab];
+  if (!aLoadInBG)
+    [mTabBrowser selectTabViewItem: newTab];
+}
+
+- (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
+{
+  int curNumTabs	= [mTabBrowser numberOfTabViewItems];
+  int numItems 		= (int)[urlArray count];
+  
+  for (int i = 0; i < numItems; i++)
+  {
+    NSString* thisURL = [urlArray objectAtIndex:i];
+    BrowserTabViewItem* tabViewItem;
+
+    if (replaceExisting && i < curNumTabs)
+    {
+      tabViewItem = [mTabBrowser tabViewItemAtIndex:i];
+    }
+    else
+    {
+      tabViewItem = [self createNewTabItem];
+      [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
+      [mTabBrowser addTabViewItem: tabViewItem];
+    }
+
+    [[tabViewItem view] loadURI: thisURL referrer:nil
+                        flags: NSLoadFlagsNone activate:(i == 0)];
+                        
+    if (![mTabBrowser canMakeNewTabs])
+      break;		// we'll throw away the rest of the items. Too bad.
+  }
+ 
+  // Select the first tab.
+  [mTabBrowser selectTabViewItemAtIndex:replaceExisting ? 0 : curNumTabs];
+}
+
+-(BrowserTabViewItem*)createNewTabItem
+{
+  BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
+  BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
+
+  [newTab setView: newView];
+  
+  // we have to copy the context menu for each tag, because
+  // the menu gets the tab view item's tag.
+  NSMenu* contextMenu = [mTabMenu copy];
+  [[newTab tabItemContentsView] setMenu:contextMenu];
+  [contextMenu release];
+
+  return newTab;
 }
 
 -(void)setupSidebarTabs
 {
-    IconTabViewItem   *bookItem = [[IconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"bookicon"]];
-    IconTabViewItem   *histItem = [[IconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"historyicon"]];
+    IconTabViewItem   *bookItem = [[[IconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
+                                  withTabIcon:[NSImage imageNamed:@"bookicon"]] autorelease];
+    IconTabViewItem   *histItem = [[[IconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
+                                  withTabIcon:[NSImage imageNamed:@"historyicon"]] autorelease];
 #if USE_SEARCH_ITEM
-    IconTabViewItem *searchItem = [[IconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"searchicon"]];
+    IconTabViewItem *searchItem = [[[IconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
+                                  withTabIcon:[NSImage imageNamed:@"searchicon"]] autorelease];
 #endif
 #if USE_PANELS_ITEM
-    IconTabViewItem *panelsItem = [[IconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"panel_icon"]];
+    IconTabViewItem *panelsItem = [[[IconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
+                                  withTabIcon:[NSImage imageNamed:@"panel_icon"]] autorelease];
 #endif
     
     [bookItem   setView:[[mSidebarSourceTabView tabViewItemAtIndex:0] view]];
@@ -1172,17 +1699,19 @@ static NSArray* sToolbarDefaults = nil;
     [mSidebarTabView insertTabViewItem:panelsItem atIndex:3];
 #endif
     
+#if USE_PREF_FOR_HISTORY_PANEL
     BOOL showHistory = NO;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
     if (pref) {
       PRBool historyPref = PR_FALSE;
       if (NS_SUCCEEDED(pref->GetBoolPref("chimera.show_history", &historyPref)))
         showHistory = historyPref ? YES : NO;
-    }
-    
+    }    
     if (!showHistory)
       [mSidebarTabView removeTabViewItem:[mSidebarTabView tabViewItemAtIndex:1]];
-      
+#endif
+    
+    [mSidebarTabView setDelegate:self];
     [mSidebarTabView selectFirstTabViewItem:self];
 }
 
@@ -1196,58 +1725,14 @@ static NSArray* sToolbarDefaults = nil;
   return mChromeMask;
 }
 
--(void) biggerTextSize
+- (IBAction)biggerTextSize:(id)aSender
 {
-  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[mBrowserView getBrowserView] getContentWindow]);
-  nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(contentWindow));
-  if (!global)
-    return;
-  nsCOMPtr<nsIDocShell> docShell;
-  global->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell)
-    return;
-  nsCOMPtr<nsIContentViewer> cv;
-  docShell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-  if (!markupViewer)
-    return;
-  float zoom;
-  markupViewer->GetTextZoom(&zoom);
-  if (zoom >= 20)
-    return;
-  
-  zoom += 0.25;
-  if (zoom > 20)
-    zoom = 20;
-  
-  markupViewer->SetTextZoom(zoom);
+  [[mBrowserView getBrowserView] biggerTextSize];
 }
 
--(void) smallerTextSize
+- (IBAction)smallerTextSize:(id)aSender
 {
-  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[mBrowserView getBrowserView] getContentWindow]);
-  nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(contentWindow));
-  if (!global)
-    return;
-  nsCOMPtr<nsIDocShell> docShell;
-  global->GetDocShell(getter_AddRefs(docShell));
-  if (!docShell)
-    return;
-  nsCOMPtr<nsIContentViewer> cv;
-  docShell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-  if (!markupViewer)
-    return;
-  float zoom;
-  markupViewer->GetTextZoom(&zoom);
-  if (zoom <= 0.01)
-    return;
-
-  zoom -= 0.25;
-  if (zoom < 0.01)
-    zoom = 0.01;
-
-  markupViewer->SetTextZoom(zoom);
+  [[mBrowserView getBrowserView] smallerTextSize];
 }
 
 - (void)getInfo:(id)sender
@@ -1300,25 +1785,65 @@ static NSArray* sToolbarDefaults = nil;
 
 - (NSMenu*)getContextMenu
 {
-  NSMenu* result = nil;
-  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0) {
-    if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
-      result = mImageLinkMenu;
-    }
+  BOOL showFrameItems = NO;
+  
+  NSMenu* menuPrototype = nil;
+  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
+  {
+    if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0)
+      menuPrototype = mImageLinkMenu;
     else
-      result = mLinkMenu;
+      menuPrototype = mLinkMenu;
   }
   else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
-           (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
-    result = mInputMenu;
+           (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0)
+  {
+    menuPrototype = mInputMenu;
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
-    result = mImageMenu;
+  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0)
+  {
+    menuPrototype = mImageMenu;
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
-    result = mPageMenu;
-    [mBackItem setEnabled: [[mBrowserView getBrowserView] canGoBack]];
+  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0)
+  {
+    menuPrototype = mPageMenu;
+    [mBackItem 		setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
+    [mCopyItem		setEnabled: [[mBrowserView getBrowserView] canCopy]];
+  }
+  
+  if (mContextMenuNode)
+  {
+    nsCOMPtr<nsIDOMDocument> ownerDoc;
+    mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+  
+    nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[mBrowserView getBrowserView] getContentWindow]);
+
+    nsCOMPtr<nsIDOMDocument> contentDoc;
+    if (contentWindow)
+      contentWindow->GetDocument(getter_AddRefs(contentDoc));
+    
+    showFrameItems = (contentDoc != ownerDoc);
+  }
+
+  // we have to clone the menu and return that, so that we don't change
+  // our only copy of the menu
+  NSMenu* result = [[menuPrototype copy] autorelease];
+
+  const int kFrameRelatedItemsTag 			= 100;
+  const int kFrameInapplicableItemsTag 	= 101;
+  
+  if (showFrameItems)
+  {
+    NSMenuItem* frameItem;
+    while ((frameItem = [result itemWithTag:kFrameInapplicableItemsTag]) != nil)
+      [result removeItem:frameItem];
+  }
+  else
+  {
+    NSMenuItem* frameItem;
+    while ((frameItem = [result itemWithTag:kFrameRelatedItemsTag]) != nil)
+      [result removeItem:frameItem];
   }
   
   return result;
@@ -1365,7 +1890,12 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)savePageAs:(id)aSender
 {
-  [self saveDocument: nil filterList: nil];
+  [self saveDocument:NO filterView:nil filterList: nil];
+}
+
+- (IBAction)saveFrameAs:(id)aSender
+{
+  [self saveDocument:YES filterView:nil filterList: nil];
 }
 
 - (IBAction)saveLinkAs:(id)aSender
@@ -1392,7 +1922,8 @@ static NSArray* sToolbarDefaults = nil;
 - (IBAction)saveImageAs:(id)aSender
 {
   nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mContextMenuNode));
-  if (imgElement) {
+  if (imgElement)
+  {
       nsAutoString text;
       imgElement->GetAttribute(NS_LITERAL_STRING("src"), text);
       nsAutoString url;
@@ -1405,20 +1936,21 @@ static NSArray* sToolbarDefaults = nil;
   }
 }
 
+- (IBAction)copyImageLocation:(id)sender
+{
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
+  if (clipboard)
+    clipboard->CopyImageLocation();
+}
+
 - (IBAction)copyLinkLocation:(id)aSender
 {
-  CHBrowserView* view = [[self getBrowserWrapper] getBrowserView];
-  if (!view) return;
-
-  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([view getWebBrowser]);
-  if (!webBrowser) return;
-
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
   nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
   if (clipboard)
     clipboard->CopyLinkLocation();
 }
-
-
 
 - (IBAction)viewOnlyThisImage:(id)aSender
 {
@@ -1437,6 +1969,22 @@ static NSArray* sToolbarDefaults = nil;
 - (BookmarksToolbar*) bookmarksToolbar
 {
   return mPersonalToolbar;
+}
+
+- (NSProgressIndicator*)progressIndicator
+{
+  return mProgress;
+}
+
+- (void)showProgressIndicator
+{
+  // note we do nothing to check if the progress indicator is already there.
+  [mProgressSuperview addSubview:mProgress];
+}
+
+- (void)hideProgressIndicator
+{
+  [mProgress removeFromSuperview];
 }
 
 
@@ -1503,11 +2051,16 @@ static NSArray* sToolbarDefaults = nil;
   return mProxyIcon;
 }
 
+- (BookmarksDataSource*)bookmarksDataSource
+{
+  return mSidebarBookmarksDataSource;
+}
+
 - (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject
 {
   if ([anObject isEqual:mURLBar]) {
     if (!mURLFieldEditor) {
-      mURLFieldEditor = [[NSTextView alloc] init];
+      mURLFieldEditor = [[AutoCompleteTextFieldEditor alloc] init];
       [mURLFieldEditor setFieldEditor:YES];
       [mURLFieldEditor setAllowsUndo:YES];
     }
@@ -1518,6 +2071,7 @@ static NSArray* sToolbarDefaults = nil;
 
 @end
 
+#pragma mark -
 
 @implementation ThrobberHandler
 

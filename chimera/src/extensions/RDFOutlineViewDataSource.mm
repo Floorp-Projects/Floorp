@@ -39,6 +39,7 @@
 #import "NSString+Utils.h"
 
 #import "RDFOutlineViewDataSource.h"
+#import "CHBrowserService.h"
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
@@ -54,42 +55,86 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
+@interface RDFOutlineViewDataSource(Private);
+
+- (void)registerForShutdownNotification;
+- (void)cleanup;
+
+@end
 
 
 @implementation RDFOutlineViewDataSource
 
-- (void) ensureDataSourceLoaded
+- (id)init
 {
-    if (!mContainer)
-    {
-      nsCOMPtr<nsIRDFContainer> ctr = do_CreateInstance("@mozilla.org/rdf/container;1");
-      NS_ADDREF(mContainer = ctr);
-          
-      nsCOMPtr<nsIRDFContainerUtils> ctrUtils = do_GetService("@mozilla.org/rdf/container-utils;1");
-      NS_ADDREF(mContainerUtils = ctrUtils);
-          
-      nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1");
-      NS_ADDREF(mRDFService = rdfService);
-  
-      mDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
-
-      mDataSource = nsnull;
-      mRootResource = nsnull;
-    }
+  if ((self = [super init]))
+  {
+    [self registerForShutdownNotification];
+  }
+  return self;
 }
 
 - (void) dealloc
 {
-    NS_IF_RELEASE(mContainer);
-    NS_IF_RELEASE(mContainerUtils);
-    NS_IF_RELEASE(mRDFService);
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+	[self cleanup];
+  [super dealloc];
+}
+
+- (void)cleanup
+{
+  NS_IF_RELEASE(mContainer);
+  NS_IF_RELEASE(mContainerUtils);
+  NS_IF_RELEASE(mRDFService);
+  
+  NS_IF_RELEASE(mDataSource);
+  NS_IF_RELEASE(mRootResource);
+  
+  [mDictionary release];
+  mDictionary = nil;
+}
+
+- (void)cleanupDataSource
+{
+  [self cleanup];
+}
+
+//
+// ensureDataSourceLoaded
+//
+// defer loading all this rdf junk until it's requested because it's slow
+//
+- (void) ensureDataSourceLoaded
+{
+  if ( !mContainer ) {
+    nsCOMPtr<nsIRDFContainer> ctr = do_CreateInstance("@mozilla.org/rdf/container;1");
+    NS_ADDREF(mContainer = ctr);
     
-    NS_IF_RELEASE(mDataSource);
-    NS_IF_RELEASE(mRootResource);
+    nsCOMPtr<nsIRDFContainerUtils> ctrUtils = do_GetService("@mozilla.org/rdf/container-utils;1");
+    NS_ADDREF(mContainerUtils = ctrUtils);
     
-    [mDictionary release];
-    
-    [super dealloc];
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1");
+    NS_ADDREF(mRDFService = rdfService);
+  
+    mDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
+  
+    mDataSource = nsnull;
+    mRootResource = nsnull;
+  }
+}
+
+- (void)registerForShutdownNotification
+{
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(shutdown:)
+                                        name:         XPCOMShutDownNotificationName
+                                        object:       nil];
+}
+
+- (void)shutdown: (NSNotification*)aNotification
+{
+  [self cleanupDataSource];
 }
 
 - (nsIRDFDataSource*) dataSource
@@ -170,7 +215,7 @@
         // our object. 
         nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(childNode));
         if (childResource) 
-            return [self MakeWrapperFor:childResource];
+            return [self makeWrapperFor:childResource];
     }
     else
     {
@@ -195,7 +240,7 @@
 
         nsCOMPtr<nsIRDFResource> childResource(do_QueryInterface(supp));
         if (childResource) {
-            return [self MakeWrapperFor:childResource];
+            return [self makeWrapperFor:childResource];
         }
     }
 
@@ -240,36 +285,44 @@
 - (id) outlineView: (NSOutlineView*) aOutlineView objectValueForTableColumn: (NSTableColumn*) aTableColumn
                                                   byItem: (id) aItem
 {
-    if (!mDataSource || !aItem)
-        return nil;
-    
-    // The table column's identifier is the RDF Resource URI of the property being displayed in
-    // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
-    NSString* columnPropertyURI = [aTableColumn identifier];
-    
-    nsCOMPtr<nsIRDFResource> propertyResource;
-    mRDFService->GetResource([columnPropertyURI UTF8String], getter_AddRefs(propertyResource));
-            
-    nsCOMPtr<nsIRDFResource> resource = dont_AddRef([aItem resource]);
-            
-    nsCOMPtr<nsIRDFNode> valueNode;
-    mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
-    if (!valueNode) {
-#if DEBUG
-        NSLog(@"ValueNode is null in RDF objectValueForTableColumn");
-#endif
-        return nil;
-    }
-    
-    nsCOMPtr<nsIRDFLiteral> valueLiteral(do_QueryInterface(valueNode));
-    if (!valueLiteral)
-        return nil;
-    
-    nsXPIDLString literalValue;
-    valueLiteral->GetValue(getter_Copies(literalValue));
+  if (!mDataSource || !aItem)
+      return nil;
+  
+  // The table column's identifier is the RDF Resource URI of the property being displayed in
+  // that column, e.g. "http://home.netscape.com/NC-rdf#Name"
+  NSString* columnPropertyURI = [aTableColumn identifier];    
+  nsXPIDLString literalValue;
+  [self getPropertyString:columnPropertyURI forItem:aItem result:getter_Copies(literalValue)];
 
-    return [NSString stringWith_nsAString: literalValue];
+  return [self createCellContents:literalValue withColumn:columnPropertyURI byItem:aItem];
 }
+
+
+//
+// createCellContents:withColumn:byItem
+//
+// Constructs a NSString from the given string data for this item in the given column.
+// This should be overridden to do more fancy things, such as add an icon, etc.
+//
+-(id) createCellContents:(const nsAString&)inValue withColumn:(NSString*)inColumn byItem:(id) inItem
+{
+  return [NSString stringWith_nsAString: inValue];
+}
+
+
+//
+// outlineView:tooltipForString
+//
+// returns the value of the Name property as the tooltip for the given item. Override to do 
+// anything more complicated
+//
+- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)inItem
+{
+  nsXPIDLString literalValue;
+  [self getPropertyString:@"http://home.netscape.com/NC-rdf#Name" forItem:inItem result:getter_Copies(literalValue)];
+  return [NSString stringWith_nsAString:literalValue];
+}
+
 
 - (void) outlineView: (NSOutlineView*) aOutlineView setObjectValue: (id) aObject
                                                     forTableColumn: (NSTableColumn*) aTableColumn
@@ -278,24 +331,61 @@
 
 }
 
+
+
 - (void) reloadDataForItem: (id) aItem reloadChildren: (BOOL) aReloadChildren
 {
-    if (!aItem)
-        [mOutlineView reloadData];
-    else
-        [mOutlineView reloadItem: aItem reloadChildren: aReloadChildren];
+  if (!aItem)
+    [mOutlineView reloadData];
+  else
+    [mOutlineView reloadItem: aItem reloadChildren: aReloadChildren];
 }
 
-- (id) MakeWrapperFor: (nsIRDFResource*) aRDFResource
+- (id) makeWrapperFor: (nsIRDFResource*) aRDFResource
 {
-    RDFOutlineViewItem* item = [[[RDFOutlineViewItem alloc] init] autorelease];
+  const char* k;
+  aRDFResource->GetValueConst(&k);
+  NSString* key = [NSString stringWithCString:k];
+  
+  // see if we've created a wrapper already, if not, create a new wrapper object
+  // and stash it in our dictionary
+  RDFOutlineViewItem* item = [mDictionary objectForKey:key];
+  if (!item) {
+    item = [[RDFOutlineViewItem alloc] init];
     [item setResource: aRDFResource];
-    // keep a copy around
-    const char* resourceValue;
-    aRDFResource->GetValueConst(&resourceValue);
-    
-    [mDictionary setObject:item forKey:[NSString stringWithCString:resourceValue]];
-    return item;
+    [mDictionary setObject:item forKey:key];				// retains |item|
+  }
+  
+  return item;
+}
+
+
+-(void) getPropertyString:(NSString*)inPropertyURI forItem:(RDFOutlineViewItem*)inItem
+            result:(PRUnichar**)outResult
+{
+  if ( !outResult )
+    return;
+  *outResult = nil;
+  
+  nsCOMPtr<nsIRDFResource> propertyResource;
+  mRDFService->GetResource([inPropertyURI UTF8String], getter_AddRefs(propertyResource));
+          
+  nsCOMPtr<nsIRDFResource> resource = dont_AddRef([inItem resource]);
+          
+  nsCOMPtr<nsIRDFNode> valueNode;
+  mDataSource->GetTarget(resource, propertyResource, PR_TRUE, getter_AddRefs(valueNode));
+  if (!valueNode) {
+#if DEBUG
+      NSLog(@"ValueNode is null in RDF objectValueForTableColumn");
+#endif
+      return;
+  }
+  
+  nsCOMPtr<nsIRDFLiteral> valueLiteral(do_QueryInterface(valueNode));
+  if (!valueLiteral)
+      return;
+
+  valueLiteral->GetValue(outResult);
 }
 
 

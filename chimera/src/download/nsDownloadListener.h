@@ -49,6 +49,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
+#include "nsExternalHelperAppService.h"
 
 
 // maybe this should replace nsHeaderSniffer too?
@@ -77,7 +78,10 @@ public:
     
 private:
 
+    // These two are mutually exclusive
     nsCOMPtr<nsIWebBrowserPersist>  mWebPersist;        // Our web persist object.
+    nsCOMPtr<nsIHelperAppLauncher>  mHelperAppLauncher; // If we're talking to uriloader
+    
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
     nsCOMPtr<nsILocalFile>          mDestination;       // Our destination URL.
     PRInt64                         mStartTime;         // When the download started

@@ -87,4 +87,7 @@ class RemoteURILoadManager;
 - (BOOL)postURILoadRequest:(NSString*)inURI forTarget:(id)target
           withUserData:(id)userData allowNetworking:(BOOL)inNetworkOK;
 
+// cancel all outstanding requests
+- (void)cancelOutstandingRequests;
+
 @end

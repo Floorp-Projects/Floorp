@@ -17,13 +17,14 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface SplashScreenWindow : NSWindow {
-    BOOL	        _fades;
-    BOOL           __didFadeIn;
-    int             _fadeIndex;
-    NSTimeInterval  _fadeDelay;
-    id			    _fadeThreadLock;
-    NSTextField    *_statusField;
+@interface SplashScreenWindow : NSWindow
+{
+    BOOL            mFades;
+    BOOL            mDidFadeIn;
+    int             mFadeIndex;
+    NSTimeInterval  mFadeDelay;
+    id              mFadeThreadLock;
+    NSTextField    *mStatusField;
 }
 
 // This method inits the window and displays it, slightly proud of center,
@@ -36,7 +37,7 @@
 // If that fails, the app icon will be displayed.
 //
 // The window will release itself whenever you send it the close message.
--(id)splashImage:(NSImage *)splashImage withFade:(BOOL)shouldFade withStatusRect:(NSRect)statusRect;
+- (id)initWithImage:(NSImage*)splashImage withFade:(BOOL)shouldFade;
 
 -(NSString *)statusText;
 -(void)setStatusText:(NSString *)newText;

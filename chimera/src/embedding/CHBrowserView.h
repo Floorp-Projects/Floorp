@@ -50,13 +50,14 @@ class nsIDOMEvent;
 class nsIWebBrowserFind;
 class nsIEventSink;
 class nsIDragHelperService;
+class nsIPrintSettings;
 
 
 // Protocol implemented by anyone interested in progress
 // related to a BrowserView. A listener should explicitly
 // register itself with the view using the addListener
 // method.
-@protocol NSBrowserListener
+@protocol CHBrowserListener
 
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
@@ -81,7 +82,7 @@ typedef enum {
   NSStatusTypeLink              = 0x0003,
 } NSStatusType;
 
-@protocol NSBrowserContainer
+@protocol CHBrowserContainer
 
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type;
 - (NSString *)title;
@@ -100,6 +101,12 @@ typedef enum {
 // another item that represents the same entity (e.g. tab or proxy icon)
 - (BOOL)shouldAcceptDragFromSource:(id)dragSource;
 
+// Gecko wants to close the "window" associated with this instance. Some
+// embedding apps might want to multiplex multiple gecko views in one
+// window (tabbed browsing). This gives them the chance to change the
+// behavior.
+- (void)closeBrowserWindow;
+
 @end
 
 enum {
@@ -117,13 +124,16 @@ enum {
 
 @interface CHBrowserView : NSView 
 {
-  nsIWebBrowser* _webBrowser;
-  CHBrowserListener* _listener;
-  NSWindow* mWindow;
+  nsIWebBrowser*        _webBrowser;
+  CHBrowserListener*    _listener;
+  NSWindow*             mWindow;
   
   nsIDragHelperService* mDragHelper;
   NSPoint               mLastTrackedLocation;
   NSWindow*             mLastTrackedWindow;
+  
+  nsIPrintSettings*     mPrintSettings; // we own this
+  BOOL                  mUseGlobalPrintSettings;
 }
 
 // NSView overrides
@@ -134,10 +144,10 @@ enum {
 - (void)setFrame:(NSRect)frameRect;
 
 // nsIWebBrowser methods
-- (void)addListener:(id <NSBrowserListener>)listener;
-- (void)removeListener:(id <NSBrowserListener>)listener;
-- (void)setContainer:(id <NSBrowserContainer>)container;
-- (nsIDOMWindow*)getContentWindow;
+- (void)addListener:(id <CHBrowserListener>)listener;
+- (void)removeListener:(id <CHBrowserListener>)listener;
+- (void)setContainer:(id <CHBrowserContainer>)container;
+- (nsIDOMWindow*)getContentWindow;	// addrefs
 
 // nsIWebNavigation methods
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags;
@@ -150,11 +160,16 @@ enum {
 - (void)stop:(unsigned int)flags;
 - (NSString*)getCurrentURI;
 
-- (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
+// nsIWebBrowserSetup methods
+- (void)setProperty:(unsigned int)property toValue:(unsigned int)value;
+
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
             url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
 
 - (void)printDocument;
+- (void)pageSetup;
+- (void)ensurePrintSettings;
 
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
             wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;
@@ -176,6 +191,12 @@ enum {
 
 - (BOOL)canUndo;
 - (BOOL)canRedo;
+
+- (void)biggerTextSize;
+- (void)smallerTextSize;
+
+- (BOOL)canMakeTextBigger;
+- (BOOL)canMakeTextSmaller;
 
 -(NSString*)getCurrentURLSpec;
 

@@ -40,22 +40,36 @@
 #import "SecurityDialogs.h"
 #import "CocoaPromptService.h"
 #include "nsIGenericFactory.h"
+#import "KeychainService.h"
 
 // {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
-#define NS_BADCERTHANDLER_CID \
+#define NS_SECURITYDIALOGS_CID \
   {0x0ffd3880, 0x7a1a, 0x11d6,{0xa3, 0x84, 0x97, 0x5d, 0x1d, 0x5f, 0x86, 0xfc}}
 
 #define NS_PROMPTSERVICE_CID \
   {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 
+#define NS_KEYCHAINPROMPT_CID                    \
+    { 0x64997e60, 0x17fe, 0x11d4, {0x8c, 0xee, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3}}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(SecurityDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(CocoaPromptService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(KeychainPrompt);
 
-static const nsModuleComponentInfo components[] = {
+// used by MainController to register the components in which we want to override
+// with the Gecko embed layer.
+
+static const nsModuleComponentInfo gAppComponents[] = {
   {
-    "Bad Cert Handler",
-    NS_BADCERTHANDLER_CID,
-    NS_NSSDIALOGS_CONTRACTID,
+    "Security Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_BADCERTLISTENER_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "Security Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_SECURITYWARNINGDIALOGS_CONTRACTID,
     SecurityDialogsConstructor
   },
   {
@@ -63,12 +77,18 @@ static const nsModuleComponentInfo components[] = {
     NS_PROMPTSERVICE_CID,
     "@mozilla.org/embedcomp/prompt-service;1",
     CocoaPromptServiceConstructor
+  },
+  {
+    "Keychain Prompt",
+    NS_KEYCHAINPROMPT_CID,
+    "@mozilla.org/wallet/single-sign-on-prompt;1",
+    KeychainPromptConstructor
   }
 };
 
-const nsModuleComponentInfo* GetAppModuleComponentInfo(int* outNumComponents)
-{
-  *outNumComponents = sizeof(components) / sizeof(components[0]);
-  return components;
-}
 
+const nsModuleComponentInfo* GetAppComponents ( unsigned int * outNumComponents )
+{
+  *outNumComponents = sizeof(gAppComponents) / sizeof(nsModuleComponentInfo);
+  return gAppComponents;
+}

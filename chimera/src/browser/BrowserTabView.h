@@ -42,4 +42,9 @@
 
 - (void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer;
 
+- (float)getExtraTopSpace;
+- (BOOL)tabsVisible;
+
+- (BrowserTabViewItem*)itemWithTag:(int)tag;
+
 @end
