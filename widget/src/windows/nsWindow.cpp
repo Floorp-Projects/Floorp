@@ -3135,7 +3135,6 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
       } 
 #endif  /* MOZ_UNICODE */
       virtualKeyCode = 0;
-      mIsShiftDown = PR_FALSE;
     }
   }
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode, 0);
