@@ -25,6 +25,7 @@
 var gMailListView; 
 var gListBox; 
 var gOkCallback = null; 
+var gCancelCallback = null;
 var gEditButton;
 var gDeleteButton;
 
@@ -38,6 +39,8 @@ function mailViewListOnLoad()
     var args = window.arguments[0];
     if ("onOkCallback" in args)
       gOkCallback =  window.arguments[0].onOkCallback;
+    if ("onCancelCallback" in args)
+      gCancelCallback =  window.arguments[0].onCancelCallback;
   }
 
   // Construct list view based on current mail view list data
@@ -59,7 +62,8 @@ function onOK()
 
 function onCancel()
 {
-  // close the window
+  if (gCancelCallback)
+    gCancelCallback();
   return true;
 }
 

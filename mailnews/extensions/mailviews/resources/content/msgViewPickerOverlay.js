@@ -24,7 +24,8 @@ const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
 var gOnLoadCalled = false; 
 var gMailViewList = null;
 var gLastDefaultViewIndex = 8;
-var gCurrentViewValue = "";
+var gCurrentViewValue = "0"; // initialize to the first view ("All")
+var gOldViewValue = "0";  // initialize to the first view ("All")
 
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
@@ -32,15 +33,24 @@ var nsMsgSearchOp = Components.interfaces.nsMsgSearchOp;
 
 // when the item in the list box changes....
 
-function viewChange (aMenuList)
+function viewChange(aMenuList)
 {
   var val = aMenuList.value;
 
-  GetSearchInput();
-  gSearchInput.value = "";  // null out any quick search text
-
-  if (val == gCurrentViewValue && val != "7") // don't skip selection of custom view item
+  // bail out early if the user picked the same view
+  // (unless they picked "Customize...")
+  if (val == gCurrentViewValue && val != "7") 
     return; 
+
+  GetSearchInput();
+
+  // switching views, clear out the quick search text
+  gSearchInput.value = "";
+
+  // remember the previous view value
+  // in case they do "Customize..." and then cancel
+  // in which case we'll restore to the previous view value
+  gOldViewValue = gCurrentViewValue;
   gCurrentViewValue = val;
 
   switch (val)
@@ -86,7 +96,7 @@ function viewPickerOnLoad()
 
 function LaunchCustomizeDialog()
 {
-  OpenOrFocusWindow({onOkCallback: refreshCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul');
+  OpenOrFocusWindow({onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul');
   // window.openDialog('chrome://messenger/content/mailViewList.xul', "", 'centerscreen,resizeable,titlebar,chrome', {onOkCallback: refreshCustomMailViews});
 }
 
@@ -109,6 +119,13 @@ function LoadCustomMailView(index)
 
   onSearch(searchTermsArray);   
   gDefaultSearchViewTerms = searchTermsArray;
+}
+
+function cancelCustomMailViews()
+{
+  var viewPicker = document.getElementById('viewPicker');
+  viewPicker.value = gOldViewValue;
+  UpdateView();
 }
 
 function refreshCustomMailViews(aDefaultSelectedIndex)
