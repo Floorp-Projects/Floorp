@@ -44,6 +44,18 @@
 @implementation NSString (ChimeraStringUtils)
 
 
++ (id)ellipsisString
+{
+  static NSString* sEllipsisString = nil;
+  if (!sEllipsisString)
+  {
+    unichar ellipsisChar = 0x2026;
+    sEllipsisString = [[[NSString alloc] initWithCharacters:&ellipsisChar length:1] retain];
+  }
+  
+  return sEllipsisString;
+}
+
 + (id)stringWithPRUnichars:(const PRUnichar*)inString
 {
   if (inString)
@@ -119,8 +131,7 @@
 
 - (NSString*)stringByTruncatingTo:(int)maxCharacters at:(ETruncationType)truncationType
 {
-  unichar ellipsisChar = 0x2026;
-  NSString*	ellipsisString = [NSString stringWithCharacters:&ellipsisChar length:1]; // @"...";
+  NSString*	ellipsisString = [NSString ellipsisString];
   
   if ([self length] > maxCharacters)
   {

@@ -438,11 +438,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // reuse the main window if there is one. The user may have closed all of 
   // them or we may get this event at startup before we've had time to load
   // our window.
-  BrowserWindowController* controller = NULL;
-  
-  NSWindow* browserWindow = [self getFrontmostBrowserWindow];
-  if (reuseWindow && browserWindow) {
-    controller = [browserWindow windowController];
+  BrowserWindowController* controller = [self getMainWindowBrowserController];
+  if (reuseWindow && controller && [controller canMakeNewTabs]) {
     [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
   }
   else {
@@ -669,11 +666,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   //NSLog(@"MainController validateMenuItem for %@ (%s)", [aMenuItem title], action);
 
-  if (action == @selector(newTab:) ||
+  if (action == @selector(printPage:) ||
         /* ... many more items go here ... */
         /* action == @selector(goHome:) || */			// always enabled
         /* action == @selector(doSearch:) || */		// always enabled
-        action == @selector(printPage:) ||
         action == @selector(findInPage:) ||
         action == @selector(doReload:) ||
         action == @selector(biggerTextSize:) ||
@@ -685,6 +681,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     return NO;
   }
 
+  if (action == @selector(newTab:)) {
+    if (browserController && [browserController newTabsAllowed])
+      return YES;
+    return NO;
+  }
+  
   // check if someone has previously done a find before allowing findAgain to be enabled
   if (action == @selector(findAgain:)) {
     if (browserController)

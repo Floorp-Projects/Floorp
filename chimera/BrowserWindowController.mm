@@ -90,6 +90,7 @@ static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
 
+#define kMaxBrowserWindowTabs 16
 
 @interface BrowserWindowController(Private)
 - (void)setupToolbar;
@@ -290,6 +291,9 @@ static NSArray* sToolbarDefaults = nil;
     
     [self setupToolbar];
     
+    // set an upper limit on the number of tabs per window
+    [mTabBrowser setMaxNumberOfTabs: kMaxBrowserWindowTabs];
+
 //  03/03/2002 mlj Changing strategy a bit here.  The addTab: method was
 //  duplicating a lot of the code found here.  I have moved it to that method.
 //  We now remove the IB tab, then add one of our own.
@@ -758,7 +762,11 @@ static NSArray* sToolbarDefaults = nil;
   PRBool loadInBackground;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-  [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
+
+  if (![self newTabsAllowed])
+    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
+  else
+    [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
 }
 
 - (IBAction)printDocument:(id)aSender
@@ -962,7 +970,7 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)newTab:(BOOL)allowHomepage
 {
-    NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
+    CHIconTabViewItem* newTab = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
 
     PRInt32 newTabPage = 0;
@@ -1040,6 +1048,11 @@ static NSArray* sToolbarDefaults = nil;
   return mTabBrowser;
 }
 
+- (BOOL)newTabsAllowed
+{
+  return [mTabBrowser canMakeNewTabs];
+}
+
 -(CHBrowserWrapper*)getBrowserWrapper
 {
   return mBrowserView;
@@ -1076,7 +1089,7 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
-    NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
+    CHIconTabViewItem* newTab = [[[CHIconTabViewItem alloc] initWithIdentifier: nil] autorelease];
     
     NSTabViewItem* selectedTab = [mTabBrowser selectedTabViewItem];
     int index = [mTabBrowser indexOfTabViewItem: selectedTab];
@@ -1305,7 +1318,7 @@ static NSArray* sToolbarDefaults = nil;
 
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
-  if (aUseWindow)
+  if (aUseWindow || ![self newTabsAllowed])
     [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
   else
     [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];

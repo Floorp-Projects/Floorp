@@ -51,6 +51,7 @@ typedef enum
 // a category to extend NSString
 @interface NSString (ChimeraStringUtils)
 
++ (id)ellipsisString;
 + (id)stringWithPRUnichars:(const PRUnichar*)inString;
 + (id)stringWith_nsAString:(const nsAString&)inString;
 - (void)assignTo_nsAString:(nsAString&)ioString;
