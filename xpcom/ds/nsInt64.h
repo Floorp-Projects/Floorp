@@ -297,7 +297,7 @@ operator >(const nsInt64& aObject1, const nsInt64& aObject2) {
  */
 inline PRBool
 operator >=(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return LL_CMP(aObject1.mValue, >=, aObject2.mValue);
+    return ! LL_CMP(aObject1.mValue, <, aObject2.mValue);
 }
 
 /**
@@ -313,7 +313,7 @@ operator <(const nsInt64& aObject1, const nsInt64& aObject2) {
  */
 inline PRBool
 operator <=(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return LL_CMP(aObject1.mValue, <=, aObject2.mValue);
+    return ! LL_CMP(aObject1.mValue, >, aObject2.mValue);
 }
 
 /**
