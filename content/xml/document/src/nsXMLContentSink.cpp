@@ -1748,6 +1748,13 @@ nsXMLContentSink::ScriptAvailable(nsresult aResult,
 
   if (NS_FAILED(aResult)) {
     mScriptElements.RemoveElementAt(count-1);
+     
+    if(mParser && aWasPending){
+      // Loading external script failed!. So, resume
+      // parsing since the parser got blocked when loading
+      // external script. - Ref. Bug: 94903
+      mParser->ContinueParsing();
+    }
   }
 
   return NS_OK;
