@@ -275,4 +275,15 @@ function updateToolbar()
   var toolbar = window.opener.document.getElementById("nav-bar");
   toolbar.setAttribute("currentset", newSet);
   window.opener.document.persist("nav-bar", "currentset");
+
+  toolbar.rebuild();
+}
+
+// Revert back to the default set.
+function resetToDefault()
+{
+  var toolbar = window.opener.document.getElementById("nav-bar");
+  var defaultSet = toolbar.getAttribute("defaultset");
+  var cloneToolbar = document.getElementById("cloneToolbar");
+  
 }

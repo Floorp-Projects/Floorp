@@ -320,6 +320,9 @@ function Startup()
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
+  var toolbar = document.getElementById("nav-bar");
+  toolbar.toolbarChanged = BrowserToolbarChanged;
+
   SetPageProxyState("invalid", null);
 
   var webNavigation;
@@ -3541,6 +3544,14 @@ function goAboutDialog()
   window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
 }
 
+
+function BrowserToolbarChanged()
+{
+  gURLBar = document.getElementById("urlbar");
+  gProxyButton = document.getElementById("page-proxy-button");
+  gProxyFavIcon = document.getElementById("page-proxy-favicon");
+  gProxyDeck = document.getElementById("page-proxy-deck");
+}
 
 function BrowserCustomizeToolbar()
 {

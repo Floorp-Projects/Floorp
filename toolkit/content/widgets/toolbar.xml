@@ -19,6 +19,11 @@
       <field name="afterPalette">
         null
       </field>
+
+      <field name="toolbarChanged">
+        null
+      </field>
+
       <method name="rebuild">
         <body>
           <![CDATA[
@@ -26,6 +31,7 @@
               this.removeChild(this.firstChild);
             }
             this.buildItemsFromPalette();
+            this.toolbarChanged();
           ]]>
         </body>
       </method>
