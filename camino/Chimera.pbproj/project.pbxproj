@@ -270,7 +270,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src /Volumes/Data/Source/cocoazilla/mozilla/dist/Embed/components";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -785,6 +785,18 @@
 		};
 		F507423D02AD808301A967F3 = {
 			fileRef = F507423C02AD808201A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A82C030BFB7901026D5D = {
+			isa = PBXFileReference;
+			name = libuniversalchardet.dylib;
+			path = ../dist/Embed/components/libuniversalchardet.dylib;
+			refType = 2;
+		};
+		F507A82E030BFBB201026D5D = {
+			fileRef = F507A82C030BFB7901026D5D;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1917,7 +1929,7 @@
 			);
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
-				HEADER_SEARCH_PATHS = "../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom";
+				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "";
@@ -8045,6 +8057,7 @@
 				F6BD641801B3156701A962F7,
 				F6BD641901B3156701A962F7,
 				F6BD641A01B3156701A962F7,
+				F507A82C030BFB7901026D5D,
 				F6BD641B01B3156701A962F7,
 				F6BD641C01B3156701A962F7,
 				F6BD641D01B3156701A962F7,
@@ -8192,6 +8205,7 @@
 				F57BBFED02DA034601026D5D,
 				F57BBFEE02DA034601026D5D,
 				F6BD64A001B3167601A962F7,
+				F507A82E030BFBB201026D5D,
 				F6BD64A101B3167601A962F7,
 				F6BD64A201B3167601A962F7,
 				F6BD64A301B3167601A962F7,
