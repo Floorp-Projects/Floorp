@@ -48,6 +48,8 @@
 #include "nsIPref.h"
 #include "imgILoader.h"
 
+#include "nsCRT.h"
+
 #include "nsIMIMEService.h"
 
 #include "nsIViewSourceChannel.h"
@@ -349,53 +351,10 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
     return;
   }
 
-  /*
-   * To prevent a possible attack, we will not consider this to be
-   * html content if it comes from the local file system and our prefs
-   * are set right
-   */
-  if (AllowSniffing(aRequest)) {
-    // Now look for HTML
-    CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
-    nsCAutoString str(bufDesc);
-
-    PRInt32 offset;
-
-    offset = str.Find("<HTML", PR_TRUE);
-    if (offset < 0) {
-      offset = str.Find("<TITLE", PR_TRUE);
-      if (offset < 0) {
-        offset = str.Find("<FRAMESET", PR_TRUE);
-        if (offset < 0) {
-          offset = str.Find("<SCRIPT", PR_TRUE);
-          if (offset < 0) {
-            offset = str.Find("<BODY", PR_TRUE);
-            if (offset < 0) {
-              offset = str.Find("<TABLE", PR_TRUE);
-              if (offset < 0) {
-                offset = str.Find("<DIV", PR_TRUE);
-                if (offset < 0) {
-                  offset = str.Find("<A HREF", PR_TRUE);
-                  if (offset < 0) {
-                    offset = str.Find("<APPLET", PR_TRUE);
-                    if (offset < 0) {
-                      offset = str.Find("<META", PR_TRUE);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (offset >= 0) {
-      mContentType = TEXT_HTML;
-      return;
-    }
+  if (SniffForHTML(aRequest)) {
+    return;
   }
-
+  
   // We don't know what this is yet.  Before we just give up, try
   // the URI from the request.
   if (SniffURI(aRequest)) {
@@ -417,6 +376,73 @@ PRBool nsUnknownDecoder::SniffForImageMimeType(nsIRequest* aRequest)
 
   mContentType.Adopt(temp);
   return PR_TRUE;
+}
+
+PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
+{
+  /*
+   * To prevent a possible attack, we will not consider this to be
+   * html content if it comes from the local file system and our prefs
+   * are set right
+   */
+  if (!AllowSniffing(aRequest)) {
+    return PR_FALSE;
+  }
+  
+  // Now look for HTML.  First, we get us a nice nsCAutoString
+  // containing our data in a readonly-ish manner...
+  const CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
+  const nsCAutoString str(bufDesc);
+
+  nsCAutoString::const_iterator start, end;
+  str.BeginReading(start);
+  str.EndReading(end);
+  PRUint32 pos = 0; // for Substring ease
+
+  // skip leading whitespace
+  while (start != end && nsCRT::IsAsciiSpace(*start)) {
+    ++start;
+    ++pos;
+  }
+
+  // did we find something like a start tag?
+  if (start == end || *start != '<' || ++start == end) {
+    return PR_FALSE;
+  }
+
+  // advance pos to keep synch with |start|
+  ++pos;
+
+  // If we seem to be SGML or XML and we got down here, just pretend we're HTML
+  if (*start == '!' || *start == '?') {
+    mContentType = TEXT_HTML;
+    return PR_TRUE;
+  }
+
+  nsCaseInsensitiveCStringComparator comparator;
+
+#define MATCHES_TAG(_tagstr) \
+  Substring(str, pos, sizeof(_tagstr) - 1).Equals(_tagstr, comparator)
+  
+  if (MATCHES_TAG("html")     ||
+      MATCHES_TAG("frameset") ||
+      MATCHES_TAG("body")     ||
+      MATCHES_TAG("script")   ||
+      MATCHES_TAG("a href")   ||
+      MATCHES_TAG("img")      ||
+      MATCHES_TAG("table")    ||
+      MATCHES_TAG("title")    ||
+      MATCHES_TAG("div")      ||
+      MATCHES_TAG("applet")   ||
+      MATCHES_TAG("meta")) {
+  
+    mContentType = TEXT_HTML;
+    return PR_TRUE;
+  }
+
+#undef MATCHES_TAG
+  
+  return PR_FALSE;
 }
 
 PRBool nsUnknownDecoder::SniffForXML(nsIRequest* aRequest)

@@ -89,8 +89,17 @@ protected:
   // Various sniffer functions.  Returning PR_TRUE means that a type
   // was determined; PR_FALSE means no luck.
   PRBool SniffForImageMimeType(nsIRequest* aRequest);
+  PRBool SniffForHTML(nsIRequest* aRequest);
   PRBool SniffForXML(nsIRequest* aRequest);
+
+  // SniffURI guesses at the content type based on the URI (typically
+  // using the extentsion)
   PRBool SniffURI(nsIRequest* aRequest);
+
+  // LastDitchSniff guesses at text/plain vs. application/octet-stream
+  // by just looking at whether the data contains null bytes, and
+  // maybe at the fraction of chars with high bit set.  Use this only
+  // as a last-ditch attempt to decide a content type!
   PRBool LastDitchSniff(nsIRequest* aRequest);
 
   /**
