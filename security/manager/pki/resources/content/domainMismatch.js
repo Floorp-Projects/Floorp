@@ -22,18 +22,21 @@
  */
 
 
-const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
-const nsIX509Cert      = Components.interfaces.nsIX509Cert;
+const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 
-var params;
+var pkiParams;
+var dialogParams;
 
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
-  var connectURL = params.GetString(1); 
-  var isupport = params.getISupportAtIndex(1);
+  pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
+  var isupport = pkiParams.getISupportAtIndex(1);
   var cert     = isupport.QueryInterface(nsIX509Cert);
+  dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
+  var connectURL = dialogParams.GetString(1); 
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
@@ -53,12 +56,12 @@ function viewCert()
 
 function doOK()
 {
-  params.SetInt(1,1);
+  dialogParams.SetInt(1,1);
   window.close();
 }
 
 function doCancel()
 {
-  params.SetInt(1,0);
+  dialogParams.SetInt(1,0);
   window.close();
 }

@@ -22,16 +22,20 @@
  */
 
 
-const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
-const nsIX509Cert      = Components.interfaces.nsIX509Cert;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
+const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 
-var params;
+var dialogParams;
+var pkiParams;
 
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
-  var isupport = params.getISupportAtIndex(1); 
+  pkiParams    = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
+  dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
+
+  var isupport = pkiParams.getISupportAtIndex(1); 
   var cert = isupport.QueryInterface(nsIX509Cert);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
@@ -50,14 +54,14 @@ function onLoad()
 
 function doOK()
 {
-  params.SetInt(1,1);
+  dialogParams.SetInt(1,1);
   var radioGroup = document.getElementById("trustSiteCert");
-  params.SetInt(2,parseInt(radioGroup.selectedItem.data));
+  dialogParams.SetInt(2,parseInt(radioGroup.selectedItem.data));
   window.close();
 }
 
 function doCancel()
 {
-  params.SetInt(1,0);
+  dialogParams.SetInt(1,0);
   window.close();
 }

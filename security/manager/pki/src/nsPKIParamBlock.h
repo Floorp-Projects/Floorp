@@ -36,6 +36,7 @@
 #define _NSPKIPARAMBLOCK_
 #include "nsCOMPtr.h"
 #include "nsIPKIParamBlock.h"
+#include "nsIDialogParamBlock.h"
 
 #define NS_PKIPARAMBLOCK_CID \
   { 0x0bec75a8, 0x1dd2, 0x11b2, \
@@ -43,7 +44,8 @@
 
 #define NS_PKIPARAMBLOCK_CONTRACTID "@mozilla.org/security/pkiparamblock;1"
 
-class nsPKIParamBlock : public nsIPKIParamBlock
+class nsPKIParamBlock : public nsIPKIParamBlock,
+                        public nsIDialogParamBlock
 {
 public:
   enum { kNumISupports = 4 };
