@@ -4053,8 +4053,9 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
     }
 
-  } else if (nsHTMLAtoms::object == tag.get()) {
-    // It's an OBJECT element, so we should display the contents instead
+  } else if ((nsHTMLAtoms::object == tag.get()) ||
+             (nsHTMLAtoms::applet == tag.get())) {
+    // It's an OBJECT element or APPLET, so we should display the contents instead
     nsCOMPtr<nsIStyleContext> styleContext;
     const nsStyleDisplay*     display;
 
