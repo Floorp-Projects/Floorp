@@ -476,7 +476,7 @@ Archive=deflenus.xpi
 $InstallSize$:deflenus
 $InstallSizeSystem$
 $InstallSizeArchive$:deflenus.xpi
-Attributes=SELECTED|INVISIBLE|FOCE_UPGRADE
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
 
 [Component En US lang pack]
