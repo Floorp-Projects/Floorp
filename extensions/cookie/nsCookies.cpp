@@ -706,6 +706,9 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   if (NS_FAILED(result)) {
     return nsnull;
   }
+  if ((host.RFindChar(' ') != -1) || (host.RFindChar('\t') != -1)) {
+    return nsnull;
+  }
   result = ioService->ExtractUrlPart(nsDependentCString(address),
                                      nsIIOService::url_Path, path);
   if (NS_FAILED(result)) {
