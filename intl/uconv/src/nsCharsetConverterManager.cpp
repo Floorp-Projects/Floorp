@@ -46,7 +46,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
 
-// Pattern of cached, commonly used, single byte encoder and decoder
+// Pattern of cached, commonly used, single byte decoder
 #define NS_1BYTE_CODER_PATTERN "ISO-8859"
 #define NS_1BYTE_CODER_PATTERN_LEN 8
 //----------------------------------------------------------------------------
@@ -485,15 +485,8 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   aDest->ToCString(progid + baselen, 256 - baselen);
 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  if (!strncmp(progid+baselen, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
-  {
-    // Single byte encoders/decoders dont hold state. Optimize by using a service.
-    encoder = do_GetService(progid, &res);
-  }
-  else
-  {
-    encoder = do_CreateInstance(progid, &res);
-  }
+  // Always create an instance since encoders hold state.
+  encoder = do_CreateInstance(progid, &res);
 
   if (NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
