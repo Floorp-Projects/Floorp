@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.11 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
+/* $Id: keyhi.h,v 1.12 2005/02/24 00:35:51 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -220,6 +220,9 @@ extern SECStatus
 SECKEY_CopyPrivateKeyInfo(PRArenaPool *poolp,
 			  SECKEYPrivateKeyInfo *to,
 			  SECKEYPrivateKeyInfo *from);
+
+extern SECStatus
+SECKEY_CacheStaticFlags(SECKEYPrivateKey* key);
 
 /* Copy encrypted private key info structure.  
  *  poolp is the arena into which the contents of from is to be copied.

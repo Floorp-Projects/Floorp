@@ -1379,6 +1379,7 @@ SECKEY_CopyPrivateKey(SECKEYPrivateKey *privk)
 	}
 	copyk->pkcs11IsTemp = privk->pkcs11IsTemp;
 	copyk->wincx = privk->wincx;
+	copyk->staticflags = privk->staticflags;
 	return copyk;
     } else {
 	PORT_SetError (SEC_ERROR_NO_MEMORY);
@@ -2313,4 +2314,23 @@ SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
 
 loser:
     return(SECFailure);
+}
+
+#define SECKEY_CacheAttribute(key, attribute) \
+    if (CK_TRUE == PK11_HasAttributeSet(key->pkcs11Slot, key->pkcs11ID, attribute)) { \
+        key->staticflags |= SECKEY_##attribute; \
+    } else { \
+        key->staticflags &= (~SECKEY_##attribute); \
+    }
+
+SECStatus
+SECKEY_CacheStaticFlags(SECKEYPrivateKey* key)
+{
+    SECStatus rv = SECFailure;
+    if (key && key->pkcs11Slot && key->pkcs11ID) {
+        key->staticflags |= SECKEY_Attributes_Cached;
+        SECKEY_CacheAttribute(key, CKA_PRIVATE);
+        rv = SECSuccess;
+    }
+    return rv;
 }
