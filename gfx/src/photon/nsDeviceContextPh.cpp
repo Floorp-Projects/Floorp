@@ -191,12 +191,7 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mDpi=<%d>\n", mDpi));
 
-#if 1
   SetDPI(mDpi); 
-#else  
-  mTwipsToPixels = float(mDpi) / float(NSIntPointsToTwips(72));
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-#endif
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit mPixelsToTwips=<%f>\n", mPixelsToTwips));
   
@@ -204,42 +199,33 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
     if (err == NS_ERROR_FAILURE)
       abort();
 
-#if 0
-    // HACK multipled by three to make Mozilla work on 3x3 virtual console
-    mWidthFloat  = (float) aWidth * 3;
-    mHeightFloat = (float) aHeight * 3;
-#else
     /* Turn off virtual console support... */
     mWidthFloat  = (float) aWidth;
     mHeightFloat = (float) aHeight;
-#endif
     
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit with aWidget: Screen Size (%f,%f)\n", mWidthFloat,mHeightFloat));
 
-  int res;
-  PgColor_t color[_Pg_MAX_PALETTE];  
 
-  res = PgGetPalette(color);
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit PgGetPalette err=<%d>\n", res));
-  if (res == -1)
-  {
-    mPaletteInfo.isPaletteDevice = PR_FALSE;
-    mPaletteInfo.sizePalette = 0;
-    mPaletteInfo.numReserved = 0;
-    mPaletteInfo.palette = NULL;
-  }
-  else
-  {
-    mPaletteInfo.isPaletteDevice = PR_TRUE;
-    mPaletteInfo.sizePalette = _Pg_MAX_PALETTE;
-    mPaletteInfo.numReserved = 16;  				/* GUESS */
-    mPaletteInfo.palette = PR_Malloc(sizeof(color));
-    if (NULL != mPaletteInfo.palette)
+	if (mDepth > 8)
 	{
-      /* If the memory was allocated */
-	  memcpy(mPaletteInfo.palette, color, sizeof(color));
+		mPaletteInfo.isPaletteDevice = PR_FALSE;
+		mPaletteInfo.sizePalette = 0;
+		mPaletteInfo.numReserved = 0;
+		mPaletteInfo.palette = NULL;
 	}
-  }
+	else
+	{
+		PgColor_t color[_Pg_MAX_PALETTE];
+
+		PgGetPalette(color);
+		// palette based
+		mPaletteInfo.isPaletteDevice = PR_TRUE;
+		mPaletteInfo.sizePalette = _Pg_MAX_PALETTE;
+		mPaletteInfo.numReserved = 16;  				/* GUESS */
+		mPaletteInfo.palette = PR_Malloc(_Pg_MAX_PALETTE * sizeof(PgColor_t));
+		memcpy(mPaletteInfo.palette, color, _Pg_MAX_PALETTE * sizeof(PgColor_t));
+	}
+  
 
   /* Revisit: the scroll bar sizes is a gross guess based on Phab */
   mScrollbarHeight = 17.0f;
@@ -271,6 +257,7 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&
         PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
 
 		PhGC_t * aGC = (PhGC_t *) mDC;
+		printf("CreateRenderingContext\n");
         rv = surf->Init(aGC);
         if (NS_OK == rv)
           rv = pContext->Init(this, surf);
@@ -411,18 +398,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface(nsIRenderingContext &aConte
 
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
 {
-  PRInt32 width=-1, height=-1;
-  nsresult rv;
-	
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetClientRect\n"));
-
-  rv = GetDeviceSurfaceDimensions(width, height);
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = width;
-  aRect.height = height;
-
-  return rv;
+	return GetRect ( aRect );
 }
 
 /* I need to know the requested font size to finish this function */
@@ -521,13 +497,26 @@ NS_IMETHODIMP nsDeviceContextPh::GetRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
+#if 0
+  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceContextFor\n"));
 
-  aContext = new nsDeviceContextPh();
-  ((nsDeviceContextPh*) aContext)->mSpec = aDevice;
-  NS_ADDREF(aDevice);
-  
-  return ((nsDeviceContextPh *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
+  // Create a Postscript device context
+  nsresult rv;
+  nsIDeviceContextPS *dcps;
+  rv = nsComponentManager::CreateInstance(kCDeviceContextPS, nsnull, NS_GET_IID(nsIDeviceContextPS), (void **)&dcps);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
+  dcps->SetSpec(aDevice);
+  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
+  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext), (void **)&aContext);
+
+  NS_RELEASE(dcps);
+
+  return rv;
+#endif  
+	printf("GetDeviceContextFor()\n");
+	return (NS_ERROR_FAILURE);
 }
 
 nsresult nsDeviceContextPh::SetDPI(PRInt32 aDpi)
@@ -553,7 +542,8 @@ int nsDeviceContextPh::prefChanged(const char *aPref, void *aClosure)
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::prefChanged aPref=<%s>\n", aPref));
   
-  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) {
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) 
+  {
     PRInt32 dpi;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     rv = prefs->GetIntPref(aPref, &dpi);
@@ -571,50 +561,6 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
   int         err;
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - Not Implemented\n"));
-
-#if 0
-  /* convert the mSpec into a nsDeviceContextPh */
-  if (mSpec)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - mSpec=<%p>\n", mSpec));
-    nsDeviceContextSpecPh * PrintSpec = nsnull;
-    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
-    if (PrintSpec)
-    {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - PriontSpec=<%p>\n", PrintSpec));
-
-      PpPrintContext_t *PrinterContext = nsnull;
-  	  PrintSpec->GetPrintContext( PrinterContext );
-      if (PrinterContext)
-	  {
-        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - PrinterContext=<%p>\n", PrinterContext));
-#if 1
-		PhRect_t Rect = {1500,1500,1500,1500};
-		err=PpPrintSetPC( PrinterContext, INTERACTIVE_PC, 0, Pp_PC_MARGINS, &Rect);
-
-		PhDim_t Dim = {720,960};
-		err=PpPrintSetPC( PrinterContext, INITIAL_PC, 0, Pp_PC_SOURCE_SIZE, &Dim);
-
-//		PhPoint_t Point = {100,100};
-//		err=PpPrintSetPC( PrinterContext, INITIAL_PC, 0, Pp_PC_SCALE, &Point);
-
-#endif
-		PhDrawContext_t *DrawContext = nsnull;
-
-//DrawContext = PpPrintStart(PrinterContext);
-DrawContext = PpContinueJob(PrinterContext);
-
-
-		if (DrawContext)
-		{
-          PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - DrawContext=<%p>\n", DrawContext));
-          ret_code = NS_OK;
-		}
-      }
-    }
-    NS_RELEASE(PrintSpec);
-  }  
-#endif
 
   return ret_code;
 }
@@ -698,6 +644,9 @@ NS_IMETHODIMP nsDeviceContextPh :: EndPage(void)
   return ret_code;
 }
 
+/*
+ Get the size and color depth of the display
+ */
 nsresult nsDeviceContextPh :: GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth)
 {
 //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDisplayInfo\n"));
@@ -720,9 +669,7 @@ nsresult nsDeviceContextPh :: GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, 
    {
      inp_grp = atoi(p);
 
-     PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
-     PhRegionQuery( rid, &region, &rect, NULL, 0 );
-     inp_grp = region.input_group;
+     PhQueryRids( 0, 0, inp_grp, Ph_GRAFX_REGION, 0, 0, 0, &rid, 1 );
      PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
      aWidth  = rect.lr.x - rect.ul.x + 1;
      aHeight = rect.lr.y - rect.ul.y + 1;  

@@ -56,6 +56,9 @@ public:
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                        PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect);
+
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized();

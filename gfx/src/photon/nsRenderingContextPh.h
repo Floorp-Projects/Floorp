@@ -97,6 +97,7 @@ public:
   NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
   NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawRect(const nsRect& aRect);
@@ -153,6 +154,8 @@ public:
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight);
+  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset,
+                                const nsRect &aTileRect);
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
