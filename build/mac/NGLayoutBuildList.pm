@@ -266,6 +266,7 @@ sub BuildDist()
 
 	#XPCOM
 	InstallFromManifest(":mozilla:xpcom:idl:MANIFEST",								"$distdirectory:idl:");
+	EmptyTree("$distdirectory:xpcom:");#// XXX temporary - needed during changeover only.
     InstallFromManifest(":mozilla:xpcom:public:MANIFEST",							"$distdirectory:xpcom:");
     !$main::USE_XPIDL && InstallFromManifest(":mozilla:xpcom:public:MANIFEST_TEMP","$distdirectory:xpcom:"); #// XXX remove
 	InstallFromManifest(":mozilla:xpcom:src:MANIFEST",								"$distdirectory:xpcom:");
@@ -416,6 +417,7 @@ sub BuildDist()
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
+	EmptyTree("$distdirectory:rdf:");#// XXX temporary - needed during changeover only.
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
     !$main::USE_XPIDL && InstallFromManifest(":mozilla:rdf:base:public:MANIFEST_TEMP","$distdirectory:rdf:"); #// XXX remove
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
