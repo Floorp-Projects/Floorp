@@ -93,6 +93,8 @@
 #include "nsUnicharUtils.h"
 
 
+#include "nsIParser.h"          // for kCharsetFromBookmarks
+
 #ifdef XP_WIN
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
@@ -3269,18 +3271,28 @@ nsBookmarksService::IsBookmarked(const char* aURL, PRBool* aIsBookmarked)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::GetLastCharset(const char* aURL, PRUnichar** aLastCharset)
+nsBookmarksService::RequestCharset(nsIDocShell* aDocShell,
+                                   nsIChannel* aChannel,
+                                   PRInt32* aCharsetSource,
+                                   PRBool* aWantCharset,
+                                   nsISupports** aClosure,
+                                   nsACString& aResult)
 {
-    NS_PRECONDITION(aURL != nsnull, "null ptr");
-    if (! aURL)
-        return NS_ERROR_NULL_POINTER;
-    NS_ENSURE_ARG_POINTER(aLastCharset);
-
     if (!mInner)
         return NS_ERROR_UNEXPECTED;
+    *aWantCharset = PR_FALSE;
+    *aClosure = nsnull;
 
+    nsresult rv;
+    
+    nsCOMPtr<nsIURI> uri;
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+
+    nsCAutoString urlSpec;
+    uri->GetSpec(urlSpec);
+   
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
-    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+    rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(urlSpec).get(),
                                    getter_AddRefs(urlLiteral));
     if (NS_FAILED(rv))
         return rv;
@@ -3306,14 +3318,26 @@ nsBookmarksService::GetLastCharset(const char* aURL, PRUnichar** aLastCharset)
             if (charsetNode) {
                 nsCOMPtr<nsIRDFLiteral> charsetLiteral = do_QueryInterface(charsetNode);
                 if (charsetLiteral) {
-                    return charsetLiteral->GetValue(aLastCharset);
+                    const PRUnichar* charset;
+                    charsetLiteral->GetValueConst(&charset);
+                    aResult = NS_LossyConvertUCS2toASCII(charset);
+                    *aCharsetSource = kCharsetFromBookmarks;
+                    
+                    return NS_OK;
                 }
             }
         }
     }
 
-    *aLastCharset = nsnull;
-    return NS_RDF_NO_VALUE;
+    aResult.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::NotifyResolvedCharset(const nsACString& aCharset,
+                                          nsISupports* aClosure)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -5354,9 +5378,9 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
 static const char kBookmarkIntro[] = "<DL><p>\n";
 static const char kIndent[] = "    ";
 static const char kContainerIntro[] = "<DT><H3";
-static const char kSpace[] = " ";
+static const char kSpaceStr[] = " ";
 static const char kTrueEnd[] = "true\"";
-static const char kQuote[] = "\"";
+static const char kQuoteStr[] = "\"";
 static const char kCloseAngle[] = ">";
 static const char kCloseH3[] = "</H3>\n";
 static const char kHROpen[] = "<HR";
@@ -5458,7 +5482,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_NewBookmarkFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kNewBookmarkFolderEquals, sizeof(kNewBookmarkFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5466,7 +5490,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_NewSearchFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kNewSearchFolderEquals, sizeof(kNewSearchFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5474,7 +5498,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_PersonalToolbarFolder,
                                                                PR_TRUE, &hasType)) && (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kPersonalToolbarFolderEquals, sizeof(kPersonalToolbarFolderEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5483,7 +5507,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (NS_SUCCEEDED(rv = mInner->HasArcOut(child, kNC_FolderGroup, &hasType)) && 
                         (hasType == PR_TRUE))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kFolderGroupEquals, sizeof(kFolderGroupEquals)-1, &dummy);
                         rv |= strm->Write(kTrueEnd, sizeof(kTrueEnd)-1, &dummy);
                         if (NS_FAILED(rv)) break;
@@ -5494,10 +5518,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     rv = child->GetValueConst(&id);
                     if (NS_SUCCEEDED(rv) && (id))
                     {
-                        rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                        rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                         rv |= strm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
                         rv |= strm->Write(id, strlen(id), &dummy);
-                        rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                        rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                         if (NS_FAILED(rv)) break;
                     }
           
@@ -5591,10 +5615,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                             rv = child->GetValueConst(&id);
                             if (NS_SUCCEEDED(rv) && (id))
                             {
-                                rv = strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                                rv = strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                                 rv |= strm->Write(kIDEquals, sizeof(kIDEquals)-1, &dummy);
                                 rv |= strm->Write(id, strlen(id), &dummy);
-                                rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                                rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                                 if (NS_FAILED(rv)) break;
                             }
 
@@ -5776,7 +5800,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
             {
                 if (isFirst == PR_FALSE)
                 {
-                    rv |= strm->Write(kSpace, sizeof(kSpace)-1, &dummy);
+                    rv |= strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
                 }
 
                 if (property == kNC_Description)
@@ -5799,7 +5823,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
                 {
                     rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
                     rv |= strm->Write(attribute, strlen(attribute), &dummy);
-                    rv |= strm->Write(kQuote, sizeof(kQuote)-1, &dummy);
+                    rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
                 }
                 nsCRT::free(attribute);
                 attribute = nsnull;

@@ -60,12 +60,6 @@ REQUIRES	= xpcom \
 		  plugin \
 		  $(NULL)
 
-ifdef MOZ_PHOENIX
-REQUIRES	+= bookmarks
-else
-REQUIRES	+= appcomps
-endif
-
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \
 		nsHTMLFragmentContentSink.cpp \

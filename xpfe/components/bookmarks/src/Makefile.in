@@ -45,6 +45,8 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \
+		  chardet \
+		  htmlparser \
 		  locale \
 		  $(NULL)
 
