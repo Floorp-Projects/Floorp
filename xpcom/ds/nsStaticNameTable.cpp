@@ -111,7 +111,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
     NS_ASSERTION(mCount,     "not inited");
 
     nsCAutoString strLower(aName);
-    ToLowerCase(strLower);
+    strLower.ToLowerCase();
     return LookupLowercasedKeyword(strLower, mNameTable);
 }  
 
@@ -124,7 +124,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
    
     nsCAutoString strLower;
     strLower.AssignWithConversion(aName);
-    ToLowerCase(strLower);
+    strLower.ToLowerCase();
     return LookupLowercasedKeyword(strLower, mNameTable);
 }  
 
