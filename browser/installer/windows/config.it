@@ -285,31 +285,41 @@ Title=$ProductName$ Setup - Select Additional Components
 ;*** LOCALIZE ME BABY ***
 Message0=Select or clear the additional components you want to install.
 
-;*** DO NOT LOCALIZE - BEGIN ***
-; do not localize this part because it is not currently being used
 [Dialog Windows Integration]
-Show Dialog=FALSE
-Title=$ProductName$ Setup - Windows Integration
-Message0=Check the options you would like Setup to perform.
-Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Mozilla, Netscape and Microsoft Internet Explorer.
+; Note - this dialog isn't actually used yet!
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Windows Integration
+;*** LOCALIZE ME BABY ***
+Sub Title=Create Shortcuts and set Default Browser
+;*** LOCALIZE ME BABY ***
+Message0=Create %s shortcuts:
 
 ; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
-CheckBoxState=FALSE
-Description=Make Mozilla my default Internet browser
+CheckBoxState=TRUE
+;*** LOCALIZE ME BABY ***
+Description=On my Desktop
 Archive=
 
 [Windows Integration-Item1]
-CheckBoxState=FALSE
-Description=Make Mozilla Netcenter my home page
+CheckBoxState=TRUE 
+;*** LOCALIZE ME BABY ***
+Description=In my Start Menu Programs folder
 Archive=
 
 [Windows Integration-Item2]
-CheckBoxState=FALSE
-Description=Use Mozilla Netcenter to search the Web
+CheckBoxState=TRUE
+;*** LOCALIZE ME BABY ***
+Description=In my Quick Launch bar
 Archive=
-;*** DO NOT LOCALIZE - END ***
+
+[Windows Integration-Item3]
+CheckBoxState=TRUE
+;*** LOCALIZE ME BABY ***
+Description=Use %s as my Default Browser.
+Archive=
 
 [Dialog Program Folder]
 Show Dialog=TRUE
@@ -413,6 +423,20 @@ Blurb=Setup is installing application files.
 Status File=Preparing File:
 ;*** LOCALIZE ME BABY ***
 Status Component=Currently Installing:
+
+[Dialog Install Successful]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Install Complete
+;*** LOCALIZE ME BABY ***
+MessageHeader=Install Complete
+;*** LOCALIZE ME BABY ***
+Message0=%s was successfully installed.
+;*** LOCALIZE ME BABY ***
+Message1=Click Finish to complete Setup. 
+;*** LOCALIZE ME BABY ***
+Launch App=Launch %s now.
+Launch App Checked=TRUE
 
 [Dialog Download]
 Show Dialog=TRUE
@@ -586,6 +610,7 @@ Description Short=Cross Platform COM
 ;*** LOCALIZE ME BABY ***
 Description Long=Cross Platform COM
 Archive=xpcom.xpi
+FileCount=$FileCount$
 $InstallSize$:xpcom
 $InstallSizeSystem$
 $InstallSizeArchive$:xpcom.xpi
@@ -596,10 +621,11 @@ Description Short=$ProductName$ Browser
 ;*** LOCALIZE ME BABY ***
 Description Long=The $ProductName$ Browser
 Archive=browser.xpi
+FileCount=$FileCount$
 $InstallSize$:browser
 $InstallSizeSystem$
 $InstallSizeArchive$:browser.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE|MAIN_COMPONENT
 Force Upgrade File0=[SETUP PATH]\$MainExeFile$
 
 [Component ABE]
@@ -607,6 +633,7 @@ Description Short=Additional Browsing Enhancements
 ;*** LOCALIZE ME BABY ***
 Description Long=Additional tools including mouse-gesture navigation, a site navigation bar and other enhanced functionality. 
 Archive=abe.xpi
+FileCount=$FileCount$
 $InstallSize$:abe
 $InstallSizeArchive$:abe.xpi
 Attributes=SELECTED|VISIBLE
@@ -616,6 +643,7 @@ Description Short=Developer Tools
 ;*** LOCALIZE ME BABY ***
 Description Long=Tools for web developers including an error console, the Document Inspector and a JavaScript Debugger. 
 Archive=adt.xpi
+FileCount=$FileCount$
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
 Attributes=FORCE_UPGRADE|VISIBLE
@@ -627,6 +655,7 @@ Description Short=$CompanyName$ Uninstaller
 ;*** LOCALIZE ME BABY ***
 Description Long=Uninstaller for $ProductName$
 Archive=$UninstallFileZip$
+FileCount=$FileCount$
 $InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
 $InstallSizeArchive$:$UninstallFileZip$
@@ -643,6 +672,7 @@ Description Short=US English Defaults
 ;*** LOCALIZE ME BABY ***
 Description Long=US English Default Profile Data
 Archive=deflenus.xpi
+FileCount=$FileCount$
 $InstallSize$:deflenus
 $InstallSizeSystem$
 $InstallSizeArchive$:deflenus.xpi
@@ -655,6 +685,7 @@ Description Short=English (US) Language Pack
 ;*** LOCALIZE ME BABY ***
 Description Long=English (US) Language Pack
 Archive=langenus.xpi
+FileCount=$FileCount$
 $InstallSize$:langenus
 $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
@@ -667,6 +698,7 @@ Description Short=US Region Pack
 ;*** LOCALIZE ME BABY ***
 Description Long=Regional content for US users
 Archive=regus.xpi
+FileCount=$FileCount$
 $InstallSize$:regus
 $InstallSizeSystem$
 $InstallSizeArchive$:regus.xpi
@@ -678,6 +710,7 @@ Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
 Description Long=for reporting $ProductName$ crash information
 Archive=talkback.xpi
+FileCount=$FileCount$
 Install Size=870
 Install Size System=1
 Install Size Archive=248
