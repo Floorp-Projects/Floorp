@@ -1296,6 +1296,9 @@ sub DumpBugActivity {
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
+    if (!defined $::anyvotesallowed) {
+        GetVersionTable();
+    }
     my $html = "";
     $html .= <<"--endquote--";
 <FORM METHOD=GET ACTION="show_bug.cgi">
@@ -1354,9 +1357,6 @@ Actions:
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
         $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
-        if (!defined $::anyvotesallowed) {
-            GetVersionTable();
-        }
         $html .= "</TR><TR>";
         $html .= "<TD>Preset Queries: </TD>";
         $html .= "<TD colspan=3>\n";
