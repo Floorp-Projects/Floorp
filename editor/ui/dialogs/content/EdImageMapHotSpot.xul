@@ -37,64 +37,63 @@
 	>
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
+  <script type="text/javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="text/javascript" src="chrome://global/content/dialogOverlay.js"/>
 
-  <script language="JavaScript" src="chrome://editor/content/EdImageMapHotSpot.js"/>
+  <script type="text/javascript" src="chrome://editor/content/EdImageMapHotSpot.js"/>
 
   <spring id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
   <titledbox orient="vertical" flex="1">
-	<title id="titleInput" value="&link.label;"/>
+    <title id="titleInput" value="&link.label;"/>
 
-	  <grid>
-		<columns><column/><column/><column/></columns>
-		  <rows>
-			<row>
-			  <text class = "label" for="urlInput" value="&urlFieldset.label;" align = "right"/>
+    <grid>
+      <columns><column/><column/><column/></columns>
+      <rows>
+        <row>
+          <text class="label" for="urlInput" value="&urlFieldset.label;" align="right"/>
 
-			  <textfield id="urlInput" class="MinWidth20em" value="http://"/>
+          <textfield id="urlInput" class="MinWidth20em" value="http://"/>
 
-			  <button class="dialog dialog" id="Browse" oncommand = "chooseFile()" value="&browseButton.label;"/>
-			</row>
+          <button class="dialog" id="Browse" oncommand="chooseFile()" value="&browseButton.label;"/>
+        </row>
 			
-			<row>
-			  <text class="label" for="altInput" value="&altFieldset.label;" align = "right"/>
+        <row>
+          <text class="label" for="altInput" value="&altFieldset.label;" align="right"/>
 
-			  <textfield class="MinWidth20em" id="altInput"/>
-			</row>
-	  	  </rows>
-      </grid>
-    </titledbox>
+          <textfield class="MinWidth20em" id="altInput"/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
 
+  <titledbox orient="vertical" flex="1">
+    <title id="targetLabel" value="&targetFieldset.label;"/>
+    <grid>
+      <columns><column/><column/><column/></columns>
+      <rows>
+        <row>
+          <text class="label" for="targetInput" value="&target.label;" align="right" />
+        </row>
+        <row>
+          <textfield class="MinWidth20em" id="targetInput"/>
 
+          <text class="label" id="commonLabel" value="&commonFieldset.label;"/>
 
-    <titledbox orient="vertical" flex="1">
-	<title id="targetLabel" value="&targetFieldset.label;"/>
-	  <grid>
-		<columns><column/><column/><column/></columns>
-		  <rows>
-		    <row>
-              <text class="label" for="targetInput" value="&target.label;" align = "right" />
-		    </row>
-			<row>
-              <textfield class="MinWidth20em" id="targetInput"/>
+          <menulist id="commonInput" oncommand="changeTarget()">
+            <menupopup valign="middle">
+              <menuitem class="middle" data="" value="&none.value;"/>
+              <menuitem class="middle" data="_self" value="&same.value;"/>
+              <menuitem class="middle" data="_top" value="&whole.value;"/>
+              <menuitem class="middle" data="_blank" value="&new.value;"/>
+              <menuitem class="middle" data="_parent" value="&parent.value;"/>
+            </menupopup>
+          </menulist>
 
-                  <text class="label" id="commonLabel" value="&commonFieldset.label;"/>
-
-				  <menulist id = "commonInput" onchange ="changeTarget()">
-		          <menupopup valign="middle">
-			        <menuitem class="middle" value="_self"><text class="label" value = "&same.value;"/></menuitem>
-			        <menuitem class="middle" value="_top"><text class="label" value = "&whole.value;"/></menuitem>
-			        <menuitem class="middle" value="_blank"><text class="label" value = "&new.value;"/></menuitem>
-			        <menuitem class="middle" value="_parent"><text class="label" value = "&parent.value;"/></menuitem>
-			      </menupopup>
-                </menulist>
-
-		  </row>
-		</rows>
-      </grid>
+        </row>
+      </rows>
+    </grid>
   </titledbox>
 
   <!-- from global dialogOverlay -->
