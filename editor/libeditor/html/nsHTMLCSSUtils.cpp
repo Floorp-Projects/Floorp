@@ -106,7 +106,7 @@ void ProcessExtendedValue(nsAReadableString * aInputString, nsAWritableString & 
     if (aPrependString) {
       aOutputString.Append(NS_ConvertASCIItoUCS2(aPrependString));
     }
-    aOutputString.Assign(*aInputString);
+    aOutputString.Append(*aInputString);
     if (aAppendString) {
       aOutputString.Append(NS_ConvertASCIItoUCS2(aAppendString));
     }
