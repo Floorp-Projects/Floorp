@@ -223,7 +223,7 @@
       <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
       	<menu name="New">
       		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
-		      <menuitem name="Chat Window" onclick="BrowserPrintPreview();"/>
+		      <menuitem name="Chat Window" onclick=""/>
 		      <separator />
 		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
 		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
@@ -241,7 +241,7 @@
       </menu>
       <separator />
       <menuitem name="Print Setup" onclick=""/>
-      <menuitem name="Print Preview" onclick="BrowserPrintPreview();"/>
+      <menuitem name="Print Preview" onclick=""/>
       <menuitem name="Print" onclick=""/>
       <separator />
       <menuitem name="Close" onclick="BrowserClose();"/>
