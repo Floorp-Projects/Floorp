@@ -1082,25 +1082,27 @@ nsMenuX::OnCreate()
           domDoc->GetElementById(command, getter_AddRefs(commandElt));
           nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
 
-          nsAutoString commandDisabled, menuDisabled;
-          commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
-          grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
-          if (!commandDisabled.Equals(menuDisabled)) {
-            // The menu's disabled state needs to be updated to match the command.
-            if (commandDisabled.IsEmpty()) 
-              grandChild->UnsetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
-            else grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
-          }
+          if ( commandContent ) {
+            nsAutoString commandDisabled, menuDisabled;
+            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
+            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
+            if (!commandDisabled.Equals(menuDisabled)) {
+              // The menu's disabled state needs to be updated to match the command.
+              if (commandDisabled.IsEmpty()) 
+                grandChild->UnsetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+              else grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+            }
 
-          nsAutoString commandValue, menuValue;
-          commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
-          grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
-          if (!commandValue.Equals(menuValue)) {
-            // The menu's label state needs to be updated to match the command.
-            // Note that (unlike the disabled state) if the command has *no* label, we
-            // assume the menu is supplying its own.
-            if (!commandValue.IsEmpty()) 
-              grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
+            nsAutoString commandValue, menuValue;
+            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
+            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
+            if (!commandValue.Equals(menuValue)) {
+              // The menu's label state needs to be updated to match the command.
+              // Note that (unlike the disabled state) if the command has *no* label, we
+              // assume the menu is supplying its own.
+              if (!commandValue.IsEmpty()) 
+                grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
+            }
           }
         }
       }
