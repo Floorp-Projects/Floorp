@@ -826,6 +826,49 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextXlib :: InvertRect(const nsRect& aRect)
+{
+  return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+NS_IMETHODIMP 
+nsRenderingContextXlib :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) 
+    return NS_ERROR_FAILURE;
+  
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // Set XOR drawing mode
+  ::XSetFunction(mDisplay,
+                 mRenderingSurface->GetGC(),
+                 GXxor);  
+
+  ::XFillRectangle(mDisplay,
+                   mRenderingSurface->GetDrawable(),
+                   mRenderingSurface->GetGC(),
+                   x,
+                   y,
+                   w,
+                   h);
+  
+  // Back to normal copy drawing mode
+  // Set XOR drawing mode
+  ::XSetFunction(mDisplay,
+                 mRenderingSurface->GetGC(),
+                 GXcopy);  
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {

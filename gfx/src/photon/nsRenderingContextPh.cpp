@@ -996,6 +996,21 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRenderingContextPh :: InvertRect(const nsRect& aRect)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {

@@ -1202,6 +1202,35 @@ NS_IMETHODIMP nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord 
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextWin :: InvertRect(const nsRect& aRect)
+{
+  RECT nr;
+	nsRect tr;
+
+	tr = aRect;
+	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+  ConditionRect(tr, nr);
+  ::InvertRect(mDC, &nr);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextWin :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+  RECT nr;
+	nsRect	tr;
+
+	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	nr.left = aX;
+	nr.top = aY;
+	nr.right = aX+aWidth;
+	nr.bottom = aY+aHeight;
+
+  ::InvertRect(mDC, &nr);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextWin :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   // First transform nsPoint's into POINT's; perform coordinate space
