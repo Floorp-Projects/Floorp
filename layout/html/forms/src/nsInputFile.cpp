@@ -141,7 +141,6 @@ NS_IMETHODIMP nsInputFileFrame::Reflow(nsIPresContext&      aPresContext,
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
     nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
     childFrame->SetRect(rect);
-    childFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     maxSize.width  -= desiredSize.width;
     aDesiredSize.width  += desiredSize.width; 
     aDesiredSize.height = desiredSize.height;
