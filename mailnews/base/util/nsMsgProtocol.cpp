@@ -362,7 +362,7 @@ NS_IMETHODIMP nsMsgProtocol::IsPending(PRBool *result)
 
 NS_IMETHODIMP nsMsgProtocol::Cancel()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_channel->Cancel();
 }
 
 NS_IMETHODIMP nsMsgProtocol::Suspend()

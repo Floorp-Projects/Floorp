@@ -380,7 +380,7 @@ NS_IMETHODIMP nsMsgFolder::EndFolderLoading(void)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::UpdateFolder()
+nsMsgFolder::UpdateFolder(nsIMsgWindow *)
 {
   return NS_OK;
 }
@@ -1442,7 +1442,7 @@ NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNewMessages()
+NS_IMETHODIMP nsMsgFolder::GetNewMessages(nsIMsgWindow *)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -61,7 +61,7 @@ public:
   NS_IMETHOD GetThreads(nsISimpleEnumerator **_retval);
   NS_IMETHOD StartFolderLoading(void);
   NS_IMETHOD EndFolderLoading(void);
-  NS_IMETHOD UpdateFolder(void);
+  NS_IMETHOD UpdateFolder(nsIMsgWindow *window);
   NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **_retval);
   NS_IMETHOD HasMessage(nsIMessage *message, PRBool *_retval);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator **_retval);
@@ -121,7 +121,7 @@ public:
   NS_IMETHOD TestSemaphore(nsISupports *semHolder, PRBool *_retval);
   NS_IMETHOD GetLocked(PRBool *aLocked);
   // NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **_retval);
-  NS_IMETHOD GetNewMessages(void);
+  NS_IMETHOD GetNewMessages(nsIMsgWindow *window);
   // NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
   // NS_IMETHOD GetCharset(PRUnichar * *aCharset);
   // NS_IMETHOD SetCharset(const PRUnichar * aCharset);
