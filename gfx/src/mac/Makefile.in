@@ -73,17 +73,16 @@ CPPSRCS = \
         nsNativeThemeMac.cpp \
         $(NULL)
 
-#       $(DIST)/lib/libimg_s.a \
+SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+EXTRA_DSO_LIBS = mozutil_s gkgfx
+EXTRA_DEPS = $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
-        $(MKSHLIB_FORCE_ALL) \
-        $(DIST)/lib/libmozutil_s.a \
-        -lgkgfx \
-	-lgfxshared_s \
-        $(MKSHLIB_UNFORCE_ALL) \
-        $(TK_LIBS) \
-        $(MOZ_COMPONENT_LIBS) \
-        $(NULL)
+	$(LIBS_DIR) \
+	$(EXTRA_DSO_LIBS) \
+	$(TK_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../shared \

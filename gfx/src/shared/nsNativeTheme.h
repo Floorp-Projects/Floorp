@@ -153,6 +153,7 @@ protected:
   static nsMargin sButtonBorderSize;
   static nsMargin sButtonDisabledBorderSize;
   static nsMargin sTextfieldBorderSize;
+  static PRBool   sTextfieldBGTransparent;
 
 private:
   nsCOMPtr<nsIAtom> mFocusedAtom;

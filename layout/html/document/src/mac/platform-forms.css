@@ -37,10 +37,7 @@
 @import url("resource:/res/forms.css");
 
 input {
-  border-left-width: 2px;
-  border-top-width: 2px;
-  border-right-width: 1px;
-  border-bottom-width: 1px;
+  border-width: 2px;
   padding: 0 2px 0 1px;
   font-size: 11px;
   background-color: transparent;
@@ -55,7 +52,7 @@ select {
 }
 
 select[size] {
-  -moz-appearance: none;
+  -moz-appearance: listbox;
   margin: 0px;
   background-color: -moz-Field !important;
 }
@@ -102,4 +99,36 @@ input[type="button"],
 input[type="submit"] {
   -moz-appearance: button-small;
   font-size: 11px;
+  margin: 0px 3px;
+  padding: 0;
+  border-width: 2px 8px 2px 8px;
+  color: -moz-FieldText !important;
+}
+
+button:active:hover,
+input[type="reset"]:active:hover,
+input[type="button"]:active:hover,
+input[type="submit"]:active:hover {
+  padding: 0;
+}
+
+button:-moz-focus-inner,
+input[type="reset"]:-moz-focus-inner,
+input[type="button"]:-moz-focus-inner,
+input[type="submit"]:-moz-focus-inner,
+input[type="file"] > input[type="button"]:focus:-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+
+button[disabled]:active, button[disabled],
+input[type="reset"][disabled]:active,
+input[type="reset"][disabled],
+input[type="button"][disabled]:active,
+input[type="button"][disabled],
+input[type="submit"][disabled]:active,
+input[type="submit"][disabled] {
+  padding: 0;
+  border-width: 2px 8px 2px 8px;
+  color: GrayText !important;
 }
