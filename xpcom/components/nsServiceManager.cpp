@@ -166,7 +166,7 @@ nsServiceManager::nsServiceManager(void)
 }
 
 static PRBool
-DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
+DeleteEntry(nsHashKey *aKey, void *aData)
 {
     nsServiceEntry* entry = (nsServiceEntry*)aData;
     entry->mService->Release();

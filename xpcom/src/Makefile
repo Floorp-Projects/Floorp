@@ -22,6 +22,7 @@ LIBRARY_NAME	= xpcom
 CPPSRCS		= nsDebug.cpp \
 		  nsHashtable.cpp \
 		  nsID.cpp \
+		  nsServiceManager.cpp \
 		  nsSupportsArray.cpp \
 		  nsRepository.cpp \
 		  nsMalloc.cpp \
@@ -36,6 +37,7 @@ EXPORTS		= nsCom.h \
 		  nsIFactory.h \
 		  nsISupports.h \
 		  nsIPtr.h \
+		  nsIServiceManager.h \
 		  nsISupportsArray.h \
 		  nsRepository.h \
 		  nsIEnumerator.h \
