@@ -336,6 +336,8 @@ STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource,
    // Now process the native drag state and then dispatch the event
     ProcessDrag(NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
 
+    // tell the drag service we're done with the session
+    mDragService->EndDragSession();
     return S_OK;
 	} else {
 		return ResultFromScode(E_FAIL);
