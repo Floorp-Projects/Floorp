@@ -819,6 +819,8 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
+PRBool gJustGotDeactivate = PR_TRUE;
+
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
@@ -881,6 +883,7 @@ nsWindow::SetFocus(void)
   
   nsGUIEvent event;
   
+  printf("send NS_GOTFOCUS from nsWindow::SetFocus\n");
   event.message = NS_GOTFOCUS;
   event.widget  = this;
 
@@ -932,6 +935,21 @@ nsWindow::SetFocus(void)
 #endif
   }
 
+  if(gJustGotDeactivate){
+    gJustGotDeactivate = PR_FALSE;
+    nsGUIEvent eventActivate;
+    eventActivate.message = NS_ACTIVATE;
+    printf("send NS_ACTIVATE from SetFocus\n");
+    eventActivate.widget  = this;
+    eventActivate.eventStructType = NS_GUI_EVENT;
+    eventActivate.time = 0;
+    eventActivate.point.x = 0;
+    eventActivate.point.y = 0;
+ 
+    AddRef();
+    DispatchFocus(eventActivate);
+    Release();
+  }
   return NS_OK;
 }
 
@@ -944,6 +962,8 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
 
   nsGUIEvent event;
   
+  
+  printf("send NS_GOTFOCUS from nsWindow::OnFocusInSignal\n");
   event.message = NS_GOTFOCUS;
   event.widget  = this;
 
@@ -1645,6 +1665,18 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                              "size_allocate",
                              GTK_SIGNAL_FUNC(handle_size_allocate),
                              this);
+    // track focus in and focus out events for the shell
+    if (mShell) {
+      gtk_signal_connect(GTK_OBJECT(mShell),
+                         "focus_in_event",
+                         GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
+                         this);
+      gtk_signal_connect(GTK_OBJECT(mShell),
+                         "focus_out_event",
+                         GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
+                         this);
+
+    }
     break;
 
   case eWindowType_child:
@@ -1690,19 +1722,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
   SetBackgroundColor(NS_RGB(192,192,192));
-
-  // track focus in and focus out events for the shell
-  if (mShell) {
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "focus_in_event",
-                       GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-                       this);
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "focus_out_event",
-                       GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-                       this);
-
-  }
 
   // XXX fix this later...
   if (mIsToplevel)
@@ -2475,7 +2494,7 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
                               GdkEventFocus *  aGdkFocusEvent, 
                               gpointer         aData)
 {
-
+  printf("handle_toplevel_focus_in\n");
   if(!aWidget) {
     return PR_TRUE;
   }
@@ -2490,24 +2509,21 @@ gint handle_toplevel_focus_in(GtkWidget *      aWidget,
     return PR_TRUE;
   }
 
-  nsGUIEvent event;
-  
-  event.message = NS_ACTIVATE;
-  event.widget  = widget;
-
-  event.eventStructType = NS_GUI_EVENT;
-
-  event.time = 0;
-  event.point.x = 0;
-  event.point.y = 0;
+  nsGUIEvent eventGotFocus;
+  eventGotFocus.message = NS_GOTFOCUS;
+  printf("Send NS_GOTFOCUS from handle_toplevel_focus_in\n");
+  eventGotFocus.widget  = widget;
+  eventGotFocus.eventStructType = NS_GUI_EVENT;
+  eventGotFocus.time = 0;
+  eventGotFocus.point.x = 0;
+  eventGotFocus.point.y = 0;
  
   NS_ADDREF(widget);
  
-  nsEventStatus status;
-  widget->DispatchEvent(&event, status);
+  nsEventStatus statusGotFocus;
+  widget->DispatchEvent(&eventGotFocus, statusGotFocus);
   
   NS_RELEASE(widget);
-  
   return PR_TRUE;
 }
 
@@ -2515,6 +2531,9 @@ gint handle_toplevel_focus_out(GtkWidget *      aWidget,
                                GdkEventFocus *  aGdkFocusEvent, 
                                gpointer         aData)
 {
+  printf("handle_toplevel_focus_out\n");
+  printf("... send NS_DEACTIVATE\n");
+  gJustGotDeactivate = PR_TRUE;
   if(!aWidget) {
     return PR_TRUE;
   }
