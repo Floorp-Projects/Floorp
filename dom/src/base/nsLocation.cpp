@@ -304,7 +304,16 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
     if (url) {
       url->SetRef(NS_ConvertUCS2toUTF8(aHash).get());
 
-      SetURL(url);
+      if (mDocShell) {
+        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+
+        if (NS_SUCCEEDED(CheckURL(url, getter_AddRefs(loadInfo))))
+          // We're not calling nsIWebNavigation->Stop, we don't
+          // want to stop the load when we're just scrolling to a
+          // named anchor in the document. See bug 114975.
+          mDocShell->LoadURI(url, loadInfo,
+                             nsIWebNavigation::LOAD_FLAGS_NONE);
+      }
     }
   }
 
