@@ -390,6 +390,7 @@ function saveFilter()
 {
   var isNewFilter;
   var filterAction; 
+  var targetUri;
 
   var filterName= gFilterNameElement.value;
   if (!filterName || filterName == "") 
@@ -399,6 +400,37 @@ function saveFilter()
                            gFilterBundle.getString("mustEnterName"));
     gFilterNameElement.focus();
     return false;
+  }
+
+  if (!(gMoveToFolderCheckbox.checked ||
+        gChangePriorityCheckbox.checked ||
+        gLabelCheckbox.checked ||
+        gJunkScoreCheckbox.checked ||
+        gMarkReadCheckbox.checked ||
+        gMarkFlaggedCheckbox.checked ||
+        gDeleteCheckbox.checked ||
+        gWatchCheckbox.checked ||
+        gKillCheckbox.checked ||
+        gDeleteFromServerCheckbox.checked ||
+        gFetchBodyFromServerCheckbox.checked))
+  {
+    if (gPromptService)
+      gPromptService.alert(window, null,
+                           gFilterBundle.getString("mustSelectAction"));
+    return false;
+  }
+
+  if (gMoveToFolderCheckbox.checked)
+  {
+    if (gActionTargetElement)
+      targetUri = gActionTargetElement.getAttribute("uri");
+    if (!targetUri || targetUri == "") 
+    {
+      if (gPromptService)
+        gPromptService.alert(window, null,
+                             gFilterBundle.getString("mustSelectFolder"));
+      return false;
+    }
   }
 
   if (!gFilter) 
@@ -425,18 +457,6 @@ function saveFilter()
 
   if (gMoveToFolderCheckbox.checked)
   {
-    var targetUri;
-
-    if (gActionTargetElement)
-      targetUri = gActionTargetElement.getAttribute("uri");
-    if (!targetUri || targetUri == "") 
-    {
-      if (gPromptService)
-        gPromptService.alert(window, null,
-                             gFilterBundle.getString("mustSelectFolder"));
-      return false;
-    }
-      
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.MoveToFolder;
     filterAction.targetFolderUri = targetUri;
@@ -445,14 +465,6 @@ function saveFilter()
     
   if (gChangePriorityCheckbox.checked)  
   {
-    if (!gActionPriority.selectedItem) 
-    {
-      if (gPromptService)
-        gPromptService.alert(window, null,
-                             gFilterBundle.getString("mustSelectPriority"));
-      return false;
-    }
-
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.ChangePriority;
     filterAction.priority = gActionPriority.selectedItem.getAttribute("value");
@@ -461,14 +473,6 @@ function saveFilter()
 
   if (gLabelCheckbox.checked) 
   {
-    if (!gActionLabel.selectedItem) 
-    {
-      if (gPromptService)
-        gPromptService.alert(window, null,
-                             gFilterBundle.getString("mustSelectLabel"));
-      return false;
-    }
-
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.Label;
     filterAction.label = gActionLabel.selectedItem.getAttribute("value");
@@ -530,17 +534,6 @@ function saveFilter()
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.FetchBodyFromPop3Server;
     gFilter.appendAction(filterAction);
-  }
-
-  if (gFilter.actionList.Count() <= 0)
-  {
-    if (gPromptService)
-      gPromptService.alert(window, null,
-                           gFilterBundle.getString("mustSelectAction"));
-    // reset gFilter so that filter is still saved next time around
-    // see bug #186217
-    gFilter = null;
-    return false;
   }
 
   if (getScope(gFilter) == Components.interfaces.nsMsgSearchScope.newsFilter)
