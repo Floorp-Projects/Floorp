@@ -413,7 +413,7 @@ sub build_url {
 sub file_url {
   my ($file, $linenum) = @_;
 
-  return "../bonsai/cvsblame.cgi"
+  return "../../bonsai/cvsblame.cgi"
         ."?file=mozilla/$file&mark=$linenum#".($linenum-10);
 
 }
