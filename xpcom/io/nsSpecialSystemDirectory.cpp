@@ -31,6 +31,7 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
+#include <Gestalt.h>
 #include "nsIInternetConfigService.h"
 #elif defined(XP_WIN)
 #include <windows.h>
@@ -71,7 +72,12 @@
 
 #if defined (XP_MAC) && UNIVERSAL_INTERFACES_VERSION < 0x0340
     enum {
-      kUserDomain                   = -32763,
+      kSystemDomain                 = -32766, /* Read-only system hierarchy.*/
+      kLocalDomain                  = -32765, /* All users of a single machine have access to these resources.*/
+      kNetworkDomain                = -32764, /* All users configured to use a common network server has access to these resources.*/
+      kUserDomain                   = -32763, /* Read/write. Resources that are private to the user.*/
+      kClassicDomain                = -32762, /* Domain referring to the currently configured Classic System Folder*/
+
       kDomainLibraryFolderType      = FOUR_CHAR_CODE('dlib')
     };
 #endif
@@ -377,6 +383,12 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     // IT's VERY IMPORTANT that needToAppend is initialized to PR_TRUE.
     PRBool needToAppend = PR_TRUE;
 
+#ifdef XP_MAC
+    OSErr err;
+    short vRefNum;
+    long dirID;
+#endif
+
     *this = (const char*)nsnull;
     switch (aSystemSystemDirectory)
     {
@@ -593,8 +605,18 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 
         case Mac_PreferencesDirectory:
-            *this = kPreferencesFolderType;
+        {
+            short domain;
+            long response;
+            err = ::Gestalt(gestaltSystemVersion, &response);
+            domain = (!err && response >= 0x00001000) ? kClassicDomain : kOnSystemDisk;
+            err = ::FindFolder(domain, kPreferencesFolderType, true, &vRefNum, &dirID);
+            if (!err) {
+                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
+            }
+            mError = NS_FILE_RESULT(err);
             break;
+        }
 
         case Mac_DocumentsDirectory:
             *this = kDocumentsFolderType;
@@ -610,9 +632,6 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             
         case Mac_UserLibDirectory:
         {
-            OSErr err;
-            short vRefNum;
-            long dirID;
             err = ::FindFolder(kUserDomain, kDomainLibraryFolderType, true, &vRefNum, &dirID);
             if (!err) {
                 err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
