@@ -194,8 +194,11 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   // Initialize OUT parameter
   aChildBounds.SetRect(0, 0, 0, 0);
 
-  // Make a copy of the reflow state. If the reason is eReflowReason_Incremental,
-  // then change it to eReflowReason_Resize
+  // Make a copy of the reflow state.  If the reason is
+  // eReflowReason_Incremental (which should mean either that the target
+  // is the frame for which this is the absolute container or that the
+  // container changed size due to incremental reflow of its children),
+  // then change it to eReflowReason_Resize.
   nsHTMLReflowState reflowState(aReflowState);
   if (eReflowReason_Incremental == reflowState.reason) {
     reflowState.reason = eReflowReason_Resize;
