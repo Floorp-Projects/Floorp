@@ -78,8 +78,11 @@ private:
 
   void CheckForDeactivation() {
     if (mCouldHaveEvents && !mAcceptingEvents && !PL_EventAvailable(mEventQueue)) {
-      mCouldHaveEvents = PR_FALSE;
-      NS_RELEASE_THIS(); // balance ADDREF from the constructor
+      if (PL_IsQueueOnCurrentThread(mEventQueue)) {
+        mCouldHaveEvents = PR_FALSE;
+        NS_RELEASE_THIS(); // balance ADDREF from the constructor
+      } else
+        NS_ERROR("CheckForDeactivation called from wrong thread!");
     }
   }
 };
