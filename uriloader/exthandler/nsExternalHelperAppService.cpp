@@ -31,6 +31,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
 #include "nsIMIMEService.h"
@@ -415,12 +416,12 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   // save to disk
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_SaveToDisk, &stringValue);
   NS_NAMED_LITERAL_STRING( trueString, "true" );
-  if (trueString.Equals(stringValue))
+  if (stringValue && trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
   // handle internal
   FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_HandleInternal, &stringValue);
-  if (trueString.Equals(stringValue))
+  if (stringValue && trueString.Equals(stringValue))
        aMIMEInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
   
   // always ask --> these fields aren't stored in the data source anymore
@@ -496,7 +497,8 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
     if (NS_SUCCEEDED(rv) && exists)
     {
        // create a mime info object and we'll fill it in based on the values from the data source
-       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
+       NS_ENSURE_SUCCESS(rv, rv);
        rv = FillTopLevelProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
        NS_ENSURE_SUCCESS(rv, rv);
        rv = FillContentHandlerProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
@@ -504,6 +506,59 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
        *aMIMEInfo = mimeInfo;
        NS_IF_ADDREF(*aMIMEInfo);
     } // if we have a node in the graph for this content type
+    else
+      *aMIMEInfo = nsnull;
+  } // if we have a data source
+  else
+    rv = NS_ERROR_FAILURE;
+  return rv;
+}
+
+nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo)
+{
+  nsresult rv = NS_OK;
+
+  rv = InitDataSource();
+  if (NS_FAILED(rv)) return rv;
+
+  // if we have a data source then use the information found in that
+  if (mOverRideDataSource)
+  {
+    // Get the RDF service.
+    nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ConvertUTF8toUCS2 extension(aFileExtension);
+    ToUpperCase(extension);
+    nsCOMPtr<nsIRDFLiteral> extensionLiteral;
+    rv = rdf->GetLiteral(extension.get(), getter_AddRefs( extensionLiteral));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
+    rv = mOverRideDataSource->GetSource(kNC_FileExtensions,
+                                        extensionLiteral,
+                                        PR_TRUE,
+                                        getter_AddRefs(contentTypeNodeResource));
+    nsCAutoString contentTypeStr;
+    if (NS_SUCCEEDED(rv))
+    {
+      const PRUnichar* contentType = nsnull;
+      rv = FillLiteralValueFromTarget(contentTypeNodeResource, kNC_Value, &contentType);
+      if (contentType)
+        contentTypeStr.AssignWithConversion(contentType);
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+       // create a mime info object and we'll fill it in based on the values from the data source
+       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
+       NS_ENSURE_SUCCESS(rv, rv);
+       rv = FillTopLevelProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
+       NS_ENSURE_SUCCESS(rv, rv);
+       rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
+
+       *aMIMEInfo = mimeInfo;
+       NS_IF_ADDREF(*aMIMEInfo);
+    } // if we have a node in the graph for this extension
     else
       *aMIMEInfo = nsnull;
   } // if we have a data source
@@ -1364,6 +1419,15 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
 
   *_retval = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
   NS_IF_ADDREF(*_retval);
+
+  // if we don't have a match in our hash table, then query the user provided
+  // data source
+  if (!*_retval) 
+    rv = GetMIMEInfoForExtensionFromDS(aFileExt, _retval);
+
+  // if we still don't have a match, then we give up, we don't know
+  // anything about it...  return an error.
+
   if (!*_retval) rv = NS_ERROR_FAILURE;
   return rv;
 }
