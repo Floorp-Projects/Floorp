@@ -104,7 +104,7 @@ nsresult nsCalTodoComponentCanvas :: Init()
 
   gXPFCToolkit->GetViewManager()->MoveViewTo(mView, rect.x, rect.y);
   gXPFCToolkit->GetViewManager()->ResizeView(mView, rect.width, rect.height);
-  gXPFCToolkit->GetViewManager()->UpdateView(mView, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+  gXPFCToolkit->GetViewManager()->UpdateView(mView, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
 
   NS_RELEASE(context);
   NS_RELEASE(widget);

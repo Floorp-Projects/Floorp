@@ -934,7 +934,7 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   {
     nsRect bounds;
     root->GetView()->GetBounds(bounds);
-    gXPFCToolkit->GetViewManager()->UpdateView(root->GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+    gXPFCToolkit->GetViewManager()->UpdateView(root->GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   }
 
 

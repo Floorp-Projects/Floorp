@@ -683,7 +683,7 @@ nsresult nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
 
       nsRect bounds;
       GetView()->GetBounds(bounds);
-      gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+      gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
 
       NS_RELEASE(tbc);
 

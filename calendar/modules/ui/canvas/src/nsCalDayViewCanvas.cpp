@@ -245,6 +245,7 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
   {
     gCalToolkit->GetNSCalendar()->getEventsByRange(evtVctr, *dStart, *dEnd);
   }
+
   nscal->getEventsByRange(evtVctr, *dStart, *dEnd); 
 
   PRUint32 vis_start_min = GetTimeContext()->GetFirstVisibleTime(nsCalPeriodFormat_kHour) * 60 + GetTimeContext()->GetFirstVisibleTime(nsCalPeriodFormat_kMinute);

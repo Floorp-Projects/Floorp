@@ -337,7 +337,7 @@ nsEventStatus nsXPButton::OnMouseEnter(nsGUIEvent *aEvent)
   bounds.x = 0;
   bounds.y = 0;
 
-  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   return (nsXPItem::OnMouseEnter(aEvent));
 }
 
@@ -350,7 +350,7 @@ nsEventStatus nsXPButton::OnMouseExit(nsGUIEvent *aEvent)
   GetView()->GetBounds(bounds);
   bounds.x = 0;
   bounds.y = 0;
-  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   return (nsXPItem::OnMouseExit(aEvent));
 }
 
@@ -362,7 +362,7 @@ nsEventStatus nsXPButton :: OnLeftButtonDown(nsGUIEvent *aEvent)
   GetView()->GetBounds(bounds);
   bounds.x = 0;
   bounds.y = 0;
-  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
   return (nsXPItem::OnLeftButtonDown(aEvent));
 }
 
@@ -374,7 +374,7 @@ nsEventStatus nsXPButton :: OnLeftButtonUp(nsGUIEvent *aEvent)
   GetView()->GetBounds(bounds);
   bounds.x = 0;
   bounds.y = 0;
-  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
 
   SendCommand();
 

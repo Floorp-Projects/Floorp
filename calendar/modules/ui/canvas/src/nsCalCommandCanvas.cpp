@@ -254,7 +254,7 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 
     gXPFCToolkit->GetViewManager()->MoveViewTo(mStaticTextField, rect.x, rect.y);
     gXPFCToolkit->GetViewManager()->ResizeView(mStaticTextField, rect.width, rect.height);
-    gXPFCToolkit->GetViewManager()->UpdateView(mStaticTextField, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+    gXPFCToolkit->GetViewManager()->UpdateView(mStaticTextField, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
 
   }
 
@@ -267,7 +267,7 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 
     gXPFCToolkit->GetViewManager()->MoveViewTo(mTextField, rect.x, rect.y);
     gXPFCToolkit->GetViewManager()->ResizeView(mTextField, rect.width, rect.height);
-    gXPFCToolkit->GetViewManager()->UpdateView(mTextField, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+    gXPFCToolkit->GetViewManager()->UpdateView(mTextField, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC) ;
 
   }
 
