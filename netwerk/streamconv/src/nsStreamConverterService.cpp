@@ -515,7 +515,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         nsIInputStream *convertedData = nsnull;
         NS_ADDREF(dataToConvert);
 
-        for (PRInt32 i = edgeCount-1; i > 0; i--) {
+        for (PRInt32 i = edgeCount-1; i >= 0; i--) {
             nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
             char * lProgID = progIDStr->ToNewCString();
             const char *x = lProgID;
