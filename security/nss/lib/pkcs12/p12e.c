@@ -194,7 +194,7 @@ SEC_PKCS12CreateExportContext(SECKEYGetPasswordKey pwfn, void *pwfnarg,
     p12ctxt->integrityEnabled = PR_FALSE;
     p12ctxt->arena = arena;
     p12ctxt->wincx = wincx;
-    p12ctxt->slot = (slot) ? slot : PK11_GetInternalSlot();
+    p12ctxt->slot = (slot) ? PK11_ReferenceSlot(slot) : PK11_GetInternalSlot();
 
     return p12ctxt;
 
@@ -2146,6 +2146,8 @@ SEC_PKCS12DestroyExportContext(SEC_PKCS12ExportContext *p12ecx)
 	    i++;
 	}
     }
+
+    PK11_FreeSlot(p12ecx->slot);
 
     PORT_FreeArena(p12ecx->arena, PR_TRUE);
 }
