@@ -75,7 +75,9 @@ function openCalendarAlarmWindow( Event )
 
    args.calendarEvent = Event;
    
-   calendarAlarmWindow = window.openDialog("chrome://calendar/content/alertDialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
+//   Acknowledging alarms on calendars with auto-publish enabled may bring up 
+//   a username/password dialog, therefore we can't be modal/alwaysraised.
+   calendarAlarmWindow = window.openDialog("chrome://calendar/content/alertDialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar", args);
    
    setTimeout( "resetAlarmDialog()", 2000 );
 }

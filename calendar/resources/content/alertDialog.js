@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Matthew Willis <mattwillis@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,6 +41,7 @@ var gAllEvents = new Array();
 var CreateAlarmBox = true;
 var kungFooDeathGripOnEventBoxes = new Array();
 var gICalLib;
+var calendarsToPublish = new Array();
 
 function onLoad()
 {
@@ -99,7 +101,7 @@ function buildEventBoxes()
       {
          var TooManyDesc = document.getElementById( "too-many-alarms-description" );
          TooManyDesc.removeAttribute( "collapsed" );         
-	 tooManyDescValue = gCalendarBundle.getFormattedString("TooManyAlarmsMessage", [gAllEvents.length]);
+         tooManyDescValue = gCalendarBundle.getFormattedString("TooManyAlarmsMessage", [gAllEvents.length]);
          TooManyDesc.setAttribute( "value", tooManyDescValue );
       }
       else
@@ -183,6 +185,8 @@ function createAlarmBox( Event )
    
    //document.getElementById( "event-container-rows" ).insertBefore( OuterBox, document.getElementById( "event-container-rows" ).childNodes[1] );
    document.getElementById( "event-container-rows" ).appendChild( OuterBox );
+
+   self.focus();
 }
 
 function removeAlarmBox( Event )
@@ -224,17 +228,65 @@ function getArrayId( Event )
 
 }
 
-function onOkButton( )
+function onOkButton( )   // "Acknowledge All Alarms" button
 {
-   //this would acknowledge all the alarms
+   // Set each alarm's last alarm ack date/time to now
    for( i = 0; i < gAllEvents.length; i++ )
    {
       gAllEvents[i].lastAlarmAck = new Date();
    }
 
+   // Modify each event to locally save the new last alarm ack date/time
    for( i = 0; i < gAllEvents.length; i++ )
    {
       gICalLib.modifyEvent( gAllEvents[i] );
+   }
+
+   // Publishing time...
+   // Do any alarms' parent calendars have auto-publish enabled?
+   var autoPublishEnabled = false;
+   var serverInArray = false;
+   for( i = 0; i < gAllEvents.length; i++ )
+   {
+      var eachEvent = gAllEvents[i].event;
+      var calendarServer = opener.gCalendarWindow.calendarManager.getCalendarByName( eachEvent.parent.server );
+
+      if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
+      {
+         // Yes, we're going to need to publish at least one calendar
+         if( !autoPublishEnabled)
+            autoPublishEnabled = true;
+
+         // If the calendarsToPublish array is empty, add this alarm's calendar's parent server to the array
+         if( calendarsToPublish.length == 0 )
+            serverInArray = false;
+         else
+         {
+            // Check if this alarm's parent calendar's server is already in the calendarsToPublish array
+            serverInArray = false;
+            for( var j = 0; j < calendarsToPublish.length; j++ )
+            {
+               if( calendarsToPublish[j].getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) ==
+                   calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ) )
+               {
+                  serverInArray = true;
+               }
+            }
+         }
+
+         // If this event's parent calendar's server isn't in the array, add it
+         if( !serverInArray )
+            calendarsToPublish[ calendarsToPublish.length ] = calendarServer;
+      }
+   }
+
+   // If we need to publish at least one calendar, publish to each calendarServer in the array
+   if( autoPublishEnabled )
+   {
+      for( i = 0; i < calendarsToPublish.length; i++ )
+      {
+         opener.gCalendarWindow.calendarManager.publishCalendar( calendarsToPublish[i] );
+      }
    }
 
    return( true );
@@ -251,11 +303,7 @@ function acknowledgeAlarm( Event )
 {
    Event.lastAlarmAck = new Date();
 
-   var calendarEventService = opener.gEventSource;
-   
-   gICalLib = calendarEventService.getICalLib();
-
-   gICalLib.modifyEvent( Event );
+   opener.refreshRemoteCalendarAndRunFunction( Event, Event.parent.server, "modifyEvent" );
 
    var Id = getArrayId( Event )
 
@@ -322,10 +370,7 @@ function snoozeAlarm( Event )
    
    Event.setSnoozeTime( DateObjOfNextAlarm );
    
-   var calendarEventService = opener.gEventSource;
-   
-   gICalLib = calendarEventService.getICalLib();
-   gICalLib.modifyEvent( Event );
+   opener.refreshRemoteCalendarAndRunFunction( Event, Event.parent.server, "modifyEvent" );
 
    var Id = getArrayId( Event )
 

@@ -933,10 +933,7 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
             gCalendarWindow.clearSelectedEvent( calendarEvent );
             
             //publish the changes back to the server
-            if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
-            {
-               gCalendarWindow.calendarManager.publishCalendar( calendarServer );
-            }
+            gCalendarWindow.calendarManager.publishCalendar( calendarServer );
          }
    
          //refresh the calendar file.
