@@ -38,6 +38,10 @@ rect_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 PR_STATIC_CALLBACK(JSBool)
 rect_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
+/* HACK: We don't want to resolve layers when we restore the layer state on
+   resizes.  This boolean gets set to FALSE for that case in 
+   lm_RestoreLayerState() */
+static Bool lm_really_resolve_layer = TRUE;
 
 enum layer_array_slot {
     LAYER_ARRAY_LENGTH = -1
@@ -132,6 +136,12 @@ layer_array_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+/* XXXMLM - gross hack until we have JS_HasProperty. 
+ *           Do not resolve a property if this static 
+ *           flag is set.  See lm_reflect_layer_using_existing_obj.
+ */
+static JSBool layer_array_should_resolve = JS_TRUE;
+
 PR_STATIC_CALLBACK(JSBool)
 layer_array_resolve_name(JSContext *cx, JSObject *obj, jsval id)
 {
@@ -142,6 +152,11 @@ layer_array_resolve_name(JSContext *cx, JSObject *obj, jsval id)
 
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
+
+    /* XXXMLM - see above; wish we had JS_HasProperty */
+    if (!layer_array_should_resolve)  {
+	return JS_TRUE;
+    }
 
     name = JS_GetStringBytes(JSVAL_TO_STRING(id));
     if (!name)
@@ -978,6 +993,9 @@ layer_resolve_name(JSContext *cx, JSObject *obj, jsval id)
     MochaDecoder *decoder;
     const char * name;
 
+    if (!lm_really_resolve_layer)
+	return JS_FALSE;
+
     js_layer = JS_GetPrivate(cx, obj);
     if (!js_layer)
         return JS_TRUE;
@@ -1018,7 +1036,7 @@ layer_finalize(JSContext *cx, JSObject *obj)
     CL_SetLayerMochaObject(js_layer->layer, NULL);
  */
     DROP_BACK_COUNT(js_layer->decoder);
-    JS_UnlockGCThing(cx, js_layer->name);
+    JS_RemoveRoot(cx, &js_layer->name);
 
 	map = lm_GetIdToObjectMap(js_layer->decoder);
     if (map)
@@ -1961,6 +1979,7 @@ lm_RestoreLayerState(MWContext *context, int32 layer_id,
         PR_snprintf(param->bgcolor, 10, "%x", JSVAL_TO_INT(val));
     }
 
+    lm_really_resolve_layer = FALSE;
     if (JS_LookupProperty(cx, obj, lm_background_str, &val) &&
         JSVAL_IS_OBJECT(val)) {
         JSObject *background;
@@ -1972,6 +1991,7 @@ lm_RestoreLayerState(MWContext *context, int32 layer_id,
             param->bgimage = XP_STRDUP(JS_GetStringBytes(JSVAL_TO_STRING(val)));
         }
     }
+    lm_really_resolve_layer = TRUE;
 
     if (LM_CHECK_LAYER_MODIFICATION(js_layer, LAYER_MOD_SRC) &&
         js_layer->source_url) {
@@ -2147,6 +2167,10 @@ lm_reflect_layer_using_existing_obj(MWContext *context,
     CL_Layer *layer;
     lo_TopState *top_state;
     PRHashTable *map;
+    jsval existing_layer;
+    char *newname = NULL;    
+    JSLayer *existing_js_layer;
+    JSObject *existing_layer_object;
 
     decoder = LM_GetMochaDecoder(context);
     if (!decoder)
@@ -2254,6 +2278,57 @@ lm_reflect_layer_using_existing_obj(MWContext *context,
         }
     }
 
+    /* XXXMLM - There's a problem where a user creates two layers that
+     *           have the same parent and the same name.  What used to 
+     *           happen was that JS_DefineProperty would simply overwrite
+     *           the old property, causing the old property to become
+     *           unrooted, and therefore freed the next time the GC was
+     *           run.  Since the CL_Layer keeps a mocha_object pointer
+     *           around, the pointer was stale as soon as the GC was
+     *           run, and it would crash.
+     *
+     *           We need a function JS_HasProperty so we can figure out
+     *           if the property has been defined yet, without resolving
+     *           the property through native code.  We don't have the
+     *           function yet, so we take the backwards approach - if
+     *           we know we're trying to find a property without resolving
+     *           it, we set a static boolean that our resolving function
+     *           sees and knows not to do the resolution.
+     */
+    layer_array_should_resolve = JS_FALSE;
+    if(!JS_LookupProperty(cx, array_obj, name, &existing_layer))  {
+    	layer_array_should_resolve = JS_TRUE;
+	obj = NULL;
+	goto out;
+    }
+    layer_array_should_resolve = JS_TRUE;
+    if(JSVAL_IS_OBJECT(existing_layer))  {
+	/* Hrmph.  Okay, rename the old one. */
+	existing_layer_object = JSVAL_TO_OBJECT(existing_layer);
+	if(!existing_layer_object)  {
+	    obj = NULL;
+	    goto out;
+	}
+	existing_js_layer = JS_GetPrivate(cx, existing_layer_object);
+	if(!existing_js_layer)  {
+	    obj = NULL;
+	    goto out;
+	}
+
+        newname = PR_smprintf("%s_%d", name, fake_layer_count++);
+	if(!newname)  {
+	    obj = NULL;
+	    goto out;
+	}
+
+	existing_js_layer->name = JS_NewStringCopyZ(cx, newname);
+
+	JS_DefineProperty(cx, array_obj, newname, 
+			  OBJECT_TO_JSVAL(existing_layer_object),
+			  NULL, NULL, flags);
+	XP_FREE(newname);
+    }
+
     if (name && 
         !JS_DefineProperty(cx, array_obj, name, OBJECT_TO_JSVAL(obj),
                            NULL, NULL, flags)) {
@@ -2267,7 +2342,7 @@ lm_reflect_layer_using_existing_obj(MWContext *context,
     js_layer->layer_id = layer_id;
     js_layer->name = JS_NewStringCopyZ(cx, name);
     js_layer->source_url = NULL;
-    if (!JS_LockGCThing(cx, js_layer->name)) {
+    if (!JS_AddRoot(cx, &js_layer->name)) {
         LM_PutMochaDecoder(decoder);
         if (bFreeName)
             XP_FREE(name);
@@ -2277,6 +2352,7 @@ lm_reflect_layer_using_existing_obj(MWContext *context,
     if(tag)
         lm_process_layer_tag(decoder, tag, obj);
 
+out:
     LM_PutMochaDecoder(decoder);
 
     if (bFreeName)
