@@ -1063,7 +1063,10 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
 
   // Enable the Stop buton
-  setAttribute( mWebShell, "canStop", "disabled", "false" );
+  setAttribute( mWebShell, "canStop", "disabled", "" );
+
+  //Disable the reload button
+  setAttribute(mWebShell, "canReload", "disabled", "true");
 
   return NS_OK;
 }
