@@ -733,8 +733,8 @@ void nsMenu::LoadMenuItem(
       return; //NS_ERROR_FAILURE;
     }
   
-    nsIDOMElement * keyElement = nsnull;
-    xulDocument->GetElementById(keyValue, &keyElement);
+    nsCOMPtr<nsIDOMElement> keyElement;
+    xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     
     if(keyElement){
         PRUint8 modifiers = knsMenuItemNoModifier;
