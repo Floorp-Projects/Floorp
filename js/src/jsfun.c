@@ -1758,7 +1758,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* The argument string may be empty or contain no tokens. */
         tt = js_GetToken(cx, ts);
         if (tt != TOK_EOF) {
-            while (1) {
+            for (;;) {
                 /*
                  * Check that it's a name.  This also implicitly guards against
                  * TOK_ERROR, which was already reported.

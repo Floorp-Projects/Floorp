@@ -2744,7 +2744,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 
     i = 0;
     vector = &ida->vector[0];
-    while (1) {
+    for (;;) {
         if (i == ida->length) {
             /* Grow length by factor of 1.5 instead of doubling. */
             jsint newlen = ida->length + (((jsuint)ida->length + 1) >> 1);
