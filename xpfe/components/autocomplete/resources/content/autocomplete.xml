@@ -522,7 +522,8 @@
             var val = this.resultsPopup.getOverrideValue();
             if (val) {
               this.value = val;
-            } else {
+            } else if (this.mInputElt.value == this.currentSearchStringPreFilter) {
+              // only fill in default value if there is nothing currently selected in popup
               var defaultSession = this.getDefaultSession();
               if (defaultSession) {
                 var results = this.mLastResults[defaultSession];
@@ -553,6 +554,8 @@
           else if (this.resultsPopup.selectedIndex != null && !this.noMatch) {
             this.value = this.getResultValueAt(this.resultsPopup.selectedIndex);
           }
+
+          this.mNeedToFinish = false;
 
           this.closeResultPopup();
 
