@@ -40,6 +40,8 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.*;
 
+import java.util.Hashtable;
+
 /**
  * Collection of utilities
  */
@@ -280,6 +282,19 @@ public class Kit
                 return null;
             return array[index];
         }
+    }
+
+    static Object initHash(Hashtable h, Object key, Object initialValue)
+    {
+        synchronized (h) {
+            Object current = h.get(key);
+            if (current == null) {
+                h.put(key, initialValue);
+            } else {
+                initialValue = current;
+            }
+        }
+        return initialValue;
     }
 
     /**
