@@ -366,11 +366,6 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
 
     gdk_gc_set_ts_origin(gc, x_offset, y_offset);
     gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
-    if (tiling_required)
-      {
-        gdk_gc_set_fill(gc, GDK_TILED);
-        gdk_gc_set_tile(gc,img_x_pixmap);
-      }
 
     if (fe_drawable->clip_region) { /* This is a bad hack */
       GdkRegionPrivate * hack = gdk_region_new();
