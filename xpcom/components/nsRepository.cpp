@@ -625,6 +625,127 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 	return (res);
 }
 
+
+static nsresult platformProgIDToCLSID(const char *aProgID, nsCID *aClass) 
+{
+	HREG hreg;
+    nsresult res = NS_ERROR_FAILURE;
+
+	PR_ASSERT(aClass != NULL);
+	
+	REGERR err = NR_RegOpen(NULL, &hreg);
+	if (err != REGERR_OK)
+	{
+		return (NS_ERROR_FAILURE);
+	}
+
+	RKEY classesKey;
+	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	RKEY key;
+	err = NR_RegGetKey(hreg, classesKey, (char *)aProgID, &key);
+	if (err != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	char cidString[MAXREGNAMELEN];
+	err = NR_RegGetEntryString(hreg, key, "CLSID", cidString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+		NR_RegClose(hreg);
+		return (NS_ERROR_FAILURE);
+	}
+
+	NR_RegClose(hreg);
+
+	if (!(aClass->Parse(cidString)))
+	{
+		return (NS_ERROR_FAILURE);
+	}
+	res = NS_OK;
+    return (res);
+}
+
+static nsresult platformCLSIDToProgID(nsCID *aClass,
+                                      char* *aClassName, char* *aProgID)
+{
+	HREG hreg;
+    char* classnameString;
+    char* progidString;
+    nsresult res = NS_ERROR_FAILURE;
+
+    char* cidStr = aClass->ToString();
+	
+	PR_ASSERT(aClass != NULL);
+	
+	REGERR err = NR_RegOpen(NULL, &hreg);
+	if (err != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done1;
+	}
+
+	RKEY classesKey;
+	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+	RKEY key;
+	err = NR_RegGetKey(hreg, classesKey, cidStr, &key);
+	if (err != REGERR_OK)
+	{
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+	classnameString = new char[MAXREGNAMELEN];
+    if (classnameString == NULL) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto done2;
+    }
+	err = NR_RegGetEntryString(hreg, key, "ClassName", classnameString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+        delete[] classnameString;
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+    *aClassName = classnameString;
+
+	progidString = new char[MAXREGNAMELEN];
+    if (progidString == NULL) {
+        delete[] classnameString;
+        res = NS_ERROR_OUT_OF_MEMORY;
+        goto done2;
+    }
+	err = NR_RegGetEntryString(hreg, key, "ProgID", progidString, MAXREGNAMELEN);
+	if (err != REGERR_OK)
+	{
+        delete[] progidString;
+        delete[] classnameString;
+		res = NS_ERROR_FAILURE;
+        goto done2;
+	}
+
+    *aProgID = progidString; 
+	res = NS_OK;
+
+  done2:	
+	NR_RegClose(hreg);
+  done1:
+    delete[] cidStr;
+
+    return (res);
+}
+
 #endif // USE_NSREG
 
 /***************************************************************************/
@@ -749,53 +870,16 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
                                      nsCID *aClass) 
 {
 	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef USE_REGISTRY
-	HREG hreg;
 
 	checkInitialized();
+
 	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
 	{
 		PR_LogPrint("nsRepository: ProgIDToCLSID(%s)", aProgID);
 	}
-	
-	PR_ASSERT(aClass != NULL);
-	
-	REGERR err = NR_RegOpen(NULL, &hreg);
-	if (err != REGERR_OK)
-	{
-		return (NS_ERROR_FAILURE);
-	}
 
-	RKEY classesKey;
-	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
-	{
-		NR_RegClose(hreg);
-		return (NS_ERROR_FAILURE);
-	}
-
-	RKEY key;
-	err = NR_RegGetKey(hreg, classesKey, (char *)aProgID, &key);
-	if (err != REGERR_OK)
-	{
-		NR_RegClose(hreg);
-		return (NS_ERROR_FAILURE);
-	}
-
-	char cidString[MAXREGNAMELEN];
-	err = NR_RegGetEntryString(hreg, key, "CLSID", cidString, MAXREGNAMELEN);
-	if (err != REGERR_OK)
-	{
-		NR_RegClose(hreg);
-		return (NS_ERROR_FAILURE);
-	}
-
-	NR_RegClose(hreg);
-
-	if (!(aClass->Parse(cidString)))
-	{
-		return (NS_ERROR_FAILURE);
-	}
-	res = NS_OK;
+#ifdef USE_REGISTRY
+    res = platformProgIDToCLSID(aProgID, aClass);
 #endif /* USE_REGISTRY */
 
 	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: ProgIDToCLSID() %s",
@@ -804,84 +888,26 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
 	return res;
 }
 
+
 nsresult nsRepository::CLSIDToProgID(nsCID *aClass,
                                      char* *aClassName,
                                      char* *aProgID)
 {
 	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
-#ifdef USE_REGISTRY
-	HREG hreg;
-    char* classnameString;
-    char* progidString;
 
 	checkInitialized();
-    char* cidStr = aClass->ToString();
+
 	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
 	{
-		PR_LogPrint("nsRepository: CLSIDToProgID(%s)", cidStr);
-	}
-	
-	PR_ASSERT(aClass != NULL);
-	
-	REGERR err = NR_RegOpen(NULL, &hreg);
-	if (err != REGERR_OK)
-	{
-		res = NS_ERROR_FAILURE;
-        goto done1;
+		char *buf = aClass->ToString();
+		PR_LogPrint("nsRepository: CLSIDToProgID(%s)", buf);
+		delete [] buf;
 	}
 
-	RKEY classesKey;
-	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Classes", &classesKey) != REGERR_OK)
-	{
-		res = NS_ERROR_FAILURE;
-        goto done2;
-	}
-
-	RKEY key;
-	err = NR_RegGetKey(hreg, classesKey, cidStr, &key);
-	if (err != REGERR_OK)
-	{
-		res = NS_ERROR_FAILURE;
-        goto done2;
-	}
-
-	classnameString = new char[MAXREGNAMELEN];
-    if (classnameString == NULL) {
-        res = NS_ERROR_OUT_OF_MEMORY;
-        goto done2;
-    }
-	err = NR_RegGetEntryString(hreg, key, "ClassName", classnameString, MAXREGNAMELEN);
-	if (err != REGERR_OK)
-	{
-        delete[] classnameString;
-		res = NS_ERROR_FAILURE;
-        goto done2;
-	}
-    *aClassName = classnameString;
-
-	progidString = new char[MAXREGNAMELEN];
-    if (progidString == NULL) {
-        delete[] classnameString;
-        res = NS_ERROR_OUT_OF_MEMORY;
-        goto done2;
-    }
-	err = NR_RegGetEntryString(hreg, key, "ProgID", progidString, MAXREGNAMELEN);
-	if (err != REGERR_OK)
-	{
-        delete[] progidString;
-        delete[] classnameString;
-		res = NS_ERROR_FAILURE;
-        goto done2;
-	}
-
-    *aProgID = progidString; 
-	res = NS_OK;
-
-  done2:	
-	NR_RegClose(hreg);
-  done1:
-    delete[] cidStr;
+#ifdef USE_REGISTRY
+    res = platformCLSIDToProgID(aClass, aClassName, aProgID);
 #endif /* USE_REGISTRY */
+
 	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: CLSIDToProgID() %s",
 		res == NS_OK ? "succeeded" : "FAILED"));
 	return res;
