@@ -12,10 +12,19 @@ var AddressAutoCompleteListener = {
 	}
 };
 
-function AutoCompleteSimple(doc_id)
+function AutoCompleteAddress(select_doc_id, doc_id)
 {
-        // get the current text
+	dump("select_doc_id = " + select_doc_id + "\n");
 	dump("doc_id = " + doc_id + "\n");
+
+        var select = document.getElementById(select_doc_id);
+	dump("select = " + select + "\n");
+	dump("select.value = " + select.value + "\n");
+
+	if (select.value == "addr_newsgroups") {
+		dump("don't autocomplete, it's a newsgroup");
+		return;
+	}
 	
 	var ac = Components.classes['component://netscape/messenger/autocomplete&type=addrbook'];
         if (ac) {
