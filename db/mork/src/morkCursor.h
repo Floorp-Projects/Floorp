@@ -68,7 +68,7 @@ class morkCursor : public morkObject, public nsIMdbCursor{ // collection iterato
   // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
-  NS_DECL_ISUPPORTS_INHERITED;
+  NS_DECL_ISUPPORTS_INHERITED
 
   // { ----- begin attribute methods -----
   NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);

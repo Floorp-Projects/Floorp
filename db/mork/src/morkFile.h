@@ -96,7 +96,7 @@ protected: // protected morkFile members (similar to public domain IronDoc)
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
-  NS_DECL_ISUPPORTS_INHERITED;
+  NS_DECL_ISUPPORTS_INHERITED
   virtual void CloseMorkNode(morkEnv* ev); // CloseFile() only if open
   virtual ~morkFile(); // assert that CloseFile() executed earlier
   
