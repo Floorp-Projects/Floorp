@@ -109,7 +109,6 @@ protected:
 
 
 nsImageControlFrame::nsImageControlFrame()
-  : nsImageControlFrameSuper()
 {
   mLastMouseState = eMouseNone;
   mLastClickPoint = nsPoint(0,0);
