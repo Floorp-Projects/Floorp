@@ -86,11 +86,8 @@ MakeDocs('PDF', "jade -t tex -d $LDP_HOME/ldp.dsl\#print $JADE_PUB/xml.dcl " .
          '../xml/Bugzilla-Guide.xml');
 chdir '../pdf';
 MakeDocs(undef, 'mv ../xml/Bugzilla-Guide.tex .');
-MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
-MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
-MakeDocs(undef, 'jadetex Bugzilla-Guide.tex');
-MakeDocs(undef, 'dvips -o Bugzilla-Guide.ps Bugzilla-Guide.dvi');
-MakeDocs(undef, 'ps2pdf Bugzilla-Guide.ps Bugzilla-Guide.pdf');
-MakeDocs(undef, 'rm Bugzilla-Guide.tex Bugzilla-Guide.log Bugzilla-Guide.dvi ' .
-                'Bugzilla-Guide.aux Bugzilla-Guide.ps');
+MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'pdfjadetex Bugzilla-Guide.tex');
+MakeDocs(undef, 'rm Bugzilla-Guide.tex Bugzilla-Guide.log Bugzilla-Guide.aux');
 
