@@ -516,7 +516,7 @@ PRBool nsOEScanBoxes::Scan50MailboxDir( nsIFileSpec * srcDir)
 						pEntry->type = -1;
 						pEntry->fileName = pLeaf;
 						pLeaf[sLen - 4] = 0;
-						pEntry->mailName = pLeaf;
+						pEntry->mailName.AssignWithConversion(pLeaf);
 						m_entryArray.AppendElement( pEntry);				
 					}
 				}
@@ -587,7 +587,7 @@ void nsOEScanBoxes::ScanMailboxDir( nsIFileSpec * srcDir)
 					pEntry->type = -1;
 					pEntry->fileName = pLeaf;
 					pLeaf[sLen - 4] = 0;
-					pEntry->mailName = pLeaf;
+					pEntry->mailName.AssignWithConversion(pLeaf);
 					m_entryArray.AppendElement( pEntry);				
 				}
 				if (pLeaf)
