@@ -39,7 +39,7 @@ void main(int argc, char **argv)
 
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 
 #include "xp_mcom.h"
 #include "net.h"
