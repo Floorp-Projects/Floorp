@@ -21,8 +21,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 CHROME_DIR = global
-
 CHROME_CONTENT_DIR = content/default
+CHROME_SOURCE_DIR  = $(srcdir)
 
 CHROME_CONTENT = \
 	unknownContent.xul \

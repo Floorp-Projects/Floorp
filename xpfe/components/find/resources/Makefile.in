@@ -22,6 +22,7 @@ VPATH		= @srcdir@
 
 CHROME_DIR = global
 
+CHROME_SOURCE_DIR  = $(srcdir)
 CHROME_CONTENT_DIR = content/default
 
 CHROME_CONTENT = \
