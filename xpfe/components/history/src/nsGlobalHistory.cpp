@@ -3149,7 +3149,7 @@ nsGlobalHistory::SearchEnumerator::~SearchEnumerator()
 //
 void
 nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
-                                  PRBool aDoGroupBy,
+                                  const PRBool aDoGroupBy,
                                   nsAWritableCString& aResult)
 {
   mdb_err err;
