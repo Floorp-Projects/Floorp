@@ -22,24 +22,15 @@ interface nsIChannel;
 [scriptable, uuid(2F0F927A-8677-11d3-989D-001083010E9B)]
 interface nsIContentHandler : nsISupports
 {
-  /* CanHandleContent returns true if this content handler wants
-     to handle this particular content type and false otherwise.
-     aContentType --> is the content type of the document
-     aCommand --> is a layout specific action command i.e. "view"
-     aWindowTarget --> can be null for the normal case. It refers to the
-                       target window name the content needs to be displayed in.
-  */
-  void CanHandleContent(in string aContentType,
-                        in string aCommand, 
-                        in string aWindowTarget, 
-                        out boolean aCanHandle);
-
   /* HandleContent works as the name implies =). aChannel is an open channel
      whose content type is already known (aContentType) */
-  void HandleContent(in string aContentType,
+  void handleContent(in string aContentType,
                      in string aCommand,
                      in string aWindowTarget,
                      in nsIChannel aChannel);
-  
-  attribute nsIContentHandler parentHandler; 
 };
+
+%{ C++
+#define NS_CONTENT_HANDLER_PROGID               "component://netscape/uriloader/content-handler"
+#define NS_CONTENT_HANDLER_PROGID_PREFIX	     NS_CONTENT_HANDLER_PROGID "?type="
+%}
