@@ -1065,9 +1065,9 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
         nsCAutoString temp; 
-        temp = (const char*) NS_ConvertUCS2toUTF8(profile);
+        NS_ConvertUCS2toUTF8 temp(profile);
         nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
-        nsAutoString convertedProfName((const PRUnichar*) NS_ConvertUTF8toUCS2(profileName));
+        nsAutoString convertedProfName(NS_ConvertUTF8toUCS2(profileName).get());
 #else
         nsCAutoString temp; temp.AssignWithConversion(profile);
 
@@ -1549,7 +1549,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
             {
                 rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
                 if (NS_SUCCEEDED(rv))
-                    rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData));
+                    rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData).get());
             }
             else
 #endif
