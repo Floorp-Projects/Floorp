@@ -1818,6 +1818,15 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     theContext.AppendLiteral(">");
   }
 
+  if (!aXMLMode) {
+    // Make sure we flush the context out if there wasn't a body tag. This is
+    // safe, since the fragment sink doesn't make a distinction between the
+    // head and body context. This is needed because if there wasn't a body
+    // tag, the DTD will store tags that belong in the body until it sees
+    // text or a body tag. This flushes all context tags out of the DTD.
+    theContext.AppendLiteral("<BODY>");
+  }
+
   // First, parse the context to build up the DTD's tag stack. Note that we
   // pass PR_FALSE for the aLastCall parameter.
   result = Parse(theContext, (void*)&theContext, aMimeType, 
