@@ -1511,8 +1511,8 @@ function cli_inick (e)
     
     if (e.server) 
         e.server.sendData ("NICK " + e.inputData + "\n");
-    else
-        CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
+
+    CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
     
     return true;
     
