@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="CookieViewer.js"/>
+
+  <frameset rows = "10,10,125,50" border="0" framespacing="0" onload="loadFrames();">
+    <frame src="about:blank"
+          name="index_frame"
+          scrolling="no"
+          marginwidth="1"
+          marginheight="1"
+          noresize="noresize"/>
+    <frame src="about:blank"
+          name="title_frame"
+          scrolling="no"
+          marginwidth="1"
+          marginheight="1"
+          noresize="noresize"/>
+    <frameset cols="5,*,10,*,5" border="0" framespacing="0">
+      <frame src="about:blank"
+            name="spacer1_frame"
+            scrolling="auto"
+            marginwidth="0"
+            marginheight="0"
+            noresize="noresize"/>
+      <frame src="about:blank"
+            name="list_frame"
+            scrolling="auto"
+            marginwidth="0"
+            marginheight="0"
+            noresize="noresize"/>
+      <frame src="about:blank"
+            name="spacer2_frame"
+            scrolling="auto"
+            marginwidth="0"
+            marginheight="0"
+            noresize="noresize"/>
+      <frame src="about:blank"
+            name="prop_frame"
+            scrolling="auto"
+            marginwidth="0"
+            marginheight="0"
+            noresize="noresize"/>
+      <frame src="about:blank"
+            name="spacer3_frame"
+            scrolling="auto"
+            marginwidth="0"
+            marginheight="0"
+            noresize="noresize"/>
+    </frameset>
+    <frame src="about:blank"
+          name="button_frame"
+          scrolling="no"
+          marginwidth="1"
+          marginheight="1"
+          noresize="noresize"/>
+  </frameset>
+
+</xul:window>

@@ -45,5 +45,6 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/WalletEditor.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/WalletEditor.xul $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/WalletEditor.js $(DIST)/bin/res/samples
 

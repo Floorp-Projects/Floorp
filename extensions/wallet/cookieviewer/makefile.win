@@ -51,4 +51,5 @@ clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 install:: $(DLL)
-        $(MAKE_INSTALL) CookieViewer.html $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) CookieViewer.xul $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) CookieViewer.js $(DIST)\bin\res\samples

@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="WalletPreview.js"/>
+
+  <frameset rows = "15,25,100,75"
+           border="0"
+           framespacing="0"
+           onload="loadFrames();">
+    <frame src="about:blank"
+           name="index_frame"
+           scrolling="no"
+           marginwidth="1"
+           marginheight="1"
+           noresize="noresize"/>
+    <frame src="about:blank"
+           name="title_frame"
+           scrolling="no"
+           marginwidth="1"
+           marginheight="1"
+           noresize="noresize"/>
+    <frame src="about:blank"
+           name="list_frame"
+           scrolling="auto"
+           marginwidth="0"
+           marginheight="0"
+           noresize="noresize"/>
+    <frame src="about:blank"
+           name="button_frame"
+           scrolling="no"
+           marginwidth="1"
+           marginheight="1"
+           noresize="noresize"/>
+  </frameset>
+
+</xul:window>

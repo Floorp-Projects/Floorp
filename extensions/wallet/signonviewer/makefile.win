@@ -51,4 +51,5 @@ clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 install:: $(DLL)
-        $(MAKE_INSTALL) SignonViewer.html $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\res\samples

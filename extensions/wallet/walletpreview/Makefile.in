@@ -45,4 +45,5 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/WalletPreview.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/WalletPreview.xul $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/WalletPreview.js $(DIST)/bin/res/samples

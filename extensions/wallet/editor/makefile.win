@@ -51,4 +51,5 @@ clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 install:: $(DLL)
-        $(MAKE_INSTALL) WalletEditor.html $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) WalletEditor.xul $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) WalletEditor.js $(DIST)\bin\res\samples

@@ -45,4 +45,5 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/SignonViewer.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/SignonViewer.xul $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/SignonViewer.js $(DIST)/bin/res/samples

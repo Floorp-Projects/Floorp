@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="SignonViewer.js"/>
+
+  <frameset rows = "30,10,125,50" border="0" framespacing="0" onload="loadFrames();">
+    <frame src="about:blank"
+           id="index_frame" 
+           scrolling="no" 
+           marginwidth="1" 
+           marginheight="1"
+           noresize="noresize"/>
+    <frame src="about:blank"
+           id="title_frame"
+           scrolling="no"
+           marginwidth="1"
+           marginheight="1"
+           noresize="noresize"/>
+    <frameset cols="5,*,5" border="0" framespacing="0">
+      <frame src="about:blank"
+             id="spacer1_frame"
+             scrolling="AUTO"
+             marginwidth="0"
+             marginheight="0"
+             noresize="noresize"/>
+      <frame src="about:blank"
+             id="list_frame"
+             scrolling="auto"
+             marginwidth="0"
+             marginheight="0"
+             noresize="noresize"/>
+      <frame src="about:blank"
+             id="spacer2_frame"
+             scrolling="auto"
+             marginwidth="0"
+             marginheight="0"
+             noresize="noresize"/>
+    </frameset>
+    <frame src="about:blank"
+           id="button_frame"
+           scrolling="no"
+           marginwidth="1"
+           marginheight="1"
+           noresize="noresize"/>
+  </frameset>
+</xul:window>

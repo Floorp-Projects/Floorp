@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE window>
+<xul:window xmlns="http://www.w3.org/TR/REC-html40"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="WalletEditor.js"/>
+
+  <frameset rows="15,115,30" frameborder="no" border="0" bordercolor="#cccccc" onload="loadFrames();"> 
+    <frame src="about:blank" frameborder="no" id="title_frame" bordercolor="#cccccc" scrolling="no"/>
+    <frameset cols="100,200" bordercolor="#cccccc">
+      <frame src="about:blank" id="schema_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
+      <frameset rows="53%,47%" bordercolor="#cccccc">
+        <frame src="about:blank" id="value_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
+        <frame src="about:blank" id="synonym_frame" frameborder="no" bordercolor="#cccccc" scrolling="auto"/>
+      </frameset>
+    </frameset>
+    <frame src="about:blank" id="button_frame" scrolling="no"/>
+  </frameset>
+
+</xul:window>
