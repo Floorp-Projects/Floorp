@@ -967,7 +967,9 @@ case "$target" in
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
+    dnl set NO_X11 defines here as the general check is skipped on win32
     no_x=yes
+    AC_DEFINE(NO_X11)
 
     dnl Remove cygwinism from MOZ_BUILD_ROOT
     MOZ_BUILD_ROOT=`cygpath -w $MOZ_BUILD_ROOT | sed -e 's|\\\\|/|g'`
