@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.27 $ ';
+$Version = '$Revision: 1.28 $ ';
 
 
 sub PrintUsage {
@@ -751,7 +751,7 @@ sub RunBloatTest {
 	  print LOG $cmd;
 	  exec ($cmd);
 	} else {
-	  print LOG "ERROR: bloaturls.txt does not exist.";
+	  print LOG "ERROR: bloaturls.txt does not exist.\n";
 	}
 
     close STDOUT;
