@@ -84,6 +84,7 @@ XPIDLSRCS	= \
 		nsIDragDropOverride.idl \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \
+		nsIImageLoadingContent.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
