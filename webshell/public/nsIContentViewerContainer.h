@@ -47,8 +47,6 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo) = 0;
 
-  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
-
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
                                       nsIChannel* channel,
                                       const char *aContentType,
