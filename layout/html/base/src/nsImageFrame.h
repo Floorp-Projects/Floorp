@@ -127,7 +127,8 @@ protected:
 
   nsHTMLImageLoader mImageLoader;
   nsImageMap* mImageMap;
-  PRBool mSizeFrozen;
+  PRPackedBool mSizeFrozen;
+  PRPackedBool mInitialLoadCompleted;
   nsMargin mBorderPadding;
 };
 
