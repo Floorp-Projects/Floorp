@@ -326,6 +326,47 @@
         ]]></body>
       </method>
 
+      <!-- add a session by reference -->
+      <method name="addSession">
+        <parameter name="aSession"/>
+        <body><![CDATA[
+          ++this.sessionCount;
+          var name = "anon_"+this.sessionCount;
+          this.mSessions[name] = aSession;
+          this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+        ]]></body>
+      </method>
+
+      <!-- remove a session by reference -->
+      <method name="removeSession">
+        <parameter name="aSession"/>
+        <body><![CDATA[
+          for (var name in this.mSessions) {
+            if (this.mSessions[name] == aSession) {
+              delete this.mSessions[name];
+              delete this.mListeners[name];
+              --this.sessionCount;
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- make this widget listen to all of the same autocomplete sessions 
+           from another autocomplete widget -->
+      <method name="syncSessions">
+        <parameter name="aCopyFrom"/>
+        <body><![CDATA[
+          this.sessionCount = aCopyFrom.sessionCount;
+          this.mSessions = {};
+          this.mListeners = {};
+          for (var name in aCopyFrom.mSessions) {
+            this.mSessions[name] = aCopyFrom.mSessions[name];
+            this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+          }
+        ]]></body>
+      </method>
+
       <!-- get the first session that has results -->
       <method name="getDefaultSession">
         <body><![CDATA[
