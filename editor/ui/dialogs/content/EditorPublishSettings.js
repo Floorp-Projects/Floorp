@@ -94,8 +94,8 @@ function FillSiteList()
       {
         gDefaultSiteIndex = i;
 dump(" *** Setting checked style on tree item\n");
-        checkCell.setAttribute("checked", "true");
-        menuitem.setAttribute("checked", "true");
+        checkCell.checked = true;
+        menuitem.checked = true;
       }
     }
   }

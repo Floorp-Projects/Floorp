@@ -725,9 +725,7 @@ function GetLocalFileURL(filterType)
   }
   SaveFilePickerDirectory(fp, fileType);
   
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  // Note: ioService.getURLSpecFromFile(fp.file) = fp.fileURL.spec
-
+  var ioService = GetIOService();
   return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
 }
 
@@ -984,5 +982,225 @@ function MakeInputValueRelativeOrAbsolute()
     // Reset checkbox to reflect url state
     SetRelativeCheckbox(checkbox, input.value);
   }
+}
+
+var IsBlockParent = {
+  APPLET: true,
+  BLOCKQUOTE: true,
+  BODY: true,
+  CENTER: true,
+  DD: true,
+  DIV: true,
+  FORM: true,
+  LI: true,
+  NOSCRIPT: true,
+  OBJECT: true,
+  TD: true,
+  TH: true
+};
+
+var NotAnInlineParent = {
+  COL: true,
+  COLGROUP: true,
+  DL: true,
+  DIR: true,
+  MENU: true,
+  OL: true,
+  TABLE: true,
+  TBODY: true,
+  TFOOT: true,
+  THEAD: true,
+  TR: true,
+  UL: true
+};
+
+function nodeDepth(node)
+{
+  for (var depth = 0; node != null; depth++)
+    node = node.parentNode;
+  return depth;
+}
+
+function nthParent(node, n)
+{
+  for (; n > 0; n--)
+    node = node.parentNode;
+  return node;
+}
+
+function nodeIsBlock(node)
+{
+  // HR doesn't count because it's not a container
+  return !node || (node.localName != 'HR' && editorShell.NodeIsBlock(node));
+}
+
+/* Ugly code alert! If only I could do this:
+ * var range = editorShell.editorSelection;
+ * range = editorShell.FlattenRange(range); // ensure anchorNode == parentNode
+ * if (editorShell.IsInlineRange(range) && editorShell.NodeIsBlock(node)) return false;
+ * while (!editorShell.ContainmentAllowed(range.anchorNode, element))
+ *   range = editorShell.ParentRangeOf(range);
+ * editorShell.InsertElementAtRange(element, range);
+ * return true;
+ */
+function InsertElementAroundSelection(element)
+{
+  // We need to find a suitable container for the element.
+  // First get the selection
+  var anchorParent = editorShell.editorSelection.anchorNode;
+  if (!anchorParent.localName)
+    var anchorSelected = true;
+  else if (editorShell.editorSelection.anchorOffset < anchorParent.childNodes.length)
+    var anchor = anchorParent.childNodes[editorShell.editorSelection.anchorOffset];
+  var focusParent = editorShell.editorSelection.focusNode;
+  if (!focusParent.localName)
+    var focusSelected = true;
+  else if (editorShell.editorSelection.focusOffset < focusParent.childNodes.length)
+    var focus = focusParent.childNodes[editorShell.editorSelection.focusOffset];
+
+  // Find the common ancestor
+  var anchorDepth = nodeDepth(anchorParent);
+  var focusDepth = nodeDepth(focusParent);
+  if (anchorDepth > focusDepth)
+  {
+    anchor = nthParent(anchorParent, anchorDepth - focusDepth - 1);
+    anchorParent = anchor.parentNode;
+    anchorSelected = true;
+  }
+  else if (anchorDepth < focusDepth)
+  {
+    focus = nthParent(focusParent, focusDepth - anchorDepth - 1);
+    focusParent = focus.parentNode;
+    focusSelected = true;
+  }
+  var ordered = false;
+  while (anchorParent != focusParent)
+  {
+    anchor = anchorParent;
+    anchorParent = anchor.parentNode;
+    focus = focusParent;
+    focusParent = focus.parentNode;
+    anchorSelected = focusSelected = true;
+  }
+
+  // The common ancestor may not be suitable, so find a suitable one.
+  if (editorShell.NodeIsBlock(element))
+  {
+    // Block element parent must be a valid block
+    while (!(anchorParent.localName in IsBlockParent))
+    {
+      anchor = focus = anchorParent;
+      anchorSelected = focusSelected = true;
+      anchorParent = anchor.parentNode;
+      ordered = true;
+    }
+  }
+  else
+  {
+    // Inline element parent must not be an invalid block
+    while (anchorParent.localName in NotAnInlineParent)
+    {
+      anchor = focus = anchorParent;
+      anchorSelected = focusSelected = true;
+      anchorParent = anchor.parentNode;
+      ordered = true;
+    }
+  }
+
+  // We now have an ancestor to hold the element
+  // and a range of child nodes to move into the element
+  if (anchor != focus)
+  {
+    if (!ordered)
+    {
+      // Ensure anchor <= focus
+      for (var node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
+      {
+        if (node == focus)
+        {
+          focus = anchor;
+          anchor = node;
+          focusSelected = anchorSelected;
+          break;
+        }
+      }
+    }
+    if (focus && !focusSelected)
+      focus = focus.previousSibling;
+  }
+  if (!editorShell.NodeIsBlock(element))
+  {
+    // Fail if we're not inserting a block
+    if (!anchor) return false;
+    for (node = anchor; ; node = node.nextSibling)
+      if (!node)
+        return false;
+      else if (nodeIsBlock(node))
+        break;
+      else if (node == focus)
+        return false;
+  }
+
+  // The range may be contained by body text, which should all be selected.
+  if (!nodeIsBlock(anchor))
+    while (!nodeIsBlock(anchor.previousSibling))
+      anchor = anchor.previousSibling;
+  if (!nodeIsBlock(focus))
+    while (!nodeIsBlock(focus.nextSibling))
+      focus = focus.nextSibling;
+
+  editorShell.BeginBatchChanges();
+  try {
+    var anchorOffset = 0;
+    // Calculate the insertion point for the undoable InsertElement method
+    if (!anchor)
+      anchor = anchorParent.firstChild;
+    else
+      for (node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
+        anchorOffset++;
+    editorShell.InsertElement(element, anchorParent, anchorOffset, true);
+    // Move all the old child nodes to the element
+    // Use editor methods in case of text nodes
+    var editor = editorShell.editor;
+    while (anchor)
+    {
+      node = anchor.nextSibling;
+      editor.DeleteNode(anchor);
+      editor.InsertNode(anchor, element, element.childNodes.length);
+      if (anchor == focus) break;
+      anchor = node;
+    }
+  }
+  catch (ex) {}
+
+  editorShell.EndBatchChanges();
+  return true;
+}
+
+// Should I set the selection to the element, then insert HTML the element's innerHTML?
+// I would prefer to say editorShell.DeleteElement(element, FLAG_TO_KEEP_CHILD_NODES);
+function RemoveElementKeepingChildren(element)
+{
+  editorShell.BeginBatchChanges();
+  try {
+    if (element.firstChild)
+    {
+      // Use editor methods in case of text nodes
+      var editor = editorShell.editor;
+      var parent = element.parentNode;
+      var offset = 0;
+      for (var node = parent.firstChild; node != element; node = node.nextSibling)
+        offset++;
+      while ((node = element.firstChild))
+      {
+        editor.DeleteNode(node);
+        editor.InsertNode(node, parent, offset++);
+      }
+    }
+    editorShell.DeleteElement(element);
+  }
+  catch (ex) {}
+
+  editorShell.EndBatchChanges();
 }
 

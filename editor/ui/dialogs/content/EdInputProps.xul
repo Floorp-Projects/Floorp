@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Input Tag Properties Dialog.
+   -
+   - The Initial Developer of the Original Code is
+   - Neil Rashbrook.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Neil Rashbrook <neil@parkwaycc.co.uk>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInputProperties.dtd">
+<dialog title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="Startup();"
+        buttons="accept,cancel"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
+
+  <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdInputProps.js"/>
+
+  <broadcaster id="args" value=""/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+
+  <groupbox orient="vertical"><caption label="&InputType.label;"/>
+    <menulist id="InputType" oncommand="SelectInputType();">
+      <menupopup>
+        <menuitem label="&text.value;"/>
+        <menuitem label="&password.value;"/>
+        <menuitem label="&checkbox.value;"/>
+        <menuitem label="&radio.value;"/>
+        <menuitem label="&submit.value;"/>
+        <menuitem label="&reset.value;"/>
+        <menuitem label="&file.value;"/>
+        <menuitem label="&hidden.value;"/>
+        <menuitem label="&image.value;"/>
+        <menuitem label="&button.value;"/>
+      </menupopup>
+    </menulist>
+  </groupbox>
+
+  <groupbox orient="vertical"><caption label="&InputSettings.label;"/>
+    <grid><columns><column/><column/></columns>
+      <rows>
+        <row align="center">
+          <deck id="InputNameDeck">
+            <label value="&InputName.label;"/>
+            <label value="&GroupName.label;"/>
+          </deck>
+          <textbox id="InputName" oninput="onInput();"/>
+        </row>
+        <row align="center">
+          <deck id="InputValueDeck">
+            <label value="&InputValue.label;"/>
+            <label value="&InitialValue.label;"/>
+          </deck>
+          <textbox id="InputValue" oninput="onInput();"/>
+        </row>
+        <row>
+          <spacer/>
+          <deck id="InputDeck" persist="index">
+            <checkbox id="InputChecked" label="&InputChecked.label;"/>
+            <checkbox id="InputSelected" label="&InputSelected.label;"/>
+            <checkbox id="InputReadOnly" label="&InputReadOnly.label;"/>
+          </deck>
+        </row>
+        <hbox>
+          <button id="MoreFewerButton" oncommand="onMoreFewer();" persist="more"/>
+        </hbox>
+        <rows id="MoreSection">
+          <row>
+            <spacer/>
+            <checkbox id="InputDisabled" label="&InputDisabled.label;"/>
+          </row>
+          <row align="center">
+            <label value="&tabIndex.label;"/>
+            <hbox>
+              <textbox id="InputTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label value="&AccessKey.label;"/>
+            <hbox>
+              <textbox id="InputAccessKey" class="narrow"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label value="&TextSize.label;"/>
+            <hbox>
+              <textbox id="InputSize" class="narrow" oninput="forceInteger(this.id);"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label value="&TextLength.label;"/>
+            <hbox>
+              <textbox id="InputMaxLength" class="narrow" oninput="forceInteger(this.id);"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label value="&Accept.label;"/>
+            <textbox id="InputAccept"/>
+          </row>
+        </rows>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <!-- from EdDialogOverlay -->
+  <hbox flex="1" style="margin-top: 0.2em">
+    <!-- This will right-align the button -->
+    <spacer flex="1"/>
+    <deck id="AdvancedEditDeck">
+      <button id="AdvancedEditButton"/>
+      <button label="&ImageProperties.label;" oncommand="doImageProperties();"/>
+    </deck>
+  </hbox>
+  <separator class="groove"/>
+
+</dialog>

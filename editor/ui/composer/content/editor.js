@@ -1731,6 +1731,31 @@ function InitObjectPropertiesMenuitem(id)
       case "li":
         objStr = GetString("ListItem");
         break;
+      case "form":
+        objStr = GetString("Form");
+        break;
+      case "input":
+        var type = element.getAttribute("type");
+        if (type && type.toLowerCase() == "image")
+          objStr = GetString("InputImage");
+        else
+          objStr = GetString("InputTag");
+        break;
+      case "textarea":
+        objStr = GetString("TextArea");
+        break;
+      case "select":
+        objStr = GetString("Select");
+        break;
+      case "button":
+        objStr = GetString("Button");
+        break;
+      case "label":
+        objStr = GetString("Label");
+        break;
+      case "fieldset":
+        objStr = GetString("FieldSet");
+        break;
       case "a":
         if (element.name)
         {
@@ -2188,6 +2213,7 @@ function RemoveInapplicableUIElements()
     HideItem("insertHline");
     HideItem("insertTable");
     HideItem("insertHTML");
+    HideItem("insertFormMenu");
     HideItem("fileExportToText");
     HideItem("viewFormatToolbar");
     HideItem("viewEditModeToolbar");

@@ -77,3 +77,11 @@
 <!ENTITY makePageBackgroundCheckbox.tooltip "Use image as background for your page">
 <!ENTITY editImageButton.label "Edit Image">
 <!ENTITY editImageButton.tooltip "Edit image file in another program">
+
+<!-- These tabs are currently used in the image input dialog -->
+<!ENTITY imageInputTab.label "Form">
+<!ENTITY imageLocationTab.label "Image">
+<!ENTITY imageDimensionsTab.label "Dimensions">
+<!ENTITY imageAppearanceTab.label "Appearance">
+<!-- This tab is currently not used -->
+<!ENTITY imageLinkTab.label "Link">

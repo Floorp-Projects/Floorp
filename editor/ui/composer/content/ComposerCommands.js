@@ -64,6 +64,15 @@ function SetupHTMLEditorCommands()
   controller.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
   controller.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
+  controller.registerCommand("cmd_form",          nsFormCommand);
+  controller.registerCommand("cmd_inputtag",      nsInputTagCommand);
+  controller.registerCommand("cmd_inputimage",    nsInputImageCommand);
+  controller.registerCommand("cmd_textarea",      nsTextAreaCommand);
+  controller.registerCommand("cmd_select",        nsSelectCommand);
+  controller.registerCommand("cmd_button",        nsButtonCommand);
+  controller.registerCommand("cmd_label",         nsLabelCommand);
+  controller.registerCommand("cmd_fieldset",      nsFieldSetCommand);
+  controller.registerCommand("cmd_isindex",       nsIsIndexCommand);
   controller.registerCommand("cmd_image",         nsImageCommand);
   controller.registerCommand("cmd_hline",         nsHLineCommand);
   controller.registerCommand("cmd_link",          nsLinkCommand);
@@ -294,14 +303,14 @@ var nsOpenCommand =
   {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
-  
+
+    SetFilePickerDirectory(fp, "html");
+
     // When loading into Composer, direct user to prefer HTML files and text files,
     //   so we call separately to control the order of the filter list
     fp.appendFilters(nsIFilePicker.filterHTML);
     fp.appendFilters(nsIFilePicker.filterText);
     fp.appendFilters(nsIFilePicker.filterAll);
-
-    SetFilePickerDirectory(fp, "html");
 
     /* doesn't handle *.shtml files */
     try {
@@ -318,7 +327,7 @@ var nsOpenCommand =
      */
     if (fp.file && fp.file.path.length > 0) {
       SaveFilePickerDirectory(fp, "html");
-      EditorOpenUrl(fp.fileURL.spec);
+      EditorOpenUrl(fp.file.URL);
     }
   }
 };
@@ -440,7 +449,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   // set the file picker's current directory
   // assuming we have information needed (like prior saved location)
   try {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var ioService = GetIOService();
     
     var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
     ioService.initFileFromURLSpec(fileLocation, aDocumentURLString);
@@ -647,7 +656,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     {
       tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      var ioService = GetIOService();
       ioService.initFileFromURLSpec(tempLocalFile, urlstring);
     }
 
@@ -1148,7 +1157,7 @@ var nsValidateCommand =
     // See if it's a file:
     var ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
     try {
-      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      var ioService = GetIOService();
       ioService.initFileFromURLSpec(ifile, URL2Validate);
       // nsIFile throws an exception if it's not a file url
     } catch (e) { ifile = null; }
@@ -1178,46 +1187,6 @@ var nsValidateCommand =
   }
 };
 
-// Link checking.
-// XXX THIS CODE IS WORK IN PROGRESS (only exposed in the debug menu).
-
-// Variables used across all the links being checked:
-var gNumLinksToCheck = 0;     // The number of nsILinkCheckers
-var gLinksBeingChecked;       // holds the array of nsILinkCheckers
-var gNumLinksCalledBack = 0;
-var gStartedAllChecks = false;
-var gLinkCheckTimerID = 0;
-
-function nsLinkCheckTimeOut()
-{
-  // We might have gotten here via a late timeout
-  if (gNumLinksToCheck <= 0)
-    return;
-  dump("Timed out!  Heard from " + gNumLinksCalledBack + " of "
-       + gNumLinksToCheck + "\n");
-  for (var i=0; i < gNumLinksToCheck; ++i)
-  {
-    var linkChecker = gLinksBeingChecked[i].QueryInterface(Components.interfaces.nsIURIChecker);
-    // nsIURIChecker returns:
-    // NS_BINDING_SUCCEEDED     link is valid
-    // NS_BINDING_FAILED        link is invalid (gave an error)
-    // NS_BINDING_ABORTED       timed out, or cancelled
-    var status = linkChecker.status;
-    if (status ==0x804b0001)        // NS_BINDING_FAILED
-      dump(">> " + linkChecker.name + " is broken\n");
-    else if (status == 0x804b0002)   // NS_BINDING_ABORTED
-      dump(">> " + linkChecker.name + " timed out\n");
-    else if (status == 0)             // NS_BINDING_SUCCEEDED
-      dump("   " + linkChecker.name + " OK!\n");
-    else
-      dump(">> " + linkChecker.name + " not checked\n");
-  }
-
-  delete gLinksBeingChecked;  // This deletes/cancels everything
-  gNumLinksToCheck = 0;
-  gStartedAllChecks = false;
-}
-
 var nsCheckLinksCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -1227,66 +1196,147 @@ var nsCheckLinksCommand =
 
   doCommand: function(aCommand)
   {
-    //window.openDialog("chrome://editor/content/EdLinkCheck.xul", "_blank",
-    //                  "chrome,close,titlebar", "");
+    window.openDialog("chrome://editor/content/EdLinkChecker.xul","_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
 
-    objects = window.editorShell.GetLinkedObjects();
-    // Objects is an nsISupportsArray.
-    gLinksBeingChecked = new Array;
-    gNumLinksCalledBack = 0;
-    gStartedAllChecks = false;
-    gLinkCheckTimerID = setTimeout("nsLinkCheckTimeOut()", 5000);
-
-    // Loop over the nodes that have links:
-    for (gNumLinksToCheck = 0; gNumLinksToCheck < objects.Count();
-         ++gNumLinksToCheck)
-    {
-      var refobj = objects.GetElementAt(gNumLinksToCheck).QueryInterface(Components.interfaces.nsIURIRefObject);
-      // Loop over the links in this node:
-      try {
-        var uri;
-        while (refobj && (uri = refobj.GetNextURI()))
-        {
-          // Use the real class in netlib:
-          dump(gNumLinksToCheck + ": Trying to check " + uri + "\n");
-          // Make a new nsIURIChecker
-          gLinksBeingChecked[gNumLinksToCheck]
-            = Components.classes["@mozilla.org/network/urichecker;1"]
-                .createInstance()
-                  .QueryInterface(Components.interfaces.nsIURIChecker);
-          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, this, null);
-        }
-      } catch(e) {
-        // NS_ERROR_NOT_AVAILABLE means the refobj was out of uris,
-        // anything else means a real error that we should handle
-        // (probably throw again).
-        //dump("Exception: result = " + e.result + ", '" + e.message + "'\n");
-        if (e.result != 2147746065)
-          throw(e);
-      }
-    }
-    // Done with the loop, now we can be prepared for the finish:
-    gStartedAllChecks = true;
-  },
-
-  // Implement nsIRequestObserver:
-  // urichecker requires that we have an OnStartRequest even tho it's a nop.
-  onStartRequest: function(request, ctxt) { },
-
-  // onStopRequest is where we really handle the status.
-  onStopRequest: function(request, ctxt, status)
+//-----------------------------------------------------------------------------------
+var nsFormCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
   {
-    var linkChecker = request.QueryInterface(Components.interfaces.nsIURIChecker);
-    if (linkChecker)
-    {
-      linkChecker.status = status;
-      ++gNumLinksCalledBack;
-      if (gStartedAllChecks && gNumLinksCalledBack >= gNumLinksToCheck)
-      {
-        clearTimeout(gLinkCheckTimerID);
-        nsLinkCheckTimeOut();
-      }
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdFormProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsInputTagCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdInputProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsInputImageCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdInputImage.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsTextAreaCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdTextAreaProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsSelectCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdSelectProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsButtonCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    // && !editorShell.editorSelection.isCollapsed()?
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdButtonProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsLabelCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    var tagName = "label";
+    var labelElement = editorShell.GetSelectedElement(tagName);
+    if (!labelElement)
+      labelElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.anchorNode);
+    if (!labelElement)
+      labelElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.focusNode);
+    if (labelElement) {
+      // We only open the dialog for an existing label
+      window.openDialog("chrome://editor/content/EdLabelProps.xul", "_blank", "chrome,close,titlebar,modal", labelElement);
+      window._content.focus();
+    } else {
+      editorShell.SetTextProperty(tagName, "", "");
     }
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsFieldSetCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    window.openDialog("chrome://editor/content/EdFieldSetProps.xul", "_blank", "chrome,close,titlebar,modal");
+    window._content.focus();
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsIsIndexCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+  },
+  doCommand: function(aCommand)
+  {
+    var isindexElement = editorShell.CreateElementWithDefaults("isindex");
+    isindexElement.setAttribute("prompt", editorShell.GetContentsAs("text/plain", gOutputSelectionOnly));
+    editorShell.InsertElementAtSelection(isindexElement, true);
   }
 };
 
@@ -1510,6 +1560,31 @@ var nsObjectPropertiesCommand =
         case 'hr':
           goDoCommand("cmd_hline");
           break;
+        case 'form':
+          goDoCommand("cmd_form");
+          break;
+        case 'input':
+          var type = element.getAttribute("type");
+          if (type && type.toLowerCase() == "image")
+            goDoCommand("cmd_inputimage");
+          else
+            goDoCommand("cmd_inputtag");
+          break;
+        case 'textarea':
+          goDoCommand("cmd_textarea");
+          break;
+        case 'select':
+          goDoCommand("cmd_select");
+          break;
+        case 'button':
+          goDoCommand("cmd_button");
+          break;
+        case 'label':
+          goDoCommand("cmd_label");
+          break;
+        case 'fieldset':
+          goDoCommand("cmd_fieldset");
+          break;
         case 'table':
           EditorInsertOrEditTable(false);
           break;
@@ -1661,7 +1736,7 @@ var nsColorPropertiesCommand =
   doCommand: function(aCommand)
   {
     window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", ""); 
-    UpdateDefaultColors();
+    UpdateDefaultColors(); 
     window._content.focus();
   }
 };

@@ -116,6 +116,7 @@
 <!ENTITY editfindnext.keybinding "g">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY validateCmd.label "Validate HTML">
+<!ENTITY validate.accesskey "v">
 <!ENTITY checkLinksCmd.label "Check Links">
 <!ENTITY editcheckspelling.accesskey "s">
 <!ENTITY editcheckspelling.keybinding "k">
@@ -264,6 +265,8 @@
 <!ENTITY inserthline.accesskey "o">
 <!ENTITY insertTableCmd.label "Table...">
 <!ENTITY inserttable.accesskey "t">
+<!ENTITY insertFormMenu.label "Form">
+<!ENTITY insertformmenu.accesskey "F">
 <!ENTITY insertHTMLCmd.label "HTML...">
 <!ENTITY insertHTMLCmd.accesskey "h">
 <!ENTITY insertCharsCmd.label "Characters and Symbols...">
@@ -272,6 +275,26 @@
 <!ENTITY insertbreak.accesskey "b">
 <!ENTITY insertBreakAllCmd.label "Break Below Image(s)">
 <!ENTITY insertbreakall.accesskey "k">
+
+<!-- Insert form menu items -->
+<!ENTITY insertFormCmd.label "Define Form...">
+<!ENTITY insertform.accesskey "D">
+<!ENTITY insertInputTagCmd.label "Form Field...">
+<!ENTITY insertinputtag.accesskey "e">
+<!ENTITY insertInputImageCmd.label "Form Image...">
+<!ENTITY insertinputimage.accesskey "I">
+<!ENTITY insertTextAreaCmd.label "Text Area...">
+<!ENTITY inserttextarea.accesskey "T">
+<!ENTITY insertSelectCmd.label "Selection List...">
+<!ENTITY insertselect.accesskey "S">
+<!ENTITY insertButtonCmd.label "Define Button...">
+<!ENTITY insertbutton.accesskey "B">
+<!ENTITY insertLabelCmd.label "Define Label">
+<!ENTITY insertlabel.accesskey "L">
+<!ENTITY insertFieldSetCmd.label "Define Field Set...">
+<!ENTITY insertfieldset.accesskey "F">
+<!ENTITY insertIsIndexCmd.label "Index Search">
+<!ENTITY insertisindex.accesskey "x">
 
 <!-- Used just in context popup. -->
 <!ENTITY createLinkCmd.label "Create Link...">
