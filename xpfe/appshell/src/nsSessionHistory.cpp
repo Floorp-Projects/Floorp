@@ -109,6 +109,16 @@ public:
   nsresult SetWebShell(nsIWebShell * aName);
 
   /**
+   * Get the History State of the page 
+   */
+  nsresult GetHistoryState(nsISupports ** aResult);
+
+  /**
+   * Set the History State of the page 
+   */
+  nsresult SetHistoryState(nsISupports * aState);
+
+  /**
    *  Add a child
    */
   nsresult AddChild(nsHistoryEntry * aChild);
@@ -157,7 +167,8 @@ public:
   nsString *          mTitle;  // Name of the document
   nsVoidArray         mChildren;  //  children list
   PRInt32             mChildCount; // # of children
-  nsHistoryEntry *    mParent;     
+  nsHistoryEntry *    mParent;
+  nsISupports *       mHistoryState;  // History state as saved by the layout
   nsISessionHistory * mHistoryList;  // The handle to the session History to 
                                     // which this entry belongs
 };
@@ -170,6 +181,7 @@ nsHistoryEntry::nsHistoryEntry()
    mParent = nsnull;
    mURL = nsnull;
    mTitle = nsnull;
+   mHistoryState = nsnull;
    
  
 //  NS_INIT_REFCNT();
@@ -183,6 +195,7 @@ nsHistoryEntry::~nsHistoryEntry()
 	 delete mURL;
    NS_IF_RELEASE(mWS);
    NS_IF_RELEASE(mHistoryList);
+   NS_IF_RELEASE(mHistoryState);
 
    DestroyChildren();
 }
@@ -237,6 +250,20 @@ nsresult
 nsHistoryEntry::SetWebShell(nsIWebShell * aWebShell)
 {
   mWS = aWebShell;
+  return NS_OK;
+}
+
+nsresult
+nsHistoryEntry::GetHistoryState(nsISupports ** aResult)
+{
+  *aResult = mHistoryState;
+  return NS_OK;
+}
+
+nsresult
+nsHistoryEntry::SetHistoryState(nsISupports * aState)
+{
+  mHistoryState = aState;
   return NS_OK;
 }
 
@@ -484,8 +511,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             /* Get the child count of the webshell for a later use */
             PRInt32  ccount=0;
             prev->GetChildCount(ccount);
-
-            prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) (aIsReload?nsIChannel::LOAD_NORMAL:LOAD_HISTORY));
+            nsISupports * historyObject = nsnull;
+			GetHistoryState(&historyObject);
+            prev->LoadURL(cURL, nsnull, PR_FALSE, (nsLoadFlags) (aIsReload?nsIChannel::LOAD_NORMAL:LOAD_HISTORY), 0, historyObject);
             if (aIsReload && (ccount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
                * true so that consecutive calls by the frame children in to 
@@ -670,6 +698,18 @@ public:
    */
 
   NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle);
+
+  /**
+   * Get the History object of the index
+   */
+  NS_IMETHOD GetHistoryObjectForIndex(PRInt32 aIndex, nsISupports ** aState);
+
+
+  /**
+   * Set the History state of the index
+   */
+
+  NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
 protected:
 
    virtual ~nsSessionHistory();
@@ -1159,6 +1199,42 @@ nsSessionHistory::SetTitleForIndex(PRInt32 aIndex, const PRUnichar* aTitle)
   hist->SetTitle(aTitle);
   nsString title(aTitle);
   if(APP_DEBUG) printf("Setting title %s for index %d\n", title.ToNewCString(), aIndex);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSessionHistory::GetHistoryObjectForIndex(PRInt32 aIndex, nsISupports** aState)
+{
+
+  nsHistoryEntry * hist=nsnull;
+
+  if (aIndex < 0 || aIndex >= mHistoryLength)
+  {
+     if (APP_DEBUG) printf("nsSessionHistory::GetURLForIndex Returning error in GetURL for Index\n");
+     return NS_ERROR_FAILURE;
+  }
+
+  hist = (nsHistoryEntry *) mHistoryEntries.ElementAt(aIndex);
+
+  
+  if (hist)
+    hist->GetHistoryState(aState);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSessionHistory::SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports* aState)
+{
+
+  nsHistoryEntry * hist=nsnull;
+
+  if (aIndex < 0 || aIndex >= mHistoryLength)
+     return NS_ERROR_FAILURE; 
+
+  hist = (nsHistoryEntry *) mHistoryEntries.ElementAt(aIndex);
+
+  hist->SetHistoryState(aState);
   return NS_OK;
 }
 

@@ -148,8 +148,19 @@ public:
    */
   NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle) = 0;
 
+  /**
+   * Get the History object of the index
+   */
+  NS_IMETHOD GetHistoryObjectForIndex(PRInt32 aIndex, nsISupports ** aState) = 0;
 
+
+  /**
+   * Set the History state of the index
+   */
+  NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState) = 0;
 };
+
+
 
 extern "C" NS_APPSHELL nsresult
 NS_NewSessionHistoryFactory(nsIFactory ** aFactory);
