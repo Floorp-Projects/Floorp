@@ -400,7 +400,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
   if (bMetaCharsetObserverStarted == PR_FALSE)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService("@mozilla.org/parser/parser-service;1", &rv));
+    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID, &rv));
 
     if (NS_FAILED(rv))
       return rv;
@@ -419,7 +419,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService("@mozilla.org/parser/parser-service;1", &rv));
+    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID, &rv));
 
     if (NS_FAILED(rv))
       return rv;
