@@ -56,19 +56,23 @@
       </columns>
       <rows>
         <row align="center">
-          <label value="&bookmarks.name.label;" control="name"/>
+          <label value="&bookmarks.name.label;" 
+                 accesskey="&bookmarks.name.accesskey;" control="name"/>
           <textbox id="name"/>
         </row>
         <row id="locationrow" align="center">
-          <label value="&bookmarks.location.label;" control="url"/>
+          <label value="&bookmarks.location.label;" 
+                 accesskey="&bookmarks.location.accesskey;" control="url"/>
           <textbox id="url" class="uri-element" />
         </row>
         <row id="shortcutrow" align="center">
-          <label value="&bookmarks.shortcut.label;" control="shortcut"/>
+          <label value="&bookmarks.shortcut.label;" 
+                 accesskey="&bookmarks.shortcut.accesskey;" control="shortcut"/>
           <textbox id="shortcut" />
         </row>
         <row id="descriptionrow">
-          <label value="&bookmarks.description.label;" control="description"/>
+          <label value="&bookmarks.description.label;" 
+                 accesskey="&bookmarks.description.accesskey;" control="description"/>
           <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
         </row>
       </rows>
@@ -84,7 +88,7 @@
         </columns>
         <rows>
           <row align="center">
-            <label value="&when.label;" control="dayRange"/>
+            <label value="&when.label;" accesskey="&when.accesskey;" control="dayRange"/>
             <hbox>
               <menulist id="dayRange" oncommand="dayRangeChange(this);">
                 <menupopup>
@@ -105,7 +109,8 @@
             </hbox>
           </row>
           <row align="center">
-            <label id="startHourRangeLabel" value="&from.label;" control="startHourRange"/>
+            <label id="startHourRangeLabel" value="&from.label;" 
+                   accesskey="&from.accesskey;" control="startHourRange"/>
             <hbox align="center">
               <menulist id="startHourRange" oncommand="setEndHourRange()" disabled="true">
                 <menupopup>
@@ -135,8 +140,8 @@
                   <menuitem value="23" label="&PMeleven.label;"/>
                 </menupopup>
               </menulist>
-              <label id="endHourRangeLabel" 
-                    value="&to.label;" control="endHourRange"/>
+              <label id="endHourRangeLabel" value="&to.label;" 
+                     accesskey="&to.accesskey;" control="endHourRange"/>
               <menulist id="endHourRange" disabled="true">
                 <menupopup onpopupshowing="setEndHourRange()">
                   <menuitem value="1" label="&AMone.label;"/>
@@ -168,7 +173,8 @@
             </hbox>
           </row>
           <row align="center">
-            <label id="durationLabel" value="&every.label;" control="duration"/>
+            <label id="durationLabel" value="&every.label;" 
+                   accesskey="&every.accesskey;" control="duration"/>
             <hbox align="center">
               <textbox id="duration" size="4" value="60" disabled="true" />
               <label id="durationSubLabel" value="&minutes.label;" />
@@ -180,10 +186,14 @@
     <groupbox>
       <caption label="&notifications.legend.label;" />
       <vbox align="start">
-        <checkbox id="bookmarkIcon" label="&notification.icon.label;" disabled="true" />
-        <checkbox id="showAlert" label="&notification.alert.label;" disabled="true" />
-        <checkbox id="openWindow" label="&notification.window.label;" disabled="true" />
-        <checkbox id="playSound" label="&notification.sound.label;" disabled="true" />
+        <checkbox id="bookmarkIcon" label="&notification.icon.label;" 
+                  accesskey="&notification.icon.accesskey;" disabled="true" />
+        <checkbox id="showAlert" label="&notification.alert.label;" 
+                  accesskey="&notification.alert.accesskey;" disabled="true" />
+        <checkbox id="openWindow" label="&notification.window.label;" 
+                  accesskey="&notification.window.accesskey;" disabled="true" />
+        <checkbox id="playSound" label="&notification.sound.label;" 
+                  accesskey="&notification.sound.accesskey;" disabled="true" />
       </vbox>
     </groupbox>
   </hbox>
