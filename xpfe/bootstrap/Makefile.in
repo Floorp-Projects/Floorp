@@ -55,6 +55,13 @@ REQUIRES	= xpcom \
 		  $(NULL)
 # for jprof
 REQUIRES	+= jprof
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+REQUIRES	+= \
+		  intl \
+		  profile \
+		  xpconnect \
+		  $(NULL)
+endif
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
