@@ -22,6 +22,8 @@
 #include "nsCalMultiViewCanvas.h"
 #include "nsCalTimebarCanvas.h"
 #include "nsDateTime.h"
+#include "nsIModel.h"
+#include "nsBoxLayout.h"
 
 class nsCalMultiUserViewCanvas : public nsCalMultiViewCanvas
 {
@@ -35,8 +37,16 @@ public:
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
   NS_IMETHOD SetTimeContext(nsICalTimeContext * aContext);
 
+  // nsIXPFCCommandReceiver methods
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
+
 protected:
   ~nsCalMultiUserViewCanvas();
+
+private:
+  NS_IMETHOD AddMultiDayView(nsIModel * aModel);
+  NS_IMETHOD SetMultiUserLayout(nsLayoutAlignment aLayoutAlignment);
+
 
 };
 

@@ -94,9 +94,6 @@ public:
                                PRUint32 aSecond
                                );
 
-  NS_IMETHOD_(PRBool) GetHorizontal();
-  NS_IMETHOD          SetHorizontal(PRBool aHorizontal);
-
   NS_IMETHOD  SetPeriodFormat(nsCalPeriodFormat aPeriodFormat);
   NS_IMETHOD_(nsCalPeriodFormat)  GetPeriodFormat();
   NS_IMETHOD_(PRUint32) GetVisibleTimeDifference() ;
@@ -153,7 +150,6 @@ private:
   nsIDateTime * mMajorIncrement;
   nsIDateTime * mMinorIncrement;
   nsCalPeriodFormat mPeriodFormat;
-  PRBool mHorizontal;
   nsIDateTime * mDate;
 
 };

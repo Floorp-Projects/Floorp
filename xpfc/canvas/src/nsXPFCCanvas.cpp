@@ -2349,13 +2349,17 @@ nsresult nsXPFCCanvas :: BroadcastCommand(nsIXPFCCommand& aCommand)
   nsresult res ;
   nsIIterator * iterator ;
   nsIXPFCCanvas * canvas;
+  nsEventStatus status ;
 
   /*
    * Call this container's Action Method. We should change the action
    * method to return something about ignoring and consuming commands
    */
 
-  Action(&aCommand);
+  status = Action(&aCommand);
+
+  if (nsEventStatus_eConsumeNoDefault == status)
+    return NS_OK;
 
   /*
    * Iterate through the children and pass it on

@@ -23,6 +23,7 @@
 #include "nsCRT.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
+#include "nsBoxLayout.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalTimebarScaleCID, NS_CAL_TIMEBARSCALE_CID);
@@ -113,7 +114,7 @@ nsresult nsCalTimebarScale::PaintInterval(nsIRenderingContext& aRenderingContext
 
   aMinorInterval = 4;   // XXX: this is a hack, we should specify this in the XML -sman
 
-  if (GetTimeContext()->GetHorizontal() == PR_TRUE) 
+  if (((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment() == eLayoutAlignment_horizontal)
   {
     rect.x = aStart;
     rect.width = aSpace;

@@ -4,7 +4,7 @@
 
 <!-- This is the MultiDayView and Command Bar -->
 <panel name="MultiDayViewRule"> 
-  <multiuserviewcanvas layout="xbox" name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext"> 
+  <multiuserviewcanvas layout="ybox" name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext"> 
 </panel> 
 
 

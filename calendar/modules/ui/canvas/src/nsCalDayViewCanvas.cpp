@@ -27,6 +27,7 @@
 #include "nsIDeviceContext.h"
 #include "nsICalendarUser.h"
 #include "nsICalendarModel.h"
+#include "nsBoxLayout.h"
 
 #include "datetime.h"
 #include "ptrarray.h"
@@ -132,7 +133,7 @@ nsresult nsCalDayViewCanvas::PaintInterval(nsIRenderingContext& aRenderingContex
 
   aMinorInterval = 4;   // XXX: this is a hack, we should specify this in the XML -sman
 
-  if (GetTimeContext()->GetHorizontal() == PR_TRUE) 
+  if (((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment() == eLayoutAlignment_horizontal)
   {
     rect.x = aStart;
     rect.width = aSpace;
@@ -275,7 +276,7 @@ nsEventStatus nsCalDayViewCanvas :: PaintForeground(nsIRenderingContext& aRender
 
       aRenderingContext.SetColor(mComponentColor);
 
-      if (GetTimeContext()->GetHorizontal() == PR_FALSE)
+      if (((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment() == eLayoutAlignment_vertical)
       {
         /*
          * XXX: Subtract off the modulus of the area. This should not be so hardcoded!

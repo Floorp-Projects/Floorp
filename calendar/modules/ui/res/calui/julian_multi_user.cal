@@ -12,7 +12,7 @@
 <!-- This is the Timebar Scale Rule -->
 <panel name="ScaleViewRule"> 
   <tcc foregroundcolor="#0000FF" name="PrevHour" orientation="north" control="MultiCalendarEventWeekView" usectxrule="hour-1" weightminor="0" weightmajor="0"/> 
-  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1"/>
+  <timebarscale name="TimebarScale" weightminor="0" weightmajor="1" layout="ybox"/>
   <tcc foregroundcolor="#0000FF" name="NextHour" orientation="south" control="MultiCalendarEventWeekView" usectxrule="hour+1" weightminor="0" weightmajor="0"/> 
 </panel> 
 
@@ -24,7 +24,7 @@
 
 <!-- This is the MultiDayView and Command Bar -->
 <panel name="MultiDayViewRule"> 
-  <multidayviewcanvas name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext" minrepeat="1" maxrepeat="1" count="1"> 
+  <multiuserviewcanvas layout="xbox" name="MultiCalendarEventWeekView" control="MiniCalendar" repeatable="DayContext"> 
   <commandcanvas name="CommandCanvas" weightmajor="0" weightminor="0"> 
 </panel> 
 

@@ -30,6 +30,7 @@
 #include "nsCalNewModelCommand.h"
 
 #include "nscalstrings.h"
+#include "nsxpfcstrings.h"
 
 
 #define DEFAULT_NUMBER_VIEWABLE_DAYS 5
@@ -233,6 +234,11 @@ nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
   canvas->SetBackgroundColor(GetBackgroundColor());
 
   canvas->SetMinimumSize(nsSize(100,100));
+
+  if (eLayoutAlignment_horizontal == la)
+    ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
+  else
+    ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_horizontal);
 
   /*
    * Add the status View Canvas
@@ -465,9 +471,29 @@ nsresult nsCalMultiDayViewCanvas :: SetParameter(nsString& aKey, nsString& aValu
 
     SetNumberViewableDays((PRUint32)aValue.ToInteger(&i));
 
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_LAYOUT)) {
+
+    // XXX: Layout should implement this interface.
+    //      Then, put functionality in the core layout class
+    //      to identify the type of layout object needed.
+
+    if (aValue.EqualsIgnoreCase(XPFC_STRING_XBOX)) {
+      ((nsBoxLayout *)GetLayout())->SetLayoutAlignment(eLayoutAlignment_horizontal);
+    } else if (aValue.EqualsIgnoreCase(XPFC_STRING_YBOX)) {
+      ((nsBoxLayout *)GetLayout())->SetLayoutAlignment(eLayoutAlignment_vertical);
+    }
+
+    SetMultiDayLayout(((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment());
+
   }
 
+
   return (nsCalMultiViewCanvas::SetParameter(aKey, aValue));
+}
+
+nsresult nsCalMultiDayViewCanvas :: SetMultiDayLayout(nsLayoutAlignment aLayoutAlignment)
+{
+  return NS_OK;
 }
 
 /*

@@ -9,7 +9,7 @@
 #
 GDEPTH = ../../../..
 
-DIRS_LIBS = demo images
+DIRS_LIBS = demo images calui
 
 MODULE = trex
 

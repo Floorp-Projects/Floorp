@@ -610,9 +610,10 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
    * Begin a calendar for the logged in user...
    */
 
-  NSCalendar * pCalendar = new NSCalendar(0);
-  
+  NSCalendar * pCalendar;
 
+  pLayer->GetCal(pCalendar);
+  
   switch(theURL.GetProtocol())
   {
     case nsCurlParser::eFILE:
@@ -628,7 +629,6 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
       NS_ASSERTION(0 != pLayer,"null pLayer");
       pLayer->SetShell(shell);
       pLayer->FetchEventsByRange(&d,&d1,&EventList);
-      pLayer->SetCal(pCalendar);
       pCalendar->addEventList(&EventList);
     }
     break;
@@ -638,7 +638,7 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
       /* need to report that this is an unhandled curl type */
     }
     break;
-  }
+  }  
 
   nsICalendarModel * calmodel = nsnull;
   nsIModel * model = nsnull;
@@ -655,55 +655,41 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
 
   calmodel->SetCalendarUser(caluser);
 
-  calmodel->QueryInterface(kIModelIID, (void**)&model);
+  res = calmodel->QueryInterface(kIModelIID, (void**)&model);
 
   if (NS_OK != res)
     return res;
 
-  //mRootCanvas->SetModel(model);
   /*
    * find a multi canvas and add one here and then set it's model ... yeehaaa
    */
 
-  // XXX: This should probably be done via searching for class type. We also probably
-  //      Want the XML for the menubar command to specify specifically the target 
-  //      canvas for these types of operations.
-  nsString mcstring("MultiCalendarEventWeekView");
+  /*
+   * Send an NewModelCommand to all canvas's....
+   *
+   * This event basically specifies that a new model
+   * needs to be viewed somewhere.  Currently, only
+   * the multi canvas handles this
+   */
 
-  nsCalMultiDayViewCanvas * mc = (nsCalMultiDayViewCanvas *) mRootCanvas->CanvasFromName(mcstring);
+  static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
 
-  if (nsnull != mc)
-  {
+  nsCalNewModelCommand * command = nsnull;
 
-    /*
-     * Send an NewModelCommand to all canvas's....
-     *
-     * This event basically specifies that a new model
-     * needs to be viewed somewhere.  Currently, only
-     * the multi canvas handles this
-     */
+  res = nsRepository::CreateInstance(kCCalNewModelCommandCID, 
+                                     nsnull, 
+                                     kXPFCCommandIID,
+                                     (void **)&command);
+  if (NS_OK != res)
+      return res;
 
-    static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+  command->Init();
 
-    nsCalNewModelCommand * command = nsnull;
+  command->mModel = model;
 
-    res = nsRepository::CreateInstance(kCCalNewModelCommandCID, 
-                                       nsnull, 
-                                       kXPFCCommandIID,
-                                       (void **)&command);
-    if (NS_OK != res)
-        return res;
+  mRootCanvas->BroadcastCommand(*command);
 
-    command->Init();
-
-    command->mModel = model;
-
-    mRootCanvas->BroadcastCommand(*command);
-
-    NS_RELEASE(command);
-
-  }
-
+  NS_RELEASE(command);
   NS_RELEASE(model);
 
 

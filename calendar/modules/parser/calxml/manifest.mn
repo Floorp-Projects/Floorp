@@ -11,5 +11,5 @@ GDEPTH = ../../../..
 DEPTH  = ../../../..
 
 DIRS_EXPORT = inc 
-DIRS_LIBS = src res
+DIRS_LIBS = src
 

@@ -17,7 +17,7 @@
 <application name="Trex 0.1" layout="ybox"> 
 	<canvas src="resource://res/ui/menubar.ui" name="menubar"/>
 	<canvas src="resource://res/ui/toolbar.ui" name="toolbar"/>
-	<canvas src="resource://res/ui/julian_day.cal" name="content" layout="ybox"/>
+	<canvas src="resource://res/ui/test.cal" name="content" layout="ybox"/>
 </application> 
 
 </UI>

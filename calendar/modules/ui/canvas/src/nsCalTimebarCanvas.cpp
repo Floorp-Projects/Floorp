@@ -19,6 +19,7 @@
 #include "nsCalTimebarCanvas.h"
 #include "nsCalUICIID.h"
 #include "nsXPFCToolkit.h"
+#include "nsBoxLayout.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
@@ -170,7 +171,8 @@ nsEventStatus nsCalTimebarCanvas :: PaintBackground(nsIRenderingContext& aRender
 
   PRUint32 space_per_interval, start;
 
-  if (GetTimeContext()->GetHorizontal() == PR_TRUE) {
+  if (((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment() == eLayoutAlignment_horizontal) 
+  {  
     space_per_interval = ((rect.width-(2*LOCAL_INSET)) - ((rect.width-(2*LOCAL_INSET)) % major_intervals)) / major_intervals;
     start = rect.x+LOCAL_INSET;
   } else {
@@ -208,7 +210,7 @@ nsresult nsCalTimebarCanvas::PaintInterval(nsIRenderingContext& aRenderingContex
 
   aRenderingContext.SetColor(GetForegroundColor());
 
-  if (GetTimeContext()->GetHorizontal() == PR_TRUE) {
+  if (((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment() == eLayoutAlignment_horizontal) {  
     rect.x = aStart;
     rect.width = aSpace;
     aRenderingContext.DrawLine(rect.x, rect.y+LOCAL_INSET, rect.x, rect.y+rect.height-LOCAL_INSET);

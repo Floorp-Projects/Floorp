@@ -87,10 +87,6 @@ public:
                                PRUint32 aSecond
                                ) = 0;
 
-  NS_IMETHOD_(PRBool) GetHorizontal() = 0;
-  NS_IMETHOD          SetHorizontal(PRBool aHorizontal) = 0;
-
-
   NS_IMETHOD_(nsIDateTime *) GetDTStart() = 0;
   NS_IMETHOD_(nsIDateTime *) GetDTEnd() = 0;
   NS_IMETHOD_(nsIDateTime *) GetDTFirstVisible() = 0;

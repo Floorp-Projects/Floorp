@@ -28,6 +28,7 @@
 #include "nsCalNewModelCommand.h"
 #include "nscalstrings.h"
 #include "nsxpfcstrings.h"
+#include "nsCalNewModelCommand.h"
 
 
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -88,14 +89,19 @@ nsresult nsCalMultiUserViewCanvas :: Init()
   /*
    * create a multiday as a child of us
    */
+  nsCalMultiViewCanvas::Init();
 
+  return (AddMultiDayView(nsnull));
+
+}
+
+nsresult nsCalMultiUserViewCanvas :: AddMultiDayView(nsIModel * aModel)
+{
   static NS_DEFINE_IID(kCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
   static NS_DEFINE_IID(kIXPFCCanvasIID,           NS_IXPFC_CANVAS_IID);
 
   nsCalMultiDayViewCanvas * multi;
-
-  nsresult rv = nsCalMultiViewCanvas::Init();
-
+  
   nsresult res = nsRepository::CreateInstance(kCalMultiDayViewCanvasCID, 
                                               nsnull, 
                                               kIXPFCCanvasIID, 
@@ -110,19 +116,24 @@ nsresult nsCalMultiUserViewCanvas :: Init()
 
     multi->SetShowTimeScale(PR_TRUE);
 
-    nsLayoutAlignment la = ((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment();
-    ((nsBoxLayout *)(multi->GetLayout()))->SetLayoutAlignment(la);
+    multi->SetTimeContext(GetTimeContext());
+
+    SetMultiUserLayout(((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment());
 
     multi->SetNumberViewableDays(1); // XXX
 
+    if (nsnull != aModel)
+    {
+      multi->SetModel(aModel);
+    }
+
+    Layout();
     
   }
 
 
-  return (rv);
+  return (res);
 }
-
-
 
 nsresult nsCalMultiUserViewCanvas :: SetParameter(nsString& aKey, nsString& aValue)
 {
@@ -145,64 +156,103 @@ nsresult nsCalMultiUserViewCanvas :: SetParameter(nsString& aKey, nsString& aVal
     // If someone changes our layout, pass it on to any MultiDay canvas
     // that are our children.
 
-    nsresult res ;
-    nsIIterator * iterator ;
-    nsIXPFCCanvas * canvas ;
+    SetMultiUserLayout(((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment());
 
-    res = CreateIterator(&iterator);
-
-    nsLayoutAlignment la = ((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment();
-
-    if (NS_OK == res)
-    {
-
-      iterator->Init();
-
-      while(!(iterator->IsDone()))
-      {
-        canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
-
-        ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
-
-        /*
-         * Now, iterate thru its children and set the layout alignment
-         */
-
-         {
-            nsIIterator * iterator2 ;
-
-            res = canvas->CreateIterator(&iterator2);
-
-            if (NS_OK == res)
-            {
-
-              iterator2->Init();
-
-
-              while(!(iterator2->IsDone()))
-              {
-                canvas = (nsIXPFCCanvas *) iterator2->CurrentItem();
-                ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
-                iterator2->Next();
-              }
-
-              NS_RELEASE(iterator2);
-            }
-
-         }
-
-        iterator->Next();
-      }
-
-      NS_RELEASE(iterator);
-    }    
   } 
   
   return (nsXPFCCanvas :: SetParameter(aKey, aValue));
 }
 
+nsresult nsCalMultiUserViewCanvas :: SetMultiUserLayout(nsLayoutAlignment aLayoutAlignment)
+{
+  nsresult res ;
+  nsIIterator * iterator ;
+  nsIXPFCCanvas * canvas ;
+
+  res = CreateIterator(&iterator);
+
+  nsLayoutAlignment la = aLayoutAlignment;
+
+  if (NS_OK == res)
+  {
+
+    iterator->Init();
+
+    while(!(iterator->IsDone()))
+    {
+      canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
+
+      ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
+
+      /*
+       * Now, iterate thru its children and set the layout alignment
+       */
+
+       {
+          nsIIterator * iterator2 ;
+
+          res = canvas->CreateIterator(&iterator2);
+
+          if (NS_OK == res)
+          {
+
+            iterator2->Init();
+
+
+            while(!(iterator2->IsDone()))
+            {
+              canvas = (nsIXPFCCanvas *) iterator2->CurrentItem();
+              ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
+              iterator2->Next();
+            }
+
+            NS_RELEASE(iterator2);
+          }
+
+       }
+
+      iterator->Next();
+    }
+
+    NS_RELEASE(iterator);
+  }    
+
+  return NS_OK;
+}
+
 nsresult nsCalMultiUserViewCanvas :: SetTimeContext(nsICalTimeContext * aContext)
 {
-  aContext->SetHorizontal(PR_TRUE); //XXX
+  //aContext->SetHorizontal(PR_TRUE);
   return (nsCalMultiViewCanvas :: SetTimeContext(aContext));
 }
+
+
+nsEventStatus nsCalMultiUserViewCanvas::Action(nsIXPFCCommand * aCommand)
+{
+  nsresult res;
+
+  nsCalNewModelCommand * newmodel_command = nsnull;
+  static NS_DEFINE_IID(kCalNewModelCommandCID, NS_CAL_NEWMODEL_COMMAND_CID);                 
+
+  res = aCommand->QueryInterface(kCalNewModelCommandCID,(void**)&newmodel_command);
+
+  if (NS_OK == res)
+  {
+
+    /*
+     * A NewModel Command will Add a new MultiDayView in this MultiUser
+     * canvas, which *clones* the attributes of the other MultiDay views
+     *
+     * For now, let's just limp along by adding it to the list...
+     */
+
+    AddMultiDayView(newmodel_command->mModel);
+
+    NS_RELEASE(newmodel_command);
+
+    return (nsEventStatus_eConsumeNoDefault);
+  }
+
+  return (nsCalMultiViewCanvas::Action(aCommand));
+}
+

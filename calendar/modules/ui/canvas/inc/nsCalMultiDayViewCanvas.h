@@ -23,6 +23,7 @@
 #include "nsCalTimebarComponentCanvas.h"
 #include "nsCalTimebarCanvas.h"
 #include "nsDateTime.h"
+#include "nsBoxLayout.h"
 
 class nsCalMultiDayViewCanvas : public nsCalMultiViewCanvas
 {
@@ -45,6 +46,9 @@ public:
 
   // nsIXPFCCommandReceiver methods
   NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
+
+private:
+  NS_IMETHOD SetMultiDayLayout(nsLayoutAlignment aLayoutAlignment);
 
 protected:
   ~nsCalMultiDayViewCanvas();

@@ -52,7 +52,6 @@ nsCalTimeContext :: nsCalTimeContext()
   mLastVisibleTime = nsnull;
   mMajorIncrement = nsnull;
   mMinorIncrement = nsnull;
-  mHorizontal = PR_FALSE;
   mPeriodFormat = nsCalPeriodFormat_kHour;
   mDate = nsnull;
 
@@ -126,9 +125,6 @@ nsresult nsCalTimeContext::Copy(nsICalTimeContext * aContext)
   mMajorIncrement     = aContext->GetDTMajorIncrement()->Copy();
   mMinorIncrement     = aContext->GetDTMinorIncrement()->Copy();
   mDate               = aContext->GetDate()->Copy();
-  mHorizontal         = aContext->GetHorizontal();
-
-
   return NS_OK;
 }
 
@@ -140,17 +136,6 @@ nsresult nsCalTimeContext::Init()
 
   SetDefaultDateTime();
 
-  return NS_OK;
-}
-
-PRBool nsCalTimeContext::GetHorizontal()
-{
-  return mHorizontal;
-}
-
-nsresult nsCalTimeContext::SetHorizontal(PRBool aHorizontal)
-{
-  mHorizontal = aHorizontal;
   return NS_OK;
 }
 
@@ -227,8 +212,6 @@ nsresult nsCalTimeContext::SetDefaultDateTime()
 
   SetMajorIncrement(0,0,0,1,0,0);
   SetMinorIncrement(0,0,0,0,15,0);
-
-  mHorizontal = PR_FALSE;
 
   mPeriodFormat = nsCalPeriodFormat_kHour;
 
