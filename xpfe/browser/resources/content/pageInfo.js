@@ -90,7 +90,7 @@ function onLoadPageInfo()
 
   /* Selected the requested tab, if the name is specified */
   /*  if (window.arguments != null) { */
-  if ("arguments" in window) {
+  if ("arguments" in window && window.arguments.length > 1) {
     var tabName = window.arguments[1];
 
     if (tabName)
@@ -112,7 +112,6 @@ function makeDocument(page, root)
   var lastModified;
   var lastMod = page.lastModified // get string of last modified date
   var lastModdate = Date.parse(lastMod)   // convert modified string to date
-  var lastModified;
   if (lastModdate) {
     var date = new Date(lastModdate);
     try {
