@@ -56,26 +56,10 @@
 
 		<treehead>
 			<treerow>
-				<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending">
-					<observes element="NameColumn" attribute="sortActive"/>
-					<observes element="NameColumn" attribute="sortDirection"/>
-					&name.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#URL" onclick="return doSort('URLColumn');">
-					<observes element="URLColumn" attribute="sortActive"/>
-					<observes element="URLColumn" attribute="sortDirection"/>
-					&url.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#ShortcutURL" onclick="return doSort('ShortcutURLColumn');">
-					<observes element="ShortcutURLColumn" attribute="sortActive"/>
-					<observes element="ShortcutURLColumn" attribute="sortDirection"/>
-					&shortcuturl.column.label;
-				</treecell>
-				<treecell resource="http://home.netscape.com/NC-rdf#Description" onclick="return doSort('DescriptionColumn');">
-					<observes element="DescriptionColumn" attribute="sortActive"/>
-					<observes element="DescriptionColumn" attribute="sortDirection"/>
-					&description.column.label;
-				</treecell>
+				<treecell observes="NameColumn" value="&name.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" />
+				<treecell observes="URLColumn" value="&url.column.label;" resource="http://home.netscape.com/NC-rdf#URL" onclick="return doSort('URLColumn');" />
+				<treecell observes="ShortcutURLColumn" value="&shortcuturl.column.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL" onclick="return doSort('ShortcutURLColumn');" />
+				<treecell observes="DescriptionColumn" value="&description.column.label;" resource="http://home.netscape.com/NC-rdf#Description" onclick="return doSort('DescriptionColumn');" />
 			</treerow>
 		</treehead>
 
