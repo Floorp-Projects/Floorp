@@ -1414,6 +1414,11 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
+<!-- not ready for prime time 
+    <menuitem label="&junkMailCmd.label;" 
+              accesskey="&junkMailCmd.accesskey;" 
+              oncommand="MsgJunkMail()"/>
+-->
     <menuitem label="&filtersApply.label;"
               accesskey="&filtersApply.accesskey;"
               oncommand="MsgApplyFilters(null);"/>
