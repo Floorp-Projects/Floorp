@@ -667,6 +667,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     NS_IF_ADDREF(inout_rv);
     hook->OnExecute (frame, type, &inout_rv, &hook_rv);
     js_rv = inout_rv;
+    NS_IF_RELEASE(inout_rv);
     gJsds->UnPause(nsnull);
     jsdStackFrame::InvalidateAll();
         
@@ -681,7 +682,6 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
         }
     }
     
-    NS_IF_RELEASE(js_rv);
     return hook_rv;
 }
 
