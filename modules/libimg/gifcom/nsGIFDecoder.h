@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -44,6 +44,8 @@ public:
   virtual ~GIFDecoder();
  
   NS_DECL_ISUPPORTS
+
+  static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   /* stream */
   NS_IMETHOD ImgDInit();

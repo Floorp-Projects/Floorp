@@ -30,17 +30,44 @@
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
-NS_IMPL_ISUPPORTS(GIFDecoder, NS_GET_IID(nsIImgDecoder));
+NS_IMPL_ISUPPORTS1(GIFDecoder, nsIImgDecoder);
 
 GIFDecoder::GIFDecoder(il_container* aContainer)
 {
   NS_INIT_REFCNT();
   ilContainer = aContainer;
-};
+}
 
 GIFDecoder::~GIFDecoder(void)
 {
-};
+}
+
+
+NS_METHOD
+GIFDecoder::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  if (aOuter) return NS_ERROR_NO_AGGREGATION;
+
+  il_container *ic = new il_container();
+  if (!ic) return NS_ERROR_OUT_OF_MEMORY;
+
+  GIFDecoder *decoder = new GIFDecoder(ic);
+  if (!decoder) {
+    delete ic;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(decoder);
+  rv = decoder->QueryInterface(aIID, aResult);
+  NS_RELEASE(decoder);
+
+  /* why are we creating and destroying this object for no reason? */
+  delete ic; /* is a place holder */
+
+  return rv;
+}
+
 
 NS_IMETHODIMP
 GIFDecoder::ImgDInit()
