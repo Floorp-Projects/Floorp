@@ -89,6 +89,13 @@
             <treecell name="chrome://pref/content/pref-colors.xul"><treeindentation/>&colors.label;</treecell>
           </treerow>
         </treeitem>
+
+		<treeitem open="true">
+          <treerow>
+            <treecell name="chrome://pref/content/pref-themes.xul"><treeindentation/>&themes.label;</treecell>
+          </treerow>
+        </treeitem>
+
       </treechildren>
     </treeitem>
 

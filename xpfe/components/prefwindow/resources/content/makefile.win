@@ -29,6 +29,7 @@ install::
 	$(MAKE_INSTALL) pref-applications.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-cache.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-colors.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-themes.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-composer.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-debug.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-download.xul  $(DIST)\bin\chrome\pref\content\default

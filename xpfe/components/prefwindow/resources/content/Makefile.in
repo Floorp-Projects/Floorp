@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-applications.xul \
 		$(srcdir)/pref-cache.xul \
 		$(srcdir)/pref-colors.xul \
+		$(srcdir)/pref-themes.xul \
 		$(srcdir)/pref-composer.xul \
 		$(srcdir)/pref-debug.xul \
 		$(srcdir)/pref-download.xul \

@@ -4,6 +4,7 @@
 <!ENTITY appear.label "Appearance">
 <!ENTITY fonts.label "Fonts">
 <!ENTITY colors.label "Colors">
+<!ENTITY themes.label "Themes">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
 <!ENTITY languages.label "Languages">
