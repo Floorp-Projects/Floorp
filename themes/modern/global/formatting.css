@@ -171,3 +171,9 @@ html {
   padding: 20px 44px 10px 44px;
 }
 
+.link {
+  color               : #0000FF;
+  cursor              : pointer;
+  -moz-user-select    : text;
+  text-decoration     : underline;
+}

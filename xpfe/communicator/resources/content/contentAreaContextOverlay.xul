@@ -164,6 +164,11 @@
                 label="&copyImageCmd.label;"
                 accesskey="&copyImageCmd.accesskey;"
                 oncommand="contextMenu.copyImage();"/>
+      <menuseparator id="context-sep-clip"/>
+      <!-- Metadata ================================ -->
+      <menuitem id="context-metadata"
+                label="&metadataCmd.label;"
+                oncommand="contextMenu.showMetadata();"/>
     </popup>
   </popupset>
 </overlay>
