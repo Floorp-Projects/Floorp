@@ -108,8 +108,6 @@ endif
 
 ifdef SHARED_LIBRARY
 export:: $(TARGETS)
-	$(NSINSTALL) $(TARGETS) ../$(OBJDIR)/dll
-
 
 clean::
 	rm -rf $(TARGETS)
