@@ -216,6 +216,7 @@ nsFileTransport::nsFileTransport()
       mSuspendCount(0),
       mLock(nsnull),
       mActive(PR_FALSE),
+      mCloseStreamWhenDone(PR_TRUE),
       mStatus(NS_OK),
       mOffset(0),
       mTotalAmount(-1),
@@ -245,13 +246,14 @@ nsFileTransport::Init(nsFileTransportService *aService, nsIFile* file, PRInt32 i
 
 nsresult
 nsFileTransport::Init(nsFileTransportService *aService, const char* name, nsIInputStream* inStr,
-                      const char* contentType, PRInt32 contentLength)
+                      const char* contentType, PRInt32 contentLength, PRBool closeStreamWhenDone)
 {
     nsresult rv;
     nsCOMPtr<nsIInputStreamIO> io;
     rv = NS_NewInputStreamIO(getter_AddRefs(io),
                              name, inStr, contentType, contentLength);
     if (NS_FAILED(rv)) return rv;
+    mCloseStreamWhenDone = closeStreamWhenDone;
     return Init(aService, io);
 }
 
@@ -502,7 +504,6 @@ nsFileTransport::AsyncRead(nsIStreamListener *aListener,
                                    mBufferSegmentSize,
                                    mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
-
     NS_ASSERTION(mContext == nsnull, "context not released");
     mContext = aContext;
     mOffset = aTransferOffset;
@@ -781,7 +782,7 @@ nsFileTransport::Process(void)
         LOG(("nsFileTransport: END_READ [this=%x %s] status=%x\n",
             this, mStreamName.get(), mStatus));
 
-#if defined (DEBUG_dougt) || defined (DEBUG_warren)
+#if defined (DEBUG_dougt) || defined (DEBUG_warren) || defined (DEBUG_bienvenu)
         NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
 #endif 
         if (mTransferAmount > 0 && NS_SUCCEEDED(mStatus)) {
@@ -793,23 +794,31 @@ nsFileTransport::Process(void)
             mStatus = NS_BASE_STREAM_CLOSED;
         }
 
-        if (mListener) {
-            mListener->OnStopRequest(this, mContext, mStatus);
-            mListener = 0;
-        }
-        if (mProgress) {
-            nsAutoString fileName;
-            fileName.AssignWithConversion(mStreamName);
-            mProgress->OnStatus(this, mContext, 
-                                NS_NET_STATUS_READ_FROM, 
-                                fileName.GetUnicode());
-        }
-        mContext = 0;
+        // need to close before calling OnStopRequest, in case the listener
+        // is reusing the stream.
+        mXferState = CLOSING;
+        DoClose();
+        nsCOMPtr <nsISupports> saveContext = mContext;
+        nsCOMPtr <nsIStreamListener> saveListener = mListener;
+        mListener = nsnull;
+        mContext = nsnull;
 
         // close the data source
         NS_IF_RELEASE(mSourceWrapper);
         mSourceWrapper = nsnull;
-        mXferState = CLOSING;
+
+        if (saveListener) {
+            saveListener->OnStopRequest(this, saveContext, mStatus);
+            saveListener = 0;
+        }
+        if (mProgress) {
+            nsAutoString fileName;
+            fileName.AssignWithConversion(mStreamName);
+            mProgress->OnStatus(this, saveContext, 
+                                NS_NET_STATUS_READ_FROM, 
+                                fileName.GetUnicode());
+        }
+
         break;
       }
 
@@ -1000,14 +1009,18 @@ nsFileTransport::Process(void)
 void
 nsFileTransport::DoClose(void)
 {
-    LOG(("nsFileTransport: CLOSING [this=%x %s] status=%x\n",
-        this, mStreamName.get(), mStatus));
+    if (mCloseStreamWhenDone)
+    {
+        LOG(("nsFileTransport: CLOSING [this=%x %s] status=%x\n",
+            this, mStreamName.get(), mStatus));
 
-    // XXX closing the stream io prevents this file transport from being reused
-    if (mStreamIO) {
-        nsresult rv = mStreamIO->Close(mStatus);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
-        mStreamIO = 0;
+      // XXX closing the stream io prevents this file transport from being reused
+        if (mStreamIO) {
+            nsresult rv = NS_OK;
+            rv = mStreamIO->Close(mStatus);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected Close failure");
+            mStreamIO = 0;
+        }
     }
     mXferState = CLOSED;
 
