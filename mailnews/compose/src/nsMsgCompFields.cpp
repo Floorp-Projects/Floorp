@@ -631,7 +631,7 @@ NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBo
 }
 
 
-//This method is called during the sending of message from NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients
+// This method is called during the sending of message from nsMsgCompose::CheckAndPopulateRecipients()
 nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray)
 {
   NS_ASSERTION(recipients, "The recipient list is not supposed to be null -Fix the caller!");

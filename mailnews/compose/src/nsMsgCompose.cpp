@@ -3872,7 +3872,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
         nsMsgRecipient* recipient = new nsMsgRecipient(nsAutoString(addr), nsAutoString(emailAddr));
         if (!recipient)
-           return  NS_ERROR_OUT_OF_MEMORY;
+           return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(recipient);
         rv = recipientsList[i].AppendObject(recipient) ? NS_OK : NS_ERROR_FAILURE;
         NS_RELEASE(recipient);
@@ -4084,7 +4084,10 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       htmlDomains = str;
     }
 
-    *_retval = nsIAbPreferMailFormat::html;
+    PRBool atLeastOneRecipientPrefersUnknown = PR_FALSE;
+    PRBool atLeastOneRecipientPrefersPlainText = PR_FALSE;
+    PRBool atLeastOneRecipientPrefersHTML = PR_FALSE;
+
     for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
       PRInt32 nbrRecipients = recipientsList[i].Count();
@@ -4113,20 +4116,18 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
             }
           }
 
-          /* setup return value */
           switch (recipient->mPreferFormat)
           {
             case nsIAbPreferMailFormat::html:
-              // nothing to do
+              atLeastOneRecipientPrefersHTML = PR_TRUE;
               break;
 
             case nsIAbPreferMailFormat::plaintext:
-              if (*_retval == nsIAbPreferMailFormat::html)
-                *_retval = nsIAbPreferMailFormat::plaintext;
+              atLeastOneRecipientPrefersPlainText = PR_TRUE;
               break;
 
-            default :
-              *_retval = nsIAbPreferMailFormat::unknown;
+            default: /* nsIAbPreferMailFormat::unknown */
+              atLeastOneRecipientPrefersUnknown = PR_TRUE;
               break;
           }
  
@@ -4160,6 +4161,24 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
   if (returnNonHTMLRecipients)
     *nonHTMLRecipients = ToNewUnicode(nonHtmlRecipientsStr);
+
+  if (atLeastOneRecipientPrefersUnknown)
+    *_retval = nsIAbPreferMailFormat::unknown;
+  else if (atLeastOneRecipientPrefersHTML)
+  {
+    // if we have at least one recipient that prefers html
+    // and at least one that recipients that prefers plain text
+    // we need to return unknown, so that we can prompt the user
+    if (atLeastOneRecipientPrefersPlainText)
+      *_retval = nsIAbPreferMailFormat::unknown;
+    else
+      *_retval = nsIAbPreferMailFormat::html;
+  }
+  else 
+  {
+    NS_ASSERTION(atLeastOneRecipientPrefersPlainText, "at least one should prefer plain text");
+    *_retval = nsIAbPreferMailFormat::plaintext;
+  }      
 
   return rv;
 }
