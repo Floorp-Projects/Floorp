@@ -28,7 +28,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
-#include "nsILoadGroup.h"
 #include "nsIFTPContext.h"
 #include "nsIMIMEService.h"
 #include "nsProxyObjectManager.h"
@@ -83,7 +82,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     if (getter) {
         rv = getter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
-                                  (nsISupports**)&mEventSink);
+                                  (nsISupports**)(nsIProgressEventSink**)getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) {
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
         }
