@@ -807,6 +807,7 @@ nsresult nsDocument::Init()
   if (mNameSpaceManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+
   nsresult rv;
 
   rv = NS_NewISupportsArray(getter_AddRefs(mChildren));
@@ -1285,6 +1286,7 @@ void nsDocument::SetRootContent(nsIContent* aRoot)
   } else if (aRoot) {
     mChildren->AppendElement(aRoot);
   }
+
   mRootContent = aRoot;
 }
 
@@ -1293,7 +1295,6 @@ nsDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
   nsCOMPtr<nsIContent> content( dont_AddRef(NS_STATIC_CAST(nsIContent*, mChildren->ElementAt(aIndex))) );
   NS_IF_ADDREF(aResult = content);
-
   return NS_OK;
 }
 
@@ -2251,14 +2252,71 @@ nsDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
   return NS_OK;
 }
 
+static nsresult
+GetElementByAttribute(nsIContent* aContent, 
+                      nsIAtom* aAttrName,
+                      const nsAReadableString& aAttrValue,
+                      PRBool aUniversalMatch,
+                      nsIDOMElement** aResult)
+{
+  nsAutoString value;
+  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, aAttrName, value);
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (aUniversalMatch || value.Equals(aAttrValue))
+      return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
+  }
+  
+  PRInt32 childCount;
+  aContent->ChildCount(childCount);
+
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIContent> current;
+    current->ChildAt(i, *getter_AddRefs(current));
+
+    GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch, aResult);
+
+    if (*aResult)
+      return NS_OK;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
-nsDocument::GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, 
+nsDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
+                                           const nsAReadableString& aAttrName, 
                                            const nsAReadableString& aAttrValue, 
                                            nsIDOMElement** aResult)
 {
   *aResult = nsnull;
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  GetAnonymousNodes(aElement, getter_AddRefs(nodeList));
+  
+  if (!nodeList) 
+    return NS_OK;
+
+  nsCOMPtr<nsIAtom> attribute = getter_AddRefs(NS_NewAtom(aAttrName));
+
+  PRUint32 length;
+  nodeList->GetLength(&length);
+
+  PRBool universalMatch = aAttrValue.Equals(NS_LITERAL_STRING("*"));
+
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCOMPtr<nsIDOMNode> current;
+    nodeList->Item(i, getter_AddRefs(current));
+    
+    nsCOMPtr<nsIContent> content(do_QueryInterface(current));
+
+    GetElementByAttribute(content, attribute, aAttrValue, universalMatch, aResult);
+    if (*aResult)
+      return NS_OK;
+  }
+
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
@@ -2274,8 +2332,7 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   PRBool dummy;
   nsCOMPtr<nsIContent> dummyElt;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
-  return xblService->GetContentList(content, aResult, 
-                                    getter_AddRefs(dummyElt), &dummy);
+  return xblService->GetContentList(content, aResult, getter_AddRefs(dummyElt), &dummy);
 }
 
 NS_IMETHODIMP    

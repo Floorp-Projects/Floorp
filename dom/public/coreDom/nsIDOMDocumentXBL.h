@@ -43,7 +43,7 @@ public:
 
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn)=0;
 
-  NS_IMETHOD    GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD    GetAnonymousElementByAttribute(nsIDOMElement* aElt, const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL)=0;
 
@@ -57,7 +57,7 @@ public:
 
 #define NS_DECL_IDOMDOCUMENTXBL   \
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn);  \
-  NS_IMETHOD    GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    GetAnonymousElementByAttribute(nsIDOMElement* aElt, const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn);  \
   NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
   NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
   NS_IMETHOD    GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aReturn);  \
@@ -67,7 +67,7 @@ public:
 
 #define NS_FORWARD_IDOMDOCUMENTXBL(_to)  \
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn) { return _to GetAnonymousNodes(aElt, aReturn); }  \
-  NS_IMETHOD    GetAnonymousElementByAttribute(const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn) { return _to GetAnonymousElementByAttribute(aAttrName, aAttrValue, aReturn); }  \
+  NS_IMETHOD    GetAnonymousElementByAttribute(nsIDOMElement* aElt, const nsAReadableString& aAttrName, const nsAReadableString& aAttrValue, nsIDOMElement** aReturn) { return _to GetAnonymousElementByAttribute(aElt, aAttrName, aAttrValue, aReturn); }  \
   NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to AddBinding(aElt, aBindingURL); }  \
   NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to RemoveBinding(aElt, aBindingURL); }  \
   NS_IMETHOD    GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aReturn) { return _to GetBindingParent(aNode, aReturn); }  \
