@@ -394,10 +394,7 @@ function printWeekView(currentDate)
 function printDayView(currentDate) {
   var dayStart = currentDate.getDate();
 
-  var mydateshow="";
-  mydateshow+=ArrayOfDayNames[currentDate.getDay()];
-  mydateshow+=", ";
-  mydateshow+=monthNames[currentDate.getMonth()]+" "+currentDate.getDate()+" "+currentDate.getFullYear();
+  var mydateshow= gCalendarWindow.dateFormater.getLongFormatedDate(currentDate);
   gHtmlDocument.write("<table style='border:1px solid black;' width=100%>");
   gHtmlDocument.write("<tr ><td colspan=2 align=center style='font-size:26px;font-weight:bold;border-bottom:1px solid black;'>");
   gHtmlDocument.write(mydateshow);
@@ -651,22 +648,4 @@ function getWeekNumberText( weekNumber )
     default:
       return( false );
   }
-}
-
-/*-----------------------------------------------------------------
- *   Take a Date object and return a displayable date string i.e.: May 5, 1959
- *  :TODO: This should be moved into DateFormater and made to use some kind of
- *         locale or user date format preference.
- */
-
-function formatDate( date )
-{
-  return( gCalendarWindow.dateFormater.getFormatedDate( date ) );
-}
-
-//Is this function Needed in this file?
-//No calls to it in this file.
-function debug( Text )
-{
-  dump( "\ncalPrintEngine.js :"+ Text + "\n");
 }
