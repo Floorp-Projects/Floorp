@@ -77,7 +77,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    //nsComponentManager::RegisterComponent(kEditorAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     return NS_OK;
 }
 
@@ -96,7 +96,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kToolbarCoreCID, path);
     nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
     nsComponentManager::UnregisterComponent(kBrowserAppCoreCID, path);
-    nsComponentManager::UnregisterComponent(kEditorAppCoreCID, path);
+    //nsComponentManager::UnregisterComponent(kEditorAppCoreCID, path);
     
     return NS_OK;
 }
@@ -158,10 +158,12 @@ NSGetFactory(nsISupports* serviceMgr,
     {
         inst = new nsBrowserAppCoreFactory();      
     }
+/*
     else if ( aClass.Equals(kEditorAppCoreCID) )
     {
         inst = new nsEditorAppCoreFactory();      
     }
+*/
     else
     {
         return NS_ERROR_ILLEGAL_VALUE;

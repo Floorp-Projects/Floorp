@@ -80,7 +80,7 @@ nsAppCoresNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
       result = NS_InitProfileCoreClass(aScriptContext, nsnull); 
     result = NS_InitToolbarCoreClass(aScriptContext, nsnull);
     result = NS_InitBrowserAppCoreClass(aScriptContext, nsnull);
-    result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
+    //result = NS_InitEditorAppCoreClass(aScriptContext, nsnull);
     result = NS_InitToolkitCoreClass(aScriptContext, nsnull);
     result = NS_InitRDFCoreClass(aScriptContext, nsnull);
 
@@ -160,13 +160,13 @@ nsAppCoresNameSet::AddNameSet(nsIScriptContext* aScriptContext)
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
-
+/*
         result = manager->RegisterGlobalName("EditorAppCore", 
                                              kEditorAppCoreCID, 
                                              PR_TRUE);
 
         if (NS_OK != result) return result;
-
+*/
         result = manager->RegisterGlobalName("XPAppCoresManager", 
                                              kAppCoresCID, 
                                              PR_FALSE);
