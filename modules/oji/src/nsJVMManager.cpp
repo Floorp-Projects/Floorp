@@ -852,7 +852,7 @@ nsJVMManager::IsAllPermissionGranted(
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
-    if (NS_FAILED(rv) || !secMan) return FALSE;
+    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
     // Ask the Script Security Manager to make a Certificate Principal.
     // The fingerprint is a one way hash of this certificate. It is used
@@ -903,7 +903,7 @@ nsJVMManager::IsAppletTrusted(
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
-    if (NS_FAILED(rv) || !secMan) return FALSE;
+    if (NS_FAILED(rv) || !secMan) return PR_FALSE;
 
 
     // Ask the Script Security Manager to make a Certificate Principal.
