@@ -83,23 +83,17 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsReflowState* aParentRS
   return width;
 }
 
-// XXX there is no CLEAN way to detect the "replaced" attribute (yet)
-void
-nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
+nsCSSFrameType
+nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame)
 {
-  nsIAtom* tag = nsnull;
-  nsIContent* content;
-  if (NS_SUCCEEDED(frame->GetContent(&content)) && (nsnull != content)) {
-    content->GetTag(tag);
-    NS_RELEASE(content);
-  }
+  nsCSSFrameType frameType;
 
-  // Section 9.7 indicates that absolute position takes precedence
-  // over float which takes precedence over display.
+  // Section 9.7 of the CSS2 spec indicates that absolute position
+  // takes precedence over float which takes precedence over display.
   const nsStyleDisplay* display;
-  frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
   const nsStylePosition* pos;
-  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+  aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
   if (pos->IsAbsolutelyPositioned()) {
     frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
   }
@@ -146,11 +140,12 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
 
   // See if the frame is replaced
   nsFrameState  frameState;
-  frame->GetFrameState(&frameState);
+  aFrame->GetFrameState(&frameState);
   if (frameState & NS_FRAME_REPLACED_ELEMENT) {
     frameType = NS_FRAME_REPLACED(frameType);
   }
-  NS_IF_RELEASE(tag);
+
+  return frameType;
 }
 
 // Helper function that re-calculates the left and right margin based on
@@ -601,6 +596,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   }
 }
 
+// XXX refactor this code to have methods for each set of properties
+// we are computing: width,height,line-height; margin; offsets
+
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
@@ -616,6 +614,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     computedMargin.SizeTo(0, 0, 0, 0);
     computedOffsets.SizeTo(0, 0, 0, 0);
 
+    // XXX what about other properties...
   } else {
     // Get the containing block reflow state
     const nsHTMLReflowState* cbrs =
@@ -632,22 +631,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 
     // Compute margins from the specified margin style information. These
     // become the default computed values, and may be adjusted below
+
+    // XXX fix to provide 0,0 for the top&bottom marings for
+    // inline-non-replaced elements
     ComputeMarginFor(frame, parentReflowState, computedMargin);
-  
-    // Calculate the line height.
-    // XXX Do we need to do this for all elements or just inline non-replaced
-    // elements?
-    mLineHeight = CalcLineHeight(aPresContext, frame);
-  
-    // See if it's an inline non-replaced element
-    if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
-      // 'width' property doesn't apply to inline non-replaced elements. The
-      // 'height' is given by the element's 'line-height' value
-      if (mLineHeight >= 0) {
-        computedHeight = mLineHeight;
-      }
-      return;  // nothing else to compute
-    }
 
     // Get the containing block width and height. We'll need them when
     // calculating the computed width and height. For all elements other
