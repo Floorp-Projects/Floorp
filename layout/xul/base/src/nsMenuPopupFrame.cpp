@@ -1158,7 +1158,8 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   if (tag.get() != nsXULAtoms::tooltip) {
     nsAutoString sizeToContent;
     parentContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizeToContent);
-    if (sizeToContent == NS_LITERAL_STRING("true")) {
+    if (sizeToContent == NS_LITERAL_STRING("pref") ||
+        sizeToContent == NS_LITERAL_STRING("always")) {
       nsBoxLayoutState state(mPresContext);
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
     }
@@ -1773,7 +1774,8 @@ nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
   if (tag && (tag.get() == nsXULAtoms::menu ||
-              tag.get() == nsXULAtoms::menuitem))
+              tag.get() == nsXULAtoms::menuitem ||
+              tag.get() == nsHTMLAtoms::option))
       return PR_TRUE;
 
   return PR_FALSE;
