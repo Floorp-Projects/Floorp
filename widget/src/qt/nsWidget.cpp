@@ -1453,11 +1453,6 @@ NS_IMETHODIMP nsWidget::ResetInputState()
   return NS_OK;  
 }
 
-NS_IMETHODIMP nsWidget::PasswordFieldInit()
-{
-  return NS_OK;  
-}
-
 void nsWidget::AddChildEventHandler(nsQEventHandler *aEHandler)
 {
   mChildEventHandlers.insert((void*)aEHandler,aEHandler);

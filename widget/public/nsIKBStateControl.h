@@ -49,7 +49,6 @@ class nsIKBStateControl : public nsISupports {
     /*
      * This method is called in the init stage of a password field
      */
-    NS_IMETHOD PasswordFieldInit()=0;
 
 };
 
