@@ -153,7 +153,7 @@ nsMenuX::~nsMenuX()
 // Create
 //
 NS_METHOD 
-nsMenuX::Create(nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
+nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                 nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
 {
   mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(aShell));
@@ -206,7 +206,7 @@ NS_METHOD nsMenuX::GetLabel(nsString &aText)
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuX::SetLabel(const nsAReadableString &aText)
+NS_METHOD nsMenuX::SetLabel(const nsAString &aText)
 {
   mLabel = aText;
 
@@ -226,7 +226,7 @@ NS_METHOD nsMenuX::GetAccessKey(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuX::SetAccessKey(const nsAReadableString &aText)
+NS_METHOD nsMenuX::SetAccessKey(const nsAString &aText)
 {
   return NS_OK;
 }

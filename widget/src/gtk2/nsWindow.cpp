@@ -626,7 +626,7 @@ nsWindow::SetTitle(const nsString& aTitle)
 }
 
 NS_IMETHODIMP
-nsWindow::SetIcon(const nsAReadableString& anIconSpec)
+nsWindow::SetIcon(const nsAString& anIconSpec)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

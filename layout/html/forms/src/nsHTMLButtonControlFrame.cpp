@@ -744,7 +744,7 @@ nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
-                                                    nsIAtom* aName, const nsAReadableString& aValue)
+                                                    nsIAtom* aName, const nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
     nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
@@ -755,7 +755,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
+NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
     nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));

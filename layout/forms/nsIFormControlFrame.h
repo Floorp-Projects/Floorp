@@ -119,7 +119,7 @@ public:
    * @returns NS_OK if the property name is valid, otherwise an error code
    */
   
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue) = 0;
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue) = 0;
   
   /**
    * Get a property from the form control frame
@@ -129,7 +129,7 @@ public:
    * @returns NS_OK if the property name is valid, otherwise an error code
    */
 
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue) = 0; 
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue) = 0; 
 
   /**
    * Notification that the content has been reset

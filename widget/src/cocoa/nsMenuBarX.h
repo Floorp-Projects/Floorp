@@ -177,7 +177,7 @@ protected:
     
       // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar ( ) ;
-    void HideItem ( nsIDOMDocument* inDoc, nsAReadableString & inID, nsIContent** outHiddenNode ) ;
+    void HideItem ( nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode ) ;
     OSStatus InstallCommandEventHandler ( ) ;
 
       // command handler for some special menu items (prefs/quit/etc)

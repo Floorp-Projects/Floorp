@@ -77,10 +77,10 @@ public:
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const = 0;
+                               nsAString& aResult) const = 0;
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult) = 0;
 
   /**
@@ -97,7 +97,7 @@ public:
    * but certain content carries a local base for backward
    * compatibility.
    */
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const = 0;
+  NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */

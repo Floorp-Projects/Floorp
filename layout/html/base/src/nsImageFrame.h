@@ -39,7 +39,7 @@
 
 #include "nsSplittableFrame.h"
 #include "nsString.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 #include "nsIPresContext.h"
 #include "nsIImageFrame.h"
 
@@ -212,8 +212,8 @@ protected:
 
   inline PRBool CanLoadImage(nsIURI *aURI);
 
-  inline void GetURI(const nsAReadableString& aSpec, nsIURI **aURI);
-  inline void GetRealURI(const nsAReadableString& aSpec, nsIURI **aURI);
+  inline void GetURI(const nsAString& aSpec, nsIURI **aURI);
+  inline void GetRealURI(const nsAString& aSpec, nsIURI **aURI);
 
   inline void GetBaseURI(nsIURI **uri);
   inline void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
@@ -221,11 +221,11 @@ protected:
   void FireDOMEvent(PRUint32 aMessage);
 
 private:
-  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
-  nsresult RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
+  nsresult LoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
+  nsresult RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
   inline int GetImageLoad(imgIRequest *aRequest);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
-  void GetDocumentCharacterSet(nsAWritableString& aCharset) const;
+  void GetDocumentCharacterSet(nsAString& aCharset) const;
 
   nsImageMap*         mImageMap;
 

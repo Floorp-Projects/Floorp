@@ -69,7 +69,7 @@ class nsIMenu : public nsISupports {
     * Creates the Menu
     *
     */
-    NS_IMETHOD Create ( nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
+    NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                           nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) = 0;
 
    /**
@@ -88,7 +88,7 @@ class nsIMenu : public nsISupports {
     * Set the Menu label
     *
     */
-    NS_IMETHOD SetLabel(const nsAReadableString &aText) = 0;
+    NS_IMETHOD SetLabel(const nsAString &aText) = 0;
 
 	/**
     * Get the Menu Access Key
@@ -100,7 +100,7 @@ class nsIMenu : public nsISupports {
     * Set the Menu Access Key
     *
     */
-	NS_IMETHOD SetAccessKey(const nsAReadableString &aText) = 0;
+	NS_IMETHOD SetAccessKey(const nsAString &aText) = 0;
 
 	/**
     * Set the Menu enabled state

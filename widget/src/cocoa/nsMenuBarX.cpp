@@ -424,7 +424,7 @@ nsMenuBarX :: ExecuteCommand ( nsIContent* inDispatchTo )
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
 //
 void
-nsMenuBarX :: HideItem ( nsIDOMDocument* inDoc, nsAReadableString & inID, nsIContent** outHiddenNode )
+nsMenuBarX :: HideItem ( nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode )
 {
   nsCOMPtr<nsIDOMElement> menuItem;
   inDoc->GetElementById(inID, getter_AddRefs(menuItem));  

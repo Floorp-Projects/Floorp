@@ -13,13 +13,13 @@ class nsPresState: public nsIPresState
 {
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetStatePropertyAsSupports(const nsAReadableString& aName, nsISupports** aResult);
-  NS_IMETHOD SetStatePropertyAsSupports(const nsAReadableString& aName, nsISupports* aValue);
+  NS_IMETHOD GetStatePropertyAsSupports(const nsAString& aName, nsISupports** aResult);
+  NS_IMETHOD SetStatePropertyAsSupports(const nsAString& aName, nsISupports* aValue);
 
-  NS_IMETHOD GetStateProperty(const nsAReadableString& aProperty, nsAWritableString& aResult);
-  NS_IMETHOD SetStateProperty(const nsAReadableString& aProperty, const nsAReadableString& aValue);
+  NS_IMETHOD GetStateProperty(const nsAString& aProperty, nsAString& aResult);
+  NS_IMETHOD SetStateProperty(const nsAString& aProperty, const nsAString& aValue);
 
-  NS_IMETHOD RemoveStateProperty(const nsAReadableString& aProperty);
+  NS_IMETHOD RemoveStateProperty(const nsAString& aProperty);
 
 public:
   nsPresState();
@@ -59,8 +59,8 @@ nsPresState::~nsPresState(void)
 // nsIPresState Interface ////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsPresState::GetStateProperty(const nsAReadableString& aName,
-			      nsAWritableString& aResult)
+nsPresState::GetStateProperty(const nsAString& aName,
+			      nsAString& aResult)
 {
   aResult.SetLength(0);
 
@@ -84,7 +84,7 @@ nsPresState::GetStateProperty(const nsAReadableString& aName,
 }
 
 NS_IMETHODIMP
-nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableString& aValue)
+nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
 {
   if (!mPropertyTable) {
     mPropertyTable = new nsSupportsHashtable(8);
@@ -104,7 +104,7 @@ nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableS
 }
 
 NS_IMETHODIMP
-nsPresState::RemoveStateProperty(const nsAReadableString& aName)
+nsPresState::RemoveStateProperty(const nsAString& aName)
 {
   if (!mPropertyTable)
     return NS_OK;
@@ -116,7 +116,7 @@ nsPresState::RemoveStateProperty(const nsAReadableString& aName)
 }
 
 NS_IMETHODIMP
-nsPresState::GetStatePropertyAsSupports(const nsAReadableString& aName, nsISupports** aResult)
+nsPresState::GetStatePropertyAsSupports(const nsAString& aName, nsISupports** aResult)
 {
   // Retrieve from hashtable.
   nsCOMPtr<nsISupports> supp;
@@ -132,7 +132,7 @@ nsPresState::GetStatePropertyAsSupports(const nsAReadableString& aName, nsISuppo
 }
 
 NS_IMETHODIMP
-nsPresState::SetStatePropertyAsSupports(const nsAReadableString& aName, nsISupports* aValue)
+nsPresState::SetStatePropertyAsSupports(const nsAString& aName, nsISupports* aValue)
 {
   if (!mPropertyTable) {
     mPropertyTable = new nsSupportsHashtable(8);

@@ -136,9 +136,9 @@ class nsDataObj : public IDataObject
 		virtual HRESULT AddSetFormat(FORMATETC&  FE);
 		virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
-		virtual HRESULT GetText ( nsAReadableCString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
-		virtual HRESULT GetBitmap ( nsAReadableCString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
+		virtual HRESULT GetText ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
+		virtual HRESULT GetBitmap ( const nsACString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
+		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
 		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
     virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;

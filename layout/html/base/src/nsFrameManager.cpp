@@ -2089,7 +2089,7 @@ static inline void KeyAppendSep(nsCString& aKey)
   }
 }
 
-static inline void KeyAppendString(nsAReadableString& aString, nsCString& aKey)
+static inline void KeyAppendString(const nsAString& aString, nsCString& aKey)
 {
   KeyAppendSep(aKey);
 

@@ -82,13 +82,13 @@ public:
     nsEventStatus SetRebuild(PRBool aMenuEvent);
 
     // nsIMenu Methods
-    NS_IMETHOD Create ( nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
+    NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                         nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) ;
     NS_IMETHOD GetParent(nsISupports *&aParent);
     NS_IMETHOD GetLabel(nsString &aText);
-    NS_IMETHOD SetLabel(const nsAReadableString &aText);
+    NS_IMETHOD SetLabel(const nsAString &aText);
     NS_IMETHOD GetAccessKey(nsString &aText);
-    NS_IMETHOD SetAccessKey(const nsAReadableString &aText);
+    NS_IMETHOD SetAccessKey(const nsAString &aText);
     NS_IMETHOD AddItem(nsISupports* aText);
     NS_IMETHOD AddSeparator();
     NS_IMETHOD GetItemCount(PRUint32 &aCount);

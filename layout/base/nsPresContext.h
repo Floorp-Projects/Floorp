@@ -40,7 +40,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsIRequest.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -516,7 +516,7 @@ public:
   /**
    * Get the document charset
    */
-  NS_IMETHOD GetBidiCharset(nsAWritableString &aCharSet) = 0;
+  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) = 0;
 
 
 #endif // IBMBIDI

@@ -363,7 +363,7 @@ HRESULT nsDataObj::AddGetFormat(FORMATETC& aFE)
 
 //-----------------------------------------------------
 HRESULT 
-nsDataObj::GetBitmap ( nsAReadableCString& , FORMATETC&, STGMEDIUM& )
+nsDataObj::GetBitmap ( const nsACString& , FORMATETC&, STGMEDIUM& )
 {
   PRNTDEBUG("nsDataObj::GetBitmap\n");
 	return ResultFromScode(E_NOTIMPL);
@@ -377,7 +377,7 @@ nsDataObj::GetBitmap ( nsAReadableCString& , FORMATETC&, STGMEDIUM& )
 // nsIImage, so just QI it.
 //
 HRESULT 
-nsDataObj :: GetDib ( nsAReadableCString& inFlavor, FORMATETC &, STGMEDIUM & aSTG )
+nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG )
 {
   PRNTDEBUG("nsDataObj::GetDib\n");
   ULONG result = E_FAIL;
@@ -604,7 +604,7 @@ nsDataObj :: IsInternetShortcut ( )
 
 
 //-----------------------------------------------------
-HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
+HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   void* data;
   PRUint32   len;
