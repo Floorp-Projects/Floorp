@@ -497,6 +497,18 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   TranslateLineEnding(aBuf);
   TranslateLineEnding(aSignature);
 
+  // We're going to be inserting stuff, and MsgComposeCommands
+  // may have set the editor to readonly in the recycled case.
+  // So set it back to writable.
+  // Note!  enableEditableFields in gComposeRecyclingListener::onReopen
+  // will redundantly set this flag to writable, but it gets there
+  // too late.  This will be revisited when cmanske lands the
+  // next stage of editorshell removal.
+  PRUint32 flags = 0;
+  m_editor->GetFlags(&flags);
+  flags &= !nsIPlaintextEditor::eEditorReadonlyMask;
+  m_editor->SetFlags(flags);
+
   m_editor->EnableUndo(PR_FALSE);
 
   // Ok - now we need to figure out the charset of the aBuf we are going to send
@@ -1259,7 +1271,7 @@ nsresult nsMsgCompose::ClearEditor()
 }
 
 nsresult nsMsgCompose::SetEditorShell(nsIEditorShell * aEditorShell)
-{ 
+{
     // First, store the editor shell but do not addref it (see sfraser@netscape.com for explanation).
     m_editorShell = aEditorShell;
     m_editor = nsnull;
