@@ -19,7 +19,6 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://related/skin/related-panel.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://related/locale/related-panel.dtd" >
@@ -37,8 +36,10 @@
      datasource is created and a content model builder is installed, even
      though there is no datasource from which to build content yet.
   -->
+
+  <html:div style="width:100px; height:100px" flex="1">
   <tree id="Tree"
-        flex="100%" style="height: 100%"
+        style="width: 100%; height: 100%"
         datasources="rdf:internetsearch"
         ondblclick="return OnDblClick(event.target.parentNode.parentNode);">
 
@@ -76,23 +77,24 @@
     <treechildren>
       <treeitem id="NC:RelatedLinks" container="true">
         <treerow>
-          <treecell><treeindentation/><titledbutton />&related.row.label;</treecell>
+          <treecell indent="true" value="&related.row.label;" />
         </treerow>
       </treeitem>
 
       <treeitem id="NC:LastSearchRoot" ref="http://home.netscape.com/NC-rdf#ref" container="true" >
         <treerow>
-          <treecell><treeindentation/><titledbutton />&lastsearch.row.label;</treecell>
+          <treecell indent="true" value="&lastsearch.row.label;" />
         </treerow>
       </treeitem>
 
 
-      <treeitem id="NC:SiteMapRoot">
+      <treeitem id="NC:SiteMapRoot" container="true">
         <treerow>
-          <treecell><treeindentation/><titledbutton />&sitemap.row.label;</treecell>
+          <treecell indent="true" value="&sitemap.row.label;" />
         </treerow>
       </treeitem>
 
     </treechildren>
   </tree>
+  </html:div>
 </window>
