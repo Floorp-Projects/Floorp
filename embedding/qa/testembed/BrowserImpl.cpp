@@ -489,6 +489,11 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 	FormatAndPrintOutput("OnDataAvailable() offset = ", offset, 1);
 	FormatAndPrintOutput("OnDataAvailable() count = ", count, 1);
 
+	if (!ctxt)
+		QAOutput("OnDataAvailable():We didn't get the nsISupports object.", 1);
+	else
+		QAOutput("OnDataAvailable():We got the nsISupports object.", 1);
+
 	return NS_OK;
 }
 
@@ -500,6 +505,11 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	QAOutput("##### BEGIN: nsIStreamListener::OnStartRequest() #####");
 	RequestName(request, stringMsg, 1);
 
+	if (!ctxt)
+		QAOutput("OnStartRequest():We didn't get the nsISupports object.", 1);
+	else
+		QAOutput("OnStartRequest():We got the nsISupports object.", 1);
+
 	return NS_OK;
 }
 
@@ -510,6 +520,14 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 
 	RvTestResult(rv, "nsIStreamListener::OnStopRequest rv input", 1);
 	RequestName(request, stringMsg, 1);
+
+	if (!ctxt)
+		QAOutput("OnStopRequest():We didn't get the nsISupports object.", 1);
+	else
+		QAOutput("OnStopRequest():We got the nsISupports object.", 1);
+
+	RvTestResult(rv, "OnStopRequest() rv test", 1);
+
 	QAOutput("##### END: nsIStreamListener::OnStopRequest() #####");
 		
 	return NS_OK;
