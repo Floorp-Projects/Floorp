@@ -150,15 +150,9 @@ extern void _MD_CleanupBeforeExit(void);
 /* Sparc */
 #if defined(__GLIBC__) && __GLIBC__ >= 2
 /*
- * FIXME: The setjmp/longjmp approach works in Red Hat 4.2 but
- * not in Red Hat 5.1 for Linux/Sparc.  We should talk to the
- * maintainer of Linux/Sparc glibc2 about this.  Or we can write
- * assembly code to save and restore thread contexts.  Before
- * this problem is solved, you can build the pthreads version.
- * Set the environment variable USE_PTHREADS to 1 before you
- * build.
+ * You need glibc2-2.0.7-25 or later. The libraries that came with
+ * Red Hat 5.1 are not new enough, but they are in 5.2.
  */
-#error "Please see comments in pr/include/md/_linux.h"
 #define _MD_GET_SP(_t) (_t)->md.context[0].__jmpbuf[JB_SP]
 #define _MD_SET_FP(_t, val) ((_t)->md.context[0].__jmpbuf[JB_FP] = val)
 #define _MD_GET_SP_PTR(_t) &(_MD_GET_SP(_t))
