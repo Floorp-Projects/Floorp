@@ -25,6 +25,8 @@
 #include "nsWindow.h"
 #include <Navigation.h>
 
+#define	kMaxTypeListCount	10
+#define kMaxTypesPerFilter	9
 
 /**
  * Native Mac FileSelector wrapper
@@ -117,6 +119,8 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      nsFileDlgResults		mSelectResult;
 
      void GetFilterListArray(nsString& aFilterList);
+     
+     NavTypeListPtr			mTypeLists[kMaxTypeListCount];
           
 };
 
