@@ -1,6 +1,5 @@
 {
     IBClasses = (
-        {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             CLASS = NSPreferencePane; 
@@ -15,26 +14,31 @@
         }, 
         {
             ACTIONS = {
-                clearCookies = id; 
                 clickAskAboutCookies = id; 
                 clickAutoFillPasswords = id; 
-                clickEnableCookies = id; 
+                clickCookieBehavior = id; 
                 clickStorePasswords = id; 
-                editCookieSites = id; 
-                editCookieSitesDone = id; 
+                editCookies = id; 
+                editCookiesDone = id; 
+                editPermissions = id; 
+                editPermissionsDone = id; 
                 launchKeychainAccess = id; 
-                removeCookieSite = id; 
+                removeAllCookiePermissions = id; 
+                removeAllCookies = id; 
+                removeCookiePermissions = id; 
+                removeCookies = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferencePrivacy; 
             LANGUAGE = ObjC; 
             OUTLETS = {
                 mAskAboutCookies = NSButton; 
                 mAutoFillPasswords = NSButton; 
-                mCookieSitePanel = id; 
-                mCookiesEnabled = NSButton; 
-                mEditSitesButton = NSButton; 
-                mEditSitesText = NSTextField; 
-                mSiteTable = ExtendedTableView; 
+                mCookieBehavior = NSMatrix; 
+                mCookiesPanel = id; 
+                mCookiesTable = NSTableView; 
+                mPermissionColumn = NSTableColumn; 
+                mPermissionsPanel = id; 
+                mPermissionsTable = NSTableView; 
                 mStorePasswords = NSButton; 
             }; 
             SUPERCLASS = PreferencePaneBase; 

@@ -309,11 +309,7 @@ static BOOL gMadePrefManager;
     PRInt32 acceptCookies = 0;
     static const char* kCookieBehaviorPref = "network.cookie.cookieBehavior";
     mPrefs->GetIntPref(kCookieBehaviorPref, &acceptCookies);
-    if ( acceptCookies == 1 ) {          // accept foreign cookies, assume off  
-      acceptCookies = 2;
-      mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
-    }
-    else if ( acceptCookies == 3 ) {     // p3p, assume all cookies on
+    if ( acceptCookies == 3 ) {     // p3p, assume all cookies on
       acceptCookies = 0;
       mPrefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
     }

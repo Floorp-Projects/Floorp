@@ -6,47 +6,66 @@
 
 class nsIPref;
 class nsIPermissionManager;
-class nsISimpleEnumerator;
 class nsIPermission;
+class nsICookieManager;
+class nsICookie;
 
 @interface OrgMozillaChimeraPreferencePrivacy : PreferencePaneBase
 {
-  IBOutlet NSButton* mCookiesEnabled;
+  // pane
+  IBOutlet NSMatrix* mCookieBehavior;
   IBOutlet NSButton* mAskAboutCookies;
-  IBOutlet id mCookieSitePanel;
-  IBOutlet NSButton* mEditSitesButton;
-  IBOutlet NSTextField* mEditSitesText;
   
   IBOutlet NSButton* mStorePasswords;
   IBOutlet NSButton* mAutoFillPasswords;
   
-  IBOutlet ExtendedTableView* mSiteTable;
-  nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
-  nsCOMArray<nsIPermission>* mCachedPermissions;	// parallel list of permissions for speed
+  // permission sheet
+  IBOutlet id mPermissionsPanel;
+  IBOutlet NSTableView* mPermissionsTable;
+  IBOutlet NSTableColumn* mPermissionColumn;
+  nsIPermissionManager* mPermissionManager;        // STRONG (should be nsCOMPtr)
+  nsCOMArray<nsIPermission>* mCachedPermissions;   // parallel list for speed, STRONG
+      
+  // cookie sheet
+  IBOutlet id mCookiesPanel;
+  IBOutlet NSTableView* mCookiesTable;
+  nsICookieManager* mCookieManager;
+  nsCOMArray<nsICookie>* mCachedCookies;
 }
 
--(IBAction) clearCookies:(id)aSender;
--(IBAction) editCookieSites:(id)aSender;
--(IBAction) editCookieSitesDone:(id)aSender;
--(IBAction) removeCookieSite:(id)aSender;
-- (void) editCookieSitesSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo;
-
-// data source informal protocol (NSTableDataSource)
-- (int)numberOfRowsInTableView:(NSTableView *)aTableView;
-- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex;
-
-// NSTableView delegate methods
-- (void)tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn;
-
--(IBAction) clickEnableCookies:(id)sender;
+// main panel button actions
+-(IBAction) clickCookieBehavior:(id)aSender;
 -(IBAction) clickAskAboutCookies:(id)sender;
-
 -(IBAction) clickStorePasswords:(id)sender;
 -(IBAction) clickAutoFillPasswords:(id)sender;
 -(IBAction) launchKeychainAccess:(id)sender;
 
-// helpers going between the enable cookie checkbox and the mozilla pref
--(BOOL)mapCookiePrefToCheckbox:(int)inCookiePref;
--(int)mapCookieCheckboxToPref:(BOOL)inCheckboxValue;
+// cookie editing functions
+-(void) populateCookieCache;
+-(IBAction) editCookies:(id)aSender;
+-(IBAction) editCookiesDone:(id)aSender;
+-(IBAction) removeCookies:(id)aSender;
+-(IBAction) removeAllCookies:(id)aSender;
+
+// permission editing functions
+-(void) populatePermissionCache;
+-(IBAction) editPermissions:(id)aSender;
+-(IBAction) editPermissionsDone:(id)aSender;
+-(IBAction) removeCookiePermissions:(id)aSender;
+-(IBAction) removeAllCookiePermissions:(id)aSender;
+
+-(void) mapCookiePrefToGUI:(int)pref;
+
+// data source informal protocol (NSTableDataSource)
+- (int)numberOfRowsInTableView:(NSTableView *)aTableView;
+- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex;
+- (void)tableView:(NSTableView *)aTableView setObjectValue:anObject forTableColumn:(NSTableColumn *)aTableColumn  row:(int)rowIndex;
+
+// NSTableView delegate methods
+- (void) tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn;
+
+// sorting support methods
+-(void) sortCookiesByColumn:(NSTableColumn *)aTableColumn;
+-(void) sortPermissionsByColumn:(NSTableColumn *)aTableColumn;
 
 @end
