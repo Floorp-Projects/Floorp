@@ -45,8 +45,7 @@ Contributor(s): ______________________________________. -->
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   title="hidden"
   titlemodifier="&mainWindow.titlemodifier;" 
-  titlemenuseparator="&mainWindow.titlemodifiermenuseparator;" width="10" height="10"
- onload="window.moveTo(10000,10000);">
+  titlemenuseparator="&mainWindow.titlemodifiermenuseparator;">
 
   <!-- JS from navigator.xul, to handle the menu commands -->
   <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
