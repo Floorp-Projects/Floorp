@@ -125,8 +125,9 @@ endif
 #
 
 ifeq ($(OS_ARCH),Linux)
-	OS_OBJTYPE  = ELF
-	OS_RELEASE := $(basename $(OS_RELEASE))
+#	OS_OBJTYPE  = ELF
+	OS_RELEASE := $(shell uname -r)_x86
+#	OS_RELEASE := $(basename $(OS_RELEASE))
 endif
 
 #######################################################################
