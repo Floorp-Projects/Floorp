@@ -279,19 +279,11 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
       GetBounds(brect);
 
-      if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+      if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom) &&
+          (this != pRoot))
       {
-        nsRect  crect;
-
-        crect.x = mClip.mLeft + brect.x;
-        crect.y = mClip.mTop + brect.y;
-        crect.width = mClip.mRight - mClip.mLeft;
-        crect.height = mClip.mBottom - mClip.mTop;
-
-        rc.SetClipRect(crect, nsClipCombine_kIntersect, clipres);
-      }
-      else if (this != pRoot)
         rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
+      }
     }
   }
 
@@ -581,6 +573,20 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
           if (NS_OK == mViewManager->GetViewObserver(obs))
           {
+            if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
+            {
+              nsRect  crect, brect;
+
+              GetBounds(brect);
+
+              crect.x = mClip.mLeft + brect.x;
+              crect.y = mClip.mTop + brect.y;
+              crect.width = mClip.mRight - mClip.mLeft;
+              crect.height = mClip.mBottom - mClip.mTop;
+
+              localcx->SetClipRect(crect, nsClipCombine_kIntersect, clipres);
+            }
+
             obs->Paint((nsIView *)this, *localcx, rect);
             NS_RELEASE(obs);
           }
