@@ -169,7 +169,6 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     nsReflowState reflowState(mFirstChild, aReflowState, kidMaxSize);
     nsRect        desiredRect;
 
-    aDesiredSize.SetMargins(0, 0, 0, 0);
     mFirstChild->WillReflow(*aPresContext);
     mFirstChild->MoveTo(borderPadding.left, borderPadding.top);
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
