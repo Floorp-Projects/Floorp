@@ -315,11 +315,20 @@ nsXULTreeElement::RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)
 NS_IMETHODIMP
 nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
 {
+  PRUint32 length;
+  mSelectedItems->GetLength(&length);
+  
+  nsAutoString multiple;
+  mOuter->GetAttribute("multiple", multiple);
+
   nsAutoString isSelected;
   aTreeItem->GetAttribute("selected", isSelected);
   if (isSelected == "true")
     RemoveItemFromSelectionInternal(aTreeItem);
-  else AddItemToSelectionInternal(aTreeItem);
+  else if (multiple == "true" || length == 0)
+    AddItemToSelectionInternal(aTreeItem);
+  else 
+    return NS_OK;
 
   SetCurrentItem(aTreeItem);
 
@@ -330,11 +339,20 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
 NS_IMETHODIMP
 nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
 {
+  PRUint32 length;
+  mSelectedCells->GetLength(&length);
+  
+  nsAutoString multiple;
+  mOuter->GetAttribute("multiple", multiple);
+
   nsAutoString isSelected;
   aTreeCell->GetAttribute("selected", isSelected);
   if (isSelected == "true")
     RemoveCellFromSelectionInternal(aTreeCell);
-  else AddCellToSelectionInternal(aTreeCell);
+  else if (multiple == "true" || length == 0)
+    AddCellToSelectionInternal(aTreeCell);
+  else 
+    return NS_OK;
 
   SetCurrentCell(aTreeCell);
 
@@ -347,6 +365,15 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
 NS_IMETHODIMP
 nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
 {
+  nsAutoString multiple;
+  mOuter->GetAttribute("multiple", multiple);
+
+  if (multiple != "true") {
+    // We're a single selection tree only. This
+    // is not allowed.
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMXULElement> startItem;
   if (aStartItem == nsnull) {
     // Continue the ranged selection based off the current item.
