@@ -21,3 +21,9 @@ TestIDN
 TestURLParser
 TestStandardURL
 TestUpload
+TestStreamTransport
+TestStreamChannel
+TestStreamPump
+TestBlockingSocket
+TestDNS
+TestIOThreads
