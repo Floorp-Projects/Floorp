@@ -143,6 +143,9 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_UINT:
         strcpy(aBuffer, "PRUint32");
         break;
+      case TYPE_FLOAT:
+        strcpy(aBuffer, "jsdouble");
+        break;
       case TYPE_STRING:
         strcpy(aBuffer, "nsAutoString");
         break;
@@ -192,6 +195,9 @@ FileGen::GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_UINT:
         strcpy(aBuffer, "PRUint32");
         break;
+      case TYPE_FLOAT:
+        strcpy(aBuffer, "float");
+        break;
       case TYPE_STRING:
         strcpy(aBuffer, "nsAutoString");
         break;
@@ -240,6 +246,9 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         break;
       case TYPE_UINT:
         strcpy(aBuffer, "PRUint32");
+        break;
+      case TYPE_FLOAT:
+        strcpy(aBuffer, "float");
         break;
       case TYPE_STRING:
         strcpy(aBuffer, "nsString&");
