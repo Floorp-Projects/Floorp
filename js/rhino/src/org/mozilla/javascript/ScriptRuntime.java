@@ -151,16 +151,18 @@ public class ScriptRuntime {
         return (index < args.length) ? toNumber(args[index]) : NaN;
     }
 
-    // This definition of NaN is identical to that in java.lang.Double
-    // except that it is not final. This is a workaround for a bug in
-    // the Microsoft VM, versions 2.01 and 3.0P1, that causes some uses
-    // (returns at least) of Double.NaN to be converted to 1.0.
+    // Can not use Double.NaN defined as 0.0d / 0.0 as under the Microsoft VM,
+    // versions 2.01 and 3.0P1, that causes some uses (returns at least) of
+    // Double.NaN to be converted to 1.0.
     // So we use ScriptRuntime.NaN instead of Double.NaN.
-    public static double NaN = 0.0d / 0.0;
-    public static Double NaNobj = new Double(0.0d / 0.0);
+    public static final double
+        NaN = Double.longBitsToDouble(0x7ff8000000000000L);
 
     // A similar problem exists for negative zero.
-    public static double negativeZero = -0.0;
+    public static final double
+        negativeZero = Double.longBitsToDouble(0x8000000000000000L);
+
+    public static final Double NaNobj = new Double(NaN);
 
     /*
      * Helper function for toNumber, parseInt, and TokenStream.getToken.
