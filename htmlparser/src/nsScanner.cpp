@@ -293,41 +293,51 @@ nsresult nsScanner::Append(const nsAReadableString& aBuffer) {
  */
 nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
   nsresult res=NS_OK;
-  PRUnichar* unichars;
+  PRUnichar *unichars, *start;
   if(mUnicodeDecoder) {
-	  do {
-      PRInt32 unicharBufLen = 0;
-      mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
-      unichars = (PRUnichar*)nsMemory::Alloc((unicharBufLen+1) * sizeof(PRUnichar));
-      if (!unichars) {
-        return PR_FALSE;
-      }
-
-	    PRInt32 srcLength = aLen;
-		  PRInt32 unicharLength = unicharBufLen;
+    PRInt32 unicharBufLen = 0;
+    mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
+    start = unichars = (PRUnichar*)nsMemory::Alloc((unicharBufLen+1) * sizeof(PRUnichar));
+    NS_ENSURE_TRUE(unichars,NS_ERROR_OUT_OF_MEMORY);
+	  
+    PRInt32 totalChars = 0;
+    PRInt32 unicharLength = unicharBufLen;
+    do {
+      PRInt32 srcLength = aLen;
 		  res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
 
-      // if we failed, we consume one byte, replace it with U+FFFD
-      // and try the conversion again.
-		  if(NS_FAILED(res)) {
-        unichars[unicharLength++] = (PRUnichar)0xFFFD;
-      }
-
-      AppendToBuffer(unichars, unichars+unicharLength, 
-                            unichars+unicharBufLen);
-		  mTotalRead += unicharLength;
-
+      totalChars += unicharLength;
       // Continuation of failure case
 		  if(NS_FAILED(res)) {
+        // if we failed, we consume one byte, replace it with U+FFFD
+        // and try the conversion again.
+        unichars[unicharLength++] = (PRUnichar)0xFFFD;
+        unichars = unichars + unicharLength;
+        unicharLength = unicharBufLen - (++totalChars);
+
 			  mUnicodeDecoder->Reset();
-			  if(((PRUint32) (srcLength + 1)) > aLen)
-				  srcLength = aLen;
-			  else 
-				  srcLength++;
-			  aBuffer += srcLength;
-			  aLen -= srcLength;
+
+        if(((PRUint32) (srcLength + 1)) > aLen) {
+          srcLength = aLen;
+        }
+        else {
+          srcLength++;
+        }
+
+        aBuffer += srcLength;
+        aLen -= srcLength;
 		  }
 	  } while (NS_FAILED(res) && (aLen > 0));
+
+    AppendToBuffer(start, 
+                   start+totalChars, 
+                   start+unicharBufLen);
+    mTotalRead += totalChars;
+
+    // Don't propagate return code of unicode decoder
+    // since it doesn't reflect on our success or failure
+    // - Ref. bug 87110
+    res = NS_OK; 
   }
   else {
     nsDependentCString str(aBuffer, aLen);

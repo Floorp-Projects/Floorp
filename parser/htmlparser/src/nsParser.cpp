@@ -645,6 +645,10 @@ public:
   //********************************************************************************
   
   PRInt32 GetNextWord(PRBool aSkipQuotes=PR_FALSE) {
+    
+    if(mOffset == kNotFound) {
+      return kNotFound; // Ref. bug 89732
+    }
 
     const CharT *cp=mBuffer+mOffset+mLength;  //skip last word
 
