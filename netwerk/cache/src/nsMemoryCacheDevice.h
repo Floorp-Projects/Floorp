@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *    Gordon Sheridan, 20-February-2001
+ *    Brian Ryner <bryner@netscape.com>
  */
 
 #ifndef _nsMemoryCacheDevice_h_
@@ -78,15 +79,17 @@ private:
     void      EvictEntriesIfNecessary();
     int       EvictionList(nsCacheEntry * entry, PRInt32  deltaSize);
 
+    void      EnsureEvictionLists();
+    void      CreateEvictionLists();
+
     /*
      *  Data members
      */
     
     nsCacheEntryHashTable   mMemCacheEntries;
     PRBool                  mInitialized;
-    
-    enum { mostLikelyToEvict = 0, leastLikelyToEvict = 1 };   // constants to differentiate eviction lists
-    PRCList                 mEvictionList[2];
+
+    PRCList*               mEvictionList;
     PRInt32                mEvictionThreshold;
 
     PRInt32                mHardLimit;
@@ -98,6 +101,9 @@ private:
     PRInt32                mEntryCount;
 
     PRInt32                mMaxEntryCount;
+
+    PRInt32                mQueueCount;
+
     // XXX what other stats do we want to keep?
 };
 
