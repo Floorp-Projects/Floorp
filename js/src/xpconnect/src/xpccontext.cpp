@@ -90,6 +90,8 @@ XPCContext::XPCContext(JSContext* aJSContext,
         }
     }
     mLastResult = NS_OK;
+    mSecurityManager = NULL;
+    mSecurityManagerFlags = 0;
 }
 
 JS_STATIC_DLL_CALLBACK(intN)

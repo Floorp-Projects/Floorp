@@ -417,6 +417,59 @@ nsXPConnect::AbandonJSContext(JSContext* aJSContext)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::SetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager* aManager,
+                                    PRUint16 flags)
+{
+    if(!aJSContext)
+    {
+        NS_ASSERTION(0,"called SetSecurityManagerForJSContext with null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    XPCContext* xpcc = mContextMap->Find(aJSContext);
+    if(!xpcc)
+    {
+        NS_ASSERTION(0,"called SetSecurityManagerForJSContext for context that's not init'd");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    if(aManager)
+        NS_ADDREF(aManager);
+    nsIXPCSecurityManager* oldManager = xpcc->GetSecurityManager();
+    if(oldManager)
+        NS_RELEASE(oldManager);
+    
+    xpcc->SetSecurityManager(aManager);
+    xpcc->SetSecurityManagerFlags(flags);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnect::GetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager** aManager,
+                                    PRUint16* flags)
+{
+    if(!aJSContext || !aManager || !flags)
+    {
+        NS_ASSERTION(0,"called GetSecurityManagerForJSContext with null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    XPCContext* xpcc = mContextMap->Find(aJSContext);
+    if(!xpcc)
+    {
+        NS_ASSERTION(0,"called GetSecurityManagerForJSContext for context that's not init'd");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    if(NULL != (*aManager = xpcc->GetSecurityManager()))
+        NS_ADDREF(*aManager);
+    *flags = xpcc->GetSecurityManagerFlags();
+    return NS_OK;
+}
+
 // has to go somewhere...
 nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
 {

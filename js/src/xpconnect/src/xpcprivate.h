@@ -32,6 +32,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
+#include "nsIXPCSecurityManager.h"
 #include "xptcall.h"
 #include "jsapi.h"
 #include "jshash.h"
@@ -89,6 +90,14 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD DebugDumpObject(nsISupports* p, int depth);
 
     NS_IMETHOD AbandonJSContext(JSContext* aJSContext);
+
+    NS_IMETHOD SetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager* aManager,
+                                    PRUint16 flags);
+
+    NS_IMETHOD GetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager** aManager,
+                                    PRUint16* flags);
 
     // non-interface implementation
 public:
@@ -168,6 +177,16 @@ public:
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
 
+    nsIXPCSecurityManager* GetSecurityManager() const 
+        {return mSecurityManager;}
+    void SetSecurityManager(nsIXPCSecurityManager* aSecurityManager) 
+        {mSecurityManager = aSecurityManager;}
+
+    PRUint16 GetSecurityManagerFlags() const
+        {return mSecurityManagerFlags;}
+    void SetSecurityManagerFlags(PRUint16 f) 
+        {mSecurityManagerFlags = f;}
+
     JSBool Init(JSObject* aGlobalObj = NULL);
     void DebugDump(int depth);
 
@@ -191,6 +210,8 @@ private:
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
     jsid mStrIDs[IDX_TOTAL_COUNT];
     nsresult mLastResult;
+    nsIXPCSecurityManager* mSecurityManager;
+    PRUint16 mSecurityManagerFlags;
 };
 
 /***************************************************************************/
@@ -479,10 +500,12 @@ public:
                               const XPCNativeMemberDescriptor* desc,
                               jsval* vp);
 
+    enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
+
     JSBool CallWrappedMethod(JSContext* cx,
                              nsXPCWrappedNative* wrapper,
                              const XPCNativeMemberDescriptor* desc,
-                             JSBool isAttributeSet,
+                             CallMode callMode,
                              uintN argc, jsval *argv, jsval *vp);
 
     JSBool GetAttributeAsJSVal(JSContext* cx,
@@ -490,7 +513,7 @@ public:
                                const XPCNativeMemberDescriptor* desc,
                                jsval* vp)
     {
-        return CallWrappedMethod(cx, wrapper, desc, JS_FALSE, 0, NULL, vp);
+        return CallWrappedMethod(cx, wrapper, desc, CALL_GETTER, 0, NULL, vp);
     }
 
     JSBool SetAttributeFromJSVal(JSContext* cx,
@@ -498,7 +521,7 @@ public:
                                  const XPCNativeMemberDescriptor* desc,
                                  jsval* vp)
     {
-        return CallWrappedMethod(cx, wrapper, desc, JS_TRUE, 1, vp, NULL);
+        return CallWrappedMethod(cx, wrapper, desc, CALL_SETTER, 1, vp, NULL);
     }
 
     JSObject* GetInvokeFunObj(const XPCNativeMemberDescriptor* desc);

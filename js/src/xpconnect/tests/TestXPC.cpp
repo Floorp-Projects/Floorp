@@ -25,6 +25,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
+#include "nsIXPCSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "jsapi.h"
@@ -67,7 +68,7 @@ static void SetupRegistry()
       /* The PC version of the directory from filePath is of the form
        *	/y|/moz/mozilla/dist/bin/components
        * We need to remove the initial / and change the | to :
-       * for all this to work with NSPR.	  
+       * for all this to work with NSPR.
        */
 #endif /* XP_PC */
 //      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
@@ -84,10 +85,10 @@ static void SetupRegistry()
 //    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL,
 //                                          XPCOM_DLL, PR_FALSE, PR_FALSE);
 
-    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, "allocator", 
+    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, "allocator",
                                           XPCOM_DLL, PR_TRUE, PR_TRUE);
 
-    nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, 
+    nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL,
                                           XPCOM_DLL, PR_FALSE, PR_FALSE);
 }
 
@@ -189,12 +190,13 @@ NS_IMETHODIMP nsTestXPCFoo::Test(int p1, int p2, int* retval)
 }
 NS_IMETHODIMP nsTestXPCFoo::Test2()
 {
-    printf("nsTestXPCFoo::Test2 called\n");
+    printf("nsTestXPCFoo::Test2 called ");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
 {
+    printf("nsTestXPCFoo::Get called ");
     if(!aFoo)
         return NS_ERROR_NULL_POINTER;
     if(mFoo)
@@ -202,19 +204,20 @@ NS_IMETHODIMP nsTestXPCFoo::GetFoo(char * *aFoo)
     else
         *aFoo = NULL;
     return NS_OK;
-}        
+}
 
 NS_IMETHODIMP nsTestXPCFoo::SetFoo(char * aFoo)
 {
+    printf("nsTestXPCFoo::Set called ");
     if(mFoo)
     {
-        nsAllocator::Free(mFoo);        
+        nsAllocator::Free(mFoo);
         mFoo = NULL;
     }
     if(aFoo)
         mFoo = (char*) nsAllocator::Clone(aFoo, strlen(aFoo)+1);
     return NS_OK;
-}        
+}
 
 NS_IMPL_ADDREF(nsTestXPCFoo)
 NS_IMPL_RELEASE(nsTestXPCFoo)
@@ -229,8 +232,8 @@ nsTestXPCFoo::nsTestXPCFoo()
 nsTestXPCFoo::~nsTestXPCFoo()
 {
     if(mFoo)
-        nsAllocator::Free(mFoo);        
-}        
+        nsAllocator::Free(mFoo);
+}
 
 
 /***************************************************************************/
@@ -485,6 +488,162 @@ MyEcho::ReturnCode_NS_ERROR_OUT_OF_MEMORY()
 {return NS_ERROR_OUT_OF_MEMORY;}
 
 /***************************************************************************/
+// security manager test class
+
+class MySecMan : public nsIXPCSecurityManager
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  enum Mode { OK_ALL    ,
+              VETO_ALL
+            };
+
+  /* void CanCreateWrapper (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj); */
+  NS_IMETHOD CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj);
+
+  /* void CanCreateInstance (in JSContext aJSContext, in nsCIDRef aCID); */
+  NS_IMETHOD CanCreateInstance(JSContext * aJSContext, const nsCID & aCID);
+
+  /* void CanGetService (in JSContext aJSContext, in nsCIDRef aCID); */
+  NS_IMETHOD CanGetService(JSContext * aJSContext, const nsCID & aCID);
+
+  /* void CanCallMethod (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
+  NS_IMETHOD CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
+
+  /* void CanGetProperty (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
+  NS_IMETHOD CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
+
+  /* void CanSetProperty (in JSContext aJSContext, in nsIIDRef aIID, in nsISupports aObj, in nsIInterfaceInfo aInterfaceInfo, in PRUint16 aMethodIndex, [const] in jsid aName); */
+  NS_IMETHOD CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName);
+
+  void SetMode(Mode mode) {mMode = mode;}
+
+  MySecMan();
+
+private:
+  Mode mMode;
+};
+
+static NS_DEFINE_IID(kMySecManIID, NS_IXPCSECURITYMANAGER_IID);
+NS_IMPL_ISUPPORTS(MySecMan, kMySecManIID);
+
+MySecMan::MySecMan()
+    : mMode(OK_ALL)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+NS_IMETHODIMP
+MySecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+MySecMan::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+MySecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+MySecMan::CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+MySecMan::CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+MySecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    switch(mMode)
+    {
+        case OK_ALL:
+            return NS_OK;
+        case VETO_ALL:
+            JS_SetPendingException(aJSContext, 
+                STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext,
+                    "security exception")));
+            return NS_ERROR_FAILURE;
+        default:
+            NS_ASSERTION(0,"bad case");
+            return NS_OK;
+    }
+}
+
+/***************************************************************************/
 
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
@@ -563,7 +722,7 @@ static nsIXPConnect* GetXPConnect()
                         (nsISupports**) &result, NULL)))
         return result;
     return NULL;
-}        
+}
 
 extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 
@@ -654,6 +813,7 @@ int main()
 
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
+    nsIXPConnectWrappedNative* wrapper3;
 
 
     nsIXPConnectWrappedNative* fool_wrapper = NULL;
@@ -736,7 +896,7 @@ int main()
                     int result;
                     JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
-                    printf("call to ptr->Test result: %s\n", 
+                    printf("call to ptr->Test result: %s\n",
                            result == 24 ? "passed" : "FAILED");
 
                     nsIXPConnectWrappedJSMethods* methods;
@@ -756,7 +916,7 @@ int main()
                     ptr->SetFoo(some_string);
                     ptr->GetFoo(&answer);
                     printf("set/get property : %s\n",
-                           0 == strcmp(some_string, answer) ? 
+                           0 == strcmp(some_string, answer) ?
                                 "passed" : "FALIED");
 
                     if(answer)
@@ -777,7 +937,6 @@ int main()
         }
 //        NS_RELEASE(wrapper);
     }
-    NS_RELEASE(foo);
 
     // XXX things are still rooted to the global object in the test scripts...
 
@@ -786,6 +945,115 @@ int main()
 //    XPC_LOG_ALWAYS(("after running release object..."));
 //    XPC_LOG_ALWAYS((""));
 //    XPC_DUMP(xpc, 3);
+
+
+    {
+    // SecurityManager tests...
+
+    char* t;
+    jsval rval;
+    JSBool success = JS_TRUE;
+    MySecMan* sm = new MySecMan();
+
+    rval = JSVAL_FALSE;
+    JS_SetProperty(jscontext, glob, "failed", &rval);
+    printf("Individual SecurityManager tests...\n");
+    if(!NS_SUCCEEDED(xpc->SetSecurityManagerForJSContext(jscontext, sm,
+                                        nsIXPCSecurityManager::HOOK_ALL)))
+    {
+        success = JS_FALSE;
+        printf("SetSecurityManagerForJSContext failed!\n");
+        goto sm_test_done;
+    }
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  getService no veto: ");
+    t = "try{Components.classes.allocator.getService(); print('passed');}catch(e){failed = true; print('failed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  getService with veto: ");
+    t = "try{Components.classes.allocator.getService(); failed = true; print('failed');}catch(e){print('passed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  createInstance no veto: ");
+    t = "try{Components.classes.nsIID.createInstance(Components.interfaces.nsIJSIID); print('passed');}catch(e){failed = true; print('failed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  getService with veto: ");
+    t = "try{Components.classes.nsIID.createInstance(Components.interfaces.nsIJSIID); failed = true; print('failed');}catch(e){print('passed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  call method no veto: ");
+    t = "try{foo.Test2(); print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  call method with veto: ");
+    t = "try{foo.Test2(); failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  get attribute no veto: ");
+    t = "try{foo.Foo; print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  get attribute with veto: ");
+    t = "try{foo.Foo; failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  set attribute no veto: ");
+    t = "try{foo.Foo = 0; print(' : passed');}catch(e){failed = true; print(' : failed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  set attribute with veto: ");
+    t = "try{foo.Foo = 0; failed = true; print(' : failed');}catch(e){print(' : passed');}";
+    JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
+
+    sm->SetMode(MySecMan::OK_ALL);
+    printf("  build wrapper no veto: ");
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper3)))
+    {
+        printf("passed\n");
+        NS_RELEASE(wrapper3);
+    }
+    else
+    {
+        success = JS_FALSE;
+        printf("failed\n");
+    }
+
+    sm->SetMode(MySecMan::VETO_ALL);
+    printf("  build wrapper with veto: ");
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::GetIID(), &wrapper3)))
+    {
+        success = JS_FALSE;
+        printf("failed\n");
+        NS_RELEASE(wrapper3);
+    }
+    else
+    {
+        printf("passed\n");
+    }
+
+sm_test_done:
+    success = success && JS_GetProperty(jscontext, glob, "failed", &rval) && JSVAL_TRUE != rval;
+    printf("SecurityManager tests : %s\n", success ? "passed" : "failed");
+    }
+
+    // cleanup
+
+    NS_RELEASE(foo);
 
     if(glob)
     {

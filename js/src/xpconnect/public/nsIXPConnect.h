@@ -56,7 +56,7 @@ class nsIXPCScriptable;
 class nsIInterfaceInfo;
 class nsIXPConnectWrappedNative;
 class nsIXPConnectFinalizeListener;
-
+class nsIXPCSecurityManager;
 
 // {1B2DDB00-EEE8-11d2-BAA4-00805F8A5DD7}
 #define NS_IXPCONNECT_FINALIZE_LISTENER_IID   \
@@ -178,6 +178,13 @@ public:
 
     NS_IMETHOD AbandonJSContext(JSContext* aJSContext) = 0;
 
+    NS_IMETHOD SetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager* aManager,
+                                    PRUint16 flags) = 0;
+
+    NS_IMETHOD GetSecurityManagerForJSContext(JSContext* aJSContext,
+                                    nsIXPCSecurityManager** aManager,
+                                    PRUint16* flags) = 0;
     // XXX other methods?
 };
 
