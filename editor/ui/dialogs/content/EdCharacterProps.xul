@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<xul:window
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()">
+
+  <html:script>
+    // dialog initialization code
+    function Startup()
+    {
+      dump("Doing Startup...\n");
+      appCore = XPAppCoresManager.Find("EditorAppCore");  
+      dump("Looking up EditorAppCore...\n");
+      if (appCore == null) {
+        dump("Creating EditorAppCore...\n");
+        appCore = new EditorAppCore();
+        if (appCore != null) {
+          dump("EditorAppCore has been created.\n");
+          appCore.Init("EditorAppCore");
+//	        appCore.setContentWindow(window.frames[0]);
+//	        appCore.setWebShellWindow(window);
+//	        appCore.setToolbarWindow(window);
+          dump("Adding EditorAppCore to AppCoreManager...\n");
+          XPAppCoresManager.Add(appCore);  
+        }
+      } else {
+        dump("EditorAppCore has already been created! Why?\n");
+      }
+	  }
+
+    function EditorCut()
+    {
+      appCore = XPAppCoresManager.Find("EditorAppCore");  
+      if (appCore != null) {
+	      dump("Cutting\n");
+        appCore.cut();
+      } else {
+        dump("EditorAppCore has not been created!\n");
+      }
+    }
+
+	  function EditorCopy()
+    {
+      appCore = XPAppCoresManager.Find("EditorAppCore");  
+      if (appCore != null) {
+	      dump("Copying\n");
+        appCore.copy();
+      } else {
+        dump("EditorAppCore has not been created!\n");
+      }
+    }
+
+	  function EditorPaste()
+    {
+      appCore = XPAppCoresManager.Find("EditorAppCore");  
+      if (appCore != null) {
+	      dump("Pasting\n");
+        appCore.paste();
+      } else {
+        dump("EditorAppCore has not been created!\n");
+      }
+    }
+
+    // find and return the DOM element with the given ID
+    // the equivalent of document.getElementById(), but also
+    // works for XML documents (unused in the example)
+    function ElementByID(id) {
+      var element;
+      var ctr;
+      var taglist = document.getElementsByTagName("*");
+
+      element = null;
+      for (ctr = 0; ctr < taglist.length; ctr++)
+        if (taglist[ctr].getAttribute("id") == id) {
+          element = taglist[ctr];
+          break;
+        }
+      return element;
+    }
+  </html:script>
+
+  <table xmlns="http://www.w3.org/TR/REC-html40">
+    <tr>
+        <td><button onclick="EditorCopy()">Copy</button></td>
+        <td><button onclick="EditorCut()">Cut</button></td>
+        <td><button onclick="EditorPaste()">Paste</button></td>
+    </tr>
+  </table>
+
+</xul:window>

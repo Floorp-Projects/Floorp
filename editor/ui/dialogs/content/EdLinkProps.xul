@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordialogs/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+<xul:window width="380" height="240"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()">
+
+  <html:script>
+    var appCore;
+    var toolkitCore;
+
+    var editElement = null;
+    var insertNew = true;
+
+    // NOTE: Use "HREF" instead of "A" to distinguish from Named Anchor
+    // The returned nodes will have the "A" tagName
+    var tagName = "HREF";
+
+    // dialog initialization code
+    function Startup() {
+      dump("Doing Startup...\n");
+      toolkitCore = GetToolkitCore();
+      if(!toolkitCore) {
+        dump("toolkitCore not found!!! And we can't close the dialog!\n");
+      }
+      // NEVER create an appcore here - we must find parent editor's
+      appCore = XPAppCoresManager.Find("EditorAppCoreHTML");  
+      if(!appCore || !toolkitCore) {
+        dump("EditorAppCore not found!!!\n");
+        toolkitCore.CloseWindow();
+      }
+      dump("EditorAppCore found for Link Properties dialog\n");
+      
+      // Get a single selected element and edit its properites
+      editElement = appCore.getSelectedElement(tagName);
+
+      if (editElement) {
+        // We found an element and don't need to insert it
+        insertNew = false;
+      } else {
+        // We don't have an element selected, 
+        //  so create one with default attributes
+        dump("Element not selected - calling createElementWithDefaults\n");
+        editElement = appCore.createElementWithDefaults(tagName);
+      }
+
+      if(!editElement)
+      {
+        dump("Failed to get selected element or create a new one!\n");
+        toolkitCore.CloseWindow(window);
+      }
+      dump("GetSelectedElement...\n");
+
+      hrefInput = document.getElementById("textHREF");
+      // Set the input element value to current HREF
+      if (hrefInput)
+      {
+        dump("Setting HREF editbox value\n");
+        hrefInput.value = editNode.href;
+      }
+	  }
+
+    function applyChanges() {
+      // Set the input element value to current HREF
+      hrefInput = document.getElementById("textHREF");
+      if (hrefInput)
+      {
+        dump("Copying edit field HREF value to node attribute\n");
+        editElement.setAttribute("href",hrefInput.value);
+      }
+      // Get text to use for a new link
+      if (insertNew)
+      {
+        textLink = document.getElementById("textLink");
+        if (textLink)
+        {
+          // Append the link text as the last child node 
+          //   of the docFrag
+          textNode = appCore.editorDocument.createTextNode(textLink.value);
+          if (textNode)
+          {
+            editElement.appendChild(textNode);
+            dump("Text for new link appended to HREF node\n");
+            newElement = appCore.insertElement(editElement);
+            if (newElement != editElement)
+            {
+              dump("Returned element from insertElement is different from orginal element.\n");
+            }
+          }
+        }
+        // Once inserted, we can modify properties, but don't insert again
+        insertNew = false;
+      }
+    }
+
+    function onOK() {
+      applyChanges();
+      toolkitCore.CloseWindow(window);
+    }
+
+    function onCancel() {
+      dump("Calling CloseWindow...\n");
+      toolkitCore.CloseWindow(window);
+    }
+
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+
+  </html:script>
+
+  <html:table>
+    <html:tr>
+      <html:td>
+        <html:fieldset><html:legend align="left">Link source </html:legend>
+          Enter text to display for a new link:<html:br/>
+          <html:input type="text" size="25" length="25" maxlength="100" name="textLink" html:id="textLink"></html:input>
+        </html:fieldset>
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>
+        <html:fieldset><html:legend align="left">Link to </html:legend>
+          Enter a web page location or local file:<html:br/>
+          <html:input type="text" size="25" length="25" maxlength="100" name="textHREF" html:id="textHREF"></html:input>
+        </html:fieldset>
+      </html:td>
+    </html:tr>
+    <html:tr>
+      <html:td align = "right">
+        <html:button onclick="onOK();">OK</html:button>  
+        <html:button onclick="onCancel();">Cancel</html:button>
+      </html:td>
+    </html:tr>
+  </html:table>
+
+</xul:window>
