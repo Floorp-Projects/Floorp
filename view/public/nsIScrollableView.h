@@ -169,6 +169,25 @@ public:
    */
   NS_IMETHOD GetScrollProperties(PRUint32 *aProperties) = 0;
 
+  /**
+   * Scroll the view up or down by aNumLines lines. positive
+   * values move down in the view. Prevents scrolling off the
+   * end of the view.
+   * @param aNumLines number of lines to scroll the view by
+   * @return error status
+   */
+  NS_IMETHOD ScrollByLines(PRInt32 aNumLines) = 0;
+
+  /**
+   * Scroll the view up or down by aNumPages pages. a page
+   * is considered to be the amount displayed by the clip view.
+   * positive values move down in the view. Prevents scrolling
+   * off the end of the view.
+   * @param aNumPage number of pages to scroll the view by
+   * @return error status
+   */
+  NS_IMETHOD ScrollByPages(PRInt32 aNumPages) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

@@ -727,62 +727,25 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
     case NS_KEY_DOWN:
     {
       nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+
       switch (keyEvent->keyCode)
       {
         case NS_VK_PAGE_DOWN: 
-        case NS_VK_PAGE_UP: {
-          nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
-          nsIWidget     *win;
-          mVScrollBarView->GetWidget(win);
-
-          if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
-          {
-            PRUint32  oldPos = 0;
-            scrollv->GetPosition(oldPos);
-            nsSize    clipSize;
-            mClipView->GetDimensions(&clipSize.width, &clipSize.height);
-            nscoord   newPos = 0;
-            if (keyEvent->keyCode == NS_VK_PAGE_DOWN) {
-              newPos = oldPos + clipSize.height;
-            } else {
-              newPos = oldPos - clipSize.height;
-              if (newPos < 0)
-                newPos = 0;
-            }
-            ScrollTo(0, newPos, 0);
-          }
-
-        } break;
+        case NS_VK_PAGE_UP:
+          ScrollByPages((keyEvent->keyCode == NS_VK_PAGE_DOWN) ? 1 : -1);
+          break;
 
         case NS_VK_DOWN: 
-        case NS_VK_UP: {
-          nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
-          mVScrollBarView->GetWidget(win);
-
-          if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
-          {
-            PRUint32  oldPos  = 0;
-            scrollv->GetPosition(oldPos);
-            PRUint32  lineInc = 0;
-            scrollv->GetLineIncrement(lineInc);
-            nscoord   newPos = 0;
-            if (keyEvent->keyCode == NS_VK_DOWN) {
-              newPos = oldPos + lineInc;
-            } else {
-              newPos = oldPos - lineInc;
-              if (newPos < 0)
-                newPos = 0;
-            }
-            ScrollTo(0, newPos, 0);
-          }
-
-        } break;
+        case NS_VK_UP:
+          ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+          break;
 
         default:
           break;
+      }
+    }
 
-      } // switch
-    } break;
+    break;
 
 #if 0
     case NS_MOUSE_MOVE:
@@ -1597,5 +1560,65 @@ NS_IMETHODIMP nsScrollingView :: SetScrollProperties(PRUint32 aProperties)
 NS_IMETHODIMP nsScrollingView :: GetScrollProperties(PRUint32 *aProperties)
 {
   *aProperties = mScrollProperties;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: ScrollByLines(PRInt32 aNumLines)
+{
+  nsIScrollbar  *scrollv = nsnull;
+  nsIWidget     *win;
+
+  mVScrollBarView->GetWidget(win);
+
+  if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+  {
+    PRUint32  oldPos  = 0;
+    PRUint32  lineInc;
+    nscoord   newPos = 0;
+    nsSize    clipSize;
+
+    scrollv->GetPosition(oldPos);
+    scrollv->GetLineIncrement(lineInc);
+    mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+
+    newPos = oldPos + lineInc * aNumLines;
+
+    if (newPos < 0)
+      newPos = 0;
+    else if (newPos > (mSizeY - clipSize.height))
+      newPos = mSizeY - clipSize.height;
+
+    ScrollTo(0, newPos, 0);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollingView :: ScrollByPages(PRInt32 aNumPages)
+{
+  nsIScrollbar  *scrollv = nsnull;
+  nsIWidget     *win;
+
+  mVScrollBarView->GetWidget(win);
+
+  if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+  {
+    PRUint32  oldPos = 0;
+    nsSize    clipSize;
+    nscoord   newPos = 0;
+
+    scrollv->GetPosition(oldPos);
+    mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+
+    newPos = oldPos + clipSize.height * aNumPages;
+
+    if (newPos < 0)
+      newPos = 0;
+    else if (newPos > (mSizeY - clipSize.height))
+      newPos = mSizeY - clipSize.height;
+
+    ScrollTo(0, newPos, 0);
+  }
+
   return NS_OK;
 }

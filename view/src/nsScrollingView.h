@@ -64,6 +64,8 @@ public:
                                      PRBool *aHorizontalVisible) const;
   NS_IMETHOD  SetScrollProperties(PRUint32 aProperties);
   NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
+  NS_IMETHOD  ScrollByLines(PRInt32 aNumLines);
+  NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
 
   //private
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
