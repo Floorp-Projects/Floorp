@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/18 19:20:44 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/10/18 20:31:34 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -57,6 +57,11 @@
 #       starttime => The time the build started  (in time() format)
 #       endtime   => The time the build ended (in time() format)
 #       runtime   => The time it took the build to complete (in seconds)
+#       deadtime   => The time between the last build ending and 
+#                      this build starting (in seconds).  Most organizations 
+#                      will have this be zero all the time.  Some shops may 
+#                      run the build scrips through cron and this will cause 
+#                      'deadtime'.
 #
 #       errorparser => The error parser to use when parsing the logfiles
 #       full-log  => The basename of the log file contianing the full log
@@ -82,6 +87,9 @@
 
 # $DATABASE{$tree}{$buildname}{'average_buildtime'}
 #     the average time a sucessful build takes(in seconds).
+
+# $DATABASE{$tree}{$buildname}{'average_deadtime'}
+#     the average deadtime (in seconds).
 
 #  $METADATA{$tree}{'updates_since_trim'}+= 1
 
@@ -556,6 +564,8 @@ sub trim_db_history {
   my ($self, $tree, ) = (@_);
   
   my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
+  my (@run_times) = ();
+  my (@dead_times) = ();
 
   foreach $buildname (sort keys %{ $DATABASE{$tree} } ){
 
@@ -567,7 +577,11 @@ sub trim_db_history {
 
       if ( ($rec->{'status'} eq 'success') && 
            ($rec->{'runtime'}) ) {
-        push @times, $rec->{'runtime'};
+        push @run_times, $rec->{'runtime'};
+      }
+      
+      if ( $rec->{'deadtime'} ) {
+        push @dead_times, $rec->{'deadtime'};
       }
       
       if ($rec->{'starttime'} < $last_time) {
@@ -580,9 +594,13 @@ sub trim_db_history {
     # medians are a more robust statistical estimator then the mean.
     # They will give us better answers then a typical "average"
 
-    my $avg = main::median(@times);
-    ($avg) &&
-      ( $DATABASE{$tree}{$buildname}{'average_buildtime'} = $avg);
+    my $run_avg = main::median(@run_times);
+    ($run_avg) &&
+      ( $DATABASE{$tree}{$buildname}{'average_buildtime'} = $run_avg);
+    
+    my $dead_avg = main::median(@dead_times);
+    ($dead_avg) &&
+      ( $DATABASE{$tree}{$buildname}{'average_deadtime'} = $dead_avg);
     
     # the trim DB step
 
@@ -717,7 +735,9 @@ sub status_table_header {
     # create popup text discribing how this build is progressing
 
     my $avg_buildtime = $DATABASE{$tree}{$buildname}{'average_buildtime'};
+    my $avg_deadtime = $DATABASE{$tree}{$buildname}{'average_deadtime'};
     my $current_starttime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'starttime'};
+    my $previous_endtime = $DATABASE{$tree}{$buildname}{'recs'}[1]{'endtime'};
     
     my $txt ='';    
     my $num_lines;
@@ -748,6 +768,13 @@ sub status_table_header {
       $num_lines++;
     }
     
+    if ($avg_deadtime) {
+      my $min = sprintf ("%.0f",         # round
+                         $avg_deadtime/60);
+      $txt .= "avg_deadtime (minutes): &nbsp;$min<br>";
+      $num_lines++;
+    }
+    
     if ($current_starttime) {
       my $min =  sprintf ("%.0f",         # round
                           ($main::TIME  - $current_starttime)/60);
@@ -757,10 +784,18 @@ sub status_table_header {
       $num_lines += 2;
     }
 
+    my $estimated_remaining = undef;
     if ( ($avg_buildtime) && ($current_starttime) ) {
+      $estimated_remaining = ($avg_buildtime) + 
+        ($current_starttime - $main::TIME);
+    } elsif ( ($avg_deadtime) && ($avg_buildtime) && ($previous_endtime) ) {
+      $estimated_remaining = ($avg_deadtime + $avg_buildtime) + 
+        ($previus_endtime - $main::TIME);
+    }
+
+    if ($estimated_remaining) {
       my $min =  sprintf ("%.0f",         # round
-                          ( ($avg_buildtime + $current_starttime) -
-                            $main::TIME )/60);
+                          ($estimated_finish/60) );
       $txt .= "time_remaining (estimate): &nbsp;$min<br>";
       $num_lines++;
     }
@@ -889,8 +924,7 @@ sub apply_db_updates {
     # If there is a final disposition then we need to add a bunch of
     # other data which depends on what is already availible.
     
-    if ( ($buildstatus ne 'not_running') &&
-         ($buildstatus ne 'building') ) {
+    if ($buildstatus ne 'not_running') {
 
       if (
           ($buildstatus ne 'success') &&
@@ -906,6 +940,9 @@ sub apply_db_updates {
 
       $record->{'runtime'} = ( $record->{'timenow'} - 
                                $record->{'starttime'} );
+
+      $record->{'deadtime'} = ( $record->{'starttime'} - 
+                                $previous_rec->{'endtime'} );
 
       $record->{'endtime'} = $record->{'timenow'};
 
@@ -924,6 +961,11 @@ sub apply_db_updates {
       $info .= ("runtime: ".
                 sprintf("%.2f", ($record->{'runtime'}/60)).
                 " (minutes)<br>");
+      if ($record->{'deadtime'} > 0) {
+        $info .= ("deadtime: ".
+                  sprintf("%.2f", ($record->{'deadtime'}/60)).
+                  " (minutes)<br>");
+      }
       $info .= "buildstatus: $record->{'status'}<br>";
       $info .= "buildname: $record->{'buildname'}<br>";
       $info .= "tree: $record->{'tree'}<br>";
