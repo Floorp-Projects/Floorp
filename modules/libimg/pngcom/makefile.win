@@ -62,8 +62,8 @@ MAKE_OBJ_TYPE=DLL
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=nspng$(MOZ_BITS)$(VERSION_NUMBER)
-DLL1NAME=nspng$(MOZ_BITS)$(VERSION_NUMBER)
+DLLNAME=nspng
+DLL1NAME=nspng
 PDBFILE=$(DLLNAME).pdb
 MAPFILE=$(DLLNAME).map
 DEFFILE=nspng.def
