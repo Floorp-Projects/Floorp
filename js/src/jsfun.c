@@ -983,6 +983,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
+    /*
+     * Ok, check whether id is 'prototype' and bootstrap the function object's
+     * prototype property.
+     */
     str = JSVAL_TO_STRING(id);
     prototypeAtom = cx->runtime->atomState.classPrototypeAtom;
     if (str == ATOM_TO_STRING(prototypeAtom)) {
@@ -1002,20 +1006,21 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         }
 
         /*
-         * If resolving "prototype" in a clone, clone the parent's prototype.
-         * Beware of the wacky case of a user function Object() -- trying to
-         * build a prototype for that will recur back here ad perniciem.
+         * Beware of the wacky case of a user function named Object -- trying
+         * to find a prototype for that will recur back here ad perniciem.
          */
-        if (fun->atom != cx->runtime->atomState.ObjectAtom) {
-            /*
-             * Pass the constructor's (obj's) parent as the prototype parent,
-             * to avoid defaulting to parentProto.constructor.__parent__.
-             */
-            proto = js_NewObject(cx, &js_ObjectClass, parentProto,
-                                 OBJ_GET_PARENT(cx, obj));
-            if (!proto)
-                return JS_FALSE;
-        }
+        if (!parentProto && fun->atom == cx->runtime->atomState.ObjectAtom)
+            return JS_TRUE;
+
+        /*
+         * If resolving "prototype" in a clone, clone the parent's prototype.
+         * Pass the constructor's (obj's) parent as the prototype parent, to
+         * avoid defaulting to parentProto.constructor.__parent__.
+         */
+        proto = js_NewObject(cx, &js_ObjectClass, parentProto,
+                             OBJ_GET_PARENT(cx, obj));
+        if (!proto)
+            return JS_FALSE;
 
         /*
          * ECMA says that constructor.prototype is DontEnum | DontDelete for
