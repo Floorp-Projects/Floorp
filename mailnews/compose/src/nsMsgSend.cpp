@@ -1405,7 +1405,7 @@ PRUint32                  i;
           }
 
           nsXPIDLCString    spec;
-          nsIURI            *uri = doc->GetDocumentURL();
+          nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
 
           if (!uri)
             return NS_ERROR_OUT_OF_MEMORY;
