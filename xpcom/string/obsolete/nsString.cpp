@@ -190,6 +190,9 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
 void nsCString::SetLength(PRUint32 anIndex) {
   if ( anIndex > mCapacity )
     SetCapacity(anIndex);
+    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+    //  we can only use it since our local implementation, |nsCString::SetCapacity|, is known to do what we want
+
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -735,11 +738,12 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
  */
 PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   char*       cp=mStr;
-  PRInt32     theRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
+  PRInt32     theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
   PRInt32     result=0;
   PRBool      negate=PR_FALSE;
   char        theChar=0;
 
+    //initial value, override if we find an integer
   *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
   
   if(cp) {
@@ -771,12 +775,13 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
       } //switch
     }
 
-    theRadix = (kAutoDetect==aRadix) ? theRadix : aRadix;
-
-      //if you don't have any valid chars, return 0, but set the error;
-    *anErrorCode = NS_OK;
-
     if (done) {
+
+        //integer found
+      *anErrorCode = NS_OK;
+
+      if (aRadix!=kAutoDetect) theRadix = aRadix; // override
+
         //now iterate the numeric chars and build our result
       char* first=--cp;  //in case we have to back up.
 
@@ -1891,7 +1896,9 @@ NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
     // Make sure our buffer's big enough, so we don't need to do
     // multiple allocations.
     if(PRUint32(utf8len+1) > sizeof(mBuffer))
-      SetCapacity(utf8len+1); 
+      SetCapacity(utf8len+1);
+    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+    //  we can only use it since our local implementation, |nsCString::SetCapacity|, is known to do what we want
 
     char* out = mStr;
     PRUint32 ucs4=0;

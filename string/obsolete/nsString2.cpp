@@ -202,6 +202,8 @@ void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
 void nsString::SetLength(PRUint32 anIndex) {
   if ( anIndex > mCapacity )
     SetCapacity(anIndex);
+    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+    //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
   nsStr::Truncate(*this,anIndex);
 }
 
@@ -829,11 +831,12 @@ float nsString::ToFloat(PRInt32* aErrorCode) const {
  */
 PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   PRUnichar*  cp=mUStr;
-  PRInt32     theRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
+  PRInt32     theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
   PRInt32     result=0;
   PRBool      negate=PR_FALSE;
   PRUnichar   theChar=0;
 
+    //initial value, override if we find an integer
   *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
   
   if(cp) {
@@ -844,7 +847,6 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
     PRBool      done=PR_FALSE;
     
     while((cp<endcp) && (!done)){
-      theChar=*cp;
       switch(*cp++) {
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
@@ -866,17 +868,17 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
       } //switch
     }
 
-    theRadix = (kAutoDetect==aRadix) ? theRadix : aRadix;
+    if (done) {
 
-      //if you don't have any valid chars, return 0, but set the error;
-    if(cp<=endcp) {
-
+        //integer found
       *anErrorCode = NS_OK;
+
+     if (aRadix!=kAutoDetect) theRadix = aRadix; // override
 
         //now iterate the numeric chars and build our result
       PRUnichar* first=--cp;  //in case we have to back up.
 
-      while(cp<=endcp){
+      while(cp<endcp){
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
           result = (theRadix * result) + (theChar-'0');
@@ -2344,6 +2346,8 @@ NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
   // Grow the buffer if we need to.
   if ((count * sizeof(PRUnichar)) >= sizeof(mBuffer))
     SetCapacity(count + 1);
+    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
+    //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
 
   // We'll write directly into the new string's buffer
   PRUnichar* out = mUStr;
