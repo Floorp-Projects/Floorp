@@ -1232,7 +1232,6 @@ NS_METHOD nsMacWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 {
   nsresult rv;
-  PRInt32  currentMode;
 
   if (aMode == nsSizeMode_Minimized) // unlikely on the Mac
     return NS_ERROR_UNEXPECTED;
@@ -1241,12 +1240,10 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
   if (mZooming)
     return NS_OK;
 
-  // already done? it's bad to rezoom a window, so do nothing
-  rv = nsBaseWidget::GetSizeMode(&currentMode);
-  if (currentMode == nsSizeMode_Normal && !mVisible && mZoomOnShow)
-    currentMode = nsSizeMode_Maximized;
-  if (NS_SUCCEEDED(rv) && currentMode == aMode)
-    return NS_OK;
+  // even if our current mode is the same as aMode, keep going
+  // because the window can be maximized and zoomed, but partially
+  // offscreen, and we want a click of the maximize button to move
+  // it back onscreen.
 
   if (!mVisible) {
     /* zooming on the Mac doesn't seem to work until the window is visible.

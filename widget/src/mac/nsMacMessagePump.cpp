@@ -767,10 +767,6 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         nsWatchTask::GetTask().Suspend();       
         if (::TrackBox(whichWindow, anEvent.where, partCode))
         {
-          Rect windRect;
-          ::GetWindowPortBounds(whichWindow, &windRect);
-          ::EraseRect(&windRect);
-        
           if (partCode == inZoomOut)
           {
             nsCOMPtr<nsIWidget> topWidget;
