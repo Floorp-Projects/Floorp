@@ -56,7 +56,7 @@ public:
 
   enum {
     kOnError_Recover,       // on an error, recover and continue
-    kOnError_Signal,        // on an error, stop and signal
+    kOnError_Signal         // on an error, stop and signal
   };
 
   /**
