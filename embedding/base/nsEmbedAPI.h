@@ -29,15 +29,64 @@
 #include "nsIDirectoryService.h"
 
 
-/*
-    aPath       -> the mozilla bin directory. If nsnull, the default is used
-    aProvider   -> the application directory service provider. If nsnull, the
-                   default (nsAppFileLocationProvider) is constructed and used.
-*/
+/**
+ * Function to initialise the Gecko embedding APIs. You *must* call this
+ * method before any others!
+ *
+ *   aPath      -> the mozilla bin directory. If nsnull, the default is used
+ *   aProvider  -> the application directory service provider. If nsnull, the
+ *                 default (nsAppFileLocationProvider) is constructed and used.
+ */
 extern nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
                                  nsIDirectoryServiceProvider *appFileLocProvider);
+
+
+/**
+ * Function to call to finish the Gecko embedding APIs.
+ */
 extern nsresult NS_TermEmbedding();
 
+/*---------------------------------------------------------------------------*/
+/* Event processing APIs. The native OS dependencies mean you must be        */
+/* building on a supported platform to get the functions below.              */
+/*---------------------------------------------------------------------------*/
 
+#undef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
+
+/* Win32 specific stuff */
+#ifdef WIN32
+#include "windows.h"
+typedef MSG nsEmbedNativeEvent;
+#define MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 #endif
+
+/* Mac specific stuff */
+/* TODO implementation left as an exercise for the reader */
+
+/* GTK specific stuff */
+/* TODO implementation left as an exercise for the reader */
+
+
+#ifdef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
+
+/**
+ * Function to call during the idle time in your application and/or as each
+ * event is processed. This function ensures things such as timers are fired
+ * correctly.
+ */
+extern nsresult NS_DoIdleEmbeddingStuff();
+
+
+/**
+ * Function to call before handling an event. It gives Gecko the chance to
+ * handle the event first.
+ *
+ *   aEvent      -> the native UI event
+ *   aWasHandled -> returns with PR_TRUE if the event was handled by Gecko
+ */
+extern nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
+
+#endif /* MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING */
+
+#endif /* NSEMBEDAPI_H */
 
