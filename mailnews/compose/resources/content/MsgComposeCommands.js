@@ -43,7 +43,7 @@ var sComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 
 var sPrefs = null;
 var sPrefBranchInternal = null;
-var sOther_header = "";
+var sOther_headers = "";
 
 /* Create message window object. This is use by mail-offline.js and therefore should not be renamed. We need to avoid doing 
    this kind of cross file global stuff in the future and instead pass this object as parameter when needed by function
@@ -1459,7 +1459,7 @@ function ComposeLoad()
   }
 
   try {
-    sOther_header = sPrefs.getCharPref("mail.compose.other.header");
+    sOther_headers = sPrefs.getCharPref("mail.compose.other.header");
   }
   catch (ex) {
     dump("failed to get the mail.compose.other.header pref\n");
@@ -1476,13 +1476,16 @@ function ComposeLoad()
     var wizardcallback = true;
     var state = verifyAccounts(wizardcallback); // this will do migration, or create a new account if we need to.
 
-    if (sOther_header != "") {
-      var selectNode = document.getElementById('addressCol1#1');
-      selectNode = selectNode.childNodes[0];
-      var opt = document.createElement('menuitem');
-      opt.setAttribute("value", "addr_other");
-      opt.setAttribute("label", sOther_header + ":");
-      selectNode.appendChild(opt);
+    if (sOther_headers != "") {
+      var sOther_headers_Array = sOther_headers.split(",");
+      for (i = 0; i < sOther_headers_Array.length; i++) {
+        var selectNode = document.getElementById('addressCol1#1');
+        selectNode = selectNode.childNodes[0];
+        var opt = document.createElement('menuitem');
+        opt.setAttribute("value", "addr_other");
+        opt.setAttribute("label", sOther_headers_Array[i] + ":");
+        selectNode.appendChild(opt);
+      }
     }
     if (state)
       ComposeStartup(false, null);
