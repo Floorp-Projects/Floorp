@@ -295,7 +295,6 @@ nsMsgStatusFeedback.prototype =
 	},
   _startMeteors : function()
     {
-      dump('starting meteors\n');
       this.ensureStatusFields();
 
       this.meteorsSpinning = true;
@@ -332,7 +331,6 @@ nsMsgStatusFeedback.prototype =
 	},
    _stopMeteors : function()
     {
-      dump('stopping meteors\n');
       this.ensureStatusFields();
 	    // Record page loading time.
 	    var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
