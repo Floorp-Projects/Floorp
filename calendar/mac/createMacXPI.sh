@@ -1,5 +1,5 @@
 #!/bin/bash
-suffix="so"
+suffix="dylib"
 
 if [ -f calendar_mac.xpi ]; then 
    rm -rf calendar_mac.xpi
