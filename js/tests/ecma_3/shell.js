@@ -24,6 +24,9 @@
 
 var FAILED = "FAILED!: ";
 var STATUS = "STATUS: ";
+var BUGNUMBER = "BUGNUMBER: ";
+
+var VERBOSE = false;
 
 var callStack = new Array();
 
@@ -56,6 +59,16 @@ function printStatus (msg)
 }
 
 /*
+ * Print a bugnumber message.
+ */
+function printBugNumber (num)
+{
+
+    print (BUGNUMBER + num);
+
+}
+
+/*
  * Compare expected result to actual result, if they differ (in value and/or
  * type) report a failure.  If description is provided, include it in the 
  * failure report.
@@ -64,16 +77,31 @@ function reportCompare (expected, actual, description)
 {
     var expected_t = typeof expected;
     var actual_t = typeof actual;
+    var output = "";
     
-    if (typeof description != "undefined")
-        reportFailure (description);
-    
+    if ((VERBOSE) && (typeof description != "undefined"))
+        printStatus ("Comparing '" + description + "'");
+
     if (expected_t != actual_t)
-        reportFailure ("Type mismatch, expected type " + expected + 
-                      ", actual type " + actual);        
+        output += "Type mismatch, expected type " + expected_t + 
+            ", actual type " + actual_t + "\n";
+    else if (VERBOSE)
+        printStatus ("Expected type '" + actual_t + "' matched actual " +
+                     "type '" + expected_t + "'");
 
     if (expected != actual)
-        reportFailure ("Expected " + expected + ", Actual " + actual);
+        output += "Expected value '" + expected + "', Actual value '" + actual +
+            "'\n";
+    else if (VERBOSE)
+        printStatus ("Expected value '" + actual + "' matched actual " +
+                     "value '" + expected + "'");
+
+    if (output != "")
+    {
+        if (typeof description != "undefined")
+            reportFailure (description);
+        reportFailure (output);   
+    }
 
 }
 
