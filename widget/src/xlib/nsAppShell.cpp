@@ -24,7 +24,7 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
  *   Caspian Maclean <caspian@igelaus.com.au>
- *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -63,26 +63,16 @@
 #include "nsIDragSessionXlib.h"
 #include "nsITimer.h"
 
-#include "nsIXlibWindowService.h"
-
 #include "xlibrgb.h"
 
-#define CHAR_BUF_SIZE 40
+#define CHAR_BUF_SIZE 80
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
-static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-
-// // this is so that we can get the timers in the base.  most widget
-// // toolkits do this through some set of globals.  not here though.  we
-// // don't have that luxury
-extern "C" int NS_TimeToNextTimeout(struct timeval *);
-extern "C" void NS_ProcessTimeouts(void);
-
+/* nsAppShell static members */
 Display *nsAppShell::mDisplay = nsnull;
 XlibRgbHandle *nsAppShell::mXlib_rgb_handle = nsnull;
 XtAppContext nsAppShell::mAppContext;
@@ -97,6 +87,9 @@ PRPackedBool nsAppShell::mCtrlDown  = PR_FALSE;
 PRPackedBool nsAppShell::mMetaDown  = PR_FALSE;
 PRPackedBool nsAppShell::DieAppShellDie = PR_FALSE;
 
+static PLHashTable *sQueueHashTable = nsnull;
+static PLHashTable *sCountHashTable = nsnull;
+static nsVoidArray *sEventQueueList = nsnull;
 
 
 // For debugging.
@@ -139,104 +132,6 @@ static const char *event_names[] =
   "MappingNotify"
 };
 
-static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
-{
-  static nsXlibTimeToNextTimeoutFunc sFunc = nsnull;
-
-  if (!sFunc)
-  {
-    nsIXlibWindowService * xlibWindowService = nsnull;
-    
-    nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
-                                               kWindowServiceIID,
-                                               (nsISupports **)&xlibWindowService);
-    
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
-    
-    if (NS_SUCCEEDED(rv) && nsnull != xlibWindowService)
-    {
-      xlibWindowService->GetTimeToNextTimeoutFunc(&sFunc);
-
-#ifdef DEBUG_ramiro
-      printf("Time to next timeout func is null - for now.\n");
-
-      static int once = 1;
-
-      if (once && sFunc)
-      {
-        once = 0;
-
-        printf("YES! Time to next timeout func is good.\n");
-      }
-#endif
-      
-      NS_RELEASE(xlibWindowService);
-    }
-  }
-
-  return sFunc;
-}
-
-static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
-{
-  static nsXlibProcessTimeoutsProc sProc = nsnull;
-
-  if (!sProc)
-  {
-    nsIXlibWindowService * xlibWindowService = nsnull;
-    
-    nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
-                                               kWindowServiceIID,
-                                               (nsISupports **)&xlibWindowService);
-    
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service.");
-    
-    if (NS_SUCCEEDED(rv) && nsnull != xlibWindowService)
-    {
-      xlibWindowService->GetProcessTimeoutsProc(&sProc);
-    
-#ifdef DEBUG_ramiro
-      printf("Process timeout proc is null - for now.\n");
-
-      static int once = 1;
-
-      if (once && sProc)
-      {
-        once = 0;
-
-        printf("YES! Process timeout proc is good.\n");
-      }
-#endif
-
-      NS_RELEASE(xlibWindowService);
-    }
-  }
-
-  return sProc;
-}
-
-static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
-{
-  nsXlibTimeToNextTimeoutFunc func = GetTimeToNextTimeoutFunc();
-
-  if (func)
-  {
-    return (*func)(aTimeval);
-  }
-
-  return 0;
-}
-
-static void CallProcessTimeoutsProc(XtAppContext app_context)
-{
-  nsXlibProcessTimeoutsProc proc = GetProcessTimeoutsProc();
-
-  if (proc)
-  {
-    (*proc)(app_context);
-  }
-}
-
 #define COMPARE_FLAG1( a,b) ((b)[0]=='-' && !strcmp((a), &(b)[1]))
 #define COMPARE_FLAG2( a,b) ((b)[0]=='-' && (b)[1]=='-' && !strcmp((a), &(b)[2]))
 #define COMPARE_FLAG12(a,b) ((b)[0]=='-' && !strcmp((a), (b)[1]=='-'?&(b)[2]:&(b)[1]))
@@ -257,8 +152,10 @@ nsAppShell::nsAppShell()
   NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 
+  if (!sEventQueueList)
+    sEventQueueList = new nsVoidArray();
+
   mEventQueue = nsnull;
-  xlib_fd = -1;
 }
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
@@ -374,70 +271,55 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
   return NS_OK;
 }
 
-NS_METHOD nsAppShell::Spinup()
+NS_IMETHODIMP nsAppShell::Spinup()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  NS_ADDREF_THIS();
+#ifdef DEBUG_APPSHELL
+  printf("nsAppShell::Spinup()\n");
+#endif
 
-  // get the event queue service
-  rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **) &mEventQueueService);
+  /* Get the event queue service */
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID, &rv);
+
   if (NS_FAILED(rv)) {
     NS_WARNING("Could not obtain event queue service");
     return rv;
   }
-  rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  // If a queue already present use it.
-  if (mEventQueue)
-    return NS_OK;
 
-  // Create the event queue for the thread
-  rv = mEventQueueService->CreateThreadEventQueue();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Could not create the thread event queue");
-    return rv;
-  }
-  //Get the event queue for the thread
-  rv = mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);  
-  if (NS_FAILED(rv)) {
-      NS_WARNING("Could not obtain the thread event queue");
+  /* Get the event queue for the thread.*/
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+  
+  /* If we got an event queue, use it. */
+  if (!mEventQueue) {
+    /* otherwise create a new event queue for the thread */
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Could not create the thread event queue");
       return rv;
-  }   
-  return NS_OK;
+    }
+
+    /* Ask again nicely for the event queue now that we have created one. */
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
+  }
+
+  ListenToEventQueue(mEventQueue, PR_TRUE);
+
+  return rv;
 }
 
-/* XtTimerCallbackProc!! */
-static
-void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 )
-{
-  XtAppContext *app_context = (XtAppContext *) dummy1;
-  CallProcessTimeoutsProc(*app_context);
-
-  // Flush the nsWindow's drawing queue
-  nsWindow::UpdateIdle(nsnull); 
-
-  // reset timer
-#define CALLPROCESSTIMEOUTSVAL (10)
-  XtAppAddTimeOut(*app_context, 
-                  CALLPROCESSTIMEOUTSVAL,
-                  CallProcessTimeoutsXtProc, 
-                  app_context);
-}
-
-/* XtInputCallbackProc */
+/* must be a |XtInputCallbackProc| !! */
+PR_BEGIN_EXTERN_C
 static
 void HandleQueueXtProc(XtPointer ptr, int *source_fd, XtInputId* id)
 {
   nsIEventQueue *queue = (nsIEventQueue *)ptr;
   queue->ProcessPendingEvents();
 }
+PR_END_EXTERN_C
 
 nsresult nsAppShell::Run()
 {
-  nsresult rv = NS_OK;
-  XtInputMask mask;
-  
   if (mEventQueue == nsnull)
     Spinup();
 
@@ -445,112 +327,157 @@ nsresult nsAppShell::Run()
     NS_WARNING("Cannot initialize the Event Queue");
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  // set up our fds callbacks
-  XtAppAddInput(mAppContext,
-                mEventQueue->GetEventQueueSelectFD(),
-                (XtPointer)(long)(XtInputReadMask),
-                HandleQueueXtProc,
-                (XtPointer)mEventQueue);
-
-  // set initial timer
-  XtAppAddTimeOut(mAppContext, 
-                  CALLPROCESSTIMEOUTSVAL,
-                  CallProcessTimeoutsXtProc, 
-                  &mAppContext);
-                
-  // process events.
+               
+  XEvent xevent;
+  
+  /* process events. */
   while (!DieAppShellDie) 
   {   
-    XEvent event;
-    XtAppNextEvent(mAppContext, &event);
-   
-    if (XtDispatchEvent(&event) == False)
-      DispatchXEvent(&event);  
+    XtAppNextEvent(mAppContext, &xevent);
+  
+    if (XtDispatchEvent(&xevent) == False)
+      DispatchXEvent(&xevent);
+    
+    if (XEventsQueued(mDisplay, QueuedAlready) == 0)
+    {
+      /* Flush the nsWindow's drawing queue */
+      nsWindow::UpdateIdle(nsnull);
+    }
   }
-  DieAppShellDie = PR_FALSE;
-
+  
   Spindown();
-  return rv;
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::Spindown()
 {
-  NS_IF_RELEASE(mEventQueueService);
   Release();
 
   if (mEventQueue) {
+    ListenToEventQueue(mEventQueue, PR_FALSE);
     mEventQueue->ProcessPendingEvents();
-    NS_IF_RELEASE(mEventQueue);
+    mEventQueue = nsnull;
   }
 
   return NS_OK;
 }
 
+#define NUMBER_HASH_KEY(_num) ((PLHashNumber) _num)
+
+static PLHashNumber
+IntHashKey(PRInt32 key)
+{
+  return NUMBER_HASH_KEY(key);
+}
+// wrapper so we can call a macro
+PR_BEGIN_EXTERN_C
+static unsigned long getNextRequest (void *aClosure) {
+  return XNextRequest(nsAppShell::mDisplay);
+}
+PR_END_EXTERN_C
+
+NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
+                                             PRBool aListen)
+{
+#ifdef DEBUG_APPSHELL
+  printf("ListenToEventQueue(%p, %d) this=%p\n", aQueue, aListen, this);
+#endif
+  if (!sQueueHashTable) {
+    sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }
+  if (!sCountHashTable) {
+    sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }    
+
+  int   queue_fd = aQueue->GetEventQueueSelectFD();
+  void *key      = aQueue;
+  if (aListen) {
+    /* Add listener -
+     * but only if we arn't already in the table... */
+    if (!PL_HashTableLookup(sQueueHashTable, key)) {
+      int tag;
+      
+      /* set up our fds callbacks */
+      tag = (int)XtAppAddInput(mAppContext,
+                               queue_fd,
+                               (XtPointer)(long)(XtInputReadMask),
+                               HandleQueueXtProc,
+                               (XtPointer)mEventQueue);
+
+/* This hack would not be neccesary if we would have a hashtable function
+ * which returns success/failure in a seperate var ...
+ */
+#define NEVER_BE_ZERO_MAGIC (54321) 
+      tag += NEVER_BE_ZERO_MAGIC; /* be sure that |tag| is _never_ 0 */
+      NS_ASSERTION(tag!=0, "tag is 0 while adding");
+      
+      if (tag) {
+        PL_HashTableAdd(sQueueHashTable, key, (void *)tag);
+      }
+      
+      PLEventQueue *plqueue;
+      aQueue->GetPLEventQueue(&plqueue);
+      PL_RegisterEventIDFunc(plqueue, getNextRequest, 0);
+      sEventQueueList->AppendElement(plqueue);
+    }
+  } else {
+    /* Remove listener... */   
+    PLEventQueue *plqueue;
+    aQueue->GetPLEventQueue(&plqueue);
+    PL_UnregisterEventIDFunc(plqueue);
+    sEventQueueList->RemoveElement(plqueue);
+
+    int tag = int(PL_HashTableLookup(sQueueHashTable, key));
+    if (tag) {
+      tag -= NEVER_BE_ZERO_MAGIC;
+      XtRemoveInput((XtInputId)tag);
+      PL_HashTableRemove(sQueueHashTable, key);
+    }  
+  }
+
+  return NS_OK;
+}
+
+/* Does nothing. Used by xp code with non-gtk expectations.
+ * this method will be removed once xp eventloops are working.
+ */
 NS_METHOD
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-  fd_set select_set;
-  int select_retval;
-  int max_fd;
-  struct timeval DelayTime;
-  XEvent *event;
-
-  int queue_fd = mEventQueue->GetEventQueueSelectFD();
-
-  if (xlib_fd == -1)
-    xlib_fd = XConnectionNumber(mDisplay);
-
-  if (xlib_fd >= queue_fd) {
-    max_fd = xlib_fd + 1;
-  } else {
-    max_fd = queue_fd + 1;
-  }
-
-  FD_ZERO(&select_set);
-  FD_SET(queue_fd, &select_set);
-  FD_SET(xlib_fd, &select_set);
-
-  DelayTime.tv_sec = 0;
-  DelayTime.tv_usec = 100;
-
-  select_retval = select(max_fd, &select_set, nsnull, nsnull, &DelayTime);
-
-  if (select_retval == -1)
-    return NS_ERROR_FAILURE;
-
-  if (XPending(mDisplay)) {
-    event = (XEvent *)malloc(sizeof(XEvent));
-    XNextEvent(mDisplay, event);
-    aRealEvent = PR_TRUE;
-    aEvent = event;
-    return NS_OK;
-  }
   aRealEvent = PR_FALSE;
-  aEvent = nsnull;
+  aEvent     = nsnull;
+
   return NS_OK;
 }
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  nsresult rv;
-  XEvent *event;
-  if (mEventQueue == nsnull) {
+  XEvent xevent;
+  
+  if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
+
+#if 1
+  /* gisburn: Why do we have to call this explicitly ?
+   * I have registered a callback via XtAddAppInput() above... 
+   */  
+  mEventQueue->ProcessPendingEvents();  
+#endif
+
+  XtAppNextEvent(mAppContext, &xevent);
+    
+  if (XtDispatchEvent(&xevent) == False)
+    DispatchXEvent(&xevent);
+   
+  if (XEventsQueued(mDisplay, QueuedAlready) == 0)
+  {
+    /* Flush the nsWindow's drawing queue */
+    nsWindow::UpdateIdle(nsnull);
   }
-
-  rv = mEventQueue->ProcessPendingEvents();
-
-  if (aRealEvent) {
-    event = (XEvent *)aEvent;
-    DispatchXEvent(event);
-    free(event);
-  }
-
-  CallProcessTimeoutsProc(mAppContext);
-
-  nsWindow::UpdateIdle(nsnull);
-  return rv;
+    
+  return NS_OK;
 }
 
 NS_METHOD nsAppShell::Exit()
@@ -573,7 +500,6 @@ nsAppShell::DispatchXEvent(XEvent *event)
 {
   nsWidget *widget;
   widget = nsWidget::GetWidgetForWindow(event->xany.window);
-
 
   // did someone pass us an x event for a window we don't own?
   // bad! bad!
@@ -885,8 +811,9 @@ PRUint32 nsConvertCharCodeToUnicode(XKeyEvent* xkey)
   unsigned char  string_buf[CHAR_BUF_SIZE];
   int            len = 0;
 
-  len = XLookupString(xkey, (char *)string_buf, CHAR_BUF_SIZE, &keysym, &compose);
-  if (0 == len) return 0;
+  len = XLookupString(xkey, (char *)string_buf, CHAR_BUF_SIZE-1, &keysym, &compose);
+  if (0 == len)
+    return 0;
 
   if (xkey->state & ControlMask) {
     if (xkey->state & ShiftMask) {
@@ -909,12 +836,12 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
   char      string_buf[CHAR_BUF_SIZE];
   int       len = 0;
-  Window    focusWindow = 0;
+  Window    focusWindow = None;
   nsWidget *focusWidget = 0;
 
   // figure out where the real focus should go...
   focusWindow = nsWidget::GetFocusWindow();
-  if (focusWindow) {
+  if (focusWindow != None) {
     focusWidget = nsWidget::GetWidgetForWindow(focusWindow);
   }
 
@@ -961,7 +888,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 
   XComposeStatus compose;
 
-  len = XLookupString(&event->xkey, string_buf, CHAR_BUF_SIZE, &keysym, &compose);
+  len = XLookupString(&event->xkey, string_buf, CHAR_BUF_SIZE-1, &keysym, &compose);
   string_buf[len] = '\0';
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);

@@ -39,73 +39,57 @@
 
 #include "nsTimerXlib.h"
 
-#include "nsIXlibWindowService.h"
-#include "nsIServiceManager.h"
-
 #include "nsVoidArray.h"
 #include <unistd.h>
 #include <stdio.h>
 
-#include "prlog.h"
-
-#include <X11/Xlib.h>
+#include <xlibrgb.h>
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-static int  NS_TimeToNextTimeout(struct timeval *aTimer);
-static void NS_ProcessTimeouts(XtAppContext app_context);
-
 nsVoidArray *nsTimerXlib::gHighestList = (nsVoidArray *)nsnull;
-nsVoidArray *nsTimerXlib::gHighList = (nsVoidArray *)nsnull;
-nsVoidArray *nsTimerXlib::gNormalList = (nsVoidArray *)nsnull;
-nsVoidArray *nsTimerXlib::gLowList = (nsVoidArray *)nsnull;
-nsVoidArray *nsTimerXlib::gLowestList = (nsVoidArray *)nsnull;
-PRBool nsTimerXlib::gTimeoutAdded = PR_FALSE;
-PRBool nsTimerXlib::gProcessingTimer = PR_FALSE;
+nsVoidArray *nsTimerXlib::gHighList    = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gNormalList  = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gLowList     = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gLowestList  = (nsVoidArray *)nsnull;
+PRPackedBool nsTimerXlib::gTimeoutAdded = PR_FALSE;
+Display *nsTimerXlib::mDisplay = nsnull;
 
-nsTimerXlib::nsTimerXlib()
+/* Interval how controlls how often we visit the timer queues ...*/
+#define CALLPROCESSTIMEOUTSVAL (10)
+
+/* local prototypes */
+PR_BEGIN_EXTERN_C
+static void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 );
+PR_END_EXTERN_C
+
+nsTimerXlib::nsTimerXlib() :
+  mFunc(nsnull),
+  mCallback(nsnull),
+  mDelay(0),
+  mClosure(nsnull),
+  mPriority(0),
+  mType(NS_TYPE_ONE_SHOT),
+  mQueued(PR_FALSE)
 {
-#ifdef TIMER_DEBUG
-  fprintf(stderr, "nsTimerXlib::nsTimerXlib (%p) called.\n", this);
-#endif
-
   NS_INIT_REFCNT();
-  mFunc = nsnull;
-  mCallback = nsnull;
-  mDelay = 0;
-  mClosure = nsnull;
-  mPriority = 0;
-  mType = NS_TYPE_ONE_SHOT;
 }
 
 nsTimerXlib::~nsTimerXlib()
-{
-#ifdef TIMER_DEBUG
-  fprintf(stderr, "nsTimerXlib::~nsTimerXlib (%p) called.\n", this);
-#endif
-  
+{ 
   Cancel();
   NS_IF_RELEASE(mCallback);
 }
 
-/*static*/ void nsTimerXlib::Shutdown()
+void nsTimerXlib::Shutdown()
 {
-  delete nsTimerXlib::gHighestList;
-  nsTimerXlib::gHighestList = nsnull;
+  if (gHighestList) delete gHighestList; gHighestList = nsnull;
+  if (gHighList)    delete gHighList;    gHighList    = nsnull;
+  if (gNormalList)  delete gNormalList;  gNormalList  = nsnull;
+  if (gLowList)     delete gLowList;     gLowList     = nsnull;
+  if (gLowestList)  delete gLowestList;  gLowestList  = nsnull;
 
-  delete nsTimerXlib::gHighList;
-  nsTimerXlib::gHighList = nsnull;
-
-  delete nsTimerXlib::gNormalList;
-  nsTimerXlib::gNormalList = nsnull;
-
-  delete nsTimerXlib::gLowList;
-  nsTimerXlib::gLowList = nsnull;
-
-  delete nsTimerXlib::gLowestList;
-  nsTimerXlib::gLowestList = nsnull;
-
-  nsTimerXlib::gTimeoutAdded = PR_FALSE;
+  gTimeoutAdded = PR_FALSE;
 }
 
 NS_IMPL_ISUPPORTS1(nsTimerXlib, nsITimer)
@@ -163,37 +147,56 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
 
   if (!gTimeoutAdded)
   {
-    nsTimerXlib::gHighestList = new nsVoidArray;
-    nsTimerXlib::gHighList = new nsVoidArray;
-    nsTimerXlib::gNormalList = new nsVoidArray;
-    nsTimerXlib::gLowList = new nsVoidArray;
-    nsTimerXlib::gLowestList = new nsVoidArray;
+    mDisplay = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
+    NS_ASSERTION(mDisplay!=nsnull, "xxlib_rgb_get_display() returned nsnull display. BAD.");
+    XtAppContext app_context = XtDisplayToApplicationContext(mDisplay);
+    NS_ASSERTION(app_context!=nsnull, "XtDisplayToApplicationContext() returned nsnull Xt app context. BAD.");
+    if (!app_context)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    gHighestList = new nsVoidArray(64);
+    gHighList    = new nsVoidArray(64);
+    gNormalList  = new nsVoidArray(64);
+    gLowList     = new nsVoidArray(64);
+    gLowestList  = new nsVoidArray(64);
+
+    if (!(gHighestList && gHighList && gNormalList && gLowList && gLowestList)) {
+      NS_WARNING("nsTimerXlib initalisation failed. DIE!");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }  
     
-    nsTimerXlib::gTimeoutAdded = PR_TRUE;
+    // start timers
+    XtAppAddTimeOut(app_context, 
+                    CALLPROCESSTIMEOUTSVAL,
+                    CallProcessTimeoutsXtProc, 
+                    app_context);
+
+    gTimeoutAdded = PR_TRUE;
   }
 
   switch (aPriority)
   {
     case NS_PRIORITY_HIGHEST:
-      nsTimerXlib::gHighestList->InsertElementAt(this, 0);
+      mQueued = gHighestList->AppendElement(this);
       break;
     case NS_PRIORITY_HIGH:
-      nsTimerXlib::gHighList->InsertElementAt(this, 0);
+      mQueued = gHighList->AppendElement(this);
       break;
     case NS_PRIORITY_NORMAL:
-      nsTimerXlib::gNormalList->InsertElementAt(this, 0);
+      mQueued = gNormalList->AppendElement(this);
       break;
     case NS_PRIORITY_LOW:
-      nsTimerXlib::gLowList->InsertElementAt(this, 0);
+      mQueued = gLowList->AppendElement(this);
       break;
+    default:  
     case NS_PRIORITY_LOWEST:
-      nsTimerXlib::gLowestList->InsertElementAt(this, 0);
-      break;
+      mQueued = gLowestList->AppendElement(this);
+      break;  
   }
-
-  EnsureWindowService();
-
-  return NS_OK;
+  
+  NS_ASSERTION(mQueued, "can't add timer to queue list!");
+  
+  return (mQueued)?(NS_OK):(NS_ERROR_OUT_OF_MEMORY);
 }
 
 PRBool
@@ -201,18 +204,6 @@ nsTimerXlib::Fire()
 {
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
 
-#ifdef TIMER_DEBUG
-  fprintf(stderr, "*** PRIORITY is %x ***\n", mPriority);
-#endif
-  
-  timeval aNow;
-  gettimeofday(&aNow, nsnull);
-
-#ifdef TIMER_DEBUG  
-  fprintf(stderr, "nsTimerXlib::Fire (%p) called at %ld / %ld\n",
-          this, aNow.tv_sec, aNow.tv_usec);
-#endif
-  
   if (mFunc != nsnull) {
     (*mFunc)(this, mClosure);
   }
@@ -226,22 +217,25 @@ nsTimerXlib::Fire()
 void
 nsTimerXlib::Cancel()
 {
+  if (!mQueued)
+    return;
+    
   switch(mPriority)
   {
     case NS_PRIORITY_HIGHEST:
-      nsTimerXlib::gHighestList->RemoveElement(this);
+      gHighestList->RemoveElement(this);
       break;
     case NS_PRIORITY_HIGH:
-      nsTimerXlib::gHighList->RemoveElement(this);
+      gHighList->RemoveElement(this);
       break;
     case NS_PRIORITY_NORMAL:
-      nsTimerXlib::gNormalList->RemoveElement(this);
+      gNormalList->RemoveElement(this);
       break;
     case NS_PRIORITY_LOW:
-      nsTimerXlib::gLowList->RemoveElement(this);
+      gLowList->RemoveElement(this);
       break;
     case NS_PRIORITY_LOWEST:
-      nsTimerXlib::gLowestList->RemoveElement(this);
+      gLowestList->RemoveElement(this);
       break;
   }
 }
@@ -320,134 +314,41 @@ void nsTimerXlib::SetType(PRUint32 aType)
 {
   mType = aType;
 }
-           
 
-static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
-static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-
-nsresult
-nsTimerXlib::EnsureWindowService()
+void nsTimerXlib::CallProcessTimeouts(XtAppContext app_context)
 {
-  nsIXlibWindowService * xlibWindowService = nsnull;
-
-  nsresult rv = nsServiceManager::GetService(kWindowServiceCID,
-                                             kWindowServiceIID,
-                                             (nsISupports **)&xlibWindowService);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't obtain window service.");
-
-  if (NS_SUCCEEDED(rv) && (nsnull != xlibWindowService))
+  ProcessTimeouts(gHighestList);
+  ProcessTimeouts(gHighList);
+  ProcessTimeouts(gNormalList);
+ 
+  /* no X events anymore ? then crawl the low priority timers ...
+   * Smallish hack: |if ((XtAppPending(app_context) & XtIMXEvent) == 0)|
+   *  would be the correct way in libXt apps. - but I want to avoid any
+   * possible call to XFlush() ...
+   */
+  if (XEventsQueued(mDisplay, QueuedAlready) == 0)
   {
-    xlibWindowService->SetTimeToNextTimeoutFunc(NS_TimeToNextTimeout);
-    xlibWindowService->SetProcessTimeoutsProc(NS_ProcessTimeouts);
-
-    NS_RELEASE(xlibWindowService);
+    ProcessTimeouts(gLowList);
+    ProcessTimeouts(gLowestList);
   }
-
-  return NS_OK;
 }
 
+/* must be a |XtInputCallbackProc| !! */
+PR_BEGIN_EXTERN_C
 static
-int NS_TimeToNextTimeout(struct timeval *aTimer) 
+void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 )
 {
-#ifdef DEBUG
-  static int once = 1;
+  XtAppContext app_context = (XtAppContext) dummy1;
 
-  if (once)
-  {
-    once = 0;
-
-    printf("NS_TimeToNextTimeout() lives!\n");
-  }
-#endif /* DEBUG */  
+  nsTimerXlib::CallProcessTimeouts(app_context);
   
-  nsTimerXlib *timer;
-
-  // Find the next timeout.
-  
-  if (nsTimerXlib::gHighestList->Count() > 0)
-    timer = (nsTimerXlib*)nsTimerXlib::gHighestList->ElementAt(0);
-  else
-    if (nsTimerXlib::gHighList->Count() > 0)
-      timer = (nsTimerXlib*)nsTimerXlib::gHighList->ElementAt(0);
-    else
-      if (nsTimerXlib::gNormalList->Count() > 0)
-        timer = (nsTimerXlib*)nsTimerXlib::gNormalList->ElementAt(0);
-      else
-        if (nsTimerXlib::gLowList->Count() > 0)
-          timer = (nsTimerXlib*)nsTimerXlib::gLowList->ElementAt(0);
-        else
-          if (nsTimerXlib::gLowestList->Count() > 0)
-            timer = (nsTimerXlib*)nsTimerXlib::gLowestList->ElementAt(0);
-          else
-            timer = nsnull;
-    
-  if (timer) {
-    if ((timer->mFireTime.tv_sec < aTimer->tv_sec) ||
-        ((timer->mFireTime.tv_sec == aTimer->tv_sec) &&
-         (timer->mFireTime.tv_usec <= aTimer->tv_usec))) {
-      aTimer->tv_sec = 0;
-      aTimer->tv_usec = 0;
-      return 1;
-    }
-    else {
-      if (aTimer->tv_sec < timer->mFireTime.tv_sec)
-        aTimer->tv_sec = timer->mFireTime.tv_sec - aTimer->tv_sec;
-      else 
-        aTimer->tv_sec = 0;
-      // handle the overflow case
-      if (aTimer->tv_usec < timer->mFireTime.tv_usec) {
-        aTimer->tv_usec = timer->mFireTime.tv_usec - aTimer->tv_usec;
-        // make sure we don't go past zero when we decrement
-        if (aTimer->tv_sec)
-          aTimer->tv_sec--;
-      }
-      else {
-        aTimer->tv_usec -= timer->mFireTime.tv_usec;
-      }
-      return 1;
-    }
-  }
-  else {
-    return 0;
-  }
+  /* reset timer */
+  XtAppAddTimeOut(app_context, 
+                  CALLPROCESSTIMEOUTSVAL,
+                  CallProcessTimeoutsXtProc, 
+                  app_context);
 }
+PR_END_EXTERN_C
 
-static
-void
-NS_ProcessTimeouts(XtAppContext app_context) 
-{
-#ifdef DEBUG
-  static int once = 1;
 
-  if (once)
-  {
-    once = 0;
-
-    printf("NS_ProcessTimeouts() lives!\n");
-  }
-#endif /* DEBUG */
-
-  nsTimerXlib::gProcessingTimer = PR_TRUE;
-
-  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighestList);
-  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighList);
-  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gNormalList);
-  
-  /* no X events anymore ? then crawl the low priority timers ... */ 
-  if ((XtAppPending(app_context) & XtIMXEvent) == 0)
-  {
-#ifdef TIMER_DEBUG
-    fprintf(stderr, "\n Handling Low Priority Stuff!!! Display is 0x%x\n", aDisplay);
-#endif    
-    nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowList);
-    nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowestList);
-  }
-#ifdef TIMER_DEBUG  
-  else
-    fprintf(stderr, "\n Handling Event Stuff!!!", aDisplay);
-#endif
-  
-  nsTimerXlib::gProcessingTimer = PR_FALSE;
-}
 

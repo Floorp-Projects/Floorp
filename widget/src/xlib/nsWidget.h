@@ -47,7 +47,6 @@
 #include "nsHashtable.h"
 #include "prlog.h"
 #include "nsIRegion.h"
-#include "nsIXlibWindowService.h"
 #include "nsIRollupListener.h"
 #include "xlibrgb.h"
 
@@ -159,10 +158,6 @@ public:
 
   PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
 
-//   static nsresult         SetXlibWindowCallback(nsXlibWindowCallback *aCallback);
-//   static nsresult         XWindowCreated(Window aWindow);
-//   static nsresult         XWindowDestroyed(Window aWindow);
-
   // these are for the wm protocols
   static Atom   WMDeleteWindow;
   static Atom   WMTakeFocus;
@@ -245,10 +240,6 @@ protected:
   PRBool       mListenForResizes;     // If we're native we want to listen.
   static       nsHashtable *          gsWindowList;
   static       Cursor                 gsXlibCursorCache[eCursor_count_up_down + 1];
-
-  static       nsXlibWindowCallback   gsWindowCreateCallback;
-  static       nsXlibWindowCallback   gsWindowDestroyCallback;
-  static       nsXlibEventDispatcher  gsEventDispatcher;
 
   // Variables for infomation about the current popup window and its listener
   static nsCOMPtr<nsIRollupListener> gRollupListener;

@@ -48,7 +48,7 @@
 
 class nsAppShell : public nsIAppShell
 {
-  public:
+public:
   nsAppShell(); 
   virtual ~nsAppShell();
 
@@ -60,10 +60,9 @@ class nsAppShell : public nsIAppShell
   virtual nsresult      Run(); 
   NS_IMETHOD            Spinup();
   NS_IMETHOD            Spindown();
-  NS_IMETHOD            ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
-                          { return NS_OK; }
+  NS_IMETHOD            ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen);
   NS_IMETHOD            GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-  NS_IMETHOD            DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
+  NS_IMETHOD            DispatchNativeEvent(PRBool aRealEvent, void *aEvent);
   
   NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
   NS_IMETHOD            Exit();
@@ -77,8 +76,8 @@ class nsAppShell : public nsIAppShell
   static Display       *mDisplay;
  private:
   static XlibRgbHandle *mXlib_rgb_handle;
-  int                   xlib_fd;
-  nsDispatchListener*     mDispatchListener;
+  nsDispatchListener*   mDispatchListener;
+  
   static void HandleButtonEvent(XEvent *event, nsWidget *aWidget);
   static void HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget);
   static void HandleExposeEvent(XEvent *event, nsWidget *aWidget);
@@ -111,8 +110,7 @@ class nsAppShell : public nsIAppShell
   static PRPackedBool DieAppShellDie;
 
 protected:
-  nsIEventQueueService *mEventQueueService;
-  nsIEventQueue        *mEventQueue;
+  nsCOMPtr<nsIEventQueue>  mEventQueue;
 };
 
 #endif /* !nsAppShell_h__ */

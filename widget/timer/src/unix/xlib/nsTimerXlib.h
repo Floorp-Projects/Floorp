@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Tony Tsui <tony@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,6 +44,8 @@
 #include "nsITimerCallback.h"
 
 #include <sys/time.h>
+
+#include <X11/Intrinsic.h>
 
 class nsVoidArray;
 
@@ -83,26 +86,28 @@ public:
 
   virtual void *GetClosure() { return mClosure; }
 
-  static nsVoidArray *gHighestList;
-  static nsVoidArray *gHighList;
-  static nsVoidArray *gNormalList;
-  static nsVoidArray *gLowList;
-  static nsVoidArray *gLowestList;
+  /* semi-private, only for |CallProcessTimeoutsXtProc()| !! */
+  static void CallProcessTimeouts(XtAppContext app_context);
 
-  static PRBool      gTimeoutAdded;
-  static PRBool      gProcessingTimer;
-
-  struct timeval       mFireTime;  
-  PRUint32             mDelay;
 private:
   nsresult Init(PRUint32 aDelay, PRUint32 aPriority);
-  nsresult EnsureWindowService();
-
+  
   void *               mClosure;
   nsITimerCallback *   mCallback;
   nsTimerCallbackFunc  mFunc;
   PRUint32             mPriority;
   PRUint32             mType;
+  struct timeval       mFireTime;  
+  PRUint32             mDelay;
+  PRPackedBool         mQueued; /* queued in list ? */
 
+  static Display      *mDisplay;
+  static nsVoidArray  *gHighestList,
+                      *gHighList,   
+                      *gNormalList, 
+                      *gLowList,    
+                      *gLowestList; 
+    
+  static PRPackedBool  gTimeoutAdded;
 };
-#endif // __nsTimerXlib_h
+#endif /* !__nsTimerXlib_h */

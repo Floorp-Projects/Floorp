@@ -75,18 +75,6 @@ nsHashtable *nsWidget::gsWindowList = nsnull; // WEAK references to nsWidget*
 // cursors hash table
 Cursor nsWidget::gsXlibCursorCache[eCursor_count_up_down + 1];
 
-// this is a class for generating keys for
-// the list of windows managed by mozilla.
-
-// this is possibly the class impl that will be
-// called whenever a new window is created/destroyed
-
-//nsXlibWindowCallback *nsWidget::mWindowCallback = nsnull;
-
-nsXlibWindowCallback  nsWidget::gsWindowCreateCallback = nsnull;
-nsXlibWindowCallback  nsWidget::gsWindowDestroyCallback = nsnull;
-nsXlibEventDispatcher nsWidget::gsEventDispatcher = nsnull;
-
 // this is for implemention the WM_PROTOCOL code
 PRBool nsWidget::WMProtocolsInitialized = PR_FALSE;
 Atom   nsWidget::WMDeleteWindow = 0;
@@ -251,9 +239,6 @@ NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
                               aContext, aAppShell, aToolkit, aInitData,
                               aParent));
 }
-
-static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
-static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
 
 nsresult
 nsWidget::StandardWidgetCreate(nsIWidget *aParent,
@@ -853,13 +838,6 @@ nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
   }
   nsWindowKey window_key(aWindow);
   gsWindowList->Put(&window_key, aWidget);
-
-  // make sure that if someone is listening that we inform
-  // them of the new window
-  if (gsWindowCreateCallback) 
-  {
-    (*gsWindowCreateCallback)(aWindow);
-  }
 }
 
 void
@@ -880,12 +858,6 @@ nsWidget::DeleteWindowCallback(Window aWindow)
       if (gsXlibCursorCache[i])
         XFreeCursor(nsAppShell::mDisplay, gsXlibCursorCache[i]);
   }
-
-  if (gsWindowDestroyCallback) 
-  {
-    (*gsWindowDestroyCallback)(aWindow);
-  }
-
 }
 
 #undef TRACE_PAINT
@@ -1502,34 +1474,6 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
   
   return xcursor;
 }
-
-// nsresult
-// nsWidget::SetXlibWindowCallback(nsXlibWindowCallback *aCallback)
-// {
-//   if (aCallback == nsnull) {
-//     return NS_ERROR_FAILURE;
-//   }
-//   else {
-//     mWindowCallback = aCallback;
-//   }
-//   return NS_OK;
-// }
-
-// nsresult
-// nsWidget::XWindowCreated(Window aWindow) {
-//   if (mWindowCallback) {
-//     mWindowCallback->WindowCreated(aWindow);
-//   }
-//   return NS_OK;
-// }
-
-// nsresult
-// nsWidget::XWindowDestroyed(Window aWindow) {
-//   if (mWindowCallback) {
-//     mWindowCallback->WindowDestroyed(aWindow);
-//   }
-//   return NS_OK;
-// }
 
 void
 nsWidget::SetUpWMHints(void) {
