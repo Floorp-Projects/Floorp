@@ -6153,9 +6153,6 @@ FE_SecurityDialog (MWContext *context, int state, XP_Bool *prefs_toggle)
   }
 }
 
-#if 0
-/* backing this out, waiting for mac. */
-
 /* Temporary stub. */
 XP_Bool 
 FE_Select(MWContext  *pContext,
@@ -6198,4 +6195,4 @@ FE_CheckConfirm (MWContext  *pContext,
     *pChecked = FE_Confirm (pContext, pCheckMessage);
     return userHasAccepted;
 }
-#endif
+
