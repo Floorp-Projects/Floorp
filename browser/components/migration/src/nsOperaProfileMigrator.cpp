@@ -1271,6 +1271,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
                                                keyword.get(), 
                                                description.get(), 
                                                nsnull, 
+                                               nsnull,
                                                onToolbar ? aToolbar : aParent, 
                                                -1, 
                                                getter_AddRefs(itemRes));
