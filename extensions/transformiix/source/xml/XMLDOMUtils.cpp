@@ -24,7 +24,6 @@
  */
 
 #include "XMLDOMUtils.h"
-#include "txAtom.h"
 
 void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
 {
@@ -65,22 +64,4 @@ void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
             break;
         }
     }
-}
-
-MBool XMLDOMUtils::getNamespaceURI(const String& aPrefix,
-                                   Element* aElement,
-                                   String& aResult)
-{
-    txAtom* prefix = TX_GET_ATOM(aPrefix);
-    if (!prefix)
-        return MB_FALSE;
-    PRInt32 namespaceID = aElement->lookupNamespaceID(prefix);
-    TX_RELEASE_ATOM(prefix);
-    if (namespaceID == kNameSpaceID_Unknown)
-        return MB_FALSE;
-    Document* document = aElement->getOwnerDocument();
-    if (!document)
-        return MB_FALSE;
-    document->namespaceIDToURI(namespaceID, aResult);
-    return MB_TRUE;
 }

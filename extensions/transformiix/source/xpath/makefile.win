@@ -42,7 +42,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\BooleanFunctionCall.obj		\
 	.\$(OBJDIR)\BooleanResult.obj			\
 	.\$(OBJDIR)\ExprLexer.obj			\
-	.\$(OBJDIR)\ExprLexerChars.obj			\
 	.\$(OBJDIR)\ExprParser.obj			\
 	.\$(OBJDIR)\FilterExpr.obj			\
 	.\$(OBJDIR)\FunctionCall.obj			\

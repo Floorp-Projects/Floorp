@@ -64,7 +64,6 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/BooleanFunctionCall.obj \
   ../xpath/$(OBJDIR)/BooleanResult.obj \
   ../xpath/$(OBJDIR)/ExprLexer.obj \
-  ../xpath/$(OBJDIR)/ExprLexerChars.obj \
   ../xpath/$(OBJDIR)/ExprParser.obj \
   ../xpath/$(OBJDIR)/FilterExpr.obj \
   ../xpath/$(OBJDIR)/FunctionCall.obj \

@@ -39,6 +39,7 @@
 **/
 
 #include "ExprLexer.h"
+#include "XMLUtils.h"
 
   //---------------------------/
  //- Implementation of Token -/
@@ -254,7 +255,7 @@ void ExprLexer::parse(const String& pattern)
     defType = Token::CNAME;
 
     if (ch==DOLLAR_SIGN) {
-      if (++iter == size || !isLetter(ch=pattern.charAt(iter))) {
+      if (++iter == size || !XMLUtils::isLetter(ch=pattern.charAt(iter))) {
         // Error, VariableReference expected
         errorPos = iter;
         errorCode = ERROR_UNRESOLVED_VAR_REFERENCE;
@@ -270,20 +271,20 @@ void ExprLexer::parse(const String& pattern)
     // just reuse the QName parsing, which will use defType 
     // the token to construct
 
-    if (isLetter(ch)) {
+    if (XMLUtils::isLetter(ch)) {
       // NCName, can get QName or OperatorName;
       //  FunctionName, NodeName, and AxisSpecifier may want whitespace,
       //  and are dealt with below
       start = iter;
       while (++iter < size && 
-             isNCNameChar(pattern.charAt(iter))) /* just go */ ;
+             XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
       PRInt32 end = iter;
       if (pattern.charAt(iter)==COLON) {
         // try QName or wildcard, might need to step back for axis
         if (++iter < size)
-          if (isLetter(pattern.charAt(iter)))
+          if (XMLUtils::isLetter(pattern.charAt(iter)))
             while (++iter < size && 
-                  isNCNameChar(pattern.charAt(iter))) /* just go */ ;
+                   XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
           else if (pattern.charAt(iter)=='*' 
                    && defType != Token::VAR_REFERENCE)
             ++iter; /* eat wildcard for NameTest, bail for var ref at COLON */
@@ -314,13 +315,13 @@ void ExprLexer::parse(const String& pattern)
       }
       addToken(new Token(pattern.subString(start,iter,subStr),defType));
     }
-    else if (isDigit(ch)) {
+    else if (isXPathDigit(ch)) {
       start = iter;
       while (++iter < size && 
-             isDigit(pattern.charAt(iter))) /* just go */;
+             isXPathDigit(pattern.charAt(iter))) /* just go */;
       if (pattern.charAt(iter)=='.')
         while (++iter < size && 
-               isDigit(pattern.charAt(iter))) /* just go */;
+               isXPathDigit(pattern.charAt(iter))) /* just go */;
       addToken(new Token(pattern.subString(start,iter,subStr),Token::NUMBER));
     }
     else {
@@ -356,10 +357,10 @@ void ExprLexer::parse(const String& pattern)
         // period can be .., .(DIGITS)+ or ., check next
         if (++iter < size) {
           ch=pattern.charAt(iter);
-          if (isDigit(ch)) {
+          if (isXPathDigit(ch)) {
             start=iter-1;
             while (++iter < size && 
-                   isDigit(pattern.charAt(iter))) /* just go */;
+                   isXPathDigit(pattern.charAt(iter))) /* just go */;
             addToken(new Token(pattern.subString(start,iter,subStr),
                                Token::NUMBER));
           }

@@ -93,7 +93,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanResult.$(OBJ_SUFFIX) \
   ../source/xpath/ExprLexer.$(OBJ_SUFFIX) \
-  ../source/xpath/ExprLexerChars.$(OBJ_SUFFIX) \
   ../source/xpath/ExprParser.$(OBJ_SUFFIX) \
   ../source/xpath/FilterExpr.$(OBJ_SUFFIX) \
   ../source/xpath/FunctionCall.$(OBJ_SUFFIX) \
