@@ -70,7 +70,7 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGINCOMINGSERVER
-  
+
 protected:
   nsCString m_serverKey;
   void getPrefName(const char *serverKey, const char *pref, nsCString& fullPrefName);
@@ -107,10 +107,7 @@ private:
   nsCOMPtr<nsIMsgFilterPlugin> mFilterPlugin;  // XXX should be a list
 
 protected:
-  // member variable for canHaveFilters
   PRPackedBool m_canHaveFilters;
-
-  // member variable for to check if we need display startup page
   PRPackedBool m_displayStartupPage;
   PRPackedBool mPerformingBiff;
 };
