@@ -361,6 +361,7 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
 static nsIPrincipal* newCodebasePrincipal(const char* codebaseURL)
 {
 	nsIPrincipal* principal = NULL;
+#if 0
 	nsICapsManager* capsManager = NULL;
 	static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
 	if (thePluginManager->QueryInterface(kICapsManagerIID, &capsManager) == NS_OK) {
@@ -368,6 +369,7 @@ static nsIPrincipal* newCodebasePrincipal(const char* codebaseURL)
 			principal = NULL;
 		capsManager->Release();
 	}
+#endif
 	return principal;
 }
 
