@@ -714,13 +714,41 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aParent,
   return result;
 }
 
+//
+// Convenience routine since we use it here and there
+//
+static nsCOMPtr<nsIDOMSelection>
+getDOMSelection(nsIPresShell* presShell)
+{
+  nsCOMPtr<nsIDOMSelection> selection;  // will be the return value
+
+  nsresult result;
+  nsISelection* frameSelection;
+  result = presShell->GetSelection(&frameSelection);
+  if ((!NS_SUCCEEDED(result)) || (nsnull == frameSelection))
+    return selection;
+
+  frameSelection->QueryInterface(kIDOMSelectionIID,
+                                          getter_AddRefs(selection));
+
+  return selection;
+}
+
 nsresult 
 nsEditor::InsertText(const nsString& aStringToInsert)
 {
-  DeleteSelection(eLTR);
+  nsresult result;
+  nsCOMPtr<nsIDOMSelection> selection = getDOMSelection(mPresShell);
+  if (selection)
+  {
+    PRBool collapsed;
+    result = selection->IsCollapsed(&collapsed);
+    if (NS_SUCCEEDED(result) && !collapsed)
+      DeleteSelection(eLTR);
+  }
 
   InsertTextTxn *txn;
-  nsresult result = CreateTxnForInsertText(aStringToInsert, &txn);
+  result = CreateTxnForInsertText(aStringToInsert, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
@@ -891,27 +919,19 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
+  nsresult result;
 #ifdef DELETE_SELECTION_DOESNT_GO_THROUGH_RANGE
   EditAggregateTxn *txn;
-  nsresult result = CreateTxnForDeleteSelection(aDir, &txn);
+  result = CreateTxnForDeleteSelection(aDir, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
 #else
   // XXX Warning, this should be moved to a transaction since
   // calling it this way means undo won't work.
-  nsCOMPtr<nsISelection> frameSelection;
-  nsresult result = mPresShell->GetSelection(getter_AddRefs(frameSelection));
-  if (!NS_SUCCEEDED(result))
-    return result;
-
-  nsCOMPtr<nsIDOMSelection> domSelection;
-  result = frameSelection->QueryInterface(kIDOMSelectionIID,
-                                          getter_AddRefs(domSelection));
-  if (!NS_SUCCEEDED(result))
-    return result;
-
-  result = domSelection->DeleteFromDocument();
+  nsCOMPtr<nsIDOMSelection> domSelection = getDOMSelection(mPresShell);
+  if (domSelection)
+    result = domSelection->DeleteFromDocument();
 #endif
 
   return result;
