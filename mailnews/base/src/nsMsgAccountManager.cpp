@@ -500,6 +500,9 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     
     NotifyServerUnloaded(server);
 
+    rv = server->RemoveFiles();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the files associated with server");
+
     // now clear out the server once and for all.
     // watch out! could be scary
     server->ClearAllValues();

@@ -47,6 +47,10 @@
 #include "nsIXULWindow.h"
 #include "nsRDFCID.h"
 
+#ifdef DEBUG_sspitzer
+#define DEBUG_MSGINCOMING_SERVER
+#endif /* DEBUG_sspitzer */
+
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -751,15 +755,15 @@ nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
 
     // compare the server keys
     if (PL_strcmp((const char *)key1,(const char *)key2)) {
-#ifdef DEBUG_seth
+#ifdef DEBUG_MSGINCOMING_SERVER
         printf("%s and %s are different, servers are not the same\n",(const char *)key1,(const char *)key2);
-#endif /* DEBUG_seth */
+#endif /* DEBUG_MSGINCOMING_SERVER */
         *_retval = PR_FALSE;
     }
     else {
-#ifdef DEBUG_seth
+#ifdef DEBUG_MSGINCOMING_SERVER
         printf("%s and %s are equal, servers are the same\n",(const char *)key1,(const char *)key2);
-#endif /* DEBUG_seth */
+#endif /* DEBUG_MSGINCOMING_SERVER */
         *_retval = PR_TRUE;
     }
     return rv;
@@ -776,6 +780,44 @@ nsMsgIncomingServer::ClearAllValues()
 
     return rv;
 }
+
+NS_IMETHODIMP
+nsMsgIncomingServer::RemoveFiles()
+{
+	// this is not ready for prime time.  the problem is that if files are in use, they won't
+	// get deleted properly.  for example, when we get here, we may have .msf files in open
+	// and in use.  I need to think about this some more.
+#if 0
+#ifdef DEBUG_MSGINCOMING_SERVER
+	printf("remove files for %s\n", (const char *)m_serverKey);
+#endif /* DEBUG_MSGINCOMING_SERVER */
+	nsresult rv = NS_OK;
+	nsCOMPtr <nsIFileSpec> localPath;
+	rv = GetLocalPath(getter_AddRefs(localPath));
+	if (NS_FAILED(rv)) return rv;
+	
+	if (!localPath) return NS_ERROR_FAILURE;
+	
+	PRBool exists = PR_FALSE;
+	rv = localPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+
+	// if it doesn't exist, that's ok.
+	if (!exists) return NS_OK;
+
+	rv = localPath->Delete(PR_TRUE /* recursive */);
+	if (NS_FAILED(rv)) return rv;
+
+	// now check if it really gone
+	rv = localPath->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+
+	// if it still exists, something failed.
+	if (exists) return NS_ERROR_FAILURE;
+#endif /* 0 */
+	return NS_OK;
+}
+
 
 void
 nsMsgIncomingServer::clearPrefEnum(const char *aPref, void *aClosure)

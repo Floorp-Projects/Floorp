@@ -146,6 +146,12 @@ interface nsIMsgIncomingServer : nsISupports {
    * do not call this unless you know what you're doing!
    */
   void clearAllValues();
+
+  /** 
+   * this is also very dangerous.  this will remove the files
+   * associated with this server on disk.
+   */
+  void removeFiles();
   
   attribute boolean valid;
   
