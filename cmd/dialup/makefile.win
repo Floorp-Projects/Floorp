@@ -28,5 +28,15 @@ install::
 		java\signed\npasw.jar \
 		$(DEPTH)\..\x86Dbg\plugins
 	$(MAKE_INSTALL) \
-		$(DEPTH)\dist\classes\netscape\asw\asw.jar \
-		$(DEPTH)\..\x86dbg\asw
+		as_html\signed\asw.jar \
+		as_html
+!ifdef MOZ_INSTALL_DIR
+	echo copying plugin to Communicator folder...
+	copy \
+		$(DEPTH)\dist\$(OBJDIR)\lib\np32asw.dll \
+		$(MOZ_INSTALL_DIR)\Program\Plugins\.
+	echo copying plugin .jar to Commuicator folder...
+	copy \
+		java\signed\npasw.jar \
+		$(MOZ_INSTALL_DIR)\Program\Plugins\.
+!endif
