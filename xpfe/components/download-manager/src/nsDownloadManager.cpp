@@ -178,13 +178,8 @@ nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
 nsresult
 nsDownloadManager::GetDownloadsContainer(nsIRDFContainer** aResult)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIRDFContainerUtils> rdfC(do_GetService(NS_RDF_CONTRACTID "/container-utils;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-
   PRBool isContainer;
-  rv = mRDFContainerUtils->IsContainer(mDataSource, gNC_DownloadsRoot, &isContainer);
+  nsresult rv = mRDFContainerUtils->IsContainer(mDataSource, gNC_DownloadsRoot, &isContainer);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFContainer> ctr;
