@@ -3000,17 +3000,17 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
 
   CreateStyleSet(document, getter_AddRefs(aPO->mStyleSet));
 
-  aPO->mPresShell = do_CreateInstance(kPresShellCID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   aPO->mViewManager = do_CreateInstance(kViewManagerCID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   rv = aPO->mViewManager->Init(mPrt->mPrintDocDC);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = document->CreateShell(aPO->mPresContext, aPO->mViewManager, aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
   if (NS_FAILED(rv)) {
     return rv;
   }
