@@ -46,6 +46,7 @@ interface nsIImapProtocol;
 interface nsISupportsArray;
 interface nsIMsgFolder;
 interface nsIImapHostSessionList;
+interface nsIMsgWindow;
 
 [scriptable, uuid(132231ca-c796-11d3-b9f5-00108335942a)]
 interface nsIImapProtocol : nsIStreamListener {
@@ -97,7 +98,7 @@ interface nsIImapProtocol : nsIStreamListener {
     // Get last active time stamp
     void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
-	void PseudoInterruptMsgLoad(in nsIMsgFolder imapFolder, out boolean interrupted);
+	void pseudoInterruptMsgLoad(in nsIMsgFolder imapFolder, in nsIMsgWindow aMsgWindow, out boolean interrupted);
     void GetSelectedMailboxName(out string folderName);
     // Reset folder connection to authenticated state
     void ResetToAuthenticatedState();

@@ -1183,6 +1183,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         rv = trashFolder->Delete(); // delete summary spec
         trashFolder->SetDBTransferInfo(transferInfo);
 
+        trashFolder->SetSizeOnDisk(0);
         nsCOMPtr<nsIImapService> imapService = 
                  do_GetService(kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
@@ -1503,8 +1504,9 @@ NS_IMETHODIMP nsImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
     
 NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
+  NS_ENSURE_ARG_POINTER(size);
+  *size = mFolderSize;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1946,7 +1948,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     // if we're deleting a message, we should pseudo-interrupt the msg
     //load of the current message.
     PRBool interrupted = PR_FALSE;
-    imapServer->PseudoInterruptMsgLoad(this, &interrupted);
+    imapServer->PseudoInterruptMsgLoad(this, msgWindow, &interrupted);
   }
   
   rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
@@ -2641,6 +2643,9 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
     }
     newMsgHdr->SetMessageKey(m_curMsgUid);
     TweakHeaderFlags(aProtocol, newMsgHdr);
+    PRUint32 messageSize;
+    if (NS_SUCCEEDED(newMsgHdr->GetMessageSize(&messageSize)))
+      mFolderSize += messageSize;
     m_msgMovedByFilter = PR_FALSE;
     // If this is the inbox, try to apply filters.
     if (mFlags & MSG_FOLDER_FLAG_INBOX)
@@ -3958,7 +3963,10 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
 {
     // update all of the database flags
   PRInt32 messageIndex;
-  
+  PRUint32 messageSize;
+  PRUint32 oldFolderSize = mFolderSize;
+  // take this opportunity to recalculate the folder size:
+  mFolderSize = 0;
   flagState->GetNumberOfMessages(&messageIndex);
 
   for (PRInt32 flagIndex=0; flagIndex < messageIndex; flagIndex++)
@@ -3967,33 +3975,57 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
     flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
     imapMessageFlagsType flags;
     flagState->GetMessageFlags(flagIndex, &flags);
+    nsCOMPtr<nsIMsgDBHdr> dbHdr;
+    PRBool containsKey;
+    nsresult rv = mDatabase->ContainsKey(uidOfMessage , &containsKey);
+    // if we don't have the header, don't diddle the flags.
+    // GetMsgHdrForKey will create the header if it doesn't exist.
+    if (NS_FAILED(rv) || !containsKey)
+      continue;
+
+    rv = mDatabase->GetMsgHdrForKey(uidOfMessage, getter_AddRefs(dbHdr));
+    if (NS_SUCCEEDED(dbHdr->GetMessageSize(&messageSize)))
+      mFolderSize += messageSize;
+
     if (flags & kImapMsgCustomKeywordFlag)
     {
-      char *keywords;
-      nsresult rv = flagState->GetCustomFlags(uidOfMessage, &keywords);
-      if (NS_SUCCEEDED(rv) && keywords)
+      nsXPIDLCString keywords;
+      if (NS_SUCCEEDED(flagState->GetCustomFlags(uidOfMessage, getter_Copies(keywords))) && !keywords.IsEmpty())
       {
-        nsCOMPtr<nsIMsgDBHdr> dbHdr;
-        PRBool containsKey;
-        rv = mDatabase->ContainsKey(uidOfMessage , &containsKey);
-        // if we don't have the header, don't diddle the flags.
-        // GetMsgHdrForKey will create the header if it doesn't exist.
-        if (NS_FAILED(rv) || !containsKey)
-          return rv;
-    
-        rv = mDatabase->GetMsgHdrForKey(uidOfMessage, getter_AddRefs(dbHdr));
         if (dbHdr && NS_SUCCEEDED(rv))
         {
           dbHdr->SetStringProperty("keywords", keywords);
         }
       }
     }
-    NotifyMessageFlags(flags, uidOfMessage);
+    NotifyMessageFlagsFromHdr(dbHdr, uidOfMessage, flags);
   }
+  if (oldFolderSize != mFolderSize)
+    NotifyIntPropertyChanged(kFolderSizeAtom, oldFolderSize, mFolderSize);
+
   return NS_OK;
 }
 
-    // message flags operation
+// helper routine to sync the flags on a given header
+nsresult nsImapMailFolder::NotifyMessageFlagsFromHdr(nsIMsgDBHdr *dbHdr, nsMsgKey msgKey, PRUint32 flags)
+{
+    mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
+    mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
+    mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+    mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
+    // this turns on labels, but it doesn't handle the case where the user
+    // unlabels a message on one machine, and expects it to be unlabeled
+    // on their other machines. If I turn that on, I'll be removing all the labels
+    // that were assigned before we started storing them on the server, which will
+    // make some people very unhappy.
+    if (flags & kImapMsgLabelFlags)
+      mDatabase->SetLabel(msgKey, (flags & kImapMsgLabelFlags) >> 9);
+  
+    return NS_OK;
+}
+
+// message flags operation - this is called (rarely) from the imap protocol,
+// proxied over from the imap thread to the ui thread
 NS_IMETHODIMP
 nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 {
@@ -4013,17 +4045,7 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
     
     if(NS_SUCCEEDED(rv) && dbHdr)
     {
-      mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
-      mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
-      mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
-      mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
-      // this turns on labels, but it doesn't handle the case where the user
-      // unlabels a message on one machine, and expects it to be unlabeled
-      // on their other machines. If I turn that on, I'll be removing all the labels
-      // that were assigned before we started storing them on the server, which will
-      // make some people very unhappy.
-      if (flags & kImapMsgLabelFlags)
-        mDatabase->SetLabel(msgKey, (flags & kImapMsgLabelFlags) >> 9);
+      NotifyMessageFlagsFromHdr(dbHdr, msgKey, flags);
     }
   }
   
@@ -4869,6 +4891,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
   if (mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  SetSizeOnDisk(mFolderSize); 
   if (m_moveCoalescer)
   {
     m_moveCoalescer->PlaybackMoves ();

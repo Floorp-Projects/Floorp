@@ -202,8 +202,8 @@ public:
   // Get last active time stamp
   NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 
-	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool
-                                      *interrupted);
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *aMsgWindow, 
+                                          PRBool *interrupted);
   NS_IMETHOD GetSelectedMailboxName(char ** folderName);
   NS_IMETHOD ResetToAuthenticatedState();
   NS_IMETHOD OverrideConnectionInfo(const PRUnichar *pHost, PRUint16 pPort, const char *pCookieData);

@@ -224,8 +224,8 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
     
     dstListener = do_QueryInterface(dstFolder, &rv);
     if (NS_FAILED(rv)) return rv;
-    // ** make sire we are in the selected state; use lite select folder
-    // so we won't hit preformace hard
+    // ** make sure we are in the selected state; use lite select folder
+    // so we won't potentially download a bunch of headers.
     rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
       dstListener, nsnull);
     if (NS_FAILED(rv)) return rv;
@@ -296,7 +296,7 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
         dstListener = do_QueryInterface(dstFolder, &rv); 
         if (NS_FAILED(rv)) 
           return rv;
-        // ** make sire we are in the selected state; use lite select
+        // ** make sure we are in the selected state; use lite select
         // folder so we won't hit preformace hard
         rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
                                            dstListener, nsnull);

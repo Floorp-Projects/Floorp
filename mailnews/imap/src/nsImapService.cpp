@@ -654,7 +654,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
           nsCOMPtr<nsIImapIncomingServer>
             aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
           if (NS_SUCCEEDED(rv) && aImapServer)
-            aImapServer->PseudoInterruptMsgLoad(aImapMailFolder, &interrupted);
+            aImapServer->PseudoInterruptMsgLoad(aImapMailFolder, nsnull, &interrupted);
         }
       }
       // if the display consumer is a docshell, then we should run the url in the docshell.
@@ -1052,7 +1052,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       nsCOMPtr<nsIImapIncomingServer>
         aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
       if (NS_SUCCEEDED(rv) && aImapServer)
-        aImapServer->PseudoInterruptMsgLoad(aImapMailFolder, &interrupted);
+        aImapServer->PseudoInterruptMsgLoad(aImapMailFolder, aMsgWindow, &interrupted);
     }
 	 }
   // if the display consumer is a docshell, then we should run the url in the docshell.

@@ -1056,7 +1056,7 @@ nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 }
 
 NS_IMETHODIMP
-nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interrupted)
+nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *aMsgWindow, PRBool *interrupted)
 {
   NS_ENSURE_ARG (interrupted);
 
@@ -1078,9 +1078,11 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interr
       if (NS_SUCCEEDED(rv) && runningImapURL)
       {
         nsCOMPtr <nsIMsgFolder> runningImapFolder;
+        nsCOMPtr <nsIMsgWindow> msgWindow;
         nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(runningImapURL);
+        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
         mailnewsUrl->GetFolder(getter_AddRefs(runningImapFolder));
-        if (aImapFolder == runningImapFolder)
+        if (aImapFolder == runningImapFolder && msgWindow == aMsgWindow)
         {
           PseudoInterrupt(PR_TRUE);
           *interrupted = PR_TRUE;
@@ -1979,6 +1981,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 m_progressIndex = 0;
                 m_progressCount = CountMessagesInIdString(messageIdString);
           
+                // we need to set this so we'll get the msg from the memory cache.
+                if (m_imapAction == nsIImapUrl::nsImapMsgFetchPeek)
+                  SetContentModified(IMAP_CONTENT_NOT_MODIFIED);
                 FetchMessage(messageIdString, 
                              kEveryThingRFC822Peek,
                              bMessageIdsAreUids);
@@ -7395,6 +7400,18 @@ NS_IMETHODIMP nsImapMockChannel::Close()
 {
   if (mReadingFromCache)
     NotifyStartEndReadFromCache(PR_FALSE);
+  else
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+    if (mailnewsUrl)
+    {
+      nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
+      mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+      if (cacheEntry)
+        cacheEntry->MarkValid();
+    }
+  }
+
 
   m_channelListener = nsnull;
   mCacheRequest = nsnull;
@@ -7549,7 +7566,6 @@ nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCache
     // gets written to both 
     if (access & nsICache::ACCESS_WRITE && !(access & nsICache::ACCESS_READ))
     {
-      entry->MarkValid();
       // use a stream listener Tee to force data into the cache and to our current channel listener...
       nsCOMPtr<nsIStreamListener> newListener;
       nsCOMPtr<nsIStreamListenerTee> tee = do_CreateInstance(kStreamListenerTeeCID, &rv);

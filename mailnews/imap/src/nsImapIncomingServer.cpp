@@ -453,11 +453,11 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   }
   else
   {   // unable to get an imap connection to run the url; add to the url
-      // queue
+    // queue
     PR_CEnterMonitor(this);
-	  nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
-	  if (supports)
-		  m_urlQueue->AppendElement(supports);
+    nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
+    if (supports)
+      m_urlQueue->AppendElement(supports);
     m_urlConsumers.AppendElement((void*)aConsumer);
     NS_IF_ADDREF(aConsumer);
     PR_CExitMonitor(this);
@@ -478,7 +478,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
   
   nsAutoCMonitor(this);
   m_urlQueue->Count(&cnt);
-  
+
   while (cnt > 0 && !urlRun && keepGoing)
   {
     nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
@@ -2477,7 +2477,7 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 }
 
-NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interrupted)
+NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *aMsgWindow, PRBool *interrupted)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIImapProtocol> connection;
@@ -2496,7 +2496,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFo
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
     if (connection)
-      rv = connection->PseudoInterruptMsgLoad(aImapFolder, interrupted);
+      rv = connection->PseudoInterruptMsgLoad(aImapFolder, aMsgWindow, interrupted);
   }
   
   PR_CExitMonitor(this);
