@@ -6491,7 +6491,7 @@ CalcHorCornerOffset(PRUint8 aCornerOwnerSide,
 
 struct BCVerticalSeg
 {
-  BCVerticalSeg::BCVerticalSeg();
+  BCVerticalSeg();
  
   void Start(BCMapBorderIterator& aIter,
              BCBorderOwner        aBorderOwner,
@@ -6556,7 +6556,7 @@ BCVerticalSeg::Start(BCMapBorderIterator& aIter,
 
 struct BCHorizontalSeg
 {
-  BCHorizontalSeg::BCHorizontalSeg();
+  BCHorizontalSeg();
 
   void Start(BCMapBorderIterator& aIter,
              BCBorderOwner        aBorderOwner,
