@@ -1,0 +1,55 @@
+<HTML>
+<HEAD>
+  <TITLE>Attributes test</TITLE>
+</HEAD>
+<BODY bgColor="#ffffff" text="#000000">
+<H1>Attributes test</H1>
+
+<P>You should see the following in the console:</P>
+<PRE>
+attribute.getNamedItem == getAttributeNode: true
+attribute BGCOLOR=#ffffff
+changing attribute node value changes attribute value: true
+return value of removeNamedItem is attribute node: true
+removing attribute changes attribute count: true
+changing disembodied attribute value works: true
+removing attribute node removes attribute: true
+</PRE>
+
+<P>The text should turn green and then you should see
+the following in the console:</P>
+<PRE>
+setting an existing attribute returns the old node: true
+</PRE>
+
+<SCRIPT>
+a = document.body.attributes.getNamedItem("bgcolor")
+a2 = document.body.getAttributeNode("bgcolor")
+n = document.body.attributes.length;
+dump("attribute.getNamedItem == getAttributeNode: " + (a == a2) + "\n");
+
+dump("attribute " + a.name + "=" + a.value + "\n");
+
+a.value = "#00ffff"
+dump("changing attribute node value changes attribute value: " + (document.body.getAttribute("bgcolor") == "#00ffff") + "\n");
+
+a = document.body.attributes.removeNamedItem("bgcolor")
+dump("return value of removeNamedItem is attribute node: " + (a == a2) + "\n");
+
+dump("removing attribute changes attribute count: " + (document.body.attributes.length == (n-1)) + "\n");
+
+a.value = "#ff0000"
+dump("changing disembodied attribute value works: " + (a.value == "#ff0000") + "\n");
+
+dump("removing attribute node removes attribute: " + (document.body.getAttribute("bgcolor") == "") + "\n");
+
+a = document.body.attributes.getNamedItem("TEXT");
+a2 = document.createAttribute("text");
+a2.value = "#00ff00";
+a3 = document.body.attributes.setNamedItem(a2);
+dump("setting an existing attribute returns the old node: " + (a == a3) + "\n");
+</SCRIPT>
+
+</BODY>
+</HTML>
+
