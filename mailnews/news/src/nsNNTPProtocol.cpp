@@ -928,7 +928,11 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 
 	nsAllocator::Free(fullPath);
 
-	nsUnescape (group);
+	// more to do here, but for now, this works.
+	// only escape if we are doing a search
+	if (m_newsAction == nsINntpUrl::ActionSearch) { 
+		nsUnescape (group);
+	}
 
     /* "group" now holds the part after the host name:
 	 "message@id?search" or "/group/xxx?search" or "/message?id@xx?search"
