@@ -40,7 +40,8 @@
 //***    nsWebBrowserChrome: Object Management
 //*****************************************************************************
 
-nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull)
+nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull),
+   mProgressStatusFlags(0)
 {
 	NS_INIT_REFCNT();
 }
@@ -359,8 +360,20 @@ NS_IMETHODIMP nsWebBrowserChrome::OnChildProgressChange(nsIChannel* aChannel,
 NS_IMETHODIMP nsWebBrowserChrome::OnStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
+/*   if(aProgressStatusFlags & nsIWebProgress::flag_networkActivity)
+      { // There is network activity now
+      
+      }
+   else 
+      { // There is no network Activity
+      if(mProgressStatusFlags & nsIWebProgress::flag_networkActivity)
+         { // If there was netwoerk activity before
+         OnLoadFinished(nsIChannel);
+         }
+      }
+   
    //XXXTAB Implement
-   NS_ERROR("NotYetImplemented");
+   NS_ERROR("NotYetImplemented");*/
    return NS_OK;
 }
 
