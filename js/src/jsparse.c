@@ -417,7 +417,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
  * that contains an early return e1 will get a strict-option-only warning).
  */
 static JSBool
-CheckFinalReturn(JSParseNode *pn)
+HasFinalReturn(JSParseNode *pn)
 {
     JSBool ok, hasDefault;
     JSParseNode *pn2, *pn3;
@@ -426,11 +426,11 @@ CheckFinalReturn(JSParseNode *pn)
       case TOK_LC:
         if (!pn->pn_head)
             return JS_FALSE;
-        return CheckFinalReturn(PN_LAST(pn));
+        return HasFinalReturn(PN_LAST(pn));
 
       case TOK_IF:
-        ok = CheckFinalReturn(pn->pn_kid2);
-        ok &= pn->pn_kid3 && CheckFinalReturn(pn->pn_kid3);
+        ok = HasFinalReturn(pn->pn_kid2);
+        ok &= pn->pn_kid3 && HasFinalReturn(pn->pn_kid3);
         return ok;
 
 #if JS_HAS_SWITCH_STATEMENT
@@ -443,7 +443,7 @@ CheckFinalReturn(JSParseNode *pn)
             pn3 = pn2->pn_right;
             JS_ASSERT(pn3->pn_type == TOK_LC);
             if (pn3->pn_head)
-                ok &= CheckFinalReturn(PN_LAST(pn3));
+                ok &= HasFinalReturn(PN_LAST(pn3));
         }
         /* If a final switch has no default case, we judge it harshly. */
         ok &= hasDefault;
@@ -451,7 +451,7 @@ CheckFinalReturn(JSParseNode *pn)
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
       case TOK_WITH:
-        return CheckFinalReturn(pn->pn_right);
+        return HasFinalReturn(pn->pn_right);
 
       case TOK_RETURN:
         return JS_TRUE;
@@ -462,26 +462,54 @@ CheckFinalReturn(JSParseNode *pn)
 
       case TOK_TRY:
         /* If we have a finally block that returns, we are done. */
-        if (pn->pn_kid3 && CheckFinalReturn(pn->pn_kid3))
+        if (pn->pn_kid3 && HasFinalReturn(pn->pn_kid3))
             return JS_TRUE;
 
         /* Else check the try block and any and all catch statements. */
-        ok = CheckFinalReturn(pn->pn_kid1);
+        ok = HasFinalReturn(pn->pn_kid1);
         if (pn->pn_kid2)
-            ok &= CheckFinalReturn(pn->pn_kid2);
+            ok &= HasFinalReturn(pn->pn_kid2);
         return ok;
 
       case TOK_CATCH:
         /* Check this block's code and iterate over further catch blocks. */
-        ok = CheckFinalReturn(pn->pn_kid3);
+        ok = HasFinalReturn(pn->pn_kid3);
         for (pn2 = pn->pn_kid2; pn2; pn2 = pn2->pn_kid2)
-            ok &= CheckFinalReturn(pn2->pn_kid3);
+            ok &= HasFinalReturn(pn2->pn_kid3);
         return ok;
 #endif
 
       default:
         return JS_FALSE;
     }
+}
+
+static JSBool
+ReportNoReturnValue(JSContext *cx, JSTokenStream *ts)
+{
+    JSFunction *fun;
+    JSBool ok;
+
+    fun = cx->fp->fun;
+    if (fun->atom) {
+        char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
+        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING |
+                                         JSREPORT_STRICT,
+                                         JSMSG_NO_RETURN_VALUE, name);
+    } else {
+        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING |
+                                         JSREPORT_STRICT,
+                                         JSMSG_ANON_NO_RETURN_VALUE);
+    }
+    return ok;
+}
+
+static JSBool
+CheckFinalReturn(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
+{
+    return HasFinalReturn(pn) || ReportNoReturnValue(cx, ts);
 }
 
 static JSParseNode *
@@ -511,23 +539,8 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
 
     /* Check for falling off the end of a function that returns a value. */
     if (pn && JS_HAS_STRICT_OPTION(cx) && (tc->flags & TCF_RETURN_EXPR)) {
-        if (!CheckFinalReturn(pn)) {
-            JSBool ok;
-            if (fun->atom) {
-                char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_NO_RETURN_VALUE, name);
-            } else {
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_ANON_NO_RETURN_VALUE);
-            }
-            if (!ok)
-                pn = NULL;
-        }
+        if (!CheckFinalReturn(cx, ts, pn))
+            pn = NULL;
     }
 
     cx->fp = fp;
@@ -791,20 +804,40 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2 = Statement(cx, ts, tc);
         if (!pn2)
             return NULL;
+        ts->flags |= TSF_REGEXP;
 
         /* If compiling top-level statements, emit as we go to save space. */
         if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
+            if (cx->fp->fun &&
+                JS_HAS_STRICT_OPTION(cx) &&
+                (tc->flags & TCF_RETURN_EXPR)) {
+                /*
+                 * Check pn2 for lack of a final return statement if it is the
+                 * last statement in the block.
+                 */
+                tt = js_PeekToken(cx, ts);
+                if ((tt == TOK_EOF || tt == TOK_RC) &&
+                    !CheckFinalReturn(cx, ts, pn2)) {
+                    tt = TOK_ERROR;
+                    break;
+                }
+
+                /*
+                 * Clear TCF_RETURN_EXPR so FunctionBody doesn't try to
+                 * CheckFinalReturn again.
+                 */
+                tc->flags &= ~TCF_RETURN_EXPR;
+            }
             if (!js_FoldConstants(cx, pn, tc) ||
                 !js_AllocTryNotes(cx, (JSCodeGenerator *)tc) ||
                 !js_EmitTree(cx, (JSCodeGenerator *)tc, pn2)) {
-                return NULL;
+                tt = TOK_ERROR;
+                break;
             }
             RecycleTree(pn2, tc);
         } else {
             PN_APPEND(pn, pn2);
         }
-
-        ts->flags |= TSF_REGEXP;
     }
     ts->flags &= ~TSF_REGEXP;
     if (tt == TOK_ERROR)
@@ -1633,29 +1666,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         if (JS_HAS_STRICT_OPTION(cx) &&
-            (tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) ==
-            (TCF_RETURN_EXPR | TCF_RETURN_VOID)) {
-            JSFunction *fun;
-            JSBool ok;
-
+            (~tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) == 0) {
             /*
              * We must be in a frame with a non-native function, because
              * we're compiling one.
              */
-            fun = cx->fp->fun;
-            if (fun->atom) {
-                char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_NO_RETURN_VALUE, name);
-            } else {
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_ANON_NO_RETURN_VALUE);
-            }
-            if (!ok)
+            if (!ReportNoReturnValue(cx, ts))
                 return NULL;
         }
         break;
