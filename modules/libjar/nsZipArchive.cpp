@@ -60,7 +60,7 @@
 
 #if defined(XP_UNIX)
     #include <sys/stat.h>
-#elseif defined(XP_PC)
+#elif defined(XP_PC)
     #include <io.h>
 #endif
 
