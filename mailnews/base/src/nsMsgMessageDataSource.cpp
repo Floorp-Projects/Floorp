@@ -304,8 +304,12 @@ NS_IMETHODIMP nsMsgMessageDataSource::HasAssertion(nsIRDFResource* source,
                             PRBool tv,
                             PRBool* hasAssertion)
 {
-  *hasAssertion = PR_FALSE;
-  return NS_OK;
+	nsCOMPtr<nsIMessage> message(do_QueryInterface(source));
+	if(message)
+		return DoMessageHasAssertion(message, property, target, tv, hasAssertion);
+	else
+		*hasAssertion = PR_FALSE;
+	return NS_OK;
 }
 
 
@@ -650,6 +654,34 @@ nsresult nsMsgMessageDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 	return NS_OK;
 }
 
+
+nsresult nsMsgMessageDataSource::DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion)
+{
+	nsresult rv = NS_OK;
+	if(!hasAssertion)
+		return NS_ERROR_NULL_POINTER;
+
+	//We're not keeping track of negative assertions on messages.
+	if(!tv)
+	{
+		*hasAssertion = PR_FALSE;
+		return NS_OK;
+	}
+
+	nsCOMPtr<nsIRDFResource> messageResource(do_QueryInterface(message, &rv));
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = GetTargetHasAssertion(this, messageResource, property, tv, target, hasAssertion);
+
+
+	return rv;
+
+
+}
+
 nsresult
 NS_NewMsgMessageDataSource(const nsIID& iid, void **result)
 {
@@ -670,3 +702,5 @@ NS_NewMsgMessageDataSource(const nsIID& iid, void **result)
 
 	return datasource->QueryInterface(iid, result);
 }
+
+

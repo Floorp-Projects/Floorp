@@ -146,6 +146,9 @@ protected:
 								  nsIRDFResource *propertyResource,
 								  const char *oldValue, const char *newValue);
 
+	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
+													 PRBool tv, PRBool *hasAssertion);
+
 	static nsresult getMessageArcLabelsOut(nsIMessage *message,
                                          nsISupportsArray **arcs);
   
