@@ -287,6 +287,9 @@ nsHTMLTextAreaElement::Select()
     return rv;
   }
 
+  // XXX Bug?  We have to give the input focus before contents can be selected
+
+  // Just like SetFocus() but without the ScrollIntoView()!
   nsCOMPtr<nsIPresContext> presContext;
   nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext)); 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -296,6 +299,23 @@ nsHTMLTextAreaElement::Select()
   event.flags = NS_EVENT_FLAG_NONE;
   event.widget = nsnull;
   rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+  // If the DOM event was not canceled (e.g. by a JS event handler returning false)
+  if (status == nsEventStatus_eIgnore) {
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (NS_OK == presContext->GetEventStateManager(getter_AddRefs(esm))) {
+      esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+    }
+
+    nsIFormControlFrame* formControlFrame = nsnull;
+    rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+    if (NS_SUCCEEDED(rv)) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+
+      // Now Select all the text!
+      SelectAll(presContext);
+    }
+  }
 
   return rv;
 }
@@ -549,33 +569,6 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
   
   rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-
-  if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
-    switch (aEvent->message) {
-      case NS_FORM_SELECTED:
-      {
-        // XXX Selection bug?
-        // XXX We have to give the textarea focus before contents can be selected
-
-        // Just like SetFocus() but without the ScrollIntoView(), should we scroll?
-        nsCOMPtr<nsIEventStateManager> esm;
-        if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
-          esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-        }
-
-        nsIFormControlFrame* formControlFrame = nsnull;
-        rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-        if (NS_SUCCEEDED(rv)) {
-          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-
-          // Now Select all the text!
-          rv = SelectAll(aPresContext);
-        }
-      } break; //NS_FORM_SELECTED
-
-    } //switch
-  } // if
 
   // Finish the special anonymous content processing...
   {
