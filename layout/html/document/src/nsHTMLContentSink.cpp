@@ -178,7 +178,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(nsresult aErrorResult);
+  NS_IMETHOD NotifyError(const nsParserError* aError);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
@@ -3083,7 +3083,7 @@ HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
 }
 
 NS_IMETHODIMP 
-HTMLContentSink::NotifyError(nsresult aErrorResult)
+HTMLContentSink::NotifyError(const nsParserError* aError)
 {
   // Errors in HTML? Who would have thought!
   // Why are you telling us, parser. Deal with it yourself.
