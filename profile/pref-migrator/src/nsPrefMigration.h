@@ -53,10 +53,10 @@
 #include "nsVoidArray.h"
 #include "nsILocalFile.h"
 
-#define SUCCESS    0
-#define RETRY      1
-#define CREATE_NEW 2
-#define CANCEL     3
+#define MIGRATION_SUCCESS    0
+#define MIGRATION_RETRY      1
+#define MIGRATION_CREATE_NEW 2
+#define MIGRATION_CANCEL     3
 
 #define MAX_DRIVES 4
 

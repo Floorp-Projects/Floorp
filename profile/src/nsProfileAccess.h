@@ -29,6 +29,9 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
 
 class ProfileStruct
 {    
@@ -163,6 +166,44 @@ private:
     void SetPREGInfo(const char* pregInfo);
     void FreeProfileMembers(nsVoidArray *aProfile);
     nsresult ResetProfileMembers();
+};
+
+
+#include "prclist.h"
+
+class nsProfileLock
+#if defined (XP_UNIX)
+  : public PRCList
+#endif
+{
+public:
+                            nsProfileLock();
+                            nsProfileLock(nsProfileLock& src);
+
+                            ~nsProfileLock();
+ 
+    nsProfileLock&          operator=(nsProfileLock& rhs);
+                       
+    nsresult                Lock(nsILocalFile* aFile);
+    nsresult                Unlock();
+        
+private:
+    PRPackedBool            mHaveLock;
+
+#if defined (XP_MAC)
+    nsCOMPtr<nsILocalFile>  mLockFile;
+#elif defined (XP_WIN)
+    HANDLE                  mLockFileHandle;
+#elif defined (XP_OS2)
+    LHANDLE                 mLockFileHandle;
+#elif defined (XP_UNIX)
+    static void             RemovePidLockFiles();
+    static void             FatalSignalHandler(int signo);
+    static PRCList          mPidLockList;
+    char*                   mPidLockFileName;
+    int                     mLockFileDesc;
+#endif
+
 };
 
 #endif // __nsProfileAccess_h___

@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -38,6 +38,19 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
+
+#ifdef XP_MAC
+#include <Processes.h>
+#endif
+
+#ifdef XP_UNIX
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
+#include "prnetdb.h"
+#include "prsystem.h"
+#endif
 
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
@@ -90,7 +103,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
  */
 nsProfileAccess::nsProfileAccess()
 {
-    mProfileDataChanged	 =  PR_FALSE;
+    mProfileDataChanged  =  PR_FALSE;
     mForgetProfileCalled =  PR_FALSE;
     m4xProfilesAdded     =  PR_FALSE;
     mProfiles            =  new nsVoidArray();
@@ -102,9 +115,9 @@ nsProfileAccess::nsProfileAccess()
     FillProfileInfo(mNewRegFile);
 }
 
-// On the way out, close the registry if it is 
+// On the way out, close the registry if it is
 // still opened and free up the resources.
-nsProfileAccess::~nsProfileAccess() 
+nsProfileAccess::~nsProfileAccess()
 {
     // Release all resources.
     mNewRegFile = nsnull;
@@ -112,7 +125,7 @@ nsProfileAccess::~nsProfileAccess()
 }
 
 // A wrapper function to call the interface to get a platform file charset.
-nsresult 
+nsresult
 GetPlatformCharset(nsString& aCharset)
 {
     nsresult rv;
@@ -129,12 +142,12 @@ GetPlatformCharset(nsString& aCharset)
 }
 
 // Apply a charset conversion from the given charset to Unicode for input C string.
-nsresult 
+nsresult
 ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
 {
     nsresult rv;
     // convert result to unicode
-    nsCOMPtr<nsICharsetConverterManager> ccm = 
+    nsCOMPtr<nsICharsetConverterManager> ccm =
              do_GetService(kCharsetConverterManagerCID, &rv);
 
     if(NS_SUCCEEDED(rv)) {
@@ -163,7 +176,7 @@ ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAString& outS
                     rv = NS_ERROR_OUT_OF_MEMORY;
                 }
             }
-        }    
+        }
     }
     return rv;
 }
@@ -194,37 +207,37 @@ nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles)
 // Given the name of the profile, the structure that
 // contains the relavant profile information will be filled.
 // Caller must free up the profile struct.
-nsresult	
+nsresult
 nsProfileAccess::GetValue(const PRUnichar* profileName, ProfileStruct** aProfile)
 {
     NS_ENSURE_ARG(profileName);
     NS_ENSURE_ARG_POINTER(aProfile);
     *aProfile = nsnull;
-    
+
     PRInt32 index = 0;
     index = FindProfileIndex(profileName, PR_FALSE);
-    if (index < 0) 
-        return NS_ERROR_FAILURE; 
+    if (index < 0)
+        return NS_ERROR_FAILURE;
 
     ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
     *aProfile = new ProfileStruct(*profileItem);
     if (!*aProfile)
         return NS_ERROR_OUT_OF_MEMORY;
-        
+
     return NS_OK;
 }
 
-// This method writes all changes to the array of the 
+// This method writes all changes to the array of the
 // profile structs. If it is an existing profile, it
 // will be updated. If it is a new profile, it gets added
-// to the list. 
+// to the list.
 nsresult
 nsProfileAccess::SetValue(ProfileStruct* aProfile)
 {
     NS_ENSURE_ARG(aProfile);
 
-    PRInt32	index = 0;
+    PRInt32     index = 0;
     ProfileStruct* profileItem;
 
     index = FindProfileIndex(aProfile->profileName.get(), aProfile->isImportType);
@@ -237,7 +250,7 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
     }
     else
     {
-        profileItem	= new ProfileStruct(*aProfile);
+        profileItem     = new ProfileStruct(*aProfile);
         if (!profileItem)
             return NS_ERROR_OUT_OF_MEMORY;
     profileItem->updateProfileEntry = PR_TRUE;
@@ -254,35 +267,34 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 }
 
 // Enumerates through the registry for profile
-// information. Reads in the data into the array 
+// information. Reads in the data into the array
 // of profile structs. After this, all the callers
 // requesting profile info will get thier data from
 // profiles array. All the udates will be done to this
 // data structure to reflect the latest status.
 // Data will be flushed at the end.
-nsresult 
+nsresult
 nsProfileAccess::FillProfileInfo(nsIFile* regName)
 {
     nsresult rv = NS_OK;
-    PRBool fixRegEntries = PR_FALSE;
 
     nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     rv = registry->Open(regName);
-    if (NS_FAILED(rv)) return rv;   
+    if (NS_FAILED(rv)) return rv;
 
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
     nsRegistryKey profilesTreeKey;
 
-    rv = registry->GetKey(nsIRegistry::Common, 
-                            kRegistryProfileSubtreeString.get(), 
+    rv = registry->GetKey(nsIRegistry::Common,
+                            kRegistryProfileSubtreeString.get(),
                             &profilesTreeKey);
 
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
     {
-        rv = registry->AddKey(nsIRegistry::Common, 
-                                kRegistryProfileSubtreeString.get(), 
+        rv = registry->AddKey(nsIRegistry::Common,
+                                kRegistryProfileSubtreeString.get(),
                                 &profilesTreeKey);
         if (NS_FAILED(rv)) return rv;
     }
@@ -297,12 +309,12 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
     // For the following variables, we do not check for the rv value
     // but check for the variable instead, because it is valid to proceed
-    // without the variables having a value. That's why there are no returns 
+    // without the variables having a value. That's why there are no returns
     // for invalid rv values.
 
     // Get the current profile
-    rv = registry->GetString(profilesTreeKey, 
-                               kRegistryCurrentProfileString.get(), 
+    rv = registry->GetString(profilesTreeKey,
+                               kRegistryCurrentProfileString.get(),
                                getter_Copies(tmpCurrentProfile));
 
     if (tmpCurrentProfile)
@@ -318,13 +330,13 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
     }
 
     // Get the profile version
-    rv = registry->GetString(profilesTreeKey, 
-                             kRegistryVersionString.get(), 
+    rv = registry->GetString(profilesTreeKey,
+                             kRegistryVersionString.get(),
                              getter_Copies(tmpVersion));
 
     // Get the preg info
-    rv = registry->GetString(profilesTreeKey, 
-                             kRegistryHavePREGInfoString.get(), 
+    rv = registry->GetString(profilesTreeKey,
+                             kRegistryHavePREGInfoString.get(),
                              getter_Copies(tmpPREGInfo));
 
     if (tmpPREGInfo == nsnull)
@@ -341,7 +353,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
 
     PRBool currentProfileValid = mCurrentProfile.IsEmpty();
 
-    while (NS_OK != enumKeys->IsDone()) 
+    while (NS_OK != enumKeys->IsDone())
     {
         nsCOMPtr<nsISupports> base;
 
@@ -366,46 +378,46 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
         rv = node->GetName(getter_Copies(profile));
         if (NS_FAILED(rv)) return rv;
 
-        nsRegistryKey profKey;								
+        nsRegistryKey profKey;
         rv = node->GetKey(&profKey);
         if (NS_FAILED(rv)) return rv;
 
-        rv = registry->GetString(profKey, 
-                                 kRegistryMigratedString.get(), 
+        rv = registry->GetString(profKey,
+                                 kRegistryMigratedString.get(),
                                  getter_Copies(isMigrated));
         if (NS_FAILED(rv)) return rv;
         nsDependentString isMigratedString(isMigrated);
 
         // Not checking the return values of these variables as they
-        // are for activation, they are optional and their values 
+        // are for activation, they are optional and their values
         // do not call for a return
-        registry->GetString(profKey, 
-                            kRegistryNCProfileNameString.get(), 
+        registry->GetString(profKey,
+                            kRegistryNCProfileNameString.get(),
                             getter_Copies(NCProfileName));
 
-        registry->GetString(profKey, 
-                            kRegistryNCServiceDenialString.get(), 
+        registry->GetString(profKey,
+                            kRegistryNCServiceDenialString.get(),
                             getter_Copies(NCDeniedService));
 
-        registry->GetString(profKey, 
-                            kRegistryNCUserEmailString.get(), 
+        registry->GetString(profKey,
+                            kRegistryNCUserEmailString.get(),
                             getter_Copies(NCEmailAddress));
 
-        registry->GetString(profKey, 
-                            kRegistryNCHavePREGInfoString.get(), 
+        registry->GetString(profKey,
+                            kRegistryNCHavePREGInfoString.get(),
                             getter_Copies(NCHavePregInfo));
 
         // Make sure that mCurrentProfile is valid
         if (!mCurrentProfile.IsEmpty() && mCurrentProfile.Equals(profile))
           currentProfileValid = PR_TRUE;
 
-        ProfileStruct*  profileItem	= new ProfileStruct();
+        ProfileStruct*  profileItem     = new ProfileStruct();
         if (!profileItem)
             return NS_ERROR_OUT_OF_MEMORY;
 
         profileItem->updateProfileEntry     = PR_TRUE;
-        profileItem->profileName      = NS_STATIC_CAST(const PRUnichar*, profile);        
-        
+        profileItem->profileName      = NS_STATIC_CAST(const PRUnichar*, profile);
+
         PRInt64 tmpLongLong;
         rv = registry->GetLongLong(profKey,
                                    kRegistryCreationTimeString.get(),
@@ -418,12 +430,12 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
                                    &tmpLongLong);
         if (NS_SUCCEEDED(rv))
             profileItem->lastModTime = tmpLongLong;
-        
+
         rv = profileItem->InternalizeLocation(registry, profKey, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Internalizing profile location failed");
         // Not checking the error since most won't have this info
         profileItem->InternalizeMigratedFromLocation(registry, profKey);
-        
+
         profileItem->isMigrated       = isMigratedString.Equals(kRegistryYesString);
 
         if (NCProfileName)
@@ -448,15 +460,15 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
             }
         }
 
-        mProfiles->AppendElement((void*)profileItem);			
-        
+        mProfiles->AppendElement((void*)profileItem);
+
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
     }
 
     if (!currentProfileValid)
       mCurrentProfile.SetLength(0);
-      
+
     return rv;
 }
 
@@ -512,7 +524,7 @@ nsProfileAccess::GetNum4xProfiles(PRInt32 *numProfiles)
 // the first profile will be used as the current profile.
 // This routine returns the first 5x profile.
 // Caller must free up the string (firstProfile).
-void 
+void
 nsProfileAccess::GetFirstProfile(PRUnichar **firstProfile)
 {
     if (!firstProfile) {
@@ -553,7 +565,7 @@ nsProfileAccess::SetCurrentProfile(const PRUnichar *profileName)
 // Return the current profile value.
 // If mCurrent profile is already set, that value is returned.
 // If there is only one profile that value is set to CurrentProfile.
-void 
+void
 nsProfileAccess::GetCurrentProfile(PRUnichar **profileName)
 {
     *profileName = nsnull;
@@ -580,7 +592,7 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
     NS_ASSERTION(profileName, "Invalid profile name");
 
     // delete this entry from the mProfiles array
-    PRInt32	index = FindProfileIndex(profileName, PR_FALSE);
+    PRInt32     index = FindProfileIndex(profileName, PR_FALSE);
 
     if (index >= 0)
     {
@@ -592,11 +604,11 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
         }
     }
 }
-    
+
 // Return the index of a given profiel from the arraf of profile structs.
 PRInt32
 nsProfileAccess::FindProfileIndex(const PRUnichar* profileName, PRBool forImport)
-{    
+{
     NS_ASSERTION(profileName, "Invalid profile name");
 
     PRInt32 retval = -1;
@@ -616,7 +628,7 @@ nsProfileAccess::FindProfileIndex(const PRUnichar* profileName, PRBool forImport
 }
 
 // Flush profile information from the data structure to the registry.
-nsresult 
+nsresult
 nsProfileAccess::UpdateRegistry(nsIFile* regName)
 {
     nsresult rv;
@@ -634,20 +646,20 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     rv = registry->Open(regName);
-    if (NS_FAILED(rv)) return rv;   
+    if (NS_FAILED(rv)) return rv;
 
     // Enumerate all subkeys (immediately) under the given node.
     nsCOMPtr<nsIEnumerator> enumKeys;
     nsRegistryKey profilesTreeKey;
 
     // Get the major subtree
-    rv = registry->GetKey(nsIRegistry::Common, 
-                          kRegistryProfileSubtreeString.get(), 
+    rv = registry->GetKey(nsIRegistry::Common,
+                          kRegistryProfileSubtreeString.get(),
                           &profilesTreeKey);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
     {
-        rv = registry->AddKey(nsIRegistry::Common, 
-                                kRegistryProfileSubtreeString.get(), 
+        rv = registry->AddKey(nsIRegistry::Common,
+                                kRegistryProfileSubtreeString.get(),
                                 &profilesTreeKey);
         if (NS_FAILED(rv)) return rv;
     }
@@ -655,21 +667,21 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     // Set the current profile
     if (!mCurrentProfile.IsEmpty()) {
 
-        rv = registry->SetString(profilesTreeKey, 
-                                 kRegistryCurrentProfileString.get(), 
+        rv = registry->SetString(profilesTreeKey,
+                                 kRegistryCurrentProfileString.get(),
                                  mCurrentProfile.get());
         if (NS_FAILED(rv)) return rv;
     }
 
     // Set the registry version
-    rv = registry->SetString(profilesTreeKey, 
-                             kRegistryVersionString.get(), 
+    rv = registry->SetString(profilesTreeKey,
+                             kRegistryVersionString.get(),
                              kRegistryCurrentVersion.get());
     if (NS_FAILED(rv)) return rv;
 
     // Set preg info
-    rv = registry->SetString(profilesTreeKey, 
-                             kRegistryHavePREGInfoString.get(), 
+    rv = registry->SetString(profilesTreeKey,
+                             kRegistryHavePREGInfoString.get(),
                              mHavePREGInfo.get());
     if (NS_FAILED(rv)) return rv;
 
@@ -679,7 +691,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     rv = enumKeys->First();
     if (NS_FAILED(rv)) return rv;
 
-    while (NS_OK != enumKeys->IsDone()) 
+    while (NS_OK != enumKeys->IsDone())
     {
         nsCOMPtr<nsISupports> base;
 
@@ -713,32 +725,32 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
         }
         else
         {
-            nsRegistryKey profKey;								
+            nsRegistryKey profKey;
 
             ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
             rv = node->GetKey(&profKey);
             if (NS_FAILED(rv)) return rv;
 
-            rv = registry->SetString(profKey, 
-                                     kRegistryMigratedString.get(), 
+            rv = registry->SetString(profKey,
+                                     kRegistryMigratedString.get(),
                                      profileItem->isMigrated ? kRegistryYesString.get() : kRegistryNoString.get());
             if (NS_FAILED(rv)) return rv;
 
-            registry->SetString(profKey, 
-                                kRegistryNCProfileNameString.get(),  
+            registry->SetString(profKey,
+                                kRegistryNCProfileNameString.get(),
                                 profileItem->NCProfileName.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCServiceDenialString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCServiceDenialString.get(),
                                 profileItem->NCDeniedService.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCUserEmailString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCUserEmailString.get(),
                                 profileItem->NCEmailAddress.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCHavePREGInfoString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCHavePREGInfoString.get(),
                                 profileItem->NCHavePregInfo.get());
 
             registry->SetLongLong(profKey,
@@ -748,7 +760,7 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
             registry->SetLongLong(profKey,
                                   kRegistryLastModTimeString.get(),
                                   &profileItem->lastModTime);
-            
+
             rv = profileItem->ExternalizeLocation(registry, profKey);
             if (NS_FAILED(rv)) {
                 NS_ASSERTION(PR_FALSE, "Could not update profile location");
@@ -772,32 +784,32 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
         if (!profileItem->isImportType && profileItem->updateProfileEntry)
         {
-            nsRegistryKey profKey;								
+            nsRegistryKey profKey;
 
-            rv = registry->AddKey(profilesTreeKey, 
-                                    profileItem->profileName.get(), 
+            rv = registry->AddKey(profilesTreeKey,
+                                    profileItem->profileName.get(),
                                     &profKey);
             if (NS_FAILED(rv)) return rv;
 
-            rv = registry->SetString(profKey, 
-                                     kRegistryMigratedString.get(), 
+            rv = registry->SetString(profKey,
+                                     kRegistryMigratedString.get(),
                                      profileItem->isMigrated ? kRegistryYesString.get() : kRegistryNoString.get());
             if (NS_FAILED(rv)) return rv;
 
-            registry->SetString(profKey, 
-                                kRegistryNCProfileNameString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCProfileNameString.get(),
                                 profileItem->NCProfileName.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCServiceDenialString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCServiceDenialString.get(),
                                 profileItem->NCDeniedService.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCUserEmailString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCUserEmailString.get(),
                                 profileItem->NCEmailAddress.get());
 
-            registry->SetString(profKey, 
-                                kRegistryNCHavePREGInfoString.get(), 
+            registry->SetString(profKey,
+                                kRegistryNCHavePREGInfoString.get(),
                                 profileItem->NCHavePregInfo.get());
 
             registry->SetLongLong(profKey,
@@ -843,26 +855,26 @@ nsProfileAccess::GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFil
 #ifdef XP_MAC
             PRBool exists;
             rv = profileDir->Exists(&exists);
-            if (NS_FAILED(rv)) 
+            if (NS_FAILED(rv))
                 return rv;
             if (exists) {
                 PRBool inTrash;
                 nsCOMPtr<nsIFile> trashFolder;
-                            
+
                 rv = NS_GetSpecialDirectory(NS_MAC_TRASH_DIR, getter_AddRefs(trashFolder));
                 if (NS_FAILED(rv)) return rv;
                 rv = trashFolder->Contains(profileDir, PR_TRUE, &inTrash);
                 if (NS_FAILED(rv)) return rv;
                 if (inTrash) {
                     return NS_ERROR_FILE_NOT_FOUND;
-                }  
+                }
             }
 #endif
             NS_IF_ADDREF(*originalDir = profileDir);
         }
         return rv;
     }
-    return NS_ERROR_FAILURE;    
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -907,12 +919,12 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
     NS_ENSURE_ARG_POINTER(result);
     *result = nsnull;
 
-    nsresult rv = NS_OK;    
+    nsresult rv = NS_OK;
     PRInt32 count, localLength = 0;
     PRUnichar **outArray, **next;
     PRInt32 numElems = mProfiles->Count();
     PRInt32 profilesCount;
-    
+
     switch (whichKind)
     {
         case nsIProfileInternal::LIST_ONLY_NEW:
@@ -935,15 +947,15 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
             NS_ASSERTION(PR_FALSE, "Bad parameter");
             return NS_ERROR_INVALID_ARG;
     }
-    
+
     next = outArray = (PRUnichar **)nsMemory::Alloc(count * sizeof(PRUnichar *));
     if (!outArray)
         return NS_ERROR_OUT_OF_MEMORY;
-        
+
     for (PRInt32 index=0; index < numElems && localLength < count; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
-        
+
         if (whichKind == nsIProfileInternal::LIST_ONLY_OLD && (profileItem->isMigrated || profileItem->isImportType))
             continue;
         else if (whichKind == nsIProfileInternal::LIST_ONLY_NEW && (!profileItem->isMigrated || profileItem->isImportType))
@@ -961,7 +973,7 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
         next++;
         localLength++;
     }
-    
+
     if (NS_SUCCEEDED(rv))
     {
         *result = outArray;
@@ -973,7 +985,7 @@ nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar *
             nsMemory::Free(*next);
         nsMemory::Free(outArray);
     }
-    
+
     return rv;
 }
 
@@ -1036,7 +1048,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
     if (fromImport)
         m4xProfilesAdded = PR_TRUE;
     // Enumerate subkeys till done.
-    while( (NS_OK != enumKeys->IsDone())) 
+    while( (NS_OK != enumKeys->IsDone()))
     {
         nsCOMPtr<nsISupports> base;
         rv = enumKeys->CurrentItem(getter_AddRefs(base));
@@ -1082,11 +1094,11 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
             }
         }
 
-        nsRegistryKey key;								
+        nsRegistryKey key;
         rv = node->GetKey(&key);
         if (NS_FAILED(rv)) return rv;
-		
-        ProfileStruct*	profileItem  = new ProfileStruct();
+
+        ProfileStruct*  profileItem  = new ProfileStruct();
         if (!profileItem)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1109,7 +1121,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
         nsCAutoString unixProfileName( PR_GetEnv(PROFILE_NAME_ENVIRONMENT_VARIABLE) );
         nsCAutoString unixProfileDirectory( PR_GetEnv(PROFILE_HOME_ENVIRONMENT_VARIABLE) );
 
-        if (unixProfileName.IsEmpty()  || 
+        if (unixProfileName.IsEmpty()  ||
             unixProfileDirectory.IsEmpty())
         {
             unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
@@ -1155,7 +1167,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
                 profileItem->updateProfileEntry = PR_TRUE;
 
                 profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).get();
-                
+
                 nsCOMPtr<nsILocalFile> localFile;
                 rv = NS_NewNativeLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
                 if (NS_FAILED(rv)) return rv;
@@ -1188,7 +1200,7 @@ nsProfileAccess::SetPREGInfo(const char* pregInfo)
 }
 
 //Get the for PREG info.
-void 
+void
 nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
 {
     NS_ASSERTION(profileName, "Invalid profile name");
@@ -1214,7 +1226,7 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
 }
 
 
-// Clear the profile member data structure 
+// Clear the profile member data structure
 // We need to fill in the data from the new registry
 nsresult
 nsProfileAccess::ResetProfileMembers()
@@ -1227,20 +1239,20 @@ nsProfileAccess::ResetProfileMembers()
 nsresult
 nsProfileAccess::DetermineForceMigration(PRBool *forceMigration)
 {
-	if (!forceMigration) return NS_ERROR_NULL_POINTER;
-    
+    if (!forceMigration) return NS_ERROR_NULL_POINTER;
+
     PRInt32 numProfiles;
     GetNumProfiles(&numProfiles);
-    
-	if (numProfiles > 0) {
-		// we have some 6.0 profiles, don't force migration:
-	    *forceMigration = PR_FALSE;
-		return NS_OK;
-	}
 
-	// even if we don't any 4.x profiles, running -installer is safe.  so do it
-	*forceMigration = PR_TRUE;
-	return NS_OK;
+    if (numProfiles > 0) {
+        // we have some 6.0 profiles, don't force migration:
+        *forceMigration = PR_FALSE;
+            return NS_OK;
+    }
+
+    // even if we don't any 4.x profiles, running -installer is safe.  so do it
+    *forceMigration = PR_TRUE;
+    return NS_OK;
 }
 
 // **********************************************************************
@@ -1274,7 +1286,7 @@ ProfileStruct& ProfileStruct::operator=(const ProfileStruct& rhs)
 
     nsresult rv;
         nsCOMPtr<nsIFile> file;
-    
+
     resolvedLocation = nsnull;
     if (rhs.resolvedLocation) {
         regLocationData.Truncate(0);
@@ -1285,14 +1297,14 @@ ProfileStruct& ProfileStruct::operator=(const ProfileStruct& rhs)
     }
     else
         regLocationData = rhs.regLocationData;
-    
-    migratedFrom = nsnull;    
+
+    migratedFrom = nsnull;
     if (rhs.migratedFrom) {
         rv = rhs.migratedFrom->Clone(getter_AddRefs(file));
         if (NS_SUCCEEDED(rv))
             migratedFrom = do_QueryInterface(file);
     }
-    
+
     return *this;
 }
 
@@ -1306,9 +1318,9 @@ nsresult ProfileStruct::GetResolvedProfileDir(nsILocalFile **aDirectory)
         NS_ADDREF(*aDirectory);
         return NS_OK;
     }
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FILE_NOT_FOUND; // The only reason it would not exist.
 }
-    
+
 nsresult ProfileStruct::SetResolvedProfileDir(nsILocalFile *aDirectory)
 {
     NS_ENSURE_ARG(aDirectory);
@@ -1328,7 +1340,7 @@ nsresult ProfileStruct::CopyProfileLocation(ProfileStruct *destStruct)
         if (NS_FAILED(rv)) return rv;
     }
     destStruct->regLocationData = regLocationData;
-    
+
     return NS_OK;
 }
 
@@ -1336,31 +1348,31 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 {
     nsresult rv;
     nsCOMPtr<nsILocalFile> tempLocal;
-    
+
     // Reset ourselves
     regLocationData.SetLength(0);
     resolvedLocation = nsnull;
-    
+
     if (is4x)
     {
         nsXPIDLString profLoc;
-        
+
         rv = aRegistry->GetString( profKey, NS_LITERAL_STRING("ProfileLocation").get(), getter_Copies(profLoc));
         if (NS_FAILED(rv)) return rv;
         regLocationData = profLoc;
-		
+
 #if defined(XP_MAC)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
-        
+
         // Unescape profile location
         NS_ConvertUCS2toUTF8 tempLoc(profLoc);
         nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
         nsAutoString convertedProfLoc(NS_ConvertUTF8toUCS2(profileLocation).get());
 #else
-		nsAutoString charSet;
-		rv = GetPlatformCharset(charSet);
-		if (NS_FAILED(rv)) return rv;
+        nsAutoString charSet;
+        rv = GetPlatformCharset(charSet);
+        if (NS_FAILED(rv)) return rv;
 
         // Unescape profile location and convert it to the right format
         nsCAutoString tempLoc; tempLoc.AssignWithConversion(profLoc);
@@ -1377,8 +1389,8 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     {
         nsXPIDLString regData;
 
-        rv = aRegistry->GetString(profKey, 
-                                  kRegistryDirectoryString.get(), 
+        rv = aRegistry->GetString(profKey,
+                                  kRegistryDirectoryString.get(),
                                   getter_Copies(regData));
         if (NS_FAILED(rv)) return rv;
         regLocationData = regData;
@@ -1403,14 +1415,14 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         if (NS_SUCCEEDED(tempLocal->Exists(&exists)) && exists)
             SetResolvedProfileDir(tempLocal);
     }
-    
+
     return NS_OK;
 }
 
 nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKey profKey)
 {
     nsresult rv;
-    
+
     if (resolvedLocation)
     {
         nsAutoString regData;
@@ -1439,9 +1451,9 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
     }
     else if (regLocationData.Length() != 0)
     {
-        // Write the original data back out - maybe it can be resolved later. 
-        rv = aRegistry->SetString(profKey, 
-                                 kRegistryDirectoryString.get(), 
+        // Write the original data back out - maybe it can be resolved later.
+        rv = aRegistry->SetString(profKey,
+                                 kRegistryDirectoryString.get(),
                                  regLocationData.get());
     }
     else
@@ -1449,7 +1461,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         NS_ASSERTION(PR_FALSE, "ProfileStruct has no location data!");
         rv = NS_ERROR_FAILURE;
     }
-        
+
     return rv;
 }
 
@@ -1458,9 +1470,9 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
     nsresult rv;
     nsXPIDLCString regData;
     nsCOMPtr<nsILocalFile> tempLocal;
-    
-    rv = aRegistry->GetStringUTF8(profKey, 
-                                  kRegistryMigratedFromString.get(), 
+
+    rv = aRegistry->GetStringUTF8(profKey,
+                                  kRegistryMigratedFromString.get(),
                                   getter_Copies(regData));
     if (NS_SUCCEEDED(rv))
     {
@@ -1486,7 +1498,7 @@ nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
 {
     nsresult rv = NS_OK;
     nsCAutoString regData;
-    
+
     if (migratedFrom)
     {
 #if XP_MAC
@@ -1510,7 +1522,7 @@ nsresult ProfileStruct::EnsureDirPathExists(nsILocalFile *aDir, PRBool *wasCreat
     NS_ENSURE_ARG(aDir);
     NS_ENSURE_ARG_POINTER(wasCreated);
     *wasCreated = PR_FALSE;
-    
+
     nsresult rv;
     PRBool exists;
     rv = aDir->Exists(&exists);
@@ -1522,3 +1534,507 @@ nsresult ProfileStruct::EnsureDirPathExists(nsILocalFile *aDir, PRBool *wasCreat
     return rv;
 }
 
+
+// **********************************************************************
+// class nsProfileLock
+// **********************************************************************
+
+nsProfileLock::nsProfileLock() :
+    mHaveLock(PR_FALSE)
+#if defined (XP_WIN)
+    ,mLockFileHandle(INVALID_HANDLE_VALUE)
+#elif defined (XP_OS2)
+    ,mLockFileHandle(-1)
+#elif defined (XP_UNIX)
+    ,mPidLockFileName(nsnull)
+    ,mLockFileDesc(-1)
+#endif
+{
+#if defined (XP_UNIX)
+    next = prev = this;
+#endif
+}
+
+
+nsProfileLock::nsProfileLock(nsProfileLock& src)
+{
+    *this = src;
+}
+
+
+nsProfileLock& nsProfileLock::operator=(nsProfileLock& rhs)
+{
+    Unlock();
+
+    mHaveLock = rhs.mHaveLock;
+    rhs.mHaveLock = PR_FALSE;
+
+#if defined (XP_MAC)
+    mLockFile = rhs.mLockFile;
+    rhs.mLockFile = nsnull;
+#elif defined (XP_WIN)
+    mLockFileHandle = rhs.mLockFileHandle;
+    rhs.mLockFileHandle = INVALID_HANDLE_VALUE;
+#elif defined (XP_OS2)
+    mLockFileHandle = rhs.mLockFileHandle;
+    rhs.mLockFileHandle = -1;
+#elif defined (XP_UNIX)
+    mLockFileDesc = rhs.mLockFileDesc;
+    rhs.mLockFileDesc = -1;
+    mPidLockFileName = rhs.mPidLockFileName;
+    rhs.mPidLockFileName = nsnull;
+    if (mPidLockFileName)
+    {
+        // rhs had a symlink lock, therefore it was on the list.
+        PR_REMOVE_LINK(&rhs);
+        PR_APPEND_LINK(this, &mPidLockList);
+    }
+#endif
+
+    return *this;
+}
+
+
+nsProfileLock::~nsProfileLock()
+{
+    Unlock();
+}
+
+
+#if defined (XP_UNIX)
+
+static int setupPidLockCleanup;
+
+PRCList nsProfileLock::mPidLockList =
+    PR_INIT_STATIC_CLIST(&nsProfileLock::mPidLockList);
+
+void nsProfileLock::RemovePidLockFiles()
+{
+    while (!PR_CLIST_IS_EMPTY(&mPidLockList))
+    {
+        nsProfileLock *lock = NS_STATIC_CAST(nsProfileLock*, mPidLockList.next);
+        lock->Unlock();
+    }
+}
+
+static struct sigaction SIGHUP_oldact;
+static struct sigaction SIGINT_oldact;
+static struct sigaction SIGQUIT_oldact;
+static struct sigaction SIGILL_oldact;
+static struct sigaction SIGABRT_oldact;
+static struct sigaction SIGSEGV_oldact;
+static struct sigaction SIGTERM_oldact;
+
+void nsProfileLock::FatalSignalHandler(int signo)
+{
+    // Remove any locks still held.
+    RemovePidLockFiles();
+
+    // Chain to the old handler, which may exit.
+    struct sigaction *oldact = nsnull;
+
+    switch (signo) {
+      case SIGHUP:
+        oldact = &SIGHUP_oldact;
+        break;
+      case SIGINT:
+        oldact = &SIGINT_oldact;
+        break;
+      case SIGQUIT:
+        oldact = &SIGQUIT_oldact;
+        break;
+      case SIGILL:
+        oldact = &SIGILL_oldact;
+        break;
+      case SIGABRT:
+        oldact = &SIGABRT_oldact;
+        break;
+      case SIGSEGV:
+        oldact = &SIGSEGV_oldact;
+        break;
+      case SIGTERM:
+        oldact = &SIGTERM_oldact;
+        break;
+      default:
+        NS_NOTREACHED("bad signo");
+        break;
+    }
+
+    if (oldact &&
+        oldact->sa_handler &&
+        oldact->sa_handler != SIG_DFL &&
+        oldact->sa_handler != SIG_IGN)
+    {
+        oldact->sa_handler(signo);
+    }
+
+    // Backstop exit call, just in case.
+    _exit(signo);
+}
+
+#endif /* XP_UNIX */
+
+
+nsresult nsProfileLock::Lock(nsILocalFile* aFile)
+{
+#if defined (XP_UNIX)
+    NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "lock");
+    NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
+#else
+    NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, "parent.lock");
+#endif
+
+    nsresult rv;
+    NS_ENSURE_STATE(!mHaveLock);
+
+    PRBool isDir;
+    rv = aFile->IsDirectory(&isDir);
+    if (NS_FAILED(rv))
+        return rv;
+    if (!isDir)
+        return NS_ERROR_FILE_NOT_DIRECTORY;
+
+    nsCOMPtr<nsILocalFile> lockFile;
+    rv = aFile->Clone((nsIFile **)((void **)getter_AddRefs(lockFile)));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = lockFile->Append(LOCKFILE_NAME);
+    if (NS_FAILED(rv))
+        return rv;
+
+#if defined(XP_MAC)
+    struct LockProcessInfo
+    {
+        ProcessSerialNumber psn;
+        unsigned long launchDate;
+    };
+
+    PRFileDesc *fd = nsnull;
+    PRInt32 ioBytes;
+    ProcessInfoRec processInfo;
+    LockProcessInfo lockProcessInfo;
+
+    rv = lockFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+    if (NS_SUCCEEDED(rv))
+    {
+        ioBytes = PR_Read(fd, &lockProcessInfo, sizeof(LockProcessInfo));
+        PR_Close(fd);
+
+        if (ioBytes == sizeof(LockProcessInfo))
+        {
+            processInfo.processAppSpec = nsnull;
+            processInfo.processName = nsnull;
+            processInfo.processInfoLength = sizeof(ProcessInfoRec);
+            if (::GetProcessInformation(&lockProcessInfo.psn, &processInfo) == noErr &&
+                processInfo.processLaunchDate == lockProcessInfo.launchDate)
+            {
+                return NS_ERROR_FILE_ACCESS_DENIED;
+            }
+        }
+        else
+        {
+            NS_WARNING("Could not read lock file - ignoring lock");
+        }
+    }
+
+    rv = lockFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0, &fd);
+    if (NS_FAILED(rv))
+        return rv;
+
+    static LockProcessInfo sSelfInfo;
+    static PRBool sSelfInfoInited;
+
+    if (!sSelfInfoInited)
+    {
+        ProcessSerialNumber psn;
+        if (::GetCurrentProcess(&psn) == noErr)
+        {
+            processInfo.processAppSpec = nsnull;
+            processInfo.processName = nsnull;
+            processInfo.processInfoLength = sizeof(ProcessInfoRec);
+            if (::GetProcessInformation(&psn, &processInfo) == noErr)
+            {
+                sSelfInfo.psn = processInfo.processNumber;
+                sSelfInfo.launchDate = processInfo.processLaunchDate;
+                sSelfInfoInited = PR_TRUE;
+            }
+        }
+    }
+    if (!sSelfInfoInited)
+    {
+        PR_Close(fd);
+        return NS_ERROR_FAILURE;
+    }
+
+    ioBytes = PR_Write(fd, &sSelfInfo, sizeof(LockProcessInfo));
+    PR_Close(fd);
+    if (ioBytes != sizeof(LockProcessInfo))
+        return NS_ERROR_FAILURE;
+    mLockFile = lockFile;
+
+#elif defined(XP_WIN)
+    nsCAutoString filePath;
+    rv = lockFile->GetNativePath(filePath);
+    if (NS_FAILED(rv))
+        return rv;
+    mLockFileHandle = CreateFile(filePath.get(),
+                                 GENERIC_READ | GENERIC_WRITE,
+                                 0, // no sharing - of course
+                                 nsnull,
+                                 OPEN_ALWAYS,
+                                 FILE_FLAG_DELETE_ON_CLOSE,
+                                 nsnull);
+    if (mLockFileHandle == INVALID_HANDLE_VALUE)
+        return NS_ERROR_FILE_ACCESS_DENIED;
+#elif defined(XP_OS2)
+    nsCAutoString filePath;
+    rv = lockFile->GetNativePath(filePath);
+    if (NS_FAILED(rv))
+        return rv;
+
+    ULONG   ulAction = 0;
+    APIRET  rc;
+    rc = DosOpen(filePath.get(),
+                  &mLockFileHandle,
+                  &ulAction,
+                  0,
+                  FILE_NORMAL,
+                  OPEN_ACTION_CREATE_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS,
+                  OPEN_ACCESS_READWRITE | OPEN_SHARE_DENYREADWRITE | OPEN_FLAGS_NOINHERIT,
+                  0 );
+    if (rc != NO_ERROR)
+    {
+        mLockFileHandle = -1;
+        return NS_ERROR_FILE_ACCESS_DENIED;
+    }
+#elif defined(VMS)
+    nsCAutoString filePath;
+    rv = lockFile->GetNativePath(filePath);
+    if (NS_FAILED(rv))
+        return rv;
+
+    remove(filePath.get());
+    mLockFileDesc = open(filePath.get(), O_WRONLY | O_CREAT | O_EXCL, 0666);
+    if (mLockFileDesc == -1)
+    {
+        NS_ERROR("Failed to open lock file.");
+        return NS_ERROR_FAILURE;
+    }
+#elif defined(XP_UNIX)
+    nsCOMPtr<nsILocalFile> oldLockFile;
+    rv = aFile->Clone((nsIFile **)((void **)getter_AddRefs(oldLockFile)));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = oldLockFile->Append(OLD_LOCKFILE_NAME);
+    if (NS_FAILED(rv))
+        return rv;
+    nsCAutoString oldFilePath;
+    rv = oldLockFile->GetNativePath(oldFilePath);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // First, try the 4.x-compatible symlink technique, which works with NFS
+    // without depending on (broken or missing, too often) lockd.
+    struct in_addr inaddr;
+    inaddr.s_addr = INADDR_LOOPBACK;
+
+    char hostname[256];
+    PRStatus status = PR_GetSystemInfo(PR_SI_HOSTNAME, hostname, sizeof hostname);
+    if (status == PR_SUCCESS)
+    {
+        char netdbbuf[PR_NETDB_BUF_SIZE];
+        PRHostEnt hostent;
+        status = PR_GetHostByName(hostname, netdbbuf, sizeof netdbbuf, &hostent);
+        if (status == PR_SUCCESS)
+            memcpy(&inaddr, hostent.h_addr, sizeof inaddr);
+    }
+
+    char *signature =
+        PR_smprintf("%s:%lu", inet_ntoa(inaddr), (unsigned long)getpid());
+    const char *oldFileName = oldFilePath.get();
+    int symlink_rv, symlink_errno, tries = 0;
+
+    // use ns4.x-compatible symlinks if the FS supports them
+    while ((symlink_rv = symlink(signature, oldFileName)) < 0)
+    {
+        symlink_errno = errno;
+        if (symlink_errno != EEXIST)
+            break;
+
+        // the link exists; see if it's from this machine, and if
+        // so if the process is still active
+        char buf[1024];
+        int len = readlink(oldFileName, buf, sizeof buf - 1);
+        if (len > 0)
+        {
+            buf[len] = '\0';
+            char *colon = strchr(buf, ':');
+            if (colon)
+            {
+                *colon++ = '\0';
+                unsigned long addr = inet_addr(buf);
+                if (addr != (unsigned long) -1)
+                {
+                    char *after = nsnull;
+                    pid_t pid = strtol(colon, &after, 0);
+                    if (pid != 0 && *after == '\0')
+                    {
+                        if (addr != inaddr.s_addr)
+                        {
+                            // Remote lock: give up even if stuck.
+                            break;
+                        }
+
+                        // kill(pid,0) is a neat trick to check if a
+                        // process exists
+                        if (kill(pid, 0) == 0 || errno == ESRCH)
+                        {
+                            // Local process appears to be alive, ass-u-me it
+                            // is another Mozilla instance, or a compatible
+                            // derivative, that's currently using the profile.
+                            // XXX need an "are you Mozilla?" protocol
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Lock seems to be bogus: try to claim it.  Give up after a large
+        // number of attempts (100 comes from the 4.x codebase).
+        (void) unlink(oldFileName);
+        if (++tries > 100)
+            break;
+    }
+
+    PR_smprintf_free(signature);
+    signature = nsnull;
+
+    if (symlink_rv == 0)
+    {
+        // We exclusively created the symlink: record its name for eventual
+        // unlock-via-unlink.
+        mPidLockFileName = strdup(oldFileName);
+        if (mPidLockFileName)
+        {
+            PR_APPEND_LINK(this, &mPidLockList);
+            if (!setupPidLockCleanup++)
+            {
+                // Clean up on normal termination.
+                atexit(RemovePidLockFiles);
+
+                // Clean up on abnormal termination, using POSIX sigaction.
+                // Don't arm a handler if the signal is being ignored, e.g.,
+                // because mozilla is run via nohup.
+                struct sigaction act, oldact;
+                act.sa_handler = FatalSignalHandler;
+                act.sa_flags = 0;
+                sigfillset(&act.sa_mask);
+
+#define CATCH_SIGNAL(signame)                                                 \
+    PR_BEGIN_MACRO                                                            \
+        if (sigaction(signame, NULL, &oldact) == 0 &&                         \
+            oldact.sa_handler != SIG_IGN)                                     \
+        {                                                                     \
+            sigaction(signame, &act, &signame##_oldact);                      \
+        }                                                                     \
+    PR_END_MACRO
+
+                CATCH_SIGNAL(SIGHUP);
+                CATCH_SIGNAL(SIGINT);
+                CATCH_SIGNAL(SIGQUIT);
+                CATCH_SIGNAL(SIGILL);
+                CATCH_SIGNAL(SIGABRT);
+                CATCH_SIGNAL(SIGSEGV);
+                CATCH_SIGNAL(SIGTERM);
+
+#undef CATCH_SIGNAL
+            }
+        }
+    }
+    else if (symlink_errno != EEXIST)
+    {
+        // Symlinks aren't supported (for example, on Win32 SAMBA servers).
+        // F_SETLK is not well supported on all NFS servers, which is why we
+        // try symlinks first.
+        nsCAutoString filePath;
+        rv = lockFile->GetNativePath(filePath);
+        if (NS_FAILED(rv))
+            return rv;
+
+        mLockFileDesc = open(filePath.get(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (mLockFileDesc == -1)
+        {
+            NS_ERROR("Failed to open lock file.");
+            return NS_ERROR_FAILURE;
+        }
+        struct flock lock;
+        lock.l_start = 0;
+        lock.l_len = 0; // len = 0 means entire file
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
+        {
+            if (errno == EAGAIN || errno == EACCES)
+                return NS_ERROR_FILE_ACCESS_DENIED;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    else
+    {
+        // Couldn't create the symlink (but symlink(2) is supported).
+        // This error code will cause the right dialog to be displayed.
+        return NS_ERROR_FILE_ACCESS_DENIED;
+    }
+#endif /* XP_UNIX */
+
+    mHaveLock = PR_TRUE;
+
+    return rv;
+}
+
+
+nsresult nsProfileLock::Unlock()
+{
+    nsresult rv = NS_OK;
+
+    if (mHaveLock)
+    {
+#if defined (XP_MAC)
+        if (mLockFile)
+            rv = mLockFile->Remove(PR_FALSE);
+#elif defined (XP_WIN)
+        if (mLockFileHandle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(mLockFileHandle);
+            mLockFileHandle = INVALID_HANDLE_VALUE;
+        }
+#elif defined (XP_OS2)
+        if (mLockFileHandle != -1)
+        {
+            DosClose(mLockFileHandle);
+            mLockFileHandle = -1;
+        }
+#elif defined (XP_UNIX)
+        if (mPidLockFileName)
+        {
+            PR_REMOVE_LINK(this);
+            (void) unlink(mPidLockFileName);
+            free(mPidLockFileName);
+            mPidLockFileName = nsnull;
+        }
+        else if (mLockFileDesc != -1)
+        {
+            close(mLockFileDesc);
+            mLockFileDesc = -1;
+            // Don't remove it
+        }
+#endif
+
+        mHaveLock = PR_FALSE;
+    }
+
+    return rv;
+}
