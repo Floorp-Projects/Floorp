@@ -33,7 +33,6 @@ var dialog;
 var msgProgress = null; 
 
 // random global variables...
-var targetFile;
 var itsASaveOperation = false;
 
 // all progress notifications are done through the nsIWebProgressListener implementation...
@@ -148,10 +147,6 @@ function getString( stringId ) {
    return dialog.strings[ stringId ];
 }
 
-function loadDialog() 
-{
-}
-
 function replaceInsert( text, index, value ) {
    var result = text;
    var regExp = new RegExp( "#"+index );
@@ -174,7 +169,7 @@ function onLoad() {
     }
 
     if ( !msgProgress ) {
-        dump( "Invalid argument to downloadProgress.xul\n" );
+        dump("Invalid argument to sendProgress.xul\n");
         window.close()
         return;
     }
@@ -184,14 +179,6 @@ function onLoad() {
     dialog.status      = document.getElementById("dialog.status");
     dialog.progress    = document.getElementById("dialog.progress");
     dialog.progressText = document.getElementById("dialog.progressText");
-    dialog.cancel      = document.getElementById("cancel");
-
-    // Set up dialog button callbacks.
-    var object = this;
-    doSetOKCancel("", function () { return object.onCancel();});
-
-    // Fill dialog.
-    loadDialog();
 
     // set our web progress listener on the helper app launcher
     msgProgress.registerListener(progressListener);

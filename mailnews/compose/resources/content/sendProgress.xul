@@ -26,16 +26,15 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/messengercompose/sendProgress.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/sendProgress.dtd">
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&sendWindow.title;"
         style="width: 36em;"
         onload="onLoad()"
-        onunload="onUnload()">
+        onunload="onUnload()"
+        buttons="cancel"
+        ondialogcancel="return onCancel();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/sendProgress.js"/>
 
@@ -46,7 +45,6 @@ Contributor(s):
           convert to use string bundles. 
     -->
   
-    <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
     <data id="dialog.strings.titlePrefixSend">&titlePrefixSend;</data>
     <data id="dialog.strings.titlePrefixSave">&titlePrefixSave;</data>
     <data id="dialog.strings.messageSent">&messageSent;</data>
@@ -77,9 +75,5 @@ Contributor(s):
         </row>
       </rows>
     </grid>
-    <separator/>
-    <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
-    </hbox>
 
-</window>
+</dialog>
