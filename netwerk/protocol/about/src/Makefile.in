@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= necko_about
+SHORT_LIBNAME	= neckoabt
 IS_COMPONENT	= 1
 
 REQUIRES	= xpcom necko

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
+SHORT_LIBNAME	= unicutil
 IS_COMPONENT	= 1
 
 REQUIRES	= libxpcom

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= DebugRobot
+SHORT_LIBNAME	= dbgrobot
 
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
 
