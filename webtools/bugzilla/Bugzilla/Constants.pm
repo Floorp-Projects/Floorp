@@ -128,7 +128,7 @@ use constant contenttypes =>
   {
    "html" => "text/html" , 
    "rdf" => "application/rdf+xml" , 
-   "xml" => "text/xml" , 
+   "xml" => "application/xml" , 
    "js" => "application/x-javascript" , 
    "csv" => "text/plain" ,
    "png" => "image/png" ,
