@@ -25,7 +25,6 @@
  */
 
 #include "xcDll.h"
-#include "plstr.h"	// strdup and strfree
 #include "nsIComponentManager.h"
 
 // MAC ONLY
@@ -39,7 +38,7 @@ nsDll::nsDll(const char *codeDllName, int type)
         m_status = DLL_INVALID_PARAM;
         return;
     }
-    m_dllName = PL_strdup(codeDllName);
+    m_dllName = nsCRT::strdup(codeDllName);
     if (!m_dllName)
     {
         m_status = DLL_NO_MEM;
@@ -142,12 +141,11 @@ nsDll::Init(const char *libPersistentDescriptor)
 
 nsDll::~nsDll(void)
 {
-	if (m_instance != NULL)
-		Unload();
+    Unload();
     if (m_dllSpec)
         NS_RELEASE(m_dllSpec);
     if (m_dllName)
-        PL_strfree(m_dllName);
+        nsCRT::free(m_dllName);
 }
 
 const char *
