@@ -177,7 +177,7 @@
 
 <!-- Mac OS X "Window" menu items -->
 <!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY minimizeWindow.label                   "Réduire">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.accesskey               "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Ramener tout à l'avant-plan">
