@@ -178,7 +178,9 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
 
   // use transliterate to convert things like smart quotes to normal quotes for plain text
 
-  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
+  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = converter->Init(platformCharset.get(),
                   nsISaveAsCharset::attr_EntityAfterCharsetConv +
                   nsISaveAsCharset::attr_FallbackQuestionMark,
