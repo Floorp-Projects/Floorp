@@ -269,7 +269,7 @@ select
     bugs.bug_id,
     bugs.bug_status,
     assign.login_name,
-    unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %h:%m:%s'))
+    unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %H:%i:%s'))
 
 from   bugs,
        profiles assign $prod_table
