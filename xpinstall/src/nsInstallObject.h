@@ -32,6 +32,7 @@ class nsInstallObject
     public:
         /* Public Methods */
         nsInstallObject(nsInstall* inInstall) {mInstall = inInstall; }
+        virtual ~nsInstallObject() {}
 
         /* Override with your set-up action */
         virtual PRInt32 Prepare() = 0;
