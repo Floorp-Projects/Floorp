@@ -18,10 +18,11 @@
 <!--  to hide script contents from old browsers
 
 
+var globals = parent.parent.globals;
 
 function go(msg)
 {
-	if (parent.parent.globals.document.vars.editMode.value == "yes")	{
+	if (globals.document.vars.editMode.value == "yes")	{
 		return(true);
 		}
 	else	{
@@ -36,18 +37,18 @@ function checkData()
 	var theIndex = document.forms[0].providerlist.selectedIndex;
 	if (theIndex < 0)	{
 		alert("Please select from the list before continuing.");
-		parent.parent.globals.setFocus(document.forms[0].providerlist);
+		globals.setFocus(document.forms[0].providerlist);
 		return(false);
 		}
 	var theProviderName = document.forms[0].providerlist.options[theIndex].text;
 	var theProviderFilename = document.forms[0].providerlist.options[theIndex].value;
 	if (theProviderFilename == "")	{
 		theProviderName = "";
-		parent.parent.globals.debug("User chose none of the above.");
+		globals.debug("User chose none of the above.");
 		}
 	else	{
-		parent.parent.globals.debug("ISP Name: " + theProviderName);
-		parent.parent.globals.debug("ISP Filename: " + theProviderFilename);
+		globals.debug("ISP Name: " + theProviderName);
+		globals.debug("ISP Filename: " + theProviderFilename);
 		}
 	return(true);
 }
@@ -63,7 +64,7 @@ function loadData()
 		return;
 		}
 
-	parent.parent.globals.setFocus(document.forms[0].providerlist);
+	globals.setFocus(document.forms[0].providerlist);
 	if (parent.controls.generateControls)	parent.controls.generateControls();
 }
 
@@ -80,8 +81,8 @@ function saveData()
 		return;
 		}
 
-	var theFile = parent.parent.globals.getAcctSetupFilename(self);
-	var intlFlag = parent.parent.globals.GetNameValuePair(theFile,"Mode Selection","IntlMode");
+	var theFile = globals.getAcctSetupFilename(self);
+	var intlFlag = globals.GetNameValuePair(theFile,"Mode Selection","IntlMode");
 	if (intlFlag != null && intlFlag != "")	{
 		intlFlag = intlFlag.toLowerCase();
 		}
@@ -95,37 +96,37 @@ function saveData()
 			theProviderName = "";
 			}
 		}
-	parent.parent.globals.document.vars.providername.value = theProviderName;
-	parent.parent.globals.document.vars.providerFilename.value = theProviderFilename;
+	globals.document.vars.providername.value = theProviderName;
+	globals.document.vars.providerFilename.value = theProviderFilename;
 
 	// clear fields before reading in data from .NCI file
 	
-	parent.parent.globals.document.vars.accountAreaCode.value = "";
-	parent.parent.globals.document.vars.accountPhoneNumber.value = "";
-	parent.parent.globals.document.vars.domainName.value = "";
-	parent.parent.globals.document.vars.primaryDNS.value = "";
-	parent.parent.globals.document.vars.secondaryDNS.value = "";
-	parent.parent.globals.document.vars.ipAddress.value = "";
-	parent.parent.globals.document.vars.SMTP.value = "";
-	parent.parent.globals.document.vars.mailServer.value = "";
-	parent.parent.globals.document.vars.mailProtocol.value = "";
-	parent.parent.globals.document.vars.NNTP.value = "";
-	parent.parent.globals.document.vars.publishURL.value = "";
-	parent.parent.globals.document.vars.publishPassword.value = "";
-	parent.parent.globals.document.vars.viewURL.value = "";
-	parent.parent.globals.document.vars.scriptEnabled.value = "";
-	parent.parent.globals.document.vars.scriptFile.value = "";
-	parent.parent.globals.document.vars.lckFilename.value = "";
+	globals.document.vars.accountAreaCode.value = "";
+	globals.document.vars.accountPhoneNumber.value = "";
+	globals.document.vars.domainName.value = "";
+	globals.document.vars.primaryDNS.value = "";
+	globals.document.vars.secondaryDNS.value = "";
+	globals.document.vars.ipAddress.value = "";
+	globals.document.vars.SMTP.value = "";
+	globals.document.vars.mailServer.value = "";
+	globals.document.vars.mailProtocol.value = "";
+	globals.document.vars.NNTP.value = "";
+	globals.document.vars.publishURL.value = "";
+	globals.document.vars.publishPassword.value = "";
+	globals.document.vars.viewURL.value = "";
+	globals.document.vars.scriptEnabled.value = "";
+	globals.document.vars.scriptFile.value = "";
+	globals.document.vars.lckFilename.value = "";
 
 	var data="";
 	if (theProviderFilename != "")	{
 		
 		// read default values from selected .NCI file
 
-		data = "" + parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Dial-In Configuration","Phone");
+		data = "" + globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Dial-In Configuration","Phone");
 		if (data != null && data != "")	{
-			parent.parent.globals.document.vars.accountAreaCode.value = "";
-			parent.parent.globals.document.vars.accountPhoneNumber.value = data;
+			globals.document.vars.accountAreaCode.value = "";
+			globals.document.vars.accountPhoneNumber.value = data;
 			if (intlFlag != "yes")	{
 				var x = data.indexOf("(");
 				if (x>=0)	{
@@ -136,104 +137,104 @@ function saveData()
 						if (data.charAt(0) == ' ')	{
 							data = data.substring(1,data.length);
 							}
-						parent.parent.globals.document.vars.accountAreaCode.value = areaCode;
-						parent.parent.globals.document.vars.accountPhoneNumber.value = data;
+						globals.document.vars.accountAreaCode.value = areaCode;
+						globals.document.vars.accountPhoneNumber.value = data;
 						}
 					}
 				}
 			}
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DomainName");
-		parent.parent.globals.debug("ISP DomainName: " + data);
-		parent.parent.globals.document.vars.domainName.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DomainName");
+		globals.debug("ISP DomainName: " + data);
+		globals.document.vars.domainName.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DNSAddress");
-		parent.parent.globals.debug("ISP DNSAddress: " + data);
-		parent.parent.globals.document.vars.primaryDNS.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DNSAddress");
+		globals.debug("ISP DNSAddress: " + data);
+		globals.document.vars.primaryDNS.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DNSAddress2");
-		parent.parent.globals.debug("ISP DNSAddress2: " + data);
-		parent.parent.globals.document.vars.secondaryDNS.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","DNSAddress2");
+		globals.debug("ISP DNSAddress2: " + data);
+		globals.document.vars.secondaryDNS.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","IPAddress");
-		parent.parent.globals.debug("ISP IPAddress: " + data);
-		parent.parent.globals.document.vars.ipAddress.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"IP","IPAddress");
+		globals.debug("ISP IPAddress: " + data);
+		globals.document.vars.ipAddress.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","SMTP_Server");
-		parent.parent.globals.debug("ISP smtpHost: " + data);
-		parent.parent.globals.document.vars.SMTP.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","SMTP_Server");
+		globals.debug("ISP smtpHost: " + data);
+		globals.document.vars.SMTP.value = data;
 
-		parent.parent.globals.document.vars.mailServer.value = "";
+		globals.document.vars.mailServer.value = "";
 /*
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","POP_Server");
-		parent.parent.globals.debug("ISP popHost: " + data);
-		parent.parent.globals.document.vars.POP.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","POP_Server");
+		globals.debug("ISP popHost: " + data);
+		globals.document.vars.POP.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","IMAP_Server");
-		parent.parent.globals.debug("ISP imapHost: " + data);
-		parent.parent.globals.document.vars.IMAP.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","IMAP_Server");
+		globals.debug("ISP imapHost: " + data);
+		globals.document.vars.IMAP.value = data;
 */
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","Default_Mail_Protocol");
-		parent.parent.globals.debug("ISP Default_Mail_Protocol: " + data);
-		parent.parent.globals.document.vars.mailProtocol.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","Default_Mail_Protocol");
+		globals.debug("ISP Default_Mail_Protocol: " + data);
+		globals.document.vars.mailProtocol.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","NNTP_Server");
-		parent.parent.globals.debug("ISP nntpHost: " + data);
-		parent.parent.globals.document.vars.NNTP.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","NNTP_Server");
+		globals.debug("ISP nntpHost: " + data);
+		globals.document.vars.NNTP.value = data;
 
 /*
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","NUM_LDAP_Servers");
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services","NUM_LDAP_Servers");
 		if (data != null && data != "")	{
 			var numLDAPHosts = parseInt(data);
 			if (numLDAPHosts>0)	{
 				var LDAPdata = "";
 				for (var x=1; x<=numLDAPHosts; x++)	{
 					var theLDAPstring = "LDAP_Server_" + x;
-					data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services",theLDAPstring);
+					data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Services",theLDAPstring);
 					if (data != null && data != "")	{
-						parent.parent.globals.debug("ISP LDAP_Server_" + x + ": " + data);
+						globals.debug("ISP LDAP_Server_" + x + ": " + data);
 						LDAPdata += data + "\r";
 						}
 					}
-				parent.parent.globals.document.vars.LDAP.value = LDAPdata;
+				globals.document.vars.LDAP.value = LDAPdata;
 				}
 			}
 */
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","Publish_URL");
-		parent.parent.globals.debug("ISP Publish_URL: " + data);
-		parent.parent.globals.document.vars.publishURL.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","Publish_URL");
+		globals.debug("ISP Publish_URL: " + data);
+		globals.document.vars.publishURL.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","Publish_Password");
-		parent.parent.globals.debug("ISP Publish_Password: " + data);
-		parent.parent.globals.document.vars.publishPassword.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","Publish_Password");
+		globals.debug("ISP Publish_Password: " + data);
+		globals.document.vars.publishPassword.value = data;
 
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","View_URL");
-		parent.parent.globals.debug("ISP View_URL: " + data);
-		parent.parent.globals.document.vars.viewURL.value = data;
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Publishing","View_URL");
+		globals.debug("ISP View_URL: " + data);
+		globals.document.vars.viewURL.value = data;
 	
 		// scripting support
 	
 		var theScriptFile = "";
 		var theScriptEnabledFlag = "FALSE";
-		data = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Script","ScriptEnabled");
+		data = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Script","ScriptEnabled");
 		if (data != null && data != "")	{
 			data = data.toLowerCase();
 			}
 		if (data == "yes")	{
-			theScriptFile = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Script","ScriptFileName");
+			theScriptFile = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Script","ScriptFileName");
 			if (theScriptFile != null && theScriptFile != "")	{
 				theScriptEnabledFlag = "TRUE";
-				theScriptFile = parent.parent.globals.getConfigFolder(self) + theScriptFile;
-				parent.parent.globals.debug("ISP ScriptFileName: " + theScriptFile);
+				theScriptFile = globals.getConfigFolder(self) + theScriptFile;
+				globals.debug("ISP ScriptFileName: " + theScriptFile);
 				}
 			}
-		parent.parent.globals.document.vars.scriptEnabled.value = theScriptEnabledFlag;
-		parent.parent.globals.document.vars.scriptFile.value = theScriptFile;
+		globals.document.vars.scriptEnabled.value = theScriptEnabledFlag;
+		globals.document.vars.scriptFile.value = theScriptFile;
 	
 		// profile lockfile support
 		
-		parent.parent.globals.document.vars.lckFilename.value = parent.parent.globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Configuration","ConfigurationFileName");
+		globals.document.vars.lckFilename.value = globals.document.setupPlugin.GetNameValuePair(theProviderFilename,"Configuration","ConfigurationFileName");
 		}
 }
 
@@ -263,33 +264,37 @@ function generateISPList()
 	for ( x = document.forms[ 0 ].providerlist.length; x >= 0; x-- )
 		document.forms[ 0 ].providerlist[ x ] = null;
 	
-	var theAcctSetupFile = parent.parent.globals.getAcctSetupFilename( self );
-	var showPhonesFlag = parent.parent.globals.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowPhones" );
+	var theAcctSetupFile = globals.getAcctSetupFilename( self );
+	var showPhonesFlag = globals.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowPhones" );
 	if ( showPhonesFlag != null && showPhonesFlag != "" )
 		showPhonesFlag = showPhonesFlag.toLowerCase();
 	
-	var pathName = parent.parent.globals.getConfigFolder( self );
-	var theList = parent.parent.globals.document.setupPlugin.GetFolderContents( pathName, ".NCI" );
+	var pathName = globals.getConfigFolder( self );
+	//globals.debug( "path: " + pathName );
+	
+	var theList = globals.document.setupPlugin.GetFolderContents( pathName, ".NCI" );
 	
 	if ( theList != null )
 	{
-		parent.parent.globals.debug( "GetFolderContents returned " + theList.length + " items" );
+		//globals.debug( "GetFolderContents returned " + theList.length + " items" );
 	
+		var name = "";
 		var ISParray = new Array();
 		for ( var i = 0, j = 0; i < theList.length; i++ )
 		{
 			var theProviderFilename = pathName + theList[ i ];
-			//parent.parent.globals.debug("theProviderFilename " + i + ": " +theProviderFilename);
+			//globals.debug( "theProviderFilename " + i + ": " +theProviderFilename );
 	
-			var name = "";
+			name = "";
 			if ( showPhonesFlag == "yes" )
-				name = parent.parent.globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "Phone" );
+				name = globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "Phone" );
 			if ( name == null || name == "" )
-				var name = parent.parent.globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "SiteName" );
+				name = globals.document.setupPlugin.GetNameValuePair( theProviderFilename, "Dial-In Configuration", "SiteName" );
+			//globals.debug( "name: " + name );
+
+			if ( theProviderFilename != null && theProviderFilename != "" && name != null && name != "" )
+				ISParray[ j++ ] = new ISP( theProviderFilename, name );
 		}
-	
-		if ( theProviderFilename != null && theProviderFilename != "" && name != null && name!= "" )	{
-			ISParray[ j++ ] = new ISP( theProviderFilename, name );
 	}
 	
 	// un-comment the following line to sort the ISP array
@@ -302,10 +307,10 @@ function generateISPList()
 	{
 		var y = document.forms[ 0 ].providerlist.length;
 		document.forms[ 0 ].providerlist.options[ y ] = new Option( ISParray[ x ].name, ISParray[ x ].theProviderFilename, false, false );
-		document.forms[ 0 ].providerlist.options[ y ].selected = ( ( ISParray[ x ].name == parent.parent.globals.document.vars.providername.value) ? true : false );
+		document.forms[ 0 ].providerlist.options[ y ].selected = ( ( ISParray[ x ].name == globals.document.vars.providername.value) ? true : false );
 	}
 	
-	var showNoneAboveFlag = parent.parent.globals.document.setupPlugin.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowNoneAbove" );
+	var showNoneAboveFlag = globals.document.setupPlugin.GetNameValuePair( theAcctSetupFile, "Existing Acct Mode", "ShowNoneAbove" );
 	if ( showNoneAboveFlag != null && showNoneAboveFlag != "" )
 		showNoneAboveFlag = showNoneAboveFlag.toLowerCase();
 	if ( showNoneAboveFlag != "no" )
