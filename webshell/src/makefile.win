@@ -75,7 +75,7 @@ WIN_LIBS= OLE32.LIB
 include <$(DEPTH)\config\rules.mak>
 
 !ifdef MOZ_STATIC_COMPONENT_LIBS
-install:: $(LIB)
+libs:: $(LIB)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
 
@@ -83,7 +83,7 @@ clobber::
 	rm -f $(DIST)\bin\$(LIBRARY_NAME).lib
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 !else
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
  

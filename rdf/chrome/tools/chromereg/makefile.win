@@ -30,7 +30,7 @@ LLIBS=  \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(OBJDIR) $(PROGRAMS)
+libs:: $(OBJDIR) $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::

@@ -52,10 +52,10 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
-install::
+libs::
 	$(MAKE_INSTALL) mathml.dtd $(DIST)\bin\dtd
 	$(MAKE_INSTALL) mathml.css $(DIST)\bin\res
 	$(PERL) mathml-css.pl $(DIST)\bin\res\ua.css

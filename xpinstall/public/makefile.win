@@ -42,7 +42,7 @@ XPIDLSRCS =                               \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) .\xpinstall.js $(DIST)\bin\defaults\pref
 
 

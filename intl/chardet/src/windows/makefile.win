@@ -60,7 +60,7 @@ LLIBS= \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
  
 clobber::

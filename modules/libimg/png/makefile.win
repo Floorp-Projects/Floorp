@@ -57,7 +57,7 @@ C_OBJS=.\$(OBJDIR)\png.obj .\$(OBJDIR)\pngerror.obj \
 include <$(DEPTH)\config\rules.mak>
 
 #export::  $(LIBRARY)
-install::  $(LIBRARY)
+libs::  $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
 
 #install:: export

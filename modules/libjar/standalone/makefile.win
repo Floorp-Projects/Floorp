@@ -47,7 +47,7 @@ include <$(DEPTH)/config/rules.mak>
 export::
     $(MAKE_INSTALL) ..\nsZipArchive.cpp  .
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
 
 clobber::

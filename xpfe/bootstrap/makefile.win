@@ -167,7 +167,7 @@ $(EXTRA_LIBS_LIST_FILE): $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)
 
 !endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

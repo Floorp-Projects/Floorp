@@ -36,6 +36,6 @@ FILES=\
 		mimeTypes.rdf		\
         $(NULL)
 
-install::
+libs::
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\defaults\profile\US

@@ -294,7 +294,7 @@ clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
-build_all_dep: depend install
+build_all_dep: depend libs
 
 distclean: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
@@ -370,7 +370,7 @@ build_xpconnect: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\string
 	nmake -f makefile.win all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\xpcom
-	nmake -f makefile.win install
+	nmake -f makefile.win libs
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
 	nmake -f makefile.win all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src\xpconnect
@@ -392,9 +392,9 @@ build_dist:
 	@cd $(MOZ_SRC)\mozilla\.
 	nmake -f makefile.win all
 
-install:
+libs:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
-	nmake -f makefile.win install
+	nmake -f makefile.win libs
 
 export: build_nspr
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.

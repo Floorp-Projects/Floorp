@@ -23,7 +23,7 @@ DEPTH=..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: 
+libs:: 
 	$(MAKE_INSTALL) redirect_loop.xul $(DIST)\bin\chrome\packages\core\necko\content
 
 clobber::

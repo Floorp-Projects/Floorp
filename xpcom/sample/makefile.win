@@ -43,7 +43,7 @@ LLIBS=\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
         $(MAKE_INSTALL) nsSample.js $(DIST)\bin\components
         $(MAKE_INSTALL) xpconnect-sample.html $(DIST)\bin\res\samples

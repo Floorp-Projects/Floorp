@@ -43,7 +43,7 @@ LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS)
+libs:: $(PROGRAMS)
   -for %p in ($(PROGRAMS) $(SRPTS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::

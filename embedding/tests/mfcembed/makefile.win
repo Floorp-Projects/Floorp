@@ -84,7 +84,7 @@ LLFLAGS = -SUBSYSTEM:windows
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
     $(MAKE_INSTALL) mfcembed.htm $(DIST)\bin
 

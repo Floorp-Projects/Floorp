@@ -36,5 +36,5 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib

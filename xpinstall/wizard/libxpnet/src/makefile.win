@@ -39,7 +39,7 @@ OBJS=															\
 
 include <$(DEPTH)/config/rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::

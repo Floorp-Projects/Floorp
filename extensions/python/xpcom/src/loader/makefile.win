@@ -59,7 +59,7 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
 		$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components\.
 
 #clobber::

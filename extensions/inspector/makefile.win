@@ -27,7 +27,7 @@ DIRS=base build
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
     $(MAKE_INSTALL) resources\content\res\viewer-registry.rdf $(DIST)\bin\res\inspector
     $(MAKE_INSTALL) resources\content\res\search-registry.rdf $(DIST)\bin\res\inspector
     $(MAKE_INSTALL) resources\content\res\winInspectorMain.ico $(DIST)\bin\chrome\icons\default

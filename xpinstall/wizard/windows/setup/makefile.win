@@ -63,7 +63,7 @@ WIN_LIBS=                       \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
 
 clobber_all::

@@ -42,7 +42,7 @@ OBJS=                             \
 
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\install
 
 clobber_all:: clobber

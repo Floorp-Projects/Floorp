@@ -27,7 +27,7 @@ DEPTH=..\..\..
 
 include <$(DEPTH)/config/rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) .\htmlEntityVersions.properties $(DIST)\bin\res\entityTables
 	$(MAKE_INSTALL) .\html40Latin1.properties $(DIST)\bin\res\entityTables
 	$(MAKE_INSTALL) .\html40Symbols.properties $(DIST)\bin\res\entityTables

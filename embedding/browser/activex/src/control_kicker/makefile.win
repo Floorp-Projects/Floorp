@@ -57,7 +57,7 @@ CFLAGS = /D "WIN32" /GX /GF /MT /O1
 
 PATH=$(DIST)\bin;$(PATH)
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 !ifdef MOZ_ACTIVEX_REGISTRATION
 !if "$(WINOS)" != "WIN95"

@@ -47,7 +47,7 @@ CPP_OBJS	= .\$(OBJDIR)\nsLocale.obj			\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) langGroups.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) language.properties $(DIST)\bin\res
 

@@ -101,7 +101,7 @@ include <$(DEPTH)\config\rules.mak>
 export::
   $(MAKE_INSTALL) ..\nsCompressedCharMap.cpp .
 
-install::
+libs::
 	$(MAKE_INSTALL) fontEncoding.properties $(DIST)\bin\res\fonts
 
 clobber::

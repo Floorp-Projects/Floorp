@@ -71,7 +71,7 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS)
+libs:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
 
 clobber::

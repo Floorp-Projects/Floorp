@@ -25,7 +25,7 @@ DIRS=sampleimages
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
         $(MAKE_INSTALL) collapsing.xul $(DIST)\bin\res\samples
         $(MAKE_INSTALL) collapsing.css $(DIST)\bin\res\samples
         $(MAKE_INSTALL) colorpicker.xul $(DIST)\bin\res\samples

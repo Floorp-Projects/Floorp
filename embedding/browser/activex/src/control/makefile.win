@@ -119,7 +119,7 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
 
 PATH=$(DIST)\bin;$(PATH)
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
     $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
 

@@ -72,7 +72,7 @@ LLIBS=				                \
 
 include <$(DEPTH)\config\rules.mak>
 
-install::
+libs::
 	$(MAKE_INSTALL) icon_0.gif $(DIST)\bin\res\gfx
 	$(MAKE_INSTALL) icon_1.gif $(DIST)\bin\res\gfx
 

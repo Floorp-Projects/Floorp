@@ -121,7 +121,7 @@ OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
 OS_CFLAGS = $(OS_CFLAGS) -DNGPREFS
 !endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 	$(MAKE_INSTALL) resources\find.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) resources\printsetup.html $(DIST)\bin\res\samples

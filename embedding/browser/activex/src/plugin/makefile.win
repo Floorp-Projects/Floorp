@@ -136,7 +136,7 @@ LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
 !endif
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
 

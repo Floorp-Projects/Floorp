@@ -69,14 +69,14 @@ JAR_NAME = jsj10.jar
 include <$(DEPTH)\config\rules.mak>
 
 !ifdef JAVA_OR_NSJVM
-install:: 
+libs:: 
 	cd $(JAVA_DESTPATH)
 	@echo +++ building/updating $(JAR_NAME)
 	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) $(ZIP_FLAGS) $(JAR_NAME) %i\*.class
 	cd $(MAKEDIR)
 
 !ifdef REGENERATE
-install::
+libs::
 	cd $(JAVA_DESTPATH)
 	@echo +++ updating $(DEPTH)\nav-java\stubs\classes\$(JAR_NAME) for checkin
 	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) $(ZIP_FLAGS) ..\..\nav-java\stubs\classes\$(JAR_NAME) %i\*.class

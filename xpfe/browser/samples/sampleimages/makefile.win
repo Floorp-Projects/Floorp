@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) right.gif $(DIST)\bin\res\samples\sampleimages
 	$(MAKE_INSTALL) down.gif $(DIST)\bin\res\samples\sampleimages
 	$(MAKE_INSTALL) left.gif $(DIST)\bin\res\samples\sampleimages

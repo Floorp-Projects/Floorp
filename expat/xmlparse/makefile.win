@@ -57,9 +57,9 @@ LINCS=-I..\xmltok
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(OBJDIR) $(OBJS)
+libs:: $(OBJDIR) $(OBJS)
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)

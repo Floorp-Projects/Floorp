@@ -74,7 +74,7 @@ include <$(DEPTH)\config\rules.mak>
 # OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
 # !endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 	$(MAKE_INSTALL) $(BATCHSCRIPT) $(DIST)\bin
 	$(MAKE_INSTALL) $(TEST_FILES) $(DIST)/bin/OutTestData

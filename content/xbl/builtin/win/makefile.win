@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) platformHTMLBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) platformButtonBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) platformSelectBindings.xml $(DIST)\bin\res\builtin

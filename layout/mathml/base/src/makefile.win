@@ -112,10 +112,10 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
-install::
+libs::
 	$(MAKE_INSTALL) mathfont.properties $(DIST)\bin\res\fonts
 	$(MAKE_INSTALL) mathfontPUA.properties $(DIST)\bin\res\fonts
 	$(MAKE_INSTALL) mathfontCMSY10.properties $(DIST)\bin\res\fonts

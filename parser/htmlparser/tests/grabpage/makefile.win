@@ -44,7 +44,7 @@ include <$(DEPTH)\config\rules.mak>
 OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::

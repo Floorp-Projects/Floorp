@@ -43,5 +43,5 @@ FILES=\
 	selectLang.xul			\
         $(NULL)
 
-install::
+libs::
         -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\chrome\packages\core\communicator\content\profile

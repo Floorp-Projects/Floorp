@@ -38,5 +38,5 @@ FILES=\
 	NetscapeSearch.src  \
     $(NULL)
 
-install:: $(FILES:/=\)
+libs:: $(FILES:/=\)
 	!@$(MAKE_INSTALL) $** $(DIST)\bin\searchplugins
