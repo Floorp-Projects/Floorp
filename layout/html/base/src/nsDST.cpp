@@ -445,13 +445,16 @@ nsDST::Insert(void* aKey, void* aValue, void** aOldValue)
   LeafNode**  node = (LeafNode**)&mRoot;
   TwoNode*    branchReduction = 0;
   nsresult    result = NS_OK;
-  
+
   if (*node) {
     PtrBits   bitMask = mLevelZeroBit;
 
     while (1) {
       // See if the key matches
       if ((*node)->Key() == aKey) {
+        // We found an existing node with a matching key. Replace the value and
+        // don't do a branch reduction
+        branchReduction = 0;
         break;
       }
       
@@ -542,6 +545,9 @@ nsDST::Insert(void* aKey, void* aValue, void** aOldValue)
 
 #ifdef DEBUG_troy
   VerifyTree(mRoot);
+
+  // Verify that one and only one node in the tree have the specified key
+  DepthFirstSearch(mRoot, aKey);
 #endif
   return result;
 }
@@ -715,28 +721,52 @@ nsDST::SearchTree(void* aKey, unsigned aOptions, void** aValue)
 nsresult
 nsDST::Remove(void* aKey)
 {
-  void* value;
-  return SearchTree(aKey, NS_DST_REMOVE_KEY_VALUE, &value);
+  void*     value;
+  nsresult  result = SearchTree(aKey, NS_DST_REMOVE_KEY_VALUE, &value);
+
+#ifdef DEBUG_troy
+  if (NS_OK == result) {
+    // We found a node with a matching key and we removed it. Verify that
+    // we successfully removed the node
+    void* ignoreValue;
+
+    NS_POSTCONDITION(Search(aKey, 0, &ignoreValue) == NS_DST_KEY_NOT_THERE,
+                     "remove operation failed");
+  }
+#endif
+
+  return result;
 }
 
 #ifdef NS_DEBUG
 // Helper function used to verify the integrity of the tree. Does a
 // depth-first search of the tree looking for a node with the specified
-// key. Called by Search() if we don't find the key using the radix-search
+// key. Also verifies that the key is not in the tree more than once
 nsDST::LeafNode*
 nsDST::DepthFirstSearch(LeafNode* aNode, void* aKey) const
 {
   if (!aNode) {
     return 0;
-  } else if (aNode->Key() == aKey) {
-    return aNode;
   } else if (aNode->IsLeaf()) {
-    return 0;
+    return (aNode->Key() == aKey) ? aNode : 0;
   } else {
+    // Search the left branch of the tree
     LeafNode* result = DepthFirstSearch(((TwoNode*)aNode)->mLeft, aKey);
 
-    if (!result) {
+    if (result) {
+      // Verify there's no matching node in the right branch
+      NS_ASSERTION(!DepthFirstSearch(((TwoNode*)aNode)->mRight, aKey),
+                   "key in tree more than once");
+
+    } else {
+      // Search the right branch of the tree
       result = DepthFirstSearch(((TwoNode*)aNode)->mRight, aKey);
+    }
+
+    // See if the node's key matches
+    if (aNode->Key() == aKey) {
+      NS_ASSERTION(!result, "key in tree more than once");
+      result = aNode;
     }
 
     return result;
