@@ -564,7 +564,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
         
         nsTraceRefcnt::DemangleSymbol(symbol,demangled,sizeof(demangled));
         
-        if (demangled && strlen(demangled))
+        if (demangled && *demangled != '\0')
             demangledSymbol = demangled;
         
         if (!demangledSymbol.IsEmpty())
