@@ -81,6 +81,8 @@ void main()
 		cout << "READING BACK DATA FROM " << (const char*)myTextFilePath << endl << endl;
 		nsInputFileStream testStream2(myTextFilePath);
 		char line[1000];
+		
+		testStream2.seekg(0); // check that the seek template compiles
 		while (!testStream2.eof())
 		{
 			testStream2.getline(line, sizeof(line), '\n');
