@@ -82,7 +82,65 @@ public class Codegen extends Interpreter {
     {
         ObjArray classFiles = new ObjArray();
         ObjArray names = new ObjArray();
-        String generatedName = null;
+        if (cx.getOptimizationLevel() > 0) {
+            (new Optimizer()).optimize(tree, cx.getOptimizationLevel());
+        }
+        generateCode(tree, names, classFiles);
+        String generatedName = name;
+
+        boolean onlySave = false;
+        ClassRepository repository = nameHelper.getClassRepository();
+        if (repository != null) {
+            for (int i=0; i < names.size(); i++) {
+                String className = (String) names.get(i);
+                byte[] classFile = (byte[]) classFiles.get(i);
+                boolean isTopLevel = className.equals(generatedName);
+                try {
+                    if (!repository.storeClass(className, classFile,
+                                               isTopLevel))
+                    {
+                        onlySave = true;
+                    }
+                } catch (IOException iox) {
+                    throw WrappedException.wrapException(iox);
+                }
+            }
+
+            Class[] interfaces = nameHelper.getTargetImplements();
+            Class superClass = nameHelper.getTargetExtends();
+            if (interfaces != null || superClass != null) {
+                String adapterClassName = getScriptClassName(null, true);
+                ScriptableObject obj = new NativeObject();
+                for (Node cursor = tree.getFirstChild(); cursor != null;
+                     cursor = cursor.getNext())
+                {
+                    if (cursor.getType() == TokenStream.FUNCTION) {
+                        OptFunctionNode fnNode
+                            = (OptFunctionNode)cursor.
+                                  getProp(Node.FUNCTION_PROP);
+                        obj.put(fnNode.getFunctionName(), obj, fnNode);
+                    }
+                }
+                if (superClass == null) {
+                    superClass = Object.class;
+                }
+                byte[] classFile = JavaAdapter.createAdapterCode(
+                                       cx, obj, adapterClassName,
+                                       superClass, interfaces,
+                                       generatedName);
+                try {
+                    if (!repository.storeClass(adapterClassName, classFile,
+                                               true))
+                    {
+                        onlySave = true;
+                    }
+                } catch (IOException iox) {
+                    throw WrappedException.wrapException(iox);
+                }
+            }
+        }
+
+        if (onlySave) { return null; }
 
         Exception e = null;
         Class result = null;
@@ -95,35 +153,21 @@ public class Codegen extends Interpreter {
                                                           securityDomain);
         }
 
-        ClassRepository repository = nameHelper.getClassRepository();
         try {
-            if (cx.getOptimizationLevel() > 0) {
-                (new Optimizer()).optimize(tree, cx.getOptimizationLevel());
-            }
-            generatedName = generateCode(tree, names, classFiles);
-
             for (int i=0; i < names.size(); i++) {
-                String name = (String) names.get(i);
+                String className = (String) names.get(i);
                 byte[] classFile = (byte[]) classFiles.get(i);
-                boolean isTopLevel = name.equals(generatedName);
+                boolean isTopLevel = className.equals(generatedName);
                 try {
-                    if (repository == null
-                        || repository.storeClass(name, classFile, isTopLevel))
-                    {
-                        Class cl = loader.defineClass(name, classFile);
-                        if (isTopLevel) {
-                            result = cl;
-                        }
+                    Class cl = loader.defineClass(className, classFile);
+                    if (isTopLevel) {
+                        result = cl;
                     }
                 } catch (ClassFormatError ex) {
                     throw new RuntimeException(ex.toString());
-                } catch (IOException iox) {
-                    throw WrappedException.wrapException(iox);
                 }
             }
-            if (result != null) {
-                loader.linkClass(result);
-            }
+            loader.linkClass(result);
         } catch (SecurityException x) {
             e = x;
         } catch (IllegalArgumentException x) {
@@ -132,35 +176,6 @@ public class Codegen extends Interpreter {
         if (e != null)
             throw new RuntimeException("Malformed optimizer package " + e);
 
-        Class[] interfaces = nameHelper.getTargetImplements();
-        Class superClass = nameHelper.getTargetExtends();
-        if (interfaces != null || superClass != null) {
-            String name = getScriptClassName(null, true);
-            ScriptableObject obj = new NativeObject();
-            for (Node cursor = tree.getFirstChild(); cursor != null;
-                 cursor = cursor.getNext())
-            {
-                if (cursor.getType() == TokenStream.FUNCTION) {
-                    OptFunctionNode fnNode
-                        = (OptFunctionNode)cursor.getProp(Node.FUNCTION_PROP);
-                    obj.put(fnNode.getFunctionName(), obj, fnNode);
-                }
-            }
-            if (superClass == null)
-                superClass = Object.class;
-            try {
-                JavaAdapter.createAdapterClass(cx, obj, name,
-                                               superClass,
-                                               interfaces,
-                                               generatedName,
-                                               repository);
-            } catch (ClassNotFoundException exn) {
-                // should never happen
-                throw new Error(exn.toString());
-            }
-        }
-        if (result == null)
-            return null;
         if (tree instanceof OptFunctionNode) {
             NativeFunction f;
             try {

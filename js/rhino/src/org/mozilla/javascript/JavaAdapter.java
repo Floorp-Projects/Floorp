@@ -129,9 +129,10 @@ public class JavaAdapter extends ScriptableObject {
             synchronized (generatedClasses) {
                 adapterName = "adapter" + serial++;
             }
-            adapterClass = createAdapterClass(cx, obj, adapterName,
-                                              superClass, interfaces,
-                                              null, null);
+            byte[] code = createAdapterCode(cx, obj, adapterName,
+                                            superClass, interfaces, null);
+
+            adapterClass = loadAdapterClass(cx, adapterName, code);
             generatedClasses.put(sig, adapterClass);
         }
 
@@ -157,9 +158,9 @@ public class JavaAdapter extends ScriptableObject {
             }
             Context cx = Context.enter();
             try {
-                adapterClass = createAdapterClass(cx, obj,
-                                                  adapterName, superClass,
-                                                  interfaces, null, null);
+                byte[] code = createAdapterCode(cx, obj, adapterName,
+                                                superClass, interfaces, null);
+                adapterClass = loadAdapterClass(cx, adapterName, code);
                 generatedClasses.put(sig, adapterClass);
             } finally {
                 Context.exit();
@@ -180,12 +181,10 @@ public class JavaAdapter extends ScriptableObject {
         throw new ClassNotFoundException("adapter");
     }
 
-    public static Class createAdapterClass(Context cx, Scriptable jsObj,
-                                           String adapterName, Class superClass,
-                                           Class[] interfaces,
-                                           String scriptClassName,
-                                           ClassRepository repository)
-        throws ClassNotFoundException
+    public static byte[]
+    createAdapterCode(Context cx, Scriptable jsObj, String adapterName,
+                       Class superClass, Class[] interfaces,
+                       String scriptClassName)
     {
         ClassFileWriter cfw = new ClassFileWriter(adapterName,
                                                   superClass.getName(),
@@ -317,18 +316,12 @@ public class JavaAdapter extends ScriptableObject {
                 generateMethod(cfw, adapterName, id, parms, Object.class);
             }
         }
-        byte[] bytes = cfw.toByteArray();
+        return cfw.toByteArray();
+    }
 
-        if (repository != null) {
-            try {
-                if (!repository.storeClass(adapterName, bytes, true)) {
-                    return null;
-                }
-            } catch(IOException iox) {
-                throw WrappedException.wrapException(iox);
-            }
-        }
-
+    private static Class
+    loadAdapterClass(Context cx, String className, byte[] classBytes)
+    {
         ClassLoader parentLoader = cx.getClass().getClassLoader();
         GeneratedClassLoader loader;
         SecurityController sc = cx.getSecurityController();
@@ -338,7 +331,7 @@ public class JavaAdapter extends ScriptableObject {
             Object securityDomain = sc.getDynamicSecurityDomain(null);
             loader = sc.createClassLoader(parentLoader, securityDomain);
         }
-        Class result = loader.defineClass(adapterName, bytes);
+        Class result = loader.defineClass(className, classBytes);
         loader.linkClass(result);
         return result;
     }
