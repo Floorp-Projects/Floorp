@@ -37,6 +37,7 @@
 
 #include "nsParserCIID.h"
 
+
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
@@ -46,6 +47,9 @@
 #define PREF_DLL   "xppref32.dll"
 #define PARSER_DLL "raptorhtmlpars.dll"
 #else
+#ifdef XP_MAC
+#include "nsMacRepository.h"
+#else
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFXWIN_DLL "libgfxunix.so"
 #define VIEW_DLL   "libraptorview.so"
@@ -53,6 +57,7 @@
 #define PLUGIN_DLL "raptorplugin.so"
 #define PREF_DLL   "libpref.so"
 #define PARSER_DLL "libraptorhtmlpars.so"
+#endif
 #endif
 
 // Class ID's
@@ -83,6 +88,7 @@ static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
 
 extern "C" void
 NS_SetupRegistry()
