@@ -222,7 +222,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 libs::
-	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons
+	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons/default
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
