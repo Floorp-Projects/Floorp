@@ -31,10 +31,6 @@
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
        (production :qualified-identifier (:qualifier \:\: :qualified-identifier) qualified-identifier-qualifier)
 
-       (production :qualified-identifier-or-new (:identifier) qualified-identifier-or-new-identifier)
-       (production :qualified-identifier-or-new (new) qualified-identifier-or-new-new)
-       (production :qualified-identifier-or-new (:qualifier \:\: :qualified-identifier-or-new) qualified-identifier-or-new-qualifier)
-
        (production :qualifier (:identifier) qualifier-identifier)
        (production :qualifier (super) qualifier-super)
        (production :qualifier (private) qualifier-private)
@@ -76,7 +72,7 @@
        
        (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression)
        
-       (production :field-name (:identifier) field-name-identifier)
+       (production :field-name (:qualified-identifier) field-name-identifier)
        (production :field-name ($string) field-name-string)
        (production :field-name ($number) field-name-number)
        
@@ -114,7 +110,7 @@
        (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
        
        (production :member-operator ([ :argument-list ]) member-operator-array)
-       (production :member-operator (\. :qualified-identifier-or-new) member-operator-property)
+       (production :member-operator (\. :qualified-identifier) member-operator-property)
        (production :member-operator (\. :parenthesized-expression) member-operator-indirect-property)
        (production :member-operator (@ :qualified-identifier) member-operator-coerce)
        (production :member-operator (@ :parenthesized-expression) member-operator-indirect-coerce)
@@ -486,9 +482,9 @@
        (production (:variable-binding :beta) ((:typed-variable :beta)) variable-binding-simple)
        (production (:variable-binding :beta) ((:typed-variable :beta) = (:assignment-expression :beta)) variable-binding-initialized)
        
-       (production (:typed-variable :beta) (:qualified-identifier-or-new) typed-variable-identifier)
-       (production (:typed-variable :beta) (:qualified-identifier-or-new \: (:type-expression :beta)) typed-variable-identifier-and-type)
-       ;(production (:typed-variable :beta) ((:type-expression :beta) :qualified-identifier-or-new) typed-variable-type-and-identifier)
+       (production (:typed-variable :beta) (:qualified-identifier) typed-variable-identifier)
+       (production (:typed-variable :beta) (:qualified-identifier \: (:type-expression :beta)) typed-variable-identifier-and-type)
+       ;(production (:typed-variable :beta) ((:type-expression :beta) :qualified-identifier) typed-variable-type-and-identifier)
        
        
        (%subsection "Function Definition")
@@ -496,12 +492,9 @@
        (production (:function-definition :omega) (:function-declaration (:semicolon :omega)) function-definition-declaration)
        
        (production :function-declaration (function :function-name :function-signature) function-declaration-signature-and-body)
-       (production :function-declaration (constructor :constructor-name :function-signature) function-declaration-constructor)
+       (production :function-declaration (constructor :identifier :function-signature) function-declaration-constructor)
        
-       (production :constructor-name (:identifier) constructor-name-identifier)
-       (production :constructor-name (new) constructor-name-new)
-       
-       (production :function-name (:qualified-identifier-or-new) function-name-function)
+       (production :function-name (:qualified-identifier) function-name-function)
        (production :function-name (get :no-line-break (:- \() :qualified-identifier) function-name-getter)
        (production :function-name (set :no-line-break (:- \() :qualified-identifier) function-name-setter)
 
