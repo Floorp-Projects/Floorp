@@ -1319,8 +1319,8 @@ public class Context
         throws IOException
     {
         if (lineno < 0) {
-            throw new IllegalArgumentException(
-                "Line number can not be negative:"+lineno);
+            // For compatibility IllegalArgumentException can not be thrown here
+            lineno = 0;
         }
         return (Script) compileImpl(null, in, null, sourceName, lineno,
                                     securityDomain, false, null, null);
@@ -1346,8 +1346,8 @@ public class Context
                                       Object securityDomain)
     {
         if (lineno < 0) {
-            throw new IllegalArgumentException(
-                "Line number can not be negative:"+lineno);
+            // For compatibility IllegalArgumentException can not be thrown here
+            lineno = 0;
         }
         return compileString(source, null, null, sourceName, lineno,
                              securityDomain);
