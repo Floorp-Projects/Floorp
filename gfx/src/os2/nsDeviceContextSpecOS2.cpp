@@ -507,10 +507,14 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   for (int i = 0; i < mGlobalNumPrinters; i++) {
     nsXPIDLCString printer;
     nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i, getter_Copies(printer));
+    PRUnichar* printerName = new PRUnichar[strlen(printer)+1];
+    MultiByteToWideChar(0, printer, strlen(printer)+1, printerName, strlen(printer)+1);
+    nsAutoString nativePrinterName(printerName);
+    delete [] printerName;
     if ( defaultPrinter == i ) 
-       mGlobalPrinterList->InsertStringAt(NS_ConvertASCIItoUCS2(printer), 0);
+       mGlobalPrinterList->InsertStringAt(nativePrinterName, 0);
     else 
-       mGlobalPrinterList->AppendString(NS_ConvertASCIItoUCS2(printer));
+       mGlobalPrinterList->AppendString(nativePrinterName);
   } 
   return NS_OK;
 }
@@ -525,8 +529,12 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
   int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
   nsXPIDLCString printer;
   nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter, getter_Copies(printer));
+  PRUnichar* printerName = new PRUnichar[strlen(printer)+1];
+  MultiByteToWideChar(0, printer, strlen(printer)+1, printerName, strlen(printer)+1);
+  nsAutoString nativePrinterName(printerName);
+  delete [] printerName; 
 
-  aDefaultPrinterName = ToNewUnicode(NS_ConvertASCIItoUCS2(printer));
+  aDefaultPrinterName = ToNewUnicode(nativePrinterName);
 }
 
 void GlobalPrinters::FreeGlobalPrinters()

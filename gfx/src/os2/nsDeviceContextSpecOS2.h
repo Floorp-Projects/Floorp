@@ -56,6 +56,7 @@
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
+#include "nsGFXDefs.h"
 #include "nsPrintdOS2.h"
 #include <os2.h>
 #include <pmddim.h>
