@@ -385,7 +385,7 @@ nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   
   // caption frames live in a different list which we need to check separately
   if (mCaptionFrame) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::captionList, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::captionList, aWhichLayer, PR_FALSE, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
@@ -1400,7 +1400,7 @@ nsTableOuterFrame::UpdateReflowMetrics(nsIPresContext*      aPresContext,
       frameState |= NS_FRAME_OUTSIDE_CHILDREN;
       SetFrameState(frameState);
     }
-  }
+  } 
 }
 
 nsresult 
@@ -2183,9 +2183,7 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
 {
   if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
   nsITableLayout *inner;
-  nsresult result = mInnerTableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&inner);
-  if (NS_SUCCEEDED(result) && inner)
-  {
+  if (NS_SUCCEEDED(CallQueryInterface(mInnerTableFrame, &inner))) {
     return (inner->GetCellDataAt(aRowIndex, aColIndex, aCell,
                                  aStartRowIndex, aStartColIndex, 
                                  aRowSpan, aColSpan, aActualRowSpan, aActualColSpan, 
@@ -2198,9 +2196,7 @@ NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColC
 {
   if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
   nsITableLayout *inner;
-  nsresult result = mInnerTableFrame->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&inner);
-  if (NS_SUCCEEDED(result) && inner)
-  {
+  if (NS_SUCCEEDED(CallQueryInterface(mInnerTableFrame, &inner))) {
     return (inner->GetTableSize(aRowCount, aColCount));
   }
   return NS_ERROR_NULL_POINTER;
