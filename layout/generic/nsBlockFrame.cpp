@@ -2828,106 +2828,34 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
   }
 
   if (aLine->IsBlock()) {
-    nsRect r;
-    kid->GetRect(r);
     if (aDY) {
-      r.y += aDY;
-      kid->SetRect(aState.mPresContext, r);
+      nsPoint p;
+      kid->GetOrigin(p);
+      p.y += aDY;
+      kid->MoveTo(aState.mPresContext, p.x, p.y);
     }
 
     // Make sure the frame's view and any child views are updated
     ::PlaceFrameView(aState.mPresContext, kid);
-
-    // If the child has any floaters that impact the space-manager,
-    // place them now so that they are present in the space-manager
-    // again (they were removed by the space-manager's frame when
-    // the reflow began).
-    nsBlockFrame* bf;
-    nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**) &bf);
-    if (NS_SUCCEEDED(rv)) {
-      // Translate spacemanager to the child blocks upper-left corner
-      // so that when it places its floaters (which are relative to
-      // it) the right coordinates are used. Note that we have already
-      // been translated by our border+padding so factor that in to
-      // get the right translation.
-      const nsMargin& bp = aState.BorderPadding();
-      nscoord dx = r.x - bp.left;
-      nscoord dy = r.y - bp.top;
-      aState.mSpaceManager->Translate(dx, dy);
-      bf->UpdateSpaceManager(aState.mPresContext, aState.mSpaceManager);
-      aState.mSpaceManager->Translate(-dx, -dy);
-    }
   }
   else {
     // Adjust the Y coordinate of the frames in the line.
     // Note: we need to re-position views even if aDY is 0, because
     // one of our parent frames may have moved and so the view's position
     // relative to its parent may have changed
-    nsRect r;
     PRInt32 n = aLine->GetChildCount();
     while (--n >= 0) {
       if (aDY) {
-        kid->GetRect(r);
-        r.y += aDY;
-        kid->SetRect(aState.mPresContext, r);
+        nsPoint p;
+        kid->GetOrigin(p);
+        p.y += aDY;
+        kid->MoveTo(aState.mPresContext, p.x, p.y);
       }
       // Make sure the frame's view and any child views are updated
       ::PlaceFrameView(aState.mPresContext, kid);
       kid->GetNextSibling(&kid);
     }
   }
-}
-
-nsresult
-nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
-                                 nsSpaceManager* aSpaceManager)
-{
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end;
-       ++line) {
-    // Place the floaters in the spacemanager
-    if (line->HasFloaters()) {
-      nsFloaterCache* fc = line->GetFirstFloater();
-      while (fc) {
-        nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
-        aSpaceManager->AddRectRegion(floater, fc->mRegion);
-#ifdef NOISY_SPACEMANAGER
-        nscoord tx, ty;
-        aSpaceManager->GetTranslation(tx, ty);
-        nsFrame::ListTag(stdout, this);
-        printf(": UpdateSpaceManager: AddRectRegion: txy=%d,%d {%d,%d,%d,%d}\n",
-               tx, ty,
-               fc->mRegion.x, fc->mRegion.y,
-               fc->mRegion.width, fc->mRegion.height);
-#endif
-        fc = fc->Next();
-      }
-    }
-
-    // Tell kids about the move too
-    if (line->mFirstChild && line->IsBlock()) {
-      // If the child has any floaters that impact the space-manager,
-      // place them now so that they are present in the space-manager
-      // again (they were removed by the space-manager's frame when
-      // the reflow began).
-      nsBlockFrame* bf;
-      nsresult rv = line->mFirstChild->QueryInterface(kBlockFrameCID,
-                                            NS_REINTERPRET_CAST(void**, &bf));
-      if (NS_SUCCEEDED(rv)) {
-        nsPoint origin;
-        bf->GetOrigin(origin);
-
-        // Translate spacemanager to the child blocks upper-left
-        // corner so that when it places its floaters (which are
-        // relative to it) the right coordinates are used.
-        aSpaceManager->Translate(origin.x, origin.y);
-        bf->UpdateSpaceManager(aPresContext, aSpaceManager);
-        aSpaceManager->Translate(-origin.x, -origin.y);
-      }
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
