@@ -33,6 +33,13 @@ CPPSRCS =				\
 	nsUnicodeToCP932.cpp		\
 	nsUCvJaSupport.cpp		\
 	nsUCVJADll.cpp			\
+        nsEUCJPToUnicode.cpp            \
+        nsISO2022JPToUnicode.cpp        \
+        nsUnicodeToEUCJP.cpp            \
+        nsUnicodeToJISx0201.cpp         \
+        nsUnicodeToJISx0208.cpp         \
+        nsUnicodeToJISx0212.cpp         \
+        nsUnicodeToISO2022JP.cpp        \
 	$(NULL)
 
 CPP_OBJS=						\
@@ -42,9 +49,17 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP932.obj			\
 	.\$(OBJDIR)\nsUCvJaSupport.obj			\
 	.\$(OBJDIR)\nsUCVJADll.obj 			\
+        .\$(OBJDIR)\nsEUCJPToUnicode.obj        \
+        .\$(OBJDIR)\nsISO2022JPToUnicode.obj    \
+        .\$(OBJDIR)\nsUnicodeToEUCJP.obj        \
+        .\$(OBJDIR)\nsUnicodeToJISx0201.obj     \
+        .\$(OBJDIR)\nsUnicodeToJISx0208.obj     \
+        .\$(OBJDIR)\nsUnicodeToJISx0212.obj     \
+        .\$(OBJDIR)\nsUnicodeToISO2022JP.obj    \
 	$(NULL)
 
 EXPORTS= nsUCVJACID.h			\
+         nsUCVJA2CID.h                  \
 	$(NULL)
 
 LINCS=					\
