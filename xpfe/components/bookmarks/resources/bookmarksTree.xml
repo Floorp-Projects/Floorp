@@ -647,6 +647,7 @@
           if (!selectionLength)
             this.mOuter._target = null;
           else {
+            // Paste or create items into an expanded folder, otherwise after the selected item.
             var orient = selection.isExpanded[0] ? BookmarksUtils.DROP_ON : BookmarksUtils.DROP_AFTER;
             this.mOuter._target = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], orient);
           }
