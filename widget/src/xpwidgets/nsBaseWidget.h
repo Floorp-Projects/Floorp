@@ -134,7 +134,7 @@ protected:
       virtual nsresult Next();
       virtual nsresult Prev();
       virtual nsresult CurrentItem(nsISupports **aItem);
-      virtual nsresult IsDone(PRBool *aDone);
+      virtual nsresult IsDone();
 
       void Append(nsIWidget* aWidget);
       void Remove(nsIWidget* aWidget);
