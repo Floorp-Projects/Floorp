@@ -37,9 +37,9 @@ class nsIFontRetrieverService : public nsISupports
 
 			NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator ) = 0;
 
-			NS_IMETHOD CreateFontSizeIterator( const nsString * aFontName, nsIFontSizeIterator** aIterator ) = 0;
+			NS_IMETHOD CreateFontSizeIterator( const nsString &aFontName, nsIFontSizeIterator** aIterator ) = 0;
 
-			NS_IMETHOD IsFontScalable( const nsString * aFontName, PRBool* aResult ) = 0;	
+			NS_IMETHOD IsFontScalable( const nsString &aFontName, PRBool* aResult ) = 0;	
 };
 
 

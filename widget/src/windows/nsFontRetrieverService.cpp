@@ -103,15 +103,18 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontNameIterator( nsIFontNameIterato
 }
 
 //----------------------------------------------------------
-NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString * aFontName, 
+NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString &aFontName, 
                                                               nsIFontSizeIterator** aIterator )
 {
+  // cache current value in case someone else externally is using it
+  PRInt32 saveIterInx  = mNameIterInx;
+
   PRBool found = PR_FALSE;
   Reset();
   do {
     nsAutoString name;
     Get(&name);
-    if (name.Equals(*aFontName)) {
+    if (name.Equals(aFontName)) {
       found = PR_TRUE;
       break;
     }
@@ -128,8 +131,10 @@ NS_IMETHODIMP nsFontRetrieverService::CreateFontSizeIterator( const nsString * a
 
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
     mSizeIter->SetFontInfo(fontInfo);
+    mNameIterInx = saveIterInx;
     return NS_OK;
   }
+  mNameIterInx = saveIterInx;
   return NS_ERROR_FAILURE;
 }
 
@@ -323,14 +328,17 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
 } 
 
 //----------------------------------------------------------
-NS_IMETHODIMP nsFontRetrieverService::IsFontScalable( const nsString * aFontName, PRBool* aResult )
+NS_IMETHODIMP nsFontRetrieverService::IsFontScalable( const nsString &aFontName, PRBool* aResult )
 {
+  // cache current value in case someone else externally is using it
+  PRInt32 saveIterInx  = mNameIterInx;
+
   PRBool found = PR_FALSE;
   Reset();
   do {
     nsAutoString name;
     Get(&name);
-    if (name.Equals(*aFontName)) {
+    if (name.Equals(aFontName)) {
       found = PR_TRUE;
       break;
     }
@@ -339,8 +347,10 @@ NS_IMETHODIMP nsFontRetrieverService::IsFontScalable( const nsString * aFontName
   if (found) {
     FontInfo * fontInfo = (FontInfo *)mFontList->ElementAt(mNameIterInx);
     *aResult = fontInfo->mIsScalable;
+    mNameIterInx = saveIterInx;
     return NS_OK;
   }
+  mNameIterInx = saveIterInx;
 
   return NS_ERROR_FAILURE;
 }
