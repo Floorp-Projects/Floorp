@@ -4,7 +4,6 @@ nsFileSpec.h
 nsFileSpecStreaming.h
 nsFileStream.h
 nsIFileStream.h
-nsIStringStream.h
 nsIUnicharInputStream.h
 nsSpecialSystemDirectory.h
 nsStorageStream.h
