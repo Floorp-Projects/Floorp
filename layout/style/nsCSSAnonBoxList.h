@@ -103,3 +103,9 @@ CSS_ANON_BOX(moztreeseparator, ":-moz-tree-separator")
 CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
 CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
 #endif
+
+#ifdef MOZ_MATHML
+CSS_ANON_BOX(mozMathStretchy, ":-moz-math-stretchy")
+CSS_ANON_BOX(mozMathAnonymous, ":-moz-math-anonymous")
+CSS_ANON_BOX(mozMathInline, ":-moz-math-inline")
+#endif

@@ -897,7 +897,7 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
                              nsFont*         aFont,
                              nsVoidArray*    aGlyphTableList)
 {
-  // @see the documentation of -moz-math-font-style-stretchy in mathml.css
+  // @see the documentation of -moz-math-stretchy in mathml.css
   // for how this work
   aGlyphTableList->Clear();
   PRBool useDocumentFonts = PR_TRUE;
@@ -905,7 +905,7 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
   // Check to honor the pref("browser.display.use_document_fonts", 0)
   // Only include fonts from CSS if the pref to disallow authors' fonts isn't set
   if (useDocumentFonts) {
-    // Convert the list of fonts in aFont (from -moz-math-font-style-stretchy)
+    // Convert the list of fonts in aFont (from -moz-math-stretchy)
     // to an ordered list of corresponding glyph extension tables
     StretchyFontEnumContext context = {aPresContext, aChar, aGlyphTableList};
     aFont->EnumerateFamilies(StretchyFontEnumCallback, &context);
@@ -1373,7 +1373,7 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
  2) We search for the first larger variant of the char that fits the
     container' size. We search fonts for larger variants in the order
     specified in the list of stretchy fonts held by the leaf style
-    context (from -moz-math-font-style-stretchy in mathml.css).
+    context (from -moz-math-stretchy in mathml.css).
     Issues :
     a) the largeop and display settings determine the starting
        size when we do the above search, regardless of whether

@@ -6732,7 +6732,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
     if (NS_FAILED(rv)) return rv;
     nsRefPtr<nsStyleContext> mrowContext;
     mrowContext = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                             nsMathMLAtoms::mozMathInline,
+                                                             nsCSSAnonBoxes::mozMathInline,
                                                              parentContext);
     InitAndRestoreFrame(aPresContext, aState, aContent, aParentFrame,
                         mrowContext, nsnull, newFrame);
