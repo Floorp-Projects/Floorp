@@ -57,6 +57,8 @@ public:
   NS_IMETHOD GetBaseTarget(nsString& aTarget) const = 0;
   NS_IMETHOD SetBaseTarget(const nsString& aTarget) = 0;
 
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify) = 0;
+
   /**
    * Access DTD compatibility mode for this document
    */
