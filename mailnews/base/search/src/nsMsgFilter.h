@@ -57,7 +57,7 @@ public:
 	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}
 	PRBool			GetEnabled() {return m_enabled;}
 	void			SetFilterScript(nsCString *filterName) ;
-	void			SetFilterList(nsMsgFilterList *filterList) ;
+    void            SetFilterList(nsIMsgFilterList* filterList);
 	PRBool			IsRule() 
 						{return (m_type & (nsMsgFilterType::InboxRule |
                                            nsMsgFilterType::NewsRule)) != 0;}
@@ -69,8 +69,7 @@ public:
 	nsresult		SaveToTextFile(nsIOFileStream *stream);
 	nsresult		SaveRule();
 
-	PRInt16			GetVersion() {return (m_filterList) ? m_filterList->GetVersion() : 0;}
-	nsMsgFilterList	*GetFilterList() {return m_filterList;}
+	PRInt16			GetVersion();
     void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}
     nsMsgSearchTermArray* GetTermList() {return &m_termList;}       /* linked list of criteria terms */
 #ifdef DEBUG
@@ -90,7 +89,7 @@ protected:
 	nsCString		m_description;
     PRBool         m_dontFileMe;
 
-	nsMsgFilterList *m_filterList;	/* owning filter list */
+	nsIMsgFilterList *m_filterList;	/* owning filter list */
     nsMsgSearchTermArray m_termList;       /* linked list of criteria terms */
     nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
 have a newsgroup - LDAP would be invalid */

@@ -34,6 +34,9 @@ interface nsIMsgFilter : nsISupports {
     attribute boolean enabled;
     attribute string filterName;
     attribute string filterDesc;
+
+    readonly attribute nsIMsgFilterList filterList; // owning filter list
+    
     void AddTerm(in nsMsgSearchAttribValue attrib,
                  in nsMsgSearchOpValue op,
                  in nsIMsgSearchValue value,

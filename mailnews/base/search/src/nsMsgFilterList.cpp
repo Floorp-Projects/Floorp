@@ -260,23 +260,23 @@ extern "C" MSG_FolderInfo *MSG_GetFolderInfoForFilterList(nsMsgFilterList *filte
 
 typedef struct
 {
-	nsMsgFilterFileAttrib	attrib;
+	nsMsgFilterFileAttribValue	attrib;
 	const char			*attribName;
 } FilterFileAttribEntry;
 
 static FilterFileAttribEntry FilterFileAttribTable[] =
 {
-	{nsMsgFilterAttribNone,			""},
-	{nsMsgFilterAttribVersion,		"version"},
-	{nsMsgFilterAttribLogging,		"logging"},
-	{nsMsgFilterAttribName,			"name"},
-	{nsMsgFilterAttribEnabled,		"enabled"},
-	{nsMsgFilterAttribDescription,	"description"},
-	{nsMsgFilterAttribType,			"type"},
-	{nsMsgFilterAttribScriptFile,	"scriptName"},
-	{nsMsgFilterAttribAction,		"action"},
-	{nsMsgFilterAttribActionValue,	"actionValue"},
-	{nsMsgFilterAttribCondition,		"condition"}
+	{nsIMsgFilterList::attribNone,			""},
+	{nsIMsgFilterList::attribVersion,		"version"},
+	{nsIMsgFilterList::attribLogging,		"logging"},
+	{nsIMsgFilterList::attribName,			"name"},
+	{nsIMsgFilterList::attribEnabled,		"enabled"},
+	{nsIMsgFilterList::attribDescription,	"description"},
+	{nsIMsgFilterList::attribType,			"type"},
+	{nsIMsgFilterList::attribScriptFile,	"scriptName"},
+	{nsIMsgFilterList::attribAction,		"action"},
+	{nsIMsgFilterList::attribActionValue,	"actionValue"},
+	{nsIMsgFilterList::attribCondition,		"condition"}
 };
 
 // If we want to buffer file IO, wrap it in here.
@@ -307,7 +307,7 @@ PRBool nsMsgFilterList::StrToBool(nsCString &str)
 	return str.Equals("yes") ;
 }
 
-char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttrib &attrib)
+char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttribValue &attrib)
 {
 	char	attribStr[100];
 	char	curChar;
@@ -333,7 +333,7 @@ char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttrib &attrib)
 	return curChar;
 }
 
-const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttrib attrib)
+const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttribValue attrib)
 {
 	for (int tableIndex = 0; tableIndex < (int)(sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0])); tableIndex++)
 	{
@@ -390,7 +390,7 @@ nsresult nsMsgFilterList::LoadValue(nsCString &value)
 nsresult nsMsgFilterList::LoadTextFilters()
 {
 	nsresult	err = NS_OK;
-	nsMsgFilterFileAttrib attrib;
+	nsMsgFilterFileAttribValue attrib;
 
 	// We'd really like to move lot's of these into the objects that they refer to.
 	m_fileStream->seek(PR_SEEK_SET, 0);
@@ -402,27 +402,27 @@ nsresult nsMsgFilterList::LoadTextFilters()
 		char curChar;
 
         curChar = LoadAttrib(attrib);
-		if (attrib == nsMsgFilterAttribNone)
+		if (attrib == nsIMsgFilterList::attribNone)
 			break;
 		err = LoadValue(value);
 		if (err != NS_OK)
 			break;
 		switch(attrib)
 		{
-		case nsMsgFilterAttribNone:
+		case nsIMsgFilterList::attribNone:
 			break;
-		case nsMsgFilterAttribVersion:
+		case nsIMsgFilterList::attribVersion:
 			m_fileVersion = value.ToInteger(&intToStringResult, 10);
 			if (intToStringResult != 0)
 			{
-				attrib = nsMsgFilterAttribNone;
+				attrib = nsIMsgFilterList::attribNone;
 				NS_ASSERTION(PR_FALSE, "error parsing filter file version");
 			}
 			break;
-		case nsMsgFilterAttribLogging:
+		case nsIMsgFilterList::attribLogging:
 			m_loggingEnabled = StrToBool(value);
 			break;
-		case nsMsgFilterAttribName:
+		case nsIMsgFilterList::attribName:
 		{
 			nsMsgFilter *filter = new nsMsgFilter;
 			if (filter == nsnull)
@@ -430,34 +430,34 @@ nsresult nsMsgFilterList::LoadTextFilters()
 				err = NS_ERROR_OUT_OF_MEMORY;
 				break;
 			}
-			filter->SetFilterList(this);
+			filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
 			filter->SetFilterName(value.GetBuffer());
 			m_curFilter = filter;
 			m_filters->AppendElement(filter);
 		}
 			break;
-		case nsMsgFilterAttribEnabled:
+		case nsIMsgFilterList::attribEnabled:
 			if (m_curFilter)
 				m_curFilter->SetEnabled(StrToBool(value));
 			break;
-		case nsMsgFilterAttribDescription:
+		case nsIMsgFilterList::attribDescription:
 			if (m_curFilter)
 				m_curFilter->SetFilterDesc(value.GetBuffer());
 			break;
-		case nsMsgFilterAttribType:
+		case nsIMsgFilterList::attribType:
 			if (m_curFilter)
 			{
 				m_curFilter->SetType((nsMsgFilterTypeType) value.ToInteger(&intToStringResult, 10));
 			}
 			break;
-		case nsMsgFilterAttribScriptFile:
+		case nsIMsgFilterList::attribScriptFile:
 			if (m_curFilter)
 				m_curFilter->SetFilterScript(&value);
 			break;
-		case nsMsgFilterAttribAction:
+		case nsIMsgFilterList::attribAction:
 			m_curFilter->m_action.m_type = nsMsgFilter::GetActionForFilingStr(value);
 			break;
-		case nsMsgFilterAttribActionValue:
+		case nsIMsgFilterList::attribActionValue:
 			if (m_curFilter->m_action.m_type == nsMsgFilterAction::MoveToFolder)
 				err = m_curFilter->ConvertMoveToFolderValue(value);
 			else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
@@ -473,11 +473,11 @@ nsresult nsMsgFilterList::LoadTextFilters()
 
 			}
 			break;
-		case nsMsgFilterAttribCondition:
+		case nsIMsgFilterList::attribCondition:
 			err = ParseCondition(value);
 			break;
 		}
-	} while (attrib != nsMsgFilterAttribNone);
+	} while (attrib != nsIMsgFilterList::attribNone);
 	return err;
 }
 
@@ -558,7 +558,7 @@ nsresult nsMsgFilterList::ParseCondition(nsCString &value)
 	return err;
 }
 
-nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
+nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttribValue attrib, int value)
 {
 	const char *attribStr = GetStringForAttrib(attrib);
 	if (attribStr)
@@ -572,9 +572,11 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsCString &str)
+nsresult
+nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttribValue attrib,
+                              const char *str)
 {
-	if (!str.IsEmpty() && m_fileStream) // only proceed if we actually have a string to write out. 
+	if (str && str[0] && m_fileStream) // only proceed if we actually have a string to write out. 
 	{
 		char *escapedStr = nsnull;
 		if (PL_strchr(str, '"'))
@@ -594,7 +596,7 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsCString &
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal)
+nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttribValue attrib, PRBool boolVal)
 {
 	nsCString strToWrite((boolVal) ? "yes" : "no");
 	return WriteStrAttr(attrib, strToWrite);
@@ -607,9 +609,9 @@ nsresult nsMsgFilterList::SaveTextFilters()
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
 
-	attribStr = GetStringForAttrib(nsMsgFilterAttribVersion);
-	err = WriteIntAttr(nsMsgFilterAttribVersion, kFileVersion);
-	err = WriteBoolAttr(nsMsgFilterAttribLogging, m_loggingEnabled);
+	attribStr = GetStringForAttrib(nsIMsgFilterList::attribVersion);
+	err = WriteIntAttr(nsIMsgFilterList::attribVersion, kFileVersion);
+	err = WriteBoolAttr(nsIMsgFilterList::attribLogging, m_loggingEnabled);
 	for (PRUint32 i = 0; i < filterCount; i ++)
 	{
 		nsMsgFilter *filter;
@@ -763,6 +765,14 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 		return NS_ERROR_INVALID_ARG;
 	}
 	return NS_OK;
+}
+
+nsresult
+nsMsgFilterList::GetVersion(PRInt16 *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_fileVersion;
+    return NS_OK;
 }
 
 

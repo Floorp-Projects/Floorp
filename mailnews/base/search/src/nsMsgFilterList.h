@@ -45,20 +45,6 @@ class nsIMsgFilter;
 class nsIOFileStream;
 class nsMsgFilter;
 
-typedef enum
-{
-	nsMsgFilterAttribNone,
-	nsMsgFilterAttribVersion, 
-	nsMsgFilterAttribLogging, 
-	nsMsgFilterAttribName, 
-	nsMsgFilterAttribEnabled, 
-	nsMsgFilterAttribDescription, 
-	nsMsgFilterAttribType,
-	nsMsgFilterAttribScriptFile, 
-	nsMsgFilterAttribAction, 
-	nsMsgFilterAttribActionValue, 
-	nsMsgFilterAttribCondition
-}  nsMsgFilterFileAttrib;
 
 class nsMsgFilterList : public nsIMsgFilterList
 {
@@ -74,12 +60,6 @@ public:
 	nsresult		Close();
 	nsresult		LoadTextFilters();
 
-	PRInt16			GetVersion() {return m_fileVersion;}
-
-	// IO routines, used by filter object filing code.
-	nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
-	nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, nsCString &str);
-	nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal);
 protected:
 		// type-safe accessor when you really have to have an nsMsgFilter
 		nsresult GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter);
@@ -93,8 +73,8 @@ protected:
 	PRBool			IsWhitespace(char ch);
 	char			SkipWhitespace();
 	PRBool			StrToBool(nsCString &str);
-	char			LoadAttrib(nsMsgFilterFileAttrib &attrib);
-	const char		*GetStringForAttrib(nsMsgFilterFileAttrib attrib);
+	char			LoadAttrib(nsMsgFilterFileAttribValue &attrib);
+	const char		*GetStringForAttrib(nsMsgFilterFileAttribValue attrib);
 	nsresult		LoadValue(nsCString &value);
 	nsresult ParseCondition(nsCString &value);
 		PRInt16		m_fileVersion;

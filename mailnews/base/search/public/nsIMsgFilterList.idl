@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -34,10 +34,26 @@ interface nsIOFileStream;
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+typedef long nsMsgFilterFileAttribValue;
+
 [scriptable, uuid(08ecbcb4-0493-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgFilterList : nsISupports {
 
+    const nsMsgFilterFileAttribValue attribNone = 0;
+    const nsMsgFilterFileAttribValue attribVersion = 1;
+    const nsMsgFilterFileAttribValue attribLogging = 2;
+    const nsMsgFilterFileAttribValue attribName = 3;
+    const nsMsgFilterFileAttribValue attribEnabled = 4; 
+    const nsMsgFilterFileAttribValue attribDescription = 5; 
+    const nsMsgFilterFileAttribValue attribType = 6;
+    const nsMsgFilterFileAttribValue attribScriptFile = 7; 
+    const nsMsgFilterFileAttribValue attribAction = 8; 
+    const nsMsgFilterFileAttribValue attribActionValue = 9; 
+    const nsMsgFilterFileAttribValue attribCondition = 10;
+
     attribute nsIMsgFolder folder;
+    readonly attribute short version;
+    
     readonly attribute unsigned long filterCount;
     nsIMsgFilter GetFilterAt(in unsigned long filterIndex);
 	/* these methods don't delete filters - they just change the list.
@@ -45,26 +61,30 @@ interface nsIMsgFilterList : nsISupports {
      * call MSG_DestroyFilter to delete a filter.
      */
 
-    void SetFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
-    void RemoveFilterAt(in unsigned long filterIndex);
-    void MoveFilterAt(in unsigned long filterIndex,
+    void setFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
+    void removeFilterAt(in unsigned long filterIndex);
+    void moveFilterAt(in unsigned long filterIndex,
                       in nsMsgFilterMotionValue motion);
-    void InsertFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
+    void insertFilterAt(in unsigned long filterIndex, in nsIMsgFilter filter);
 
     attribute boolean loggingEnabled;
 
-    nsIMsgFilter CreateFilter(in string name);
+    nsIMsgFilter createFilter(in string name);
 
-    void SaveToFile(in nsIOFileStream stream);
+    void saveToFile(in nsIOFileStream stream);
 
-    void ApplyFiltersToHdr(in nsMsgFilterTypeType filterType,
+    void applyFiltersToHdr(in nsMsgFilterTypeType filterType,
                            in nsIMsgDBHdr msgHdr,
                            in nsIMsgFolder folder,
                            in nsIMsgDatabase db,
                            in string headers,
                            in unsigned long headersSize,
                            in nsIMsgFilterHitNotify listener);
-    
+
+	// IO routines, used by filter object filing code.
+    void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value);
+    void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value);
+    void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value);
 };
 
 

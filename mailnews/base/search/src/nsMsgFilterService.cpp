@@ -79,7 +79,9 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 	if (NS_SUCCEEDED(ret))
   {
 		*resultFilterList = filterList;
-    if (filterList->GetVersion() != kFileVersion)
+        PRInt16 version;
+        filterList->GetVersion(&version);
+    if (version != kFileVersion)
     {
 
       SaveFilterList(filterList, filterFile);

@@ -21,12 +21,12 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-// this file implements the nsMsgFilterList interface 
+// this file implements the nsMsgFilter interface 
 
 #include "msgCore.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgHdr.h"
-#include "nsMsgFilterList.h"
+#include "nsMsgFilterList.h"    // for kFileVersion
 #include "nsMsgFilter.h"
 #include "nsMsgUtils.h"
 #include "nsFileStream.h"
@@ -48,9 +48,9 @@ nsMsgRuleAction::~nsMsgRuleAction()
 }
 
 
-nsMsgFilter::nsMsgFilter() 
+nsMsgFilter::nsMsgFilter() :
+    m_filterList(nsnull)
 {
-	m_filterList = nsnull;
 	NS_INIT_REFCNT();
 }
 
@@ -307,9 +307,20 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 														   pResult);
 }
 
-void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
+void
+nsMsgFilter::SetFilterList(nsIMsgFilterList *filterList)
 {
+    // hold weak ref
 	m_filterList = filterList;
+}
+
+nsresult
+nsMsgFilter::GetFilterList(nsIMsgFilterList **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult = m_filterList;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
 
 void nsMsgFilter::SetFilterScript(nsCString *fileName) 
@@ -322,7 +333,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
   PRInt16 filterVersion = kFileVersion;
   if (m_filterList)
-    filterVersion = m_filterList->GetVersion();
+      m_filterList->GetVersion(&filterVersion);
   if (filterVersion <= k60Beta1Version)
   {
     nsCOMPtr <nsIMsgFolder> rootFolder;
@@ -401,12 +412,12 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
 {
-	nsresult err = m_filterList->WriteStrAttr(nsMsgFilterAttribName, m_filterName);
-	err = m_filterList->WriteBoolAttr(nsMsgFilterAttribEnabled, m_enabled);
-	err = m_filterList->WriteStrAttr(nsMsgFilterAttribDescription, m_description);
-	err = m_filterList->WriteIntAttr(nsMsgFilterAttribType, m_type);
+	nsresult err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribName, m_filterName);
+	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled);
+	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description);
+	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type);
 	if (IsScript())
-		err = m_filterList->WriteStrAttr(nsMsgFilterAttribScriptFile, m_scriptFileName);
+		err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName);
 	else
 		err = SaveRule();
 	return err;
@@ -416,12 +427,13 @@ nsresult nsMsgFilter::SaveRule()
 {
 	nsresult err = NS_OK;
 	//char			*relativePath = nsnull;
-	nsMsgFilterList	*filterList = GetFilterList();
+	nsIMsgFilterList	*filterList;
+    GetFilterList(&filterList);
 	nsCAutoString	actionFilingStr;
 
 	GetActionFilingStr(m_action.m_type, actionFilingStr);
 
-	err = filterList->WriteStrAttr(nsMsgFilterAttribAction, actionFilingStr);
+	err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr);
 	if (!NS_SUCCEEDED(err))
 		return err;
 	switch(m_action.m_type)
@@ -429,7 +441,7 @@ nsresult nsMsgFilter::SaveRule()
 	case nsMsgFilterAction::MoveToFolder:
 		{
 		nsCAutoString imapTargetString(m_action.m_folderUri);
-		err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, imapTargetString);
+		err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString);
 		}
 		break;
 	case nsMsgFilterAction::ChangePriority:
@@ -438,7 +450,7 @@ nsresult nsMsgFilter::SaveRule()
 			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
       nsCAutoString cStr;
       cStr.AssignWithConversion(priority);
-			err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, cStr);
+			err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr);
 		}
 		break;
 	default:
@@ -475,7 +487,7 @@ nsresult nsMsgFilter::SaveRule()
 		condition += ')';
 	}
 	if (NS_SUCCEEDED(err))
-		err = filterList->WriteStrAttr(nsMsgFilterAttribCondition, condition);
+		err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition);
 	return err;
 }
 
@@ -538,6 +550,15 @@ nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsCString &actionStr)
 			return ruleActionsTable[i].action;
 	}
 	return nsMsgFilterAction::None;
+}
+
+PRInt16
+nsMsgFilter::GetVersion()
+{
+    if (!m_filterList) return 0;
+    PRInt16 version;
+    m_filterList->GetVersion(&version);
+    return version;
 }
 
 #ifdef DEBUG
