@@ -2713,6 +2713,11 @@ nsTableFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
     if (firstBodyFrame) {
       prevSibling = nextInFlow->mFrames.GetPrevSiblingFor(firstBodyFrame);
     }
+    // When pushing and pulling frames we need to check for whether any
+    // views need to be reparented.
+    for (nsIFrame* f = aFromChild; f; f->GetNextSibling(&f)) {
+      nsHTMLContainerFrame::ReparentFrameView(f, this, nextInFlow);
+    }
     nextInFlow->mFrames.InsertFrames(mNextInFlow, prevSibling, aFromChild);
   }
   else {
@@ -2738,7 +2743,12 @@ nsTableFrame::MoveOverflowToChildList()
   nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
-      mFrames.AppendFrames(this, prevInFlow->mOverflowFrames);
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented.
+      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+      }
+      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
       result = PR_TRUE;
     }
   }
