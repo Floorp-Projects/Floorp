@@ -28,6 +28,7 @@
 <overlay id="platformPreferencesOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-         
+  <groupbox id="pref-nav-platform-extensions" hidden="true"/>
+
 </overlay>
 
