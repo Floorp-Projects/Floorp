@@ -336,6 +336,8 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
+#define XPC_BUILT_IN_PROPERTY ((JSProperty*)1)
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp
@@ -356,7 +358,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
         if(clazz->LookupMemberByID(id))
         {
             *objp = obj;
-            *propp = (JSProperty*)1;
+            *propp = XPC_BUILT_IN_PROPERTY;
             return JS_TRUE;
         }
         else if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
@@ -695,6 +697,20 @@ WrappedNative_Finalize(JSContext *cx, JSObject *obj)
     wrapper->JSObjectFinalized(cx, obj);
 }
 
+JS_STATIC_DLL_CALLBACK(void)
+WrappedNative_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
+{
+    /* If this is not one of our 'built-in' native properties AND 
+    *  the JS engine has a callback to handle dropProperty then call it.
+    */
+    if(prop != XPC_BUILT_IN_PROPERTY)
+    {
+        JSPropertyRefOp drop = js_ObjectOps.dropProperty;
+        if(drop)
+            drop(cx, obj, prop);
+    }
+}        
+
 /*
 * We have two classes - one with and one without call and construct. We use
 * the one without for any object without an nsIXPCScriptable so that the
@@ -718,7 +734,7 @@ static JSObjectOps WrappedNative_ops = {
 
     /* Optionally non-null members start here. */
     nsnull,                     /* thisObject   */
-    nsnull,                     /* dropProperty */
+    WrappedNative_DropProperty, /* dropProperty */
     nsnull,                     /* call         */
     nsnull,                     /* construct    */
     nsnull,                     /* xdrObject    */
@@ -745,7 +761,7 @@ static JSObjectOps WrappedNativeWithCall_ops = {
 
     /* Optionally non-null members start here. */
     nsnull,                     /* thisObject   */
-    nsnull,                     /* dropProperty */
+    WrappedNative_DropProperty, /* dropProperty */
     WrappedNative_Call,         /* call         */
     WrappedNative_Construct,    /* construct    */
     nsnull,                     /* xdrObject    */
@@ -806,11 +822,9 @@ JSBool xpc_InitWrappedNativeJSOps()
     {
         WrappedNative_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-        WrappedNative_ops.dropProperty     = js_ObjectOps.dropProperty;
 
         WrappedNativeWithCall_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNativeWithCall_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
-        WrappedNativeWithCall_ops.dropProperty     = js_ObjectOps.dropProperty;
     }
     return JS_TRUE;
 }
