@@ -48,6 +48,7 @@
 #include "nsNetUtil.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgWindow.h"
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -172,6 +173,16 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
             rv = i18nUrl->GetFolderCharsetOverride(&folderCharsetOverride);
             if (NS_SUCCEEDED(rv) && folderCharsetOverride)
               *override_charset = nsCRT::strdup(*default_charset);
+
+            // notify the default to msgWindow (for the menu check mark)
+            nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
+            if (msgurl)
+            {
+              nsCOMPtr<nsIMsgWindow> msgWindow;
+              msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+              if (msgWindow)
+                msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset));
+            }
           }
 
           // if the pref says always override and no manual override then set the folder charset to override
