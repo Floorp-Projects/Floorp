@@ -46,9 +46,15 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const nsString & aMimeStr )
     format = 'XIF ';
   else if ( aMimeStr.Equals(kHTMLMime) )
     format = 'HTML';
-  else
+  else if ( aMimeStr.Equals("moz/toolbaritem") )    //¥¥¥ hack until the hash implemented
+    format = 'TITM';
+  else if ( aMimeStr.Equals("moz/toolbar") )        //¥¥¥ hack until the hash implemented
+    format = 'TBAR';
+  else {
+    NS_NOTYETIMPLEMENTED("Unsupported mime type, Pink needs to write a hash routine");
     format = '????';   //¥¥¥ Need to use a hash here
-    
+  }
+  
   /*
    else if (aMimeStr.Equals(kUnicodeMime)) {
     format = CF_UNICODETEXT;
@@ -79,9 +85,12 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsString & outMim
     case 'TEXT': outMimeStr = kTextMime; break;
     case 'XIF ': outMimeStr = kXIFMime; break;
     case 'HTML': outMimeStr = kHTMLMime; break;
-    
+    case 'TITM': outMimeStr = "moz/toolbaritem"; break;   //¥¥¥Êhack until un-hash implemented
+    case 'TBAR': outMimeStr = "moz/toolbar"; break;       //¥¥¥Êhack until un-hash implemented
+   
     default:
       outMimeStr = "unknown";
+      NS_NOTYETIMPLEMENTED("Unsupported mime type, Pink needs to write a unhash routine");
       //¥¥¥ need to un-hash here.
   
   } // case of which flavor
