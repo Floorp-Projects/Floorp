@@ -33,6 +33,9 @@ BEGIN { use Test::More tests => $tests; }
 use strict;
 use Template;
 
+# Bug 137589 - Disable command-line input of CGI.pm when testing
+use CGI qw(-no_debug);
+
 my @testitems = @Support::Templates::testitems;
 my $include_path = $Support::Templates::include_path;
 # Capture the TESTERR from Test::More for printing errors.
