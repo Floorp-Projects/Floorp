@@ -50,13 +50,19 @@ var $ = new Array(); /* array to store results from evals in debug frames */
 
 console._scriptHook = {
     onScriptCreated: function scripthook (script) {
-                         if (script.fileName != MSG_VAL_CONSOLE)
+                         if (script.fileName && 
+                             script.fileName != MSG_VAL_CONSOLE)
+                         {
                              realizeScript (script);
-                         console.onScriptCreated (script);  
+                         }
                      },
 
     onScriptDestroyed: function scripthook (script) {
-                           //XXXremoveScript (script);
+                         if (script.fileName && 
+                             script.fileName != MSG_VAL_CONSOLE)
+                         {
+                             unrealizeScript (script);
+                         }
                        }
 };
 
@@ -149,8 +155,77 @@ function realizeScript(script)
         container.reserveChildren();
         console.scriptsView.childData.appendChild(container);
     }
+    else if (!container.parentRecord)
+    {
+        /* source record exists but is not inserted in the source tree, either
+         * we are reloading it, or the user added it manually */
+        console.scriptsView.childData.appendChild(container);
+    }
+    
+    var scriptRec = new ScriptRecord (script);
+    container.appendChild (scriptRec);
 
-    container.appendChild (new ScriptRecord (script));
+    /* check to see if this script contains a breakpoint */
+    for (var i = 0; i < console.breakpoints.childData.length; ++i)
+    {
+        var bpr = console.breakpoints.childData[i];
+        if (bpr.matchesScriptRecord(scriptRec))
+        {
+            if (bpr.fileName == scriptRec.script.fileName)
+            {
+                /* if the names match exactly, piggyback the new script record
+                 * on the existing breakpoint record. */
+                bpr.addScriptRecord(scriptRec);
+            }
+            else
+            {
+                /* otherwise, we only matched a pattern, create a new breakpoint
+                 * record. */
+                setBreakpoint (scriptRec.script.fileName, bpr.line);
+            }
+        }
+    }    
+}
+
+function unrealizeScript(script)
+{
+    var container = console.scripts[script.fileName];
+    if (!container)
+    {
+        dd ("unrealizeScript: unknown file ``" + 
+            script.fileName + "''");
+        return;
+    }
+
+    var scriptRec = container.locateChildByScript (script);
+    if (!scriptRec)
+    {
+        dd ("unrealizeScript: unable to locate script record");
+        return;
+    }
+    
+    var bplist = console.breakpoints.childData;
+    for (var i = 0; i < bplist.length; ++i)
+    {
+        if (bplist[i].fileName == script.fileName)
+        {
+            var bpr = bplist[i];
+            for (var j = 0; j < bpr.scriptRecords.length; ++j)
+            {
+                if (bpr.scriptRecords[j] == scriptRec)
+                {
+                    arrayRemoveAt(bpr.scriptRecords, j);
+                    --scriptRec.bpcount;
+                }
+            }
+        }
+    }
+    
+    container.removeChildAtIndex (scriptRec.childIndex);
+    if (container.childData.length == 0)
+    {
+        console.scriptsView.childData.removeChildAtIndex(container.childIndex);
+    }
 }
 
 const TMODE_IGNORE = 0;
@@ -749,8 +824,6 @@ function setBreakpoint (fileName, line)
     
     if (sourceRecord.isLoaded && sourceRecord.sourceText[line - 1])
     {
-        dd ("setting bp atom");
-        
         sourceRecord.sourceText[line - 1].bpRecord = bpr;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
@@ -762,52 +835,19 @@ function setBreakpoint (fileName, line)
     return bpr;
 }
 
-function XXXisFutureBreakpoint (filePattern, line)
+function setFutureBreakpoint (filePattern, line)
 {
-    for (var b in console.fbreaks.childData)
-        if (console.fbreaks.childData[b].filePattern == filePattern &&
-            console.fbreaks.childData[b].line == line)
-        {
-            return true;
-        }
-
-    return false;
-}
-                
-function XXXsetFutureBreakpoint (filePattern, line)
-{
-    if (!isFutureBreakpoint(filePattern, line))
+    var bpr = console.breakpoints.locateChildByFileLine (filePattern, line);
+    if (bpr)
     {
-        console.fbreaks.childData.appendChild (new FBreakRecord(filePattern,
-                                                                line));
-        display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
-    }
-
-    return true;
-}
-
-function XXXclearFutureBreakpoint (filePattern, line)
-{
-    for (var i = 0; i < console._futureBreaks.length; ++i)
-    {
-        if (console._futureBreaks[i].filePattern == filePattern &&
-            console._futureBreaks[i].line == line)
-        {
-            return clearFutureBreakpointByNumber(i);
-        }
+        display (getMsg(MSN_BP_EXISTS, [filePattern, line]), MT_INFO);
+        return null;
     }
     
-    display (getMsg(MSN_ERR_BP_NODICE, [filePattern, line]), MT_ERROR);
-
-    return false;
-}
-
-function XXXclearFutureBreakpointByNumber (idx)
-{
-    var filePattern = console.fbreaks.childData[idx].filePattern;
-    var line = console.freaks.childData[idx].line;
+    bpr = new BPRecord (filePattern, line);
     
-    console.fbreaks.removeChildAtIndex(idx);
-    display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
-    return true;
+    console.breakpoints.appendChild (bpr);
+    display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
+    
+    return bpr;
 }
