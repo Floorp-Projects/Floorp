@@ -11,8 +11,8 @@
      onload="parent.onPanelLoaded('am-main.xul');"
      align="vertical">
 
-    <html:script src="chrome://global/content/strres.js"/>
-    <html:script src="chrome://pref/content/prefutilities.js"/>
+    <script src="chrome://global/content/strres.js"/>
+    <script src="chrome://pref/content/prefutilities.js"/>
     <box class="header" align="horizontal">  
     <titledbutton class="left-header-text" value="&accountTitle.label;"/>
       <spring class="header-spring" flex="1"/>
@@ -47,11 +47,11 @@
     </html:tr>
     <html:tr>
       <html:td>&email.label;</html:td>
-      <html:td><html:input name="identity.email" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.email" type="text" maxwidth="200" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td flex="40%">&replyTo.label;</html:td>
-      <html:td><html:input name="identity.replyTo" type="text" size="30"/></html:td>
+      <html:td><html:input name="identity.replyTo" type="text" maxwidth="200" size="30"/></html:td>
     </html:tr>
     <html:tr>
       <html:td flex="40%">&organization.label;</html:td>
@@ -67,12 +67,12 @@
       </html:td>
       </html:tr>    
 -->
-      <html:div>
+      <box orient="horizontal">
         <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
         <html:label for="identity.attachSignature">&signature.label;</html:label>
         <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
         <button class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
-      </html:div>
+      </box>
 
 <!--
       <html:select flex="100%">
@@ -89,4 +89,8 @@
         <html:label for="identity.composeHtml">&useHtml.label;</html:label>
     </html:div>
 
+    <box orient="horizontal">
+      <spring flex="100%"/>
+      <button onclick="window.openDialog('am-identity-advanced.xul','advanced','modal,chrome', null);" value="&advancedButton.label;"/>
+    </box>
 </window>
