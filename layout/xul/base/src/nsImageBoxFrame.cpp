@@ -94,6 +94,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsFormControlHelper.h"
+#include "nsContentUtils.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
@@ -348,26 +349,22 @@ nsImageBoxFrame::UpdateImage()
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
   mUseSrcAttr = !src.IsEmpty();
   if (mUseSrcAttr) {
-    nsCOMPtr<nsIURI> baseURI;
-    if (mContent) {
-      baseURI = mContent->GetBaseURI();
+    nsIDocument* doc = mContent->GetDocument();
+    if (!doc) {
+      // No need to do anything here...
+      return;
     }
-    // XXX origin charset needed
+    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), src, nsnull, baseURI);
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                              src,
+                                              doc,
+                                              baseURI);
 
-    nsresult rv;
-    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
-    if (uri && NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
-
-      // Get the document URI for the referrer...
-      nsIDocument* doc = mContent ? mContent->GetDocument() : nsnull;
-      nsIURI *documentURI = doc ? doc->GetDocumentURI() : nsnull;
-
-      // XXX: initialDocumentURI is NULL!
-      il->LoadImage(uri, nsnull, documentURI, loadGroup, mListener, doc,
-                    mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
+    if (uri && nsContentUtils::CanLoadImage(uri, mContent, doc)) {
+      nsContentUtils::LoadImage(uri, doc, doc->GetDocumentURI(),
+                                mListener, mLoadFlags,
+                                getter_AddRefs(mImageRequest));
     }
   } else {
     // Only get the list-style-image if we aren't being drawn

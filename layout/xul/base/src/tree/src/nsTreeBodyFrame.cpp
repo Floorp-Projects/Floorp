@@ -95,6 +95,7 @@
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
 #include "nsINodeInfo.h"
+#include "nsContentUtils.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -1683,30 +1684,31 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     if (styleRequest) {
       styleRequest->Clone(imgDecoderObserver, getter_AddRefs(imageRequest));
     } else {
-      nsCOMPtr<nsIURI> baseURI;
-      nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+      nsIDocument* doc = mContent->GetDocument();
       if (!doc)
         // The page is currently being torn down.  Why bother.
         return NS_ERROR_FAILURE;
 
-      baseURI = mContent->GetBaseURI();
+      nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
 
       nsCOMPtr<nsIURI> srcURI;
-      // XXX origin charset needed
-      NS_NewURI(getter_AddRefs(srcURI), imageSrc, nsnull, baseURI);
+      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcURI),
+                                                imageSrc,
+                                                doc,
+                                                baseURI);
       if (!srcURI)
         return NS_ERROR_FAILURE;
 
-      nsresult rv;
-      nsCOMPtr<imgILoader> il =
-        do_GetService("@mozilla.org/image/loader;1", &rv);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // XXX: initialDocumentURI is NULL!
-      rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURI(), nsnull,
-                         imgDecoderObserver, doc, nsIRequest::LOAD_NORMAL,
-                         nsnull, nsnull, getter_AddRefs(imageRequest));
+      if (nsContentUtils::CanLoadImage(srcURI, mContent, doc)) {
+        nsresult rv = nsContentUtils::LoadImage(srcURI,
+                                                doc,
+                                                doc->GetDocumentURI(),
+                                                imgDecoderObserver,
+                                                nsIRequest::LOAD_NORMAL,
+                                                getter_AddRefs(imageRequest));
+        NS_ENSURE_SUCCESS(rv, rv);
+                                  
+      }
     }
     listener->UnsuppressInvalidation();
 
