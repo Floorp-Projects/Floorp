@@ -5679,7 +5679,8 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
   BCCellBorder  lastTopBorder, lastBottomBorder;
   // horizontal borders indexed in x-direction (cols)
   BCCellBorders lastBottomBorders(damageArea.width + 1, damageArea.x); if (!lastBottomBorders.borders) ABORT0();
-  PRBool startSeg, gotRowBorder;
+  PRBool startSeg;
+  PRBool gotRowBorder = PR_FALSE;
 
   BCMapCellInfo  info, ajaInfo;
   BCBorderOwner  owner, ajaOwner;
@@ -5757,31 +5758,35 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         propData->mTopBorderWidth = LimitBorderWidth(PR_MAX(propData->mTopBorderWidth, (PRUint8)ownerWidth));
         //calculate column continuous borders
         //we only need to do this once, so we'll do it only on the first row
-        CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.topRow,
-                           nsnull, PR_TRUE, NS_SIDE_TOP, PR_FALSE, t2p,
-                           owner, ownerBStyle, ownerWidth, ownerColor);
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
-                                                                 ownerWidth);
-        if (numCols == cellEndColIndex + 1) {
-          CalcDominantBorder(this, cgFrame, colFrame, nsnull, nsnull,
-                             nsnull, PR_TRUE, NS_SIDE_RIGHT, PR_FALSE, t2p,
+        if (colFrame) {
+          CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.topRow,
+                             nsnull, PR_TRUE, NS_SIDE_TOP, PR_FALSE, t2p,
                              owner, ownerBStyle, ownerWidth, ownerColor);
+          ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
+                                                                   ownerWidth);
+          if (numCols == cellEndColIndex + 1) {
+            CalcDominantBorder(this, cgFrame, colFrame, nsnull, nsnull,
+                               nsnull, PR_TRUE, NS_SIDE_RIGHT, PR_FALSE, t2p,
+                               owner, ownerBStyle, ownerWidth, ownerColor);
+          }
+          else {
+            CalcDominantBorder(nsnull, cgFrame, colFrame, nsnull, nsnull,
+                               nsnull, PR_FALSE, NS_SIDE_RIGHT, PR_FALSE, t2p,
+                               owner, ownerBStyle, ownerWidth, ownerColor);
+          }
+          ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
+                                                                   ownerWidth);
         }
-        else {
-          CalcDominantBorder(nsnull, cgFrame, colFrame, nsnull, nsnull,
-                             nsnull, PR_FALSE, NS_SIDE_RIGHT, PR_FALSE, t2p,
-                             owner, ownerBStyle, ownerWidth, ownerColor);
-        }
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
-                                                                 ownerWidth);
       }
       //calculate continuous top first row & rowgroup border: special case
       //because it must include the table in the collapse
-      CalcDominantBorder(this, nsnull, nsnull, info.rg, info.topRow,
-                         nsnull, PR_TRUE, NS_SIDE_TOP, PR_FALSE, t2p,
-                         owner, ownerBStyle, ownerWidth, ownerColor);
-      info.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, ownerWidth);
-      if (info.cgRight) {
+      if (info.topRow) {
+        CalcDominantBorder(this, nsnull, nsnull, info.rg, info.topRow,
+                           nsnull, PR_TRUE, NS_SIDE_TOP, PR_FALSE, t2p,
+                           owner, ownerBStyle, ownerWidth, ownerColor);
+        info.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, ownerWidth);
+      }
+      if (info.cgRight && info.cg) {
         //calculate continuous top colgroup border once per colgroup
         CalcDominantBorder(this, info.cg, nsnull, info.rg, info.topRow,
                            nsnull, PR_TRUE, NS_SIDE_TOP, PR_FALSE, t2p,
@@ -5842,12 +5847,14 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         }
         propData->mLeftBorderWidth = LimitBorderWidth(PR_MAX(propData->mLeftBorderWidth, ownerWidth));
         //get row continuous borders
-        CalcDominantBorder(this, info.cg, info.leftCol, info.rg, rowFrame, nsnull, PR_TRUE, NS_SIDE_LEFT,
-                           PR_FALSE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
-        rowFrame->SetContinuousBCBorderWidth(NS_SIDE_LEFT, ownerWidth);
+        if (rowFrame) {
+          CalcDominantBorder(this, info.cg, info.leftCol, info.rg, rowFrame, nsnull, PR_TRUE, NS_SIDE_LEFT,
+                             PR_FALSE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
+          rowFrame->SetContinuousBCBorderWidth(NS_SIDE_LEFT, ownerWidth);
+        }
       }
       //get row group continuous borders
-      if (info.rgBottom) { //once per row group, so check for bottom
+      if (info.rgBottom && info.rg) { //once per row group, so check for bottom
         CalcDominantBorder(this, info.cg, info.leftCol, info.rg, nsnull,
                            nsnull, PR_TRUE, NS_SIDE_LEFT, PR_FALSE, t2p,
                            owner, ownerBStyle, ownerWidth, ownerColor);
@@ -5890,13 +5897,15 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         }
         propData->mRightBorderWidth = LimitBorderWidth(PR_MAX(propData->mRightBorderWidth, ownerWidth));
         //get row continuous borders
-        CalcDominantBorder(this, info.cg, info.rightCol, info.rg, rowFrame,
-                           nsnull, PR_TRUE, NS_SIDE_RIGHT, PR_TRUE, t2p,
-                           owner, ownerBStyle, ownerWidth, ownerColor);
-        rowFrame->SetContinuousBCBorderWidth(NS_SIDE_RIGHT, ownerWidth);
+        if (rowFrame) {
+          CalcDominantBorder(this, info.cg, info.rightCol, info.rg, rowFrame,
+                             nsnull, PR_TRUE, NS_SIDE_RIGHT, PR_TRUE, t2p,
+                             owner, ownerBStyle, ownerWidth, ownerColor);
+          rowFrame->SetContinuousBCBorderWidth(NS_SIDE_RIGHT, ownerWidth);
+        }
       }
       //get row group continuous borders
-      if (info.rgBottom) { //once per rg, so check for bottom
+      if (info.rgBottom && info.rg) { //once per rg, so check for bottom
         CalcDominantBorder(this, info.cg, info.rightCol, info.rg, nsnull,
                            nsnull, PR_TRUE, NS_SIDE_RIGHT, PR_TRUE, t2p,
                            owner, ownerBStyle, ownerWidth, ownerColor);
@@ -6028,21 +6037,27 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         lastBottomBorder.span = info.rowSpan;
         lastBottomBorders[colX] = lastBottomBorder;
         //get col continuous border
-        CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.bottomRow,
-                           nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
-                           owner, ownerBStyle, ownerWidth, ownerColor);
-        ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
-                                                                 ownerWidth);
+        if (colFrame) {
+          CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.bottomRow,
+                             nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
+                             owner, ownerBStyle, ownerWidth, ownerColor);
+          ((nsTableColFrame*)colFrame)->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
+                                                                   ownerWidth);
+        }
       }
       //get row group/col group continuous border
-      CalcDominantBorder(this, nsnull, nsnull, info.rg, info.bottomRow,
-                         nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
-                         owner, ownerBStyle, ownerWidth, ownerColor);
-      info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, ownerWidth);
-      CalcDominantBorder(this, info.cg, nsnull, info.rg, info.bottomRow,
-                         nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
-                         owner, ownerBStyle, ownerWidth, ownerColor);
-      info.cg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, ownerWidth);
+      if (info.rg) {
+        CalcDominantBorder(this, nsnull, nsnull, info.rg, info.bottomRow,
+                           nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
+                           owner, ownerBStyle, ownerWidth, ownerColor);
+        info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, ownerWidth);
+      }
+      if (info.cg) {
+        CalcDominantBorder(this, info.cg, nsnull, info.rg, info.bottomRow,
+                           nsnull, PR_TRUE, NS_SIDE_BOTTOM, PR_TRUE, t2p,
+                           owner, ownerBStyle, ownerWidth, ownerColor);
+        info.cg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, ownerWidth);
+      }
     }
     else {
       PRInt32 segLength = 0;
@@ -6127,7 +6142,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         BCCornerInfo& brCorner = bottomCorners[colX + segLength];
         brCorner.Update(NS_SIDE_LEFT, owner, ownerBStyle, ownerWidth, ownerColor);
       }
-      if (!gotRowBorder && 1 == info.rowSpan) {
+      if (!gotRowBorder && 1 == info.rowSpan && (ajaInfo.topRow || info.rgBottom)) {
         //get continuous row/row group border
         //we need to check the row group's bottom border if this is
         //the last row in the row group, but only a cell with rowspan=1
@@ -6144,8 +6159,10 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
                            ownerColor, ajaOwner, ajaBStyle, ajaWidth,
                            ajaColor, owner, ownerBStyle, ownerWidth,
                            ownerColor, PR_TRUE);
-        ajaInfo.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, ownerWidth);
-        if (info.rgBottom) {
+        if (ajaInfo.topRow) {
+          ajaInfo.topRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, ownerWidth);
+        }
+        if (info.rgBottom && info.rg) {
           info.rg->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, ownerWidth);
         }
         gotRowBorder = PR_TRUE;
