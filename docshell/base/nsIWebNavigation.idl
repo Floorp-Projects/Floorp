@@ -49,11 +49,17 @@ interface nsIWebNavigation : nsISupports
 
 	/*
 	Tells the object to navigate to the next Back session history item.
+	@return	NS_OK - Back was successfull
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+				likely you can't go back right now.
 	*/
 	void goBack();
 
 	/*
 	Tells the object to navigate to the next Forward session history item.
+	@return	NS_OK - Forward was successfull
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.  Most
+				likely you can't go forward right now.
 	*/
 	void goForward();
 
@@ -68,9 +74,17 @@ interface nsIWebNavigation : nsISupports
 	void loadURI(in wstring uri);
 
 	/*
+	Definitions for the reload types.
+	*/
+	const long reloadNormal=0;  // Does a normal reload
+	const long reloadBypassCache=2; // Reloads bypassing the cache
+	const long reloadBypassProxy=3; // Reloads bypassing the proxy
+	const long reloadBypassProxyAndCache=3; // Reloads bypassing proxy and cache
+
+	/*
 	Tells the Object to reload the current location.
 	*/
-	void reload(); //XXX Should take a cache parameter
+	void reload(in long reloadType);
 
 	/*
 	Stops a load of a URI.
