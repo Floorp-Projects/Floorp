@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.9 $ $Date: 2002/01/07 16:45:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.10 $ $Date: 2002/01/08 15:37:36 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -772,6 +772,9 @@ sha1_hash(NSSItem *input, NSSItem *output)
     NSSToken *token = STAN_GetDefaultCryptoToken();
     ap = NSSAlgorithmAndParameters_CreateSHA1Digest(NULL);
     (void)nssToken_Digest(token, NULL, ap, input, output, NULL);
+#ifdef NSS_3_4_CODE
+    PK11_FreeSlot(token->pk11slot);
+#endif
     nss_ZFreeIf(ap);
 }
 
@@ -782,6 +785,9 @@ md5_hash(NSSItem *input, NSSItem *output)
     NSSToken *token = STAN_GetDefaultCryptoToken();
     ap = NSSAlgorithmAndParameters_CreateMD5Digest(NULL);
     (void)nssToken_Digest(token, NULL, ap, input, output, NULL);
+#ifdef NSS_3_4_CODE
+    PK11_FreeSlot(token->pk11slot);
+#endif
     nss_ZFreeIf(ap);
 }
  

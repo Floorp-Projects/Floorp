@@ -468,6 +468,10 @@ PK11_DestroySlot(PK11SlotInfo *slot)
    /* free up the cached keys and sessions */
    PK11_CleanKeyList(slot);
 
+   if (slot->mechanismList) {
+	PORT_Free(slot->mechanismList);
+   }
+
    /* finally Tell our parent module that we've gone away so it can unload */
    if (slot->module) {
 	SECMOD_SlotDestroyModule(slot->module,PR_TRUE);

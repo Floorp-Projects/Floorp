@@ -799,6 +799,7 @@ pk11_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
     trustOrderPair=pk11_formatIntPair("trustOrder",trustOrder,0);
     cipherOrderPair=pk11_formatIntPair("cipherOrder",cipherOrder,0);
     slotPair=pk11_formatPair("slotParams",slotParams,'{'); /* } */
+    if (slotParams) PORT_Free(slotParams);
     cipherPair=pk11_formatPair("ciphers",ciphers,'\'');
     if (ciphers) PR_smprintf_free(ciphers);
     flagPair=pk11_formatPair("Flags",nssFlags,'\'');

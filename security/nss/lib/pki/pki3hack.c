@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.20 $ $Date: 2002/01/07 16:45:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.21 $ $Date: 2002/01/08 15:37:40 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -118,6 +118,10 @@ STAN_LoadDefaultNSS3TrustDomain
 	    PK11Slot_SetNSSToken(le->slot, token);
 	    nssList_Add(td->tokenList, token);
 	}
+	/* okay to free this, as the last reference is maintained in the
+	 * global slot lists
+	 */
+	PK11_FreeSlotList(list);
     }
     td->tokens = nssList_CreateIterator(td->tokenList);
     g_default_trust_domain = td;
@@ -430,12 +434,16 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSToken *tok;
     NSSTrust *tokenTrust;
-    NSSTrust *t = NULL;
+    NSSTrust t;
     nssListIterator *tokens;
     int lastTrustOrder, myTrustOrder;
     tokens = nssList_CreateIterator(td->tokenList);
     if (!tokens) return NULL;
     lastTrustOrder = 1<<16; /* just make it big */
+    t.serverAuth = CKT_NETSCAPE_TRUST_UNKNOWN;
+    t.clientAuth = CKT_NETSCAPE_TRUST_UNKNOWN;
+    t.emailProtection = CKT_NETSCAPE_TRUST_UNKNOWN;
+    t.codeSigning = CKT_NETSCAPE_TRUST_UNKNOWN;
     for (tok  = (NSSToken *)nssListIterator_Start(tokens);
          tok != (NSSToken *)NULL;
          tok  = (NSSToken *)nssListIterator_Next(tokens))
@@ -444,43 +452,35 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	                                       nssTokenSearchType_TokenOnly);
 	if (tokenTrust) {
 	    myTrustOrder = nsstoken_get_trust_order(tok);
-	    if (t) {
-		if (t->serverAuth == CKT_NETSCAPE_TRUST_UNKNOWN ||
-		     myTrustOrder < lastTrustOrder) {
-		    t->serverAuth = tokenTrust->serverAuth;
-		}
-		if (t->clientAuth == CKT_NETSCAPE_TRUST_UNKNOWN ||
-		     myTrustOrder < lastTrustOrder) {
-		    t->clientAuth = tokenTrust->clientAuth;
-		}
-		if (t->emailProtection == CKT_NETSCAPE_TRUST_UNKNOWN ||
-		     myTrustOrder < lastTrustOrder) {
-		    t->emailProtection = tokenTrust->emailProtection;
-		}
-		if (t->codeSigning == CKT_NETSCAPE_TRUST_UNKNOWN ||
-		     myTrustOrder < lastTrustOrder) {
-		    t->codeSigning = tokenTrust->codeSigning;
-		}
-		(void)nssPKIObject_Destroy(&tokenTrust->object);
-	    } else {
-		t = tokenTrust;
+	    if (t.serverAuth == CKT_NETSCAPE_TRUST_UNKNOWN ||
+	         myTrustOrder < lastTrustOrder) {
+		t.serverAuth = tokenTrust->serverAuth;
 	    }
+	    if (t.clientAuth == CKT_NETSCAPE_TRUST_UNKNOWN ||
+	         myTrustOrder < lastTrustOrder) {
+		t.clientAuth = tokenTrust->clientAuth;
+	    }
+	    if (t.emailProtection == CKT_NETSCAPE_TRUST_UNKNOWN ||
+	         myTrustOrder < lastTrustOrder) {
+		t.emailProtection = tokenTrust->emailProtection;
+	    }
+	    if (t.codeSigning == CKT_NETSCAPE_TRUST_UNKNOWN ||
+	         myTrustOrder < lastTrustOrder) {
+		t.codeSigning = tokenTrust->codeSigning;
+	    }
+	    (void)nssPKIObject_Destroy(&tokenTrust->object);
 	    lastTrustOrder = myTrustOrder;
 	}
     }
     nssListIterator_Finish(tokens);
     nssListIterator_Destroy(tokens);
-    if (!t) {
-	return NULL;
-    }
-    rvTrust = cert_trust_from_stan_trust(t, cc->arena);
+    rvTrust = cert_trust_from_stan_trust(&t, cc->arena);
     if (!rvTrust) return NULL;
     if (cc->slot && PK11_IsUserCert(cc->slot, cc, cc->pkcs11ID)) {
 	rvTrust->sslFlags |= CERTDB_USER;
 	rvTrust->emailFlags |= CERTDB_USER;
 	rvTrust->objectSigningFlags |= CERTDB_USER;
     }
-    (void)nssPKIObject_Destroy(&t->object);
     return rvTrust;
 }
 
