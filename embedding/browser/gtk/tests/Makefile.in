@@ -36,6 +36,7 @@ LIBS		= \
 		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgtkembedmoz \
+		-lgtksuperwin \
 		$(TK_LIBS) \
 		$(NULL)
 
