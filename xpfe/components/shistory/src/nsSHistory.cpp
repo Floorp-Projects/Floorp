@@ -531,7 +531,8 @@ NS_IMETHODIMP
 nsSHistory::UpdateIndex()
 {
   // Update the actual index with the right value. 
-  mIndex = mRequestedIndex;
+  if (mIndex != mRequestedIndex && mRequestedIndex != -1)
+    mIndex = mRequestedIndex;
   return NS_OK;
 }
 
@@ -704,6 +705,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
     // Time to initiate a document load
     return docShell->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
 }
+
 
 
 PRBool
