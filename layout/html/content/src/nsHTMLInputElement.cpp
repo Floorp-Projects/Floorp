@@ -23,7 +23,8 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIControllers.h"
-#include "nsEditorController.h"
+#include "nsIEditorController.h"
+
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -1000,13 +1001,15 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
         NS_ERROR_FAILURE);
       if (!mControllers) { return NS_ERROR_NULL_POINTER; }
 
-      nsEditorController *controller = new nsEditorController();
+      nsCOMPtr<nsIController> controller;
+      NS_ENSURE_SUCCESS (
+        nsComponentManager::CreateInstance("component://netscape/editor/editorcontroller",
+                                           nsnull,
+                                           NS_GET_IID(nsIController),
+                                           getter_AddRefs(controller)),
+        NS_ERROR_FAILURE);
       if (!controller) { return NS_ERROR_NULL_POINTER; }
-      nsCOMPtr<nsIController> iController = do_QueryInterface(controller);
-      if (!iController) { return NS_ERROR_NULL_POINTER; }
-      NS_ADDREF(controller);
-      controller->SetContent(this);
-      mControllers->AppendController(iController);
+      mControllers->AppendController(controller);
     }
   }
 
