@@ -70,14 +70,6 @@ MRESULT EXPENTRY fnwpTimer( HWND h, ULONG msg, MPARAM mp1, MPARAM mp2)
    return mRC;
 }
 
-TID QueryCurrentTID()
-{
-   PTIB pTib = 0;
-   PPIB pPib = 0;
-   DosGetInfoBlocks( &pTib, &pPib);
-   return pTib->tib_ptib2->tib2_ultid;
-}
-
 void EnsureWndClass()
 {
    static BOOL bRegistered = FALSE;
