@@ -90,16 +90,6 @@ public:
 
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult) = 0;
 
-  /**
-    * Finds text in content
-   */
-  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
-
-  /**
-    * Redraws contents of browser window
-   */
-  NS_IMETHOD ForceRefresh() = 0;
-
   // XXX minimize, maximize
   // XXX event control: enable/disable window close box, stick to glass, modal
 };

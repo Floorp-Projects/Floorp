@@ -94,8 +94,6 @@ public:
   NS_IMETHOD GetStatus(PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
-  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
-  NS_IMETHOD ForceRefresh();
 
   NS_IMETHOD HandleEvent(nsGUIEvent * anEvent);
 
@@ -152,6 +150,8 @@ public:
   void DoFind();
   void DoSelectAll();
   void DoAppsDialog();
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+  NS_IMETHOD ForceRefresh();
 
   // nsIToolbarManager Listener Interface
   NS_IMETHOD NotifyToolbarManagerChangedSize(nsIToolbarManager* aToolbarMgr);
