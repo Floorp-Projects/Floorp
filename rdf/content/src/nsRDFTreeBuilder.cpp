@@ -71,6 +71,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsIURL.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
@@ -257,6 +258,9 @@ public:
 
     nsresult
     CloseTreeItem(nsIContent* aElement);
+
+    nsresult
+    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -688,23 +692,6 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
         return NS_OK;
 
-    // Get the treeitem's resource so that we can generate cell
-    // values. We could QI for the nsIRDFResource here, but doing this
-    // via the nsIContent interface allows us to support generic nodes
-    // that might get added in by DOM calls.
-    nsAutoString uri;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_RDF,
-                                              kIdAtom,
-                                              uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no RDF:ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
     // Now mark the element's contents as being generated so that
     // any re-entrant calls don't trigger an infinite recursion.
     if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_None,
@@ -715,17 +702,21 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
         return rv;
     }
 
+    // Get the treeitem's resource so that we can generate cell
+    // values. We could QI for the nsIRDFResource here, but doing this
+    // via the nsIContent interface allows us to support generic nodes
+    // that might get added in by DOM calls.
+    nsCOMPtr<nsIRDFResource> resource;
+    if (NS_FAILED(rv = GetElementResource(aElement, getter_AddRefs(resource)))) {
+        NS_ERROR("unable to get element resource");
+        return rv;
+    }
+
     // XXX Eventually, we may want to factor this into one method that
     // handles RDF containers (RDF:Bag, et al.) and another that
     // handles multi-attributes. For performance...
 
     // Create a cursor that'll enumerate all of the outbound arcs
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
     nsCOMPtr<nsIRDFArcsOutCursor> properties;
     if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties))))
         return rv;
@@ -1250,10 +1241,6 @@ RDFTreeBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
 {
     nsresult rv;
 
-    const char* resourceURI;
-    if (NS_FAILED(rv = aResource->GetValue(&resourceURI)))
-        return rv;
-
     PRInt32 count;
     if (NS_FAILED(rv = aElement->ChildCount(count)))
         return rv;
@@ -1281,17 +1268,13 @@ RDFTreeBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
         // Now get the resource ID from the RDF:ID attribute. We do it
         // via the content model, because you're never sure who
         // might've added this stuff in...
-        nsAutoString uri;
-
-        if (NS_FAILED(rv = kid->GetAttribute(kNameSpaceID_RDF, kIdAtom, uri))) {
-            NS_ERROR("severe error retrieving attribute");
-            return rv; // XXX fatal
+        nsCOMPtr<nsIRDFResource> resource;
+        if (NS_FAILED(rv = GetElementResource(kid, getter_AddRefs(resource)))) {
+            NS_ERROR("severe error retrieving resource");
+            return rv;
         }
 
-        if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-            continue;
-
-        if (! uri.Equals(resourceURI))
+        if (resource != aResource)
             continue; // not the resource we want
 
         // Fount it!
@@ -1618,21 +1601,11 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
     // values. We could QI for the nsIRDFResource here, but doing this
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
-    nsAutoString treeItemResourceURI;
-    if (NS_FAILED(rv = aTreeItemElement->GetAttribute(kNameSpaceID_RDF,
-                                                      kIdAtom,
-                                                      treeItemResourceURI)))
-        return rv;
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("xul:treeitem has no RDF:ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
     nsCOMPtr<nsIRDFResource> treeItemResource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(treeItemResourceURI,
-                                                       getter_AddRefs(treeItemResource))))
+    if (NS_FAILED(rv = GetElementResource(aTreeItemElement, getter_AddRefs(treeItemResource)))) {
+        NS_ERROR("unable to get tree item resource");
         return rv;
+    }
 
     PRInt32 count;
     if (NS_FAILED(rv = mRoot->ChildCount(count))) {
@@ -1947,7 +1920,7 @@ RDFTreeBuilderImpl::IsTreeProperty(nsIContent* aElement, nsIRDFResource* aProper
 
         if (nameSpaceID != kNameSpaceID_HTML) {
             // Is this the "rdf:containment? property?
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_RDF, kContainmentAtom, uri))) {
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, uri))) {
                 NS_ERROR("unable to get attribute value");
                 return PR_FALSE;
             }
@@ -2060,26 +2033,7 @@ RDFTreeBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aReso
         return rv;
     }
 
-    nsAutoString uri;
-    if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_RDF,
-                                             kIdAtom,
-                                             uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no RDF:ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResource))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
-    return NS_OK;
+    return GetElementResource(element, aResource);
 }
 
 nsresult
@@ -2098,7 +2052,7 @@ RDFTreeBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     if (NS_FAILED(rv = aResource->GetValue(&uri)))
         return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_RDF, kIdAtom, uri, PR_FALSE)))
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
         return rv;
 
     *aResult = result;
@@ -2190,6 +2144,52 @@ RDFTreeBuilderImpl::CloseTreeItem(nsIContent* aElement)
                                                 kTreeContentsGeneratedAtom,
                                                 PR_FALSE))) {
         NS_ERROR("unable to clear contents-generated attribute");
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+RDFTreeBuilderImpl::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
+{
+    // Perform a reverse mapping from an element in the content model
+    // to an RDF resource.
+    nsresult rv;
+    nsAutoString uri;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
+                                              kIdAtom,
+                                              uri))) {
+        NS_ERROR("severe error retrieving attribute");
+        return rv;
+    }
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+        NS_ERROR("tree element has no ID");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Since the element will store its ID attribute as a document-relative value,
+    // we may need to qualify it first...
+    NS_ASSERTION(mDocument != nsnull, "builder has no document -- can't fully qualify URI");
+    if (nsnull != mDocument) {
+        nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+        NS_ASSERTION(doc, "doesn't support nsIDocument");
+        if (doc) {
+          nsIURL* docURL = nsnull;
+          doc->GetBaseURL(docURL);
+          if (docURL) {
+              const char* url;
+              docURL->GetSpec(&url);
+              rdf_PossiblyMakeAbsolute(url, uri);
+              NS_RELEASE(docURL);
+          }
+        }
+    }
+
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResult))) {
+        NS_ERROR("unable to create resource");
         return rv;
     }
 

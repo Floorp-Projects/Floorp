@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
-#include "nsGenericAttribute.h"
+#include "nsXULAttributes.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsIXMLContent.h"
@@ -81,6 +81,10 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIStyledContent.h"
+#include "nsIStyleRule.h"
+#include "nsIURL.h"
+#include "rdfutil.h"
 
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
@@ -141,7 +145,7 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIDOMEventReceiver,
                        public nsIScriptObjectOwner,
                        public nsIJSScriptObject,
-                       public nsIXMLContent
+                       public nsIStyledContent
 {
 public:
     RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
@@ -161,7 +165,7 @@ public:
     NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-    // nsIContent (from nsIRDFContent via nsIXMLContent)
+    // nsIContent (from nsIStyledContent)
 
     // Any of the nsIContent methods that directly manipulate content
     // (e.g., AppendChildTo()), are assumed to "know what they're
@@ -204,7 +208,22 @@ public:
     NS_IMETHOD RangeRemove(nsIDOMRange& aRange); 
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
-    // nsIXMLContent (from nsIRDFContent)
+    NS_IMETHOD GetID(nsIAtom*& aResult) const;
+    NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+    NS_IMETHOD HasClass(nsIAtom* aClass) const;
+
+    NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);
+    NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);
+
+    /** NRA ***
+    * Get a hint that tells the style system what to do when 
+    * an attribute on this node changes.
+    */
+    NS_IMETHOD GetStyleHintForAttributeChange(
+      const nsIAtom* aAttribute,
+      PRInt32 *aHint) const;
+
+    // nsIXMLContent (no longer implemented)
     NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
     NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
@@ -256,6 +275,8 @@ private:
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
     static nsIAtom*             kIdAtom;
+    static nsIAtom*             kClassAtom;
+    static nsIAtom*             kStyleAtom;
     static nsIAtom*             kContainerAtom;
 
     nsIDocument*      mDocument;
@@ -267,10 +288,10 @@ private:
     PRInt32           mNameSpaceID;
     nsIAtom*          mTag;
     nsIEventListenerManager* mListenerManager;
-    nsVoidArray*      mAttributes;
+    nsXULAttributes*  mAttributes;
     PRBool            mContentsMustBeGenerated;
-    nsIDOMNode*		  mBroadcaster;
-    nsVoidArray		  mBroadcastListeners;
+    nsIDOMNode*		    mBroadcaster;
+    nsVoidArray		    mBroadcastListeners;
 };
 
 
@@ -278,6 +299,8 @@ nsrefcnt             RDFElementImpl::gRefCnt;
 nsIRDFService*       RDFElementImpl::gRDFService;
 nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
 nsIAtom*             RDFElementImpl::kIdAtom;
+nsIAtom*             RDFElementImpl::kClassAtom;
+nsIAtom*             RDFElementImpl::kStyleAtom;
 nsIAtom*             RDFElementImpl::kContainerAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
@@ -310,6 +333,8 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
 
         kIdAtom        = NS_NewAtom("id");
+        kClassAtom     = NS_NewAtom("class");
+        kStyleAtom     = NS_NewAtom("style");
         kContainerAtom = NS_NewAtom("container");
 
         rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
@@ -328,15 +353,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
 RDFElementImpl::~RDFElementImpl()
 {
-    if (nsnull != mAttributes) {
-        PRInt32 count = mAttributes->Count();
-        PRInt32 index;
-        for (index = 0; index < count; index++) {
-            nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
-            delete attr;
-        }
-        delete mAttributes;
-    }
+    delete mAttributes; // nsXULAttributes destructor takes care of the rest.
 
     //NS_IF_RELEASE(mDocument); // not refcounted
     //NS_IF_RELEASE(mParent)    // not refcounted
@@ -358,6 +375,8 @@ RDFElementImpl::~RDFElementImpl()
         }
 
         NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kClassAtom);
+        NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kContainerAtom);
         NS_IF_RELEASE(gNameSpaceManager);
     }
@@ -396,7 +415,7 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(kIXMLContentIID) ||
+    if (iid.Equals(nsIStyledContent::GetIID()) ||
         iid.Equals(kIContentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIContent*, this);
@@ -1121,11 +1140,12 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
     nsresult rv;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    GetResource(getter_AddRefs(resource));
-
     nsCOMPtr<nsIRDFDocument> rdfDoc;
     if (mDocument) {
+        // Need to do a GetResource() here, because changing the document
+        // may actually change the element's URI.
+        nsCOMPtr<nsIRDFResource> resource;
+        GetResource(getter_AddRefs(resource));
 
         // Remove this element from the RDF resource-to-element map in
         // the old document.
@@ -1156,6 +1176,10 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     mDocument = aDocument; // not refcounted
 
     if (mDocument) {
+        // Need to do a GetResource() here, because changing the document
+        // may actually change the element's URI.
+        nsCOMPtr<nsIRDFResource> resource;
+        GetResource(getter_AddRefs(resource));
 
         // Add this element to the RDF resource-to-element map in the
         // new document.
@@ -1306,7 +1330,7 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         //nsRange::OwnerChildInserted(this, aIndex);
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_FALSE);
+            aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
                 doc->ContentInserted(this, aKid, aIndex);
             }
@@ -1338,7 +1362,7 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_FALSE);
+            aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
                 doc->ContentReplaced(this, oldKid, aKid, aIndex);
             }
@@ -1371,7 +1395,7 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         // ranges don't need adjustment since new child is at end of list
         nsIDocument* doc = mDocument;
         if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_FALSE);
+            aKid->SetDocument(doc, PR_TRUE);
             if (aNotify) {
                 doc->ContentInserted(this, aKid, mChildren->Count() - 1);
             }
@@ -1504,7 +1528,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         return NS_ERROR_NULL_POINTER;
 
     if (nsnull == mAttributes) {
-        if ((mAttributes = new nsVoidArray()) == nsnull)
+        if ((mAttributes = new nsXULAttributes()) == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1529,15 +1553,35 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
       }
     }
 
+    // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
+    // class list.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kClassAtom) {
+      mAttributes->UpdateClassList(aValue);
+    }
+
+    // Check to see if the STYLE attribute is being set.  If so, we need to create a new
+    // style rule based off the value of this attribute, and we need to let the document
+    // know about the StyleRule change.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
+
+        nsIURL* docURL = nsnull;
+        if (nsnull != mDocument) {
+            mDocument->GetBaseURL(docURL);
+        }
+
+        mAttributes->UpdateStyleRule(docURL, aValue);
+        // XXX Some kind of special document update might need to happen here.
+    }
+
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
     
-    nsGenericAttribute* attr;
+    nsXULAttribute* attr;
     PRBool successful = PR_FALSE;
     PRInt32 index = 0;
     PRInt32 count = mAttributes->Count();
     while (index < count) {
-        attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+        attr = mAttributes->ElementAt(index);
         if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName))
             break;
         index++;
@@ -1547,7 +1591,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         attr->mValue = aValue;
     }
     else { // didn't find it
-        attr = new nsGenericAttribute(aNameSpaceID, aName, aValue);
+        attr = new nsXULAttribute(aNameSpaceID, aName, aValue);
         if (! attr)
           return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1609,24 +1653,11 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
         nsString aString;
         aName->ToString(aString);
-        if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
-            // Set the attribute in the broadcast listener.
-            nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
-            if (contentNode) {
-                
-                // If the namespace of the attribute and the namespace of the
-                // tag are identical, then use the namespace of the listener's tag.
-                // This allows you to do things like set xul:disabled on a xul tag
-                // and have an html tag be annotated with an html:disabled instead.
-                
-                PRInt32 thisNameSpaceID, listenerNameSpaceID;
-                GetNameSpaceID(thisNameSpaceID);
-                contentNode->GetNameSpaceID(listenerNameSpaceID);
-
-                if (aNameSpaceID == thisNameSpaceID)
-                    contentNode->SetAttribute(listenerNameSpaceID, aName, aValue, aNotify);
-                else contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
-            }
+        if (xulListener->mAttribute == aString) {
+            nsCOMPtr<nsIDOMElement> element;
+            element = do_QueryInterface(xulListener->mListener);
+            if (element)
+                element->SetAttribute(aString, aValue);
         }
     }
 
@@ -1721,7 +1752,7 @@ done:
         PRInt32 count = mAttributes->Count();
         PRInt32 index;
         for (index = 0; index < count; index++) {
-            const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
+            const nsXULAttribute* attr = (const nsXULAttribute*)mAttributes->ElementAt(index);
             if (((attr->mNameSpaceID == aNameSpaceID) ||
                  (aNameSpaceID == kNameSpaceID_Unknown) ||
                  (aNameSpaceID == kNameSpaceID_None)) &&
@@ -1732,6 +1763,24 @@ done:
                 }
                 else {
                     rv = NS_CONTENT_ATTR_NO_VALUE;
+                }
+                if ((aNameSpaceID == kNameSpaceID_None) &&
+                    (attr->mName == kIdAtom))
+                {
+                  aResult = attr->mValue;
+
+                  // RDF will treat all document IDs as absolute URIs, so we'll need convert 
+                  // a possibly-absolute URI into a relative ID attribute.
+                  if (nsnull != mDocument) {
+                    nsIURL* docURL = nsnull;
+                    mDocument->GetBaseURL(docURL);
+                    if (docURL) {
+                      const char* url;
+                      docURL->GetSpec(&url);
+                      rdf_PossiblyMakeRelative(url, aResult);
+                      NS_RELEASE(docURL);
+                    }
+                  }
                 }
                 break;
             }
@@ -1748,13 +1797,30 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         return NS_ERROR_NULL_POINTER;
     }
 
+    // Check to see if the CLASS attribute is being unset.  If so, we need to delete our
+    // class list.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kClassAtom) {
+      mAttributes->UpdateClassList("");
+    }
+    
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kStyleAtom) {
+
+        nsIURL* docURL = nsnull;
+        if (nsnull != mDocument) {
+            mDocument->GetBaseURL(docURL);
+        }
+
+        mAttributes->UpdateStyleRule(docURL, "");
+        // XXX Some kind of special document update might need to happen here.
+    }
+
     nsresult rv = NS_OK;
     PRBool successful = PR_FALSE;
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
         PRInt32 index;
         for (index = 0; index < count; index++) {
-            nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
+            nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(index);
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
                 mAttributes->RemoveElementAt(index);
                 delete attr;
@@ -1772,22 +1838,12 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
             nsString aString;
             aName->ToString(aString);
-            if (xulListener->mAttribute.EqualsIgnoreCase(aString)) {
+            if (xulListener->mAttribute == aString) {
                 // Unset the attribute in the broadcast listener.
-                nsCOMPtr<nsIContent> contentNode(do_QueryInterface(xulListener->mListener));
-                
-                // If the namespace of the attribute and the namespace of the
-                // tag are identical, then use the namespace of the listener's tag.
-                // This allows you to do things like set xul:disabled on a xul tag
-                // and have an html tag be annotated with an html:disabled instead.
-            
-                PRInt32 thisNameSpaceID, listenerNameSpaceID;
-                GetNameSpaceID(thisNameSpaceID);
-                contentNode->GetNameSpaceID(listenerNameSpaceID);
-
-                if (aNameSpaceID == thisNameSpaceID)
-                    contentNode->UnsetAttribute(listenerNameSpaceID, aName, aNotify);
-                else contentNode->UnsetAttribute(aNameSpaceID, aName, aNotify);
+                nsCOMPtr<nsIDOMElement> element;
+                element = do_QueryInterface(xulListener->mListener);
+                if (element)
+                  element->RemoveAttribute(aString);
             }
         }
    
@@ -1857,7 +1913,7 @@ done:
 #endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
 
     if (nsnull != mAttributes) {
-        nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
+        nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(aIndex);
         if (nsnull != attr) {
             aNameSpaceID = attr->mNameSpaceID;
             aName        = attr->mName;
@@ -2181,7 +2237,20 @@ nsresult
 RDFElementImpl::GetResource(nsIRDFResource** aResource)
 {
     nsAutoString uri;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_RDF, kIdAtom, uri)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None, kIdAtom, uri)) {
+        // RDF will treat all document IDs as absolute URIs, so we'll need convert 
+        // a possibly-relative ID attribute into a fully-qualified (that is, with
+        // the current document's URL) URI.
+        if (nsnull != mDocument) {
+          nsIURL* docURL = nsnull;
+          mDocument->GetBaseURL(docURL);
+          if (docURL) {
+            const char* url;
+            docURL->GetSpec(&url);
+            rdf_PossiblyMakeAbsolute(url, uri);
+            NS_RELEASE(docURL);
+          }
+        }
         return gRDFService->GetUnicodeResource(uri, aResource);
     }
 
@@ -2329,3 +2398,70 @@ RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
     return NS_OK;
 }
 
+// nsIStyledContent Implementation
+NS_IMETHODIMP
+RDFElementImpl::GetID(nsIAtom*& aResult) const
+{
+  nsString value;
+  GetAttribute(kNameSpaceID_None, kIdAtom, value);
+
+  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
+  return NS_OK;
+}
+    
+NS_IMETHODIMP
+RDFElementImpl::GetClasses(nsVoidArray& aArray) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFElementImpl::HasClass(nsIAtom* aClass) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetContentStyleRule(nsIStyleRule*& aResult)
+{
+  aResult = nsnull;
+  return NS_OK;
+}
+    
+NS_IMETHODIMP
+RDFElementImpl::GetInlineStyleRule(nsIStyleRule*& aResult)
+{
+  // Fetch the cached style rule from the attributes.
+  nsresult result = NS_ERROR_NULL_POINTER;
+  aResult = nsnull;
+  if (mAttributes != nsnull)
+    result = mAttributes->GetInlineStyleRule(aResult);
+  return result;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt32 *aHint) const
+{
+  *aHint = NS_STYLE_HINT_REFLOW;
+  if (mNameSpaceID == kNameSpaceID_XUL)
+  {
+      // We are a XUL tag and need to specify a style hint.
+      if (!mTag)
+        return NS_OK;
+
+      nsString tagName;
+      mTag->ToString(tagName);
+      
+      nsString attributeName;
+      aAttribute->ToString(attributeName);
+
+      if (tagName == "progressmeter")
+      {
+          // Give hints for the values that should only involve a content change
+          if (attributeName == "value" || attributeName == "mode")
+            *aHint = NS_STYLE_HINT_CONTENT;
+      }
+  }
+
+  return NS_OK;
+}
