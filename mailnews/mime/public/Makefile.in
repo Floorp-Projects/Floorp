@@ -26,6 +26,7 @@ EXPORTS = \
 		nsIMimeHeaderConverter.h    	\
 		nsIStreamConverter.h		\
 		nsIMimeObjectClassAccess.h	\
+		nsIMimeEmitter.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
