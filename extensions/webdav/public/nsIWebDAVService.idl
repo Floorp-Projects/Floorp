@@ -1,0 +1,100 @@
+/* -*- Mode: idl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:expandtab:ts=4 sw=4:
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is Oracle Corporation.
+ * Portions created by Oracle Corporation are  Copyright (C) 2004
+ * by Oracle Corporation.  All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mike Shaver <shaver@off.net> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIWebDAVListener.idl"
+#include "nsIWebDAVResource.idl"
+
+interface nsIStreamListener;
+
+[scriptable,uuid(173ef52e-2a2f-45ca-8f9f-abc7429163c2)]
+interface nsIWebDAVService : nsISupports
+{
+    void lockResources(in PRUint32 count,
+                       [array, size_is(count)]
+                       in nsIWebDAVResource resources,
+                       in nsIWebDAVOperationListener listener);
+
+    void unlockResources(in PRUint32 count,
+                         [array, size_is(count)]
+                         in nsIWebDAVResource resources,
+                         in nsIWebDAVOperationListener listener);
+
+    void getResourcePropertyNames(in nsIWebDAVResource resource,
+                                  in boolean withDepth,
+                                  in nsIWebDAVMetadataListener listener);
+
+    void getResourceProperties(in nsIWebDAVResource resource,
+                               in PRUint32 propCount,
+                               [array, size_is(propCount)]
+                               in string properties, /* XXX wstring? */
+                               in boolean withDepth,
+                               in nsIWebDAVMetadataListener listener);
+
+    void getResourceOptions(in nsIWebDAVResource resource,
+                            in nsIWebDAVMetadataListener listener);
+
+    void getChildren(in nsIWebDAVResource resource,
+                     in PRUint32 depth, in nsIWebDAVChildrenListener listener);
+
+    void get(in nsIWebDAVResource resource,
+             in nsIStreamListener listener);
+
+    void put(in nsIWebDAVResourceWithData resource,
+             in nsIWebDAVOperationListener listener);
+
+    void remove(in nsIWebDAVResource resource,
+                in nsIWebDAVOperationListener listener);
+
+    void moveTo(in nsIWebDAVResourceWithTarget resource,
+                in nsIWebDAVOperationListener listener);
+
+    void copyTo(in nsIWebDAVResourceWithTarget resource,
+                in nsIWebDAVOperationListener listener,
+                in boolean recursive);
+};
+
+[scriptable,uuid(96c8d65a-fa17-408c-8008-1aa2b95952d4)]
+interface nsIWebDAVResourceXXX : nsISupports
+{
+  readonly attribute boolean isCollection;
+
+  nsIWebDAVResource makeChildCollection(in string name);
+
+  void setProperties([array,size_is(count)] in string propname,
+                     [array,size_is(count)] in string propvalues,
+                     in PRUint32 count);
+};
