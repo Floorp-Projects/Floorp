@@ -97,6 +97,11 @@ public:
   // nsISVGChildFrame interface:
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
 
+  // nsISVGGeometrySource interface:
+  NS_IMETHOD GetStrokePaintType(PRUint16 *aStrokePaintType);
+  NS_IMETHOD GetFillPaintType(PRUint16 *aFillPaintType);
+  NS_IMETHOD GetHittestMask(PRUint16 *aHittestMask);
+  
   /**
    * Get the "type" of the frame
    *
@@ -607,6 +612,62 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   mSurface->Unlock();
   aNewFrame->UnlockImageData();
   aNewFrame->UnlockAlphaData();
+  
+  return NS_OK;
+}
+
+// Lie about our fill/stroke so that hit detection works properly
+
+/* readonly attribute unsigned short strokePaintType; */
+NS_IMETHODIMP
+nsSVGImageFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
+{
+  *aStrokePaintType = nsISVGGeometrySource::PAINT_TYPE_NONE;
+  return NS_OK;
+}
+
+/* readonly attribute unsigned short fillPaintType; */
+NS_IMETHODIMP
+nsSVGImageFrame::GetFillPaintType(PRUint16 *aFillPaintType)
+{
+  *aFillPaintType = nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGImageFrame::GetHittestMask(PRUint16 *aHittestMask)
+{
+  *aHittestMask=0;
+
+  switch(GetStyleSVG()->mPointerEvents) {
+    case NS_STYLE_POINTER_EVENTS_NONE:
+      break;
+    case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+      if (GetStyleVisibility()->IsVisible()) {
+        /* XXX: should check pixel transparency */
+        *aHittestMask |= HITTEST_MASK_FILL;
+      }
+      break;
+    case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
+    case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
+    case NS_STYLE_POINTER_EVENTS_VISIBLE:
+      if (GetStyleVisibility()->IsVisible()) {
+        *aHittestMask |= HITTEST_MASK_FILL;
+      }
+      break;
+    case NS_STYLE_POINTER_EVENTS_PAINTED:
+      /* XXX: should check pixel transparency */
+      *aHittestMask |= HITTEST_MASK_FILL;
+      break;
+    case NS_STYLE_POINTER_EVENTS_FILL:
+    case NS_STYLE_POINTER_EVENTS_STROKE:
+    case NS_STYLE_POINTER_EVENTS_ALL:
+      *aHittestMask |= HITTEST_MASK_FILL;
+      break;
+    default:
+      NS_ERROR("not reached");
+      break;
+  }
   
   return NS_OK;
 }
