@@ -17,10 +17,30 @@
  */
 
 #include "rdf.h"
+#include "nsIStreamListener.h"
+#include "nsIInputStream.h"
+#include "nsIURL.h"
+#include "nsINetService.h"
+#include "plstr.h"
+#include "plevent.h"
+#include "nsRepository.h"
 
-#define RDF_DB "file:///sitemap.rdf"
+#define RDF_DB "test.rdf"
 #define SUCCESS 0
 #define FAILURE -1
+
+
+#ifdef XP_PC
+#define NETLIB_DLL "netlib.dll"
+#endif
+
+#include "nsIPostToServer.h"
+#include "nsINetService.h"
+
+
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
 void fail(char* msg);
 
@@ -28,6 +48,8 @@ int
 main(int argc, char** argv)
 {
   nsIRDFService* pRDF = 0;
+  PL_InitializeEventsLib("");
+  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
   NS_GetRDFService( &pRDF );
   PR_ASSERT( pRDF != 0 );
@@ -37,30 +59,30 @@ main(int argc, char** argv)
 
   /* turn on logging */
 
-  pRDF->CreateDatabase( url, &pDB );
+  pRDF->CreateDatabase((const char**) url, &pDB );
   PR_ASSERT( pDB != 0 );
 
   /* execute queries */
   RDF_Resource resource = 0;
-  if( NS_OK != pDB->CreateResource("http://www.hotwired.com", &resource) )
+  if( NS_OK != pDB->CreateResource("test.rdf#root", &resource) )
     fail("Unable to get resource on db!!!\n");
-  RDF_Resource child = 0;
-  if( NS_OK != pDB->GetResource("child", &resource) )
-    fail("Unable to get resource 'child'!!!\n");
-  PR_ASSERT( child != 0 );
+  RDF_Resource parent = 0;
+  if( NS_OK != pDB->GetResource("parent", &parent) )
+    fail("Unable to get resource 'parent'!!!\n");
+  PR_ASSERT(parent != 0 );
   {
     // enumerate children
     nsIRDFCursor* cursor;
-    if( NS_OK != pDB->GetTargets( resource, child, RDF_RESOURCE_TYPE, &cursor ) )
+    if( NS_OK != pDB->GetSources(resource, parent, RDF_RESOURCE_TYPE, &cursor ) )
 	fail("Unable to get targets on db\n!!!");
-    
-    PRBool hasElements;
-    cursor->HasElements( hasElements );
-    while( hasElements ) {
-      RDF_NodeStruct node;
-      cursor->Next( node );
+    RDF_NodeStruct node;
+	cursor->Next(node);
+    while(node.value.r != NULL) { 
+      char* url;
+      pRDF->ResourceIdentifier(node.value.r, &url);
+      printf("%s\n", url );
       pDB->ReleaseResource( node.value.r );
-      cursor->HasElements( hasElements );
+	  	cursor->Next(node);
     }
 
   }

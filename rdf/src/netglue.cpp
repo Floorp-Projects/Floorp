@@ -22,7 +22,7 @@
 #include "nsString.h"
 #include "rdf-int.h"
 #include "rdfparse.h"
-
+#include <stdio.h>
 class rdfStreamListener : public nsIStreamListener
 {
 public:
@@ -152,6 +152,17 @@ rdfStreamListener::OnStopBinding(nsIURL* aURL,
 void
 beginReadingRDFFile (RDFFile file)
 {
+  if (!strchr(file->url, ':') && (endsWith(".rdf", file->url))) {
+    FILE* f = fopen(file->url, "r");
+    char buffer[4096];
+    int n;
+    while (f && ((n = fread(buffer, 1, 4095, f)) > 0)) {
+      buffer[n] = '\0';
+      parseNextRDFXMLBlobInt(file, buffer, n);
+    }
+    fclose(f);
+    return;
+  } else {
    rdfStreamListener* pListener = new rdfStreamListener(file);
    pListener->AddRef(); // XXX is this evil?  Can't see any reason to use factories but...
    nsIURL* pURL = NULL;
@@ -165,5 +176,6 @@ beginReadingRDFFile (RDFFile file)
    if( NS_OK != r ) {
        // XXX what to do?
    }
+  }
 
 }

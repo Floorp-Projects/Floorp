@@ -57,8 +57,12 @@ public:
                               nsIRDFDataSource **source /* out */) = 0;
 #endif /* RDF_NOT_IMPLEMENTED */
 
-  NS_IMETHOD CreateDatabase(const RDF_String* url_ary,
+  NS_IMETHOD CreateDatabase(const char** url_ary,
                             nsIRDFDataBase **db /* out */) = 0;
+
+  NS_IMETHOD ResourceIdentifier(RDF_Resource r,
+                            char**   url /* out */) = 0;
+
 
 };
 

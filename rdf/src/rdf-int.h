@@ -291,7 +291,10 @@ struct RDF_FileStruct {
   struct RDF_FileStruct* next;
 };
 
+RDFT		MakeColumnStore (char* url);
 RDF	newNavCenterDB();
+void addToResourceList (RDFFile f, RDF_Resource u);
+
 void	walkThroughAllBookmarks (RDF_Resource u);
 RDFT NewRemoteStore (char* url);
 RDF_Resource nextFindValue (RDF_Cursor c) ;

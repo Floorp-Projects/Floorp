@@ -39,7 +39,7 @@ typedef struct RDF_NotificationStruct* RDF_Notification;
 
 typedef void (*RDF_NotificationProc)(RDF_Event theEvent, void* pdata);
 
-PR_PUBLIC_API(RDF) RDF_GetDB(const RDF_String* dbs);
+PR_PUBLIC_API(RDF) RDF_GetDB(const char** dbs);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseDB(RDF rdf);
 PR_PUBLIC_API(RDFT) RDF_AddDataSource(RDF rdf, char* dataSource);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource);
@@ -47,6 +47,7 @@ PR_PUBLIC_API(RDF_Resource) RDF_GetResource(RDF db, char* id, PRBool createp);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseResource(RDF db, RDF_Resource resource);
 PR_PUBLIC_API(RDF_Error) RDF_DeleteAllArcs(RDF rdfDB, RDF_Resource source);
 PR_PUBLIC_API(RDF_Error) RDF_Update(RDF rdfDB, RDF_Resource u);
+PR_PUBLIC_API(char*) RDF_ResourceID(RDF_Resource u);
 
 PR_PUBLIC_API(RDF_Notification) RDF_AddNotifiable (RDF rdfDB, RDF_NotificationProc callBack, RDF_Event ev, void* pdata);
 PR_PUBLIC_API(RDF_Error) RDF_DeleteNotifiable (RDF_Notification ns);

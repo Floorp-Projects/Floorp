@@ -87,11 +87,11 @@ public:
    * Find all RDF resources that point to a given node over the
    * specified arc & truth value (defaults to "PR_TRUE").
    */
-  NS_IMETHOD GetSources(RDF_Node target,
+  NS_IMETHOD GetSources(RDF_Resource target,
                         RDF_Resource arcLabel,
                         nsIRDFCursor **sources /* out */) = 0;
 
-  NS_IMETHOD GetSources(RDF_Node target,
+  NS_IMETHOD GetSources(RDF_Resource target,
                         RDF_Resource arcLabel,
                         PRBool tv,
                         nsIRDFCursor **sources /* out */) = 0;

@@ -69,8 +69,7 @@ getTranslator (char* url)
 
 
 PR_PUBLIC_API(RDF)
-RDF_GetDB (const char** dataSources)
-{
+RDF_GetDB (const char** dataSources) {
   int32 n = 0;
   int32 m = 0;
   char* next ;
@@ -854,7 +853,7 @@ matchStrings(RDF_Resource match, char *data, char *pattern)
 	}
 	else if (match == gCoreVocab->RDF_stringEquals)
 	{
-		ok = (PRBool)(!compareStrings(data, pattern));
+		ok = (PRBool)(strcmp(data, pattern) == 0);
 	}
 	else if (match == gCoreVocab->RDF_stringNotEquals)
 	{
