@@ -202,6 +202,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
+  mClientData = nsnull;
 }
 
 
@@ -586,6 +587,24 @@ void nsWindow::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWindow::Destroy()
 {
+}
+
+//-------------------------------------------------------------------------
+//
+// Accessor functions to get/set the client data
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
+{
+  aClientData = mClientData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
+{
+  mClientData = aClientData;
+  return NS_OK;
 }
 
 

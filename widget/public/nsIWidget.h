@@ -176,6 +176,16 @@ class nsIWidget : public nsISupports {
                         nsIToolkit       *aToolkit = nsnull,
                         nsWidgetInitData *aInitData = nsnull) = 0;
 
+
+    /**
+     * Accessor functions to get and set the client data associated with the
+     * widget.
+     */
+    //@{
+    NS_IMETHOD  GetClientData(void*& aClientData) = 0;
+    NS_IMETHOD  SetClientData(void* aClientData) = 0;
+    //@}
+
     /**
      * Close and destroy the internal native window. 
      * This method does not delete the widget.

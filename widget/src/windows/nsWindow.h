@@ -69,6 +69,8 @@ public:
                                      nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
+    NS_IMETHOD              GetClientData(void*& aClientData);
+    NS_IMETHOD              SetClientData(void* aClientData);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -196,6 +198,8 @@ protected:
     PRInt32     mWidth;
     PRInt32     mHeight;
 
+    void*       mClientData;
+
     // keep the list of children
     class Enumerator : public nsIEnumerator {
         nsIWidget   **mChildrens;
@@ -275,6 +279,14 @@ protected:
                  nsWidgetInitData *aInitData = nsnull) \
     { \
         nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
+    } \
+    NS_IMETHODIMP GetClientData(void*& aClientData) \
+    { \
+        return nsWindow::GetClientData(aClientData); \
+    } \
+    NS_IMETHODIMP SetClientData(void* aClientData) \
+    { \
+        return nsWindow::SetClientData(aClientData); \
     } \
     void Destroy(void) \
     { \
