@@ -109,6 +109,7 @@ protected:
     nsCOMPtr<nsIPrincipal> mCertificate;
     nsCOMPtr<nsIPrincipal> mCodebase;
     nsCOMPtr<nsIPrincipal> mOriginalCodebase;
+    void* mCachedSecurityPolicy;
     PRPackedBool mDomainChanged;
 };
 

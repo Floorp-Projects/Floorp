@@ -178,6 +178,8 @@ nsAggregatePrincipal::SetCertificate(nsIPrincipal* aCertificate)
     }
     else
         mCertificate = aCertificate;
+    // New certificate, so forget cached security policy
+    mCachedSecurityPolicy = nsnull;
     return NS_OK;
 }
 
@@ -208,6 +210,12 @@ nsAggregatePrincipal::SetCodebase(nsIPrincipal* aCodebase)
     //-- If this is the first codebase set, remember it.
     if (!mOriginalCodebase)
         mOriginalCodebase = newCodebase;
+    else
+    {
+        mDomainChanged = PR_TRUE;
+        // Codebase has changed, forget cached security policy
+        mCachedSecurityPolicy = nsnull;
+    }
 
     return NS_OK;
 }
@@ -271,6 +279,21 @@ nsAggregatePrincipal::GetDomainChanged(PRBool* aDomainChanged)
     *aDomainChanged = mDomainChanged;
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::GetCachedSecurityPolicy(void** aCachedSecurityPolicy)
+{
+    *aCachedSecurityPolicy = mCachedSecurityPolicy;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAggregatePrincipal::SetCachedSecurityPolicy(void* aCachedSecurityPolicy)
+{
+    mCachedSecurityPolicy = aCachedSecurityPolicy;
+    return NS_OK;
+}
+
 
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
@@ -446,7 +469,8 @@ nsAggregatePrincipal::Write(nsIObjectOutputStream* aStream)
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 
-nsAggregatePrincipal::nsAggregatePrincipal() : mDomainChanged(PR_FALSE)
+nsAggregatePrincipal::nsAggregatePrincipal() : mCachedSecurityPolicy(nsnull),
+                                               mDomainChanged(PR_FALSE)
 {
 }
 
