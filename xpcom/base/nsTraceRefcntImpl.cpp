@@ -51,12 +51,12 @@
 #include <dlfcn.h>
 #endif
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-#include "plhash.h"
-#include <math.h>
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+#include "plhash.h"
+#include <math.h>
 
 #if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
