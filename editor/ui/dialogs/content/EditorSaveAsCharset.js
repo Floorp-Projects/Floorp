@@ -20,6 +20,7 @@
  * Contributor(s): 
  * Frank Tang  ftang@netscape.com
  * J.M  Betak  jbetak@netscape.com
+ * Neil Rashbrook <neil@parkwaycc.co.uk>
  */
 
 
@@ -69,7 +70,6 @@ function Startup()
   // SET FOCUS TO FIRST CONTROL
   SetTextboxFocus(gDialog.TitleInput);
   
-  LoadAvailableCharSets();
   initDone = true;
   
   SetWindowLocation();
@@ -80,6 +80,13 @@ function InitDialog()
 {
   gDialog.TitleInput.value = editorShell.GetDocumentTitle();
   charset = editorShell.GetDocumentCharacterSet();
+  var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+  var index = gDialog.charsetTree.builderView.getIndexOfResource(RDF.GetResource(charset));
+  if (index >= 0) {
+    var treeBox = gDialog.charsetTree.treeBoxObject;
+    treeBox.selection.select(index);
+    treeBox.ensureRowIsVisible(index);
+  }
 }
 
 
@@ -115,53 +122,14 @@ function readRDFString(aDS,aRes,aProp)
 }
 
       
-function LoadAvailableCharSets()
-{
-  try 
-  {                                  
-    var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-    var kNC_Root = rdf.GetResource("NC:DecodersRoot");
-    var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
-    var rdfDataSource = rdf.GetDataSource("rdf:charset-menu");
-    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
-
-    rdfContainer.Init(rdfDataSource, kNC_Root);
-
-    var availableCharsets = rdfContainer.GetElements();
-    var charsetNode;
-    var selectedItem;
-    var item;
-
-    ClearTreelist(gDialog.charsetTree);
-
-    for (var i = 0; i < rdfContainer.GetCount(); i++) 
-	{
-      charsetNode = availableCharsets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      item = AppendStringToTreelist(gDialog.charsetTree, readRDFString(rdfDataSource, charsetNode, kNC_name));
-      item.firstChild.firstChild.setAttribute("value", charsetNode.Value);
-      if(charset == charsetNode.Value) 
-        selectedItem = item;
-    }
-
-    if(selectedItem) 
-	{
-	    var index = gDialog.charsetTree.contentView.getIndexOfItem(selectedItem);
-      gDialog.charsetTree.treeBoxObject.selection.select(index);
-      gDialog.charsetTree.treeBoxObject.ensureRowIsVisible(index);
-    }
-  }
-  catch(e) { }
-}
-
-
 function SelectCharset()
 {
   if(initDone) 
   {
     try 
 	{
-      charset = GetSelectedTreelistAttribute(gDialog.charsetTree, "value");
-      if(charset != "")
+      charset = gDialog.charsetTree.builderView.getResourceAtIndex(gDialog.charsetTree.currentIndex).Value;
+      if (charset)
          charsetWasChanged = true;
     }
     catch(e) {}
