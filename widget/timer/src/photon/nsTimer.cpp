@@ -127,6 +127,7 @@ NS_METHOD TimerImpl::SetupTimer( PRUint32 aDelay )
     return NS_ERROR_FAILURE;
   }
 
+  mTimerId = -1;
   err = timer_create( CLOCK_SOFTTIME, &mPulseMsg, &mTimerId );
   if( err != 0 )
   { 
@@ -194,7 +195,7 @@ void TimerImpl::Cancel()
       return;
     }
 	
-    mTimerId *= -1;   // HACK for Debug 
+    mTimerId = -1;   // HACK for Debug 
   }
 
   if( mInputId )
