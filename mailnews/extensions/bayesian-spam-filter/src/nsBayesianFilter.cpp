@@ -601,7 +601,26 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
 {
     Token* tokens = tokenizer.copyTokens();
     if (!tokens) return;
-    
+  
+    // the algorithm in "A Plan For Spam" assumes that you have a large good
+    // corpus and a large junk corpus.
+    // that won't be the case with users who first use the junk mail feature
+    // so, we do certain things to encourage them to train.
+    //
+    // if there are no good tokens, assume the message is junk
+    // this will "encourage" the user to train
+    // and if there are no bad tokens, assume the message is not junk
+    // this will also "encourage" the user to train
+    // see bug #194238
+    if (listener && !mGoodCount && !mGoodTokens.countTokens()) {
+      listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::JUNK));
+      return;
+    }
+    else if (listener && !mBadCount && !mBadTokens.countTokens()) {
+      listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::GOOD));
+      return;
+    }
+
     /* run the kernel of the Graham filter algorithm here. */
     PRUint32 i, count = tokenizer.countTokens();
     double ngood = mGoodCount, nbad = mBadCount;
