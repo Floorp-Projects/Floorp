@@ -35,31 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * <font color="#FF0000"><b>    W A R N I N G
- * <p>This API is currently under review in preparation for making it an 
- * officially supported part of the mozilla platform. Please submit comments
- * to porkjockeys@mozilla.org before 6/15/00. Until that time, it is not 
- * advised to base commercial products on this API because it is subject to 
- * change. Use at your own risk!
- * </b></font>
- *
- * @status UNDER_REVIEW
- */
-
 #include "nsISupports.idl"
 
 /**
+ *
  * nsIMemory: interface to allocate and deallocate memory. Also provides
  * for notifications in low-memory situations.
  *
  * A client that wishes to be notified of low memory situations (for
  * example, because the client maintains a large memory cache that
- * could be released when memory is tight) may register with the
- * observer service (see nsIObserverService) using the
- * NS_MEMORY_PRESSURE_TOPIC ("memory-pressure") as the topic for
- * observation.
+ * could be released when memory is tight) should register with the
+ * observer service (see nsIObserverService) using the topic 
+ * "memory-pressure". There are three specific types of notications 
+ * that can occur.  These types will be passed as the |aData| 
+ * parameter of the of the "memory-pressure" notification: 
+ * 
+ * "low-memory"
+ * This will be passed as the extra data when the pressure 
+ * observer is being asked to flush for low-memory conditions.
+ *
+ * "heap-minimize"
+ * This will be passed as the extra data when the pressure 
+ * observer is being asked to flush because of a heap minimize 
+ * call.
+ *
+ * "alloc-failure"
+ * This will be passed as the extra data when the pressure 
+ * observer has been asked to flush because a malloc() or 
+ * realloc() has failed.
+ *
+ * @status FROZEN
  */
+
 [scriptable, uuid(59e7e77a-38e4-11d4-8cf5-0060b0fc14a3)]
 interface nsIMemory : nsISupports
 {
@@ -112,41 +119,8 @@ interface nsIMemory : nsISupports
     /**
      * This predicate can be used to determine if we're in a low-memory
      * situation (what constitutes low-memory is platform dependent). This
-     * can be used to trigger the memory flushers.
+     * can be used to trigger the memory pressure observers.
      */
     boolean isLowMemory();
 };
 
-%{C++
-/**
- * This is the topic that a memory pressure observer
- * should use with the observer service.
- */
-#define NS_MEMORY_PRESSURE_TOPIC "memory-pressure"
-
-/**
- * This will be passed as the extra data when the flusher
- * is being asked to flush for low-memory conditions.
- */
-#define NS_MEMORY_PRESSURE_LOW_MEMORY "low-memory"
-
-/**
- * This will be passed as the extra data when the flusher
- * is being asked to flush because of a heap minimize call.
- */
-#define NS_MEMORY_PRESSURE_HEAP_MINIMIZE "heap-minimize"
-
-/**
- * This will be passed as the extra data when the flusher
- * has been asked to flush because a malloc() or realloc()
- * has failed.
- */
-#define NS_MEMORY_PRESSURE_ALLOC_FAILURE "alloc-failure"
-%}
-
-%{C++
-/**
- * ContractID for the global memory service:
- */
-#define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
-%}
