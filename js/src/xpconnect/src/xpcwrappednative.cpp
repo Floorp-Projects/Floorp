@@ -238,6 +238,13 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
     NS_ADDREF(aClass);
     NS_ADDREF(aObj);
 
+#ifdef DEBUG_stats_jband
+    static int count = 0;
+    static const int interval = 10;
+    if(0 == (++count % interval))
+        printf("++++++++ %d instances of nsXPCWrappedNative created\n", count);
+#endif
+
     if(mRoot == this)
     {
         nsIXPCScriptable* ds;

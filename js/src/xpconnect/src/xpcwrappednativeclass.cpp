@@ -289,6 +289,68 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
 }
 
 JSBool
+nsXPCWrappedNativeClass::GetArraySizeFromParam(
+                                    JSContext* cx, 
+                                    const nsXPTMethodInfo* method,
+                                    const XPCNativeMemberDescriptor* desc,
+                                    const nsXPTParamInfo& param,
+                                    uint8 vtblIndex,
+                                    uint8 paramIndex,
+                                    SizeMode mode,
+                                    jsval *argv,
+                                    JSUint32* result)
+{
+    uint8 argnum;
+    nsresult rv;
+    jsval val;    
+    
+    // XXX fixup the various exceptions that are thrown
+
+    if(mode == GET_SIZE)
+        rv = mInfo->GetSizeIsArgNumberForParam(vtblIndex, &param, 1, &argnum);
+    else
+        rv = mInfo->GetLengthIsArgNumberForParam(vtblIndex, &param, 1, &argnum);
+    if(NS_FAILED(rv))
+    {
+        ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+        return JS_FALSE;
+    }
+
+    const nsXPTParamInfo& arg_param = method->GetParam(argnum);
+    const nsXPTType& arg_type = arg_param.GetType();
+
+    // XXX require PRUint32 here - need to require in compiler too!
+    if(arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_U32)
+    {
+        ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+        return JS_FALSE;
+    }
+
+    if(arg_param.IsOut())
+    {
+        if(JSVAL_IS_PRIMITIVE(argv[argnum]) ||
+           !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[argnum]), 
+                           XPC_VAL_STR, &val))
+        {
+            ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+            return JS_FALSE;
+        }
+    }
+    else
+    {
+        val = argv[argnum];
+    }
+    if(!XPCConvert::JSData2Native(cx, result, val,
+                                  arg_type, JS_FALSE, nsnull, nsnull))
+    {
+        ThrowBadParamException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO,
+                               cx, desc, paramIndex);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}        
+
+JSBool
 nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                            nsXPCWrappedNative* wrapper,
                                            const XPCNativeMemberDescriptor* desc,
@@ -313,6 +375,14 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     uintN err;
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     nsIXPCSecurityManager* securityManager;
+    XPCArrayDataScavenger* scavenger = nsnull;
+
+#ifdef DEBUG_stats_jband
+    static int count = 0;
+    static const int interval = 10;
+    if(0 == (++count % interval))
+        printf(">>>>>>>> %d calls on nsXPCWrappedNatives made\n", count);
+#endif
 
     if(vp)
         *vp = JSVAL_NULL;
@@ -415,6 +485,18 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         JSBool useAllocator = JS_FALSE;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
+        nsXPTType type_in_array = type;
+        uint8 type_tag = type.TagPart();
+        PRBool isArray = type.IsArray();
+        JSUint32 array_count;
+        JSUint32 array_capacity;
+
+        if(isArray && NS_FAILED(mInfo->GetTypeForParam(vtblIndex, &param, 1, 
+                                                       &type_in_array)))
+        {
+            ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+            goto done;
+        }
 
         nsXPTCVariant* dp = &dispatchParams[i];
         dp->type = type;
@@ -422,8 +504,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         dp->val.p = nsnull;
         dispatchParamsInitedCount++;
 
-        if(type.TagPart() == nsXPTType::T_INTERFACE ||
-           type.TagPart() == nsXPTType::T_INTERFACE_IS)
+        if(type_tag == nsXPTType::T_INTERFACE ||
+           type_tag == nsXPTType::T_INTERFACE_IS)
         {
             dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
         }
@@ -444,12 +526,26 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                        cx, desc, i);
                 goto done;
             }
-            if(type.IsPointer() &&
-               !type.IsInterfacePointer() &&
-               !param.IsShared())
+
+            if(isArray)
             {
-                useAllocator = JS_TRUE;
-                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                if(type_in_array.IsPointer() &&
+                   !type_in_array.IsInterfacePointer() &&
+                   !param.IsShared())
+                {
+                    useAllocator = JS_TRUE;
+                    dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                }
+            }
+            else
+            {
+                if(type.IsPointer() &&
+                   !type.IsInterfacePointer() &&
+                   !param.IsShared())
+                {
+                    useAllocator = JS_TRUE;
+                    dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                }
             }
             if(!param.IsIn())
                 continue;
@@ -457,14 +553,45 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         else
         {
             src = argv[i];
-            if(type.IsPointer() && type.TagPart() == nsXPTType::T_IID)
+
+            if(isArray)
             {
-                useAllocator = JS_TRUE;
-                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                if(type_in_array.IsPointer() && 
+                   type_in_array.TagPart() == nsXPTType::T_IID)
+                {
+                    useAllocator = JS_TRUE;
+                }
+            }
+            else
+            {
+                if(type.IsPointer() && type_tag == nsXPTType::T_IID)
+                {
+                    useAllocator = JS_TRUE;
+                    dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                }
             }
         }
 
-        if(type.TagPart() == nsXPTType::T_INTERFACE)
+
+        if(isArray)
+        {
+            if(!GetArraySizeFromParam(cx, info, desc, param, vtblIndex, 
+                                      i, GET_SIZE, argv, &array_capacity))
+                goto done;
+
+            // XXX add code to handle length here!
+
+            array_count = array_capacity;
+        }
+
+        else
+        {
+        // XXX fix for arrays of interfaces!
+        // Need to fix GetInterfaceIsArgNumber() to be a method on the 
+        // interface info instead of the param - so it can look at the right
+        // type info.
+
+        if(type_tag == nsXPTType::T_INTERFACE)
         {
             if(NS_FAILED(GetInterfaceInfo()->
                           GetIIDForParam(vtblIndex, &param, &conditional_iid)))
@@ -474,14 +601,15 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 goto done;
             }
         }
-        else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
+        else if(type_tag == nsXPTType::T_INTERFACE_IS)
         {
             uint8 arg_num = param.GetInterfaceIsArgNumber();
-            const nsXPTParamInfo& param = info->GetParam(arg_num);
-            const nsXPTType& type = param.GetType();
-            if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
+            const nsXPTParamInfo& arg_param = info->GetParam(arg_num);
+            const nsXPTType& arg_type = arg_param.GetType();
+            if(!arg_type.IsPointer() || 
+                arg_type.TagPart() != nsXPTType::T_IID ||
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
-                                          type, JS_TRUE, nsnull, nsnull))
+                                          arg_type, JS_TRUE, nsnull, nsnull))
             {
                 ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
@@ -489,12 +617,38 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             }
         }
 
-        if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
-                                      useAllocator, conditional_iid, &err))
-        {
-            ThrowBadParamException(err, cx, desc, i);
-            goto done;
         }
+
+        if(isArray)
+        {
+            XPCArrayDataScavenger* new_scavenger;
+            if(!(new_scavenger = new XPCArrayDataScavenger(scavenger)))
+            {
+                JS_ReportOutOfMemory(cx);
+                goto done;
+            }
+            scavenger = new_scavenger;
+
+            if(!XPCConvert::JSArray2Native(cx, (void**)&dp->val, src, 
+                                           array_count, array_capacity, 
+                                           scavenger, type_in_array,
+                                           useAllocator, conditional_iid, &err))
+            {
+                // XXX need exception scheme for arrays to indicate bad element
+                ThrowBadParamException(err, cx, desc, i);
+                goto done;
+            }
+        }
+        else
+        {
+            if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
+                                          useAllocator, conditional_iid, &err))
+            {
+                ThrowBadParamException(err, cx, desc, i);
+                goto done;
+            }
+        }
+
         if(conditional_iid)
         {
             nsAllocator::Free((void*)conditional_iid);
@@ -522,6 +676,53 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         if(param.IsOut())
         {
             jsval v;
+            JSUint32 array_count;
+            JSUint32 array_capacity;
+            nsXPTType type_in_array;
+            PRBool isArray = type.IsArray();
+
+            if(isArray)
+            {
+                uint8 size_is_argnum;
+
+                if(NS_FAILED(mInfo->GetTypeForParam(vtblIndex, &param, 1, 
+                                                    &type_in_array)))
+                {
+                    ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+                    goto done;
+                }
+                
+                if(NS_FAILED(
+                        mInfo->GetSizeIsArgNumberForParam(vtblIndex, &param, 1, 
+                                                          &size_is_argnum)))
+                {
+                    ThrowException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, cx, desc);
+                    goto done;
+                }
+                const nsXPTParamInfo& arg_param = info->GetParam(size_is_argnum);
+                const nsXPTType& arg_type = arg_param.GetType();
+                // XXX require PRUint32 here - need to require in compiler too!
+                if(arg_type.IsPointer() || 
+                   arg_type.TagPart() != nsXPTType::T_U32)
+                {
+                    ThrowBadParamException(NS_ERROR_XPC_CANT_GET_ARRAY_INFO,
+                                           cx, desc, i);
+                    goto done;
+                }
+                array_capacity = dispatchParams[size_is_argnum].val.u32;
+                
+                // XXX add code to handle length here!
+    
+                array_count = array_capacity;
+                                
+            }
+    
+            else
+            {
+            // XXX fix for arrays of interfaces!
+            // Need to fix GetInterfaceIsArgNumber() to be a method on the 
+            // interface info instead of the param - so it can look at the right
+            // type info.
 
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
@@ -536,9 +737,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
             {
                 uint8 arg_num = param.GetInterfaceIsArgNumber();
-                const nsXPTParamInfo& param = info->GetParam(arg_num);
-                const nsXPTType& type = param.GetType();
-                if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
+                const nsXPTParamInfo& arg_param = info->GetParam(arg_num);
+                const nsXPTType& arg_type = arg_param.GetType();
+                if(!arg_type.IsPointer() || 
+                   arg_type.TagPart() != nsXPTType::T_IID ||
                    !(conditional_iid = (nsID*)
                          nsAllocator::Clone(dispatchParams[arg_num].val.p,
                                           sizeof(nsID))))
@@ -548,12 +750,27 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                     goto done;
                 }
             }
+            }
 
-            if(!XPCConvert::NativeData2JS(cx, &v, &dp->val, type,
-                                          conditional_iid, &err))
+            if(isArray)
             {
-                ThrowBadParamException(err, cx, desc, i);
-                goto done;
+                if(!XPCConvert::NativeArray2JS(cx, &v, (const void**)&dp->val, 
+                                               type_in_array, conditional_iid, 
+                                               array_count, &err))
+                {
+                    // XXX need exception scheme for arrays to indicate bad element
+                    ThrowBadParamException(err, cx, desc, i);
+                    goto done;
+                }
+            }
+            else
+            {
+                if(!XPCConvert::NativeData2JS(cx, &v, &dp->val, type,
+                                              conditional_iid, &err))
+                {
+                    ThrowBadParamException(err, cx, desc, i);
+                    goto done;
+                }
             }
 
             if(param.IsRetval())
@@ -582,6 +799,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     retval = JS_TRUE;
 
 done:
+    // delete any array contents that have been allocated
+    if(scavenger)
+        delete scavenger;
+
     // iterate through the params that were init'd (again!) and clean up
     // any alloc'd stuff and release wrappers of params
     for(i = 0; i < dispatchParamsInitedCount; i++)

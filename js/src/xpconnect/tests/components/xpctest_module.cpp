@@ -55,6 +55,8 @@ NSGetFactory(nsISupports* aServMgr,
         rv = factory->SetConstructor(xpctest::ConstructStringTest);
     else if(aClass.Equals(xpctest::GetOverloadedCID()))
         rv = factory->SetConstructor(xpctest::ConstructOverloaded);
+    else if(aClass.Equals(xpctest::GetArrayTestCID()))
+        rv = factory->SetConstructor(xpctest::ConstructArrayTest);
     else
     {
         NS_ASSERTION(0, "incorrectly registered");
@@ -100,6 +102,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "nsOverloaded", "nsOverloaded", aPath,
                                     PR_TRUE, PR_TRUE);
 
+    rv = compMgr->RegisterComponent(xpctest::GetArrayTestCID(),
+                                    "nsArrayTest", "nsArrayTest", aPath,
+                                    PR_TRUE, PR_TRUE);
 
     return rv;
 }
@@ -117,6 +122,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(xpctest::GetNoisyCID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetStringTestCID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetOverloadedCID(), aPath);
+    rv = compMgr->UnregisterComponent(xpctest::GetArrayTestCID(), aPath);
 
     return rv;
 }

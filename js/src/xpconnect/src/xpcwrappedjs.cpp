@@ -188,6 +188,13 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
       mRoot(root ? root : this),
       mNext(nsnull)
 {
+#ifdef DEBUG_stats_jband
+    static int count = 0;
+    static const int interval = 10;
+    if(0 == (++count % interval))
+        printf("//////// %d instances of nsXPCWrappedJS created\n", count);
+#endif
+
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);

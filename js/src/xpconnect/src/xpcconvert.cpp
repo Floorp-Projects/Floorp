@@ -40,32 +40,34 @@
         ((uint8)((np_no) | ((p_no) << 1) | ((np_o) << 2) | ((p_o) << 3)))
 
 /***********************************************************/
-#define XPC_FLAG_COUNT nsXPTType::T_INTERFACE_IS+1
+#define XPC_FLAG_COUNT nsXPTType::T_ARRAY_WITH_LENGTH+1
 
-/* '1' means 'reflectable'. '0' means 'not reflectable'.   */
+/* '1' means 'reflectable'. '0' means 'not reflectable'.        */
 static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
-    /* 'p' stands for 'pointer' and 'o' stands for 'out'   */
-    /*          !p&!o, p&!o, !p&o, p&o                     */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8           */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8           */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64          */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT        */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE       */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL         */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR         */
-    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR        */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID         */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID          */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR         */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR     */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR    */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE    */
-    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_INTERFACE_IS */
+    /* 'p' stands for 'pointer' and 'o' stands for 'out'        */
+    /*          !p&!o, p&!o, !p&o, p&o                          */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I8                */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I16               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I32               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_I64               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U8                */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U16               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U32               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_U64               */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_FLOAT             */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_DOUBLE            */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_BOOL              */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_CHAR              */
+    XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR             */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID              */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID               */
+    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_BSTR              */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR          */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR         */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE_IS      */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_ARRAY             */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 )  /* T_ARRAY_WITH_LENGTH */
     };
 /***********************************************************/
 
@@ -168,7 +170,7 @@ JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
 JSBool
 XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                           const nsXPTType& type, const nsID* iid,
-                          uintN* pErr)
+                          nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -365,7 +367,7 @@ JSBool
 XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
                           const nsXPTType& type,
                           JSBool useAllocator, const nsID* iid,
-                          uintN* pErr)
+                          nsresult* pErr)
 {
     NS_PRECONDITION(d, "bad param");
 
@@ -755,7 +757,7 @@ XPCConvert::JSValToXPCException(JSContext* cx,
             // heuristic to see if it might be usable as an xpcexception
             if(JS_GetPropertyAttributes(cx, obj, "message", &ignored, &found) &&
                found &&
-               JS_GetPropertyAttributes(cx, obj, "code", &ignored, &found) &&
+               JS_GetPropertyAttributes(cx, obj, "result", &ignored, &found) &&
                found)
             {
                 // lets try to build a wrapper around the JSObject
@@ -786,12 +788,59 @@ XPCConvert::JSValToXPCException(JSContext* cx,
                                   nsnull, ifaceName, methodName, nsnull);
     }
 
-    // lets see if it looks like and nsresult
+    if(JSVAL_IS_NUMBER(s))
+    {
+        // lets see if it looks like an nsresult
+        nsresult rv;
+        double number;
+        JSBool isResult = JS_FALSE;
 
-    nsresult rv;
-    if(JSVAL_IS_NUMBER(s) && JS_ValueToECMAUint32(cx, s, (uint32*)&rv))
-        return ConstructException(rv, nsnull, ifaceName, methodName, nsnull);
+        if(JSVAL_IS_INT(s))
+        {
+            rv = (nsresult) JSVAL_TO_INT(s);
+            if(NS_FAILED(rv))
+                isResult = JS_TRUE;
+            else
+                number = (double) JSVAL_TO_INT(s);
+        }
+        else
+        {
+            if(JSVAL_TO_DOUBLE(s))
+            {
+                number = *(JSVAL_TO_DOUBLE(s));
+                if(number > 0.0 && 
+                   number < (double)0xffffffff && 
+                   0.0 == fmod(number,1))
+                {
+                    rv = (nsresult) number;
+                    if(NS_FAILED(rv))
+                        isResult = JS_TRUE;
+                }
+            }
+        }
 
+        if(isResult)
+            return ConstructException(rv, nsnull, ifaceName, methodName, nsnull);
+        else
+        {
+            nsISupportsDouble* data; 
+            nsIComponentManager* cm;
+            if(NS_FAILED(NS_GetGlobalComponentManager(&cm)) || !cm ||
+               NS_FAILED(cm->CreateInstanceByProgID(
+                                NS_SUPPORTS_DOUBLE_PROGID,
+                                nsnull,
+                                NS_GET_IID(nsISupportsDouble),
+                                (void**)&data)))
+                return nsnull;
+            data->SetData(number);
+            nsIXPCException* e = 
+                        ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER,
+                                           nsnull,
+                                           ifaceName, methodName, data);
+            NS_RELEASE(data);
+            return e;
+        }
+    }
 
     // otherwise we'll just try to convert it to a string
 
@@ -880,5 +929,246 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
     *vpp = vp + 1;
     *app = ap;
     return JS_TRUE;
+}
+
+/***************************************************************************/
+
+XPCArrayDataScavenger::XPCArrayDataScavenger(XPCArrayDataScavenger* aNext)
+    :   mCleanupMode(NO_ACTION),
+        mInitedCount(0),
+        mData(nsnull),
+        mNext(aNext)
+{
+    // nada
+}
+
+XPCArrayDataScavenger::~XPCArrayDataScavenger()
+{
+    if(mData)
+    {
+        if(mCleanupMode == DO_FREE)
+        {
+            for(PRUint32 i = 0; i < mInitedCount; i++)
+            {
+                void* p = mData[i];
+                if(p) nsAllocator::Free(p);
+            }
+        }
+        else if(mCleanupMode == DO_RELEASE)
+        {
+            for(PRUint32 i = 0; i < mInitedCount; i++)
+            {
+                nsISupports* p = NS_REINTERPRET_CAST(nsISupports*, mData[i]);
+                NS_IF_RELEASE(p);
+            }
+        }
+    }
+
+    if(mNext)
+        delete mNext;
+}
+
+/***************************************************************************/
+
+// array fun...
+
+#ifdef POPULATE
+#undef POPULATE
+#endif
+
+// static
+JSBool
+XPCConvert::NativeArray2JS(JSContext* cx,
+                           jsval* d, const void** s,
+                           const nsXPTType& type, const nsID* iid,
+                           JSUint32 count,
+                           nsresult* pErr)
+{
+    NS_PRECONDITION(s, "bad param");
+    NS_PRECONDITION(d, "bad param");
+
+    // XXX add support for putting chars in a string rather than an array
+
+    // XXX add support to indicate *which* array element was not convertable
+
+    JSObject *array = JS_NewArrayObject(cx, count, nsnull);
+
+    if(!array)
+        return JS_FALSE;
+
+    // root this early
+    *d = OBJECT_TO_JSVAL(array);
+
+    if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
+
+    JSUint32 i;
+    jsval current;
+
+#define POPULATE(_t)                                                         \
+    PR_BEGIN_MACRO                                                           \
+        for(i = 0; i < count; i++)                                           \
+        {                                                                    \
+            if(!NativeData2JS(cx, &current, ((_t*)*s)+i, type, iid, pErr) || \
+               !JS_SetElement(cx, array, i, &current))                       \
+                goto failure;                                                \
+        }                                                                    \
+    PR_END_MACRO
+
+    // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
+
+    switch(type.TagPart())
+    {
+    case nsXPTType::T_I8            : POPULATE(int8);           break;
+    case nsXPTType::T_I16           : POPULATE(int16);          break;
+    case nsXPTType::T_I32           : POPULATE(int32);          break;
+    case nsXPTType::T_I64           : POPULATE(int64);          break;
+    case nsXPTType::T_U8            : POPULATE(uint8);          break;
+    case nsXPTType::T_U16           : POPULATE(uint16);         break;
+    case nsXPTType::T_U32           : POPULATE(uint32);         break;
+    case nsXPTType::T_U64           : POPULATE(uint64);         break;
+    case nsXPTType::T_FLOAT         : POPULATE(float);          break;
+    case nsXPTType::T_DOUBLE        : POPULATE(double);         break;
+    case nsXPTType::T_BOOL          : POPULATE(PRBool);         break;
+    case nsXPTType::T_CHAR          : POPULATE(char);           break;
+    case nsXPTType::T_WCHAR         : POPULATE(jschar);         break;
+    case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_IID           : POPULATE(nsID*);          break;
+    case nsXPTType::T_BSTR          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_CHAR_STR      : POPULATE(char*);          break;
+    case nsXPTType::T_WCHAR_STR     : POPULATE(jschar*);        break;
+    case nsXPTType::T_INTERFACE     : POPULATE(nsISupports*);   break;
+    case nsXPTType::T_INTERFACE_IS  : POPULATE(nsISupports*);   break;
+    default                         : NS_ASSERTION(0,"bad type"); goto failure;
+    }
+
+    if(pErr)
+        *pErr = NS_OK;
+    return JS_TRUE;
+
+failure:
+    return JS_FALSE;
+
+#undef POPULATE
+}
+
+// static
+JSBool
+XPCConvert::JSArray2Native(JSContext* cx, void** d, jsval s,
+                           JSUint32 count, JSUint32 capacity,
+                           XPCArrayDataScavenger* scavenger,
+                           const nsXPTType& type,
+                           JSBool useAllocator, const nsID* iid,
+                           uintN* pErr)
+{
+    NS_PRECONDITION(d, "bad param");
+    NS_PRECONDITION(scavenger, "bad param");
+
+
+    // XXX add support for getting chars from strings
+
+    // XXX add support to indicate *which* array element was not convertable
+
+    if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
+    {
+        *d = nsnull;
+        return JS_TRUE;
+    }
+
+    if(!JSVAL_IS_OBJECT(s))
+    {
+        if(pErr)
+            *pErr = NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY;
+        return JS_FALSE;
+    }
+
+    JSObject* jsarray = JSVAL_TO_OBJECT(s);
+    if(!JS_IsArrayObject(cx, jsarray))
+    {
+        if(pErr)
+            *pErr = NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY;
+        return JS_FALSE;
+    }
+
+    jsuint len;
+    if(!JS_GetArrayLength(cx, jsarray, &len) || len < count)
+    {
+        if(pErr)
+            *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
+        return JS_FALSE;
+    }
+
+    if(pErr)
+        *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    void* array = nsnull;
+    JSUint32 i;
+    jsval current;
+
+#define POPULATE(_mode, _t)                                                  \
+    PR_BEGIN_MACRO                                                           \
+        if(nsnull == (array = nsAllocator::Alloc(capacity * sizeof(_t))))    \
+        {                                                                    \
+            if(pErr)                                                         \
+                *pErr = NS_ERROR_OUT_OF_MEMORY;                              \
+            goto failure;                                                    \
+        }                                                                    \
+        scavenger->SetDataPtr((void**)array);                                \
+        scavenger->SetCleanupMode(_mode);                                    \
+        for(i = 0; i < count; i++)                                           \
+        {                                                                    \
+            if(!JS_GetElement(cx, jsarray, i, &current) ||                   \
+               !JSData2Native(cx, ((_t*)array)+i, current, type,             \
+                              useAllocator, iid, pErr))                      \
+                goto failure;                                                \
+            scavenger->IncrementInitedCount();                               \
+        }                                                                    \
+    PR_END_MACRO
+
+    static const XPCArrayDataScavenger::CleanupMode 
+        na = XPCArrayDataScavenger::NO_ACTION,
+        fr = useAllocator ? 
+                XPCArrayDataScavenger::DO_FREE : 
+                XPCArrayDataScavenger::NO_ACTION,
+        re = XPCArrayDataScavenger::DO_RELEASE;
+
+    // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
+
+    // XXX make extra space at end of char* and wchar* and null termintate
+
+    switch(type.TagPart())
+    {
+    case nsXPTType::T_I8            : POPULATE(na, int8);           break;
+    case nsXPTType::T_I16           : POPULATE(na, int16);          break;
+    case nsXPTType::T_I32           : POPULATE(na, int32);          break;
+    case nsXPTType::T_I64           : POPULATE(na, int64);          break;
+    case nsXPTType::T_U8            : POPULATE(na, uint8);          break;
+    case nsXPTType::T_U16           : POPULATE(na, uint16);         break;
+    case nsXPTType::T_U32           : POPULATE(na, uint32);         break;
+    case nsXPTType::T_U64           : POPULATE(na, uint64);         break;
+    case nsXPTType::T_FLOAT         : POPULATE(na, float);          break;
+    case nsXPTType::T_DOUBLE        : POPULATE(na, double);         break;
+    case nsXPTType::T_BOOL          : POPULATE(na, PRBool);         break;
+    case nsXPTType::T_CHAR          : POPULATE(na, char);           break;
+    case nsXPTType::T_WCHAR         : POPULATE(na, jschar);         break;
+    case nsXPTType::T_VOID          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_IID           : POPULATE(fr, nsID*);          break;
+    case nsXPTType::T_BSTR          : NS_ASSERTION(0,"bad type"); goto failure;
+    case nsXPTType::T_CHAR_STR      : POPULATE(fr, char*);          break;
+    case nsXPTType::T_WCHAR_STR     : POPULATE(fr, jschar*);        break;
+    case nsXPTType::T_INTERFACE     : POPULATE(re, nsISupports*);   break;
+    case nsXPTType::T_INTERFACE_IS  : POPULATE(re, nsISupports*);   break;
+    default                         : NS_ASSERTION(0,"bad type"); goto failure;
+    }
+
+    *d = array;
+    if(pErr)
+        *pErr = NS_OK;
+    return JS_TRUE;
+
+failure:
+    return JS_FALSE;
+
+#undef POPULATE
 }
 

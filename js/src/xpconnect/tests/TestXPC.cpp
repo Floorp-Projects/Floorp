@@ -442,6 +442,17 @@ MyEcho::MethodWithForwardDeclaredParam(nsITestXPCSomeUselessThing *sut)
     return NS_OK;
 }
 
+/* void PseudoQueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP
+MyEcho::PseudoQueryInterface(const nsIID & uuid, void * *result)
+{
+    if(!result)
+        return NS_ERROR_NULL_POINTER;
+    if(mReceiver)
+        return mReceiver->PseudoQueryInterface(uuid, result);
+    return NS_OK;
+}        
+
 /***************************************************************************/
 // security manager test class
 

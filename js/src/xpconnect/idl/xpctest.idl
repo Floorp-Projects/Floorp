@@ -38,7 +38,6 @@ interface nsITestXPCFoo : nsISupports {
 interface nsITestXPCFoo2 : nsITestXPCFoo {
 };
 
-
 [scriptable, uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
 interface nsIEcho : nsISupports {
 
@@ -101,6 +100,9 @@ interface nsIEcho : nsISupports {
     void SetReceiverReturnOldReceiver(inout nsIEcho aReceiver);
 
     void MethodWithForwardDeclaredParam(in nsITestXPCSomeUselessThing sut);
+
+    void PseudoQueryInterface(in nsIIDRef uuid, 
+                              [iid_is(uuid),retval] out nsQIResult result);
 };
 
 /***************************************************************************/
@@ -141,3 +143,20 @@ interface nsIXPCTestOverloaded : nsISupports {
     void Foo1(in PRInt32 p1);
     void Foo2(in PRInt32 p1, in PRInt32 p2);
 };
+
+[scriptable, uuid(3d2e64b0-6552-11d3-989e-006008962422)]
+interface nsIXPCTestArray : nsISupports {
+    void PrintIntegerArray(in PRUint32 count, 
+                           [array, size_is(count)] in PRInt32 valueArray);
+    void PrintStringArray(in PRUint32 count, 
+                          [array, size_is(count)] in string valueArray);
+    void MultiplyEachItemInIntegerArray(
+                           in PRInt32 val, 
+                           in PRUint32 count, 
+                           [array, size_is(count)] inout PRInt32 valueArray);
+    void MultiplyEachItemInIntegerArrayAndAppend(
+                           in PRInt32 val, 
+                           inout PRUint32 count, 
+                           [array, size_is(count)] inout PRInt32 valueArray);
+};
+
