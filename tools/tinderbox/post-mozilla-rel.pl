@@ -230,7 +230,7 @@ sub reportRelease {
     close(TMPMAIL);
 
     TinderUtils::print_log ("$donemessage \n");
-    my $subject = "[build] $datestamp Mozilla $Settings::OS Build Complete";
+    my $subject = "[build] $datestamp $Settings::ProductName $Settings::OS Build Complete";
     if ($Settings::blat ne "" && $Settings::use_blat) {
       system("$Settings::blat tmpmail.txt -to $Settings::notify_list -s \"$subject\"");
     } else {
