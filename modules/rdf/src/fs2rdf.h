@@ -25,13 +25,18 @@
 #include "client.h"
 #include "prio.h"
 #include "prlong.h"
+#include "nlcstore.h"
+#include "remstore.h"
 
 #ifdef	XP_MAC
 #include <Appletalk.h>
 #include <Devices.h>
 #include <Files.h>
 #include <FinderRegistry.h>
+#include <Folders.h>
 #include <Processes.h>
+
+#include "FullPath.h"
 #endif
 
 

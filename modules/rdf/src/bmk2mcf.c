@@ -161,18 +161,22 @@ parseNextBkToken (RDFFile f, char* token)
     if ((f->status == IN_TITLE) || (f->status == IN_H3) || 
 	(f->status == IN_ITEM_TITLE)) {
       if (IN_H3 && gBkFolderDate) {
-	char url[150];
+	char *url;
 	RDF_Resource newFolder;
-	sprintf(url, "%s%s.rdf", gBkFolderDate, token);
+	url = PR_smprintf("%s%s.rdf", gBkFolderDate, token);
 	newFolder = createContainer(url);
+	XP_FREE(url);
 	addSlotValue(f,newFolder, gCoreVocab->RDF_parent, f->stack[f->depth-1], 
 		     RDF_RESOURCE_TYPE, true);
 	freeMem(gBkFolderDate);
 	gBkFolderDate = NULL;
 	f->lastItem = newFolder;
       }
-      addSlotValue(f, f->lastItem, gCoreVocab->RDF_name, 
-		   copyString(token), RDF_STRING_TYPE, true);
+      if ((f->db == gLocalStore) || (f->status != IN_TITLE))
+	{
+	      addSlotValue(f, f->lastItem, gCoreVocab->RDF_name, 
+			   copyString(token), RDF_STRING_TYPE, true);
+	}
       if (startsWith("Personal Toolbar", token) && (containerp(f->lastItem)))
 	nlocalStoreAssert(gLocalStore, f->lastItem, gCoreVocab->RDF_instanceOf, 
 			  gNavCenter->RDF_PersonalToolbarFolderCategory, 

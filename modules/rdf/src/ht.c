@@ -9006,10 +9006,20 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 		break;
 
 		case LDAP_RT:
+		return DROP_NOT_ALLOWED;
+		break;
+
 		case RDF_RT :
 		if (justAction)
 		{
-			return COPY_MOVE_LINK;
+			if (HT_IsLocalData(dropTarget))
+			{
+				return COPY_MOVE_LINK;
+			}
+			else
+			{
+				return DROP_NOT_ALLOWED;
+			}
 		}
 		else
 		{

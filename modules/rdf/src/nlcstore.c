@@ -95,25 +95,27 @@ readInBookmarksOnInit(RDFFile f)
     parseNextBkBlob(f, buf, len);
   }
 
-  /* if no personal toolbar was specified in bookmark file, create one */
-
-  ptFolder = nlocalStoreGetSlotValue(f->db, gNavCenter->RDF_PersonalToolbarFolderCategory,
-		gCoreVocab->RDF_instanceOf, RDF_RESOURCE_TYPE, true, true);
-
-  if (ptFolder == NULL)
+  if (f->db == gLocalStore)
   {
-  	if ((ptFolder = createContainer("personaltoolbar.rdf")) != NULL)
-  	{
-		addSlotValue(f, ptFolder, gCoreVocab->RDF_parent,
-			gNavCenter->RDF_BookmarkFolderCategory,
-			RDF_RESOURCE_TYPE, true);
-  		addSlotValue(f, ptFolder, gCoreVocab->RDF_name,
-  			copyString(XP_GetString(RDF_PERSONAL_TOOLBAR_NAME)),
-  			RDF_STRING_TYPE, true );
-		RDFUtil_SetPTFolder(ptFolder);
-  	}
-  }
+	/* if no personal toolbar was specified in bookmark file, create one */
 
+	ptFolder = nlocalStoreGetSlotValue(f->db, gNavCenter->RDF_PersonalToolbarFolderCategory,
+	gCoreVocab->RDF_instanceOf, RDF_RESOURCE_TYPE, true, true);
+
+	if (ptFolder == NULL)
+	{
+	if ((ptFolder = createContainer("personaltoolbar.rdf")) != NULL)
+	{
+	addSlotValue(f, ptFolder, gCoreVocab->RDF_parent,
+		gNavCenter->RDF_BookmarkFolderCategory,
+		RDF_RESOURCE_TYPE, true);
+	addSlotValue(f, ptFolder, gCoreVocab->RDF_name,
+		copyString(XP_GetString(RDF_PERSONAL_TOOLBAR_NAME)),
+		RDF_STRING_TYPE, true );
+	RDFUtil_SetPTFolder(ptFolder);
+	}
+	}
+  }
   PR_Close(fp);
   freeMem(f->line);
   freeMem(f->currentSlot);
@@ -177,6 +179,7 @@ DBM_OpenDBMStore (DBMRDF store, char* directory)
       newFile->db = gLocalStore;
       newFile->assert = nlocalStoreAssert1;
       readInBookmarksOnInit(newFile);
+
       doingFirstTimeInitp = 0;
       (*store->propDB->sync)(store->propDB, 0);
       (*store->invPropDB->sync)(store->invPropDB, 0);

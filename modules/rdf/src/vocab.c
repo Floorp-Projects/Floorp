@@ -140,6 +140,12 @@ createNavCenterVocab () {
   setResourceType(gNavCenter->RDF_HistoryBySite, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryByDate, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryMostVisited, HISTORY_RT);
+
+  /* IE items */
+  gNavCenter->RDF_IEBookmarkFolderCategory = createContainer("NC:IEBookmarks");
+  gNavCenter->RDF_IEHistory =  createContainer("NC:IEHistory");
+  setResourceType(gNavCenter->RDF_IEHistory, HISTORY_RT);
+
   gNavCenter->RDF_bookmarkAddDate  = newResource("bookmarkAddDate", RDF_ADDED_ON_STR);
   gNavCenter->RDF_PersonalToolbarFolderCategory = 
     RDF_GetResource(gCoreDB, "PersonalToolbarCat", true);
@@ -375,6 +381,16 @@ getResourceDefaultName(RDF_Resource node)
 	{
 		defaultName = XP_GetString(strID);
 	}
+		/* XXX localization !!! */
+	else if (node == gNavCenter->RDF_IEBookmarkFolderCategory)
+	{
+		defaultName = "Your IE Favorites";
+	}
+	else if (node == gNavCenter->RDF_IEHistory)
+	{
+		defaultName = "Your IE History";
+	}
+
 #endif /* MOZILLA_CLIENT */
 	return(defaultName);
 }

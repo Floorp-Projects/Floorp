@@ -127,9 +127,9 @@ RDF_Init(RDF_InitParams params)
   freeMem(navCenterURL);
 
   HT_Startup();
-#ifdef XP_WIN
+
   GuessIEBookmarks();
-#endif  
+
 #endif
   walkThroughAllBookmarks(RDF_GetResource(NULL, "NC:Bookmarks", true));
   return 0;

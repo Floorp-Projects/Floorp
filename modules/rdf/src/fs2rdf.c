@@ -30,6 +30,8 @@
 	/* external string references in allxpstr */
 extern	int	RDF_UNABLETODELETEFILE, RDF_UNABLETODELETEFOLDER;
 
+extern	RDF	gNCDB;
+
 #define IMPORT_LIST_SIZE 12
 
   	/* XXX localization */
@@ -122,6 +124,89 @@ GuessIEBookmarks (void)
 		importForProfile("file:///c|/windows/", NULL);
 	}
 	XP_FREE(nativePath);
+
+#elif XP_MAC
+
+	Handle			nameH;
+	RDFFile			newFile;
+	char			*nativePath, *url;
+	short			len, prefsVRefNum;
+	long			prefsDirID;
+	OSErr			err;
+
+	if (!(err = FindFolder(kOnSystemDisk, kPreferencesFolderType,
+		kDontCreateFolder, &prefsVRefNum, &prefsDirID)))
+	{
+		if (!(err = GetFullPath(prefsVRefNum, prefsDirID, "\p:Explorer:Favorites.html", &len, &nameH)))
+		{
+			if (nameH != NULL)
+			{
+				HLock(nameH);
+				nativePath = PR_smprintf("%.*s", (int)len, *nameH);
+				DisposeHandle(nameH);
+				if (nativePath != NULL)
+				{
+					url = XP_PlatformFileToURL(nativePath);
+					XP_FREE(nativePath);
+					if (url != NULL)
+					{
+						if ((newFile = makeRDFFile(url, gNavCenter->RDF_IEBookmarkFolderCategory,
+							true)) != NULL)
+						{
+							newFile->fileType = RDF_BOOKMARKS;
+							/*
+							newFile->db = gLocalStore;
+							newFile->assert = nlocalStoreAssert1;
+							*/
+							newFile->db = gRemoteStore;
+							newFile->assert = remoteAssert3;
+							readInBookmarksOnInit(newFile);
+							
+							RDF_Assert(gNCDB, gNavCenter->RDF_IEBookmarkFolderCategory,
+								gCoreVocab->RDF_parent,
+								gNavCenter->RDF_BookmarkFolderCategory,
+								RDF_RESOURCE_TYPE);
+						}
+						XP_FREE(url);
+					}
+				}
+			}
+		}
+		if (!(err = GetFullPath(prefsVRefNum, prefsDirID, "\p:Explorer:History.html", &len, &nameH)))
+		{
+			if (nameH != NULL)
+			{
+				HLock(nameH);
+				nativePath = PR_smprintf("%.*s", (int)len, *nameH);
+				DisposeHandle(nameH);
+				if (nativePath != NULL)
+				{
+					url = XP_PlatformFileToURL(nativePath);
+					XP_FREE(nativePath);
+					if (url != NULL)
+					{
+						if ((newFile = makeRDFFile(url, gNavCenter->RDF_IEHistory,
+							true)) != NULL)
+						{
+							newFile->fileType = RDF_BOOKMARKS;
+							/*
+							newFile->db = gLocalStore;
+							newFile->assert = nlocalStoreAssert1;
+							*/
+							newFile->db = gRemoteStore;
+							newFile->assert = remoteAssert3;
+							readInBookmarksOnInit(newFile);
+							
+							RDF_Assert(gNCDB, gNavCenter->RDF_IEHistory,
+								gCoreVocab->RDF_parent, gNavCenter->RDF_History,
+								RDF_RESOURCE_TYPE);
+						}
+						XP_FREE(url);
+					}
+				}
+			}
+		}
+	}
 #endif
 }
 
