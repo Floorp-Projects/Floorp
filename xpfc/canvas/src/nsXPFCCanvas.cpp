@@ -137,7 +137,10 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
   }
 
   if (nsnull != mView)
+  {
+    mView->SetParent(nsnull);
     mView->Destroy();
+  }
 
 }
 
@@ -606,8 +609,6 @@ nsresult nsXPFCCanvas :: LoadView(const nsCID &aViewClassIID,
     view = aParent;
   else if (GetParent() != nsnull)
     view = GetParent()->GetView();
-
-  nsViewClip clip ;
 
   mView->Init(gXPFCToolkit->GetViewManager(),
               bounds,
