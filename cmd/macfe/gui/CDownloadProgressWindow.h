@@ -23,7 +23,7 @@
 #include "CSaveWindowStatus.h"
 #include <LListener.h>
 
-class CProgressBar;
+class LProgressBar;
 class COffscreenCaption;
 
 const ResIDT	WIND_DownloadProgress		=		1011;
@@ -80,7 +80,7 @@ class CDownloadProgressWindow :
 		virtual	void				NoteProgressEnd(const CContextProgress& inProgress);
 
 		CNSContext*					mContext;
-		CProgressBar*				mBar;
+		LProgressBar*				mBar;
 		COffscreenCaption*			mMessage;
 		COffscreenCaption*			mComment;		
 		Boolean						mClosing;
