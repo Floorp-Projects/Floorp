@@ -37,13 +37,25 @@ DEPTH = ..\..
 
 DIRS  = classes_spec \
 	src_share \
-	src_moz \
 	$(NULL)
 
-!if defined(BAL_INTERFACE)
-DIRS = classes_spec \
-	src_share \
+# This macro makes it so if the environment var WC_IE is 
+# defined, then webclient will be built to use
+# IE.  Otherwise webclient will be built to use
+# mozilla.
+
+!if defined(WC_IE)
+DIRS = $(DIRS) \
+	src_ie \
+	$(NULL)
+!else
+DIRS = $(DIRS) \
 	src_moz \
+	$(NULL)
+!endif
+
+!if defined(BAL_INTERFACE)
+DIRS = $(DIRS) \
 	bal_test \
 	$(NULL)
 !endif
