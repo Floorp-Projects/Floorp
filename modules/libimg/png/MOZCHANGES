@@ -14,3 +14,6 @@ Bug 81794 - crash/leak fix for pngrutil.c
 Bug 135579 - small interlaced PNG images not decoded correctly.
 	Affected files: pngpread.c
 
+Bug 154996 - PNG files with invalid IHDR can crash/hand browser.
+	Affected files: pngpread.c
+
