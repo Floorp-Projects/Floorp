@@ -24,14 +24,17 @@
 #define nsDrawingSurfaceBeOS_h___
 
 #include "nsIDrawingSurface.h"
+#include "nsIDrawingSurfaceBeOS.h"
 
 #include <Bitmap.h>
 #include <View.h>
 
-class nsDrawingSurfaceBeOS : public nsIDrawingSurface
+class nsDrawingSurfaceBeOS : public nsIDrawingSurface, 
+                             public nsIDrawingSurfaceBeOS
 {
 public:
   nsDrawingSurfaceBeOS();
+  virtual ~nsDrawingSurfaceBeOS();
 
   NS_DECL_ISUPPORTS
 
@@ -50,22 +53,35 @@ public:
   NS_IMETHOD Init(BView *aView);
   NS_IMETHOD Init(BView *aView, PRUint32 aWidth, PRUint32 aHeight,
                   PRUint32 aFlags);
-  NS_IMETHOD GetView(BView **aView);
+                  
+/* below are utility functions used mostly for nsRenderingContext and nsImage 
+ * to plug into gdk_* functions for drawing.  You should not set a pointer 
+ * that might hang around with the return from these.  instead use the ones 
+ * above.  pav 
+ */                 
+  NS_IMETHOD AcquireView(BView **aView); 
   NS_IMETHOD ReleaseView(void);
-  NS_IMETHOD GetBitmap(BBitmap **aBitmap);
+  NS_IMETHOD AcquireBitmap(BBitmap **aBitmap);
   NS_IMETHOD ReleaseBitmap(void);
 
-private:
-  virtual ~nsDrawingSurfaceBeOS();
-
+  void GetSize(PRUint32 *aWidth, PRUint32 *aHeight) { *aWidth = mWidth; *aHeight = mHeight; } 
+ 
+private: 
   BView			*mView;
   BBitmap		*mBitmap;
   nsPixelFormat mPixFormat;
   PRUint32      mWidth;
   PRUint32      mHeight;
-  PRInt32       mLockOffset;
-  PRInt32       mLockHeight;
+  PRUint32     mFlags; 
+  PRBool       mIsOffscreen; 
+ 
+  /* for locks */ 
+  PRInt32      mLockX; 
+  PRInt32      mLockY; 
+  PRUint32     mLockWidth; 
+  PRUint32     mLockHeight; 
   PRUint32      mLockFlags;
+  PRBool       mLocked;
 };
 
 #endif

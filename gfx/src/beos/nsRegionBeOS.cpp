@@ -25,24 +25,36 @@
 #include "nsRegionBeOS.h"
 #include "prmem.h"
 
+#ifdef DEBUG_REGIONS 
+static int nRegions; 
+#endif 
+
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 nsRegionBeOS :: nsRegionBeOS()
 {
   NS_INIT_REFCNT();
 
+#ifdef DEBUG_REGIONS 
+  ++nRegions; 
+  printf("REGIONS+ = %i\n", nRegions); 
+#endif 
+ 
   mRegion.MakeEmpty();
   mRegionType = eRegionComplexity_empty;
 }
 
 nsRegionBeOS :: ~nsRegionBeOS()
 {
+#ifdef DEBUG_REGIONS 
+  --nRegions; 
+  printf("REGIONS- = %i\n", nRegions); 
+#endif 
+ 
   mRegion.MakeEmpty();
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionBeOS, kRegionIID)
-NS_IMPL_ADDREF(nsRegionBeOS)
-NS_IMPL_RELEASE(nsRegionBeOS)
+NS_IMPL_ISUPPORTS1(nsRegionBeOS, nsIRegion)
 
 nsresult nsRegionBeOS :: Init(void)
 {
@@ -53,6 +65,8 @@ nsresult nsRegionBeOS :: Init(void)
 
 void nsRegionBeOS :: SetTo(const nsIRegion &aRegion)
 {
+  Init();
+  
   nsRegionBeOS *pRegion = (nsRegionBeOS *)&aRegion;
 
   mRegion = pRegion->mRegion;
@@ -61,6 +75,8 @@ void nsRegionBeOS :: SetTo(const nsIRegion &aRegion)
 
 void nsRegionBeOS :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  Init();
+  
 	mRegion.Set(BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
 	SetRegionType();
 }
@@ -194,10 +210,10 @@ NS_IMETHODIMP nsRegionBeOS :: GetRects(nsRegionRectSet **aRects)
 	for(int32 i = 0; i < nbox; i++)
 	{
 		BRect r = mRegion.RectAt(i);
-		rect->x = r.left;
-		rect->width = (r.right - r.left + 1);
-		rect->y = r.top;
-		rect->height = (r.bottom - r.top + 1);
+    rect->x = nscoord(r.left); 
+    rect->width = nscoord(r.right - r.left + 1); 
+    rect->y = nscoord(r.top); 
+    rect->height = nscoord(r.bottom - r.top + 1); 
 
 		rects->mArea += rect->width * rect->height;
 

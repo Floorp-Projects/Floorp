@@ -20,36 +20,27 @@
  * Contributor(s): 
  */
 
-#include "xp_core.h"
-#include "nsFontMetricsBeOS.h"
-#include "nspr.h"
-
+#include "xp_core.h" 
+#include "nsQuickSort.h" 
+#include "nsFontMetricsBeOS.h" 
+#include "nsIServiceManager.h" 
+#include "nsICharsetConverterManager.h" 
+#include "nsICharsetConverterManager2.h" 
+#include "nsISaveAsCharset.h" 
+#include "nsIPref.h" 
+#include "nsCOMPtr.h" 
+#include "nspr.h" 
+#include "nsHashtable.h" 
+ 
+#undef USER_DEFINED 
+#define USER_DEFINED "x-user-def" 
+ 
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
-
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsBeOS::nsFontMetricsBeOS()
 {
   NS_INIT_REFCNT();
-  mDeviceContext = nsnull;
-  mFont = nsnull;
-//  mFontHandle = nsnull;
-
-  mHeight = 0;
-  mAscent = 0;
-  mDescent = 0;
-  mLeading = 0;
-  mMaxAscent = 0;
-  mMaxDescent = 0;
-  mMaxAdvance = 0;
-  mXHeight = 0;
-  mSuperscriptOffset = 0;
-  mSubscriptOffset = 0;
-  mStrikeoutSize = 0;
-  mStrikeoutOffset = 0;
-  mUnderlineSize = 0;
-  mUnderlineOffset = 0;
 }
 
 nsFontMetricsBeOS::~nsFontMetricsBeOS()
@@ -59,8 +50,25 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
     mFont = nsnull;
   }
 }
+ 
+NS_IMPL_ISUPPORTS1(nsFontMetricsBeOS, nsIFontMetrics) 
+ 
+static PRBool 
+IsASCIIFontName(const nsString& aName) 
+{ 
+  PRUint32 len = aName.Length(); 
+  const PRUnichar* str = aName.GetUnicode(); 
+  for (PRUint32 i = 0; i < len; i++) { 
+    /* 
+     * X font names are printable ASCII, ignore others (for now) 
+     */ 
+    if ((str[i] < 0x20) || (str[i] > 0x7E)) { 
+      return PR_FALSE; 
+    } 
+  } 
 
-NS_IMPL_ISUPPORTS(nsFontMetricsBeOS, kIFontMetricsIID)
+  return PR_TRUE; 
+} 
 
 NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIDeviceContext* aContext)
@@ -73,7 +81,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     aFont.GetFirstFamily(firstFace);
   }
 
-  PRInt32     namelen = MAX( firstFace.Length() + 1, sizeof(font_family) );
+//  PRInt32     namelen = MAX( firstFace.Length() + 1, sizeof(font_family) );
   font_family wildstring;
   PRInt16	  face = B_REGULAR_FACE;
 
@@ -130,7 +138,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
  
 #ifdef NOISY_FONTS
 #ifdef DEBUG
-  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
+  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / app2twip);
 #endif
 #endif
 
@@ -152,55 +160,73 @@ void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
   
   struct font_height height;
   mFontHandle.GetHeight( &height );
+ 
+  struct font_height emHeight; 
+  be_plain_font->GetHeight(&emHeight); 
+ 
+  int lineSpacing = nscoord(height.ascent + height.descent); 
+  if (lineSpacing > (emHeight.ascent + emHeight.descent)) { 
+    mLeading = nscoord((lineSpacing - (emHeight.ascent + emHeight.descent)) * f); 
+  } 
+  else { 
+    mLeading = 0; 
+  } 
+  mEmHeight = PR_MAX(1, nscoord((emHeight.ascent + emHeight.descent) * f)); 
+  mEmAscent = nscoord(height.ascent * (emHeight.ascent + emHeight.descent) * f / lineSpacing); 
+  mEmDescent = mEmHeight - mEmAscent; 
 
-  mAscent = nscoord(height.ascent * f);
-  mDescent = nscoord(height.descent * f);
+  mMaxHeight = nscoord((height.ascent + 
+                        height.descent) * f) ; 
   mMaxAscent = nscoord(height.ascent * f) ;
   mMaxDescent = nscoord(height.descent * f);
   
-  mHeight = nscoord((height.ascent + height.descent) * f) ;
   mMaxAdvance = nscoord(mFontHandle.BoundingBox().Width() * f);
 
-/*  PRUint32 i;
+  // 56% of ascent, best guess for non-true type 
+  mXHeight = NSToCoordRound((float) height.ascent* f * 0.56f); 
 
-  for (i = 0; i < 256; i++)
-  {
-    if ((i < mFontInfo->min_char_or_byte2) || (i > mFontInfo->max_char_or_byte2))
-      mCharWidths[i] = mMaxAdvance;
-    else
-      mCharWidths[i] = nscoord((mFontInfo->per_char[i - mFontInfo->min_char_or_byte2].width) * f);
-  }
-*/
-  mLeading = nscoord(height.leading);
+  float rawWidth = mFontHandle.StringWidth(" "); 
+  mSpaceWidth = NSToCoordRound(rawWidth * f); 
+ 
+/* Temp */ 
+  mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * (height.ascent + height.descent + height.leading) + 0.5)) * f); 
+  
+  mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * (height.ascent + height.descent + height.leading) + 0.5)) * f); 
+ 
+  mSuperscriptOffset = mXHeight; 
+ 
+  mSubscriptOffset = mXHeight; 
+ 
+  /* need better way to calculate this */ 
+  mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0); 
+  mStrikeoutSize = mUnderlineSize; 
+ 
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetXHeight(nscoord& aResult)
 {
-//  aResult = mXHeight;
-  aResult = nscoord( mMaxAscent / 2 );     // FIXME temporary code!
+  aResult = mXHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetSuperscriptOffset(nscoord& aResult)
 {
-//  aResult = mSuperscriptOffset;
-  aResult = nscoord( mMaxAscent / 2 );     // FIXME temporary code!
+  aResult = mSuperscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetSubscriptOffset(nscoord& aResult)
 {
-//  aResult = mSubscriptOffset;
-  aResult = nscoord( mMaxAscent / 2 );     // FIXME temporary code!
+  aResult = mSubscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
-//  aOffset = mStrikeoutOffset;
-//  aSize = mStrikeoutSize;
-  aOffset = nscoord( ( mAscent / 2 ) - mDescent );
-  aSize = nscoord( 20 );  // FIXME Put 1 pixel which equal 20 twips..
+  aOffset = mStrikeoutOffset; 
+  aSize = mStrikeoutSize; 
+//  aOffset = nscoord( ( mAscent / 2 ) - mDescent ); 
+//  aSize = nscoord( 20 );  // FIXME Put 1 pixel which equal 20 twips.. 
   return NS_OK;
 }
 
@@ -214,8 +240,14 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetUnderline(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetHeight(nscoord &aHeight)
+{ 
+  aHeight = mMaxHeight; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetNormalLineHeight(nscoord &aHeight) 
 {
-  aHeight = mHeight;
+  aHeight = mEmHeight + mLeading; 
   return NS_OK;
 }
 
@@ -225,6 +257,30 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetLeading(nscoord &aLeading)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetEmHeight(nscoord &aHeight) 
+{ 
+  aHeight = mEmHeight; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetEmAscent(nscoord &aAscent) 
+{ 
+  aAscent = mEmAscent; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetEmDescent(nscoord &aDescent) 
+{ 
+  aDescent = mEmDescent; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetMaxHeight(nscoord &aHeight) 
+{ 
+  aHeight = mMaxHeight; 
+  return NS_OK; 
+} 
+ 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetMaxAscent(nscoord &aAscent)
 {
   aAscent = mMaxAscent;
@@ -265,5 +321,139 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFontHandle(nsFontHandle &aHandle)
 {
   aHandle = (nsFontHandle)&mFontHandle;
   return NS_OK;
+} 
+ 
+nsresult 
+nsFontMetricsBeOS::FamilyExists(const nsString& aName) 
+{ 
+  if (!IsASCIIFontName(aName)) { 
+    return NS_ERROR_FAILURE; 
+  } 
+ 
+  nsCAutoString name; 
+  name.AssignWithConversion(aName.GetUnicode()); 
+  name.ToLowerCase(); 
+  PRBool  isthere = PR_FALSE; 
+ 
+  char* cStr = name.ToNewCString(); 
+ 
+       int32 numFamilies = count_font_families(); 
+       for(int32 i = 0; i < numFamilies; i++) 
+       { 
+               font_family family; 
+               uint32 flags; 
+               if(get_font_family(i, &family, &flags) == B_OK) 
+               { 
+                       if(strcmp(family, cStr) == 0) 
+                       { 
+                               isthere = PR_TRUE; 
+                               break; 
+                       } 
+               } 
+       } 
+ 
+       //printf("%s there? %s\n", cStr, isthere?"Yes":"No" ); 
+       
+  delete[] cStr; 
+ 
+  if (PR_TRUE == isthere) 
+    return NS_OK; 
+  else 
+    return NS_ERROR_FAILURE; 
+} 
+ 
+nsresult 
+nsFontMetricsBeOS::GetSpaceWidth(nscoord &aSpaceWidth) 
+{ 
+  aSpaceWidth = mSpaceWidth; 
+  return NS_OK; 
+} 
+ 
+// The Font Enumerator 
+ 
+nsFontEnumeratorBeOS::nsFontEnumeratorBeOS() 
+{ 
+  NS_INIT_REFCNT(); 
+} 
+ 
+NS_IMPL_ISUPPORTS(nsFontEnumeratorBeOS, 
+                  NS_GET_IID(nsIFontEnumerator)); 
+ 
+static int 
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure) 
+{ 
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1); 
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2); 
+ 
+  // XXX add nsICollation stuff 
+ 
+  return nsCRT::strcmp(str1, str2); 
+} 
+ 
+static nsresult 
+EnumFonts(nsIAtom* aLangGroup, const char* aGeneric, PRUint32* aCount, 
+  PRUnichar*** aResult) 
+{ 
+  nsString font_name; 
+    
+  int32 numFamilies = count_font_families(); 
+ 
+  PRUnichar** array = 
+    (PRUnichar**) nsMemory::Alloc(numFamilies * sizeof(PRUnichar*)); 
+  if (!array) { 
+    return NS_ERROR_OUT_OF_MEMORY; 
+  } 
+ 
+       for(int32 i = 0; i < numFamilies; i++) 
+       { 
+               font_family family; 
+               uint32 flags; 
+               if(get_font_family(i, &family, &flags) == B_OK) 
+               { 
+                       font_name.AssignWithConversion(family); 
+                       array[i] = font_name.ToNewUnicode(); 
+               } 
+       } 
+ 
+  NS_QuickSort(array, numFamilies, sizeof(PRUnichar*), CompareFontNames, 
+               nsnull); 
+ 
+  *aCount = numFamilies; 
+  if (*aCount) { 
+    *aResult = array; 
+  } 
+  else { 
+    nsMemory::Free(array); 
+  } 
+ 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP 
+nsFontEnumeratorBeOS::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult) 
+{ 
+  NS_ENSURE_ARG_POINTER(aResult); 
+  *aResult = nsnull; 
+  NS_ENSURE_ARG_POINTER(aCount); 
+  *aCount = 0; 
+ 
+  return EnumFonts(nsnull, nsnull, aCount, aResult); 
+} 
+ 
+NS_IMETHODIMP 
+nsFontEnumeratorBeOS::EnumerateFonts(const char* aLangGroup, 
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult) 
+{ 
+  NS_ENSURE_ARG_POINTER(aResult); 
+  *aResult = nsnull; 
+  NS_ENSURE_ARG_POINTER(aCount); 
+  *aCount = 0; 
+  NS_ENSURE_ARG_POINTER(aGeneric); 
+  NS_ENSURE_ARG_POINTER(aLangGroup); 
+ 
+  nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup)); 
+ 
+  // XXX still need to implement aLangGroup and aGeneric 
+  return EnumFonts(langGroup, aGeneric, aCount, aResult); 
 }
 

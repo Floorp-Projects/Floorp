@@ -23,15 +23,17 @@
 #ifndef nsFontMetricsBeOS_h__
 #define nsFontMetricsBeOS_h__
 
-#include "nsIFontMetrics.h"
+#include "nsDeviceContextBeOS.h" 
+#include "nsIFontMetrics.h" 
+#include "nsIFontEnumerator.h" 
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
-#include "nsDeviceContextBeOS.h"
-#include "nsIAtom.h"
 #include "nsCOMPtr.h"
+#include "nsRenderingContextBeOS.h" 
+#include "nsICharRepresentable.h" 
 
 #include <Font.h>
 
@@ -56,7 +58,12 @@ public:
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
-  NS_IMETHOD  GetLeading(nscoord &aLeading);
+  NS_IMETHOD  GetNormalLineHeight(nscoord &aHeight); 
+  NS_IMETHOD  GetLeading(nscoord &aLeading); 
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight); 
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent); 
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent); 
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight); 
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
@@ -64,18 +71,24 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
+  virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth); 
+ 
+  static nsresult FamilyExists(const nsString& aFontName); 
+ 
+  nsCOMPtr<nsIAtom>   mLangGroup; 
+ 
 protected:
   void RealizeFont(nsIDeviceContext* aContext);
 
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
   BFont               mFontHandle;
-  nsCOMPtr<nsIAtom>   mLangGroup;
 
-  nscoord             mHeight;
-  nscoord             mAscent;
-  nscoord             mDescent;
   nscoord             mLeading;
+  nscoord             mEmHeight; 
+  nscoord             mEmAscent; 
+  nscoord             mEmDescent; 
+  nscoord             mMaxHeight; 
   nscoord             mMaxAscent;
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;
@@ -86,6 +99,19 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+  nscoord             mSpaceWidth; 
+ 
+  PRUint16            mPixelSize; 
+  PRUint8             mStretchIndex; 
+  PRUint8             mStyleIndex;  
+}; 
+ 
+class nsFontEnumeratorBeOS : public nsIFontEnumerator 
+{ 
+public: 
+  nsFontEnumeratorBeOS(); 
+  NS_DECL_ISUPPORTS 
+  NS_DECL_NSIFONTENUMERATOR 
 };
 
 #endif

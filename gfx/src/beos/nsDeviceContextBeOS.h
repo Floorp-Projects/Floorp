@@ -29,7 +29,6 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
-#include "nsDrawingSurfaceBeOS.h"
 #include "nsRenderingContextBeOS.h"
 
 class nsDeviceContextBeOS : public DeviceContextImpl
@@ -43,6 +42,9 @@ public:
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));} 
+  NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));} 
+ 
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
@@ -54,13 +56,13 @@ public:
   //in the device context for re-use.
 
   NS_IMETHOD GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
-  NS_IMETHOD GetRect(nsRect &aRect);
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
   NS_IMETHOD GetClientRect(nsRect &aRect);
+  NS_IMETHOD GetRect(nsRect &aRect);
 
   NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
@@ -71,11 +73,26 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  NS_IMETHOD GetDepth(PRUint32& aDepth); 
+ 
+  static int prefChanged(const char *aPref, void *aClosure); 
+  nsresult   SetDPI(PRInt32 dpi); 
+
 private:
   PRUint32      mDepth;
   PRBool        mWriteable;
   nsPaletteInfo mPaletteInfo;
   PRUint32 mNumCells;
+  PRInt16       mScrollbarHeight; 
+  PRInt16       mScrollbarWidth; 
+  static nscoord mDpi; 
+ 
+  float         mWidthFloat; 
+  float         mHeightFloat; 
+  PRInt32       mWidth; 
+  PRInt32       mHeight; 
+ 
+  nsresult GetSystemFontInfo(const BFont *font, nsSystemAttrID anID, nsFont* aFont) const;
 };
 
 #endif /* nsDeviceContextBeOS_h___ */

@@ -20,109 +20,65 @@
  * Contributor(s): 
  */
 
+#include "nsFontMetricsBeOS.h"
 #include "nsRenderingContextBeOS.h"
 #include "nsRegionBeOS.h"
-#include "nsGfxCIID.h"
+#include "nsImageBeOS.h"
+#include "nsGraphicsStateBeOS.h"
+#include "nsICharRepresentable.h"
 #include <math.h>
-
-#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-class GraphicsState
-{
-public:
-	GraphicsState();
-	~GraphicsState();
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
 
-	nsTransform2D	*mMatrix;
-	nsRect			mLocalClip;
-	nsRegionBeOS	*mClipRegion;
-	nscolor			mColor;
-	nsLineStyle		mLineStyle;
-	nsIFontMetrics	*mFontMetrics;
-};
-
-GraphicsState::GraphicsState()
-{
-	mMatrix = nsnull;
-	mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
-	mClipRegion = nsnull;
-	mColor = NS_RGB(0, 0, 0);
-	mLineStyle = nsLineStyle_kSolid;
-	mFontMetrics = nsnull;
-}
-
-GraphicsState::~GraphicsState()
-{
-	delete mClipRegion;
-}
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsRenderingContextBeOS::nsRenderingContextBeOS()
 {
 	NS_INIT_REFCNT();
 
-	mColor.red = 0; mColor.green = 0; mColor.blue = 0; mColor.alpha = 255;
 	mFontMetrics = nsnull;
 	mContext = nsnull;
 	mSurface = nsnull;
-	mMainSurface = nsnull;
-	mView = nsnull;
-	mMainView = nsnull;
-	mCurrentColor = 0;
+  mOffscreenSurface = nsnull;
+  mCurrentColor = NS_RGB(255, 255, 255);  // set it to white
 	mCurrentLineStyle = nsLineStyle_kSolid;
 	mCurrentFont = nsnull;
-	mTMatrix = nsnull;
+  mTranMatrix = nsnull;
 	mP2T = 1.0f;
 	mStateCache = new nsVoidArray();
-	mRegion = new nsRegionBeOS();
-	mRegion->Init();
+  mClipRegion = nsnull;
+
+  mView = nsnull;
 
 	PushState();
 }
 
 nsRenderingContextBeOS::~nsRenderingContextBeOS()
 {
-	NS_IF_RELEASE(mContext);
-	NS_IF_RELEASE(mFontMetrics);
-	
 	// Destroy the State Machine
-	if(nsnull != mStateCache)
+  if (mStateCache)
 	{
 		PRInt32 cnt = mStateCache->Count();
 
 		while(--cnt >= 0)
 		{
-			GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
-			mStateCache->RemoveElementAt(cnt);
-
-			if(nsnull != state)
-				delete state;
+      PRBool  clipstate;
+      PopState(clipstate);
 		}
 
 		delete mStateCache;
 		mStateCache = nsnull;
 	}
 
-	if(nsnull != mSurface)
-	{
-		mSurface->ReleaseView();
-		NS_RELEASE(mSurface);
-	}
-
-	if(nsnull != mMainSurface)
-	{
-		mMainSurface->ReleaseView();
-		NS_RELEASE(mMainSurface);
-	}
-	
-	if(nsnull != mViewOwner)
-		NS_RELEASE(mViewOwner);
+  if (mTranMatrix)
+    delete mTranMatrix;
+  NS_IF_RELEASE(mOffscreenSurface);
+  NS_IF_RELEASE(mFontMetrics);
+  NS_IF_RELEASE(mContext);
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextBeOS, kRenderingContextIID)
-NS_IMPL_ADDREF(nsRenderingContextBeOS)
-NS_IMPL_RELEASE(nsRenderingContextBeOS)
 
 NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext* aContext,
 										nsIWidget *aWindow)
@@ -131,18 +87,19 @@ NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext* aContext,
 	NS_IF_ADDREF(mContext);
 	
 	mSurface = new nsDrawingSurfaceBeOS();
-	BView	*view = (BView *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
-	NS_ADDREF(mSurface);
-	mSurface->Init(view);
-	mView = view;
-	mMainView = mView;
-	mMainSurface = mSurface;
-    NS_ADDREF(mMainSurface);
-	
-	mViewOwner = aWindow;
-	NS_IF_ADDREF(mViewOwner);
 
-	return CommonInit();
+  if (mSurface)
+  {
+    if (!aWindow) return NS_ERROR_NULL_POINTER;
+    
+	BView	*view = (BView *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+	mSurface->Init(view);
+	
+    mOffscreenSurface = mSurface;
+
+    NS_ADDREF(mSurface);
+}
+  return (CommonInit());
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext* aContext,
@@ -152,84 +109,30 @@ NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext* aContext,
 	NS_IF_ADDREF(mContext);
 
 	mSurface = (nsDrawingSurfaceBeOS *)aSurface;
-
-	if (nsnull != mSurface)
-	{
 		NS_ADDREF(mSurface);
-		mSurface->GetView(&mView);
 
-		mMainView = mView;
-		mMainSurface = mSurface;
-		NS_ADDREF(mMainSurface);
+  return (CommonInit());
 	}
-
-	mViewOwner = nsnull;
-
-	return CommonInit();
-}
-
-nsresult nsRenderingContextBeOS::SetupView(BView *oldview, BView *newview)
-{
-	bool		havetounlocknew = false;
-	bool		havetounlockold = false;
-	BFont		fontinstance(be_plain_font);
-	rgb_color	prevcolor;
-	BFont		*prevfont;
-	BRegion		r;
-	bool		gotit = false;
-
-	if(newview && newview->LockLooper())
-		havetounlocknew = true;
-
-	newview->SetViewColor(B_TRANSPARENT_32_BIT);
-
-	newview->SetDrawingMode(B_OP_COPY);
-
-	prevfont = &fontinstance;
-	prevcolor.red = 0; prevcolor.green = 0; prevcolor.blue = 0; prevcolor.alpha = 255;
-
-	if(oldview)
-	{
-		if(oldview->LockLooper())
-			havetounlockold = true;
-
-		prevcolor = oldview->HighColor();
-		oldview->GetFont(&fontinstance);
-		oldview->GetClippingRegion(&r);
-		gotit = true;
-
-		if(havetounlockold)
-			oldview->UnlockLooper();
-	}
-
-	newview->SetHighColor(mColor);
-	prevfont->SetSpacing(B_BITMAP_SPACING);
-	newview->SetFont(prevfont);
-	if(gotit)
-		newview->ConstrainClippingRegion(&r);
-
-	if(havetounlocknew)
-		newview->UnlockLooper();
-
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsRenderingContextBeOS::CommonInit()
 {
 	mContext->GetDevUnitsToAppUnits(mP2T);
 	float app2dev;
 	mContext->GetAppUnitsToDevUnits(app2dev);
-	mTMatrix->AddScale(app2dev, app2dev);
+  mTranMatrix->AddScale(app2dev, app2dev);
 
 	mContext->GetGammaTable(mGammaTable);
 
-	return SetupView(nsnull, mView);
+  return NS_OK;  //SetupView(nsnull, mView);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetHints(PRUint32& aResult)
 {
+  PRUint32 result = 0;
+
 	// We like PRUnichar rendering, hopefully it's not slowing us too much
-	aResult = 0;
+
+  aResult = result;
 	return NS_OK;
 }
 
@@ -239,63 +142,29 @@ NS_IMETHODIMP nsRenderingContextBeOS::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
 	PushState();
-	mSurface->ReleaseView();
-	return mSurface->Lock(aX, aY, aWidth, aHeight, aBits, aStride, aWidthBytes, aFlags);
+  
+  return mSurface->Lock(aX, aY, aWidth, aHeight, 
+            aBits, aStride, aWidthBytes, aFlags);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::UnlockDrawingSurface(void)
 {
 	PRBool  clipstate;
+  PopState(clipstate);
 
 	mSurface->Unlock();
-	mSurface->GetView(&mView);
-	PopState(clipstate);
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
-{
-       nsresult  rv=NS_OK;
-
-	//XXX this should reset the data in the state stack.
-
-	if(aSurface != mSurface)
-	{
-		if(nsnull != aSurface)
 		{
-			BView *v;
-
-			// get back a BView
-			((nsDrawingSurfaceBeOS *)aSurface)->GetView(&v);
-
-			rv = SetupView(mView, v);
-
-			// kill the BView
-			mSurface->ReleaseView();
-
-			NS_IF_RELEASE(mSurface);
-			mSurface = (nsDrawingSurfaceBeOS *)aSurface;
-		}
+  if (nsnull == aSurface)
+    mSurface = mOffscreenSurface;
 		else
-		{
-			if(NULL != mView)
-			{
-				rv = SetupView(mView, mMainView);
-
-				// kill the BView
-				mSurface->ReleaseView();
-
-				NS_IF_RELEASE(mSurface);
-				mSurface = mMainSurface;
-			}
-		}
-
-		NS_ADDREF(mSurface);
-		mSurface->GetView(&mView);
-	}
+    mSurface = (nsDrawingSurfaceBeOS *)aSurface;
 	
-	return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetDrawingSurface(nsDrawingSurface *aSurface)
@@ -318,82 +187,57 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetDeviceContext(nsIDeviceContext *&aConte
 
 NS_IMETHODIMP nsRenderingContextBeOS::PushState(void)
 {
-	GraphicsState * state = new GraphicsState();
-
+  //  Get a new GS
+#ifdef USE_GS_POOL
+  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
+#else
+  nsGraphicsState *state = new nsGraphicsState;
+#endif
+  // Push into this state object, add to vector
 	if(!state)
-		return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_FAILURE;
 
-	// Push into this state object, add to vector
-	state->mMatrix = mTMatrix;
+  state->mMatrix = mTranMatrix;
 	
-	mStateCache->AppendElement(state);
-	
-	if (nsnull == mTMatrix)
-		mTMatrix = new nsTransform2D();
+  if (nsnull == mTranMatrix)
+    mTranMatrix = new nsTransform2D();
 	else
-		mTMatrix = new nsTransform2D(mTMatrix);
+    mTranMatrix = new nsTransform2D(mTranMatrix);
 
-	PRBool clipState;
-	GetClipRect(state->mLocalClip, clipState);
+  // set state to mClipRegion.. SetClip{Rect,Region}() will do copy-on-write stuff
+  state->mClipRegion = mClipRegion;
 
-	state->mClipRegion = mRegion;
-
-	if(nsnull != state->mClipRegion)
-	{
-		mRegion = new nsRegionBeOS();
-		mRegion->Init();
-		mRegion->SetTo(*state->mClipRegion);
-	}
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
 
 	state->mColor = mCurrentColor;
 	state->mLineStyle = mCurrentLineStyle;
 
+  mStateCache->AppendElement(state);
+  
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty)
 {
-	PRBool bEmpty = PR_FALSE;
-
 	PRUint32 cnt = mStateCache->Count();
-	GraphicsState * state;
+  nsGraphicsState * state;
 	
-	if(cnt > 0)
-	{
-		state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
 		mStateCache->RemoveElementAt(cnt - 1);
 		
 		// Assign all local attributes from the state object just popped
-		if (mTMatrix)
-			delete mTMatrix;
-		mTMatrix = state->mMatrix;
-
-		if(nsnull != mRegion)
-			delete mRegion;
+    if (state->mMatrix) {
+      if (mTranMatrix)
+        delete mTranMatrix;
+      mTranMatrix = state->mMatrix;
+    }
 		
-		mRegion = state->mClipRegion;
-		state->mClipRegion = 0;
+    mClipRegion = state->mClipRegion;
 
-		if(nsnull != mRegion && mRegion->IsEmpty() == PR_TRUE)
-		{
-			bEmpty = PR_TRUE;
-		}
-		else
-		{
-			// Select in the old region.  We probably want to set a dirty flag and only
-			// do this IFF we need to draw before the next Pop.  We'd need to check the
-			// state flag on every draw operation.
-			if(nsnull != mRegion)
-			{
-				BRegion *rgn;
-				mRegion->GetNativeRegion((void*&)rgn);
-				if(mView != mMainView && mView && mView->LockLooper())
-				{
-					mView->ConstrainClippingRegion(rgn);
-					mView->UnlockLooper();
-				}
-			}
-		}
+    if (state->mFontMetrics && (mFontMetrics != state->mFontMetrics))
+      SetFont(state->mFontMetrics);
 
 		if(state->mColor != mCurrentColor)
 			SetColor(state->mColor);
@@ -402,10 +246,17 @@ NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty)
 			SetLineStyle(state->mLineStyle);
 
 		// Delete this graphics state object
+#ifdef USE_GS_POOL
+    nsGraphicsStatePool::ReleaseGS(state);
+#else
 		delete state;
+#endif
 	}
 
-	aClipEmpty = bEmpty;
+  if (mClipRegion)
+    aClipEmpty = mClipRegion->IsEmpty();
+  else
+    aClipEmpty = PR_TRUE;
 
 	return NS_OK;
 }
@@ -420,14 +271,15 @@ NS_IMETHODIMP nsRenderingContextBeOS::IsVisibleRect(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextBeOS::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
 	PRInt32 x, y, w, h;
-	if(!mRegion->IsEmpty())
-	{
-		mRegion->GetBoundingBox(&x,&y,&w,&h);
+  
+  if (!mClipRegion)
+    return NS_ERROR_FAILURE;
+
+  if (!mClipRegion->IsEmpty()) {
+    mClipRegion->GetBoundingBox(&x,&y,&w,&h);
 		aRect.SetRect(x,y,w,h);
 		aClipValid = PR_TRUE;
-	}
-	else
-	{
+  } else {
 		aRect.SetRect(0,0,0,0);
 		aClipValid = PR_FALSE;
 	}
@@ -439,126 +291,168 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
-	nsRect trect = aRect;
-	BRegion *rgn;
+  PRUint32 cnt = mStateCache->Count();
+  nsGraphicsState *state = nsnull;
 
-	mTMatrix->TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+  }
+
+  if (state) {
+    if (state->mClipRegion) {
+      if (state->mClipRegion == mClipRegion) {
+        nsCOMPtr<nsIRegion> tmpRgn;
+        GetClipRegion(getter_AddRefs(tmpRgn));
+        mClipRegion = tmpRgn;
+      }
+    }
+  }
+
+  CreateClipRegion();
+
+	nsRect trect = aRect;
+
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
 
 	switch(aCombine)
 	{
 		case nsClipCombine_kIntersect:
-			mRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
 			break;
 		case nsClipCombine_kUnion:
-			mRegion->Union(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
 			break;
 		case nsClipCombine_kSubtract:
-			mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
 			break;
 		case nsClipCombine_kReplace:
-			mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+      mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
 			break;
 	}
+  aClipEmpty = mClipRegion->IsEmpty();
 
-	aClipEmpty = mRegion->IsEmpty();
+  return NS_OK;
+}
 
-	mRegion->GetNativeRegion((void*&)rgn);
+void nsRenderingContextBeOS::UpdateView()
+{
+  if (mView)
+    mView = NULL;
+    
+  mSurface->AcquireView(&mView);
 	if(mView && mView->LockLooper())
 	{
+    if(mCurrentFont == NULL)
+    	mCurrentFont = (BFont *)be_plain_font;
+    mView->SetFont(mCurrentFont);
+    
+    rgb_color color;
+    color.red = mGammaTable[NS_GET_R(mCurrentColor)];
+    color.green = mGammaTable[NS_GET_G(mCurrentColor)];
+    color.blue = mGammaTable[NS_GET_B(mCurrentColor)];
+    color.alpha = 255;	// solid
+    mView->SetHighColor(color);
+    
+//    SetLineStyle();
+
+    BRegion *rgn = nsnull;
+    if (mClipRegion) {
+      mClipRegion->GetNativeRegion((void*&)rgn);
 		mView->ConstrainClippingRegion(rgn);
-		mView->UnlockLooper();
 	}
 
-	return NS_OK;
+    mView->UnlockLooper();
+  }
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
-	BRegion *rgn;
+  PRUint32 cnt = mStateCache->Count();
+  nsGraphicsState *state = nsnull;
+
+  if (cnt > 0) {
+    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+  }
 	
+  if (state) {
+    if (state->mClipRegion) {
+      if (state->mClipRegion == mClipRegion) {
+        nsCOMPtr<nsIRegion> tmpRgn;
+        GetClipRegion(getter_AddRefs(tmpRgn));
+        mClipRegion = tmpRgn;
+      }
+    }
+  }
+
+  CreateClipRegion();
+
 	switch(aCombine)
 	{
 		case nsClipCombine_kIntersect:
-			mRegion->Intersect(aRegion);
+      mClipRegion->Intersect(aRegion);
 			break;
 		case nsClipCombine_kUnion:
-			mRegion->Union(aRegion);
+      mClipRegion->Union(aRegion);
 			break;
 		case nsClipCombine_kSubtract:
-			mRegion->Subtract(aRegion);
+      mClipRegion->Subtract(aRegion);
 			break;
 		case nsClipCombine_kReplace:
-			mRegion->SetTo(aRegion);
+      mClipRegion->SetTo(aRegion);
 			break;
 	}
 	
-	aClipEmpty = mRegion->IsEmpty();
-	mRegion->GetNativeRegion((void*&)rgn);
-	if(mView && mView->LockLooper())
-	{
-		mView->ConstrainClippingRegion(rgn);
-		mView->UnlockLooper();
-	}
+  aClipEmpty = mClipRegion->IsEmpty();
 	
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::CopyClipRegion(nsIRegion &aRegion)
 {
-  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mRegion));
+  if (!mClipRegion)
+    return NS_ERROR_FAILURE;
+
+  aRegion.SetTo(*mClipRegion);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetClipRegion(nsIRegion **aRegion)
 {
-	nsresult  rv = NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
 
-	NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+  if (!aRegion || !mClipRegion)
+    return NS_ERROR_NULL_POINTER;
 
-	if (nsnull == *aRegion)
-	{
-		nsRegionBeOS *rgn = new nsRegionBeOS();
-
-		if(nsnull != rgn)
-		{
-			NS_ADDREF(rgn);
-
-			rv = rgn->Init();
-
-			if (NS_OK == rv)
-				*aRegion = rgn;
-			else
-				NS_RELEASE(rgn);
+  if (mClipRegion) {
+    if (*aRegion) { // copy it, they should be using CopyClipRegion 
+      (*aRegion)->SetTo(*mClipRegion);
+      rv = NS_OK;
+    } else {
+      nsCOMPtr<nsIRegion> newRegion = do_CreateInstance(kRegionCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        newRegion->Init();
+        newRegion->SetTo(*mClipRegion);
+        NS_ADDREF(*aRegion = newRegion);
+      }
+    }
+  } else {
+    printf("null clip region, can't make a valid copy\n");
+    rv = NS_ERROR_FAILURE;
 		}
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	if (rv == NS_OK)
-		(*aRegion)->SetTo(*mRegion);
 
 	return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetColor(nscolor aColor)
 {
+  if (nsnull == mContext)  
+    return NS_ERROR_FAILURE;
+
 	mCurrentColor = aColor;
-	mColor.red = mGammaTable[NS_GET_R(aColor)];
-	mColor.green = mGammaTable[NS_GET_G(aColor)];
-	mColor.blue = mGammaTable[NS_GET_B(aColor)];
-	mColor.alpha = 255;	// solid
-	if(mView)
-	{
-		if(mView->LockLooper())
-		{
-			mView->SetHighColor(mColor);
-			mView->UnlockLooper();
-		}
-		else
-			mView->SetHighColor(mColor);
-	}
+
 	return NS_OK;
 }
 
@@ -570,9 +464,12 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetFont(const nsFont& aFont)
 {
-	NS_IF_RELEASE(mFontMetrics);
-	mContext->GetMetricsFor(aFont, mFontMetrics);
-	return SetFont(mFontMetrics);
+  nsCOMPtr<nsIFontMetrics> newMetrics;
+  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetFont(newMetrics);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetFont(nsIFontMetrics *aFontMetrics)
@@ -586,56 +483,41 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetFont(nsIFontMetrics *aFontMetrics)
 		nsFontHandle  fontHandle;
 		mFontMetrics->GetFontHandle(fontHandle);
 		mCurrentFont = (BFont *)fontHandle;
-		
-		if(mView && mView->LockLooper())
-		{
-			mView->SetFont(mCurrentFont);
-			mView->UnlockLooper();
-		}
 	}
 	
 	return NS_OK;
 }
 
-// #pragma mark checkme
 NS_IMETHODIMP nsRenderingContextBeOS::SetLineStyle(nsLineStyle aLineStyle)
 {
   if (aLineStyle != mCurrentLineStyle)
   {
-printf("nsRenderingContextBeOS::SetLineStyle not implemented!\n");
-#if 0
     switch(aLineStyle)
     { 
       case nsLineStyle_kSolid:
-        ::gdk_gc_set_line_attributes(mSurface->gc,
-                          1, GDK_LINE_SOLID, (GdkCapStyle)0, (GdkJoinStyle)0);
+        {
+        }
         break;
 
-      case nsLineStyle_kDashed: {
-        static char dashed[2] = {4,4};
+      case nsLineStyle_kDashed:
+        {
+        }
+        break;
 
-        ::gdk_gc_set_dashes(mSurface->gc, 
-                     0, dashed, 2);
-        } break;
-
-      case nsLineStyle_kDotted: {
-        static char dotted[2] = {3,1};
-
-        ::gdk_gc_set_dashes(mSurface->gc, 
-                     0, dotted, 2);
-         }break;
+      case nsLineStyle_kDotted:
+        {
+        }
+        break;
 
       default:
         break;
 
     }
-#endif
 
     mCurrentLineStyle = aLineStyle;
   }
 
   return NS_OK;
-
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetLineStyle(nsLineStyle &aLineStyle)
@@ -654,20 +536,20 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetFontMetrics(nsIFontMetrics *&aFontMetri
 // add the passed in translation to the current translation
 NS_IMETHODIMP nsRenderingContextBeOS::Translate(nscoord aX, nscoord aY)
 {
-	mTMatrix->AddTranslation((float)aX,(float)aY);
+  mTranMatrix->AddTranslation((float)aX,(float)aY);
 	return NS_OK;
 }
 
 // add the passed in scale to the current scale
 NS_IMETHODIMP nsRenderingContextBeOS::Scale(float aSx, float aSy)
 {
-	mTMatrix->AddScale(aSx, aSy);
+  mTranMatrix->AddScale(aSx, aSy);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetCurrentTransform(nsTransform2D *&aTransform)
 {
-	aTransform = mTMatrix;
+  aTransform = mTranMatrix;
 	return NS_OK;
 }
 
@@ -675,76 +557,95 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
+  if (nsnull == mSurface) {
        aSurface=nsnull;
-
-       //allocate a new surface
-	nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
-       if (surf==NULL) {
-               //there wasn't enough memory
-               return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_FAILURE;
        }
 
-       //we own this surface
-		NS_ADDREF(surf);
+  if (aBounds == NULL) return NS_ERROR_FAILURE;
+  if ((aBounds->width <= 0) || (aBounds->height <= 0)) return NS_ERROR_FAILURE;
 
-       int w=0, h=0;
-       if (aBounds!=NULL) {
-               w=aBounds->width;
-               h=aBounds->height;
-       }
+  nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
 
-       nsresult rv=surf->Init(mMainView, w, h, aSurfFlags);
-       if (NS_FAILED(rv)) {
-               //the surface is invalid - get rid of it
-               NS_RELEASE(surf);
-               surf=nsnull;
+  if (surf)
+  {
+    NS_ADDREF(surf);
+    if(!mView)
+      UpdateView();
+    surf->Init(mView, aBounds->width, aBounds->height, aSurfFlags);
 	}
 
-       //return the new surface
 	aSurface = (nsDrawingSurface)surf;
 
-       return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
 	nsDrawingSurfaceBeOS *surf = (nsDrawingSurfaceBeOS *)aDS;
+
+  if(surf == NULL) return NS_ERROR_FAILURE;
 	
-	// are we using the surface that we want to kill?
-	if(surf == mSurface)
+  NS_IF_RELEASE(surf);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 	{
-		// remove our local ref to the surface
-		NS_IF_RELEASE(mSurface);
+  nscoord diffX,diffY;
 
-		mView = mMainView;
-		mSurface = mMainSurface;
+  if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
+  if (mSurface == NULL) return NS_ERROR_FAILURE;
 
-		// two pointers: two refs
-		NS_IF_ADDREF(mSurface);
+  mTranMatrix->TransformCoord(&aX0,&aY0);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
+
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
 	}
 
-	// release it...
-	NS_IF_RELEASE(surf);
+  UpdateView();
+
+  if(mView && mView->LockLooper())
+  {
+    mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1-diffX, aY1-diffY));
+    
+    mView->UnlockLooper();
+  }
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+NS_IMETHODIMP nsRenderingContextBeOS::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-	if(nsLineStyle_kNone == mCurrentLineStyle)
-		return NS_OK;
+  nscoord diffX,diffY;
 	
-	mTMatrix->TransformCoord(&aX0, &aY0);
-	mTMatrix->TransformCoord(&aX1, &aY1);
+  if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
+  if (mSurface == NULL) return NS_ERROR_FAILURE;
 
-	if (aY0 != aY1)
-		aY1--;
-	if (aX0 != aX1)
-		aX1--;
+  diffX = aX1 - aX0;
+  diffY = aY1 - aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
+  }
+
+  UpdateView();
 
 	if(mView && mView->LockLooper())
 	{
-		mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1, aY1));	// FIXME: add line style
+    mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1-diffX, aY1-diffY));
+    
 		mView->UnlockLooper();
 	}
 	
@@ -753,39 +654,31 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	if(nsLineStyle_kNone == mCurrentLineStyle)
-		return NS_OK;
+  PRInt32 i;
 	
-	// First transform nsPoint's into BPoint's; perform coordinate space
-	// transformation at the same time
-	BPoint pts[20];
-	BPoint *pp0 = pts;
+  if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
+  if (mSurface == NULL) return NS_ERROR_FAILURE;
 	
-	if(aNumPoints > 20)
-		pp0 = new BPoint[aNumPoints];
-	
-	BPoint *pp = pp0;
-	const nsPoint *np = &aPoints[0];
-	
-	for(PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
+  BPoint *pts = new BPoint[aNumPoints];
+  for (i = 0; i < aNumPoints; i++)
 	{
-		int x = np->x;
-		int y = np->y;
-		mTMatrix->TransformCoord(&x, &y);
-		pp->x = x;
-		pp->y = y;
+    nsPoint p = aPoints[i];
+    mTranMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
+    pts[i].y = p.y;
+    printf("(%i,%i)\n", p.x, p.y);
 	}
+
+  UpdateView();
 	
-	// Draw the polyline
 	if(mView && mView->LockLooper())
 	{
-		mView->StrokePolygon(pp0, aNumPoints, false);	// FIXME: add line style
+    mView->StrokePolygon(pts, aNumPoints, false);
+    
 		mView->UnlockLooper();
 	}
 
-	// Release temporary storage if necessary
-	if(pp0 != pts)
-		delete pp0;
+  delete[] pts;
 	
 	return NS_OK;
 }
@@ -797,6 +690,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 	
 	x = aX;
@@ -804,9 +701,19 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawRect(nscoord aX, nscoord aY, nscoord a
 	w = aWidth;
 	h = aHeight;
 	
-	mTMatrix->TransformCoord(&x, &y, &w, &h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-	// Draw the rect
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
+  // Don't draw empty rectangles; also, w/h are adjusted down by one
+  // so that the right number of pixels are drawn.
+  if (w && h) {
+
+    UpdateView();
+
 	if(mView && mView->LockLooper())
 	{
 		if( 1 == h )
@@ -818,6 +725,8 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawRect(nscoord aX, nscoord aY, nscoord a
 		mView->UnlockLooper();
 	}
 
+  }
+
 	return NS_OK;
 }
 
@@ -828,16 +737,29 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextBeOS::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 	
 	x = aX;
 	y = aY;
 	w = aWidth;
 	h = aHeight;
+
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
 	
-	mTMatrix->TransformCoord(&x, &y, &w, &h);
+  if (w && h)
+  {
+
+    UpdateView();
 	
-	// Fill the rect
 	if(mView && mView->LockLooper())
 	{
 		if( 1 == h )
@@ -849,94 +771,111 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillRect(nscoord aX, nscoord aY, nscoord a
 		mView->UnlockLooper();
 	}
 
+  }
+  
 	return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsRenderingContextBeOS :: InvertRect(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextBeOS::InvertRect(const nsRect& aRect)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextBeOS::InvertRect");
-
-  return NS_OK;
+  return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP 
-nsRenderingContextBeOS :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextBeOS::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextBeOS::InvertRect");
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+}
 
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
+  if (w && h)
+  {
+  
+    UpdateView();
+
+    if(mView && mView->LockLooper())
+    {
+      if( 1 == h )
+{
+        mView->StrokeLine(BPoint(x, y), BPoint(x + w-1, y));	// FIXME: add line style
+      }
+      else
+        mView->FillRect(BRect(x, y, x + w - 1, y + h - 1), B_SOLID_LOW);
+      mView->UnlockLooper();
+    }
+
+  }
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	// First transform nsPoint's into BPoint's; perform coordinate space
-	// transformation at the same time
-	BPoint pts[20];
-	BPoint *pp0 = pts;
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
 	
-	if(aNumPoints > 20)
-		pp0 = new BPoint[aNumPoints];
-	
-	BPoint *pp = pp0;
-	const nsPoint *np = &aPoints[0];
-	
-	for(PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
+  BPoint *pts = new BPoint[aNumPoints];
+  for (PRInt32 i = 0; i < aNumPoints; i++)
 	{
-		int x = np->x;
-		int y = np->y;
-		mTMatrix->TransformCoord(&x, &y);
-		pp->x = x;
-		pp->y = y;
+    nsPoint p = aPoints[i];
+    mTranMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
+    pts[i].y = p.y;
 	}
+
+  UpdateView();
 	
-	// Draw the polyline
 	if(mView && mView->LockLooper())
 	{
-		// FIXME: ignore linestyle, like Windows???
-		mView->StrokePolygon(pp0, aNumPoints, true, B_SOLID_HIGH);
+	mView->StrokePolygon(pts, aNumPoints, true, B_SOLID_HIGH);
+    
 		mView->UnlockLooper();
 	}
 
-	// Release temporary storage if necessary
-	if(pp0 != pts)
-		delete pp0;
+  delete[] pts;
 	
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	// First transform nsPoint's into BPoint's; perform coordinate space
-	// transformation at the same time
-	BPoint pts[20];
-	BPoint *pp0 = pts;
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
 	
-	if(aNumPoints > 20)
-		pp0 = new BPoint[aNumPoints];
-	
-	BPoint *pp = pp0;
-	const nsPoint *np = &aPoints[0];
-	
-	for(PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
+  BPoint *pts = new BPoint[aNumPoints];
+  for (PRInt32 i = 0; i < aNumPoints; i++)
 	{
-		int x = np->x;
-		int y = np->y;
-		mTMatrix->TransformCoord(&x, &y);
-		pp->x = x;
-		pp->y = y;
+    nsPoint p = aPoints[i];
+    mTranMatrix->TransformCoord(&p.x,&p.y);
+    pts[i].x = p.x;
+    pts[i].y = p.y;
 	}
+
+  UpdateView();
 	
-	// Fill the polygon
 	if(mView && mView->LockLooper())
 	{
-		mView->FillPolygon(pp0, aNumPoints, B_SOLID_HIGH);
+    mView->FillPolygon(pts, aNumPoints, B_SOLID_HIGH);
+    
 		mView->UnlockLooper();
 	}
 
-	// Release temporary storage if necessary
-	if(pp0 != pts)
-		delete pp0;
+  delete[] pts;
 	
 	return NS_OK;
 }
@@ -948,6 +887,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 	
 	x = aX;
@@ -955,12 +898,14 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawEllipse(nscoord aX, nscoord aY, nscoor
 	w = aWidth;
 	h = aHeight;
 	
-	mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 	
-	// Draw the ellipse
+  UpdateView();
+	
 	if(mView && mView->LockLooper())
 	{
-		mView->StrokeEllipse(BRect(x, y, x + w - 1, y + h - 1));	// FIXME: add line style
+    mView->StrokeEllipse(BRect(x, y, x + w - 1, y + h - 1));
+
 		mView->UnlockLooper();
 	}
 	
@@ -974,19 +919,25 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextBeOS::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 
 	x = aX;
 	y = aY;
 	w = aWidth;
 	h = aHeight;
+	
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-	mTMatrix->TransformCoord(&x,&y,&w,&h);
+  UpdateView();
 
-	// Fill the ellipse
 	if(mView && mView->LockLooper())
 	{
-		mView->FillEllipse(BRect(x, y, x + w - 1, y + h - 1));	// FIXME: add line style
+    mView->FillEllipse(BRect(x, y, x + w - 1, y + h - 1));
+
 		mView->UnlockLooper();
 	}
 
@@ -1003,19 +954,25 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 
 	x = aX;
 	y = aY;
 	w = aWidth;
 	h = aHeight;
+	
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-	mTMatrix->TransformCoord(&x,&y,&w,&h);
+  UpdateView();
 
-	// Draw the arc
 	if(mView && mView->LockLooper())
 	{
 		mView->StrokeArc(BRect(x, y, x + w - 1, y + h - 1), aStartAngle, aEndAngle - aStartAngle);	// FIXME: add line style
+    
 		mView->UnlockLooper();
 	}
 
@@ -1033,6 +990,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTranMatrix || nsnull == mSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
 	nscoord x,y,w,h;
 
 	x = aX;
@@ -1040,12 +1001,14 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillArc(nscoord aX, nscoord aY,
 	w = aWidth;
 	h = aHeight;
 
-	mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
-	// Fill the arc
+  UpdateView();
+
 	if(mView && mView->LockLooper())
 	{
 		mView->FillArc(BRect(x, y, x + w - 1, y + h - 1), aStartAngle, aEndAngle - aStartAngle);
+	
 		mView->UnlockLooper();
 	}
 
@@ -1054,17 +1017,19 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillArc(nscoord aX, nscoord aY,
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(char aC, nscoord &aWidth)
 {
-	char buf[1];
-	buf[0] = aC;
-	return GetWidth(buf, 1, aWidth);
+  // Check for the very common case of trying to get the width of a single
+  // space.
+  if ((aC == ' ') && (nsnull != mFontMetrics)) {
+    nsFontMetricsBeOS *fontMetricsBeOS = (nsFontMetricsBeOS*)mFontMetrics;
+    return fontMetricsBeOS->GetSpaceWidth(aWidth);
+  }
+  return GetWidth(&aC, 1, aWidth);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(PRUnichar aC, nscoord& aWidth,
                                 PRInt32* aFontID)
 {
-	PRUnichar buf[1];
-	buf[0] = aC;
-	return GetWidth(buf, 1, aWidth, aFontID);
+  return GetWidth(&aC, 1, aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const nsString& aString,
@@ -1073,19 +1038,23 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const nsString& aString,
 	return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
-NS_IMETHODIMP
-nsRenderingContextBeOS::GetWidth(const char* aString, nscoord& aWidth)
+NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char* aString, nscoord& aWidth)
 {
 	return GetWidth(aString, strlen(aString), aWidth);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char* aString, PRUint32 aLength,
                                 nscoord& aWidth)
-{
-	if(mView && mView->LockLooper())
 	{
-		aWidth = nscoord(mView->StringWidth(aString, aLength) * mP2T);
-		mView->UnlockLooper();
+  PRUint32 rawWidth = 0;
+  
+  if (0 == aLength) {
+    aWidth = 0;
+  }
+  else {
+    if (aString == NULL) return NS_ERROR_FAILURE;
+    rawWidth = mCurrentFont->StringWidth(aString, aLength);
+    aWidth = NSToCoordRound(rawWidth * mP2T);
 	}  
 	return NS_OK;
 }
@@ -1124,10 +1093,16 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const PRUnichar* aString, PRUint3
 {
 	uint8 *utf8str = new uint8 [aLength * 4 + 1];	// max UTF-8 string length
 	uint8 *utf8ptr = utf8str;
+	uint32 utf8str_len;
 	const uint16 *uniptr = aString;
+	
 	for(PRUint32 i = 0; i < aLength; i++)
 		convert_to_utf8(utf8ptr, uniptr);
-	GetWidth((char *)utf8str, aLength, aWidth);
+	*utf8ptr = '\0';
+	utf8str_len = strlen(utf8str);
+	
+	GetWidth((char *)utf8str, utf8str_len, aWidth);
+	
 	delete [] utf8str;
 
 	return NS_OK;
@@ -1137,21 +1112,21 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
                                   nscoord aX, nscoord aY,
                                   const nscoord* aSpacing)
 {
-	if(! aLength)
-		return NS_OK;
+  if (0 != aLength) {
+    if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
+    if (mSurface == NULL) return NS_ERROR_FAILURE;
+    if (aString == NULL) return NS_ERROR_FAILURE;
 
-	PRInt32	x = aX;
-	PRInt32 y = aY;
+    nscoord x = aX;
+    nscoord y = aY;
 
 	// Substract xFontStruct ascent since drawing specifies baseline
-	if(mFontMetrics)
-	{
+    if (mFontMetrics) {
 		mFontMetrics->GetMaxAscent(y);
 		y += aY;
 	}
 
-	mTMatrix->TransformCoord(&x, &y);
-	y++;	// BView::DrawString quirk
+    UpdateView();
 
 	if(mView && mView->LockLooper())
 	{
@@ -1159,33 +1134,30 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 		// but it's the easiest way to render antialiased text correctly
 		mView->SetDrawingMode(B_OP_OVER);
 
-		if(nsnull != aSpacing)
-		{
-			PRIntn dxMem[500];
-			PRIntn *dx0;
-			PRInt32 currentX = x;
+      if (nsnull != aSpacing) {
+        // Render the string, one character at a time...
+        const char* end = aString + aLength;
+        while (aString < end) {
+          char ch = *aString++;
+          nscoord xx = x;
+          nscoord yy = y;
+          mTranMatrix->TransformCoord(&xx, &yy);
 
-			dx0 = dxMem;
-			if(aLength > 500)
-				dx0 = new PRIntn[aLength];
-			mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
-
-			for(PRUint32 i = 0; i < aLength; i++)
-			{
-				mView->DrawString(&aString[i], 1L, BPoint(currentX, y));
-				currentX += dx0[i];
+			// yy++; DrawString quirk!
+          mView->DrawString(&ch, 1L, BPoint(xx, yy));
+          x += *aSpacing++;
 			}
-	
-			if((nsnull != aSpacing) && (dx0 != dxMem))
-				delete [] dx0;
 		}
-		else
+      else {
+        mTranMatrix->TransformCoord(&x, &y);
 			mView->DrawString(aString, aLength, BPoint(x, y));
+      }
 
 		mView->SetDrawingMode(B_OP_COPY);
 
 		mView->UnlockLooper();
 	}
+  }
 	
 	return NS_OK;
 }
@@ -1197,10 +1169,14 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const PRUnichar* aString, PRUin
 {
 	uint8 *utf8str = new uint8 [aLength * 4 + 1];	// max UTF-8 string length
 	uint8 *utf8ptr = utf8str;
+  uint32 utf8str_len;
 	const uint16 *uniptr = aString;
 	for(PRUint32 i = 0; i < aLength; i++)
 		convert_to_utf8(utf8ptr, uniptr);
-	DrawString((char *)utf8str, aLength, aX, aY, aSpacing);
+  *utf8ptr = '\0';
+  utf8str_len = strlen(utf8str);
+  
+  DrawString((char *)utf8str, utf8str_len, aX, aY, aSpacing);
 	delete [] utf8str;
 	return NS_OK;
 }
@@ -1213,86 +1189,166 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const nsString& aString,
 	return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, 
+                                                nscoord aX, nscoord aY)
 {
 	nscoord width,height;
+
+  // we have to do this here because we are doing a transform below
 	width = NSToCoordRound(mP2T * aImage->GetWidth());
 	height = NSToCoordRound(mP2T * aImage->GetHeight());
 	
 	return DrawImage(aImage, aX, aY, width, height);
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                     nscoord aWidth, nscoord aHeight)
-{
-	nsRect	tr;
-	
-	tr.x = aX;
-	tr.y = aY;
-	tr.width = aWidth;
-	tr.height = aHeight;
-	
-	return DrawImage(aImage,tr);
-}
-
 NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-	nsRect	tr;
-	
-	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-	
-	return aImage->Draw(*this,mSurface,tr.x,tr.y,tr.width,tr.height);
+  return DrawImage(aImage,
+                   aRect.x,
+                   aRect.y,
+                   aRect.width,
+                   aRect.height);
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, 
+                                                nscoord aX, nscoord aY,
+                                                nscoord aWidth, nscoord aHeight)
+{
+  nscoord x, y, w, h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTranMatrix->TransformCoord(&x, &y, &w, &h);
+	
+  UpdateView();
+	
+  return aImage->Draw(*this, mSurface,
+                      x, y, w, h);
+}
+
+
+NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, 
+                                                const nsRect& aSRect, 
+                                                const nsRect& aDRect)
 {
 	nsRect	sr,dr;
 	
 	sr = aSRect;
-	mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+  mTranMatrix->TransformCoord(&sr.x, &sr.y,
+                            &sr.width, &sr.height);
 	
 	dr = aDRect;
-	mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
-	
-	return aImage->Draw(*this,mSurface,sr.x,sr.y,sr.width,sr.height,
-		dr.x,dr.y,dr.width,dr.height);
+  mTranMatrix->TransformCoord(&dr.x, &dr.y,
+                           &dr.width, &dr.height);
+
+  UpdateView();
+  	
+  return aImage->Draw(*this, mSurface,
+                      sr.x, sr.y,
+                      sr.width, sr.height,
+                      dr.x, dr.y,
+                      dr.width, dr.height);
 }
 
-// #pragma mark checkme
+#ifdef USE_NATIVE_TILING
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextBeOS::DrawTile(nsIImage *aImage, 
+                                nscoord aX0, nscoord aY0,
+                                nscoord aX1, nscoord aY1,
+                                nscoord aWidth, nscoord aHeight)
+{
+  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
+
+  nsRect srcRect (0, 0, aWidth,  aHeight);
+  nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
+	
+  ((nsImageBeOS*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextBeOS::DrawTile(nsIImage *aImage,
+                                nscoord aSrcXOffset, nscoord aSrcYOffset,
+                                const nsRect &aTileRect)
+{
+  nsImageBeOS* image = (nsImageBeOS*) aImage;
+
+  nsRect tileRect(aTileRect);
+  nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
+  mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
+                           &srcRect.height);
+  mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y,
+                           &tileRect.width, &tileRect.height);
+
+  if((tileRect.width > 0) && (tileRect.height > 0))
+    image->DrawTile(*this, mSurface, srcRect.width, srcRect.height,
+                    tileRect);
+
+  return NS_OK;
+}
+
+
+#endif
+
+
+
 NS_IMETHODIMP
 nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                          const nsRect &aDestBounds,
                                          PRUint32 aCopyFlags)
-{
-	if((nsnull != aSrcSurf) && (nsnull != mMainView))
 	{
-		PRInt32 x = aSrcX;
-		PRInt32 y = aSrcY;
+  PRInt32               srcX = aSrcX;
+  PRInt32               srcY = aSrcY;
 		nsRect	drect = aDestBounds;
+  nsDrawingSurfaceBeOS *destsurf;
+  
 		BBitmap	*srcbitmap;
 		BView	*srcview;
 		BView	*destview;
 
-		// get back a BBitmap
-		((nsDrawingSurfaceBeOS *)aSrcSurf)->GetBitmap(&srcbitmap);
-		((nsDrawingSurfaceBeOS *)aSrcSurf)->GetView(&srcview);
+  if (aSrcSurf == NULL) return NS_ERROR_FAILURE;
+  if (mTranMatrix == NULL) return NS_ERROR_FAILURE;
+  if (mSurface == NULL) return NS_ERROR_FAILURE;
 
-		if(srcview->LockLooper())
+  UpdateView();
+  
+		// get back a BBitmap
+  ((nsDrawingSurfaceBeOS *)aSrcSurf)->AcquireBitmap(&srcbitmap);
+  ((nsDrawingSurfaceBeOS *)aSrcSurf)->AcquireView(&srcview);
+
+  if(srcbitmap)
 		{
-			if(nsnull != srcbitmap)
+    if(srcview && srcview->LockLooper())
 			{
 				if(aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
 				{
-					NS_ASSERTION(!(nsnull == mView), "no back buffer");
-					destview = mView;
+        NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
+        destsurf = mSurface;
 				}
 				else
-					destview = mMainView;
+        destsurf = mOffscreenSurface;
 
-				if(destview->LockLooper())
+      destsurf->AcquireView(&destview);
+
+      if(destview && destview->LockLooper())
 				{
+
+        if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+          mTranMatrix->TransformCoord(&srcX, &srcY);
+
+        if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+          mTranMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
 					if(aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
 					{
 						BRegion r;
@@ -1300,30 +1356,20 @@ nsRenderingContextBeOS::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 						destview->ConstrainClippingRegion(&r);
 					}
 
-					if(aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-						mTMatrix->TransformCoord(&x, &y);
-
-					if(aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-						mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
-
-					destview->DrawBitmapAsync(srcbitmap, BRect(x, y, x + drect.width - 1, y + drect.height - 1), BRect(drect.x, drect.y, drect.x + drect.width - 1, drect.y + drect.height - 1));
+        destview->DrawBitmapAsync(srcbitmap, BRect(srcX, srcY, srcX + drect.width - 1, srcY + drect.height - 1), BRect(drect.x, drect.y, drect.x + drect.width - 1, drect.y + drect.height - 1));
 					destview->Sync();
+
 					destview->UnlockLooper();
 				}
+      srcview->UnlockLooper();
+    }
 			}
 			else
 				printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: should render from surface without bitmap!?!?!\n");
-//				NS_ASSERTION(0, "attempt to blit with bad BViews");
-
-			srcview->UnlockLooper();
 
 			// kill the source bitmap
 			((nsDrawingSurfaceBeOS *)aSrcSurf)->ReleaseBitmap();
 			((nsDrawingSurfaceBeOS *)aSrcSurf)->ReleaseView();
-		}
-	}
-	else
-		NS_ASSERTION(0, "attempt to blit with bad BViews");
 
 	return NS_OK;
 }

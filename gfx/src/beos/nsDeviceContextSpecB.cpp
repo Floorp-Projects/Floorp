@@ -21,10 +21,24 @@
  */
 
 #include "nsDeviceContextSpecB.h"
+ 
+#include "nsCOMPtr.h" 
+#include "nsIServiceManager.h" 
+ 
+#include "nsIPref.h" 
+#include "prenv.h" /* for PR_GetEnv */ 
+ 
+#include "nsIAppShellComponentImpl.h" 
+#include "nsIDOMWindowInternal.h" 
+#include "nsIServiceManager.h" 
+#include "nsIDialogParamBlock.h" 
+#include "nsINetSupportDialogService.h" 
+ 
+static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID ); 
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID); 
+ 
 //#include "prmem.h"
 //#include "plstr.h"
-
-#include "stdlib.h"  // getenv() on Solaris/CC
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecBeOS
@@ -42,13 +56,52 @@ nsDeviceContextSpecBeOS :: nsDeviceContextSpecBeOS()
  */
 nsDeviceContextSpecBeOS :: ~nsDeviceContextSpecBeOS()
 {
+} 
+ 
+static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID); 
+static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID); 
+ 
+#if 0 
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecBeOS, kDeviceContextSpecIID) 
+NS_IMPL_ADDREF(nsDeviceContextSpecBeOS) 
+NS_IMPL_RELEASE(nsDeviceContextSpecBeOS) 
+#endif 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr) 
+{ 
+  if (nsnull == aInstancePtr) 
+    return NS_ERROR_NULL_POINTER; 
 
+  if (aIID.Equals(kIDeviceContextSpecIID)) 
+  { 
+    nsIDeviceContextSpec* tmp = this; 
+    *aInstancePtr = (void*) tmp; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+ 
+  if (aIID.Equals(kIDeviceContextSpecPSIID)) 
+  { 
+    nsIDeviceContextSpecPS* tmp = this; 
+    *aInstancePtr = (void*) tmp; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  }
 
-}
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecBeOS, kDeviceContextSpecIID)
+  if (aIID.Equals(kISupportsIID)) 
+  { 
+    nsIDeviceContextSpec* tmp = this; 
+    nsISupports* tmp2 = tmp; 
+    *aInstancePtr = (void*) tmp2; 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+ 
+  return NS_NOINTERFACE; 
+} 
+ 
 NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)
 NS_IMPL_RELEASE(nsDeviceContextSpecBeOS)
 
@@ -61,35 +114,193 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: Init(PRBool	aQuiet)
 {
   char *path;
 
-  // XXX for now, neutering this per rickg until dcone can play with it
-  
-  return NS_ERROR_FAILURE;
-#if 0
-  // XXX these settings should eventually come out of preferences 
-
-  mPrData.toPrinter = PR_TRUE;
-  mPrData.fpf = PR_TRUE;
-  mPrData.grayscale = PR_FALSE;
-  mPrData.size = SizeLetter;
-  mPrData.stream = (FILE *) NULL;
+  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE; 
+  PRBool tofile = PR_FALSE; 
+  PRInt32 paper_size = NS_LETTER_SIZE; 
+  int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
+  char *command; 
+  char *printfile = nsnull; 
+ 
+  nsresult rv = NS_OK; 
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock; 
+ 
+  rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 
+                                          nsnull, 
+                                          NS_GET_IID(nsIDialogParamBlock), 
+                                          getter_AddRefs(ioParamBlock)); 
+ 
+  if (NS_SUCCEEDED(rv)) { 
+    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv); 
+    if (NS_SUCCEEDED(rv)) { 
+      nsCOMPtr<nsIDOMWindowInternal> hiddenWindow; 
+      nsCOMPtr<nsIDOMWindowInternal> mWindow; 
+ 
+      JSContext *jsContext; 
+      rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext); 
+      if (NS_SUCCEEDED(rv)) { 
+        void *stackPtr; 
+        jsval *argv = JS_PushArguments(jsContext, 
+                                       &stackPtr, 
+                                       "sss%ip", 
+                                       "chrome://global/content/printdialog.xul", 
+                                       "_blank", 
+                                       "chrome,modal", 
+                                       (const nsIID *) (&NS_GET_IID(nsIDialogParamBlock)), 
+                                       (nsISupports *) ioParamBlock); 
+        if (argv) { 
+          nsCOMPtr<nsIDOMWindowInternal> newWindow; 
+ 
+          rv = hiddenWindow->OpenDialog(jsContext, 
+                                        argv, 
+                                        4, 
+                                        getter_AddRefs(newWindow)); 
+ 
+          if (NS_SUCCEEDED(rv)) { 
+            JS_PopArguments(jsContext, stackPtr); 
+            PRInt32 buttonPressed = 0; 
+            ioParamBlock->GetInt(0, &buttonPressed); 
+            if (buttonPressed == 0) { 
+              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+              if (NS_SUCCEEDED(rv) && pPrefs) { 
+                (void) pPrefs->GetBoolPref("print.print_reversed", &reversed); 
+                (void) pPrefs->GetBoolPref("print.print_color", &color); 
+                (void) pPrefs->GetBoolPref("print.print_landscape", &landscape); 
+                (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size); 
+                (void) pPrefs->CopyCharPref("print.print_command", (char **) &command); 
+                (void) pPrefs->GetIntPref("print.print_margin_top", &itop); 
+                (void) pPrefs->GetIntPref("print.print_margin_left", &ileft); 
+                (void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom); 
+                (void) pPrefs->GetIntPref("print.print_margin_right", &iright); 
+                (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile); 
+                (void) pPrefs->GetBoolPref("print.print_tofile", &tofile); 
+                sprintf( mPrData.command, command ); 
+                sprintf( mPrData.path, printfile ); 
+              } else { 
+#ifndef VMS 
   sprintf( mPrData.command, "lpr" );
+#else 
+                // Note to whoever puts the "lpr" into the prefs file. Please contact me 
+                // as I need to make the default be "print" instead of "lpr" for OpenVMS. 
+                sprintf( mPrData.command, "print" ); 
+#endif 
+              } 
+ 
+              mPrData.top = itop / 1000.0; 
+              mPrData.bottom = ibottom / 1000.0; 
+              mPrData.left = ileft / 1000.0; 
+              mPrData.right = iright / 1000.0; 
+              mPrData.fpf = !reversed; 
+              mPrData.grayscale = !color; 
+              mPrData.size = paper_size; 
+              mPrData.toPrinter = !tofile; 
 
   // PWD, HOME, or fail 
 
-  if ( ( path = getenv( "PWD" ) ) == (char *) NULL ) 
-	if ( ( path = getenv( "HOME" ) ) == (char *) NULL )
+              if (!printfile) { 
+                if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+                   if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
   		strcpy( mPrData.path, "mozilla.ps" );
   if ( path != (char *) NULL )
 	sprintf( mPrData.path, "%s/mozilla.ps", path );
   else
 	return NS_ERROR_FAILURE;
+              }
 
-  ::UnixPrDialog( &mPrData );
-  if ( mPrData.cancel == PR_TRUE ) 
+              return NS_OK; 
+            } 
+          } 
+        } 
+      } 
+    } 
+  } 
+ 
 	return NS_ERROR_FAILURE;
-  else
+ 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetToPrinter( PRBool &aToPrinter )     
+{ 
+  aToPrinter = mPrData.toPrinter;
         return NS_OK;
-#endif
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetFirstPageFirst ( PRBool &aFpf )      
+{ 
+  aFpf = mPrData.fpf; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetGrayscale ( PRBool &aGrayscale )      
+{ 
+  aGrayscale = mPrData.grayscale; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetSize ( int &aSize )      
+{ 
+  aSize = mPrData.size; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetPageDimensions ( float &aWidth, float &aHeight )      
+{ 
+    if ( mPrData.size == NS_LETTER_SIZE ) { 
+        aWidth = 8.5; 
+        aHeight = 11.0; 
+    } else if ( mPrData.size == NS_LEGAL_SIZE ) { 
+        aWidth = 8.5; 
+        aHeight = 14.0; 
+    } else if ( mPrData.size == NS_EXECUTIVE_SIZE ) { 
+        aWidth = 7.5; 
+        aHeight = 10.0; 
+    } else if ( mPrData.size == NS_A4_SIZE ) { 
+        // 210mm X 297mm == 8.27in X 11.69in 
+        aWidth = 8.27; 
+        aHeight = 11.69; 
+    } 
+    return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetTopMargin ( float &value )      
+{ 
+  value = mPrData.top; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetBottomMargin ( float &value )      
+{ 
+  value = mPrData.bottom; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetRightMargin ( float &value )      
+{ 
+  value = mPrData.right; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetLeftMargin ( float &value )      
+{ 
+  value = mPrData.left; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetCommand ( char **aCommand )      
+{ 
+  *aCommand = &mPrData.command[0]; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetPath ( char **aPath )      
+{ 
+  *aPath = &mPrData.path[0]; 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetUserCancelled( PRBool &aCancel )     
+{ 
+  aCancel = mPrData.cancel; 
+  return NS_OK;
 }
 
 /** -------------------------------------------------------
