@@ -29,16 +29,16 @@ _allocated(PR_FALSE)
 {
 }
 
-PRfilebuf::PRfilebuf(PRFileDesc *fd):
+PRfilebuf::PRfilebuf(PRFileDesc *filedesc):
 streambuf(),
-_fd(fd),
+_fd(filedesc),
 _opened(PR_FALSE),
 _allocated(PR_FALSE)
 {
 }
 
-PRfilebuf::PRfilebuf(PRFileDesc *fd, char * buffptr, int bufflen):
-_fd(fd),
+PRfilebuf::PRfilebuf(PRFileDesc *filedesc, char * buffptr, int bufflen):
+_fd(filedesc),
 _opened(PR_FALSE),
 _allocated(PR_FALSE)
 {
@@ -120,10 +120,10 @@ PRfilebuf::open(const char *name, int mode, int flags)
 }
 
 PRfilebuf*	
-PRfilebuf::attach(PRFileDesc *fd)
+PRfilebuf::attach(PRFileDesc *filedesc)
 {
     _opened = PR_FALSE;
-    _fd = fd;
+    _fd = filedesc;
     return this;
 }
 
@@ -279,23 +279,23 @@ ostream(new PRfilebuf)
     _PRSTR_DELBUF(0);
 }
 
-PRofstream::PRofstream(PRFileDesc *fd):
-ostream(new PRfilebuf(fd))
+PRofstream::PRofstream(PRFileDesc *filedesc):
+ostream(new PRfilebuf(filedesc))
 {
     _PRSTR_DELBUF(0);
 }
 
-PRofstream::PRofstream(PRFileDesc *fd, char *buff, int bufflen):
-ostream(new PRfilebuf(fd, buff, bufflen))
+PRofstream::PRofstream(PRFileDesc *filedesc, char *buff, int bufflen):
+ostream(new PRfilebuf(filedesc, buff, bufflen))
 {
     _PRSTR_DELBUF(0);
 }
 
-PRofstream::PRofstream(const char *name, int mode, int flags):
+PRofstream::PRofstream(const char *name, int mode, int aFlags):
 ostream(new PRfilebuf)
 {
     _PRSTR_DELBUF(0);
-    if (!rdbuf()->open(name, (mode|ios::out), flags))
+    if (!rdbuf()->open(name, (mode|ios::out), aFlags))
         clear(rdstate() | ios::failbit);
 }
 
@@ -320,16 +320,16 @@ PRofstream::setbuf(char * ptr, int len)
 }
 
 void 
-PRofstream::attach(PRFileDesc *fd)
+PRofstream::attach(PRFileDesc *filedesc)
 {
-    if (!(rdbuf()->attach(fd)))
+    if (!(rdbuf()->attach(filedesc)))
         clear(rdstate() | ios::failbit);
 }
 
 void 
-PRofstream::open(const char * name, int mode, int flags)
+PRofstream::open(const char * name, int mode, int aFlags)
 {
-    if (is_open() || !(rdbuf()->open(name, (mode|ios::out), flags)))
+    if (is_open() || !(rdbuf()->open(name, (mode|ios::out), aFlags)))
         clear(rdstate() | ios::failbit);
 }
 
