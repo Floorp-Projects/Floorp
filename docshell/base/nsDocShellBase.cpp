@@ -27,13 +27,19 @@
 //***    nsDocShellBase: Object Management
 //*****************************************************************************
 
-nsDocShellBase::nsDocShellBase()
+nsDocShellBase::nsDocShellBase() : m_Created(PR_FALSE)
 {
 	NS_INIT_REFCNT();
+   m_BaseInitInfo = new nsDocShellInitInfo();
 }
 
 nsDocShellBase::~nsDocShellBase()
 {
+   if(m_BaseInitInfo)
+      {
+      delete m_BaseInitInfo;
+      m_BaseInitInfo = nsnull;
+      }
 }
 
 //*****************************************************************************
@@ -122,40 +128,35 @@ NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* name)
 NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** presContext)
 {
    NS_ENSURE_ARG_POINTER(presContext);
-   //XXX First Check
-	/*
-	Presentation context
-	*/
-   return NS_ERROR_FAILURE;
+
+   *presContext = m_PresContext;
+   NS_IF_ADDREF(*presContext);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetPresContext(nsIPresContext* presContext)
 {
-   //XXX First Check
-   /*
-   Presentation context
-   */
-   return NS_ERROR_FAILURE;
+   m_PresContext = presContext;
+   
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
 {
    NS_ENSURE_ARG_POINTER(parent);
-   //XXX First Check
-	/*
-	Parent DocShell
-	*/
-   return NS_ERROR_FAILURE;
+
+   *parent = m_Parent;
+   NS_IF_ADDREF(*parent);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* parent)
 {
-   //XXX First Check
-	/*
-	Parent DocShell
-	*/
-   return NS_ERROR_FAILURE;
+   m_Parent = parent;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType, 
@@ -306,39 +307,21 @@ NS_IMETHODIMP nsDocShellBase::GetPrintable(PRBool* printable)
 NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   //XXX First Check
-	/*
-	Allows a client to initialize an object implementing this interface with
-	the usually required window setup information.
+   NS_ENSURE_ARG(parentWidget);  // DocShells must get a widget for a parent
+   NS_ENSURE_STATE(!m_Created && m_BaseInitInfo);
 
-	@param parentNativeWindow - This allows a system to pass in the parenting
-		window as a native reference rather than relying on the calling
-		application to have created the parent window as an nsIWidget.  This 
-		value will be ignored (should be nsnull) if an nsIWidget is passed in to
-		the parentWidget parameter.  One of the two parameters however must be
-		passed.
+   m_ParentWidget = parentWidget;
+   m_BaseInitInfo->x = x;
+   m_BaseInitInfo->y = y;
+   m_BaseInitInfo->cx = cx;
+   m_BaseInitInfo->cy = cy;
 
-	@param parentWidget - This allows a system to pass in the parenting widget.
-		This allows some objects to optimize themselves and rely on the view
-		system for event flow rather than creating numerous native windows.  If
-		one of these is not available, nsnull should be passed and a 
-		valid native window should be passed to the parentNativeWindow parameter.
-
-	@param x - This is the x co-ordinate relative to the parent to place the
-		window.
-
-	@param y - This is the y co-ordinate relative to the parent to place the 
-		window.
-
-	@param cx - This is the width	for the window to be.
-
-	@param cy - This is the height for the window to be.
-	*/
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::Create()
 {
+   // Use m_BaseInitInfo to do create
    //XXX First Check
 	/*
 	Tells the window that intialization and setup is complete.  When this is
@@ -365,53 +348,86 @@ NS_IMETHODIMP nsDocShellBase::Destroy()
 
 NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
 {
-   //XXX First Check
-	/*
-	Sets the current x and y coordinates of the control.  This is relative to
-	the parent window.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_BaseInitInfo->x = x;
+      m_BaseInitInfo->y = y;
+      }
+   else
+      {
+      //XXX Manipulate normal position stuff
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
-   //XXX First Check
-	/*
-	Gets the current x and y coordinates of the control.  This is relatie to the
-	parent window.
-	*/
-   return NS_ERROR_FAILURE;
+
+   if(!m_Created)
+      {
+      *x = m_BaseInitInfo->x;
+      *y = m_BaseInitInfo->y;
+      }
+   else
+      {
+      //XXX query normal position objects
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check
-	/*
-	Sets the width and height of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_BaseInitInfo->cx = cx;
+      m_BaseInitInfo->cy = cy;
+      }
+   else
+      {
+      // XXX Do Normal Size Stuff
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
-   //XXX First Check
-	/*
-	Gets the width and height of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      *cx = m_BaseInitInfo->cx;
+      *cy = m_BaseInitInfo->cy;
+      }
+   else
+      {
+      //XXX Query normal Size Objects
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
-   //XXX First Check
-	/*
-	Convenience function combining the SetPosition and SetSize into one call.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      {
+      m_BaseInitInfo->x = x;
+      m_BaseInitInfo->y = y;
+      m_BaseInitInfo->cx = cx;
+      m_BaseInitInfo->cy = cy;
+      }
+   else
+      {
+      // XXX Do normal size and position stuff.  Could just call 
+      // Size and then Position, but underlying control probably supports 
+      // some optimized setting of both like this.
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SizeToContent()
@@ -438,80 +454,73 @@ NS_IMETHODIMP nsDocShellBase::GetParentWidget(nsIWidget** parentWidget)
 {
    NS_ENSURE_ARG_POINTER(parentWidget);
 
-   //XXX First Check
-	/*			  
-	This is the parenting widget for the control.  This may be null if only the
-	native window was handed in for the parent during initialization.  If this
-	is returned, it should refer to the same object as parentNativeWindow.
-	*/
-   return NS_ERROR_FAILURE;
+   *parentWidget = m_ParentWidget;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetParentWidget(nsIWidget* parentWidget)
 {
-   //XXX First Check
-	/*			  
-	This is the parenting widget for the control.  This may be null if only the
-	native window was handed in for the parent during initialization.  If this
-	is returned, it should refer to the same object as parentNativeWindow.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(!m_Created);
+
+   m_ParentWidget = parentWidget;
+
+   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsDocShellBase::GetParentNativeWindow(nativeWindow* parentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
-   //XXX First Check
-	/*
-	This is the native window parent of the control.
-	*/
-   return NS_ERROR_FAILURE;
+
+   if(m_ParentWidget)
+      *parentNativeWindow = m_ParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+   else
+      *parentNativeWindow = nsnull;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetParentNativeWindow(nativeWindow parentNativeWindow)
 {
-   //XXX First Check
-	/*
-	This is the native window parent of the control.
-	*/
-   return NS_ERROR_FAILURE;
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* visibility)
 {
    NS_ENSURE_ARG_POINTER(visibility);
 
-   //XXX First Check
-	/*
-	Attribute controls the visibility of the object behind this interface.
-	Setting this attribute to false will hide the control.  Setting it to 
-	true will show it.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      *visibility = m_BaseInitInfo->visible;
+   else
+      {
+      //XXX Query underlying control
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetVisibility(PRBool visibility)
 {
-   //XXX First Check
-	/*
-	Attribute controls the visibility of the object behind this interface.
-	Setting this attribute to false will hide the control.  Setting it to 
-	true will show it.
-	*/
-   return NS_ERROR_FAILURE;
+   if(!m_Created)
+      m_BaseInitInfo->visible = visibility;
+   else
+      {
+      // XXX Set underlying control visibility
+      }
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);
-   //XXX First Check
-	/*
-	Allows you to find out what the widget is of a given object.  Depending
-	on the object, this may return the parent widget in which this object
-	lives if it has not had to create it's own widget.
-	*/
-   return NS_ERROR_FAILURE;
+
+   // For now we don't create our own widget, so simply return the parent one. 
+   *mainWidget = m_ParentWidget;
+   NS_IF_ADDREF(*mainWidget);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetFocus()
