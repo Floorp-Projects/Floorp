@@ -325,6 +325,18 @@
       (depict markup-stream "}"))))
 
 
+; (exclude-zero <type>)
+;   "<type1> - {0}"
+(defun depict-exclude-zero (markup-stream world level type-expr)
+  (depict-type-parentheses (markup-stream level %%type%%)
+    (depict-logical-block (markup-stream 0)
+      (depict-type-expr markup-stream world type-expr %%suffix%%)
+      (depict-space markup-stream)
+      (depict markup-stream :minus)
+      (depict-break markup-stream 1)
+      (depict markup-stream "{0}"))))
+
+
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
 ;   "<arg-type1> x ... x <arg-typen> -> <result-type>"
 (defun depict--> (markup-stream world level arg-type-exprs result-type-expr)
@@ -408,6 +420,12 @@
   (depict-type-expr markup-stream world element-type-expr level))
 
 
+; (delay <element-type>)
+;   "<element-type>"
+(defun depict-delay (markup-stream world level element-type-expr)
+  (depict-type-expr markup-stream world element-type-expr level))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING EXPRESSIONS
 
@@ -459,12 +477,16 @@
           (depict markup-stream "("))
         (when sign
           (depict markup-stream :minus))
-        (depict markup-stream s)
-        (when e
-          (depict markup-stream :cartesian-product-10 "10")
-          (depict-char-style (markup-stream :superscript)
-            (depict-integer markup-stream e))
-          (depict markup-stream ")")))
+        (if e
+          (progn
+            (unless (equal s "1")
+              (depict markup-stream s)
+              (depict markup-stream :cartesian-product-10))
+            (depict markup-stream "10")
+            (depict-char-style (markup-stream :superscript)
+              (depict-integer markup-stream e))
+            (depict markup-stream ")"))
+          (depict markup-stream s)))
       (depict-char-style (markup-stream :subscript)
         (depict-char-style (markup-stream :tag-name)
           (depict markup-stream suffix))))))
@@ -617,6 +639,8 @@
 ; (lisp-call <lisp-function> <arg-exprs> <result-type-expr> . <styled-text>)
 ; <styled-text> can contain the entry (:operand <n>) to depict the nth operand, with n starting from 0.
 (defun depict-lisp-call (markup-stream world level arg-annotated-exprs &rest text)
+  (when (endp text)
+    (error "lisp-call needs a text comment"))
   (let ((*operand-depictor* #'(lambda (markup-stream n)
                                 (depict-expression markup-stream world (nth n arg-annotated-exprs) %expr%))))
     (depict-expr-parentheses (markup-stream level %factor%)
@@ -825,6 +849,24 @@
                :separator ","
                :break 1
                :empty nil))
+
+
+; (%list-set <element-expr> ... <element-expr>)
+; (%list-set-of <element-type> <element-expr> ... <element-expr>)
+(defun depict-%list-set-expr (markup-stream world level &rest element-annotated-exprs)
+  (declare (ignore level))
+  (depict-list markup-stream
+               #'(lambda (markup-stream element-annotated-expr)
+                   (depict-expression markup-stream world element-annotated-expr %expr%))
+               element-annotated-exprs
+               :indent 1
+               :prefix "{"
+               :prefix-break :force-compact
+               :suffix "}"
+               :separator ","
+               :break :force-compact
+               :empty nil)
+  (force-compact-next-break markup-stream))
 
 
 ; (range-set-of-ranges <element-type> <low-expr> <high-expr> ... <low-expr> <high-expr>)
