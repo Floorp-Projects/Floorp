@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.165 $ ';
+$::UtilsVersion = '$Revision: 1.166 $ ';
 
 package TinderUtils;
 
@@ -1213,9 +1213,11 @@ sub run_all_tests {
       }
       
       if($test_result eq 'success') {
+        my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+
         print_log "TinderboxPrint:" .
           "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
-            ::hostname() . "&autoscale=1&days=7&avg=1\">Tp:$layout_time" . "ms</a>\n";
+            ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">Tp:$layout_time" . "ms</a>\n";
         
         # Pull out detail data from log.
         my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
@@ -1251,10 +1253,12 @@ sub run_all_tests {
         }
         if($open_time) {
             $test_result = 'success';
+            
+            my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
 
             print_log "TinderboxPrint:" .
                 "<a title=\"Best nav open time of 9 runs\" href=\"http://$Settings::results_server/graph/query.cgi?testname=xulwinopen&tbox=" .
-                    ::hostname() . "&autoscale=1&days=7&avg=1\">Txul:$open_time" . "ms</a>\n";
+                    ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$open_time\">Txul:$open_time" . "ms</a>\n";
 
             # Pull out samples data from log.
             my $raw_data = extract_token_from_file($binary_log, "openingTimes", "=");
@@ -1357,8 +1361,9 @@ sub run_all_tests {
             # print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
             # print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 
+            my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
             my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
-                . ::hostname() . "&autoscale=1&days=7&avg=1\">Ts:" . $min_startuptime . "ms</a>\n\n";
+                . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">Ts:" . $min_startuptime . "ms</a>\n\n";
             print_log "$print_string";
 
             # Report data back to server
