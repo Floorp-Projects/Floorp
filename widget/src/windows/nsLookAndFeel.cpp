@@ -280,7 +280,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 2;
         break;
     case eMetric_ShowCaretDuringSelection:
-        aMetric = 1;
+        aMetric = 0;
         break;
     case eMetric_SubmenuDelay:
         {
