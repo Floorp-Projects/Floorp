@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaiInterfaceHypertext.h"
+#include "nsPIAccessNode.h"
 
 G_BEGIN_DECLS
 
@@ -150,11 +151,12 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     // if the maiHyperlink is not in cache, create it.
     if (!maiNode) {
         maiNode = new MaiHyperlink(hyperLink, nsnull, weakShell);
-        maiNode->Init();  // add to cache.
         if (!maiNode) {
             NS_WARNING("OUT OF MEMORY");
             return nsnull;
         }
+        nsCOMPtr<nsPIAccessNode> pMaiNode = do_QueryInterface(maiNode);
+        pMaiNode->Init();  // add to cache.
     }
 
     // we can get AtkHyperlink from the MaiHyperlink
