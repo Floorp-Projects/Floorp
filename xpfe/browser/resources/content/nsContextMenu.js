@@ -41,6 +41,7 @@ function nsContextMenu( xulMenu ) {
     this.link       = false;
     this.inFrame    = false;
     this.hasBGImage = false;
+    this.inDirList  = false;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -72,14 +73,14 @@ nsContextMenu.prototype = {
     },
     initOpenItems : function () {
         // Remove open/edit link if not applicable.
-        this.showItem( "context-openlink", this.onSaveableLink );
-        this.showItem( "context-editlink", this.onSaveableLink );
+        this.showItem( "context-openlink", this.onSaveableLink || ( this.inDirList && this.onLink ) );
+        this.showItem( "context-editlink", this.onSaveableLink && !this.inDirList );
     
         // Remove open frame if not applicable.
         this.showItem( "context-openframe", this.inFrame );
     
         // Remove separator after open items if neither link nor frame.
-        this.showItem( "context-sep-open", this.onSaveableLink || this.inFrame );
+        this.showItem( "context-sep-open", this.onSaveableLink || ( this.inDirList && this.onLink ) || this.inFrame );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
@@ -96,7 +97,8 @@ nsContextMenu.prototype = {
         this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        // Save page is always OK.
+        // Save page is always OK, unless in directory listing.
+        this.showItem( "context-savepage", !this.inDirList );
     
         // Save frame as depends on whether we're in a frame.
         this.showItem( "context-saveframe", this.inFrame );
@@ -109,9 +111,14 @@ nsContextMenu.prototype = {
     
         // Save image depends on whether there is one.
         this.showItem( "context-saveimage", this.onImage );
+
+        // Remove separator if none of these were shown.
+        var showSep = !this.inDirList || this.inFrame || this.onSaveableLink || this.hasBGImage || this.onImage;
+        this.showItem( "context-sep-save", showSep );
     },
     initViewItems : function () {
-        // View source is always OK.
+        // View source is always OK, unless in directory listing.
+        this.showItem( "context-viewsource", !this.inDirList );
     
         // View frame source depends on whether we're in a frame.
         this.showItem( "context-viewframesource", this.inFrame );
@@ -128,6 +135,9 @@ nsContextMenu.prototype = {
         // Block image depends on whether an image was clicked on, and,
         // whether the user pref is enabled.
         this.showItem( "context-blockimage", this.onImage && this.isBlockingImages() );
+
+        // Remove separator if all items are removed.
+        this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
     },
     initMiscItems : function () {
         // Add bookmark always OK.
@@ -136,7 +146,8 @@ nsContextMenu.prototype = {
         this.showItem( "context-sendpage", false );
     },
     initClipboardItems : function () {
-        // Select All is always OK.
+        // Select All is always OK, unless in directory listing.
+        this.showItem( "context-selectall", !this.inDirList );
     
         // Copy depends on whether there is selected text.
         // Enabling this context menu item is now done through the global
@@ -225,17 +236,47 @@ nsContextMenu.prototype = {
             } else if (this.target.getAttribute( "background" )) {
                this.onImage = true;
                this.imageURL = this.target.getAttribute( "background" );
-             } else  {
-               var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
-                             this.target.style.getPropertyValue( "list-style" ) || 
-                             this.target.style.getPropertyValue( "background-image" ) || 
-                             this.target.style.getPropertyValue( "background" );
-               if ( cssAttr ) {
-                 this.onImage = true;
-                 this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
-               }
-             }
-             
+            } else if ( window._content.HTTPIndex == "[xpconnect wrapped nsIHTTPIndex]"
+                        &&
+                        typeof window._content.HTTPIndex == "object"
+                        &&
+                        !window._content.HTTPIndex.constructor ) {
+                // The above test is a roundabout way of determining whether
+                // the content area contains chrome://global/content/directory/directory.xul.
+                this.inDirList = true;
+                // Bubble outward till we get to an element with id= attribute
+                // (which should be the href).
+                var root = this.target;
+                while ( root && !this.link ) {
+                    if ( root.getAttribute( "id" ) ) {
+                        if ( root.tagName == "tree" ) {
+                            // Hit root of tree; must have clicked in empty space;
+                            // thus, no link.
+                            break;
+                        }
+                        // Build pseudo link object so link-related functions work.
+                        this.onLink = true;
+                        this.link = { href : root.getAttribute( "id" ) };
+                        // If element is a directory, then you can't save it.
+                        if ( root.getAttribute( "container" ) == "true" ) {
+                            this.onSaveableLink = false;
+                        } else {
+                            this.onSaveableLink = true;                        
+                        }
+                    } else {
+                        root = root.parentNode;
+                    }
+                }
+            } else {
+                var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
+                              this.target.style.getPropertyValue( "list-style" ) || 
+                              this.target.style.getPropertyValue( "background-image" ) || 
+                              this.target.style.getPropertyValue( "background" );
+                if ( cssAttr ) {
+                    this.onImage = true;
+                    this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+                }
+            }
         }
     
         // See if the user clicked in a frame.
