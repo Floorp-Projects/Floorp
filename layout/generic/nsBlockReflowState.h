@@ -6309,13 +6309,24 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 {
 
   nsresult result;
+  nsCOMPtr<nsIPresShell> shell;
   if (aEvent->message == NS_MOUSE_MOVE) {
-    nsCOMPtr<nsISelectionController> selCon;
-    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-    if (NS_FAILED(result) || !selCon)
-      return result?result:NS_ERROR_FAILURE;
-    nsCOMPtr<nsIFrameSelection> frameSelection = do_QueryInterface(selCon);
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (!shell)
+      return NS_OK;
+    nsCOMPtr<nsIFrameSelection> frameSelection;
     PRBool mouseDown = PR_FALSE;
+//check to see if we need to ask the selection controller..
+    if (mState & NS_FRAME_INDEPENDENT_SELECTION)
+    {
+      nsCOMPtr<nsISelectionController> selCon;
+      result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_FAILED(result) || !selCon)
+        return result?result:NS_ERROR_FAILURE;
+      frameSelection = do_QueryInterface(selCon);
+    }
+    else
+      shell->GetFrameSelection(getter_AddRefs(frameSelection));
     if (!frameSelection || NS_FAILED(frameSelection->GetMouseDownState(&mouseDown)) || !mouseDown) 
       return NS_OK;//do not handle
   }
@@ -6334,10 +6345,6 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
                                    //can tell who to pass it to
     nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    if (!shell)
-      return NS_OK;
     nsCOMPtr<nsIFocusTracker> tracker;
     result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
 
