@@ -1,19 +1,14 @@
 <html>
  <head>
-  <title>Test case for bug #xxxxx</title>
+  <title>Test case for block inside inline layout</title>
   <style>
    body { font-family: "Arial", monospace; font-size: 12pt; }
-   div:first-letter { color: green; font-size: 36pt; background-color: khaki; }
-   .fl:first-letter {
-     font-size: 72pt; background-color: gold; float: left;
-     margin-right: 5px;
-   }
-   :first-letter { color: red; }
    div { margin: 1em; border: 1px solid grey; }
-   span { text-decoration: underline; }
    div.test { border: 2px solid green; padding: 2px; display: none; }
    p { background: lightgreen; }
    input.blue { background: rgb(128,128,255); }
+   span.outer { }
+   span.block { display: block; background: rgb(180,180,180); }
   </style>
   <script src=testlogic.js></script>
   <script>
@@ -48,7 +43,7 @@
  </head>
  <body onload="SetupTest();">
   <form id="form">
-   <input type=button value="NextTest" onclick="NextTest();" class=blue>
+   <input type=button value="NextTest" onclick="NextTest();" class=blue disabled>
    <input type=button value="RunTest" onclick="RunTest();" class=blue><br>
    <input type=button value="0: InsertText" onclick="InsertText();">
    <input type=button value="1: AppendText" onclick="AppendText();">
@@ -71,21 +66,11 @@
   <hr>
 
   <div class="test" name="0">
-   Simple first-letter; direct child of the block
-   <div name="it">
-    Twas brillig and the slithey toves...And Bush one.
-    Twas brillig and the slithey toves...And Bush one.
-    Twas brillig and the slithey toves...And Bush one.
-   </div><br clear=all>
-  </div>
-
-  <div class="test" name="1">
-   Floating first-letter; direct child of the block
-   <div class="fl" name="it">
-    Twas brillig and the slithey toves...And Bush one.
-    Twas brillig and the slithey toves...And Bush one.
-    Twas brillig and the slithey toves...And Bush one.
-   </div><br clear=all>
+   <span class="outer" name="it">
+    <span class="block">
+     Twas brillig and the slithey toves...And Bush one.
+    </span>
+   </span>
   </div>
 
  </body>
