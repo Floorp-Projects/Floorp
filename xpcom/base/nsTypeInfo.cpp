@@ -262,7 +262,6 @@ const char* nsGetTypeName(void* ptr)
     const char vtable_sym_start[] = "__vt_";
     const int vtable_sym_start_length = sizeof(vtable_sym_start) - 1;
 #endif
-    // sanity check the vtable pointer, before trying to use RTTI on the object.
     void* vt = *(void**)ptr;
     Dl_info info;
     // If dladdr fails, if we're not at the expected offset in the vtable,
