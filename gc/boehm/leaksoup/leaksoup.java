@@ -77,6 +77,7 @@ class Leak {
 	Object[] mCrawl;
 	int mRefCount;
 	Leak[] mParents;
+	int mTotalSize;
 
 	Leak(String addr, Type type, Object[] refs, Object[] crawl) {
 		mAddress = addr;
@@ -84,32 +85,70 @@ class Leak {
 		mCrawl = crawl;
 		mRefCount = 0;
 		mType = type;
+		mTotalSize = 0;
 	}
 	
 	void setParents(Vector parents) {
 		mParents = new Leak[parents.size()];
 		parents.copyInto(mParents);
 	}
+	
+	void computeTotalSize() {
+		// first, mark this node as having been visited.
+		// we only want to include nodes that haven't been
+		// visited in our total size.
+		mTotalSize = mType.mSize;
+		
+		// then, visit all nodes that haven't been visited,
+		// and include their total size in ours.
+		int count = mReferences.length;
+		for (int i = 0; i < count; ++i) {
+			Object ref = mReferences[i];
+			if (ref instanceof Leak) {
+				Leak leak = (Leak) ref;
+				if (leak.mTotalSize == 0) {
+					leak.computeTotalSize();
+					mTotalSize += leak.mTotalSize;
+				}
+			}
+		}
+	}
+
+	void clearTotalSize() {
+		// first, clear our total size.
+		mTotalSize = 0;
+		
+		// then, visit all nodes that haven't been visited,
+		// and clear each one's total size.
+		int count = mReferences.length;
+		for (int i = 0; i < count; ++i) {
+			Object ref = mReferences[i];
+			if (ref instanceof Leak) {
+				Leak leak = (Leak) ref;
+				if (leak.mTotalSize != 0)
+					leak.clearTotalSize();
+			}
+		}
+	}
 
 	public String toString() {
-		return ("<A HREF=\"#" + mAddress + "\">" + mAddress + "</A> [" + mRefCount + "] " + mType);
+		return ("<A HREF=\"#" + mAddress + "\">" + mAddress + "</A> [" + mRefCount + "] " + mType + "{" + mTotalSize + "}");
 	}
 	
 	static class ByCount implements QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
-			// return (l1.mRefCount - l2.mRefCount);
-			return (l1.mType.mSize - l2.mType.mSize);
+			return (l1.mRefCount - l2.mRefCount);
 		}
 	}
 
 	/**
-	 * Sorts in order of decreasing size.
+	 * Sorts in order of decreasing total size.
 	 */
-	static class BySize implements QuickSort.Comparator {
+	static class ByTotalSize implements QuickSort.Comparator {
 		public int compare(Object obj1, Object obj2) {
 			Leak l1 = (Leak) obj1, l2 = (Leak) obj2;
-			return (l2.mType.mSize - l1.mType.mSize);
+			return (l2.mTotalSize - l1.mTotalSize);
 		}
 	}
 }
@@ -251,6 +290,15 @@ public class leaksoup {
 			out.println("total objects leaked = " + leakCount + "<BR>");
 			out.println("total memory leaked  = " + totalSize + " bytes.<BR>");
 			
+			// sort the leaks by reference count. then compute each root leak's total size.
+			QuickSort byCount = new QuickSort(new Leak.ByCount());
+			byCount.sort(leaks);
+			for (int i = 0; i < leakCount; ++i) {
+				Leak leak = leaks[i];
+				if (leak.mTotalSize == 0)
+					leak.computeTotalSize();
+			}
+			
 			// print the object histogram report.
 			printHistogram(out, hist);
 			
@@ -345,7 +393,7 @@ public class leaksoup {
 	
 	static void printLeaks(PrintWriter out, Leak[] leaks) throws IOException {
 		// sort the leaks by size.
-		QuickSort bySize = new QuickSort(new Leak.BySize());
+		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
 		bySize.sort(leaks);
 
 		out.println("<H2>Leak Roots</H2>");
