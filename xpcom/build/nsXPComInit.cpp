@@ -524,6 +524,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // libraries:
     NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
     NS_WARN_IF_FALSE(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+    nsComponentManagerImpl::gComponentManager = nsnull;
 
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
