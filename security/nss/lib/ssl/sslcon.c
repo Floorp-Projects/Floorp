@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.15 2001/11/08 02:15:37 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.16 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2428,7 +2428,12 @@ ssl2_HandleRequestCertificate(sslSocket *ss)
     if (ss->sec->localCert) {
 	CERT_DestroyCertificate(ss->sec->localCert);
     }
-    ss->sec->localCert = cert;
+    ss->sec->localCert = CERT_DupCertificate(cert);
+    PORT_Assert(!ss->sec->ci.sid->localCert);
+    if (ss->sec->ci.sid->localCert) {
+	CERT_DestroyCertificate(ss->sec->ci.sid->localCert);
+    }
+    ss->sec->ci.sid->localCert = cert;
     cert = NULL;
 
     goto done;
@@ -3121,6 +3126,11 @@ ssl2_BeginClientHandshake(sslSocket *ss)
 	PRINT_BUF(4, (ss, "client, found session-id:", sid->u.ssl2.sessionID,
 		      sidLen));
 	ss->version = sid->version;
+	PORT_Assert(!sec->localCert);
+	if (sec->localCert) {
+	    CERT_DestroyCertificate(sec->localCert);
+	}
+	sec->localCert     = CERT_DupCertificate(sid->localCert);
 	break;  /* this isn't really a loop */
     } 
     if (!sid) {
@@ -3478,6 +3488,8 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     sslConnectInfo  *ci;
     sslGather       *gs;
     sslSessionID    *sid;
+    sslServerCerts * sc;
+    CERTCertificate *serverCert;
     PRUint8         *msg;
     PRUint8         *data;
     PRUint8         *cs;
@@ -3505,6 +3517,8 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 
     sec = ss->sec;
     ci = &sec->ci;
+    sc = ss->serverCerts + kt_rsa;
+    serverCert = sc->serverCert;
 
     ssl_GetRecvBufLock(ss);
 
@@ -3654,8 +3668,6 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	    goto loser;
 	}
     } else {
-	sslServerCerts * sc = ss->serverCerts + kt_rsa;
-	CERTCertificate *serverCert = sc->serverCert;
 	SECItem * derCert   = &serverCert->derCert;
 
 	SSL_TRC(7, ("%d: SSL[%d]: server, lookup nonce missed",
@@ -3683,15 +3695,26 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	cert    = derCert->data;
 	certLen = derCert->len;
 
-	if (sec->localCert) {
-	    CERT_DestroyCertificate(sec->localCert);
+	/* pretend that server sids remember the local cert. */
+	PORT_Assert(!sid->localCert);
+	if (sid->localCert) {
+	    CERT_DestroyCertificate(sid->localCert);
 	}
-	sec->localCert     = CERT_DupCertificate(serverCert);
+	sid->localCert     = CERT_DupCertificate(serverCert);
+
 	sec->authAlgorithm = ssl_sign_rsa;
 	sec->keaType       = ssl_kea_rsa;
 	sec->keaKeyBits    = \
 	sec->authKeyBits   = ss->serverCerts[kt_rsa].serverKeyBits;
     }
+
+    /* server sids don't remember the local cert, so whether we found
+    ** a sid or not, just "remember" we used the rsa server cert.
+    */
+    if (sec->localCert) {
+	CERT_DestroyCertificate(sec->localCert);
+    }
+    sec->localCert     = CERT_DupCertificate(serverCert);
 
     /* Build up final list of required elements */
     ci->requiredElements = CIS_HAVE_MASTER_KEY | CIS_HAVE_FINISHED;

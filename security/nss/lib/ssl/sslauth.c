@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.6 2001/11/08 02:15:36 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.7 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -73,8 +73,13 @@ SSL_LocalCertificate(PRFileDesc *fd)
 	return NULL;
     }
     sec = ss->sec;
-    if (ss->useSecurity && sec && sec->localCert) {
-	return CERT_DupCertificate(sec->localCert);
+    if (ss->useSecurity && sec ) {
+    	if (sec->localCert) {
+	    return CERT_DupCertificate(sec->localCert);
+	}
+	if (sec->ci.sid && sec->ci.sid->localCert) {
+	    return CERT_DupCertificate(sec->ci.sid->localCert);
+	}
     }
     return NULL;
 }

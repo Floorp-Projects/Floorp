@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.8 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.9 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -100,6 +100,9 @@ ssl_DestroySID(sslSessionID *sid)
 
     if ( sid->peerCert ) {
 	CERT_DestroyCertificate(sid->peerCert);
+    }
+    if ( sid->localCert ) {
+	CERT_DestroyCertificate(sid->localCert);
     }
     
     PORT_ZFree(sid, sizeof(sslSessionID));

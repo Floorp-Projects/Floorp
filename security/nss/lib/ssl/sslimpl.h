@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.19 2001/11/08 02:15:37 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.20 2001/11/09 05:39:36 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -713,6 +713,7 @@ struct sslSessionIDStr {
     CERTCertificate *     peerCert;
     const char *          peerID;     /* client only */
     const char *          urlSvrName; /* client only */
+    CERTCertificate *     localCert;
 
     PRIPv6Addr            addr;
     PRUint16              port;
