@@ -118,6 +118,50 @@
 //192
 //193
 //194
+//1B0
+//1B1
+//1B2
+//1B3
+//1B4
+		1BD0F22A050FFDAB00A80011 = {
+			isa = PBXFileReference;
+			path = libmozz.dylib;
+			refType = 4;
+		};
+		1BD0F22B050FFDAB00A80011 = {
+			fileRef = 1BD0F22A050FFDAB00A80011;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		1BD0F22D050FFDE000A80011 = {
+			fileRef = 1BD0F22A050FFDAB00A80011;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		1BD0F22E050FFE0100A80011 = {
+			isa = PBXFileReference;
+			path = libxpcom_compat.dylib;
+			refType = 4;
+		};
+		1BD0F22F050FFE0100A80011 = {
+			fileRef = 1BD0F22E050FFE0100A80011;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		1BD0F230050FFE0500A80011 = {
+			fileRef = 1BD0F22E050FFE0100A80011;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//1B0
+//1B1
+//1B2
+//1B3
+//1B4
 //290
 //291
 //292
@@ -235,7 +279,7 @@
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "../../../dist/include/string ../../../dist/include/nspr ../../../dist/include/xpcom ../../../dist/sdk/xpcom/include ../../../dist/include/embed_base ../../browser/cocoa/build/CHBrowserView.framework/Headers";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = ../../../dist/Embed;
+				LIBRARY_SEARCH_PATHS = "../../../dist/Embed /Volumes/moose/floppy/cocoamoz/mozilla/embedding/tests/cocoaEmbed /Volumes/moose/floppy/cocoamoz/mozilla/dist/Embed";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
@@ -317,6 +361,8 @@
 			files = (
 				1058C7A3FEA54F0111CA2CBB,
 				3FA6DEBF042FC3E20002AD8F,
+				1BD0F22B050FFDAB00A80011,
+				1BD0F22F050FFE0100A80011,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -487,6 +533,8 @@
 				3FA6DE90042F9B380002AD8F,
 				3FA6DE91042F9B380002AD8F,
 				3FA6DE92042F9B380002AD8F,
+				1BD0F22A050FFDAB00A80011,
+				1BD0F22E050FFE0100A80011,
 			);
 			isa = PBXGroup;
 			name = bin;
@@ -1497,12 +1545,6 @@
 			settings = {
 			};
 		};
-		79C236E8043A00AC00202892 = {
-			fileRef = 79C2360F0439FD4500202892;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		79C236E9043A00AC00202892 = {
 			fileRef = 79C236100439FD4500202892;
 			isa = PBXBuildFile;
@@ -1796,6 +1838,8 @@
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
 				F6BD637D01B30E2901A962F7,
+				1BD0F22D050FFDE000A80011,
+				1BD0F230050FFE0500A80011,
 				3FA6DEC2042FC4270002AD8F,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -2033,7 +2077,6 @@
 				79C236E5043A00AC00202892,
 				79C236E6043A00AC00202892,
 				79C236E7043A00AC00202892,
-				79C236E8043A00AC00202892,
 				79C236E9043A00AC00202892,
 				79C236EA043A00AC00202892,
 				79C236EB043A00AC00202892,
