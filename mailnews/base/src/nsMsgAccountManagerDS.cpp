@@ -33,6 +33,7 @@
 #include "nsIMsgMailSession.h"
 
 #include "plstr.h"
+#include "prmem.h"
 
 #include "nsMsgRDFUtils.h"
 
@@ -104,7 +105,8 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Account);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
-nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
+nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
+  mAccountManager(nsnull)
 {
   fprintf(stderr, "nsMsgAccountManagerDataSource() being created\n");
 }
@@ -154,9 +156,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 {
   nsresult rv = NS_RDF_NO_VALUE;
   if (!aTruthValue) return NS_RDF_NO_VALUE;
-  
-  // I don't think we'll ever get this?
-  
   return rv;
 }
 
@@ -260,28 +259,36 @@ NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
                                      nsISimpleEnumerator **_retval)
 {
-    char *value=nsnull;
-    source->GetValue(&value);
-    printf("accountmanager::ArcLabelsOut(%s)\n", value ? value : "(nsnull)");
+  nsresult rv;
+  
+  // we have to return something, so always create the array/enumerators
+  nsISupportsArray *arcs;
+  rv = NS_NewISupportsArray(&arcs);
 
-    if (PL_strcmp(value, "msgaccounts:/")!=0)
-      return NS_RDF_NO_VALUE;
+  if (NS_FAILED(rv)) return rv;
+  
+  nsArrayEnumerator* enumerator =
+    new nsArrayEnumerator(arcs);
 
-    nsISupportsArray *arcs;
-    NS_NewISupportsArray(&arcs);
+  *_retval = enumerator;
+  
+  // do we NS_RELEASE the arcs?
+  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(enumerator);
+  
+  char *value=nsnull;
+  source->GetValue(&value);
+  printf("accountmanager::ArcLabelsOut(%s)\n", value ? value : "(nsnull)");
+  
+  if (PL_strcmp(value, "msgaccounts:/")==0) {
     arcs->AppendElement(kNC_Child);
     arcs->AppendElement(kNC_Name);
     arcs->AppendElement(kNC_Server);
-
-    nsArrayEnumerator* enumerator =
-        new nsArrayEnumerator(arcs);
-
-    if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(enumerator);
-    *_retval = enumerator;
-    
-    return NS_OK;
+  }
+  
+  PR_FREEIF(value);
+  return NS_OK;
 }
 
 nsresult
