@@ -36,7 +36,6 @@ Requires Ant version 1.2
     <property name="dist.javasrc.dir" value="${src.dir}/src"/>
     <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
     <available file="${cvs.javasrc.dir}/org" property="in-cvs-tree"/>
-    <available classname="com.ibm.bsf.BSFEngine" property="bsf.present"/>
     <available file="${src.debugger}/AbstractCellEditor.java"
                property="swing-ex-available"/>
     <available classname="java.lang.reflect.Proxy"
@@ -110,7 +109,6 @@ Requires Ant version 1.2
            includes="org/**/*.java"
            deprecation="on"
            debug="${debug}">
-      <exclude name="**/BSFJavaScriptEngine.java" unless="bsf.present"/>
       <exclude name="**/debugger/*.java" unless="jdk1.3"/>
     </javac>
   </target>

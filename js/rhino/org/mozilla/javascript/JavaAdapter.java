@@ -170,12 +170,21 @@ public class JavaAdapter extends ScriptableObject {
             	Method method = methods[j];
                 int mods = method.getModifiers();
                 if (Modifier.isStatic(mods) || Modifier.isFinal(mods) ||
-                    jsObj == null || 
-                    ScriptableObject.getProperty(jsObj, method.getName()) == 
-                        Scriptable.NOT_FOUND)
+                    jsObj == null)
                 {
-                    // See bug 19734 for the rationale for the getProperty test
                     continue;
+                }
+                if (!ScriptableObject.hasProperty(jsObj, method.getName())) {
+                    try {
+                        superClass.getMethod(method.getName(), 
+                                             method.getParameterTypes());
+                        // The class we're extending implements this method and
+                        // the JavaScript object doesn't have an override. See
+                        // bug 61226.
+                        continue;
+                    } catch (NoSuchMethodException e) {
+                        // Not implemented by superclass; fall through
+                    }
                 }
                 // make sure to generate only one instance of a particular 
                 // method/signature.
@@ -206,7 +215,7 @@ public class JavaAdapter extends ScriptableObject {
             // has a property of the same name, then an override is intended.
             boolean isAbstractMethod = Modifier.isAbstract(mods);
             if (isAbstractMethod || 
-                (jsObj != null && ScriptableObject.getProperty(jsObj,method.getName()) != Scriptable.NOT_FOUND))
+                (jsObj != null && ScriptableObject.hasProperty(jsObj,method.getName())))
             {
                 // make sure to generate only one instance of a particular 
                 // method/signature.
@@ -327,11 +336,12 @@ public class JavaAdapter extends ScriptableObject {
             Context cx = Context.enter();
             Object fun = ScriptableObject.getProperty(object,methodId);
             if (fun == Scriptable.NOT_FOUND) {
-                // It is an error that this function doesn't exist.
-                // Easiest thing to do is just pass the undefined value 
-                // along and ScriptRuntime will take care of reporting 
-                // the error.
-                fun = Undefined.instance;
+                // This method used to swallow the exception from calling
+                // an undefined method. People have come to depend on this
+                // somewhat dubious behavior. It allows people to avoid 
+                // implementing listener methods that they don't care about,
+                // for instance.
+                return Undefined.instance;
             }
             return ScriptRuntime.call(cx, fun, thisObj, args, object);
         } catch (JavaScriptException ex) {
