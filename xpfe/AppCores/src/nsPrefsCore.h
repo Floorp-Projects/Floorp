@@ -21,16 +21,20 @@
 //#include "nsAppCores.h"
 
 #include "nscore.h"
-#include "nsString.h"
 #include "nsISupports.h"
 
 #include "nsIDOMPrefsCore.h"
 #include "nsBaseAppCore.h"
+#include "prtypes.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
 class nsIScriptContext;
 class nsIDOMWindow;
+class nsIPref;
+class nsIDOMNode;
+class nsIDOMHTMLInputElement;
+class nsString;
 
 //========================================================================================
 class nsPrefsCore
@@ -45,13 +49,49 @@ class nsPrefsCore
                  
 
     NS_DECL_ISUPPORTS_INHERITED
-    NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-    NS_IMETHOD    Init(const nsString& aId);
-    NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
-    NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
+    NS_IMETHOD           GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+    NS_IMETHOD           Init(const nsString& aId);
+    NS_IMETHOD           GetId(nsString& aId)
+                         {
+                             return nsBaseAppCore::GetId(aId);
+                         } 
+    NS_IMETHOD           SetDocumentCharset(const nsString& aCharset)
+                         {
+                             return nsBaseAppCore::SetDocumentCharset(aCharset);
+                         } 
 
     NS_DECL_IDOMPREFSCORE
     
+	enum TypeOfPref
+	{
+	    eNoType        = 0
+	  , eBool
+	  , eInt
+	  , eString
+	  , ePath
+	};
+
+  protected:
+    
+    nsresult             InitializePrefsManager();
+    nsresult             InitializePrefWidgets();
+    nsresult             InitializeWidgetsRecursive(nsIDOMNode* inParentNode);
+    nsresult             InitializeOneWidget(
+                             nsIDOMHTMLInputElement* inElement,
+                             const nsString& inWidgetType,
+                             const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRInt16 inPrefOrdinal);
+    nsresult             FinalizePrefWidgets();
+    nsresult             FinalizeWidgetsRecursive(nsIDOMNode* inParentNode);
+    nsresult             FinalizeOneWidget(
+                             nsIDOMHTMLInputElement* inElement,
+                             const nsString& inWidgetType,
+                             const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRInt16 inPrefOrdinal);
+
+
   protected:
 
     nsString             mTreeScript;     
@@ -62,6 +102,8 @@ class nsPrefsCore
     
     nsIDOMWindow*        mTreeWindow;
     nsIDOMWindow*        mPanelWindow;
+    
+    nsIPref*             mPrefs;
 };
 
 #endif // nsPrefsCore_h___
