@@ -143,6 +143,7 @@ nsresult nsInput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsrefcnt nsInput::AddRef(void)
 {
+  PRInt32 refCnt = mRefCnt;  // debugging 
   return nsHTMLContainer::AddRef(); 
 }
 
@@ -174,7 +175,9 @@ nsrefcnt nsInput::Release()
   } else {
     for (int i = 0; i < numSiblings; i++) {
       nsIFormControl* sibling = mFormMan->GetFormControlAt(i);
-      if (sibling->GetRefCount() > 1) {
+      PRInt32 refCnt = sibling->GetRefCount();
+      NS_RELEASE(sibling);
+      if (refCnt > 1) {
         externalRefs = PR_TRUE;
         break;
       }

@@ -179,6 +179,7 @@ void nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext,
     }
     nsInput::MapAttributesInto(aContext, aPresContext);
   }
+  NS_IF_RELEASE(formMan);
 }
 
 PRInt32 

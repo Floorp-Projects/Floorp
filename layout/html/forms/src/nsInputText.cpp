@@ -197,8 +197,8 @@ nsInputTextFrame::EnterPressed(nsIPresContext& aPresContext)
       formMan->OnSubmit(&aPresContext, this, control);
       NS_IF_RELEASE(control);
     }
+    NS_RELEASE(formMan);
   }
-  NS_RELEASE(formMan);
 }
 
 void 

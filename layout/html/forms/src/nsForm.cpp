@@ -290,7 +290,12 @@ nsresult nsForm::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   return res;
 }
-NS_IMPL_ADDREF(nsForm);
+
+nsrefcnt nsForm::AddRef(void)                                
+{ 
+  PRInt32 refCnt = mRefCnt;  // debugging 
+  return ++mRefCnt;                                          
+}
 
 nsrefcnt nsForm::GetRefCount() const
 {
@@ -304,9 +309,13 @@ nsrefcnt nsForm::Release()
   PRBool externalRefsToChildren = PR_FALSE;  // are there refs to any children besides my ref
   for (int i = 0; i < numChildren; i++) {
     nsIFormControl* child = GetFormControlAt(i);
-    if (child->GetRefCount() > 1) {
-      externalRefsToChildren = PR_TRUE;
-      break;
+    if (child) {
+      PRInt32 refCnt = child->GetRefCount();
+      NS_RELEASE(child);
+      if (refCnt > 1) {
+        externalRefsToChildren = PR_TRUE;
+        break;
+      }
     }
   }
   if (!externalRefsToChildren && ((int)mRefCnt == numChildren)) {
@@ -974,6 +983,7 @@ void nsForm::Init(PRBool aReinit)
 	      }
       }
     }
+    NS_RELEASE(control);
   }
 
   // if there is only one text field, it can submit on "return" 

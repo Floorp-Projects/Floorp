@@ -59,6 +59,7 @@ nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 nsInputFrame::~nsInputFrame()
 {
+  printf("nsInputFrame::~nsInputFrame \n");
 }
 
 NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
@@ -71,7 +72,9 @@ nsFormRenderingMode nsInputFrame::GetMode() const
   nsInput* content = (nsInput *)mContent;
   nsIFormManager* formMan = content->GetFormManager();
   if (formMan) {
-    return formMan->GetMode();
+    nsFormRenderingMode mode = formMan->GetMode();
+    NS_RELEASE(formMan);
+    return mode;
   }
   else {
     return kBackwardMode;
@@ -122,7 +125,11 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
     GetView(view);
     if (nsnull != view) {
       if (PR_FALSE == mDidInit) {
-        ((nsInput*)mContent)->GetFormManager()->Init(PR_FALSE);
+        nsIFormManager* formMan = ((nsInput*)mContent)->GetFormManager();
+        if (formMan) {
+          formMan->Init(PR_FALSE);
+          NS_RELEASE(formMan);
+        }
         PostCreateWidget(&aPresContext, view);
         mDidInit = PR_TRUE;
       }
@@ -150,7 +157,12 @@ nsInputFrame::SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow)
       if (newVisibility != view->GetVisibility()) {
         // this only inits the 1st time
         // XXX kipp says: this is yucky; init on first visibility seems lame
-        ((nsInput*)mContent)->GetFormManager()->Init(PR_FALSE);
+        // XXX is this even called
+        nsIFormManager* formMan = ((nsInput*)mContent)->GetFormManager();
+        if (formMan) {
+          formMan->Init(PR_FALSE);
+          NS_RELEASE(formMan);
+        }
         view->SetVisibility(newVisibility);
         PostCreateWidget(aPresContext, view);
       }
