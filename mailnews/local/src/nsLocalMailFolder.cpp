@@ -1258,7 +1258,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
-	
+
     oldPathSpec->Rename(newNameStr.get());
 
 	newNameStr += ".msf";
@@ -1279,9 +1279,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 		rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
 		if (newFolder) 
         {
-			newFolder->SetName(newFolderName.get());
-            PRBool changed = PR_FALSE;
-            ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
+          newFolder->SetName(newFolderName.get());
+          PRBool changed = PR_FALSE;
+          ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
           nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
           NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
         /***** jefft -
