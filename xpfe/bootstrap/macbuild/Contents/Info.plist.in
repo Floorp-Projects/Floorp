@@ -5,15 +5,15 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleExecutable</key>
-	<string>mozilla-bin</string>
+	<string>MOZ_APP_NAME-bin</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.mozilla</string>
+	<string>org.mozilla.MOZ_APP_NAME</string>
 	<key>CFBundleVersion</key>
-	<string>MOZILLA_VERSION</string>
+	<string>MOZ_APP_VERSION</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleName</key>
-	<string>Mozilla</string>
+	<string>MOZ_APP_DISPLAYNAME</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
@@ -21,9 +21,9 @@
 	<key>CFBundleIconFile</key>
 	<string>mozilla.icns</string>
 	<key>CFBundleShortVersionString</key>
-	<string>MOZILLA_VERSION</string>
+	<string>MOZ_APP_VERSION</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Mozilla MOZILLA_VERSION, © 1998-2005 The Mozilla Organization</string>
+	<string>MOZ_APP_DISPLAYNAME MOZ_APP_VERSION, © 1998-2005 The Mozilla Organization</string>
         <key>NSAppleScriptEnabled</key>
         <true/>
 	<key>CFBundleDocumentTypes</key>
@@ -57,7 +57,7 @@
 
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>Mozilla Preferences File</string>
+				<string>MOZ_APP_DISPLAYNAME Preferences File</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -70,7 +70,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>Mozilla Plugin</string>
+				<string>MOZ_APP_DISPLAYNAME Plugin</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -89,7 +89,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>Mozilla Command Line File</string>
+				<string>MOZ_APP_DISPLAYNAME Command Line File</string>
 				<key>CFBundleTypeRole</key>
 				<string>Viewer</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -102,7 +102,7 @@
 			
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>Mozilla Shared Library</string>
+				<string>MOZ_APP_DISPLAYNAME Shared Library</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -120,7 +120,7 @@
 
 			<dict>
 				<key>CFBundleTypeName</key>
-				<string>Mozilla Binary File</string>
+				<string>MOZ_APP_DISPLAYNAME Binary File</string>
 				<key>CFBundleTypeRole</key>
 				<string>None</string>
 				<key>CFBundleTypeOSTypes</key>
@@ -161,7 +161,7 @@
 				<string>html.icns</string>
 			</dict>
 			
-	<!--Image Icon img.icns does not yet exist, but associating Images with Mozilla here-->
+	<!--Image Icon image.icns does not yet exist, but associating Images with the application here-->
 			
 			<dict>
 				<key>CFBundleTypeName</key>

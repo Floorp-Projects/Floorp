@@ -151,8 +151,6 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #include "jprof.h"
 #endif
 
-#define MOZ_APP_NAME "mozilla"
-
 // on x86 linux, the current builds of some popular plugins (notably
 // flashplayer and real) expect a few builtin symbols from libgcc
 // which were available in some older versions of gcc.  However,
@@ -1383,7 +1381,7 @@ static void DumpHelp(char *appname)
 #ifdef XP_UNIX
   printf("%s--g-fatal-warnings%sMake all warnings fatal\n", HELP_SPACER_1, HELP_SPACER_2);
 
-  printf("\nMozilla options\n");
+  printf("\n%s options\n", MOZ_APP_DISPLAYNAME);
 #endif
 
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
@@ -1399,13 +1397,13 @@ static void DumpHelp(char *appname)
   printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
 #if defined(XP_WIN32) || defined(XP_OS2)
-  printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-console%sStart %s with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2,MOZ_APP_DISPLAYNAME);
 #endif
 #ifdef MOZ_ENABLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
-         "%sMozilla process.  For more info, see:\n"
+         "%s%s process.  For more info, see:\n"
          "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
-         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
+         HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,MOZ_APP_DISPLAYNAME,HELP_SPACER_2);
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
@@ -1426,7 +1424,7 @@ static nsresult DumpVersion(char *appname)
   nsresult rv = NS_OK;
   long buildID = NS_BUILD_ID;  // 10-digit number
 
-  printf("Mozilla %s, Copyright (c) 2003-2004 mozilla.org", MOZILLA_VERSION);
+  printf("%s %s, Copyright (c) 2003-2005 mozilla.org", MOZ_APP_DISPLAYNAME, MOZ_APP_VERSION);
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);

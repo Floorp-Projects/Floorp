@@ -46,8 +46,8 @@ MODULE		= apprunner
 
 include $(topsrcdir)/config/rules.mk
 
-# Only install the init.d/ files when we use the "mozilla" shell script
-# to start mozilla
+# Only install the init.d/ files when we use the application shell script
+# to start the application
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
 

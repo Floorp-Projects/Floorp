@@ -36,17 +36,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.7 2004/04/17 16:51:11 gerv%gerv.net Exp $
+## $Id: mozilla.in,v 1.8 2005/03/29 22:02:22 kairo%kairo.at Exp $
 ## 
 ## Usage:
 ##
 ## $ mozilla [args]
 ##
-## This script is meant to run the mozilla-bin binary from either 
+## This script is meant to run the application binary from either 
 ## mozilla/xpfe/bootstrap or mozilla/dist/bin.
 ##
 ## The script will setup all the environment voodoo needed to make
-## the mozilla-bin binary to work.
+## the application binary to work.
 ##
 
 moz_pis_startstop_scripts()
@@ -133,7 +133,7 @@ else
     if [ -x "$moz_libdir/run-mozilla.sh" ]; then
       dist_bin=$moz_libdir
     else 
-      echo "Cannot find mozilla runtime directory. Exiting."
+      echo "Cannot find %MOZ_APP_DISPLAYNAME% runtime directory. Exiting."
       exit 1
     fi
   fi
