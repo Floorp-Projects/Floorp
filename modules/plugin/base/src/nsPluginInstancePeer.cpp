@@ -142,7 +142,7 @@ class nsPluginStreamToFile : public nsIOutputStream
 public:
 
 	nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner);
-	~nsPluginStreamToFile();
+	virtual ~nsPluginStreamToFile();
 
 	NS_DECL_ISUPPORTS
 

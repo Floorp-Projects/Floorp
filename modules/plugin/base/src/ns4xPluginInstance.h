@@ -104,7 +104,7 @@ public:
     ns4xPluginInstance(NPPluginFuncs* callbacks);
 
     // Use Release() to destroy this
-    ~ns4xPluginInstance(void);
+    virtual ~ns4xPluginInstance(void);
 
 protected:
 
