@@ -255,17 +255,17 @@ iframe {
 #button-print[disabled="true"][buttonover="true"],
 #button-print[disabled="true"][buttondown="true"]
   {
-    list-style-image      : url("chrome://global/skin/print.gif");
+    list-style-image      : url("chrome://global/skin/print-disabled.gif");
   }
 
 #button-print[buttonover="true"]
   {
-    list-style-image      : url("chrome://global/skin/print.gif");
+    list-style-image      : url("chrome://global/skin/print-hover.gif");
   }
 
 #button-print[buttondown="true"]
   {
-    list-style-image      : url("chrome://global/skin/print.gif");
+    list-style-image      : url("chrome://global/skin/print-hover-active.gif");
   }
 
 #button-stop 

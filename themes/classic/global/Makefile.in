@@ -79,6 +79,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	opentwisty.gif \
 	otherbutton28-bg-active.gif \
 	otherbutton28-bg-hover.gif \
+	print-disabled.gif \
+	print-hover-active.gif \
+	print-hover.gif \
 	print.gif \
 	progressmeter-busy.gif \
 	return-disabled.gif \
