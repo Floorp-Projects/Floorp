@@ -1732,6 +1732,15 @@ nsChildView::GetQuickDrawPort()
 
 @implementation ChildView
 
+-(NSMenu*)menuForEvent:(NSEvent*)theEvent
+{
+  // XXX Fire the context menu event into Gecko.
+
+  // XXX If we don't get an ignore status, then we now need to go up our
+  // view chain and ask for a menu to return.
+  return nil;
+}
+
 
 //
 // initWithGeckoChild:eventSink:
@@ -2039,6 +2048,39 @@ const PRInt32 kNumLines = 8;
         isChar: &isChar
         toGeckoEvent: &geckoEvent];
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+}
+
+// This method is called when we are about to be focused.
+- (BOOL)becomeFirstResponder
+{
+  nsFocusEvent event;
+  event.eventStructType = NS_FOCUS_EVENT;
+  event.message = NS_GOTFOCUS;
+  event.widget = mGeckoChild;
+
+  //focus and blur event should go to their base widget loc
+  event.point.x = 0;
+  event.point.y = 0;
+
+  mGeckoChild->DispatchWindowEvent(event);
+  return [super becomeFirstResponder];
+}
+
+// This method is called when are are about to lose focus.
+- (BOOL)resignFirstResponder
+{
+  nsFocusEvent event;
+  event.eventStructType = NS_FOCUS_EVENT;
+  event.message = NS_LOSTFOCUS;
+  event.widget = mGeckoChild;
+
+  //focus and blur event should go to their base widget loc
+  event.point.x = 0;
+  event.point.y = 0;
+
+  mGeckoChild->DispatchWindowEvent(event);
+
+  return [super resignFirstResponder];
 }
 
 //-------------------------------------------------------------------------
