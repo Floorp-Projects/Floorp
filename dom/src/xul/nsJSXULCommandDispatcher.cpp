@@ -1,19 +1,23 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -32,8 +36,8 @@
 #include "nsString.h"
 #include "nsIController.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMWindow.h"
 #include "nsIControllers.h"
 
 
@@ -42,21 +46,22 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 NS_DEF_PTR(nsIController);
 NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMXULCommandDispatcher);
+NS_DEF_PTR(nsIDOMWindow);
 NS_DEF_PTR(nsIControllers);
 
 //
 // XULCommandDispatcher property ids
 //
 enum XULCommandDispatcher_slots {
-  XULCOMMANDDISPATCHER_FOCUSEDNODE = -1
+  XULCOMMANDDISPATCHER_FOCUSEDELEMENT = -1,
+  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2
 };
 
 /***********************************************************************/
@@ -80,16 +85,35 @@ GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULCOMMANDDISPATCHER_FOCUSEDNODE:
+      case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDNODE, PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMNode* prop;
+        nsIDOMElement* prop;
         nsresult result = NS_OK;
-        result = a->GetFocusedNode(&prop);
+        result = a->GetFocusedElement(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMWindow* prop;
+        nsresult result = NS_OK;
+        result = a->GetFocusedWindow(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
@@ -131,21 +155,39 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULCOMMANDDISPATCHER_FOCUSEDNODE:
+      case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDNODE, PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDELEMENT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMNode* prop;
+        nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kINodeIID, "Node",
+                                                kIElementIID, "Element",
                                                 cx, *vp)) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
-        a->SetFocusedNode(prop);
+        a->SetFocusedElement(prop);
+        NS_IF_RELEASE(prop);
+        break;
+      }
+      case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_FOCUSEDWINDOW, PR_TRUE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMWindow* prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIWindowIID, "Window",
+                                                cx, *vp)) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
+        }
+      
+        a->SetFocusedWindow(prop);
         NS_IF_RELEASE(prop);
         break;
       }
@@ -212,7 +254,7 @@ XULCommandDispatcherAddCommandUpdater(JSContext *cx, JSObject *obj, uintN argc, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADDCOMMANDUPDATER,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADDCOMMANDUPDATER, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -269,7 +311,7 @@ XULCommandDispatcherRemoveCommandUpdater(JSContext *cx, JSObject *obj, uintN arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_REMOVECOMMANDUPDATER,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_REMOVECOMMANDUPDATER, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -324,7 +366,7 @@ XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_UPDATECOMMANDS,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_UPDATECOMMANDS, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -374,7 +416,7 @@ XULCommandDispatcherGetControllerForCommand(JSContext *cx, JSObject *obj, uintN 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERFORCOMMAND,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERFORCOMMAND, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -424,7 +466,7 @@ XULCommandDispatcherGetControllers(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERS,PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_GETCONTROLLERS, PR_FALSE, &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -473,7 +515,8 @@ JSClass XULCommandDispatcherClass = {
 //
 static JSPropertySpec XULCommandDispatcherProperties[] =
 {
-  {"focusedNode",    XULCOMMANDDISPATCHER_FOCUSEDNODE,    JSPROP_ENUMERATE},
+  {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
+  {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
   {0}
 };
 

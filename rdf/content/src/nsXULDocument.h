@@ -285,7 +285,11 @@ public:
     NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
-
+    NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument);
+    NS_IMETHOD SetDocumentURL(nsIURI* anURL);
+    NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
+    
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
                               nsISupports* aContainer,
@@ -413,9 +417,6 @@ protected:
     nsresult
     ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt32& aNameSpaceID);
 
-    NS_IMETHOD PrepareStyleSheets(nsIURI* anURL);
-
-    void SetDocumentURLAndGroup(nsIURI* anURL);
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
     nsresult CreateElement(PRInt32 aNameSpaceID,

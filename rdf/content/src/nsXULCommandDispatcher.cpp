@@ -29,6 +29,8 @@
 #include "nsIContent.h"
 #include "nsIControllers.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
@@ -51,7 +53,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(void)
-    : mScriptObject(nsnull), mCurrentNode(nsnull), mUpdaters(nsnull)
+    : mScriptObject(nsnull), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
 
@@ -63,11 +65,11 @@ nsXULCommandDispatcher::nsXULCommandDispatcher(void)
 
 nsXULCommandDispatcher::~nsXULCommandDispatcher(void)
 {
-    while (mUpdaters) {
-        Updater* doomed = mUpdaters;
-        mUpdaters = mUpdaters->mNext;
-        delete doomed;
-    }
+  while (mUpdaters) {
+    Updater* doomed = mUpdaters;
+    mUpdaters = mUpdaters->mNext;
+    delete doomed;
+  }
 }
 
 NS_IMPL_ADDREF(nsXULCommandDispatcher)
@@ -120,21 +122,34 @@ nsXULCommandDispatcher::Create(nsIDOMXULCommandDispatcher** aResult)
 // nsIDOMXULTracker Interface
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::GetFocusedNode(nsIDOMNode** aNode)
+nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 {
-  *aNode = mCurrentNode;
-  NS_IF_ADDREF(*aNode);
+  *aElement = mCurrentElement;
+  NS_IF_ADDREF(*aElement);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::SetFocusedNode(nsIDOMNode* aNode)
+nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
 {
-  // XXX On a blur, will need to fire an updatecommands (focus) on the
-  // parent window.
-  mCurrentNode = aNode;
-  if (mCurrentNode)
+  *aWindow = mCurrentWindow;
+  NS_IF_ADDREF(*aWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
+{
+  mCurrentElement = aElement;
+  if (mCurrentElement)
     UpdateCommands(nsAutoString("focus"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::SetFocusedWindow(nsIDOMWindow* aWindow)
+{
+  mCurrentWindow = aWindow;
   return NS_OK;
 }
 
@@ -224,13 +239,12 @@ nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
     nsresult rv;
 
     nsAutoString id;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mCurrentNode);
-    if (element) {
-        rv = element->GetAttribute(nsAutoString("id"), id);
+    if (mCurrentElement) {
+        rv = mCurrentElement->GetAttribute(nsAutoString("id"), id);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
         if (NS_FAILED(rv)) return rv;
     }
-
+  
     for (Updater* updater = mUpdaters; updater != nsnull; updater = updater->mNext) {
         // Skip any nodes that don't match our 'events' or 'targets'
         // filters.
@@ -286,20 +300,21 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 {
   //XXX: we should fix this so there's a generic interface that describes controllers, 
   //     so this code would have no special knowledge of what object might have controllers.
-  if (mCurrentNode) {
-    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentNode);
+  if (mCurrentElement) {
+    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentElement);
     if (xulElement)
       return xulElement->GetControllers(aResult);
 
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea = do_QueryInterface(mCurrentNode);
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea = do_QueryInterface(mCurrentElement);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement = do_QueryInterface(mCurrentNode);
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement = do_QueryInterface(mCurrentElement);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
-
-    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(mCurrentNode);
+  }
+  else if (mCurrentWindow) {
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(mCurrentWindow);
     if (domWindow)
       return domWindow->GetControllers(aResult);
   }
@@ -318,10 +333,40 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   
-  // XXX: Bad fix
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(t);
-  if(element) {
-    SetFocusedNode(t);
+/*
+  printf("%d : Focus occurred on: ", this);
+  nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
+  if (domDebugElement) {
+    printf("A Focusable DOM Element");
+  }
+  nsCOMPtr<nsIDOMDocument> domDebugDocument = do_QueryInterface(t);
+  if (domDebugDocument) {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(t);
+    if (htmlDoc) {
+      printf("Window with an HTML doc (happens twice)");
+    }
+    else printf("Window with a XUL doc (happens twice)");
+  }
+  printf("\n");
+*/
+
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
+  if (domElement && (domElement != mCurrentElement)) {
+    SetFocusedElement(domElement);
+  }
+  else {
+    // We're focusing a window.  We only want to do an update commands
+    // if no element is focused.
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(t);
+    if (domDoc) {
+      GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
+      if (domWindow && (domWindow != mCurrentWindow)) {
+        SetFocusedWindow(domWindow);
+        if (!mCurrentElement)
+          UpdateCommands(nsAutoString("focus"));
+      }
+    }
   }
 
   return NS_OK;
@@ -332,8 +377,35 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
-  if( t == mCurrentNode ) {
-    SetFocusedNode(nsnull);
+
+/*
+  printf("%d : Blur occurred on: ", this);
+  nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
+  if (domDebugElement) {
+    printf("A Focusable DOM Element");
+  }
+  nsCOMPtr<nsIDOMDocument> domDebugDocument = do_QueryInterface(t);
+  if (domDebugDocument) {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(t);
+    if (htmlDoc) {
+      printf("Window with an HTML doc (happens twice)");
+    }
+    else printf("Window with a XUL doc (happens twice)");
+  }
+  printf("\n");
+*/
+
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
+  if (domElement) {
+    SetFocusedElement(nsnull);
+  }
+  
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(t);
+  if (domDoc) {
+    GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
+    if (domWindow)
+      SetFocusedWindow(nsnull);
   }
 
   return NS_OK;
@@ -393,25 +465,19 @@ nsXULCommandDispatcher::Matches(const nsString& aList, const nsString& aElement)
 }
 
 
-NS_IMETHODIMP
-nsXULCommandDispatcher::GetParentWindowFromElement(nsIDOMElement* aElement, nsPIDOMWindow** aPWindow)
+nsresult
+nsXULCommandDispatcher::GetParentWindowFromDocument(nsIDOMDocument* aDocument, nsIDOMWindow** aWindow)
 {
-    nsCOMPtr<nsIDOMDocument> document;
-    aElement->GetOwnerDocument(getter_AddRefs(document));
-    if(!document) return NS_OK;
-
-    nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(document);
+    nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(aDocument);
     if(!objectOwner) return NS_OK;
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
     objectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
     if(!globalObject) return NS_OK;
 
-    nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(globalObject);
-    if(!privateDOMWindow) return NS_OK;
-
-    privateDOMWindow->GetPrivateParent(aPWindow);
-
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(globalObject);
+    *aWindow = domWindow;
+    NS_IF_ADDREF(*aWindow);
     return NS_OK;
 }
 
@@ -423,46 +489,47 @@ nsXULCommandDispatcher::GetControllerForCommand(const nsString& command, nsICont
     nsCOMPtr<nsIControllers> controllers;
     GetControllers(getter_AddRefs(controllers));
     if(controllers) {
-        nsCOMPtr<nsIController> controller;
-        controllers->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
-        if(controller) {
+      nsCOMPtr<nsIController> controller;
+      controllers->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
+      if(controller) {
+        *_retval = controller;
+        NS_ADDREF(*_retval);
+        return NS_OK;
+      }
+    }
+    
+    nsCOMPtr<nsPIDOMWindow> currentWindow;
+    if (mCurrentElement) {
+      // Move up to the window.
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
+      nsCOMPtr<nsIDOMWindow> domWindow;
+      GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
+      currentWindow = do_QueryInterface(domWindow);
+    }
+    else if (mCurrentWindow) {
+      nsCOMPtr<nsPIDOMWindow> privateWin = do_QueryInterface(mCurrentWindow);
+      privateWin->GetPrivateParent(getter_AddRefs(currentWindow));
+    }
+    else return NS_OK;
+
+    while(currentWindow) {
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(currentWindow);
+      if(domWindow) {
+        nsCOMPtr<nsIControllers> controllers2;
+        domWindow->GetControllers(getter_AddRefs(controllers2));
+        if(controllers2) {
+          nsCOMPtr<nsIController> controller;
+          controllers2->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
+          if(controller) {
             *_retval = controller;
             NS_ADDREF(*_retval);
             return NS_OK;
+          }
         }
-    }
-     
-    if(!mCurrentNode) return NS_OK;
-
-    nsCOMPtr<nsPIDOMWindow> currentWindow;
-
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mCurrentNode);
-    if(element) {
-        GetParentWindowFromElement(element, getter_AddRefs(currentWindow));
-    } else {
-        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mCurrentNode);
-        if(!window) return NS_OK;
-
-        window->GetPrivateParent(getter_AddRefs(currentWindow));
-    }
-
-    while(currentWindow) {
-        nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(currentWindow);
-        if(domWindow) {
-            nsCOMPtr<nsIControllers> controllers2;
-            domWindow->GetControllers(getter_AddRefs(controllers2));
-            if(controllers2) {
-                nsCOMPtr<nsIController> controller;
-                controllers2->GetControllerForCommand(command.GetUnicode(), getter_AddRefs(controller));
-                if(controller) {
-                    *_retval = controller;
-                    NS_ADDREF(*_retval);
-                    return NS_OK;
-                }
-            }
-        } 
-        nsCOMPtr<nsPIDOMWindow> parentPWindow = currentWindow;
-        parentPWindow->GetPrivateParent(getter_AddRefs(currentWindow));
+      } 
+      nsCOMPtr<nsPIDOMWindow> parentPWindow = currentWindow;
+      parentPWindow->GetPrivateParent(getter_AddRefs(currentWindow));
     }
     
     return NS_OK;
