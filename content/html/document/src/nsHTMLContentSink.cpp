@@ -176,6 +176,8 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #define NS_SINK_FLAG_CAN_INTERRUPT_PARSER 0x20 //Interrupt parsing when mMaxTokenProcessingTime is exceeded
 #define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE 0x40 // Lower the value for mNotificationInterval and mMaxTokenProcessingTime
 
+#define NS_DELAY_FOR_WINDOW_CREATION  500000  // 1/2 second fudge factor for window creation
+
 
 class SinkContext;
 
@@ -394,6 +396,7 @@ public:
   PRUint32            mDelayTimerStart;
   PRInt32             mMaxTokenProcessingTime;  // Interrupt parsing during token procesing after # of microseconds
   PRInt32             mDynamicIntervalSwitchThreshold;   // Switch between intervals when time is exceeded
+  PRInt32             mBeginLoadTime;
 
   void StartLayout();
 
@@ -2299,6 +2302,7 @@ HTMLContentSink::HTMLContentSink() {
   mFlags=0;
   mNeedToBlockParser = PR_FALSE;
   mDummyParserRequest = nsnull;
+  mBeginLoadTime = 0;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2606,6 +2610,7 @@ HTMLContentSink::WillBuildModel(void)
       // WillBuildModel.
       mFlags &= ~NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
     }
+    mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
   // Notify document that the load is beginning
   mDocument->BeginLoad();
@@ -3721,8 +3726,20 @@ PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
     // Get the last user event time and compare it with
     // the current time to determine if the lower value
     // for content notification and max token processing 
-    // should be used.
-    if (mDocument) {
+    // should be used. But only consider using the lower
+    // value if the document has already been loading
+    // for 2 seconds. 2 seconds was chosen because it is
+    // greater than the default 3/4 of second that is used
+    // to determine when to switch between the modes and it
+    // gives the document a little time to create windows.
+    // This is important because on some systems (Windows, 
+    // for example) when a window is created and the mouse
+    // is over it, a mouse move event is sent, which will kick
+    // us into interactive mode otherwise. It also supresses
+    // reaction to pressing the ENTER key in the URL bar...
+
+    PRUint32 delayBeforeLoweringThreshold = NS_STATIC_CAST(PRUint32, ((2 * mDynamicIntervalSwitchThreshold) + NS_DELAY_FOR_WINDOW_CREATION));
+    if (((currentTime - mBeginLoadTime) > delayBeforeLoweringThreshold) && mDocument) {
       nsCOMPtr<nsIPresShell> shell;
       mDocument->GetShellAt(0, getter_AddRefs(shell));
       if (shell) {
