@@ -21,7 +21,7 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIURL.h"
-#include "nsICSSParser.h"
+#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsString.h"
 #include "nsLayoutCID.h"
@@ -538,33 +538,17 @@ nsLayoutDLF::InitUAStyleSheet()
     nsIURL* uaURL;
     rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
     if (NS_SUCCEEDED(rv)) {
-      // Get an input stream from the url
-      nsIInputStream* in;
-      rv = NS_OpenURL(uaURL, &in);
-      if (NS_SUCCEEDED(rv)) {
-        // Translate the input using the argument character set id into unicode
-        nsIUnicharInputStream* uin;
-        rv = NS_NewConverterStream(&uin, nsnull, in);
-        if (NS_SUCCEEDED(rv)) {
-          // Create parser and set it up to process the input file
-          nsICSSParser* css;
-          rv = NS_NewCSSParser(&css);
-          if (NS_SUCCEEDED(rv)) {
-            // Parse the input and produce a style set
-            // XXX note: we are ignoring rv until the error code stuff in the
-            // input routines is converted to use nsresult's
-            css->Parse(uin, uaURL, gUAStyleSheet);
-            NS_RELEASE(css);
-          }
-          NS_RELEASE(uin);
+      nsICSSLoader* cssLoader;
+      rv = NS_NewCSSLoader(&cssLoader);
+      if (NS_SUCCEEDED(rv) && cssLoader) {
+        PRBool complete;
+        rv = cssLoader->LoadAgentSheet(uaURL, gUAStyleSheet, complete, nsnull, nsnull);
+        NS_RELEASE(cssLoader);
+        if (NS_FAILED(rv)) {
+          printf("open of %s failed: error=%x\n", UA_CSS_URL, rv);
+          rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
         }
-        NS_RELEASE(in);
       }
-      else {
-        printf("open of %s failed: error=%x\n", UA_CSS_URL, rv);
-        rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
-      }
-
       NS_RELEASE(uaURL);
     }
   }
