@@ -2690,10 +2690,10 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         if (asd)
             decodeErr = asd->Decode();
 
+        delete asd;
+
         if (decodeErr != noErr)
         {
-            if (asd)
-                delete asd;
             return EXTRACTION_FAILED;
         }
 
