@@ -277,7 +277,7 @@ Attr* Document::createAttributeNS(const String& aNamespaceURI,
 
     if (NS_SUCCEEDED(nsDocument->CreateAttributeNS(
                 aNamespaceURI.getConstNSString(), aName.getConstNSString(),
-                getter_AddRefs(attr)) == NS_OK))
+                getter_AddRefs(attr))))
         return createAttribute(attr);
     else
         return NULL;
@@ -304,8 +304,8 @@ Text* Document::createTextNode(const String& aData)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMText> text;
 
-    if (nsDocument->CreateTextNode(aData.getConstNSString(),
-                getter_AddRefs(text)) == NS_OK)
+    if (NS_SUCCEEDED(nsDocument->CreateTextNode(aData.getConstNSString(),
+                getter_AddRefs(text))))
         return createTextNode(text);
     else
         return NULL;
