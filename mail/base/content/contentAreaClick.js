@@ -91,10 +91,11 @@
     if (linkNode && linkNode.href) 
     {
       handleLinkClick(event, linkNode.href, null);
+
       // block the link click if we determine that this URL
       // is phishy (i.e. a potential email scam) 
-
-      return !isPhishingURL(linkNode, false); 
+      if (!event.button)  // left click only
+        return !isPhishingURL(linkNode, false); 
     }
 
     return true;
