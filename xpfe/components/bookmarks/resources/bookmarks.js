@@ -68,8 +68,6 @@ var kWINDOWContractID;
 var kWINDOWIID;
 var WINDOWSVC;
 
-var gBMtxmgr;
-
 // should be moved in a separate file
 function initServices()
 {
@@ -382,13 +380,13 @@ var BookmarksCommand = {
 
   undoBookmarkTransaction: function ()
   {
-    gBMtxmgr.undoTransaction();
+    BMSVC.transactionManager.undoTransaction();
     BookmarksUtils.flushDataSource();
   },
 
   redoBookmarkTransaction: function ()
   {
-    gBMtxmgr.redoTransaction();
+    BMSVC.transactionManager.redoTransaction();
     BookmarksUtils.flushDataSource();
   },
 
@@ -676,7 +674,7 @@ var BookmarksCommand = {
     }
     var isCancelled = !BookmarksUtils.any(transaction.isValid)
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
     }    
   },
@@ -1297,7 +1295,7 @@ var BookmarksUtils = {
       SOUND.beep();
     var isCancelled = !BookmarksUtils.any(transaction.isValid)
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction)
+      BMSVC.transactionManager.doTransaction(transaction);
       if (aAction != "move")
         BookmarksUtils.flushDataSource();
     }
@@ -1348,7 +1346,7 @@ var BookmarksUtils = {
       SOUND.beep();
     var isCancelled = !BookmarksUtils.any(transaction.isValid)
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
       BookmarksUtils.flushDataSource();
     }
     return !isCancelled;
@@ -1360,7 +1358,7 @@ var BookmarksUtils = {
     var transaction = new BookmarkMoveTransaction(aAction, aSelection, aTarget);
     var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
-      gBMtxmgr.doTransaction(transaction);
+      BMSVC.transactionManager.doTransaction(transaction);
     } else
       SOUND.beep();
     return !isCancelled;
@@ -1481,35 +1479,6 @@ var BookmarksUtils = {
     setTimeout(function () {remoteDS.Flush()}, 100);
   },
 
-  getTransactionManager: function ()
-  {
-    var windows = WINDOWSVC.getEnumerator(null);
-    while(windows.hasMoreElements()) {
-      var w = windows.getNext();
-      if (w.gBMtxmgr)
-        return w.gBMtxmgr;
-    }
-
-    // Create a TransactionManager object:
-    gBMtxmgr = Components.classes["@mozilla.org/transactionmanager;1"]
-               .createInstance(Components.interfaces.nsITransactionManager);
-    if (!gBMtxmgr) {
-      dump("Failed to create the Bookmark Transaction Manager!\n");
-      return null;
-    }
-    this.dispatchTransactionManager();
-    return gBMtxmgr;
-  },
-
-  dispatchTransactionManager: function ()
-  {
-    var windows = WINDOWSVC.getEnumerator(null);
-    while(windows.hasMoreElements()) {
-      var w = windows.getNext();
-      w.gBMtxmgr = gBMtxmgr;
-    }
-  },
-
   addBookmarkForTabBrowser: function( aTabBrowser, aSelect )
   {
     var tabsInfo = [];
@@ -1593,7 +1562,6 @@ var BookmarksUtils = {
 function BookmarkInsertTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "insert";
   this.action  = aAction;
   this.item    = null;
@@ -1645,7 +1613,6 @@ BookmarkInsertTransaction.prototype =
 function BookmarkRemoveTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "remove";
   this.action  = aAction;
   this.item    = null;
@@ -1697,7 +1664,6 @@ BookmarkRemoveTransaction.prototype =
 function BookmarkMoveTransaction (aAction, aSelection, aTarget)
 {
   this.wrappedJSObject = this;
-  this.txmgr     = BookmarksUtils.getTransactionManager();
   this.type      = "move";
   this.action    = aAction;
   this.selection = aSelection;
@@ -1729,7 +1695,6 @@ BookmarkMoveTransaction.prototype =
 function BookmarkImportTransaction (aAction)
 {
   this.wrappedJSObject = this;
-  this.txmgr   = BookmarksUtils.getTransactionManager();
   this.type    = "import";
   this.action  = aAction;
   this.item    = [];

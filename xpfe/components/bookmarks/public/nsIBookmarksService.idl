@@ -43,6 +43,7 @@
 #include "nsISupports.idl"
 
 interface nsIRDFResource;
+interface nsITransactionManager;
 
 [scriptable, uuid(a82e9300-e4af-11d2-8fdf-0008c70adc7b)]
 interface nsIBookmarksService : nsISupports
@@ -89,6 +90,8 @@ interface nsIBookmarksService : nsISupports
     wstring getLastCharset(in string aURL);
 
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
+
+    readonly attribute nsITransactionManager transactionManager;
 };
 
 %{C++
