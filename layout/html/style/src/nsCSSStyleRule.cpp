@@ -401,6 +401,9 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                        PRInt32 aMask, const nsStyleFont* aFont, 
                        nsIPresContext* aPresContext);
 
+static void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration, 
+                                   nsIStyleContext* aContext, 
+                                   nsIPresContext* aPresContext);
 static void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
                                nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -421,6 +424,7 @@ public:
   // Strength is an out-of-band weighting, useful for mapping CSS ! important
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -476,6 +480,13 @@ NS_IMETHODIMP
 CSSImportantRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportantRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  MapDeclarationFontInto(mDeclaration, aContext, aPresContext);
   return NS_OK;
 }
 
@@ -642,6 +653,7 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -1146,6 +1158,13 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, nsc
 }
 
 NS_IMETHODIMP
+CSSStyleRuleImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  MapDeclarationFontInto(mDeclaration, aContext, aPresContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   MapDeclarationInto(mDeclaration, aContext, aPresContext);
@@ -1167,8 +1186,8 @@ nsString& Unquote(nsString& aString)
   return aString;
 }
 
-void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
-                        nsIStyleContext* aContext, nsIPresContext* aPresContext)
+void MapDeclarationFontInto(nsICSSDeclaration* aDeclaration, 
+                            nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != aDeclaration) {
     nsIStyleContext* parentContext = aContext->GetParent();
@@ -1319,6 +1338,21 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           font->mFlags |= (parentFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT);
         }
       }
+    }
+
+    NS_IF_RELEASE(parentContext);
+  }
+}
+
+void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
+                        nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (nsnull != aDeclaration) {
+    nsIStyleContext* parentContext = aContext->GetParent();
+    nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+    const nsStyleFont* parentFont = font;
+    if (nsnull != parentContext) {
+      parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
     }
 
     nsCSSText*  ourText;
@@ -2299,6 +2333,9 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   if (nsnull != aSelector->mTag) {
     aSelector->mTag->ToString(buffer);
     fputs(buffer, out);
+  }
+  else {
+    fputs("*", out);
   }
   if (nsnull != aSelector->mID) {
     aSelector->mID->ToString(buffer);

@@ -55,7 +55,8 @@ public:
 
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const = 0;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const = 0;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                          nsMapAttributesFunc& aMapFunc) const = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,

@@ -149,17 +149,26 @@ nsHTMLBaseFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
+MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+                      nsIStyleContext* aContext,
+                      nsIPresContext* aPresContext)
+{
+  // XXX write me
+}
+
+static void
 MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
 NS_IMETHODIMP
-nsHTMLBaseFontElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLBaseFontElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                                    nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = &MapFontAttributesInto;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

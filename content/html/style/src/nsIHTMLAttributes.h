@@ -63,7 +63,7 @@ public:
 
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const = 0;
   NS_IMETHOD Reset(void) = 0;
-  NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc) = 0;
+  NS_IMETHOD SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc) = 0;
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
@@ -72,6 +72,7 @@ public:
 extern NS_HTML nsresult
   NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult,
                        nsIHTMLStyleSheet* aSheet,
+                       nsMapAttributesFunc aFontMapFunc,
                        nsMapAttributesFunc aMapFunc);
 
 #endif /* nsIHTMLAttributes_h___ */

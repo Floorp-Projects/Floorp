@@ -332,8 +332,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLTableSectionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                                        nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

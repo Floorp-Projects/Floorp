@@ -169,6 +169,24 @@ nsHTMLPreElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
+MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+                      nsIStyleContext* aContext,
+                      nsIPresContext* aPresContext)
+{
+  if (nsnull != aAttributes) {
+    nsHTMLValue value;
+
+    // variable: empty
+    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      nsStyleFont* font = (nsStyleFont*)
+        aContext->GetMutableStyleData(eStyleStruct_Font);
+      font->mFont.name = "serif";
+    }
+  }
+}
+
+static void
 MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
@@ -184,14 +202,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
     }
       
-    // variable: empty
-    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
-    if (value.GetUnit() == eHTMLUnit_Empty) {
-      nsStyleFont* font = (nsStyleFont*)
-        aContext->GetMutableStyleData(eStyleStruct_Font);
-      font->mFont.name = "serif";
-    }
-
     // cols: int (nav4 attribute)
     aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
@@ -229,8 +239,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLPreElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLPreElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                               nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = &MapFontAttributesInto;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
