@@ -419,7 +419,7 @@ public class Interpreter {
                             if (childType == TokenStream.NAME
                                 || childType == TokenStream.GETPROP)
                             {
-                                nameIndex = itsStrings.size() - 1;
+                                nameIndex = lastStringIndex;
                             }
                         }
                         child = child.getNextSibling();
@@ -1145,6 +1145,7 @@ public class Interpreter {
             itsStrings.put(str, index);
         }
         iCodeTop = addShort(index, iCodeTop);
+        lastStringIndex = index;
         return iCodeTop;
     }
 
@@ -2898,6 +2899,7 @@ public class Interpreter {
     private LabelTable itsLabels = new LabelTable();
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
+    private int lastStringIndex = -1;
 
 
     private int version;
