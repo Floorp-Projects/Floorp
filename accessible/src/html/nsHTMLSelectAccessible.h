@@ -83,7 +83,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount) ;
 
 };
 
@@ -103,6 +103,21 @@ public:
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
+
+};
+
+/*
+ * Opt Groups inside the select, contained within the list
+ */
+class nsHTMLSelectOptGroupAccessible : public nsHTMLSelectOptionAccessible
+{
+public:
+
+  nsHTMLSelectOptGroupAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsHTMLSelectOptGroupAccessible() {}
+
+  /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
 
 };
 
