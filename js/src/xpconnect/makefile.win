@@ -18,6 +18,8 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+DIRS=md
+
 MAKE_OBJ_TYPE	= DLL
 DLLNAME		= xpc$(MOZ_BITS)$(VERSION_NUMBER)
 #PDBFILE		= $(DLLNAME).pdb
@@ -28,6 +30,8 @@ DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MODULE=xpconnect
 REQUIRES=xpcom js
 
+MD_LIBRARY	=	.\md\win32\$(OBJDIR)\xpcmd.lib
+
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API -DJS_THREADSAFE -DDEBUG
 
 OBJS=					\
@@ -37,10 +41,8 @@ OBJS=					\
 	.\$(OBJDIR)\xpcarbitrary.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
-	.\$(OBJDIR)\xpcinvoke.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\
 	.\$(OBJDIR)\xpcnsid.obj	\
-	.\$(OBJDIR)\xpcstubs.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
@@ -62,7 +64,8 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LLIBS=	$(LIBNSPR) 										\
+LLIBS=	$(LIBNSPR)	\
+        $(MD_LIBRARY)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
 
@@ -76,7 +79,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
+    
 
 clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
