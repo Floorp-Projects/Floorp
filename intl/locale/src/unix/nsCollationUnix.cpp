@@ -16,11 +16,12 @@
  * Reserved.
  */
 
+#include  <locale.h>
 #include "prmem.h"
 #include "nsCollationUnix.h"
 
 
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 
 NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 
@@ -39,13 +40,30 @@ nsCollationUnix::~nsCollationUnix()
 
 nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {
+  NS_ASSERTION(mCollation == NULL, "Should only be initialized once");
+
   mCollation = new nsCollation;
   if (mCollation == NULL) {
     NS_ASSERTION(0, "mCollation creation failed");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // store local charset name
+  mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
+
   // store platform locale
+  mLocale.SetString("en_US"); //TODO: get locale from ILocale
+
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_COLLATE");
+    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    //TODO: Use GetPlatformLocale() when it's ready
+    //TODO: Get a charset name from the locale
+  }
 
   return NS_OK;
 };
@@ -64,14 +82,17 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
   }
 
   // convert unicode to charset
-  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   char *str;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str, aCharset);
+  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    // TODO: setlocale()
+    char *cstr = mLocale.ToNewCString();
+    char *old_locale =  setlocale(LC_COLLATE, NULL);
+    (void) setlocale(LC_COLLATE, cstr);
     // call strxfrm to calculate a key length 
     int len = strxfrm(NULL, str, 0) + 1;
+    (void) setlocale(LC_COLLATE, old_locale);
+    delete [] cstr;
     *outLen = (len == -1) ? 0 : (PRUint32)len;
     PR_Free(str);
   }
@@ -89,15 +110,18 @@ nsresult nsCollationUnix::CreateSortKey(const nsCollationStrength strength,
     res = mCollation->NormalizeString(stringNormalized);
   }
   // convert unicode to charset
-  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   char *str;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str, aCharset);
+  res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    // TODO: setlocale()
+    char *cstr = mLocale.ToNewCString();
+    char *old_locale =  setlocale(LC_COLLATE, NULL);
+    (void) setlocale(LC_COLLATE, cstr);
     // call strxfrm to generate a key 
     int len = strxfrm((char *) key, str, strlen(str));
-   *outLen = (len == -1) ? 0 : (PRUint32)len;
+    (void) setlocale(LC_COLLATE, old_locale);
+    delete [] cstr;
+    *outLen = (len == -1) ? 0 : (PRUint32)len;
     PR_Free(str);
   }
 

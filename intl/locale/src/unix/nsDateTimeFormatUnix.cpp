@@ -16,11 +16,13 @@
  * Reserved.
  */
 
+#include <locale.h>
+#include "plstr.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatUnix.h"
 
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
 
@@ -43,53 +45,72 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
   char fmtD[32], fmtT[32];
+  char platformLocale[16];
+  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
+  nsresult res;
   
+  PL_strcpy(platformLocale, "en_US");
+  //PL_strcpy(platformLocale, "fr_FR");
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_TIME");
+
+    res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    //TODO: Use GetPlatformLocale() when it's ready
+    //TODO: Get a charset name from a locale
+  }
+
   // set date format
   switch (dateFormatSelector) {
     case kDateFormatNone:
-      strcpy(fmtD, "");
+      PL_strcpy(fmtD, "");
       break; 
     case kDateFormatLong:
-      strcpy(fmtD, "%c");
+      PL_strcpy(fmtD, "%c");
       break; 
     case kDateFormatShort:
-      strcpy(fmtD, "%x");
+      PL_strcpy(fmtD, "%x");
       break; 
     case kDateFormatYearMonth:
-      strcpy(fmtD, "%y/%m");
+      PL_strcpy(fmtD, "%y/%m");
       break; 
     case kDateFormatWeekday:
-      strcpy(fmtD, "%a");
+      PL_strcpy(fmtD, "%a");
       break;
     default:
-      strcpy(fmtD, ""); 
+      PL_strcpy(fmtD, ""); 
   }
 
   // set time format
   switch (timeFormatSelector) {
     case kTimeFormatNone:
-      strcpy(fmtT, ""); 
+      PL_strcpy(fmtT, ""); 
       break;
     case kTimeFormatSeconds:
-      strcpy(fmtT, "%I:%M:%S %p");
+      PL_strcpy(fmtT, "%I:%M:%S %p");
       break;
     case kTimeFormatNoSeconds:
-      strcpy(fmtT, "%I:%M %p");
+      PL_strcpy(fmtT, "%I:%M %p");
       break;
     case kTimeFormatSecondsForce24Hour:
-      strcpy(fmtT, "%H:%M:%S");
+      PL_strcpy(fmtT, "%H:%M:%S");
       break;
     case kTimeFormatNoSecondsForce24Hour:
-      strcpy(fmtT, "%H:%M");
+      PL_strcpy(fmtT, "%H:%M");
       break;
     default:
-      strcpy(fmtT, ""); 
+      PL_strcpy(fmtT, ""); 
   }
 
   // generate data/time string
+  char *old_locale = setlocale(LC_TIME, NULL);
+  (void) setlocale(LC_TIME, platformLocale);
   if (strlen(fmtD) && strlen(fmtT)) {
-    strcat(fmtD, " ");
-    strcat(fmtD, fmtT);
+    PL_strcat(fmtD, " ");
+    PL_strcat(fmtD, fmtT);
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
   }
   else if (strlen(fmtD) && !strlen(fmtT)) {
@@ -99,13 +120,11 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtT, tmTime);
   }
   else {
-    strcpy(strOut, "");
+    PL_strcpy(strOut, "");
   }
-//  stringOut.SetString(strOut);
+  (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  nsresult res;
-  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsICharsetConverterManager * ccm = nsnull;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
