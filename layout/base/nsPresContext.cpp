@@ -573,7 +573,7 @@ nsPresContext::GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue)
   return rv;
 }
 
-NS_IMETHODIMP
+void
 nsPresContext::ClearStyleDataAndReflow()
 {
   if (mShell) {
@@ -586,8 +586,6 @@ nsPresContext::ClearStyleDataAndReflow()
     // then we only need to repaint...
     mShell->StyleChangeReflow();
   }
-
-  return NS_OK;
 }
 
 void
@@ -611,7 +609,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 
   if (mDeviceContext) {
     mDeviceContext->FlushFontCache();
-    ClearStyleDataAndReflow();
+    nsPresContext::ClearStyleDataAndReflow();
   }
 }
 
@@ -680,13 +678,13 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        mBaseURL = doc->GetBaseURI();
+        nsIURI *baseURI = doc->GetBaseURI();
 
-        if (!mNeverAnimate && mBaseURL) {
+        if (!mNeverAnimate && baseURI) {
             PRBool isChrome = PR_FALSE;
             PRBool isRes = PR_FALSE;
-            mBaseURL->SchemeIs("chrome", &isChrome);
-            mBaseURL->SchemeIs("resource", &isRes);
+            baseURI->SchemeIs("chrome", &isChrome);
+            baseURI->SchemeIs("resource", &isRes);
 
           if (!isChrome && !isRes)
             mImageAnimationMode = mImageAnimationModePref;
@@ -746,7 +744,7 @@ nsPresContext::Observe(nsISupports* aSubject,
     UpdateCharSet(NS_LossyConvertUCS2toASCII(aData).get());
     if (mDeviceContext) {
       mDeviceContext->FlushFontCache();
-      ClearStyleDataAndReflow();
+      nsPresContext::ClearStyleDataAndReflow();
     }
     return NS_OK;
   }
@@ -839,62 +837,11 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
   mImageAnimationMode = aMode;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetBaseURL(nsIURI** aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mBaseURL;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-already_AddRefed<nsStyleContext>
-nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
-                                      nsStyleContext* aParentContext)
-{
-  return mShell->StyleSet()->ResolveStyleFor(this, aContent, aParentContext);
-}
-
-already_AddRefed<nsStyleContext>
-nsPresContext::ResolveStyleContextForNonElement(nsStyleContext* aParentContext)
-{
-  return mShell->StyleSet()->ResolveStyleForNonElement(this, aParentContext);
-}
-
-already_AddRefed<nsStyleContext>
-nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
-                                            nsIAtom* aPseudoTag,
-                                            nsStyleContext* aParentContext)
-{
-  return ResolvePseudoStyleWithComparator(aParentContent, aPseudoTag,
-                                          aParentContext, nsnull);
-}
-
-already_AddRefed<nsStyleContext>
-nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
-                                                nsIAtom* aPseudoTag,
-                                                nsStyleContext* aParentContext,
-                                                nsICSSPseudoComparator* aComparator)
-{
-  return mShell->StyleSet()->ResolvePseudoStyleFor(this, aParentContent,
-                                                   aPseudoTag, aParentContext,
-                                                   aComparator);
-}
-
-already_AddRefed<nsStyleContext>
-nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
-                                          nsIAtom* aPseudoTag,
-                                          nsStyleContext* aParentContext)
-{
-  return mShell->StyleSet()->ProbePseudoStyleFor(this, aParentContent,
-                                                 aPseudoTag, aParentContext);
-}
-
-NS_IMETHODIMP
+nsresult
 nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult)
 {
   nsRefPtr<nsStyleContext> sc;
-  sc = ResolveStyleContextFor(aContent, nsnull);
+  sc = StyleSet()->ResolveStyleFor(aContent, nsnull);
   NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
 
   *aResult = sc->GetStyleDisplay()->mBinding;
@@ -1497,7 +1444,7 @@ NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
     SetVisualMode(IsVisualCharset(mCharset) );
   }
   if (mShell && aForceReflow) {
-    ClearStyleDataAndReflow();
+    nsPresContext::ClearStyleDataAndReflow();
   }
   return NS_OK;
 }
@@ -1621,7 +1568,8 @@ nsPresContext::SysColorChanged()
   // data without reflowing/updating views will lead to incorrect change hints
   // later, because when generating change hints, any style structs which have
   // been cleared and not reread are assumed to not be used at all.
-  return ClearStyleDataAndReflow();
+  nsPresContext::ClearStyleDataAndReflow();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -56,7 +56,6 @@ public:
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult) { mCanPaginatedScroll = aResult; return NS_OK; }
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
@@ -85,6 +84,7 @@ PrintPreviewContext::PrintPreviewContext() :
   // Printed images are never animated
   mImageAnimationMode = imgIContainer::kDontAnimMode;
   mNeverAnimate = PR_TRUE;
+  mMedium = nsLayoutAtoms::print;
 }
 
 PrintPreviewContext::~PrintPreviewContext()
@@ -106,15 +106,6 @@ PrintPreviewContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
 
   return nsPresContext::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP
-PrintPreviewContext::GetMedium(nsIAtom** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nsLayoutAtoms::print;
-  NS_ADDREF(*aResult);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

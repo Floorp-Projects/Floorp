@@ -47,6 +47,7 @@ class nsIView;
 #include "prtypes.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -162,9 +163,8 @@ public:
 
     nsRefPtr<nsStyleContext> pseudoContext;
     if (aContent) {
-      pseudoContext = aPresContext->ProbePseudoStyleContextFor(aContent,
-                                                               aPseudoElement,
-                                                               aStyleContext);
+      pseudoContext = aPresContext->StyleSet()->
+        ProbePseudoStyleFor(aContent, aPseudoElement, aStyleContext);
     }
     return pseudoContext != nsnull;
   }

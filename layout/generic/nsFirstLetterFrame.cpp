@@ -43,6 +43,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 #define nsFirstLetterFrameSuper nsHTMLContainerFrame
 
@@ -142,7 +143,8 @@ nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
     // a style context like we would for a text node.
     nsStyleContext* parentStyleContext = aContext->GetParent();
     if (parentStyleContext) {
-      newSC = aPresContext->ResolveStyleContextForNonElement(parentStyleContext);
+      newSC = aPresContext->StyleSet()->
+        ResolveStyleForNonElement(parentStyleContext);
       if (newSC)
         aContext = newSC;
     }
@@ -370,7 +372,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
     if (kidContent) {
       NS_ASSERTION(kidContent->IsContentOfType(nsIContent::eTEXT),
                    "should contain only text nodes");
-      sc = aPresContext->ResolveStyleContextForNonElement(mStyleContext);
+      sc = aPresContext->StyleSet()->ResolveStyleForNonElement(mStyleContext);
       if (sc) {
         kid->SetStyleContext(aPresContext, sc);
       }

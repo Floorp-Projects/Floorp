@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  view \
 		  accessibility \
 		  necko \
+		  webshell \
 		  $(NULL)
 
 CPPSRCS		= \

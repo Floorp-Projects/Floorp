@@ -71,6 +71,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsStyleSet.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -137,14 +138,15 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
   }
 
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(aPresContext->PresShell(), &areaFrame, flags);
+  nsIPresShell *shell = aPresContext->PresShell();
+  NS_NewAreaFrame(shell, &areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
   nsRefPtr<nsStyleContext> styleContext;
-  styleContext = aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                            nsCSSAnonBoxes::buttonContent,
-                                            mStyleContext);
+  styleContext = shell->StyleSet()->ResolvePseudoStyleFor(mContent,
+                                                          nsCSSAnonBoxes::buttonContent,
+                                                          mStyleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
 
   return rv;

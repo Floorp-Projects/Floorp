@@ -1556,6 +1556,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
   // that the frame has the last reference to it, so AddRef it here.
 
   nsStyleContext* oldContext = aFrame->GetStyleContext();
+  nsStyleSet* styleSet = aPresContext->StyleSet();
 
   if (oldContext) {
     oldContext->AddRef();
@@ -1594,7 +1595,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      newContext = aPresContext->ResolveStyleContextForNonElement(parentContext).get();
+      newContext = styleSet->ResolveStyleForNonElement(parentContext).get();
     }
     else if (pseudoTag) {
       nsIContent* pseudoContent =
@@ -1602,9 +1603,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       if (pseudoTag == nsCSSPseudoElements::before ||
           pseudoTag == nsCSSPseudoElements::after) {
         // XXX what other pseudos do we need to treat like this?
-        newContext = aPresContext->ProbePseudoStyleContextFor(pseudoContent,
-                                                              pseudoTag,
-                                                              parentContext).get();
+        newContext = styleSet->ProbePseudoStyleFor(pseudoContent,
+                                                   pseudoTag,
+                                                   parentContext).get();
         if (!newContext) {
           // This pseudo should no longer exist; gotta reframe
           NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
@@ -1615,15 +1616,15 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           newContext->AddRef();
         }
       } else {
-        newContext = aPresContext->ResolvePseudoStyleContextFor(pseudoContent,
-                                                                pseudoTag,
-                                                                parentContext).get();
+        newContext = styleSet->ResolvePseudoStyleFor(pseudoContent,
+                                                     pseudoTag,
+                                                     parentContext).get();
       }
     }
     else {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      newContext = aPresContext->ResolveStyleContextFor(content, parentContext).get();
+      newContext = styleSet->ResolveStyleFor(content, parentContext).get();
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1680,9 +1681,9 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         NS_ASSERTION(pseudoTag &&
                      pseudoTag != nsCSSAnonBoxes::mozNonElement,
                      "extra style context is not pseudo element");
-        newExtraContext = aPresContext->ResolvePseudoStyleContextFor(content,
-                                                                     pseudoTag,
-                                                                     newContext).get();
+        newExtraContext = styleSet->ResolvePseudoStyleFor(content,
+                                                          pseudoTag,
+                                                          newContext).get();
         if (newExtraContext) {
           if (oldExtraContext != newExtraContext) {
             aMinChange = CaptureChange(oldExtraContext, newExtraContext, aFrame, 
@@ -1707,18 +1708,18 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         nsRefPtr<nsStyleContext> undisplayedContext;
         pseudoTag = undisplayed->mStyle->GetPseudoType();
         if (pseudoTag == nsnull) {  // child content
-          undisplayedContext = aPresContext->ResolveStyleContextFor(undisplayed->mContent,
-                                                                    newContext);
+          undisplayedContext = styleSet->ResolveStyleFor(undisplayed->mContent,
+                                                         newContext);
         }
         else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
-          undisplayedContext = aPresContext->ResolveStyleContextForNonElement(newContext);
+          undisplayedContext = styleSet->ResolveStyleForNonElement(newContext);
         }
         else {  // pseudo element
           NS_NOTREACHED("no pseudo elements in undisplayed map");
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
-          undisplayedContext = aPresContext->ResolvePseudoStyleContextFor(localContent,
-                                                                          pseudoTag,
-                                                                          newContext);
+          undisplayedContext = styleSet->ResolvePseudoStyleFor(localContent,
+                                                               pseudoTag,
+                                                               newContext);
         }
         if (undisplayedContext) {
           const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();

@@ -94,6 +94,7 @@
 #endif
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 #include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
@@ -1006,9 +1007,9 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
 
     if (aContent) {
       nsRefPtr<nsStyleContext> sc;
-      sc = aPresContext->ProbePseudoStyleContextFor(aContent->GetParent(),
-						    nsCSSPseudoElements::mozSelection,
-						    aStyleContext);
+      sc = aPresContext->StyleSet()->
+	ProbePseudoStyleFor(aContent->GetParent(),
+			    nsCSSPseudoElements::mozSelection, aStyleContext);
       if (sc) {
         mSelectionPseudoStyle = PR_TRUE;
         const nsStyleBackground* bg = sc->GetStyleBackground();

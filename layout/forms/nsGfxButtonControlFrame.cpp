@@ -51,6 +51,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
 
@@ -237,7 +238,8 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     if (NS_FAILED(rv)) { return rv; }
     if (!newFrame)   { return NS_ERROR_NULL_POINTER; }
     nsRefPtr<nsStyleContext> textStyleContext;
-    textStyleContext = aPresContext->ResolveStyleContextForNonElement(styleContext);
+    textStyleContext = aPresContext->StyleSet()->
+      ResolveStyleForNonElement(styleContext);
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
 
     if (styleContext) {

@@ -94,6 +94,7 @@
 #include "imgIContainer.h"
 #include "imgIContainerObserver.h"
 #include "imgILoader.h"
+#include "nsStyleSet.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -176,10 +177,9 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
     result = NS_STATIC_CAST(nsStyleContext*, mCache->Get(currState));
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    result = aPresContext->ResolvePseudoStyleWithComparator(aContent,
-                                                            aPseudoElement,
-                                                            aContext,
-                                                            aComparator).get();
+    result = aPresContext->StyleSet()->
+      ResolvePseudoStyleFor(aContent, aPseudoElement,
+                            aContext, aComparator).get();
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {

@@ -45,6 +45,7 @@
 
 #include "nsMathMLmactionFrame.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 //
 // <maction> -- bind actions to a subexpression - implementation
@@ -142,8 +143,9 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
 
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
-        newStyleContext = aPresContext->ResolveStyleContextFor(aContent,
-							       parentStyleContext);
+        newStyleContext = aPresContext->StyleSet()->
+          ResolveStyleFor(aContent, parentStyleContext);
+
         if (!newStyleContext) 
           mRestyle.Truncate();
         else {

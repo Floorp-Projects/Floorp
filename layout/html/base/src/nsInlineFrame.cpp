@@ -1053,9 +1053,10 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
         // style context thus removing the :first-line style. This way
         // we behave as if an anonymous (unstyled) span was the child
         // of the parent frame.
-        nsRefPtr<nsStyleContext> newSC = aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                                                    nsCSSAnonBoxes::mozLineFrame,
-                                                                                    parentContext);
+        nsRefPtr<nsStyleContext> newSC;
+        newSC = aPresContext->StyleSet()->
+          ResolvePseudoStyleFor(nsnull,
+                                nsCSSAnonBoxes::mozLineFrame, parentContext);
         if (newSC) {
           // Switch to the new style context.
           SetStyleContext(aPresContext, newSC);

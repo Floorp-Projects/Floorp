@@ -67,6 +67,7 @@
 #include "nsIFontMetrics.h"
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
+#include "nsStyleSet.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -710,8 +711,9 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
 
   if (firstRowContent) {
     nsRefPtr<nsStyleContext> styleContext;
-    styleContext = aBoxLayoutState.GetPresContext()->ResolveStyleContextFor(firstRowContent,
-                                                                            nsnull);
+    nsIPresContext *presContext = aBoxLayoutState.GetPresContext();
+    styleContext = presContext->StyleSet()->
+      ResolveStyleFor(firstRowContent, nsnull);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);
