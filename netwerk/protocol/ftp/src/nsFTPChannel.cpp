@@ -68,7 +68,7 @@ nsFTPChannel::~nsFTPChannel() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() called"));
 }
 
-NS_IMPL_ISUPPORTS3(nsFTPChannel, nsPIFTPChannel, nsIChannel, nsIRequest);
+NS_IMPL_ISUPPORTS5(nsFTPChannel, nsPIFTPChannel, nsIChannel, nsIRequest, nsIInterfaceRequestor, nsIProgressEventSink);
 
 nsresult
 nsFTPChannel::Init(const char* verb, 
@@ -218,7 +218,7 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     NS_ADDREF(mConnThread); // keep our own ref to the thread obj (we'll 
                             // release it later in this same call.
 
-    rv = mConnThread->Init(mHandler, this, nsnull, mCallbacks);
+    rv = mConnThread->Init(mHandler, this, nsnull);
     mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(mConnThread);
@@ -270,7 +270,7 @@ nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 
     mThreadRequest = do_QueryInterface((nsISupports*)(nsIRequest*)mConnThread);
 
-    rv = mConnThread->Init(mHandler, this, ctxt, mCallbacks);
+    rv = mConnThread->Init(mHandler, this, ctxt);
     mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(mConnThread);
@@ -335,7 +335,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
         mThreadRequest = do_QueryInterface((nsISupports*)(nsIRequest*)mConnThread);
 
-        rv = mConnThread->Init(mHandler, this, ctxt, mCallbacks);
+        rv = mConnThread->Init(mHandler, this, ctxt);
         mHandler = 0;
         if (NS_FAILED(rv)) {
             NS_RELEASE(mConnThread);
@@ -541,4 +541,32 @@ nsFTPChannel::Stopped(nsresult aStatus, const PRUnichar *aMsg) {
         rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
 
     return rv;
+}
+
+// nsIInterfaceRequestor method
+NS_IMETHODIMP
+nsFTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
+    // capture the progress event sink stuff. pass the rest through.
+    if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
+        *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    } else {
+        return mCallbacks ? mCallbacks->GetInterface(anIID, aResult) : NS_ERROR_NO_INTERFACE;
+    }
+}
+
+
+// nsIProgressEventSink methods
+NS_IMETHODIMP
+nsFTPChannel::OnStatus(nsIChannel *aChannel,
+                                nsISupports *aContext,
+                                const PRUnichar *aMsg) {
+    return mEventSink ? mEventSink->OnStatus(this, aContext, aMsg) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
+                                  PRUint32 aProgress, PRUint32 aProgressMax) {
+    return mEventSink ? mEventSink->OnProgress(this, aContext, aProgress, aProgressMax) : NS_OK;
 }
