@@ -67,7 +67,7 @@
 <!ENTITY  showIcon.label          "Show warning icon when Cookie Acceptance Policy is triggered">
 
 <!ENTITY  p3pDialogTitle.label       "Cookie Notification">
-<!ENTITY  p3pDialogOff.label         "Turn Off Privacy Settings">
+<!ENTITY  p3pDialogOff.label         "Allow All Cookies">
 <!ENTITY  p3pDialogClose.label       "Close">
 <!ENTITY  p3pDialogViewCookies.label "View Cookie Manager">
 <!ENTITY  p3pDialogViewLevels.label  "View Privacy Settings">
