@@ -102,6 +102,7 @@ XFE_ToolbarButton::createBaseWidget(Widget			parent,
 	button = XtVaCreateWidget(name,
 							  xfeButtonWidgetClass,
 							  parent,
+							  XmNinstancePointer,	this,
 							  NULL);
 
 	return button;
@@ -231,13 +232,17 @@ XFE_ToolbarButton::activate()
 	// Other URLs
 	else if (!HT_IsContainer(entry))
 	{
-		char *			address = HT_GetNodeURL(entry);
-		URL_Struct *	url = NET_CreateURLStruct(address,NET_DONT_RELOAD);
-		MWContext *		context = getAncestorContext();
+        MWContext *		context = getAncestorContext();
+
+        // Give HT a chance to handle the launch
+        if (!HT_Launch(entry, context)) {
+            char *			address = HT_GetNodeURL(entry);
+            URL_Struct *	url = NET_CreateURLStruct(address,NET_DONT_RELOAD);
 		
-		XP_ASSERT( context != NULL );
+            XP_ASSERT( context != NULL );
 		
-		fe_reuseBrowser(context,url);
+            fe_reuseBrowser(context,url);
+        }
 	}
 }
 //////////////////////////////////////////////////////////////////////////
