@@ -45,9 +45,8 @@
 #define QueryPerformanceCounter(x)     FALSE
 #endif
 
-PRIntn _nt_bitShift = 0;
-PRInt32 _nt_highMask = 0;
-PRInt32 _nt_ticksPerSec = -1;
+static PRIntn _nt_bitShift = 0;
+static PRInt32 _nt_ticksPerSec = -1;
 
 void
 _PR_MD_INTERVAL_INIT()
@@ -55,17 +54,33 @@ _PR_MD_INTERVAL_INIT()
     LARGE_INTEGER count;
 
     if (QueryPerformanceFrequency(&count)) {
-        PR_ASSERT(count.HighPart == 0);
+        /*
+         * HighPart is signed (LONG).  Assert that its sign bit is 0
+         * because we will be right shifting it.  LowPart is unsigned
+         * (DWORD).
+         */
+        PR_ASSERT(count.HighPart >= 0);
+        while(count.HighPart) {
+            count.LowPart = (count.HighPart << 31) + (count.LowPart >> 1);
+            count.HighPart >>= 1;
+            _nt_bitShift++;
+        }
         while(count.LowPart > PR_INTERVAL_MAX) {
             count.LowPart >>= 1;
             _nt_bitShift++;
-            _nt_highMask = (_nt_highMask << 1)+1;
         }
 
-        _nt_ticksPerSec = count.LowPart;
-        PR_ASSERT(_nt_ticksPerSec > PR_INTERVAL_MIN);
-    } else 
-        _nt_ticksPerSec = -1;
+        /*
+         * We can't use the performance counter if after
+         * normalization we are left with fewer than 32 bits.
+         */
+        if (_nt_bitShift <= 32) {
+            _nt_ticksPerSec = count.LowPart;
+            PR_ASSERT(_nt_ticksPerSec > PR_INTERVAL_MIN);
+            return;
+        }
+    }
+    _nt_ticksPerSec = -1;
 }
 
 PRIntervalTime 
@@ -77,12 +92,15 @@ _PR_MD_GET_INTERVAL()
     * to only 100000 ticks per second; QueryPerformanceCounter is too high
     * resolution...
     */
-    if (QueryPerformanceCounter(&count)) {
-        PRInt32 top = count.HighPart & _nt_highMask;
-        top = top << (32 - _nt_bitShift);
-        count.LowPart = count.LowPart >> _nt_bitShift;   
-        count.LowPart = count.LowPart + top; 
-        return (PRUint32)count.LowPart;
+    if (_nt_ticksPerSec != -1) {
+        (void)QueryPerformanceCounter(&count);
+        PR_ASSERT(_nt_bitShift <= 32);
+        if (_nt_bitShift == 32) {
+            return (PRUint32)count.HighPart;
+        } else {
+            return (PRUint32)((count.HighPart << (32 - _nt_bitShift))
+                    + (count.LowPart >> _nt_bitShift));
+        }
     } else
 #if defined(__MINGW32__)
         return time();
