@@ -40,6 +40,11 @@
 { 0x46efcb10, 0xcb6d, 0x11d2,                  \
     { 0x80, 0x65, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
+typedef enum {
+	nsMailboxActionParseMailbox = 0,
+	nsMailboxActionDisplayMessage
+} nsMailboxAction;
+
 class nsIMailboxUrl : public nsIMsgMailNewsUrl
 {
 public:
@@ -68,6 +73,15 @@ public:
 	// Getters and Setters for the mailbox url state
 	///////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath) = 0;
+	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath) = 0;
+
+	// Some mailbox urls include a message id for the message in question. 
+	// I'm not sure if there is a type for a message ID right now....
+//	NS_IMETHOD GetMessageID(PRUint32 aMessageID) = 0;
+//	NS_IMETHOD SetMessageID(PRUint32 aMessageID) = 0;
+
+	NS_IMETHOD GetMailboxAction(nsMailboxAction * aMailboxAction) = 0;
+	NS_IMETHOD SetMailboxAction(nsMailboxAction aMailboxAction) = 0;
 };
 
 #endif /* nsIMailboxUrl_h___ */
