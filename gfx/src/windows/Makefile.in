@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  content \
 		  layout \
 		  debug \
+		  imglib2 \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -68,11 +69,12 @@ CPPSRCS		= \
 
 EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
 
-EXTRA_DSO_LIBS	= gkgfx mozutil_s
+EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
 		$(NULL)
 
 OS_LIBS		+= winspool.lib comdlg32.lib

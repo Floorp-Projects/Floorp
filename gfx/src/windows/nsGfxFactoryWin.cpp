@@ -55,6 +55,8 @@
 #include "nsIGenericFactory.h"
 #include "nsNativeThemeWin.h"
 #include "nsPrintSession.h"
+#include "gfxImageFrame.h"
+
 
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextWin)
@@ -73,6 +75,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 PRBool
 UseAFunctions()
@@ -226,6 +229,10 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/chrome/chrome-native-theme;1", 
     NS_NewNativeTheme
   },
+  { "windows image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",

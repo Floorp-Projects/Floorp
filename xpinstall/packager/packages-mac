@@ -213,7 +213,6 @@ viewer:Components:transformiix.xpt
 viewer:Components:transformiix.shlb
 viewer:Components:nsCloseAllWindows.js
 
-viewer:Components:gfx2.shlb
 viewer:Components:libimg2.shlb
 viewer:Components:pngdecoder2.shlb
 viewer:Components:gifdecoder2.shlb

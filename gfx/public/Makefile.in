@@ -30,6 +30,7 @@ MODULE		= gfx
 
 EXPORTS		= \
 		imgScaler.h \
+		gfxcompat.h \
 		nsColor.h \
 		nsColorNames.h \
 		nsColorNameList.h \

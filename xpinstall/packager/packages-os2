@@ -128,8 +128,6 @@ bin/components/editor.dll
 ;bin/components/evntloop.dll
 bin/components/find.xpt
 bin/components/gfx.xpt
-bin/components/gfx2.xpt
-bin/components/gfx2.dll
 ;bin/components/gkcontent.dll
 bin/components/gkcontnt.dll
 bin/components/content_base.xpt

@@ -58,7 +58,6 @@ PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
 NSS_CO_TAG = NSS_CLIENT_TAG
 LDAPCSDK_CO_TAG = ldapcsdk_50_client_branch
 ACCESSIBLE_CO_TAG = 
-GFX2_CO_TAG = 
 IMGLIB2_CO_TAG = 
 BUILD_MODULES = all
 
@@ -267,18 +266,6 @@ ifdef ACCESSIBLE_CO_TAG
 endif
 CVSCO_ACCESSIBLE = $(CVS) $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(ACCESSIBLE_CO_MODULE)
 
-####################################
-# CVS defines for gfx2
-#
-GFX2_CO_MODULE = mozilla/gfx2
-GFX2_CO_FLAGS := -P
-ifdef MOZ_CO_FLAGS
-  GFX2_CO_FLAGS := $(MOZ_CO_FLAGS)
-endif
-ifdef GFX2_CO_TAG
-  GFX2_CO_FLAGS := $(GFX2_CO_FLAGS) -r $(GFX2_CO_TAG)
-endif
-CVSCO_GFX2 = $(CVS) $(CVS_FLAGS) co $(GFX2_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(GFX2_CO_MODULE)
 
 ####################################
 # CVS defines for new image library
@@ -319,9 +306,6 @@ ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
 endif
 ifeq (,$(filter accessible, $(BUILD_MODULE_CVS)))
   CVSCO_ACCESSIBLE :=
-endif
-ifeq (,$(filter gfx2, $(BUILD_MODULE_CVS)))
-  CVSCO_GFX2 :=
 endif
 ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
@@ -437,7 +421,6 @@ real_checkout:
 	cvs_co $(CVSCO_PSM) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
         cvs_co $(CVSCO_ACCESSIBLE) && \
-        cvs_co $(CVSCO_GFX2) && \
         cvs_co $(CVSCO_IMGLIB2) && \
 	$(CHECKOUT_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
@@ -498,7 +481,6 @@ real_fast-update:
 	fast_update $(CVSCO_PSM) && \
 	fast_update $(CVSCO_LDAPCSDK) && \
 	fast_update $(CVSCO_ACCESSIBLE) && \
-	fast_update $(CVSCO_GFX2) && \
 	fast_update $(CVSCO_IMGLIB2) && \
 	$(FASTUPDATE_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \

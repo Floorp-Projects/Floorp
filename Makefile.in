@@ -189,7 +189,6 @@ tier_9_dirs	+= \
 		expat \
 		htmlparser \
 		gfx \
-		gfx2 \
 		modules/libpr0n \
 		modules/plugin \
 		dom \

@@ -55,6 +55,7 @@
 #include "nsPrintOptionsOS2.h"
 #include "nsFontList.h"
 #include "nsPrintSession.h"
+#include "gfxImageFrame.h"
 
 // objects that just require generic constructors
 
@@ -72,6 +73,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 // our custom constructors
 
@@ -187,6 +189,10 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
     nsPrinterEnumeratorOS2Constructor },
+  { "windows image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",

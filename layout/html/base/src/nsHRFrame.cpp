@@ -40,7 +40,7 @@
 #include "nsLeafFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
-#include "nsColor.h"
+#include "nsCSSColorUtils.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"

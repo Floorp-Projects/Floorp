@@ -13,7 +13,6 @@ mozilla/security/manager,
 mozilla/accessible,
 mozilla/directory/c-sdk,    ldapcsdk_50_client_branch
 mozilla/lib/mac/Instrumentation
-mozilla/gfx2
 mozilla/modules/libpr0n
 SeaMonkeyAll
 ## You need this if you want to be able to use SVG

@@ -97,15 +97,6 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResu
 // otherwise return false.
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
 
-// Weird color computing code stolen from winfe which was stolen
-// from the xfe which was written originally by Eric Bina. So there.
-extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor);
-
-// To determin colors based on the background brightness
-extern "C" NS_GFX_(void) NS_GetSpecial3DColors(nscolor aResult[2],
-											   nscolor aBackgroundColor,
-											   nscolor aBorderColor);
-
 // Special method to brighten a Color and have it shift to white when
 // fully saturated.
 extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
@@ -113,13 +104,5 @@ extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
 // Special method to darken a Color and have it shift to black when
 // darkest component underflows
 extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
-
-// Determins brightness for a specific color
-extern "C" NS_GFX_(int) NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
-
-// function to convert from RGB color space to HSV color space 
-extern "C" NS_GFX_(void) NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue);
-// function to convert from HSV color space to RGB color space 
-extern "C" NS_GFX_(void) NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue);
 
 #endif /* nsColor_h___ */

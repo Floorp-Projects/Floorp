@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
+		nsCSSColorUtils.cpp \
 		nsFrameContentIterator.cpp \
 		nsChildIterator.cpp \
 		$(NULL)

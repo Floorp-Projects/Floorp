@@ -52,7 +52,7 @@ typedef struct {
 } Edge;
 
 
-class NS_GFX nsRenderingContextImpl : public nsIRenderingContext
+class nsRenderingContextImpl : public nsIRenderingContext
 {
 
 // CLASS MEMBERS

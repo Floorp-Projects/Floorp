@@ -44,7 +44,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  $(NULL)
 
-DIRS        =
+DIRS        = shared
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += ps
@@ -92,7 +92,6 @@ CPPSRCS = \
         nsFont.cpp \
         nsFontList.cpp \
         nsNameValuePairDB.cpp \
-        nsRenderingContextImpl.cpp \
         nsRect.cpp \
         nsRegion.cpp \
         nsTransform2D.cpp \
