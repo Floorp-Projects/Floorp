@@ -26,18 +26,41 @@ package org.mozilla.webclient;
  * <p>This {@link DocumentLoadListener} subclass adds the ability to get
  * detailed information on each event. </p>
  *
- * <p>The <code>eventDispatched()</code> method is passed the same thing
- * as in the {@link DocumentLoadListener}.</p>
- *
  * <p>The <code>eventData</code> property of the
  * <code>DocumentLoadEvent</code> instance will be a
- * <code>java.util.Map</code>.  For the
- * <code>END_URL_LOAD_EVENT_MASK</code> type in
- * <code>DocumentLoadEvent</code> the map will contain an entry under
- * the key "<code>URI</code>" without the quotes.  This will be the
- * fully qualified URI for the event.  The map will also contain an
- * entry under the key "<code>headers</code>".  This entry will be a
- * <code>Map</code> of all the response headers.</p>
+ * <code>java.util.Map</code>.  The following entries may be present in
+ * this map for the following <code>*_EVENT_MASK</code> types in
+ * <code>DocumentLoadEvent</code>.</p>
+ *
+ * <dl>
+ *
+ * <dt>For all <code>*_EVENT_MASK</code> types</dt>
+ *
+ * <dd><p>the map will contain an entry under the key "<code>URI</code>"
+ * without the quotes.  This will be the fully qualified URI for the
+ * event. </p></dd>
+ *
+ * <dt>For <code>START_URL_LOAD</code> type</dt>
+ *
+ * <dd><p>The map will contain an entry under the key
+ * "<code>method</code>" without the quotes.  This will be the request
+ * method for this event.  The map will also contain an entry under the
+ * key "<code>headers</code>".  This entry will be a
+ * <code>java.util.Map</code> of all the request headers.</p></dd>
+ *
+ * <dt>For <code>END_URL_LOAD</code> type</dt>
+ *
+ * <dd><p>The map will contain an entry under the key
+ * "<code>method</code>" without the quotes.  This will be the request
+ * method for this event.  The map will contain an entry under the key
+ * "<code>status</code>" without the quotes.  This will be the response
+ * status string from the server, such as "<code>200 OK</code>".  The
+ * map will also contain an entry under the key "<code>headers</code>".
+ * This entry will be a <code>java.util.Map</code> of all the response
+ * headers.</p></dd>
+ *
+ * </dl>
+ *
  *
  */
 

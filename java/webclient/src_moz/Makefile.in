@@ -100,6 +100,7 @@ CPPSRCS = \
 	nsActions.cpp \
 	NavigationActionEvents.cpp \
 	InputStreamShim.cpp \
+	NativeInputStreamImpl.cpp \
 	CurrentPageImpl.cpp \
 	NativeBrowserControl.cpp \
 	NativeWrapperFactory.cpp \

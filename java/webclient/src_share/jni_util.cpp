@@ -75,6 +75,9 @@ jobject ONE_VALUE;
 jobject TWO_VALUE;
 jobject URI_VALUE;
 jobject HEADERS_VALUE;
+jobject METHOD_VALUE;
+jobject STATUS_VALUE;
+jobject REQUEST_BODY_VALUE;
 jobject MESSAGE_VALUE;
 jobject BM_ADD_DATE_VALUE;
 jobject BM_LAST_MODIFIED_DATE_VALUE;
@@ -270,6 +273,21 @@ jboolean util_InitStringConstants()
                                        ::util_NewStringUTF(env, "headers")))) {
         return JNI_FALSE;
     }
+    if (nsnull == (STATUS_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "status")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (REQUEST_BODY_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "requestBody")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (METHOD_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "method")))) {
+        return JNI_FALSE;
+    }
     if (nsnull == (MESSAGE_VALUE = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "message")))) {
@@ -352,10 +370,16 @@ jboolean util_StringConstantsAreInitialized()
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
+    util_ThrowExceptionToJava(env, "java/lang/RuntimeException", message);
+}
+
+void util_ThrowExceptionToJava (JNIEnv * env, const char * exceptionClass,
+                                const char * message)
+{
     if (env->ExceptionOccurred()) {
       env->ExceptionClear();
     }
-    jclass excCls = env->FindClass("java/lang/RuntimeException");
+    jclass excCls = env->FindClass(exceptionClass);
     
     if (excCls == 0) { // Unable to find the exception class, give up.
 	if (env->ExceptionOccurred())

@@ -90,6 +90,9 @@ extern jobject ONE_VALUE;
 extern jobject TWO_VALUE;
 extern jobject URI_VALUE;
 extern jobject HEADERS_VALUE;
+extern jobject METHOD_VALUE;
+extern jobject STATUS_VALUE;
+extern jobject REQUEST_BODY_VALUE;
 extern jobject MESSAGE_VALUE;
 extern jobject BM_ADD_DATE_VALUE;
 extern jobject BM_LAST_MODIFIED_DATE_VALUE;
@@ -252,6 +255,8 @@ jboolean util_InitStringConstants();
 jboolean util_StringConstantsAreInitialized();
 
 void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
+void    util_ThrowExceptionToJava (JNIEnv * env, const char *exceptionClass,
+                                   const char * message);
 
 /**
 
