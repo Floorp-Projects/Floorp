@@ -193,20 +193,50 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
         result = GetDIBits(pDC, pIconInfo.hbmColor, 0, pBitMapInfo.bmiHeader.biHeight, (void *) buffer, &pBitMapInfo, DIB_RGB_COLORS);
         if (result > 0)
         {
-
-          InvertRows(buffer, pBitMapInfo.bmiHeader.biSizeImage, pBitMapInfo.bmiHeader.biWidth * (pBitMapInfo.bmiHeader.biBitCount / 8));
+          PRUint32 bytesPerPixel = pBitMapInfo.bmiHeader.biBitCount / 8;
+          InvertRows(buffer, pBitMapInfo.bmiHeader.biSizeImage, pBitMapInfo.bmiHeader.biWidth * bytesPerPixel);
           // Convert our little icon buffer which is padded to 4 bytes per pixel into a nice 3 byte per pixel
           // description.
           nsCString iconBuffer;
           iconBuffer.Assign((char) pBitMapInfo.bmiHeader.biWidth);
           iconBuffer.Append((char) pBitMapInfo.bmiHeader.biHeight);
+          
           PRInt32 index = 0;
-          while (index <pBitMapInfo.bmiHeader.biSizeImage)
+          if (pBitMapInfo.bmiHeader.biBitCount == 16)
           {
-            iconBuffer.Append((char) buffer[index]);
-            iconBuffer.Append((char) buffer[index+1]);
-            iconBuffer.Append((char) buffer[index+2]);
-            index += 4;
+            PRUint8 redValue, greenValue, blueValue, partialGreen;
+            while (index < pBitMapInfo.bmiHeader.biSizeImage)
+            {                            
+              DWORD dst=(DWORD) buffer[index];
+              PRUint16 num = 0;
+              num = (PRUint8) buffer[index];
+              num <<= 8;
+              num |= (PRUint8) buffer[index+1];
+
+              //blueValue = (PRUint8)((*dst)&(0x1F));
+              //greenValue = (PRUint8)(((*dst)>>5)&(0x1F));
+              //redValue = (PRUint8)(((*dst)>>10)&(0x1F));
+
+              redValue = ((PRUint32) (((float)(num & 0x7c00) / 0x7c00) * 0xFF0000) & 0xFF0000)>> 16;
+              greenValue =  ((PRUint32)(((float)(num & 0x03E0) / 0x03E0) * 0x00FF00) & 0x00FF00)>> 8;
+              blueValue =  ((PRUint32)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
+
+              // now we have the right RGB values...
+              iconBuffer.Append((char) redValue);
+              iconBuffer.Append((char) greenValue);
+              iconBuffer.Append((char) blueValue);
+              index += bytesPerPixel;
+            }
+          }
+          else
+          {
+            while (index <pBitMapInfo.bmiHeader.biSizeImage)
+            {
+              iconBuffer.Append((char) buffer[index]);
+              iconBuffer.Append((char) buffer[index+1]);
+              iconBuffer.Append((char) buffer[index+2]);
+              index += bytesPerPixel;
+            }
           }
 
           // now we need to tack on the alpha data...which is hbmMask
