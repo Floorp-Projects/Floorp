@@ -2935,19 +2935,6 @@ nsBrowserStatusHandler.prototype =
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
 
-    if (Components.isSuccessCode(aStatus))
-      dump("Document "+urlStr+" loaded successfully\n"); // per QA request
-    else {
-      // per QA request
-      var e = new Components.Exception("", aStatus);
-      var name = e.name;
-      dump("Error loading URL "+urlStr+" : "+
-           Number(aStatus).toString(16));
-      if (name)
-           dump(" ("+name+")");
-      dump('\n'); 
-    }
-
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                     .getService(Components.interfaces.nsIObserverService);
 
