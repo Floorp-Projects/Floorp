@@ -1202,12 +1202,14 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
                            NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
                            NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMultiple").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsg").get());
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsg").get(),
+                           NS_LITERAL_STRING("dontQuitButtonWin").get());
 #else
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
                            NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
                            NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMacMultiple").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMac").get());
+                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMac").get(),
+                           NS_LITERAL_STRING("dontQuitButtonMac").get());
 #endif
   }
   else if (nsCRT::strcmp(aTopic, "offline-requested") == 0 && 
@@ -1216,7 +1218,8 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertTitle").get(),
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsgMultiple").get(),
-                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get());
+                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get(),
+                           NS_LITERAL_STRING("dontGoOfflineButton").get());
     PRBool data;
     cancelDownloads->GetData(&data);
     if (!data) {
@@ -1232,9 +1235,10 @@ void
 nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCancelDownloads,
                                           const PRUnichar* aTitle, 
                                           const PRUnichar* aCancelMessageMultiple, 
-                                          const PRUnichar* aCancelMessageSingle)
+                                          const PRUnichar* aCancelMessageSingle,
+                                          const PRUnichar* aDontCancelButton)
 {
-  nsXPIDLString title, message, quitButton;
+  nsXPIDLString title, message, quitButton, dontQuitButton;
   
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
   nsCOMPtr<nsIStringBundle> bundle;
@@ -1254,6 +1258,8 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCa
       bundle->GetStringFromName(aCancelMessageSingle, getter_Copies(message));
       bundle->GetStringFromName(NS_LITERAL_STRING("cancelDownloadsOKText").get(), getter_Copies(quitButton));
     }
+
+    bundle->GetStringFromName(aDontCancelButton, getter_Copies(dontQuitButton));
   }
 
   // Get Download Manager window, to be parent of alert.
@@ -1265,10 +1271,10 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCa
   // Show alert.
   nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
   if (prompter) {
-    PRInt32 flags = (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0) + (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1);
+    PRInt32 flags = (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0) + (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1);
     PRBool nothing = PR_FALSE;
     PRInt32 button;
-    prompter->ConfirmEx(dmWindow, title, message, flags, quitButton.get(), nsnull, nsnull, nsnull, &nothing, &button);
+    prompter->ConfirmEx(dmWindow, title, message, flags, quitButton.get(), dontQuitButton.get(), nsnull, nsnull, &nothing, &button);
 
     aCancelDownloads->SetData(button == 1);
   }

@@ -104,7 +104,8 @@ protected:
   void     ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCancelDownloads,
                                   const PRUnichar* aTitle, 
                                   const PRUnichar* aCancelMessageMultiple, 
-                                  const PRUnichar* aCancelMessageSingle);
+                                  const PRUnichar* aCancelMessageSingle,
+                                  const PRUnichar* aDontCancelButton);
 
   static void     OpenTimerCallback(nsITimer* aTimer, void* aClosure);
   static nsresult OpenDownloadManager(PRBool aShouldFocus, nsIDownload* aDownload, nsIDOMWindow* aParent);
