@@ -197,4 +197,6 @@ void XXXNeverCalled()
       nsAdoptingString foo, bar;
       foo = bar;
     }
+    NS_UTF16ToCString(str1, 0, str2);
+    NS_CStringToUTF16(str2, 0, str1);
 }
