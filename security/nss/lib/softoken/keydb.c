@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.1 2000/03/31 19:25:52 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.2 2000/09/28 21:36:11 thayes%netscape.com Exp $
  */
 
 #include "keylow.h"
@@ -544,7 +544,7 @@ makeGlobalSalt(SECKEYKeyDBHandle *handle)
 static char *
 keyDBFilenameCallback(void *arg, int dbVersion)
 {
-    return((char *)arg);
+    return(PORT_Strdup((char *)arg));
 }
 
 SECKEYKeyDBHandle *
@@ -629,8 +629,8 @@ newdb:
 	handle->db = dbopen( dbname,
 			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
 
-    PORT_Free( dbname );
-    dbname = NULL;
+        PORT_Free( dbname );
+        dbname = NULL;
 
 	/* if create fails then we lose */
 	if ( handle->db == NULL ) {
@@ -664,8 +664,8 @@ newdb:
 		}
 	    }
 	    
-        PORT_Free( dbname );
-        dbname = NULL;
+            PORT_Free( dbname );
+            dbname = NULL;
 	}
 
 	/* we are using the old salt if we updated from an old db */
