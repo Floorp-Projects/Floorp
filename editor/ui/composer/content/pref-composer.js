@@ -22,11 +22,11 @@
 // This is mostly a modified version of code in EdColorProps.xul
 
 // Initialize in case we can't get them from prefs???
-var defaultTextColor="#000000";
-var defaultLinkColor="#000099";
-var defaultActiveColor="#000099";
-var defaultVisitedColor="#990099";
-var defaultBackgroundColor="#FFFFFF";
+const defaultTextColor="#000000";
+const defaultLinkColor="#000099";
+const defaultActiveColor="#000099";
+const defaultVisitedColor="#990099";
+const defaultBackgroundColor="#FFFFFF";
 
 var customTextColor;
 var customLinkColor;
@@ -37,16 +37,16 @@ var previewBGColor;
 var backgroundImage = "";
 
 // Strings we use often
-var styleStr =       "style";
-var textStr =        "text";
-var linkStr =        "link";
-var vlinkStr =       "vlink";
-var alinkStr =       "alink";
-var bgcolorStr =     "bgcolor";
-var backgroundStr =  "background";
-var colorStyle =     "color: ";
-var backColorStyle = "background-color: ";
-var backImageStyle = "; background-image: url(";
+const styleStr =       "style";
+const textStr =        "text";
+const linkStr =        "link";
+const vlinkStr =       "vlink";
+const alinkStr =       "alink";
+const bgcolorStr =     "bgcolor";
+const backgroundStr =  "background";
+const colorStyle =     "color: ";
+const backColorStyle = "background-color: ";
+const backImageStyle = "; background-image: url(";
 
 var browserColors;
 var dialog;
@@ -286,22 +286,9 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var image = TrimString(gDialog.BackgroundImageInput.value);
   if (image)
   {
-    if (IsValidImage(image))
-    {
-      backgroundImage = image;
-      // Append image style
-      styleValue += backImageStyle+backgroundImage+");";
-    }
-    else
-    {
-      backgroundImage = "";
-      if (ShowErrorMessage)
-      {
-        SetTextboxFocus(gDialog.BackgroundImageInput);
-        // Tell user about bad image
-        ShowInputErrorMessage(GetString("MissingImageError"));
-      }
-    }
+    backgroundImage = image;
+    // Append image style
+    styleValue += backImageStyle+backgroundImage+");";
   }
   else
     backgroundImage = "";
