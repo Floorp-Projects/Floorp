@@ -84,18 +84,22 @@ nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
 {
   NS_PRECONDITION(aIsCompiled == mIsCompiled,
                   "Incorrect aIsCompiled in nsXBLProtoImplProperty::Destroy");
-  if (aIsCompiled) {
-    if (mJSGetterObject)
-      RemoveJSGCRoot(&mJSGetterObject);
-    if (mJSSetterObject)
-      RemoveJSGCRoot(&mJSSetterObject);
-    mJSGetterObject = mJSSetterObject = nsnull;
+
+  if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
+    RemoveJSGCRoot(&mJSGetterObject);
   }
   else {
     delete mGetterText;
-    delete mSetterText;
-    mGetterText = mSetterText = nsnull;
   }
+
+  if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
+    RemoveJSGCRoot(&mJSSetterObject);
+  }
+  else {
+    delete mSetterText;
+  }
+
+  mGetterText = mSetterText = nsnull;
 }
 
 void 
