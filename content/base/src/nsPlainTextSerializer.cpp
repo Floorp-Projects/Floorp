@@ -899,29 +899,6 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   else if (type == eHTMLTag_u && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
-  else if (type == eHTMLTag_img) {
-    /* Output (in decreasing order of preference)
-       alt, title or nothing */
-    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
-    nsAutoString imageDescription;
-    if (NS_SUCCEEDED(GetAttributeValue(aNode,
-                                       nsHTMLAtoms::alt,
-                                       imageDescription))) {
-      // If the alt attribute has an empty value (|alt=""|), output nothing
-    }
-    else if (NS_SUCCEEDED(GetAttributeValue(aNode,
-                                            nsHTMLAtoms::title,
-                                            imageDescription))
-             && !imageDescription.IsEmpty()) {
-      imageDescription = NS_LITERAL_STRING(" [") +
-                         imageDescription +
-                         NS_LITERAL_STRING("] ");
-    }
-    
-    if (!imageDescription.IsEmpty()) {
-      Write(imageDescription);
-    }
-  }
 
   return NS_OK;
 }
@@ -1227,6 +1204,28 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
 
     EnsureVerticalSpace(0);
   }
+  else if (type == eHTMLTag_img) {
+    /* Output (in decreasing order of preference)
+       alt, title or nothing */
+    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
+    nsAutoString imageDescription;
+    if (NS_SUCCEEDED(GetAttributeValue(aNode,
+                                       nsHTMLAtoms::alt,
+                                       imageDescription))) {
+      // If the alt attribute has an empty value (|alt=""|), output nothing
+    }
+    else if (NS_SUCCEEDED(GetAttributeValue(aNode,
+                                            nsHTMLAtoms::title,
+                                            imageDescription))
+             && !imageDescription.IsEmpty()) {
+      imageDescription = NS_LITERAL_STRING(" [") +
+                         imageDescription +
+                         NS_LITERAL_STRING("] ");
+    }
+   
+    Write(imageDescription);
+  }
+
 
   return NS_OK;
 }
