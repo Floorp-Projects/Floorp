@@ -93,6 +93,9 @@ DEFINES += -DWIN32
 #
 
 DEFINES += -D_WINDOWS
+ifdef MOZILLA_CLIENT
+INCLUDES += -I$(SOURCE_XP_DIR)/include
+endif
 
 # override default, which is ASFLAGS = CFLAGS
 AS	= ml.exe

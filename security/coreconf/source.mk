@@ -40,9 +40,6 @@
 #
 
 SOURCE_PREFIX = $(CORE_DEPTH)/../dist
-ifdef MOZILLA_CLIENT
-SOURCE_PREFIX = $(CORE_DEPTH)/../mozilla/dist
-endif
 
 #
 # <user_source_tree> cross-platform (xp) master import/export directory
