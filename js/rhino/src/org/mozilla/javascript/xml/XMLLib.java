@@ -43,7 +43,11 @@ public abstract class XMLLib
 
     public static XMLLib extractFromScopeOrNull(Scriptable scope)
     {
-        ScriptableObject so = ScriptRuntime.getLibraryScope(scope);
+        ScriptableObject so = ScriptRuntime.getLibraryScopeOrNull(scope);
+        if (so == null) {
+            // If librray is not yet initialized, return null
+            return null;
+        }
 
         // Ensure lazily initialization of real XML library instance
         // which is done on first access to XML property
@@ -64,7 +68,11 @@ public abstract class XMLLib
 
     protected final XMLLib bindToScope(Scriptable scope)
     {
-        ScriptableObject so = ScriptRuntime.getLibraryScope(scope);
+        ScriptableObject so = ScriptRuntime.getLibraryScopeOrNull(scope);
+        if (so == null) {
+            // standard library should be initialized at this point
+            throw new IllegalStateException();
+        }
         return (XMLLib)so.associateValue(XML_LIB_KEY, this);
     }
 

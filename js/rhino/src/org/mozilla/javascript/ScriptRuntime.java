@@ -175,14 +175,11 @@ public class ScriptRuntime {
         return scope;
     }
 
-    public static ScriptableObject getLibraryScope(Scriptable scope)
+    public static ScriptableObject getLibraryScopeOrNull(Scriptable scope)
     {
         ScriptableObject libScope;
         libScope = (ScriptableObject)ScriptableObject.
                        getTopScopeValue(scope, LIBRARY_SCOPE_KEY);
-        if (libScope == null) {
-            throw new IllegalStateException("Failed to find library scope");
-        }
         return libScope;
     }
 
