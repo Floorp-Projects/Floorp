@@ -620,13 +620,13 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsMenuBar)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsMenuBar)
 
 NS_IMETHODIMP
-nsMenuBar::BeginUpdate( nsIDocument * aDocument )
+nsMenuBar::BeginUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMenuBar::EndUpdate( nsIDocument * aDocument )
+nsMenuBar::EndUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 {
   return NS_OK;
 }

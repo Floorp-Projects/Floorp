@@ -149,8 +149,12 @@ public:
 
   NS_DECL_NSIDOMSTYLESHEETLIST
 
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) {
+    return NS_OK;
+  }
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) {
+    return NS_OK;
+  }
   NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD BeginReflow(nsIDocument *aDocument,
@@ -443,10 +447,10 @@ public:
    */
   virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver);
 
-  // Observation hooks used by content nodes to propagate
-  // notifications to document observers.
-  NS_IMETHOD BeginUpdate();
-  NS_IMETHOD EndUpdate();
+  // Observation hooks used to propagate notifications to document
+  // observers.
+  NS_IMETHOD BeginUpdate(nsUpdateType aUpdateType);
+  NS_IMETHOD EndUpdate(nsUpdateType aUpdateType);
   NS_IMETHOD BeginLoad();
   NS_IMETHOD EndLoad();
   NS_IMETHOD ContentChanged(nsIContent* aContent,

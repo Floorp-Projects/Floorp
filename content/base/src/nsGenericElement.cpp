@@ -2614,7 +2614,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     PRBool do_notify = !!aRefChild;
 
     if (count && !do_notify && mDocument) {
-      mDocument->BeginUpdate();
+      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
     }    
     
     /*
@@ -2653,7 +2653,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
     if (count && !do_notify && mDocument) {
       mDocument->ContentAppended(this, old_count);
-      mDocument->EndUpdate();
+      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
 
     doc_fragment->DropChildReferences();
@@ -3403,7 +3403,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
 
   // Begin the update _before_ changing the attr value
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate();
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
 
     mDocument->AttributeWillChange(this, nameSpaceID, name);
   }
@@ -3466,7 +3466,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
       PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       mDocument->AttributeChanged(this, nameSpaceID, name, modHint);
-      mDocument->EndUpdate();
+      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -3574,7 +3574,7 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
            attr->mNodeInfo->NamespaceEquals(aNameSpaceID)) &&
           attr->mNodeInfo->Equals(aName)) {
         if (aNotify && (nsnull != mDocument)) {
-          mDocument->BeginUpdate();
+          mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
 
           mDocument->AttributeWillChange(this, aNameSpaceID, aName);
         }
@@ -3620,7 +3620,7 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
       if (aNotify) {
         mDocument->AttributeChanged(this, aNameSpaceID, aName,
                                     nsIDOMMutationEvent::REMOVAL);
-        mDocument->EndUpdate();
+        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
       }
     }
   }
@@ -3820,7 +3820,7 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
@@ -3850,7 +3850,7 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
     }
   }
   if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -3864,7 +3864,7 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != mDocument)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
@@ -3883,7 +3883,7 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
     NS_RELEASE(oldKid);
   }
   if (aNotify && (nsnull != mDocument)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -3895,7 +3895,7 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
@@ -3925,7 +3925,7 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
     }
   }
   if (aNotify && doc) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -3937,7 +3937,7 @@ nsGenericContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
   if (oldKid) {
     nsIDocument* doc = mDocument;
     if (aNotify && doc) {
-      doc->BeginUpdate();
+      doc->BeginUpdate(UPDATE_CONTENT_MODEL);
     }
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
@@ -3968,7 +3968,7 @@ nsGenericContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
     if (aNotify && doc) {
-      doc->EndUpdate();
+      doc->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 

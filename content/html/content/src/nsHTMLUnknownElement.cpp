@@ -198,7 +198,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     if (aNotify && (mDocument)) {
-      mDocument->BeginUpdate();
+      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
 
       mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
     }
@@ -218,7 +218,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   if (aNotify && (mDocument)) {
     result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
                                          nsIDOMMutationEvent::MODIFICATION);
-    mDocument->EndUpdate();
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return result;

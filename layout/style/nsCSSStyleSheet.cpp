@@ -1338,7 +1338,7 @@ DOMMediaListImpl::BeginMediaChange(void)
   if (mStyleSheet) {
     rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = doc->BeginUpdate();
+    rv = doc->BeginUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mStyleSheet->WillDirty();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1358,7 +1358,7 @@ DOMMediaListImpl::EndMediaChange(void)
     // XXXldb Pass something meaningful?
     rv = doc->StyleRuleChanged(mStyleSheet, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = doc->EndUpdate();
+    rv = doc->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -1913,7 +1913,9 @@ CSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
   mDisabled = !aEnabled;
 
   if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, !mDisabled);
+    mDocument->EndUpdate(UPDATE_STYLE);
   }
 
   return NS_OK;
@@ -1935,7 +1937,9 @@ CSSStyleSheetImpl::SetComplete()
   mInner->mComplete = PR_TRUE;
   if (mDocument && !mDisabled) {
     // Let the document know
+    mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, PR_TRUE);
+    mDocument->EndUpdate(UPDATE_STYLE);
   }
   return NS_OK;
 }
@@ -2476,7 +2480,9 @@ CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
   mDisabled = aDisabled;
 
   if (mDocument && mInner && mInner->mComplete && oldDisabled != mDisabled) {
+    mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, !mDisabled);
+    mDocument->EndUpdate(UPDATE_STYLE);
   }
 
   return NS_OK;
@@ -2668,7 +2674,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
     return result;
 
   if (mDocument) {
-    result = mDocument->BeginUpdate();
+    result = mDocument->BeginUpdate(UPDATE_STYLE);
     if (NS_FAILED(result))
       return result;
   }
@@ -2795,7 +2801,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
   }
   
   if (mDocument) {
-    result = mDocument->EndUpdate();
+    result = mDocument->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -2821,7 +2827,7 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
   // XXX TBI: handle @rule types
   if (mInner && mInner->mOrderedRules) {
     if (mDocument) {
-      result = mDocument->BeginUpdate();
+      result = mDocument->BeginUpdate(UPDATE_STYLE);
       if (NS_FAILED(result))
         return result;
     }
@@ -2844,7 +2850,7 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
           result = mDocument->StyleRuleRemoved(this, rule);
           NS_ENSURE_SUCCESS(result, result);
           
-          result = mDocument->EndUpdate();
+          result = mDocument->EndUpdate(UPDATE_STYLE);
           NS_ENSURE_SUCCESS(result, result);
         }
       }
@@ -2873,7 +2879,7 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
   }
 
   if (mDocument) {
-    result = mDocument->BeginUpdate();
+    result = mDocument->BeginUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -2891,7 +2897,7 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
     result = mDocument->StyleRuleRemoved(this, rule);
     NS_ENSURE_SUCCESS(result, result);
     
-    result = mDocument->EndUpdate();
+    result = mDocument->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -2933,7 +2939,7 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
 
   // parse and grab the rule 
   if (mDocument) {
-    result = mDocument->BeginUpdate();
+    result = mDocument->BeginUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -2975,7 +2981,7 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   }
 
   if (mDocument) {
-    result = mDocument->EndUpdate();
+    result = mDocument->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(result, result);
   }
 
@@ -3027,7 +3033,7 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
     nsCOMPtr<nsICSSImportRule> ownerRule;
     aSheet->GetOwnerRule(getter_AddRefs(ownerRule));
     
-    nsresult rv = mDocument->BeginUpdate();
+    nsresult rv = mDocument->BeginUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // XXXldb @import rules shouldn't even implement nsIStyleRule (but
@@ -3037,7 +3043,7 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
     rv = mDocument->StyleRuleAdded(this, styleRule);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDocument->EndUpdate();
+    rv = mDocument->EndUpdate(UPDATE_STYLE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

@@ -2335,7 +2335,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
     // Send the update notification _before_ changing anything
     if (mDocument && aNotify) {
-        mDocument->BeginUpdate();
+        mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
         mDocument->AttributeWillChange(this, attrns, attrName);
     }
 
@@ -2433,7 +2433,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
             : PRInt32(nsIDOMMutationEvent::ADDITION);
 
         mDocument->AttributeChanged(this, attrns, attrName, modHint);
-        mDocument->EndUpdate();
+        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
       }
     }
 

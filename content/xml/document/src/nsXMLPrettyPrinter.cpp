@@ -217,14 +217,14 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLPrettyPrinter)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXMLPrettyPrinter)
 
 NS_IMETHODIMP
-nsXMLPrettyPrinter::BeginUpdate(nsIDocument* aDocument)
+nsXMLPrettyPrinter::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
 {
     mUpdateDepth++;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument)
+nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
 {
     mUpdateDepth--;
 

@@ -1580,6 +1580,16 @@ NS_IMETHODIMP
 nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
                               nsCOMArray<nsIStyleSheet>& aNewSheets)
 {
+  // if an observer removes itself, we're ok (not if it removes
+  // others though)
+  PRInt32 obsIndx;
+  for (obsIndx = mObservers.Count() - 1; obsIndx >= 0; --obsIndx) {
+    nsIDocumentObserver *observer =
+      NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(obsIndx));
+
+    observer->BeginUpdate(this, UPDATE_STYLE);
+  }
+
   // XXX Need to set the sheet on the ownernode, if any
   NS_PRECONDITION(aOldSheets.Count() == aNewSheets.Count(),
                   "The lists must be the same length!");
@@ -1593,19 +1603,7 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
     // First remove the old sheet.
     NS_ASSERTION(oldSheet, "None of the old sheets should be null");
     PRInt32 oldIndex = mStyleSheets.IndexOf(oldSheet);
-    NS_ASSERTION(oldIndex != -1, "stylesheet not found");
-    mStyleSheets.RemoveObjectAt(oldIndex);
-
-    PRBool applicable = PR_TRUE;
-    oldSheet->GetApplicable(applicable);
-    if (applicable) {
-      RemoveStyleSheetFromStyleSets(oldSheet);
-    }
-    // XXX we should really notify here, but right now that would
-    // force things like a full reframe on every sheet.  We really
-    // need a way to batch this sucker...
-
-    oldSheet->SetOwningDocument(nsnull);
+    RemoveStyleSheet(oldSheet);  // This does the right notifications
 
     // Now put the new one in its place.  If it's null, just ignore it.
     nsIStyleSheet* newSheet = aNewSheets[i];
@@ -1618,21 +1616,20 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
         AddStyleSheetToStyleSets(newSheet);
       }
 
-      // XXX we should be notifying here too.
+      for (obsIndx = mObservers.Count() - 1; obsIndx >= 0; --obsIndx) {
+        nsIDocumentObserver *observer =
+          NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(obsIndx));
+        
+        observer->StyleSheetAdded(this, newSheet);
+      }
     }
   }
 
-  // Now notify so _something_ happens, assuming we did anything
-  if (oldSheet) {
-    // if an observer removes itself, we're ok (not if it removes
-    // others though)
-    // XXXldb Hopefully the observer doesn't care which sheet you use.
-    for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
-      nsIDocumentObserver *observer =
-        NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(indx));
+  for (obsIndx = mObservers.Count() - 1; obsIndx >= 0; --obsIndx) {
+    nsIDocumentObserver *observer =
+      NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(obsIndx));
 
-      observer->StyleSheetRemoved(this, oldSheet);
-    }
+    observer->EndUpdate(this, UPDATE_STYLE);
   }
 
   return NS_OK;
@@ -1814,24 +1811,24 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 }
 
 NS_IMETHODIMP
-nsDocument::BeginUpdate()
+nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
-    observer->BeginUpdate(this);
+    observer->BeginUpdate(this, aUpdateType);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocument::EndUpdate()
+nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
-    observer->EndUpdate(this);
+    observer->EndUpdate(this, aUpdateType);
   }
 
   return NS_OK;
@@ -2156,26 +2153,12 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
 {
   PRInt32 i;
 
-  // Get new value of count for every iteration in case observers
-  // remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  // Loop backwards to handle observers removing themselves
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver *observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    // XXXbz We should _not_ be calling BeginUpdate from in here! The
-    // caller of StyleRuleChanged should do that!
-    observer->BeginUpdate(this);
     observer->StyleRuleChanged(this, aStyleSheet, aOldStyleRule, aNewStyleRule);
-
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
-    else {
-      observer->EndUpdate(this);
-    }
   }
 
   return NS_OK;
@@ -2187,25 +2170,12 @@ nsDocument::StyleRuleAdded(nsIStyleSheet* aStyleSheet,
 {
   PRInt32 i;
 
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  // Loop backwards to handle observers removing themselves
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver *observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    // XXXbz We should _not_ be calling BeginUpdate from in here! The
-    // caller of StyleRuleAdded should do that!
-    observer->BeginUpdate(this);
     observer->StyleRuleAdded(this, aStyleSheet, aStyleRule);
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
-    else {
-      observer->EndUpdate(this);
-    }
   }
 
   return NS_OK;
@@ -2217,26 +2187,12 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 {
   PRInt32 i;
 
-  // Get new value of count for every iteration in case
-  // observers remove themselves during the loop.
-  for (i = 0; i < mObservers.Count(); i++) {
+  // Loop backwards to handle observers removing themselves
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver *observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    // XXXbz We should _not_ be calling BeginUpdate from in here! The
-    // caller of StyleRuleRemoved should do that!
-    observer->BeginUpdate(this);
     observer->StyleRuleRemoved(this, aStyleSheet, aStyleRule);
-
-    // Make sure that the observer didn't remove itself during the
-    // notification. If it did, update our index and count.
-    if (i < mObservers.Count() &&
-        observer != (nsIDocumentObserver*)mObservers[i]) {
-      i--;
-    }
-    else {
-      observer->EndUpdate(this);
-    }
   }
 
   return NS_OK;

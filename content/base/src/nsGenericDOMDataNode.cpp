@@ -1176,7 +1176,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   }
 
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate();
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
 
   mText.SetTo(aBuffer, aLength);
@@ -1202,7 +1202,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate();
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -1220,7 +1220,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
   }
 
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate();
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
 
   mText.SetTo(aBuffer, aLength);
@@ -1244,7 +1244,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate();
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;
@@ -1255,7 +1255,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
                               PRBool aNotify)
 {
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate();
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
 
   mText = aStr;
@@ -1281,7 +1281,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate();
+    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;
