@@ -198,14 +198,15 @@ sub ShowEmailOptions () {
     }
 
     if ($showNewEmailTech==0) {
-    print qq{
+    print <<"--endquote--";
+<TABLE>
 <TR><TD COLSPAN="2">
 Bugzilla will send out email notification of changed bugs to 
 the current owner, the Reporter of the bug$qacontactpart, and anyone on the
 CC list.  However, you can suppress some of those email notifications.
 On which of these bugs would you like email notification of changes?
 </TD></TR>
-};
+--endquote--
     my $entry =
         BuildPulldown("emailnotification", 
                       [["ExcludeSelfChanges",
@@ -215,7 +216,8 @@ On which of these bugs would you like email notification of changes?
                        ["All",
                         "All qualifying bugs"]],
                        $emailnotification);
-    EmitEntry("Notify me of changes to", $entry);
+        EmitEntry("Notify me of changes to", $entry);
+    print "</TABLE>";
     }
 
     if (Param("newemailtech")) {
