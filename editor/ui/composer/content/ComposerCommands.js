@@ -399,7 +399,7 @@ function pokeMultiStateUI(uiID, cmdParams)
     if (isMixed)
       desiredAttrib = "mixed";
     else
-      desiredAttrib = cmdParams.getCStringValue("state_attribute");
+      desiredAttrib = cmdParams.getStringValue("state_attribute");
 
     var uiState = commandNode.getAttribute("state");
     if (desiredAttrib != uiState)
@@ -421,7 +421,7 @@ function doStatefulCommand(commandID, newState)
     var cmdParams = newCommandParams();
     if (!cmdParams) return;
 
-    cmdParams.setCStringValue("state_attribute", newState);
+    cmdParams.setStringValue("state_attribute", newState);
     goDoCommandParams(commandID, cmdParams);
 
     pokeMultiStateUI(commandID, cmdParams);
