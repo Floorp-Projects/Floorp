@@ -38,6 +38,15 @@ CONFIG_CONFIG_MAK=1
 #//
 #//------------------------------------------------------------------------
 
+!if [$(MOZ_TOOLS)\bin\uname > osuname.inc]
+!endif
+WINOS=\
+!include "osuname.inc"
+WINOS=$(WINOS: =)^
+
+!if [del osuname.inc]
+!endif
+
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
 
@@ -151,6 +160,15 @@ CFLAGS = $(CFLAGS) -DMOZILLA_CLIENT
 PERL= $(MOZ_TOOLS)\perl5\perl.exe
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
+!if "$(WINOS)" == "WIN95"
+MKDIR = $(MOZ_SRC)\ns\config\w95mkdir
+QUIET =
+!else
+MKDIR = mkdir
+QUIET=@
+!endif
+
+
 #//------------------------------------------------------------------------
 #//
 #// Include the OS dependent configuration information
@@ -181,7 +199,7 @@ CFLAGS = $(CFLAGS) -DDEBUG_$(USERNAME)
 #enable builds on any drive if defined.
 MOZ_SRC=y:
 !endif
-MAKE_INSTALL=@$(DEPTH)\config\makecopy.exe
+MAKE_INSTALL=$(QUIET)$(DEPTH)\config\makecopy.exe
 MAKE_MANGLE=$(DEPTH)\config\mangle.exe
 MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 

@@ -57,10 +57,18 @@ JRI_GEN_DIR=_jri
 
 MANIFEST_LEVEL=MACROS
 !IF EXIST(manifest.mn) && !defined(IGNORE_MANIFEST)
+!IF "$(WINOS)" == "WIN95"
+!IF [$(MOZ_SRC)\ns\config\mantomak.exe manifest.mn manifest.mnw] == 0 
+!INCLUDE <manifest.mnw>
+!ELSE
+!ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
+!ENDIF
+!ELSE
 !IF ["$(MOZ_SRC)\ns\config\mantomak.exe manifest.mn manifest.mnw"] == 0 
 !INCLUDE <manifest.mnw>
 !ELSE
 !ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
+!ENDIF
 !ENDIF
 !ENDIF
 
@@ -105,6 +113,13 @@ TARGETS=$(PROGRAM) $(LIBRARY) $(DLL)
 !ifndef MAKE_ARGS
 #MAKE_ARGS=all
 !endif
+
+!if "$(WINOS)" == "WIN95"
+W95MAKE=$(MOZ_SRC)\ns\config\w95make.exe
+W32OBJS = $(OBJS:.obj=.obj, )
+W32LOBJS = $(OBJS: .= +-.)
+!endif
+
 
 all:: 
     $(NMAKE) -f makefile.win export
@@ -155,10 +170,14 @@ MAPFILE=.\$(OBJDIR)\$(MAPFILE)
 #//
 #//------------------------------------------------------------------------
 $(DIRS)::
+!if "$(WINOS)" == "WIN95"
+    @echo +++ make: cannot recursively make on win95 using command.com, use w95make.
+!else
     @echo +++ make: %MAKE_ARGS% in $(MAKEDIR)\$@
 	@cd $@
 	@$(NMAKE) -f makefile.win %%MAKE_ARGS%%
     @cd $(MAKEDIR) 
+!endif
 
 !endif # DIRS
 
@@ -223,6 +242,10 @@ export:: $(JAVA_DESTPATH) $(JDIRS)
 
 $(JDIRS):: $(JAVA_DESTPATH) $(TMPDIR)
 
+!if "$(WINOS)" == "WIN95"
+JDIRS = $(JDIRS:/=\)
+!endif
+
 !if defined(NO_CAFE)
 
 $(JDIRS)::
@@ -237,7 +260,11 @@ $(JDIRS)::
 # compile using symantec cafe's super-speedy compiler!
 $(JDIRS)::
     @echo +++ make: building package $@
-    -@mkdir $(MOZ_SRC)\ns\dist\classes\$@ 2> NUL
+!if "$(WINOS)" == "WIN95"
+    -@$(MKDIR) $(MOZ_SRC)\ns\dist\classes\$(@:/=\)
+!else
+    -@$(MKDIR) $(MOZ_SRC)\ns\dist\classes\$@ 2> NUL
+!endif
     $(MOZ_TOOLS)\bin\sj -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) \
             -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) $@\*.java
 
@@ -284,6 +311,71 @@ LIBRARY=$(OBJDIR)\$(LIBRARY_NAME)$(LIBRARY_SUFFIX).lib
 #// Set the MAKE_ARGS variable to indicate the target being built...  This is used
 #// when processing subdirectories via the $(DIRS) rule
 #//
+
+
+
+#
+# Nasty hack to get around the win95 shell's inability to set 
+# environment variables whilst in a set of target commands
+#
+!if "$(WINOS)" == "WIN95"
+
+clean:: 
+!ifdef DIRS
+     @$(W95MAKE) clean $(MAKEDIR) $(DIRS)
+!endif
+    -$(RM) $(OBJS) $(NOSUCHFILE) NUL 2> NUL
+
+clobber:: 
+!ifdef DIRS
+     @$(W95MAKE) clobber $(MAKEDIR) $(DIRS)
+!endif
+    -$(RM_R) $(GARBAGE) $(OBJDIR) 2> NUL
+
+clobber_all::
+!ifdef DIRS
+     @$(W95MAKE) clobber_all $(MAKEDIR) $(DIRS)
+!endif
+    -$(RM_R) *.OBJ $(TARGETS) $(GARBAGE) $(OBJDIR) 2> NUL
+
+  
+export::
+!ifdef DIRS
+    @$(W95MAKE) export $(MAKEDIR) $(DIRS)
+!endif # DIRS
+
+libs:: w95libs $(LIBRARY)
+
+w95libs::
+!ifdef DIRS
+     @$(W95MAKE) libs $(MAKEDIR) $(DIRS)
+!endif # DIRS
+
+install::
+!ifdef DIRS
+    @$(W95MAKE) install $(MAKEDIR) $(DIRS)
+!endif # DIRS
+
+depend::
+!ifdef DIRS
+    @$(W95MAKE) depend $(MAKEDIR) $(DIRS)
+!endif # DIRS
+
+mangle::
+!ifdef DIRS
+    @$(W95MAKE) mangle $(MAKEDIR) $(DIRS)
+!endif # DIRS
+    $(MAKE_MANGLE)
+
+unmangle::
+!ifdef DIRS
+    @$(W95MAKE) unmangle $(MAKEDIR) $(DIRS)
+!endif # DIRS
+    -$(MAKE_UNMANGLE)
+
+!else
+
+
 clean:: 
 	@set MAKE_ARGS=$@
 
@@ -310,6 +402,8 @@ unmangle::
 
 depend:: 
 	@set MAKE_ARGS=$@
+
+!endif
 
 #//------------------------------------------------------------------------
 #// DEPEND
