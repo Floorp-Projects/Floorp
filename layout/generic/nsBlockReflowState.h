@@ -29,6 +29,7 @@
 #include "nsHTMLValue.h"
 #include "nsReflowCommand.h"
 #include "nsCSSLayout.h"
+#include "nsIView.h"
 
 // XXX what do we do with catastrophic errors (rv < 0)? What is the
 // state of the reflow world after such an error?
@@ -309,6 +310,12 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the tag
   ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
 
   // Output the first/last content offset
   fprintf(out, "[%d,%d,%c] ", mFirstContentOffset, mLastContentOffset,
