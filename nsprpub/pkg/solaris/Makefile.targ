@@ -2,15 +2,15 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.targ,v 1.3 2003/02/08 06:32:06 sonja.mirtitsch%sun.com Exp $"
+#ident	"$Id: Makefile.targ,v 1.4 2003/02/08 22:45:13 sonja.mirtitsch%sun.com Exp $"
 #
 
 pkginfo: pkginfo.tmpl ../awk_pkginfo
 	$(RM) $@; nawk -f ../awk_pkginfo $< > $@
 
 # we need to copy prototype_sparc to current too find copyright in current
-prototype:  prototype_com prototype_$(MACH)
-	cat prototype_$(MACH) |  sed -e \
+prototype:  $(srcdir)/prototype_com $(srcdir)/prototype_$(MACH)
+	cat $(srcdir)/prototype_$(MACH) |  sed -e \
 '/^!include[ 	][ 	]*prototype_com/ r ./prototype_com' \
 -e 's/^!include[ 	][ 	]*prototype_com//g' >prototype
 
