@@ -26,7 +26,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messengercompose/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
 		pref-messages.xul \
-		pref-copiesfolders.xul \
 		pref-formatting.xul \
 		$(NULL)
 

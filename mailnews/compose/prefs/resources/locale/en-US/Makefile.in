@@ -26,7 +26,6 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messengercompose/locale/en-US
 
 EXPORT_RESOURCE_SAMPLES = \
 		pref-messages.dtd \
-		pref-copiesfolders.dtd \
 		pref-formatting.dtd \
 		$(NULL)
 

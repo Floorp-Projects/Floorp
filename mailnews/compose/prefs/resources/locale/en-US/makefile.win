@@ -23,10 +23,8 @@ DISTBROWSER=$(DIST)\bin\chrome\messengercompose\locale\en-US
 
 install::
 	$(MAKE_INSTALL) pref-messages.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-copiesfolders.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-formatting.dtd $(DISTBROWSER)
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\pref-messages.dtd
-	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\pref-copiesfolders.dtd
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\pref-formatting.dtd

@@ -144,12 +144,6 @@
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messengercompose/content/pref-copiesfolders.xul"><treeindentation/>&copyFolder.label;</treecell>
-          </treerow>
-        </treeitem>
-
-        <treeitem open="true">
-          <treerow>
             <treecell name="chrome://messengercompose/content/pref-formatting.xul"><treeindentation/>&format.label;</treecell>
           </treerow>
         </treeitem>
