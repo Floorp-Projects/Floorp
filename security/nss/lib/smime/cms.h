@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.16 2003/02/28 23:32:29 relyea%netscape.com Exp $
+ * $Id: cms.h,v 1.17 2003/03/11 03:38:53 jpierre%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -903,6 +903,12 @@ NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri);
 extern SECItem *
 NSS_CMSRecipientInfo_GetEncryptedKey(NSSCMSRecipientInfo *ri, int subIndex);
 
+/*
+ * NSS_CMSRecipientInfo_Encode - encode an NSS_CMSRecipientInfo as ASN.1
+ */
+SECStatus NSS_CMSRecipientInfo_Encode(PRArenaPool* poolp,
+                                      const NSSCMSRecipientInfo *src,
+                                      SECItem* returned);
 
 extern SECOidTag
 NSS_CMSRecipientInfo_GetKeyEncryptionAlgorithmTag(NSSCMSRecipientInfo *ri);
