@@ -192,31 +192,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 
     if (!scriptContext) return NS_ERROR_FAILURE;
 
-    // Grab a context to evaluate the javascript: URL on. If the
-    // evaluation of a javascript: URL is caused by some running
-    // script, use the context of the running script. If no JS is
-    // running, use the context of the window where the javascript:
-    // URL is being evaluated.
-    nsCOMPtr<nsIScriptContext> evalContext;
-
-    nsCOMPtr<nsIJSContextStack> stack = 
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    if (stack) {
-        JSContext *cx;
-        if (NS_SUCCEEDED(stack->Peek(&cx)) && cx &&
-            (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
-            nsISupports *supports =
-                NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(cx));
-
-            evalContext = do_QueryInterface(supports);
-        }
-    }
-
-    if (!evalContext) {
-        // No JS on the stack, use the window's context.
-        evalContext = scriptContext;
-    }
-
     // Unescape the script
     NS_UnescapeURL(script);
 
@@ -297,14 +272,14 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     nsString result;
     PRBool bIsUndefined;
 
-    rv = evalContext->EvaluateString(NS_ConvertUTF8toUCS2(script),
-                                     globalJSObject, // obj
-                                     principal,
-                                     url.get(),      // url
-                                     1,              // line no
-                                     nsnull,
-                                     result,
-                                     &bIsUndefined);
+    rv = scriptContext->EvaluateString(NS_ConvertUTF8toUCS2(script),
+                                       globalJSObject, // obj
+                                       principal,
+                                       url.get(),      // url
+                                       1,              // line no
+                                       nsnull,
+                                       result,
+                                       &bIsUndefined);
 
     if (NS_FAILED(rv)) {
         rv = NS_ERROR_MALFORMED_URI;
