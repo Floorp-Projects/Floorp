@@ -38,7 +38,7 @@ ParseRFC822Addresses (const char *line,
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->ParseRFC822Addresses(line, names, addresses, numAddresses);
+    pRfc822->ParseRFC822Addresses(NULL, line, names, addresses, numAddresses);
     pRfc822->Release();
     return numAddresses;
   }
@@ -61,7 +61,7 @@ UnquotePhraseOrAddr (char *line, char** lineout)
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->UnquotePhraseOrAddr(line, lineout);
+    pRfc822->UnquotePhraseOrAddr(NULL, line, lineout);
     pRfc822->Release();
     return NS_OK;
   }
@@ -83,7 +83,7 @@ ExtractRFC822AddressMailboxes (const char *line)
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->ExtractRFC822AddressMailboxes(line, &retVal);
+    pRfc822->ExtractRFC822AddressMailboxes(NULL, line, &retVal);
     pRfc822->Release();
   }
 
@@ -109,7 +109,7 @@ ExtractRFC822AddressNames (const char *line)
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->ExtractRFC822AddressNames(line, &retVal);
+    pRfc822->ExtractRFC822AddressNames(NULL, line, &retVal);
     pRfc822->Release();
   }
 
@@ -130,7 +130,7 @@ ExtractRFC822AddressName (const char *line)
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->ExtractRFC822AddressName(line, &retVal);
+    pRfc822->ExtractRFC822AddressName(NULL, line, &retVal);
     pRfc822->Release();
   }
 
@@ -152,7 +152,7 @@ ReformatRFC822Addresses (const char *line)
                                                    (void **) &pRfc822);
   if (NS_SUCCEEDED(rv)) 
   {
-    pRfc822->ReformatRFC822Addresses(line, &retVal);
+    pRfc822->ReformatRFC822Addresses(NULL, line, &retVal);
     pRfc822->Release();
   }
 
