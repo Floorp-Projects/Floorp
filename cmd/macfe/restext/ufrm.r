@@ -110,7 +110,7 @@ resource 'UTO ' ( CS_SYMBOL, "macsymbo.ut- CS_SYMBOL", purgeable) {{
 #include "macsymbo.ut"
 }};
 resource 'UTO ' ( CS_MAC_CYRILLIC, "maccyril.ut- CS_MAC_CYRILLIC", purgeable) {{ 
-#include "macdingb.ut"
+#include "maccyril.ut"
 }};
 resource 'UTO ' ( CS_MAC_GREEK, "macgreek.ut- CS_MAC_GREEK", purgeable) {{ 
 #include "macgreek.ut"
