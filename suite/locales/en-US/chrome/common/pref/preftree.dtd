@@ -11,7 +11,6 @@
 <!ENTITY address.label "Addressing">
 <!ENTITY mess.label "Messages">
 <!ENTITY windowSet.label "Window Settings">
-<!ENTITY copyFolder.label "Copies &amp; Folders">
 <!ENTITY format.label "Formatting">
 <!ENTITY return.label "Return Receipts">
 <!ENTITY disk.label "Disk Space">
