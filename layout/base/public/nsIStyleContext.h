@@ -42,8 +42,8 @@ class nsISupportsArray;
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleFont : public nsStyleStruct {
-  nsFont  mFont;
-  PRUint8 mThreeD;  // XXX fold this into nsFont
+  nsFont  mFont;    // [inherited]
+  PRUint8 mThreeD;  // [inherited] XXX fold this into nsFont or nuke it
 
 protected:
   nsStyleFont(const nsFont& aFont);
@@ -51,19 +51,19 @@ protected:
 };
 
 struct nsStyleColor : public nsStyleStruct {
-  nscolor mColor;
+  nscolor mColor;                 // [inherited]
  
-  PRUint8 mBackgroundAttachment; // See nsStyleConsts.h
-  PRUint8 mBackgroundFlags;      // See nsStyleConsts.h
-  PRUint8 mBackgroundRepeat;     // See nsStyleConsts.h
-  PRUint8 mCursor;               // See nsStyleConsts.h NS_STYLE_CURSOR_*
+  PRUint8 mBackgroundAttachment;  // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundFlags;       // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundRepeat;      // [reset] See nsStyleConsts.h
 
-  nscolor mBackgroundColor;
-  nscoord mBackgroundXPosition;
-  nscoord mBackgroundYPosition;
-  nsString mBackgroundImage;     // absolute url string
+  nscolor mBackgroundColor;       // [reset]
+  nscoord mBackgroundXPosition;   // [reset]
+  nscoord mBackgroundYPosition;   // [reset]
+  nsString mBackgroundImage;      // [reset] absolute url string
 
-  nsString mCursorImage;         // url string
+  PRUint8 mCursor;                // [reset] See nsStyleConsts.h NS_STYLE_CURSOR_*
+  nsString mCursorImage;          // [reset] url string
 
 protected:
   nsStyleColor(void);
@@ -71,11 +71,11 @@ protected:
 };
 
 struct nsStyleSpacing: public nsStyleStruct {
-  nsStyleSides  mMargin;          // length, percent, auto, inherit
-  nsStyleSides  mPadding;         // length, percent, inherit
-  nsStyleSides  mBorder;          // length, percent, See nsStyleConsts.h for enum
-  PRUint8       mBorderStyle[4];  // See nsStyleConsts.h
-  nscolor       mBorderColor[4];
+  nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
+  nsStyleSides  mPadding;         // [reset] length, percent, inherit
+  nsStyleSides  mBorder;          // [reset] length, percent, See nsStyleConsts.h for enum
+  PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
+  nscolor       mBorderColor[4];  // [reset] 
 
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
   void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
@@ -95,9 +95,9 @@ protected:
 };
 
 struct nsStyleList : public nsStyleStruct {
-  PRUint8   mListStyleType;             // See nsStyleConsts.h
-  PRUint8   mListStylePosition;
-  nsString  mListStyleImage;            // absolute url string
+  PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
+  PRUint8   mListStylePosition;         // [inherited] 
+  nsString  mListStyleImage;            // [inherited] absolute url string
 
 protected:
   nsStyleList(void);
@@ -105,56 +105,57 @@ protected:
 };
 
 struct nsStylePosition : public nsStyleStruct {
-  PRUint8   mPosition;                  // see nsStyleConsts.h
-  PRUint8   mOverflow;                  // see nsStyleConsts.h
-  PRUint8   mClipFlags;                 // see nsStyleConsts.h
+  PRUint8   mPosition;                  // [reset] see nsStyleConsts.h
 
-  nsStyleCoord  mLeftOffset;
-  nsStyleCoord  mTopOffset;
-  nsStyleCoord  mWidth;
-  nsStyleCoord  mHeight;
+  nsStyleCoord  mLeftOffset;            // [reset] 
+  nsStyleCoord  mTopOffset;             // [reset] 
+  nsStyleCoord  mWidth;                 // [reset] 
+  nsStyleCoord  mHeight;                // [reset] 
 
-  nsStyleCoord  mZIndex;
-  nsMargin  mClip;                      // offsets from respective edge
+  nsStyleCoord  mZIndex;                // [reset] 
 
 protected:
   nsStylePosition(void);
 };
 
-// XXX missing: length, inherit and percentage support
 struct nsStyleText : public nsStyleStruct {
-  PRUint8 mTextAlign;                   // see nsStyleConsts.h
-  PRUint8 mTextDecoration;              // see nsStyleConsts.h
-  PRUint8 mTextTransform;               // see nsStyleConsts.h
-  PRUint8 mWhiteSpace;                  // see nsStyleConsts.h
+  PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
+  PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
+  PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
+  PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
 
-  nsStyleCoord  mLetterSpacing;
-  nsStyleCoord  mLineHeight;
-  nsStyleCoord  mTextIndent;
-  nsStyleCoord  mWordSpacing;
-  nsStyleCoord  mVerticalAlign;         // see nsStyleConsts.h for enums
+  nsStyleCoord  mLetterSpacing;         // [inherited] 
+  nsStyleCoord  mLineHeight;            // [inherited] 
+  nsStyleCoord  mTextIndent;            // [inherited] 
+  nsStyleCoord  mWordSpacing;           // [inherited] 
+  nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 
 protected:
   nsStyleText(void);
 };
 
 struct nsStyleDisplay : public nsStyleStruct {
-  PRUint8 mDirection;           // see nsStyleConsts.h NS_STYLE_DIRECTION_*
-  PRUint8 mDisplay;             // see nsStyleConsts.h NS_STYLE_DISPLAY_*
-  PRUint8 mFloats;              // see nsStyleConsts.h NS_STYLE_FLOAT_*
-  PRUint8 mBreakType;           // see nsStyleConsts.h NS_STYLE_CLEAR_*
-  PRPackedBool mBreakBefore;
-  PRPackedBool mBreakAfter;
+  PRUint8 mDirection;           // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
+  PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
+  PRUint8 mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
+  PRUint8 mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
+  PRPackedBool mBreakBefore;    // [reset] 
+  PRPackedBool mBreakAfter;     // [reset] 
+  PRPackedBool mVisible;        // [inherited]
+  PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
+
+  PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
+  nsMargin  mClip;              // [reset] offsets from respective edge
 
 protected:
   nsStyleDisplay(void);
 };
 
 struct nsStyleTable: public nsStyleStruct {
-  PRUint8       mFrame;         // see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
-  PRUint8       mRules;         // see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
-  nsStyleCoord  mCellPadding;
-  nsStyleCoord  mCellSpacing;
+  PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
+  PRUint8       mRules;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_RULES_*
+  nsStyleCoord  mCellPadding;   // [reset] 
+  nsStyleCoord  mCellSpacing;   // [reset] 
 
 protected:
   nsStyleTable(void);
@@ -175,6 +176,8 @@ public:
   virtual nsISupportsArray* GetStyleRules(void) const = 0;
   virtual PRInt32 GetStyleRuleCount(void) const = 0;
 
+  virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules) = 0;
+
   // get a style data struct by ID, may return null 
   virtual nsStyleStruct* GetData(nsStyleStructID aSID) = 0;
 
@@ -188,8 +191,8 @@ public:
 // this is private to nsStyleSet, don't call it
 extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
+                     nsIStyleContext* aParentContext,
                      nsISupportsArray* aRules,
-                     nsIPresContext* aPresContext,
-                     nsIFrame* aParentFrame);
+                     nsIPresContext* aPresContext);
 
 #endif /* nsIStyleContext_h___ */
