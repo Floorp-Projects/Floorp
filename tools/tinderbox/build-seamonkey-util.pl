@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.176 $ ';
+$::UtilsVersion = '$Revision: 1.177 $ ';
 
 package TinderUtils;
 
@@ -1525,79 +1525,10 @@ sub run_all_tests {
 
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
-      my $layout_time;
-      my $layout_time_details;
-      my $test_name = "LayoutPerformanceTest";
-      my $binary_log = "$build_dir/$test_name.log";
-      my $url = "http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=$Settings::LayoutPerformanceTestPageTimeout&auto=1";
-
-      # Settle OS.
-      run_system_cmd("sync; sleep 10", 35);
-
-      $layout_time = AliveTestReturnToken($test_name,
-                                          $build_dir,
-                                          $binary,
-                                          " -P $Settings::MozProfileName \"$url\"",
-                                          $Settings::LayoutPerformanceTestTimeout,
-                                          "_x_x_mozilla_page_load",
-                                          ",");
-      
-      if($layout_time) {
-        # Pick off first number.
-        chomp($layout_time);
-        my @times = split(',', $layout_time);
-        $layout_time = $times[0];  # Set layout time to first number that we scraped.
-        
-        
-        
-      } else {
-        print_log "TinderboxPrint:Tp:[CRASH]\n";
-
-        # Run the test a second time.  Getting intermittent crashes, these
-        # are expensive to wait, a 2nd run that is successful is still useful.
-        # Sorry for the cut & paste. -mcafee
-
-        $layout_time = AliveTestReturnToken($test_name,
-                                            $build_dir,
-                                            $binary,
-                                            " -P $Settings::MozProfileName \"$url\"",
-                                            $Settings::LayoutPerformanceTestTimeout,
-                                            "_x_x_mozilla_page_load",
-                                            ",");
-        
-        # Print failure message if we fail 2nd time.
-        unless($layout_time) {
-            print_log "TinderboxPrint:Tp:[CRASH]\n";          
-        } else {
-            # Pick off first number.
-            chomp($layout_time);
-            my @times = split(',', $layout_time);
-            $layout_time = $times[0];  # Set layout time to first number that we scraped.
-        }
-      }
-      
-      # Set test status.
-      if($layout_time) {
-        $test_result = 'success';
-      } else {
-        $test_result = 'testfailed';
-      }
-      
-      if($test_result eq 'success') {
-        my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-
-        print_log "TinderboxPrint:" .
-          "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
-            ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">Tp:$layout_time" . "ms</a>\n";
-        
-        # Pull out detail data from log.
-        my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
-        chomp($raw_data);
-        
-        if($Settings::TestsPhoneHome) {
-          send_results_to_server($layout_time, $raw_data, "pageload", ::hostname());
-        }
-      }
+        $test_result = LayoutPerformanceTest("LayoutPerformanceTest", 
+                                             $binary, 
+                                             $build_dir,
+                                             "-P $Settings::MozProfileName");
     }
 
 
@@ -1881,7 +1812,79 @@ sub FileBasedTest {
 } # FileBasedTest
 
 
+sub LayoutPerformanceTest {
+    my ($test_name, $binary, $build_dir, $layout_test_args) = @_;
+    my $layout_test_result;
+    my $layout_time;
+    my $layout_time_details;
+    my $binary_log = "$build_dir/$test_name.log";
+    my $url = "http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=$Settings::LayoutPerformanceTestPageTimeout&auto=1";
+    
+    # Settle OS.
+    run_system_cmd("sync; sleep 10", 35);
+    
+    $layout_time = AliveTestReturnToken($test_name,
+                                        $build_dir,
+                                        $binary,
+                                        " $layout_test_args \"$url\"",
+                                        $Settings::LayoutPerformanceTestTimeout,
+                                        "_x_x_mozilla_page_load",
+                                        ",");
+    
+    if($layout_time) {
+      chomp($layout_time);
+      my @times = split(',', $layout_time);
+      $layout_time = $times[0];  # Set layout time to first number. 
+    } else {
+      print_log "TinderboxPrint:Tp:[CRASH]\n";
+      
+      # Run the test a second time.  Getting intermittent crashes, these
+      # are expensive to wait, a 2nd run that is successful is still useful.
+      # Sorry for the cut & paste. -mcafee
+      
+      $layout_time = AliveTestReturnToken($test_name,
+                                          $build_dir,
+                                          $binary,
+                                          " $layout_test_args \"$url\"",
+                                          $Settings::LayoutPerformanceTestTimeout,
+                                          "_x_x_mozilla_page_load",
+                                          ",");
+      
+      # Print failure message if we fail 2nd time.
+      unless($layout_time) {
+        print_log "TinderboxPrint:Tp:[CRASH]\n";
+      } else {
+        chomp($layout_time);
+        my @times = split(',', $layout_time);
+        $layout_time = $times[0];  # Set layout time to first number.
+      }
+    }
+    
+    # Set test status.
+    if($layout_time) {
+      $layout_test_result = 'success';
+    } else {
+      $layout_test_result = 'testfailed';
+    }
+    
+    if($layout_test_result eq 'success') {
+      my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+      
+      print_log "TinderboxPrint:" .
+        "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
+          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">Tp:$layout_time" . "ms</a>\n";
+      
+      # Pull out detail data from log.
+      my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
+      chomp($raw_data);
+      
+      if($Settings::TestsPhoneHome) {
+        send_results_to_server($layout_time, $raw_data, "pageload", ::hostname());
+      }
+    }
 
+    return $layout_test_result;
+}
 
 
 # Page loader/cycling mechanism (mozilla -f option):

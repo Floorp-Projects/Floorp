@@ -53,8 +53,8 @@ sub main {
   # Control tests from here, sorry no config file yet.
   my $chimera_alive_test              = 1;
   my $chimera_test8_test              = 1;
-  my $chimera_startup_test            = 0;
-  my $chimera_layout_performance_test = 0;
+  my $chimera_startup_test            = 1;
+  my $chimera_layout_performance_test = 1;
 
   my $chimera_clean_profile = 1;
 
@@ -235,76 +235,12 @@ sub main {
   
   # Pageload test.
   if ($chimera_layout_performance_test and $post_status eq 'success') {
-    my $layout_time;
-    my $test_name = "ChimeraLayoutPerformanceTest";
-    my $binary_log = "$test_name.log";
 
-    $layout_time =
-      TinderUtils::AliveTestReturnToken($test_name,
-                                        "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                        "Navigator",
-                                        "-url \"http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=15000&auto=1\"",
-                                        800,
-                                        "_x_x_mozilla_page_load",
-                                        ",");
-
-    if($layout_time) {
-        chomp($layout_time);
-        my @times = split(',', $layout_time);
-        $layout_time = $times[0];  # Set layout time to first number that we scraped.
-
-    } else {
-        TinderUtils::print_log "TinderboxPrint:Tp:[CRASH]\n";
-
-        # Run the test a second time.  Getting intermittent crashes, these
-        # are expensive to wait, a 2nd run that is successful is still useful.
-        # Sorry for the cut & paste. -mcafee
-
-        $layout_time =
-          TinderUtils::AliveTestReturnToken($test_name,
-                                            "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                            "Navigator",
-                                            "-url \"http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=15000&auto=1\"",
-                                            800,
-                                            "_x_x_mozilla_page_load",
-                                            ",");
-
-        if($layout_time) {
-          chomp($layout_time);
-          my @times = split(',', $layout_time);
-          $layout_time = $times[0];  # Set layout time to first number that we scraped.
-        } else {
-          # Print failure message if we fail 2nd time.
-          TinderUtils::print_log "TinderboxPrint:Tp:[CRASH]\n";
-        }
-    }
-
-    # Set test status.
-    if($layout_time) {
-        $post_status = 'success';
-    } else {
-        $post_status = 'testfailed';
-    }
-
-
-    if($post_status eq 'success') {
-        my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-
-        TinderUtils::print_log "TinderboxPrint:" .
-          "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
-            ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">Tp:$layout_time" . "ms</a>\n";
-
-        # Pull out detail data from log.
-        my $cwd = TinderUtils::get_system_cwd();
-        print "cwd = $cwd\n";
-        my $raw_data = TinderUtils::extract_token_from_file("$chimera_dir/build/Navigator.app/Contents/MacOS/$binary_log", "_x_x_mozilla_page_load_details", ",");
-        chomp($raw_data);
-
-        if($Settings::TestsPhoneHome) {
-          TinderUtils::send_results_to_server($layout_time, $raw_data, "pageload", ::hostname());
-      }
-    }
-
+      $post_status = 
+        TinderUtils::LayoutPerformanceTest("ChimeraLayoutPerformanceTest",
+                                           "Navigator",
+                                           "$chimera_dir/build/Navigator.app/Contents/MacOS",
+                                           "-url");
 
   }
 
