@@ -129,7 +129,7 @@ private:
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
-  PRTime            mLastRefresh;
+  PRIntervalTime    mLastRefresh;
   nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
