@@ -84,6 +84,7 @@ EXPORTS2= \
 	nsIDOMHTMLTableRowElement.h \
 	nsIDOMHTMLTableSectionElement.h \
 	nsIDOMHTMLTextAreaElement.h \
+	nsIDOMNSHTMLTextAreaElement.h \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
 	nsIDOMHTMLEmbedElement.h \

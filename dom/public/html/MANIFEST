@@ -57,6 +57,7 @@ nsIDOMHTMLTableElement.h
 nsIDOMHTMLTableRowElement.h
 nsIDOMHTMLTableSectionElement.h
 nsIDOMHTMLTextAreaElement.h
+nsIDOMNSHTMLTextAreaElement.h
 nsIDOMHTMLTitleElement.h
 nsIDOMHTMLUListElement.h
 nsIDOMImage.h
