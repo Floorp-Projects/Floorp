@@ -123,7 +123,6 @@ nsDOMIterator::ForEach(nsDomIterFunctor& functor) const
 {
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsISupports> isupports;
   nsresult res;
   
   // iterate through dom
@@ -143,9 +142,6 @@ nsresult
 nsDOMIterator::MakeList(nsBoolDomIterFunctor& functor,
                         nsCOMPtr<nsISupportsArray> *outArrayOfNodes) const
 {
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsISupports> isupports;
   nsresult res;
   
   // make a array
