@@ -687,7 +687,6 @@ public:
 
   // Find the subset of glyph tables that are applicable to the given char,
   // knowing that the stretchy style context of the char has the given font.
-  // aGlyphTableList is not cleared here, we just append to what may exist there.
   nsresult
   GetListFor(nsIPresContext* aPresContext,
              nsMathMLChar*   aChar,
@@ -1849,12 +1848,18 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         styleContext->GetStyleData(eStyleStruct_Border));
       const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
         styleContext->GetStyleData(eStyleStruct_Outline));
+
+      // if the leaf style context that we use for stretchy chars has a background color
+      // we use it, otherwise we let the rendering code lookup in our parent context
       const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
         styleContext->GetStyleData(eStyleStruct_Background));
-
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                                      aDirtyRect, rect, *backg, *border, 0, 0);
+      if (0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
+        nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
+                                              aDirtyRect, rect, *backg, *border, 0, 0);
+      else
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
+                                        aDirtyRect, rect, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
                                   aDirtyRect, rect, *border, styleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
