@@ -1129,14 +1129,21 @@ NS_IMETHODIMP nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval
   PRInt32 x;
   PRInt32 y;
   AdjustEventCoordsToBoxCoordSpace (aX, aY, &x, &y);
-  
+
+  // Check if the coordinates are above our visible space.
+  if (y < 0) {
+    *_retval = -1;
+    return NS_OK;
+  }
+
   // Now just mod by our total inner box height and add to our top row index.
   *_retval = (y/mRowHeight)+mTopRowIndex;
 
-  // Check if the coordinates are actually in our visible space.
+  // Check if the coordinates are below our visible space (or within 
+  // our visible space but below any row).
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
-  if (*_retval < mTopRowIndex || *_retval > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1))
+  if (*_retval > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1))
     *_retval = -1;
 
   return NS_OK;
@@ -1151,14 +1158,21 @@ NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, 
   PRInt32 x;
   PRInt32 y;
   AdjustEventCoordsToBoxCoordSpace (aX, aY, &x, &y);
-  
+
+  // Check if the coordinates are above our visible space.
+  if (y < 0) {
+    *aRow = -1;
+    return NS_OK;
+  }
+
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
 
-  // Check if the coordinates are actually in our visible space.
+  // Check if the coordinates are below our visible space (or within 
+  // our visible space but below any row).
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
-  if (*aRow < mTopRowIndex || *aRow > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1)) {
+  if (*aRow > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1)) {
     *aRow = -1;
     return NS_OK;
   }
