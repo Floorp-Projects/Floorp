@@ -118,7 +118,7 @@ C1=Component1
 
 [Setup Type2]
 Description Short=C&ustom
-Description Long=You many choose the options you want to install.  Recommended for advanced users.
+Description Long=You may choose the options you want to install.  Recommended for advanced users.
 ;Description Short=&Pro
 ;Description Long=Program will be installed with all the options available.
 
@@ -130,7 +130,7 @@ C1=Component1
 
 ;[Setup Type3]
 ;Description Short=C&ustom
-;Description Long=You many choose the options you want to install.  Recommended for advanced users.
+;Description Long=You may choose the options you want to install.  Recommended for advanced users.
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
