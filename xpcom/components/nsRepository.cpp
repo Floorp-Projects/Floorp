@@ -919,9 +919,10 @@ nsresult nsRepository::Initialize(void)
 	PR_LOG(logmodule, PR_LOG_ALWAYS, ("nsRepository: Initialized."));
 #ifdef USE_NSREG
 	NR_StartupRegistry();
-#endif
+
 	// Check the version of registry. Nuke old versions.
     platformVersionCheck();
+#endif
 
 	// Initiate autoreg
 	AutoRegister(NS_Startup, NULL);
