@@ -168,12 +168,11 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWi
 
 
   mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
-	mCurrentSurface = mRenderingSurface;
-	::InitPort(mCurrentSurface);
-  
-
+	mCurrentSurface = mRenderingSurface;  
   mFrontBuffer = mRenderingSurface;
-
+  
+  mMainRegion = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
+  
   return (CommonInit());
 }
 
@@ -195,13 +194,12 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextMac :: CommonInit()
 {
-/*  ((nsDeviceContextMac *)mContext)->SetDrawingSurface(mRenderingSurface);
-  ((nsDeviceContextMac *)mContext)->InstallColormap();
+	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mRenderingSurface);
+  //((nsDeviceContextMac *)mContext)->InstallColormap();
 
   mFontCache = mContext->GetFontCache();
   mP2T = mContext->GetDevUnitsToAppUnits();
-  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
-                     mContext->GetAppUnitsToDevUnits());*/
+  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),mContext->GetAppUnitsToDevUnits());
   return NS_OK;
 }
 
@@ -242,6 +240,7 @@ void nsRenderingContextMac :: PushState(void)
 nsRect 	rect;
 Rect		mac_rect;
 
+	
   GraphicsState * state = new GraphicsState();
 
   // Push into this state object, add to vector
@@ -280,6 +279,7 @@ PRBool nsRenderingContextMac :: PopState(void)
 {
 PRBool bEmpty = PR_FALSE;
 
+	
   PRUint32 cnt = mStateCache->Count();
   GraphicsState * state;
 
@@ -434,6 +434,10 @@ Rect	cliprect;
     return (PR_TRUE);
   	}
 }
+
+//------------------------------------------------------------------------
+
+
 
 //------------------------------------------------------------------------
 
@@ -633,6 +637,7 @@ void nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
   mTMatrix->TransformCoord(&aX1,&aY1);
 
 	SetPort(mCurrentSurface);
+	::SetClip(mMainRegion);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
 }

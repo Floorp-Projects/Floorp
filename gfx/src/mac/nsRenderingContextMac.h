@@ -60,84 +60,55 @@ public:
   virtual nsresult CommonInit();
 
   virtual void Reset();
-
   virtual nsIDeviceContext * GetDeviceContext(void);
-
-  virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
-
-  virtual void PushState(void);
-  virtual PRBool PopState(void);
-
-  virtual PRBool IsVisibleRect(const nsRect& aRect);
-
-  virtual PRBool SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine);
-  virtual PRBool SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-  virtual PRBool GetClipRect(nsRect &aRect);
-  virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
-  virtual void GetClipRegion(nsIRegion **aRegion);
-
-  virtual void SetColor(nscolor aColor);
+  virtual nsresult	SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
+  virtual void		PushState(void);
+  virtual PRBool 	PopState(void);
+  virtual PRBool	IsVisibleRect(const nsRect& aRect);
+  virtual PRBool	SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine);
+  virtual PRBool	SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
+  virtual PRBool	GetClipRect(nsRect &aRect);
+  virtual PRBool	SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
+  virtual void 		GetClipRegion(nsIRegion **aRegion);
+  virtual void 		SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
-
-  virtual void SetFont(const nsFont& aFont);
+  virtual void 		SetFont(const nsFont& aFont);
   virtual const nsFont& GetFont();
-
   virtual nsIFontMetrics * GetFontMetrics();
-
-  virtual void Translate(nscoord aX, nscoord aY);
-  virtual void Scale(float aSx, float aSy);
+  virtual void 		Translate(nscoord aX, nscoord aY);
+  virtual void 		Scale(float aSx, float aSy);
   virtual nsTransform2D * GetCurrentTransform();
-
   virtual nsDrawingSurface CreateDrawingSurface(nsRect *aBounds);
-  virtual void DestroyDrawingSurface(nsDrawingSurface aDS);
-
-  virtual void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-  virtual void DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
-
-  virtual void DrawRect(const nsRect& aRect);
-  virtual void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual void FillRect(const nsRect& aRect);
-  virtual void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-
-  virtual void DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-  virtual void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-
-  virtual void DrawEllipse(const nsRect& aRect);
-  virtual void DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual void FillEllipse(const nsRect& aRect);
-  virtual void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-
-  virtual void DrawArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-  virtual void DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
-  virtual void FillArc(const nsRect& aRect,
-                       float aStartAngle, float aEndAngle);
-  virtual void FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       float aStartAngle, float aEndAngle);
-
-  virtual void DrawString(const char *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          nscoord aWidth);
-  virtual void DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
-                          nscoord aWidth);
-  virtual void DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                          nscoord aWidth);
-
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
-  virtual void DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight); 
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aRect);
-  virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
-
+  virtual void 		DestroyDrawingSurface(nsDrawingSurface aDS);
+  virtual void 		DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  virtual void 		DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
+  virtual void 		DrawRect(const nsRect& aRect);
+  virtual void 		DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  virtual void 		FillRect(const nsRect& aRect);
+  virtual void 		FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  virtual void 		DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  virtual void 		FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+  virtual void 		DrawEllipse(const nsRect& aRect);
+  virtual void 		DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  virtual void 		FillEllipse(const nsRect& aRect);
+  virtual void 		FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  virtual void 		DrawArc(const nsRect& aRect,float aStartAngle, float aEndAngle);
+  virtual void 		DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,float aStartAngle, float aEndAngle);
+  virtual void 		FillArc(const nsRect& aRect,float aStartAngle, float aEndAngle);
+  virtual void 		FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,float aStartAngle, float aEndAngle);
+  virtual void 		DrawString(const char *aString, PRUint32 aLength,nscoord aX, nscoord aY,nscoord aWidth);
+  virtual void 		DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,nscoord aWidth);
+  virtual void 		DrawString(const nsString& aString, nscoord aX, nscoord aY,nscoord aWidth);
+  virtual void 		DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
+  virtual void 		DrawImage(nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight); 
+  virtual void 		DrawImage(nsIImage *aImage, const nsRect& aRect);
+  virtual void 		DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
   virtual nsresult CopyOffScreenBits(nsRect &aBounds);
-
+	
 protected:
-
-  nscolor 					mCurrentColor ;
-  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
-  float             mP2T;
-
+  nscolor 							mCurrentColor ;
+  nsTransform2D		  		*mTMatrix;		// transform that all the graphics drawn here will obey
+  float             		mP2T;
   nsDrawingSurfaceMac		mRenderingSurface;  // Can be a BackBuffer if Selected in
   nsDrawingSurfaceMac		mFrontBuffer;
   nsDrawingSurfaceMac		mCurrentSurface;
@@ -145,6 +116,7 @@ protected:
   nsIFontMetrics				*mFontMetrics;
   nsIFontCache					*mFontCache;
   RgnHandle							mClipRegion;
+  RgnHandle							mMainRegion;
   PRInt32               mCurrFontHandle;
 
   //state management
