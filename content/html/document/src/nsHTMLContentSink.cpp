@@ -2321,7 +2321,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mBackoffCount = -1; // never
   prefs->GetIntPref("content.notify.backoffcount", &mBackoffCount);
 
-  mNotificationInterval = 1000000;
+  // The mNotificationInterval has a dramatic effect on how long it 
+  // takes to initially display content for slow connections.
+  // The current value of 1/4 of second provides good 
+  // incremental display of content without causing an increase
+  // in page load time. If this value is set below 1/10 of second
+  // it starts to impact page load performance.
+  // see bugzilla bug 72138 for more info.
+  mNotificationInterval = 250000;
   prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
 
   mMaxTextRun = 8192;
