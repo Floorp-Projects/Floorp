@@ -2238,7 +2238,6 @@ PRIVATE cookie_CookieStruct *
 NextCookieAfter(cookie_CookieStruct * cookie, int * cookieNum) {
   cookie_CookieStruct *cookie_ptr;
   cookie_CookieStruct *lowestCookie = NULL;
-  int localCookieNum = 0;
 
   if (!cookie_cookieList) return NULL;
 
@@ -2249,10 +2248,9 @@ NextCookieAfter(cookie_CookieStruct * cookie, int * cookieNum) {
     if (!cookie || (CookieCompare(cookie_ptr, cookie) > 0)) {
       if (!lowestCookie || (CookieCompare(cookie_ptr, lowestCookie) < 0)) {
         lowestCookie = cookie_ptr;
-        *cookieNum = localCookieNum;
+        *cookieNum = i;
       }
     }
-    localCookieNum++;
   }
 
   return lowestCookie;
