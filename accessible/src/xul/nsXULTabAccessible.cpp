@@ -152,7 +152,9 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetRole(PRUint32 *_retval)
 /** Possible states: normal */
 NS_IMETHODIMP nsXULTabBoxAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval = 0;
+  nsAccessible::GetState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;
+  *_retval |= STATE_UNAVAILABLE;
   return NS_OK;
 }
 
@@ -190,7 +192,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *_retval)
 #ifndef MOZ_ACCESSIBILITY_ATK
   *_retval = ROLE_PROPERTYPAGE;
 #else
-  *_retval = ROLE_PANE;
+  *_retval = ROLE_SCROLL_PANE;
 #endif
   return NS_OK;
 }
@@ -202,7 +204,6 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetState(PRUint32 *_retval)
 {
   // get focus and disable status from base class -- skip container because we have state
   nsAccessible::GetState(_retval);
-  *_retval &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -243,8 +244,7 @@ NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
 /** no state -- normal */
 NS_IMETHODIMP nsXULTabsAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval = 0;
-  return NS_OK;
+  return nsAccessible::GetState(_retval);
 }
 
 /** no value */
