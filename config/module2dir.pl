@@ -37,6 +37,7 @@ my %map = (
   'dbm',                'dbm',
   'docshell',           'docshell',
   'dom',                'dom',
+  'downloadmanager',    'xpfe/components/download-manager',
   'editor',             'editor',
   'embed_base',         'embedding/base',
   'embedcomponents',    'embedding/components/appstartup',
@@ -63,7 +64,7 @@ my %map = (
   'mailnews',           'mailnews',
   'mime',               'mailnews/mime',
   'mimetype',           'netwerk/mime',
-  'mork',               'db/mork',
+  'mork',               'db/mork db/mdb',
   'mozcomps',           'xpfe/components',
   'mozldap',            'directory/xpcom/base',
   'mpfilelocprovider',  'modules/mpfilelocprovider',
@@ -82,6 +83,7 @@ my %map = (
   'pref',               'modules/libpref',
   'prefmigr',           'profile/pref-migrator',
   'profile',            'profile',
+  'progressDlg',        'embedding/components/ui/progressDlg',
   'rdf',                'rdf',
   'rdfutil',            'rdf/util',
   'shistory',           'xpfe/components/shistory',
@@ -97,6 +99,7 @@ my %map = (
   'view',               'view',
   'wallet',             'extensions/wallet',
   'webbrwsr',           'embedding/browser/webBrowser',
+  'webbrowserpersist',  'embedding/components/webbrowserpersist',
   'webshell',           'webshell',
   'widget',             'widget',
   'windowwatcher',      'embedding/components/windowwatcher',
@@ -121,7 +124,9 @@ sub dir_for_required_component {
 
   $dir = $map{$component};
   if($dir) {
+	# prepend "mozilla/" in front of directory names.
 	$rv = "mozilla/$dir";
+	$rv =~ s/\s+/ mozilla\//g;  # Hack for 2 or more directories.
   } else {
 	$rv = 0;
   }
