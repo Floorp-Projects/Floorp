@@ -1678,6 +1678,10 @@ NS_IMETHODIMP nsDocShell::GetCurScrollPos(PRInt32 scrollOrientation,
    nsCOMPtr<nsIScrollableView> scrollView;
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    nscoord x, y;
    NS_ENSURE_SUCCESS(scrollView->GetScrollPosition(x, y), NS_ERROR_FAILURE);
@@ -1704,6 +1708,10 @@ NS_IMETHODIMP nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation,
    nsCOMPtr<nsIScrollableView> scrollView;
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    PRInt32 other;
    PRInt32 x;
@@ -1738,6 +1746,10 @@ NS_IMETHODIMP nsDocShell::SetCurScrollPosEx(PRInt32 curHorizontalPos,
    nsCOMPtr<nsIScrollableView> scrollView;
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    NS_ENSURE_SUCCESS(scrollView->ScrollTo(curHorizontalPos, curVerticalPos, 
       NS_VMREFRESH_IMMEDIATE), NS_ERROR_FAILURE);
@@ -1753,6 +1765,10 @@ NS_IMETHODIMP nsDocShell::GetScrollRange(PRInt32 scrollOrientation,
    nsCOMPtr<nsIScrollableView> scrollView;
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    PRInt32 cx;
    PRInt32 cy;
@@ -1918,6 +1934,10 @@ NS_IMETHODIMP nsDocShell::GetScrollbarVisibility(PRBool* verticalVisible,
    nsCOMPtr<nsIScrollableView> scrollView;
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    PRBool vertVisible;
    PRBool horizVisible;
@@ -1943,6 +1963,10 @@ NS_IMETHODIMP nsDocShell::ScrollByLines(PRInt32 numLines)
 
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    NS_ENSURE_SUCCESS(scrollView->ScrollByLines(0, numLines), NS_ERROR_FAILURE);
 
@@ -1955,6 +1979,10 @@ NS_IMETHODIMP nsDocShell::ScrollByPages(PRInt32 numPages)
 
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
       NS_ERROR_FAILURE);
+   if (!scrollView)
+   {
+       return NS_ERROR_FAILURE;
+   }
 
    NS_ENSURE_SUCCESS(scrollView->ScrollByPages(numPages), NS_ERROR_FAILURE);
 
@@ -2306,38 +2334,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     if(wasAnchor)
     {
         mLoadType = aLoadType;
-
-        PRBool updateHistory = PR_TRUE;
-
-        // Determine if this type of load should update history   
-        switch(mLoadType)
-        {
-        case loadHistory:
-        case loadReloadNormal:
-        case loadReloadBypassCache:
-        case loadReloadBypassProxy:
-        case loadReloadBypassProxyAndCache:
-            updateHistory = PR_FALSE;
-            break;
-        }
-
-        if (updateHistory)
-        {
-            UpdateCurrentSessionHistory();
-            UpdateCurrentGlobalHistory();
-            PRBool shouldAdd = PR_FALSE;
-
-            ShouldAddToSessionHistory(aURI, &shouldAdd);
-            if(shouldAdd)
-                AddToSessionHistory(aURI, nsnull);
-
-            shouldAdd = PR_FALSE;
-            ShouldAddToGlobalHistory(aURI, &shouldAdd);
-            if(shouldAdd)
-                AddToGlobalHistory(aURI);
-        }
-
-        SetCurrentURI(aURI);
+        OnNewURI(aURI, nsnull, mLoadType);
         return NS_OK;
     }
    
@@ -2750,6 +2747,12 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
         sCurrentLeft = sCurrent;
     }
 
+    // Exit when there are no anchors
+    if (hashNew <= 0 && hashCurrent <= 0)
+    {
+        return NS_OK;
+    }
+
     // Compare the URIs.
     //
     // NOTE: this is case sensitive so it won't pick up www.ABC.com and
@@ -2790,63 +2793,76 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 }
 
 
+void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType)
+{
+    NS_ASSERTION(aURI, "uri is null");
+
+    UpdateCurrentSessionHistory();
+    UpdateCurrentGlobalHistory();
+
+    PRBool updateHistory = PR_TRUE;
+
+    // Determine if this type of load should update history   
+    switch(aLoadType)
+    {
+    case loadHistory:
+    case loadReloadNormal:
+    case loadReloadBypassCache:
+    case loadReloadBypassProxy:
+    case loadReloadBypassProxyAndCache:
+        updateHistory = PR_FALSE;
+        break;
+
+    case loadNormal:
+    case loadNormalReplace:
+    case loadLink:
+        break;
+
+    default:
+        NS_ERROR("Need to update case");
+        break;
+    } 
+
+    if(updateHistory)
+    {
+        PRBool shouldAdd = PR_FALSE;
+
+        ShouldAddToSessionHistory(aURI, &shouldAdd);
+        if(shouldAdd)
+        {
+            AddToSessionHistory(aURI, aChannel);
+        }
+
+        shouldAdd = PR_FALSE;
+        ShouldAddToGlobalHistory(aURI, &shouldAdd);
+        if(shouldAdd)
+        {
+            AddToGlobalHistory(aURI);
+        }
+    }
+
+    SetCurrentURI(aURI);
+
+    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+    if(httpChannel)
+    {
+        nsCOMPtr<nsIURI> referrer;
+        httpChannel->GetReferrer(getter_AddRefs(referrer));
+        SetReferrerURI(referrer);
+    }
+
+    mInitialPageLoad = PR_FALSE;
+}
+
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 {
-   nsCOMPtr<nsIURI> uri;
-   aChannel->GetURI(getter_AddRefs(uri));
-   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
-   UpdateCurrentSessionHistory();
-   UpdateCurrentGlobalHistory();
+    OnNewURI(uri, aChannel, mLoadType);
 
-   PRBool updateHistory = PR_TRUE;
-
-   // Determine if this type of load should update history   
-   switch(mLoadType)
-      {
-      case loadHistory:
-      case loadReloadNormal:
-      case loadReloadBypassCache:
-      case loadReloadBypassProxy:
-      case loadReloadBypassProxyAndCache:
-         updateHistory = PR_FALSE;
-         break;
-
-      case loadNormal:
-      case loadNormalReplace:
-      case loadLink:
-         break;
-      
-      default:
-         NS_ERROR("Need to update case");
-         break;
-      } 
-
-   if(updateHistory)
-      {
-      PRBool shouldAdd = PR_FALSE;
-
-      ShouldAddToSessionHistory(uri, &shouldAdd);
-      if(shouldAdd)
-         AddToSessionHistory(uri, aChannel);
-
-      shouldAdd = PR_FALSE;
-      ShouldAddToGlobalHistory(uri, &shouldAdd);
-      if(shouldAdd)
-         AddToGlobalHistory(uri);
-      }
-
-   SetCurrentURI(uri);
-   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-   if(httpChannel)
-      {
-      nsCOMPtr<nsIURI> referrer;
-      httpChannel->GetReferrer(getter_AddRefs(referrer));
-      SetReferrerURI(referrer);
-      }
-
-   mInitialPageLoad = PR_FALSE;
-   return NS_OK;
+    return NS_OK;
 }
 
 void nsDocShell::SetCurrentURI(nsIURI* aURI)
@@ -3244,9 +3260,10 @@ NS_IMETHODIMP nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollVi
    NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
       NS_ERROR_FAILURE);
 
-   NS_ASSERTION(*aOutScrollView, "no scroll view");
-   if (!*aOutScrollView) return NS_ERROR_FAILURE;
-
+   if (*aOutScrollView == nsnull)
+   {
+      return NS_ERROR_FAILURE;
+   }
    return NS_OK;
 } 
 
