@@ -304,6 +304,7 @@ protected:
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 
+	nsresult NotifyFolderLoaded();
 	// this is a little helper function that is not part of the public interface. 
 	// we use it to get the IID of the incoming server for the derived folder.
 	// w/out a function like this we would have to implement GetServer in each

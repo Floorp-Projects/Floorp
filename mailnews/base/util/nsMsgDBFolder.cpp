@@ -303,7 +303,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey /* aParentKey */, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
 	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey /* aPar
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey /* aParentKey */, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;
@@ -509,13 +509,7 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		PRBool updatingFolder = PR_FALSE;
 		if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
 		{
-			PRInt32 i;
-			for(i = 0; i < mListeners->Count(); i++)
-			{
-				//Folderlistener's aren't refcounted.
-				nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-				listener->OnFolderLoaded(this);
-			}
+			NotifyFolderLoaded();
 		}
 	}
     return NS_OK;

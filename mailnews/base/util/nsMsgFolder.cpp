@@ -1664,6 +1664,24 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 
 }
 
+nsresult nsMsgFolder::NotifyFolderLoaded()
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnFolderLoaded(this);
+	}
+	//Notify listeners who listen to every folder
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyFolderLoaded(this);
+
+	return NS_OK;
+}
+
 
 nsresult
 nsGetMailFolderSeparator(nsString& result)

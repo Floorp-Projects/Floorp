@@ -281,6 +281,25 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISu
 
 }
 
+NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
+{
+
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnFolderLoaded(folder);
+	}
+	return NS_OK;
+
+
+}
+
 nsresult
 NS_NewMsgMailSession(const nsIID& iid, void **result)
 {
