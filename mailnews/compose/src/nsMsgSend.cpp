@@ -1971,7 +1971,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
       // Check to see if this is a file URL, if so, don't retrieve
       // like a remote URL...
       //
-      if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
+      if (nsMsgIsLocalFile((const char *)str))
       {
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
@@ -2030,7 +2030,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
     if (!str.IsEmpty()) 
     {
       // Just look for local file:// attachments and do the right thing.
-      if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
+      if (nsMsgIsLocalFile((const char *)str))
       {
 #ifdef NS_DEBUG
         printf("Adding LOCAL attachment %d: %s\n", newLoc, str.get());
@@ -2144,7 +2144,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       // Just look for files that are NOT local file attachments and do 
       // the right thing.
       //
-      if (str.CompareWithConversion("file://", PR_TRUE, 7) != 0)
+      if (! nsMsgIsLocalFile((const char *)str))
       {
 #ifdef NS_DEBUG
         printf("Adding REMOTE attachment %d: %s\n", newLoc, str.get());

@@ -1673,8 +1673,19 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
 PRBool
 nsMsgIsLocalFile(const char *url)
 {
-  if (PL_strncasecmp(url, "file:", 5) == 0) 
+  /*
+    A url is considered as a local file if it's start with file://
+    But on Window, we need to filter UNC file url because there
+    are not really local file. Those start with file:////
+  */
+  if (PL_strncasecmp(url, "file://", 7) == 0)
+  {
+#ifdef XP_WIN
+    if (PL_strncasecmp(url, "file:////", 9) == 0)
+      return PR_FALSE;
+#endif
     return PR_TRUE;
+  }
   else
     return PR_FALSE;
 }
