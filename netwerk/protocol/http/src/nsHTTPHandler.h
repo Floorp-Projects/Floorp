@@ -33,21 +33,20 @@
 
     -Gagan Saksena 02/25/99
 */
-//TODO turnon the proxy stuff as well. 
 
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
+//#include "nsIProxy.h"
 
 //Forward decl.
 class nsHashtable;
 class nsIChannel;
 class nsHTTPChannel;
 
-class nsHTTPHandler : public nsIHTTPProtocolHandler
-        //, public nsIProxy 
+class nsHTTPHandler : public nsIHTTPProtocolHandler//, public nsIProxy 
 {
 
 public:
@@ -89,25 +88,28 @@ public:
     NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,
                                     nsIURI **_retval);
 
-    //Functions from nsIHTTPProtocolHandler
-
-#if 0
     //Functions from nsIProxy
     /*
         Get and Set the Proxy Host 
     */
-    NS_IMETHOD      GetProxyHost(const char* *o_ProxyHost) const {return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_IMETHOD      SetProxyHost(const char* i_ProxyHost) {return NS_ERROR_NOT_IMPLEMENTED;};
+    NS_IMETHOD               GetProxyHost(const char* *o_ProxyHost) const; 
+
+    NS_IMETHOD               SetProxyHost(const char* i_ProxyHost);
 
     /*
         Get and Set the Proxy Port 
         -1 on Set call indicates switch to default port
     */
-    NS_IMETHOD_(PRInt32)
-                    GetProxyPort(void) const {return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_IMETHOD      SetProxyPort(PRInt32 i_ProxyPort) {return NS_ERROR_NOT_IMPLEMENTED;}; 
+    NS_IMETHOD_(PRInt32)     GetProxyPort(void) const 
+    {
+        return mProxyPort;
+    };
+    NS_IMETHOD               SetProxyPort(PRInt32 i_ProxyPort) 
+    {
+        mProxyPort = i_ProxyPort;
+        return NS_OK;
+    }; 
 
-#endif
     // Follow the redirects automatically. This will trigger OnRedirect call on the sink
     NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
 
@@ -139,6 +141,9 @@ protected:
     nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
     nsCOMPtr<nsISupportsArray> mTransportList;
+
+    char*           mProxy;
+    PRInt32         mProxyPort;
 };
 
 #endif /* _nsHTTPHandler_h_ */

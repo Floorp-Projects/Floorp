@@ -34,11 +34,11 @@ nsBasicAuth::~nsBasicAuth()
 
 nsresult
 nsBasicAuth::Authenticate(nsIURI* i_URI, 
-	const char* iChallenge, 
-	const char* iUserPass,
-	char**	oResult)
+    const char* iChallenge, 
+    const char* iUserPass,
+    char**  oResult)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
     // Assert that iChallenge starts with Basic. TODO
     // Then do the conversion
     if (oResult && iUserPass)
@@ -46,16 +46,16 @@ nsBasicAuth::Authenticate(nsIURI* i_URI,
         char* tempBuff = nsnull;
         tempBuff = PL_Base64Encode(iUserPass, 0, tempBuff); 
         if (!tempBuff)
-			return NS_ERROR_FAILURE; // ??
-		nsString authString("Basic ");
-		authString += tempBuff;
+            return NS_ERROR_FAILURE; // ??
+        nsString authString("Basic ");
+        authString += tempBuff;
         // Copy this set into an nsAuth and save to nsAuthList
         // TODO
         *oResult = authString.ToNewCString();
-		PR_Free(tempBuff);
+        PR_Free(tempBuff);
         rv = NS_OK;
     }
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -67,11 +67,11 @@ nsBasicAuth::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = NULL;
     
     if (aIID.Equals(NS_GET_IID(nsISupports))) 
-	{
+    {
         *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
         NS_ADDREF_THIS();
         return NS_OK;
-	}
+    }
     return NS_NOINTERFACE;
 }
  

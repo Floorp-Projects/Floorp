@@ -75,6 +75,10 @@ public:
     nsresult            SetContentLength(PRInt32 aContentLength);
     nsresult            SetContentType(const char* aContentType);
     nsresult            SetCharset(const char *aCharset);
+
+    // Set if this channel is using proxy to connect
+    nsresult            SetUsingProxy(PRBool i_UsingProxy);
+
 protected:
     nsCOMPtr<nsIURI>            mURI;
     PRBool                      mConnected; 
@@ -99,13 +103,14 @@ protected:
     nsCString                   mCharset;
     nsIInputStream*             mPostStream;
     nsCOMPtr<nsISupports>       mOwner;
-    // Auth related stuff-
-    /* 
-       If this is true then we have already tried 
-       prehost as a response to the server challenge. 
-       And so we need to throw a dialog box!
-    */
-    PRBool 						mAuthTriedWithPrehost;
+	// Auth related stuff-
+	/* 
+		If this is true then we have already tried 
+		prehost as a response to the server challenge. 
+		And so we need to throw a dialog box!
+	*/
+	PRBool 						mAuthTriedWithPrehost;
+    PRBool                      mUsingProxy;
 };
 
 #endif /* _nsHTTPChannel_h_ */

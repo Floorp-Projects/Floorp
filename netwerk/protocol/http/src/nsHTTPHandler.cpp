@@ -34,6 +34,8 @@
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
 
+#include "nsIPref.h" // preferences stuff
+
 #if defined(PR_LOGGING)
 //
 // Log module for HTTP Protocol logging...
@@ -55,6 +57,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
 {
@@ -76,7 +79,7 @@ NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
     return NS_ERROR_NULL_POINTER;
 }
 
-nsHTTPHandler::nsHTTPHandler()
+nsHTTPHandler::nsHTTPHandler():mProxy(nsnull)
 {
     nsresult rv;
     NS_INIT_REFCNT();
@@ -101,6 +104,34 @@ nsHTTPHandler::nsHTTPHandler()
     if (NS_FAILED(rv)) {
         NS_ERROR("Failed to create the transport list");
     }
+    
+    // Prefs stuff. Is this the right place to do this? TODO check
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+
+    if (NS_FAILED(rv)) 
+    {
+        NS_ERROR("Failed to access preferences service.");
+        return;
+    }
+    else 
+    {
+        nsXPIDLCString proxyServer;
+        PRInt32 proxyPort = -1;
+        rv = prefs->CopyCharPref("network.proxy.http", getter_Copies(proxyServer));
+        if (NS_FAILED(rv)) NS_ERROR("Failed to get the HTTP proxy server");
+        rv = prefs->GetIntPref("network.proxy.http_port",&proxyPort);
+#ifdef DEBUG_gagan
+        printf("Read HTTP proxy = %s:%d\n", (const char*)proxyServer,proxyPort);
+#endif
+
+        if (NS_SUCCEEDED(rv))
+        {
+            if (NS_FAILED(SetProxyHost(proxyServer)))
+                NS_ERROR("Failed to set the HTTP proxy server");
+            if (NS_FAILED(SetProxyPort(proxyPort)))
+                NS_ERROR("Failed to set the HTTP proxy port");
+        }
+    }
 }
 
 nsHTTPHandler::~nsHTTPHandler()
@@ -113,6 +144,8 @@ nsHTTPHandler::~nsHTTPHandler()
 
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
+
+    CRTFREEIF(mProxy);
 
 }
 
@@ -329,9 +362,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                          nsIChannel** o_pTrans)
 {
     nsresult rv;
-    PRInt32 port;
     PRUint32 count;
-    nsXPIDLCString host;
 
     *o_pTrans = nsnull;
 
@@ -350,18 +381,6 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         return NS_ERROR_BUSY;
     }
 
-    // Get the host and port of the URI to create a new socket transport...
-    rv = i_Uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = i_Uri->GetPort(&port);
-    if (NS_FAILED(rv)) return rv;
-
-    if (port == -1) {
-        GetDefaultPort(&port);
-    }
-
-
 #if 0
     // Check in the table...
     nsIChannel* trans = (nsIChannel*) mTransportList->Get(&key);
@@ -377,7 +396,30 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = sts->CreateTransport(host, port, &trans);
+    if (!mProxy)
+    {
+        PRInt32 port;
+        nsXPIDLCString host;
+
+        // Get the host and port of the URI to create a new socket transport...
+        rv = i_Uri->GetHost(getter_Copies(host));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = i_Uri->GetPort(&port);
+        if (NS_FAILED(rv)) return rv;
+
+        if (port == -1) {
+            GetDefaultPort(&port);
+        }
+
+        rv = sts->CreateTransport(host, port, &trans);
+        i_Channel->SetUsingProxy(PR_FALSE);
+    }
+    else
+    {
+        rv = sts->CreateTransport(mProxy, mProxyPort, &trans);
+        i_Channel->SetUsingProxy(PR_TRUE);
+    }
     if (NS_FAILED(rv)) return rv;
 
     // Put it in the table...
@@ -434,3 +476,31 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
     return rv;
 }
 
+nsresult
+nsHTTPHandler::GetProxyHost(const char* *o_ProxyHost) const
+{
+    if (!o_ProxyHost)
+        return NS_ERROR_NULL_POINTER;
+    if (mProxy)
+    {
+        *o_ProxyHost = nsCRT::strdup(mProxy);
+        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_ProxyHost = nsnull;
+        return NS_OK;
+    }
+}
+
+nsresult
+nsHTTPHandler::SetProxyHost(const char* i_ProxyHost) 
+{
+    CRTFREEIF(mProxy);
+    if (i_ProxyHost)
+    {
+        mProxy = nsCRT::strdup(i_ProxyHost);
+        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    return NS_OK;
+}
