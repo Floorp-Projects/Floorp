@@ -575,9 +575,9 @@ function getInstallManifest(aFile)
   var arcs = ds.ArcLabelsOut(manifestRoot);
   if (!arcs.hasMoreElements()) {
     ds = null;
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Components.interfaces.nsIURI);
-    uri.spec = fileURL;
+    var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService)
+                        .newFileURI(aFile);
     var url = uri.QueryInterface(Components.interfaces.nsIURL);
     showMalformedError(url.fileName);
   }
@@ -1331,9 +1331,9 @@ nsThemeInstaller.prototype = {
                                             ") does not match the em:internalName arc in the theme's " + 
                                             "install.rdf file (" + stringData(internalName) + ")");
             var fileURL = getURLSpecFromFile(themeManifest);
-            var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                                .createInstance(Components.interfaces.nsIURI);
-            uri.spec = fileURL;
+            var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newFileURI(themeManifest);
             var url = uri.QueryInterface(Components.interfaces.nsIURL);
             showMalformedError(url.fileName);
             

@@ -289,11 +289,11 @@ function onDownloadShow(aEvent)
       f.reveal();
     } catch (ex) {
       // if reveal failed for some reason (eg on unix it's not currently
-      // implemented), send the file: URL  window rooted at the parent to 
+      // implemented), send the file: URL window rooted at the parent to 
       // the OS handler for that protocol
       var parent = f.parent;
       if (parent) {
-        openExternal(parent.path);
+        openExternal(parent);
       }
     }
   }
@@ -352,7 +352,7 @@ function onDownloadOpen(aEvent)
         } catch (ex) {
           // if launch fails, try sending it through the system's external
           // file: URL handler
-          openExternal(f.path);
+          openExternal(f);
         }
       }
       else {
@@ -561,18 +561,21 @@ var XPInstallDownloadManager = {
     var tempDir = fileLocator.get("TmpD", Components.interfaces.nsIFile);
 
     var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
-    
+
+    var IOService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+
     var xpinstallManager = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
 
     var xpiString = "";
+
     for (var i = 0; i < numXPInstallItems;) {
       // Pretty Name
       var displayName = aParams.GetString(i++);
       
       // URI
-      var uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-      uri.spec = aParams.GetString(i++);
-      
+      var uri = IOService.newURI(aParams.GetString(i++), null, null);
+
       var iconURL = aParams.GetString(i++);
       
       // Local File Target
@@ -828,19 +831,20 @@ function onDownloadShowFolder()
   } catch (ex) {
     // if nsILocalFile::Reveal failed (eg it currently just returns an
     // error on unix), just open the folder in a browser window
-    openExternal(dir.path);
+    openExternal(dir);
   }
 }
 
-function openExternal(aPath)
+function openExternal(aFile)
 {
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-    .createInstance(Components.interfaces.nsIURI);
-  uri.spec = "file:///" + aPath;
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService)
+                      .newFileURI(aFile);
 
-  var protocolSvc = Components.classes
-    ["@mozilla.org/uriloader/external-protocol-service;1"]
-    .getService(Components.interfaces.nsIExternalProtocolService);
+  var protocolSvc = 
+      Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                .getService(Components.interfaces.nsIExternalProtocolService);
+
   protocolSvc.loadUrl(uri);
 
   return;
