@@ -30,9 +30,6 @@ static NS_DEFINE_IID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 
 nsIFactory  *nsCCapsManagerFactory::m_pNSIFactory = NULL;
 
-
-
-
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NSGetFactory:
  * Provides entry point to liveconnect dll.
@@ -131,12 +128,10 @@ nsCCapsManagerFactory::nsCCapsManagerFactory(void)
 
       NS_INIT_REFCNT();
       nsresult     err         = NS_OK;
-      NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
       err = this->QueryInterface(kIFactoryIID, (void**)&m_pNSIFactory);
       if ( (err == NS_OK) && (m_pNSIFactory != NULL) )
       {
-         NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
          nsComponentManager::RegisterFactory(kCCapsManagerCID, 0, 0,
                                        m_pNSIFactory, PR_FALSE);
       }
@@ -146,7 +141,6 @@ nsCCapsManagerFactory::~nsCCapsManagerFactory()
 {
     if(mRefCnt == 0)
     {
-      NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
       nsComponentManager::UnregisterFactory(kCCapsManagerCID, (nsIFactory *)m_pNSIFactory);
       
     }
