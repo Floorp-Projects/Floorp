@@ -1949,8 +1949,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
       case nsIImapUrl::nsImapOnlineToOfflineMove:
             {
                 nsCString messageIdString;
-                m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
-                if (messageIdString)
+                nsresult rv = m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
+                if (NS_SUCCEEDED(rv))
                 {
           SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
           m_progressIndex = 0;
@@ -1963,17 +1963,23 @@ void nsImapProtocol::ProcessSelectedStateURL()
                     SetProgressString(0);
 					if (m_imapMailFolderSink)
 					{
-					  m_imapMailFolderSink->OnlineCopyCompleted(this, 
-                      GetServerStateParser().LastCommandSuccessful() ? 
-                                ImapOnlineCopyStateType::kSuccessfulCopy : ImapOnlineCopyStateType::kFailedCopy);
+						ImapOnlineCopyState copyStatus;
+						if (GetServerStateParser().LastCommandSuccessful())
+							copyStatus = ImapOnlineCopyStateType::kSuccessfulCopy;
+						else
+							copyStatus = ImapOnlineCopyStateType::kFailedCopy;
+					  m_imapMailFolderSink->OnlineCopyCompleted(this, copyStatus);
                       if (GetServerStateParser().LastCommandSuccessful() &&
                         (m_imapAction == nsIImapUrl::nsImapOnlineToOfflineMove))
 					  {
                         Store(messageIdString, "+FLAGS (\\Deleted)",
                               bMessageIdsAreUids); 
-                         PRBool storeSuccessful = GetServerStateParser().LastCommandSuccessful();
+                         if (GetServerStateParser().LastCommandSuccessful())
+							 copyStatus = ImapOnlineCopyStateType::kSuccessfulDelete;
+						 else
+							 copyStatus = ImapOnlineCopyStateType::kFailedDelete;
 
-                         m_imapMailFolderSink->OnlineCopyCompleted(this,  storeSuccessful ? ImapOnlineCopyStateType::kSuccessfulDelete : ImapOnlineCopyStateType::kFailedDelete);
+                         m_imapMailFolderSink->OnlineCopyCompleted(this,  copyStatus);
 					  }
 					}
                 }
