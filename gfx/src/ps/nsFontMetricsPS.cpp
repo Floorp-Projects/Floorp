@@ -1563,6 +1563,11 @@ nsFontPSFreeType::GetBoundingMetrics(const PRUnichar*   aString,
 // Implementation of nsPSFontGenerator
 nsPSFontGenerator::nsPSFontGenerator()
 {
+  // Add a small set of characters to the subset of the user
+  // defined font to produce to make sure the font ends up
+  // being larger than 2000 bytes, a threshold under which
+  // some printers will consider the font invalid.  (bug 253219)
+  AddToSubset("1234567890", 10);
 }
 
 nsPSFontGenerator::~nsPSFontGenerator()
