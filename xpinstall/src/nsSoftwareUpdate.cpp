@@ -580,7 +580,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
                      cid ? cid : "unknown" );
         nsCRT::free(cid);
 
-        nsIRegistry::Key key;
+        nsRegistryKey key;
         rv = registry->AddSubtree( nsIRegistry::Common,
                                    buffer,
                                    &key );

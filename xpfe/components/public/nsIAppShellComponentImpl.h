@@ -322,7 +322,7 @@ NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
                                      NS_IAPPSHELLCOMPONENT_KEY, \
                                      cidString ? cidString : "unknown" ); \
                         delete [] cidString; \
-                        nsIRegistry::Key key; \
+                        nsRegistryKey key; \
                         rv = registry->AddSubtree( nsIRegistry::Common, \
                                                    buffer, \
                                                    &key ); \
