@@ -58,6 +58,10 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredLayoutSize);
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
