@@ -64,4 +64,5 @@ namespace JavaScript {
 		World();
 	};
 }
+
 #endif

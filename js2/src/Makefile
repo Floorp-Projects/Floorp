@@ -9,7 +9,8 @@ objs = 	hash.o \
 	numerics.o \
 	parser.o \
 	utilities.o \
-	world.o
+	world.o \
+	vmtypes.o
 
 libs =	../../gc/boehm/gc.a -lstdc++ -lm
 

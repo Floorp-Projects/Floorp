@@ -750,7 +750,7 @@ namespace JavaScript {
 	// A Formatter is an abstract base class representing a simplified output stream.
 	// One can print text to a Formatter by using << and the various global print... methods below.
 	// Formatters accept both char and char16 text and convert as appropriate to their actual stream.
-	class Formatter {
+    class Formatter {
 	  protected:
 		virtual void printChar8(char ch) = 0;
 		virtual void printChar16(char16 ch) = 0;
@@ -761,26 +761,27 @@ namespace JavaScript {
 		virtual void printVFormat8(const char *format, va_list args) = 0;
 	  public:
 
+		friend void printString(Formatter &f, const char *strBegin, const char *strEnd) {f.printStr8(strBegin, strEnd);}
+		friend void printString(Formatter &f, const char16 *strBegin, const char16 *strEnd) {f.printStr16(strBegin, strEnd);}
+		friend void printFormat(Formatter &f, const char *format, ...) {va_list args; va_start(args, format); f.printVFormat8(format, args); va_end(args);}
+
 		Formatter &operator<<(char ch) {printChar8(ch); return *this;}
 		Formatter &operator<<(char16 ch) {printChar16(ch); return *this;}
 		Formatter &operator<<(const char *str) {printZStr8(str); return *this;}
 		Formatter &operator<<(const String &s) {printString16(s); return *this;}
+        Formatter &operator<<(uint32 i) {printFormat(*this, "%u", i); return *this;}
 
-		friend void printString(Formatter &f, const char *strBegin, const char *strEnd) {f.printStr8(strBegin, strEnd);}
-		friend void printString(Formatter &f, const char16 *strBegin, const char16 *strEnd) {f.printStr16(strBegin, strEnd);}
-		friend void printFormat(Formatter &f, const char *format, ...) {va_list args; va_start(args, format); f.printVFormat8(format, args); va_end(args);}
-	};
+    };
+        
+    void printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format);
 
-	void printNum(Formatter &f, uint32 i, int nDigits, char pad, const char *format);
-
-	void printChar(Formatter &f, char ch, int count);
-	void printChar(Formatter &f, char16 ch, int count);
-	inline void printDec(Formatter &f, int32 i, int nDigits = 0, char pad = ' ') {printNum(f, (uint32)i, nDigits, pad, "%i");}
-	inline void printDec(Formatter &f, uint32 i, int nDigits = 0, char pad = ' ') {printNum(f, i, nDigits, pad, "%u");}
-	inline void printHex(Formatter &f, int32 i, int nDigits = 0, char pad = '0') {printNum(f, (uint32)i, nDigits, pad, "%X");}
-	inline void printHex(Formatter &f, uint32 i, int nDigits = 0, char pad = '0') {printNum(f, i, nDigits, pad, "%X");}
-	void printPtr(Formatter &f, void *p);
-
+    void printChar(Formatter &f, char ch, int count);
+    void printChar(Formatter &f, char16 ch, int count);
+    inline void printDec(Formatter &f, int32 i, int nDigits = 0, char pad = ' ') {printNum(f, (uint32)i, nDigits, pad, "%i");}
+    inline void printDec(Formatter &f, uint32 i, int nDigits = 0, char pad = ' ') {printNum(f, i, nDigits, pad, "%u");}
+    inline void printHex(Formatter &f, int32 i, int nDigits = 0, char pad = '0') {printNum(f, (uint32)i, nDigits, pad, "%X");}
+    inline void printHex(Formatter &f, uint32 i, int nDigits = 0, char pad = '0') {printNum(f, i, nDigits, pad, "%X");}
+    void printPtr(Formatter &f, void *p);
 
 	// An AsciiFileFormatter is a Formatter that prints to a standard ASCII file or stream.
 	// Characters with Unicode values of 256 or higher are converted to escape sequences.

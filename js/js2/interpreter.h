@@ -20,50 +20,23 @@
 #ifndef interpreter_h
 #define interpreter_h
 
+#include "utilities.h"
+#include "jstypes.h"
 #include "icodegenerator.h"
 
-#include "gc_allocator.h"
-
-namespace JavaScript {
-    /**
-     * Opaque type for JavaScript objects.
-     */
-    class JSObject;
-    class JSArray;
-	class JSFunction;
+namespace JavaScript {    
+    namespace Interpreter {
+        using namespace ICG;
+        using namespace JSTypes;
     
-    /**
-     * All JavaScript data types.
-     */
-    union JSValue {
-        int8 i8;
-        uint8 u8;
-        int16 i16;
-        uint16 u16;
-        int32 i32;
-        uint32 u32;
-        int64 i64;
-        uint64 u64;
-        float32 f32;
-        float64 f64;
-        JSObject* object;
-        JSArray* array;
-        JSFunction *function;
+        JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
-        JSValue() : f64(0.0) {}
-
-        explicit JSValue(float64 f64) : f64(f64) {}
+        JSValue& defineGlobalProperty(const String& name,
+                                      const JSValue& value);
+        JSValue& defineFunction(const String& name, ICodeModule* iCode);
     };
-	
-    /**
-     * GC-scannable array of values.
-     */
-    typedef std::vector<JSValue, gc_allocator<JSValue> > JSValues;
+    
+};
 
-    JSValue interpret(ICodeModule* iCode, const JSValues& args);
-
-    JSValue& defineGlobalProperty(const String& name, const JSValue& value);
-	JSValue& defineFunction(const String& name, ICodeModule* iCode);
-}
 
 #endif /* interpreter_h */
