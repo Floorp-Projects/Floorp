@@ -118,7 +118,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompositionStringSize = 0;
 	mIMECompositionStringSize = 0;
 	mIMECompositionUniString = NULL;
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 	mHaveDBCSLeadByte = false;
 	mDBCSLeadByte = '\0';
 #endif
@@ -1923,7 +1923,7 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
     case VK_F10:   
     case VK_F11:   
     case VK_F12: 
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 	case VK_RETURN:
 	case VK_BACK:
 #endif
@@ -2088,7 +2088,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //
 //-------------------------------------------------------------------------
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 BOOL nsWindow::OnChar( UINT aVirtualKeyCode, bool isMultiByte )
 {
   wchar_t	uniChar;
@@ -2246,7 +2246,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 		case WM_SYSCHAR:
 		case WM_CHAR: 
 			{
@@ -2594,7 +2594,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			HIMC hIMEContext;
 
 			mIMEIsComposing = PR_TRUE;
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
 #endif
 			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
@@ -2630,7 +2630,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_COMPSTR) {
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
 #endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
@@ -2648,7 +2648,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			}
 
 			if (lParam & GCS_RESULTSTR) {
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
 #endif
 				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
@@ -2675,7 +2675,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 		case WM_IME_ENDCOMPOSITION:
 
 			mIMEIsComposing = PR_FALSE;
-#ifdef DEBUG_TAGUE
+#ifdef DEBUG_tague
 			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
 #endif
 			HandleEndComposition();
