@@ -48,11 +48,30 @@ nsIServiceManager * gServiceManager = NULL;
 #ifdef XP_UNIX
 #define MIME_TYPES_HANDLED  "application/simple-plugin"
 #define PLUGIN_NAME         "Simple Plugin Example for Mozilla"
-#define PLUGIN_DESCRIPTION  MIME_TYPES_HANDLED"::"PLUGIN_NAME
+#define MIME_TYPES_DESCRIPTION  MIME_TYPES_HANDLED"::"PLUGIN_NAME
+#define PLUGIN_DESCRIPTION  PLUGIN_NAME " (Plug-ins SDK sample)" 
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(PLUGIN_DESCRIPTION);
+    return(MIME_TYPES_DESCRIPTION);
+}
+
+// get values per plugin
+NPError NS_PluginGetValue(NPPVariable aVariable, void *aValue)
+{
+  NPError err = NPERR_NO_ERROR;
+  switch (aVariable) {
+    case NPPVpluginNameString:
+      *((char **)aValue) = PLUGIN_NAME;
+      break;
+    case NPPVpluginDescriptionString:
+      *((char **)aValue) = PLUGIN_DESCRIPTION;
+      break;
+    default:
+      err = NPERR_INVALID_PARAM;
+      break;
+  }
+  return err;
 }
 #endif //XP_UNIX
 
@@ -205,16 +224,6 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
         rv = NPERR_OUT_OF_MEMORY_ERROR;
     }
     break;
-
-#ifdef XP_UNIX
-    // Unix needs some additional cases
-    case NPPVpluginNameString:
-      *((char **)aValue) = PLUGIN_NAME;
-      break;
-    case NPPVpluginDescriptionString:
-      *((char **)aValue) = PLUGIN_DESCRIPTION;
-      break;
-#endif //XP_UNIX
 
     default:
       break;
