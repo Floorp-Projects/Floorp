@@ -79,57 +79,6 @@
     <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="EditorDecreaseFontSize()" />
     <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="EditorIncreaseFontSize()" />
 
-<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
-        <!-- scroll document/page/line and move caret -->
-<!--
-    <key id="homekb"      keycode="VK_HOME" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="endkb"       keycode="VK_END" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
-    <key id="pageupkb"    keycode="VK_PAGE_UP" onkeypress="EditorMoveUpPage( true, false )" />
-    <key id="pagedownkb"  keycode="VK_PAGE_DOWN" onkeypress="EditorMoveDownPage( true, false )" />
-    <key id="beginoflinekb" keycode="VK_LEFT" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflinekb" keycode="VK_RIGHT" xulkey="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomekb"    keycode="VK_UP" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendkb"   keycode="VK_DOWN" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
--->
-        <!-- scroll document/page/line and extend selection -->
-<!--
-    <key id="homeextendkb"      keycode="VK_HOME"  shift="true" onkeypress="EditorMoveToTopOfWindow( true, true )" />
-    <key id="endextendkb"       keycode="VK_END"   shift="true" onkeypress="EditorMoveToBottomOfWindow( true, true )" />
-    <key id="pageupextendkb"    keycode="VK_PAGE_UP" shift="true" onkeypress="EditorMoveUpPage( true, true )" />
-    <key id="pagedownextendkb"  keycode="VK_PAGE_DOWN" shift="true" onkeypress="EditorMoveDownPage( true, true )" />
-    <key id="beginoflineextendkb" keycode="VK_LEFT" shift="true" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflineextendkb" keycode="VK_RIGHT" shift="true" xulkey="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomeextendkb"    keycode="VK_UP"    shift="true" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendextendkb"   keycode="VK_DOWN"  shift="true" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
--->
-       <!-- move caret by one character -->
-<!--
-    <key id="leftkb" keycode="VK_LEFT" onkeypress="EditorPreviousCharacter( false )" />
-    <key id="rightkb" keycode="VK_RIGHT" onkeypress="EditorNextCharacter( false )" />
-    <key id="upkb"   keycode="VK_UP" onkeypress="EditorPreviousRow( false )" />
-    <key id="downkb" keycode="VK_DOWN" onkeypress="EditorNextRow( false )" />
--->
-        <!-- move caret by one character/row and extend selection -->
-<!--
-    <key id="prevcharextendkb" keycode="VK_LEFT" shift="true" onkeypress="EditorPreviousCharacter( true )" />
-    <key id="nextcharextendkb" keycode="VK_RIGHT" shift="true" onkeypress="EditorNextCharacter( true )" />
-    <key id="prevrowextendkb" keycode="VK_UP"    shift="true" onkeypress="EditorPreviousRow( true )" />
-    <key id="nextrowextendkb" keycode="VK_DOWN"  shift="true" onkeypress="EditorNextRow( true )" />
--->
-        <!-- move caret by one word/paragraph -->
-<!--
-    <key id="prevwordkb" keycode="VK_LEFT" alt="true" onkeypress="EditorPreviousWord( false )" />
-    <key id="nextwordkb" keycode="VK_RIGHT" alt="true" onkeypress="EditorNextWord( false )" />
-    <key id="prevparakb" keycode="VK_UP"   alt="true" onkeypress="EditorBeginningOfParagraph( false )" />
-    <key id="nextparakb" keycode="VK_DOWN" alt="true" onkeypress="EditorEndOfParagraph( false )" />
--->
-        <!-- move caret by one word and extend selection -->
-<!--
-    <key id="prevwordextendkb" keycode="VK_LEFT" shift="true" alt="true" onkeypress="EditorPreviousWord( true )" />
-    <key id="nextwordextendkb" keycode="VK_RIGHT" shift="true" alt="true" onkeypress="EditorNextWord( true )" />
-    <key id="prevparaextendkb" keycode="VK_UP"   shift="true" alt="true" onkeypress="EditorBeginningOfParagraph( true )" />
-    <key id="nextparaextendkb" keycode="VK_DOWN" shift="true" alt="true" onkeypress="EditorEndOfParagraph( true )" />
--->
   </keyset>
 
   <broadcasterset id="broadcasterset">
@@ -551,6 +500,15 @@
     <menuseparator position="13"/>
 
     <!-- Stylesheet submenu -->
+<!-- 
+function EditorApplyStyleSheet(styleSheetURL)
+{
+  // Second param is true for "override" type of sheet
+  // We don't let users use that option
+  editorShell.ApplyStyleSheet(styleSheetURL);
+  contentWindow.focus();
+}
+
     <menu id="stylesheetMenu" value="&stylesheetMenu.label;"
           accesskey="&formatstylesheetmenu.accesskey;"
           position="14">
@@ -565,6 +523,7 @@
     </menu>
 
     <menuseparator position="15"/>
+-->
 
     <menuitem id="increaseIndent" value="&increaseIndent.label;"
               accesskey="&increaseindent.accesskey;" 
