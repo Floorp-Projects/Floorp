@@ -1521,6 +1521,8 @@ nsMenu::AttributeChanged(
     if(aContent == contentNode.get()){
       nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
       nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
+      nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
+      
       if(aAttribute == disabledAtom.get()) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         nsString valueString;
@@ -1553,8 +1555,22 @@ nsMenu::AttributeChanged(
           ::DrawMenuBar();
         }
 #endif
+      } else if(aAttribute == hiddenAtom.get()) {
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
+        nsString valueString;
+        element->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), valueString);
+        if(valueString.EqualsWithConversion("true")) {
+          // hide this menu
+          ::DeleteMenu(mMacMenuID);
+        } else {
+          // show this menu
+          ::InsertMenu(mMacMenuHandle, mMacMenuID+1);
+        }
+        if(mMenuBarParent) {
+          mMenuBarParent->SetNativeData(::GetMenuBar());
+          ::DrawMenuBar();
+        }
       }
-      
     }
   }
   return NS_OK;
