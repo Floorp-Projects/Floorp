@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsChildView.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
@@ -447,7 +446,7 @@ NS_IMETHODIMP nsChildView::Show(PRBool bState)
     if (bState) 
       [mParentView addSubview: mView];
     else
-      [mView removeFromSuperviewWithoutNeedingDisplay];
+      [mView removeFromSuperview];
   }
   mVisible = bState;
   return NS_OK;
@@ -824,9 +823,8 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   if ((mBounds.x != aX) || (mBounds.y != aY))
   {
     // Invalidate the current location
-    Invalidate(PR_FALSE);
     if (mVisible)
-      [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
+        [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
     
     // Set the bounds
     mBounds.x = aX;
@@ -861,7 +859,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     mBounds.height = aHeight;
 
     if (mVisible)
-      [[mView superview] setNeedsDisplayInRect:[mView frame]];    //XXX needed?
+      [[mView superview] setNeedsDisplayInRect: [mView frame]];    //XXX needed?
     
   // Recalculate the regions
   //CalcWindowRegions();
@@ -875,16 +873,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
     // Report the event
     ReportSizeEvent();
   }
-  else {
-    // Recalculate the regions. We always need to do this, our parents may have
-    // changed, hence changing our notion of visibility. We then also should make
-    // sure that we invalidate ourselves correctly. Fixes bug 18240 (pinkerton).
-    CalcWindowRegions();
-
-    if (mVisible)
-      [mView setNeedsDisplay:YES];
-  }
-
+ 
   return NS_OK;
 }
 
@@ -1009,6 +998,8 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
 {
   if ( !mView || !mVisible)
     return NS_OK;
+ 
+  NSLog(@"This view: %@ got invalidated.", mView);
  
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
@@ -1168,7 +1159,9 @@ nsChildView::OnPaint(nsPaintEvent &event)
 // 
 NS_IMETHODIMP nsChildView::Update()
 {
-  UpdateWidget(mBounds, GetRenderingContext());
+  // Update means "Flush any pending changes right now."  It does *not* mean
+  // repaint the world. :) -- dwh
+  [mView displayIfNeeded];
   return NS_OK;
 }
 
@@ -1189,7 +1182,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 {
   if (! mVisible)
     return;
-
+  
   ::SetPort(GetQuickDrawPort());
 
   // initialize the paint event
@@ -1222,48 +1215,37 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 //
 NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  if ( !mVisible )
+    if ( !mVisible)
+        return NS_OK;
+
+    NSSize scrollVector = {aDx,aDy};
+     [mView scrollRect: [mView bounds] by:scrollVector];
+
+    // Scroll the children
+    nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+    if ( children ) {
+        children->First();
+        do {
+        nsCOMPtr<nsISupports> child;
+        if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+            nsCOMPtr<nsIWidget> widget = do_QueryInterface(child);
+            
+            nsRect bounds;
+            widget->GetBounds(bounds);
+            widget->Move(bounds.x + aDx, bounds.y + aDy);
+        }
+        } while (NS_SUCCEEDED(children->Next()));     
+    }
+
+    NSRect frame = [mView bounds];
+    NSRect horizInvalid = frame;
+    horizInvalid.size.height = abs(aDy);
+    if ( aDy < 0 )
+        horizInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
+    if (aDy != 0)
+        [mView setNeedsDisplayInRect: horizInvalid];
+  
     return NS_OK;
-
-//FIXME
-// There seems to be a problem scrolling the NSQDView. It only blits white
-// where it should blit the contents of the view. So just forget blitting and
-// repaint the entire view. It sucks, but it works.
-
-#if 0
-  NSSize scrollVector = {aDx, aDy};
-  [mView scrollRect:[mView frame] by:scrollVector];
-#endif
-  
-  // Scroll the children
-  nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-  if ( children ) {
-    children->First();
-    do {
-      nsCOMPtr<nsISupports> child;
-      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
-        nsCOMPtr<nsIWidget> widget = do_QueryInterface(child);
-        
-        nsRect bounds;
-        widget->GetBounds(bounds);
-        widget->Move(bounds.x + aDx, bounds.y + aDy);
-      }
-    } while (NS_SUCCEEDED(children->Next()));     
-  }
-  
-#if 0
-  NSRect frame = [mView frame];
-  NSRect horizInvalid = frame;
-  horizInvalid.size.height = abs(aDy);
-  if ( aDy < 0 )
-    horizInvalid.origin.y = frame.origin.y + frame.size.height + aDy;
-printf("-- updating x/y (%f, %f) w/h (%f, %f)\n", horizInvalid.origin.x, horizInvalid.origin.y,
-          horizInvalid.size.width, horizInvalid.size.height);
-  //[mView displayRect:horizInvalid];
-#endif
-  [mView displayRect:[mView frame]];
-  
-  return NS_OK;
 }
 
 
@@ -1798,6 +1780,15 @@ nsChildView::GetQuickDrawPort ( )
   return YES;
 }
 
+// -isOpaque
+//
+// XXXdwh.  Quickdraw views are transparent by default.  Since Gecko does its own blending if/when
+// opacity is specified, we would like to optimize here by turning off the transparency of the view. 
+// But we can't. :(
+- (BOOL)isOpaque
+{
+  return NO;
+}
 
 //
 // -acceptsFirstResponder
@@ -1825,7 +1816,7 @@ nsChildView::GetQuickDrawPort ( )
   if (!isVisible)
     return;
     
-  // tell gecko to paint.
+   // tell gecko to paint.
   nsRect r;
   ConvertCocoaToGeckoRect(aRect, r);
   mGeckoChild->UpdateWidget(r, mGeckoChild->GetRenderingContext());
