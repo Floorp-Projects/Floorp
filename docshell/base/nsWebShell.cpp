@@ -121,7 +121,7 @@ typedef unsigned long HMTX;
 #include "nsIStringBundle.h"
 #include "nsIStringBundle.h"
 
-static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID)
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
