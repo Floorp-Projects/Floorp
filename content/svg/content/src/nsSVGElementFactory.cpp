@@ -43,16 +43,26 @@
 #include "nsSVGAtoms.h"
 #include "nsIXMLContent.h"
 
-extern nsresult NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGCircleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGEllipseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGLineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGRectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-extern nsresult NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGCircleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGEllipseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGLineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGRectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 
 class nsSVGElementFactory : public nsIElementFactory

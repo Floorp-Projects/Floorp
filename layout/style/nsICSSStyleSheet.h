@@ -100,10 +100,10 @@ public:
 };
 
 // XXX for backwards compatibility and convenience
-extern NS_EXPORT nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL);
+nsresult
+NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL);
 
-extern NS_EXPORT nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
+nsresult
+NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsICSSStyleSheet_h___ */

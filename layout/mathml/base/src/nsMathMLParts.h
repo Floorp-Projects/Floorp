@@ -26,42 +26,77 @@
 #include "nsISupports.h"
 
 // Factory methods for creating MathML objects
-extern nsresult NS_NewMathMLForeignFrameWrapper ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLTokenFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmoFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmrowFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmphantomFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmpaddedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmspaceFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmsFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmfencedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmfracFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmsubFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmsupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmsubsupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmunderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmoverFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmunderoverFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmmultiscriptsFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmstyleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+nsresult
+NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell,
+                                nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmsubFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmunderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-extern nsresult NS_NewMathMLmtableOuterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-inline nsresult NS_NewMathMLmtableFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
-{ return NS_NewTableFrame(aPresShell, aNewFrame); }
-inline nsresult NS_NewMathMLmtrFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
-{ return NS_NewTableRowFrame(aPresShell, aNewFrame); }
-extern nsresult NS_NewMathMLmtdFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmtdInnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmsqrtFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmrootFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmactionFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-extern nsresult NS_NewMathMLmathBlockFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmathInlineFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-inline nsresult NS_NewMathMLmathFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsBlock)
+nsresult
+NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+inline nsresult
+NS_NewMathMLmtableFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
- return (aIsBlock)
-   ? NS_NewMathMLmathBlockFrame(aPresShell, aNewFrame)
-   : NS_NewMathMLmathInlineFrame(aPresShell, aNewFrame);
+  return NS_NewTableFrame(aPresShell, aNewFrame);
+}
+inline nsresult
+NS_NewMathMLmtrFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+{
+  return NS_NewTableRowFrame(aPresShell, aNewFrame);
+}
+nsresult
+NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
+NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsresult
+NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+inline nsresult
+NS_NewMathMLmathFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
+                      PRBool aIsBlock)
+{
+  return (aIsBlock)
+    ? NS_NewMathMLmathBlockFrame(aPresShell, aNewFrame)
+    : NS_NewMathMLmathInlineFrame(aPresShell, aNewFrame);
 }
 #endif /* nsMathMLParts_h___ */

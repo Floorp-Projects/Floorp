@@ -760,8 +760,8 @@ private:
 };
 
 
-extern NS_EXPORT nsresult
-  NS_NewCSSDeclaration(nsCSSDeclaration** aInstancePtrResult);
+nsresult
+NS_NewCSSDeclaration(nsCSSDeclaration** aInstancePtrResult);
 
 
 #endif /* nsCSSDeclaration_h___ */

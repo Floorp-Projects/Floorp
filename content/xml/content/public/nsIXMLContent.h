@@ -83,27 +83,27 @@ public:
   NS_IMETHOD GetXMLBaseURI(nsIURI **aURI) = 0;
 };
 
-extern nsresult
+nsresult
 NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 
 // XXX These belongs elsewhere
-extern nsresult
+nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aTarget,
                                const nsAString& aData);
 
-extern nsresult
+nsresult
 NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
                                          const nsAString& aData);
 
-extern nsresult
+nsresult
 NS_NewXMLEntity(nsIContent** aInstancePtrResult,
                 const nsAString& aName,
                 const nsAString& aPublicId,
                 const nsAString& aSystemId,
                 const nsAString& aNotationName);
 
-extern nsresult
+nsresult
 NS_NewXMLNotation(nsIContent** aInstancePtrResult,
                   const nsAString& aName,
                   const nsAString& aPublicId,
@@ -111,11 +111,11 @@ NS_NewXMLNotation(nsIContent** aInstancePtrResult,
 
 class nsIDOMNamedNodeMap;
 
-extern nsresult
+nsresult
 NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
                       nsISupportsArray *aArray);
 
-extern nsresult
+nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
 
 #endif // nsIXMLContent_h___

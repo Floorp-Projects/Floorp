@@ -112,7 +112,7 @@
 #endif
 
 // handy utilities
-extern void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
+void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
 //----------------------------------------------------------------------
 

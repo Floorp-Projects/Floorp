@@ -178,7 +178,8 @@ protected:
     nsresult Init();
 
     friend NS_IMETHODIMP
-    NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+    NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID,
+                               void** aResult);
 };
 
 

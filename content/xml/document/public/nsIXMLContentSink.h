@@ -81,10 +81,9 @@ public:
 
 };
 
-extern nsresult NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult,
-                                     nsIDocument* aDoc,
-                                     nsIURI* aURL,
-                                     nsIWebShell* aWebShell,
-                                     nsIChannel *aChannel);
+nsresult
+NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult, nsIDocument* aDoc,
+                     nsIURI* aURL, nsIWebShell* aWebShell,
+                     nsIChannel *aChannel);
 
 #endif // nsIXMLContentSink_h___

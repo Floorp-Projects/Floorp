@@ -383,6 +383,7 @@ public:
   NS_IMETHOD GetNodeInfoArray(nsISupportsArray** aArray) = 0;
 };
 
-extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
+nsresult
+NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
 #endif /* nsINodeInfo_h___ */

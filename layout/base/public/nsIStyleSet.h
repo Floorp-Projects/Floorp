@@ -325,8 +325,8 @@ public:
   virtual void ResetUniqueStyleItems(void) = 0;
 };
 
-extern NS_EXPORT nsresult
-  NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
+nsresult
+NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
 
 
 class nsUniqueStyleItems : private nsVoidArray

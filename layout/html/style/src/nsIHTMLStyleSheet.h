@@ -72,11 +72,11 @@ public:
 
 
 // XXX convenience method. Calls Initialize() automatically.
-extern NS_EXPORT nsresult
-  NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
-                       nsIDocument* aDocument);
+nsresult
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
+                     nsIDocument* aDocument);
 
-extern NS_EXPORT nsresult
-  NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult);
+nsresult
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult);
 
 #endif /* nsIHTMLStyleSheet_h___ */

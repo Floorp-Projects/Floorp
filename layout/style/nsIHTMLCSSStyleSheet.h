@@ -53,11 +53,11 @@ public:
 };
 
 // XXX for convenience and backward compatibility
-extern NS_EXPORT nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURI* aURL,
-                          nsIDocument* aDocument);
+nsresult
+NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult,
+                        nsIURI* aURL, nsIDocument* aDocument);
 
-extern NS_EXPORT nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult);
+nsresult
+NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult);
 
 #endif /* nsIHTMLCSSStyleSheet_h___ */

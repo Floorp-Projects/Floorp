@@ -83,7 +83,7 @@ protected:
   nsString mInternalSubset;
 };
 
-extern nsresult
+nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       const nsAString& aName,
                       nsIDOMNamedNodeMap *aEntities,

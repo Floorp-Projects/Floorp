@@ -126,7 +126,7 @@ public:
 };
 
 
-extern NS_IMETHODIMP
+NS_IMETHODIMP
 NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 

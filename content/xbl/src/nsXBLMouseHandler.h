@@ -85,9 +85,9 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLMouseHandler(nsIDOMEventReceiver* aEventReceiver,
-                      nsXBLPrototypeHandler* aHandlerElement, 
+                      nsXBLPrototypeHandler* aHandlerElement,
                       nsXBLMouseHandler** aResult);
 
 

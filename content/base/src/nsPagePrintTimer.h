@@ -96,6 +96,7 @@ private:
 };
 
 
-extern nsresult NS_NewPagePrintTimer(nsPagePrintTimer **aResult);
+nsresult
+NS_NewPagePrintTimer(nsPagePrintTimer **aResult);
 
 #endif /* nsPagePrintTimer_h___ */

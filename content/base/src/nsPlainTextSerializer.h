@@ -273,6 +273,7 @@ protected:
   const nsString          kSpace;
 };
 
-extern nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer);
+nsresult
+NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer);
 
 #endif

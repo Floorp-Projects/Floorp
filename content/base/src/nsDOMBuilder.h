@@ -68,7 +68,7 @@ private:
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
 };
 
-extern nsresult
+nsresult
 NS_NewDOMBuilder(nsIDOMDOMBuilder** aResult,
                  PRUint16 aMode,
                  const nsAString & aSchemaType,

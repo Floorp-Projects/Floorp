@@ -321,7 +321,7 @@ protected:
  */
 #define LIST_LAZY 2
 
-extern nsresult
+nsresult
 NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
                   PRInt32 aMatchNameSpaceId, nsIContent* aRootContent,
                   nsIContentList** aInstancePtrResult);

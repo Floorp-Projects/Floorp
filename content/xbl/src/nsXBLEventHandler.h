@@ -150,8 +150,8 @@ protected:
   }
 };
 
-extern nsresult
+nsresult
 NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
-                      nsXBLPrototypeHandler* aHandlerElement, 
+                      nsXBLPrototypeHandler* aHandlerElement,
                       nsXBLEventHandler** aResult);
 #endif

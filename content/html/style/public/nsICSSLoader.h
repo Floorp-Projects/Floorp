@@ -138,10 +138,10 @@ public:
   NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
 };
 
-extern NS_EXPORT nsresult 
+nsresult 
 NS_NewCSSLoader(nsIDocument* aDocument, nsICSSLoader** aLoader);
 
-extern NS_EXPORT nsresult 
+nsresult 
 NS_NewCSSLoader(nsICSSLoader** aLoader);
 
 #endif /* nsICSSLoader_h___ */

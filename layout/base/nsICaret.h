@@ -127,7 +127,8 @@ public:
 
 };
 
-extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
+nsresult
+NS_NewCaret(nsICaret** aInstancePtrResult);
 
 
 // handy stack-based class for temporarily disabling the caret

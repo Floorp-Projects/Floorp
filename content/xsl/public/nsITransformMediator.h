@@ -75,7 +75,8 @@ public:
   NS_IMETHOD SetStyleInvalid(PRBool aInvalid) = 0;
 };
 
-extern nsresult NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,                                        
-                                        const nsACString& aMimeType);
+nsresult
+NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,
+                        const nsACString& aMimeType);
 
 #endif // nsITransformMediator_h___

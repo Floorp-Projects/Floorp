@@ -71,8 +71,9 @@ public:
   NS_IMETHOD Matches(nsIContent* aContent, PRUint32 aIndex, PRBool* aResult)=0;
 };
 
-extern nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent,
+nsresult
+NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex,
+                        nsIContent* aDefContent,
                         nsIXBLInsertionPoint** aResult);
 
 #endif // nsIXBLInsertionPoint_h__

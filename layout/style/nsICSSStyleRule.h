@@ -181,7 +181,8 @@ public:
   virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 };
 
-extern NS_EXPORT nsresult
-  NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult, const nsCSSSelector& aSelector);
+nsresult
+NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
+                   const nsCSSSelector& aSelector);
 
 #endif /* nsICSSStyleRule_h___ */

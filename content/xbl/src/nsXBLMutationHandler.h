@@ -86,7 +86,7 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLMutationHandler(nsIDOMEventReceiver* aEventReceiver,
                          nsXBLPrototypeHandler* aHandlerElement,
                          nsXBLMutationHandler** aResult);

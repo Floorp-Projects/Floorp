@@ -82,9 +82,9 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLDragHandler(nsIDOMEventReceiver* aEventReceiver,
-                     nsXBLPrototypeHandler* aHandlerElement, 
+                     nsXBLPrototypeHandler* aHandlerElement,
                      nsXBLDragHandler** aResult);
 
 

@@ -73,7 +73,8 @@ public:
 
 /* Define global NS_New* functions for rules that don't need their own
    interfaces here */
-extern NS_EXPORT nsresult
-  NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding);
+nsresult
+NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult,
+                     const nsAString& aEncoding);
 
 #endif /* nsICSSRule_h___ */

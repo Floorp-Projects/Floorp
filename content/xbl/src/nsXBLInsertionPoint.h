@@ -80,8 +80,9 @@ protected:
   nsCOMPtr<nsIContent> mDefaultContent;  // The cloned default content obtained by cloning mDefaultContentTemplate.
 };
 
-extern nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent, 
+nsresult
+NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex,
+                        nsIContent* aDefContent,
                         nsIXBLInsertionPoint** aResult);
 
 #endif

@@ -567,8 +567,8 @@ public:
 
 // Factory method to create a "galley" presentation context (galley is
 // a kind of view that has no limit to the size of a page)
-extern NS_EXPORT nsresult
-  NS_NewGalleyContext(nsIPresContext** aInstancePtrResult);
+nsresult
+NS_NewGalleyContext(nsIPresContext** aInstancePtrResult);
 
 #ifdef MOZ_REFLOW_PERF
 

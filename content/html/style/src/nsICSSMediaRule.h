@@ -55,7 +55,7 @@ public:
   NS_IMETHOD_(PRBool)  UseForMedium(nsIAtom* aMedium) const = 0;
 };
 
-extern NS_EXPORT nsresult
-  NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult);
+nsresult
+NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult);
 
 #endif /* nsICSSMediaRule_h___ */

@@ -56,7 +56,7 @@ public:
                   nsIPresShell *aPresShell) = 0;
 };
 
-extern NS_EXPORT nsresult 
+nsresult 
 NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle);
 
 #endif /* nsIComputedDOMStyle_h___ */

@@ -312,34 +312,6 @@ protected:
 };
 
 //
-// Visitor declarations
-//
-
-/**
- * This visitor sets CheckedChanged on all elements it finds.
- *
- * @param aCheckedChanged the value of CheckedChanged to set on all elements
- * @param aVisitor the visitor (out param)
- */
-NS_METHOD NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
-                                              nsIRadioVisitor** aVisitor);
-
-/**
- * This visitor will take the boolean you're pointing at and put
- * aCheckedChanged into it.  If the visitor is never called, aCheckedChanged
- * will of course not change.
- *
- * @param aCheckedChanged the boolean to put CheckedChanged into
- * @param aExcludeElement an element to exclude--i.e. don't get checked changed
- *        on this element
- * @param aVisitor the visitor (out param)
- */
-NS_METHOD NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
-                                              nsIFormControl* aExcludeElement,
-                                              nsIRadioVisitor** aVisitor);
-
-
-//
 // construction, destruction
 //
 
@@ -2815,7 +2787,7 @@ protected:
   nsIFormControl* mExcludeElement;
 };
 
-NS_METHOD
+nsresult
 NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
                                     nsIRadioVisitor** aVisitor)
 {
@@ -2859,7 +2831,7 @@ NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
   return NS_OK;
 }
 
-NS_METHOD
+nsresult
 NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
                                     nsIFormControl* aExcludeElement,
                                     nsIRadioVisitor** aVisitor)

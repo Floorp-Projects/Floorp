@@ -77,8 +77,9 @@ public:
  * @param aVisitor the visitor (out param)
  * @param aCheckedChanged the value of CheckedChanged to set on all elements
  */
-extern NS_METHOD NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
-                   nsIRadioVisitor** aVisitor);
+nsresult
+NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
+                                    nsIRadioVisitor** aVisitor);
 
 /**
  * This visitor will take the boolean you're pointing at and put
@@ -89,8 +90,9 @@ extern NS_METHOD NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
  * @param aCheckedChanged the boolean to put CheckedChanged into
  * @param aExcludeElement the element 
  */
-extern NS_METHOD NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
-                   nsIFormControl* aExcludeElement,
-                   nsIRadioVisitor** aVisitor);
+nsresult
+NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+                                    nsIFormControl* aExcludeElement,
+                                    nsIRadioVisitor** aVisitor);
 
 #endif // nsIRadioVisitor_h___

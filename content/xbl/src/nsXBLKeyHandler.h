@@ -81,9 +81,9 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLKeyHandler(nsIDOMEventReceiver* aEventReceiver,
-                    nsXBLPrototypeHandler* aHandlerElement, 
+                    nsXBLPrototypeHandler* aHandlerElement,
                     nsXBLKeyHandler** aResult);
 
 

@@ -25,7 +25,7 @@ public:
   NS_IMETHOD RemoveStateProperty(const nsAString& aName) = 0;
 };
 
-extern nsresult
+nsresult
 NS_NewPresState(nsIPresState** aResult);
 
 #endif /* _nsIPresState_h */

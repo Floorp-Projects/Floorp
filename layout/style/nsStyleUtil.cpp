@@ -394,7 +394,7 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
                                        nsFontSizeType aFontSizeType)
 {
 #if DUMP_FONT_SIZES
-	extern void DumpFontSizes(nsIPresContext* aPresContext);
+  void DumpFontSizes(nsIPresContext* aPresContext);
 	DumpFontSizes(aPresContext);
 #endif
 	if (UseNewFontAlgorithm())

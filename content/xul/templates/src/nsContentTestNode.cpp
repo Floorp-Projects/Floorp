@@ -50,7 +50,7 @@
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-extern PRBool
+PRBool
 IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder);
 
 nsContentTestNode::nsContentTestNode(InnerNode* aParent,
