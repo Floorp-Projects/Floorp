@@ -64,11 +64,6 @@
 #include "nsITimelineService.h"
 #include "prprf.h"    
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#include <Gestalt.h>
-static PRBool OnMacOSX();
-#endif
-
 #include "nsWidgetsCID.h"
 #include "nsIRequestObserver.h"
 
@@ -749,10 +744,7 @@ nsAppShellService::CalculateWindowZLevel(nsIXULWindow *aParent,
   PRUint32 modalDepMask = nsIWebBrowserChrome::CHROME_MODAL |
                           nsIWebBrowserChrome::CHROME_DEPENDENT;
   if (aParent && (aChromeMask & modalDepMask)) {
-    if (::OnMacOSX())
-      aParent->GetZLevel(&zLevel);
-    else
-      zLevel = nsIXULWindow::highestZ;
+    aParent->GetZLevel(&zLevel);
   }
 #else
   /* Platforms with native support for dependent windows (that's everyone
@@ -1015,60 +1007,9 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   return NS_OK;
 }
 
-/* The only thing we do with this knowledge is deactivate all other windows
-   on Mac OS 9. */
 NS_IMETHODIMP
 nsAppShellService::TopLevelWindowIsModal(nsIXULWindow *aWindow, PRBool aModal)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-
-  PRBool enable,
-         takeAction = PR_FALSE;
-
-  // adjust our counter and prepare to take action if we just opened
-  // our first modal window or closed our last.
-  NS_ASSERTION(aModal || !aModal && mModalWindowCount > 0, "modal window count error");
-  if (aModal && ++mModalWindowCount == 1) {
-    enable = PR_FALSE;
-    takeAction = PR_TRUE;
-  } else if (!aModal && --mModalWindowCount == 0) {
-    enable = PR_TRUE;
-    takeAction = PR_TRUE;
-  }
-  if (!takeAction)
-    return NS_OK;
-
-  if (::OnMacOSX()) // application modal windows only happen on the classic Mac
-    return NS_OK;
-
-  // prepare to visit each open window
-  if (!mWindowMediator)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISimpleEnumerator> windowList;
-  mWindowMediator->GetXULWindowEnumerator(0, getter_AddRefs(windowList));
-  if (!windowList)
-    return NS_ERROR_FAILURE;
-
-  // if we just closed our last modal window, enable every window.
-  // if we just opened our first, disable every window but aWindow
-  do {
-    PRBool more;
-    windowList->HasMoreElements(&more);
-    if (!more)
-      break;
-
-    nsCOMPtr<nsISupports> supportsWindow;
-    windowList->GetNext(getter_AddRefs(supportsWindow));
-
-    nsCOMPtr<nsIXULWindow> listXULWindow(do_QueryInterface(supportsWindow));
-    if (enable || listXULWindow != aWindow) {
-      nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
-      if (listBaseWindow)
-        listBaseWindow->SetEnabled(enable);
-    }
-  } while(1);
-#endif
   return NS_OK;
 }
 
@@ -1509,27 +1450,6 @@ nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
     NS_IF_ADDREF( *aResult );
     return *aResult ? NS_OK : NS_ERROR_NULL_POINTER;
 }
-
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-//
-// Return true if we are on Mac OS X, caching the result after the first call
-//
-static PRBool
-OnMacOSX()
-{
-
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnMacOSX = PR_FALSE;
-  if(! gInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnMacOSX = (err == noErr && version >= 0x00001000);
-    gInitVer = PR_TRUE;
-  }
-  return gOnMacOSX;
-}
-#endif
 
 static nsresult ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString)
 {
