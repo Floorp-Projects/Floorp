@@ -192,7 +192,7 @@ nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 // If nothing is selected, and we have options, select item 0
 // This is a UI decision that goes against the HTML 4 spec.
 // See bugzilla bug 15841 for justification of this deviation.
-nsresult
+NS_IMETHODIMP
 nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext)
 {
   nsIFormControlFrame* fcFrame = nsnull;
@@ -210,7 +210,7 @@ nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext
         rv = fcFrame->SetProperty(aPresContext, nsHTMLAtoms::selectedindex, "0");
         mSelectedIndex = 0;
       }
-      // XXX UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
+      UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
     }
     
     // Don't NS_RELEASE fcFrame here as it isn't addRef'd in the QI (???)
@@ -1113,7 +1113,7 @@ nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   // We should call MakeSureSomethingIsSelected here, but since it
   // it changes selection, which currently causes a reframe, and thus
   // deletes the frame out from under the caller, causing a crash. (Bug 17995)
-  // XXX BAD MakeSureSomethingIsSelected(aPresContext);
+  // XXX MakeSureSomethingIsSelected(aPresContext);
   return rv;
 }
   

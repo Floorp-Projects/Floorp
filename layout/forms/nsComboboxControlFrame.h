@@ -203,7 +203,7 @@ protected:
   nsIFrame* GetButtonFrame(nsIPresContext& aPresContext);
   nsIFrame* GetDropdownFrame();
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
-  nsresult MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
+  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
   nsFrameList mPopupFrames;                       // additional named child list
   nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.

@@ -1488,7 +1488,9 @@ nsListControlFrame::Reset(nsIPresContext* aPresContext)
   }
 
   InitSelectionCache(numOptions);
-
+  if (mComboboxFrame) {
+    mComboboxFrame->MakeSureSomethingIsSelected(mPresContext);
+  }
 } 
 
 //---------------------------------------------------------
