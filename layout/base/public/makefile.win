@@ -31,6 +31,7 @@ EXPORTS =			\
 	nsIReflowCommand.h	\
 	nsISelection.h		\
 	nsISpaceManager.h	\
+	nsStyleConsts.h		\
 	nsStyleCoord.h		\
 	nsStyleStruct.h		\
 	nsIStyleContext.h	\
