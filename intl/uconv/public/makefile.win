@@ -21,11 +21,13 @@ EXPORTS =				\
 	nsICharsetConverterManager.h	\
 	nsICharsetConverterInfo.h	\
 	nsIUnicodeDecoder.h		\
+	nsIUnicodeDecodeUtil.h		\
 	nsIUnicodeEncoder.h		\
 	nsConverterCID.h		\
+	uconvutil.h	\
         $(NULL)
 
-MODULE=intl 
+MODULE=uconv 
 
 include <$(DEPTH)\layout\config\rules.mak>
 
