@@ -1432,9 +1432,9 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
 	if (titlenum == XP_SECURITY_ADVISOR_TITLE_STRING)
     	cx = FE_MakeNewWindow((MWContext *)proto_win, NULL, XP_GetString(titlenum), &chrome);
     else
-#else
-    cx = FE_MakeNewWindow((MWContext *)proto_win, NULL, NULL, &chrome);
 #endif
+    cx = FE_MakeNewWindow((MWContext *)proto_win, NULL, NULL, &chrome);
+    
     if ( cx == NULL ) {
 	goto loser;
     }
