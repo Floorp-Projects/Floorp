@@ -34,24 +34,45 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImages", "enableImagesForOriginatingSiteOnly",
+var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
                    "popupPolicy", "allowWindowMoveResize", "allowWindowFlip", "allowHideStatusBar", 
                    "allowWindowStatusChange", "allowImageSrcChange"];
 
-
+var gImagesPref, gImagesEnabled, gImagesRestricted;
 var policyButton = null;
 var manageTree = null;
+
 function Startup()
 {
   policyButton = document.getElementById("popupPolicy");
   manageTree = document.getElementById("permissionsTree");
   togglePermissionEnabling();
   loadPermissions();
-  
-  var imagesEnabled = document.getElementById("enableImages").checked;
-  var imageBroadcaster = document.getElementById("imageBroadcaster");
-  imageBroadcaster.setAttribute("disabled", !imagesEnabled);
   javascriptEnabledChange()
+  
+  gImagesPref = document.getElementById("enableImagePref");
+  gImagesEnabled = document.getElementById("enableImages");
+  gImagesRestricted = document.getElementById("enableRestricted");
+  var prefValue = gImagesPref.getAttribute("value");
+  if (!prefValue)
+    prefValue = "0";
+  switch (prefValue) {
+  case "1": gImagesRestricted.checked=true;
+  case "0": gImagesEnabled.checked=true;
+  }
+  if (!gImagesEnabled.checked)
+    gImagesRestricted.disabled=true;
+}
+
+function updateImagePref()
+{
+  if (!gImagesEnabled.checked) {
+    gImagesPref.setAttribute("value", 2)
+    gImagesRestricted.disabled=true;
+  } else {
+    gImagesPref.setAttribute("value", gImagesRestricted.checked?1:0)
+    gImagesRestricted.disabled=false;
+  }
 }
 
 function viewImages() 

@@ -48,8 +48,6 @@
 
   <stringbundle id="stringBundle" src="chrome://browser/locale/pref/addPopup.properties"/>
 
-  <broadcaster id="imageBroadcaster"/>
-
   <groupbox flex="1">
     <checkbox label="&popupReject.label;"
               prefstring="dom.disable_open_during_load"
@@ -102,18 +100,20 @@
               oncommand="advancedJavaScript();" class="uniWidthButton"/>
     </hbox>
   </groupbox>
+
   <groupbox>
     <hbox>
       <vbox flex="1">
         <checkbox id="enableImages"
-                  oncommand="document.getElementById('imageBroadcaster').setAttribute('disabled', this.checked ? 'false' : 'true');"
-                  label="&enableImages.label;" accesskey="&enableImages.accesskey;"
-                  prefstring="network.image.enable"/>
-        <checkbox id="enableImagesForOriginatingSiteOnly" observes="imageBroadcaster"
+                  oncommand="updateImagePref()"
+                  label="&enableImages.label;"
+                  accesskey="&enableImages.accesskey;"/>
+        <checkbox id="enableRestricted"
                   label="&forOriginatingSiteOnly.label;"
                   accesskey="&forOriginatingSiteOnly.accesskey;"
-                  prefstring="network.image.enableForOriginatingWebsiteOnly"
+                  oncommand="updateImagePref()"
                   style="margin-left: 23px;"/>
+        <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior" prefattribute="value" wsm_attributes="value"/>
       </vbox>
       <vbox>
         <button id="manageImages" class="uniWidthButton"
