@@ -24,11 +24,6 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH=..\..
-include <$(DEPTH)\config\config.mak>
-
-!if !defined(JSD_STANDALONE)
-DIRS=idl
-!endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -38,6 +33,12 @@ REQUIRES	= xpcom \
 		  appshell \
 		  pref \
 		  $(NULL)
+
+include <$(DEPTH)\config\config.mak>
+
+!if !defined(JSD_STANDALONE)
+DIRS=idl
+!endif
 
 #//------------------------------------------------------------------------
 #//
