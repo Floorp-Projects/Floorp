@@ -12815,68 +12815,69 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   return PR_FALSE;
 }
 
-// Recursively split an inline frame until we reach a block frame.
-// Below is an example of how SplitToContainingBlock() works.
-//
-// 1. In the initial state, you've got a block frame B that contains a
-//    bunch of inline frames eventually winding down to the <object>
-//    frame o
-//
-//     A-->B-->C
-//         |
-//         a-->1-->a'
-//             |
-//             b-->2-->b'
-//                 |
-//                 o
-//
-// 2. Now the object frame o gets split into the left inlines (o), the
-//    block frames (O), and the right inlines (o').
-//
-//             o O o'
-//
-// 3. We call SplitToContainingBlock(), which will split 2 as follows. 
-//
-//             .--------.
-//            /          \
-//       b-->2   2*  2'   b'
-//           |   |   |
-//           o   O   o'
-//
-//    Note that 2 gets split into 2* and 2', which correspond to the
-//    anonymous block and inline frames, respectively. Furthermore,
-//    note that 2 still refers to b' as its next sibling, and that 2'
-//    does not.
-//
-// 4. We recurse again to split 1. At this point, we'll break the
-//    link between 2 and b', and make b' be the next sibling of 2'.
-//
-//             .-----------.
-//            /             \
-//       a-->1      1*  1'   a'
-//           |      |   |
-//           b-->2  2*  2'-->b'
-//               |  |   |
-//               o  O   o'
-//
-//     As before, 1 retains a' as its next sibling. 
-//
-// 5. When we hit B, the recursion terminates. We now insert 1* and 1'
-//    immediately after 1, resulting in the following frame model. This
-//    is done using the "normal" frame insertion mechanism,
-//    nsIFrame::InsertFrames(), which properly recomputes the line boxes.
-//
-//     A-->B-->C
-//         |
-//         a-->1------>1*-->1'-->a'      
-//             |       |    |
-//             b-->2   2*   2'-->b'
-//                 |   |    |
-//                 o   O    o'
-//
-//    Since B is a block, it is allowed to contain both block and
-//    inline frames, so we can let 1* and 1' be "real siblings" of 1.
-//
+/*
+ * Recursively split an inline frame until we reach a block frame.
+ * Below is an example of how SplitToContainingBlock() works.
+ *
+ * 1. In the initial state, you've got a block frame B that contains a
+ *    bunch of inline frames eventually winding down to the <object>
+ *    frame o
+ *
+ *     A-->B-->C
+ *         |
+ *         a-->1-->a'
+ *             |
+ *             b-->2-->b'
+ *                 |
+ *                 o
+ *
+ * 2. Now the object frame o gets split into the left inlines (o), the
+ *    block frames (O), and the right inlines (o').
+ *
+ *             o O o'
+ *
+ * 3. We call SplitToContainingBlock(), which will split 2 as follows. 
+ *
+ *             .--------.
+ *            /          \
+ *       b-->2   2*  2'   b'
+ *           |   |   |
+ *           o   O   o'
+ *
+ *    Note that 2 gets split into 2* and 2', which correspond to the
+ *    anonymous block and inline frames, respectively. Furthermore,
+ *    note that 2 still refers to b' as its next sibling, and that 2'
+ *    does not.
+ *
+ * 4. We recurse again to split 1. At this point, we'll break the
+ *    link between 2 and b', and make b' be the next sibling of 2'.
+ *
+ *             .-----------.
+ *            /             \
+ *       a-->1      1*  1'   a'
+ *           |      |   |
+ *           b-->2  2*  2'-->b'
+ *               |  |   |
+ *               o  O   o'
+ *
+ *     As before, 1 retains a' as its next sibling. 
+ *
+ * 5. When we hit B, the recursion terminates. We now insert 1* and 1'
+ *    immediately after 1, resulting in the following frame model. This
+ *    is done using the "normal" frame insertion mechanism,
+ *    nsIFrame::InsertFrames(), which properly recomputes the line boxes.
+ *
+ *     A-->B-->C
+ *         |
+ *         a-->1------>1*-->1'-->a'      
+ *             |       |    |
+ *             b-->2   2*   2'-->b'
+ *                 |   |    |
+ *                 o   O    o'
+ *
+ *    Since B is a block, it is allowed to contain both block and
+ *    inline frames, so we can let 1* and 1' be "real siblings" of 1.
+ */
 nsresult
 nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
                                               nsFrameConstructorState& aState,
