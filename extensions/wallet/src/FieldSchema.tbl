@@ -1,1006 +1,1006 @@
 Name
 Name
 
+NamePrefix
 Name.Prefix
-Name.Prefix
 
+NameFirst
 Name.First
-Name.First
 
+NameMiddle
 Name.Middle
-Name.Middle
 
-Name.Last
+NameLast
 Name.Last
 
-Name.Suffix
+NameSuffix
 Name.Suffix
 
 Nickname
 Nickname
 
+BillToName
 BillTo.Name
-BillTo.Name
 
+BillToNamePrefix
 BillTo.Name.Prefix
-BillTo.Name.Prefix
 
+BillToNameFirst
 BillTo.Name.First
-BillTo.Name.First
 
+BillToNameMiddle
 BillTo.Name.Middle
-BillTo.Name.Middle
 
+BillToNameLast
 BillTo.Name.Last
-BillTo.Name.Last
 
+BillToNameSuffix
 BillTo.Name.Suffix
-BillTo.Name.Suffix
 
+BillToNickname
 BillTo.Nickname
-BillTo.Nickname
 
+ShipToName
 ShipTo.Name
-ShipTo.Name
 
+ShipToNamePrefix
 ShipTo.Name.Prefix
-ShipTo.Name.Prefix
 
+ShipToNameFirst
 ShipTo.Name.First
-ShipTo.Name.First
 
+ShipToNameMiddle
 ShipTo.Name.Middle
-ShipTo.Name.Middle
 
+ShipToNameLast
 ShipTo.Name.Last
-ShipTo.Name.Last
 
+ShipToNameSuffix
 ShipTo.Name.Suffix
-ShipTo.Name.Suffix
 
+ShipToNickname
 ShipTo.Nickname
-ShipTo.Nickname
 
+BusinessJobTitle
 Business.JobTitle
-Business.JobTitle
 
+BusinessDepartment
 Business.Department
-Business.Department
 
+BillToCompanyName
 BillTo.CompanyName
-BillTo.CompanyName
 
+ShipToCompanyName
 ShipTo.CompanyName
-ShipTo.CompanyName
 
+BusinessCompanyName
 Business.CompanyName
-Business.CompanyName
 
+HomeStreetLine1
 Home.Street.Line1
-Home.Street.Line1
 
+HomeStreetLine2
 Home.Street.Line2
-Home.Street.Line2
 
+HomeStreetLine3
 Home.Street.Line3
-Home.Street.Line3
 
+HomeCity
 Home.City
-Home.City
 
+HomeState
 Home.State
-Home.State
 
+HomeProv
 Home.Prov
-Home.Prov
 
+HomePostalCode
 Home.PostalCode
-Home.PostalCode
 
+HomePostalCodePrefix
 Home.PostalCode.Prefix
-Home.PostalCode.Prefix
 
+HomePostalCodeSuffix
 Home.PostalCode.Suffix
-Home.PostalCode.Suffix
 
+HomeCountry
 Home.Country
-Home.Country
 
+BillToStreetLine1
 BillTo.Street.Line1
-BillTo.Street.Line1
 
+BillToStreetLine2
 BillTo.Street.Line2
-BillTo.Street.Line2
 
+BillToStreetLine3
 BillTo.Street.Line3
-BillTo.Street.Line3
 
+BillToCity
 BillTo.City
-BillTo.City
 
+BillToState
 BillTo.State
-BillTo.State
 
+BillToProv
 BillTo.Prov
-BillTo.Prov
 
+BillToPostalCode
 BillTo.PostalCode
-BillTo.PostalCode
 
+BillToPostalCodePrefix
 BillTo.PostalCode.Prefix
-BillTo.PostalCode.Prefix
 
+BillToPostalCodeSuffix
 BillTo.PostalCode.Suffix
-BillTo.PostalCode.Suffix
 
+BillToCountry
 BillTo.Country
-BillTo.Country
 
+ShipToStreetLine1
 ShipTo.Street.Line1
-ShipTo.Street.Line1
 
+ShipToStreetLine2
 ShipTo.Street.Line2
-ShipTo.Street.Line2
 
+ShipToStreetLine3
 ShipTo.Street.Line3
-ShipTo.Street.Line3
 
+ShipToCity
 ShipTo.City
-ShipTo.City
 
+ShipToState
 ShipTo.State
-ShipTo.State
 
+ShipToProv
 ShipTo.Prov
-ShipTo.Prov
 
+ShipToPostalCode
 ShipTo.PostalCode
-ShipTo.PostalCode
 
+ShipToPostalCodePrefix
 ShipTo.PostalCode.Prefix
-ShipTo.PostalCode.Prefix
 
+ShipToPostalCodeSuffix
 ShipTo.PostalCode.Suffix
-ShipTo.PostalCode.Suffix
 
+ShipToCountry
 ShipTo.Country
-ShipTo.Country
 
+BusinessStreetLine1
 Business.Street.Line1
-Business.Street.Line1
 
+BusinessStreetLine2
 Business.Street.Line2
-Business.Street.Line2
 
+BusinessStreetLine3
 Business.Street.Line3
-Business.Street.Line3
 
+BusinessCity
 Business.City
-Business.City
 
+BusinessState
 Business.State
-Business.State
 
+BusinessProv
 Business.Prov
-Business.Prov
 
+BusinessPostalCode
 Business.PostalCode
-Business.PostalCode
 
+BusinessPostalCodePrefix
 Business.PostalCode.Prefix
-Business.PostalCode.Prefix
 
+BusinessPostalCodeSuffix
 Business.PostalCode.Suffix
-Business.PostalCode.Suffix
 
+BusinessCountry
 Business.Country
-Business.Country
 
+HomePhone
 Home.Phone
-Home.Phone
 
+HomePhoneIntCode
 Home.Phone.IntCode
-Home.Phone.IntCode
 
+HomePhoneLocCode
 Home.Phone.LocCode
-Home.Phone.LocCode
 
+HomePhoneNumber
 Home.Phone.Number
-Home.Phone.Number
 
+HomePhoneNumberPrefix
 Home.Phone.Number.Prefix
-Home.Phone.Number.Prefix
 
+HomePhoneNumberSuffix
 Home.Phone.Number.Suffix
-Home.Phone.Number.Suffix
 
+HomePhoneExtension
 Home.Phone.Extension
-Home.Phone.Extension
 
+BillToPhone
 BillTo.Phone
-BillTo.Phone
 
+BillToPhoneIntCode
 BillTo.Phone.IntCode
-BillTo.Phone.IntCode
 
+BillToPhoneLocCode
 BillTo.Phone.LocCode
-BillTo.Phone.LocCode
 
+BillToPhoneNumber
 BillTo.Phone.Number
-BillTo.Phone.Number
 
+BillToPhoneNumberPrefix
 BillTo.Phone.Number.Prefix
-BillTo.Phone.Number.Prefix
 
+BillToPhoneNumberSuffix
 BillTo.Phone.Number.Suffix
-BillTo.Phone.Number.Suffix
 
+BillToPhoneExtension
 BillTo.Phone.Extension
-BillTo.Phone.Extension
 
+ShipToPhone
 ShipTo.Phone
-ShipTo.Phone
 
+ShipToPhoneIntCode
 ShipTo.Phone.IntCode
-ShipTo.Phone.IntCode
 
+ShipToPhoneLocCode
 ShipTo.Phone.LocCode
-ShipTo.Phone.LocCode
 
+ShipToPhoneNumber
 ShipTo.Phone.Number
-ShipTo.Phone.Number
 
+ShipToPhoneNumberPrefix
 ShipTo.Phone.Number.Prefix
-ShipTo.Phone.Number.Prefix
 
+ShipToPhoneNumberSuffix
 ShipTo.Phone.Number.Suffix
-ShipTo.Phone.Number.Suffix
 
+ShipToPhoneExtension
 ShipTo.Phone.Extension
-ShipTo.Phone.Extension
 
+BusinessPhone
 Business.Phone
-Business.Phone
 
+BusinessPhoneIntCode
 Business.Phone.IntCode
-Business.Phone.IntCode
 
+BusinessPhoneLocCode
 Business.Phone.LocCode
-Business.Phone.LocCode
 
+BusinessPhoneNumber
 Business.Phone.Number
-Business.Phone.Number
 
+BusinessPhoneNumberPrefix
 Business.Phone.Number.Prefix
-Business.Phone.Number.Prefix
 
+BusinessPhoneNumberSuffix
 Business.Phone.Number.Suffix
-Business.Phone.Number.Suffix
 
+BusinessPhoneExtension
 Business.Phone.Extension
-Business.Phone.Extension
 
+HomeAltPhone
 Home.AltPhone
-Home.AltPhone
 
+HomeAltPhoneIntCode
 Home.AltPhone.IntCode
-Home.AltPhone.IntCode
 
+HomeAltPhoneLocCode
 Home.AltPhone.LocCode
-Home.AltPhone.LocCode
 
+HomeAltPhoneNumber
 Home.AltPhone.Number
-Home.AltPhone.Number
 
+HomeAltPhoneNumberPrefix
 Home.AltPhone.Number.Prefix
-Home.AltPhone.Number.Prefix
 
+HomeAltPhoneNumberSuffix
 Home.AltPhone.Number.Suffix
-Home.AltPhone.Number.Suffix
 
+HomeAltPhoneExtension
 Home.AltPhone.Extension
-Home.AltPhone.Extension
 
+BillToAltPhone
 BillTo.AltPhone
-BillTo.AltPhone
 
+BillToAltPhoneIntCode
 BillTo.AltPhone.IntCode
-BillTo.AltPhone.IntCode
 
+BillToAltPhoneLocCode
 BillTo.AltPhone.LocCode
-BillTo.AltPhone.LocCode
 
+BillToAltPhoneNumber
 BillTo.AltPhone.Number
-BillTo.AltPhone.Number
 
+BillToAltPhoneNumberPrefix
 BillTo.AltPhone.Number.Prefix
-BillTo.AltPhone.Number.Prefix
 
+BillToAltPhoneNumberSuffix
 BillTo.AltPhone.Number.Suffix
-BillTo.AltPhone.Number.Suffix
 
+BillToAltPhoneExtension
 BillTo.AltPhone.Extension
-BillTo.AltPhone.Extension
 
+ShipToAltPhone
 ShipTo.AltPhone
-ShipTo.AltPhone
 
+ShipToAltPhoneIntCode
 ShipTo.AltPhone.IntCode
-ShipTo.AltPhone.IntCode
 
+ShipToAltPhoneLocCode
 ShipTo.AltPhone.LocCode
-ShipTo.AltPhone.LocCode
 
+ShipToAltPhoneNumber
 ShipTo.AltPhone.Number
-ShipTo.AltPhone.Number
 
+ShipToAltPhoneNumberPrefix
 ShipTo.AltPhone.Number.Prefix
-ShipTo.AltPhone.Number.Prefix
 
+ShipToAltPhoneNumberSuffix
 ShipTo.AltPhone.Number.Suffix
-ShipTo.AltPhone.Number.Suffix
 
+ShipToAltPhoneExtension
 ShipTo.AltPhone.Extension
-ShipTo.AltPhone.Extension
 
+BusinessAltPhone
 Business.AltPhone
-Business.AltPhone
 
+BusinessAltPhoneIntCode
 Business.AltPhone.IntCode
-Business.AltPhone.IntCode
 
+BusinessAltPhoneLocCode
 Business.AltPhone.LocCode
-Business.AltPhone.LocCode
 
+BusinessAltPhoneNumber
 Business.AltPhone.Number
-Business.AltPhone.Number
 
+BusinessAltPhoneNumberPrefix
 Business.AltPhone.Number.Prefix
-Business.AltPhone.Number.Prefix
 
+BusinessAltPhoneNumberSuffix
 Business.AltPhone.Number.Suffix
-Business.AltPhone.Number.Suffix
 
+BusinessAltPhoneExtension
 Business.AltPhone.Extension
-Business.AltPhone.Extension
 
+HomeFax
 Home.Fax
-Home.Fax
 
+HomeFaxIntCode
 Home.Fax.IntCode
-Home.Fax.IntCode
 
+HomeFaxLocCode
 Home.Fax.LocCode
-Home.Fax.LocCode
 
+HomeFaxNumber
 Home.Fax.Number
-Home.Fax.Number
 
+HomeFaxNumberPrefix
 Home.Fax.Number.Prefix
-Home.Fax.Number.Prefix
 
+HomeFaxNumberSuffix
 Home.Fax.Number.Suffix
-Home.Fax.Number.Suffix
 
+BillToFax
 BillTo.Fax
-BillTo.Fax
 
+BillToFaxIntCode
 BillTo.Fax.IntCode
-BillTo.Fax.IntCode
 
+BillToFaxLocCode
 BillTo.Fax.LocCode
-BillTo.Fax.LocCode
 
+BillToFaxNumber
 BillTo.Fax.Number
-BillTo.Fax.Number
 
+BillToFaxNumberPrefix
 BillTo.Fax.Number.Prefix
-BillTo.Fax.Number.Prefix
 
+BillToFaxNumberSuffix
 BillTo.Fax.Number.Suffix
-BillTo.Fax.Number.Suffix
 
+ShipToFax
 ShipTo.Fax
-ShipTo.Fax
 
+ShipToFaxIntCode
 ShipTo.Fax.IntCode
-ShipTo.Fax.IntCode
 
+ShipToFaxLocCode
 ShipTo.Fax.LocCode
-ShipTo.Fax.LocCode
 
+ShipToFaxNumber
 ShipTo.Fax.Number
-ShipTo.Fax.Number
 
+ShipToFaxNumberPrefix
 ShipTo.Fax.Number.Prefix
-ShipTo.Fax.Number.Prefix
 
+ShipToFaxNumberSuffix
 ShipTo.Fax.Number.Suffix
-ShipTo.Fax.Number.Suffix
 
+BusinessFax
 Business.Fax
-Business.Fax
 
+BusinessFaxIntCode
 Business.Fax.IntCode
-Business.Fax.IntCode
 
+BusinessFaxLocCode
 Business.Fax.LocCode
-Business.Fax.LocCode
 
+BusinessFaxNumber
 Business.Fax.Number
-Business.Fax.Number
 
+BusinessFaxNumberPrefix
 Business.Fax.Number.Prefix
-Business.Fax.Number.Prefix
 
+BusinessFaxNumberSuffix
 Business.Fax.Number.Suffix
-Business.Fax.Number.Suffix
 
+HomeMobile
 Home.Mobile
-Home.Mobile
 
+HomeMobileIntCode
 Home.Mobile.IntCode
-Home.Mobile.IntCode
 
+HomeMobileLocCode
 Home.Mobile.LocCode
-Home.Mobile.LocCode
 
+HomeMobileNumber
 Home.Mobile.Number
-Home.Mobile.Number
 
+HomeMobileNumberPrefix
 Home.Mobile.Number.Prefix
-Home.Mobile.Number.Prefix
 
+HomeMobileNumberSuffix
 Home.Mobile.Number.Suffix
-Home.Mobile.Number.Suffix
 
+BillToMobile
 BillTo.Mobile
-BillTo.Mobile
 
+BillToMobileIntCode
 BillTo.Mobile.IntCode
-BillTo.Mobile.IntCode
 
+BillToMobileLocCode
 BillTo.Mobile.LocCode
-BillTo.Mobile.LocCode
 
+BillToMobileNumber
 BillTo.Mobile.Number
-BillTo.Mobile.Number
 
+BillToMobileNumberPrefix
 BillTo.Mobile.Number.Prefix
-BillTo.Mobile.Number.Prefix
 
+BillToMobileNumberSuffix
 BillTo.Mobile.Number.Suffix
-BillTo.Mobile.Number.Suffix
 
+ShipToMobile
 ShipTo.Mobile
-ShipTo.Mobile
 
+ShipToMobileIntCode
 ShipTo.Mobile.IntCode
-ShipTo.Mobile.IntCode
 
+ShipToMobileLocCode
 ShipTo.Mobile.LocCode
-ShipTo.Mobile.LocCode
 
+ShipToMobileNumber
 ShipTo.Mobile.Number
-ShipTo.Mobile.Number
 
+ShipToMobileNumberPrefix
 ShipTo.Mobile.Number.Prefix
-ShipTo.Mobile.Number.Prefix
 
+ShipToMobileNumberSuffix
 ShipTo.Mobile.Number.Suffix
-ShipTo.Mobile.Number.Suffix
 
+BusinessMobile
 Business.Mobile
-Business.Mobile
 
+BusinessMobileIntCode
 Business.Mobile.IntCode
-Business.Mobile.IntCode
 
+BusinessMobileLocCode
 Business.Mobile.LocCode
-Business.Mobile.LocCode
 
+BusinessMobileNumber
 Business.Mobile.Number
-Business.Mobile.Number
 
+BusinessMobileNumberPrefix
 Business.Mobile.Number.Prefix
-Business.Mobile.Number.Prefix
 
+BusinessMobileNumberSuffix
 Business.Mobile.Number.Suffix
-Business.Mobile.Number.Suffix
 
+HomePager
 Home.Pager
-Home.Pager
 
+HomePagerIntCode
 Home.Pager.IntCode
-Home.Pager.IntCode
 
+HomePagerLocCode
 Home.Pager.LocCode
-Home.Pager.LocCode
 
+HomePagerNumber
 Home.Pager.Number
-Home.Pager.Number
 
+HomePagerNumberPrefix
 Home.Pager.Number.Prefix
-Home.Pager.Number.Prefix
 
+HomePagerNumberSuffix
 Home.Pager.Number.Suffix
-Home.Pager.Number.Suffix
 
+BillToPager
 BillTo.Pager
-BillTo.Pager
 
+BillToPagerIntCode
 BillTo.Pager.IntCode
-BillTo.Pager.IntCode
 
+BillToPagerLocCode
 BillTo.Pager.LocCode
-BillTo.Pager.LocCode
 
+BillToPagerNumber
 BillTo.Pager.Number
-BillTo.Pager.Number
 
+BillToPagerNumberPrefix
 BillTo.Pager.Number.Prefix
-BillTo.Pager.Number.Prefix
 
+BillToPagerNumberSuffix
 BillTo.Pager.Number.Suffix
-BillTo.Pager.Number.Suffix
 
+ShipToPager
 ShipTo.Pager
-ShipTo.Pager
 
+ShipToPagerIntCode
 ShipTo.Pager.IntCode
-ShipTo.Pager.IntCode
 
+ShipToPagerLocCode
 ShipTo.Pager.LocCode
-ShipTo.Pager.LocCode
 
+ShipToPagerNumber
 ShipTo.Pager.Number
-ShipTo.Pager.Number
 
+ShipToPagerNumberPrefix
 ShipTo.Pager.Number.Prefix
-ShipTo.Pager.Number.Prefix
 
+ShipToPagerNumberSuffix
 ShipTo.Pager.Number.Suffix
-ShipTo.Pager.Number.Suffix
 
+BusinessPager
 Business.Pager
-Business.Pager
 
+BusinessPagerIntCode
 Business.Pager.IntCode
-Business.Pager.IntCode
 
+BusinessPagerLocCode
 Business.Pager.LocCode
-Business.Pager.LocCode
 
+BusinessPagerNumber
 Business.Pager.Number
-Business.Pager.Number
 
+BusinessPagerNumberPrefix
 Business.Pager.Number.Prefix
-Business.Pager.Number.Prefix
 
+BusinessPagerNumberSuffix
 Business.Pager.Number.Suffix
-Business.Pager.Number.Suffix
 
+HomeEmail
 Home.Email
-Home.Email
 
+HomeURI
 Home.URI
-Home.URI
 
+BillToEmail
 BillTo.Email
-BillTo.Email
 
+BillToURI
 BillTo.URI
-BillTo.URI
 
+ShipToEmail
 ShipTo.Email
-ShipTo.Email
 
+ShipToURI
 ShipTo.URI
-ShipTo.URI
 
+BusinessEmail
 Business.Email
-Business.Email
 
+BusinessURI
 Business.URI
-Business.URI
 
+JointName
 Joint.Name
-Joint.Name
 
+JointNamePrefix
 Joint.Name.Prefix
-Joint.Name.Prefix
 
+JointNameFirst
 Joint.Name.First
-Joint.Name.First
 
+JointNameMiddle
 Joint.Name.Middle
-Joint.Name.Middle
 
+JointNameLast
 Joint.Name.Last
-Joint.Name.Last
 
+JointNameSuffix
 Joint.Name.Suffix
-Joint.Name.Suffix
 
+JointNickname
 Joint.Nickname
-Joint.Nickname
 
+JointBusinessName
 Joint.Business.Name
-Joint.Business.Name
 
+JointBusinessJobTitle
 Joint.Business.JobTitle
-Joint.Business.JobTitle
 
+JointBusinessDepartment
 Joint.Business.Department
-Joint.Business.Department
 
+JointBusinessCompanyName
 Joint.Business.CompanyName
-Joint.Business.CompanyName
 
+JointHomeStreetLine1
 Joint.Home.Street.Line1
-Joint.Home.Street.Line1
 
+JointHomeStreetLine2
 Joint.Home.Street.Line2
-Joint.Home.Street.Line2
 
+JointHomeStreetLine3
 Joint.Home.Street.Line3
-Joint.Home.Street.Line3
 
+JointHomeCity
 Joint.Home.City
-Joint.Home.City
 
+JointHomeState
 Joint.Home.State
-Joint.Home.State
 
+JointHomeProv
 Joint.Home.Prov
-Joint.Home.Prov
 
+JointHomePostalCode
 Joint.Home.PostalCode
-Joint.Home.PostalCode
 
+JointHomePostalCodePrefix
 Joint.Home.PostalCode.Prefix
-Joint.Home.PostalCode.Prefix
 
+JointHomePostalCodeSuffix
 Joint.Home.PostalCode.Suffix
-Joint.Home.PostalCode.Suffix
 
+JointHomeCountry
 Joint.Home.Country
-Joint.Home.Country
 
+JointBusinessStreetLine1
 Joint.Business.Street.Line1
-Joint.Business.Street.Line1
 
+JointBusinessStreetLine2
 Joint.Business.Street.Line2
-Joint.Business.Street.Line2
 
+JointBusinessStreetLine3
 Joint.Business.Street.Line3
-Joint.Business.Street.Line3
 
+JointBusinessCity
 Joint.Business.City
-Joint.Business.City
 
+JointBusinessState
 Joint.Business.State
-Joint.Business.State
 
+JointBusinessProv
 Joint.Business.Prov
-Joint.Business.Prov
 
+JointBusinessPostalCode
 Joint.Business.PostalCode
-Joint.Business.PostalCode
 
+JointBusinessPostalCodePrefix
 Joint.Business.PostalCode.Prefix
-Joint.Business.PostalCode.Prefix
 
+JointBusinessPostalCodeSuffix
 Joint.Business.PostalCode.Suffix
-Joint.Business.PostalCode.Suffix
 
+JointBusinessCountry
 Joint.Business.Country
-Joint.Business.Country
 
+JointHomePhone
 Joint.Home.Phone
-Joint.Home.Phone
 
+JointHomePhoneIntCode
 Joint.Home.Phone.IntCode
-Joint.Home.Phone.IntCode
 
+JointHomePhoneLocCode
 Joint.Home.Phone.LocCode
-Joint.Home.Phone.LocCode
 
+JointHomePhoneNumber
 Joint.Home.Phone.Number
-Joint.Home.Phone.Number
 
+JointHomePhoneNumberPrefix
 Joint.Home.Phone.Number.Prefix
-Joint.Home.Phone.Number.Prefix
 
+JointHomePhoneNumberSuffix
 Joint.Home.Phone.Number.Suffix
-Joint.Home.Phone.Number.Suffix
 
+JointHomePhoneExtension
 Joint.Home.Phone.Extension
-Joint.Home.Phone.Extension
 
+JointBusinessPhone
 Joint.Business.Phone
-Joint.Business.Phone
 
+JointBusinessPhoneIntCode
 Joint.Business.Phone.IntCode
-Joint.Business.Phone.IntCode
 
+JointBusinessPhoneLocCode
 Joint.Business.Phone.LocCode
-Joint.Business.Phone.LocCode
 
+JointBusinessPhoneNumber
 Joint.Business.Phone.Number
-Joint.Business.Phone.Number
 
+JointBusinessPhoneNumberPrefix
 Joint.Business.Phone.Number.Prefix
-Joint.Business.Phone.Number.Prefix
 
+JointBusinessPhoneNumberSuffix
 Joint.Business.Phone.Number.Suffix
-Joint.Business.Phone.Number.Suffix
 
+JointBusinessPhoneExtension
 Joint.Business.Phone.Extension
-Joint.Business.Phone.Extension
 
+JointHomeAltPhone
 Joint.Home.AltPhone
-Joint.Home.AltPhone
 
+JointHomeAltPhoneIntCode
 Joint.Home.AltPhone.IntCode
-Joint.Home.AltPhone.IntCode
 
+JointHomeAltPhoneLocCode
 Joint.Home.AltPhone.LocCode
-Joint.Home.AltPhone.LocCode
 
+JointHomeAltPhoneNumber
 Joint.Home.AltPhone.Number
-Joint.Home.AltPhone.Number
 
+JointHomeAltPhoneNumberPrefix
 Joint.Home.AltPhone.Number.Prefix
-Joint.Home.AltPhone.Number.Prefix
 
+JointHomeAltPhoneNumberSuffix
 Joint.Home.AltPhone.Number.Suffix
-Joint.Home.AltPhone.Number.Suffix
 
+JointHomeAltPhoneExtension
 Joint.Home.AltPhone.Extension
-Joint.Home.AltPhone.Extension
 
+JointBusinessAltPhone
 Joint.Business.AltPhone
-Joint.Business.AltPhone
 
+JointBusinessAltPhoneIntCode
 Joint.Business.AltPhone.IntCode
-Joint.Business.AltPhone.IntCode
 
+JointBusinessAltPhoneLocCode
 Joint.Business.AltPhone.LocCode
-Joint.Business.AltPhone.LocCode
 
+JointBusinessAltPhoneNumber
 Joint.Business.AltPhone.Number
-Joint.Business.AltPhone.Number
 
+JointBusinessAltPhoneNumberPrefix
 Joint.Business.AltPhone.Number.Prefix
-Joint.Business.AltPhone.Number.Prefix
 
+JointBusinessAltPhoneNumberSuffix
 Joint.Business.AltPhone.Number.Suffix
-Joint.Business.AltPhone.Number.Suffix
 
+JointBusinessAltPhoneExtension
 Joint.Business.AltPhone.Extension
-Joint.Business.AltPhone.Extension
 
+JointHomeFax
 Joint.Home.Fax
-Joint.Home.Fax
 
+JointHomeFaxIntCode
 Joint.Home.Fax.IntCode
-Joint.Home.Fax.IntCode
 
+JointHomeFaxLocCode
 Joint.Home.Fax.LocCode
-Joint.Home.Fax.LocCode
 
+JointHomeFaxNumber
 Joint.Home.Fax.Number
-Joint.Home.Fax.Number
 
+JointHomeFaxNumberPrefix
 Joint.Home.Fax.Number.Prefix
-Joint.Home.Fax.Number.Prefix
 
+JointHomeFaxNumberSuffix
 Joint.Home.Fax.Number.Suffix
-Joint.Home.Fax.Number.Suffix
 
+JointBusinessFax
 Joint.Business.Fax
-Joint.Business.Fax
 
+JointBusinessFaxIntCode
 Joint.Business.Fax.IntCode
-Joint.Business.Fax.IntCode
 
+JointBusinessFaxLocCode
 Joint.Business.Fax.LocCode
-Joint.Business.Fax.LocCode
 
+JointBusinessFaxNumber
 Joint.Business.Fax.Number
-Joint.Business.Fax.Number
 
+JointBusinessFaxNumberPrefix
 Joint.Business.Fax.Number.Prefix
-Joint.Business.Fax.Number.Prefix
 
+JointBusinessFaxNumberSuffix
 Joint.Business.Fax.Number.Suffix
-Joint.Business.Fax.Number.Suffix
 
+JointHomeMobile
 Joint.Home.Mobile
-Joint.Home.Mobile
 
+JointHomeMobileIntCode
 Joint.Home.Mobile.IntCode
-Joint.Home.Mobile.IntCode
 
+JointHomeMobileLocCode
 Joint.Home.Mobile.LocCode
-Joint.Home.Mobile.LocCode
 
+JointHomeMobileNumber
 Joint.Home.Mobile.Number
-Joint.Home.Mobile.Number
 
+JointHomeMobileNumberPrefix
 Joint.Home.Mobile.Number.Prefix
-Joint.Home.Mobile.Number.Prefix
 
+JointHomeMobileNumberSuffix
 Joint.Home.Mobile.Number.Suffix
-Joint.Home.Mobile.Number.Suffix
 
+JointBusinessMobile
 Joint.Business.Mobile
-Joint.Business.Mobile
 
+JointBusinessMobileIntCode
 Joint.Business.Mobile.IntCode
-Joint.Business.Mobile.IntCode
 
+JointBusinessMobileLocCode
 Joint.Business.Mobile.LocCode
-Joint.Business.Mobile.LocCode
 
+JointBusinessMobileNumber
 Joint.Business.Mobile.Number
-Joint.Business.Mobile.Number
 
+JointBusinessMobileNumberPrefix
 Joint.Business.Mobile.Number.Prefix
-Joint.Business.Mobile.Number.Prefix
 
+JointBusinessMobileNumberSuffix
 Joint.Business.Mobile.Number.Suffix
-Joint.Business.Mobile.Number.Suffix
 
+JointHomePager
 Joint.Home.Pager
-Joint.Home.Pager
 
+JointHomePagerIntCode
 Joint.Home.Pager.IntCode
-Joint.Home.Pager.IntCode
 
+JointHomePagerLocCode
 Joint.Home.Pager.LocCode
-Joint.Home.Pager.LocCode
 
+JointHomePagerNumber
 Joint.Home.Pager.Number
-Joint.Home.Pager.Number
 
+JointHomePagerNumberPrefix
 Joint.Home.Pager.Number.Prefix
-Joint.Home.Pager.Number.Prefix
 
+JointHomePagerNumberSuffix
 Joint.Home.Pager.Number.Suffix
-Joint.Home.Pager.Number.Suffix
 
+JointBusinessPager
 Joint.Business.Pager
-Joint.Business.Pager
 
+JointBusinessPagerIntCode
 Joint.Business.Pager.IntCode
-Joint.Business.Pager.IntCode
 
+JointBusinessPagerLocCode
 Joint.Business.Pager.LocCode
-Joint.Business.Pager.LocCode
 
+JointBusinessPagerNumber
 Joint.Business.Pager.Number
-Joint.Business.Pager.Number
 
+JointBusinessPagerNumberPrefix
 Joint.Business.Pager.Number.Prefix
-Joint.Business.Pager.Number.Prefix
 
+JointBusinessPagerNumberSuffix
 Joint.Business.Pager.Number.Suffix
-Joint.Business.Pager.Number.Suffix
 
+JointHomeEmail
 Joint.Home.Email
-Joint.Home.Email
 
+JointHomeURI
 Joint.Home.URI
-Joint.Home.URI
 
+JointBusinessEmail
 Joint.Business.Email
-Joint.Business.Email
 
+JointBusinessURI
 Joint.Business.URI
-Joint.Business.URI
 
+CardType
 Card.Type
-Card.Type
 
+CardNumber
 Card.Number
-Card.Number
 
+CardName
 Card.Name
-Card.Name
 
+CardExpDate
 Card.ExpDate
-Card.ExpDate
 
-Card.ExpDate.Month
+CardExpDateMonth
 Card.ExpDate.Month
 
-Card.ExpDate.Year
+CardExpDateYear
 Card.ExpDate.Year
 
 SocSec
 SocSec
 
+SocSecPrefix
 SocSec.Prefix
-SocSec.Prefix
 
+SocSecMiddle
 SocSec.Middle
-SocSec.Middle
 
+SocSecSuffix
 SocSec.Suffix
-SocSec.Suffix
 
+JointSocSec
 Joint.SocSec
-Joint.SocSec
 
+JointSocSecPrefix
 Joint.SocSec.Prefix
-Joint.SocSec.Prefix
 
+JointSocSecMiddle
 Joint.SocSec.Middle
-Joint.SocSec.Middle
 
+JointSocSecSuffix
 Joint.SocSec.Suffix
-Joint.SocSec.Suffix
 
+LicenseNumber
 License.Number
-License.Number
 
+LicenseState
 License.State
-License.State
 
-Joint.License.Number
+JointLicenseNumber
 Joint.License.Number
 
-Joint.License.State
+JointLicenseState
 Joint.License.State
 
 Bdate
 Bdate
 
+BdateMonth
 Bdate.Month
-Bdate.Month
 
+BdateDay
 Bdate.Day
-Bdate.Day
 
+BdateYear
 Bdate.Year
-Bdate.Year
 
+JointBdate
 Joint.Bdate
-Joint.Bdate
 
+JointBdateMonth
 Joint.Bdate.Month
-Joint.Bdate.Month
 
-Joint.Bdate.Day
+JointBdateDay
 Joint.Bdate.Day
 
-Joint.Bdate.Year
+JointBdateYear
 Joint.Bdate.Year
 
 Anniv
 Anniv
 
+AnnivMonth
 Anniv.Month
-Anniv.Month
 
+AnnivDay
 Anniv.Day
-Anniv.Day
 
+AnnivYear
 Anniv.Year
-Anniv.Year
 
+JointAnniv
 Joint.Anniv
-Joint.Anniv
 
+JointAnnivMonth
 Joint.Anniv.Month
-Joint.Anniv.Month
 
-Joint.Anniv.Day
+JointAnnivDay
 Joint.Anniv.Day
 
-Joint.Anniv.Year
+JointAnnivYear
 Joint.Anniv.Year
 
 MothersMaidenName
