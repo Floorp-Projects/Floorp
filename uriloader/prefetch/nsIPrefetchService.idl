@@ -47,8 +47,9 @@ interface nsIPrefetchService : nsISupports
      *
      * @param aURI the URI of the document to prefetch
      * @param aReferrerURI the URI of the referring page
+     * @param aExplicit the link element has an explicit prefetch link type
      */
-    void prefetchURI(in nsIURI aURI, in nsIURI aReferrerURI);
+    void prefetchURI(in nsIURI aURI, in nsIURI aReferrerURI, in boolean aExplicit);
 
     // XXX do we need a way to cancel prefetch requests?
 };

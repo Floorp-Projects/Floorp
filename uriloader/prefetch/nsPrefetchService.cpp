@@ -428,7 +428,7 @@ NS_IMPL_ISUPPORTS4(nsPrefetchService,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsPrefetchService::PrefetchURI(nsIURI *aURI, nsIURI *aReferrerURI)
+nsPrefetchService::PrefetchURI(nsIURI *aURI, nsIURI *aReferrerURI, PRBool aExplicit)
 {
     nsresult rv;
 
@@ -475,19 +475,17 @@ nsPrefetchService::PrefetchURI(nsIURI *aURI, nsIURI *aReferrerURI)
         return NS_ERROR_ABORT;
     }
 
-    //
-    // skip URLs that contain query strings.  these URLs are likely to result
-    // in documents that have zero freshness lifetimes, which we'd stop
-    // prefetching anyways (see nsPrefetchListener::OnStartRequest).  this
-    // check avoids nearly doubling the load on bugzilla, for example ;-)
-    //
-    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
-    if (NS_FAILED(rv)) return rv;
-    nsCAutoString query;
-    rv = url->GetQuery(query);
-    if (NS_FAILED(rv) || !query.IsEmpty()) {
-        LOG(("rejected: URL has a query string\n"));
-        return NS_ERROR_ABORT;
+    // skip URLs that contain query strings, except URLs for which prefetching
+    // has been explicitly requested.
+    if (!aExplicit) {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(aURI, &rv));
+        if (NS_FAILED(rv)) return rv;
+        nsCAutoString query;
+        rv = url->GetQuery(query);
+        if (NS_FAILED(rv) || !query.IsEmpty()) {
+            LOG(("rejected: URL has a query string\n"));
+            return NS_ERROR_ABORT;
+        }
     }
 
     // 
