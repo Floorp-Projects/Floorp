@@ -52,10 +52,12 @@ static const struct SVRCOREPinMethods vtable;
  */
 
 
+/*ARGSUSED*/
 void echoOff(int fd)
 {
 }
  
+/*ARGSUSED*/
 void echoOn(int fd)
 {
 }

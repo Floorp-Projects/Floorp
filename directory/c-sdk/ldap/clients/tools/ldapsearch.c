@@ -33,7 +33,7 @@ static int dosearch( LDAP *ld, char *base, int scope, char **attrs,
 static void write_string_attr_value( char *attrname, char *strval,
 	unsigned long opts );
 #define LDAPTOOL_WRITEVALOPT_SUPPRESS_NAME	0x01
-static int write_ldif_value( char *type, char *value, unsigned long vallen,
+static void write_ldif_value( char *type, char *value, unsigned long vallen,
 	unsigned long ldifoptions );
 static void print_entry( LDAP *ld, LDAPMessage *entry, int attrsonly );
 static void options_callback( int option, char *optarg );
@@ -701,7 +701,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 		    parse_and_display_reference( ld, res );
 		} else if ( rc == LDAP_RES_EXTENDED
 			&& ldap_msgid( res ) == LDAP_RES_UNSOLICITED ) {
-		    ldaptool_print_extended_response( ld, res,
+		    (void)ldaptool_print_extended_response( ld, res,
 			    "Unsolicited response" );
 		} else {
 		    fprintf( stderr, "%s: ignoring LDAP response message"
@@ -730,10 +730,10 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 
     if ( ldap_parse_result( ld, res, &rc, NULL, NULL, &refs,
 	    &ctrl_response_array, 0 ) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, "ldap_parse_result",
+	(void)ldaptool_print_lderror( ld, "ldap_parse_result",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else if ( rc != LDAP_SUCCESS ) {                                          
-	ldaptool_print_lderror( ld, "ldap_search",
+	(void)ldaptool_print_lderror( ld, "ldap_search",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     } 
     /* Parse the returned sort control */
@@ -742,7 +742,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	char *attribute;
 	
 	if ( LDAP_SUCCESS != ldap_parse_sort_control(ld,ctrl_response_array,&result,&attribute) ) {
-	    ldaptool_print_lderror(ld, "ldap_parse_sort_control",
+	    (void)ldaptool_print_lderror(ld, "ldap_parse_sort_control",
 		    LDAPTOOL_CHECK4SSL_IF_APPROP );
 	    ldap_controls_free(ctrl_response_array);
 	    ldap_msgfree(res);
@@ -769,7 +769,7 @@ dosearch( ld, base, scope, attrs, attrsonly, filtpatt, value )
 	unsigned long vpos, vcount;
 	int vresult;
 	if ( LDAP_SUCCESS != ldap_parse_virtuallist_control(ld,ctrl_response_array,&vpos, &vcount,&vresult) ) {
-	    ldaptool_print_lderror( ld, "ldap_parse_virtuallist_control",
+	    (void)ldaptool_print_lderror( ld, "ldap_parse_virtuallist_control",
 		    LDAPTOOL_CHECK4SSL_IF_APPROP );
 	    ldap_controls_free(ctrl_response_array);
 	    ldap_msgfree(res);
@@ -962,7 +962,7 @@ print_entry( ld, entry, attrsonly )
     }
 
     if ( ldap_get_lderrno( ld, NULL, NULL ) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, "ldap_first_attribute/ldap_next_attribute",
+	(void)ldaptool_print_lderror( ld, "ldap_first_attribute/ldap_next_attribute",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     }
 
@@ -988,7 +988,7 @@ write_string_attr_value( char *attrname, char *strval, unsigned long opts )
 }
 
 
-static int
+static void
 write_ldif_value( char *type, char *value, unsigned long vallen,
 	unsigned long ldifoptions )
 {
@@ -1010,15 +1010,14 @@ write_ldif_value( char *type, char *value, unsigned long vallen,
 	ldifoptions |= LDIF_OPT_MINIMAL_ENCODING;
     }
 
+    /* ldif_type_and_value() fails only if malloc() fails. */
     if (( ldif = ldif_type_and_value_with_options( type, value, (int)vallen,
 	    ldifoptions )) == NULL ) {
-	return( -1 );
+	exit( LDAP_NO_MEMORY );
     }
 
     fputs( ldif, stdout );
     free( ldif );
-
-    return( 0 );
 }
 
 
@@ -1071,7 +1070,7 @@ parse_and_display_reference( LDAP *ld, LDAPMessage *ref )
     char	**refs;
 
     if ( ldap_parse_reference( ld, ref, &refs, NULL, 0 ) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, "ldap_parse_reference",
+	(void)ldaptool_print_lderror( ld, "ldap_parse_reference",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else if ( refs != NULL && refs[ 0 ] != NULL ) {
 	fputs( "Unfollowed continuation reference(s):\n", stderr );

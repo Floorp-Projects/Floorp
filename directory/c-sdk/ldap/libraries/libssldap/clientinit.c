@@ -86,6 +86,11 @@ splitpath(char *string, char *dir, char *prefix, char *key) {
         char *l;
         int  len = 0;
 
+/* XXXmcs: This function knows more about the NSS certificate and key database
+ *         filenames than it should. It relies on the fact that the suffix for
+ *         these files is ".db" and that the first letter in the main part of
+ *         the name is either 'c' or 'k'.
+ */
 
         if (string == NULL)
                 return (-1);
@@ -128,7 +133,7 @@ splitpath(char *string, char *dir, char *prefix, char *key) {
                         PL_strcpy(dir, d);
                 }
         } else {
-                /* neither *key[0-9].db nor *cert[0=9].db found */
+                /* neither *key[0-9].db nor *cert[0-9].db found */
                 return (-1);
         }
 
@@ -152,20 +157,28 @@ static PRStatus local_SSLPLCY_Install(void)
 
 
 
+/*
+ * Note: by design, the keydbpath can actually be a certdbpath.  Some
+ * callers rely on this behavior, e.g., the LDAP command line tools.
+ * This function simply does not care whether the paths end in the
+ * correct NSS filenames or not; the mission here is just to extract
+ * the base directory (which is pulled out of certdbpath) and the
+ * cert and key prefixes (pulled out of certdbpath and keydbpath
+ * respectively).
+ */
 static int
-ldapssl_basic_init( const char *certdbpath, const char *keydbpath )
+ldapssl_basic_init( const char *certdbpath, const char *keydbpath,
+		const char *secmoddbpath )
 {
 	char *confDir = NULL, *certdbPrefix = NULL, *certdbName = NULL;
 	char *keyconfDir = NULL, *keydbPrefix = NULL, *keydbName = NULL;
 	char *certPath = NULL, *keyPath = NULL;
-	static char *secmodname =  "secmod.db";
 	int retcode = 0; 
-	SECStatus rc;
 
-    /* PR_Init() must to be called before everything else... */
-    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+	/* PR_Init() must to be called before everything else... */
+	PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
 
-    PR_SetConcurrency( 4 );	/* work around for NSPR 3.x I/O hangs */
+	PR_SetConcurrency( 4 );	/* work around for NSPR 3.x I/O hangs */
 
 	/* Get confDir, certdbPrefix and certdbName from certdbpath */
 	certPath = ldapssl_strdup( certdbpath );
@@ -175,7 +188,7 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath )
 	if (certdbPrefix) {
 		*certdbPrefix = '\0';
 	}
-	splitpath(certPath, confDir, certdbPrefix, certdbName);
+	(void)splitpath(certPath, confDir, certdbPrefix, certdbName);
 
 	/* Get keyconfDir, keydbPrefix and keydbName from keydbpath */
 	keyPath = ldapssl_strdup( keydbpath );
@@ -185,7 +198,7 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath )
 	if (keydbPrefix) {
 		*keydbPrefix = '\0';
 	}
-	splitpath(keyPath, keyconfDir, keydbPrefix, keydbName);
+	(void)splitpath(keyPath, keyconfDir, keydbPrefix, keydbName);
 
 	/* Free the variables we no longer need */
 	ldapssl_free((void **)&certPath);
@@ -194,8 +207,16 @@ ldapssl_basic_init( const char *certdbpath, const char *keydbpath )
 	ldapssl_free((void **)&keydbName);
 	ldapssl_free((void **)&keyconfDir);
 
-	if ((rc = NSS_Initialize(confDir,certdbPrefix,keydbPrefix,
-			secmodname, NSS_INIT_READONLY)) != SECSuccess) {
+	/*
+	 * Accept a NULL secmoddbpath (NSS_Initialize() does not; it would
+	 * be nice if it did!)
+	 */
+	if ( NULL == secmoddbpath ) {
+	   	secmoddbpath = "secmod.db";
+	}
+
+	if ( NSS_Initialize(confDir,certdbPrefix,keydbPrefix,
+			secmoddbpath, NSS_INIT_READONLY) != SECSuccess) {
 		retcode = -1;
 	}
 
@@ -359,12 +380,11 @@ GetDBName(const char *dbname, const char *path)
  * is supported but not client authentication.
  *
  * If "certdbpath" is NULL or "", the default cert. db is used (typically
- * ~/.netscape/cert7.db).
+ * ~/.netscape/cert8.db).
  *
  * If "certdbpath" ends with ".db" (case-insensitive compare), then
  * it is assumed to be a full path to the cert. db file; otherwise,
- * it is assumed to be a directory that contains a file called
- * "cert7.db" or "cert.db".
+ * it is assumed to be a directory that contains such a file.
  *
  * If certdbhandle is non-NULL, it is assumed to be a pointer to a
  * SECCertDBHandle structure.  It is fine to pass NULL since this
@@ -376,14 +396,14 @@ GetDBName(const char *dbname, const char *path)
  *
  * If "keydbpath" ends with ".db" (case-insensitive compare), then
  * it is assumed to be a full path to the key db file; otherwise,
- * it is assumed to be a directory that contains a file called
- * "key3.db" 
+ * it is assumed to be a directory that contains such a file.
  *
  * If certdbhandle is non-NULL< it is assumed to be a pointed to a
  * SECKEYKeyDBHandle structure.  It is fine to pass NULL since this
  * routine will allocate one for you (SECKEY_GetDefaultDB() can be
  * used to retrieve the cert db handle).
  */
+/*ARGSUSED*/
 int
 LDAP_CALL
 ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle, 
@@ -401,7 +421,7 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
 	return( 0 );
     }
 
-    if ((rc = ldapssl_basic_init(certdbpath, keydbpath)) != 0) {
+    if ( ldapssl_basic_init(certdbpath, keydbpath, NULL) != 0) {
 	return (-1);
     }
 
@@ -440,12 +460,11 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
  * is supported but not client authentication.
  *
  * If "certdbpath" is NULL or "", the default cert. db is used (typically
- * ~/.netscape/cert7.db).
+ * ~/.netscape/cert8.db).
  *
  * If "certdbpath" ends with ".db" (case-insensitive compare), then
  * it is assumed to be a full path to the cert. db file; otherwise,
- * it is assumed to be a directory that contains a file called
- * "cert7.db" or "cert.db".
+ * it is assumed to be a directory that contains such a file.
  *
  * If certdbhandle is non-NULL, it is assumed to be a pointer to a
  * SECCertDBHandle structure.  It is fine to pass NULL since this
@@ -457,13 +476,14 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
  *
  * If "keydbpath" ends with ".db" (case-insensitive compare), then
  * it is assumed to be a full path to the key db file; otherwise,
- * it is assumed to be a directory that contains a file called
- * "key3.db" 
+ * it is assumed to be a directory that contains such a file.
  *
  * If certdbhandle is non-NULL< it is assumed to be a pointed to a
  * SECKEYKeyDBHandle structure.  It is fine to pass NULL since this
  * routine will allocate one for you (SECKEY_GetDefaultDB() can be
- * used to retrieve the cert db handle).  */
+ * used to retrieve the cert db handle).
+*/
+/*ARGSUSED*/
 int
 LDAP_CALL
 ldapssl_advclientauth_init( 
@@ -472,8 +492,6 @@ ldapssl_advclientauth_init(
     const int needsecmoddb, const char *secmoddbpath,
     const int sslstrength )
 {
-    int rc = 0;
-
     if ( inited ) {
 	return( 0 );
     }
@@ -482,7 +500,7 @@ ldapssl_advclientauth_init(
      *    LDAPDebug(LDAP_DEBUG_TRACE, "ldapssl_advclientauth_init\n",0 ,0 ,0);
      */
 
-    if ((rc = ldapssl_basic_init(certdbpath, keydbpath)) != 0) {
+    if ( ldapssl_basic_init(certdbpath, keydbpath, NULL) != 0) {
 	return (-1);
     }
 
@@ -518,7 +536,7 @@ LDAP_CALL
 ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
 {
 
-    char		*certdbpath, *keydbpath;
+    char		*certdbpath, *keydbpath, *secmoddbpath;
     int			rc;
     
     if ( inited ) {
@@ -534,11 +552,13 @@ ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
     /*
      *    LDAPDebug(LDAP_DEBUG_TRACE, "ldapssl_pkcs_init\n",0 ,0 ,0);
      */
-
-
+    certdbpath = keydbpath = secmoddbpath = NULL;
     pfns->pkcs_getcertpath( NULL, &certdbpath);
     pfns->pkcs_getkeypath( NULL, &keydbpath);
-    ldapssl_basic_init(certdbpath, keydbpath);
+    pfns->pkcs_getmodpath( NULL, &secmoddbpath);
+    if ( ldapssl_basic_init(certdbpath, keydbpath, secmoddbpath) != 0 ) {
+	return( -1 );
+    }
 
     /* this is odd */
     PK11_ConfigurePKCS11(NULL, NULL, tokDes, ptokDes, NULL, NULL, NULL, NULL, 0, 0 );

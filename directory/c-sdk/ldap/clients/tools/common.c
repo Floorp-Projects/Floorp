@@ -32,7 +32,7 @@
 #include "ntuserpin.h"
 #endif /* LDAP_TOOL_ARGPIN */
 
-#include <nspr.h>	/* for PR_Cleanup() */
+#include <nspr.h>
 #include <stdlib.h>
 #include <time.h>	/* for time() and ctime() */
 
@@ -51,8 +51,7 @@ static void ldaptool_debug_free( void *ptr );
 #endif /* LDAPTOOL_DEBUG_MEMORY */
 
 #if defined(NET_SSL)
-static char *certpath2keypath( char *certdbpath );
-static int ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns);
+static void ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns);
 static char * buildTokenCertName( const char *tokenName, const char *certName);
 #ifdef FORTEZZA
 static int ldaptool_fortezza_init( int exit_on_error );
@@ -149,11 +148,7 @@ int			ldaptool_port2 = LDAP_PORT;
 int			ldaptool_verbose = 0;
 int			ldaptool_not = 0;
 FILE			*ldaptool_fp = NULL;
-FILE			*password_fp = NULL;
 char			*ldaptool_progname = "";
-char			*ldaptool_nls_lang = NULL;
-char                    *proxyauth_id = NULL;
-int			proxyauth_version = 2;	/* use newer proxy control */
 LDAPControl		*ldaptool_request_ctrls[CONTROL_REQUESTS] = {0};
 #ifdef LDAP_DEBUG
 int			ldaptool_dbg_lvl = 0;
@@ -171,6 +166,9 @@ static int		ldversion = -1;	/* use default */
 static int		refhoplim = LDAPTOOL_DEFREFHOPLIMIT;
 static int		send_manage_dsait_ctrl = 0;
 static int		prompt_password = 0;
+static FILE		*password_fp = NULL;
+static char             *proxyauth_id = NULL;
+static int		proxyauth_version = 2;	/* use newer proxy control */
 
 #ifndef NO_LIBLCACHE
 static char		*cache_config_file = NULL;
@@ -545,8 +543,8 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    break;
 	case 'y':   /* old (version 1) proxied authorization control */
 		proxyauth_version = 1;
-	case 'Y':   /* new (version 2 ) proxied authorization control */
 		/*FALLTHRU*/
+	case 'Y':   /* new (version 2 ) proxied authorization control */
 	    proxyauth_id = strdup(optarg);
 	    if (NULL == proxyauth_id)
 	    {
@@ -618,7 +616,11 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	if ( NULL == ssl_certdbpath ) {
 	    ssl_keydbpath = LDAPTOOL_DEFKEYDBPATH;
 	} else {
-	    ssl_keydbpath = certpath2keypath( ssl_certdbpath );
+	    /* The ldapssl_.*init() functions, which call NSS_Initialize(),
+	     * don't rely on the key DB path ending in the correct filename,
+	     * so it is OK to just pass them the cert DB path.
+	     */
+	    ssl_keydbpath = ssl_certdbpath;
 	}
     }
     if ( NULL == ssl_certdbpath ) {
@@ -1160,7 +1162,7 @@ ldaptool_print_extended_response( LDAP *ld, LDAPMessage *res, char *msg )
 
     if ( ldap_parse_extended_result( ld, res, &oid, &data, 0 )
 	    != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	if ( oid != NULL ) {
 	    if ( strcmp ( oid, LDAP_NOTICE_OF_DISCONNECTION ) == 0 ) {
@@ -1204,7 +1206,7 @@ ldaptool_sasl_bind_s( LDAP *ld, const char *dn, const char *mechanism,
 
     if (( rc = ldap_sasl_bind( ld, dn, mechanism, cred, serverctrls,
 	    clientctrls, &msgid )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	rc = wait4result( ld, msgid, servercredp, msg );
     }
@@ -1242,7 +1244,7 @@ ldaptool_add_ext_s( LDAP *ld, const char *dn, LDAPMod **attrs,
 
     if (( rc = ldap_add_ext( ld, dn, attrs, serverctrls, clientctrls, &msgid ))
 	    != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	/*
 	 * 25-April-2000 Note: the next line used to read:
@@ -1269,7 +1271,7 @@ ldaptool_modify_ext_s( LDAP *ld, const char *dn, LDAPMod **mods,
 
     if (( rc = ldap_modify_ext( ld, dn, mods, serverctrls, clientctrls,
 	    &msgid )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	rc = wait4result( ld, msgid, NULL, msg );
     }
@@ -1290,7 +1292,7 @@ ldaptool_delete_ext_s( LDAP *ld, const char *dn, LDAPControl **serverctrls,
 
     if (( rc = ldap_delete_ext( ld, dn, serverctrls, clientctrls, &msgid ))
 	    != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	rc = wait4result( ld, msgid, NULL, msg );
     }
@@ -1311,7 +1313,7 @@ int ldaptool_compare_ext_s( LDAP *ld, const char *dn, const char *attrtype,
 
     if (( rc = ldap_compare_ext( ld, dn, attrtype, bvalue, serverctrls,
 	    clientctrls, &msgid )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	rc = wait4result( ld, msgid, NULL, msg );
     }
@@ -1333,7 +1335,7 @@ ldaptool_rename_s(  LDAP *ld, const char *dn, const char *newrdn,
 
     if (( rc = ldap_rename( ld, dn, newrdn, newparent, deleteoldrdn,
 	    serverctrls, clientctrls, &msgid )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     } else {
 	rc = wait4result( ld, msgid, NULL, msg );
     }
@@ -1357,7 +1359,7 @@ wait4result( LDAP *ld, int msgid, struct berval **servercredp, char *msg )
 	res = NULL;
 	if (( rc = ldap_result( ld, msgid, 1, (struct timeval *)NULL, &res ))
 		    == -1 ) {
-	    ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	    (void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
 	    return( ldap_get_lderrno( ld, NULL, NULL ));
 	}
 
@@ -1391,7 +1393,7 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 
     if (( rc = ldap_parse_result( ld, res, &lderr, NULL, NULL, &refs,
 	    &ctrls, 0 )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
 	ldap_msgfree( res );
 	return( rc );
     }
@@ -1453,7 +1455,7 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
 
     if ( servercredp != NULL && ( rc = ldap_parse_sasl_bind_result( ld, res,
 	    servercredp, 0 )) != LDAP_SUCCESS ) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
 	ldap_msgfree( res );
 	return( rc );
     }
@@ -1463,7 +1465,7 @@ parse_result( LDAP *ld, LDAPMessage *res, struct berval **servercredp,
     }
 
     if ( LDAPTOOL_RESULT_IS_AN_ERROR( lderr )) {
-	ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
+	(void)ldaptool_print_lderror( ld, msg, LDAPTOOL_CHECK4SSL_IF_APPROP );
     }
 
     if ( refs != NULL ) {
@@ -1678,6 +1680,7 @@ ldaptool_parse_ctrl_arg(char *ctrl_arg, char sep,
 /*
  * callback function for LDAP bind credentials
  */
+/*ARGSUSED*/
 static int
 LDAP_CALL
 LDAP_CALLBACK
@@ -1868,58 +1871,6 @@ ldaptool_debug_free( void *ptr )
 
 
 #if defined(NET_SSL)
-/*
- * Derive key database path from certificate database path and return a
- * malloc'd string.
- *
- * We just return an exact copy of "certdbpath" unless it ends in "cert.db",
- * "cert5.db", or "cert7.db".  In those cases we strip off everything from
- * "cert" on and append "key.db", "key5.db", or "key3.db" as appropriate.
- * Strangely enough cert7.db and key3.db go together.
- */
-static char *
-certpath2keypath( char *certdbpath )
-{
-    char	*keydbpath, *appendstr;
-    int		len, striplen;
-
-    if ( certdbpath == NULL ) {
-	return( NULL );
-    }
-
-    if (( keydbpath = strdup( certdbpath )) == NULL ) {
-	perror( "strdup" );
-	exit( LDAP_NO_MEMORY );
-    }
-
-    len = strlen( keydbpath );
-    if ( len > 7 &&
-	    strcasecmp( "cert.db", keydbpath + len - 7 ) == 0 ) {
-	striplen = 7;
-	appendstr = "key.db";
-	
-    } else if ( len > 8 &&
-	    strcasecmp( "cert5.db", keydbpath + len - 8 ) == 0 ) {
-	striplen = 8;
-	appendstr = "key5.db";
-    } else if ( len > 8 &&
-	    strcasecmp( "cert7.db", keydbpath + len - 8 ) == 0 ) {
-	striplen = 8;
-	appendstr = "key3.db";
-    } else {
-	striplen = 0;
-    }
-
-    if ( striplen > 0 ) {
-	/*
-	 * The following code assumes that strlen( appendstr ) < striplen!
-	 */
-	strcpy( keydbpath + len - striplen, appendstr );
-    }
-
-    return( keydbpath );
-}
-
 #ifdef LDAP_TOOL_PKCS11
 static 
 char * 
@@ -1944,8 +1895,8 @@ buildTokenCertName( const char *tokenName, const char *certName)
 
 
 
-static
-int
+/*ARGSUSED*/
+static int
 ldaptool_getcertpath( void *context, char **certlocp )
 {
     
@@ -1964,6 +1915,7 @@ ldaptool_getcertpath( void *context, char **certlocp )
     return LDAP_SUCCESS;
 }
 
+/*ARGSUSED*/
 int
 ldaptool_getcertname( void *context, char **certnamep )
 { 
@@ -1982,6 +1934,7 @@ ldaptool_getcertname( void *context, char **certnamep )
     return LDAP_SUCCESS;
 }
 
+/*ARGSUSED*/
 int
 ldaptool_getkeypath(void *context, char **keylocp )
 {
@@ -2000,6 +1953,7 @@ ldaptool_getkeypath(void *context, char **keylocp )
     return LDAP_SUCCESS;
 }
 
+/*ARGSUSED*/
 int
 ldaptool_gettokenname( void *context, char **tokennamep )
 {
@@ -2018,6 +1972,8 @@ ldaptool_gettokenname( void *context, char **tokennamep )
 
     return LDAP_SUCCESS;
 }
+
+/*ARGSUSED*/
 int
 ldaptool_gettokenpin( void *context, const char *tokennamep, char **tokenpinp)
 {
@@ -2058,6 +2014,7 @@ ldaptool_gettokenpin( void *context, const char *tokennamep, char **tokenpinp)
 #endif
 }
 
+/*ARGSUSED*/
 int
 ldaptool_getmodpath( void *context, char **modulep )
 {
@@ -2076,6 +2033,7 @@ ldaptool_getmodpath( void *context, char **modulep )
     return LDAP_SUCCESS;
 }
 
+/*ARGSUSED*/
 int
 ldaptool_getdonglefilename( void *context, char **filename )
 {
@@ -2095,7 +2053,7 @@ ldaptool_getdonglefilename( void *context, char **filename )
     return LDAP_SUCCESS;
 }
 
-static int
+static void
 ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns)
 {
   pfns->pkcs_getcertpath = (int (*)(void *, char **))ldaptool_getcertpath;
@@ -2106,7 +2064,6 @@ ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns)
   pfns->pkcs_gettokenname =  (int (*)(void *, char **)) ldaptool_gettokenname;
   pfns->pkcs_getdonglefilename =  (int (*)(void *, char **)) ldaptool_getdonglefilename;
   pfns->local_structure_id=PKCS_STRUCTURE_ID;
-  return LDAP_SUCCESS;
 }
 
 

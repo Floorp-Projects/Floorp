@@ -471,6 +471,7 @@ ldapssl_install_routines( LDAP *ld )
 }
 
 
+/*ARGSUSED*/
 int
 LDAP_CALL
 ldapssl_enable_clientauth( LDAP *ld, char *keynickname,
@@ -859,7 +860,7 @@ ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd, PRBool checkSig,
  *			SECFailure otherwise.
  * if SECFailure is returned SSL will proceed without sending a cert.
  */
-
+/*ARGSUSED*/
 static SECStatus
 get_clientauth_data( void *sessionarg, PRFileDesc *prfd,
         CERTDistNames *caNames,  CERTCertificate **pRetCert,
@@ -920,7 +921,7 @@ get_keyandcert( LDAPSSLSessionInfo *ssip,
  * This function is enable through PK11_SetPasswordFunc
  * only if pkcs functions are not being used.
  */ 
-
+/*ARGSUSED*/
 static char *
 get_keypassword( PK11SlotInfo *slot, PRBool retry, void *sessionarg )
 {

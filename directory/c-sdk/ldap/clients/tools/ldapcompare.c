@@ -131,6 +131,7 @@ main( int argc, char **argv )
     return( rc );
 }
 
+/*ARGSUSED1*/
 static void
 options_callback( int option, char *optarg )
 {

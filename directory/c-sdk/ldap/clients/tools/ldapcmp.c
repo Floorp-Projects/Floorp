@@ -34,13 +34,13 @@ static void options_callback( int option, char *optarg );
 static int docompare( LDAP *ld1, LDAP *ld2, char *base );
 static int cmp2(LDAP *ld1, LDAP *ld2, LDAPMessage *e1, int findonly );
 static void notfound(char *base, int dbaseno);
-ATTR* get_attrs( LDAP *ld, LDAPMessage *e );
-char* cmp_attrs( ATTR *a1, ATTR *a2 );
+static ATTR* get_attrs( LDAP *ld, LDAPMessage *e );
+static char* cmp_attrs( ATTR *a1, ATTR *a2 );
 static void attr_free(ATTR *at);
 #if 0 /* these functions are not used */
 static void print_entry( LDAP *ld, LDAPMessage *entry, int attrsonly );
 static void print_dn( LDAP *ld, LDAPMessage *entry );
-static int write_ldif_value( char *type, char *value, unsigned long vallen );
+static void write_ldif_value( char *type, char *value, unsigned long vallen );
 #endif /* 0 */
 
 static void
@@ -212,7 +212,7 @@ docompare( LDAP *ld1, LDAP *ld2, char *base )
 		LDAPTOOL_CHECK4SSL_IF_APPROP ));
     }
     if (( rc = ldap_result2error( ld1, res, 0 )) != LDAP_SUCCESS ) {
-        ldaptool_print_lderror( ld1, "ldap_search",
+        (void)ldaptool_print_lderror( ld1, "ldap_search",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     }
     ldap_msgfree( res );
@@ -234,7 +234,7 @@ docompare( LDAP *ld1, LDAP *ld2, char *base )
 		LDAPTOOL_CHECK4SSL_IF_APPROP ));
     }
     if (( rc = ldap_result2error( ld1, res, 0 )) != LDAP_SUCCESS ) {
-        ldaptool_print_lderror( ld1, "ldap_search",
+        (void)ldaptool_print_lderror( ld1, "ldap_search",
 		LDAPTOOL_CHECK4SSL_IF_APPROP );
     }
     ldap_msgfree( res );
@@ -297,7 +297,7 @@ cmp2( LDAP *ld1, LDAP *ld2, LDAPMessage *e1, int findonly)
 }
 
 
-ATTR*
+static ATTR*
 get_attrs( LDAP *ld, LDAPMessage *e )
 {
     char		*a;
@@ -334,7 +334,7 @@ get_attrs( LDAP *ld, LDAPMessage *e )
 }
 
 
-char*
+static char*
 cmp_attrs( ATTR *a1, ATTR *a2 )
 {
     static char result[5000];
@@ -586,18 +586,17 @@ print_entry( ld, entry, attrsonly )
 }
 
 
-static int
+static void
 write_ldif_value( char *type, char *value, unsigned long vallen )
 {
     char	*ldif;
 
+    /* ldif_type_and_value() fails only if malloc() fails. */
     if (( ldif = ldif_type_and_value( type, value, (int)vallen )) == NULL ) {
-	return( -1 );
+	exit( LDAP_NO_MEMORY );
     }
 
     fputs( ldif, stdout );
     free( ldif );
-
-    return( 0 );
 }
 #endif /* 0 */

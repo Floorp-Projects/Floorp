@@ -320,7 +320,8 @@ process_ldif_rec( char *rbuf )
     deleteoldrdn = 1;
     use_record = force;
     pmods = NULL;
-    dn = newrdn = newparent = NULL;
+    dn = newrdn = newparent = value = NULL;
+    modop = -1;	/* invalid value */
 
     while ( rc == 0 && ( line = ldif_getline( &rbuf )) != NULL ) {
 	++linenum;

@@ -93,7 +93,7 @@ typedef struct tuple_str tuple_str;
 #include "secerr.h"
 #include "sslerr.h"
 
-const tuple_str errStrings[] = {
+static const tuple_str errStrings[] = {
 
 /* keep this list in asceding order of error numbers */
 #ifdef NS_DIRECTORY
@@ -113,7 +113,7 @@ const tuple_str errStrings[] = {
 
 };
 
-const PRInt32 numStrings = sizeof(errStrings) / sizeof(tuple_str);
+static const PRInt32 numStrings = sizeof(errStrings) / sizeof(tuple_str);
 
 /* Returns a UTF-8 encoded constant error string for "errNum".
  * Returns NULL of errNum is unknown.
