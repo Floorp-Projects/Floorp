@@ -669,7 +669,8 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   -1,-1
 };
 
-static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
+PRInt32 
+nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = 1;
   for (;;) {
@@ -684,8 +685,8 @@ static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
   return -1;
 }
 
-static const nsCString&
-SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
+const nsCString&
+nsCSSProps::SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = SearchKeywordTableInt(aValue, aTable);
   if (i < 0) {
