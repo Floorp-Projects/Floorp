@@ -265,23 +265,21 @@ nsLocaleService::nsLocaleService(void)
 	long script = GetScriptManagerVariable(smSysScript);
 	long lang = GetScriptVariable(smSystemScript,smScriptLang);
 	long region = GetScriptManagerVariable(smRegionCode);
-	nsIMacLocale*	macConverter;
+	nsCOMPtr<nsIMacLocale> macConverter;
 	nsresult result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
-						NULL,kIMacLocaleIID,(void**)&macConverter);
+						NULL,kIMacLocaleIID,(void**)getter_AddRefs(macConverter));
 	if (NS_SUCCEEDED(result) && macConverter!=nsnull) {
 		nsString xpLocale;
 		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
-		if (NS_FAILED(result)) { macConverter->Release(); return; }
-        PRUnichar* loc = xpLocale.ToNewUnicode();
-		result = NewLocale(loc, &mSystemLocale);
-        nsCRT::free(loc);                    
-		if (NS_FAILED(result)) { macConverter->Release(); return; }
-		mApplicationLocale = mSystemLocale;
-		mApplicationLocale->AddRef();
-		macConverter->Release();
+		if (NS_SUCCEEDED(result)) {
+			result = NewLocale(xpLocale.GetUnicode(),&mSystemLocale);
+			if (NS_SUCCEEDED(result)) {
+				mApplicationLocale = mSystemLocale;
+				mApplicationLocale->AddRef();
+			}
+		}
 	}
-#endif	
-                              
+#endif
 }
 
 nsLocaleService::~nsLocaleService(void)
@@ -306,9 +304,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 
 	for(i=0;i<LocaleListLength;i++) {
 		nsString category = LocaleList[i];
-        PRUnichar* cat = category.ToNewUnicode();
-		result = resultLocale->AddCategory(cat, aLocale);
-        nsCRT::free(cat);
+		result = resultLocale->AddCategory(category.GetUnicode(),aLocale);
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
@@ -378,9 +374,9 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   /* put in standard form */
   while (*(++cPtr1)) {
     if      (isalpha(*cPtr1))  *cPtr2++ = tolower(*cPtr1); /* force lower case */
-    else if (isspace(*cPtr1));                             /* ignore any space */
+    else if (isspace(*cPtr1))  ;                           /* ignore any space */
     else if (*cPtr1=='-')      *cPtr2++ = '_';             /* "-" -> "_"       */
-    else if (*cPtr1=='*');                                 /* ignore "*"       */
+    else if (*cPtr1=='*')      ;                           /* ignore "*"       */
     else                       *cPtr2++ = *cPtr1;          /* else unchanged   */
   }
   *cPtr2 = '\0';
@@ -401,7 +397,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
     while (cPtr) {
       qvalue[countLang] = 1.0f;
       /* add extra parens to get rid of warning */
-      if ((cPtr1 = strchr(cPtr,';'))) {
+      if ((cPtr1 = strchr(cPtr,';')) != nsnull) {
         sscanf(cPtr1,";q=%f",&qvalue[countLang]);
         *cPtr1 = '\0';
       }
