@@ -74,6 +74,7 @@ public:
     kOutdent         = 3003,
     kAlign           = 3004,
     kMakeBasicBlock  = 3005,
+    kRemoveList      = 3006,
     kInsertElement   = 3008
   };
   

@@ -1619,6 +1619,34 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 
 
 NS_IMETHODIMP
+nsHTMLEditor::RemoveList(const nsString& aListType)
+{
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
+
+  nsAutoEditBatch beginBatching(this);
+  
+  // pre-process
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  nsTextRulesInfo ruleInfo(nsHTMLEditRules::kRemoveList);
+  if (aListType == "ol") ruleInfo.bOrdered = PR_TRUE;
+  else  ruleInfo.bOrdered = PR_FALSE;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+  if (cancel || (NS_FAILED(res))) return res;
+
+  // no default behavior for this yet.  what would it mean?
+
+  return res;
+}
+
+
+NS_IMETHODIMP
 nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
 {
   nsresult res;
@@ -2977,18 +3005,18 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
                                            const nsString& aFormatType,
                                            PRUint32 aFlags)
 {
-  PRBool cancel;
-  nsString resultString;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
-  ruleInfo.outString = &resultString;
-  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
-  if (NS_FAILED(rv)) { return rv; }
-  if (PR_TRUE==cancel)
-  { // this case will get triggered by password fields
-    aOutputString = *(ruleInfo.outString);
-  }
-  else
-  { // default processing
+//  PRBool cancel;
+//  nsString resultString;
+//  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
+//  ruleInfo.outString = &resultString;
+//  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
+//  if (NS_FAILED(rv)) { return rv; }
+//  if (PR_TRUE==cancel)
+//  { // this case will get triggered by password fields
+//    aOutputString = *(ruleInfo.outString);
+//  }
+//  else
+//  { // default processing
     nsCOMPtr<nsIDocumentEncoder> encoder;
     char* progid = (char *)nsAllocator::Alloc(strlen(NS_DOC_ENCODER_PROGID_BASE) + aFormatType.Length() + 1);
     if (! progid)
@@ -2997,7 +3025,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     char* type = aFormatType.ToNewCString();
     strcat(progid, type);
     nsCRT::free(type);
-    rv = nsComponentManager::CreateInstance(progid,
+    nsresult rv = nsComponentManager::CreateInstance(progid,
                                             nsnull,
                                             nsIDocumentEncoder::GetIID(),
                                             getter_AddRefs(encoder));
@@ -3047,7 +3075,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     }
 
     rv = encoder->EncodeToString(aOutputString);
-  }
+//  }
   return rv;
 }
 

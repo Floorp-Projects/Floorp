@@ -2065,6 +2065,28 @@ nsEditorShell::InsertList(const PRUnichar *listType)
   return err;
 }
 
+
+NS_IMETHODIMP
+nsEditorShell::RemoveList(const PRUnichar *listType)
+{
+  nsresult err = NS_NOINTERFACE;
+
+  nsAutoString aListType(listType);
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      err = mEditor->RemoveList(aListType);
+      break;
+
+    case ePlainTextEditorType:
+    default:
+      err = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return err;
+}
+
 NS_IMETHODIMP
 nsEditorShell::Indent(const PRUnichar *indent)
 {
