@@ -176,8 +176,8 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
       rv = pHTTPConnection->GetResponseHeader(header, &pDate);
     }
     if (NS_SUCCEEDED(rv)) {
+      COOKIE_SetCookieStringFromHttp((char*)(const char*)url, cookie, pDate);
       if(pDate) {
-        COOKIE_SetCookieStringFromHttp((char*)(const char*)url, cookie, pDate);
         nsCRT::free(pDate);
       }
     }
