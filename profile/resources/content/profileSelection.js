@@ -217,7 +217,7 @@ function onStart()
         break;
   }
       promptService.alert(window, null, message);
-      return;
+      return false;
   }
     
   return true;
