@@ -1,0 +1,60 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="Author" content="Suresh Duddi">
+   <title>XPCOM Code FAQ</title>
+</head>
+<body>
+
+<h2>
+XPCOM Code FAQ</h2>
+Suresh Duddi &lt;<a href="mailto:dp@netscape.com">dp@netscape.com</a>>
+<br>Last Modified: March 22 1999
+<br>
+<hr WIDTH="100%">
+<br>I am documenting things randomly as I am replying to people's questions.
+So this might look more like an FAQ.
+<h4>
+What are the Global Objects that XPCOM maintains</h4>
+
+<ul>mGlobalServiceManager
+<br>mGlobalComponentManager</ul>
+
+<h4>
+What are the static classes that XPCOM maintains</h4>
+
+<blockquote>nsComponentManager
+<br>nsServiceManager</blockquote>
+
+<h4>
+Is there any restriction on which static class I should call first</h4>
+
+<blockquote>No restrictions. You can call any function from the static
+classes nsComponentManager and nsServiceManager. XPCOM will do the right
+thing to initialize itself at both places.</blockquote>
+
+<h4>
+What is the order of creation of the ServiceManager, ComponentManager and
+Registry</h4>
+
+<blockquote>Init_XPCOM()
+<br>&nbsp;&nbsp;&nbsp; create the global component manager
+<br>&nbsp;&nbsp;&nbsp; create the global registry and register as service
+with global service manager
+<br>&nbsp;&nbsp;&nbsp; create the global component manager and register
+as service with the global service manager
+<p>Now the hard problem is when to trigger Init_XPCOM() There are two static
+objects nsComponentManager and nsServiceManager. Any function in either
+of them can be called first. Today nsServiceManager::GetService() is the
+first one that gets called. All the members of the static nsServiceManager
+use the nsGetGlobalServiceManager() to get to the global service manager.
+All members of the static nsComponentManager use the nsGetGlobalComponentManager()
+to get to the global component manager. Hence if we trigger Init_XPCOM()
+from both NS_GetGlobalComponentManager() and NS_GetGlobalServiceManager()
+we will be safe.</blockquote>
+
+<hr WIDTH="100%">
+</body>
+</html>
