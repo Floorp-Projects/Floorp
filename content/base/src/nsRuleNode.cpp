@@ -1505,6 +1505,70 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   return nsnull;
 }
 
+/*
+ * This function handles cascading of *-left or *-right box properties
+ * against *-start (which is L for LTR and R for RTL) or *-end (which is
+ * R for LTR and L for RTL).
+ *
+ * Cascading these properties correctly is hard because we need to
+ * cascade two properties as one, but which two properties depends on a
+ * third property ('direction').  We solve this by treating each of
+ * these properties (say, 'margin-start') as a shorthand that sets a
+ * property containing the value of the property specified
+ * ('margin-start-value') and sets a pair of properties
+ * ('margin-left-ltr-source' and 'margin-right-rtl-source') saying which
+ * of the properties we use.  Thus, when we want to compute the value of
+ * 'margin-left' when 'direction' is 'ltr', we look at the value of
+ * 'margin-left-ltr-source', which tells us whether to use the highest
+ * 'margin-left' in the cascade or the highest 'margin-start'.
+ *
+ * Finally, since we can compute the normal (*-left and *-right)
+ * properties in a loop, this function works by assuming the computation
+ * for those properties has happened as though we have not implemented
+ * the logical properties (*-start and *-end).  It is the responsibility
+ * of this function to replace the computed values with the values
+ * computed from the logical properties when needed.
+ */
+void
+nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
+                                 const nsCSSValue& aLTRSource,
+                                 const nsCSSValue& aRTLSource,
+                                 const nsCSSValue& aLTRLogicalValue,
+                                 const nsCSSValue& aRTLLogicalValue,
+                                 const nsStyleSides& aParentRect,
+                                 nsStyleSides& aRect,
+                                 PRUint8 aSide,
+                                 PRInt32 aMask,
+                                 PRBool& aInherited)
+{
+  PRBool LTRlogical = aLTRSource.GetUnit() == eCSSUnit_Enumerated &&
+                      aLTRSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
+  PRBool RTLlogical = aRTLSource.GetUnit() == eCSSUnit_Enumerated &&
+                      aRTLSource.GetIntValue() == NS_BOXPROP_SOURCE_LOGICAL;
+  if (LTRlogical || RTLlogical) {
+    // We can't cache anything on the rule tree if we use any data from
+    // the style context, since data cached in the rule tree could be
+    // used with a style context with a different value.
+    aInherited = PR_TRUE;
+    PRUint8 dir = aContext->GetStyleVisibility()->mDirection;
+
+    nsStyleCoord parentCoord;
+    nsStyleCoord coord;
+    aParentRect.Get(aSide, parentCoord);
+    if (dir == NS_STYLE_DIRECTION_LTR) {
+      if (LTRlogical &&
+          SetCoord(aLTRLogicalValue, coord, parentCoord, aMask, aContext,
+                   mPresContext, aInherited))
+        aRect.Set(aSide, coord);
+    } else {
+      if (RTLlogical &&
+          SetCoord(aRTLLogicalValue, coord, parentCoord, aMask, aContext,
+                   mPresContext, aInherited))
+        aRect.Set(aSide, coord);
+    }
+  }
+}
+  
 /* static */ void
 nsRuleNode::SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
                     nscoord aMinFontSize, PRBool aUseDocumentFonts,
@@ -3012,6 +3076,19 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
     }
   }
 
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mMarginLeftLTRSource,
+                       marginData.mMarginLeftRTLSource,
+                       marginData.mMarginStart, marginData.mMarginEnd,
+                       parentMargin->mMargin, margin->mMargin,
+                       NS_SIDE_LEFT, SETCOORD_LPAH, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mMarginRightLTRSource,
+                       marginData.mMarginRightRTLSource,
+                       marginData.mMarginEnd, marginData.mMarginStart,
+                       parentMargin->mMargin, margin->mMargin,
+                       NS_SIDE_RIGHT, SETCOORD_LPAH, inherited);
+
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
@@ -3228,6 +3305,19 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct,
       padding->mPadding.Set(side, coord);
     }
   }
+
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mPaddingLeftLTRSource,
+                       marginData.mPaddingLeftRTLSource,
+                       marginData.mPaddingStart, marginData.mPaddingEnd,
+                       parentPadding->mPadding, padding->mPadding,
+                       NS_SIDE_LEFT, SETCOORD_LPH, inherited);
+  AdjustLogicalBoxProp(aContext,
+                       marginData.mPaddingRightLTRSource,
+                       marginData.mPaddingRightRTLSource,
+                       marginData.mPaddingEnd, marginData.mPaddingStart,
+                       parentPadding->mPadding, padding->mPadding,
+                       NS_SIDE_RIGHT, SETCOORD_LPH, inherited);
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
