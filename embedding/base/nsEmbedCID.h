@@ -44,7 +44,8 @@
 
 /**
  * Web Browser ContractID
- *   The web browser is the basic way to instantiate a Gecko browser.
+ *   Creating an instance of this ContractID (via createInstanceByContractID)
+ *   is the basic way to instantiate a Gecko browser.
  *
  * This contract implements the following interfaces:
  * nsIWebBrowser
@@ -60,7 +61,8 @@
 
 /**
  * Prompt Service ContractID
- *   The prompt service is the way to pose various prompts, alerts,
+ *   The prompt service (which can be gotten by calling getServiceByContractID
+ *   on this ContractID) is the way to pose various prompts, alerts,
  *   and confirmation dialogs to the user.
  * 
  * This contract implements the following interfaces:
