@@ -455,7 +455,7 @@ nsXMLMIMEDataSource::InitFromHack() {
     rv = AddMapping(TEXT_XUL, "xul", "XML-Based User Interface Language", nsnull, 'TEXT','ttxt' );
     if (NS_FAILED(rv)) return rv;
 
-    rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull);
+    rv = AddMapping(TEXT_XML, "xml", "Extensible Markup Language", nsnull, 'TEXT','ttxt');
     if (NS_FAILED(rv)) return rv;
 
     rv = AddMapping(TEXT_CSS, "css", "Style Sheet", nsnull, 'TEXT','ttxt');
@@ -494,20 +494,19 @@ nsXMLMIMEDataSource::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension(APPLICATION_POSTSCRIPT, "eps");
     if (NS_FAILED(rv)) return rv;
+
     rv = AppendExtension(APPLICATION_POSTSCRIPT, "ai");
     if (NS_FAILED(rv)) return rv;
                  
     rv = AddMapping(TEXT_RTF, "rtf", "Rich Text Format", nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_RTF, "rtf");
-    if (NS_FAILED(rv)) return rv;
+
 
     rv = AddMapping(TEXT_CPP, "cpp", "CPP file", nsnull,  'TEXT','CWIE');
     if (NS_FAILED(rv)) return rv;
-    rv = AppendExtension(TEXT_CPP, "cpp");
-    if (NS_FAILED(rv)) return rv;
+
     
-    rv = AddMapping( "application/x-arj", "arj", "ARj file", nsnull);
+    rv = AddMapping( "application/x-arj", "arj", "ARJ file", nsnull);
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
@@ -548,12 +547,11 @@ nsXMLMIMEDataSource::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retva
 
 NS_IMETHODIMP
 nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const char* aExt,  nsIMIMEInfo **_retval)
-{
-		    
-    char buf[16];
+{	    
+    PRUint32 buf[2];
     buf[0] = aType;
-    buf[4] = aCreator;
-    nsAutoString keyString( buf,8 );
+    buf[1] = aCreator;
+    nsAutoString keyString( (char*)buf,8 );
     keyString+=aExt;
     nsStringKey key(  keyString );
     // Check if in cache for real quick look up of common ( html,js, xul, ...) types
@@ -583,24 +581,28 @@ nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const
 	 		info->GetMacType( &type );
 	 		info->GetMacCreator( &creator );
 	 		
+	 		PRInt32 scoreOfElement  = 0;
 	 		if ( type == aType )
 	 		{
-	 			PRInt32 scoreOfElement  = 1;
-	 			if ( creator == aCreator )
+	 			scoreOfElement=2;
+	 		}
+	 		
+	 		
+	 		if ( creator == aCreator )
 	 				scoreOfElement++;
 	 			
 	 			PRBool tempBool = PR_FALSE;
 	 			info->ExtensionExists( aExt, &tempBool );
 	 			if ( tempBool )
-	 				scoreOfElement+=	extString.Length()*2; 		
+	 				scoreOfElement+= 4; 		
 	 		
 	 			if ( scoreOfElement > score )
 	 			{
 	 				score = scoreOfElement;
 	 				bestMatch = info;
 	 			}
-	 		}
 	 }
+	 
 	 
 	 if( score != 0 )
 	 {
