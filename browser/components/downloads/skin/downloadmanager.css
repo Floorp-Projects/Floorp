@@ -1,0 +1,37 @@
+.bold {
+  font-weight: bold;
+}
+
+page > #downloadView {
+  background-color: white;
+  padding: 10px;
+}
+
+download {
+  padding: 3px;
+  min-height: 25px;
+}
+
+#downloadView > treechildren:-moz-tree-image(Name) {
+  margin-right: 2px;
+}
+
+.indented {
+  margin-left: 17px;
+}
+
+.link {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+  -moz-user-focus: normal;
+  border: 1px solid transparent;
+}
+
+.link:hover:active {
+  color: red;
+}
+
+.link:focus {
+  border: 1px dotted black;
+}

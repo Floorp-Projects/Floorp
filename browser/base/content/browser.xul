@@ -778,9 +778,27 @@ Contributor(s):
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
-        <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
-      </toolbaritem>
+        <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
+          <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
+        </toolbaritem>
+
+        <toolbarbutton id="downloads-button" class="toolbarbutton-1" autoCheck="false"
+                       label="&downloadsButton.label;" type="radio" group="sidebar"
+                       sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
+                       oncommand="toggleSidebar(this);"
+                       tooltiptext="&downloadsButton.tooltip;"/>
+
+        <toolbarbutton id="history-button" class="toolbarbutton-1" autoCheck="false"
+                       label="&historyButton.label;" type="radio" group="sidebar"
+                       sidebarurl="chrome://browser/content/history/history-panel.xul"
+                       oncommand="toggleSidebar(this);"
+                       tooltiptext="&historyButton.tooltip;"/>
+
+        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1" autoCheck="false"
+                       label="&bookmarksButton.label;" type="radio" group="sidebar"
+                       sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
+                       oncommand="toggleSidebar(this);"
+                       tooltiptext="&bookmarksButton.tooltip;"/>
     </toolbarpalette>
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
@@ -809,17 +827,27 @@ Contributor(s):
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"/>
     
   </toolbox>
+  
+  <hbox flex="1">
+    <vbox id="sidebar-box" hidden="true">
+      <hbox id="sidebar-header" align="center" pack="start">
+        <label id="sidebar-title"/>
+      </hbox>        
+      <browser id="sidebar" flex="1"
+               style="min-width: 150px; width: 200px; max-width: 400px;"/>
+    </vbox>    
     
-  <!-- we only need to handle |ondragdrop| because everything else is
-        taken care of by the builtin behavior inside the tabbrowser -->
-  <tabbrowser id="content"
-              flex="1" contenttooltip="aHTMLTooltip"
-              contentcontextmenu="contentAreaContextMenu"
-              autocompletepopup="PopupAutoComplete"
-              onnewtab="BrowserOpenTab();"
-              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-              onclick="return contentAreaClick(event);"/>
-
+    <splitter id="sidebar-splitter" hidden="true"/>
+    <!-- we only need to handle |ondragdrop| because everything else is
+          taken care of by the builtin behavior inside the tabbrowser -->
+    <tabbrowser id="content"
+                flex="1" contenttooltip="aHTMLTooltip"
+                contentcontextmenu="contentAreaContextMenu"
+                onnewtab="BrowserOpenTab();"
+                autocompletepopup="PopupAutoComplete"
+                ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+                onclick="return contentAreaClick(event);"/>
+  </hbox>
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="security-button" class="statusbarpanel-iconic"

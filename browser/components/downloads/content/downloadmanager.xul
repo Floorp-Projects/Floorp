@@ -25,13 +25,13 @@
     Jan Varga   <varga@utcru.sk>
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/downloads/downloadmanager.css"?>
 
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.dtd">
+<!ENTITY % downloadManagerDTD SYSTEM "chrome://browser/locale/downloads/downloadmanager.dtd">
 %downloadManagerDTD;
 <!ENTITY % downloadProgressDTD SYSTEM "chrome://global/locale/nsProgressDialog.dtd" >
 %downloadProgressDTD;
@@ -40,19 +40,19 @@
 <window id="downloadManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
         windowtype="Download:Manager"
         width="500" height="300" screenX="10" screenY="10"
         persist="width height screenX screenY"
         title="&downloadManager.title;"
-        onload="Startup();"
-        onunload="Shutdown();">
+        onload="Startup();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
-  <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/downloads/downloadmanager.js"/>
 
   <stringbundle id="dlMgrBundle"
-                src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
+                src="chrome://browser/locale/downloads/downloadmanager.properties"/>
   <stringbundle id="dlProgressDlgBundle"
                 src="chrome://global/locale/nsProgressDialog.properties"/>
 
@@ -66,59 +66,37 @@
   <data id="strings.unknownTime">&unknownTime;</data>
   <data id="strings.pausedMsg">&pausedMsg;</data>
 
-  <commandset id="commands">
-    <commandset id="commandUpdate_Downloads"
-                commandupdater="true"
-                events="focus,tree-select"
-                oncommandupdate="downloadViewController.onCommandUpdate()"/>
+  <commandset id="commandUpdate_Downloads"
+              commandupdater="true"
+              events="focus,tree-select"
+              oncommandupdate="downloadViewController.onCommandUpdate()"/>
 
-    <commandset id="downloadCommands">
-      <command id="cmd_properties"
-               oncommand="goDoCommand('cmd_properties');"/>
-      <command id="cmd_pause"
-               oncommand="goDoCommand('cmd_pause');"/>
-      <command id="cmd_cancel"
-               oncommand="goDoCommand('cmd_cancel');"/>
-      <command id="cmd_remove"
-               oncommand="goDoCommand('cmd_remove');"/>
-      <command id="cmd_openfile"
-               oncommand="goDoCommand('cmd_openfile');"/>
-      <command id="cmd_showinshell"
-               oncommand="goDoCommand('cmd_showinshell');"/>
-    </commandset>
-
-    <!-- File Menu -->
-    <command id="cmd_newNavigator"/>
-    <command id="cmd_close" oncommand="close()"/>
-    <command id="cmd_quit"/>
-
+  <commandset id="downloadCommands">
+    <command id="cmd_properties"
+             oncommand="goDoCommand('cmd_properties');"/>
+    <command id="cmd_remove"
+             oncommand="goDoCommand('cmd_remove');"/>
+    <command id="cmd_openfile"
+             oncommand="goDoCommand('cmd_openfile');"/>
+    <command id="cmd_showinshell"
+             oncommand="goDoCommand('cmd_showinshell');"/>
   </commandset>
-  
-  <broadcasterset id="navBroadcasters"/>
 
-  <keyset id="tasksKeys">
-    <!-- File Menu -->
-    <key id="key_newNavigator"/>
+  <!-- File Menu -->
+  <command id="cmd_close" oncommand="close()"/>
+  
+  <keyset>
     <key id="key_close"/>
-    <key id="key_quit"/>
 
     <!-- These keybindings do not have a command specified in the overlay,
          which is good, but we need to specify it ourselves here -->
     <key id="key_selectAll" command="cmd_selectAll"/>
 
     <key id="key_remove" keycode="VK_DELETE" command="cmd_remove"/>
-
-    <key id="key_properties" key="&cmd.properties.keybinding;"
-         command="cmd_properties" modifiers="accel"/>
   </keyset>
 
   <toolbox id="toolbox">
-    <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed" grippytooltiptext="&dm.tooltip;">
-      <toolbarbutton label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
-                     command="cmd_properties"/>
-      <toolbarseparator/>
-      <toolbarbutton label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
-                     command="cmd_cancel"/>
+    <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed">
       <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
                      command="cmd_remove"/>
       <toolbarseparator/>
@@ -130,73 +108,90 @@
 
   <tree id="downloadView" flex="1" class="plain"
             datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-            ondblclick="return goDoCommand('cmd_properties');" enableColumnDrag="true"
-            onselect="onSelect(event);">
+            enableColumnDrag="true"
+            onselect="this.treeBoxObject.view.selectionChanged(); onSelect(event);">
     <treecols>
       <treecol id="Name" primary="true"
-                   label="&view.header.name.label;"
+                   label="&name.label;"
                    class="sortDirectionIndicator" width="3*" flex="3"
                    sort="http://home.netscape.com/NC-rdf#Name"
                    persist="width sortActive sortDirection"/>
       <splitter class="tree-splitter"/>
-      <treecol id="Progress" type="progressmeter"
-                   label="&view.header.progress.label;"
-                   class="sortDirectionIndicator" width="3*" flex="3"
-                   sort="http://home.netscape.com/NC-rdf#ProgressPercent"
-                   persist="width hidden sortActive sortDirection"
-                   sortActive="true" sortDirection="descending"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="ProgressPercent" hidden="true"
-                   label="&view.header.progresstext.label;"
+      <treecol id="StatusText"
+                   label="&status.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#ProgressPercent"
+                   sort="http://home.netscape.com/NC-rdf#StatusText"
                    persist="width hidden sortActive sortDirection"/>
+<!--
       <splitter class="tree-splitter"/>
       <treecol id="TimeRemaining"
-                   label="&view.header.timeremaining.label;"
+                   label="&timeremaining.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    sort="http://home.netscape.com/NC-rdf#TimeRemaining"
                    persist="width hidden sortActive sortDirection"/>
+-->      
       <splitter class="tree-splitter"/>
       <treecol id="Transferred"
-                   label="&view.header.transferred.label;"
+                   label="&transferred.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    sort="http://home.netscape.com/NC-rdf#Transferred"
                    persist="width hidden sortActive sortDirection"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="TransferRate"
-                   label="&view.header.transferrate.label;"
-                   class="sortDirectionIndicator" width="1*" flex="1"
-                   sort="http://home.netscape.com/NC-rdf#TransferRate"
-                   persist="width hidden sortActive sortDirection"/>
+<!--
       <splitter class="tree-splitter"/>
       <treecol id="TimeElapsed" hidden="true"
-                   label="&view.header.timeelapsed.label;"
+                   label="&timeelapsed.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    sort="http://home.netscape.com/NC-rdf#TimeElapsed"
                    persist="width hidden sortActive sortDirection"/>
+-->
       <splitter class="tree-splitter"/>
-      <treecol id="Source" hidden="true"
-                   label="&view.header.source.label;"
+      <treecol id="Source"
+                   label="&source.label;"
                    class="sortDirectionIndicator" width="1*" flex="1"
                    sort="http://home.netscape.com/NC-rdf#URL"
                    persist="width hidden sortActive sortDirection"/>
     </treecols>
     <template>
-      <rule>
+      <rule nc:DownloadState="1" parseType="Integer">
         <treechildren>
           <treeitem uri="rdf:*">
             <treerow>
               <treecell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <treecell mode="rdf:http://home.netscape.com/NC-rdf#ProgressMode"
-                            value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"
-                            label="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/> -->
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#TransferRate"/>
-              <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/> -->
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+      <rule nc:DownloadState="2" parseType="Integer">
+        <treechildren>
+          <treeitem uri="rdf:*">
+            <treerow>
+              <treecell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/> -->
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/> -->
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+      <rule nc:DownloadState="3" parseType="Integer">
+        <treechildren>
+          <treeitem uri="rdf:*">
+            <treerow>
+              <treecell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/> -->
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
+              <!-- <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeElapsed"/> -->
               <treecell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
             </treerow>
           </treeitem>
@@ -204,9 +199,4 @@
       </rule>
     </template>
   </tree>
-
-  <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="statusbar-text" label="" flex="1"/>
-  </statusbar>
-
 </window>

@@ -40,32 +40,19 @@
 
 const NC_NS = "http://home.netscape.com/NC-rdf#";
 
-var gDownloadView = null;
 var gDownloadManager = null;
+var gDownloadView = null;
 var gRDFService = null;
 var gNC_File = null;
 var gStatusBar = null;
 
-const dlObserver = {
-  observe: function(subject, topic, state) {
-    if (topic != "download-starting") return;
-    selectDownload(subject.QueryInterface(Components.interfaces.nsIDownload));
-  }
-};
-
 function selectDownload(aDownload)
 {
   var dlElt = document.getElementById(aDownload.target.path);
-  var dlIndex = gDownloadView.contentView.getIndexOfItem(dlElt);
-  gDownloadView.treeBoxObject.selection.select(dlIndex);
-  gDownloadView.treeBoxObject.ensureRowIsVisible(dlIndex);
 }
 
 function Startup()
 {
-  if (!window.arguments.length)
-    return;
-
   try {
     var observerService = Components.classes[kObserverServiceProgID]
                                     .getService(Components.interfaces.nsIObserverService);
@@ -80,15 +67,14 @@ function Startup()
   
   gNC_File = gRDFService.GetResource(NC_NS + "File");
 
-  gDownloadView = document.getElementById("downloadView");
-  
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
 
-  var ds = window.arguments[0];
+  var ds = gDownloadManager.datasource;
+  gDownloadView = document.getElementById("downloadView");
   gDownloadView.database.AddDataSource(ds);
-  gDownloadView.builder.rebuild();
+  gDownloadView.builder.rebuild(); 
   window.setTimeout(onRebuild, 0);
   
   var key;
@@ -111,30 +97,10 @@ function Startup()
 
 function onRebuild() {
   gDownloadView.controllers.appendController(downloadViewController);
-  gDownloadView.focus();
-  
-  // If the window was opened automatically because
-  // a download started, select the new download
-  if (window.arguments.length > 1 && window.arguments[1]) {
-    var dl = window.arguments[1];
-    selectDownload(dl.QueryInterface(Components.interfaces.nsIDownload));
-  }
-  else if (gDownloadView.view.rowCount) {
-    // Select the first item in the view, if any.
-    gDownloadView.treeBoxObject.selection.select(0);
-  }
+  gDownloadView.treeBoxObject.selection.select(0);
 }
 
 function onSelect(aEvent) {
-  if (!gStatusBar)
-    gStatusBar = document.getElementById("statusbar-text");
-  
-  var selectionCount = gDownloadView.treeBoxObject.selection.count;
-  if (selectionCount == 1)
-    gStatusBar.label = getSelectedItem().id;
-  else
-    gStatusBar.label = "";
-
   window.updateCommands("tree-select");
 }
   
@@ -143,8 +109,6 @@ var downloadViewController = {
   {
     switch (aCommand) {
     case "cmd_properties":
-    case "cmd_pause":
-    case "cmd_cancel":
     case "cmd_remove":
     case "cmd_openfile":
     case "cmd_showinshell":
@@ -155,37 +119,18 @@ var downloadViewController = {
   },
   
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
-  {
+  {    
     var selectionCount = gDownloadView.treeBoxObject.selection.count;
     if (!selectionCount) return false;
 
     var selectedItem = getSelectedItem();
-    var isDownloading = gDownloadManager.getDownload(selectedItem.id);
     switch (aCommand) {
     case "cmd_openfile":
-      try {
-        if (isDownloading || getFileForItem(selectedItem).isExecutable())
-          return false;
-      } catch(e) {
-        // Exception means file doesn't exist; launch is not allowed.
-        return false;
-      }      
-    case "cmd_showinshell":
-      // some apps like kazaa/morpheus let you "preview" in-progress downloads because
-      // that's possible for movies and music. for now, just disable indiscriminately.
       return selectionCount == 1;
-    case "cmd_properties":
-      return selectionCount == 1 && isDownloading;
-    case "cmd_pause":
-      return false;
-    case "cmd_cancel":
-      // XXX check if selection is still in progress
-      //     how to handle multiple selection?
-      return isDownloading;
+    case "cmd_showinshell":
+      return selectionCount == 1;
     case "cmd_remove":
-      // XXX ensure selection isn't still in progress
-      //     and how to handle multiple selection?
-      return !isDownloading;
+      return selectionCount;
     case "cmd_selectAll":
       return gDownloadView.view.rowCount != selectionCount;
     default:
@@ -199,10 +144,6 @@ var downloadViewController = {
     var file, i;
 
     switch (aCommand) {
-    case "cmd_properties":
-      selectedItem = getSelectedItem();
-      gDownloadManager.openProgressDialogFor(selectedItem.id, window);
-      break;
     case "cmd_openfile":
       selectedItem = getSelectedItem();
       file = getFileForItem(selectedItem);
@@ -217,22 +158,14 @@ var downloadViewController = {
         file = file.QueryInterface(Components.interfaces.nsIFile);
         var parent = file.parent;
         if (parent) {
-          const browserURL = "chrome://navigator/content/navigator.xul";
+          //XXXBlake use chromeUrlForTask pref here
+          const browserURL = "chrome://browser/content/navigator.xul";
           window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
         }
       }
       else {
         file.reveal();
       }
-      break;
-    case "cmd_pause":
-      break;
-    case "cmd_cancel":
-      // XXX we should probably prompt the user
-      selectedItems = getSelectedItems();
-      for (i = 0; i < selectedItems.length; i++)
-        gDownloadManager.cancelDownload(selectedItems[i].id);
-      window.updateCommands("tree-select");
       break;
     case "cmd_remove":
       selectedItems = getSelectedItems();
@@ -249,7 +182,7 @@ var downloadViewController = {
 
       gDownloadManager.endBatchUpdate();
       observer.endUpdateBatch(ds);
-      var remote = window.arguments[0].QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      var remote = gDownloadManager.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
       remote.Flush();
       gDownloadView.builder.rebuild();
       if (minValue >= gDownloadView.treeBoxObject.view.rowCount)
@@ -318,15 +251,4 @@ function createLocalFile(aFilePath)
   var lf = Components.classes[lfContractID].createInstance(lfIID);
   lf.initWithPath(aFilePath);
   return lf;
-}
-
-function Shutdown()
-{
-  try {
-    var observerService = Components.classes[kObserverServiceProgID]
-                     .getService(Components.interfaces.nsIObserverService);
-    observerService.removeObserver(dlObserver, "download-starting");
-  }
-  catch (ex) {
-  }
 }
