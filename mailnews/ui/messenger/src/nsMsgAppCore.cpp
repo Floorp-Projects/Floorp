@@ -16,9 +16,18 @@
  * Reserved.
  */
 
-static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IMSGAPPCORE_IID);
+#include "nsIDOMMsgAppCore.h"
+#include "nsMsgAppCore.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDOMBaseAppCore.h"
 
-class nsMsgAppCore : public nsIMsgAppCore,
+
+static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+class nsMsgAppCore : public nsIDOMMsgAppCore,
                      public nsIScriptObjectOwner
 {
   

@@ -133,7 +133,8 @@ ResolveMsgAppCore(JSContext *cx, JSObject *obj, jsval id)
   return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
-
+// this was in the old MailCore
+#if 0
 //
 // Native method SendMail
 //
@@ -252,7 +253,7 @@ MsgAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   return JS_TRUE;
 }
-
+#endif
 
 /***********************************************************************/
 //
@@ -286,9 +287,12 @@ static JSPropertySpec MsgAppCoreProperties[] =
 //
 static JSFunctionSpec MsgAppCoreMethods[] = 
 {
+  // don't have old MailCore methods
+#if 0
   {"SendMail",          MsgAppCoreSendMail,     3},
   {"MailCompleteCallback",          MsgAppCoreMailCompleteCallback,     1},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
+#endif
   {0}
 };
 

@@ -22,6 +22,12 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+LIBRARY_NAME=messenger
+
+CPPSRCS =	\
+	nsJSMsgAppCore.cpp	\
+	nsMsgAppCore.cpp	\
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 

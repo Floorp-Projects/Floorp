@@ -20,11 +20,12 @@
 #define __nsMsgAppCore_h
 
 #include "nsCom.h"
+#include "nsIDOMMsgAppCore.h"
 
 NS_BEGIN_EXTERN_C
 
 nsresult
-NS_NewMsgAppCore(nsIMsgAppCore **);
+NS_NewMsgAppCore(nsIDOMMsgAppCore **);
 
 NS_END_EXTERN_C
 #endif
