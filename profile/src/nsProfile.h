@@ -29,12 +29,21 @@
 #include "nsICmdLineService.h"
 #include "nsProfileAccess.h"
 
+#include "nsIXULWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIURIContentListener.h"
+
 #define _MAX_LENGTH             256
 
-class nsProfile: public nsIProfile
+class nsProfile: public nsIProfile, public nsIURIContentListener, public nsIInterfaceRequestor
 {
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIPROFILE
+
+  // these are necessary if the profile manager is going to load urls for
+  // the registration stuff....
+  NS_DECL_NSIURICONTENTLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
 	nsresult ProcessArgs(nsICmdLineService *service,
@@ -42,6 +51,7 @@ private:
 					   nsCString & profileURLStr);
 	nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
 	PRBool mAutomigrate;
+  nsCOMPtr<nsIXULWindow> mPregWindow;
 
 public:
 	nsProfile();

@@ -62,6 +62,9 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccount.h"
 
+#include "nsIWebShell.h"
+#include "nsIDocShell.h"
+
 #if defined (XP_UNIX)
 #elif defined (XP_MAC)
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
@@ -206,7 +209,13 @@ nsProfile::~nsProfile()
 
 NS_IMPL_ADDREF(nsProfile)
 NS_IMPL_RELEASE(nsProfile)
-NS_IMPL_QUERY_INTERFACE(nsProfile, kIProfileIID)
+
+NS_INTERFACE_MAP_BEGIN(nsProfile)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProfile)
+   NS_INTERFACE_MAP_ENTRY(nsIProfile)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+NS_INTERFACE_MAP_END
 
 /*
  * nsIProfile Implementation
@@ -1730,15 +1739,25 @@ nsProfile::TriggerActivation(const char *profileName)
 
 			if (NS_FAILED(rv)) return rv;
 
-			nsCOMPtr<nsIWebShellWindow>  pregWindow;
+      nsCOMPtr<nsIWebShellWindow> webWindow;
 			rv = pregAppShell->CreateTopLevelWindow(nsnull, registrationURL,
 													PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
 													nsnull, 
-							NS_SIZETOCONTENT,           // width 
-							NS_SIZETOCONTENT,           // height
-													getter_AddRefs(pregWindow));
+							            NS_SIZETOCONTENT,           // width 
+							            NS_SIZETOCONTENT,           // height
+													getter_AddRefs(webWindow));
+
+      mPregWindow = do_QueryInterface(webWindow);
 
 			if (NS_FAILED(rv)) return rv;
+
+      // be sure to register ourself as the parent content listener on the
+      // webshell window we are creating.
+      nsCOMPtr<nsIDocShell> docShellForWindow;
+      NS_ENSURE_SUCCESS(mPregWindow->GetDocShell(getter_AddRefs(docShellForWindow)), NS_ERROR_FAILURE);
+      nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docShellForWindow));
+
+      ctnListener->SetParentContentListener(NS_STATIC_CAST(nsIURIContentListener *, this));
 
 			/*
 			 * Start up the main event loop...
@@ -1809,3 +1828,107 @@ nsProfile::CreateDefaultProfile(void)
 	return rv;
 }
 
+// The following implementations of nsIURIContentListener and nsIInterfaceRequestor are 
+// required if the profile manageris going to bring up a dialog for registration directly
+// before we've actually created the hidden window or an application window...
+
+NS_IMETHODIMP 
+nsProfile::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+{
+   NS_ENSURE_ARG_POINTER(aInstancePtr);
+   return QueryInterface(aIID, aInstancePtr);
+}
+
+// nsIURIContentListener support
+NS_IMETHODIMP
+nsProfile::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  NS_ENSURE_ARG_POINTER(aProtocolHandler);
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProfile::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProfile::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProfile::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  NS_ENSURE_ARG_POINTER(aLoadCookie);
+  *aLoadCookie = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProfile::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsProfile::IsPreferred(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  return CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                          aDesiredContentType, aCanHandleContent);
+}
+
+NS_IMETHODIMP 
+nsProfile::CanHandleContent(const char * aContentType,
+                                nsURILoadCommand aCommand,
+                                const char * aWindowTarget,
+                                char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  // the chrome window the profile manager is bringing up for registration
+  // needs to say that it handles ANY Content type because we haven't
+  // actually started to run any of the applications yet (which means
+  // that none of the applications are up and ready to handle any content).
+
+  if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+    *aDesiredContentType = nsCRT::strdup("text/xul");
+  // since we explicilty loaded the url, we always want to handle it!
+  *aCanHandleContent = PR_TRUE;
+  return NS_OK;
+} 
+
+NS_IMETHODIMP 
+nsProfile::DoContent(const char * aContentType,
+                      nsURILoadCommand aCommand,
+                      const char * aWindowTarget,
+                      nsIChannel * aOpenedChannel,
+                      nsIStreamListener ** aContentHandler,
+                      PRBool * aAbortProcess)
+{
+  nsresult rv = NS_OK;
+
+  // if we are currently showing a chromeless window for the registration stuff,
+  // then forward the call to the webshell window...then we are done...
+  if (mPregWindow)
+  {
+    nsCOMPtr<nsIDocShell> docshell;
+    NS_ENSURE_SUCCESS(mPregWindow->GetDocShell(getter_AddRefs(docshell)), NS_ERROR_FAILURE);
+    nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docshell));
+    NS_ENSURE_TRUE(ctnListener, NS_ERROR_FAILURE);
+
+    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aOpenedChannel, aContentHandler, aAbortProcess);
+  }
+
+  return NS_OK;
+}
