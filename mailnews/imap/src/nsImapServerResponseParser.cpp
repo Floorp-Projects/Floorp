@@ -1374,6 +1374,7 @@ void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
 				{
 					addressLine += '@';
 					addressLine += hostName;
+          nsCRT::free(hostName);
 				}
 				if (personalName)
 				{
@@ -1383,6 +1384,9 @@ void nsImapServerResponseParser::parse_address(nsCAutoString &addressLine)
 				}
 			}
 		}
+    PR_FREEIF(personalName);
+    PR_FREEIF(atDomainList);
+
 		if (*fNextToken == ')')
 			fNextToken++;
     // if the next token isn't a ')' for the address term,
