@@ -41,7 +41,8 @@ static void moz_drawingarea_init                (MozDrawingarea *drawingarea);
 
 /* static methods */
 static void moz_drawingarea_create_windows      (MozDrawingarea *drawingarea,
-						 GdkWindow *parent, GtkWidget *widget);
+						 GdkWindow *parent,
+						 GtkWidget *widget);
 
 static GObjectClass *parent_class = NULL;
 
@@ -192,6 +193,5 @@ void
 moz_drawingarea_scroll (MozDrawingarea *drawingarea,
 			gint x, gint y)
 {
-  gdk_window_scroll(drawingarea->inner_window,
-		    x, y);
+  gdk_window_scroll(drawingarea->inner_window, x, y);
 }

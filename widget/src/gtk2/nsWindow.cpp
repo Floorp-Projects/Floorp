@@ -44,9 +44,11 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
 
+/* utility functions */
 static nsWindow *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow *get_window_for_gdk_window(GdkWindow *window);
 
+/* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
 					   GdkEventExpose *event);
 static gboolean configure_event_cb        (GtkWidget *widget,
@@ -472,7 +474,9 @@ nsWindow::Scroll(PRInt32  aDx,
 		 PRInt32  aDy,
 		 nsRect  *aClipRect)
 {
+  // XXX fix this so that it doesn't expose twice!
   moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
+  gdk_window_process_all_updates();
   return NS_OK;
 }
 
@@ -1215,6 +1219,9 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 	   (void *)mDrawingarea->inner_window,
 	   GDK_WINDOW_XWINDOW(mDrawingarea->clip_window),
 	   GDK_WINDOW_XWINDOW(mDrawingarea->inner_window));
+
+  // resize so that everything is set to the right dimensions
+  Resize(mBounds.width, mBounds.height, PR_FALSE);
 
   return NS_OK;
 }
