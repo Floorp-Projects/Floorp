@@ -27,7 +27,9 @@
 #define PROTYPES_H
 
 /* SVR4 typedef of uint is commonly found on UNIX machines. */
-#ifndef XP_UNIX
+#ifdef XP_UNIX
+#include <sys/types.h>
+#else
 typedef PRUintn uint;
 #endif
 
