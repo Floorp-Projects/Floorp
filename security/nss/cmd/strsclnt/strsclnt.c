@@ -917,20 +917,22 @@ client_main(
 
     /* end of ssl configuration. */
 
-    rv = launch_thread(do_connects, &addr, model_sock, 1);
-
-    if (connections > 1) {
+    i = 1;
+    if (!NoReuse) {
+	rv = launch_thread(do_connects, &addr, model_sock, i);
+	--connections;
+	++i;
 	/* wait for the first connection to terminate, then launch the rest. */
 	reap_threads();
-	/* Start up the connections */
-	for (i = 2; i <= connections; ++i) {
-
-	    rv = launch_thread(do_connects, &addr, model_sock, i);
-
-	}
     }
-
-    reap_threads();
+    if (connections > 0) {
+	/* Start up the connections */
+	do {
+	    rv = launch_thread(do_connects, &addr, model_sock, i);
+	    ++i;
+	} while (--connections > 0);
+	reap_threads();
+    }
     destroy_thread_data();
 
     PR_Close(model_sock);
