@@ -47,6 +47,8 @@
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
+#include "nsMsgCompCID.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -54,7 +56,6 @@
 #define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
-#include "nsMacRepository.h"
 #else
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
@@ -400,8 +401,13 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	// SMTP protocol instance every time we launch a mailto url...
 
 	nsFilePath filePath (fileName);
+	nsFileSpec aFileSpec (fileName);
+	nsCOMPtr<nsIFileSpec> aIFileSpec;
+	NS_NewFileSpecWithSpec(aFileSpec, getter_AddRefs(aIFileSpec));
+
+
 	nsIURI * url = nsnull;
-	m_smtpService->SendMailMessage(filePath, recipients, this, nsnull, &url);
+	m_smtpService->SendMailMessage(aIFileSpec, recipients, this, nsnull, &url);
 	if (url)
 		m_smtpUrl = do_QueryInterface(url);
 
