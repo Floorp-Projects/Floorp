@@ -123,6 +123,7 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
 
   virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
@@ -199,6 +200,7 @@ protected:
   nscoord             mMaxAscent;
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;
+  nscoord             mAveCharWidth;
 #ifdef MOZ_MATHML
   float               mItalicSlope;
 #endif

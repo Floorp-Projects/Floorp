@@ -154,6 +154,13 @@ public:
    * Returns the font handle associated with these metrics
    */
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle) = 0;
+
+#ifdef _WIN32
+  /**
+   * Returns the average character width
+   */
+  NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth) = 0;
+#endif
 };
 
 #endif /* nsIFontMetrics_h___ */

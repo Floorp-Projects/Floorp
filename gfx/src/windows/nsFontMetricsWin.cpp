@@ -2524,6 +2524,7 @@ HDC   dc1 = NULL;
   mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
+  mAveCharWidth = NSToCoordRound(metrics.tmAveCharWidth * dev2app);
 
    // Cache the width of a single space.
   SIZE  size;
@@ -2647,6 +2648,13 @@ nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFontMetricsWin::GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
+  return NS_OK;
+}
+
 nsFontWin::nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap)
 {
   if (aLogFont) {
@@ -2678,7 +2686,6 @@ nsFontWinUnicode::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
   SIZE size;
   ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
-
   return size.cx;
 }
 
