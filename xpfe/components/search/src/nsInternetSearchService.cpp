@@ -1215,6 +1215,39 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 	rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
 	if (NS_FAILED(rv))	return(rv);
 
+	// check if we have any filters, enable command to clear them
+	PRBool				haveFilters = PR_FALSE;
+
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore)))
+		&& (localstore))
+	{
+		nsCOMPtr<nsISimpleEnumerator>	cursor;
+		PRBool				hasMore = PR_FALSE;
+
+		// check kNC_FilterSearchURLsRoot
+		if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
+			PR_TRUE, getter_AddRefs(cursor))))
+		{
+			if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+			{
+				haveFilters = PR_TRUE;
+			}
+		}
+		if (haveFilters == PR_FALSE)
+		{
+			// check kNC_FilterSearchSitesRoot
+			if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
+				PR_TRUE, getter_AddRefs(cursor))))
+			{
+				if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+				{
+					haveFilters = PR_TRUE;
+				}
+			}
+		}
+	}
+
 	PRBool				isSearchResult = PR_FALSE;
 	if (NS_SUCCEEDED(rv = mInner->HasAssertion(source, kRDF_type, kNC_SearchResult,
 		PR_TRUE, &isSearchResult)) && (isSearchResult == PR_TRUE))
@@ -1239,14 +1272,31 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 				}
 			}
 		}
-		cmdArray->AppendElement(kNC_SearchCommand_FilterResult);
+
+		// if this is a search result, and it isn't filtered, enable command to be able to filter it
+		PRBool				isURLFiltered = PR_FALSE;
+		if (NS_SUCCEEDED(rv = mInner->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, source,
+			PR_TRUE, &isURLFiltered)) && (isURLFiltered != PR_TRUE))
+		{
+			cmdArray->AppendElement(kNC_SearchCommand_FilterResult);
+		}
+
+		// XXX (should check site) if this is a search result site, and the site isn't filtered,
+		//     enable command to filter it
 		cmdArray->AppendElement(kNC_SearchCommand_FilterSite);
-		cmdArray->AppendElement(kNC_BookmarkSeparator);
-		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+
+		if (haveFilters == PR_TRUE)
+		{
+			cmdArray->AppendElement(kNC_BookmarkSeparator);
+			cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+		}
 	}
 	else if (isSearchURI(source) || (source == kNC_LastSearchRoot))
 	{
-		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+		if (haveFilters == PR_TRUE)
+		{
+			cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
+		}
 	}
 
 	// always append a separator last (due to aggregation of commands from multiple datasources)
