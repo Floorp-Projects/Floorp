@@ -2478,14 +2478,19 @@ dnl = MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
 dnl = 
 dnl = Flags to strip unused symbols from .so components
 dnl = 
+dnl = On on Linux non debug builds by default
+dnl = 
 dnl ========================================================
 MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 
-case "$host" in
-*-linux*)
-    MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script'
-    ;;
-esac
+if test ! "$MOZ_DEBUG"
+then
+    case "$host" in
+        *-linux*)
+            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(topsrcdir)/build/unix/gnu-ld-scripts/components-version-script'
+        ;;
+    esac
+fi
 dnl ========================================================
 
 dnl ========================================================
