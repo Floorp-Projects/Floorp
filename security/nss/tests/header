@@ -645,6 +645,7 @@ turn_on_cronoptions()
 test_mozroot()
 {
   PWD=`pwd`
+  Debug "LOCAL_MOZROOT = $LOCAL_MOZROOT"
   case "$LOCAL_MOZROOT" in
       [0-9-]*|tip)
           glob_usage "Error: -"$1" requires a directoryname to follow (start with a letter) "
@@ -662,7 +663,7 @@ test_mozroot()
       \.\.\/*)
           LOCAL_MOZROOT="${PWD}/${LOCAL_MOZROOT}"
           ;;
-      \/*)
+      \/*|[a-zA-Z]:\/*)
           ;;
       ?*)
           LOCAL_MOZROOT="${PWD}/${LOCAL_MOZROOT}"
@@ -1428,7 +1429,7 @@ opt_usage()
     Echo "         example sonmi,nelsonb,wtc) only useful with -f"
     Echo "    -cron equivalient to -y -s -d -f \$RESULTDIR/\$HOST.nssqa"
     Echo "    -t run on a tinderbox build (included -cron)"
-    if [ `basename $0` != nssqa ] ; then
+    if [ `basename $0` = nssqa ] ; then
         Echo "    -l <mozroot> run on a local build"
         Echo "    -ln <mozroot> copy a networkbuild to a local directory "
         Echo "        mozroot,  used for networkindipendend QA "
