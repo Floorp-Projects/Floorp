@@ -559,7 +559,9 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
     if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
         (NS_UNCONSTRAINEDSIZE != aMaxSize.width)) {
       // Make sure we're at least as wide as our available width
-      width = PR_MAX(aMetrics.width, aMaxSize.width);
+      if (aMaxSize.width > width) {
+        width = aMaxSize.width;
+      }
     }
   }
   if (aReflowState.HaveConstrainedHeight()) {
