@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = raptorxulcontent_s
+LIBRARY_NAME = raptorxulbase_s
 
 DEFINES += -D_IMPL_NS_HTML
 
