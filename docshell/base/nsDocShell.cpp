@@ -3420,7 +3420,9 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
             if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
                 PRInt32 i = 0;
                 PRUnichar value = nsnull;
-                while ((value = token[i++])) {
+                for ( ; i < (PRInt32) token.Length (); i++)
+                {
+                    value = token[i];
                     if (!nsCRT::IsAsciiDigit(value)) {
                         i = -1;
                         break;
