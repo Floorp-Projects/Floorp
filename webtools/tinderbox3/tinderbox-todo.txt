@@ -6,7 +6,7 @@ New Tinderbox Features:
 - upload patches for clients to try out
 - incremental logs / status
 - clients can throttle (not send build_starts more than a minute)
-- allows tinderboxen to build at a particular cvs co date
+- allows tinderboxen to build at a particular cvs co date and branch
 - can configure tinderboxen .mozconfig
 - security (logins / passwords)
 - clients upgrade themselves if there is a new version of themselves on the server
@@ -16,6 +16,7 @@ New Tinderbox Features:
 - uses fast-update (every 6 hours it re-syncs with checkout)
 - does not bother building if there were no changes (build can be forced with build command)--minimum cycle time
 - uploaded binaries are intelligently deleted to keep a hard quota but still have a useful range of binaries around
+- a nice log viewer that lets you look at the log page by page and see a summary of progress
 
 Todo:
 - tests
@@ -35,10 +36,7 @@ Bugs:
 - popups should show up closer to where they do in current tbox--it looks nicer
 
 Would be nice:
-- allow server control of branch
-- * log parsing (maybe even have heuristics to determine % done)
 - * midcheckin detection
-- brief log
 - log brief-izing script (makes logs brief so you don't have to *remove* them)
 - targeted log quota script (same as build deleting script)
 - allow machine to move from tree to tree
@@ -53,11 +51,12 @@ Would be nice:
 - allow creation of a machine without a machine connecting (this allows
   pre-configuration of branch and .mozconfig)
 - show status as text, not number ("upgraded client" instead of 302, for example)
+- allow builds to be ftp'd up
+- allow tree to be rsync'd instead of cvs'd
 
 Test:
 - --notrust and friends
 - changing cvs co date around (esp. having one and then not having one--do we need to unstick the tree?)
-- clobber build
 
 Not Now, Dammit
 - allow clients to send status as multiple machines to different tinderboxen
