@@ -581,8 +581,8 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
-    mOutlineRadius(aCopy.mOutlineRadius),
     mOutlineOffset(aCopy.mOutlineOffset),
+    mOutlineRadius(aCopy.mOutlineRadius),
     mFloatEdge(aCopy.mFloatEdge)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
