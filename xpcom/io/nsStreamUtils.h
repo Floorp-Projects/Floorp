@@ -108,4 +108,36 @@ NS_AsyncCopy(nsIInputStream         *aSource,
              nsAsyncCopyCallbackFun  aCallbackFun = nsnull,
              void                   *aCallbackClosure = nsnull);
 
+/**
+ * This function tests whether or not the input stream is buffered.  A buffered
+ * input stream is one that implements readSegments.  The test for this is to
+ * simply call readSegments, without actually consuming any data from the
+ * stream, to verify that it functions.
+ *
+ * NOTE: If the stream is non-blocking and has no data available yet, then this
+ * test will fail.  In that case, we return false even though the test is not 
+ * really conclusive.
+ *
+ * @param aInputStream
+ *        The input stream to test.
+ */
+extern NS_COM PRBool
+NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
+
+/**
+ * This function tests whether or not the output stream is buffered.  A
+ * buffered output stream is one that implements writeSegments.  The test for
+ * this is to simply call writeSegments, without actually writing any data into
+ * the stream, to verify that it functions.
+ *
+ * NOTE: If the stream is non-blocking and has no available space yet, then
+ * this test will fail.  In that case, we return false even though the test is
+ * not really conclusive.
+ *
+ * @param aOutputStream
+ *        The output stream to test.
+ */
+extern NS_COM PRBool
+NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
+
 #endif // !nsStreamUtils_h__

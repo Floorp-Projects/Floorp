@@ -112,6 +112,8 @@ void XXXNeverCalled()
     NS_NewInputStreamReadyEvent(nsnull, nsnull, nsnull);
     NS_NewOutputStreamReadyEvent(nsnull, nsnull, nsnull);
     NS_AsyncCopy(nsnull, nsnull, nsnull, NS_ASYNCCOPY_VIA_READSEGMENTS, 0, nsnull, nsnull);
+    NS_InputStreamIsBuffered(nsnull);
+    NS_OutputStreamIsBuffered(nsnull);
     PL_DHashStubEnumRemove(nsnull, nsnull, nsnull, nsnull);
     nsIDHashKey::HashKey(nsnull);
     nsFixedSizeAllocator a;

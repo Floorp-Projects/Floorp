@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -580,4 +581,50 @@ NS_AsyncCopy(nsIInputStream         *source,
     NS_RELEASE(copier);
 
     return rv;
+}
+
+//-----------------------------------------------------------------------------
+
+static NS_METHOD
+TestInputStream(nsIInputStream *inStr,
+                void *closure,
+                const char *buffer,
+                PRUint32 offset,
+                PRUint32 count,
+                PRUint32 *countWritten)
+{
+    PRBool *result = NS_REINTERPRET_CAST(PRBool *, closure);
+    *result = PR_TRUE;
+    return NS_ERROR_ABORT;  // don't call me anymore
+}
+
+NS_COM PRBool
+NS_InputStreamIsBuffered(nsIInputStream *stream)
+{
+    PRBool result = PR_FALSE;
+    PRUint32 n;
+    stream->ReadSegments(TestInputStream, &result, 1, &n);
+    return result;
+}
+
+static NS_METHOD
+TestOutputStream(nsIOutputStream *outStr,
+                 void *closure,
+                 char *buffer,
+                 PRUint32 offset,
+                 PRUint32 count,
+                 PRUint32 *countRead)
+{
+    PRBool *result = NS_REINTERPRET_CAST(PRBool *, closure);
+    *result = PR_TRUE;
+    return NS_ERROR_ABORT;  // don't call me anymore
+}
+
+NS_COM PRBool
+NS_OutputStreamIsBuffered(nsIOutputStream *stream)
+{
+    PRBool result = PR_FALSE;
+    PRUint32 n;
+    stream->WriteSegments(TestOutputStream, &result, 1, &n);
+    return result;
 }
