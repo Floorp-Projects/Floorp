@@ -50,7 +50,7 @@ for (qw{value data tbox testname ua ip time}) {
 #die "No 'real' browsers allowed: $ua" 
 #     unless $ua =~ /^(libwww-perl|PERL_CGI_BASE)/;
 die "No 'value' parameter supplied"
-     unless $value;
+     unless (defined $value);  # Allow for value=0
 die "No 'testname' parameter supplied"
      unless $testname;
 die "No 'tbox' parameter supplied"
