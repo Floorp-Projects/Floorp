@@ -1639,7 +1639,7 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
     CreateAlphaBitmap(mWidth, mHeight);
   
   if (mAlphaPixmap) {
-    SetupGCForAlpha(gc, 0, 0);
+    SetupGCForAlpha(gc, aDX, aDY);
   }
 
   gdk_window_copy_area(dest->mImagePixmap, gc,

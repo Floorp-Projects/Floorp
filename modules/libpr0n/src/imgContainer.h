@@ -90,6 +90,11 @@ private:
   // logical screen size. Smart GIF compressors may do this to save space.
   void DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
                    PRInt32 aPrevFrame, PRInt32 aNextFrame);
+
+  void BuildCompositeMask(gfxIImageFrame* aCompositingFrame, gfxIImageFrame* aOverlayFrame);
+  void ZeroMask(gfxIImageFrame *aCompositingFrame);
+  void FillWithColor(gfxIImageFrame* aFrame, gfx_color color);
+
 };
 
 #endif /* __imgContainer_h__ */

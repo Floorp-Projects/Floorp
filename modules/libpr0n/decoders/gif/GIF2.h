@@ -122,7 +122,8 @@ typedef struct gif_struct {
     int (PR_CALLBACK* GIFCallback_EndImageFrame)(
       void* aClientData,
       PRUint32 aFrameNumber,
-      PRUint32 aDelayTimeout);
+      PRUint32 aDelayTimeout,
+      PRUint32 aDisposal);
     int (PR_CALLBACK* GIFCallback_SetupColorspaceConverter)();
     int (PR_CALLBACK* GIFCallback_ResetPalette)(); 
     int (PR_CALLBACK* GIFCallback_InitTransparentPixel)();
@@ -242,7 +243,8 @@ PRBool GIFInit(
   int (*PR_CALLBACK GIFCallback_EndImageFrame)(
     void* aClientData,
     PRUint32 aFrameNumber,
-    PRUint32 aDelayTimeout),
+    PRUint32 aDelayTimeout,
+    PRUint32 aDisposal),
   
   int (*PR_CALLBACK GIFCallback_SetupColorspaceConverter)(),
   
@@ -306,7 +308,8 @@ typedef int (PR_CALLBACK *GIFCallback_BeginImageFrame)(
 extern int GIFCallback_EndImageFrame(
   void*    aClientData,
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout); /* Time in milliseconds this frame should be displayed before the next frame.
+  PRUint32 aDelayTimeout,
+  PRUint32 aDisposal); /* Time in milliseconds this frame should be displayed before the next frame.
                               This information appears in a sub control block, so we don't
                               transmit it back to the client until we're done with the frame. */
 

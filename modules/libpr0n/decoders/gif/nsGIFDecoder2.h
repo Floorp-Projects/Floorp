@@ -68,6 +68,7 @@ public:
   gif_struct *mGIFStruct;
   
   PRUint8 *mAlphaLine;
+  PRUint8 mBackgroundRGBIndex;
 };
 
 // static callbacks for the GIF decoder
@@ -105,7 +106,8 @@ static int PR_CALLBACK BeginImageFrame(
 static int PR_CALLBACK EndImageFrame(
   void*    aClientData, 
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout);
+  PRUint32 aDelayTimeout,
+  PRUint32 aDisposal);
 static int PR_CALLBACK SetupColorspaceConverter();
 static int PR_CALLBACK ResetPalette();
 static int PR_CALLBACK InitTransparentPixel();

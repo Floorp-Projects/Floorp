@@ -45,6 +45,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   mGIFStruct = nsnull;
 
   mAlphaLine = nsnull;
+  mBackgroundRGBIndex = 0;
 
   mCurrentRow = -1;
   mLastFlushedRow = -1;
@@ -237,6 +238,8 @@ int BeginGIF(
   // copy GIF info into imagelib structs
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
 
+  decoder->mBackgroundRGBIndex = aBackgroundRGBIndex;
+
   if (decoder->mObserver)
     decoder->mObserver->OnStartDecode(nsnull, nsnull);
 
@@ -289,20 +292,20 @@ int BeginImageFrame(
 int EndImageFrame(
   void*    aClientData, 
   PRUint32 aFrameNumber,
-  PRUint32 aDelayTimeout)  /* Time this frame should be displayed before the next frame 
+  PRUint32 aDelayTimeout,
+  PRUint32 aDisposal)  /* Time this frame should be displayed before the next frame 
                               we can't have this in the image frame init because it doesn't
                               show up in the GIF frame header, it shows up in a sub control
                               block.*/
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   
+  decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
   // We actually have the timeout information before we get the lzw encoded image
   // data, at least according to the spec, but we delay in setting the timeout for
   // the image until here to help ensure that we have the whole image frame decoded before
   // we go off and try to display another frame.
 
-// XXXXXXXX
-  // decoder->mImageFrame->SetTimeout(aDelayTimeout);
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
 
   if (decoder->mObserver) {
@@ -319,6 +322,8 @@ int EndImageFrame(
   }
 
   decoder->mImageFrame = nsnull;
+  decoder->mGIFStruct->local_colormap = nsnull;
+  decoder->mGIFStruct->is_transparent = PR_FALSE;
   return 0;
 }
   
@@ -354,8 +359,9 @@ int HaveDecodedRow(
   // How annoying.
   if(! decoder->mImageFrame) {
     gfx_format format = gfxIFormats::RGB;
-    if (decoder->mGIFStruct->is_transparent)
+    if (decoder->mGIFStruct->is_transparent) {
       format = gfxIFormats::RGB_A1;
+    }
 
 #if defined(XP_PC) || defined(XP_BEOS)
     // XXX this works...
@@ -367,7 +373,7 @@ int HaveDecodedRow(
     decoder->mImageFrame->Init(
       decoder->mGIFStruct->x_offset, decoder->mGIFStruct->y_offset, 
       decoder->mGIFStruct->width, decoder->mGIFStruct->height, format);
-      
+
     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
 
     if (decoder->mObserver)
@@ -398,12 +404,20 @@ int HaveDecodedRow(
     // XXX map the data into colors
     int cmapsize;
     GIF_RGB* cmap;
+    cmapsize = decoder->mGIFStruct->global_colormap_size;
+    cmap = decoder->mGIFStruct->global_colormap;
+
+    if(decoder->mGIFStruct->global_colormap &&
+       decoder->mGIFStruct->screen_bgcolor < cmapsize) {
+      gfx_color bgColor = 0;
+      bgColor |= cmap[decoder->mGIFStruct->screen_bgcolor].red;
+      bgColor |= cmap[decoder->mGIFStruct->screen_bgcolor].green << 8;
+      bgColor |= cmap[decoder->mGIFStruct->screen_bgcolor].blue << 16;
+      decoder->mImageFrame->SetBackgroundColor(bgColor);
+    }
     if(decoder->mGIFStruct->local_colormap) {
       cmapsize = decoder->mGIFStruct->local_colormap_size;
       cmap = decoder->mGIFStruct->local_colormap;
-    } else {
-      cmapsize = decoder->mGIFStruct->global_colormap_size;
-      cmap = decoder->mGIFStruct->global_colormap;
     }
 
     PRUint8* rgbRowIndex = aRGBrowBufPtr;
@@ -440,6 +454,14 @@ int HaveDecodedRow(
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
+        if (decoder->mGIFStruct->is_transparent) {
+          gfx_color transColor = 0;
+            transColor |= cmap[decoder->mGIFStruct->tpixel].red;
+            transColor |= cmap[decoder->mGIFStruct->tpixel].green << 8;
+            transColor |= cmap[decoder->mGIFStruct->tpixel].blue << 16;
+            decoder->mImageFrame->SetTransparentColor(transColor);
+        }
+
         memset(aRGBrowBufPtr, 0, bpr);
         memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
