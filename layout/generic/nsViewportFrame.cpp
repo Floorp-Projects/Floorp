@@ -222,21 +222,6 @@ ViewportFrame::AdjustReflowStateForScrollbars(nsIPresContext*    aPresContext,
   }
 }
 
-// Called by Reflow() to reflow all of the fixed positioned child frames.
-// This is only done for 'initial', 'resize', and 'style change' reflow commands
-nsresult
-ViewportFrame::ReflowFixedFrames(nsIPresContext*          aPresContext,
-                                 const nsHTMLReflowState& aReflowState) 
-{
-  // Make a copy of the reflow state and change the computed width and height
-  // to reflect the available space for the fixed items
-  nsHTMLReflowState reflowState(aReflowState);
-  AdjustReflowStateForScrollbars(aPresContext, reflowState);
-
-  return mFixedContainer.Reflow(this, aPresContext, reflowState, reflowState.mComputedWidth, 
-                                reflowState.mComputedHeight);
-}
-
 NS_IMETHODIMP
 ViewportFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -251,34 +236,13 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   // Initialize OUT parameters
   aStatus = NS_FRAME_COMPLETE;
 
-  nsresult rv = NS_OK;
-  
-  nsReflowType reflowType = eReflowType_ContentChanged;
-  if (aReflowState.path) {
-    // XXXwaterson this is more restrictive than the previous code
-    // was: it insists that the UserDefined reflow be targeted at
-    // _this_ frame.
-    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
-    if (command)
-      command->GetType(reflowType);
-  }
-  if (reflowType == eReflowType_UserDefined) {
-    // Reflow the fixed frames to account for changed scrolled area size
-    rv = ReflowFixedFrames(aPresContext, aReflowState);
-  } // Otherwise check for an incremental reflow
-  else if (eReflowReason_Incremental == aReflowState.reason) {
-    // Make a copy of the reflow state and change the computed width and height
-    // to reflect the available space for the fixed items
-    nsHTMLReflowState reflowState(aReflowState);
-    AdjustReflowStateForScrollbars(aPresContext, reflowState);
- 
-    PRBool wasHandled; 
-    rv = mFixedContainer.IncrementalReflow(this, aPresContext, reflowState, reflowState.mComputedWidth,
-                                           reflowState.mComputedHeight, wasHandled);
-  }
-
+  // Reflow the main content first so that the placeholders of the
+  // fixed-position frames will be in the right places on an initial
+  // reflow.
   nsRect kidRect(0,0,aReflowState.availableWidth,aReflowState.availableHeight);
 
+  nsresult rv = NS_OK;
+  
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
@@ -303,12 +267,6 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  if (eReflowReason_Incremental != aReflowState.reason) {
-    // If it's anything but an incremental reflow, then reflow all the
-    // fixed positioned child frames.
-    rv = ReflowFixedFrames(aPresContext, aReflowState);
-  }
-
   // If we were flowed initially at both an unconstrained width and height, 
   // this is a hint that we should return our child's intrinsic size.
   if ((eReflowReason_Initial == aReflowState.reason ||
@@ -326,6 +284,40 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.height = aReflowState.availableHeight;
     aDesiredSize.ascent = aReflowState.availableHeight;
     aDesiredSize.descent = 0;
+  }
+
+  // Make a copy of the reflow state and change the computed width and height
+  // to reflect the available space for the fixed items
+  nsHTMLReflowState reflowState(aReflowState);
+  AdjustReflowStateForScrollbars(aPresContext, reflowState);
+  
+  nsReflowType reflowType = eReflowType_ContentChanged;
+  if (aReflowState.path) {
+    // XXXwaterson this is more restrictive than the previous code
+    // was: it insists that the UserDefined reflow be targeted at
+    // _this_ frame.
+    nsHTMLReflowCommand *command = aReflowState.path->mReflowCommand;
+    if (command)
+      command->GetType(reflowType);
+  }
+
+  PRBool wasHandled = PR_FALSE;
+  if (reflowType != eReflowType_UserDefined &&
+      aReflowState.reason == eReflowReason_Incremental) {
+    // Incremental reflow
+    rv = mFixedContainer.IncrementalReflow(this, aPresContext, reflowState,
+                                           reflowState.mComputedWidth,
+                                           reflowState.mComputedHeight,
+                                           wasHandled);
+  }
+
+  if (!wasHandled) {
+    // It's the initial reflow or some other non-incremental reflow or
+    // IncrementalReflow() didn't handle it.  Just reflow all the
+    // fixed-pos frames.
+    rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
+                                reflowState.mComputedWidth, 
+                                reflowState.mComputedHeight);
   }
 
   // If this is an initial reflow, resize reflow, or style change reflow
