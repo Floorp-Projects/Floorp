@@ -56,7 +56,7 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
 
     if (NULL != pConsumer) {
         pConsumer->AddRef();
-}
+    }
 }
 
 
