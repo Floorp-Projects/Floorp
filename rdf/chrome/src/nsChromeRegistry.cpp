@@ -89,6 +89,7 @@
 #include "nsIObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIChromeEventHandler.h"
+#include "nsIContent.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
@@ -2729,8 +2730,12 @@ nsChromeRegistry::GetBackstopSheets(nsIDocShell* aDocShell, nsISupportsArray **a
         char* newStr;
         char* token = nsCRT::strtok( str, ", ", &newStr );
         while( token != NULL ) {
+          nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
+          nsCOMPtr<nsIDocument> doc;
+          content->GetDocument(*getter_AddRefs(doc));
+          nsCOMPtr<nsIURI> docURL = getter_AddRefs(doc->GetDocumentURL());
           nsCOMPtr<nsIURI> url;
-          rv = NS_NewURI(getter_AddRefs(url), token, nsnull);
+          rv = NS_NewURI(getter_AddRefs(url), token, docURL);
 
           PRBool enabled = PR_FALSE;
           nsCOMPtr<nsICSSStyleSheet> sheet;
