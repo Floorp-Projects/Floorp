@@ -30,6 +30,7 @@ DIRS= \
         util \
 	main \
 	mimetype \
+	cache\nu \
 	cache \
 	protocol \
 	cnvts \
