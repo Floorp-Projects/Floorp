@@ -28,23 +28,21 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % profileDTD SYSTEM "chrome://communicator/locale/profile/profileSelection.dtd">
 %profileDTD;
 ]>
 
-<window
+<dialog
   id="profileWindow"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-  class="color-dialog non-resizable"
+  class="non-resizable"
   title="&windowtitle.label;"
-  orient="vertical"
   style="width: 42em;"
-  onclose="onExit();"
+  ondialogaccept="return onStart();"
+  ondialogcancel="return onExit();"
   onload="StartUp();"> 
       
   <stringbundle id="bundle_profileManager"
@@ -55,8 +53,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>
-  
-  <keyset id="dialogKeys"/>
 
   <dialogheader class="header-large" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
@@ -101,7 +97,8 @@
     <separator class="thin" orient="vertical"/>
     <button id="manage" label="&manage.label;" accesskey="&manage.accesskey;" oncommand="SwitchProfileManagerMode();"/>
     <spacer flex="1"/>
-    <hbox id="okCancelButtons"/>
+    <button dlgtype="accept" class="dialog-button padded"/>
+    <button dlgtype="cancel" class="dialog-button"/>
     <separator class="thin" orient="vertical"/>
   </hbox>
   
@@ -109,4 +106,4 @@
   
   <hbox id="profileManager-status" class="box-status" value="&profilemanager.label;" progress=""/>
   
-</window>
+</dialog>
