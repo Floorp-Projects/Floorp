@@ -751,7 +751,7 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  printf("About to fill window %ld with rect %d %d %d %d\n",
+  printf("About to fill window 0x%lxd with rect %d %d %d %d\n",
          mRenderingSurface->GetDrawable(), x, y, w, h);
   ::XFillRectangle(gDisplay,
                    mRenderingSurface->GetDrawable(),
