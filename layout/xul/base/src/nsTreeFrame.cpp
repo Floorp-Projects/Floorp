@@ -504,3 +504,4 @@ nsTreeFrame::GetFrameStateStorageObject(nsILayoutHistoryState** aState)
   *aState = mTempFrameTreeState;
   return NS_OK;
 }
+
