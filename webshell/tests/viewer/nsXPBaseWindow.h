@@ -97,11 +97,7 @@ public:
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
-  NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
-  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
-  NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
+  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
