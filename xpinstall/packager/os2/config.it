@@ -635,7 +635,7 @@ Timing=post download
 Destination=[SETUP PATH]\Plugins
 
 
-[Delete File1]
+[Delete File0]
 Timing=post launchapp
 Destination=[SETUP PATH]\install_wizard.log
 
