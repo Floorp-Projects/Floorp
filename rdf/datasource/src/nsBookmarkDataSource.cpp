@@ -590,7 +590,7 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
     nsresult rv = NS_ERROR_FAILURE;
 
     PRFileDesc* f;
-    if ((f = PR_Open(kBookmarksFilename, PR_RDONLY, 0644))) {
+    if ((f = PR_Open(kBookmarksFilename, PR_RDONLY, 0644)) != nsnull) {
         BookmarkParser parser;
         rv = parser.Parse(f, this);
         PR_Close(f);
