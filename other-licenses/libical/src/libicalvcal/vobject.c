@@ -43,11 +43,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
  */
 
 #ifndef	 MWERKS
-#ifdef XP_MAC
-#include <objc/malloc.h>
-#else
 #include <malloc.h>
-#endif
 #endif
 
 #ifdef WIN32
