@@ -41,10 +41,11 @@ interface nsINNTPNewsgroup : nsISupports {
 
   attribute boolean category;
 
-  /* this should die, and we should start using individual accessors */
-  attribute long flag;
+  boolean GetFlag(in long flag);
+  void SetFlag(in long flag);
 
   attribute boolean subscribed;
+  attribute boolean wantNewTotals;
 };
 
 
