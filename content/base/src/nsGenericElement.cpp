@@ -2419,7 +2419,7 @@ isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
 
     parent->GetParent(getter_AddRefs(tmpNode));
 
-    parent = tmpNode;
+    parent.swap(tmpNode);
   }
 
   return PR_FALSE;
