@@ -80,10 +80,14 @@ endif
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WIN16 and WINCE
     ASFILES  = mpi_x86.asm
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+ifdef BUILD_OPT
+    OPTIMIZER += -Ox  # maximum optimization for freebl
+endif
 endif
 
 ifeq ($(OS_TARGET),WINCE)
     DEFINES += -DMP_ARGCHK=0	# no assert in WinCE
+    DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 endif
 
 ifdef XP_OS2_VACPP
@@ -126,6 +130,7 @@ ifndef FREEBL_EXTENDED_BUILD
 ifdef USE_PURE_32
 # build for DA1.1 (HP PA 1.1) pure 32 bit model
     DEFINES  += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
+    DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 else
 ifdef USE_64
 # this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 32-bit digits 
@@ -168,6 +173,7 @@ endif
 ifdef USE_PURE_32
 # this builds for Sparc v8 pure 32-bit architecture
     DEFINES += -DMP_USE_LONG_LONG_MULTIPLY -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
+    DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 else
 ifdef USE_64
 # this builds for Sparc v9a pure 64-bit architecture
