@@ -522,6 +522,7 @@ secmod_FreeSlotStrings(char **slotStrings, int count)
     for (i=0; i < count; i++) {
 	if (slotStrings[i]) {
 	    PR_smprintf_free(slotStrings[i]);
+	    slotStrings[i] = NULL;
 	}
     }
 }
@@ -552,7 +553,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     unsigned long cipherOrder	=PK11_DEFAULT_CIPHER_ORDER;
     unsigned short len;
     unsigned short namesOffset  = 0;	/* start of the names block */
-    unsigned short namesRunningOffset;	/* offset to name we are 
+    unsigned long namesRunningOffset;	/* offset to name we are 
 					 * currently processing */
     unsigned short slotOffset;
     PRBool isOldVersion  	= PR_FALSE;
@@ -573,7 +574,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 
     /* -------------------------------------------------------------
     ** Process the buffer header, which is the secmodData struct. 
-    ** It may be an old or new version.  Check the length fo each. 
+    ** It may be an old or new version.  Check the length for each. 
     */
 
     CHECK_SIZE( offsetof(secmodData, trustOrder[0]) );
@@ -672,7 +673,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     }
 
     /* 
-     * Consistancy check: Make sure the slot and names blocks don't
+     * Consistency check: Make sure the slot and names blocks don't
      * overlap. These blocks can occur in any order, so this check is made 
      * in 2 parts. First we check the case where the slot block starts 
      * after the name block. Later, when we have the slot block length,
@@ -700,7 +701,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     slotCount = SECMOD_GETSHORT((unsigned char *)data->data + slotOffset);
 
     /* 
-     * Consistancy check: Part2. We now have the slot block length, we can 
+     * Consistency check: Part 2. We now have the slot block length, we can 
      * check the case where the slotblock procedes the name block.
      */
     if (slotOffset < namesOffset) { /* slot block starts before name block */
@@ -714,6 +715,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 
     /*  slotCount; */
     slotStrings = (char **)PORT_ArenaZAlloc(arena, slotCount * sizeof(char *));
+    if (slotStrings == NULL)
+	goto loser;
     for (i=0; i < (int) slotCount; i++, slots++) {
 	PRBool hasRootCerts	=PR_FALSE;
 	PRBool hasRootTrust	=PR_FALSE;
@@ -743,8 +746,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 		     isModuleDBOnly, internal, trustOrder, cipherOrder, 
 		     ssl0, ssl1);
     secmod_FreeSlotStrings(slotStrings,slotCount);
-    if (nss == NULL) 
-	goto loser;
+    /* it's permissible (and normal) for nss to be NULL. it simply means
+     * there are no NSS specific parameters in the database */
     moduleSpec = pk11_mkNewModuleSpec(dllName,commonName,parameters,nss);
     PR_smprintf_free(nss);
     PORT_FreeArena(arena,PR_TRUE);
