@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIInterfaceRequestor.h"
@@ -1440,18 +1441,29 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
   return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-#define FILE_PROTOCOL "file:///"
+#define FILE_PROTOCOL "file://"
 
 static void convertFileToURL(const nsString &aIn, nsString &aOut)
 {
-#ifdef XP_PC
   char szFile[1000];
   aIn.ToCString(szFile, sizeof(szFile));
+#ifdef XP_PC
+  // Check for \ in the url-string (PC)
   if (PL_strchr(szFile, '\\')) {
+#else
+#if XP_UNIX
+  // Check if it starts with / or \ (UNIX)
+  if (*(szFile) == '/' || *(szFile) == '\\') {
+#else
+  if (0) {  
+  // Do nothing (All others for now) 
+#endif
+#endif
     PRInt32 len = strlen(szFile);
     PRInt32 sum = len + sizeof(FILE_PROTOCOL);
     char* lpszFileURL = (char *)PR_Malloc(sum + 1);
 
+#ifdef XP_PC
     // Translate '\' to '/'
     for (PRInt32 i = 0; i < len; i++) {
       if (szFile[i] == '\\') {
@@ -1461,6 +1473,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
         szFile[i] = '|';
       }
     }
+#endif
 
     // Build the file URL
     PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
@@ -1468,7 +1481,6 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
     PR_Free((void *)lpszFileURL);
   }
   else
-#endif
   {
     aOut = aIn;
   }
@@ -1801,6 +1813,7 @@ nsWebShell::DoContent(const char * aContentType,
   NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
   if (NS_SUCCEEDED(rv))
     pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand));
+
 
   // determine if the channel has just been retargeted to us...
   nsLoadFlags loadAttribs = 0;

@@ -30,6 +30,9 @@
 #include "nsSocketTransportService.h"
 #include "nsSocketProviderService.h"
 #include "nscore.h"
+#include "nsStdURLParser.h"
+#include "nsAuthURLParser.h"
+#include "nsNoAuthURLParser.h"
 #include "nsStdURL.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
@@ -107,7 +110,19 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_FILEOUTPUTSTREAM_CLASSNAME, 
       NS_FILEOUTPUTSTREAM_CID,
       NS_FILEOUTPUTSTREAM_PROGID,
-      nsFileOutputStream::Create }
+      nsFileOutputStream::Create },
+    { "StdURLParser", 
+      NS_STANDARDURLPARSER_CID,
+      "component://netscape/network/standard-urlparser",
+      nsStdURLParser::Create },
+    { "AuthURLParser", 
+      NS_AUTHORITYURLPARSER_CID,
+      "component://netscape/network/authority-urlparser",
+      nsAuthURLParser::Create },
+    { "NoAuthURLParser", 
+      NS_NOAUTHORITYURLPARSER_CID,
+      "component://netscape/network/no-authority-urlparser",
+      nsNoAuthURLParser::Create },
 };
 
 NS_IMPL_NSGETMODULE("net", gNetModuleInfo)
