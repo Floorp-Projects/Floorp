@@ -3729,14 +3729,6 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
       }
     }
     
-    // are we in a textnode or inline node?
-    if (!nsEditor::IsBlockNode(parent))
-    {
-      // we must be in a text or inline node - convert existing block
-      *outMakeEmpty = PR_FALSE;
-      return res;
-    }
-        
     // is it after a <br> with no inline nodes after it, or a <br> after it??
     if (offset)
     {
@@ -3771,6 +3763,15 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
         }
       }
     }
+
+    // are we in a textnode or inline node?
+    if (!nsEditor::IsBlockNode(parent))
+    {
+      // we must be in a text or inline node - convert existing block
+      *outMakeEmpty = PR_FALSE;
+      return res;
+    }
+        
   }    
   // otherwise transform an existing block
   *outMakeEmpty = PR_FALSE;
