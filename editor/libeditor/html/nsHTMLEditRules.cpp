@@ -1087,7 +1087,6 @@ nsHTMLEditRules::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
 nsresult 
 nsHTMLEditRules::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 {
-  nsIPresShell* shell = nsnull;
   nsresult result;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   nsIFrame *frame;
@@ -1097,7 +1096,8 @@ nsHTMLEditRules::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   if (!aResult || !content) return NS_ERROR_NULL_POINTER;
   
-  result = mEditor->GetPresShell(&shell);
+  nsCOMPtr<nsIPresShell> shell;
+  result = mEditor->GetPresShell(getter_AddRefs(shell));
   if (NS_FAILED(result)) return result;
   
   result = shell->GetPrimaryFrameFor(content, &frame);
