@@ -45,6 +45,87 @@
 #define KSHIFTLEFT  (0)
 #define KSHIFTRIGHT (1)
 
+// uncomment the following line to caught nsString char* casting problem
+//#define DEBUG_ILLEGAL_CAST_UP
+//#define DEBUG_ILLEGAL_CAST_DOWN
+
+#if  defined(DEBUG_ILLEGAL_CAST_UP) || defined(DEBUG_ILLEGAL_CAST_DOWN) 
+
+static PRBool track_illegal = PR_TRUE;
+static PRBool track_latin1  = PR_TRUE;
+
+#ifdef XP_UNIX
+#include "nsTraceRefcnt.h"
+class CTraceFile {
+public:
+   CTraceFile() {
+      mFile = fopen("nsStringTrace.txt" , "a+");
+   }
+   ~CTraceFile() {
+      fflush(mFile);
+      fclose(mFile);
+   }
+   void ReportCastUp(const char* data, const char* msg)
+   {
+      if(mFile) {
+        fprintf(mFile, "ERRORTEXT= %s\n", msg);
+        fprintf(mFile, "BEGINDATA\n");
+        const char* s=data;
+        while(*s) {
+           if(*s & 0x80) {
+             fprintf(mFile, "[%2X]", (char)*s);
+	   } else {
+             fprintf(mFile, "%c", *s);
+           }
+           s++;
+        }
+        fprintf(mFile, "\n");
+        fprintf(mFile, "ENDDATA\n");
+        fprintf(mFile, "BEGINSTACK\n");
+        nsTraceRefcnt::WalkTheStack(mFile);
+        fprintf(mFile, "\n");
+        fprintf(mFile, "ENDSTACK\n");
+        fflush(mFile);
+      }
+   }
+   void ReportCastDown(const PRUnichar* data, const char* msg)
+   {
+      if(mFile) {
+        fprintf(mFile, "ERRORTEXT=%s\n", msg);
+        fprintf(mFile, "BEGINDATA\n");
+        const PRUnichar* s=data;
+        while(*s) {
+           if(*s & 0xFF80) {
+             fprintf(mFile, "\\u%X", *s);
+	   } else {
+             fprintf(mFile, "%c", *s);
+           }
+           s++;
+        }
+        fprintf(mFile, "\n");
+        fprintf(mFile, "ENDDATA\n");
+        fprintf(mFile, "BEGINSTACK\n");
+        nsTraceRefcnt::WalkTheStack(mFile);
+        fprintf(mFile, "\n");
+        fprintf(mFile, "ENDSTACK\n");
+        fflush(mFile);
+      }
+   }
+private:
+   FILE* mFile;
+};
+static CTraceFile gTrace;
+#define  TRACE_ILLEGAL_CAST_UP(c, s, m)     if(!(c)) gTrace.ReportCastUp(s,m);
+#define  TRACE_ILLEGAL_CAST_DOWN(c, s, m)   if(!(c)) gTrace.ReportCastDown(s,m);
+
+#else // XP_UNIX
+
+#define  TRACE_ILLEGAL_CAST_UP(c, s, m)   NS_ASSERTION((c), (m))
+#define  TRACE_ILLEGAL_CAST_DOWN(c, s, m) NS_ASSERTION((c), (m))
+
+#endif //XP_UNIX
+
+#endif
 
 inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
   return ((PRUnichar*)aString)[anIndex];
@@ -172,12 +253,23 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   const unsigned char* first= (const unsigned char*)aSource+anOffset;
   const unsigned char* last = first+aCount;
 
+#ifdef DEBUG_ILLEGAL_CAST_UP
+  PRBool illegal= PR_FALSE;
+#endif
   //now loop over characters, shifting them left...
   while(first<last) {
     *to=(PRUnichar)(*first);  
+#ifdef DEBUG_ILLEGAL_CAST_UP
+    if(track_illegal && track_latin1 && ( *to >= 0x80))
+      illegal= PR_TRUE;
+#endif
     to++;
     first++;
   }
+#ifdef DEBUG_ILLEGAL_CAST_UP
+  TRACE_ILLEGAL_CAST_UP((!illegal), aSource, "illegal cast up in CopyChars1To2");
+#endif
+
 }
  
 
@@ -196,14 +288,31 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
   const PRUnichar*  first= theSource+anOffset;
   const PRUnichar*  last = first+aCount;
 
+#ifdef DEBUG_ILLEGAL_CAST_DOWN
+  PRBool illegal= PR_FALSE;
+#endif
   //now loop over characters, shifting them left...
   while(first<last) {
     if(*first<256)
       *to=(char)*first;  
     else *to='.';
+#ifdef DEBUG_ILLEGAL_CAST_DOWN
+    if(track_illegal) {
+      if(track_latin1) {
+        if(*first & 0xFF80)
+          illegal = PR_TRUE;
+      } else {
+        if(*first & 0xFF00)
+          illegal = PR_TRUE;
+      } // track_latin1
+    } // track_illegal
+#endif
     to++;
     first++;
   }
+#ifdef DEBUG_ILLEGAL_CAST_DOWN
+  TRACE_ILLEGAL_CAST_DOWN((!illegal), theSource, "illegal cast down in CopyChars2To1");
+#endif
 }
 
 /**
