@@ -233,9 +233,10 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = ../../../dist/bin;
 				OPTIMIZATION_CFLAGS = "-O2";
-				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
+				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
+				PREFIX_HEADER = "../../../mozilla-config.h";
 				PRODUCT_NAME = CocoaEmbed;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -357,6 +358,40 @@
 //4A2
 //4A3
 //4A4
+//A70
+//A71
+//A72
+//A73
+//A74
+		A76C8E9B0403980900A967DF = {
+			isa = PBXFileReference;
+			name = libi18n.dylib;
+			path = ../../../intl/build/libi18n.dylib;
+			refType = 2;
+		};
+		A76C8E9C0403981600A967DF = {
+			fileRef = A76C8E9B0403980900A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A79172DB0403993400A967DF = {
+			isa = PBXFileReference;
+			name = libimglib2.dylib;
+			path = ../../../modules/libpr0n/build/libimglib2.dylib;
+			refType = 2;
+		};
+		A79172DC0403993F00A967DF = {
+			fileRef = A79172DB0403993400A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//A70
+//A71
+//A72
+//A73
+//A74
 //F50
 //F51
 //F52
@@ -410,18 +445,6 @@
 //F62
 //F63
 //F64
-		F655020201B480F201A962F7 = {
-			isa = PBXFileReference;
-			name = libnkcache.dylib;
-			path = ../../../netwerk/cache/src/libnkcache.dylib;
-			refType = 2;
-		};
-		F655020401B4812301A962F7 = {
-			fileRef = F655020201B480F201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6901D3F01B70DB301A962F7 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -541,7 +564,6 @@
 				F6BD63A201B3131201A962F7,
 				F6BD63A301B3131201A962F7,
 				F6BD63A401B3131201A962F7,
-				F6BD63A501B3131201A962F7,
 				F6BD63A601B3131201A962F7,
 				F6BD63A701B3131201A962F7,
 				F6BD63A801B3131201A962F7,
@@ -549,10 +571,7 @@
 				F6BD63AA01B3131201A962F7,
 				F6BD63AB01B3131201A962F7,
 				F6BD63AC01B3131201A962F7,
-				F6BD63AD01B3131201A962F7,
-				F6BD63AE01B3131201A962F7,
 				F6BD63AF01B3131201A962F7,
-				F6BD63B001B3131201A962F7,
 				F6BD63B101B3131201A962F7,
 				F6BD63B201B3131201A962F7,
 				F6BD63B301B3131201A962F7,
@@ -563,7 +582,6 @@
 				F6BD63DB01B313EE01A962F7,
 				F6BD63DC01B313EE01A962F7,
 				F6BD63DD01B313EE01A962F7,
-				F6BD63DE01B313EE01A962F7,
 				F6BD63DF01B313EE01A962F7,
 				F6BD63E001B313EE01A962F7,
 				F6BD63E101B313EE01A962F7,
@@ -583,21 +601,11 @@
 				F6BD63EF01B313EE01A962F7,
 				F6BD63F001B313EE01A962F7,
 				F6BD63F101B313EE01A962F7,
-				F6BD640B01B3156701A962F7,
-				F6BD640C01B3156701A962F7,
-				F6BD640D01B3156701A962F7,
-				F6BD640E01B3156701A962F7,
-				F6BD640F01B3156701A962F7,
-				F6BD641001B3156701A962F7,
-				F6BD641101B3156701A962F7,
 				F6BD641201B3156701A962F7,
 				F6BD641301B3156701A962F7,
 				F6BD641401B3156701A962F7,
 				F6BD641501B3156701A962F7,
-				F6BD641601B3156701A962F7,
 				F6BD641701B3156701A962F7,
-				F6BD641801B3156701A962F7,
-				F6BD641901B3156701A962F7,
 				F6BD641A01B3156701A962F7,
 				F6BD641B01B3156701A962F7,
 				F6BD641C01B3156701A962F7,
@@ -619,7 +627,8 @@
 				F6BD644E01B315FA01A962F7,
 				F6BD644F01B315FA01A962F7,
 				F6BD645001B315FA01A962F7,
-				F655020201B480F201A962F7,
+				A76C8E9B0403980900A967DF,
+				A79172DB0403993400A967DF,
 			);
 			isa = PBXGroup;
 			name = "Gecko Components";
@@ -679,7 +688,6 @@
 				F6BD646501B3167601A962F7,
 				F6BD646601B3167601A962F7,
 				F6BD646701B3167601A962F7,
-				F6BD646801B3167601A962F7,
 				F6BD646901B3167601A962F7,
 				F6BD646A01B3167601A962F7,
 				F6BD646B01B3167601A962F7,
@@ -687,10 +695,7 @@
 				F6BD646D01B3167601A962F7,
 				F6BD646E01B3167601A962F7,
 				F6BD646F01B3167601A962F7,
-				F6BD647001B3167601A962F7,
-				F6BD647101B3167601A962F7,
 				F6BD647201B3167601A962F7,
-				F6BD647301B3167601A962F7,
 				F6BD647401B3167601A962F7,
 				F6BD647501B3167601A962F7,
 				F6BD647601B3167601A962F7,
@@ -701,7 +706,6 @@
 				F6BD647B01B3167601A962F7,
 				F6BD647C01B3167601A962F7,
 				F6BD647D01B3167601A962F7,
-				F6BD647E01B3167601A962F7,
 				F6BD647F01B3167601A962F7,
 				F6BD648001B3167601A962F7,
 				F6BD648101B3167601A962F7,
@@ -721,21 +725,11 @@
 				F6BD648F01B3167601A962F7,
 				F6BD649001B3167601A962F7,
 				F6BD649101B3167601A962F7,
-				F6BD649201B3167601A962F7,
-				F6BD649301B3167601A962F7,
-				F6BD649401B3167601A962F7,
-				F6BD649501B3167601A962F7,
-				F6BD649601B3167601A962F7,
-				F6BD649701B3167601A962F7,
-				F6BD649801B3167601A962F7,
 				F6BD649901B3167601A962F7,
 				F6BD649A01B3167601A962F7,
 				F6BD649B01B3167601A962F7,
 				F6BD649C01B3167601A962F7,
-				F6BD649D01B3167601A962F7,
 				F6BD649E01B3167601A962F7,
-				F6BD649F01B3167601A962F7,
-				F6BD64A001B3167601A962F7,
 				F6BD64A101B3167601A962F7,
 				F6BD64A201B3167601A962F7,
 				F6BD64A301B3167601A962F7,
@@ -757,7 +751,8 @@
 				F6BD64B401B3167601A962F7,
 				F6BD64B501B3167601A962F7,
 				F6BD64B601B3167601A962F7,
-				F655020401B4812301A962F7,
+				A76C8E9C0403981600A967DF,
+				A79172DC0403993F00A967DF,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -870,12 +865,6 @@
 			path = ../../../gfx/idl/_xpidlgen/gfx.xpt;
 			refType = 2;
 		};
-		F6BD63A501B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = gfx2.xpt;
-			path = ../../../gfx2/public/_xpidlgen/gfx2.xpt;
-			refType = 2;
-		};
 		F6BD63A601B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libcaps.dylib;
@@ -918,28 +907,10 @@
 			path = ../../../gfx/src/mac/libgfx_mac.dylib;
 			refType = 2;
 		};
-		F6BD63AD01B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = libgfx2.dylib;
-			path = ../../../gfx2/src/libgfx2.dylib;
-			refType = 2;
-		};
-		F6BD63AE01B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = libmozbrwsr.dylib;
-			path = ../../../xpfe/browser/src/libmozbrwsr.dylib;
-			refType = 2;
-		};
 		F6BD63AF01B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = libnsappshell.dylib;
 			path = ../../../xpfe/appshell/src/libnsappshell.dylib;
-			refType = 2;
-		};
-		F6BD63B001B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = libtxtsvc.dylib;
-			path = ../../../editor/txtsvc/src/libtxtsvc.dylib;
 			refType = 2;
 		};
 		F6BD63B101B3131201A962F7 = {
@@ -1000,12 +971,6 @@
 			isa = PBXFileReference;
 			name = layout_xul.xpt;
 			path = ../../../layout/xul/base/public/_xpidlgen/layout_xul.xpt;
-			refType = 2;
-		};
-		F6BD63DE01B313EE01A962F7 = {
-			isa = PBXFileReference;
-			name = libgkcontent.dylib;
-			path = ../../../content/build/libgkcontent.dylib;
 			refType = 2;
 		};
 		F6BD63DF01B313EE01A962F7 = {
@@ -1122,48 +1087,6 @@
 			path = ../../../netwerk/base/public/_xpidlgen/necko.xpt;
 			refType = 2;
 		};
-		F6BD640B01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libchardet.dylib;
-			path = ../../../intl/chardet/src/libchardet.dylib;
-			refType = 2;
-		};
-		F6BD640C01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libimggif.dylib;
-			path = ../../../modules/libpr0n/decoders/gif/libimggif.dylib;
-			refType = 2;
-		};
-		F6BD640D01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libimgjpeg.dylib;
-			path = ../../../modules/libpr0n/decoders/jpeg/libimgjpeg.dylib;
-			refType = 2;
-		};
-		F6BD640E01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libimglib2.dylib;
-			path = ../../../modules/libpr0n/src/libimglib2.dylib;
-			refType = 2;
-		};
-		F6BD640F01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libimgpng.dylib;
-			path = ../../../modules/libpr0n/decoders/png/libimgpng.dylib;
-			refType = 2;
-		};
-		F6BD641001B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = liblwbrk.dylib;
-			path = ../../../intl/lwbrk/src/liblwbrk.dylib;
-			refType = 2;
-		};
-		F6BD641101B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libnslocale.dylib;
-			path = ../../../intl/locale/src/mac/libnslocale.dylib;
-			refType = 2;
-		};
 		F6BD641201B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libpref.dylib;
@@ -1173,7 +1096,7 @@
 		F6BD641301B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libprofile.dylib;
-			path = ../../../profile/src/libprofile.dylib;
+			path = ../../../profile/build/libprofile.dylib;
 			refType = 2;
 		};
 		F6BD641401B3156701A962F7 = {
@@ -1188,28 +1111,10 @@
 			path = ../../../xpfe/components/shistory/src/libshistory.dylib;
 			refType = 2;
 		};
-		F6BD641601B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libstrres.dylib;
-			path = ../../../intl/strres/src/libstrres.dylib;
-			refType = 2;
-		};
 		F6BD641701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libuconv.dylib;
 			path = ../../../intl/uconv/src/libuconv.dylib;
-			refType = 2;
-		};
-		F6BD641801B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libucvlatin.dylib;
-			path = ../../../intl/uconv/ucvlatin/libucvlatin.dylib;
-			refType = 2;
-		};
-		F6BD641901B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libunicharutil.dylib;
-			path = ../../../intl/unicharutil/src/libunicharutil.dylib;
 			refType = 2;
 		};
 		F6BD641A01B3156701A962F7 = {
@@ -1467,12 +1372,6 @@
 			settings = {
 			};
 		};
-		F6BD646801B3167601A962F7 = {
-			fileRef = F6BD63A501B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD646901B3167601A962F7 = {
 			fileRef = F6BD63A601B3131201A962F7;
 			isa = PBXBuildFile;
@@ -1515,26 +1414,8 @@
 			settings = {
 			};
 		};
-		F6BD647001B3167601A962F7 = {
-			fileRef = F6BD63AD01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD647101B3167601A962F7 = {
-			fileRef = F6BD63AE01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD647201B3167601A962F7 = {
 			fileRef = F6BD63AF01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD647301B3167601A962F7 = {
-			fileRef = F6BD63B001B3131201A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1595,12 +1476,6 @@
 		};
 		F6BD647D01B3167601A962F7 = {
 			fileRef = F6BD63DD01B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD647E01B3167601A962F7 = {
-			fileRef = F6BD63DE01B313EE01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1719,48 +1594,6 @@
 			settings = {
 			};
 		};
-		F6BD649201B3167601A962F7 = {
-			fileRef = F6BD640B01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649301B3167601A962F7 = {
-			fileRef = F6BD640C01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649401B3167601A962F7 = {
-			fileRef = F6BD640D01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649501B3167601A962F7 = {
-			fileRef = F6BD640E01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649601B3167601A962F7 = {
-			fileRef = F6BD640F01B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649701B3167601A962F7 = {
-			fileRef = F6BD641001B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649801B3167601A962F7 = {
-			fileRef = F6BD641101B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD649901B3167601A962F7 = {
 			fileRef = F6BD641201B3156701A962F7;
 			isa = PBXBuildFile;
@@ -1785,26 +1618,8 @@
 			settings = {
 			};
 		};
-		F6BD649D01B3167601A962F7 = {
-			fileRef = F6BD641601B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD649E01B3167601A962F7 = {
 			fileRef = F6BD641701B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD649F01B3167601A962F7 = {
-			fileRef = F6BD641801B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD64A001B3167601A962F7 = {
-			fileRef = F6BD641901B3156701A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
