@@ -165,8 +165,8 @@ private:
     SavePrincipal(nsIPrincipal* aToSave);
 
     nsresult
-    CheckXPCPermissions(JSContext* cx, nsISupports* aObj,
-                        const char* aObjectSecurityLevel, const char* aErrorMsg);
+    CheckXPCPermissions(nsISupports* aObj,
+                        const char* aObjectSecurityLevel);
 
     nsresult
     InitPrefs();

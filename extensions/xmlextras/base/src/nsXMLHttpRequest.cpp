@@ -710,15 +710,7 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest","open");
     if (NS_FAILED(rv))
     {
-      // Security check failed. The above call set a JS exception. The
-      // following lines ensure that the exception is propagated.
-
-      nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-      nsCOMPtr<nsIXPCNativeCallContext> cc;
-      if(NS_SUCCEEDED(rv))
-        xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-      if (cc)
-        cc->SetExceptionWasThrown(PR_TRUE);
+      // Security check failed.
       return NS_OK;
     }
 
