@@ -24,14 +24,16 @@
 #include <stdlib.h>
 
 #include "nsIWidget.h"
+#include "nsIPref.h"
 
 //-------------------------------------------------------------------------
 //
 // XPCOM CIDs
 //
 //-------------------------------------------------------------------------
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //-------------------------------------------------------------------------
 //
@@ -76,6 +78,41 @@ static void event_processor_callback(gpointer data,
   eventQueue->ProcessPendingEvents();
 }
 
+#define PREF_NCOLS "browser.ncols"
+#define PREF_INSTALLCMAP "browser.installcmap"
+
+static void
+HandleColormapPrefs( void )
+{
+	PRInt32 ivalue = 0;
+        PRBool bvalue;
+	nsresult rv;
+
+	/* The default is to do nothing. INSTALLCMAP has precedence over
+	   NCOLS. Ignore the fact we can't do this if it fails, as it is
+	   not critical */
+ 
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv) || (!prefs)) 
+		return;
+       
+	/* first check ncols */
+ 
+	rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
+	if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 )
+		gdk_rgb_set_min_colors( ivalue );
+
+	/* next check installcmap */
+
+	rv = prefs->GetBoolPref(PREF_INSTALLCMAP, &bvalue);
+	if (NS_SUCCEEDED(rv)) {
+		if ( PR_TRUE == bvalue )
+			gdk_rgb_set_min_colors( 255 );	// force it
+		else
+			gdk_rgb_set_min_colors( 0 );
+	}
+}
+	
 //-------------------------------------------------------------------------
 //
 // Create the application shell
@@ -111,6 +148,7 @@ NS_METHOD nsAppShell::Create(int *bac, char **bav)
 
   // delete the cmdLineArgs thing?
 
+  HandleColormapPrefs();
   gdk_rgb_init();
 
   home = g_get_home_dir();
