@@ -244,17 +244,19 @@ Title=Select Program Folder
 ;*** LOCALIZE ME BABY ***
 Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
+[Dialog Download Options]
+Show Dialog=FALSE
+Title=
+Message0=
+Message1=
+Message2=
+Save Installer=
+
 [Dialog Advanced Settings]
 Show Dialog=FALSE
-;*** LOCALIZE ME BABY ***
-Title=Advanced Settings
-;*** LOCALIZE ME BABY ***
-Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
-;*** LOCALIZE ME BABY ***
-Message1=Check the option below if you wish to save the downloaded installer files locally for future use.  They will be saved into ...\$ProductName$\Install
+Title=
 Proxy Server=
 Proxy Port=
-Save Installer=
 
 [Dialog Start Install]
 Show Dialog=TRUE
