@@ -202,7 +202,6 @@ public:
     mEndNode(),
     mStartNode(),
     mTokenNode(),
-    mErrorNode(),
     mITextToken(),
     mErrorToken(NS_LITERAL_STRING("error")) {
   }
@@ -216,9 +215,8 @@ public:
   }
 
   nsCParserNode       mEndNode;
-  nsCParserNode       mStartNode;
-  nsCParserNode       mTokenNode;
-  nsCParserNode       mErrorNode;
+  nsCParserStartNode  mStartNode;
+  nsCParserStartNode  mTokenNode;
   CIndirectTextToken  mITextToken;
   CTextToken          mErrorToken;
 };
@@ -565,7 +563,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_link,tag));
         if(theToken) {
           CAttributeToken *theAttr;
-          nsCParserNode theNode(theToken, theAllocator);
+          nsCParserStartNode theNode(theToken, theAllocator);
 
           theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_LITERAL_STRING("stylesheet"));
           theAttr->SetKey(NS_LITERAL_STRING("rel"));
@@ -586,7 +584,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
       CEndToken endHeadToken(eHTMLTag_head);
       nsCParserNode endHeadNode(&endHeadToken, 0/*stack token*/);
-      result = mSink->CloseHead(endHeadNode);
+      result = mSink->CloseHead();
       if(NS_SUCCEEDED(result)) {
         mHasOpenRoot = PR_TRUE;
         if (didBlock) {
@@ -599,7 +597,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         tag.Assign(NS_LITERAL_STRING("BODY"));
         CStartToken* bodyToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start, eHTMLTag_body, tag));
         if (bodyToken) {
-          nsCParserNode bodyNode(bodyToken, theAllocator);
+          nsCParserStartNode bodyNode(bodyToken, theAllocator);
           CAttributeToken *theAttr=nsnull;
           theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kBodyId));
           theAttr->SetKey(NS_LITERAL_STRING("id"));
@@ -679,7 +677,7 @@ nsresult  CViewSourceHTML::GenerateSummary() {
 void CViewSourceHTML::StartNewPreBlock(void){
   CEndToken endToken(eHTMLTag_pre);
   nsCParserNode endNode(&endToken, 0/*stack token*/);
-  mSink->CloseContainer(endNode);
+  mSink->CloseContainer(eHTMLTag_pre);
 
   CStartToken startToken(eHTMLTag_pre);
   nsCParserNode startNode(&startToken, 0/*stack token*/);
@@ -727,15 +725,15 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
       if(ePlainText!=mDocType) {
         CEndToken theToken(eHTMLTag_pre);
         nsCParserNode preNode(&theToken, 0/*stack token*/);
-        mSink->CloseContainer(preNode);
+        mSink->CloseContainer(eHTMLTag_pre);
         
         CEndToken bodyToken(eHTMLTag_body);
         nsCParserNode bodyNode(&bodyToken, 0/*stack token*/);
-        mSink->CloseBody(bodyNode);
+        mSink->CloseBody();
         
         CEndToken htmlToken(eHTMLTag_html);
         nsCParserNode htmlNode(&htmlToken, 0/*stack token*/);
-        mSink->CloseHTML(htmlNode);
+        mSink->CloseHTML();
       }
       result = mSink->DidBuildModel(1);
     }
@@ -994,7 +992,7 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     theContext.mStartNode.ReleaseAll(); 
     CEndToken theEndToken(eHTMLTag_span);
     theContext.mEndNode.Init(&theEndToken, 0/*stack token*/);
-    mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+    mSink->CloseContainer(eHTMLTag_span);  //emit </starttag>...
 #ifdef DUMP_TO_FILE
     if (gDumpFile)
       fprintf(gDumpFile, "</span>");

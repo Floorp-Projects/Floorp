@@ -157,7 +157,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @return  string containing node name
      */
-    virtual const nsString& GetName() const;
+    virtual const nsAString& GetTagName() const;
 
     /**
      * Retrieve the text from the given node
@@ -245,15 +245,6 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual void GetSource(nsString& aString);
 
-    /*
-     * Get and set the ID attribute atom for this node.
-     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
-     * for the definition of an ID attribute.
-     *
-     */
-    virtual nsresult GetIDAttributeAtom(nsIAtom** aResult) const;
-    virtual nsresult SetIDAttributeAtom(nsIAtom* aID);
-
     /**
      * This pair of methods allows us to set a generic bit (for arbitrary use)
      * on each node stored in the context.
@@ -268,18 +259,66 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual nsresult ReleaseAll();
 
-    CToken*   mToken;
-    nsDeque*  mAttributes;
-    PRInt32   mUseCount;
-    PRBool    mGenericState;
-    nsCOMPtr<nsIAtom> mIDAttributeAtom;
-    
-   nsTokenAllocator* mTokenAllocator;
+    CToken*      mToken;
+    PRInt32      mUseCount;
+    PRPackedBool mGenericState;  
+   
+    nsTokenAllocator* mTokenAllocator;
 #ifdef HEAP_ALLOCATED_NODES
    nsNodeAllocator*  mNodeAllocator; // weak 
 #endif
 };
 
+
+class nsCParserStartNode :  public nsCParserNode 
+{
+public:
+    static nsCParserNode* Create(CToken* aToken,
+                                 nsTokenAllocator* aTokenAllocator,
+                                 nsNodeAllocator* aNodeAllocator)
+    {
+#ifdef HEAP_ALLOCATED_NODES
+      return new
+#else
+      nsFixedSizeAllocator& pool = aNodeAllocator->GetArenaPool();
+      void* place = pool.Alloc(sizeof(nsCParserStartNode));
+      return ::new (place)
 #endif
+        nsCParserStartNode(aToken, aTokenAllocator, aNodeAllocator);
+    }
+
+    nsCParserStartNode() 
+      : mAttributes(0), nsCParserNode() { }
+
+    nsCParserStartNode(CToken* aToken, 
+                       nsTokenAllocator* aTokenAllocator, 
+                       nsNodeAllocator* aNodeAllocator = 0) 
+      : mAttributes(0), nsCParserNode(aToken, aTokenAllocator, aNodeAllocator) { }
+
+    ~nsCParserStartNode() 
+    {
+      NS_ASSERTION(0 != mTokenAllocator, "Error: no token allocator");
+      CToken* theAttrToken = 0;
+      while ((theAttrToken = NS_STATIC_CAST(CToken*, mAttributes.Pop()))) {
+        IF_FREE(theAttrToken, mTokenAllocator);
+      }
+    }
+
+    virtual nsresult Init(CToken* aToken,
+                          nsTokenAllocator* aTokenAllocator,
+                          nsNodeAllocator* aNodeAllocator = 0);
+    virtual void     AddAttribute(CToken* aToken);
+    virtual PRInt32  GetAttributeCount(PRBool askToken = PR_FALSE) const;
+    virtual const    nsAString& GetKeyAt(PRUint32 anIndex) const;
+    virtual const    nsAString& GetValueAt(PRUint32 anIndex) const;
+    virtual CToken*  PopAttributeToken();
+    virtual void     GetSource(nsString& aString);
+    virtual nsresult ReleaseAll();
+protected:
+    nsDeque  mAttributes;
+};
+
+#endif
+
 
 

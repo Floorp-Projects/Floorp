@@ -305,11 +305,9 @@ public:
     this gets called after each tag is opened in the given context
    **********************************************************/
   virtual nsresult  OpenContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
-    
-    aContext->Push(aNode);
-
-    CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
-    theElement->NotifyOpen(aNode,aTag,aContext,aSink);
+    aContext->Push(aNode, 0, PR_FALSE);
+    CElement *theElement = (aTag == mTag) ? this : GetElement(aTag);
+    theElement->NotifyOpen(aNode, aTag, aContext,aSink);
     return NS_OK;
   }
 
@@ -325,7 +323,7 @@ public:
     this gets called to close a given tag in the sink
    **********************************************************/
   virtual nsresult  CloseContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
-    return aSink->CloseContainer(*aNode);
+    return aSink->CloseContainer(aTag);
   }
 
   /**********************************************************
@@ -1175,7 +1173,7 @@ public:
     nsresult result=NS_OK;
     if(aSink && aContext) {
       if(aContext->mFlags.mHasOpenHead==PR_TRUE) {
-        result=aSink->CloseHead(*aNode);
+        result = aSink->CloseHead();
         aContext->mFlags.mHasOpenHead=PR_FALSE;
       }
     }
@@ -1668,14 +1666,14 @@ public:
     switch(aTag) {
       case eHTMLTag_html:
         if(aContext->HasOpenContainer(aTag)) {
-          result=aSink->CloseHTML(*aNode);
+          result=aSink->CloseHTML();
           CloseContext(aNode,aTag,aContext,aSink);
         }
         break;
 
       case eHTMLTag_body:
         if(aContext->HasOpenContainer(aTag)) {
-          result=aSink->CloseBody(*aNode);
+          result=aSink->CloseBody();
           CloseContext(aNode,aTag,aContext,aSink);
         }
         break;
@@ -1839,18 +1837,18 @@ public:
 
     switch(aTag) {
       case eHTMLTag_body:
-        aSink->CloseBody(*aNode);
+        aSink->CloseBody();
         result=CloseContext(aNode,aTag,aContext,aSink);
         break;
 
       case eHTMLTag_frameset:
-        aSink->CloseFrameset(*aNode);
+        aSink->CloseFrameset();
         result=CloseContext(aNode,aTag,aContext,aSink);
         break;
 
       case eHTMLTag_object:
         result=CloseContainerInContext(aNode,aTag,aContext,aSink);
-        aSink->CloseHead(*aNode);
+        aSink->CloseHead();
         break;
 
       case eHTMLTag_script:

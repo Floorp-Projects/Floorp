@@ -418,14 +418,11 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
-  PRInt32 type = aNode.GetNodeType();
-  const nsAString&   namestr = aNode.GetText();
-  nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
-  
-  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
-  return DoCloseContainer(type);
+  // XXX What do we need this?
+  // mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
+  return DoCloseContainer(aTag);
 }
  
 NS_IMETHODIMP 
@@ -463,9 +460,9 @@ nsPlainTextSerializer::OpenHTML(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseHTML(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseHTML()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_html);
 }
 
 NS_IMETHODIMP 
@@ -476,7 +473,7 @@ nsPlainTextSerializer::OpenHead(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseHead(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseHead()
 {
   mInHead = PR_FALSE;
   return NS_OK;
@@ -489,9 +486,9 @@ nsPlainTextSerializer::OpenBody(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseBody(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseBody()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_body);
 }
 
 NS_IMETHODIMP 
@@ -501,9 +498,9 @@ nsPlainTextSerializer::OpenForm(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseForm(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseForm()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_form);
 }
 
 NS_IMETHODIMP 
@@ -513,9 +510,9 @@ nsPlainTextSerializer::OpenMap(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseMap(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseMap()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_map);
 }
 
 NS_IMETHODIMP 
@@ -525,9 +522,9 @@ nsPlainTextSerializer::OpenFrameset(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::CloseFrameset(const nsIParserNode& aNode)
+nsPlainTextSerializer::CloseFrameset()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_frameset);
 }
 
 NS_IMETHODIMP

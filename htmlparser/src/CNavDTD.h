@@ -280,7 +280,10 @@ public:
     nsresult OpenForm(const nsIParserNode *aNode);
     nsresult OpenMap(const nsCParserNode *aNode);
     nsresult OpenFrameset(const nsCParserNode *aNode);
-    nsresult OpenContainer(const nsCParserNode *aNode,eHTMLTags aTag,PRBool aClosedByStartTag,nsEntryStack* aStyleStack=0);
+    nsresult OpenContainer(const nsCParserNode *aNode,
+                           eHTMLTags aTag,
+                           PRBool aClosedByStartTag,
+                           nsEntryStack* aStyleStack=0);
 
     /**
      * The next set of methods close the given HTML element.
@@ -289,12 +292,12 @@ public:
      * @param   HTML (node) to be opened in content sink.
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseHTML(const nsIParserNode *aNode);
-    nsresult CloseHead(const nsIParserNode *aNode);
-    nsresult CloseBody(const nsIParserNode *aNode);
-    nsresult CloseForm(const nsIParserNode *aNode);
-    nsresult CloseMap(const nsIParserNode *aNode);
-    nsresult CloseFrameset(const nsIParserNode *aNode);
+    nsresult CloseHTML();
+    nsresult CloseHead();
+    nsresult CloseBody();
+    nsresult CloseForm();
+    nsresult CloseMap();
+    nsresult CloseFrameset();
     
     /**
      * The special purpose methods automatically close
@@ -302,9 +305,14 @@ public:
      * @update	gess5/11/98
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseContainer(const nsCParserNode *aNode,eHTMLTags aTarget,PRBool aClosedByStartTag);
-    nsresult CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag);
-    nsresult CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aClosedByStartTag);
+    nsresult CloseContainer(const eHTMLTags aTag,
+                            eHTMLTags aTarget,
+                            PRBool aClosedByStartTag);
+    nsresult CloseContainersTo(eHTMLTags aTag,
+                               PRBool aClosedByStartTag);
+    nsresult CloseContainersTo(PRInt32 anIndex,
+                               eHTMLTags aTag,
+                               PRBool aClosedByStartTag);
 
     /**
      * Causes leaf to be added to sink at current vector pos.

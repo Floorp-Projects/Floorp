@@ -60,14 +60,13 @@ const nsString& GetEmptyString() {
  */
 nsCParserNode::nsCParserNode()
   : mToken(nsnull),
-    mAttributes(nsnull),
     mUseCount(0),
     mGenericState(PR_FALSE),
     mTokenAllocator(nsnull)
 {
   MOZ_COUNT_CTOR(nsCParserNode);
 #ifdef HEAP_ALLOCATED_NODES
-  mNodeAllocator=nsnull;
+  mNodeAllocator = nsnull;
 #endif
 }
 
@@ -80,21 +79,20 @@ nsCParserNode::nsCParserNode()
  */
 nsCParserNode::nsCParserNode(CToken* aToken,
                              nsTokenAllocator* aTokenAllocator,
-                             nsNodeAllocator* aNodeAllocator): 
-    nsIParserNode() {
+                             nsNodeAllocator* aNodeAllocator): nsIParserNode() 
+{
   mRefCnt = 0;
   MOZ_COUNT_CTOR(nsCParserNode);
 
-  static int theNodeCount=0;
+  static int theNodeCount = 0;
   ++theNodeCount;
-  mAttributes=0;
-  mToken=aToken;
+  mToken = aToken;
   IF_HOLD(mToken);
-  mTokenAllocator=aTokenAllocator;
-  mUseCount=0;
-  mGenericState=PR_FALSE;
+  mTokenAllocator = aTokenAllocator;
+  mUseCount = 0;
+  mGenericState = PR_FALSE;
 #ifdef HEAP_ALLOCATED_NODES
-  mNodeAllocator=aNodeAllocator;
+  mNodeAllocator = aNodeAllocator;
 #endif
 }
 
@@ -113,9 +111,9 @@ nsCParserNode::~nsCParserNode() {
   if(mNodeAllocator) {
     mNodeAllocator->Recycle(this);
   }
-  mNodeAllocator=nsnull;
+  mNodeAllocator = nsnull;
 #endif
-  mTokenAllocator=0;
+  mTokenAllocator = 0;
 }
 
 
@@ -127,48 +125,25 @@ nsCParserNode::~nsCParserNode() {
  *  @return  
  */
 
-nsresult nsCParserNode::Init(CToken* aToken,
-                             nsTokenAllocator* aTokenAllocator,
-                             nsNodeAllocator* aNodeAllocator) {
-  if(mAttributes && (mAttributes->GetSize())) {
-    NS_ASSERTION(0!=mTokenAllocator, "Error: Attribute tokens on node without token allocator");
-    if(mTokenAllocator) {
-      CToken* theAttrToken=0;
-      while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-        IF_FREE(theAttrToken, mTokenAllocator);
-      }
-    }
-  }
-  mTokenAllocator=aTokenAllocator;
-  mToken=aToken;
+nsresult
+nsCParserNode::Init(CToken* aToken,
+                    nsTokenAllocator* aTokenAllocator,
+                    nsNodeAllocator* aNodeAllocator) 
+{
+  mTokenAllocator = aTokenAllocator;
+  mToken = aToken;
   IF_HOLD(mToken);
-  mGenericState=PR_FALSE;
+  mGenericState = PR_FALSE;
   mUseCount=0;
 #ifdef HEAP_ALLOCATED_NODES
-  mNodeAllocator=aNodeAllocator;
+  mNodeAllocator = aNodeAllocator;
 #endif
   return NS_OK;
 }
 
-/**
- *  Causes the given attribute to be added to internal 
- *  mAttributes list, and mAttributeCount to be incremented.
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- token to be added to attr list
- *  @return  
- */
-void nsCParserNode::AddAttribute(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
-  NS_PRECONDITION(0!=mTokenAllocator, "Error: Can't add attribute without token allocator");
-
-  if(mTokenAllocator) {
-    if(!mAttributes)
-      mAttributes=new nsDeque(0);
-    if(mAttributes) {
-      mAttributes->Push(aToken);
-    }
-  }
+void
+nsCParserNode::AddAttribute(CToken* aToken) 
+{
 }
 
 
@@ -179,9 +154,9 @@ void nsCParserNode::AddAttribute(CToken* aToken) {
  *  @param   
  *  @return  string ref containing node name
  */
-const nsString& nsCParserNode::GetName() const {
+const nsAString&
+nsCParserNode::GetTagName() const {
   return GetEmptyString();
-  // return mName;
 }
 
 
@@ -193,8 +168,13 @@ const nsString& nsCParserNode::GetName() const {
  *  @param   
  *  @return  string ref of text from internal token
  */
-const nsAString& nsCParserNode::GetText() const {
-  return (mToken) ? mToken->GetStringValue() : NS_STATIC_CAST(const nsAString&,GetEmptyString());
+const nsAString& 
+nsCParserNode::GetText() const 
+{
+  if (mToken) {
+    return mToken->GetStringValue();
+  }
+  return GetEmptyString();
 }
 
 /**
@@ -205,7 +185,9 @@ const nsAString& nsCParserNode::GetText() const {
  *  @param   
  *  @return  int value that represents tag type
  */
-PRInt32 nsCParserNode::GetNodeType(void) const{
+PRInt32 
+nsCParserNode::GetNodeType(void) const
+{
   return (mToken) ? mToken->GetTypeID() : 0;
 }
 
@@ -218,7 +200,9 @@ PRInt32 nsCParserNode::GetNodeType(void) const{
  *  @param   
  *  @return  
  */
-PRInt32 nsCParserNode::GetTokenType(void) const{
+PRInt32 
+nsCParserNode::GetTokenType(void) const
+{
   return (mToken) ? mToken->GetTokenType() : 0;
 }
 
@@ -230,15 +214,10 @@ PRInt32 nsCParserNode::GetTokenType(void) const{
  *  @param   
  *  @return  int -- representing attribute count
  */
-PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
-  PRInt32 result=0;
-
-  if(PR_FALSE==askToken) {
-    if(mAttributes)
-      result=mAttributes->GetSize();
-  }
-  else result=mToken->GetAttributeCount();
-  return result;
+PRInt32 
+nsCParserNode::GetAttributeCount(PRBool askToken) const
+{
+  return 0;
 }
 
 /**
@@ -249,12 +228,9 @@ PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text key
  */
-const nsAString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
-  PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
-  if((PRInt32)anIndex<theCount) {
-    CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
-    return tkn->GetKey();
-  }
+const nsAString&
+nsCParserNode::GetKeyAt(PRUint32 anIndex) const 
+{
   return GetEmptyString();
 }
 
@@ -266,20 +242,15 @@ const nsAString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text value
  */
-const nsAString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
-  PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
-
-  NS_PRECONDITION(PRInt32(anIndex)<theCount, "Bad attr index");
-
-  if(PRInt32(anIndex)<theCount) {
-    CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
-    return tkn->GetValue();
-  }
+const nsAString&
+nsCParserNode::GetValueAt(PRUint32 anIndex) const 
+{
   return GetEmptyString();
 }
 
 
-PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
+PRInt32 
+nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
 {
   if (eToken_entity == mToken->GetTokenType()) {
     return ((CEntityToken*)mToken)->TranslateToUnicodeStr(aString);
@@ -293,7 +264,8 @@ PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
  * @update	gess7/24/98
  * @return  int containing the line number the token was found on
  */
-PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
+PRInt32
+nsCParserNode::GetSourceLineNumber(void) const {
   return mToken ? mToken->GetLineNumber() : 0;
 }
 
@@ -303,39 +275,24 @@ PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
  * @return  token at anIndex
  */
 
-CToken* nsCParserNode::PopAttributeToken() {
-
-  CToken* result=0;
-  if(mAttributes) {
-    result =(CToken*)mAttributes->Pop();
-  }
-  return result;
+CToken* 
+nsCParserNode::PopAttributeToken() {
+  return 0;
 }
 
 /** Retrieve a string containing the tag and its attributes in "source" form
  * @update	rickg 06June2000
  * @return  void
  */
-void nsCParserNode::GetSource(nsString& aString) {
-  aString.Truncate();
-
-  eHTMLTags theTag=(eHTMLTags)mToken->GetTypeID();
-  aString.Append(PRUnichar('<'));
-  const PRUnichar* theTagName=nsHTMLTags::GetStringValue(theTag);
+void 
+nsCParserNode::GetSource(nsString& aString) 
+{
+  eHTMLTags theTag = mToken ? (eHTMLTags)mToken->GetTypeID() : eHTMLTag_unknown;
+  aString.Assign(PRUnichar('<'));
+  const PRUnichar* theTagName = nsHTMLTags::GetStringValue(theTag);
   if(theTagName) {
     aString.Append(theTagName);
   }
-  if(mAttributes) {
-    int           index=0;
-    for(index=0;index<mAttributes->GetSize();++index) {
-      CAttributeToken *theToken=(CAttributeToken*)mAttributes->ObjectAt(index);
-      if(theToken) {
-        theToken->AppendSourceTo(aString);
-        aString.Append(PRUnichar(' ')); //this will get removed...
-      }
-    }
-  }
-
   aString.Append(PRUnichar('>'));
 }
 
@@ -343,44 +300,104 @@ void nsCParserNode::GetSource(nsString& aString) {
  * @update	harishd 08/02/00
  * @return  void
  */
-nsresult nsCParserNode::ReleaseAll() {
-  if(mAttributes) {
-    NS_ASSERTION(0!=mTokenAllocator, "Error: no token allocator");
-    if(mTokenAllocator) {
-      CToken* theAttrToken=0;
-      while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-        IF_FREE(theAttrToken, mTokenAllocator);
-      }
-    }
-    delete mAttributes;
-    mAttributes=0;
-  }
-
+nsresult 
+nsCParserNode::ReleaseAll() 
+{
   if(mTokenAllocator) {
-    // It was heap allocated, so free it!
     IF_FREE(mToken,mTokenAllocator);
   }
-
   return NS_OK;
 }
 
-nsresult
-nsCParserNode::GetIDAttributeAtom(nsIAtom** aResult) const
+nsresult 
+nsCParserStartNode::Init(CToken* aToken,
+                         nsTokenAllocator* aTokenAllocator,
+                         nsNodeAllocator* aNodeAllocator) 
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mIDAttributeAtom;
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
+  NS_ASSERTION(mAttributes.GetSize() == 0, "attributes not recycled!");
+  return nsCParserNode::Init(aToken, aTokenAllocator, aNodeAllocator);
 }
 
-nsresult
-nsCParserNode::SetIDAttributeAtom(nsIAtom* aID)
+void nsCParserStartNode::AddAttribute(CToken* aToken) 
 {
-  NS_ENSURE_ARG(aID);
-  mIDAttributeAtom = aID;
-
-  return NS_OK;
+  NS_ASSERTION(0 != aToken, "Error: Token shouldn't be null!");
+  mAttributes.Push(aToken);
 }
 
+PRInt32 
+nsCParserStartNode::GetAttributeCount(PRBool askToken) const
+{
+  PRInt32 result = 0;
+  if (askToken) {
+    result = mToken ? mToken->GetAttributeCount() : 0;
+  }
+  else {
+    result = mAttributes.GetSize();
+  }
+  return result;
+}
+
+const nsAString&
+nsCParserStartNode::GetKeyAt(PRUint32 anIndex) const 
+{
+  if ((PRInt32)anIndex < mAttributes.GetSize()) {
+    CAttributeToken* attr = 
+      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(anIndex));
+    if (attr) {
+      return attr->GetKey();
+    }
+  }
+  return GetEmptyString();
+}
+
+const nsAString&
+nsCParserStartNode::GetValueAt(PRUint32 anIndex) const 
+{
+  if (PRInt32(anIndex) < mAttributes.GetSize()) {
+    CAttributeToken* attr = 
+      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(anIndex));
+    if (attr) {
+      return attr->GetValue();
+    }
+  }
+  return GetEmptyString();
+}
+
+CToken* 
+nsCParserStartNode::PopAttributeToken() 
+{
+  return NS_STATIC_CAST(CToken*, mAttributes.Pop());
+}
+
+void nsCParserStartNode::GetSource(nsString& aString) 
+{
+  aString.Assign(PRUnichar('<'));
+  const PRUnichar* theTagName = 
+    nsHTMLTags::GetStringValue(nsHTMLTag(mToken->GetTypeID()));
+  if (theTagName) {
+    aString.Append(theTagName);
+  }
+  PRInt32 index;
+  PRInt32 size = mAttributes.GetSize();
+  for (index = 0 ; index < size; ++index) {
+    CAttributeToken *theToken = 
+      NS_STATIC_CAST(CAttributeToken*, mAttributes.ObjectAt(index));
+    if (theToken) {
+      theToken->AppendSourceTo(aString);
+      aString.Append(PRUnichar(' ')); //this will get removed...
+    }
+  }
+  aString.Append(PRUnichar('>'));
+}
+
+nsresult nsCParserStartNode::ReleaseAll() 
+{
+  NS_ASSERTION(0!=mTokenAllocator, "Error: no token allocator");
+  CToken* theAttrToken;
+  while ((theAttrToken = NS_STATIC_CAST(CToken*, mAttributes.Pop()))) {
+    IF_FREE(theAttrToken, mTokenAllocator);
+  }
+  nsCParserNode::ReleaseAll();
+  return NS_OK; 
+}
 

@@ -71,7 +71,7 @@
 // recycles _ptr
 #define IF_FREE(_ptr, _allocator)                \
   PR_BEGIN_MACRO                                 \
-  if(_ptr) {                                     \
+  if(_ptr && _allocator) {                       \
     _ptr->Release((_allocator)->GetArenaPool()); \
     _ptr=0;                                      \
   }                                              \
@@ -107,6 +107,8 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
 class nsEntryStack;  //forware declare to make compilers happy.
 
 struct nsTagEntry {
+  nsTagEntry::nsTagEntry() 
+    : mTag(eHTMLTag_unknown), mNode(0), mParent(0), mStyles(0){}
   eHTMLTags       mTag;  //for speedier access to tag id
   nsCParserNode*  mNode;
   nsEntryStack*   mParent;
@@ -119,9 +121,11 @@ public:
                   nsEntryStack();
                   ~nsEntryStack();
 
+  nsTagEntry*     PopEntry();
+  void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
   void            EnsureCapacityFor(PRInt32 aNewMax, PRInt32 aShiftOffset=0);
-  void            Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
-  void            PushFront(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
+  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
+  void            PushFront(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
   void            Append(nsEntryStack *theStack);
   nsCParserNode*  Pop(void);
   nsCParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
@@ -329,7 +333,10 @@ public:
                   nsDTDContext();
                   ~nsDTDContext();
 
-  void            Push(const nsCParserNode* aNode,nsEntryStack* aStyleStack=0);
+  nsTagEntry*     PopEntry();
+  void            PushEntry(nsTagEntry* aEntry, PRBool aRefCntNode = PR_TRUE);
+  void            MoveEntries(nsDTDContext& aDest, PRInt32 aCount);
+  void            Push(nsCParserNode* aNode,nsEntryStack* aStyleStack=0, PRBool aRefCntNode = PR_TRUE);
   nsCParserNode*  Pop(nsEntryStack*& aChildStack);
   nsCParserNode*  Pop();
   nsCParserNode*  PeekNode() { return mStack.NodeAt(mStack.mCount-1); }
@@ -346,7 +353,7 @@ public:
   PRInt32         GetCount(void) {return mStack.mCount;}
   PRInt32         GetResidualStyleCount(void) {return mResidualStyleCount;}
   nsEntryStack*   GetStylesAt(PRInt32 anIndex) const;
-  void            PushStyle(const nsCParserNode* aNode);
+  void            PushStyle(nsCParserNode* aNode);
   void            PushStyles(nsEntryStack *theStyles);
   nsCParserNode*  PopStyle(void);
   nsCParserNode*  PopStyle(eHTMLTags aTag);

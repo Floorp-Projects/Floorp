@@ -85,7 +85,7 @@ public:
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -96,22 +96,22 @@ public:
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody();
   NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset();
   NS_IMETHOD OpenNoscript(const nsIParserNode& aNode);
-  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode);
+  NS_IMETHOD CloseNoscript();
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) { return NS_OK; }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
   
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap();
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
   NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
@@ -378,7 +378,7 @@ nsHTMLFragmentContentSink::OpenHTML(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseHTML(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseHTML()
 {
   return NS_OK;
 }
@@ -391,7 +391,7 @@ nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseHead(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseHead()
 {
   return NS_OK;
 }
@@ -411,9 +411,9 @@ nsHTMLFragmentContentSink::OpenBody(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseBody(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseBody()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_body);
 }
 
 NS_IMETHODIMP 
@@ -423,9 +423,9 @@ nsHTMLFragmentContentSink::OpenForm(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseForm(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseForm()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_form);
 }
 
 NS_IMETHODIMP 
@@ -435,9 +435,9 @@ nsHTMLFragmentContentSink::OpenFrameset(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseFrameset(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseFrameset()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_frameset);
 }
 
 NS_IMETHODIMP 
@@ -447,9 +447,9 @@ nsHTMLFragmentContentSink::OpenMap(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseMap(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseMap()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_map);
 }
 
 NS_IMETHODIMP 
@@ -459,9 +459,9 @@ nsHTMLFragmentContentSink::OpenNoscript(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseNoscript(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseNoscript()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_noscript);
 }
 
 void
@@ -563,7 +563,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-nsHTMLFragmentContentSink::CloseContainer(const nsIParserNode& aNode)
+nsHTMLFragmentContentSink::CloseContainer(const nsHTMLTag aTag)
 {
   if (mHitSentinel && (nsnull != GetCurrentContent())) {
     nsIContent* content;
