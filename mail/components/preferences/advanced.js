@@ -88,6 +88,12 @@ var gAdvancedPane = {
                                            "", null);
   },
 
+  showConfigEdit: function()
+  {
+    document.documentElement.openSubDialog("chrome://global/content/config.xul",
+                                           "chrome,centerscreen,resizable=yes", null);
+  },
+
   updateAppUpdateUI: function ()
   {
     var preference = document.getElementById("app.update.autoUpdateEnabled");

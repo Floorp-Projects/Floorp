@@ -134,6 +134,11 @@
                     accesskey="&showOfflineSettings.accesskey;" 
                     oncommand="gAdvancedPane.showOfflineSettings();"/>
           </hbox>
+          <hbox align="center" pack="start">
+            <description flex="1">&configEditDesc.label;</description>
+            <button id="configEditor" label="&configEdit.label;" 
+                    accesskey="&configEdit.accesskey;" oncommand="gAdvancedPane.showConfigEdit();"/>
+          </hbox>
         </tabpanel>
         
         <!-- Update --> 

@@ -29,6 +29,9 @@
 <!ENTITY connectionTimeout.accesskey   "C">
 <!ENTITY connectionSeconds.label "seconds">
 <!ENTITY offline.label                 "Configure Offline Settings">
+<!ENTITY configEditDesc.label          "&brandShortName;'s Configuration File">
+<!ENTITY configEdit.label              "Config Editor...">
+<!ENTITY configEdit.accesskey          "g">
 
 <!-- Update -->
 <!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">
