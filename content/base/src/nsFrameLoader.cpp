@@ -357,6 +357,13 @@ nsFrameLoader::Destroy()
     mOwnerContent = nsnull;
   }
 
+  // Let our window know that we are gone
+  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mDocShell));
+  nsCOMPtr<nsPIDOMWindow> win_private(do_QueryInterface(win));
+  if (win_private) {
+    win_private->SetFrameElementInternal(nsnull);
+  }
+  
   nsCOMPtr<nsIBaseWindow> base_win(do_QueryInterface(mDocShell));
 
   if (base_win) {
