@@ -1597,7 +1597,7 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 			pBuiltin_struct->FE_Data = pWnd;
 		}
 #ifdef ENDER
-	}
+    }
 	else if (classid && !XP_STRCMP(classid,"builtin:htmlarea")) { //ENDER
 		if (pBuiltin_struct->FE_Data == NULL) {
 			//create a new CPaneCX
