@@ -131,7 +131,8 @@ Rights Reserved.
     <hbox id="msgHeaderView"/>
 
     <!-- message view -->
-    <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+    <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" 
+      disableHistory="true" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
   </vbox>  
 
 

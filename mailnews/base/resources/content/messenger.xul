@@ -177,7 +177,8 @@ Rights Reserved.
       <vbox id="messagepanebox" flex="3" persist="collapsed height" class="window-focusborder" focusring="false" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
         <hbox id="msgHeaderView"/>
     
-        <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
+        <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" 
+          disableHistory="true" type="content-primary" src="about:blank"/>
       </vbox>  
       </vbox>
 
