@@ -1853,8 +1853,7 @@ char *
 VCardGetStringByIDREAL(PRInt32 stringID)
 {
   nsresult    res;
-  char        propertyURL[256];
-  PRInt32     bufLen = sizeof(propertyURL);
+  char*       propertyURL;
 
 /***************************************     
     // Father forgive me...
@@ -1875,10 +1874,10 @@ VCardGetStringByIDREAL(PRInt32 stringID)
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetCharPref("mail.strings.vcard", propertyURL, &bufLen);
+    res = prefs->CopyCharPref("mail.strings.vcard", &propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
-    PR_snprintf(propertyURL, sizeof(propertyURL), "%s", VCARD_URL);
+    propertyURL = PL_strdup(VCARD_URL);
 
   NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
   if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
