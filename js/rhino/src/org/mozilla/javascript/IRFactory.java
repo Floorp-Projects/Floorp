@@ -132,7 +132,7 @@ public class IRFactory {
                               int lineno)
     {
         if (catchCond == null) {
-            catchCond = new Node(Token.PRIMARY, Token.TRUE);
+            catchCond = new Node(Token.TRUE);
         }
         return new Node(Token.CATCH, (Node)createName(varName),
                                (Node)catchCond, (Node)stmts, lineno);
@@ -259,7 +259,7 @@ public class IRFactory {
         Node bodyTarget = new Node(Token.TARGET);
         Node condTarget = new Node(Token.TARGET);
         if (loopType == LOOP_FOR && cond.getType() == Token.VOID) {
-            cond = new Node(Token.PRIMARY, Token.TRUE);
+            cond = new Node(Token.TRUE);
         }
         Node IFEQ = new Node(Token.IFEQ, (Node)cond);
         IFEQ.putProp(Node.TARGET_PROP, bodyTarget);
@@ -346,7 +346,7 @@ public class IRFactory {
         Node temp = createNewTemp(next);
         Node cond = new Node(Token.EQOP, Token.NE);
         cond.addChildToBack(temp);
-        cond.addChildToBack(new Node(Token.PRIMARY, Token.NULL));
+        cond.addChildToBack(new Node(Token.NULL));
         Node newBody = new Node(Token.BLOCK);
         Node assign = (Node) createAssignment(Token.NOP, lvalue,
                                               createUseTemp(temp));
@@ -586,9 +586,7 @@ public class IRFactory {
             // altered in new Node constructor
             elem = cursor;
             cursor = cursor.getNext();
-            if (elem.getType() == Token.PRIMARY &&
-                elem.getOperation() == Token.UNDEFINED)
-            {
+            if (elem.getType() == Token.UNDEFINED) {
                 i++;
                 continue;
             }
@@ -613,10 +611,7 @@ public class IRFactory {
              * length explicitly, because we can't depend on SETELEM
              * to do it for us - because empty [,,] array elements
              * never set anything at all. */
-            if (elem != null &&
-                elem.getType() == Token.PRIMARY &&
-                elem.getOperation() == Token.UNDEFINED)
-            {
+            if (elem != null && elem.getType() == Token.UNDEFINED) {
                 Node setlength = new Node(Token.SETPROP,
                                           createUseTemp(temp),
                                           Node.newString("length"),
@@ -724,7 +719,7 @@ public class IRFactory {
                 childNode.removeChild(left);
                 childNode.removeChild(right);
             } else {
-                return new Node(Token.PRIMARY, Token.TRUE);
+                return new Node(Token.TRUE);
             }
             return new Node(nodeType, left, right);
         }

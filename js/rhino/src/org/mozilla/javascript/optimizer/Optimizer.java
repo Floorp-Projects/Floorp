@@ -843,8 +843,7 @@ class Optimizer
                 if (isLDefined == ALWAYS_FALSE_BOOLEAN) {
                     // if the first one is false, replace with FALSE
                     if (!IRFactory.hasSideEffects(rChild)) {
-                        replace = new Node(Token.PRIMARY,
-                            Token.FALSE);
+                        replace = new Node(Token.FALSE);
                     }
                 }
 
@@ -852,8 +851,7 @@ class Optimizer
                 if (isRDefined == ALWAYS_FALSE_BOOLEAN) {
                     // if the second one is false, replace with FALSE
                     if (!IRFactory.hasSideEffects(lChild)) {
-                        replace = new Node(Token.PRIMARY,
-                            Token.FALSE);
+                        replace = new Node(Token.FALSE);
                     }
                 }
                 else if (isRDefined == ALWAYS_TRUE_BOOLEAN) {
@@ -873,8 +871,7 @@ class Optimizer
                 if (isLDefined == ALWAYS_TRUE_BOOLEAN) {
                     // if the first one is true, replace with TRUE
                     if (!IRFactory.hasSideEffects(rChild)) {
-                        replace = new Node(Token.PRIMARY,
-                            Token.TRUE);
+                        replace = new Node(Token.TRUE);
                     }
                 }
 
@@ -882,8 +879,7 @@ class Optimizer
                 if (isRDefined == ALWAYS_TRUE_BOOLEAN) {
                     // if the second one is true, replace with TRUE
                     if (!IRFactory.hasSideEffects(lChild)) {
-                        replace = new Node(Token.PRIMARY,
-                            Token.TRUE);
+                        replace = new Node(Token.TRUE);
                     }
                 }
                 else if (isRDefined == ALWAYS_FALSE_BOOLEAN) {
@@ -935,37 +931,31 @@ class Optimizer
     }
 
     // Check if Node always mean true or false in boolean context
-    private static int isAlwaysDefinedBoolean(Node node) {
-        int result = 0;
-        int type = node.getType();
-        if (type == Token.PRIMARY) {
-            int id = node.getOperation();
-            if (id == Token.FALSE || id == Token.NULL
-                || id == Token.UNDEFINED)
-            {
-                result = ALWAYS_FALSE_BOOLEAN;
-            }
-            else if (id == Token.TRUE) {
-                result = ALWAYS_TRUE_BOOLEAN;
-            }
-        }
-        else if (type == Token.NUMBER) {
+    private static int isAlwaysDefinedBoolean(Node node)
+    {
+        switch (node.getType()) {
+          case Token.FALSE:
+          case Token.NULL:
+          case Token.UNDEFINED:
+            return ALWAYS_FALSE_BOOLEAN;
+          case Token.TRUE:
+            return ALWAYS_TRUE_BOOLEAN;
+          case Token.NUMBER:
             double num = node.getDouble();
             if (num == 0) {
                 // Is it neccessary to check for -0.0 here?
                 if (1 / num > 0) {
-                    result = ALWAYS_FALSE_BOOLEAN;
+                    return ALWAYS_FALSE_BOOLEAN;
                 }
             }
             else {
-                result = ALWAYS_TRUE_BOOLEAN;
+                return ALWAYS_TRUE_BOOLEAN;
             }
         }
-        return result;
+        return 0;
     }
 
-    private static void
-    replaceVariableAccess(Node n, OptFunctionNode fn)
+    private static void replaceVariableAccess(Node n, OptFunctionNode fn)
     {
         Node child = n.getFirstChild();
         while (child != null) {

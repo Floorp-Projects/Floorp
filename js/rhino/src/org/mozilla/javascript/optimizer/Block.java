@@ -547,9 +547,7 @@ public class Block {
                     if (baseChild != null) {
                         localCSE(n, baseChild, theCSETable, theFunction);
                     }
-                    if (baseChild.getType() == Token.PRIMARY
-                        && baseChild.getOperation() == Token.THIS)
-                    {
+                    if (baseChild.getType() == Token.THIS) {
                         Node nameChild = baseChild.getNext();
                         if (nameChild.getType() == Token.STRING) {
                             String theName = nameChild.getString();

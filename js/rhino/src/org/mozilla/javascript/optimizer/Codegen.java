@@ -1077,8 +1077,30 @@ public class Codegen extends Interpreter {
                 visitLiteral(node);
                 break;
 
-              case Token.PRIMARY:
-                visitPrimary(node);
+              case Token.THIS:
+                aload(thisObjLocal);
+                break;
+
+              case Token.THISFN:
+                classFile.add(ByteCode.ALOAD_0);
+                break;
+
+              case Token.NULL:
+                addByteCode(ByteCode.ACONST_NULL);
+                break;
+
+              case Token.TRUE:
+                classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                        "TRUE", "Ljava/lang/Boolean;");
+                break;
+
+              case Token.FALSE:
+                classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                        "FALSE", "Ljava/lang/Boolean;");
+                break;
+
+              case Token.UNDEFINED:
+                pushUndefined();
                 break;
 
               case Token.REGEXP:
@@ -2796,9 +2818,7 @@ public class Codegen extends Interpreter {
         Node rightChild = child.getNext();
         boolean isStrict = op == Token.SHEQ ||
                            op == Token.SHNE;
-        if (rightChild.getType() == Token.PRIMARY &&
-            rightChild.getOperation() == Token.NULL)
-        {
+        if (rightChild.getType() == Token.NULL) {
             generateCodeFromNode(child, node);
             if (isStrict) {
                 addByteCode(ByteCode.IFNULL, 9);
@@ -2869,9 +2889,7 @@ public class Codegen extends Interpreter {
         boolean isStrict = op == Token.SHEQ ||
                            op == Token.SHNE;
 
-        if (rightChild.getType() == Token.PRIMARY &&
-            rightChild.getOperation() == Token.NULL)
-        {
+        if (rightChild.getType() == Token.NULL) {
             if (op != Token.EQ && op != Token.SHEQ) {
                 // invert true and false.
                 int temp = trueGOTO;
@@ -3266,12 +3284,9 @@ public class Codegen extends Interpreter {
         generateCodeFromNode(child, node);      // the object
         generateCodeFromNode(nameChild, node);  // the name
         if (nameChild.getType() == Token.STRING) {
-            if ((child.getType() == Token.PRIMARY
-                 && child.getOperation() == Token.THIS)
+            if ((child.getType() == Token.THIS)
                 || (child.getType() == Token.NEWTEMP
-                    && child.getFirstChild().getType() == Token.PRIMARY
-                    && child.getFirstChild().getOperation()
-                           == Token.THIS))
+                    && child.getFirstChild().getType() == Token.THIS))
             {
                 aload(variableObjectLocal);
                 addOptRuntimeInvoke(

@@ -961,8 +961,13 @@ public class Interpreter
                 break;
             }
 
-            case Token.PRIMARY:
-                iCodeTop = addToken(node.getOperation(), iCodeTop);
+            case Token.NULL:
+            case Token.THIS:
+            case Token.THISFN:
+            case Token.FALSE:
+            case Token.TRUE:
+            case Token.UNDEFINED:
+                iCodeTop = addToken(type, iCodeTop);
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
                     itsData.itsMaxStack = itsStackDepth;

@@ -386,8 +386,7 @@ public class NodeTransformer {
                         bind.setType(Token.STRING);
                     } else {
                         // Local variables are by definition permanent
-                        Node n = new Node(Token.PRIMARY,
-                                          Token.FALSE);
+                        Node n = new Node(Token.FALSE);
                         iter.replaceCurrent(n);
                     }
                 }

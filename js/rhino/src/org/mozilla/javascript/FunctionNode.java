@@ -129,8 +129,7 @@ public class FunctionNode extends ScriptOrFnNode {
                 addVar(name);
                 Node setFn = new Node(Token.POP,
                                 new Node(Token.SETVAR, Node.newString(name),
-                                         new Node(Token.PRIMARY,
-                                                  Token.THISFN)));
+                                         new Node(Token.THISFN)));
                 stmts.addChildrenToFront(setFn);
             }
         }

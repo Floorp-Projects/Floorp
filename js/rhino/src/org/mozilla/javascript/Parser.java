@@ -1316,8 +1316,8 @@ class Parser {
                         }
 
                         if (tt == Token.COMMA) {
-                            nf.addChildToBack(pn, nf.createLeaf(Token.PRIMARY,
-                                                                Token.UNDEFINED));
+                            nf.addChildToBack(pn,
+                                nf.createLeaf(Token.UNDEFINED));
                         } else {
                             nf.addChildToBack(pn, assignExpr(ts, false));
                         }
@@ -1426,7 +1426,7 @@ class Parser {
         case Token.FALSE:
         case Token.TRUE:
             decompiler.addToken(tt);
-            return nf.createLeaf(Token.PRIMARY, tt);
+            return nf.createLeaf(tt);
 
         case Token.RESERVED:
             reportError(ts, "msg.reserved.id");

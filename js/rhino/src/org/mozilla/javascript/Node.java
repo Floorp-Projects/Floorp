@@ -444,7 +444,6 @@ public class Node implements Cloneable {
             case Token.EQOP:
             case Token.RELOP:
             case Token.UNARYOP:
-            case Token.PRIMARY:
                 return intDatum;
         }
         Context.codeBug();
@@ -456,7 +455,6 @@ public class Node implements Cloneable {
             case Token.EQOP:
             case Token.RELOP:
             case Token.UNARYOP:
-            case Token.PRIMARY:
                 Context.codeBug();
         }
         return intDatum;

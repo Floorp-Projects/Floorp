@@ -204,24 +204,23 @@ public class Token
         EQOP        = 106, // equality ops (== !=)
         RELOP       = 107, // relational ops (< <= > >= in instanceof)
         UNARYOP     = 108, // unary prefix operator
-        PRIMARY     = 109, // true, false, null, this
 
-        BLOCK       = 110, // statement block
-        ARRAYLIT    = 111, // array literal
-        OBJLIT      = 112, // object literal
-        LABEL       = 113, // label
-        TARGET      = 114,
-        LOOP        = 115,
-        ENUMDONE    = 116,
-        EXPRSTMT    = 117,
-        PARENT      = 118,
-        TONUMBER    = 119,
-        JSR         = 120,
-        NEWLOCAL    = 121,
-        USELOCAL    = 122,
-        SCRIPT      = 123,   // top-level node for entire script
+        BLOCK       = 109, // statement block
+        ARRAYLIT    = 110, // array literal
+        OBJLIT      = 111, // object literal
+        LABEL       = 112, // label
+        TARGET      = 113,
+        LOOP        = 114,
+        ENUMDONE    = 115,
+        EXPRSTMT    = 116,
+        PARENT      = 117,
+        TONUMBER    = 118,
+        JSR         = 119,
+        NEWLOCAL    = 120,
+        USELOCAL    = 121,
+        SCRIPT      = 122,   // top-level node for entire script
 
-        LAST_TOKEN  = 123;
+        LAST_TOKEN  = 122;
 
     public static String name(int token)
     {
@@ -315,7 +314,6 @@ public class Token
                 case INC:             return "inc";
                 case DEC:             return "dec";
                 case DOT:             return "dot";
-                case PRIMARY:         return "primary";
                 case FUNCTION:        return "function";
                 case EXPORT:          return "export";
                 case IMPORT:          return "import";
