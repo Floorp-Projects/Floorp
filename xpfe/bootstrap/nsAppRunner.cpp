@@ -264,7 +264,7 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *pr
   {
     if (forceLaunchEditor || (cmdResult && (PL_strcmp("1",cmdResult)==0))) {
       urlstr = "chrome://editor/content/";
-      withArgs = "chrome://editor/content/EditorInitPage.html";
+      withArgs = "about:blank";
      
       OpenWindow( urlstr, withArgs.GetUnicode() );
     }
@@ -366,7 +366,7 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
     if (cmdResult && (PL_strcmp("1",cmdResult)==0))
     {
       urlstr = "chrome://messengercompose/content/";
-      withArgs = "chrome://editor/content/EditorInitPage.html";
+      withArgs = "about:blank";
   	  
       OpenWindow( urlstr, withArgs.GetUnicode() );
     }

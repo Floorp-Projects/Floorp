@@ -2,7 +2,7 @@
 <!ENTITY tasksMenu.label				"Tasks">
 <!ENTITY navigatorCmd.label					"Navigator">  
 <!ENTITY messengerCmd.label					"Messenger">
-<!ENTITY editorCmd.label					"Editor">
+<!ENTITY editorCmd.label					  "Composer">
 <!ENTITY textEditorCmd.label				"Plaintext Editor">
 
 <!ENTITY addressBookCmd.label				"Address Book">  
