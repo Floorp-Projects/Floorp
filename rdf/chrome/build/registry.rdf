@@ -5,13 +5,7 @@
 
   <chrome about="chrome://global/">
 	
-    <skin> 
-      <RDF:Description about="chrome://global/skin/">
-	    <main>skin.css</main>
-		<base>resource:/chrome/global/skin/default/</base>
-      </RDF:Description> 
-    </skin> 
-	
+
     <content> 
       <RDF:Description about="chrome://global/content/">
 	    <base>resource:/chrome/global/content/default/</base>

@@ -265,7 +265,6 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
 */
 NS_IMETHODIMP
 nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
-#ifdef NECKO
 {
     nsresult rv = NS_OK;
     NS_ASSERTION(aChromeURL, "null url!");
@@ -329,8 +328,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     // Get the chromeResource from this lookup string
     nsCOMPtr<nsIRDFResource> chromeResource;
     if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
-        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
-        return rv;
+//        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+        //return rv;
     }
     
     // Using this chrome resource get the three basic things of a chrome entry-
@@ -340,7 +339,10 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 
     rv = GetChromeResource(name, chromeResource, kCHROME_name);
     if (NS_FAILED (rv)) {
-        // No name entry was found. No problem.
+        if (PL_strcmp(provider,"/locale") == 0)
+          name = "en-US";
+        else
+          name = "default";
     }
 
     rv = GetChromeResource(base, chromeResource, kCHROME_base);
@@ -373,8 +375,15 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         if (NS_FAILED(rv))
         {
             //we'd definitely need main for an empty remaining
-            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
-            return rv;
+            //NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
+            //return rv;
+            main = package;
+            if (PL_strcmp(provider, "/skin") == 0)
+              main += ".css";
+            else if (PL_strcmp(provider, "/content") == 0)
+              main += ".xul";
+            else if (PL_strcmp(provider, "/locale") == 0)
+              main += ".dtd";
         }
         finalString += main;
     }
@@ -383,143 +392,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 
     char* finalURI = finalString.ToNewCString();
     aChromeURL->SetSpec(finalURI);
-/*
-#ifndef NECKO
-    // Clean out possible // in the path
-    char* path;
-    rv = aChromeURL->GetPath(&path);
-    char* cleanPath = path;
-    for (; '\0' != *path; ++path)
-    {
-        if (*path == '/' && *(path+1) == '/')
-            ++path;
-        *cleanPath++ = *path;
-    }
-    aChrome->SetRelativePath(path);
-    nsCRT::free(path);
-#endif
-*/  
+
     nsCRT::free(finalURI);
     return NS_OK;
 }
-#else
-{
-    nsresult rv = NS_OK;
-    
-    // Retrieve the resource for this chrome element.
-    const char* host;
-    if (NS_FAILED(rv = aChromeURL->GetHost(&host))) {
-        NS_ERROR("Unable to retrieve the host for a chrome URL.");
-        return rv;
-    }
 
-    nsAutoString hostStr(host);
-    const char* file;
-
-    // Construct a chrome URL and use it to look up a resource.
-    nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
-
-    // Stash any search part of the URL for later
-    aChromeURL->GetSearch(&file);
-    nsAutoString searchStr(file);
-
-    // Find out the package type of the URL
-    aChromeURL->GetFile(&file);
-
-    nsAutoString restOfURL(file);
-
-    // Find the second slash.
-    nsAutoString packageType("content");
-    nsAutoString path("");
-    PRInt32 slashIndex = -1;
-    if (restOfURL.Length() > 1)
-    {
-        // There is something to the right of that slash. A provider type must have
-        // been specified.
-        slashIndex = restOfURL.FindChar('/', PR_FALSE,1);
-        if (slashIndex == -1)
-		    slashIndex = restOfURL.Length();
-
-        restOfURL.Mid(packageType, 1, slashIndex - 1);
-
-        if (slashIndex < restOfURL.Length()-1)
-        {
-            // There are some extra subdirectories to remember.
-            restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
-        }
-    }
-
-    windowType += packageType + "/";
-
-    // We have the resource URI that we wish to retrieve. Fetch it.
-    nsCOMPtr<nsIRDFResource> chromeResource;
-    if (NS_FAILED(rv = GetPackageTypeResource(windowType, getter_AddRefs(chromeResource)))) {
-        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
-        return rv;
-    }
-
-    nsAutoString chromeName;
-    if (NS_FAILED(rv = GetChromeResource(chromeName, chromeResource, kCHROME_name))) {
-        // No name entry was found. Don't use one.
-        chromeName = "";
-    }
-
-    nsAutoString chromeBase;
-    if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
-        // No base entry was found. Default to our cache.
-        chromeBase = "resource:/chrome/";
-        chromeBase += hostStr;
-		chromeBase += "/";
-        chromeBase += packageType + "/";
-        if (chromeName != "")
-          chromeBase += chromeName + "/";
-    }
-
-		// Make sure base ends in a slash
-	  PRInt32 length = chromeBase.Length();
-		if (length > 0)
-		{
-			PRUnichar c = chromeBase.CharAt(length-1);
-			if (c != '/')
-				chromeBase += "/"; // Ensure that a slash is present.
-		}
-
-    // Check to see if we should append the "main" entry in the registry.
-    // Only do this when the user doesn't have anything following "skin"
-    // or "content" in the specified URL.
-    if (path.IsEmpty())
-    {
-			  PRInt32 length = restOfURL.Length();
-				if (length > 0)
-				{
-					PRUnichar c = restOfURL.CharAt(length-1);
-					if (c != '/')
-						restOfURL += "/"; // Ensure that a slash is present.
-				}
-				  
-        // Append the "main" entry.
-        nsAutoString mainFile;
-        if (NS_FAILED(rv = GetChromeResource(mainFile, chromeResource, kCHROME_main))) {
-            NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
-            return rv;
-        }
-        chromeBase += mainFile;
-    }
-    else
-    {
-        // XXX Just append the rest of the URL to base to get the actual URL to look up.
-			  chromeBase += path;
-    }
-
-    char* finalDecision = chromeBase.ToNewCString();
-    char* search = searchStr.ToNewCString();
-    aChromeURL->SetSpec(finalDecision);
-    if (search && *search) {
-        aChromeURL->SetSearch(search);
-        nsCRT::free(search);
-    }
-}
-#endif 
 
 NS_IMETHODIMP
 nsChromeRegistry::InitRegistry()
@@ -570,6 +447,8 @@ nsChromeRegistry::InitRegistry()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 
+
+        /*
         rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                                 nsnull,
                                                 nsIRDFDataSource::GetIID(),
@@ -590,8 +469,9 @@ nsChromeRegistry::InitRegistry()
 
         rv = remote->Init(innerURI);
         if (NS_FAILED(rv)) return rv;
+        */
     }
-
+    /*
     nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
     if (! remote)
         return NS_ERROR_UNEXPECTED;
@@ -599,7 +479,8 @@ nsChromeRegistry::InitRegistry()
     // We need to read this synchronously.
     nsresult rv = remote->Refresh(PR_TRUE);
     if (NS_FAILED(rv)) return rv;
-    
+    */
+
     return NS_OK;
 }
 
