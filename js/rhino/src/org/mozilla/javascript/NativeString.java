@@ -746,55 +746,55 @@ public class NativeString extends IdScriptable {
     }
 
     private String jsFunction_bold() {
-        return tagify("B", null, null);
+        return tagify("b", null, null);
     }
 
     private String jsFunction_italics() {
-        return tagify("I", null, null);
+        return tagify("i", null, null);
     }
 
     private String jsFunction_fixed() {
-        return tagify("TT", null, null);
+        return tagify("tt", null, null);
     }
 
     private String jsFunction_strike() {
-        return tagify("STRIKE", null, null);
+        return tagify("strike", null, null);
     }
 
     private String jsFunction_small() {
-        return tagify("SMALL", null, null);
+        return tagify("small", null, null);
     }
 
     private String jsFunction_big() {
-        return tagify("BIG", null, null);
+        return tagify("big", null, null);
     }
 
     private String jsFunction_blink() {
-        return tagify("BLINK", null, null);
+        return tagify("blink", null, null);
     }
 
     private String jsFunction_sup() {
-        return tagify("SUP", null, null);
+        return tagify("sup", null, null);
     }
 
     private String jsFunction_sub() {
-        return tagify("SUB", null, null);
+        return tagify("sub", null, null);
     }
 
     private String jsFunction_fontsize(String value) {
-        return tagify("FONT SIZE", "FONT", value);
+        return tagify("font size", "font", value);
     }
 
     private String jsFunction_fontcolor(String value) {
-        return tagify("FONT COLOR", "FONT", value);
+        return tagify("font color", "font", value);
     }
 
     private String jsFunction_link(String value) {
-        return tagify("A HREF", "A", value);
+        return tagify("a href", "a", value);
     }
 
     private String jsFunction_anchor(String value) {
-        return tagify("A NAME", "A", value);
+        return tagify("a name", "a", value);
     }
 
     private static boolean jsFunction_equals(String target, String strOther) {
