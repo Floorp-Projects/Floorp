@@ -25,10 +25,12 @@ Contributor(s):
   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
   Asko Tontti <atontti@cc.hut.fi>
   Rod Spears <rods@netscape.com>
+  Bill Law <law@netscape.com>
 
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/printing.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/printPageSetup.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -41,175 +43,190 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/printPageSetup.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
-  <vbox>
-  <grid>
-    <columns>
-      <column/>
-      <column flex="1"/>
-    </columns>
+  <!-- Localizable strings manipulated at run-time. -->
+  <data id="marginUnits.inches">&marginUnits.inches;</data>
+  <data id="marginUnits.metric">&marginUnits.metric;</data>
+  <data id="customPrompt.title">&customPrompt.title;</data>
+  <data id="customPrompt.prompt">&customPrompt.prompt;</data>
 
-    <rows>
-
-     <row>
-      <hbox align="center" pack="end">
-       <label id="orientationLabel" value="&orientationGroup.label;"/>
-      </hbox>
-      <menulist id="orientation" flex ="1">
-        <menupopup>
-          <menuitem label="&portraitItem.label;" value="0"/>
-          <menuitem label="&landscapeItem.label;" value="1"/>
-        </menupopup>
-      </menulist>
-     </row>
-
-    </rows>
-  </grid>
-
-  <hbox>
-    <checkbox id="printBGColors" label="&printBGColorsInput.label;"/>
-    <checkbox id="printBGImages" label="&printBGImagesInput.label;"/>
-  </hbox>
-
-  <grid>
-    <columns>
-      <column/>
-    </columns>
-    <rows>
-      <row>
-       <groupbox flex="1">
-        <caption label="&marginInput.label;"/>
-        <hbox>
-          <hbox align="center">
-            <label id="topLabel" control="topInput" value="&topInput.label;"/>
-            <textbox id="topInput" style="width:5em;" onkeyup="checkDouble(this)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
-            <textbox id="bottomInput" style="width:5em;" onkeyup="checkDouble(this)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
-            <textbox id="leftInput" style="width:5em;" onkeyup="checkDouble(this)"/>
-          </hbox>
-          <hbox align="center">
-            <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
-            <textbox id="rightInput" style="width:5em;" onkeyup="checkDouble(this)"/>
-          </hbox>
-        </hbox>
+  <tabbox>
+    <tabs>
+      <tab label="&basic.tab;"/>
+      <tab label="&advanced.tab;"/>
+    </tabs>
+    <tabpanels>
+      <tabpanel orient="vertical">
+        <groupbox>
+          <caption label="&formatGroup.label;"/>
+          <vbox>
+            <hbox align="center">
+              <label value="&orientation.label;"/>
+              <radiogroup id="orientation" oncommand="setOrientation()" tabindex="1">
+                <hbox align="center">
+                  <radio id="portrait"  class="portrait-page"  label="&portrait;"/>
+                  <radio id="landscape" class="landscape-page" label="&landscape;"/>
+                </hbox>
+              </radiogroup>
+            </hbox>
+            <separator/>
+            <hbox align="center">
+              <label value="&scale.label;"/>
+              <textbox id="scalingInput" size="4" onfocus="this.select()" oninput="checkDouble(this)" tabindex="1"/>
+              <label value="&scalePercent;"/>
+              <separator/>
+              <checkbox id="shrinkToFit" label="&shrinkToFit.label;" tabindex="1"
+                        oncommand="gDialog.scalingInput.disabled=gDialog.scalingLabel.disabled=this.checked"/>
+            </hbox>
+          </vbox>
         </groupbox>
-      </row>
-
-    </rows>
-  </grid>
-
-  <hbox flex="1">
-    <grid>
-      <columns>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-         <groupbox flex="1">
-          <caption label="&headerInput.label;"/>
-          <grid>
-            <columns>
-              <column/>
-              <column/>
-            </columns>
-            <rows>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="hLeftLabel" control="hLeftInput" value="&leftInput.label;"/>
-                </hbox>
-                <textbox id="hLeftInput" style="width:10em;"/>
-              </row>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="hCenterLabel" control="hCenterInput" value="&centerInput.label;"/>
-                </hbox>
-                <textbox id="hCenterInput" style="width:10em;"/>
-              </row>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="hRightLabel" control="hRightInput" value="&rightInput.label;"/>
-                </hbox>
-                <textbox id="hRightInput" style="width:10em;"/>
-              </row>
-            </rows>
-          </grid>
-          </groupbox>
-        </row>
-
-      </rows>
-    </grid>
-    <grid>
-      <columns>
-        <column/>
-      </columns>
-      <rows>
-        <row>
-         <groupbox flex="1">
-          <caption label="&footerInput.label;"/>
-          <grid>
-            <columns>
-              <column/>
-              <column/>
-            </columns>
-            <rows>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="fLeftLabel" control="fLeftInput" value="&leftInput.label;"/>
-                </hbox>
-                <textbox id="fLeftInput" style="width:10em;"/>
-              </row>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="fCenterLabel" control="fCenterInput" value="&centerInput.label;"/>
-                </hbox>
-                <textbox id="fCenterInput" style="width:10em;"/>
-              </row>
-              <row>
-                <hbox align="center" pack="end">
-                  <label id="fRightLabel" control="fRightInput" value="&rightInput.label;"/>
-                </hbox>
-                <textbox id="fRightInput" style="width:10em;"/>
-              </row>
-            </rows>
-          </grid>
-          </groupbox>
-        </row>
-
-      </rows>
-    </grid>
-    </hbox>
-
-    <hbox>
-     <groupbox>
-      <caption label="&scalingGroup.label;" disabled="true"/>
-      <grid>
-        <columns>
-          <column/>
-          <column/>
-          <column/>
-        </columns>
-        <rows>
-          <row>
+        <groupbox>
+          <caption label="&optionsGroup.label;"/>
+          <checkbox id="printBG" label="&printBG.label;" tabindex="1"/>
+        </groupbox>
+      </tabpanel>
+      <tabpanel orient="vertical">
+        <groupbox>
+          <caption id="marginGroup" label="&marginGroup.label;"/>
+          <vbox>
             <hbox align="center">
-              <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" />
+              <spacer flex="1"/>
+              <label value="&marginTop.label;"/>
+              <textbox id="topInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
+              <!-- This invisible label (with same content as the visible one!) is used
+                   to ensure that the <textbox> is centered above the page.  The same
+                   technique is deployed for the bottom/left/right input fields, below. -->
+              <label value="&marginTop.label;" style="visibility: hidden;"/>
+              <spacer flex="1"/>
             </hbox>
-            <textbox id="scalingInput" style="width:4em;" onkeyup="checkDouble(this)" />
+            <hbox>
+              <spacer flex="1"/>
+              <vbox>
+                <spacer flex="1"/>
+                <label value="&marginLeft.label;"/>
+                <textbox id="leftInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
+                <label value="&marginLeft.label;" style="visibility: hidden;"/>
+                <spacer flex="1"/>
+              </vbox>
+              <!-- The "margin page" draws a simulated printout page with dashed lines
+                   for the margins.  The height/width style attributes of the marginTop,
+                   marginBottom, marginLeft, and marginRight elements are set by
+                   the JS code dynamically based on the user input. -->
+              <vbox id="marginPage" style="height:29.7mm;">
+                <box id="marginTop" style="height:0.05in;"/>
+                <hbox flex="1">
+                  <box id="marginLeft" style="width:0.025in;"/>
+                  <box style="border: 1px; border-style: dashed; border-color: gray;" flex="1"/>
+                  <box id="marginRight" style="width:0.025in;"/>
+                </hbox>
+                <box id="marginBottom" style="height:0.05in;"/>
+              </vbox>
+              <vbox>
+                <spacer flex="1"/>
+                <label value="&marginRight.label;"/>
+                <textbox id="rightInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
+                <label value="&marginRight.label;" style="visibility: hidden;"/>
+                <spacer flex="1"/>
+              </vbox>
+              <spacer flex="1"/>
+            </hbox>
             <hbox align="center">
-              <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" />
+              <spacer flex="1"/>
+              <label value="&marginBottom.label;"/>
+              <textbox id="bottomInput" size="5" oninput="changeMargin(this)" onfocus="this.select()" tabindex="1"/>
+              <label value="&marginBottom.label;" style="visibility: hidden;"/>
+              <spacer flex="1"/>
             </hbox>
-          </row>
-        </rows>
-      </grid>
-      <hrow>
-        <checkbox id="shrinkToFit" label="&shrinkToFitInput.label;" oncommand="doEnableScaling(!this.checked);"/>
-      </hrow>
-      </groupbox>
-    </hbox>
-  </vbox>
-
+          </vbox>
+        </groupbox>
+        <groupbox>
+          <caption id="headersAndFooters" label="&headerFooter.label;"/>
+          <hbox>
+            <vbox>
+              <menulist id="hLeftOption" oncommand="customize(this)" tabindex="2">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+              <vbox align="center">
+                <label value="&hfLeft.label;"/>
+              </vbox>
+              <menulist id="fLeftOption" oncommand="customize(this)" tabindex="3">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+            </vbox>
+            <vbox>
+              <menulist id="hCenterOption" oncommand="customize(this)" tabindex="2">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+              <vbox align="center">
+                <label value="&hfCenter.label;"/>
+              </vbox>
+              <menulist id="fCenterOption" oncommand="customize(this)" tabindex="3">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+            </vbox>
+            <vbox>
+              <menulist id="hRightOption" oncommand="customize(this)" tabindex="2">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+              <vbox align="center">
+                <label value="&hfRight.label;"/>
+              </vbox>
+              <menulist id="fRightOption" oncommand="customize(this)" tabindex="3">
+                <menupopup>
+                  <menuitem value="0" label="&hfBlank;"/>
+                  <menuitem value="1" label="&hfTitle;"/>
+                  <menuitem value="2" label="&hfURL;"/>
+                  <menuitem value="3" label="&hfDateAndTime;"/>
+                  <menuitem value="4" label="&hfPage;"/>
+                  <menuitem value="5" label="&hfPageAndTotal;"/>
+                  <menuitem value="6" label="&hfCustom;"/>
+                </menupopup>
+              </menulist>
+            </vbox>
+          </hbox>
+        </groupbox>
+      </tabpanel>
+    </tabpanels>
+  </tabbox>
+  <separator/>
 </dialog>
 
