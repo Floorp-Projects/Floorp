@@ -744,7 +744,7 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
             this, (const char *) buffer, progressListener.get()));
 #endif
       mProgressStatusFlags = nsIWebProgress::flag_net_start;
-      progressListener->OnChildStatusChange(mDocumentChannel, nsIWebProgress::flag_net_start);  
+      progressListener->OnChildStatusChange(aChannel, nsIWebProgress::flag_net_start);  
     }
   }
 
@@ -968,6 +968,13 @@ NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
       webProgress = do_QueryInterface(docloader);
       webProgress->GetMaxTotalProgress(&invididualProgress);
     }
+    if (invididualProgress < 0) // if one of the elements doesn't know it's size
+                                // then none of them do
+    {
+       *aMaxTotalProgress = -1;
+       break;
+    }
+    else
      *aMaxTotalProgress += invididualProgress;
   }
 
@@ -992,6 +999,11 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* channel, nsISupports* ctxt
   GetMaxTotalProgress(&currentMax);
   GetCurTotalProgress(&currentTotal);
 
+  // if for some reason the max is less than the # we've already processed,
+  // then just assume we really don't know the max 
+  if (currentMax < currentTotal)
+    currentMax = -1;
+
   if (mProgressListener)
     mProgressListener->OnProgressChange(channel, mCurrentSelfProgress, mMaxSelfProgress, 
                                         currentTotal /* current total progress */, currentMax /* max total progress */);
@@ -1000,8 +1012,13 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* channel, nsISupports* ctxt
   GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
   if (parentProgressListener)
   {
-     parentProgressListener->OnChildProgressChange(channel, mCurrentSelfProgress, mMaxSelfProgress);
+    parentProgressListener->OnChildProgressChange(channel, mCurrentSelfProgress, mMaxSelfProgress);
   }
+
+  // we have to inform our parent that our progress changed so the parent can trigger
+  // a OnProgresschange for it's progressListener
+  if (mParent)
+    mParent->ChildProgressChange(this);
 
   return NS_OK;
 }
@@ -1016,3 +1033,9 @@ void nsDocLoaderImpl::ClearInternalProgress()
   mCurrentSelfProgress = 0;
   mMaxSelfProgress = 0;
 }
+
+void nsDocLoaderImpl::ChildProgressChange(nsDocLoaderImpl * aDocLoader)
+{
+   OnProgress(nsnull, nsnull, mCurrentSelfProgress, mMaxSelfProgress);
+}
+

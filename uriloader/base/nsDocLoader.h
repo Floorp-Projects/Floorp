@@ -94,6 +94,10 @@ protected:
     // we don't have one, it will look up the doc loader hierarchy
     // to see if one of our parent doc loaders has one.
     nsresult GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgres);
+    // if a child doc loader's progress changed, they'll call this method
+    // on their parent docloader. this is so the parent knows to trigger OnProgress
+    // on the progress listener
+    void ChildProgressChange(nsDocLoaderImpl * aDocLoader);
 
 protected:
 
