@@ -31,6 +31,6 @@
 <!ENTITY propertiesButton.label      "Properties">
 <!ENTITY propertiesButton.accesskey  "P">
 <!ENTITY composeButton.label         "Compose">
-<!ENTITY composeButton.accesskey     "C">
+<!ENTITY composeButton.accesskey     "e">
 <!ENTITY abSearchDialogTitle.label   "Advanced Address Book Search">
 
