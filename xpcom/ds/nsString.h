@@ -47,6 +47,9 @@
 
 #ifdef NEW_STRING_APIS
 #include "nsAWritableString.h"
+#else
+  #define NS_LITERAL_STRING(s)  (s)
+  #define NS_LITERAL_CSTRING(s) (s)
 #endif
 
 
@@ -67,14 +70,9 @@ public:
   nsCString( const nsAReadableCString& );
 
 #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-  using nsAWritableCString::Assign;
   using nsAWritableCString::Append;
   using nsAWritableCString::Insert;
 #else
- virtual  void Assign( const nsAReadableCString& aReadable ) {
-    nsAWritableCString::Assign(aReadable);
-  }
-
   virtual void Append( const nsAReadableCString& aReadable ) {
     nsAWritableCString::Append(aReadable);
   }
@@ -123,7 +121,7 @@ public:
    * This constructor takes a subsumestr
    * @param   reference to subsumestr
    */
-  nsCString(nsSubsumeCStr& aSubsumeStr);   
+  nsCString(nsSubsumeCStr& aSubsumeStr);
 
   /**
    * Destructor
@@ -394,13 +392,6 @@ public:
    *********************************************************************/
 
   /**
-   * Functionally equivalent to assign or operator=
-   * 
-   */
-  nsCString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-  nsCString& SetString(const nsStr& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-
-  /**
    * assign given string to this string
    * @param   aStr: buffer to be assigned to this 
    * @param   aCount is the length of the given str (or -1) if you want me to determine its length
@@ -408,11 +399,35 @@ public:
    *
    * @return  this
    */
-  nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
+#ifdef NEW_STRING_APIS
+#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
+  using nsAWritableCString::Assign;
+#else
+ virtual  void Assign( const nsAReadableCString& aReadable ) {
+    nsAWritableCString::Assign(aReadable);
+  }
+#endif
+#endif
   nsCString& Assign(const char* aString,PRInt32 aCount=-1);
-  nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
-  nsCString& Assign(PRUnichar aChar);
   nsCString& Assign(char aChar);
+
+  void AssignWithConversion(const PRUnichar*,PRInt32=-1);
+  void AssignWithConversion(PRUnichar);
+
+#ifndef NEW_STRING_APIS
+  nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
+  nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
+  nsCString& Assign(PRUnichar aChar)                            { AssignWithConversion(aChar); return *this; }
+#endif
+
+  /**
+   * Functionally equivalent to assign or operator=
+   * 
+   */
+  nsCString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+#ifndef NEW_STRING_APIS
+  nsCString& SetString(const nsStr& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+#endif
 
   /**
    * here come a bunch of assignment operators...
@@ -426,20 +441,20 @@ public:
     nsCString& operator=( const nsAReadableCString& aReadable ) { nsAWritableCString::operator=(aReadable); return *this; }
   #endif
 #endif
-  nsCString& operator=(PRUnichar aChar) {return Assign(aChar);}
-  nsCString& operator=(char aChar) {return Assign(aChar);}
-  nsCString& operator=(const PRUnichar* aString) {return Assign(aString);}
+  nsCString& operator=(PRUnichar aChar)           {return Assign(aChar);}
+  nsCString& operator=(char aChar)                {AssignWithConversion(aChar); return *this;}
+  nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
 
 #ifndef NEW_STRING_APIS
-  nsCString& operator=(const nsCString& aString) {return Assign(aString);}
-  nsCString& operator=(const nsStr& aString) {return Assign(aString);}
-  nsCString& operator=(const char* aCString) {return Assign(aCString);}
+  nsCString& operator=(const nsCString& aString)  {return Assign(aString);}
+  nsCString& operator=(const nsStr& aString)      {return Assign(aString);}
+  nsCString& operator=(const char* aCString)      {return Assign(aCString);}
+#endif
   #ifdef AIX
   nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX requires a const here
   #else
   nsCString& operator=(nsSubsumeCStr& aSubsumeString);
   #endif
-#endif
 
   /**
    * Here's a bunch of methods that append varying types...
@@ -778,6 +793,7 @@ public:
 #else
     nsCAutoString(nsSubsumeCStr& aSubsumeStr);
 #endif // AIX
+
     nsCAutoString(PRUnichar aChar);
     virtual ~nsCAutoString();
 
