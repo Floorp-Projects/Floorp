@@ -77,9 +77,10 @@ protected:
   float                 mHeightFloat;
   PRInt32               mWidth;
   PRInt32               mHeight;
-  PRInt32		mStupid;
-  nsIDeviceContextSpec  *mSpec;
+  PRInt32		        mStupid;		/* do we really need this?? */
 
+  nsIDeviceContextSpec  *mSpec;
+  nsNativeDeviceContext mDC;
 public:
 //  HDC                   mDC;
 };
