@@ -1546,6 +1546,24 @@ PK11_KeyForCertExists(CERTCertificate *cert, CK_OBJECT_HANDLE *keyPtr,
     return slot;
 
 }
+/*
+ * import a cert for a private key we have already generated. Set the label
+ * on both to be the nickname. This is for the Key Gen, orphaned key case.
+ */
+PK11SlotInfo *
+PK11_KeyForDERCertExists(SECItem *derCert, CK_OBJECT_HANDLE *keyPtr, 
+								void *wincx) {
+    CERTCertificate *cert;
+    PK11SlotInfo *slot = NULL;
+
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), derCert, NULL,
+	                                   PR_FALSE, PR_TRUE);
+    if (cert == NULL) return NULL;
+
+    slot = PK11_KeyForCertExists(cert, keyPtr, wincx);
+    CERT_DestroyCertificate (cert);
+    return slot;
+}
 
 PK11SlotInfo *
 PK11_ImportCertForKey(CERTCertificate *cert, char *nickname,void *wincx) {
