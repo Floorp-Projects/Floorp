@@ -43,7 +43,7 @@ private:
 private:
   NS_IMETHOD Run(void) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD GetNativeEvent(void *& aEvent,
-                            nsIWidget* aWidget,
+                            nsIWebShellWindow* aWidget,
                             PRBool &aIsInWindow,
                             PRBool &aIsMouseEvent)
     { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -53,27 +53,27 @@ private:
   NS_IMETHOD Shutdown(void)
     { return NS_ERROR_NOT_IMPLEMENTED; }
 
-  NS_IMETHOD CreateTopLevelWindow(nsIWidget * aParent,
+  NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight)
     { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD CreateDialogWindow(  nsIWidget * aParent,
+  NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult,
+                                  nsIWebShellWindow*& aResult,
                                   nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight)
     { return NS_ERROR_NOT_IMPLEMENTED; }
   
-  NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow)
+  NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow)
     { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow)
+  NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
     { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow)
+  NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
     { return NS_ERROR_NOT_IMPLEMENTED; }
 
 };

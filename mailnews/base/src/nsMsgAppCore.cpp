@@ -318,7 +318,7 @@ nsMsgAppCore::Open3PaneWindow()
 									  nsIAppShellService::GetIID(),
 									  (nsISupports**)&appShell);
 	nsIURL* url;
-	nsIWidget* newWindow;
+	nsIWebShellWindow* newWindow;
   
 	rv = NS_NewURL(&url, urlstr);
 	if (NS_FAILED(rv)) {

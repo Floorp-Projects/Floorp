@@ -85,9 +85,8 @@ nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &
   aIsInWindow = PR_TRUE;
   static MSG msg;
   BOOL isOK = GetMessage(&msg, NULL, 0, 0);
-  if (msg.message != 275) {
-    printf("-> %d\n", msg.message);
-  }
+  if (msg.message != WM_TIMER)
+    printf("-> %d", msg.message);
 
   if (isOK) {
     TranslateMessage(&msg);
@@ -130,7 +129,7 @@ nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &
         }
         */
         if (win == eWin) {
-          printf("Short circut\n");
+          printf(" Short circut");
           aIsInWindow = PR_TRUE;
         } else {
           RECT r;
@@ -143,6 +142,8 @@ nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &
         }
       }
     }
+    printf("%s%s", aIsMouseEvent ? "mouse " : "", aIsInWindow ? "window" : "");
+    printf("\n");
     return NS_OK;
   }
   return NS_ERROR_FAILURE;

@@ -547,7 +547,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
     if (NS_FAILED(rv)) return rv;
 
 	nsIURL* url;
-	nsIWidget* newWindow;
+	nsIWebShellWindow* newWindow;
   
 	rv = NS_NewURL(&url, aUrl);
 	if (NS_FAILED(rv)) {

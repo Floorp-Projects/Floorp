@@ -69,24 +69,24 @@ public:
 
   NS_IMETHOD Initialize(void);
   NS_IMETHOD Run(void);
-  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
+  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
   NS_IMETHOD DispatchNativeEvent(void * aEvent);
   NS_IMETHOD Shutdown(void);
-  NS_IMETHOD CreateTopLevelWindow(nsIWidget * aParent,
+  NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD CreateDialogWindow(  nsIWidget * aParent,
+  NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow);
-  NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow);
-  NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow);
+  NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow);
+  NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow);
+  NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow);
 
 
 protected:
@@ -179,9 +179,13 @@ nsAppShellService::Run(void)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+nsAppShellService::GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
 {
-  return mAppShell->GetNativeEvent(aEvent, aWidget, aIsInWindow, aIsMouseEvent);
+  nsIWidget *windowWidget = nsnull;
+  if (aWindow != nsnull)
+    if (NS_FAILED(aWindow->GetWidget(windowWidget)))
+      windowWidget = nsnull;
+  return mAppShell->GetNativeEvent(aEvent, windowWidget, aIsInWindow, aIsMouseEvent);
 }
 
 NS_IMETHODIMP
@@ -239,9 +243,9 @@ nsAppShellService::Shutdown(void)
  * @param aInitialHeight - height of window, in pixels (currently unused)
  */
 NS_IMETHODIMP
-nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
+nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                         nsIURL* aUrl, nsString& aControllerIID,
-                                        nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                        nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                         nsIXULWindowCallbacks *aCallbacks,
                                         PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
@@ -254,12 +258,12 @@ nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
-    rv = window->Initialize((nsIWidget *) nsnull, mAppShell, aUrl, aControllerIID,
+    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl, aControllerIID,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
-      aResult = window->GetWidget();
-      RegisterTopLevelWindow(aResult);
+      rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
+      RegisterTopLevelWindow(window);
       window->Show(PR_TRUE);
     }
   }
@@ -269,19 +273,11 @@ nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
 
 
 NS_IMETHODIMP
-nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
+nsAppShellService::CloseTopLevelWindow(nsIWebShellWindow* aWindow)
 {
   nsresult closerv, unregrv;
-  void     *data;
 
-  aWindow->GetClientData(data);
-  if (data == nsnull)
-    closerv = NS_ERROR_NULL_POINTER;
-  else {
-    nsWebShellWindow* window = (nsWebShellWindow *) data;
-    closerv = window->Close();
-  }
-
+  closerv = aWindow->Close();
   unregrv = UnregisterTopLevelWindow(aWindow);
   if (0 == mWindowList->Count())
     mAppShell->Exit();
@@ -296,9 +292,9 @@ nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
  * can't affect attributes like window type.
  */
 NS_IMETHODIMP
-nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
+nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
                                       nsIURL* aUrl, nsString& aControllerIID,
-                                      nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                      nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
@@ -311,12 +307,12 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
   } else {
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
-    rv = window->Initialize((nsIWidget *) nsnull, mAppShell, aUrl, aControllerIID,
+    rv = window->Initialize((nsIWebShellWindow *) nsnull, mAppShell, aUrl, aControllerIID,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
-      aResult = window->GetWidget();
-      RegisterTopLevelWindow(aResult);
+      rv = window->QueryInterface(kIWebShellWindowIID, (void **) &aResult);
+      RegisterTopLevelWindow(window);
       window->Show(PR_TRUE);
     }
   }
@@ -330,44 +326,30 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
  */
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 NS_IMETHODIMP
-nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
+nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
 {
   nsresult rv;
-  void* data;
 
-  aWindow->GetClientData(data);
-  if (data == nsnull)
-    rv = NS_ERROR_NULL_POINTER;
-  else {
-    nsWebShellWindow* window = (nsWebShellWindow *) data;
-    nsIWebShellContainer* wsc;
-    rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
-    if (NS_SUCCEEDED(rv)) {
-      mWindowList->AppendElement(wsc);
-      NS_RELEASE(wsc);
-    }
+  nsIWebShellContainer* wsc;
+  rv = aWindow->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+  if (NS_SUCCEEDED(rv)) {
+    mWindowList->AppendElement(wsc);
+    NS_RELEASE(wsc);
   }
   return rv;
 }
 
 
 NS_IMETHODIMP
-nsAppShellService::UnregisterTopLevelWindow(nsIWidget* aWindow)
+nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 {
   nsresult rv;
-  void* data;
 
-  aWindow->GetClientData(data);
-  if (data == nsnull)
-    rv = NS_ERROR_NULL_POINTER;
-  else {
-    nsWebShellWindow* window = (nsWebShellWindow *) data;
-    nsIWebShellContainer* wsc;
-    rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
-    if (NS_SUCCEEDED(rv)) {
-      mWindowList->RemoveElement(wsc);
-      NS_RELEASE(wsc);
-    }
+  nsIWebShellContainer* wsc;
+  rv = aWindow->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
+  if (NS_SUCCEEDED(rv)) {
+    mWindowList->RemoveElement(wsc);
+    NS_RELEASE(wsc);
   }
   return rv;
 }
