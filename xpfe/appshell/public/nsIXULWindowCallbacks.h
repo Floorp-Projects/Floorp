@@ -21,11 +21,13 @@
 #define nsIXULWindowCallbacks_h__
 
 #include "nsISupports.h"
+class nsIWebShell;
 
 // Interface ID for nsIXULWindowCallbacks_h__
 // {ACE54DD1-CCF5-11d2-81BC-0060083A0BCF}
 #define NS_IXULWINDOWCALLBACKS_IID \
  { 0xace54dd1, 0xccf5, 0x11d2, { 0x81, 0xbc, 0x0, 0x60, 0x8, 0x3a, 0xb, 0xcf } }
+
 
 class nsIXULWindowCallbacks : public nsISupports
 {
