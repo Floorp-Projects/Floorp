@@ -73,9 +73,10 @@ EXPORT_RESOURCE_SAMPLES	:= \
 EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
 
 TOOLKIT_CPPSRCS_beos	:= nsBeOSMain.cpp
-TOOLKIT_CPPSRCS_gtk	:= nsGTKMain.cpp nsGTKMenu.cpp
-TOOLKIT_CPPSRCS_motif	:= nsMotifMenu.cpp nsMotifMain.cpp
 TOOLKIT_CPPSRCS_photon	:= nsPhMain.cpp nsPhMenu.cpp
+
+TOOLKIT_CPPSRCS_gtk		:= nsGTKMain.cpp nsGTKMenu.cpp
+TOOLKIT_CPPSRCS_motif	:= nsMotifMenu.cpp nsMotifMain.cpp
 TOOLKIT_CPPSRCS_xlib	:= nsXlibMain.cpp
 TOOLKIT_CPPSRCS_qt		:= nsQTMain.cpp nsQTMenu.cpp moc_nsQTMenu.cpp
 
