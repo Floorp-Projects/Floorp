@@ -649,7 +649,7 @@ nsRegistryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, P
             rv = gRDF->GetResource(propertyStr, getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
-            if (aArc == property) {
+            if (aArc == property.get()) {
                 *result = PR_TRUE;
                 return NS_OK;
             }
