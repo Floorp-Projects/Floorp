@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsILocale.h"
 
 // {D4CF2F80-A98B-11d2-9119-006008A6EDF6}
 #define NS_ICOLLATIONFACTORY_IID \
@@ -37,7 +38,7 @@
 typedef enum {
   kCollationStrengthDefault = 0,      // use the primary comparison for the given local - no flags) 
   kCollationCaseInsensitiveAscii = 1, // do not consider case differences when doing the comparison i.e. A=a) 
-  kCollationAccentInsenstive = 16,    // do not consider accent differences when doing the comparison a=á) 
+  kCollationAccentInsenstive = 2,     // do not consider accent differences when doing the comparison a=á) 
   kCollationCaseSensitive = kCollationStrengthDefault,
   kCollationCaseInSensitive = (kCollationCaseInsensitiveAscii | kCollationAccentInsenstive)
 } nsCollationStrength;
@@ -51,7 +52,7 @@ class nsICollationFactory : public nsISupports {
 
 public: 
 
-  NS_IMETHOD CreateCollation(const nsString& locale, nsICollation** instancePtr) = 0;
+  NS_IMETHOD CreateCollation(nsILocale* locale, nsICollation** instancePtr) = 0;
 };
 
 // Locale sensitive collation interface
@@ -83,7 +84,7 @@ public:
 
   // init this interface to a specified locale (should only be called by collation factory)
   //
-  NS_IMETHOD Initialize(const nsString& locale) = 0;
+  NS_IMETHOD Initialize(nsILocale* locale) = 0;
 };
 
 #endif  /* nsICollation_h__ */

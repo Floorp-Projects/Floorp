@@ -38,7 +38,7 @@ nsCollationWin::~nsCollationWin()
     delete mCollation;
 }
 
-nsresult nsCollationWin::Initialize(const nsString& locale) 
+nsresult nsCollationWin::Initialize(nsILocale* locale) 
 {
   mCollation = new nsCollation;
   if (mCollation == NULL) {

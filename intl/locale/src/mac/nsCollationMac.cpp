@@ -37,7 +37,7 @@ nsCollationMac::~nsCollationMac()
     delete mCollation;
 }
 
-nsresult nsCollationMac::Initialize(const nsString& locale) 
+nsresult nsCollationMac::Initialize(nsILocale* locale) 
 {
   mCollation = new nsCollation;
   if (mCollation == NULL) {

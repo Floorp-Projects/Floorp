@@ -22,7 +22,7 @@ NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
 
-nsresult nsDateTimeFormatUnix::FormatTime(const nsString& locale, 
+nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale, 
                                       const nsDateFormatSelector  dateFormatSelector, 
                                       const nsTimeFormatSelector timeFormatSelector, 
                                       const time_t  timetTime, 
@@ -32,7 +32,7 @@ nsresult nsDateTimeFormatUnix::FormatTime(const nsString& locale,
 }
 
 // performs a locale sensitive date formatting operation on the struct tm parameter
-nsresult nsDateTimeFormatUnix::FormatTMTime(const nsString& locale, 
+nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale, 
                                         const nsDateFormatSelector  dateFormatSelector, 
                                         const nsTimeFormatSelector timeFormatSelector, 
                                         const struct tm*  tmTime, 
