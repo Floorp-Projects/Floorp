@@ -31,11 +31,13 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
 		title="&messengerWindow.title;"
-        titlemodifier="Mozilla"
-        titlemodifierseperator=" - "
+        titlemodifier="&titleModifier.label;"
+        titlemodifierseperator="&titleSeperator.label;"
 		onload="OnLoadMessenger()"
 		onunload="OnUnloadMessenger()"
 		align="vertical"
+        width="800"
+        height="600"
         persist="width height x y"
 		windowtype="mail:3pane">
 

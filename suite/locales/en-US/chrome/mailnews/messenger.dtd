@@ -19,6 +19,8 @@ Rights Reserved.
 --> 
 
 <!ENTITY messengerWindow.title "Messenger">
+<!ENTITY titleModifier.label "Mozilla">
+<!ENTITY titleSeperator.label " - ">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
