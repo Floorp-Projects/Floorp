@@ -49,6 +49,7 @@
 
 <overlay id="viewSourceOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
