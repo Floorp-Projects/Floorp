@@ -4832,21 +4832,16 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
 }
 
 /* helper method for determining if this is a nested table or not */
+// aReflowState must be the reflow state for this inner table frame, should have an assertion here for that
 PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const
 {
   PRBool result = PR_FALSE;
-#ifdef NS_DEBUG
-  PRInt32 counter=0;
-#endif
   // Walk up the reflow state chain until we find a cell or the root
-  const nsReflowState* rs = aReflowState.parentReflowState;
+  const nsReflowState* rs = aReflowState.parentReflowState; // this is for the outer frame
+  if (rs)
+    rs = rs->parentReflowState;  // and this is the parent of the outer frame
   while (nsnull != rs) 
   {
-#ifdef NS_DEBUG
-    counter++;
-    NS_ASSERTION(counter<100000, "infinite loop in IsNested");
-    break;
-#endif
     const nsStyleDisplay *display;
     rs->frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)

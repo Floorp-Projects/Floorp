@@ -91,7 +91,12 @@ public:
   /** @see nsIFrame::DeleteFrame */
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
-  /** helper method for determining if this is a nested table or not */
+  /** helper method for determining if this is a nested table or not 
+    * @param aReflowState The reflow state for this inner table frame
+    * @param aPosition    [OUT] The position style struct for the parent table, if nested.
+    *                     If not nested, undefined.
+    * @return  PR_TRUE if this table is nested inside another table.
+    */
   PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
