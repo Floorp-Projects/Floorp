@@ -1566,6 +1566,15 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
     XP_FREE(value_array[1]);
 }
 
+PUBLIC void
+SI_RememberSignonDataFromBrowser
+    (MWContext *context,char* URLName, char* username, char* password)
+{
+    if (si_OkToSave(context, URLName, username)) {
+	si_RememberSignonDataFromBrowser (URLName, username, password);
+    }
+}
+
 /*
  * Check for remembered data from a previous browser-generated password dialog
  * restore it if so
@@ -1600,6 +1609,17 @@ si_RestoreOldSignonDataFromBrowser
 	}
     }
     si_unlock_signon_list();
+}
+
+PUBLIC void
+SI_RestoreOldSignonDataFromBrowser
+    (MWContext *context, char* URLName, Bool pickFirstUser,
+    char** username, char** password)
+{
+    if (si_GetSignonRememberingPref()){
+	si_RestoreOldSignonDataFromBrowser
+	    (context, URLName, pickFirstUser, username, password);
+    }
 }
 
 /* Browser-generated prompt for user-name and password */
@@ -2195,8 +2215,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 	    url->URLName,
 	    data->value
 	    );
+	    FLUSH_BUFFER
+	    signonNum++;
 	}
-	FLUSH_BUFFER
     }
 
     /* generate next section of html file */
