@@ -374,3 +374,4 @@ nsXULWindow* nsContentTreeOwner::XULWindow()
 {
    return mXULWindow;
 }
+
