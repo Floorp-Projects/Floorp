@@ -21,6 +21,7 @@
  */
 #include "jsstddef.h"
 #include <math.h>
+#include <string.h>
 #include <stdlib.h>
 #include "jstypes.h"
 #include "jsprf.h"
