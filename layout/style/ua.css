@@ -950,19 +950,18 @@ sourcetext {
  border: 1px solid blue;
 } 
 
-
-:combobox-text {
+:-moz-combobox-text {
   color: black;
   padding-left: 2px;
 }
 
-:combobox-textselected {
+:-moz-combobox-textselected {
   background-color: rgb(0,0,128);
   color: white;
   border: 1px solid rgb(0,0,128);
 }
 
-:combobox-textselectedfocus {
+:-moz-combobox-textselectedfocus {
   background-color: rgb(0,0,128);
   color: white;
   border: 1px dotted white;

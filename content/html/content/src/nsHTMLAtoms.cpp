@@ -75,6 +75,9 @@ nsIAtom* nsHTMLAtoms::colgroup;
 nsIAtom* nsHTMLAtoms::cols;
 nsIAtom* nsHTMLAtoms::colspan;
 nsIAtom* nsHTMLAtoms::columnPseudo;
+nsIAtom* nsHTMLAtoms::comboText;
+nsIAtom* nsHTMLAtoms::comboTextSelected;
+nsIAtom* nsHTMLAtoms::comboTextSelectedFocus;
 nsIAtom* nsHTMLAtoms::commentPseudo;
 nsIAtom* nsHTMLAtoms::compact;
 nsIAtom* nsHTMLAtoms::content;
@@ -340,6 +343,9 @@ void nsHTMLAtoms::AddrefAtoms()
     cols = NS_NewAtom("cols");
     colspan = NS_NewAtom("colspan");
     columnPseudo = NS_NewAtom(":body-column");
+    comboText = NS_NewAtom(":-moz-combobox-text");
+    comboTextSelected = NS_NewAtom(":-moz-combobox-textselected");
+    comboTextSelectedFocus = NS_NewAtom(":-moz-combobox-textselectedfocus");
     commentPseudo = NS_NewAtom(":-moz-comment");
     compact = NS_NewAtom("compact");
     content = NS_NewAtom("content");
@@ -358,6 +364,7 @@ void nsHTMLAtoms::AddrefAtoms()
     dropDownBtnOut   = NS_NewAtom(":-moz-dropdown-btn-out");
     dropDownBtnPressed = NS_NewAtom(":-moz-dropdown-btn-pressed");
     dropDownList = NS_NewAtom(":-moz-dropdown-list");
+   
     datetime = NS_NewAtom("datetime");
     data = NS_NewAtom("data");
     embed = NS_NewAtom("embed");
@@ -603,6 +610,9 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(cols);
     NS_RELEASE(colspan);
     NS_RELEASE(columnPseudo);
+    NS_RELEASE(comboText); 
+    NS_RELEASE(comboTextSelected);
+    NS_RELEASE(comboTextSelectedFocus);
     NS_RELEASE(commentPseudo);
     NS_RELEASE(compact);
     NS_RELEASE(content);

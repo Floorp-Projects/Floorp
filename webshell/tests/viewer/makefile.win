@@ -151,6 +151,12 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test13.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test14.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test15.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test16.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\demoform.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\mozform.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\aform.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\bform.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\cform.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_gfx.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_lbox.html $(DIST)\bin\res\samples
@@ -220,6 +226,12 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\test10.html
 	rm -f $(DIST)\bin\res\samples\test11.html
 	rm -f $(DIST)\bin\res\samples\test12.html
+	rm -f $(DIST)\bin\res\samples\test16.html
+	rm -f $(DIST)\bin\res\samples\demoform.css
+	rm -f $(DIST)\bin\res\samples\mozform.css
+	rm -f $(DIST)\bin\res\samples\aform.css
+	rm -f $(DIST)\bin\res\samples\bform.css
+	rm -f $(DIST)\bin\res\samples\cform.css
 	rm -f $(DIST)\bin\res\samples\test_pr.html
 	rm -f $(DIST)\bin\res\samples\test_gfx.html
 	rm -f $(DIST)\bin\res\samples\test_lbox.html

@@ -96,6 +96,9 @@ public:
   static nsIAtom* cols;
   static nsIAtom* colspan;
   static nsIAtom* columnPseudo;
+  static nsIAtom* comboText;
+  static nsIAtom* comboTextSelected;
+  static nsIAtom* comboTextSelectedFocus;
   static nsIAtom* commentPseudo;
   static nsIAtom* compact;
   static nsIAtom* content;

@@ -1,0 +1,49 @@
+
+input[type="checkbox"] {
+ -moz-border-radius:4px; 
+ width:12px; 
+ height:12px; 
+ border:2px outset; 
+ background-color:rgb(200, 200, 200);
+}
+
+input[type="radio"] {
+ width:12px; 
+ height:12px; 
+ border:2px inset; 
+ background-color:rgb(230, 230, 230);
+}
+
+input[type=button] {
+ padding-left:10px; 
+ padding-right:10px; 
+ -moz-border-radius:4px;
+ border-color:rgb(230, 230, 230);
+}
+
+select {
+  -moz-border-radius:0px;
+  border-color:rgb(230, 230, 230);
+  border-width:2px;
+  border-style:inset;
+  background-color:white;
+}
+
+:-moz-dropdown-list {
+  border-color:black;
+  -moz-border-radius:4px;
+  background-color:rgb(200, 200, 200);
+}
+
+option {
+  padding-left:5px; 
+  padding-right:5px;
+}
+
+option[-moz-option-selected] {
+  color:white;
+  background-color:rgb(0, 0, 100);
+  padding-left:5px; 
+  padding-right:5px;
+}
+  

@@ -20,29 +20,18 @@
 #define nsListControlFrame_h___
 
 #include "nsScrollFrame.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIPresContext.h"
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
-
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLOptionElement;
-class nsFormFrame;
-class nsScrollFrame;
 class nsIComboboxControlFrame;
-class nsVoidArray;
-
 
 /**
- * The block frame has two additional named child lists:
- * - "Floater-list" which contains the floated frames
- * - "Bullet-list" which contains the bullet frame
- *
- * @see nsLayoutAtoms::bulletList
- * @see nsLayoutAtoms::floaterList
+ * Frame-based listbox.
  */
+
 class nsListControlFrame : public nsScrollFrame, 
                            public nsIFormControlFrame, 
                            public nsIListControlFrame
@@ -53,16 +42,13 @@ public:
    // nsISupports
   NS_DECL_ISUPPORTS
 
- // nsISupports overrides
- // NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus& aEventStatus);
-
   // nsIFrame
+ 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -84,9 +70,6 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-  /*virtual nsresult Focus(nsIDOMEvent* aEvent);
-  virtual nsresult Blur(nsIDOMEvent* aEvent); */
- 
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
 
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
@@ -96,16 +79,10 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
-
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
-
-
-
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
 
 
@@ -118,24 +95,16 @@ public:
   // nsIFormControlFrame
   /////////////////////////
   NS_IMETHOD GetType(PRInt32* aType) const;
-
   NS_IMETHOD GetName(nsString* aName);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  
   virtual void MouseClicked(nsIPresContext* aPresContext);
-
   virtual void Reset();
-
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-
   virtual PRInt32 GetMaxNumValues();
-
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                  nsString* aValues, nsString* aNames);
-
   virtual void SetFormFrame(nsFormFrame* aFrame);
-
  
   // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
@@ -150,11 +119,17 @@ public:
   static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint32 aIndex);
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
-  nsIContent*                 GetOptionContent(PRUint32 aIndex);
+  nsIContent* GetOptionContent(PRUint32 aIndex);
+  PRBool IsContentSelected(nsIContent* aContent);
   PRBool IsFrameSelected(PRUint32 aIndex);
   void   SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
  
 protected:
+   // nsScrollFrame overrides
+   // Override the widget created for the list box so a Borderless top level widget is created
+   // for drop-down lists.
+  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+
   nsListControlFrame();
   virtual ~nsListControlFrame();
 
@@ -167,26 +142,20 @@ protected:
                                  nsIFrame**     aFrame);
 
   // Utility methods
-
+  PRBool IsInDropDownMode();
   PRBool IsOptionElement(nsIContent* aContent);
   PRBool IsOptionElementFrame(nsIFrame *aFrame);
   nsIFrame *GetSelectableFrame(nsIFrame *aFrame);
   void DisplaySelected(nsIContent* aContent); 
   void DisplayDeselected(nsIContent* aContent); 
-  void ForceRedraw(nsIContent* aContent);
+  void ForceRedraw();
   PRBool IsOptionGroup(nsIFrame* aFrame);
   void SingleSelection();
   void MultipleSelection(PRBool aIsShift, PRBool aIsControl);
   void SelectIndex(PRInt32 aIndex); 
-  void ToggleSelected(PRInt32 aIndex, nsIContent *aContent);
-  void SetSelectedIndex(PRInt32 aIndex, nsIContent *aContent);
-  void SetContentSelectedAttribute(PRUint32 aIndex, PRBool aSelected);
-
-  // nsHTMLContainerFrame overrides
- 
+  void ToggleSelected(PRInt32 aIndex);
   void ClearSelection();
-  void InitializeFromContent(PRBool aDoDisplay);
-
+  void InitializeFromContent();
   void ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
 
   NS_IMETHOD HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
@@ -202,18 +171,15 @@ protected:
   nsFormFrame* mFormFrame;
   PRInt32      mNumRows;
   PRInt32      mNumSelections;
-  PRInt32      mMaxNumSelections;
   PRBool       mMultipleSelections;
   PRInt32      mSelectedIndex;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
-  nsIFrame   * mHitFrame;
-  nsIContent * mHitContent;
+  nsIFrame*    mHitFrame;
   PRBool       mIsInitializedFromContent;
-  nsIFrame *   mContentFrame;
-  PRBool       mInDropDownMode;
-  nsIComboboxControlFrame * mComboboxFrame;
-  nsString     mSelectionStr;
+  nsIFrame*    mContentFrame;
+  nsIComboboxControlFrame *mComboboxFrame;
+  PRBool       mDisplayed;
 };
 
 #endif /* nsListControlFrame_h___ */

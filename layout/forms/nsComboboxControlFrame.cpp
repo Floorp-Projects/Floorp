@@ -64,6 +64,18 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID,  NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID,  NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
 
+// Drop down list event management.
+// The combo box uses the following strategy for managing the
+// drop-down list.
+// If the combo box or it's arrow button is clicked on the drop-down list is displayed
+// If mouse exit's the combo box with the drop-down list displayed the drop-down list
+// is asked to capture events
+// The drop-down list will capture all events including mouse down and up and will always
+// return with ListWasSelected method call regardless of whether an item in the list was
+// actually selected.
+// The ListWasSelected code will turn off mouse-capture for the drop-down list.
+// The drop-down list does not explicitly set capture when it is in the drop-down mode.
+
 nsresult
 NS_NewComboboxControlFrame(nsIFrame** aNewFrame)
 {
@@ -313,6 +325,7 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
   }
 
+
   if (mFirstTime) {
     ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull); // XXX This temporary
     mListFrame->ReResolveStyleContext(&aPresContext, mCurrentStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
@@ -320,16 +333,13 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
     InitTextStr();
   }
 
- 
   PRInt32 numChildren = mFrames.GetLength();
   
   if (1 == numChildren) {
-    nsIAtom * textBlockContentPseudo = NS_NewAtom(":combobox-text");
-    aPresContext.ResolvePseudoStyleContextFor(mContent, textBlockContentPseudo,
+    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::comboText,
                                               mStyleContext, PR_FALSE,
                                               &mBlockTextStyle);
-    NS_RELEASE(textBlockContentPseudo);
-
+ 
     // XXX This code should move to Init(), someday when the frame construction
     // changes are all done and Init() is always getting called...
     /*PRBool disabled = */nsFormFrame::GetDisabled(this);
@@ -464,7 +474,6 @@ nsComboboxControlFrame::PaintComboboxControl(nsIPresContext&      aPresContext,
     const nsStyleColor*   myColor   = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     const nsStyleFont*    myFont    = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
 
     nsIStyleContext * blkStyle;
     if (mGotFocus) {
@@ -696,19 +705,9 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     //to memory that has been freed, by the RefreshStyleContext above.
     mArrowStyle = mBtnOutStyleContext;
 
-    nsIAtom * txtBlkContentPseudo = NS_NewAtom(":combobox-text");
-    RefreshStyleContext(aPresContext, txtBlkContentPseudo, mBlockTextStyle, mContent, mStyleContext);
-    NS_IF_RELEASE(txtBlkContentPseudo);
-
-    nsIAtom * txtBlkSelContentPseudo = NS_NewAtom(":combobox-textselected");
-    RefreshStyleContext(aPresContext, txtBlkSelContentPseudo, mBlockTextSelectedStyle, mContent, mStyleContext);
-    NS_IF_RELEASE(txtBlkSelContentPseudo);
-
-    nsIAtom * txtBlkSelFocContentPseudo = NS_NewAtom(":combobox-textselectedfocus");
-    RefreshStyleContext(aPresContext, txtBlkSelFocContentPseudo, mBlockTextSelectedFocusStyle, mContent, mStyleContext);
-    NS_IF_RELEASE(txtBlkSelFocContentPseudo);
-
-
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::comboText, mBlockTextStyle, mContent, mStyleContext);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::comboTextSelected, mBlockTextSelectedStyle, mContent, mStyleContext);
+    RefreshStyleContext(aPresContext, nsHTMLAtoms::comboTextSelectedFocus, mBlockTextSelectedFocusStyle, mContent, mStyleContext);
   }
 
   return rv;
@@ -720,7 +719,9 @@ NS_IMETHODIMP nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                                    nsEventStatus&  aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_EXIT) {
-    if (mArrowStyle == mBtnPressedStyleContext) {
+     // If dropdown is visible and we have exited the combo box then leave the
+     // list up and have the listbox capture all of the mouse events.
+    if (mCurrentStyleContext == mVisibleStyleContext) {
       mListControlFrame->CaptureMouseEvents(PR_TRUE);
     }
   }
@@ -816,6 +817,8 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
     }
     SetFocus(PR_TRUE, PR_TRUE);    
   }
+ 
+  mListControlFrame->CaptureMouseEvents(PR_FALSE);
 
   return NS_OK;
 }
