@@ -1,40 +1,28 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Sun Microsystems,
- * Inc. Portions created by Sun are
- * Copyright (C) 1999 Sun Microsystems, Inc. All
- * Rights Reserved.
- *
- * Contributor(s): 
- */
 #include "nsISupports.idl"
 
 [scriptable, uuid(e284f6a0-b701-11d3-ad26-005004159574)]
 interface nsIRPCTestOut : nsISupports
 {
-    void test1(out boolean bool);
-    void test2(out octet oct);
-    void test3(out short s);
-    void test4(out long l);
-    void test5(out long long ll);
-    void test6(out unsigned short us);
-    void test7(out unsigned long ul);
-    void test8(out unsigned long long ull);
-    void test9(out float f);
-    void test10(out double d);
-    void test11(out char c);
-    void test12(out wchar wc);
-    void test13(out string str);
-//    void test14(out wstring wstr);
+    void testOut1(out boolean bool);
+    void testOut2(out octet oct);
+    void testOut3(out short s);
+    void testOut4(out long l);
+    void testOut5(out long long ll);
+    void testOut6(out unsigned short us);
+    void testOut7(out unsigned long ul);
+    void testOut8(out unsigned long long ull);
+    void testOut9(out float f);
+    void testOut10(out double d);
+    void testOut11(out char c);
+    void testOut12(out wchar wc);
+    void testOut13(out string str);
+    void testOut14(out wstring wstr);
+    void testOut15(out unsigned long count, [array, size_is(count)] out char array); 
+    void testOut16(out boolean bBool, out char cChar, out octet nByte,
+                   out short nShort, out unsigned short nUShort,
+                   out long nLong, out unsigned long nULong,
+                   out long long nHyper, out unsigned long long nUHyper,
+                   out float fFloat, out double fDouble,
+                   out string aString);
+    void testOut17(out unsigned long count, [array, size_is(count)] out long array); 
 };
