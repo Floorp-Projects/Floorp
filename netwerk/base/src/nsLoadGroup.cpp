@@ -300,6 +300,11 @@ CancelFun(nsIRequest* req)
 NS_IMETHODIMP
 nsLoadGroup::Cancel()
 {
+    mForegroundCount = 0;
+    mIsActive = PR_FALSE;
+    if (mChannels) {
+        mChannels->Clear();
+    }
     return PropagateDown(CancelFun);
 }
 
