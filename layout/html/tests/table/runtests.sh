@@ -8,6 +8,11 @@ echo viewer: $viewer
 testsfile=/tmp/$$-tests.txt
 
 sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list.txt > $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list2.txt >> $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list3.txt >> $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list4.txt >> $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list5.txt >> $testsfile
+sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list6.txt >> $testsfile
 
 if test "$1"x = "baselinex"; then
   rm -r -f baseline
