@@ -99,7 +99,7 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
 #endif
 
 JSClass js_ObjectClass = {
-    js_Object_str,
+    (char *)js_Object_str,
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
