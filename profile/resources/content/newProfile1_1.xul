@@ -37,6 +37,10 @@
     orient="vertical"
 		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
-
+    <description>&pnl1.p1.text;</description>
+    <description>&pnl1.p2.text;</description>
+    <description>&pnl1.p3.text;</description>
+    <spacer flex="1"/>
+    <description>&pnl1.p4.text;</description>
 </page>
 
