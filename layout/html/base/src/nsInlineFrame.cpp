@@ -144,10 +144,14 @@ NS_IMETHODIMP
 nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
                        PRBool* aResult)
 {
+#if 0
+  // I used to think inline frames worked this way, but it seems they
+  // don't.  At least not in our codebase.
   if (aCompatMode == eCompatibility_FullStandards) {
     *aResult = PR_FALSE;
     return NS_OK;
   }
+#endif
   const nsStyleMargin* margin = NS_STATIC_CAST(const nsStyleMargin*,
                              mStyleContext->GetStyleData(eStyleStruct_Margin));
   const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
@@ -155,32 +159,21 @@ nsInlineFrame::IsEmpty(nsCompatibility aCompatMode, PRBool aIsPre,
   const nsStylePadding* padding = NS_STATIC_CAST(const nsStylePadding*,
                             mStyleContext->GetStyleData(eStyleStruct_Padding));
   nsStyleCoord coord;
-  if ((border->IsBorderSideVisible(NS_SIDE_TOP) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
-      (border->IsBorderSideVisible(NS_SIDE_RIGHT) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
-      (border->IsBorderSideVisible(NS_SIDE_BOTTOM) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
+  // XXX Top and bottom removed, since they shouldn't affect things, but this
+  // doesn't really match with nsLineLayout.cpp's setting of
+  // ZeroEffectiveSpanBox, anymore, so what should this really be?
+  if ((border->IsBorderSideVisible(NS_SIDE_RIGHT) &&
+       !IsBorderZero(border->mBorder.GetRightUnit(),
+                     border->mBorder.GetRight(coord))) ||
       (border->IsBorderSideVisible(NS_SIDE_LEFT) &&
-       !IsBorderZero(border->mBorder.GetTopUnit(),
-                     border->mBorder.GetTop(coord))) ||
-      !IsPaddingZero(padding->mPadding.GetTopUnit(),
-                    padding->mPadding.GetTop(coord)) ||
+       !IsBorderZero(border->mBorder.GetLeftUnit(),
+                     border->mBorder.GetLeft(coord))) ||
       !IsPaddingZero(padding->mPadding.GetRightUnit(),
                     padding->mPadding.GetRight(coord)) ||
-      !IsPaddingZero(padding->mPadding.GetBottomUnit(),
-                    padding->mPadding.GetBottom(coord)) ||
       !IsPaddingZero(padding->mPadding.GetLeftUnit(),
                     padding->mPadding.GetLeft(coord)) ||
-      !IsMarginZero(margin->mMargin.GetTopUnit(),
-                    margin->mMargin.GetTop(coord)) ||
       !IsMarginZero(margin->mMargin.GetRightUnit(),
                     margin->mMargin.GetRight(coord)) ||
-      !IsMarginZero(margin->mMargin.GetBottomUnit(),
-                    margin->mMargin.GetBottom(coord)) ||
       !IsMarginZero(margin->mMargin.GetLeftUnit(),
                     margin->mMargin.GetLeft(coord))) {
     *aResult = PR_FALSE;

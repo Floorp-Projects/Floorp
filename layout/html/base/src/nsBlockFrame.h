@@ -187,7 +187,7 @@ public:
     * almost always the first or second line, if there is one.
     * accounts for lines that hold only compressed white space, etc.
     */
-  nsIFrame* GetTopBlockChild();
+  nsIFrame* GetTopBlockChild(nsIPresContext *aPresContext);
 
   // Returns the line containing aFrame, or end_lines() if the frame
   // isn't in the block.
@@ -255,6 +255,10 @@ protected:
 
   void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aMetrics);
+
+  // Calls |nsLineBox::IsEmpty| with the correct arguments.
+  PRBool IsLineEmpty(nsIPresContext* aPresContext,
+                     const nsLineBox* aLine) const;
 
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
