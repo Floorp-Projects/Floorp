@@ -270,9 +270,6 @@ enum nsDOMClassInfoID {
   
   eDOMClassInfo_ImageDocument_id,
 
-  // XPointer evaluation result
-  eDOMClassInfo_XPointerResult_id,
-
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

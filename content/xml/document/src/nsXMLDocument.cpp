@@ -82,8 +82,8 @@
 #include "nsLayoutCID.h"
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
-#include "nsFIXptr.h"
-#include "nsXPointer.h"
+#include "nsIFIXptr.h"
+#include "nsIXPointer.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
@@ -350,7 +350,24 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 NS_IMETHODIMP
 nsXMLDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
 {
-  return nsFIXptr::Evaluate(this, aExpression, aRange);
+  nsresult rv;
+  nsCOMPtr<nsIFIXptrEvaluator> e =
+    do_CreateInstance("@mozilla.org/xmlextras/fixptrevaluator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return e->Evaluate(this, aExpression, aRange);
+}
+
+NS_IMETHODIMP
+nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
+                                nsIXPointerResult **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIXPointerEvaluator> e =
+    do_CreateInstance("@mozilla.org/xmlextras/xpointerevaluator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return e->Evaluate(this, aExpression, aResult);
 }
 
 NS_IMETHODIMP
@@ -366,13 +383,6 @@ nsXMLDocument::SetAsync(PRBool aAsync)
 {
   mAsync = aAsync;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
-                                nsIXPointerResult **aResult)
-{
-  return nsXPointer::Evaluate(this, aExpression, aResult);
 }
 
 nsresult 

@@ -30,6 +30,7 @@ MODULE		= content
 XPIDL_MODULE	= content_xmldoc
 
 XPIDLSRCS = \
+	nsIFIXptr.idl \
 	nsIXPointer.idl \
 	nsIModifyableXPointer.idl \
 	$(NULL)

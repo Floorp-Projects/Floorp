@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-*/
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -37,27 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXPointer_h__
-#define nsXPointer_h__
+#include "nsISupports.idl"
 
-#include "nsAString.h"
-#include "nsIXPointer.h"
+interface nsIDOMDocument;
+interface nsIDOMRange;
 
-class nsXPointer {
-  nsXPointer();
-  ~nsXPointer();
-public:
+/**
+ * nsIFIXptrEvaluator resolves a FIXptr expression
+ */
+[uuid(50D28211-8FB8-4323-B93D-08A6E80E559E)]
+interface nsIFIXptrEvaluator : nsISupports
+{
   /**
-   * Evaluate an XPointer expression.
+   * Evaluate a FIXptr expression.
    *
    * @param aDocument   The document in which to evaluate.
-   * @param aExpression The XPointer expression string to evaluate.
-   * @param aResult     The result.
+   * @param aExpression The FIXptr expression string to evaluate.
+   * @return            The result.
    */
-  static nsresult Evaluate(nsIDOMDocument *aDocument,
-                           const nsAString& aExpression,
-                           nsIXPointerResult **aResult);
-  
+  nsIDOMRange evaluate(in nsIDOMDocument aDocument,
+                       in DOMString aExpression);
 };
-
-#endif

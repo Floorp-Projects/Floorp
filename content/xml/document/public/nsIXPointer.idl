@@ -97,3 +97,21 @@ interface nsIXPointerSchemeProcessor : nsISupports
                              in nsIXPointerSchemeContext aContext,
                              in DOMString aData);
 };
+
+/**
+ * nsIXPointerEvaluator resolves an XPointer expression
+ */
+[uuid(ADDD0FE5-8555-45b7-B763-97D5898CE268)]
+interface nsIXPointerEvaluator : nsISupports
+{
+  /**
+   * Evaluate an XPointer expression.
+   *
+   * @param aDocument   The document in which to evaluate.
+   * @param aExpression The XPointer expression string to evaluate.
+   * @return            The result.
+   */
+  nsIXPointerResult evaluate(in nsIDOMDocument aDocument,
+                             in DOMString aExpression);
+
+};

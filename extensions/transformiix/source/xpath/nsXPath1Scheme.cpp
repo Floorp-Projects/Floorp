@@ -58,7 +58,6 @@
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kXPointerResultCID, NS_XPOINTERRESULT_CID);
 
 /**
  * nsXPath1SchemeNSResolver
@@ -185,7 +184,8 @@ nsXPath1SchemeProcessor::Evaluate(nsIDOMDocument *aDocument,
 
   // Create return result
   // XXX perf: just store the XPathResult and resolve as XPointerResult on demand
-  nsCOMPtr<nsIXPointerResult> xpointerResult(do_CreateInstance(kXPointerResultCID, &rv));
+  nsCOMPtr<nsIXPointerResult> xpointerResult(
+    do_CreateInstance("@mozilla.org/xmlextras/xpointerresult;1", &rv));
   if (NS_FAILED(rv)) {
     return rv;
   }
