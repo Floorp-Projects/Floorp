@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
+#include "nsIXBLPrototypeBinding.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
@@ -41,6 +42,9 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
 
 PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
 nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
@@ -115,6 +119,33 @@ nsXBLWindowKeyHandler::IsEditor()
   return PR_FALSE;
 }
 
+static void GetHandlers(nsIXBLDocumentInfo* aInfo, const nsCString& aDocURI, 
+                        const nsCString& aRef, nsIXBLPrototypeHandler** aResult)
+{
+  nsCOMPtr<nsIXBLPrototypeBinding> binding;
+  aInfo->GetPrototypeBinding(aRef, getter_AddRefs(binding));
+  if (!binding) {
+    nsCOMPtr<nsIDocument> doc;
+    aInfo->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+    PRInt32 childCount;
+    root->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+      nsCOMPtr<nsIContent> child;
+      root->ChildAt(i, *getter_AddRefs(child));
+      nsAutoString id;
+      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+      if (id.EqualsWithConversion(aRef)) {
+        NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
+        aInfo->SetPrototypeBinding(aRef, binding);
+        break;
+      }
+    }
+  }
+
+  binding->GetPrototypeHandler(aResult); // Addref happens here.
+}
+
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::EnsureHandlers()
 {
@@ -158,16 +189,24 @@ nsXBLWindowKeyHandler::EnsureHandlers()
 
     // Now determine which handlers we should be using.
     if (IsEditor()) {
-      mXBLSpecialDocInfo->mPlatformHTMLBindings->GetPrototypeHandler(nsCAutoString("editor"), 
-                                                                     getter_AddRefs(mPlatformHandler));
-      mXBLSpecialDocInfo->mHTMLBindings->GetPrototypeHandler(nsCAutoString("editorBase"), 
-                                                             getter_AddRefs(mHandler));
+      GetHandlers(mXBLSpecialDocInfo->mPlatformHTMLBindings, 
+                  nsCAutoString("chrome://global/content/platformHTMLBindings.xml"),
+                  nsCAutoString("editor"), 
+                  getter_AddRefs(mPlatformHandler));
+      GetHandlers(mXBLSpecialDocInfo->mHTMLBindings, 
+                  nsCAutoString("chrome://global/content/htmlBindings.xml"),
+                  nsCAutoString("editorBase"), 
+                  getter_AddRefs(mHandler));
     }
     else {
-      mXBLSpecialDocInfo->mPlatformHTMLBindings->GetPrototypeHandler(nsCAutoString("browser"), 
-                                                                     getter_AddRefs(mPlatformHandler));
-      mXBLSpecialDocInfo->mHTMLBindings->GetPrototypeHandler(nsCAutoString("browserBase"), 
-                                                             getter_AddRefs(mHandler));
+      GetHandlers(mXBLSpecialDocInfo->mPlatformHTMLBindings, 
+                  nsCAutoString("chrome://global/content/platformHTMLBindings.xml"),
+                  nsCAutoString("browser"), 
+                  getter_AddRefs(mPlatformHandler));
+      GetHandlers(mXBLSpecialDocInfo->mHTMLBindings, 
+                  nsCAutoString("chrome://global/content/htmlBindings.xml"),
+                  nsCAutoString("browserBase"), 
+                  getter_AddRefs(mHandler));
     }
   }
 

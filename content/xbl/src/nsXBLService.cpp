@@ -54,6 +54,7 @@
 #include "nsIObserverService.h"
 
 #include "nsIXBLBinding.h"
+#include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLDocumentInfo.h"
 
 #include "nsIXBLPrototypeHandler.h"
@@ -343,9 +344,6 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIXBLDocumentInfo> info;
     NS_NewXBLDocumentInfo(mBindingDocument, getter_AddRefs(info));
  
-    // Construct our prototype handlers.
-    nsXBLService::ConstructPrototypeHandlers(info);
-
     // If the doc is a chrome URI, then we put it into the XUL cache.
     PRBool cached = PR_FALSE;
     if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
@@ -486,7 +484,6 @@ PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
-nsIAtom* nsXBLService::kHandlersAtom = nsnull;
 nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
 nsIAtom* nsXBLService::kInputAtom = nsnull;
 
@@ -526,7 +523,6 @@ nsXBLService::nsXBLService(void)
 
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
-    kHandlersAtom = NS_NewAtom("handlers");
     kScrollbarAtom = NS_NewAtom("scrollbar");
     kInputAtom = NS_NewAtom("input");
 
@@ -558,7 +554,6 @@ nsXBLService::~nsXBLService(void)
     
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
-    NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kScrollbarAtom);
     NS_RELEASE(kInputAtom);
 
@@ -915,75 +910,112 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   PRBool allowScripts;
   docInfo->GetScriptAccess(&allowScripts);
 
-  // We have a doc. Obtain our specific binding element.
-  // Walk the children looking for the binding that matches the ref
-  // specified in the URL.
-  nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
-  if (!root)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIXBLPrototypeBinding> protoBinding;
+  docInfo->GetPrototypeBinding(ref, getter_AddRefs(protoBinding));
+  nsCOMPtr<nsIContent> child;
+  if (!protoBinding) {
+    // We have a doc. Obtain our specific binding element.
+    // Walk the children looking for the binding that matches the ref
+    // specified in the URL.
+    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+    if (!root)
+      return NS_ERROR_FAILURE;
 
-  nsAutoString bindingName; bindingName.AssignWithConversion( NS_STATIC_CAST(const char*, ref) );
+    nsAutoString bindingName; bindingName.AssignWithConversion( NS_STATIC_CAST(const char*, ref) );
 
-  PRInt32 count;
-  root->ChildCount(count);
+    PRInt32 count;
+    root->ChildCount(count);
 
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    root->ChildAt(i, *getter_AddRefs(child));
+    for (PRInt32 i = 0; i < count; i++) {
+      root->ChildAt(i, *getter_AddRefs(child));
 
-    nsAutoString value;
-    child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+      nsAutoString value;
+      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
     
-    // If no ref is specified just use this.
-    if ((bindingName.IsEmpty()) || (bindingName == value)) {
-      // Check for the presence of an extends attribute
-      nsAutoString extends;
-      nsCOMPtr<nsIXBLBinding> baseBinding;
-      child->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
-      value = extends;
-      if (!extends.IsEmpty()) {
-        nsAutoString prefix;
-        PRInt32 offset = extends.FindChar(':');
-        if (-1 != offset) {
-          extends.Left(prefix, offset);
-          extends.Cut(0, offset+1);
-        }
-        if (prefix.Length() > 0) {
-          // Look up the prefix.
-          nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
-          nsCOMPtr<nsINameSpace> nameSpace;
-          nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(child));
-          if (xmlContent) {
-            xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
-            if (nameSpace) {
-              nsCOMPtr<nsINameSpace> tagSpace;
-              nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
-              if (!tagSpace) {
-                // We have a base class binding. Load it right now.
-                nsCAutoString urlCString; urlCString.AssignWithConversion(value);
-                GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding));
-                if (!*aIsReady)
-                  return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
+      // If no ref is specified just use this.
+      if ((bindingName.IsEmpty()) || (bindingName == value)) {
+        // Construct a prototype binding.
+        NS_NewXBLPrototypeBinding(ref, child, docInfo, getter_AddRefs(protoBinding));
+        docInfo->SetPrototypeBinding(ref, protoBinding);
+        break;
+      }
+    }
+  }
+  else
+    protoBinding->GetBindingElement(getter_AddRefs(child));
+
+  // If our prototype already has a base, then don't check for an "extends" attribute.
+  nsCOMPtr<nsIXBLBinding> baseBinding;
+  nsCOMPtr<nsIXBLPrototypeBinding> baseProto;
+  PRBool hasBase;
+  protoBinding->HasBasePrototype(&hasBase);
+  protoBinding->GetBasePrototype(getter_AddRefs(baseProto));
+  if (baseProto) {
+    nsCAutoString url;
+    baseProto->GetBindingURI(url);
+    if (NS_FAILED(GetBindingInternal(aBoundElement, url, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
+      return NS_ERROR_FAILURE; // We aren't ready yet.
+    if (!aPeekOnly) {
+      // Make sure to set the base prototype.
+      baseBinding->GetPrototypeBinding(getter_AddRefs(baseProto));
+      protoBinding->SetBasePrototype(baseProto);
+    }
+  }
+  else if (hasBase) {
+    // Check for the presence of an extends attribute
+    nsAutoString extends;
+    child->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
+    nsAutoString value(extends);
+    if (extends.IsEmpty())
+      protoBinding->SetHasBasePrototype(PR_FALSE);
+    else {
+      nsAutoString prefix;
+      PRInt32 offset = extends.FindChar(':');
+      if (-1 != offset) {
+        extends.Left(prefix, offset);
+        extends.Cut(0, offset+1);
+      }
+      if (prefix.Length() > 0) {
+        // Look up the prefix.
+        nsCOMPtr<nsIAtom> prefixAtom = getter_AddRefs(NS_NewAtom(prefix));
+        nsCOMPtr<nsINameSpace> nameSpace;
+        nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(child));
+        if (xmlContent) {
+          xmlContent->GetContainingNameSpace(*getter_AddRefs(nameSpace));
+          if (nameSpace) {
+            nsCOMPtr<nsINameSpace> tagSpace;
+            nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
+            if (tagSpace) {
+              // We extend some widget/frame. We don't really have a base binding.
+              protoBinding->SetHasBasePrototype(PR_FALSE);
+              PRInt32 nameSpaceID;
+              tagSpace->GetNameSpaceID(nameSpaceID);
+              nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(extends));
+              protoBinding->SetBaseTag(nameSpaceID, tagName);
+            }
+            else {
+              // We have a base class binding. Load it right now.
+              nsCAutoString urlCString; urlCString.AssignWithConversion(value);
+              if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
+                return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
+              if (!aPeekOnly) {
+                // Make sure to set the base prototype.
+                baseBinding->GetPrototypeBinding(getter_AddRefs(baseProto));
+                protoBinding->SetBasePrototype(baseProto);
               }
             }
           }
         }
       }
-
-      *aIsReady = PR_TRUE;
-      if (!aPeekOnly) {
-        // Make a new binding
-        NS_NewXBLBinding(uri, ref, aResult);
-
-        // Initialize its bound element.
-        (*aResult)->SetBindingElement(child);
-        (*aResult)->SetAllowScripts(allowScripts);
-
-        if (baseBinding)
-          (*aResult)->SetBaseBinding(baseBinding);
-      }
-      break;
     }
+  }
+
+  *aIsReady = PR_TRUE;
+  if (!aPeekOnly) {
+    // Make a new binding
+    NS_NewXBLBinding(protoBinding, aResult);
+    if (baseBinding)
+      (*aResult)->SetBaseBinding(baseBinding);
   }
 
   return NS_OK;
@@ -1057,10 +1089,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
    
       if (document) {
         NS_NewXBLDocumentInfo(document, getter_AddRefs(info));
-
-        // Construct our prototype handlers.
-        ConstructPrototypeHandlers(info);
-        
+ 
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
         if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
@@ -1285,40 +1314,6 @@ nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** a
   *aResult = firstHandler;
   NS_IF_ADDREF(*aResult);
  
-  return NS_OK;
-}
-
-nsresult 
-nsXBLService::ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo)
-{
-  nsCOMPtr<nsIDocument> doc;
-  aInfo->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIContent> bindings = getter_AddRefs(doc->GetRootContent());
-  PRInt32 childCount;
-  bindings->ChildCount(childCount);
-  for (PRInt32 i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIContent> binding;
-    bindings->ChildAt(i, *getter_AddRefs(binding));
-
-    // See if this binding has a handler elt.
-    nsCOMPtr<nsIContent> handlers;
-    GetImmediateChild(kHandlersAtom, binding, getter_AddRefs(handlers));
-    if (handlers) {
-      nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
-      nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(firstHandler));
- 
-      if (firstHandler) {
-        nsAutoString ref;
-        binding->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, ref);
-        
-        nsCAutoString cref;
-        cref.AssignWithConversion(ref);
-
-        aInfo->SetPrototypeHandler(cref, firstHandler);
-      }
-    }
-  }
-
   return NS_OK;
 }
 

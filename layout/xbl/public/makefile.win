@@ -26,6 +26,7 @@ EXPORTS =				\
     nsIXBLBinding.h \
     nsIXBLBindingAttachedHandler.h \
     nsIXBLDocumentInfo.h \
+    nsIXBLPrototypeBinding.h \
     nsIXBLPrototypeHandler.h \
     nsIXBLService.h \
     $(NULL)

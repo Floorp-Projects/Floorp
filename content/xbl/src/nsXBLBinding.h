@@ -24,6 +24,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIXBLBinding.h"
+#include "nsIXBLPrototypeBinding.h"
 
 class nsIContent;
 class nsIAtom;
@@ -42,6 +43,9 @@ class nsXBLBinding: public nsIXBLBinding
   NS_DECL_ISUPPORTS
 
   // nsIXBLBinding
+  NS_IMETHOD GetPrototypeBinding(nsIXBLPrototypeBinding** aResult);
+  NS_IMETHOD SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding);
+
   NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult);
   NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding);
 
@@ -86,13 +90,11 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD InheritsStyle(PRBool* aResult);
   NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData);
 
-  NS_IMETHOD SetAllowScripts(PRBool aFlag) { mAllowScripts = aFlag; return NS_OK; };
-
   NS_IMETHOD MarkForDeath();
   NS_IMETHOD MarkedForDeath(PRBool* aResult);
 
 public:
-  nsXBLBinding(const nsCString& aDocURI, const nsCString& aRef);
+  nsXBLBinding(nsIXBLPrototypeBinding* aProtoBinding);
   virtual ~nsXBLBinding();
 
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
@@ -125,18 +127,13 @@ public:
   static nsIAtom* kOnGetAtom;
   static nsIAtom* kGetterAtom;
   static nsIAtom* kSetterAtom;
-  static nsIAtom* kHTMLAtom;
-  static nsIAtom* kValueAtom;
   static nsIAtom* kActionAtom;
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kAttachToAtom;
   static nsIAtom* kBindingAttachedAtom;
   static nsIAtom* kBindingDetachedAtom;
-  static nsIAtom* kInheritStyleAtom;
-
-  static nsIXBLService* gXBLService;
-  
+ 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
     const char*  mAttributeName;
@@ -148,8 +145,6 @@ public:
 
   static PRBool IsSupportedHandler(const nsIID* aIID);
   
-  static nsFixedSizeAllocator kPool;
-
   static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
 
 // Internal member functions
@@ -159,21 +154,11 @@ protected:
                        void** aScriptObject, void** aClassObject);
 
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
-  void GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult);
-  void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray* aList);
-  void BuildInsertionTable();
-  void GetNestedChildren();
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
-  NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
-
-  
 // MEMBER VARIABLES
 protected:
-  nsCString mDocURI;
-  nsCString mID;
-
-  nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
+  nsCOMPtr<nsIXBLPrototypeBinding> mPrototypeBinding; // Strong. As long as we're around, the binding can't go away.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   
@@ -183,10 +168,5 @@ protected:
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
   PRPackedBool mIsStyleBinding;
-  PRPackedBool mAllowScripts;
-  PRPackedBool mInheritStyle;
   PRPackedBool mMarkedForDeath;
-
-  nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
-  nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.
 };
