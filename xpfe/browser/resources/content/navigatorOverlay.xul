@@ -524,8 +524,17 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
       <menuitem value="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
       <menuitem value="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
       <menuitem value="&BloatClearCmd.label;"   oncommand="window._content.location.href='about:bloat?clear'"/>
-      <menuitem value="&BloatLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
-      <menuitem value="&BloatTraceCmd.label;"   oncommand="traceObject(document);"/>
+
+      <menuseparator />
+
+      <menu value="Leak Detector">
+       <menupopup>
+        <menuitem value="&LeaksDumpLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
+        <menuitem value="&LeaksTraceChromeCmd.label;" oncommand="traceChrome();"/>
+        <menuitem value="&LeaksTraceDocumentCmd.label;" oncommand="traceDocument();"/>
+        <menuitem value="&LeaksTraceVerboseCmd.label;" oncommand="traceVerbose(this.getAttribute('checked'))" type="checkbox" checked="false"/>
+       </menupopup>
+      </menu>
     </menupopup>
   </menu>
 </menubar>
