@@ -30,6 +30,13 @@
 #include "libimg.h"
 #include "il_util.h"
 #include "prtypes.h"
+#include "g-util.h"
+#include "g-types.h"
+#include "gnomefe.h"
+#include "g-html-view.h"
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#include <X11/X.h>
 
 #define HOWMANY(x, r)     (((x) + ((r) - 1)) / (r))
 #define ROUNDUP(x, r)     (HOWMANY(x, r) * (r))
@@ -57,9 +64,39 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   uint8 img_depth;
   NI_PixmapHeader *img_header = &image->header;
   NI_PixmapHeader *mask_header = mask ? &mask->header : NULL;
+  Pixmap img_x_pixmap=0, mask_x_pixmap = 0;
+  fe_PixmapClientData *img_client_data, *mask_client_data = NULL;
+  MozHTMLView *view = 0;
+  Display *dpy = 0;
+  Visual *visual = 0;
+  unsigned int visual_depth;
+  Window window;
   
   printf ("_IMGCB_NewPixmap\n");
 
+  /* Allocate the client data structures for the IL_Pixmaps. */
+  img_client_data = XP_NEW_ZAP(fe_PixmapClientData);
+  if (!img_client_data) {
+    image->bits = NULL;
+    mask->bits = NULL;
+    return;
+  }
+  if (mask) {
+    mask_client_data = XP_NEW_ZAP(fe_PixmapClientData);
+    if (!mask_client_data) {
+            image->bits = NULL;
+            mask->bits = NULL;
+            return;
+    }
+  }
+  
+  /* try to get the required display parameters from the html view */
+  view = find_html_view(context);
+  XP_ASSERT(view);
+  visual_depth = gdk_visual_get_best_depth();
+  window = GDK_WINDOW_XWINDOW(view->scrolled_window->window);
+  dpy = GDK_WINDOW_XDISPLAY(view->scrolled_window->window);
+  
   /* Override the image and mask dimensions with the requested target
      dimensions.  This instructs the image library to do any necessary
      scaling. */
@@ -81,7 +118,7 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
      and make sure it is quadlet aligned. */
 
   img_depth = img_header->color_space->pixmap_depth;
-  /*XXX toshok - XP_ASSERT(img_depth == pixmap_depth);*/
+  XP_ASSERT(img_depth == visual_depth);
   img_header->widthBytes = (img_header->width * img_depth + 7) / 8;
   img_header->widthBytes = ROUNDUP(img_header->widthBytes, 4);
   if (mask) {
@@ -103,7 +140,6 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
     }
   }
   
-#if 0 /* XXX - toshok, for now */
   /* Create an X pixmap for the image, and for the mask (if required.) */
   img_x_pixmap = XCreatePixmap(dpy, window, img_header->width,
                                img_header->height, visual_depth);
@@ -122,7 +158,6 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
     mask_client_data->dpy = dpy;
     mask->client_data = (void *)mask_client_data;
   }
-#endif
 }
 
 JMC_PUBLIC_API(void)
