@@ -4146,7 +4146,7 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
   }
   if (mDeleteModel == nsMsgImapDeleteModels::IMAPDelete)
     if (selectionCount > 1 || (endRange-startRange) > 0)  //multiple selection either using Ctrl or Shift keys
-      *msgToSelectAfterDelete = -1;
+      *msgToSelectAfterDelete = nsMsgViewIndex_None;
     else
       *msgToSelectAfterDelete += 1;
 

@@ -155,8 +155,6 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   NS_ENSURE_ARG(folder);
   nsresult rv = NS_OK;
 
-  PRBool found = PR_FALSE;
-
   nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
   m_folders->AppendElement(supports);
   nsMsgKey msgKey;
@@ -354,7 +352,7 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
     {
         mCurIndex++;
         PRUint32 numFolders =0;
-        nsresult rv = m_uniqueFolders->Count(&numFolders);
+        rv = m_uniqueFolders->Count(&numFolders);
         if ( mCurIndex < numFolders)
           ProcessRequestsInOneFolder(mMsgWindow);
     }

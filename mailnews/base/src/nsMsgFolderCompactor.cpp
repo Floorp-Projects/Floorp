@@ -200,7 +200,6 @@ nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
    nsCOMPtr<nsIMsgDatabase> db;
    nsCOMPtr<nsIDBFolderInfo> folderInfo;
    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-   nsresult folderOpen = NS_OK;
    nsCOMPtr<nsIFileSpec> pathSpec;
    char *baseMessageURI;
 

@@ -2141,7 +2141,8 @@ nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
                           PRBool isMove,
                           nsIMsgWindow *window,
                           nsIMsgCopyServiceListener* listener,
-						  PRBool isFolder)
+						  PRBool isFolder,
+                          PRBool allowUndo)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
