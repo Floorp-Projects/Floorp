@@ -31,8 +31,9 @@
 #include "nsIProfile.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsINetSupportDialogService.h"
 
-
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
 class ProfileServicesImpl : public nsIProfileServices
@@ -165,12 +166,22 @@ ProfileServicesImpl::GetCurrentProfile(char** profileName)
 NS_IMETHODIMP
 ProfileServicesImpl::MigrateProfile(const char* profileName)
 {
+	nsresult rv;
     NS_PRECONDITION(profileName != nsnull, "null ptr");
     if (! profileName)
         return NS_ERROR_NULL_POINTER;
 
-	mProfile->MigrateProfile(profileName);
-    return NS_OK;
+	rv = mProfile->MigrateProfile(profileName);
+	if (NS_FAILED(rv)) {
+		nsresult rv2;
+		NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv2);
+		if (NS_SUCCEEDED(rv2) || dialog) {
+			nsString errorText("Failed to migrate the following profile:  ");
+			errorText += profileName;
+          	rv2 = dialog->Alert(errorText.GetUnicode()); 
+        }
+	}
+	return rv;
 }
 
 NS_IMETHODIMP
