@@ -267,8 +267,8 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mAcceptsActivation(PR_TRUE)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
-  mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
-	gInstanceClassName = "nsMacWindow";
+	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
+	WIDGET_SET_CLASSNAME("nsMacWindow");
 }
 
 

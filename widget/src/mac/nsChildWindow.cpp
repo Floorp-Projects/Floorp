@@ -30,7 +30,7 @@
 
 nsChildWindow::nsChildWindow() : nsWindow()
 {
-	gInstanceClassName = "nsChildWindow";
+	WIDGET_SET_CLASSNAME("nsChildWindow");
 	mClipChildren = PR_FALSE;
 	mClipSiblings = PR_FALSE;
 }

@@ -73,7 +73,7 @@ nsTextAreaWidget::nsTextAreaWidget(): nsWindow()
   mMakeReadOnly = PR_FALSE;
   mMakePassword = PR_FALSE;
   mTE_Data = nsnull;
-  gInstanceClassName = "nsTextAreaWidget";
+  WIDGET_SET_CLASSNAME("nsTextAreaWidget");
   //mBackground = NS_RGB(124, 124, 124);
 
   AcceptFocusOnClick(PR_TRUE);

@@ -69,12 +69,12 @@ enum
 nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
 {
   NS_INIT_REFCNT();
-  gInstanceClassName = "nsTextWidget";
+  WIDGET_SET_CLASSNAME("nsTextWidget");
   SetControlType(kControlEditTextProc);
-	mIsPassword = PR_FALSE;
-	mIsReadOnly = PR_FALSE;
+  mIsPassword = PR_FALSE;
+  mIsReadOnly = PR_FALSE;
 
-	AcceptFocusOnClick(PR_TRUE);
+  AcceptFocusOnClick(PR_TRUE);
 }
 
 //-------------------------------------------------------------------------

@@ -49,7 +49,7 @@
 #include "nsIRollupListener.h"
 
 #include "nsCarbonHelpers.h"
-
+#include "nsGfxUtils.h"
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -83,7 +83,7 @@ static void blinkRgn(RgnHandle rgn);
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateControl()
 {
-  gInstanceClassName = "nsWindow";
+	WIDGET_SET_CLASSNAME("nsWindow");
 
   mParent = nsnull;
   mBounds.SetRect(0,0,0,0);

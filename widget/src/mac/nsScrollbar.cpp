@@ -46,7 +46,7 @@ nsScrollbar::nsScrollbar(PRBool /*aIsVertical*/)
 	,	mClickedPartCode(0)
 {
 	NS_INIT_REFCNT();
-	gInstanceClassName = "nsScrollbar";
+	WIDGET_SET_CLASSNAME("nsScrollbar");
 	SetControlType(kControlScrollBarLiveProc);
 	if (!sControlActionProc)
 		sControlActionProc = NewControlActionProc(nsScrollbar::ScrollActionProc);
