@@ -1452,8 +1452,10 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     static PRInt32 gNest;
 
     nsCAutoString space;
-    for (PRInt32 i = 0; i < gNest; ++i)
-        space += "  ";
+    {
+        for (PRInt32 i = 0; i < gNest; ++i)
+            space += "  ";
+    }
 
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
         const char* res;
