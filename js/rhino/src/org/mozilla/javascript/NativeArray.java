@@ -556,26 +556,46 @@ public class NativeArray extends IdScriptable {
     private static String js_join(Context cx, Scriptable thisObj,
                                   Object[] args)
     {
-        StringBuffer result = new StringBuffer();
         String separator;
 
-        long length = getLengthProperty(thisObj);
-
+        long llength = getLengthProperty(thisObj);
+        int length = (int)llength;
+        if (llength != length) {
+            throw Context.reportRuntimeError1(
+                "msg.arraylength.too.big", String.valueOf(llength));
+        }
         // if no args, use "," as separator
-        if ((args.length < 1) || (args[0] == Undefined.instance)) {
+        if (args.length < 1 || args[0] == Undefined.instance) {
             separator = ",";
         } else {
             separator = ScriptRuntime.toString(args[0]);
         }
-        for (long i=0; i < length; i++) {
-            if (i > 0)
-                result.append(separator);
-            Object temp = getElem(thisObj, i);
-            if (temp == null || temp == Undefined.instance)
-                continue;
-            result.append(ScriptRuntime.toString(temp));
+        if (length == 0) {
+            return "";
         }
-        return result.toString();
+        String[] buf = new String[length];
+        int total_size = 0;
+        for (int i = 0; i != length; i++) {
+            Object temp = getElem(thisObj, i);
+            if (temp != null && temp != Undefined.instance) {
+                String str = ScriptRuntime.toString(temp);
+                total_size += str.length();
+                buf[i] = str;
+            }
+        }
+        total_size += (length - 1) * separator.length();
+        StringBuffer sb = new StringBuffer(total_size);
+        for (int i = 0; i != length; i++) {
+            if (i != 0) {
+                sb.append(separator);
+            }
+            String str = buf[i];
+            if (str != null) {
+                // str == null for undefined or null
+                sb.append(str);
+            }
+        }
+        return sb.toString();
     }
 
     /**
