@@ -552,7 +552,7 @@ CHBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequ
       if (errNum) {
         nsCAutoString  uriString;
         aRequest->GetName(uriString);
-        NSString *fixedURL = [NSString stringWithCString:uriString.get()];
+        NSString *fixedURL = [NSString stringWithUTF8String:uriString.get()];
         NSDictionary *userInfo = [NSDictionary dictionaryWithObject:errNum forKey:URLLoadSuccessKey];
         NSNotification *note = [NSNotification notificationWithName:URLLoadNotification object:fixedURL userInfo:userInfo];
         [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
@@ -590,7 +590,7 @@ CHBrowserListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aR
     
   nsCAutoString spec;
   location->GetSpec(spec);
-  NSString* str = [NSString stringWithCString:spec.get()];
+  NSString* str = [NSString stringWithUTF8String:spec.get()];
 
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<CHBrowserListener> obj;
