@@ -58,6 +58,8 @@ public:
     NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
     NS_IMETHOD           SetTitle(const nsString& aTitle);
+    nsresult             SetIcon(GdkPixmap *window_pixmap, 
+                                 GdkBitmap *window_mask);
     NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
 
     NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
@@ -93,6 +95,8 @@ protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
+  nsresult     SetIcon();
+
 
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;

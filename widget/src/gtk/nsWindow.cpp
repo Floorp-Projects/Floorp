@@ -372,15 +372,58 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   return NS_OK;
 }
 
+
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
   if (!mShell)
     return NS_ERROR_FAILURE;
+
   char * titleStr = aTitle.ToNewCString();
   gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
   delete[] titleStr;
+
+  // XXX Hack.  Set the window icon here until we have
+  // a way to do this XP, from XUL.
+  SetIcon();
+
   return NS_OK;
 }
+
+
+// Just give the window a default icon, Mozilla.
+#include "mozicon50.xpm"
+nsresult nsWindow::SetIcon()
+{
+  static GdkPixmap *w_pixmap = NULL;
+  static GdkBitmap *w_mask   = NULL;
+  GtkStyle         *w_style;
+
+  w_style = gtk_widget_get_style (mShell);
+
+  if (w_pixmap == NULL) {
+    w_pixmap =
+      gdk_pixmap_create_from_xpm_d (mShell->window,
+				    &w_mask,
+				    &w_style->bg[GTK_STATE_NORMAL],
+				    mozicon50_xpm);
+  }
+  
+  return SetIcon(w_pixmap, w_mask);
+}
+
+
+// Set the iconify icon for the window.
+nsresult nsWindow::SetIcon(GdkPixmap *pixmap, 
+                           GdkBitmap *mask)
+{
+  if (!mShell)
+    return NS_ERROR_FAILURE;
+
+  gdk_window_set_icon(mShell->window, NULL, pixmap, mask);
+
+  return NS_OK;
+}
+
 
 
 /**
