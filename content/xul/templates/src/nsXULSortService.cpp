@@ -209,6 +209,7 @@ private:
 	static nsIAtom		*kSortResource2Atom;
 	static nsIAtom		*kSortDirectionAtom;
 	static nsIAtom		*kSortSeparatorsAtom;
+	static nsIAtom		*kRefAtom;
 	static nsIAtom		*kIdAtom;
 	static nsIAtom		*kRDF_type;
 
@@ -283,6 +284,7 @@ nsIAtom* XULSortServiceImpl::kSortResourceAtom;
 nsIAtom* XULSortServiceImpl::kSortResource2Atom;
 nsIAtom* XULSortServiceImpl::kSortDirectionAtom;
 nsIAtom* XULSortServiceImpl::kSortSeparatorsAtom;
+nsIAtom* XULSortServiceImpl::kRefAtom;
 nsIAtom* XULSortServiceImpl::kIdAtom;
 nsIAtom* XULSortServiceImpl::kRDF_type;
 
@@ -320,6 +322,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kSortResource2Atom		= NS_NewAtom("sortResource2");
 		kSortDirectionAtom		= NS_NewAtom("sortDirection");
 		kSortSeparatorsAtom		= NS_NewAtom("sortSeparators");
+		kRefAtom			= NS_NewAtom("ref");
 		kIdAtom				= NS_NewAtom("id");
 		kRDF_type			= NS_NewAtom("type");
  
@@ -430,6 +433,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_IF_RELEASE(kSortResource2Atom);
 	        NS_IF_RELEASE(kSortDirectionAtom);
 	        NS_IF_RELEASE(kSortSeparatorsAtom);
+	        NS_IF_RELEASE(kRefAtom);
 	        NS_IF_RELEASE(kIdAtom);
 		NS_IF_RELEASE(kRDF_type);
 	        NS_IF_RELEASE(kNC_Name);
@@ -2150,35 +2154,46 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 		nsCOMPtr<nsIContent>		parent = do_QueryInterface(container, &rv);
 		nsCOMPtr<nsIContent>		aContent;
 
-		nsCOMPtr<nsIDocument> doc;
-		if (NS_SUCCEEDED(rv) && parent) {
+		nsCOMPtr<nsIDocument>		doc;
+		if (NS_SUCCEEDED(rv) && parent)
+		{
 			rv = parent->GetDocument(*getter_AddRefs(doc));
-
 			if (! doc)
+			{
 				parent = nsnull;
+			}
 		}
 
-		while(NS_SUCCEEDED(rv) && parent)
+		if (parent)
 		{
-			nsAutoString	id;
-			if (NS_SUCCEEDED(rv = parent->GetAttribute(kNameSpaceID_None, kIdAtom, id))
-				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
+			nsAutoString		id;
+			nsCOMPtr<nsIAtom>	tag;
+
+			if (NS_FAILED(rv = trueParent->GetTag(*getter_AddRefs(tag))))
+				return(rv);
+			if (tag.get() == kTreeAtom)
+			{
+				// XXX hmmm... currently, if we just check for ref on anything before
+				// checking for id, this gives the sidebar huge fits.  So, for the
+				// moment, until the solution is determined, let's restrict checking
+				// for ref before id to only the root node of trees
+				rv = trueParent->GetAttribute(kNameSpaceID_None, kRefAtom, id);
+			}
+			if (id.Length() == 0)
+			{
+				rv = trueParent->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+			}
+			if (id.Length() > 0)
 			{
 				nsCOMPtr<nsIRDFResource>	containerRes;
 				rv = gXULUtils->MakeElementResource(doc, id, getter_AddRefs(containerRes));
 
-				if (NS_SUCCEEDED(rv)) {
-					rv = sortInfo.db->HasAssertion(containerRes,
-								       kRDF_instanceOf,
-								       kRDF_Seq,
-								       PR_TRUE,
-								       &isContainerRDFSeq);
+				if (NS_SUCCEEDED(rv))
+				{
+					rv = sortInfo.db->HasAssertion(containerRes, kRDF_instanceOf,
+								kRDF_Seq, PR_TRUE, &isContainerRDFSeq);
 				}
-				break;
 			}
-			aContent = do_QueryInterface(parent, &rv);
-			if (NS_SUCCEEDED(rv))
-				rv = aContent->GetParent(*getter_AddRefs(parent));
 		}
 	}
 
