@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Kathleen Brade <brade@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -51,6 +52,11 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMRange.h"
+
+#include "nsIDocShell.h"
+#include "nsIClipboardDragDropHooks.h"
+#include "nsIClipboardDragDropHookList.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 // for IBMBIDI
 #include "nsIDocument.h"
@@ -254,10 +260,55 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           trans->SetTransferData(kUnicodeMime, genericDataObj, buffer.Length()*2);
         }
       }
+
+      PRBool doPutOnClipboard = PR_TRUE;
+      DoHooks(aDoc, trans, &doPutOnClipboard);
+
       // put the transferable on the clipboard
-      clipboard->SetData(trans, nsnull, aClipboardID);
+      if (doPutOnClipboard)
+        clipboard->SetData(trans, nsnull, aClipboardID);
     }
   }
+  return rv;
+}
+
+nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
+                                PRBool *aDoPutOnClipboard)
+{
+  NS_ENSURE_ARG(aDoc);
+
+  *aDoPutOnClipboard = PR_TRUE;
+
+  nsCOMPtr<nsISupports> isupp;
+  nsresult rv = aDoc->GetContainer(getter_AddRefs(isupp));
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(isupp);
+  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
+  if (!hookObj) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
+  if (!enumerator) return NS_ERROR_FAILURE;
+
+  // the logic here should follow the behavior specified in
+  // nsIClipboardDragDropHooks.h
+
+  nsCOMPtr<nsIClipboardDragDropHooks> override;
+  PRBool hasMoreHooks = PR_FALSE;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
+         && hasMoreHooks)
+  {
+    rv = enumerator->GetNext(getter_AddRefs(isupp));
+    if (NS_FAILED(rv)) break;
+    override = do_QueryInterface(isupp);
+    if (override)
+    {
+      nsresult hookResult = override->OnCopyOrDrag(aTrans, aDoPutOnClipboard);
+      NS_ASSERTION(NS_SUCCEEDED(hookResult), "OnCopyOrDrag hook failed");
+      if (!*aDoPutOnClipboard)
+        break;
+    }
+  }
+
   return rv;
 }
 
