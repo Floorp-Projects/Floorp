@@ -39,6 +39,14 @@ var currentHeaderData;
 var gNumAddressesToShow = 3;
 var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
 
+// currentAddressData is an array indexed by dom node which stores all the
+// information about the person such as email address, full name, etc. 
+// This allows us to later use this information when the popup is invoked
+// for adding the address to the address book, running a mailto url, etc.
+// current fields in currentAddressData are:
+// emailAddress --> the email address associated with the node
+// fullAddress --> the full address associated with the node
+var currentAddressData;
 
 function OnLoadMsgHeaderPane()
 {
@@ -88,7 +96,6 @@ function OnLoadMsgHeaderPane()
   
   // load any preferences that at are global with regards to 
   // displaying a message...
-
   gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
 }
 
@@ -106,6 +113,8 @@ var messageHeaderSink = {
     {
       // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
+      
+      NotifyClearAddresses();
 
       // (1) clear out the email fields for to, from, cc....
       ClearEmailField(msgPaneData.FromValue);
@@ -176,13 +185,36 @@ var messageHeaderSink = {
     }
 };
 
+function AddNodeToAddressBook (emailAddressNode)
+{
+}
+
+// SendMailToNode takes the email address title button, extracts
+// the email address we stored in there and opens a compose window
+// with that address
+function SendMailToNode(emailAddressNode)
+{
+  if (emailAddressNode)
+  {
+    var addressInfo = currentAddressData[emailAddressNode];
+    if (addressInfo)
+    {
+      var url = "mailto:" + addressInfo.emailAddress;
+      messenger.OpenURL(url);
+    }
+  }
+  else
+    messenger.OpenURL("mailto:foo@netscape.com");
+}
+
 function AddSenderToAddressBook() 
 {
   // extract the from field from the current msg header and then call AddToAddressBook with that information
   var node = document.getElementById("FromValue");
   if (node)
   {
-    var fromValue = node.childNodes[0].nodeValue;
+    var fromValue = node.value; 
+    // node.childNodes[0].nodeValue;
     if (fromValue)
       AddToAddressBook(fromValue, "");
   }
@@ -281,7 +313,7 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
 	}
   if (msgHeaderParser)
   {
-    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator("UTF-8", emailAddresses);
+    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
     enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
     var numAddressesParsed = 0;
     if (enumerator)
@@ -295,12 +327,14 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
         headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
         
         // get the email and name fields
-        var outValue = {};
-        name = headerResult.getAddressAndName(outValue);
-        emailAddress = outValue.value;
+        var addrValue = {};
+        var nameValue = {};
+        fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
+        emailAddress = addrValue.value;
+        name = nameValue.value;
 
         // turn the strings back into a full address
-        var fullAddress = msgHeaderParser.MakeFullAddress("UTF-8", name, emailAddress);
+        // var fullAddress = msgHeaderParser.MakeFullAddress(name, emailAddress);
 
         // if we want to include short/long toggle views and we have a long view, always add it.
         // if we aren't including a short/long view OR if we are and we haven't parsed enough
@@ -326,16 +360,26 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
   } // if msgheader parser
 }
 
+/* InsertEmailAddressUnderEnclosingBox --> right now all email addresses are borderless titled buttons
+   with formatting to make them look like html anchors. When you click on the button,
+   you are prompted with a popup asking you what you want to do with the email address
+
+   parentBox --> the enclosing box for all the email addresses for this header. This is needed
+                 to control visibility of the header.
+   parentDiv --> the DIV the email addresses need to be inserted into.
+*/
+   
 function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress, fullAddress) 
 {
   if ( parentBox ) 
   { 
-    var item = document.createElement("html:a");
+    var item = document.createElement("titledbutton");
     if ( item && parentDiv) 
     { 
-      item.setAttribute('href', "mailto:" + emailAddress); 
-      item.appendChild(document.createTextNode(fullAddress));
-      
+      item.setAttribute("class", "emailDisplayButton");
+      item.setAttribute("popup", "emailAddressPopup");
+      item.setAttribute("value", fullAddress);     
+     
       if (parentDiv.childNodes.length)
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
@@ -346,6 +390,13 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       else
         parentDiv.appendChild(item);
 
+      AddExtraAddressProcessing(emailAddress, item);
+
+      var addressInfo = new Object;
+      addressInfo.emailAddress = emailAddress;
+      addressInfo.fullAddress = fullAddress;
+      currentAddressData[item] = addressInfo;
+
       hdrViewSetVisible(parentBox, true);
     } 
   } 
@@ -355,6 +406,7 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
 function UpdateMessageHeaders()
 {
   hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData.SubjectValue);
+  // hdrViewSetNodeWithButton(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue);
   OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue, false, "", ""); 
   hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData.DateValue); 
   OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData.ToValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
@@ -426,6 +478,21 @@ function ToggleLongShortAddresses(shortDivID, longDivID)
 ///////////////////////////////////////////////////////////////
 // The following are just small helper functions..
 ///////////////////////////////////////////////////////////////
+
+function hdrViewSetNodeWithButton(boxNode, buttonNode, text)
+{
+  if (text)
+  {
+    buttonNode.setAttribute("value", text);
+    hdrViewSetVisible(boxNode, true);
+  }
+	else
+	{
+		hdrViewSetVisible(boxNode, false);
+		return false;
+	}
+} 
+
 function hdrViewSetNodeWithBox(boxNode, textNode, text)
 {
 	if ( text )
@@ -458,3 +525,4 @@ function hdrViewSetVisible(boxNode, visible)
 	else
 		boxNode.setAttribute("hide", "true");
 }
+
