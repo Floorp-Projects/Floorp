@@ -198,16 +198,20 @@ nsCookieService::SetCookieString(nsIURI *aURL, nsIPrompt* aPrompt, const char * 
 NS_IMETHODIMP
 nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires, nsIHttpChannel* aHttpChannel) 
 {
-  nsCAutoString spec;
-  nsresult rv = aURL->GetAsciiSpec(spec);
+  nsXPIDLCString spec;
+  nsresult rv = aURL->GetSpec(spec);
   if (NS_FAILED(rv)) return rv;
-  NS_ASSERTION(aFirstURL,"aFirstURL is null");
-  if (aFirstURL) {
-    nsCAutoString firstSpec;
-    rv = aFirstURL->GetAsciiSpec(firstSpec);
-    if (NS_FAILED(rv)) return rv;
-    COOKIE_SetCookieStringFromHttp((char *) spec.get(), (char *) firstSpec.get(), aPrompter, aCookie, (char *)aExpires, mIOService, aHttpChannel);
+  nsIURI* firstURL = aFirstURL;
+  if (!firstURL) {
+    firstURL = aURL;
   }
+  nsXPIDLCString firstSpec;
+  rv = firstURL->GetSpec(firstSpec);
+  if (NS_FAILED(rv)) return rv;
+  COOKIE_SetCookieStringFromHttp(
+    NS_CONST_CAST(char *, spec.get()),
+    NS_CONST_CAST(char *, firstSpec.get()),
+    aPrompter, aCookie, (char *)aExpires, mIOService, aHttpChannel);
   return NS_OK;
 }
 

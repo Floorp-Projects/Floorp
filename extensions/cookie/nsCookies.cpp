@@ -1372,8 +1372,10 @@ COOKIE_SetCookieString(char * aURL, nsIPrompt *aPrompter, const char * setCookie
   if (aHttpChannel) {
     rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return;
-    rv = pFirstURL->GetSpec(firstSpec);
-    if (NS_FAILED(rv)) return;
+    if (pFirstURL) {
+      rv = pFirstURL->GetSpec(firstSpec);
+      if (NS_FAILED(rv)) return;
+    }
   }
   COOKIE_SetCookieStringFromHttp(aURL, NS_CONST_CAST(char *, firstSpec.get()), aPrompter, setCookieHeader, 0, ioService, aHttpChannel);
 }
