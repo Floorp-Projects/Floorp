@@ -3892,7 +3892,7 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
           nsStyleContentData &data = content->ContentAt(count++);
           switch (unit) {
             case eCSSUnit_String:   type = eStyleContentType_String;    break;
-            case eCSSUnit_URL:      type = eStyleContentType_URL;       break;
+            case eCSSUnit_Image:    type = eStyleContentType_Image;       break;
             case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
             case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
             case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
@@ -3914,9 +3914,9 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
               NS_ERROR("bad content type");
           }
           data.mType = type;
-          if (type == eStyleContentType_URL) {
-            data.mContent.mURL = value.GetURLValue();
-            NS_IF_ADDREF(data.mContent.mURL);
+          if (type == eStyleContentType_Image) {
+            data.mContent.mImage = value.GetImageValue();
+            NS_IF_ADDREF(data.mContent.mImage);
           }
           else if (type < eStyleContentType_OpenQuote) {
             value.GetStringValue(buffer);

@@ -215,6 +215,14 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 } break;
 
                 case eCSSType_ValueList:
+                    if (iProp == eCSSProperty_content) {
+                        for (nsCSSValueList* l = ValueListAtCursor(cursor);
+                             l; l = l->mNext)
+                            if (l->mValue.GetUnit() == eCSSUnit_URL)
+                                l->mValue.StartImageLoad(
+                                    aRuleData->mPresContext->GetDocument());
+                    }
+                // fall through
                 case eCSSType_CounterData:
                 case eCSSType_Quotes:
                 case eCSSType_Shadow: {

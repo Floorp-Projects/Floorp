@@ -1190,6 +1190,46 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
   return NS_STYLE_HINT_REFLOW;
 }
 
+nsStyleContentData::~nsStyleContentData()
+{
+  if (mType == eStyleContentType_Image) {
+    NS_IF_RELEASE(mContent.mImage);
+  } else if (mContent.mString) {
+    nsCRT::free(mContent.mString);
+  }
+}
+
+nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOther)
+{
+  mType = aOther.mType;
+  if (mType == eStyleContentType_Image) {
+    mContent.mImage = aOther.mContent.mImage;
+    NS_IF_ADDREF(mContent.mImage);
+  } else if (aOther.mContent.mString) {
+    mContent.mString = nsCRT::strdup(aOther.mContent.mString);
+  } else {
+    mContent.mString = nsnull;
+  }
+  return *this;
+}
+
+PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther)
+{
+  if (mType != aOther.mType)
+    return PR_FALSE;
+  if (mType == eStyleContentType_Image) {
+    PRBool eq;
+    nsCOMPtr<nsIURI> thisURI, otherURI;
+    mContent.mImage->GetURI(getter_AddRefs(thisURI));
+    aOther.mContent.mImage->GetURI(getter_AddRefs(otherURI));
+    return thisURI == otherURI ||  // handles null==null
+           (thisURI && otherURI &&
+            NS_SUCCEEDED(thisURI->Equals(otherURI, &eq)) &&
+            eq);
+  }
+  return nsCRT::strcmp(mContent.mString, aOther.mContent.mString) == 0;
+}
+
 //-----------------------
 // nsStyleContent
 //

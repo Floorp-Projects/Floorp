@@ -1391,14 +1391,15 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
 
   nsIPresShell *shell = aPresContext->PresShell();
 
-  if (eStyleContentType_URL == type) {
-    if (!data.mContent.mURL) {
-      // CSS had something specified that couldn't be converted to a URI object
+  if (eStyleContentType_Image == type) {
+    if (!data.mContent.mImage) {
+      // CSS had something specified that couldn't be converted to an
+      // image object
       *aFrame = nsnull;
       return NS_ERROR_FAILURE;
     }
     
-    // Create an HTML image content object, and set the SRC.
+    // Create an image content object and pass it the image request.
     // XXX Check if it's an image type we can handle...
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -1407,13 +1408,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
                                               getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsIContent> content;
-    nsresult rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
+    nsresult rv = NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
+                                           data.mContent.mImage);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCAutoString spec;
-    data.mContent.mURL->GetSpec(spec); // XXXldb Ugh.
-    content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src,
-                     NS_ConvertUTF8toUCS2(spec), PR_FALSE);
 
     // Set aContent as the parent content and set the document object. This
     // way event handling works
@@ -1502,8 +1499,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     case eStyleContentType_Counter:
     case eStyleContentType_Counters:
-    case eStyleContentType_URL:
       return NS_ERROR_NOT_IMPLEMENTED;  // XXX not supported yet...
+
+    case eStyleContentType_Image:
+      NS_NOTREACHED("handled by if above");
+      return NS_ERROR_UNEXPECTED;
   
     case eStyleContentType_OpenQuote:
     case eStyleContentType_CloseQuote:
