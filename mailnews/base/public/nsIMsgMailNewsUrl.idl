@@ -106,7 +106,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	const unsigned long eMove     = 1;
 	const unsigned long eDisplay  = 2;
 	boolean IsUrlType(in unsigned long type);
-        nsIStreamListener getSaveAsListener(in boolean addDummyEnvelope, in nsIFileSpec aFileSpec);
+    nsIStreamListener getSaveAsListener(in boolean addDummyEnvelope, in nsIFileSpec aFileSpec);
 };
 
 //////////////////////////////////////////////////////////////////////////////////

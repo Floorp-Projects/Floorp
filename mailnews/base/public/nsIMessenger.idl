@@ -86,6 +86,8 @@ interface nsIMessenger : nsISupports {
       */
     void loadURL(in nsIDOMWindowInternal ptr, in string aURL); 
 
+    void launchExternalURL(in string aURL);
+
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);
     void CompactFolder(in nsIRDFCompositeDataSource db,
