@@ -31,7 +31,7 @@ LIBRARY_NAME	= rdfdomds
 IS_COMPONENT	= 1
 MODULE_NAME	= nsRDFDOMViewerModule
 
-REQUIRES	= xpcom string rdf dom layout widget js locale docshell necko webshell htmlparser uriloader view rdfutil
+REQUIRES	= xpcom string rdf dom layout content widget js locale docshell necko webshell htmlparser uriloader view rdfutil
 
 DIRS		= resources
 

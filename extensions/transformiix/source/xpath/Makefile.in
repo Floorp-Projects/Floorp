@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef TX_EXE
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget
+REQUIRES = string xpcom dom layout content widget
 endif
 
 CPPSRCS = AdditiveExpr.cpp \

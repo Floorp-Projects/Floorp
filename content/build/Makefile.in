@@ -28,14 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 BUILD_DATE = gbdate.h
 
-MODULE		= layout
+MODULE		= content
 LIBRARY_NAME	= gkcontent
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= gkcontnt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsContentModule
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref xul xuldoc xultmpl timer
+REQUIRES	= xpcom string layout widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref xul xuldoc xultmpl timer
 
 CPPSRCS		= \
 		nsContentDLF.cpp \

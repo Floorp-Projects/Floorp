@@ -31,7 +31,7 @@ LIBRARY_NAME	= composer
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsComposerModule
-REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+REQUIRES	= xpcom string dom js locale layout content uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
 
 CPPSRCS  = \
            nsEditorShell.cpp              \

@@ -30,7 +30,7 @@ DIRS            = functions util
 
 ifndef TX_EXE
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget necko xsl_doc
+REQUIRES = string xpcom dom layout content widget necko xsl_doc
 endif
 
 CPPSRCS = Names.cpp \

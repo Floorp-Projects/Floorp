@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= widget
 LIBRARY_NAME	= xpwidgets_s
-REQUIRES	= xpcom string layout dom pref docshell view intl locale necko htmlparser uconv unicharutil
+REQUIRES	= xpcom string layout content dom pref docshell view intl locale necko htmlparser uconv unicharutil
 
 DEFINES		+= -DUSE_TLS_FOR_TOOLKIT
 

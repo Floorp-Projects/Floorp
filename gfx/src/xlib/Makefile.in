@@ -33,7 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXlibModule
 
-REQUIRES	= xpcom string xlibrgb widget dom layout appshell js necko pref util view uconv locale unicharutil gfx2 mozcomps windowwatcher intl
+REQUIRES	= xpcom string xlibrgb widget dom layout content appshell js necko pref util view uconv locale unicharutil gfx2 mozcomps windowwatcher intl
 
 CPPSRCS		= \
 		nsDeviceContextSpecFactoryX.cpp \

@@ -29,8 +29,7 @@ MODULE		= xremoteservice
 LIBRARY_NAME	= xremoteservice
 EXPORT_LIBRARY	= 1
 IS_COMPONENT    = 1
-REQUIRES	= xpcom string dom widget layout uriloader docshell \
-		  pref windowwatcher necko appshell rdf
+REQUIRES	= xpcom string dom widget layout uriloader docshell pref windowwatcher necko appshell rdf
 
 CPPSRCS		= \
 		XRemoteService.cpp \
