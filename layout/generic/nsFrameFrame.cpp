@@ -116,6 +116,10 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
   NS_IMETHOD  VerifyTree() const;
   nscoord GetBorderWidth(nsIPresContext& aPresContext);
   PRBool IsInline();
@@ -165,6 +169,9 @@ public:
   nsFrameborder GetFrameBorder(PRBool aStandardMode);
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
+
+  nsresult ReloadURL();
+
 protected:
   nsresult CreateWebShell(nsIPresContext& aPresContext, const nsSize& aSize);
 
@@ -351,6 +358,21 @@ nsHTMLFrameOuterFrame::VerifyTree() const
 {
   // XXX Completely disabled for now; once pseud-frames are reworked
   // then we can turn it back on.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                        nsIContent* aChild,
+                                        nsIAtom* aAttribute,
+                                        PRInt32 aHint)
+{
+  if (nsHTMLAtoms::src == aAttribute) {
+    printf("got a request\n");
+    if (nsnull != mFirstChild) {
+      ((nsHTMLFrameInnerFrame*)mFirstChild)->ReloadURL();
+    }
+  }
   return NS_OK;
 }
 
@@ -752,6 +774,32 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
       aDesiredSize.width, aDesiredSize.height, aStatus));
+  return rv;
+}
+
+nsresult
+nsHTMLFrameInnerFrame::ReloadURL()
+{
+  nsresult rv = NS_OK;
+  nsIContent* content;
+  GetParentContent(content);
+  if (nsnull != content) {
+
+    nsAutoString url;
+    GetURL(content, url);
+
+    if (nsnull != mWebShell) {
+      mCreatingViewer=PR_TRUE;
+
+      // load the document
+      nsString absURL;
+      TempMakeAbsURL(content, url, absURL);
+
+      rv = mWebShell->LoadURL(absURL,          // URL string
+                              nsnull);         // Post Data
+    }
+    NS_RELEASE(content);
+  }
   return rv;
 }
 
