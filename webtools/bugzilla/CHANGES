@@ -18,7 +18,8 @@ file.  This is the file that contains parameters you've set up on the
 editparams.cgi page.  Before changing to Perl, this was a tcl-syntax
 file, stored in the same directory as the code; after the change to
 Perl, it becomes a perl-syntax file, stored in a subdirectory named
-"data".
+"data".  See the README file for more details on what version of Perl
+you need.
 
 So, if updating from an older version of Bugzilla, you will need to
 edit data/param, change the email address listed for
@@ -26,6 +27,10 @@ $::param{'maintainer'}, and then go revisit the editparams.cgi page
 and reset all the parameters to your taste.  Fortunately, your old
 params file will still be around, and so you ought to be able to
 cut&paste important bits from there.
+
+Also, note that the "whineatnews" script has changed name (it now has
+an extension of .pl instead of .tcl), so you'll need to change your
+cron job.
 
 
 
