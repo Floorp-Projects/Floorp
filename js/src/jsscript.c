@@ -566,8 +566,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 #ifndef MOZILLA_CLIENT
 /*
  * These cannot be exposed to web content, and chrome does not need them, so
- * we take them out of the Mozilla client altogether.  Script.thaw is a hole
- * wide enough that you could hack your own native function and call it!
+ * we take them out of the Mozilla client altogether.  Fortunately, there is
+ * no way to serialize a native function (see fun_xdrObject in jsfun.c).
  */
 
 static JSBool
