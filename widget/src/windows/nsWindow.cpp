@@ -1058,7 +1058,8 @@ void nsWindow::SetFont(const nsFont &aFont)
 {
     nsIFontCache* fontCache;
     mContext->GetFontCache(fontCache);
-    nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
+    nsIFontMetrics* metrics;
+    fontCache->GetMetricsFor(aFont, metrics);
     HFONT hfont = metrics->GetFontHandle();
 
       // Draw in the new font
