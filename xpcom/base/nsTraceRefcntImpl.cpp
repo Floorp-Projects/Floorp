@@ -334,8 +334,6 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
   nsresult rv = NS_OK;
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (gBloatLog == nsnull || gBloatView == nsnull) {
-    fprintf(stdout, "### ERROR: Can't dump bloat statistics because XPCOM_MEM_BLOAT_LOG isn't set.\n");
-    fflush(stdout);
     return NS_ERROR_FAILURE;
   }
   if (out == nsnull) {
