@@ -27,6 +27,8 @@ DLLNAME = ucvcn
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
+	nsGB2312ToUnicodeV2.cpp		\
+	nsUnicodeToGB2312V2.cpp		\
 	nsGB2312ToUnicode.cpp		\
 	nsUnicodeToGB2312.cpp		\
 	nsUnicodeToGB2312GL.cpp		\
@@ -43,6 +45,8 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
+	.\$(OBJDIR)\nsGB2312ToUnicodeV2.obj 		\
+	.\$(OBJDIR)\nsUnicodeToGB2312V2.obj		\
 	.\$(OBJDIR)\nsGB2312ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToGB2312.obj		\
 	.\$(OBJDIR)\nsUnicodeToGB2312GL.obj		\
