@@ -107,6 +107,7 @@ protected:
   
     XML_Parser mExpatParser;
 	PRUint32 mBytesParsed;
+  PRBool mSeenError;
 };
 
 extern NS_HTMLPARS nsresult NS_Expat_Tokenizer(nsIDTD** aInstancePtrResult);
