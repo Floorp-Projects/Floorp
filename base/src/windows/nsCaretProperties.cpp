@@ -29,7 +29,7 @@ nsCaretProperties::nsCaretProperties()
 ,	mBlinkRate(eDefaulBlinkRate)
 {
 	// in your platform-specific class, get data from the OS in your constructor
-	mCaretWidth = 2;			// 2 pixel caret on Windows
+	mCaretWidth = 30;			// 2 pixel caret on Windows
 }
 
 
