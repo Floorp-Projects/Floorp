@@ -47,6 +47,7 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 #include "nsCSSLayout.h"
+#include "nsStyleUtil.h"
 
 nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrameSuper(aContent, aParentFrame)
@@ -78,7 +79,7 @@ nsFormRenderingMode nsInputFrame::GetMode() const
 
 PRInt32 nsInputFrame::GetScrollbarWidth(float aPixToTwip)
 {
-   return (int)(16 * aPixToTwip + 0.5);
+   return (PRInt32)((19 * aPixToTwip) + 0.5);  // XXX this is windows
 }
 
 PRInt32 nsInputFrame::GetVerticalBorderWidth(float aPixToTwip) const
@@ -91,14 +92,15 @@ PRInt32 nsInputFrame::GetHorizontalBorderWidth(float aPixToTwip) const
   return GetVerticalBorderWidth(aPixToTwip);
 }
 
-PRInt32 nsInputFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               PRInt32 aInnerHeight) const
+nscoord nsInputFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               nscoord aInnerHeight) const
 {
-  return GetVerticalBorderWidth(aPixToTwip);
+   return (nscoord)(3 * aPixToTwip + 0.5);
 }
 
-PRInt32 nsInputFrame::GetHorizontalInsidePadding(float aPixToTwip, 
-                                                 PRInt32 aInnerWidth) const
+nscoord nsInputFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                 nscoord aInnerWidth,
+                                                 nscoord aCharWidth) const
 {
   return GetVerticalInsidePadding(aPixToTwip, aInnerWidth);
 }
@@ -556,17 +558,17 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
     }
   }
 
-  if (0 == charWidth) {
+  if ((0 == charWidth) || (0 == textSize.width)) {
     charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize);
     aRowHeight = textSize.height;
   }
 
   // add inside padding if necessary
   if (!aWidthExplicit) {
-    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(p2t, aBounds.width));
+    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(p2t, aBounds.width, charWidth));
   }
   if (!aHeightExplicit) {
-    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, aBounds.height)); 
+    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, textSize.height)); 
   }
 
   NS_RELEASE(content);
@@ -578,6 +580,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 }
 
 
+// this handles all of the input types rather than having them do it.
 const void 
 nsInputFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
 {
@@ -587,11 +590,34 @@ nsInputFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
   ((nsInput*)mContent)->GetType(type);
 
   // XXX shouldn't this be atom compares instead?
-  if (type.EqualsIgnoreCase("text") || type.EqualsIgnoreCase("textarea") ||
-                                       type.EqualsIgnoreCase("password")) {
+  if (  type.EqualsIgnoreCase("text")     || 
+        type.EqualsIgnoreCase("textarea") ||
+        type.EqualsIgnoreCase("password"))   {
     aFont = styleFont->mFixedFont;
-  } else { 
-    aFont = styleFont->mFont;
+  } else if (type.EqualsIgnoreCase("button") || 
+             type.EqualsIgnoreCase("submit") ||
+             type.EqualsIgnoreCase("reset")  || 
+             type.EqualsIgnoreCase("select")) { 
+    if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
+        (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+      aFont = styleFont->mFixedFont;
+      aFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
+      aFont.size = styleFont->mFont.size;    // normal font size
+      if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
+        aFont.name = "Arial";  // XXX windows specific font
+      }
+    } else {
+      // use arial, scaled down one HTML size
+      // italics, decoration & variant(?) get used
+      aFont = styleFont->mFont;
+      aFont.name = "Arial";  // XXX windows specific font
+      aFont.weight = NS_FONT_WEIGHT_NORMAL; 
+      const nsFont& normal = aPresContext->GetDefaultFont();
+      PRInt32 scaler = aPresContext->GetFontScaler();
+      float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+      PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
+      aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
+    }
   }
 }
 
