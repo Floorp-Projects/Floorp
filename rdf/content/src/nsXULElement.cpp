@@ -527,6 +527,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(nsIStyleRule::GetIID())) {
         *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
+    else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
+        *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
+    }
     else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
               iid.Equals(nsIXULTreeContent::GetIID())) &&
              (NameSpaceID() == kNameSpaceID_XUL) &&
@@ -3474,6 +3477,18 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     return NS_OK;
 }
 
+//*****************************************************************************
+// nsXULElement::nsIChromeEventHandler
+//*****************************************************************************   
+
+NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsIPresContext* aPresContext,
+   nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
+   nsEventStatus* aEventStatus)
+{
+   NS_ENSURE_ARG(aPresContext);
+   NS_ENSURE_ARG_POINTER(aEventStatus);
+   return HandleDOMEvent(*aPresContext, aEvent, aDOMEvent, aFlags,*aEventStatus);
+}
 
 //----------------------------------------------------------------------
 

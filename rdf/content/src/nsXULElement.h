@@ -55,6 +55,7 @@
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 #include "nsXULAttributes.h"
+#include "nsIChromeEventHandler.h"
 
 class nsIDocument;
 class nsIRDFService;
@@ -249,7 +250,8 @@ class nsXULElement : public nsIStyledContent,
                      public nsIDOMEventReceiver,
                      public nsIScriptObjectOwner,
                      public nsIJSScriptObject,
-                     public nsIStyleRule
+                     public nsIStyleRule,
+                     public nsIChromeEventHandler
 {
 public:
 protected:
@@ -404,6 +406,10 @@ public:
     NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
     NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
     
+    // nsIChromeEventHandler
+    NS_DECL_NSICHROMEEVENTHANDLER
+
+
 protected:
     nsXULElement();
     nsresult Init();
