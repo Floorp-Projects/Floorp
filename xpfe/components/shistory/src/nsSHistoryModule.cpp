@@ -36,7 +36,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSHistory, Init)
 
 
 ///////////////////////////////////////////////////////////////////////////////

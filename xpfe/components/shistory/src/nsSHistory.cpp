@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -35,6 +35,10 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIServiceManager.h"
+#include "nsIPref.h"
+
+#define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
+static PRInt32  gHistoryMaxSize = 0;
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
@@ -42,7 +46,7 @@
 
 nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0)
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 
@@ -67,50 +71,67 @@ NS_INTERFACE_MAP_END
 //    nsSHistory: nsISHistory
 //*****************************************************************************
 
+/*
+ * Init method to get pref settings
+ */
+NS_IMETHODIMP
+nsSHistory::Init()
+{
+  nsresult res;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &res);
+  if (NS_SUCCEEDED(res) && prefs) {
+    prefs->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+  }
+  return res;
+}
+
+
 /* Add an entry to the History list at mIndex and 
  * increment the index to point to the new entry
  */
 NS_IMETHODIMP
 nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
 {
-   NS_ENSURE_ARG(aSHEntry);
+  NS_ENSURE_ARG(aSHEntry);
 
-   nsCOMPtr<nsISHTransaction> currentTxn;
+  nsCOMPtr<nsISHTransaction> currentTxn;
 
-   if(mListRoot)
-      GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
+  if(mListRoot)
+    GetTransactionAtIndex(mIndex, getter_AddRefs(currentTxn));
 
-   PRBool currentPersist = PR_TRUE;
-   if(currentTxn)
-      currentTxn->GetPersist(&currentPersist);
+  PRBool currentPersist = PR_TRUE;
+  if(currentTxn)
+    currentTxn->GetPersist(&currentPersist);
 
-   if(!currentPersist)
-      {
-      NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry),
-         NS_ERROR_FAILURE);
-	  currentTxn->SetPersist(aPersist);
-      return NS_OK;
-      }
+  if(!currentPersist)
+  {
+    NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry),NS_ERROR_FAILURE);
+    currentTxn->SetPersist(aPersist);
+    return NS_OK;
+  }
 
-	nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
-   NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
+  nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
+  NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
 
-   // Set the ShEntry and parent for the transaction. setting the 
-	// parent will properly set the parent child relationship
-   txn->SetPersist(aPersist);
-	NS_ENSURE_SUCCESS(txn->Create(aSHEntry, currentTxn), NS_ERROR_FAILURE);
+  // Set the ShEntry and parent for the transaction. setting the 
+  // parent will properly set the parent child relationship
+  txn->SetPersist(aPersist);
+  NS_ENSURE_SUCCESS(txn->Create(aSHEntry, currentTxn), NS_ERROR_FAILURE);
    
-   // A little tricky math here...  Basically when adding an object regardless of
-   // what the length was before, it should always be set back to the current and
-   // lop off the forward.
-   mLength = (++mIndex + 1);
+  // A little tricky math here...  Basically when adding an object regardless of
+  // what the length was before, it should always be set back to the current and
+  // lop off the forward.
+  mLength = (++mIndex + 1);
 
-   // If this is the very first transaction, initialize the list
-   if(!mListRoot)
-      mListRoot = txn;
- //  PrintHistory();
+  // If this is the very first transaction, initialize the list
+  if(!mListRoot)
+    mListRoot = txn;
 
-   return NS_OK;
+  //Purge History list if it is too long
+  if ((gHistoryMaxSize >= 0) && (mLength > gHistoryMaxSize))
+    PurgeHistory(mLength-gHistoryMaxSize);
+  
+  return NS_OK;
 }
 
 /* Get size of the history list */
@@ -297,6 +318,47 @@ nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
     *aResult=mListRoot;
       NS_IF_ADDREF(*aResult);
       return NS_OK;
+}
+
+/* Get the max size of the history list */
+NS_IMETHODIMP
+nsSHistory::GetMaxLength(PRInt32 * aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = gHistoryMaxSize;
+  return NS_OK;
+}
+
+/* Set the max size of the history list */
+NS_IMETHODIMP
+nsSHistory::SetMaxLength(PRInt32 aMaxSize)
+{
+  if (aMaxSize < 0)
+    return NS_ERROR_ILLEGAL_VALUE;
+
+  gHistoryMaxSize = aMaxSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::PurgeHistory(PRInt32 aEntries)
+{
+  if (mLength <= 0 || aEntries <= 0)
+    return NS_ERROR_FAILURE;
+        
+  PRInt32 cnt = 0;    
+  while (cnt < aEntries) {
+    nsCOMPtr<nsISHTransaction>  txn = mListRoot;
+    nsCOMPtr<nsISHTransaction> nextTxn;
+    if (mListRoot)
+      mListRoot->GetNext(getter_AddRefs(nextTxn));
+    txn = nsnull;
+    mListRoot = nextTxn;
+    cnt++;        
+  }
+  mLength -= cnt;
+  mIndex -= cnt;
+  return NS_OK;
 }
 
 //*****************************************************************************

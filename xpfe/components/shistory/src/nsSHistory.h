@@ -43,8 +43,11 @@ public:
 	NS_DECL_NSISHISTORY
 	NS_DECL_NSIWEBNAVIGATION
 
+  NS_IMETHOD Init();
+
 protected:
    virtual ~nsSHistory();
+
 
    // Could become part of nsIWebNavigation
    NS_IMETHOD PrintHistory();
@@ -54,11 +57,11 @@ protected:
    NS_IMETHOD LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType);
 	
 protected:
-   nsCOMPtr<nsISHTransaction> mListRoot;
-	PRInt32 mIndex;
-	PRInt32 mLength;
-	// Weak reference. Do not refcount this.
-	nsIDocShell *  mRootDocShell;
+  nsCOMPtr<nsISHTransaction> mListRoot;
+  PRInt32 mIndex;
+  PRInt32 mLength;
+  // Weak reference. Do not refcount this.
+  nsIDocShell *  mRootDocShell;
 };
 
 

@@ -127,6 +127,7 @@ localDefPref("browser.ldapfile_location",       "");
 
 pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
+pref("browser.sessionhistory.max_entries", 50);
 
 pref("browser.url_history.URL_1", "");
 pref("browser.url_history.URL_2", "");
