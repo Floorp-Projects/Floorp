@@ -765,7 +765,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case ARGS_LENGTH:
 	if (!JSVERSION_IS_ECMA(cx->version))
-	    *vp = INT_TO_JSVAL((jsint)(fp->fun ? fp->argc : fun->nargs));
+	    *vp = INT_TO_JSVAL((jsint)(fp && fp->fun ? fp->argc : fun->nargs));
 	else
       case FUN_ARITY:
 	    *vp = INT_TO_JSVAL((jsint)fun->nargs);
