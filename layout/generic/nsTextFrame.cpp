@@ -1099,13 +1099,14 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   if (aDetails){
     nsRect rect;
     GetRect(rect);
-    PRInt32 startOffset = 0;
-    PRInt32 textWidth = 0;
     while(aDetails){
+      const nscoord* sp= aSpacing;
+      PRInt32 startOffset = 0;
+      PRInt32 textWidth = 0;
       PRInt32 start = PR_MAX(0,(aDetails->mStart - (PRInt32)aIndex));
       PRInt32 end = PR_MIN((PRInt32)aLength,(aDetails->mEnd - (PRInt32)aIndex));
       PRInt32 i;
-      if (start < end && (aLength - start) > 0)
+      if ((start < end) && ((aLength - start) > 0))
       {
         //aDetails allready processed to have offsets from frame start not content offsets
         if (start < end){
@@ -1113,18 +1114,18 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
             textWidth = aWidth;
           else {
             if (aDetails->mStart > 0){
-              if (aSpacing)
+              if (sp)
               {
                 for (i = 0; i < start;i ++){
-                  startOffset += *aSpacing ++;
+                  startOffset += *sp ++;
                 }
               }
               else
                 aRenderingContext.GetWidth(aText, start, startOffset);
             }
-            if (aSpacing){
+            if (sp){
               for (i = start; i < end;i ++){
-                textWidth += *aSpacing ++;
+                textWidth += *sp ++;
               }
             }
             else
