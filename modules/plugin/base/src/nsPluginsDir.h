@@ -102,6 +102,9 @@ public:
 	 * Should be called after GetPluginInfo to free all allocated stuff
 	 */
 	nsresult FreePluginInfo(nsPluginInfo &PluginInfo);
+
+	// Open the resource fork for the plugin
+	short OpenPluginResource(void);
 };
 
 #endif /* nsPluginsDir_h___ */

@@ -339,10 +339,10 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
         FSSpec spec = file;
         if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
         {
-          Boolean targetIsFolder, wasAliased;
-          OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-          pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
-          found = true;
+          nsPluginFile pluginFile(file);
+          pluginRefNum = pluginFile.OpenPluginResource();
+          if (pluginRefNum != -1)
+            found = true;
         }
       }
     }
@@ -364,10 +364,10 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
         FSSpec spec = file;
         if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
         {
-          Boolean targetIsFolder, wasAliased;
-          OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-          pluginRefNum = ::FSpOpenResFile(&spec, fsRdPerm);
-          found = PR_TRUE;
+          nsPluginFile pluginFile(file);
+          pluginRefNum = pluginFile.OpenPluginResource();
+          if (pluginRefNum != -1)
+            found = true;
         }
       }
     }
@@ -544,6 +544,7 @@ ns4xPlugin::Shutdown(void)
     fShutdownEntry = nsnull;
   }
 
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL,("4xPlugin Shutdown done, this=%p",this));
   return NS_OK;
 }
 
