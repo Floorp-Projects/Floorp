@@ -604,8 +604,6 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
   pLayer->Init();
   pLayer->SetCurl(theURL.GetCurl());
   caluser->SetLayer(pLayer);
-  NS_RELEASE(pLayer);
-
 
   /*
    * Begin a calendar for the logged in user...
@@ -614,6 +612,7 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
   NSCalendar * pCalendar;
 
   pLayer->GetCal(pCalendar);
+  NS_RELEASE(pLayer);
   
   switch(theURL.GetProtocol())
   {
