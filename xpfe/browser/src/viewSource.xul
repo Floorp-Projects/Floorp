@@ -105,6 +105,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onunload="if (appCore) appCore.close()"
         title="Mozilla"> 
   
   <html:script src="navigator.js"></html:script>
