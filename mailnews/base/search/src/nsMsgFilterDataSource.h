@@ -29,38 +29,51 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 
+class nsIMsgFilter;
 
 class nsMsgFilterDataSource : public nsMsgRDFDataSource
 {
- public:
-  nsMsgFilterDataSource();
-  virtual ~nsMsgFilterDataSource();
+public:
+    nsMsgFilterDataSource();
+    virtual ~nsMsgFilterDataSource();
   
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD GetTargets(nsIRDFResource *source,
-                        nsIRDFResource *property,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator **_retval);
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source,
-                             nsISimpleEnumerator **_retval);
+    NS_DECL_ISUPPORTS
+    NS_IMETHOD GetTargets(nsIRDFResource *source,
+                          nsIRDFResource *property,
+                          PRBool aTruthValue,
+                          nsISimpleEnumerator **_retval);
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource *source,
+                            nsISimpleEnumerator **_retval);
 
   
- private:
+private:
 
-  static nsrefcnt mGlobalRefCount;
+    // GetTargets helpers
+    nsresult getFilterTarget(nsIMsgFilter *aFilter,
+                             nsIRDFResource *aProperty,
+                             PRBool aTruthValue,
+                             nsIRDFResource **aResult);
+    
+    nsresult getFilterListTargets(nsIMsgFilterList *aFilter,
+                                  nsIRDFResource *aSource,
+                                  nsIRDFResource *aProperty,
+                                  PRBool aTruthValue,
+                                  nsISupportsArray *aResult);
+    
+    static nsrefcnt mGlobalRefCount;
   
-  static nsresult initGlobalObjects(nsIRDFService* rdf);
-  static nsresult cleanupGlobalObjects();
-  static nsresult getServerArcsOut();
-  static nsresult getFilterArcsOut();
+    static nsresult initGlobalObjects(nsIRDFService* rdf);
+    static nsresult cleanupGlobalObjects();
+    static nsresult getServerArcsOut();
+    static nsresult getFilterArcsOut();
 
-  // arcs out
-  static nsCOMPtr<nsISupportsArray> mFolderArcsOut;
-  static nsCOMPtr<nsISupportsArray> mFilterArcsOut;
+    // arcs out
+    static nsCOMPtr<nsISupportsArray> mFilterListArcsOut;
+    static nsCOMPtr<nsISupportsArray> mFilterArcsOut;
 
-  // resources used
-  static nsCOMPtr<nsIRDFResource> kNC_Child;
-  static nsCOMPtr<nsIRDFResource> kNC_Name;
+    // resources used
+    static nsCOMPtr<nsIRDFResource> kNC_Child;
+    static nsCOMPtr<nsIRDFResource> kNC_Name;
 
 };
 

@@ -28,13 +28,15 @@
 #include "nsIMsgFilter.h"
 #include "nsIMsgFilterList.h"
 
+#include "nsXPIDLString.h"
+
 NS_IMPL_ISUPPORTS1(nsMsgFilterDataSource, nsIRDFDataSource)
 
     nsrefcnt nsMsgFilterDataSource::mGlobalRefCount = 0;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Child;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Name;
 
-nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFolderArcsOut;
+nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterListArcsOut;
 nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterArcsOut;
   
 nsMsgFilterDataSource::nsMsgFilterDataSource()
@@ -57,7 +59,7 @@ nsMsgFilterDataSource::~nsMsgFilterDataSource()
 nsresult
 nsMsgFilterDataSource::cleanupGlobalObjects()
 {
-    mFolderArcsOut = nsnull;
+    mFilterListArcsOut = nsnull;
     mFilterArcsOut = nsnull;
     kNC_Child = nsnull;
     kNC_Name = nsnull;
@@ -70,8 +72,8 @@ nsMsgFilterDataSource::initGlobalObjects(nsIRDFService *rdf)
     rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
     rdf->GetResource(NC_RDF_NAME, getter_AddRefs(kNC_Name));
 
-    NS_NewISupportsArray(getter_AddRefs(mFolderArcsOut));
-    mFolderArcsOut->AppendElement(kNC_Child);
+    NS_NewISupportsArray(getter_AddRefs(mFilterListArcsOut));
+    mFilterListArcsOut->AppendElement(kNC_Child);
   
     NS_NewISupportsArray(getter_AddRefs(mFilterArcsOut));
     mFilterArcsOut->AppendElement(kNC_Name);
@@ -95,16 +97,24 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
     rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilterList),
                              (void **)getter_AddRefs(filterList));
     if (NS_SUCCEEDED(rv))
-        rv = getFilterListTargets(filterList, aProperty, aTruthValue, resourceList);
+        rv = getFilterListTargets(filterList, aSource, aProperty,
+                                  aTruthValue, resourceList);
     else {
         // maybe it's just a filter
         nsCOMPtr<nsIMsgFilter> filter;
         rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilter),
-                                  (void **)getter_AddRefs(filterList));
+                                  (void **)getter_AddRefs(filter));
         if (NS_SUCCEEDED(rv))
             rv = getFilterTargets(filter, aProperty, aTruthValue, resourceList);
     }
-    return NS_RDF_NO_VALUE;
+
+    nsArrayEnumerator *cursor = new nsArrayEnumerator(resourceList);
+    NS_ENSURE_TRUE(cursor, NS_ERROR_OUT_OF_MEMORY);
+    
+    *aResult = cursor;
+    NS_ADDREF(*aResult);
+    
+    return NS_OK;
 }
 
 
@@ -114,11 +124,12 @@ nsMsgFilterDataSource::ArcLabelsOut(nsIRDFResource *aSource,
 {
     nsresult rv;
     nsCOMPtr<nsISupportsArray> arcs;
-  
-    nsCOMPtr<nsIMsgFolder> folder =
-        do_QueryInterface(aSource, &rv);
+
+    nsCOMPtr<nsIMsgFilterList> filterList;
+    rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilterList),
+                              (void **)getter_AddRefs(filterList));
     if (NS_SUCCEEDED(rv)) {
-        arcs = mFolderArcsOut;
+        arcs = mFilterListArcsOut;
     
     } else {
 
@@ -142,5 +153,61 @@ nsMsgFilterDataSource::ArcLabelsOut(nsIRDFResource *aSource,
     *aResult = enumerator;
     NS_ADDREF(*aResult);
 
+    return NS_OK;
+}
+
+// takes a base resource, like mailbox://username@host/folder and returns
+// the array that corresponds to all the filters.
+// it does this quickly because it knows the sub-filters will be in the form
+//
+// mailbox://username@host/folder#filter0
+// mailbox://username@host/folder#filter1
+// mailbox://username@host/folder#filter2
+// mailbox://username@host/folder#filter3
+//
+// and so forth
+nsresult
+nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
+                                            nsIRDFResource *aSource,
+                                            nsIRDFResource *aProperty,
+                                            PRBool aTruthValue,
+                                            nsISupportsArray *aResult)
+{
+    nsresult rv;
+
+    // get the URI of the source resource, say mailbox://username@host/folder
+    // from there we'll append "#filter", and then enumerate the
+    // filters to get all the resources like
+    // mailbox://username@host/folder#filter4
+    nsXPIDLCString filterListUri;
+    aSource->GetValue(getter_Copies(filterListUri));
+
+    nsCAutoString filterUri((const char *)filterListUri);
+    filterUri.Append("#filter");
+
+    // we'll use the length of this base string to truncate the string later
+    PRInt32 baseFilterUriLength = filterUri.Length();
+
+    // now start looping through the filters
+    // we're not actually touching any filters here, just creating
+    // resources that correspond to them.
+    PRUint32 filterCount;
+    rv = aFilterList->GetFilterCount(&filterCount);
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 i;
+    for (i=0; i<filterCount; i++) {
+        filterUri.Append(PRInt32(i));
+        
+        nsCOMPtr<nsIRDFResource> filterResource;
+        rv = getRDFService()->GetResource(filterUri.GetBuffer(),
+                              getter_AddRefs(filterResource));
+        if (NS_SUCCEEDED(rv))
+            aResult->AppendElement(filterResource);
+
+        // now reduce the URI back to the base uri
+        filterUri.Truncate(baseFilterUriLength);
+    }
+    
     return NS_OK;
 }
