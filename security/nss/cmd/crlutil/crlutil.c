@@ -173,7 +173,7 @@ static SECStatus DeleteCRL (CERTCertDBHandle *certHandle, char *name, int type)
 }
 
 SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type, 
-                     PRFileDesc *inFile)
+                     PRFileDesc *inFile, PRBool bypassChecks)
 {
     CERTCertificate *cert = NULL;
     CERTSignedCrl *crl = NULL;
@@ -190,7 +190,11 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 	return (SECFailure);
     }
     
-    crl = CERT_ImportCRL (certHandle, &crlDER, url, type, NULL);
+    if (PR_FALSE == bypassChecks) {
+        crl = CERT_ImportCRL (certHandle, &crlDER, url, type, NULL);
+    } else {
+        crl = SEC_NewCrl (certHandle, url, &crlDER, type);
+    }
     if (!crl) {
 	const char *errString;
 
@@ -213,7 +217,7 @@ static void Usage(char *progName)
     fprintf(stderr,
 	    "Usage:  %s -L [-n nickname[ [-d keydir] [-t crlType]\n"
 	    "        %s -D -n nickname [-d keydir]\n"
-	    "        %s -I -i crl -t crlType [-u url] [-d keydir]\n",
+	    "        %s -I -i crl -t crlType [-u url] [-d keydir] [-B]\n",
 	    progName, progName, progName);
 
     fprintf (stderr, "%-15s List CRL\n", "-L");
@@ -236,6 +240,7 @@ static void Usage(char *progName)
     fprintf(stderr, "%-20s CRL Types (default is SEC_CRL_TYPE):\n", " ");
     fprintf(stderr, "%-20s \t 0 - SEC_KRL_TYPE\n", " ");
     fprintf(stderr, "%-20s \t 1 - SEC_CRL_TYPE\n", " ");        
+    fprintf(stderr, "\n%-20s Bypass CA certificate checks (browser emulation).\n", "-B");
 
     exit(-1);
 }
@@ -257,6 +262,7 @@ int main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus status;
     SECStatus secstatus;
+    PRBool bypassChecks = PR_FALSE;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -272,12 +278,16 @@ int main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "IALd:i:Dn:Ct:u:");
+    optstate = PL_CreateOptState(argc, argv, "BIALd:i:Dn:Ct:u:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
 	    Usage(progName);
 	    break;
+
+	  case 'B':
+            bypassChecks = PR_TRUE;
+            break;
 
 	  case 'C':
 	      listCRL = 1;
@@ -353,7 +363,7 @@ int main(int argc, char **argv)
     else if (listCRL)
 	ListCRL (certHandle, nickName, crlType);
     else if (importCRL) 
-	rv = ImportCRL (certHandle, url, crlType, inFile);
+	rv = ImportCRL (certHandle, url, crlType, inFile, bypassChecks);
     
     return (rv);
 }
