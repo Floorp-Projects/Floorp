@@ -168,7 +168,7 @@ NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
     } else {
       nsIDOMHTMLButtonElement * btn;
       if (NS_OK == node->QueryInterface(kIDOMHTMLButtonElement,(void**)&btn)) {
-        btn->SetDisabled(aIsEnabled);
+        btn->SetDisabled(!aIsEnabled);
         NS_RELEASE(btn);
       }
     }
@@ -298,7 +298,9 @@ nsresult nsXULCommand::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult nsXULCommand::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   //printf("Executing [%s]\n", mCommandStr.ToNewCString());
-  DoCommand();
+  if (mIsEnabled) {
+    DoCommand();
+  }
   return NS_OK;
 }
 
