@@ -716,6 +716,8 @@ PrintData::~PrintData()
 #ifdef DEBUG_PRINTING
   fclose(mDebugFD);
 #endif
+
+  gCurrentlyPrinting = PR_FALSE;
 }
 
 void PrintData::OnStartPrinting()
@@ -4256,7 +4258,7 @@ nsresult rv;
   // the reason we check here is because this method can be called while 
   // another is still in here (the printing dialog is a good example).
   // the only time we can print more than one job at a time is the regression tests
-  if(gCurrentlyPrinting && (aFile==0)) {
+  if(gCurrentlyPrinting) {
     // Beep at the user, let them know we are not ready to print.
     nsCOMPtr<nsISound> soundInterface( do_CreateInstance(kSoundCID, &rv) );
     if (NS_SUCCEEDED(rv) && (soundInterface != nsnull)){
@@ -4507,7 +4509,7 @@ nsresult rv;
           // notified that images must be loaded as a result of the 
           // InitialReflow...
           //
-          if(!mIsPrinting){
+          if(!mIsPrinting  || (aFile != 0)){
             rv = DocumentReadyForPrinting();
 #ifdef DEBUG_dcone
             printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
@@ -4543,7 +4545,13 @@ DocumentViewerImpl::GetPrintable(PRBool *aPrintable)
 {
   NS_ENSURE_ARG_POINTER(aPrintable);
 
-  *aPrintable = PR_TRUE;
+  
+  if(gCurrentlyPrinting==PR_TRUE){
+    *aPrintable = PR_FALSE;
+  } else {
+    *aPrintable = PR_TRUE;
+  }
+
   return NS_OK;
 }
 
