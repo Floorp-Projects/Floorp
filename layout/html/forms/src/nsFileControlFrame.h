@@ -57,6 +57,7 @@ public:
   virtual PRBool IsSuccessful();
   virtual void Reset();
   NS_IMETHOD GetType(PRInt32* aType) const;
+  void SetFocus(PRBool aOn, PRBool aRepaint);
 
   //static PRInt32 gSpacing;
 

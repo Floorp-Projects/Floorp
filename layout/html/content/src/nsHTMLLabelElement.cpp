@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -26,13 +27,20 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLabelElementIID, NS_IDOMHTMLLABELELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class nsHTMLLabelElement : public nsIDOMHTMLLabelElement,
                   public nsIScriptObjectOwner,
                   public nsIDOMEventReceiver,
-                  public nsIHTMLContent
+                  public nsIHTMLContent,
+                  public nsIFormControl
+
 {
 public:
   nsHTMLLabelElement(nsIAtom* aTag);
@@ -52,6 +60,7 @@ public:
 
   // nsIDOMHTMLLabelElement
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
   NS_IMETHOD GetAccessKey(nsString& aAccessKey);
   NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
   NS_IMETHOD GetHtmlFor(nsString& aHtmlFor);
@@ -69,10 +78,17 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIFormControl
+  NS_IMETHOD GetType(PRInt32* aType) { return NS_FORM_LABEL; }
+  NS_IMETHOD SetWidget(nsIWidget* aWidget) { return NS_OK; }
+  NS_IMETHOD Init() { return NS_OK; }
+
 protected:
   nsGenericHTMLContainerElement mInner;
+  nsIForm*                      mForm;
 };
 
+// construction, destruction
 nsresult
 NS_NewHTMLLabelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 {
@@ -91,28 +107,56 @@ nsHTMLLabelElement::nsHTMLLabelElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mForm = nsnull;
 }
 
 nsHTMLLabelElement::~nsHTMLLabelElement()
 {
+  if (nsnull != mForm) {
+    // prevent mForm from decrementing its ref count on us
+    mForm->RemoveElement(this, PR_FALSE); 
+    NS_RELEASE(mForm);
+  }
 }
+
+// nsISupports 
 
 NS_IMPL_ADDREF(nsHTMLLabelElement)
 
-NS_IMPL_RELEASE(nsHTMLLabelElement)
+NS_IMETHODIMP_(nsrefcnt)
+nsHTMLLabelElement::Release()
+{
+  --mRefCnt;
+	if (mRefCnt <= 0) {
+    delete this;                                       
+    return 0;                                          
+  } else if ((1 == mRefCnt) && mForm) { 
+    mRefCnt = 0;
+    delete this;
+    return 0;
+  } else {
+    return mRefCnt;
+  }
+}
 
 nsresult
 nsHTMLLabelElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLLabelElementIID)) {
-    nsIDOMHTMLLabelElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    *aInstancePtr = (void*)(nsIDOMHTMLLabelElement*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kIFormControlIID)) {
+    *aInstancePtr = (void*)(nsIFormControl*) this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
+
+// nsIDOMHTMLLabelElement
 
 nsresult
 nsHTMLLabelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
@@ -128,19 +172,67 @@ nsHTMLLabelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  *aForm = nsnull;/* XXX */
-  return NS_OK;
+  nsresult result = NS_OK;
+  *aForm = nsnull;
+  if (nsnull != mForm) {
+    nsIDOMHTMLFormElement* formElem = nsnull;
+    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    if (NS_OK == result) {
+      *aForm = formElem;
+    }
+  }
+  return result;
+}
+
+// An important assumption is that if aForm is null, the previous mForm will not be released
+// This allows nsHTMLFormElement to deal with circular references.
+NS_IMETHODIMP
+nsHTMLLabelElement::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  nsresult result = NS_OK;
+	if (nsnull == aForm) {
+    mForm = nsnull;
+    return NS_OK;
+  } else {
+    NS_IF_RELEASE(mForm);
+    nsIFormControl* formControl = nsnull;
+    result = QueryInterface(kIFormControlIID, (void**)&formControl);
+    if ((NS_OK == result) && formControl) {
+      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
+      if ((NS_OK == result) && mForm) {
+        mForm->AddElement(formControl);
+      }
+      NS_RELEASE(formControl);
+    }
+  }
+  return result;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for, eSetAttrNotify_None)
+//NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for, eSetAttrNotify_None)
+
+NS_IMETHODIMP
+nsHTMLLabelElement::GetHtmlFor(nsString& aValue)
+{
+  mInner.GetAttribute(nsHTMLAtoms::_for, aValue);                 
+  return NS_OK;                                                    
+}  
+
+NS_IMETHODIMP
+nsHTMLLabelElement::SetHtmlFor(const nsString& aValue)
+{
+  // trim leading and trailing whitespace 
+  static char whitespace[] = " \r\n\t";
+  nsString value(aValue);
+  value.Trim(whitespace, PR_TRUE, PR_TRUE);
+  return mInner.SetAttribute(nsHTMLAtoms::defaultvalue, value, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLLabelElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
                                       nsHTMLValue& aResult)
 {
-  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -149,7 +241,6 @@ nsHTMLLabelElement::AttributeToString(nsIAtom* aAttribute,
                                       nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -158,7 +249,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
@@ -179,3 +269,4 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+

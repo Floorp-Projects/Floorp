@@ -151,7 +151,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mWidget = nsnull;
-  //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
+  nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -162,7 +162,7 @@ nsHTMLInputElement::~nsHTMLInputElement()
     mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
-  //nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
+  nsTraceRefcnt::Destroy((nsIFormControl*)this, __FILE__, __LINE__);
 }
 
 // nsISupports
@@ -170,7 +170,7 @@ nsHTMLInputElement::~nsHTMLInputElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLInputElement::AddRef(void)
 {
-  //nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
+  nsTraceRefcnt::AddRef((nsIFormControl*)this, mRefCnt+1, __FILE__, __LINE__);
   PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
@@ -196,7 +196,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLInputElement::Release()
 {
-  //nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
+  nsTraceRefcnt::Release((nsIFormControl*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
 	if (mRefCnt <= 0) {
     delete this;                                       

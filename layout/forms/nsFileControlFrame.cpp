@@ -123,6 +123,14 @@ GetWindowTemp(nsIView *aView)
 }
 
 
+void 
+nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+{
+  if (mTextFrame) {
+    mTextFrame->SetFocus(aOn, aRepaint);
+  }
+}
+
 // this is in response to the MouseClick from the containing browse button
 // XXX still need to get filters from accept attribute
 void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)

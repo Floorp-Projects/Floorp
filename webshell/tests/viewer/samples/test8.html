@@ -27,20 +27,22 @@ BUTTON {
 
 <BR>
 <FORM METHOD="GET" ACTION="http://search.yahoo.com/bin/search" NAME="searchform">
-<FIELDSET style="background-color: rgb(200, 220, 240); display: inline; border: 2px solid black; padding: 10px;">
+<div align=center><bold><font size=2>html 4 fieldset/legend</font></bold></div>
+<INPUT type=image src=raptor.jpg width=50 height=50 name=imageSubmit> 
+<FIELDSET style="background-color: rgb(200, 220, 240); display: inline; border: 2px solid black; margin-left: 10px; padding: 10px;">
 <LEGEND style="background-color:rgb(180, 200, 220);  border: 1px solid gray; padding: 0px;" align=left>&nbsp;Find it <b>Fast</b>&nbsp;</LEGEND>
 <INPUT type=text value=travel NAME="p" SIZE=15 MAXLENGTH=80 style="margin-right:10px; background-color: rgb(190, 190, 190);">
 <INPUT type=submit value="GO">
 <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
 </FIELDSET>
-&nbsp;&nbsp<INPUT type=image src=raptor.jpg width=50 height=50 name=imageSubmit> 
 <BR><BR>
-
+<div align=center><bold><font size=2>html 4 button</font></bold></div>
 <BUTTON type=submit style="border: 5px outset gray; padding: 3px;">
-<font size=4><B>This big button contains a table
+<font size=4><B>This button contains a table
 <table border=3><TR border=1><TD>CELL 1</TD><TD>CELL 2<TD></TR>
        <TR><TD>CELL 3</TD><TD>CELL 4</TD></TR></table> 
-and a background image. It will also submit the form.
+and a background image. 
+<BR>It will also submit the form.
 </B></font>
 </BUTTON>
 <BR>
@@ -49,17 +51,25 @@ and a background image. It will also submit the form.
 
 <BR><BR>
 <FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
+<div align=center><bold><font size=2>html 4 labels</font></bold></div>
+<table>
+  <tr>
+	<td><label for=radio1 style="margin-right: 5px;">radio 1 label</label></td>
+    <td><input id=radio1 type=radio name=radio></td></tr>
+  <tr>
+	<td><label for=radio2 style="border: 1px solid blue; margin-right: 5px;">radio 2</label></td>
+    <td><input id=radio2 type=radio name=radio></td></tr></table> 
+<BR>
+<label><input type=checkbox name=check1 checked>checkbox 1</label>
+<BR>
+<label><input type=checkbox name=check2>checkbox 2</label>
+<BR><BR>
+<HR>
 <textarea name=a rows=4 cols=10 value="a textarea">a textarea</textarea>
 &nbsp;&nbsp;
 <textarea name=a id=textarea1 value="a textarea">another textarea
 size, font set by css</textarea>
-<BR><BR>
-checkboxes:&nbsp;&nbsp; <input type=checkbox name=check1 checked> &nbsp;<input type=checkbox name=check2>
 &nbsp;&nbsp; a password:&nbsp;&nbsp;<INPUT TYPE="PASSWORD"> 
-<BR><BR>
-<input type=radio name=group1>  radio1
-<BR>
-<input type=radio name=group1 checked>  radio2
 <BR><BR>
 <select name=select2 id=select1 size=4 multiple>
   <option>option 1</option>

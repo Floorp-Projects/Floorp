@@ -39,7 +39,7 @@ class nsHTMLFieldSetElement : public nsIDOMHTMLFieldSetElement,
                               public nsIScriptObjectOwner,
                               public nsIDOMEventReceiver,
                               public nsIHTMLContent,
-                              public nsIFormControl
+                              public nsIFormControl 
 {
 public:
   nsHTMLFieldSetElement(nsIAtom* aTag);

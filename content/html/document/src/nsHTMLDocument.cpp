@@ -2191,7 +2191,6 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
 
 // forms related stuff
 
-// XXX remove this if GetForms is sufficient
 NS_IMETHODIMP 
 nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
 {
@@ -2207,14 +2206,12 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
     
     // Initialize mForms if necessary...
     if (nsnull == mForms) {
-      nsIDOMHTMLCollection* forms = nsnull;
-      result = GetForms(&forms);
-      NS_IF_RELEASE(forms);
+      nsAutoString tag("form");
+      mForms = new nsContentList(this, tag);
+      NS_ADDREF(mForms);
     }
 
-    if (NS_SUCCEEDED(result)) {
-      mForms->Add(iContent);
-    }
+    mForms->Add(iContent);
     NS_RELEASE(iContent);
   }
   return result;

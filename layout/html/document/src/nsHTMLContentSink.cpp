@@ -575,6 +575,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_label:
     rv = NS_NewHTMLLabelElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
     break;
   case eHTMLTag_legend:
     rv = NS_NewHTMLLegendElement(aResult, aAtom);
@@ -1588,14 +1589,14 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   AddLeaf(aNode);
 
   // add the form to the document
-  //nsIHTMLDocument* htmlDoc = nsnull;
-  //if (mDocument && mCurrentForm) {
-  //  rv = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
-  //  if ((NS_OK == rv) && htmlDoc) {
-  //    htmlDoc->AddForm(mCurrentForm);
-  //    NS_RELEASE(htmlDoc);
-  //  }
-  //}
+  nsIHTMLDocument* htmlDoc = nsnull;
+  if (mDocument && mCurrentForm) {
+    rv = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+    if ((NS_OK == rv) && htmlDoc) {
+      htmlDoc->AddForm(mCurrentForm);
+      NS_RELEASE(htmlDoc);
+    }
+  }
 
   return NS_OK;
 }

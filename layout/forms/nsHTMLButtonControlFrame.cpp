@@ -92,6 +92,8 @@ public:
   virtual void Reset() {};
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
+  void SetFocus(PRBool aOn, PRBool aRepaint);
+
   void GetDefaultLabel(nsString& aLabel);
 
   NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
@@ -341,6 +343,16 @@ void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, 
   aFrame->Invalidate(aRect, PR_TRUE);
 }
 
+void 
+nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+{
+  mGotFocus = aOn;
+  if (aRepaint) {
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    Invalidate(rect, PR_TRUE);
+  }
+}
+
 // XXX temporary hack code until new style rules are added
 void
 nsHTMLButtonControlFrame::AddToPadding(nsIPresContext& aPresContext,
@@ -513,6 +525,28 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
+  // create our view, we need a view to grab the mouse 
+  nsIView* view;
+  GetView(view);
+  if (!view) {
+    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                                  (void **)&view);
+	  nsIPresShell   *presShell = aPresContext.GetShell();     
+	  nsIViewManager *viewMan   = presShell->GetViewManager();  
+    NS_RELEASE(presShell);
+
+    nsIFrame* parWithView;
+	  nsIView *parView;
+    GetParentWithView(parWithView);
+	  parWithView->GetView(parView);
+    // the view's size is not know yet, but its size will be kept in synch with our frame.
+    nsRect boundBox(0, 0, 500, 500); 
+    result = view->Init(viewMan, boundBox, parView, nsnull);
+    viewMan->InsertChild(parView, view, 0);
+    SetView(view);
+    NS_RELEASE(viewMan);
+  }
+
   // cache our display type
   const nsStyleDisplay* styleDisplay;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
@@ -616,27 +650,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
-
-  // create our view, we need a view to grab the mouse 
-  nsIView* view;
-  GetView(view);
-  if (!view) {
-    nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                                  (void **)&view);
-	  nsIPresShell   *presShell = aPresContext.GetShell();     
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  
-    NS_RELEASE(presShell);
-
-    nsIFrame* parWithView;
-	  nsIView *parView;
-    GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
-    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
-    result = view->Init(viewMan, boundBox, parView, nsnull);
-    viewMan->InsertChild(parView, view, 0);
-    SetView(view);
-    NS_RELEASE(viewMan);
-  }
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;

@@ -333,6 +333,10 @@ NS_NewFileControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                        nsIFrame*& aResult);
 
 extern nsresult
+NS_NewLabelFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                 nsIFrame*& aResult);
+
+extern nsresult
 NS_NewLegendFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                   nsIFrame*& aResult);
 

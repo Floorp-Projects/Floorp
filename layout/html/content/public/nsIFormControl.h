@@ -37,11 +37,12 @@ class nsIWidget;
 #define NS_FORM_INPUT_RADIO    12
 #define NS_FORM_INPUT_SUBMIT   13
 #define NS_FORM_INPUT_TEXT     14
-#define NS_FORM_OPTION         15
-#define NS_FORM_OPTGROUP       16
-#define NS_FORM_LEGEND         17
-#define NS_FORM_SELECT         18
-#define NS_FORM_TEXTAREA       19
+#define NS_FORM_LABEL          15
+#define NS_FORM_OPTION         16
+#define NS_FORM_OPTGROUP       17
+#define NS_FORM_LEGEND         18
+#define NS_FORM_SELECT         19
+#define NS_FORM_TEXTAREA       20
 
 #define NS_FORM_NOTOK          0xFFFFFFF7
 #define NS_FORM_NOTSET         0xFFFFFFF7
