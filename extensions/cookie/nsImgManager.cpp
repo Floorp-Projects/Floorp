@@ -92,9 +92,9 @@ nsresult nsImgManager::Init()
 }
 
 
-NS_IMETHODIMP nsImgManager::Block(const char * imageURL)
+NS_IMETHODIMP nsImgManager::Block(nsIURI* imageURI)
 {
-    ::IMAGE_Block(imageURL,mIOService);
+    ::IMAGE_Block(imageURI);
     return NS_OK;
 }
 

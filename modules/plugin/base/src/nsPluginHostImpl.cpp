@@ -6343,15 +6343,23 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
   nsresult rv;
   PRInt64 fileSize;
   nsCAutoString filename;
+
   // stat file == get size & convert file:///c:/ to c: if needed
-  nsCOMPtr<nsILocalFile> inFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-  if (NS_FAILED(rv) || 
-    (NS_FAILED(rv = NS_InitFileFromURLSpec(inFile, nsDependentCString(postDataURL))) &&
-     NS_FAILED(rv = inFile->InitWithNativePath(nsDependentCString(postDataURL)))) ||
-    NS_FAILED(rv = inFile->GetFileSize(&fileSize)) ||
-    NS_FAILED(rv = inFile->GetNativePath(filename))
-    )
-    return rv;
+  nsCOMPtr<nsIFile> inFile;
+  rv = NS_GetFileFromURLSpec(nsDependentCString(postDataURL),
+                             getter_AddRefs(inFile));
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = NS_NewNativeLocalFile(nsDependentCString(postDataURL), PR_FALSE,
+                               getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) return rv;
+    inFile = localFile;
+  }
+  rv = inFile->GetFileSize(&fileSize);
+  if (NS_FAILED(rv)) return rv;
+  rv = inFile->GetNativePath(filename);
+  if (NS_FAILED(rv)) return rv;
+
   if (!LL_IS_ZERO(fileSize)) {
     nsCOMPtr<nsIInputStream> inStream;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), inFile);

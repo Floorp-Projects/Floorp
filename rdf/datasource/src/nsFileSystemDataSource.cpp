@@ -246,9 +246,9 @@ FileSystemDataSource::isDirURI(nsIRDFResource* source)
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv)) return(PR_FALSE);
 
-    nsCOMPtr<nsILocalFile> aDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID); 
+    nsCOMPtr<nsIFile> aDir;
 
-    rv = NS_InitFileFromURLSpec(aDir, nsDependentCString(uri));
+    rv = NS_GetFileFromURLSpec(nsDependentCString(uri), getter_AddRefs(aDir));
     if (NS_FAILED(rv)) return(PR_FALSE);
 
     PRBool isDirFlag = PR_FALSE;

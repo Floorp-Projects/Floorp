@@ -648,8 +648,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     var parentLocation = null;
     if (isLocalFile)
     {
-      var fileLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
-      ioService.initFileFromURLSpec(fileLocation, aDocumentURLString);  // this asserts if url is not local
+      var fileLocation = ioService.getFileFromURLSpec(aDocumentURLString); // this asserts if url is not local
       parentLocation = fileLocation.parent;
     }
     if (parentLocation)
@@ -1465,9 +1464,8 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
       
       if (docURI.schemeIs("file"))
       {
-        tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
         ioService = GetIOService();
-        ioService.initFileFromURLSpec(tempLocalFile, urlstring);
+        tempLocalFile = ioService.getFileFromURLSpec(urlstring).QueryInterface(Components.interfaces.nsILocalFile);
       }
     }
 
@@ -2102,9 +2100,8 @@ var nsValidateCommand =
     // See if it's a file:
     var ifile;
     try {
-      ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
       var ioService = GetIOService();
-      ioService.initFileFromURLSpec(ifile, URL2Validate);
+      ifile = ioService.getFileFromURLSpec(URL2Validate);
       // nsIFile throws an exception if it's not a file url
     } catch (e) { ifile = null; }
     if (ifile)
