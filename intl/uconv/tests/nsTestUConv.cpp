@@ -29,6 +29,9 @@
 #include "nsICharRepresentable.h"
 #include "prmem.h"
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
+
 //#define TEST_IS_REPRESENTABLE
 
 /**
