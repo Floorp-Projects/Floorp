@@ -12,6 +12,7 @@ capitalize
 center
 circle
 cm
+compact
 dashed
 decimal
 disc
@@ -27,6 +28,7 @@ ibeam
 in
 inherit
 inline
+inline-table
 inset
 inside
 italic
@@ -41,6 +43,7 @@ lower-alpha
 lower-roman
 lowercase
 ltr
+marker
 medium
 middle
 mm
@@ -65,6 +68,7 @@ repeat-y
 ridge
 right
 rtl
+run-in
 scroll
 small
 small-caps
@@ -74,6 +78,15 @@ square
 static
 sub
 super
+table
+table-caption
+table-cell
+table-column
+table-column-group
+table-footer-group
+table-header-group
+table-row
+table-row-group
 text-bottom
 text-top
 thick
