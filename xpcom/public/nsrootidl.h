@@ -13,6 +13,7 @@
  */
 #if 0
 
+typedef PRBool  PRBool;
 typedef PRUint8  PRUint8;
 typedef PRUint16  PRUint16;
 typedef PRUint32  PRUint32;

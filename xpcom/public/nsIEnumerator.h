@@ -1,99 +1,96 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIEnumerator.idl
  */
 
-#ifndef nsIEnumerator_h___
-#define nsIEnumerator_h___
+#ifndef __gen_nsIEnumerator_h__
+#define __gen_nsIEnumerator_h__
 
-#include "nsISupports.h"
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
-// {D1899240-F9D2-11d2-BDD6-000064657374}
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+
+/* starting interface:    nsISimpleEnumerator */
+
+/* {D1899240-F9D2-11D2-BDD6-000064657374} */
+#define NS_ISIMPLEENUMERATOR_IID_STR "D1899240-F9D2-11D2-BDD6-000064657374"
 #define NS_ISIMPLEENUMERATOR_IID \
-{ 0xd1899240, 0xf9d2, 0x11d2, { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+  {0xD1899240, 0xF9D2, 0x11D2, \
+    { 0xBD, 0xD6, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 }}
 
 class nsISimpleEnumerator : public nsISupports {
-public:
-  static const nsIID& GetIID(void) { static nsIID iid = NS_ISIMPLEENUMERATOR_IID; return iid; }
-  NS_IMETHOD HasMoreElements(PRBool* aResult) = 0;
-  NS_IMETHOD GetNext(nsISupports** aResult) = 0;
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISIMPLEENUMERATOR_IID)
+
+  /* boolean HasMoreElements (); */
+  NS_IMETHOD HasMoreElements(PRBool *_retval) = 0;
+
+  /* nsISupports GetNext (); */
+  NS_IMETHOD GetNext(nsISupports **_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsISimpleEnumerator *priv);
+#endif
 };
 
+/* starting interface:    nsIEnumerator */
 
-extern "C" NS_COM nsresult
-NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
-
-
-#define NS_IENUMERATOR_IID                           \
-{ /* ad385286-cbc4-11d2-8cca-0060b0fc14a3 */         \
-    0xad385286,                                      \
-    0xcbc4,                                          \
-    0x11d2,                                          \
-    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
+/* {ad385286-cbc4-11d2-8cca-0060b0fc14a3} */
+#define NS_IENUMERATOR_IID_STR "ad385286-cbc4-11d2-8cca-0060b0fc14a3"
+#define NS_IENUMERATOR_IID \
+  {0xad385286, 0xcbc4, 0x11d2, \
+    { 0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3 }}
 
 class nsIEnumerator : public nsISupports {
-public:
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IENUMERATOR_IID)
 
-  static const nsIID& GetIID(void) { static nsIID iid = NS_IENUMERATOR_IID; return iid; }
+  /* void First (); */
+  NS_IMETHOD First() = 0;
 
-  /** First will reset the list. will return NS_FAILED if no items
-   */
-  NS_IMETHOD First(void) = 0;
-  
-  /** Next will advance the list. will return failed if already at end
-   */
-  NS_IMETHOD Next(void) = 0;
+  /* void Next (); */
+  NS_IMETHOD Next() = 0;
 
-  /** CurrentItem will return the CurrentItem item it will fail if the list is empty
-   *  @param aItem return value
-   */
-  NS_IMETHOD CurrentItem(nsISupports **aItem) = 0;
+  /* nsISupports CurrentItem (); */
+  NS_IMETHOD CurrentItem(nsISupports **_retval) = 0;
 
-  /** return if the collection is at the end.  that is the beginning following a call to Prev
-   *  and it is the end of the list following a call to next
-   *  @param aItem return value
-   */
-  NS_IMETHOD IsDone(void) = 0;
+  /* void IsDone (); */
+  NS_IMETHOD IsDone() = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIEnumerator *priv);
+#endif
 };
 
-#define NS_IBIDIRECTIONALENUMERATOR_IID              \
-{ /* 75f158a0-cadd-11d2-8cca-0060b0fc14a3 */         \
-    0x75f158a0,                                      \
-    0xcadd,                                          \
-    0x11d2,                                          \
-    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
+/* starting interface:    nsIBidirectionalEnumerator */
+
+/* {75f158a0-cadd-11d2-8cca-0060b0fc14a3} */
+#define NS_IBIDIRECTIONALENUMERATOR_IID_STR "75f158a0-cadd-11d2-8cca-0060b0fc14a3"
+#define NS_IBIDIRECTIONALENUMERATOR_IID \
+  {0x75f158a0, 0xcadd, 0x11d2, \
+    { 0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3 }}
 
 class nsIBidirectionalEnumerator : public nsIEnumerator {
-public:
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBIDIRECTIONALENUMERATOR_IID)
 
-  static const nsIID& GetIID(void) { static nsIID iid = NS_IBIDIRECTIONALENUMERATOR_IID; return iid; }
+  /* void Last (); */
+  NS_IMETHOD Last() = 0;
 
-  /** Last will reset the list to the end. will return NS_FAILED if no items
-   */
-  NS_IMETHOD Last(void) = 0;
+  /* void Prev (); */
+  NS_IMETHOD Prev() = 0;
 
-  /** Prev will decrement the list. will return failed if already at beginning
-   */
-  NS_IMETHOD Prev(void) = 0;
-
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIBidirectionalEnumerator *priv);
+#endif
 };
-
+extern "C" NS_COM nsresult
+NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult);
 // Construct and return an implementation of a "conjoining enumerator." This
 // enumerator lets you string together two other enumerators into one sequence.
 // The result is an nsIBidirectionalEnumerator, but if either input is not
@@ -101,14 +98,12 @@ public:
 extern "C" NS_COM nsresult
 NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                            nsIBidirectionalEnumerator* *aInstancePtrResult);
-
 // Construct and return an implementation of a "union enumerator." This
 // enumerator will only return elements that are found in both constituent
 // enumerators.
 extern "C" NS_COM nsresult
 NS_NewUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                       nsIEnumerator* *aInstancePtrResult);
-
 // Construct and return an implementation of an "intersection enumerator." This
 // enumerator will return elements that are found in either constituent
 // enumerators, eliminating duplicates.
@@ -116,5 +111,5 @@ extern "C" NS_COM nsresult
 NS_NewIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                              nsIEnumerator* *aInstancePtrResult);
 
-#endif // __nsIEnumerator_h
 
+#endif /* __gen_nsIEnumerator_h__ */
