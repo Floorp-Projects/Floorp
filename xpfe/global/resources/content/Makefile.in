@@ -71,6 +71,7 @@ CHROME_CONTENT= \
 		htmlBindings.xml \
 		menulistBindings.xml \
 		radioBindings.xml \
+    scrollbarBindings.xml \
 		tabBindings.xml \
 		treeBindings.xml \
 		xulBindings.xml \

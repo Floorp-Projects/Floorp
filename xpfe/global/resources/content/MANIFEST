@@ -26,6 +26,7 @@ mozilla.html
 htmlBindings.xml
 menulistBindings.xml
 radioBindings.xml
+scrollbarBindings.xml
 tabBindings.xml
 treeBindings.xml
 xulBindings.xml
