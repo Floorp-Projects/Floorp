@@ -831,15 +831,25 @@ if ($#ARGV == 1) {
 }
 
 if ($ARGV[0] eq "rescanall") {
-    print "<br> Collecting bug ids...\n";
-    SendSQL("select bug_id from bugs where to_days(now()) - to_days(delta_ts) <= 2 order by bug_id");
+    print "Collecting bug ids...\n";
+    SendSQL("select bug_id, lastdiffed, delta_ts from bugs where lastdiffed < delta_ts AND delta_ts < date_sub(now(), INTERVAL 30 minute) order by bug_id");
     my @list;
     while (my @row = FetchSQLData()) {
+        my $time = $row[2];
+        if ($time =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+            $time = "$1-$2-$3 $4:$5:$6";
+        }
+        print STDERR "Bug $row[0] has unsent mail. lastdiffed is $row[1], delta_ts is $time.\n";
         push @list, $row[0];
+    }
+    if (scalar(@list) > 0) {
+        print STDERR scalar(@list) . " bugs found with possibly unsent mail\n";
+        print STDERR "Updating bugs, sending mail if required\n";
+    } else {
+        print "All appropriate mail appears to have been sent\n"
     }
     foreach my $id (@list) {
         if (detaint_natural($id)) {
-            print "<br> Doing bug $id\n";
             ProcessOneBug($id);
         }
     }

@@ -787,7 +787,8 @@ if ($action eq 'update') {
         }
 
         SendSQL("UPDATE bugs
-                 SET component=" . SqlQuote($component) . "
+                 SET component=" . SqlQuote($component) . ",
+                 delta_ts = delta_ts
                  WHERE component=" . SqlQuote($componentold) . "
                    AND product=" . SqlQuote($product));
         SendSQL("UPDATE components

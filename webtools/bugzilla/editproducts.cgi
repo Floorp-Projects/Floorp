@@ -1004,7 +1004,7 @@ if ($action eq 'update') {
             exit;
         }
 
-        SendSQL("UPDATE bugs SET product=$qp WHERE product=$qpold");
+        SendSQL("UPDATE bugs SET product=$qp, delta_ts=delta_ts WHERE product=$qpold");
         SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");

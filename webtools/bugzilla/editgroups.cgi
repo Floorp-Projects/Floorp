@@ -518,7 +518,7 @@ if ($action eq 'delete') {
     }
     SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
     if (FetchOneColumn()) {
-      SendSQL("UPDATE bugs SET groupset=(groupset-$bit) " .
+      SendSQL("UPDATE bugs SET groupset=(groupset-$bit), delta_ts=delta_ts " .
               "WHERE (groupset & $bit)");
       print "All bugs have had group bit $bit cleared.  Any of these " .
             "bugs that were not also in another group are now " .
