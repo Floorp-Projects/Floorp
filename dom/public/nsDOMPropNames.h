@@ -889,6 +889,8 @@
     "xuldocument.persist", \
     "xuldocument.popupnode", \
     "xuldocument.tooltipnode", \
+    "xuliframeelement.docshell", \
+    "xulbrowserelement.webbrowser", \
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.blur", \
