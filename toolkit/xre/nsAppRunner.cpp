@@ -74,7 +74,6 @@
 #include "nsIIOService.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
-#include "nsIPref.h"
 #include "nsIProcess.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"

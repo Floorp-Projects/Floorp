@@ -65,7 +65,6 @@
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIPref.h"
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
