@@ -105,6 +105,9 @@ nsImapIncomingServer::nsImapIncomingServer()
 
 nsImapIncomingServer::~nsImapIncomingServer()
 {
+    nsresult rv = ClearInner();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ClearInner failed");
+
     CloseCachedConnections();
 }
 
@@ -902,7 +905,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
 	if (mDoingSubscribeDialog) {
-		rv = AddToSubscribeDS(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+		rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
 		return rv;
 	}
 
@@ -2131,60 +2134,109 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
   return rv;
 }
 
+nsresult
+nsImapIncomingServer::SetDelimiterFromHierarchyDelimiter()
+{
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!imapService) return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIFolder> rootFolder;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr<nsIMsgImapMailFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!rootMsgFolder) return NS_ERROR_FAILURE;
+    
+    PRUnichar delimiter = '/';
+    rv = rootMsgFolder->GetHierarchyDelimiter(&delimiter);
+    NS_ENSURE_SUCCESS(rv,rv);
+ 
+#ifdef DEBUG_seth
+    printf("setting delimiter to %c\n",char(delimiter));
+#endif
+    if (delimiter == kOnlineHierarchySeparatorUnknown) {
+        delimiter = '/';
+#ifdef DEBUG_seth
+        printf("..no, override delimiter to %c\n",char(delimiter));
+#endif
+    }
+
+    rv = SetDelimiter(char(delimiter));     
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    return NS_OK;
+}
+
 NS_IMETHODIMP
-nsImapIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *uri)
+nsImapIncomingServer::StartPopulatingWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/, const char *uri)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	printf("in PopulateSubscribeDatasourceWithUri(%s)\n",uri);
+	printf("in StartPopulatingWithUri(%s)\n",uri);
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
-	// xxx todo can we do: rv = mInner->StartPopulatingSubscribeDS(); ?
-    rv = StartPopulatingSubscribeDS();
-    if (NS_FAILED(rv)) return rv;
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mInner->StartPopulatingWithUri(aMsgWindow, aForceToServer, uri);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = SetDelimiterFromHierarchyDelimiter();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = SetShowFullName(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+    NS_ENSURE_SUCCESS(rv,rv);
 
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 	if (!imapService) return NS_ERROR_FAILURE;
 
-	nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
-	if (NS_FAILED(rv)) return rv;
+    /* 
+    if uri = imap://user@host/foo/bar, the serverUri is imap://user@host
+    to get path from uri, skip over imap://user@host + 1 (for the /)
+    */
+    const char *path = uri + nsCRT::strlen((const char *)serverUri) + 1;
 
-	/* 
-		if uri = imap://user@host/foo/bar, the serverUri is imap://user@host
-	 	to get path from uri, skip over imap://user@host + 1 (for the /)
-	*/
-	const char *path = uri + nsCRT::strlen((const char *)serverUri) + 1;
-#ifdef DEBUG_seth
-	printf("path = %s\n",path);
-#endif
-
-    rv = imapService->BuildSubscribeDatasourceWithPath(this, aMsgWindow, path);
-    if (NS_FAILED(rv)) return rv;
+    rv = imapService->GetListOfFoldersWithPath(this, aMsgWindow, path);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/)
+nsImapIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToServer /*ignored*/)
 {
 	nsresult rv;
 #ifdef DEBUG_sspitzer
-	printf("in PopulateSubscribeDatasource()\n");
+	printf("in StartPopulating()\n");
 #endif
 	mDoingSubscribeDialog = PR_TRUE;	
 
-    rv = StartPopulatingSubscribeDS();
-    if (NS_FAILED(rv)) return rv;
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mInner->StartPopulating(aMsgWindow, aForceToServer);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = SetDelimiterFromHierarchyDelimiter();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = SetShowFullName(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
 
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 	if (!imapService) return NS_ERROR_FAILURE;
 
-    rv = imapService->BuildSubscribeDatasource(this, aMsgWindow);
-    if (NS_FAILED(rv)) return rv;
+    rv = imapService->GetListOfFoldersOnServer(this, aMsgWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
 
     return NS_OK;
 }
@@ -2200,6 +2252,9 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
     nsresult rv = exitCode;
 
+    // xxx todo get msgWindow from url
+    nsCOMPtr<nsIMsgWindow> msgWindow;
+
     nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(url);
     if (imapUrl) {
         nsImapAction imapAction = nsIImapUrl::nsImapTest;
@@ -2207,10 +2262,11 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
         switch (imapAction) {
         case nsIImapUrl::nsImapDiscoverAllAndSubscribedBoxesUrl:
         case nsIImapUrl::nsImapDiscoverChildrenUrl:
-            rv = UpdateSubscribedInSubscribeDS();
+            rv = UpdateSubscribed();
             if (NS_FAILED(rv)) return rv;
             mDoingSubscribeDialog = PR_FALSE;
-            rv = StopPopulatingSubscribeDS();
+            rv = StopPopulating(msgWindow);
+            if (NS_FAILED(rv)) return rv;
             break;
         case nsIImapUrl::nsImapDiscoverAllBoxesUrl:
             DiscoveryDone();
@@ -2226,37 +2282,45 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 NS_IMETHODIMP
 nsImapIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetIncomingServer(aServer);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetShowFullName(PRBool showFullName)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetShowFullName(showFullName);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetDelimiter(char *aDelimiter)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetDelimiter(aDelimiter);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetDelimiter(char aDelimiter)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetDelimiter(aDelimiter);
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
+nsImapIncomingServer::SetAsSubscribed(const char *path)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetAsSubscribedInSubscribeDS(aURI);
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	return mInner->SetAsSubscribed(path);
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
+nsImapIncomingServer::UpdateSubscribed()
 {
 #ifdef DEBUG_sspitzer
 	printf("for imap, do this when we populate\n");
@@ -2265,32 +2329,15 @@ nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed,PRBool changeIfExists)
+nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed,PRBool changeIfExists)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->AddToSubscribeDS(aName, addAsSubscribed, changeIfExists);
-}
-
-
-NS_IMETHODIMP
-nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
-{
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource,subscribed,changeIfExists);
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
-{
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->FindAndAddParentToSubscribeDS(uri,serverUri,aName,aChildResource);
-}
-
-NS_IMETHODIMP
-nsImapIncomingServer::StopPopulatingSubscribeDS()
+nsImapIncomingServer::StopPopulating(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 
@@ -2299,14 +2346,17 @@ nsImapIncomingServer::StopPopulatingSubscribeDS()
     if (NS_FAILED(rv)) return rv;
     if (!listener) return NS_ERROR_FAILURE;
 
-    rv = listener->OnStopPopulating();
+    rv = listener->OnDonePopulating();
     if (NS_FAILED(rv)) return rv;
 	
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	rv = mInner->StopPopulatingSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	rv = mInner->StopPopulating(aMsgWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
 
+    //xxx todo when do I set this to null?
+    //rv = ClearInner();
+    //NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
 }
 
@@ -2315,50 +2365,24 @@ NS_IMETHODIMP
 nsImapIncomingServer::SubscribeCleanup()
 {
 	nsresult rv;
-	if (mInner) {
-		rv = mInner->SetSubscribeListener(nsnull);
-		if (NS_FAILED(rv)) return rv;
-
-		mInner = nsnull;
-	}
+    rv = ClearInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapIncomingServer::StartPopulatingSubscribeDS()
-{
-	nsresult rv;
-
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-
-    rv = SetIncomingServer(this);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetDelimiter('/');		// is this aways the case?  need to talk to jefft
-    if (NS_FAILED(rv)) return rv;
-
-	rv = SetShowFullName(PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-
-	return mInner->StartPopulatingSubscribeDS();
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
 {
-	nsresult rv;
-    mInner = do_CreateInstance(kSubscribableServerCID,&rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetSubscribeListener(aListener);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->GetSubscribeListener(aListener);
 }
 
@@ -2435,4 +2459,93 @@ nsImapIncomingServer::ReDiscoverAllFolders()
 {
     nsresult rv = PerformExpand(nsnull);
     return rv;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->SetState(path, state, stateChanged);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->HasChildren(path, aHasChildren);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->IsSubscribed(path, aIsSubscribed);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetLeafName(path, aLeafName);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetFirstChildURI(const char * path, char **aResult)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetFirstChildURI(path, aResult);
+}
+
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetChildren(const char *path, nsISupportsArray *array)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetChildren(path, array);
+}
+
+nsresult
+nsImapIncomingServer::EnsureInner()
+{
+    nsresult rv = NS_OK;
+
+    if (mInner) return NS_OK;
+
+    mInner = do_CreateInstance(kSubscribableServerCID,&rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!mInner) return NS_ERROR_FAILURE;
+
+    rv = SetIncomingServer(this);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
+}
+
+nsresult
+nsImapIncomingServer::ClearInner()
+{
+    nsresult rv = NS_OK;
+
+    if (mInner) {
+        rv = mInner->SetSubscribeListener(nsnull);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = mInner->SetIncomingServer(nsnull);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        mInner = nsnull;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::CommitSubscribeChanges()
+{
+    return ReDiscoverAllFolders();
 }

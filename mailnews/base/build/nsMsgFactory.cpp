@@ -118,7 +118,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSubscribableServer);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribableServer, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
 
 // The list of components we register

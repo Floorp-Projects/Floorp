@@ -1115,11 +1115,11 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 }
 
 
-PRInt32 nsSmtpProtocol::SendData(nsIURI *url, const char *dataBuffer, PRBool aSupressLogging)
+PRInt32 nsSmtpProtocol::SendData(nsIURI *url, const char *dataBuffer, PRBool aSuppressLogging)
 {
     if (!url || !dataBuffer) return -1;
 
-    if (!aSupressLogging) {
+    if (!aSuppressLogging) {
         PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Send: %s", dataBuffer));
     } else {
         PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("Logging suppressed for this command (it probably contained authentication information)"));

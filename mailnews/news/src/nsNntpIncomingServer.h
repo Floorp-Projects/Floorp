@@ -81,8 +81,8 @@ protected:
     nsCOMPtr<nsISupportsArray> m_connectionCache;
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 	nsByteArray		mHostInfoInputStream;	
-  nsresult SetupNewsrcSaveTimer();
-  static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);
+    nsresult SetupNewsrcSaveTimer();
+    static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);
 
 private:
 	PRInt32 mGroupsOnServerIndex;
@@ -93,13 +93,12 @@ private:
 	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();
-	nsresult PopulateSubscribeDatasourceFromHostInfo();
+	nsresult StartPopulatingFromHostInfo();
 	
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
 	PRBool mHostInfoLoaded;
 	PRBool mHostInfoHasChanged;
-	nsCOMPtr <nsISubscribableServer> mInner;
 	nsCOMPtr <nsIFileSpec> mHostInfoFile;
 	
 	PRUint32 mLastGroupDate;
@@ -108,9 +107,13 @@ private:
 	PRBool mPushAuth;
 	PRInt32 mVersion;
 
-  nsCOMPtr<nsITimer> mNewsrcSaveTimer;
+    nsCOMPtr<nsITimer> mNewsrcSaveTimer;
 	nsCOMPtr <nsITimer> mUpdateTimer;
 	nsCOMPtr <nsIMsgWindow> mMsgWindow;
+
+	nsCOMPtr <nsISubscribableServer> mInner;
+    nsresult EnsureInner();
+    nsresult ClearInner();
 };
 
 #endif

@@ -216,6 +216,6 @@ interface nsIImapService : nsISupports
 							in nsIUrlListener aUrlListener);
 
 
-  void buildSubscribeDatasource(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
-  void buildSubscribeDatasourceWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
+  void getListOfFoldersOnServer(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
+  void getListOfFoldersWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
 };

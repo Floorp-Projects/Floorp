@@ -24,11 +24,36 @@
 #ifndef nsSubscribableServer_h__
 #define nsSubscribableServer_h__
 
-#include "nsISubscribableServer.h"
 #include "nsCOMPtr.h"
-#include "nsIRDFResource.h"
-#include "nsIRDFService.h"
+#include "nsISubscribableServer.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIRDFService.h"
+#include "nsSubscribeDataSource.h"
+#include "nsIRDFResource.h"
+
+typedef struct _subscribeTreeNode {
+  char *name;
+  PRBool isSubscribed;
+  struct _subscribeTreeNode *prevSibling;
+  struct _subscribeTreeNode *nextSibling;
+  struct _subscribeTreeNode *firstChild;
+  struct _subscribeTreeNode *lastChild;
+  struct _subscribeTreeNode *parent;
+  struct _subscribeTreeNode *cachedChild;
+#ifdef HAVE_SUBSCRIBE_DESCRIPTION
+  PRUnichar *description;
+#endif
+#ifdef HAVE_SUBSCRIBE_MESSAGES
+  PRUint32 messages;
+#endif
+#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
+  PRBool isSubscribable;
+#endif
+} SubscribeTreeNode;
+
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_SUBSCRIBE 1
+#endif
 
 class nsSubscribableServer : public nsISubscribableServer
 {
@@ -36,23 +61,38 @@ class nsSubscribableServer : public nsISubscribableServer
   nsSubscribableServer();
   virtual ~nsSubscribableServer();
 
+  nsresult Init();
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSISUBSCRIBABLESERVER
   
 private:
   nsresult ConvertNameToUnichar(const char *inStr, PRUnichar **outStr);
   nsCOMPtr <nsISubscribeListener> mSubscribeListener;
-  nsCOMPtr <nsIRDFDataSource> mSubscribeDatasource;
-  nsCOMPtr <nsIRDFService> mRDFService;
-  nsCOMPtr <nsIRDFResource> kNC_Name;
-  nsCOMPtr <nsIRDFResource> kNC_LeafName;
-  nsCOMPtr <nsIRDFResource> kNC_Child;
-  nsCOMPtr <nsIRDFResource> kNC_Subscribed;
-  nsCOMPtr <nsIRDFLiteral> kTrueLiteral;
-  nsCOMPtr <nsIRDFLiteral> kFalseLiteral; 
   nsCOMPtr <nsIMsgIncomingServer> mIncomingServer;
+  nsCOMPtr <nsISubscribeDataSource> mSubscribeDS;
   char mDelimiter;
   PRBool mShowFullName;
+  PRBool mStopped;
+
+  nsCOMPtr <nsIRDFResource>      kNC_Child;
+  nsCOMPtr <nsIRDFResource>      kNC_Subscribed;
+  nsCOMPtr <nsIRDFLiteral>       kTrueLiteral;
+  nsCOMPtr <nsIRDFLiteral>       kFalseLiteral;
+
+  nsCOMPtr <nsIRDFService>       mRDFService;
+
+  SubscribeTreeNode *mTreeRoot;
+  nsresult FreeSubtree(SubscribeTreeNode *node);
+  nsresult CreateNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **result);
+  nsresult AddChildNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **child);
+  nsresult FindAndCreateNode(const char *path, SubscribeTreeNode **result);
+  nsresult NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResource *property, SubscribeTreeNode *objectNode);
+  nsresult NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResource *property, PRBool value);
+  nsresult Notify(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRBool isAssert, PRBool isChange);
+  void BuildURIFromNode(SubscribeTreeNode *node, nsCString &uri);
+  nsresult EnsureSubscribeDS();
+  nsresult EnsureRDFService();
 };
 
 #endif // nsSubscribableServer_h__

@@ -93,8 +93,8 @@ protected:
 	// It also informs the transport layer that this data is now available for transmission.
 	// Returns a positive number for success, 0 for failure (not all the bytes were written to the
 	// stream, etc). 
-    // aSupressLogging is a hint that sensitive data is being sent and should not be logged
-	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging = PR_FALSE);
+    // aSuppressLogging is a hint that sensitive data is being sent and should not be logged
+	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
 
@@ -128,9 +128,9 @@ protected:
   // for a mailnews url. 
   nsresult GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog);
 
-  // if a url isn't going to result in any content then we want to supress calls to
+  // if a url isn't going to result in any content then we want to suppress calls to
   // OnStartRequest, OnDataAvailable and OnStopRequest
-  PRBool mSupressListenerNotifications;
+  PRBool mSuppressListenerNotifications;
 };
 
 #endif /* nsMsgProtocol_h__ */

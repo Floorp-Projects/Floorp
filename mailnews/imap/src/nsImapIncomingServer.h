@@ -75,6 +75,7 @@ protected:
 
   nsresult GetStringBundle();
 private:
+    nsresult SetDelimiterFromHierarchyDelimiter();
 	nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
   nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
@@ -98,7 +99,10 @@ private:
 	PRBool	mDoingSubscribeDialog;
 	PRBool	mDoingLsub;
 	nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
+
 	nsCOMPtr <nsISubscribableServer> mInner;
+    nsresult EnsureInner();
+    nsresult ClearInner();
 };
 
 

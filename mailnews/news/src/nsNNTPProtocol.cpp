@@ -1210,9 +1210,9 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
+PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {
-    if (!aSupressLogging) {
+    if (!aSuppressLogging) {
         NNTP_LOG_WRITE(dataBuffer);
     }
     else {
@@ -2841,7 +2841,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 #else
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
-		rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
+		rv = m_nntpServer->AddNewsgroupToList(line);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
 	}
 #endif /* 0 */
@@ -2865,6 +2865,7 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 {
 	m_readNewsListCount = 0;
     m_nextState = NNTP_READ_LIST;
+    mBytesReceived = 0;
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_NEWSGROUP));
@@ -2974,7 +2975,8 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
 		m_readNewsListCount++;
-		rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
+		rv = m_nntpServer->AddNewsgroupToList(line);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
 	}
 	else {
 		rv = NS_ERROR_FAILURE;
@@ -4422,7 +4424,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 #else
 				NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 				if (m_nntpServer) {
-					rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
+					rv = m_nntpServer->AddNewsgroupToList(line);
 					NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
 				}
 #endif /* 0 */

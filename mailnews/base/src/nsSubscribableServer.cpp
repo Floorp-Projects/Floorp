@@ -18,43 +18,70 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 #include "nsSubscribableServer.h"
 
 #include "nsCOMPtr.h"
 
-#include "nsIRDFService.h"
-#include "nsRDFCID.h"
-
-#include "nsEnumeratorUtils.h" 
+#include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIFolder.h"
-
-#include "rdf.h"
+#include "prmem.h"
 #include "nsICharsetConverterManager.h"
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
-#define DEBUG_SUBSCRIBE 1
-#endif
+#include "rdf.h"
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFLiteral.h"
 
-#define TRUE_LITERAL_STR "true"
-#define FALSE_LITERAL_STR "false"
-
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsSubscribableServer);
 
 nsSubscribableServer::nsSubscribableServer(void)
 {
-  NS_INIT_REFCNT();
-  mDelimiter = '.';
-  mShowFullName = PR_TRUE;
+    NS_INIT_REFCNT();
+    mDelimiter = '.';
+    mShowFullName = PR_TRUE;
+    mTreeRoot = nsnull;
+    mStopped = PR_FALSE;
+}
+
+nsresult
+nsSubscribableServer::Init()
+{
+    nsresult rv;
+
+    rv = EnsureRDFService();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mRDFService->GetResource(NC_NAMESPACE_URI "child",getter_AddRefs(kNC_Child));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mRDFService->GetResource(NC_NAMESPACE_URI "Subscribed",getter_AddRefs(kNC_Subscribed));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),getter_AddRefs(kTrueLiteral));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(),getter_AddRefs(kFalseLiteral));
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
 }
 
 nsSubscribableServer::~nsSubscribableServer(void)
 {
+    nsresult rv = NS_OK;
+#ifdef DEBUG_seth
+    printf("XXX free subscribe tree\n");
+#endif
+    rv = FreeSubtree(mTreeRoot);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to free tree");
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsSubscribableServer, NS_GET_IID(nsISubscribableServer));
@@ -67,6 +94,14 @@ nsSubscribableServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 }
 
 NS_IMETHODIMP
+nsSubscribableServer::GetDelimiter(char *aDelimiter)
+{
+    if (!aDelimiter) return NS_ERROR_NULL_POINTER;
+    *aDelimiter = mDelimiter;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSubscribableServer::SetDelimiter(char aDelimiter)
 {
 	mDelimiter = aDelimiter;
@@ -74,51 +109,33 @@ nsSubscribableServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aURI)
+nsSubscribableServer::SetAsSubscribed(const char *path)
 {
-    nsresult rv;
+    NS_ASSERTION(path,"no path");
+    if (!path) return NS_ERROR_NULL_POINTER;
+    nsresult rv = NS_OK;
 
-    NS_ASSERTION(aURI,"no URI");
-    if (!aURI) return NS_ERROR_FAILURE;
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = mRDFService->GetResource(aURI, getter_AddRefs(resource));
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIRDFDataSource> ds;
-    rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
-    if(NS_FAILED(rv)) return rv;
-    if (!mSubscribeDatasource) return NS_ERROR_FAILURE;
+#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
+    node->isSubscribable = PR_TRUE;
+#endif
+    node->isSubscribed = PR_TRUE;
 
-    nsCOMPtr<nsIRDFNode> oldNode;
-    rv = mSubscribeDatasource->GetTarget(resource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldNode));
-    if(NS_FAILED(rv)) return rv;
+    rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-	//check if literal is already true
-	nsCOMPtr<nsIRDFLiteral> oldLiteral = do_QueryInterface(oldNode);
-	if (!oldLiteral) return NS_ERROR_FAILURE;
-	const PRUnichar *subscribedLiteralStr;
-	rv = oldLiteral->GetValueConst(&subscribedLiteralStr);
-    if(NS_FAILED(rv)) return rv;
-
-	// if it was already "true", do nothing
-	if (nsCRT::strcmp(subscribedLiteralStr,TRUE_LITERAL_STR)) {
-		rv = mSubscribeDatasource->Change(resource, kNC_Subscribed, oldNode, kTrueLiteral);
-		if(NS_FAILED(rv)) return rv;
-	}
-
-    return NS_OK;
+    return rv;
 }
-
-NS_IMETHODIMP
-nsSubscribableServer::UpdateSubscribedInSubscribeDS()
-{
-	NS_ASSERTION(PR_FALSE,"override this.");
-	return NS_ERROR_FAILURE;
-}
-
 
 // copied code, this needs to be put in msgbaseutil.
-nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUnicodeStr)
+nsresult 
+CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUnicodeStr)
 {
   if (!aUnicodeStr)
 	  return NS_ERROR_NULL_POINTER;
@@ -161,269 +178,214 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
   *aUnicodeStr = convertedString;
   return (convertedString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
+
 NS_IMETHODIMP
-nsSubscribableServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
+nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
 {
-	nsresult rv;
-
-	NS_ASSERTION(aName,"attempting to add something with no name");
-	if (!aName) return NS_ERROR_FAILURE;
-
-#ifdef DEBUG_SUBSCRIBE
-	printf("AddToSubscribeDS(%s,%d,%d)\n",aName,addAsSubscribed,changeIfExists);
+    nsresult rv = NS_OK;
+    
+    if (mStopped) {
+#ifdef DEBUG_seth
+        printf("stopped!\n");
 #endif
-	nsXPIDLCString serverUri;
+        return NS_ERROR_FAILURE;
+    }
 
-	rv = mIncomingServer->GetServerURI(getter_Copies(serverUri));
-	if (NS_FAILED(rv)) return rv;
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(aName, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-	nsCAutoString uri;
-	uri = (const char *)serverUri;
-	uri += "/";
-	uri += aName;
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIRDFResource> resource;
-	rv = mRDFService->GetResource((const char *) uri, getter_AddRefs(resource));
-	if(NS_FAILED(rv)) return rv;
-	
-	nsXPIDLString unicodeName;
-	rv = CreateUnicodeStringFromUtf7(aName, getter_Copies(unicodeName));
-	if (NS_FAILED(rv)) return rv;
+    if (changeIfExists) {
+        node->isSubscribed = addAsSubscribed;
+        rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
+        NS_ENSURE_SUCCESS(rv,rv);
 
-	rv = SetPropertiesInSubscribeDS((const char *) uri, (const PRUnichar *)unicodeName, resource, addAsSubscribed, changeIfExists);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = FindAndAddParentToSubscribeDS((const char *) uri, (const char *)serverUri, aName, resource);
-	if(NS_FAILED(rv)) return rv;
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
-{
-	nsresult rv;
-
-#ifdef DEBUG_SUBSCRIBE
-	printf("SetPropertiesInSubscribeDS(%s,??,??,%d,%d)\n",uri,subscribed,changeIfExists);
+#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
+        // todo: we know for sure that if we add as subscribed
+        // that we are subscribable, but it is possible
+        // to be added as unsubscribed and still be subscribable
+        // take care of that later.
+        if (addAsSubscribed) {
+            node->isSubscribable = PR_TRUE;
+        }
 #endif
-		
-	nsCOMPtr<nsIRDFLiteral> nameLiteral;
-	rv = mRDFService->GetLiteral(aName, getter_AddRefs(nameLiteral));
-	if(NS_FAILED(rv)) return rv;
-
-	PRBool nameExists = PR_TRUE;
-	nsCOMPtr <nsIRDFNode> nameNode;
-	// should be HasAssertion(), since we don't need to get at the literal
-	rv = mSubscribeDatasource->GetTarget(aResource, kNC_Name, PR_TRUE, getter_AddRefs(nameNode));
-	if(NS_FAILED(rv)) return rv;
-	if ((!nameNode) && (rv == NS_RDF_NO_VALUE)) {
-		nameExists = PR_FALSE;
-	}
-
-	if (!nameExists) {
-		rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
-		if(NS_FAILED(rv)) return rv;
-
-		if (mShowFullName) {
-			rv = mSubscribeDatasource->Assert(aResource, kNC_LeafName, nameLiteral, PR_TRUE);
-			if(NS_FAILED(rv)) return rv;
-		}
-		else {
-			nsAutoString leafStr(aName);
-			PRInt32 leafPos = leafStr.RFindChar(mDelimiter,PR_TRUE);
-			if (leafPos != -1) {
-				leafStr.Cut(0,leafPos + 1);
-			}
-
-			nsCOMPtr<nsIRDFLiteral> leafLiteral;
-			rv = mRDFService->GetLiteral(leafStr.GetUnicode(), getter_AddRefs(leafLiteral));
-			if(NS_FAILED(rv)) return rv;
-
-			rv = mSubscribeDatasource->Assert(aResource, kNC_LeafName, leafLiteral, PR_TRUE);
-			if(NS_FAILED(rv)) return rv;
-		}
-	}
-
-	PRBool subscribedExists = PR_TRUE;
-	nsCOMPtr <nsIRDFNode> subscribedNode;
-	rv = mSubscribeDatasource->GetTarget(aResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(subscribedNode));
-	if(NS_FAILED(rv)) return rv;
-	if ((!subscribedNode) && (rv == NS_RDF_NO_VALUE)) {
-		subscribedExists = PR_FALSE;
-	}
-
-	if (subscribed) {
-		if (!subscribedExists) {
-			rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kTrueLiteral, PR_TRUE);
-			if(NS_FAILED(rv)) return rv;
-		}
-		else if (changeIfExists) {
-			nsCOMPtr<nsIRDFLiteral> subscribedLiteral = do_QueryInterface(subscribedNode);
-			if (!subscribedLiteral) return NS_ERROR_FAILURE;
-			const PRUnichar *subscribedLiteralStr;
-			rv = subscribedLiteral->GetValueConst(&subscribedLiteralStr);
-			if(NS_FAILED(rv)) return rv;
-
-			if (nsCRT::strcmp(subscribedLiteralStr,TRUE_LITERAL_STR)) {
-				rv = mSubscribeDatasource->Change(aResource, kNC_Subscribed, subscribedNode, kTrueLiteral);
-				if(NS_FAILED(rv)) return rv;
-			}
-		}
-	}
-	else {
-		if (!subscribedExists) {
-			rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kFalseLiteral, PR_TRUE);
-			if(NS_FAILED(rv)) return rv;
-		}
-		else if (changeIfExists) {
-			nsCOMPtr<nsIRDFLiteral> subscribedLiteral = do_QueryInterface(subscribedNode);
-			if (!subscribedLiteral) return NS_ERROR_FAILURE;
-			const PRUnichar *subscribedLiteralStr;
-			rv = subscribedLiteral->GetValueConst(&subscribedLiteralStr);
-			if(NS_FAILED(rv)) return rv;
-
-			if (nsCRT::strcmp(subscribedLiteralStr,FALSE_LITERAL_STR)) {
-				rv = mSubscribeDatasource->Change(aResource, kNC_Subscribed, subscribedNode, kFalseLiteral);
-				if(NS_FAILED(rv)) return rv;
-			}
-		}
-	}
-
-
-	return rv;
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
+nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
 {
-	nsresult rv;
-#ifdef DEBUG_SUBSCRIBE
-	printf("FindAndAddParentToSubscribeDS(%s,%s,%s,??)\n",uri,serverUri,aName);
+	nsresult rv = NS_OK;
+    NS_ASSERTION(path && stateChanged, "no path or stateChanged");
+    if (!path || !stateChanged) return NS_ERROR_NULL_POINTER;
+
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
+    // todo check that node->isSubscribable is PR_TRUE?
 #endif
+    if (node->isSubscribed == state) {
+        *stateChanged = PR_FALSE;
+    }
+    else {
+        node->isSubscribed = state;
+        *stateChanged = PR_TRUE;
+        rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
+        NS_ENSURE_SUCCESS(rv,rv);
+    }
 
-	nsCOMPtr <nsIRDFResource> parentResource;
-
-	nsCAutoString uriCStr(uri);
-
-	PRInt32 startpos = nsCRT::strlen(serverUri) + 1;
-	PRInt32 delimpos = uriCStr.RFindChar(mDelimiter,PR_TRUE);
-
-	if (delimpos > startpos) {
-		uriCStr.Truncate(delimpos);
-
-		nsCAutoString nameCStr(aName);
-		PRInt32 namedelimpos = nameCStr.RFindChar(mDelimiter,PR_TRUE);
-		nameCStr.Truncate(namedelimpos);
-	
-		rv = mRDFService->GetResource((const char *) uriCStr, getter_AddRefs(parentResource));
-		if(NS_FAILED(rv)) return rv;
-
-		PRBool parentExists = PR_TRUE;
-		nsCOMPtr <nsIRDFNode> firstChild;
-		// see if the parent already exists.
-		// for the in memory datasource. HasAssertion() will be O(n), 
-		// see bug #35817
-		// to make the check for a parent constant time, I have a trick:
-		// call GetTarget() to get the first child of the parent
-		// (note, this current child has not been asserted.
-		//
-		// that will be constant time since the parent,
-		// if it exists, will have #Name, #Subscribe, and 0 to <n> #child
-		// 
-		// if that fails, then do HasAssertion(), which will be constant
-		// since <n> will be zero.
-		rv = mSubscribeDatasource->GetTarget(parentResource, kNC_Child, PR_TRUE, getter_AddRefs(firstChild));
-		if(NS_FAILED(rv)) return rv;
-		if ((!firstChild) && (rv == NS_RDF_NO_VALUE)) {
-			rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &parentExists);
-			if(NS_FAILED(rv)) return rv;
-		}
-
-		if (!parentExists) {
-			nsXPIDLString unicodeName;
-			rv = CreateUnicodeStringFromUtf7((const char *)nameCStr, getter_Copies(unicodeName));
-			if (NS_FAILED(rv)) return rv;
-
-			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const PRUnichar *)unicodeName, parentResource, PR_FALSE, PR_FALSE /* change if exists */);
-			if(NS_FAILED(rv)) return rv;
-		}
-
-		// assert the group as a child of the group above
-		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
-		if(NS_FAILED(rv)) return rv;
-
-		// recurse upwards
-		if (!parentExists) {
-			rv = FindAndAddParentToSubscribeDS((const char *)uriCStr, serverUri, (const char *)nameCStr, parentResource);
-			if(NS_FAILED(rv)) return rv;
-		}
-	}
-	else {
-		rv = mRDFService->GetResource(serverUri, getter_AddRefs(parentResource));
-		if(NS_FAILED(rv)) return rv;
-
-		// assert the group as a child of the server
-		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
-		if(NS_FAILED(rv)) return rv;
-	}
-
-	return rv;
+    return rv;
 }
 
-
-NS_IMETHODIMP
-nsSubscribableServer::StopPopulatingSubscribeDS()
+void
+nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsCString &uri)
 {
-	mRDFService = nsnull;
-	mSubscribeDatasource = nsnull;
-	kNC_Name = nsnull;
-	kNC_LeafName = nsnull;
-	kNC_Child = nsnull;
-	kNC_Subscribed = nsnull;
-	
-	return NS_OK;
+    if (node->parent) {
+        BuildURIFromNode(node->parent, uri);
+        if (node->parent == mTreeRoot) {
+            uri += "/";
+        }
+        else {
+            uri += mDelimiter;
+        }
+    }
+
+    uri += node->name;
+    return;
 }
 
-NS_IMETHODIMP
-nsSubscribableServer::StartPopulatingSubscribeDS()
+nsresult
+nsSubscribableServer::NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResource *property, SubscribeTreeNode *objectNode)
 {
-  nsresult rv;
-  mRDFService = do_GetService(kRDFServiceCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && mRDFService,"no rdf server");
-  if (NS_FAILED(rv)) return rv;
+    nsresult rv;
 
-  rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && mSubscribeDatasource,"no subscribe datasource");
-  if (NS_FAILED(rv)) return rv;
+    PRBool hasObservers = PR_TRUE;
+    rv = EnsureSubscribeDS();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSubscribeDS->GetHasObservers(&hasObservers);
+    NS_ENSURE_SUCCESS(rv,rv);
+    // no need to do all this work, there are no observers
+    if (!hasObservers) {
+        return NS_OK;
+    }
+    
+    nsCString subjectUri;
+    BuildURIFromNode(subjectNode, subjectUri);
 
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Name,"no name resource");
-  if (NS_FAILED(rv)) return rv;
+    // we could optimize this, since we know that objectUri == subjectUri + mDelimiter + object->name
+    // is it worth it?
+    nsCString objectUri;
+    BuildURIFromNode(objectNode, objectUri);
 
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#LeafName", getter_AddRefs(kNC_LeafName));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_LeafName,"no leaf name resource");
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr <nsIRDFResource> subject;
+    nsCOMPtr <nsIRDFResource> object;
 
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Child,"no child resource");
-  if (NS_FAILED(rv)) return rv;
+    rv = EnsureRDFService();
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Subscribed, "no subscribed resource");	
-  if (NS_FAILED(rv)) return rv;
- 
-  nsAutoString trueString; 
-  trueString.AssignWithConversion(TRUE_LITERAL_STR);
-  rv = mRDFService->GetLiteral(trueString.GetUnicode(), getter_AddRefs(kTrueLiteral));
-  if(NS_FAILED(rv)) return rv;
+    rv = mRDFService->GetResource((const char *)subjectUri, getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mRDFService->GetResource((const char *)objectUri, getter_AddRefs(object));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  nsAutoString falseString; 
-  falseString.AssignWithConversion(FALSE_LITERAL_STR);
-  rv = mRDFService->GetLiteral(falseString.GetUnicode(), getter_AddRefs(kFalseLiteral));
-  if(NS_FAILED(rv)) return rv;
+    rv = Notify(subject, property, object, PR_TRUE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
 
-  return NS_OK;
+nsresult
+nsSubscribableServer::EnsureRDFService()
+{
+    nsresult rv;
+
+    if (!mRDFService) {
+        mRDFService = do_GetService(kRDFServiceCID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && mRDFService, "failed to get rdf service");
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (!mRDFService) return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsSubscribableServer::NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResource *property, PRBool value)
+{
+    nsresult rv;
+    nsCOMPtr <nsIRDFResource> subject;
+
+    PRBool hasObservers = PR_TRUE;
+    rv = EnsureSubscribeDS();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSubscribeDS->GetHasObservers(&hasObservers);
+    NS_ENSURE_SUCCESS(rv,rv);
+    // no need to do all this work, there are no observers
+    if (!hasObservers) {
+        return NS_OK;
+    }
+
+    nsCString subjectUri;
+    BuildURIFromNode(subjectNode, subjectUri);
+
+    rv = EnsureRDFService();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mRDFService->GetResource((const char *)subjectUri, getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (value) {
+        rv = Notify(subject,property,kTrueLiteral,PR_FALSE,PR_TRUE);
+    }
+    else {
+        rv = Notify(subject,property,kFalseLiteral,PR_FALSE,PR_TRUE);
+    }
+
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+
+nsresult
+nsSubscribableServer::EnsureSubscribeDS()
+{
+    nsresult rv = NS_OK;
+
+    if (!mSubscribeDS) {
+        nsCOMPtr<nsIRDFDataSource> ds;
+
+        rv = EnsureRDFService();
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = mRDFService->GetDataSource("rdf:subscribe", getter_AddRefs(ds));
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (!ds) return NS_ERROR_FAILURE;
+
+        mSubscribeDS = do_QueryInterface(ds, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (!mSubscribeDS) return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsSubscribableServer::Notify(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRBool isAssert, PRBool isChange)
+{
+    nsresult rv = NS_OK;
+
+    rv = EnsureSubscribeDS();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mSubscribeDS->NotifyObservers(subject, property, object, isAssert, isChange);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -452,14 +414,38 @@ nsSubscribableServer::SubscribeCleanup()
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *uri)
+nsSubscribableServer::StartPopulatingWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *uri)
 {
-	NS_ASSERTION(PR_FALSE,"override this.");
-	return NS_ERROR_FAILURE;
+    mStopped = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
+nsSubscribableServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
+{
+    nsresult rv = NS_OK;
+
+    mStopped = PR_FALSE;
+
+#ifdef DEBUG_seth
+    printf("XXX free subscribe tree\n");
+#endif
+    rv = FreeSubtree(mTreeRoot);
+    mTreeRoot = nsnull;
+    NS_ENSURE_SUCCESS(rv,rv);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::StopPopulating(nsIMsgWindow *aMsgWindow)
+{
+    mStopped = PR_TRUE;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSubscribableServer::UpdateSubscribed()
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
@@ -484,4 +470,378 @@ nsSubscribableServer::SetShowFullName(PRBool showFullName)
 {
 	mShowFullName = showFullName;
 	return NS_OK;
+}
+
+nsresult 
+nsSubscribableServer::FreeSubtree(SubscribeTreeNode *node)
+{
+    nsresult rv = NS_OK;
+
+    if (node) {
+        // recursively free the children
+        if (node->firstChild) {
+            // will free node->firstChild      
+            rv = FreeSubtree(node->firstChild);
+            NS_ENSURE_SUCCESS(rv,rv);
+            node->firstChild = nsnull;
+        }
+
+        // recursively free the siblings
+        if (node->nextSibling) {
+            // will free node->nextSibling
+            rv = FreeSubtree(node->nextSibling);
+            NS_ENSURE_SUCCESS(rv,rv);
+            node->nextSibling = nsnull;
+        }
+
+#ifdef HAVE_SUBSCRIBE_DESCRIPTION
+        NS_ASSERTION(node->description == nsnull, "you need to free the description");
+#endif
+        CRTFREEIF(node->name);
+#if 0 
+        node->name = nsnull;
+        node->parent = nsnull;
+        node->lastChild = nsnull;
+        node->cachedChild = nsnull;
+#endif
+
+        PR_Free(node);  
+    }
+
+    return NS_OK;
+}
+
+nsresult 
+nsSubscribableServer::CreateNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **result)
+{
+    NS_ASSERTION(result && name, "result or name is null");
+    if (!result || !name) return NS_ERROR_NULL_POINTER;
+
+    *result = (SubscribeTreeNode *) PR_Malloc(sizeof(SubscribeTreeNode));
+    if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+
+    (*result)->name = nsCRT::strdup(name);
+    if (!(*result)->name) return NS_ERROR_OUT_OF_MEMORY;
+
+    (*result)->parent = parent;
+    (*result)->prevSibling = nsnull;
+    (*result)->nextSibling = nsnull;
+    (*result)->firstChild = nsnull;
+    (*result)->lastChild = nsnull;
+    (*result)->isSubscribed = PR_FALSE;
+#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
+    (*result)->isSubscribable = PR_FALSE;
+#endif
+#ifdef HAVE_SUBSCRIBE_DESCRIPTION
+    (*result)->description = nsnull;
+#endif
+#ifdef HAVE_SUBSCRIBE_MESSAGES
+    (*result)->messages = 0;
+#endif
+    (*result)->cachedChild = nsnull;
+
+    if (parent) {
+        parent->cachedChild = *result;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsSubscribableServer::AddChildNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **child)
+{
+    nsresult rv = NS_OK;
+    NS_ASSERTION(parent && child && name, "parent, child or name is null");
+    if (!parent || !child || !name) return NS_ERROR_NULL_POINTER;
+
+    if (!parent->firstChild) {
+        // CreateNode will set the parent->cachedChild
+        rv = CreateNode(parent, name, child);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        parent->firstChild = *child;
+        parent->lastChild = *child;
+
+        rv = NotifyAssert(parent, kNC_Child, *child);
+        NS_ENSURE_SUCCESS(rv,rv);   
+
+        return NS_OK;
+    }
+    else {
+        if (parent->cachedChild) {
+            if (nsCRT::strcmp(parent->cachedChild->name,name) == 0) {
+                *child = parent->cachedChild;
+                return NS_OK;
+            }
+        }
+
+        SubscribeTreeNode *current = parent->firstChild;
+
+        /*
+         * insert in reverse alphabetical order
+         * this will reduce the # of strcmps
+         * since this is faster assuming:
+         *  1) the hostinfo.dat feeds us the groups in alphabetical order
+         *     since we control the hostinfo.dat file, we can guarantee this.
+         *  2) the server gives us the groups in alphabetical order
+         *     we can't guarantee this, but it seems to be a common thing
+         *
+         * because we have firstChild, lastChild, nextSibling, prevSibling
+         * we can efficiently reverse the order when dumping to hostinfo.dat
+         * or to GetTargets()
+         */
+        PRInt32 compare = nsCRT::strcmp(current->name, name);
+
+        while (current && (compare != 0)) {
+            if (compare < 0) {
+                // CreateNode will set the parent->cachedChild
+                rv = CreateNode(parent, name, child);
+                NS_ENSURE_SUCCESS(rv,rv);
+
+                (*child)->nextSibling = current;
+                (*child)->prevSibling = current->prevSibling;
+                current->prevSibling = (*child);
+                if (!(*child)->prevSibling) {
+                    parent->firstChild = (*child);
+                }
+                else {
+                    (*child)->prevSibling->nextSibling = (*child);
+                }
+
+                rv = NotifyAssert(parent, kNC_Child, *child);
+                NS_ENSURE_SUCCESS(rv,rv);
+                return NS_OK;
+            }
+            current = current->nextSibling;
+            if (current) {
+                NS_ASSERTION(current->name, "no name!");
+                compare = nsCRT::strcmp(current->name,name);
+            }
+            else {
+                compare = -1; // anything but 0, since that would be a match
+            }
+        }
+
+        if (compare == 0) {
+            // already exists;
+            *child = current;
+
+            // set the cachedChild
+            parent->cachedChild = *child;
+            return NS_OK;
+        }
+
+        // CreateNode will set the parent->cachedChild
+        rv = CreateNode(parent, name, child);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        (*child)->prevSibling = parent->lastChild;
+        (*child)->nextSibling = nsnull;
+        parent->lastChild->nextSibling = *child;
+        parent->lastChild = *child;
+
+        rv = NotifyAssert(parent, kNC_Child, *child);
+        NS_ENSURE_SUCCESS(rv,rv);
+        return NS_OK;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsSubscribableServer::FindAndCreateNode(const char *path, SubscribeTreeNode **result)
+{
+	nsresult rv = NS_OK;
+    NS_ASSERTION(result, "no result");
+    if (!result) return NS_ERROR_NULL_POINTER;
+
+    if (!mTreeRoot) {
+        nsXPIDLCString serverUri;
+        rv = mIncomingServer->GetServerURI(getter_Copies(serverUri));
+        NS_ENSURE_SUCCESS(rv,rv);
+        // the root has no parent, and its name is server uri
+        rv = CreateNode(nsnull, (const char *)serverUri, &mTreeRoot);
+        NS_ENSURE_SUCCESS(rv,rv);
+    }
+
+    if (!path || (path[0] == '\0')) {
+        *result = mTreeRoot;
+        return NS_OK;
+    }
+
+    char *pathStr = nsCRT::strdup(path);
+    char *token = nsnull;
+    char *rest = pathStr;
+    
+    // todo do this only once
+    char delimstr[2];
+    delimstr[0] = mDelimiter;
+    delimstr[1] = '\0';
+    
+    *result = nsnull;
+
+    SubscribeTreeNode *parent = mTreeRoot;
+    SubscribeTreeNode *child = nsnull;
+
+    token = nsCRT::strtok(rest, delimstr, &rest);
+    while (token && *token) {
+        rv = AddChildNode(parent, token, &child);
+        if (NS_FAILED(rv)) {
+            CRTFREEIF(pathStr);
+	        return rv;
+        }
+        token = nsCRT::strtok(rest, delimstr, &rest);
+        parent = child;
+    }   
+    CRTFREEIF(pathStr);
+
+    // the last child we add is the result
+    *result = child;
+	return rv;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::HasChildren(const char *path, PRBool *aHasChildren)
+{
+    nsresult rv = NS_OK;
+    NS_ASSERTION(aHasChildren, "no aHasChildren");
+    if (!aHasChildren) return NS_ERROR_NULL_POINTER;
+
+    *aHasChildren = PR_FALSE;
+
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+ 
+    *aHasChildren = (node->firstChild != nsnull);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSubscribableServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+{
+    nsresult rv = NS_OK;
+    NS_ASSERTION(aIsSubscribed, "no aIsSubscribed");
+    if (!aIsSubscribed) return NS_ERROR_NULL_POINTER;
+
+    *aIsSubscribed = PR_FALSE;
+
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+    *aIsSubscribed = node->isSubscribed;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+{
+    nsresult rv = NS_OK;
+    NS_ASSERTION(aLeafName, "no aLeafName");
+    if (!aLeafName) return NS_ERROR_NULL_POINTER;
+
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+    if (mShowFullName) {
+        rv = CreateUnicodeStringFromUtf7(path, aLeafName);
+    }
+    else {
+        rv = CreateUnicodeStringFromUtf7(node->name, aLeafName);
+    }
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::GetFirstChildURI(const char * path, char **aResult)
+{
+    nsresult rv = NS_OK;
+    if (!aResult) return NS_ERROR_NULL_POINTER;
+    
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+    // no children
+    if (!node->firstChild) return NS_ERROR_FAILURE;
+    
+    nsCString uri;
+    BuildURIFromNode(node->firstChild, uri);
+
+    *aResult = nsCRT::strdup((const char *)uri);
+    if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
+{
+    nsresult rv = NS_OK;
+    if (!array) return NS_ERROR_NULL_POINTER;
+
+    SubscribeTreeNode *node = nsnull;
+    rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+    nsCString uriPrefix;
+    NS_ASSERTION(mTreeRoot, "no tree root!");
+    if (!mTreeRoot) return NS_ERROR_UNEXPECTED;
+    uriPrefix = mTreeRoot->name; // the root's name is the server uri
+    uriPrefix += "/";
+    if (path && (path[0] != '\0')) {
+        uriPrefix += path;
+        uriPrefix += mDelimiter;
+    }
+
+    // we inserted them in z to a order.
+    // so pull them out in reverse to get the right order
+    // in the subscribe dialog
+    SubscribeTreeNode *current = node->lastChild;
+    // return failure if there are no children.
+    if (!current) return NS_ERROR_FAILURE;  
+
+    while (current) {
+        nsCString uri;
+        uri = uriPrefix;
+        NS_ASSERTION(current->name, "no name");
+        if (!current->name) return NS_ERROR_FAILURE;
+        uri += current->name;
+
+        nsCOMPtr <nsIRDFResource> res;
+        rv = EnsureRDFService();
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        // todo, is this creating nsMsgFolders?
+        mRDFService->GetResource((const char *)uri, getter_AddRefs(res));
+        array->AppendElement(res);
+    
+        current = current->prevSibling;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::CommitSubscribeChanges()
+{
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
 }

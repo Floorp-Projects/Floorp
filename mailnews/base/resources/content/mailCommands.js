@@ -349,50 +349,38 @@ function Subscribe(windowTitle, preselectedMsgFolder)
 				okCallback:SubscribeOKCallback});
 }
 
-function SubscribeOKCallback(serverURI, changeTable)
+function SubscribeOKCallback(changeTable)
 {
-	//dump("in SubscribeOKCallback(" + serverURI +")\n");
-	//dump("change table = " + changeTable + "\n");
-	
-	var folder = GetMsgFolderFromUri(serverURI);
-	var server = folder.server;
-	var subscribableServer =
-        server.QueryInterface(Components.interfaces.nsISubscribableServer);
+	for (var serverURI in changeTable) {
+        //dump("serverURI = " + serverURI + "\n");
+	    var folder = GetMsgFolderFromUri(serverURI);
+	    var server = folder.server;
+	    var subscribableServer =
+            server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
+        for (var name in changeTable[serverURI]) {
+            //dump("name = " + name + "\n");
+            //dump("(" + serverURI + "," + name + ") = " + changeTable[serverURI][name] + "\n");
+		    if (changeTable[serverURI][name] == true) {
+			    //dump("from js, subscribe to " + name +" on " + serverURI + "\n");
+			    subscribableServer.subscribe(name);
+		    }
+		    else if (changeTable[serverURI][name] == false) {
+			    //dump("from js, unsubscribe to " + name +" on " + serverURI + "\n");
+			    subscribableServer.unsubscribe(name);
+            }
+		    else {
+			    //dump("no change to " + name + " on " + serverURI +"\n");
+		    }
+        }
 
-	for (var name in changeTable) {
-		//dump(name + " = " + changeTable[name] + "\n");
-		if (changeTable[name] == true) {
-			//dump("from js, subscribe to " + name +"\n");
-			subscribableServer.subscribe(name);
-		}
-		else if (changeTable[name] == false) {
-			//dump("from js, unsubscribe to " + name +"\n");
-			subscribableServer.unsubscribe(name);
-		}
-		else {
-			//dump("no change to " + name + "\n");
-		}
-	}
-    try {
-        var imapServer =
-            server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
-        if (imapServer)
-            imapServer.reDiscoverAllFolders();
-    }
-    catch (ex) {
-        //dump("*** not an imap server\n");
-    }
-	var nntpServer;
-    try {
-        nntpServer =
-            server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
-		// write out the subscribe changes
-        if (nntpServer)
-            nntpServer.writeNewsrcFile();
-    }
-    catch (ex) {
-        //dump("*** not a news server\n");
+        try {
+            var subscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+            subscribableServer.commitSubscribeChanges();
+        }
+        catch (ex) {
+            dump(ex + "\n");
+        }
     }
 }
 

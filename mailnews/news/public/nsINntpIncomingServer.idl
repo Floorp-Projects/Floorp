@@ -73,6 +73,6 @@ interface nsINntpIncomingServer : nsISupports {
 	void subscribeToNewsgroup(in string name);
 
 	/* used for the subscribe dialog */
-	void addNewsgroupToSubscribeDS(in string name);
+	void addNewsgroupToList(in string name);
 
 };

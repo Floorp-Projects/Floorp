@@ -86,7 +86,7 @@ Rights Reserved.
 	    <row flex="1">
         <tree class="inset"	flex="1"
               id="subscribetree"
-              datasources="rdf:subscribe"
+              datasources="rdf:null"
               onclick="SubscribeOnClick(event);"> 
           <template>
             <rule>    
@@ -121,7 +121,8 @@ Rights Reserved.
       	<box orient="vertical">
           <button id="subscribe" class="dialog" value="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
           <button id="unsubscribe" class="dialog" value="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
-          <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="RefreshList()"/>
+          <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="Refresh()"/>
+          <button id="stop" class="dialog" value="&stopButton.label;" oncommand="Stop()"/>
           <spring flex="1"/>
         </box>
       </row>

@@ -25,7 +25,7 @@
 
 interface nsIFolder;
 
-[scriptable, uuid(1c5ef9f0-d1c0-11d2-94CA-006097222B83)]    /* XXX regenerate */
+[scriptable, uuid(d4ff86da-1dd1-11b2-a6f6-9fcd348bcc34)]
 interface nsIFolderListener : nsISupports {
 
 	void OnItemAdded(in nsISupports parentItem,

@@ -2976,12 +2976,12 @@ nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 }
 
 NS_IMETHODIMP
-nsImapService::BuildSubscribeDatasourceWithPath(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow, const char *folderPath)
+nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow, const char *folderPath)
 {
 	nsresult rv;
 
 #ifdef DEBUG_sspitzer
-	printf("BuildSubscribeDatasourceWithPath(%s)\n",folderPath);
+	printf("GetListOfFoldersWithPath(%s)\n",folderPath);
 #endif
 	nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aServer);
 	if (!server) return NS_ERROR_FAILURE;
@@ -3013,7 +3013,7 @@ nsImapService::BuildSubscribeDatasourceWithPath(nsIImapIncomingServer *aServer, 
 }
 
 NS_IMETHODIMP
-nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow)
+nsImapService::GetListOfFoldersOnServer(nsIImapIncomingServer *aServer, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 

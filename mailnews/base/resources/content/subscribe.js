@@ -3,33 +3,25 @@ var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
 var gSubscribableServer = null;
-var RDF = null;
-var gSubscribeDS = null;
 var gStatusBar = null;
 var gNameField = null;
 var gFolderDelimiter = ".";
 var gStatusFeedback = new nsMsgStatusFeedback;
 
+// the rdf service
+var RDF = '@mozilla.org/rdf/rdf-service;1'
+RDF = Components.classes[RDF].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+var subscribeDS = RDF.GetDataSource("rdf:subscribe");
+
 // used for caching the tree children (in typedown)
 var lastTreeChildrenValue = null;
 var lastTreeChildren = null;
 
-
-function SetUpRDF()
-{
-	if (!RDF) {
-			RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-			RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-	}
-		
-	if (!gSubscribeDS) {
-		gSubscribeDS = RDF.GetDataSource("rdf:subscribe");
-	}
-}
-
 function Stop()
 {
-	dump("xxx todo implement stop.\n");
+	//dump("Stop()\n")
+    gSubscribableServer.stopPopulating(msgWindow);
 }
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
@@ -39,9 +31,9 @@ function SetServerTypeSpecificTextValues()
 	if (!gServerURI) return;
 
 	var serverType = GetMsgFolderFromUri(gServerURI).server.type;
-	//dump("serverType="+serverType+"\n");
 	
-	/* set the server specific ui elements */
+	//set the server specific ui elements
+
     var element = document.getElementById("foldertextlabel");
 	var stringName = "foldertextfor-" + serverType;
 	var stringval = Bundle.GetStringFromName(stringName);
@@ -52,15 +44,14 @@ function SetServerTypeSpecificTextValues()
     element = document.getElementById("foldersheaderlabel");
 	element.setAttribute('value',stringval);
 
-	// xxx todo, fix this hack
-	// qi the server to get a nsISubscribable server
-	// and ask it for the delimiter
-	if (serverType == "nntp") {
-		gFolderDelimiter = ".";
-	}
-	else {
-		gFolderDelimiter = "/";
-	}
+    //set the delimiter
+    try {
+        gFolderDelimiter = gSubscribableServer.delimiter;
+    }
+    catch (ex) {
+        //dump(ex + "\n");
+        gFolderDelimiter = ".";
+    }
 }
 
 function onServerClick(event)
@@ -69,8 +60,9 @@ function onServerClick(event)
 	gServerURI = item.id;
 	//dump("gServerURI="+gServerURI+"\n");
 
-	SetServerTypeSpecificTextValues();
 	SetUpTree(false);
+
+	SetServerTypeSpecificTextValues();
 }
 
 function SetUpServerMenu()
@@ -88,28 +80,29 @@ function SetUpServerMenu()
     	serverMenu.selectedItem = menuitems[0];
 	}
 	catch (ex) {
-		dump("failed to set the selected server: " + ex + "\n");
+		//dump("failed to set the selected server: " + ex + "\n");
 	}
 
 	SetServerTypeSpecificTextValues();
 }
 
 var MySubscribeListener = {
-	OnStopPopulating: function() {
-		// only re-root the tree, if it is null.
-		// otherwise, we are in here because we are populating
-		// a part of the tree
-
-		var refValue = gSubscribeTree.getAttribute('ref');
-		//dump("ref = " + refValue + refValue.length + "\n");
-		if (refValue == "null") {
-			dump("root subscribe tree at: "+ gServerURI +"\n");
-			gSubscribeTree.setAttribute('ref',gServerURI);
-		}
-
+	OnDonePopulating: function() {
 		gStatusFeedback.ShowProgress(100);
 		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("doneString"));
 		gStatusBar.setAttribute("mode","normal");
+
+        // only re-root the tree, if it is null.
+        // otherwise, we are in here because we are populating
+        // a part of the tree
+  
+        var refValue = gSubscribeTree.getAttribute('ref');
+        //dump("ref = " + refValue + refValue.length + "\n");
+        if (refValue == "null") {
+            //dump("root subscribe tree at: "+ gServerURI +"\n");
+            gSubscribeTree.database.AddDataSource(subscribeDS);
+            gSubscribeTree.setAttribute('ref',gServerURI);
+        }
 	}
 };
 
@@ -121,29 +114,31 @@ function SetUpTree(forceToServer)
 	lastTreeChildrenValue = null;
 	lastTreeChildren = null;
 
-	SetUpRDF();
-	
 	gStatusBar = document.getElementById('statusbar-icon');
-	gSubscribeTree.setAttribute('ref',null);
-
 	if (!gServerURI) return;
+
 
 	var folder = GetMsgFolderFromUri(gServerURI);
 	var server = folder.server;
 
 	try {
 		gSubscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+	    gSubscribeTree.setAttribute('ref',null);
 
+        // clear out the text field when switching server
+		gNameField.setAttribute('value',"");
+
+        gSubscribeTree.database.RemoveDataSource(subscribeDS);
 		gSubscribableServer.subscribeListener = MySubscribeListener;
 
 		gStatusFeedback.ShowProgress(0);
 		gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
 		gStatusBar.setAttribute("mode","undetermined");
 
-		gSubscribableServer.populateSubscribeDatasource(msgWindow, forceToServer);
+		gSubscribableServer.startPopulating(msgWindow, forceToServer);
 	}
 	catch (ex) {
-		dump("failed to populate subscribe ds: " + ex + "\n");
+		//dump("failed to populate subscribe ds: " + ex + "\n");
 	}
 }
 
@@ -184,7 +179,7 @@ function SubscribeOnLoad()
 			gServerURI = folder.server.serverURI;
 		}
 		catch (ex) {
-			dump("not a subscribable server\n");
+			//dump("not a subscribable server\n");
 			gSubscribableServer = null;
 			gServerURI = null;
 		}
@@ -192,7 +187,7 @@ function SubscribeOnLoad()
 
 	if (!gServerURI) {
 		//dump("subscribe: no uri\n");
-		dump("xxx todo:  use the default news server.  right now, I'm just using the first server\n");
+		//dump("xxx todo:  use the default news server.  right now, I'm just using the first server\n");
 		var serverMenu = document.getElementById("serverMenu");
 		var menuitems = serverMenu.getElementsByTagName("menuitem");
 		
@@ -200,25 +195,26 @@ function SubscribeOnLoad()
 			gServerURI = menuitems[1].id;
 		}
 		else {
-			dump("xxx todo none of your servers are subscribable\n");
-			dump("xxx todo fix this by disabling subscribe if no subscribable server or, add a CREATE SERVER button, like in 4.x\n");
+			//dump("xxx todo none of your servers are subscribable\n");
+			//dump("xxx todo fix this by disabling subscribe if no subscribable server or, add a CREATE SERVER button, like in 4.x\n");
 			return;
 		}
 	}
 
 	SetUpServerMenu();
+
 	SetUpTree(false);
 
-  
-  gNameField.focus();
+    gNameField.focus();
 }
 
 function subscribeOK()
 {
 	//dump("in subscribeOK()\n")
 	if (top.okCallback) {
-		top.okCallback(top.gServerURI,top.gChangeTable);
+		top.okCallback(top.gChangeTable);
 	}
+	Stop();
 	if (gSubscribableServer) {
 		gSubscribableServer.subscribeCleanup();
 	}
@@ -235,63 +231,46 @@ function subscribeCancel()
 	return true;
 }
 
-function SetState(uri,name,state,stateStr)
+function SetState(name,state)
 {
-	//dump("SetState(" + uri +"," + name + "," + state + "," + stateStr + ")\n");
-	if (!uri || !stateStr) return;
+	//dump("SetState(" + name + "," + state + ")\n");
 
-	try {
-		// xxx should we move this code into nsSubscribableServer.cpp?
-		var src = RDF.GetResource(uri, true);
-		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
-		var oldLiteral = gSubscribeDS.GetTarget(src, prop, true);
-		//dump("oldLiteral="+oldLiteral+"\n");
+    var changed = gSubscribableServer.setState(name, state);
+	if (changed) {
+        StateChanged(name,state);
+	}
+}
 
-		oldValue = oldLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-		//dump("oldLiteral.Value="+oldValue+"\n");
-		if (oldValue != stateStr) {
-			var newLiteral = RDF.GetLiteral(stateStr);
-			gSubscribeDS.Change(src, prop, oldLiteral, newLiteral);
-			StateChanged(name,state);
-		}
-	}
-	catch (ex) {
-		dump("failed: " + ex + "\n");
-	}
+function changeTableRecord(server, name, state) {
+    this.server = server;
+    this.name = name;
+    this.state = state;
 }
 
 function StateChanged(name,state)
 {
 	//dump("StateChanged(" + name + "," + state + ")\n");
-	//dump("start val=" +gChangeTable[name] + "\n");
-
-	if (gChangeTable[name] == undefined) {
-		//dump(name+" not in table yet\n");
-		gChangeTable[name] = state;
+	if (gChangeTable[gServerURI] == undefined) {
+        gChangeTable[gServerURI] = {};
+		gChangeTable[gServerURI][name] = state;
 	}
 	else {
-		var oldValue = gChangeTable[name];
-		//dump(name+" already in table\n");
-		if (oldValue != state) {
-			gChangeTable[name] = undefined;
-		}
+        if (gChangeTable[gServerURI][name] == undefined) {
+            gChangeTable[gServerURI][name] = state;
+        }
+        else {
+		    var oldValue = gChangeTable[gServerURI,name];
+		    if (oldValue != state) {
+			    gChangeTable[gServerURI][name] = undefined;
+		    }
+        }
 	}
-
-	//dump("end val=" +gChangeTable[name] + "\n");
 }
 
 function SetSubscribeState(state)
 {
   //dump("SetSubscribedState()\n");
  
-  var stateStr;
-  if (state) {
-  	stateStr = 'true';
-  }
-  else {
-	stateStr = 'false';
-  }
-
   try {
 	//dump("subscribe button clicked\n");
 	
@@ -302,36 +281,28 @@ function SetSubscribeState(state)
 		//dump(uri + "\n");
 		name = group.getAttribute('name');
 		//dump(name + "\n");
-		SetState(uri,name,state,stateStr);
+		SetState(name,state);
 	}
   }
   catch (ex) {
-	dump("SetSubscribedState failed:  " + ex + "\n");
+	//dump("SetSubscribedState failed:  " + ex + "\n");
   }
 }
 
 function ReverseStateFromNode(node)
 {
-	var stateStr;
 	var state;
 
 	if (node.getAttribute('Subscribed') == "true") {
-		stateStr = "false";
 		state = false;
 	}
 	else {
-		stateStr = "true";
 		state = true;
 	}
 	
 	var uri = node.getAttribute('id');
 	var	name = node.getAttribute('name');
-	SetState(uri, name, state, stateStr);
-}
-
-function ReverseState(uri)
-{
-	//dump("ReverseState("+uri+")\n");
+	SetState(name, state);
 }
 
 function SubscribeOnClick(event)
@@ -348,13 +319,13 @@ function SubscribeOnClick(event)
 			if(open == "true") {
 				var uri = treeitem.getAttribute("id");	
 				
-				dump("do twisty for " + uri + "\n");
+				//dump("do twisty for " + uri + "\n");
 
 				gStatusFeedback.ShowProgress(0);
 				gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("pleaseWaitString"));
 				gStatusBar.setAttribute("mode","undetermined");
 
-				gSubscribableServer.populateSubscribeDatasourceWithUri(msgWindow, true /* force to server */, uri);
+				gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);
 			}
 		}
 		else {
@@ -366,7 +337,7 @@ function SubscribeOnClick(event)
 	}
 }
 
-function RefreshList()
+function Refresh()
 {
 	// force it to talk to the server
 	SetUpTree(true);
@@ -442,10 +413,57 @@ function selectNodeByName( aMatchString )
 		lastLow = i;
 	}
 	else {
-      gSubscribeTree.selectItem( currItem );
-      gSubscribeTree.ensureElementIsVisible( currItem );
-	  return;
+      SelectFirstMatch(lastLow, i, node.childNodes, aMatchString);
+      return;
 	}
+  }
+}
+
+function SelectFirstMatch(startNode, endNode, nodes, matchStr)
+{
+  // this code is to make sure we select the alphabetically first match
+  // not just any match (see bug #60242)
+
+  // find the match, using a binary search.
+
+  var lastMatch = nodes[endNode];
+  var totalItems = endNode - startNode;
+  if (totalItems == 0) {
+    gSubscribeTree.selectItem( lastMatch );
+    gSubscribeTree.ensureElementIsVisible( lastMatch );
+    return;
+  }
+
+  var lastLow = startNode;
+  var lastHigh = endNode;
+  while (true) {
+    var i = Math.floor((lastHigh + lastLow) / 2);
+    //dump(i+","+lastLow+","+lastHigh+"\n");
+    var currItem = nodes[i];
+    var currValue = (currItem.getAttribute("name")).substring(0,matchStr.length);
+    //dump(currValue+" vs "+matchStr+"\n");
+    if (currValue > matchStr) {
+        gSubscribeTree.selectItem( lastMatch );
+        gSubscribeTree.ensureElementIsVisible( lastMatch );
+        return;
+    }
+    else if (currValue < matchStr) {
+        if (lastLow == i) {
+            gSubscribeTree.selectItem( lastMatch );
+            gSubscribeTree.ensureElementIsVisible( lastMatch );
+            return;
+        }
+        lastLow = i;
+    }
+    else {
+        lastMatch = currItem;
+        if (lastHigh == i) {
+            gSubscribeTree.selectItem( lastMatch );
+            gSubscribeTree.ensureElementIsVisible( lastMatch );
+            return;
+        }
+        lastHigh = i;
+    }
   }
 }
 

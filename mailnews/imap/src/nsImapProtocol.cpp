@@ -1295,7 +1295,7 @@ NS_IMETHODIMP nsImapProtocol::GetRunningImapURL(nsIImapUrl **aImapUrl)
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSupressLogging)
+nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLogging)
 {
   PRUint32 writeCount = 0; 
   nsresult rv = NS_ERROR_NULL_POINTER;
@@ -1305,7 +1305,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSupressLoggin
   if (dataBuffer && m_outputStream)
   {
     m_currentCommand = dataBuffer;
-    if (!aSupressLogging)
+    if (!aSuppressLogging)
       Log("SendData", nsnull, dataBuffer);
     else
       Log("SendData", nsnull, "Logging suppressed for this command (it probably contained authentication information)");
@@ -4325,13 +4325,19 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
   // if the password contains a \, login will fail
   // turn foo\bar into foo\\bar
   nsCString correctedPassword;
-  correctedPassword = password;
-  correctedPassword.ReplaceSubstring("\\","\\\\");
+  if (password) {
+    PRUint32 i = 0;
+    for (i=0;i<nsCRT::strlen(password);i++) {
+        if (password[i] == '\\') {
+            correctedPassword += '\\';
+        }
+        correctedPassword += password[i];
+    }
+  }
   command.Append((const char *)correctedPassword);
-
   command.Append("\""CRLF);
 
-  nsresult rv = SendData(command.GetBuffer(), PR_TRUE /* supress logging */);
+  nsresult rv = SendData(command.GetBuffer(), PR_TRUE /* suppress logging */);
   
   if (NS_SUCCEEDED(rv))
      ParseIMAPandCheckForNewMail();
@@ -4418,7 +4424,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       {
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_Free(base64Str);
-        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* suppress logging */);
         if (NS_SUCCEEDED(rv))
             ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())
@@ -4445,7 +4451,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
       {
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_Free(base64Str);
-        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* suppress logging */);
         if (NS_SUCCEEDED(rv))
             ParseIMAPandCheckForNewMail(currentCommand);
       }
@@ -4454,7 +4460,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
         base64Str = PL_Base64Encode((char*)password, PL_strlen(password), nsnull);
         PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
         PR_FREEIF(base64Str);
-        rv = SendData(m_dataOutputBuf, PR_TRUE /* supress logging */);
+        rv = SendData(m_dataOutputBuf, PR_TRUE /* suppress logging */);
         if (NS_SUCCEEDED(rv))
            ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())

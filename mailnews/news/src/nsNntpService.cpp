@@ -1421,11 +1421,11 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 }
 
 NS_IMETHODIMP 
-nsNntpService::BuildSubscribeDatasource(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aMsgWindow)
+nsNntpService::GetListOfGroupsOnServer(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	printf("in BuildSubscribeDatasource()\n");
+	printf("in GetListOfGroupsOnServer()\n");
 #endif
 	if (!aNntpServer) return NS_ERROR_NULL_POINTER;
 

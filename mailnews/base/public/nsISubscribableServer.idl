@@ -22,33 +22,60 @@
  */
 
 #include "nsISupports.idl"
+#include "nsISupportsArray.idl"
 
 interface nsIMsgWindow;
 interface nsIMsgIncomingServer;
 interface nsIRDFResource;
+interface nsIRDFNode;
+
+[scriptable, uuid(61a08c3a-1dd2-11b2-b64f-c4b2de1cf129)]
+interface nsISubscribeDataSource : nsISupports {
+    readonly attribute boolean hasObservers;
+    void NotifyObservers(in nsIRDFResource subject, in nsIRDFResource property, in nsIRDFNode object, in boolean isAssert, in boolean isChange);
+};
 
 [scriptable, uuid(f337b84a-1dd1-11b2-97c7-fb8b2e3f2280)]
 interface nsISubscribeListener : nsISupports {
-	void OnStopPopulating();
+	void OnDonePopulating();
 };
 
 [scriptable, uuid(6f9d2e82-1dd2-11b2-bbed-bbea41ca33a7)]
 interface nsISubscribableServer : nsISupports {
-	void setIncomingServer(in nsIMsgIncomingServer server);
-	void setDelimiter(in char delimiter);
-	void populateSubscribeDatasource(in nsIMsgWindow aMsgWindow, in boolean forceToServer);
-	void populateSubscribeDatasourceWithUri(in nsIMsgWindow aMsgWindow, in boolean forceToServer, in string uri);
 	attribute nsISubscribeListener subscribeListener;
-	void startPopulatingSubscribeDS();
-  	void stopPopulatingSubscribeDS();
-  	void findAndAddParentToSubscribeDS(in string uri, in string serverUri, in string aName, in nsIRDFResource aChildResource);
-  	void setPropertiesInSubscribeDS(in string uri, in wstring aName, in nsIRDFResource aResource, in boolean subscribed, in boolean changeIfExists);
-	void addToSubscribeDS(in string aName, in boolean addAsSubscribed, in boolean changeIfExists);
-	void setAsSubscribedInSubscribeDS(in string aURI);
-	void updateSubscribedInSubscribeDS();
+
+	attribute char delimiter;
+
+	void startPopulating(in nsIMsgWindow aMsgWindow, in boolean forceToServer);
+	void startPopulatingWithUri(in nsIMsgWindow aMsgWindow, in boolean forceToServer, in string uri);
+    void stopPopulating(in nsIMsgWindow aMsgWindow);
+
+    // return true if state changed, false otherwise
+    boolean setState(in string path, in boolean state);
+
+	void subscribeCleanup();
+
 	void subscribe(in wstring name);
 	void unsubscribe(in wstring name);
+
+    void commitSubscribeChanges();
+
+    // other stuff
+	void setIncomingServer(in nsIMsgIncomingServer server);
+	void addTo(in string aName, in boolean addAsSubscribed, in boolean changeIfExists);
+	void setAsSubscribed(in string path);
+	void updateSubscribed();
 	void setShowFullName(in boolean showFullName);
-	void subscribeCleanup();
+ 
+    // if path is null, use the root
+    boolean hasChildren(in string path);
+    // if path is null, use the root
+    boolean isSubscribed(in string path);
+    // if path is null, use the root
+    wstring getLeafName(in string path);
+    // if path is null, use the root
+    void getChildren(in string path, in nsISupportsArray array);
+    // if path is null, use the root
+    void getFirstChildURI(in string path, out string result);
 };
 

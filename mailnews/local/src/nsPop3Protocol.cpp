@@ -707,7 +707,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	{
 		uidl += 5;
 		m_pop3ConData->only_uidl = PL_strdup(uidl);
-    mSupressListenerNotifications = PR_TRUE; // supress on start and on stop because this url won't have any content to display
+    mSuppressListenerNotifications = PR_TRUE; // suppress on start and on stop because this url won't have any content to display
 	}
 	
 	// m_pop3ConData->next_state = POP3_READ_PASSWORD;
@@ -848,11 +848,11 @@ nsPop3Protocol::Error(PRInt32 err_code)
 	return -1;
 }
 
-PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
+PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {
   	PRInt32 result = nsMsgProtocol::SendData(aURL, dataBuffer);
 
-    if (!aSupressLogging) {
+    if (!aSuppressLogging) {
         PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS, ("SEND: %s", dataBuffer));        
     }
     else {

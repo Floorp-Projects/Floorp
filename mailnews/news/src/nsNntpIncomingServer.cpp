@@ -33,7 +33,6 @@
 #include "nsCOMPtr.h"
 #include "nsINntpService.h"
 #include "nsINNTPProtocol.h"
-#include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
 #include "nsIDirectoryService.h"
@@ -43,6 +42,8 @@
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 #define HOSTINFO_FILE_NAME		 "hostinfo.dat"
+
+#define NEWS_DELIMITER   '.'
 
 #define HOSTINFO_COUNT_MAX 200 /* number of groups to process at a time when reading the list from the hostinfo.dat file */
 #define HOSTINFO_TIMEOUT 5   /* uSec to wait until doing more */
@@ -63,7 +64,6 @@
 #define HOSTINFO_FILE_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
 
@@ -100,20 +100,23 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
 {
 	nsresult rv;
 
-	if (mGroupsEnumerator) {
-    	delete mGroupsEnumerator;
-		mGroupsEnumerator = nsnull;
-	}
-
-	if (mUpdateTimer) {
-      mUpdateTimer->Cancel();
-      mUpdateTimer = nsnull;
+    if (mGroupsEnumerator) {
+        delete mGroupsEnumerator;
+        mGroupsEnumerator = nsnull;
     }
-  if (mNewsrcSaveTimer)
-  {
-    mNewsrcSaveTimer->Cancel();
-    mNewsrcSaveTimer = nsnull;
-  }
+
+    if (mUpdateTimer) {
+        mUpdateTimer->Cancel();
+        mUpdateTimer = nsnull;
+    }
+
+    if (mNewsrcSaveTimer) {
+        mNewsrcSaveTimer->Cancel();
+        mNewsrcSaveTimer = nsnull;
+    }
+
+    rv = ClearInner();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "ClearInner failed");
 
     rv = CloseCachedConnections();
 	NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
@@ -691,10 +694,10 @@ NS_IMETHODIMP
 nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
 	nsresult rv;
-	rv = UpdateSubscribedInSubscribeDS();
+	rv = UpdateSubscribed();
 	if (NS_FAILED(rv)) return rv;
 
-	rv = StopPopulatingSubscribeDS();
+	rv = StopPopulating(mMsgWindow);
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
@@ -851,26 +854,25 @@ nsNntpIncomingServer::LoadHostInfoFile()
   	}
 
   	hostinfoStream.close();
-#ifdef DEBUG_NEWS
-	printf("LoadHostInfoFile()\n");
-#endif
+
 	mHostInfoLoaded = PR_TRUE;
 	return NS_OK;
 }
 
 nsresult
-nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
+nsNntpIncomingServer::StartPopulatingFromHostInfo()
 {
 	nsresult rv;
 #ifdef DEBUG_NEWS
-	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
+	printf("StartPopulatingFromHostInfo()\n");
 #endif
+
 	mGroupsOnServerCount = mGroupsOnServer.Count();
 	nsCString currentGroup;
 
 	while (mGroupsOnServerIndex < mGroupsOnServerCount) {
 		mGroupsOnServer.CStringAt(mGroupsOnServerIndex, currentGroup);
-		rv = AddToSubscribeDS((const char *)currentGroup, PR_FALSE, PR_TRUE);
+		rv = AddTo((const char *)currentGroup, PR_FALSE, PR_TRUE);
 		if (NS_FAILED(rv)) return rv;
 #ifdef DEBUG_NEWS
 		printf("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
@@ -918,10 +920,10 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo()
 #ifdef DEBUG_NEWS
 		printf("we are done\n");
 #endif
-		rv = UpdateSubscribedInSubscribeDS();
+		rv = UpdateSubscribed();
 		if (NS_FAILED(rv)) return rv;
 
-		rv = StopPopulatingSubscribeDS();
+		rv = StopPopulating(mMsgWindow);
 		if (NS_FAILED(rv)) return rv;
 	}
 
@@ -933,19 +935,24 @@ nsNntpIncomingServer::Notify(nsITimer *timer)
 {
   NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
   mUpdateTimer = nsnull;    // release my hold  
-  PopulateSubscribeDatasourceFromHostInfo();
+  StartPopulatingFromHostInfo();
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *uri)
+nsNntpIncomingServer::StartPopulatingWithUri(nsIMsgWindow *aMsgWindow, PRBool aForceToServer, const char *uri)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
-#ifdef DEBUG_NEWS
-	printf("PopulateSubscribeDatasourceWithUri(%s)\n",uri);
+#ifdef DEBUG_seth
+	printf("StartPopulatingWithUri(%s)\n",uri);
 #endif
 
-	rv = StopPopulatingSubscribeDS();
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mInner->StartPopulatingWithUri(aMsgWindow, aForceToServer, uri);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = StopPopulating(mMsgWindow);
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
@@ -954,22 +961,26 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceWithUri(nsIMsgWindow *aMsgWindo
 NS_IMETHODIMP
 nsNntpIncomingServer::SubscribeCleanup()
 {
-	nsresult rv;
-	if (mInner) {
-		rv = mInner->SetSubscribeListener(nsnull);
-		if (NS_FAILED(rv)) return rv;
-
-		mInner = nsnull;
-	}
+	nsresult rv = NS_OK;
+    rv = ClearInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
+nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToServer)
 {
   nsresult rv;
 
-  rv = StartPopulatingSubscribeDS();
+  rv = EnsureInner();
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = mInner->StartPopulating(aMsgWindow, aForceToServer);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = SetDelimiter(NEWS_DELIMITER);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = SetShowFullName(PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
@@ -991,7 +1002,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
 	mGroupsOnServerCount = mGroupsOnServer.Count();
 	mMsgWindow = aMsgWindow;
 
-	rv = PopulateSubscribeDatasourceFromHostInfo();
+	rv = StartPopulatingFromHostInfo();
 	if (NS_FAILED(rv)) return rv;
   }
   else {
@@ -1001,7 +1012,7 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
 	mHostInfoLoaded = PR_TRUE;
 	mGroupsOnServer.Clear();
 
-	rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
+	rv = nntpService->GetListOfGroupsOnServer(this, aMsgWindow);
 	if (NS_FAILED(rv)) return rv;
   }
 
@@ -1009,14 +1020,14 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
+nsNntpIncomingServer::AddNewsgroupToList(const char *aName)
 {
 	nsresult rv;
 
 	// since this comes from the server, append it to the list
 	mGroupsOnServer.AppendCString(nsCAutoString(aName));
 
-	rv = AddToSubscribeDS(aName, PR_FALSE, PR_TRUE);
+	rv = AddTo(aName, PR_FALSE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
 }
@@ -1024,156 +1035,148 @@ nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
 NS_IMETHODIMP
 nsNntpIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetIncomingServer(aServer);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::SetShowFullName(PRBool showFullName)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetShowFullName(showFullName);
+}
+
+nsresult
+nsNntpIncomingServer::ClearInner()
+{
+    nsresult rv = NS_OK;
+
+    if (mInner) {
+        rv = mInner->SetSubscribeListener(nsnull);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = mInner->SetIncomingServer(nsnull);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        mInner = nsnull;
+    }
+    return NS_OK;
+}
+
+nsresult
+nsNntpIncomingServer::EnsureInner()
+{
+    nsresult rv = NS_OK;
+
+    if (mInner) return NS_OK;
+
+    mInner = do_CreateInstance(kSubscribableServerCID,&rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!mInner) return NS_ERROR_FAILURE;
+
+    rv = SetIncomingServer(this);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetDelimiter(char *aDelimiter)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetDelimiter(aDelimiter);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::SetDelimiter(char aDelimiter)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetDelimiter(aDelimiter);
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
+nsNntpIncomingServer::SetAsSubscribed(const char *path)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetAsSubscribedInSubscribeDS(aURI);
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	return mInner->SetAsSubscribed(path);
 }
 
 PRBool
 setAsSubscribedFunction(nsCString &aElement, void *aData)
 {
-	nsresult rv;
-	nsNntpIncomingServer *server;
-	server = (nsNntpIncomingServer *)aData;
-	
-	nsXPIDLCString serverURI;
-
-	nsCOMPtr<nsIFolder> rootFolder;
-    rv = server->GetRootFolder(getter_AddRefs(rootFolder));
-    if (NS_FAILED(rv)) return rv;
-	if (!rootFolder) return NS_ERROR_FAILURE;
-
-	rv = rootFolder->GetURI(getter_Copies(serverURI));
-    if (NS_FAILED(rv)) return rv;
-
-	nsCAutoString uriStr;
-	uriStr = (const char*)serverURI;
-	uriStr += '/';
-	uriStr += (const char *)aElement;
-
-	rv = server->SetAsSubscribedInSubscribeDS((const char *)uriStr);
-
-	NS_ASSERTION(NS_SUCCEEDED(rv),"SetAsSubscribedInSubscribeDS failed");
+	nsresult rv = NS_OK;
+    nsNntpIncomingServer *server;
+    server = (nsNntpIncomingServer *)aData;
+    NS_ASSERTION(server, "no server");
+    if (!server) {
+        // todo is this correct?
+        return PR_FALSE;
+    }
+ 
+	rv = server->SetAsSubscribed((const char *)aElement);
+	NS_ASSERTION(NS_SUCCEEDED(rv),"SetAsSubscribed failed");
 	return PR_TRUE;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::UpdateSubscribedInSubscribeDS()
+nsNntpIncomingServer::UpdateSubscribed()
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	mSubscribedNewsgroups.EnumerateForwards((nsCStringArrayEnumFunc)setAsSubscribedFunction, (void *)this);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::AddToSubscribeDS(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
+nsNntpIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool changeIfExists)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->AddToSubscribeDS(aName,addAsSubscribed,changeIfExists);
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	return mInner->AddTo(aName,addAsSubscribed,changeIfExists);
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource, PRBool subscribed, PRBool changeIfExists)
+nsNntpIncomingServer::StopPopulating(nsIMsgWindow *aMsgWindow)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource,subscribed,changeIfExists);
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
-{
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->FindAndAddParentToSubscribeDS(uri,serverUri,aName,aChildResource);
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::StopPopulatingSubscribeDS()
-{
-	nsresult rv;
+	nsresult rv = NS_OK;
 
     nsCOMPtr<nsISubscribeListener> listener;
 	rv = GetSubscribeListener(getter_AddRefs(listener));
-	if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 	if (!listener) return NS_ERROR_FAILURE;
 
-	rv = listener->OnStopPopulating();
-	if (NS_FAILED(rv)) return rv;
+	rv = listener->OnDonePopulating();
+    NS_ENSURE_SUCCESS(rv,rv);
 
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-	rv = mInner->StopPopulatingSubscribeDS();
-	if (NS_FAILED(rv)) return rv;
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+	rv = mInner->StopPopulating(aMsgWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
 
 	//xxx todo when do I set this to null?
-	//mInner = nsnull;
+	//rv = ClearInner();
+    //NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::StartPopulatingSubscribeDS()
-{
-	nsresult rv;
-
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
-
-    rv = SetIncomingServer(this);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetDelimiter('.');
-    if (NS_FAILED(rv)) return rv;
-
-	rv = SetShowFullName(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-	return mInner->StartPopulatingSubscribeDS();
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
 {	
-	nsresult rv;
-	mInner = do_CreateInstance(kSubscribableServerCID,&rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!mInner) return NS_ERROR_FAILURE;
-
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->SetSubscribeListener(aListener);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 {
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
 	return mInner->GetSubscribeListener(aListener);
 }
 
@@ -1276,4 +1279,62 @@ nsNntpIncomingServer::RemoveNewsgroup(const char *name)
 	// handle duplicates?
 	mSubscribedNewsgroups.RemoveCString(nsCAutoString(name));
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetState(const char *path, PRBool state, PRBool *stateChanged)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->SetState(path, state, stateChanged);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::HasChildren(const char *path, PRBool *aHasChildren)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->HasChildren(path, aHasChildren);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->IsSubscribed(path, aIsSubscribed);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetLeafName(path, aLeafName);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetFirstChildURI(const char * path, char **aResult)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetFirstChildURI(path, aResult);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetChildren(const char *path, nsISupportsArray *array)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->GetChildren(path, array);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::CommitSubscribeChanges()
+{
+    nsresult rv;
+    rv = SetNewsrcHasChanged(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return WriteNewsrcFile();
 }

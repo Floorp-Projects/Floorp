@@ -24,13 +24,17 @@
 #ifndef nsSubscribeDataSource_h__
 #define nsSubscribeDataSource_h__
 
+#include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFLiteral.h"
 #include "nsCOMPtr.h"
+#include "nsISubscribableServer.h"
 
 /**
  * The subscribe data source.
  */
-class nsSubscribeDataSource : public nsIRDFDataSource
+class nsSubscribeDataSource : public nsIRDFDataSource, public nsISubscribeDataSource
 {
 
 public:
@@ -40,10 +44,26 @@ public:
 	nsresult Init();
 
 	NS_DECL_ISUPPORTS
-	NS_FORWARD_NSIRDFDATASOURCE(mInner->)
+    NS_DECL_NSIRDFDATASOURCE
+    NS_DECL_NSISUBSCRIBEDATASOURCE
 
 private:
-	nsCOMPtr<nsIRDFDataSource> mInner;
+    nsCOMPtr <nsIRDFResource>      kNC_Child;
+    nsCOMPtr <nsIRDFResource>      kNC_Name;    
+    nsCOMPtr <nsIRDFResource>      kNC_LeafName;
+    nsCOMPtr <nsIRDFResource>      kNC_Subscribed;
+    nsCOMPtr <nsIRDFLiteral>       kTrueLiteral;
+    nsCOMPtr <nsIRDFLiteral>       kFalseLiteral;
+
+    nsCOMPtr <nsIRDFService>       mRDFService;
+    nsCOMPtr <nsISupportsArray>    mObservers;
+
+    nsresult GetChildren(nsISubscribableServer *server, const char *relativePath, nsISimpleEnumerator** aResult);
+    nsresult GetServerAndRelativePathFromResource(nsIRDFResource *source, nsISubscribableServer **server, char **relativePath);
+
+    static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
+    static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);
+    static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
 };
 
 #endif /* nsSubscribedDataSource_h__ */

@@ -50,7 +50,7 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
-  mSupressListenerNotifications = PR_FALSE;
+  mSuppressListenerNotifications = PR_FALSE;
   InitFromURI(aURL);
 }
 
@@ -168,10 +168,10 @@ nsresult nsMsgProtocol::CloseSocket()
  * Returns a positive number for success, 0 for failure (not all the bytes were written to the
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  *
- * No logging is done in the base implementation, so aSupressLogging is ignored.
+ * No logging is done in the base implementation, so aSuppressLogging is ignored.
  */
 
-PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSupressLogging)
+PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging)
 {
 	PRUint32 writeCount = 0; 
 	PRInt32 status = 0; 
@@ -208,7 +208,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
-	if (!mSupressListenerNotifications && m_channelListener)
+	if (!mSuppressListenerNotifications && m_channelListener)
   {
     if (!m_channelContext)
         m_channelContext = do_QueryInterface(ctxt);
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	// if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
-	if (!mSupressListenerNotifications && m_channelListener)
+	if (!mSuppressListenerNotifications && m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
 	
   nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
