@@ -7508,8 +7508,9 @@ nsCSSFrameConstructor::PageBreakBefore(nsIPresShell*            aPresShell,
 
   // See if page-break-before is set for all elements except row groups, rows, cells 
   // (these are handled internally by tables) and construct a page break frame if so.
-  if (display && ((NS_STYLE_DISPLAY_TABLE == display->mDisplay) ||
-                  (!IsTableRelated(display->mDisplay, PR_TRUE)))) { 
+  if (NS_STYLE_DISPLAY_NONE != display->mDisplay &&
+      (NS_STYLE_DISPLAY_TABLE == display->mDisplay ||
+       !IsTableRelated(display->mDisplay, PR_TRUE))) { 
     if (display->mBreakBefore) {
       ConstructPageBreakFrame(aPresShell, aPresContext, aState, aContent,
                               aParentFrame, aStyleContext, aFrameItems);
