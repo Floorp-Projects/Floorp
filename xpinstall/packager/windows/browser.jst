@@ -425,6 +425,63 @@ function upgradeCleanup()
   deleteThisFile("Components", "gkcontent.dll");
   deleteThisFile("Chrome",     "chrome.rdf");
   deleteThisFolder("Chrome",   "overlayinfo");
+
+  // obsolete files that are now part of the GRE
+  // installer package.
+  deleteThisFile("Plugins",    "npnul32.dll");
+  deleteThisFile("Program",    "gkgfx.dll");
+  deleteThisFile("Program",    "js3250.dll");
+  deleteThisFile("Program",    "mozctl.dll");
+  deleteThisFile("Program",    "mozctlx.dll");
+  deleteThisFile("Program",    "nss3.dll");
+  deleteThisFile("Program",    "nssckbi.dll");
+  deleteThisFile("Program",    "smime3.dll");
+  deleteThisFile("Program",    "softokn3.dll");
+  deleteThisFile("Program",    "ssl3.dll");
+  deleteThisFile("Program",    "xpcom.dll");
+  deleteThisFile("Program",    "xpistub.dll");
+  deleteThisFile("Program",    "zlib.dll");
+  deleteThisFile("Components", "accessibility.dll");
+  deleteThisFile("Components", "appshell.dll");
+  deleteThisFile("Components", "caps.dll");
+  deleteThisFile("Components", "chrome.dll");
+  deleteThisFile("Components", "cookie.dll");
+  deleteThisFile("Components", "docshell.dll");
+  deleteThisFile("Components", "editor.dll");
+  deleteThisFile("Components", "embedcomponents.dll");
+  deleteThisFile("Components", "gkgfxwin.dll");
+  deleteThisFile("Components", "gklayout.dll");
+  deleteThisFile("Components", "gkparser.dll");
+  deleteThisFile("Components", "gkplugin.dll");
+  deleteThisFile("Components", "gkview.dll");
+  deleteThisFile("Components", "gkwidget.dll");
+  deleteThisFile("Components", "i18n.dll");
+  deleteThisFile("Components", "imgicon.dll");
+  deleteThisFile("Components", "imglib2.dll");
+  deleteThisFile("Components", "imgmng.dll");
+  deleteThisFile("Components", "jar50.dll");
+  deleteThisFile("Components", "jsdom.dll");
+  deleteThisFile("Components", "jsurl.dll");
+  deleteThisFile("Components", "necko.dll");
+  deleteThisFile("Components", "necko2.dll");
+  deleteThisFile("Components", "nsDownloadProgressListener.js");
+  deleteThisFile("Components", "nsHelperAppDlg.js");
+  deleteThisFile("Components", "nsProgressDialog.js");
+  deleteThisFile("Components", "oji.dll");
+  deleteThisFile("Components", "pipboot.dll");
+  deleteThisFile("Components", "pipnss.dll");
+  deleteThisFile("Components", "profile.dll");
+  deleteThisFile("Components", "rdf.dll");
+  deleteThisFile("Components", "shistory.dll");
+  deleteThisFile("Components", "uconv.dll");
+  deleteThisFile("Components", "ucvmath.dll");
+  deleteThisFile("Components", "urildr.dll");
+  deleteThisFile("Components", "wallet.dll");
+  deleteThisFile("Components", "webbrwsr.dll");
+  deleteThisFile("Components", "xmlextras.dll");
+  deleteThisFile("Components", "xpc3250.dll");
+  deleteThisFile("Components", "xpinstal.dll");
+  deleteThisFile("Components", "xppref32.dll");
 }
 
 // main
@@ -525,6 +582,11 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "components\\xpti.dat");
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
     logComment("Installing: "    + fProgram + "components\\compreg.dat");
+    logComment("Create Folder: " + fProgram + "components\\Netscape");
+    logComment("Create Folder: " + fProgram + "components\\Netscape\\MozillaTrunk");
+    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\manifest.ini");
+    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\permdata.box");
+    logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\Talkback.ini");
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");

@@ -43,7 +43,7 @@ $DEPTH         = "../../../..";
 $topsrcdir     = GetTopSrcDir();
 $inStagePath   = "$topsrcdir/stage";
 $inDistPath    = "$topsrcdir/dist";
-$inXpiURL      = "ftp://not.supplied.com";
+$inXpiURL      = "ftp://not.supplied.invalid";
 $inRedirIniURL = $inXpiURL;
 
 # ensure that Packager.pm is in @INC, since we might not be called from
@@ -55,7 +55,7 @@ ParseArgv(@ARGV);
 
 $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
-$verPartial       = "1.3a.0.";
+$verPartial       = "1.3b.0.";
 $ver              = $verPartial . GetVersion($DEPTH);
 $stageDir         = "$topsrcdir/stage";
 $gDistInstallPath = "$inDistPath/inst_gre";

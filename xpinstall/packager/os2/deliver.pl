@@ -51,7 +51,7 @@ ParseArgv(@ARGV);
 if($inXpiURL eq "")
 {
   # archive url not supplied, set it to default values
-  $inXpiURL      = "ftp://not.supplied.com";
+  $inXpiURL      = "ftp://not.supplied.invalid";
 }
 if($inRedirIniURL eq "")
 {

@@ -20,7 +20,7 @@ User Agent=$UserAgent$
 ;   WINDISK
 ;   WINDIR
 ;   WINSYSDIR
-Path=[PROGRAMFILESDIR]\$CompanyName$\$ProductName$\$XPInstallVersion$
+Path=[COMMONFILESDIR]\$CompanyName$\$ProductName$\$XPInstallVersion$
 
 ; Sub Path, when set will indicate to Setup to create a subfolder from
 ; what is offered to the user to change.  It will not be shown to the user
