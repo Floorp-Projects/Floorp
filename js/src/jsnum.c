@@ -947,7 +947,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
      */
     start = s1; /* Mark - if string is empty, we return NaN. */
     value = 0.0;
-    while (1) {
+    for (;;) {
         uintN digit;
         jschar c = *s1;
         if ('0' <= c && c <= '9')
