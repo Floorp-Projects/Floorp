@@ -323,7 +323,6 @@ SECMOD_DeleteInternalModule(char *name) {
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
-	rv = STAN_AddModuleToDefaultTrustDomain(internalModule);
     }
     return rv;
 }
