@@ -72,6 +72,7 @@
 #include "nsOutlookStringBundle.h"
 #include "nsIStringBundle.h"
 #include "OutlookDebugLog.h"
+#include "nsUnicharUtils.h"
 
 #include "nsOutlookMail.h"
 
@@ -521,6 +522,13 @@ NS_IMETHODIMP ImportOutlookMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
 
 NS_IMETHODIMP ImportOutlookMailImpl::TranslateFolderName(const nsAString & aFolderName, nsAString & _retval)
 {
+    if (aFolderName.Equals(NS_LITERAL_STRING("Deleted Items"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestTrashFolderName);
+    else if (aFolderName.Equals(NS_LITERAL_STRING("Sent Items"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestSentFolderName);
+    else if (aFolderName.Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
+        _retval = NS_LITERAL_STRING(kDestUnsentMessagesFolderName);
+    else
   _retval = aFolderName; 
   return NS_OK;
 }

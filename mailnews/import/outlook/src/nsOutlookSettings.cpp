@@ -61,6 +61,7 @@
 #include "nsOutlookStringBundle.h"
 #include "OutlookDebugLog.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsIMessengerMigrator.h"
 
 class OutlookSettings {
 public:
@@ -368,8 +369,44 @@ PRBool OutlookSettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 		rv = pMgr->CreateIncomingServer( (const char *)pBytes, pServerName, "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
 			rv = in->SetType( "pop3");
-			// rv = in->SetHostName( pServerName);
-			// rv = in->SetUsername( (char *)pBytes);
+
+        nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in);
+        if (pop3Server) {
+            // set local folders as the Inbox to use for this POP3 server
+            nsCOMPtr<nsIMsgIncomingServer> localFoldersServer;
+            pMgr->GetLocalFoldersServer(getter_AddRefs(localFoldersServer));
+
+            if (!localFoldersServer)
+            {
+                // XXX: We may need to move this local folder creation code to the generic nsImportSettings code
+                // if the other import modules end up needing to do this too.    
+                // if Local Folders does not exist already, create it
+                nsCOMPtr <nsIMessengerMigrator> messengerMigrator = do_GetService(NS_MESSENGERMIGRATOR_CONTRACTID, &rv);
+                if (NS_FAILED(rv)) {
+                    IMPORT_LOG0( "*** Failed to create messenger migrator!\n");
+                    return PR_FALSE;
+                }
+          
+                rv = messengerMigrator->CreateLocalMailAccount(PR_FALSE);
+                if (NS_FAILED(rv)) {
+                    IMPORT_LOG0( "*** Failed to create Local Folders!\n");
+                    return PR_FALSE;
+                }
+    
+                pMgr->GetLocalFoldersServer(getter_AddRefs(localFoldersServer)); 
+            }
+
+            // now get the account for this server
+            nsCOMPtr<nsIMsgAccount> localFoldersAccount;
+            pMgr->FindAccountForServer(localFoldersServer, getter_AddRefs(localFoldersAccount)); 
+            if (localFoldersAccount)
+            {
+                nsXPIDLCString localFoldersAcctKey;
+                localFoldersAccount->GetKey(getter_Copies(localFoldersAcctKey));
+                pop3Server->SetDeferredToAccount(localFoldersAcctKey.get()); 
+                pop3Server->SetDeferGetNewMail(PR_TRUE);
+            }
+        }
 
 			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pServerName, (char *)pBytes);
 
@@ -416,7 +453,6 @@ PRBool OutlookSettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 
 	return( result);
 }
-
 
 PRBool OutlookSettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, const char *pServer, const char *pEmail, const char *pReply, const char *pUserName)
 {
