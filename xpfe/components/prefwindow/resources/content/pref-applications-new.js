@@ -69,8 +69,10 @@ function onOK()
       window.close();
   }
   
+  
   // now save the information
   var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
+  handlerInfo.mUpdateMode = exists; // XXX Somewhat sleazy, I know...
   handlerInfo.mimeType = gMIMEField.value;
   handlerInfo.description = gDescriptionField.value;
   
