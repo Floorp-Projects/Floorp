@@ -188,7 +188,6 @@ typedef PRUint16 PRUnichar;
 
   #define HAVE_CPP_EXPLICIT
   #define HAVE_ACCESS_CHANGING_CPP_USING
-  #define HAVE_AMBIGUITY_RESOLVING_CPP_USING
 
   #if (_MSC_VER<1100)
       // before 5.0, VC++ couldn't handle explicit
@@ -196,7 +195,6 @@ typedef PRUint16 PRUnichar;
   #elif (_MSC_VER==1100)
       // VC++5.0 has an internal compiler error (sometimes) without this
     #undef HAVE_ACCESS_CHANGING_CPP_USING
-    #undef HAVE_AMBIGUITY_RESOLVING_CPP_USING
   #endif
 
   #define HAVE_CPP_NAMESPACE_STD
