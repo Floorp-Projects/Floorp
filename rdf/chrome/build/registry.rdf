@@ -4,15 +4,15 @@
   <chrome r:ID="chrome://navigator/"> 
 
     <skin> 
-      <r:Description r:ID="chrome://navigator/skin/"> 
-        <base>resource:/res/samples/</base> 
+      <r:Description r:ID="chrome://navigator/skin/">
+	    <base>resource:/res/samples/</base>
         <main>navigator.css</main> 
       </r:Description> 
     </skin> 
 
     <content> 
-      <r:Description r:ID="chrome://navigator/content/"> 
-        <base>resource:/res/samples/</base> 
+      <r:Description r:ID="chrome://navigator/content/">
+	    <base>resource:/res/samples/</base>
         <main>navigator.xul</main> 
       </r:Description> 
     </content> 
