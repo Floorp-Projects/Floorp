@@ -292,7 +292,8 @@ SerialReadTest(char* dirName)
     gVolume = 0;
 
     // now that we've forked all the async requests, wait until they're done
-    PRUint32 threadCount = threads->Count();
+    PRUint32 threadCount;
+    rv = threads->Count(&threadCount);
     for (PRUint32 i = 0; i < threadCount; i++) {
         nsIThread* thread = (nsIThread*)(*threads)[i];
         thread->Join();
@@ -353,7 +354,8 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     }
 
     // now that we've forked all the async requests, wait until they're done
-    PRUint32 threadCount = threads->Count();
+    PRUint32 threadCount;
+    rv = threads->Count(&threadCount);
     for (PRUint32 i = 0; i < threadCount; i++) {
         nsIThread* thread = (nsIThread*)(*threads)[i];
         thread->Join();
