@@ -99,12 +99,6 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
 static PRIntervalTime gConnectTimeout  = PR_INTERVAL_NO_WAIT;
 static PRIntervalTime gTimeoutInterval = PR_INTERVAL_NO_WAIT;
 
-//
-// This is the global buffer used by all nsSocketTransport instances when
-// writing to the network using a non-buffered stream.
-//
-static char gIOBuffer[MAX_IO_TRANSFER_SIZE];
-
 #if defined(PR_LOGGING)
 //
 // Log module for SocketTransport logging...
@@ -140,7 +134,10 @@ nsSocketTransport::nsSocketTransport():
     mWriteOffset(0),
     mStatus(NS_OK),
     mSuspendCount(0),
-    mWriteCount(0)
+    mWriteCount(0),
+    mWriteBuffer(nsnull),
+    mWriteBufferIndex(0),
+    mWriteBufferLength(0)
 {
   NS_INIT_REFCNT();
 
@@ -176,7 +173,6 @@ nsSocketTransport::nsSocketTransport():
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("Creating nsSocketTransport [%x].\n", this));
-
 }
 
 
@@ -224,6 +220,10 @@ nsSocketTransport::~nsSocketTransport()
     mLock = nsnull;
   }
 
+  if (mWriteBuffer) {
+    PR_Free(mWriteBuffer);
+    mWriteBuffer = nsnull;
+  }
 }
 
 
@@ -1128,14 +1128,14 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
 
 nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   PRUint32 transferCount;
 
   // Figure out how much data to write...
   if (mWriteCount > 0) {
-    transferCount = PR_MIN(mWriteCount, sizeof(gIOBuffer));
+    transferCount = PR_MIN(mWriteCount, MAX_IO_TRANSFER_SIZE);
   } else {
-    transferCount = sizeof(gIOBuffer);
+    transferCount = MAX_IO_TRANSFER_SIZE;
   }
 
   //
@@ -1146,11 +1146,23 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   //   NS_OK                      - The write succeeded.
   //   FAILURE                    - Something bad happened.
   //
-  rv = mWriteFromStream->Read(gIOBuffer, transferCount, aCount);
+  if (0 == mWriteBufferLength) {
+    // When the buffer is empty, read the next chunk of data into 
+    // the buffer...
+    rv = mWriteFromStream->Read(mWriteBuffer, transferCount, 
+                                &mWriteBufferLength);
+    mWriteBufferIndex = 0;
+  }
 
+  *aCount = 0;
   if (NS_SUCCEEDED(rv)) {
-    transferCount = *aCount;
-    rv = nsWriteToSocket((void*)mSocketFD, gIOBuffer, 0, transferCount, aCount);
+    // Try to send the data to the network.
+    rv = nsWriteToSocket((void*)mSocketFD, mWriteBuffer, mWriteBufferIndex, 
+                         mWriteBufferLength, aCount);
+    // Update the buffer index and length with the actual amount of data
+    // that was sent...
+    mWriteBufferIndex  += *aCount;
+    mWriteBufferLength -= *aCount;
   }
 
   return rv;  
@@ -1671,8 +1683,26 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   if (NS_SUCCEEDED(rv)) {
     mWritePipeIn = do_QueryInterface(aFromStream, &rv);
     if (NS_FAILED(rv)) {
+      // If the input stream does not support nsIBufferInputStream, then
+      // an intermediate buffer is necessary to move the data from the
+      // stream to the network...
       mWriteFromStream = aFromStream;
+
+      rv = NS_OK;
+      // Create the intermediate buffer if necessary...
+      if (!mWriteBuffer) {
+        mWriteBuffer = (char *)PR_Malloc(MAX_IO_TRANSFER_SIZE+1);
+        if (!mWriteBuffer) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      // Reset to buffer index and length.
+      mWriteBufferLength = 0;
+      mWriteBufferIndex  = 0;
     }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
     mWriteContext = aContext;
 
     // Create a marshalling stream observer to receive notifications...
