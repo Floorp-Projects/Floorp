@@ -38,8 +38,11 @@ CPPSRCS		= \
                   nsISO88597ToUnicode.cpp \
                   nsISO88598ToUnicode.cpp \
                   nsISO88599ToUnicode.cpp \
+                  nsISO885910ToUnicode.cpp \
+                  nsISO885913ToUnicode.cpp \
                   nsISO885914ToUnicode.cpp \
                   nsISO885915ToUnicode.cpp \
+                  nsISOIR111ToUnicode.cpp \
                   nsCP1250ToUnicode.cpp \
                   nsCP1251ToUnicode.cpp \
                   nsCP1252ToUnicode.cpp \
@@ -66,6 +69,8 @@ CPPSRCS		= \
                   nsTCVN5712ToUnicode.cpp         \
                   nsVISCIIToUnicode.cpp           \
                   nsVPSToUnicode.cpp              \
+                  nsVIQRToUnicode.cpp              \
+                  nsVNIToUnicode.cpp              \
                   nsUTF8ToUnicode.cpp \
                   nsUTF7ToUnicode.cpp \
                   nsMUTF7ToUnicode.cpp \
@@ -74,6 +79,7 @@ CPPSRCS		= \
                   nsUCS4BEToUnicode.cpp \
                   nsUCS4LEToUnicode.cpp \
                   nsT61ToUnicode.cpp \
+                  nsUserDefinedToUnicode.cpp \
                   nsUnicodeToISO88591.cpp \
                   nsUnicodeToISO88592.cpp \
                   nsUnicodeToISO88593.cpp \
@@ -83,8 +89,11 @@ CPPSRCS		= \
                   nsUnicodeToISO88597.cpp \
                   nsUnicodeToISO88598.cpp \
                   nsUnicodeToISO88599.cpp \
+                  nsUnicodeToISO885910.cpp        \
+                  nsUnicodeToISO885913.cpp        \
                   nsUnicodeToISO885914.cpp        \
                   nsUnicodeToISO885915.cpp        \
+                  nsUnicodeToISOIR111.cpp        \
                   nsUnicodeToCP1250.cpp \
                   nsUnicodeToCP1251.cpp \
                   nsUnicodeToCP1252.cpp \
@@ -111,6 +120,8 @@ CPPSRCS		= \
                   nsUnicodeToTCVN5712.cpp         \
                   nsUnicodeToVISCII.cpp           \
                   nsUnicodeToVPS.cpp              \
+                  nsUnicodeToVIQR.cpp              \
+                  nsUnicodeToVNI.cpp              \
                   nsUnicodeToUTF8.cpp \
                   nsUnicodeToUTF7.cpp \
                   nsUnicodeToMUTF7.cpp \
@@ -119,6 +130,7 @@ CPPSRCS		= \
                   nsUnicodeToUCS4BE.cpp \
                   nsUnicodeToUCS4LE.cpp \
                   nsUnicodeToT61.cpp \
+                  nsUnicodeToUserDefined.cpp \
                   ns1ByteToUnicodeBase.cpp \
 		  nsUCvLatinSupport.cpp \
                   nsUCvLatinDll.cpp \

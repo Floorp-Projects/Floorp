@@ -33,6 +33,11 @@ CPPSRCS		= \
                   nsUnicodeToEUCTW.cpp \
                   nsUnicodeToCNS11643p1.cpp \
                   nsUnicodeToCNS11643p2.cpp \
+                  nsUnicodeToCNS11643p3.cpp \
+                  nsUnicodeToCNS11643p4.cpp \
+                  nsUnicodeToCNS11643p5.cpp \
+                  nsUnicodeToCNS11643p6.cpp \
+                  nsUnicodeToCNS11643p7.cpp \
 		  nsUCvTW2Support.cpp \
                   nsUCvTW2Dll.cpp \
 		  $(NULL)

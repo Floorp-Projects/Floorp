@@ -31,6 +31,8 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsBIG5ToUnicode.cpp \
                   nsUnicodeToBIG5.cpp \
+                  nsCP950ToUnicode.cpp \
+                  nsUnicodeToCP950.cpp \
                   nsUnicodeToBIG5NoAscii.cpp \
 		  nsUCvTWSupport.cpp \
                   nsUCvTWDll.cpp \
