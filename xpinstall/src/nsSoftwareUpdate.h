@@ -20,6 +20,7 @@ class nsInstallInfo;
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIObserver.h"
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
@@ -29,7 +30,8 @@ class nsInstallInfo;
 #define XPCOM_KEY       "software/mozilla/XPCOM"
 
 class nsSoftwareUpdate: public nsISoftwareUpdate, 
-                        public nsPIXPIStubHook
+                        public nsPIXPIStubHook,
+                        public nsIObserver
 {
     public:
         
@@ -50,6 +52,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSPIXPISTUBHOOK
+        NS_DECL_NSIOBSERVER
         
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
@@ -75,6 +78,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
+        static   PRBool             mNeedCleanup;
 
     private:
         static   nsSoftwareUpdate*  mInstance;
@@ -84,6 +88,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         nsresult RunNextInstall();
         nsresult RegisterNameset();
         void     CreateMasterListener();
+        void     Shutdown();
         
         PRLock*               mLock;
         PRBool                mInstalling;

@@ -32,6 +32,7 @@
 #include "nsICategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsIObserverService.h"
 
 #include "nspr.h"
 #include "prlock.h"
@@ -48,12 +49,15 @@
 #include "nsInstallTrigger.h"
 #include "nsInstallVersion.h"
 #include "ScheduledTasks.h"
+#include "InstallCleanupDefines.h"
 
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
 #include "nsIRegistry.h"
 #include "nsBuildID.h"
+#include "nsSpecialSystemDirectory.h"
+#include "nsProcess.h"
 
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
@@ -84,9 +88,12 @@ static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
+
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
 char*             nsSoftwareUpdate::mLogName = nsnull;
+PRBool            nsSoftwareUpdate::mNeedCleanup = PR_FALSE;
 
 
 nsSoftwareUpdate *
@@ -134,10 +141,15 @@ nsSoftwareUpdate::nsSoftwareUpdate()
             nsMemory::Free(nativePath);
             
     }
+    /***************************************/
+    /* Add this as a shutdown observer     */
+    /***************************************/
+    NS_WITH_SERVICE(nsIObserverService, observerService, 
+                    NS_OBSERVERSERVICE_CONTRACTID, &rv);
+
+    if (NS_SUCCEEDED(rv))
+        observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
 }
-
-
-
 
 
 nsSoftwareUpdate::~nsSoftwareUpdate()
@@ -170,10 +182,49 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 //  nsISupports implementation
 //------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSoftwareUpdate,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSoftwareUpdate,
                               nsISoftwareUpdate,
-                              nsPIXPIStubHook);
+                              nsPIXPIStubHook,
+                              nsIObserver);
 
+void
+nsSoftwareUpdate::Shutdown()
+{
+    if (mNeedCleanup)
+    {
+      // Create a non-blocking process to run the native platform cleanup utility
+        nsresult rv;
+        nsCOMPtr<nsILocalFile> pathToCleanupUtility;
+        //Get the program directory
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
+                              NS_GET_IID(nsIFile), 
+                              getter_AddRefs(pathToCleanupUtility));
+#if defined (XP_MAC)
+        pathToCleanupUtility->Append(ESSENTIAL_FILES);
+#endif
+        //Create the Process framework
+        pathToCleanupUtility->Append(CLEANUP_UTIL);
+        nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);
+        rv = cleanupProcess->Init(pathToCleanupUtility);
+        if (NS_SUCCEEDED(rv))
+        {
+            //Run the cleanup utility as a NON-blocking process
+            rv = cleanupProcess->Run(PR_FALSE, nsnull, 0, nsnull);
+        }
+    }
+}
+
+NS_IMETHODIMP nsSoftwareUpdate::Observe(nsISupports *aSubject, 
+                                        const PRUnichar *aTopic, 
+                                        const PRUnichar *aData)
+{
+    nsLiteralString topicString(aTopic);
+    if (topicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
+      Shutdown();
+     
+    return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
