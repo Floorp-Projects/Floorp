@@ -46,6 +46,7 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\StringList.obj \
 	..\source\base\$(OBJDIR)\Tokenizer.obj \
 	..\source\base\$(OBJDIR)\txAtoms.obj \
+	..\source\base\$(OBJDIR)\txExpandedNameMap.obj \
 	..\source\base\$(OBJDIR)\MozillaString.obj \
 	..\source\net\$(OBJDIR)\URIUtils.obj \
 	..\source\xml\dom\mozImpl\$(OBJDIR)\MozillaObjectWrapper.obj \

@@ -31,6 +31,9 @@ MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
 		  unicharutil \
+		  dom \
+		  content \
+		  widget \
 		  $(NULL)
 endif
 
@@ -44,7 +47,8 @@ CPPSRCS	= ArrayList.cpp             \
 	Stack.cpp \
 	StringList.cpp \
 	Tokenizer.cpp \
-	txAtoms.cpp
+	txAtoms.cpp \
+	txExpandedNameMap.cpp
 
 ifdef TX_EXE
 	CPPSRCS	+= CommandLineUtils.cpp	\
@@ -55,6 +59,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt
+INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt -I$(srcdir)/../xml   \
+  -I$(srcdir)/../xml/dom
 
 libs:: $(OBJS)

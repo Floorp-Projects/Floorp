@@ -20,9 +20,13 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
 		  unicharutil \
+		  dom \
+		  content \
+		  widget \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>
@@ -42,7 +46,8 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\Map.obj			\
 	.\$(OBJDIR)\StringList.obj		\
 	.\$(OBJDIR)\Tokenizer.obj		\
-	.\$(OBJDIR)\txAtoms.obj
+	.\$(OBJDIR)\txAtoms.obj			\
+	.\$(OBJDIR)\txExpandedNameMap.obj
 
 !ifndef TX_EXE
 CPP_OBJS = $(CPP_OBJS)			\
@@ -58,7 +63,7 @@ CPP_OBJS = $(CPP_OBJS)			        \
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xslt
+LINCS=-I$(PUBLIC)\xpcom -I..\xpath -I..\xslt -I..\xml -I..\xml\dom
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -138,6 +138,8 @@ private:
 
 #define TX_ADDREF_ATOM(atom) {}
 
+#define TX_IF_ADDREF_ATOM(atom) {}
+
 #define TX_RELEASE_ATOM(atom) {}
 
 #define TX_IF_RELEASE_ATOM(atom) {}
@@ -156,6 +158,8 @@ typedef nsIAtom txAtom;
     NS_NewAtom((str).getConstNSString())
 
 #define TX_ADDREF_ATOM(atom) NS_ADDREF(atom)
+
+#define TX_IF_ADDREF_ATOM(atom) NS_IF_ADDREF(atom)
 
 #define TX_RELEASE_ATOM(atom) NS_RELEASE(atom)
 
