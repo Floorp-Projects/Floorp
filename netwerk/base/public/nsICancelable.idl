@@ -38,39 +38,21 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
-interface nsIProxyInfo;
-interface nsICancelable;
-
 /**
- * This interface servers as a closure for nsIProtocolProxyService's
- * asyncResolve method.
+ * This interface provides a means to cancel an operation that is in progress.
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(a9967200-f95e-45c2-beb3-9b060d874bfd)]
-interface nsIProtocolProxyCallback : nsISupports
+[scriptable, uuid(d94ac0a0-bb18-46b8-844e-84159064b0bd)]
+interface nsICancelable : nsISupports
 {
   /**
-   * This method is called when proxy info is available or when an error
-   * in the proxy resolution occurs.
+   * Call this method to request that this object abort whatever operation it
+   * may be performing.
    *
-   * @param aRequest
-   *        The value returned from asyncResolve.
-   * @param aURI
-   *        The URI passed to asyncResolve.
-   * @param aProxyInfo
-   *        The resulting proxy info or null if there is no associated proxy
-   *        info for aURI.  As with the result of nsIProtocolProxyService's
-   *        resolve method, a null result implies that a direct connection
-   *        should be used.
-   * @param aStatus
-   *        The status of the callback.  This is a failure code if the request
-   *        could not be satisfied, in which case the value of aStatus
-   *        indicates the reason for the failure.
+   * @param aReason
+   *        Pass a failure code to indicate the reason why this operation is
+   *        being canceled.  It is an error to pass a success code.
    */
-  void onProxyAvailable(in nsICancelable aRequest,
-                        in nsIURI aURI,
-                        in nsIProxyInfo aProxyInfo,
-                        in nsresult aStatus);
+  void cancel(in nsresult aReason);
 };

@@ -65,6 +65,7 @@ XPIDLSRCS	= \
 		nsIAsyncStreamCopier.idl \
 		nsISafeOutputStream.idl \
 		nsIBufferedStreams.idl \
+		nsICancelable.idl \
 		nsIDownloader.idl \
 		nsIEncodedChannel.idl \
 		nsIFileStreams.idl \

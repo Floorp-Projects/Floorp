@@ -272,10 +272,10 @@ TestResolveCallback.prototype = {
   },
 
   onProxyAvailable:
-  function TestResolveCallback_onProxyAvailable(ctx, uri, pi, status) {
+  function TestResolveCallback_onProxyAvailable(req, uri, pi, status) {
     dump("*** uri=" + uri.spec + ", status=" + status + "\n");
 
-    do_check_neq(ctx, null);
+    do_check_neq(req, null);
     do_check_neq(uri, null);
     do_check_eq(status, 0);
     do_check_neq(pi, null);
@@ -296,6 +296,7 @@ TestResolveCallback.prototype = {
     prefs.setCharPref("network.proxy.autoconfig_url", "");
     prefs.setIntPref("network.proxy.type", 0);
 
+    run_test_continued();
     do_test_finished();
   }
 };
@@ -329,7 +330,55 @@ function run_pac_test() {
   }
   do_check_eq(hit_exception, true);
 
-  var ctx = pps.asyncResolve(uri, 0, new TestResolveCallback());
+  var req = pps.asyncResolve(uri, 0, new TestResolveCallback());
+  do_test_pending();
+}
+
+function TestResolveCancelationCallback() {
+}
+TestResolveCancelationCallback.prototype = {
+  QueryInterface:
+  function TestResolveCallback_QueryInterface(iid) {
+    if (iid.equals(Components.interfaces.nsIProtocolProxyCallback) ||
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  onProxyAvailable:
+  function TestResolveCancelationCallback_onProxyAvailable(req, uri, pi, status) {
+    dump("*** uri=" + uri.spec + ", status=" + status + "\n");
+
+    do_check_neq(req, null);
+    do_check_neq(uri, null);
+    do_check_eq(status, Components.results.NS_ERROR_ABORT);
+    do_check_eq(pi, null);
+
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    prefs.setCharPref("network.proxy.autoconfig_url", "");
+    prefs.setIntPref("network.proxy.type", 0);
+
+    run_test_continued_2();
+    do_test_finished();
+  }
+};
+
+function run_pac_cancel_test() {
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+
+  // Configure PAC
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            '  return "PROXY foopy:8080; DIRECT";' +
+            '}';
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var req = pps.asyncResolve(uri, 0, new TestResolveCancelationCallback());
+  req.cancel(Components.results.NS_ERROR_ABORT);
   do_test_pending();
 }
 
@@ -339,4 +388,13 @@ function run_test() {
   run_filter_test2();
   run_pref_test();
   run_pac_test();
+  // additional tests may be added to run_test_continued
+}
+
+function run_test_continued() {
+  run_pac_cancel_test();
+  // additional tests may be added to run_test_continued_2
+}
+
+function run_test_continued_2() {
 }

@@ -76,7 +76,7 @@ public:
     NS_HIDDEN_(nsresult) Init();
 
 protected:
-    friend class nsAsyncResolveContext;
+    friend class nsAsyncResolveRequest;
 
     ~nsProtocolProxyService() NS_HIDDEN;
 

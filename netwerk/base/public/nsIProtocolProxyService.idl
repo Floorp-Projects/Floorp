@@ -39,6 +39,7 @@
 
 #include "nsISupports.idl"
 
+interface nsICancelable;
 interface nsIProtocolProxyCallback;
 interface nsIProtocolProxyFilter;
 interface nsIProxyInfo;
@@ -51,7 +52,7 @@ interface nsIURI;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(faea2185-8e5b-44a8-ae8f-5fd3f20972af)]
+[scriptable, uuid(e38ab577-786e-4a7f-936b-7ae4c7d877b2)]
 interface nsIProtocolProxyService : nsISupports
 {
     /**
@@ -111,22 +112,10 @@ interface nsIProtocolProxyService : nsISupports
      * @param aCallback
      *        The object to be notified when the result is available.
      *
-     * @return a context for the operation that can be used to cancel the 
-     * asychronous operation.  See for example cancelAsyncResolve.
+     * @return An object that can be used to cancel the asychronous operation.
      */
-    nsISupports asyncResolve(in nsIURI aURI,
-                             in unsigned long aFlags,
-                             in nsIProtocolProxyCallback aCallback);
-
-    /**
-     * This method may be used to cancel a pending asyncResolve callback.  When
-     * this is called, the callback object passed to asyncResolve will be
-     * notified with an error condition of NS_ERROR_ABORT.
-     *
-     * @param aContext
-     *        The return value from asyncResolve.
-     */
-    void cancelAsyncResolve(in nsISupports aContext);
+    nsICancelable asyncResolve(in nsIURI aURI, in unsigned long aFlags,
+                               in nsIProtocolProxyCallback aCallback);
 
     /**
      * This method may be called to construct a nsIProxyInfo instance from
