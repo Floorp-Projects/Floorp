@@ -209,6 +209,8 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
         /* Commenting out the call to RegisterDTD() as per rickg's instructions.
            XML and HTML DTD's are going to be pre-registered withing nsParser. */
         // mParser->RegisterDTD(theDTD);
+        nsAutoString utf8("utf-8");
+        mParser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
         mParser->Parse(aUrl);
