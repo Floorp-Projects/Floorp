@@ -163,6 +163,7 @@ sub pickos {
             /\(.*OSF.*\)/ && do {return "OSF/1";};
             /\(.*Linux.*\)/ && do {return "Linux";};
             /\(.*SunOS 5.*\)/ && do {return "Solaris";};
+            /\(.*SunOS.*sun4u.*\)/ && do {return "Solaris";};
             /\(.*SunOS.*\)/ && do {return "SunOS";};
             /\(.*HP-?UX.*\)/ && do {return "HP-UX";};
             /\(.*BSD\/(?:OS|386).*\)/ && do {return "BSDI";};
