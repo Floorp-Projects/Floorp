@@ -381,6 +381,19 @@ interface nsIStreamIOChannel : nsIChannel
 [scriptable, uuid(68a26506-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIFileChannel : nsIChannel
 {
+    /** 
+     * Values for ioFlags parameters to be or'd together. 
+     * (From prio.h)
+     */
+    const long NS_RDONLY        = 0x01;
+    const long NS_WRONLY        = 0x02;
+    const long NS_RDWR          = 0x04;
+    const long NS_CREATE_FILE   = 0x08;
+    const long NS_APPEND        = 0x10;
+    const long NS_TRUNCATE      = 0x20;
+    const long NS_SYNC          = 0x40;
+    const long NS_EXCL          = 0x80;
+
     void init(in nsIFile file,
               in long ioFlags,
               in long perm);
