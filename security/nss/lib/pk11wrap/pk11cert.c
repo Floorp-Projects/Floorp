@@ -1437,11 +1437,13 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     }
     if (nickCopy) PORT_Free(nickCopy);
     if (foundCerts) {
+	PRTime now = PR_Now();
 	certList = CERT_NewCertList();
 	for (i=0, c = *foundCerts; c; c = foundCerts[++i]) {
 	    CERTCertificate *certCert = STAN_GetCERTCertificate(c);
 	    if (certCert) {
-		CERT_AddCertToListTail(certList, certCert);
+		CERT_AddCertToListSorted(certList, certCert,
+			CERT_SortCBValidity, &now);
 	    }
 	}
 	if (CERT_LIST_HEAD(certList) == NULL) {
