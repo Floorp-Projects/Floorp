@@ -32,6 +32,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="ChangePanelURL(pref-appearance.xul);"
         style="overflow: visible;"> 
+
+
+
 <html:script>
 	
 	var prefwindow = null;
@@ -66,9 +69,13 @@
 	}
 
 </html:script>
+
+
 <html:div flex="100%">
 <tree onclick="return ClickChangePanel(event.target);"> 
+ <treehead name="tree">
   <treecol style="width:100%" />
+  </treehead>
   <treechildren>
     <treeitem open="true">
       <treerow>   
@@ -218,6 +225,8 @@
       </treechildren>
     </treeitem>
   </treechildren>
+
 </tree>
+
 </html:div>
 </window>
