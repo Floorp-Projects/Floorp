@@ -2333,7 +2333,8 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	if (NS_SUCCEEDED(rv)) {               
 		rv = GetStringFromSpec(oldProfDir, &oldProfDirStr);               
 		if (NS_SUCCEEDED(rv)) {                             
-			rv = pPrefMigrator->ProcessPrefs(oldProfDirStr,  newProfDirStr);
+			rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  // you can do this a bunch of times.
+      rv = pPrefMigrator->ProcessPrefs();
 		}
 	}
 	PR_FREEIF(oldProfDirStr);
