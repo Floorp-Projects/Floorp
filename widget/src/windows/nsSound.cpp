@@ -73,6 +73,7 @@ private:
 nsSound::nsSound()
 {
   NS_INIT_REFCNT();
+  mLastSound = nsnull;
 }
 
 nsSound::~nsSound()
