@@ -1174,6 +1174,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
 
   nsPoint  innerOrigin(0,0);
   nsMargin captionMargin(0,0,0,0);
+  nsSize   captionSize(0,0);
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
   PRBool   reflowedCaption = PR_FALSE;
   // if there is a caption and the width or height of the inner table changed 
@@ -1183,7 +1184,6 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
       nsMargin ignorePadding;
       // XXX only need to reflow if the caption is auto width
       nsHTMLReflowMetrics captionMet(nsnull);  // don't ask for MES, it hasn't changed
-      nsSize captionSize;
       nscoord availWidth = GetCaptionAvailWidth(aPresContext, mCaptionFrame, aOuterRS,
                                                 &innerSize.width, &innerMargin);
       rv = OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, &availWidth,
@@ -1202,7 +1202,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
     }
     else {
       // reposition the caption frame if necessary and set the inner's origin
-      nsSize captionSize = GetFrameSize(*mCaptionFrame);
+      captionSize = GetFrameSize(*mCaptionFrame);
       nsPoint captionOrigin;
       nsMargin captionPadding;
       GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, captionMargin, 
@@ -1213,6 +1213,10 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
                      captionMargin, innerSize, innerMargin, innerOrigin);
       MoveFrameTo(aPresContext, mCaptionFrame, captionOrigin.x, captionOrigin.y); 
     }
+  }
+  else {
+    GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
+                   captionMargin, innerSize, innerMargin, innerOrigin);
   }
 
   FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
