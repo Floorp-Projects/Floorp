@@ -158,11 +158,18 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
 	return status;
 }
 
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsIDOMSelection *aDOMSel)
+{
+  NS_ENSURE_ARG_POINTER(aDOMSel);
+  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
+  return NS_OK;
+}
+
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aDOMSel)
+NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 {
-  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
 	mVisible = inMakeVisible;
 	nsresult	err = NS_OK;
 	if (mVisible)
@@ -173,12 +180,17 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aD
 	return err;
 }
 
+NS_IMETHODIMP nsCaret::GetCaretVisible(PRBool *outMakeVisible)
+{
+  NS_ENSURE_ARG_POINTER(outMakeVisible);
+  *outMakeVisible = mVisible;
+  return NS_OK;
+}
+
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly, nsIDOMSelection *aDOMSel)
+NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 {
-  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
-
 	mReadOnly = inMakeReadonly;
 	return NS_OK;
 }
@@ -323,12 +335,11 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *aDomSel, short)
 {
+	if (mVisible)
+		StopBlinking();
   mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDomSel) );   // weak reference to pres shell
 	if (mVisible)
-	{
-		StopBlinking();
 		StartBlinking();
-	}
 	
 	return NS_OK;
 }
