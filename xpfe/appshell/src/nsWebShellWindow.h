@@ -261,9 +261,8 @@ public:
   NS_IMETHOD ShowMenuBar(PRBool aShow);
 
   NS_DECL_IURLDISPATCHER
+
   // nsINetSupport
-
-
   NS_IMETHOD Alert(const PRUnichar *text);
   NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
   NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
@@ -281,6 +280,8 @@ protected:
   
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
+  NS_IMETHOD GetPresShell(nsIPresShell** aResult);
+
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   nsCOMPtr<nsIDOMNode>     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
