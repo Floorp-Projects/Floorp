@@ -36,12 +36,18 @@
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 
+#include "nsComponentManager.h"
+
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
 #ifndef EXTRA_THREADSAFE
 #define PR_Lock(x)           (void)0
 #define PR_Unlock(x)         (void)0
 #endif
+
+// Logging of debug output
+#define FORCE_PR_LOG /* Allow logging in the release build */
+extern PRLogModuleInfo *nsComponentManagerLog;
 
 PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
 
@@ -416,8 +422,61 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
 | Takes a registry id and maps that to a file name for opening. We first check |
 | to see if a registry file is already open and close  it if so.               |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
+NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) 
+{
     REGERR err = REGERR_OK;
+
+
+    #ifdef XP_UNIX
+    // Create ~/.mozilla as that is the default place for the registry file
+
+    /* The default registry on the unix system is $HOME/.mozilla/registry per
+     * vr_findGlobalRegName(). vr_findRegFile() will create the registry file
+     * if it doesn't exist. But it wont create directories.
+     *
+     * Hence we need to create the directory if it doesn't exist already.
+     *
+     * Why create it here as opposed to the app ?
+     * ------------------------------------------
+     * The app cannot create the directory in main() as most of the registry
+     * and initialization happens due to use of static variables.
+     * And we dont want to be dependent on the order in which
+     * these static stuff happen.
+     *
+     * Permission for the $HOME/.mozilla will be Read,Write,Execute
+     * for user only. Nothing to group and others.
+     */
+    char *home = getenv("HOME");
+    if (home != NULL)
+    {
+        char dotMozillaDir[1024];
+        PR_snprintf(dotMozillaDir, sizeof(dotMozillaDir),
+                    "%s/" NS_MOZILLA_DIR_NAME, home);
+        if (PR_Access(dotMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS)
+        {
+            PR_MkDir(dotMozillaDir, NS_MOZILLA_DIR_PERMISSION);
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsComponentManager: Creating Directory %s", dotMozillaDir));
+        }
+    }
+#endif /* XP_UNIX */
+
+#ifdef XP_BEOS
+    BPath p;
+    const char *settings = "/boot/home/config/settings";
+    if(find_directory(B_USER_SETTINGS_DIRECTORY, &p) == B_OK)
+        settings = p.Path();
+    char settingsMozillaDir[1024];
+    PR_snprintf(settingsMozillaDir, sizeof(settingsMozillaDir),
+                "%s/" NS_MOZILLA_DIR_NAME, settings);
+    if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
+        PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
+        printf("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
+    }
+#endif
+
 
     if (mCurRegID != nsIRegistry::None && mCurRegID != regid)
     {
@@ -440,6 +499,8 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
     switch ( (nsWellKnownRegistry) regid ) {
       case ApplicationComponentRegistry:
         {
+            // can't use NS_GetSpecialDirectory here.  Called before service manager is initialized.
+
             nsCOMPtr<nsIProperties> directoryService;
             rv = nsDirectoryService::Create(nsnull, 
                                             NS_GET_IID(nsIProperties), 
@@ -447,7 +508,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
             if (NS_FAILED(rv)) return rv;
             directoryService->Get(NS_XPCOM_COMPONENT_REGISTRY_FILE, NS_GET_IID(nsIFile), 
                                           getter_AddRefs(registryLocation));
-
+            
             if (registryLocation)
             {
                 foundReg = PR_TRUE;
@@ -462,8 +523,25 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
         break;
       case ApplicationRegistry:
         {
-            foundReg = PR_TRUE;
-            // NULL regFile will open the right one for this case.
+            // can't use NS_GetSpecialDirectory here.  Called before service manager is initialized.
+
+            nsCOMPtr<nsIProperties> directoryService;
+            rv = nsDirectoryService::Create(nsnull, 
+                                            NS_GET_IID(nsIProperties), 
+                                            getter_AddRefs(directoryService));
+            if (NS_FAILED(rv)) return rv;
+            directoryService->Get(NS_XPCOM_APPLICATION_REGISTRY_FILE, NS_GET_IID(nsIFile), 
+                                          getter_AddRefs(registryLocation));
+
+            if (registryLocation)
+            {
+                foundReg = PR_TRUE;
+                registryLocation->GetPath(&regFile);  // dougt fix...
+                // dveditz needs to fix his registry so that I can pass an
+                // nsIFile interface and not hack 
+                if (!regFile)
+                  return NS_ERROR_OUT_OF_MEMORY;
+            }
         }
         break;
 

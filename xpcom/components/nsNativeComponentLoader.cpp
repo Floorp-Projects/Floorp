@@ -220,7 +220,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         // Get key associated with library
         nsRegistryKey libKey;
         rv = node->GetKey(&libKey);
-        if (!NS_FAILED(rv)) //  Cannot continue here, because we have to free unescape
+        if (NS_SUCCEEDED(rv)) //  Cannot continue here, because we have to free unescape
         {
             // Create nsDll with this name
             nsDll *dll = NULL;
@@ -229,8 +229,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
             GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
             rv = CreateDll(NULL, uLibrary, &lastModTime, &fileSize, &dll);
         }
-        if (uLibrary != eLibrary
-                && uLibrary != nsnull)
+        if (uLibrary && (uLibrary != eLibrary))
             nsMemory::Free(uLibrary);
 
         if (NS_FAILED(rv)) continue;

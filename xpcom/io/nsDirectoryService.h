@@ -26,8 +26,11 @@
 
 #include "nsIDirectoryService.h"
 #include "nsHashtable.h"
-#include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsISupportsArray.h"
+#include "nsXPIDLString.h"
+
+
 class nsDirectoryService : public nsIDirectoryService, public nsIProperties, public nsIDirectoryServiceProvider
 {
   public:
@@ -52,12 +55,18 @@ class nsDirectoryService : public nsIDirectoryService, public nsIProperties, pub
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
+    nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
+    
     static nsDirectoryService* mService;
     static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsSupportsHashtable* mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
 
+    nsCString mProductName;
+
     static nsIAtom *sCurrentProcess;
+    static nsIAtom *sAppRegistryDirectory;
+    static nsIAtom *sAppRegistry;
     static nsIAtom *sComponentRegistry;
     static nsIAtom *sComponentDirectory;
     static nsIAtom *sOS_DriveDirectory;
@@ -77,6 +86,7 @@ private:
     static nsIAtom *sPreferencesDirectory;
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
+    static nsIAtom *sHomeDirectory;
 #elif defined (XP_OS2)
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sOS2Directory;

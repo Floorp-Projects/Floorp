@@ -368,6 +368,9 @@ NS_NewServiceManager(nsIServiceManager* *result);
 extern NS_COM nsresult
 NS_InitXPCOM(nsIServiceManager* *result, nsIFile* binDirectory);
 
+extern NS_COM nsresult
+NS_InitXPCOM2(const char* productName, nsIServiceManager* *result, nsIFile* binDirectory);
+
 ////////////////////////////////////////////////////////////////////////////////
 // Shutdown of XPCOM. XPCOM hosts an observer (NS_XPCOM_SHUTDOWN_OBSERVER_ID)
 // for modules to observer the shutdown. The first thing NS_ShutdownXPCOM()

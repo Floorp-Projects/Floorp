@@ -32,6 +32,7 @@ interface nsIDirectoryServiceProvider: nsISupports
 [scriptable, uuid(57a66a60-d43a-11d3-8cc2-00609792278c)]
 interface nsIDirectoryService: nsISupports
 {
+  void init(in string productName);
   void registerProvider(in nsIDirectoryServiceProvider prov);
 };
 
