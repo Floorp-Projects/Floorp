@@ -173,14 +173,20 @@ public:
 
   virtual PRBool Contains(nsIPresContext* aPresContext, const nsPoint& aPoint);
 
-  /** used by yje row group frame code */
-  void ReflowCellFrame(nsIPresContext*          aPresContext,
-                       const nsHTMLReflowState& aReflowState,
-                       nsTableCellFrame*        aCellFrame,
-                       nscoord                  aAvailableHeight,
-                       nsReflowStatus&          aStatus);
+  /** used by row group frame code */
+  nscoord ReflowCellFrame(nsIPresContext*          aPresContext,
+                          const nsHTMLReflowState& aReflowState,
+                          nsTableCellFrame*        aCellFrame,
+                          nscoord                  aAvailableHeight,
+                          nsReflowStatus&          aStatus);
+
   void InsertCellFrame(nsTableCellFrame* aFrame, 
                        nsTableCellFrame* aPrevSibling);
+
+  void InsertCellFrame(nsTableCellFrame* aFrame,
+                       PRInt32           aColIndex);
+
+  void RemoveCellFrame(nsTableCellFrame* aFrame);
 
   nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
                                    nscoord&  aDesiredWidth,

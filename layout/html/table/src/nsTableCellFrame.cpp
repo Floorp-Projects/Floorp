@@ -98,6 +98,35 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+nsresult 
+nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const
+{
+  nsresult result;
+  nsTableRowFrame * row;
+  GetParent((nsIFrame **)&row);
+  if (row) {
+    aRowIndex = row->GetRowIndex();
+    result = NS_OK;
+  }
+  else {
+    aRowIndex = 0;
+    result = NS_ERROR_NOT_INITIALIZED;
+  }
+  return result;
+}
+
+nsresult 
+nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
+{  
+  if (mPrevInFlow) {
+    return ((nsTableCellFrame*)GetFirstInFlow())->GetColIndex(aColIndex);
+  }
+  else {
+    aColIndex = mColIndex;
+    return  NS_OK;
+  }
+}
+
 NS_IMETHODIMP
 nsTableCellFrame::AttributeChanged(nsIPresContext* aPresContext,
                                    nsIContent*     aChild,
