@@ -89,7 +89,8 @@ NS_IMETHODIMP nsMsgHdr::GetThreadId(nsMsgKey *result)
 
 NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+		m_messageKey = value;
+		return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
