@@ -597,6 +597,14 @@ nsHTMLFormElement::Submit()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
+    if (mPendingSubmission) {
+      // aha, we have a pending submission that was not flushed
+      // (this happens when form.submit() is called twice)
+      // we have to delete it and build a new one since values
+      // might have changed inbetween (we emulate IE here, that's all)
+      mPendingSubmission = nsnull;
+    }
+
     // If we are in quirks mode or someone called form.submit()
     // from inside the onSubmit handler, just submit synchronously.
     // (bug 144534, 76694, 155453)
@@ -760,7 +768,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                               aDOMEvent,
                                                               aFlags,
                                                               aEventStatus); 
-  if (mDeferSubmission && aEvent->message == NS_FORM_SUBMIT) {
+  if (aEvent->message == NS_FORM_SUBMIT) {
     // let the form know not to defer subsequent submissions
     mDeferSubmission = PR_FALSE;
   }
@@ -774,7 +782,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
         case NS_FORM_RESET:
         case NS_FORM_SUBMIT:
         {
-          if (mPendingSubmission) {
+          if (mPendingSubmission && aEvent->message == NS_FORM_SUBMIT) {
             // tell the form to forget a possible pending submission.
             // the reason is that the script returned true (the event was
             // ignored) so if there is a stored submission, it will miss
@@ -787,11 +795,13 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
         break;
       }
     } else {
-      // tell the form to flush a possible pending submission.
-      // the reason is that the script returned false (the event was
-      // not ignored) so if there is a stored submission, it needs to
-      // be submitted immediatelly.
-      FlushPendingSubmission();
+      if (aEvent->message == NS_FORM_SUBMIT) {
+        // tell the form to flush a possible pending submission.
+        // the reason is that the script returned false (the event was
+        // not ignored) so if there is a stored submission, it needs to
+        // be submitted immediatelly.
+        FlushPendingSubmission();
+      }
     }
   }
 
@@ -899,13 +909,7 @@ nsHTMLFormElement::BuildSubmission(nsIPresContext* aPresContext,
                                    nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
                                    nsEvent* aEvent)
 {
-  if (mPendingSubmission) {
-    // aha, we have a pending submission that was not flushed
-    // (this happens when form.submit() is called twice for example)
-    // we have to delete it and build a new one since values
-    // might have changed inbetween (we emulate IE here, that's all)
-    mPendingSubmission = nsnull;
-  }
+  NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
   // Get the originating frame (failure is non-fatal)
   nsIContent *originatingElement = nsnull;
