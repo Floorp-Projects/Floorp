@@ -48,8 +48,15 @@ function onLoad()
   }
   
   setCursor("wait");
+
+  var obs = {
+    observe : function keygenListenerObserve(subject, topic, data) {
+      if (topic == "keygen-finished")
+        window.close();
+    }
+  };
   
-  keygenThread.startKeyGeneration(window);
+  keygenThread.startKeyGeneration(obs);
 }
 
 function onClose()

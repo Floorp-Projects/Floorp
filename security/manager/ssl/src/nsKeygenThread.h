@@ -43,13 +43,16 @@
 #include "nspr.h"
 
 #include "nsIKeygenThread.h"
+#include "nsCOMPtr.h"
+
+class nsIObserver;
 
 class nsKeygenThread : public nsIKeygenThread
 {
 private:
   PRLock *mutex;
   
-  nsIDOMWindowInternal* statusDialogPtr;
+  nsCOMPtr<nsIObserver> observer;
 
   PRBool iAmRunning;
   PRBool keygenReady;
