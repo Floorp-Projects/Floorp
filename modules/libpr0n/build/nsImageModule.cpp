@@ -226,7 +226,9 @@ PR_STATIC_CALLBACK(void)
 imglib_Shutdown(nsIModule* aSelf)
 {
   imgCache::Shutdown();
+#ifdef IMG_BUILD_gif
   nsGifShutdown();
+#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsImageLib2Module, components,
