@@ -358,7 +358,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
   switch (anID)
   {
     case eSystemAttr_Font_Caption: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -370,7 +370,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       break;
 
     case eSystemAttr_Font_Icon: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "IconText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -382,7 +382,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       break;
 
     case eSystemAttr_Font_Menu: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "Menus",
                               gIsWarp4 ? "9.WarpSans Bold" : "10.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -394,7 +394,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       break;
 
     case eSystemAttr_Font_MessageBox: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -406,7 +406,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
       break;
 
     case eSystemAttr_Font_SmallCaption: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -419,7 +419,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
 
     case eSystemAttr_Font_StatusBar: 
     case eSystemAttr_Font_Tooltips: 
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
@@ -442,7 +442,7 @@ nsresult GetSysFontInfo(nsSystemAttrID anID, nsFont* aFont)
     case eSystemAttr_Font_PullDownMenu:
     case eSystemAttr_Font_List:
     case eSystemAttr_Font_Field:
-      if (!IsDBCS) {
+      if (!IsDBCS()) {
         PrfQueryProfileString(HINI_USER, "PM_SystemFonts", "WindowText",
                               gIsWarp4 ? "9.WarpSans" : "8.Helv",
                               szFontNameSize, MAXNAMEL);
