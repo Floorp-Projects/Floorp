@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jonas Sicking <sicking@bigfoot.com> (Original Author)
+ *   Gervase Markham <gerv@gerv.net>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -39,12 +40,26 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XMLNS = "http://www.w3.org/XML/1998/namespace";
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 var gMetadataBundle;
+var gLangBundle;
+var gRegionBundle;
 var nodeView;
-var htmlMode;
+var htmlMode = false;
+
+var onLink   = false;
+var onImage  = false;
+var onInsDel = false;
+var onQuote  = false;
+var onMisc   = false;
+var onTable  = false;
+var onTitle  = false;
+var onLang   = false;
 
 function onLoad()
 {
     gMetadataBundle = document.getElementById("bundle_metadata");
+    gLangBundle = document.getElementById("bundle_languages");
+    gRegionBundle = document.getElementById("bundle_regions");
+    
     showMetadataFor(window.arguments[0]);
 
     nodeView = window.arguments[0].ownerDocument.defaultView;
@@ -52,6 +67,7 @@ function onLoad()
 
 function showMetadataFor(elem)
 {
+    // skip past non-element nodes
     while (elem && elem.nodeType != Node.ELEMENT_NODE)
         elem = elem.parentNode;
 
@@ -62,31 +78,59 @@ function showMetadataFor(elem)
 
     if (elem.ownerDocument.getElementsByName && !elem.ownerDocument.namespaceURI)
         htmlMode = true;
-    else
-        htmlMode = false;
+    
+    // htmltagname is "" if it's not an html tag, or the name of the tag if it is.
+    var htmltagname = "";
+    if (isHTMLElement(elem,"")) { 
+        htmltagname = elem.tagName.toLowerCase();
+    }
+    
+    // We only look for images once
+    checkForImage(elem, htmltagname);
+    
+    // Walk up the tree, looking for elements of interest.
+    // Each of them could be at a different level in the tree, so they each
+    // need their own boolean to tell us to stop looking.
+    while (elem && elem.nodeType == Node.ELEMENT_NODE) {
+        if (!onLink)   checkForLink(elem, htmltagname);
+        if (!onInsDel) checkForInsDel(elem, htmltagname);
+        if (!onQuote)  checkForQuote(elem, htmltagname);
+        if (!onTable)  checkForTable(elem, htmltagname);
+        if (!onTitle)  checkForTitle(elem, htmltagname);
+        if (!onLang)   checkForLang(elem, htmltagname);
+          
+        elem = elem.parentNode;
 
-    showDocInfo(elem);
-    showLinkInfo(elem);
-    showImageInfo(elem);
-    showInsDelInfo(elem);
-    showQuoteInfo(elem);
-    showMiscInfo(elem);
+        htmltagname = "";
+        if (isHTMLElement(elem,"")) { 
+            htmltagname = elem.tagName.toLowerCase();
+        }
+    }
+    
+    // Decide which sections to show
+    var onMisc = onTable || onTitle || onLang;
+    if (!onMisc)   hideNode("misc-sec");
+    if (!onLink)   hideNode("link-sec");
+    if (!onImage)  hideNode("image-sec");
+    if (!onInsDel) hideNode("insdel-sec");
+    if (!onQuote)  hideNode("quote-sec");
+
+    // Fix the Misc section visibilities
+    if (onMisc) {
+        if (!onTable) hideNode("misc-tblsummary");
+        if (!onLang)  hideNode("misc-lang");
+        if (!onTitle) hideNode("misc-title");
+    }
+
+    // Get rid of the "No properties" message. This is a backstop -
+    // it should really never show, as long as nsContextMenu.js's
+    // checking doesn't get broken.
+    if (onLink || onImage || onInsDel || onQuote || onMisc)
+        hideNode("no-properties")
 }
 
 
-function showDocInfo(elem)
-{
-    setInfo("document-url", elem.ownerDocument.location.href);
-
-    if (elem.ownerDocument.title)
-        setInfo("document-title", elem.ownerDocument.title);
-    else
-        setInfo("document-title", "");
-
-}
-
-
-function showImageInfo(elem)
+function checkForImage(elem, htmltagname)
 {
     var img;
     var imgType;   // "img" = <img>
@@ -94,22 +138,22 @@ function showImageInfo(elem)
                    // "input" = <input type=image>
                    // "background" = css background (to be added later)
 
-    if (isHTMLElement(elem,"img")) {
+    if (htmltagname === "img") {
         img = elem;
         imgType = "img";
 
-    } else if (isHTMLElement(elem,"object") &&
+    } else if (htmltagname === "object" &&
                elem.type.substring(0,6) == "image/" &&
                elem.data) {
         img = elem;
         imgType = "object";
 
-    } else if (isHTMLElement(elem,"input") &&
+    } else if (htmltagname === "input" &&
                elem.type.toUpperCase() == "IMAGE") {
         img = elem;
         imgType = "input";
 
-    } else if (isHTMLElement(elem,"area") || isHTMLElement(elem,"a")) {
+    } else if (htmltagname === "area" || htmltagname === "a") {
 
         // Clicked in image map?
         var map = elem;
@@ -127,186 +171,126 @@ function showImageInfo(elem)
         } else {
             setInfo("image-desc", "");
         }
+        
+        onImage = true;
     }
-    else
-        hideNode("sec-image");
 }
 
-function showLinkInfo(elem)
+function checkForLink(elem, htmltagname)
 {
-    var node = elem;
-    var linkFound = false;
+    if ((htmltagname === "a" && elem.href != "") ||
+        htmltagname === "area") {
 
-    while (node && node.nodeType == Node.ELEMENT_NODE && !linkFound) {
-        if ((isHTMLElement(node,"a") && node.href != "") ||
-            isHTMLElement(node,"area")) {
+        setInfo("link-lang", convertLanguageCode(elem.getAttribute("hreflang")));
+        setInfo("link-url",  elem.href);
+        setInfo("link-type", elem.getAttribute("type"));
+        setInfo("link-rel",  elem.getAttribute("rel"));
+        setInfo("link-rev",  elem.getAttribute("rev"));
 
-            linkFound = true;
-            setInfo("link-url", node.href);
-            setInfo("link-lang", node.getAttribute("hreflang"));
-            setInfo("link-type", node.getAttribute("type"));
-            setInfo("link-rel", node.getAttribute("rel"));
-            setInfo("link-rev", node.getAttribute("rev"));
+        target = elem.target;
 
-            target = node.target;
-            // this is a workaround for bug 72521
-            if (target == "") {
-                var baseTags = getHTMLElements(node.ownerDocument,"base");
-                for (var i=0; baseTags && i<baseTags.length; i++) {
-                    if (baseTags.item(i).target != "") {
-                        target = baseTags.item(i).target;
-                    }
-                }
-            }
-
-            switch (target) {
-            case "_top":
+        switch (target) {
+        case "_top":
+            setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
+            break;
+        case "_parent":
+            setInfo("link-target", gMetadataBundle.getString("parentFrameText"));
+            break;
+        case "_blank":
+            setInfo("link-target", gMetadataBundle.getString("newWindowText"));
+            break;
+        case "":
+        case "_self":
+            if (elem.ownerDocument != elem.ownerDocument.defaultView._content.document)
+                setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
+            else
                 setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
-                break;
-            case "_parent":
-                setInfo("link-target", gMetadataBundle.getString("parentFrameText"));
-                break;
-            case "_blank":
-                setInfo("link-target", gMetadataBundle.getString("newWindowText"));
-                break;
-            case "":
-            case "_self":
-                if (node.ownerDocument != node.ownerDocument.defaultView._content.document)
-                    setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
-                else
-                    setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
-                break;
-            default:
-                setInfo("link-target", "\"" + target + "\"");
-            }
+            break;
+        default:
+            setInfo("link-target", "\"" + target + "\"");
         }
+        
+        onLink = true;
+    }
 
-        else if (node.getAttributeNS(XLinkNS,"href") != "") {
-            linkFound = true;
-            setInfo("link-url", getAbsoluteURL(node.getAttributeNS(XLinkNS,"href"),node));
-            setInfo("link-lang", "");
-            setInfo("link-type", "");
-            setInfo("link-rel", "");
-            setInfo("link-rev", "");
+    else if (elem.getAttributeNS(XLinkNS,"href") != "") {
+        setInfo("link-url", getAbsoluteURL(elem.getAttributeNS(XLinkNS,"href"),elem));
+        setInfo("link-lang", "");
+        setInfo("link-type", "");
+        setInfo("link-rel", "");
+        setInfo("link-rev", "");
 
-            switch (node.getAttributeNS(XLinkNS,"show")) {
-            case "embed":
-                setInfo("link-target", gMetadataBundle.getString("embeddedText"));
-                break;
-            case "new":
-                setInfo("link-target", gMetadataBundle.getString("newWindowText"));
-                break;
-            case "":
-            case "replace":
-                if (node.ownerDocument != node.ownerDocument.defaultView._content.document)
-                    setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
-                else
-                    setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
-                break;
-            default:
-                setInfo("link-target", "");
-                break;
-            }
+        switch (elem.getAttributeNS(XLinkNS,"show")) {
+        case "embed":
+            setInfo("link-target", gMetadataBundle.getString("embeddedText"));
+            break;
+        case "new":
+            setInfo("link-target", gMetadataBundle.getString("newWindowText"));
+            break;
+        case "":
+        case "replace":
+            if (elem.ownerDocument != elem.ownerDocument.defaultView._content.document)
+                setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
+            else
+                setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
+            break;
+        default:
+            setInfo("link-target", "");
+            break;
         }
-        node = node.parentNode;
-    }
-
-    if (!linkFound)
-        hideNode("sec-link");
-
-}
-
-function showInsDelInfo(elem)
-{
-    var node = elem;
-
-    while (node && node.nodeType == Node.ELEMENT_NODE &&
-           !isHTMLElement(node,"ins") && !isHTMLElement(node,"del")) {
-        node = node.parentNode;
-    }
-
-    if (node && node.nodeType == Node.ELEMENT_NODE &&
-        (node.cite || node.dateTime)) {
-        setInfo("insdel-cite", getAbsoluteURL(node.cite, node));
-        setInfo("insdel-date", node.dateTime);
-    } else {
-        hideNode("sec-insdel");
+        
+        onLink = true;
     }
 }
 
-
-function showQuoteInfo(elem)
+function checkForInsDel(elem, htmltagname)
 {
-    var node = elem;
-
-    while (node && node.nodeType == Node.ELEMENT_NODE &&
-           !isHTMLElement(node,"q") && !isHTMLElement(node,"blockquote")) {
-        node = node.parentNode;
-    }
-
-    if (node && node.nodeType == Node.ELEMENT_NODE && node.cite) {
-        setInfo("quote-cite", getAbsoluteURL(node.cite, node));
-    } else {
-        hideNode("sec-quote");
-    }
+    if ((htmltagname === "ins" || htmltagname === "del") &&
+        (elem.cite || elem.dateTime)) {
+        setInfo("insdel-cite", getAbsoluteURL(elem.cite, elem));
+        setInfo("insdel-date", elem.dateTime);
+        onInsDel = true;
+    } 
 }
 
 
-function showMiscInfo(elem)
+function checkForQuote(elem, htmltagname)
 {
-    var miscFound = false;
+    if ((htmltagname === "q" || htmltagname === "blockquote") && elem.cite) {
+        setInfo("quote-cite", getAbsoluteURL(elem.cite, elem));
+        onQuote = true;
+    } 
+}
 
-    // language
-    var node = elem;
-    while (node && node.nodeType == Node.ELEMENT_NODE &&
-           !(isHTMLElement(node,"") && node.lang) &&
-           !node.getAttributeNS(XMLNS, "lang")) {
-        node = node.parentNode;
+function checkForTable(elem, htmltagname)
+{
+    if (htmltagname === "table" && elem.summary) {
+        setInfo("misc-tblsummary", elem.summary);
+        onTable = true;
     }
+}
 
-    if (node && node.nodeType == Node.ELEMENT_NODE) {
-        miscFound = true;
-        if (isHTMLElement(node,"") && node.lang)
-            setInfo("misc-lang", node.lang);
+function checkForLang(elem, htmltagname)
+{
+    if ((htmltagname && elem.lang) || elem.getAttributeNS(XMLNS, "lang")) {
+        var abbr;
+        if (htmltagname && elem.lang)
+            abbr = elem.lang;
         else
-            setInfo("misc-lang", node.getAttributeNS(XMLNS, "lang"));
-    } else {
-        setInfo("misc-lang", "");
+            abbr = elem.getAttributeNS(XMLNS, "lang");
+            
+        setInfo("misc-lang", convertLanguageCode(abbr));
+        onLang = true;
     }
-
-    // title (same as tooltip)
-    var node = elem;
-    while (node && node.nodeType == Node.ELEMENT_NODE &&
-           !(isHTMLElement(node,"") && node.title)) {
-        node = node.parentNode;
-    }
-
-    if (node && node.nodeType == Node.ELEMENT_NODE) {
-        miscFound = true;
-        setInfo("misc-title", node.title);
-    } else {
-        setInfo("misc-title", "");
-    }
-
-    // table summary
-    // tables could be nested so we walk up until we find one with summary
-    var node = elem;
-    while (node && node.nodeType == Node.ELEMENT_NODE &&
-           !(isHTMLElement(node,"table") && node.summary)) {
-        node = node.parentNode;
-    }
-
-    if (node && node.nodeType == Node.ELEMENT_NODE) {
-        miscFound = true;
-        setInfo("misc-tblsummary", node.summary);
-    } else {
-        setInfo("misc-tblsummary", "");
-    }
-
-    if (!miscFound)
-        hideNode("sec-misc");
 }
-
+    
+function checkForTitle(elem, htmltagname)
+{
+    if (htmltagname && elem.title) {
+        setInfo("misc-title", elem.title);
+        onTitle = true;
+    }    
+}
 
 /*
  * Set text of node id to value
@@ -331,7 +315,6 @@ function setInfo(id, value)
         while (node.hasChildNodes())
             node.removeChild(node.firstChild);
         node.appendChild(node.ownerDocument.createTextNode(value));
-
     }
 
 }
@@ -348,6 +331,7 @@ function openLink(node)
 {
     var url = node.getAttribute("value");
     nodeView._content.document.location = url;
+    window.close();
 }
 
 /*
@@ -458,4 +442,67 @@ function isHTMLElement(node, name)
         return !name || node.tagName.toLowerCase() == name;
 
     return (!name || node.localName == name) && node.namespaceURI == XHTMLNS;
+}
+
+// This function coded according to the spec at:
+// http://www.bath.ac.uk/~py8ieh/internet/discussion/metadata.txt
+function convertLanguageCode(abbr)
+{
+    var result;
+
+    var tokens = abbr.split("-");
+
+    if (tokens[0] === "x" || tokens[0] === "i")
+    {
+        // x and i prefixes mean unofficial ones. So we upper-case the first
+        // word and leave the rest.
+        tokens.shift();
+
+        if (tokens[0])
+        {
+            // Upper-case first letter
+            result = tokens[0].substr(0, 1).toUpperCase() + tokens[0].substr(1);
+            tokens.shift();
+
+            if (tokens[0])
+            {
+                // Add on the rest as space-separated strings inside the brackets
+                result += " (" + tokens.join(" ") + ")";
+            }
+        }
+    }
+    else
+    {
+        // Otherwise we treat the first as a lang, the second as a region
+        // and the rest as strings.
+        try
+        {
+            result = gLangBundle.getString(tokens[0]);
+        }
+        catch (e) 
+        {
+            // Language not present in lang bundle
+            result = tokens[0]; 
+        }
+
+        tokens.shift();
+
+        if (tokens[0])
+        {
+            try
+            {
+                // We don't add it on to the result immediately
+                // because we want to get the spacing right.
+                tokens[0] = gRegionBundle.getString(tokens[0].toLowerCase());
+            }
+            catch (e) 
+            {
+                // Region not present in region bundle
+            }
+
+            result += " (" + tokens.join(" ") + ")";
+        }
+    }
+
+    return result;
 }
