@@ -491,7 +491,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   aToken=theRecycler->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   
   if(aToken) {
-    result= aToken->Consume(aChar,aScanner,mPlainText);  //tell new token to finish consuming text...    
+    ((CStartToken*)aToken)->mOrigin=aScanner.GetOffset()-1; // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
+    result= aToken->Consume(aChar,aScanner,mPlainText);     //tell new token to finish consuming text...    
     if(NS_SUCCEEDED(result)) {
      
       AddToken(aToken,result,&mTokenDeque,theRecycler);

@@ -257,7 +257,6 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
    //and see if the next char is ">". If so, we have a complete
    //tag without attributes.
   if(NS_OK==result) { 
-    mOrigin=aScanner.GetOffset(); // We need this position to record the trailing contents of the start token
     result=aScanner.SkipWhitespace();
     mNewlineCount += aScanner.GetNewlinesSkipped();
     if(NS_OK==result) {
@@ -299,7 +298,15 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
  */
 void CStartToken::GetSource(nsString& anOutputString){
   anOutputString="<";
-  anOutputString+=mTextValue;
+  /*
+   * mTextValue used to contain the name of the tag.
+   * But for the sake of performance we now rely on the tagID
+   * rather than tag name.  This however, caused bug 15204
+   * to reincarnate. Since, mTextvalue is not being used here..
+   * I'm just going to comment it out.
+   * 
+   */
+  // anOutputString+=mTextValue; 
   if(mTrailingContent.Length()>0)
     anOutputString+=mTrailingContent;
 }
