@@ -22,7 +22,8 @@
  * Contributor(s):
  * jce2@po.cwru.edu <Jason Eager>: Added pref to turn on/off 
  * Boris Zbarsky <bzbarsky@mit.edu>
- * rbs@maths.uq.edu.au                                
+ * rbs@maths.uq.edu.au
+ * Andreas M. Schneider <clarence@clarence.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,7 +46,13 @@
  * 
  *         
  */
- 
+
+/*
+ * Set NS_VIEWSOURCE_TOKENS_PER_BLOCK to 0 to disable multi-block
+ * output.  Multi-block output helps reduce the amount of bidi
+ * processing we have to do on the resulting content model.
+ */
+#define NS_VIEWSOURCE_TOKENS_PER_BLOCK 16
 
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
@@ -105,8 +112,8 @@ static int gErrorThreshold = 10;
 // bug 22022 - these are used to toggle 'Wrap Long Lines' on the viewsource
 // window by selectively setting/unsetting the following class defined in
 // viewsource.css; the setting is remembered between invocations using a pref.
-static const char* kPreId = "viewsource";
-static const char* kPreClassWrap = "wrap";
+static const char* kBodyId = "viewsource";
+static const char* kBodyClassWrap = "wrap";
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -338,7 +345,6 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   mValue = VIEW_SOURCE_ATTRIBUTE_VALUE;
   mSummaryTag = VIEW_SOURCE_SUMMARY;
   mPopupTag = VIEW_SOURCE_POPUP;
-  nsresult result=NS_OK;
   mSyntaxHighlight = PR_FALSE;
   mWrapLongLines = PR_FALSE;
   nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
@@ -360,6 +366,8 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
   //set this to 1 if you want to see errors in your HTML markup.
   char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
   mShowErrors=PRBool(theEnvString != nsnull);
+
+  mTokenCount=0;
 
 #ifdef DUMP_TO_FILE
   gDumpFile = fopen(gDumpFileName,"w");
@@ -580,37 +588,35 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       }
     }
     if (NS_SUCCEEDED(result) && !mHasOpenBody) {
-      tag.Assign(NS_LITERAL_STRING("BODY"));
-      CStartToken bodyToken(tag, eHTMLTag_body);
-      nsCParserNode bodyNode(&bodyToken,0,0/*stack token*/);
-      mSink->OpenBody(bodyNode);
-
       if(theAllocator) {
-        tag.Assign(NS_LITERAL_STRING("PRE"));
-        CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre,tag));
-
-        if(theToken) {
+        tag.Assign(NS_LITERAL_STRING("BODY"));
+        CStartToken* bodyToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start, eHTMLTag_body, tag));
+        if (bodyToken) {
+          nsCParserNode bodyNode(bodyToken,0,theAllocator);
           CAttributeToken *theAttr=nsnull;
-
-          nsCParserNode theNode(theToken,0,theAllocator);
-     
-          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreId));
+          theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kBodyId));
           theAttr->SetKey(NS_LITERAL_STRING("id"));
-          theNode.AddAttribute(theAttr);
+          bodyNode.AddAttribute(theAttr);
 
           if (mWrapLongLines) {
-            theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kPreClassWrap));
+            theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertASCIItoUCS2(kBodyClassWrap));
             theAttr->SetKey(NS_LITERAL_STRING("class"));
-            theNode.AddAttribute(theAttr);
+            bodyNode.AddAttribute(theAttr);
           }
-
-          result=mSink->OpenContainer(theNode);
+          result = mSink->OpenBody(bodyNode);
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }
-
-        IF_FREE(theToken,theAllocator);
+        IF_FREE(bodyToken,theAllocator);
+        
+        if (NS_SUCCEEDED(result)) {
+          CStartToken theToken(eHTMLTag_pre);
+          nsCParserNode theNode(&theToken,0,0/*stack token*/);
+          result=mSink->OpenContainer(theNode);
+        }
       }
     }
+
+    mSink->WillProcessTokens();
 
     while(NS_SUCCEEDED(result)){
       CToken* theToken=mTokenizer->PopToken();
@@ -618,6 +624,11 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         result=HandleToken(theToken,aParser);
         if(NS_SUCCEEDED(result)) {
           IF_FREE(theToken, mTokenizer->GetTokenAllocator());
+          if (mParser->CanInterrupt() &&
+              mSink->DidProcessAToken() == NS_ERROR_HTMLPARSER_INTERRUPTED) {
+            result = NS_ERROR_HTMLPARSER_INTERRUPTED;
+            break;
+          }
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
           mTokenizer->PushTokenFront(theToken);
@@ -652,6 +663,29 @@ nsresult  CViewSourceHTML::GenerateSummary() {
   }
 
   return result;
+}
+
+/**
+ * Call this to start a new PRE block.  See bug 86355 for why this
+ * makes some pages much faster.
+ */
+void CViewSourceHTML::StartNewPreBlock(void){
+  CEndToken endToken(eHTMLTag_pre);
+  nsCParserNode endNode(&endToken,0,0/*stack token*/);
+  mSink->CloseContainer(endNode);
+
+  CStartToken startToken(eHTMLTag_pre);
+  nsCParserNode startNode(&startToken,0,0/*stack token*/);
+  mSink->OpenContainer(startNode);
+
+#ifdef DUMP_TO_FILE
+  if (gDumpFile) {
+    fprintf(gDumpFile, "</pre>");
+    fprintf(gDumpFile, "<pre>");
+  }
+#endif // DUMP_TO_FILE
+
+  mTokenCount = 0;
 }
 
 /**
@@ -1071,7 +1105,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
   eHTMLTags theParent=(mTags.Length()) ? (eHTMLTags)mTags.Last() : eHTMLTag_unknown;
   eHTMLTags theChild=(eHTMLTags)aToken->GetTypeID();
-
+  
   switch(theType) {
     
     case eToken_start:
@@ -1161,6 +1195,10 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         const nsAReadableString& newlineValue = aToken->GetStringValue();
         mLineNumber++; 
         result=WriteTag(mText,newlineValue,0,PR_FALSE);
+        mTokenCount++;
+        if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
+            mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK)
+          StartNewPreBlock();
       }
       break;
 
@@ -1168,6 +1206,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         const nsAReadableString& wsValue = aToken->GetStringValue();
         result=WriteTag(mText,wsValue,0,PR_FALSE);
+        mTokenCount++;
+        if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
+            mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK &&
+            !wsValue.IsEmpty()) {
+          PRUnichar ch = wsValue.Last();
+          if (ch == kLF || ch == kCR)
+            StartNewPreBlock();
+        }
       }
       break;
 
@@ -1194,6 +1240,13 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         else {
           const nsAReadableString& str = aToken->GetStringValue();         
           result=WriteTag(mText,str,aToken->GetAttributeCount(),PR_TRUE);
+          mTokenCount++;
+          if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
+              mTokenCount > NS_VIEWSOURCE_TOKENS_PER_BLOCK && !str.IsEmpty()) {
+            PRUnichar ch = str.Last();
+            if (ch == kLF || ch == kCR)
+              StartNewPreBlock();
+          }
         }
       }
 
