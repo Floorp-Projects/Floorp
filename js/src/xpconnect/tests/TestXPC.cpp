@@ -691,6 +691,19 @@ int main()
         return 1;
     }
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
+    if(NS_FAILED(rv))
+    {
+        printf("failed to get the nsThreadJSContextStack service!\n");
+        return 1;
+    }
+    if(NS_FAILED(cxstack->Push(jscontext)))
+    {
+        printf("failed to get push the current jscontext on the nsThreadJSContextStack service!\n");
+        return 1;
+    }
+
 #if 0
 
     // old code where global object was plain object
