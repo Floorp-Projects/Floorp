@@ -448,11 +448,16 @@ CLASS="LOT"
 ></DT
 ><DT
 >4-1. <A
+HREF="#install-mysql-packets"
+>Set Max Packet Size in MySQL</A
+></DT
+><DT
+>4-2. <A
 HREF="#trouble-filetemp-errors"
 >Other File::Temp error messages</A
 ></DT
 ><DT
->4-2. <A
+>4-3. <A
 HREF="#trouble-filetemp-patch"
 >Patch for File::Temp in Perl 5.6.0</A
 ></DT
@@ -468,6 +473,11 @@ CLASS="LOT"
 ></DT
 ><DT
 >4-1. <A
+HREF="#install-perlmodules-cpan"
+>Installing perl modules with CPAN</A
+></DT
+><DT
+>4-2. <A
 HREF="#http-apache-htaccess"
 ><TT
 CLASS="filename"
@@ -526,9 +536,9 @@ VALIGN="TOP"
 ><P
 >&#13;	Permission is granted to copy, distribute and/or modify this
 	document under the terms of the GNU Free Documentation
-	License, Version 1.1 or any later version published  by the
+	License, Version 1.1 or any later version published by the
 	Free Software Foundation; with no Invariant Sections, no
-	Front-Cover Texts, and  with no Back-Cover Texts.  A copy of
+	Front-Cover Texts, and with no Back-Cover Texts. A copy of
 	the license is included in <A
 HREF="#gfdl"
 >Appendix E</A
@@ -579,15 +589,15 @@ NAME="disclaimer"
     </P
 ><P
 >&#13;      All copyrights are held by their respective owners, unless
-      specifically noted otherwise.  Use of a term in this document
+      specifically noted otherwise. Use of a term in this document
       should not be regarded as affecting the validity of any
       trademark or service mark.
     </P
 ><P
 >&#13;      Naming of particular products or brands should not be seen as
-      endorsements, with the exception of the term "GNU/Linux".  We
+      endorsements, with the exception of the term "GNU/Linux". We
       wholeheartedly endorse the use of GNU/Linux in every situation
-      where it is appropriate.  It is an extremely versatile, stable,
+      where it is appropriate. It is an extremely versatile, stable,
       and robust operating system that offers an ideal operating
       environment for Bugzilla.
     </P
@@ -602,10 +612,10 @@ NAME="disclaimer"
       documented or fixed in the code, security holes surely exist.
       Great care should be taken both in the installation and usage of
       this software. Carefully consider the implications of installing
-      other network services with Bugzilla.  The Bugzilla development
+      other network services with Bugzilla. The Bugzilla development
       team members, Netscape Communications, America Online Inc., and
       any affiliated developers or sponsors assume no liability for
-      your use of this product.  You have the source code to this
+      your use of this product. You have the source code to this
       product, and are responsible for auditing it yourself to ensure
       your security needs are met.
     </P
@@ -635,7 +645,7 @@ NAME="newversions"
 >&#13;      The newest version of this guide can always be found at <A
 HREF="http://www.bugzilla.org"
 TARGET="_top"
->bugzilla.org</A
+>http://www.bugzilla.org</A
 >; including
       documentation for past releases and the current development version.
     </P
@@ -650,13 +660,12 @@ TARGET="_top"
     </P
 ><P
 >&#13;      The latest version of this document can always be checked out via CVS.
-	    Please follow the instructions available at 
-      <A
+      Please follow the <A
 HREF="http://www.mozilla.org/cvs.html"
 TARGET="_top"
->the Mozilla CVS page</A
->,
-      and check out the <TT
+>Mozilla CVS</A
+>
+      instructions and check out the <TT
 CLASS="filename"
 >mozilla/webtools/bugzilla/docs/</TT
 >
@@ -788,13 +797,13 @@ HREF="news://news.mozilla.org/netscape/public/mozilla/webtools"
 TARGET="_top"
 >news://news.mozilla.org/netscape/public/mozilla/webtools</A
 >
-      newsgroup.  Without your discussions, insight, suggestions, and patches,
+      newsgroup. Without your discussions, insight, suggestions, and patches,
       this could never have happened.
     </P
 ><P
 >&#13;      Thanks also go to the following people for significant contributions 
       to this documentation (in alphabetical order):
-      Andrew Pearson, Ben FrantzDale, Eric Hanson, Gervase Markham, Joe Robins, Kevin Brannen, Ron Teitelbaum, Spencer Smith, Zach Liption
+      Andrew Pearson, Ben FrantzDale, Eric Hanson, Gervase Markham, Joe Robins, Kevin Brannen, Martin Wulffeld, Ron Teitelbaum, Spencer Smith, Zach Liption
       .
     </P
 ></DIV
@@ -811,7 +820,7 @@ NAME="conventions"
 ><DIV
 CLASS="informaltable"
 ><A
-NAME="AEN110"
+NAME="AEN111"
 ></A
 ><P
 ></P
@@ -1371,8 +1380,8 @@ NAME="myaccount"
       <A
 HREF="http://landfill.bugzilla.org/bugzilla-tip/"
 TARGET="_top"
->&#13;      http://landfill.bugzilla.org/bugzilla-tip/</A
->
+>http://landfill.bugzilla.org/bugzilla-tip/</A
+>.
       </P
 ><P
 ></P
@@ -1707,10 +1716,8 @@ NAME="query"
       <A
 HREF="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"
 TARGET="_top"
->&#13;      landfill.bugzilla.org/bugzilla-tip/query.cgi</A
->
-
-      .</P
+>http://landfill.bugzilla.org/bugzilla-tip/query.cgi</A
+>.</P
 ><P
 >The Search page has controls for selecting different possible
       values for all of the fields in a bug, as described above. Once you've
@@ -1878,7 +1885,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN370"
+NAME="AEN371"
 ></A
 >3.2.1. Autolinkification</H2
 ><P
@@ -2026,7 +2033,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN399"
+NAME="AEN400"
 ></A
 >3.2.5. Filing Bugs</H2
 ><P
@@ -2178,34 +2185,21 @@ CLASS="section"
 NAME="stepbystep"
 ></A
 >4.1. Step-by-step Install</H1
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="intstall-into"
-></A
->4.1.1. Introduction</H2
 ><P
->Bugzilla has been successfully installed under Solaris, Linux,
-      and Win32. Win32 is not yet officially supported, but many people
-      have got it working fine.
-      Please see  
+>Bugzilla has been successfully installed under many different
+      operating systems including almost all Unix clones and
+      <SPAN
+CLASS="productname"
+>Microsoft Windows</SPAN
+>.  Many
+      operating systems have utilities that make installation easier or quirks
+      that make it harder. We have tried to collect that information in
       <A
-HREF="#os-win32"
->Section 4.3.1</A
->
-      for further advice on getting Bugzilla to work on Microsoft
-      Windows.</P
-></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
-NAME="install-package-list"
-></A
->4.1.2. Package List</H2
+HREF="#os-specific"
+>Section 4.3</A
+>, so be sure to check out that section before
+      you start your installation.
+      </P
 ><DIV
 CLASS="note"
 ><P
@@ -2227,231 +2221,19 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
-> If you are running the very most recent
-        version of Perl and MySQL (both the executables and development
-        libraries) on your system, you can skip these manual installation 
-        steps for the Perl modules by using Bundle::Bugzilla; see
+>Windows is one of those operating systems that has many quirks
+        and is not yet officially supported by the Bugzilla team. If you wish
+        to install Bugzilla on Windows, be sure to see
         <A
-HREF="#bundlebugzilla"
->Using Bundle::Bugzilla instead of manually installing Perl modules</A
+HREF="#os-win32"
+>Section 4.3.1</A
 >.
         </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-><P
->The software packages necessary for the proper running of
-      Bugzilla (with download links) are: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;    <A
-HREF="http://www.mysql.com/"
-TARGET="_top"
->MySQL database server</A
->
-    (3.23.41 or greater)
-  </P
-></LI
-><LI
-><P
->&#13;    <A
-HREF="http://www.perl.org"
-TARGET="_top"
->Perl</A
->
-    (5.6, 5.6.1 is recommended if you wish to
-    use Bundle::Bugzilla)
-  </P
-></LI
-><LI
-><P
->Perl Modules (minimum version):
-  <P
-></P
-><OL
-TYPE="a"
-><LI
-><P
->&#13;        <A
-HREF="http://www.template-toolkit.org"
-TARGET="_top"
->Template</A
->
-        (v2.08)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.perldoc.com/perl5.6/lib/File/Temp.html"
-TARGET="_top"
->&#13;	File::Temp</A
->
-        (1.804) (Prerequisite for Template)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/AppConfig/"
-TARGET="_top"
->AppConfig 
-        </A
->
-        (1.52)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar.gz"
-TARGET="_top"
->Text::Wrap</A
-> 
-        (2001.0131)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://search.cpan.org/search?dist=File-Spec"
-TARGET="_top"
->File::Spec 
-        </A
->
-        (0.82)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Data/"
-TARGET="_top"
->Data::Dumper 
-        </A
-> 
-        (any)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Mysql/"
-TARGET="_top"
->DBD::mysql
-        </A
-> 
-        (2.1010)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/DBI/"
-TARGET="_top"
->DBI</A
-> 
-        (1.32)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Date/"
-TARGET="_top"
->Date::Parse
-        </A
-> 
-        (2.21)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/CGI/"
-TARGET="_top"
->CGI
-        </A
-> 
-        (2.88)
-      </P
-></LI
-></OL
->
-  and, optionally:
-  <P
-></P
-><OL
-TYPE="a"
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/GD/"
-TARGET="_top"
->GD</A
->
-        (1.20) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        GD::Graph
-        (any) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        GD::Text::Align
-        (any) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Chart/"
-TARGET="_top"
->Chart::Base 
-        </A
->
-        (0.99c) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        XML::Parser 
-        (any) for the XML interface
-      </P
-></LI
-><LI
-><P
->&#13;        MIME::Parser 
-        (any) for the email interface
-      </P
-></LI
-></OL
->          
-  </P
-></LI
-><LI
-><P
->&#13;    The web server of your choice. 
-    <A
-HREF="http://www.apache.org/"
-TARGET="_top"
->Apache</A
-> 
-    is highly recommended.
-  </P
-></LI
-></OL
->
-
-      <DIV
+><DIV
 CLASS="warning"
 ><P
 ></P
@@ -2472,10 +2254,9 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->It is a good idea, while installing Bugzilla, to ensure that there
-        is some kind of firewall between you and the rest of the Internet,
-        because your machine may be insecure for periods during the install.
-        Many
+>While installing Bugzilla, it is a good idea to ensure that there
+        is some kind of firewall between you and the rest of the Internet
+        as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
         vulnerable to an attack.</P
@@ -2483,9 +2264,74 @@ VALIGN="TOP"
 ></TR
 ></TABLE
 ></DIV
->
-
+><P
+>This guide assumes that you already have your operating system
+      installed, network configured, and have administrative access to the
+      shell on the machine you are installing Bugzilla onto. It is possible to
+      install and run Bugzilla without administrative access, but you have to
+      either make sure all the required software is installed or get somebody
+      with administrative access to install it for you.
       </P
+><P
+>The listing below is a basic step-by-step list. More information
+      can be found in the sections below. Minimum versions will be
+      included in parenthesis where appropriate.
+      </P
+><DIV
+CLASS="procedure"
+><OL
+TYPE="1"
+><LI
+><P
+><A
+HREF="#install-mysql"
+>Install MySQL</A
+>
+          (3.23.41)
+          </P
+></LI
+><LI
+><P
+><A
+HREF="#install-perl"
+>Install Perl</A
+>
+          (5.6)
+          </P
+></LI
+><LI
+><P
+><A
+HREF="#install-perlmodules"
+>Install Perl Modules</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="#install-webserver"
+>Install a Webserver</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="#install-bzfiles"
+>Put Bugzilla in the Webspace</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="#install-setupdatabase"
+>Setup the MySQL Database</A
+>
+          </P
+></LI
+></OL
 ></DIV
 ><DIV
 CLASS="section"
@@ -2494,13 +2340,13 @@ CLASS="section"
 ><A
 NAME="install-mysql"
 ></A
->4.1.3. MySQL</H2
+>4.1.1. MySQL</H2
 ><P
 >Visit the MySQL homepage at 
       <A
 HREF="http://www.mysql.com"
 TARGET="_top"
->www.mysql.com</A
+>http://www.mysql.com</A
 >
       to grab and install the latest stable release of the server. 
       </P
@@ -2543,53 +2389,65 @@ CLASS="filename"
 ></TABLE
 ></DIV
 ><P
->If you install from something other than an RPM or Debian 
-      package, you will need to add <TT
-CLASS="filename"
->mysqld</TT
->
-      to your init scripts so the server daemon will come back up whenever
-      your machine reboots. Further discussion of UNIX init sequences are
-      beyond the scope of this guide. 
+>If you install from something other than a packaging/installation
+      system (such as .rpm, .dep, .exe, or .msi) you will need to configure
+      your system so the MySQL server daemon will come back up whenever
+      your machine reboots.
       </P
 ><P
->Change your init script to start 
+>If you wish to have attachments larger than 64K, you will have to
+      configure MySQL to accept large packets. This is done by adding the text
+      in <A
+HREF="#install-mysql-packets"
+>Figure 4-1</A
+> to your
       <TT
 CLASS="filename"
->mysqld</TT
->
-      with the ability to accept large packets. By default, 
-      <TT
-CLASS="filename"
->mysqld</TT
->
-      only accepts packets up to 64K long. This limits the size of
-      attachments you may put on bugs. If you add 
-      <TT
-CLASS="option"
->-O max_allowed_packet=1M</TT
->
-      to the command that starts 
-      <TT
-CLASS="filename"
->mysqld</TT
->
-      (or <TT
-CLASS="filename"
->safe_mysqld</TT
->), 
-      then you will be able to have attachments up to about 1 megabyte.
-      There is a Bugzilla parameter for maximum attachment size;
-      you should configure it to match the value you choose here.</P
+>my.conf</TT
+> file. There is also a parameter in Bugzilla
+      for setting the maximum allowable attachment size.
+      
+      You should set this value to be slightly larger than that parameter.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="install-mysql-packets"
+></A
 ><P
->If you plan on running Bugzilla and MySQL on the same machine,
-      consider using the 
-      <TT
+><B
+>Figure 4-1. Set Max Packet Size in MySQL</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;[mysqld]
+# Allow packets up to 1M
+set-variable = max_allowed_packet=1M
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>If you are running Bugzilla and MySQL on the same machine, you may
+      also wish to utilize the <TT
 CLASS="option"
->--skip-networking</TT
->
-      option in the init script. This enhances security by preventing
-      network access to MySQL.</P
+>skip-networking</TT
+> option as
+      mentioned in <A
+HREF="#security-mysql"
+>Section 5.6.2</A
+> for the added security.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
@@ -2598,25 +2456,207 @@ CLASS="section"
 ><A
 NAME="install-perl"
 ></A
->4.1.4. Perl</H2
+>4.1.2. Perl</H2
 ><P
 >Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from 
-      <A
+      Perl can be got in source form from <A
 HREF="http://www.perl.com"
 TARGET="_top"
->perl.com</A
-> for the rare 
-      *nix systems which don't have it. 
+>http://www.perl.com</A
+>.
+      There are also binary versions available for many platforms, most of which
+      are linked to from perl.com.
       Although Bugzilla runs with perl 5.6,
       it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
       version 5.8.</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="install-perlmodules"
+></A
+>4.1.3. Perl Modules</H2
+><P
+>Perl modules can be found using
+      <A
+HREF="#gloss-cpan"
+><I
+CLASS="glossterm"
+>CPAN</I
+></A
+> on Unix based systems or
+      <A
+HREF="#gloss-ppm"
+><I
+CLASS="glossterm"
+>PPM</I
+></A
+> on Win32. The root servers
+      have a real tendency to bog down, so please use mirrors.
+      </P
+><P
+>Good instuctions can be found for using each of these services on
+      their respective websites. The basics can be found in
+      <A
+HREF="#install-perlmodules-cpan"
+>Example 4-1</A
+> for CPAN and
+      <A
+HREF="#win32-perlmodules"
+>Section 4.3.1.2</A
+> for PPM.
+      </P
+><DIV
+CLASS="example"
+><A
+NAME="install-perlmodules-cpan"
+></A
+><P
+><B
+>Example 4-1. Installing perl modules with CPAN</B
+></P
+><P
+>The easy way:
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> perl -MCPAN -e 'install "&#60;modulename&#62;"'
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+        </P
+><P
+>Or the hard way:
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> tar xzvf &#60;module&#62;.tar.gz     <A
+NAME="cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> cd &#60;module&#62;                  <A
+NAME="cpan-moduledir"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> perl Makefile.PL
+<TT
+CLASS="prompt"
+>bash#</TT
+> make
+<TT
+CLASS="prompt"
+>bash#</TT
+> make test
+<TT
+CLASS="prompt"
+>bash#</TT
+> make install
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          <DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="#cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></DT
+><DD
+>This assumes that you've already downloaded the
+              <TT
+CLASS="filename"
+>&#60;module&#62;.tar.gz</TT
+> to the current working
+              directory.
+              </DD
+><DT
+><A
+HREF="#cpan-moduledir"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+></DT
+><DD
+>The process of untaring the module as defined in
+              <A
+HREF="#cpan-moduletar"
+><A
+HREF="#cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></A
+> will create the
+              <TT
+CLASS="filename"
+>&#60;module&#62;</TT
+> directory.
+              </DD
+></DL
+></DIV
+>
+        </P
+></DIV
 ><DIV
 CLASS="tip"
-><A
-NAME="bundlebugzilla"
-></A
 ><P
 ></P
 ><TABLE
@@ -2632,191 +2672,6 @@ VALIGN="TOP"
 SRC="../images/tip.gif"
 HSPACE="5"
 ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->You can skip the following Perl module installation steps by
-        installing 
-        <SPAN
-CLASS="productname"
->Bundle::Bugzilla</SPAN
->
-
-        from 
-        <A
-HREF="#gloss-cpan"
-><I
-CLASS="glossterm"
->CPAN</I
-></A
->, 
-        which installs all required modules for you.</P
-><P
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->perl -MCPAN -e 'install "Bundle::Bugzilla"'</B
->
-          </TT
->
-        </P
-><P
->Bundle::Bugzilla doesn't include GD, Chart::Base, or
-        MIME::Parser, which are not essential to a basic Bugzilla install. If
-        installing this bundle fails, you should install each module
-        individually to isolate the problem.</P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
-NAME="perl-modules"
-></A
->4.1.5. Perl Modules</H2
-><P
-> 
-      All Perl modules can be found on the
-      <A
-HREF="http://www.cpan.org"
-TARGET="_top"
->Comprehensive Perl 
-      Archive Network</A
-> (CPAN). The
-      CPAN servers have a real tendency to bog down, so please use mirrors.
-    </P
-><P
->Quality, general Perl module installation instructions can be
-      found on the CPAN website, but the easy thing to do is to just use the
-      CPAN shell which does all the hard work for you.
-      To use the CPAN shell to install a module: 
-      </P
-><P
->&#13;        <TT
-CLASS="computeroutput"
->&#13;          <TT
-CLASS="prompt"
->bash#</TT
->
-          <B
-CLASS="command"
->perl -MCPAN -e 'install "&#60;modulename&#62;"'</B
->
-        </TT
->
-      </P
-><P
->&#13;      To do it the hard way: 
-      </P
-><P
->Untar the module tarball -- it should create its own
-      directory</P
-><P
->CD to the directory just created, and enter the following
-      commands: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->perl Makefile.PL</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make test</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make install</B
->
-            </TT
->
-          </P
-></LI
-></OL
->
-      </P
-><DIV
-CLASS="warning"
-><P
-></P
-><TABLE
-CLASS="warning"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/warning.gif"
-HSPACE="5"
-ALT="Warning"></TD
 ><TD
 ALIGN="LEFT"
 VALIGN="TOP"
@@ -2842,43 +2697,412 @@ CLASS="QUOTE"
 ></TR
 ></TABLE
 ></DIV
+><P
+>Perl Modules (minimum version):
+  <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-bundle-bugzilla"
+>Bundle::Bugzilla</A
+>
+        (Will allow you to skip the rest)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-appconfig"
+>AppConfig</A
+>
+        (1.52)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-cgi"
+>CGI</A
+> 
+        (2.88)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-data-dumper"
+>Data::Dumper</A
+> 
+        (any)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-date-format"
+>Date::Format</A
+>
+        (2.21)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-dbi"
+>DBI</A
+> 
+        (1.32)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-dbd-mysql"
+>DBD::mysql</A
+>
+        (2.1010)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-file-spec"
+>File::Spec</A
+>
+        (0.82)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-file-temp"
+>File::Temp</A
+>
+        (any)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-template"
+>Template Toolkit</A
+>
+        (2.08)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-text-wrap"
+>Text::Wrap</A
+> 
+        (2001.0131)
+      </P
+></LI
+></OL
+>
+
+  and, optionally:
+  <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-gd"
+>GD</A
+>
+        (1.20) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-chart-base"
+>Chart::Base</A
+>
+        (0.99c) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-xml-parser"
+>XML::Parser</A
+>
+        (any) for the XML interface
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-gd-graph"
+>GD::Graph</A
+>
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-gd-text-align"
+>GD::Text::Align</A
+>
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="#install-modules-mime-parser"
+>MIME::Parser</A
+>
+        (any) for the email interface
+      </P
+></LI
+></OL
+>          
+  </P
 ><DIV
 CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN566"
+NAME="install-modules-bundle-bugzilla"
 ></A
->4.1.5.1. DBI</H3
+>4.1.3.1. Bundle::Bugzilla</H3
+><P
+>If you are running at least perl 5.6.1, you can save yourself a lot
+      of time by using Bundle::Bugzilla. This bundle contains every module
+      required to get Bugzilla running. It does not include GD and friends, but
+      these are not required for a base install and can always be added later
+      if the need arises.
+      </P
+><P
+>Assuming your perl was installed with CPAN (most unix installations
+      are), using Bundle::Bugzilla is really easy. Simply follow along with the
+      commands below.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>perl -MCPAN -eshell</B
+>              <A
+NAME="bundle-cpanconfig"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+cpan shell -- CPAN exploration and modules installation (v1.63)
+ReadLine support enabled
+
+<TT
+CLASS="prompt"
+>cpan&#62;</TT
+>
+
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="#bundle-cpanconfig"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></DT
+><DD
+>At this point, unless you've used CPAN on this machine before,
+            you'll have to go through a series of configuration steps.
+            </DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-appconfig"
+></A
+>4.1.3.2. AppConfig (1.52)</H3
+><P
+>Dependency for Template Toolkit. We probably don't need to
+      specifically check for it anymore.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-cgi"
+></A
+>4.1.3.3. CGI (2.88)</H3
+><P
+>The CGI module parses form elements and cookies and does many
+      other usefule things. It come as a part of recent perl distributions, but
+      Bugzilla needs a fairly new version.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/CGI.pm/"
+TARGET="_top"
+>http://search.cpan.org/dist/CGI.pm/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/CGI.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/CGI.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-data-dumper"
+></A
+>4.1.3.4. Data::Dumper (any)</H3
+><P
+>The Data::Dumper module provides data structure persistence for
+      Perl (similar to Java's serialization). It comes with later
+      sub-releases of Perl 5.004, but a re-installation just to be sure it's
+      available won't hurt anything.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Data-Dumper/"
+TARGET="_top"
+>http://search.cpan.org/dist/Data-Dumper/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-date-format"
+></A
+>4.1.3.5. TimeDate modules (2.21)</H3
+><P
+>Many of the more common date/time/calendar related Perl modules
+      have been grouped into a bundle similar to the MySQL modules bundle.
+      This bundle is stored on the CPAN under the name TimeDate. 
+      The component module we're most interested in is the Date::Format
+      module, but installing all of them is probably a good idea anyway.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/TimeDate/"
+TARGET="_top"
+>http://search.cpan.org/dist/TimeDate/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-dbi"
+></A
+>4.1.3.6. DBI (1.32)</H3
 ><P
 >The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
       correctly the DBI module should be a breeze. It's a mixed Perl/C
       module, but Perl's MakeMaker system simplifies the C compilation
       greatly.</P
-></DIV
-><DIV
-CLASS="section"
-><HR><H3
-CLASS="section"
-><A
-NAME="AEN569"
-></A
->4.1.5.2. Data::Dumper</H3
 ><P
->The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.</P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBI/"
+TARGET="_top"
+>http://search.cpan.org/dist/DBI/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://dbi.perl.org/doc/"
+TARGET="_top"
+>http://dbi.perl.org/doc/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN572"
+NAME="install-modules-dbd-mysql"
 ></A
->4.1.5.3. MySQL-related modules</H3
+>4.1.3.7. MySQL-related modules</H3
 ><P
 >The Perl/MySQL interface requires a few mutually-dependent Perl
       modules. These modules are grouped together into the the
@@ -2896,34 +3120,161 @@ NAME="AEN572"
       with a null password should find itself with sufficient access to run
       tests on the 'test' database which MySQL created upon installation.
       </P
-></DIV
-><DIV
-CLASS="section"
-><HR><H3
-CLASS="section"
-><A
-NAME="AEN577"
-></A
->4.1.5.4. TimeDate modules</H3
 ><P
->Many of the more common date/time/calendar related Perl modules
-      have been grouped into a bundle similar to the MySQL modules bundle.
-      This bundle is stored on the CPAN under the name TimeDate. 
-      The component module we're most interested in is the Date::Format
-      module, but installing all of them is probably a good idea anyway.
-      </P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBD-mysql/"
+TARGET="_top"
+>http://search.cpan.org/dist/DBD-mysql/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pod"
+TARGET="_top"
+>http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pod</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN580"
+NAME="install-file-spec"
 ></A
->4.1.5.5. GD (optional)</H3
+>4.1.3.8. File::Spec (0.82)</H3
+><P
+>File::Spec is a perl module that allows file operations, such as
+      generating full path names, to work cross platform.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/File-Spec/"
+TARGET="_top"
+>http://search.cpan.org/dist/File-Spec/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/File/Spec.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/File/Spec.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-file-temp"
+></A
+>4.1.3.9. File::Temp (any)</H3
+><P
+>File::Temp is used to generate a temporary filename that is
+      guaranteed to be unique. It comes as a standard part of perl
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/File-Spec/"
+TARGET="_top"
+>http://search.cpan.org/dist/File-Spec/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/File/Temp.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/File/Temp.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-template"
+></A
+>4.1.3.10. Template Toolkit (2.08)</H3
+><P
+>When you install Template Toolkit, you'll get asked various
+      questions about features to enable. The defaults are fine, except
+      that it is recommended you use the high speed XS Stash of the Template
+      Toolkit, in order to achieve best performance.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Template-Toolkit/"
+TARGET="_top"
+>http://search.cpan.org/dist/Template-Toolkit/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz"
+TARGET="_top"
+>http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.template-toolkit.org/docs.html"
+TARGET="_top"
+>http://www.template-toolkit.org/docs.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-text-wrap"
+></A
+>4.1.3.11. Text::Wrap (2001.0131)</H3
+><P
+>Text::Wrap is designed to proved intelligent text wrapping.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Text-Tabs+Wrap/"
+TARGET="_top"
+>http://search.cpan.org/dist/Text-Tabs+Wrap/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-gd"
+></A
+>4.1.3.12. GD (1.20) [optional]</H3
 ><P
 >The GD library was written by Thomas Boutell a long while ago to
-      programatically generate images in C. Since then it's become the
+      programmatically generate images in C. Since then it's become the
       defacto standard for programmatic image construction. The Perl bindings
       to it found in the GD library are used on millions of web pages to
       generate graphs on the fly. That's what Bugzilla will be using it for
@@ -2967,36 +3318,224 @@ CLASS="classname"
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The version of the GD perl module you need is very closely tied
+        to the <TT
+CLASS="classname"
+>libgd</TT
+> version installed on your system.
+        If you have a version 1.x of <TT
+CLASS="classname"
+>libgd</TT
+> the 2.x
+        versions of the GD perl module won't work for you.
+       </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GD/"
+TARGET="_top"
+>http://search.cpan.org/dist/GD/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://stein.cshl.org/WWW/software/GD/"
+TARGET="_top"
+>http://stein.cshl.org/WWW/software/GD/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN587"
+NAME="install-modules-chart-base"
 ></A
->4.1.5.6. Chart::Base (optional)</H3
+>4.1.3.13. Chart::Base (0.99c) [optional]</H3
 ><P
 >The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
       fetched from CPAN. 
       Note that earlier versions that 0.99c used GIFs, which are no longer
       supported by the latest versions of GD.</P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Chart/"
+TARGET="_top"
+>http://search.cpan.org/dist/Chart/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Chart.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Chart.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN590"
+NAME="install-modules-xml-parser"
 ></A
->4.1.5.7. Template Toolkit</H3
+>4.1.3.14. XML::Parser (any) [Optional]</H3
 ><P
->When you install Template Toolkit, you'll get asked various
-      questions about features to enable. The defaults are fine, except
-      that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.
+>XML::Parser is used by the <TT
+CLASS="filename"
+>importxml.pl</TT
+>
+      script. You only need it if you are going to be importing bugs (such as
+      for bug moving).  XML::Parser requires that the
+      <TT
+CLASS="classname"
+>expat</TT
+> library is already installed on your machine.
       </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/XML-Parser/"
+TARGET="_top"
+>http://search.cpan.org/dist/XML-Parser/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-graph"
+></A
+>4.1.3.15. GD::Graph (any) [Optional]</H3
+><P
+>In addition to GD listed above, the reporting interface of Bugzilla
+      needs to have the GD::Graph module installed.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDGraph/"
+TARGET="_top"
+>http://search.cpan.org/dist/GDGraph/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDGraph/Graph.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/GDGraph/Graph.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-text-align"
+></A
+>4.1.3.16. GD::Text::Align (any) [Optional]</H3
+><P
+>GD::Text::Align, as the name implies, is used to draw aligned
+      strings of text. It is needed by the reporting interface.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDTextUtil/"
+TARGET="_top"
+>http://search.cpan.org/dist/GDTextUtil/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDTextUtil/Text/Align.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/GDTextUtil/Text/Align.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><HR><H3
+CLASS="section"
+><A
+NAME="install-modules-mime-parser"
+></A
+>4.1.3.17. MIME::Parser (any) [Optional]</H3
+><P
+>MIME::Parser is only needed if you want to use the e-mail interface
+      located in the <TT
+CLASS="filename"
+>contrib</TT
+> directory.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/MIME-tools/"
+TARGET="_top"
+>http://search.cpan.org/dist/MIME-tools/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ></DIV
 ><DIV
@@ -3004,9 +3543,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="sbs-http"
+NAME="install-webserver"
 ></A
->4.1.6. HTTP Server</H2
+>4.1.4. HTTP Server</H2
 ><P
 >You have freedom of choice here, pretty much any web server that
       is capable of running <A
@@ -3046,7 +3585,12 @@ VALIGN="TOP"
 >We strongly recommend Apache as the web server to use. The
         Bugzilla Guide installation instructions, in general, assume you are
         using Apache. If you have got Bugzilla working using another webserver,
-        please share your experiences with us.</P
+        please share your experiences with us by filing a bug in <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
+TARGET="_top"
+>Bugzilla Documentation</A
+>.
+        </P
 ></TD
 ></TR
 ></TABLE
@@ -3057,9 +3601,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN600"
+NAME="install-bzfiles"
 ></A
->4.1.7. Bugzilla</H2
+>4.1.5. Bugzilla</H2
 ><P
 >You should untar the Bugzilla files into a directory that you're
       willing to make writable by the default web server user (probably 
@@ -3122,178 +3666,88 @@ CLASS="filename"
 >checksetup.pl</TT
 >
       script, which locks down your installation.</P
+><DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The default Bugzilla distribution is not designed to be placed
+        in a <TT
+CLASS="filename"
+>cgi-bin</TT
+> directory (this
+        includes any directory which is configured using the
+        <TT
+CLASS="option"
+>ScriptAlias</TT
+> directive of Apache). This will probably
+        change as part of
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=44659"
+TARGET="_top"
+>bug
+        44659</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN611"
+NAME="install-setupdatabase"
 ></A
->4.1.8. Setting Up the MySQL Database</H2
+>4.1.6. Setting Up the MySQL Database</H2
 ><P
 >After you've gotten all the software installed and working you're
       ready to start preparing the database for its life as the back end to
       a high quality bug tracker.</P
 ><P
->First, you'll want to fix MySQL permissions to allow access from
-      Bugzilla. For the purpose of this Installation section, the Bugzilla
-      username will be 
+>This first thing you'll want to do is make sure you've given the
       <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->, and will have minimal permissions. 
-      </P
-><P
->Begin by giving the MySQL root user a password. MySQL passwords are limited
-      to 16 characters. 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->mysql -u root mysql</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->UPDATE user SET Password=PASSWORD('&#60;new_password&#62;')
-            WHERE user='root';</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->FLUSH PRIVILEGES;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-
-      From this point on, if you need to access MySQL as the MySQL root user,
-      you will need to use 
-      <B
-CLASS="command"
->mysql -u root -p</B
->
-
-      and enter &#60;new_password&#62;. Remember that MySQL user names have
-      nothing to do with Unix user names (login names).</P
-><P
->Next, we use an SQL <B
-CLASS="command"
->GRANT</B
-> command to create a 
-      <SPAN
+>"root"</SPAN
+> user a password as suggested in
+      <A
+HREF="#security-mysql"
+>Section 5.6.2</A
+>. For clarity, these instructions will
+      assume that your MySQL user for Bugzilla will be <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->
-
-      user, and grant sufficient permissions for checksetup.pl, which we'll
-      use later, to work its magic. This also restricts the 
-      <SPAN
+>"bugs_user"</SPAN
+>,
+      the database will be called <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->
-      user to operations within a database called 
-      <SPAN
+>"bugs_db"</SPAN
+> and the password for
+      the <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->, and only allows the account to connect from 
-      <SPAN
+>"bugs_user"</SPAN
+> user is <SPAN
 CLASS="QUOTE"
->"localhost"</SPAN
->. 
-      Modify it to reflect your setup if you will be connecting from
-      another machine or as a different user.</P
-><P
->Remember to set &#60;bugs_password&#62; to some unique password. 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
-            ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost
-            IDENTIFIED BY '&#60;bugs_password&#62;';</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->FLUSH PRIVILEGES;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
+>"bugs_password"</SPAN
+>. You
+      should, of course, substitute the values you intend to use for your site.
       </P
 ><DIV
 CLASS="note"
@@ -3316,8 +3770,97 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
+>Most people use <SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+> for both the user and
+        database name.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Next, we use an SQL <B
+CLASS="command"
+>GRANT</B
+> command to create a 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+      user, and grant sufficient permissions for checksetup.pl, which we'll
+      use later, to work its magic. This also restricts the 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+      user to operations within a database called 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_db"</SPAN
+>, and only allows the account to connect from 
+      <SPAN
+CLASS="QUOTE"
+>"localhost"</SPAN
+>. 
+      Modify it to reflect your setup if you will be connecting from
+      another machine or as a different user.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+       DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
+       IDENTIFIED BY 'bugs_password';
+<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> FLUSH PRIVILEGES;
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
 >If you are using MySQL 4, the bugs user also needs to be granted
-        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        the <TT
+CLASS="computeroutput"
+>LOCK TABLES</TT
+> and 
+        <TT
+CLASS="computeroutput"
+>CREATE TEMPORARY TABLES</TT
+> permissions.
         </P
 ></TD
 ></TR
@@ -3329,9 +3872,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN649"
+NAME="AEN749"
 ></A
->4.1.9. <TT
+>4.1.7. <TT
 CLASS="filename"
 >checksetup.pl</TT
 ></H2
@@ -3340,10 +3883,11 @@ CLASS="filename"
       <A
 HREF="mailto:holgerschurig@nikocity.de"
 TARGET="_top"
->Holger Schurig </A
+>Holger Schurig</A
 > 
       for writing this script!) 
-      This script is designed to make sure your MySQL database and other
+      This script is designed to make sure your perl modules are the correct
+      version and your MySQL database and other
       configuration options are consistent with the Bugzilla CGI files. 
       It will make sure Bugzilla files and directories have reasonable
       permissions, set up the 
@@ -3352,35 +3896,28 @@ CLASS="filename"
 >data</TT
 >
       directory, and create all the MySQL tables. 
-      <P
-></P
+      </P
 ><TABLE
 BORDER="0"
-><TBODY
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
 ><TR
 ><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
 CLASS="prompt"
 >bash#</TT
->
-
-            <B
-CLASS="command"
->./checksetup.pl</B
->
-          </TT
->
-        </TD
+> ./checksetup.pl
+      </PRE
+></FONT
+></TD
 ></TR
-></TBODY
 ></TABLE
 ><P
-></P
->
-
-      The first time you run it, it will create a file called 
+>&#13;      The first time you run it, it will create a file called 
       <TT
 CLASS="filename"
 >localconfig</TT
@@ -3408,7 +3945,7 @@ CLASS="QUOTE"
 >database name: 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_db"</SPAN
 >
           if you're following these directions</P
 ></LI
@@ -3417,7 +3954,7 @@ CLASS="QUOTE"
 >MySQL username: 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_user"</SPAN
 >
           if you're following these directions</P
 ></LI
@@ -3426,9 +3963,12 @@ CLASS="QUOTE"
 >Password for the 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_user"</SPAN
 >
-          MySQL account; (&#60;bugs_password&#62;) above</P
+          MySQL account; (<SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+> above)</P
 ></LI
 ></OL
 >
@@ -3482,9 +4022,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN681"
+NAME="AEN780"
 ></A
->4.1.10. Configuring Bugzilla</H2
+>4.1.8. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 
@@ -3508,7 +4048,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN687"
+NAME="AEN786"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -3572,7 +4112,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN702"
+NAME="AEN801"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -3631,7 +4171,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN715"
+NAME="AEN814"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -3813,13 +4353,13 @@ HREF="http://www.openldap.org/"
 TARGET="_top"
 >&#13;      OpenLDAP</A
 > with Bugzilla, using any of a number of administration
-      tools.  You should apply the patch attached this bug:
+      tools.  You should apply the patch attached to 
       <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=158630"
 TARGET="_top"
->&#13;      http://bugzilla.mozilla.org/show_bug.cgi?id=158630</A
->, then set
-      the following object classes for your users:
+>bug 158630</A
+>
+      , then set the following object classes for your users:
 
       <P
 ></P
@@ -3877,7 +4417,7 @@ NAME="content-type"
       <A
 HREF="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"
 TARGET="_top"
->&#13;      http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
+>http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</A
 >.
       Executing the following code snippet from a UNIX command shell will
       rectify the problem if your Bugzilla installation is intended for an
@@ -3950,13 +4490,13 @@ VALIGN="TOP"
 ><P
 >Using &#60;meta&#62; tags to set the charset is not
         recommended, as there's a bug in Netscape 4.x which causes pages
-        marked up in this way to load twice. See 
+        marked up in this way to load twice. See  
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=126266"
 TARGET="_top"
->bug
-        126266</A
-> for more information including progress toward making
+>bug 126266</A
+>
+        for more information including progress toward making
         bugzilla charset aware by default.
         </P
 ></TD
@@ -4037,7 +4577,7 @@ CLASS="filename"
 HREF="http://www.snert.com/Software/mod_throttle/"
 TARGET="_top"
 >http://www.snert.com/Software/mod_throttle/</A
->
+>.
       Follow the instructions to install into your Apache install. 
       <EM
 >This module only functions with the Apache web
@@ -4134,19 +4674,23 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="win32-perl-modules"
+NAME="win32-perlmodules"
 ></A
 >4.3.1.2. Perl Modules on Win32</H3
 ><P
 >Bugzilla on Windows requires the same perl modules found in
         <A
-HREF="#install-package-list"
->Section 4.1.2</A
+HREF="#install-perlmodules"
+>Section 4.1.3</A
 >. The main difference is that
-        windows uses <B
-CLASS="command"
->ppm</B
-> instead of CPAN.
+        windows uses <A
+HREF="#gloss-ppm"
+><I
+CLASS="glossterm"
+>PPM</I
+></A
+> instead of
+        CPAN.
         </P
 ><TABLE
 BORDER="0"
@@ -4597,7 +5141,7 @@ CLASS="prompt"
 > <B
 CLASS="command"
 >urpmi perl-MailTools</B
->    <A
+>             <A
 NAME="test-mailtools"
 ><IMG
 SRC="../images/callouts/1.gif"
@@ -4690,7 +5234,7 @@ CLASS="command"
 >./checksetup.pl</B
 > (shown in <A
 HREF="#http-apache-htaccess"
->Example 4-1</A
+>Example 4-2</A
 >
       for the curious) are allowed to override Apache's normal access
       permissions or else important password information may be exposed to the
@@ -4811,7 +5355,7 @@ NAME="http-apache-htaccess"
 ></A
 ><P
 ><B
->Example 4-1. <TT
+>Example 4-2. <TT
 CLASS="filename"
 >.htaccess</TT
 > files for Apache</B
@@ -4990,7 +5534,7 @@ CLASS="productname"
       <A
 HREF="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp"
 TARGET="_top"
->Q245225 </A
+>Q245225</A
 >
       for <SPAN
 CLASS="productname"
@@ -5122,12 +5666,11 @@ VALIGN="TOP"
         <TT
 CLASS="filename"
 >localconfig</TT
->. For more information, see
+>. For more information, see 
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
 TARGET="_top"
->bug
-        186383</A
+>&#13;        bug 186383</A
 > or <A
 HREF="http://online.securityfocus.com/bid/6501"
 TARGET="_top"
@@ -5219,7 +5762,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN977"
+NAME="AEN1076"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -5244,7 +5787,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN982"
+NAME="AEN1081"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -5400,7 +5943,7 @@ CLASS="productname"
       5.6.0. Many minor variations of this error have been reported. Examples
       can be found in <A
 HREF="#trouble-filetemp-errors"
->Figure 4-1</A
+>Figure 4-2</A
 >.
       </P
 ><DIV
@@ -5410,7 +5953,7 @@ NAME="trouble-filetemp-errors"
 ></A
 ><P
 ><B
->Figure 4-1. Other File::Temp error messages</B
+>Figure 4-2. Other File::Temp error messages</B
 ></P
 ><TABLE
 BORDER="0"
@@ -5441,7 +5984,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
       or higher solved the problem for them. A less involved fix is to apply
       the patch in <A
 HREF="#trouble-filetemp-patch"
->Figure 4-2</A
+>Figure 4-3</A
 >. The patch is also
       available as a <A
 HREF="../xml/filetemp.patch"
@@ -5456,7 +5999,7 @@ NAME="trouble-filetemp-patch"
 ></A
 ><P
 ><B
->Figure 4-2. Patch for File::Temp in Perl 5.6.0</B
+>Figure 4-3. Patch for File::Temp in Perl 5.6.0</B
 ></P
 ><TABLE
 BORDER="0"
@@ -6442,7 +6985,7 @@ TYPE="1"
 ><P
 ><EM
 >Maximum Votes a person can put on a single
-         bug"</EM
+         bug</EM
 >: 
          It should probably be some number lower than the
         "Maximum votes per person". Don't set this field to "0" if
@@ -6986,12 +7529,11 @@ NAME="security-access"
       not be accessible is rather complicated. A new installation method
       is currently in the works which should solve this by allowing files
       that shouldn't be accessible from the web to be placed in directory
-      outside the webroot. See
+      outside the webroot. See 
       <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=44659"
 TARGET="_top"
->bug
-      44659</A
+>&#13;      bug 44659</A
 > for more information.
       </P
 ><P
@@ -7331,7 +7873,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1425"
+NAME="AEN1524"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -7446,7 +7988,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1444"
+NAME="AEN1543"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -7528,7 +8070,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1454"
+NAME="AEN1553"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -7590,7 +8132,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1467"
+NAME="AEN1566"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -8509,11 +9051,10 @@ CLASS="filename"
 ><P
 >There is also a CVSZilla project, based upon somewhat dated 
     Bugzilla code, to integrate CVS and Bugzilla through CVS' ability to 
-    email. Check it out at: 
-    <A
+    email. Check it out at: <A
 HREF="http://homepages.kcbbs.gen.nz/~tonyg/"
 TARGET="_top"
->&#13;    http://homepages.kcbbs.gen.nz/~tonyg/</A
+>http://homepages.kcbbs.gen.nz/~tonyg/</A
 >.
     </P
 ></DIV
@@ -8531,7 +9072,7 @@ NAME="scm"
     <A
 HREF="http://www.ravenbrook.com/project/p4dti/"
 TARGET="_top"
->&#13;    http://www.ravenbrook.com/project/p4dti</A
+>http://www.ravenbrook.com/project/p4dti/</A
 >
 
     . 
@@ -8545,7 +9086,7 @@ CLASS="QUOTE"
     <A
 HREF="http://public.perforce.com/public/perforce/p4dti/index.html"
 TARGET="_top"
->&#13;    http://public.perforce.com/public/perforce/p4dti/index.html</A
+>http://public.perforce.com/public/perforce/p4dti/index.html</A
 >
 
     .</P
@@ -9002,7 +9543,7 @@ HREF="#faq-use-changeaddress"
 ><DT
 >A.7.2. <A
 HREF="#faq-use-query"
->&#13;	    The query page is very confusing.  Isn't there a simpler way to query?
+>&#13;	    The query page is very confusing. Isn't there a simpler way to query?
 	  </A
 ></DT
 ><DT
@@ -9016,7 +9557,7 @@ HREF="#faq-use-accept"
 >A.7.4. <A
 HREF="#faq-use-attachment"
 >&#13;	    I can't upload anything into the database via the "Create Attachment"
-	    link.  What am I doing wrong?
+	    link. What am I doing wrong?
 	  </A
 ></DT
 ><DT
@@ -9092,8 +9633,8 @@ CLASS="answer"
 	    information at <A
 HREF="http://www.bugzilla.org/"
 TARGET="_top"
->&#13;	    http://www.bugzilla.org/</A
->
+>http://www.bugzilla.org/</A
+>.
 	  </P
 ></DIV
 ></DIV
@@ -9121,8 +9662,8 @@ CLASS="answer"
 	    See details at <A
 HREF="http://www.mozilla.org/MPL/"
 TARGET="_top"
->&#13;	    http://www.mozilla.org/MPL/</A
->
+>http://www.mozilla.org/MPL/</A
+>.
 	  </P
 ></DIV
 ></DIV
@@ -9158,7 +9699,7 @@ TARGET="_top"
 >&#13;	    <A
 HREF="http://www.collab.net/"
 TARGET="_top"
->www.collab.net</A
+>http://www.collab.net/</A
 > offers
 	    Bugzilla as part of their standard offering to large projects.
 	    They do have some minimum fees that are pretty hefty, and generally
@@ -9196,7 +9737,7 @@ CLASS="answer"
 	    There are <EM
 >dozens</EM
 > of major companies with public
-	    Bugzilla sites to track bugs in their products.  A few include:
+	    Bugzilla sites to track bugs in their products. A few include:
 	    <P
 ></P
 ><TABLE
@@ -9304,7 +9845,7 @@ HREF="http://www.bugzilla.org/who_we_are.html"
 TARGET="_top"
 >core team</A
 >,
-      led by Dave Miller (justdave@netscape.com).      
+      led by Dave Miller (justdave@netscape.com).
 	  </P
 ></DIV
 ></DIV
@@ -9368,8 +9909,8 @@ CLASS="answer"
 > </B
 >
 	    It may be that the support has not been built yet, or that you
-	    have not yet found it.  Bugzilla is making tremendous strides in
-	    usability, customizability, scalability, and user interface.  It
+	    have not yet found it. Bugzilla is making tremendous strides in
+	    usability, customizability, scalability, and user interface. It
 	    is widely considered the most complete and popular open-source
 	    bug-tracking software in existence.
 	  </P
@@ -9412,16 +9953,16 @@ CLASS="answer"
 	  </P
 ><P
 >&#13;            There is currently work in progress to make Bugzilla work on
-            PostgreSQL and Sybase in the default distribution.  You can track
-            the progress of these initiatives in bugs <A
+            PostgreSQL and Sybase in the default distribution. You can track
+            the progress of these initiatives in <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=98304"
 TARGET="_top"
->98304</A
+>bug 98304</A
 >
             and <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=173130"
 TARGET="_top"
->173130</A
+>bug 173130</A
 >
             respectively.
           </P
@@ -9461,11 +10002,11 @@ CLASS="filename"
 > because when
             Terry first started writing the code for mozilla.org he needed a
             version of Perl and other tools that were completely under his
-            control.  This location was abandoned for the 2.18 release in favor
+            control. This location was abandoned for the 2.18 release in favor
             of the more sensible <TT
 CLASS="filename"
 >/usr/bin/perl</TT
->.  If you
+>. If you
             installed an older verion of Bugzilla and created the symlink we
             suggested, you can remove it now (provided that you don't have
             anything else, such as Bonsai, using it and you don't intend to
@@ -9498,7 +10039,7 @@ CLASS="answer"
 > </B
 >
             Yes, the following bit of perl magic will change all the shebang
-            lines.  Be sure to change <TT
+            lines. Be sure to change <TT
 CLASS="filename"
 >/usr/local/bin/perl</TT
 >
@@ -9605,7 +10146,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    It is web and e-mail based.  You can edit bugs by sending specially
+	    It is web and e-mail based. You can edit bugs by sending specially
 	    formatted email to a properly configured Bugzilla, or control via the web.
 	  </P
 ></DIV
@@ -9708,7 +10249,7 @@ CLASS="answer"
 > </B
 >
 	    Yes - any sort of attachment is allowed, although administrators can
-      configure a maximum size.  
+      configure a maximum size.
             Bugzilla gives the user the option of either using the MIME-type
             supplied by the browser, choosing from a pre-defined list or
             manually typing any arbitrary MIME-type. 
@@ -9737,17 +10278,17 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Yes.  However, modifying some fields, notably those related to bug
+	    Yes. However, modifying some fields, notably those related to bug
 	    progression states, also require adjusting the program logic to
 	    compensate for the change.
 	  </P
 ><P
 >&#13;	    There is no GUI for adding fields to Bugzilla at this
-	    time.  You can follow development of this feature at
+	    time. You can follow development of this feature in 
 	    <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=91037"
 TARGET="_top"
->http://bugzilla.mozilla.org/show_bug.cgi?id=91037</A
+>bug 91037</A
 >
 	  </P
 ></DIV
@@ -9773,12 +10314,12 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Yes.  Look at <A
+	    Yes. Look at <A
 HREF="http://bugzilla.mozilla.org/report.cgi"
 TARGET="_top"
->&#13;	    http://bugzilla.mozilla.org/report.cgi</A
-> for samples of what
-            Bugzilla can do in reporting and graphing.
+>http://bugzilla.mozilla.org/report.cgi</A
+>
+            for samples of what Bugzilla can do in reporting and graphing.
 	  </P
 ><P
 >&#13;            If you can not get the reports you want from the included reporting
@@ -9811,7 +10352,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Email notification is user-configurable.  By default, the bug id and 
+	    Email notification is user-configurable. By default, the bug id and 
       Summary of the bug report accompany each email notification, along with
 	    a list of the changes made.
 	  </P
@@ -9889,7 +10430,7 @@ VALIGN="TOP"
 >&#13;		If you decide to use the bugzilla_email integration features
 		to allow Bugzilla to record responses to mail with the associated bug,
 		you may need to caution your users to set their mailer to "respond
-		to messages in the format in which they were sent".  For security reasons
+		to messages in the format in which they were sent". For security reasons
 		Bugzilla ignores HTML tags in comments, and if a user sends HTML-based
 		email into Bugzilla the resulting comment looks downright awful.
 	      </P
@@ -9926,7 +10467,7 @@ CLASS="answer"
 >
             Bugzilla can output buglists as HTML (the default), CSV or RDF.
             The link for CSV can be found at the bottom of the buglist in HTML
-            format.  This CSV format can easily be imported into MS Excel or
+            format. This CSV format can easily be imported into MS Excel or
             other spread-sheet applications.
           </P
 ><P
@@ -9934,7 +10475,7 @@ CLASS="answer"
             <TT
 CLASS="computeroutput"
 >&#38;ctype=rdf</TT
-> to the URL.  RDF
+> to the URL. RDF
             is meant to be machine readable and thus it is assumed that the
             URL would be generated progmatically so there is no user visible
             link to this format.
@@ -9984,15 +10525,15 @@ CLASS="answer"
 ><B
 > </B
 >
-            Yes.  For more information including available translated templates,
+            Yes. For more information including available translated templates,
             see <A
 HREF="http://www.bugzilla.org/download.html#localizations"
 TARGET="_top"
 >http://www.bugzilla.org/download.html#localizations</A
 >.
             The admin interfaces are still not included in these translated
-            templates and is therefore still English only.  Also, there may be
-            issues with the charset not being declared.  See <A
+            templates and is therefore still English only. Also, there may be
+            issues with the charset not being declared. See <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=126266"
 TARGET="_top"
 >bug 126226</A
@@ -10022,7 +10563,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Yes.  No.  Yes (using the CSV format).
+	    Yes. No. Yes (using the CSV format).
 	  </P
 ></DIV
 ></DIV
@@ -10047,7 +10588,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    You have no idea.  Bugzilla's query interface, particularly with the
+	    You have no idea. Bugzilla's query interface, particularly with the
 	    advanced Boolean operators, is incredibly versatile.
 	  </P
 ></DIV
@@ -10074,7 +10615,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Bugzilla does not lock records.  It provides mid-air collision detection,
+	    Bugzilla does not lock records. It provides mid-air collision detection,
 	    and offers the offending user a choice of options to deal with the conflict.
 	  </P
 ></DIV
@@ -10104,8 +10645,8 @@ CLASS="answer"
 	    at <A
 HREF="http://www.mysql.com/doc/B/a/Backup.html"
 TARGET="_top"
->&#13;	    http://www.mysql.com/doc/B/a/Backup.html</A
->
+>http://www.mysql.com/doc/B/a/Backup.html</A
+>.
 	  </P
 ></DIV
 ></DIV
@@ -10129,8 +10670,8 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Yes.  However, commits to the database must wait
-	    until the tables are unlocked.  Bugzilla databases are typically
+	    Yes. However, commits to the database must wait
+	    until the tables are unlocked. Bugzilla databases are typically
 	    very small, and backups routinely take less than a minute.
 	  </P
 ></DIV
@@ -10164,7 +10705,7 @@ CLASS="answer"
 	  </P
 ><P
 >&#13;	    Commercial Bug-tracking software typically costs somewhere upwards
-	    of $20,000 or more for 5-10 floating licenses.  Bugzilla consultation
+	    of $20,000 or more for 5-10 floating licenses. Bugzilla consultation
 	    is available from skilled members of the newsgroup. Simple questions
       are answered there and then.
 	  </P
@@ -10194,9 +10735,9 @@ CLASS="answer"
 ><B
 > </B
 >
-	    It all depends on your level of commitment.  Someone with much Bugzilla
+	    It all depends on your level of commitment. Someone with much Bugzilla
 	    experience can get you up and running in less than a day, and
-	    your Bugzilla install can run untended for years.  If your
+	    your Bugzilla install can run untended for years. If your
 	    Bugzilla strategy is critical to your business workflow, hire somebody
 	    with reasonable UNIX or Perl skills to handle your process management and
 	    bug-tracking maintenance &#38; customization.
@@ -10224,7 +10765,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    No.  MySQL asks, if you find their product valuable, that you purchase
+	    No. MySQL asks, if you find their product valuable, that you purchase
 	    a support contract from them that suits your needs.
 	  </P
 ></DIV
@@ -10258,7 +10799,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Run MySQL like this: "mysqld --skip-grant-tables".  Please remember <EM
+	    Run MySQL like this: "mysqld --skip-grant-tables". Please remember <EM
 >this
 	    makes MySQL as secure as taping a $100 to the floor of a football stadium
 	    bathroom for safekeeping.</EM
@@ -10407,11 +10948,11 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Try Klaas Freitag's excellent patch for "whineatassigned" functionality.
-	    You can find it at <A
+	    Try Klaas Freitag's excellent patch for "whineatassigned"
+            functionality. You can find it in <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=6679"
 TARGET="_top"
->http://bugzilla.mozilla.org/show_bug.cgi?id=6679</A
+>bug 6679</A
 >. This
 	    patch is against an older version of Bugzilla, so you must apply
 	    the diffs manually.
@@ -10443,7 +10984,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1886"
+NAME="AEN1985"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10454,7 +10995,7 @@ CLASS="BLOCKQUOTE"
 >
 	    However, this is fairly nasty and subject to problems; you also
 	    need to set up your smrsh (sendmail restricted shell) to allow
-	    it.  In a pinch, though, it can work.
+	    it. In a pinch, though, it can work.
 	  </P
 ></DIV
 ></DIV
@@ -10571,7 +11112,7 @@ CLASS="answer"
 	  </P
 ><P
 >&#13;	    If you never receive mail from Bugzilla, chances you do not have
-	    sendmail in "/usr/lib/sendmail".  Ensure sendmail lives in, or is symlinked
+	    sendmail in "/usr/lib/sendmail". Ensure sendmail lives in, or is symlinked
 	    to, "/usr/lib/sendmail".
 	  </P
 ></DIV
@@ -10606,7 +11147,7 @@ CLASS="answer"
 >
             Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
             Red Hat's newer version (based on 2.17.1 and soon to be merged into
-            the main distribution) runs on PostgreSQL.  At this time we know of
+            the main distribution) runs on PostgreSQL. At this time we know of
             no recent ports of Bugzilla to Oracle but do intend to support it
             in the future (possibly the 2.20 time-frame).
 	  </P
@@ -10645,15 +11186,15 @@ CLASS="filename"
 	    it finishes without errors, you're
 	    <EM
 >probably</EM
-> OK.  If it doesn't come back
+> OK. If it doesn't come back
 	    OK (i.e. any red letters), there are certain things
-	    Bugzilla can recover from and certain things it can't.  If
+	    Bugzilla can recover from and certain things it can't. If
 	    it can't auto-recover, I hope you're familiar with
 	    mysqladmin commands or have installed another way to
-	    manage your database.  Sanity Check, although it is a good
+	    manage your database. Sanity Check, although it is a good
 	    basic check on your database integrity, by no means is a
 	    substitute for competent database administration and
-	    avoiding deletion of data.  It is not exhaustive, and was
+	    avoiding deletion of data. It is not exhaustive, and was
 	    created to do a basic check for the most common problems
 	    in Bugzilla databases.
 	  </P
@@ -10686,7 +11227,7 @@ CLASS="command"
 >mysql</B
 >
             command line utility to manually insert, delete and modify table
-            information.  There are also more intuitive GUI clients available.
+            information. There are also more intuitive GUI clients available.
             Personal favorites of the Bugzilla team are <A
 HREF="http://www.phpmyadmin.net/"
 TARGET="_top"
@@ -10782,7 +11323,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Well, you can synchronize or you can move bugs.  Synchronization will
+	    Well, you can synchronize or you can move bugs. Synchronization will
 	    only work one way -- you can create a read-only copy of the database
 	    at one site, and have it regularly updated at intervals from the main
 	    database.
@@ -10852,8 +11393,8 @@ CLASS="answer"
 ><B
 > </B
 >
-	    Not currently.  Bundle::Bugzilla enormously simplifies Bugzilla
-	    installation on UNIX systems.  If someone can volunteer to
+	    Not currently. Bundle::Bugzilla enormously simplifies Bugzilla
+	    installation on UNIX systems. If someone can volunteer to
 	    create a suitable PPM bundle for Win32, it would be appreciated.
 	  </P
 ></DIV
@@ -10887,7 +11428,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN1969"
+NAME="AEN2068"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10968,10 +11509,10 @@ CLASS="command"
 	    I reckon TimeDate and Data::Dumper come with the activeperl. You can check
 	    the ActiveState site for packages for installation through PPM.
 	    <A
-HREF=" http://www.activestate.com/Packages/"
+HREF="http://www.activestate.com/Packages/"
 TARGET="_top"
->&#13;	      http://www.activestate.com/Packages/</A
->
+>http://www.activestate.com/Packages/</A
+>.
 	  </P
 ></DIV
 ></DIV
@@ -11019,7 +11560,7 @@ NAME="faq-use-query"
 ><B
 >A.7.2. </B
 >
-	    The query page is very confusing.  Isn't there a simpler way to query?
+	    The query page is very confusing. Isn't there a simpler way to query?
 	  </P
 ></DIV
 ><DIV
@@ -11056,8 +11597,7 @@ CLASS="answer"
 > </B
 >
 	    The current behavior is acceptable to bugzilla.mozilla.org and most
-	    users.  You have your choice of patches
-	    to change this behavior, however.
+	    users. You have your choice of patches to change this behavior, however.
 	    <P
 ></P
 ><TABLE
@@ -11084,8 +11624,8 @@ TARGET="_top"
 ><P
 ></P
 >
-	    Note that these patches are somewhat dated.  You will need to apply
-      them manually.  
+	    Note that these patches are somewhat dated. You will need to apply
+      them manually.
 	  </P
 ></DIV
 ></DIV
@@ -11101,7 +11641,7 @@ NAME="faq-use-attachment"
 >A.7.4. </B
 >
 	    I can't upload anything into the database via the "Create Attachment"
-	    link.  What am I doing wrong?
+	    link. What am I doing wrong?
 	  </P
 ></DIV
 ><DIV
@@ -11111,7 +11651,7 @@ CLASS="answer"
 > </B
 >
 	    The most likely cause is a very old browser or a browser that is
-	    incompatible with file upload via POST.  Download the latest Netscape,
+	    incompatible with file upload via POST. Download the latest Netscape,
 	    Microsoft, or Mozilla browser to handle uploads correctly.
 	  </P
 ></DIV
@@ -11137,8 +11677,8 @@ CLASS="answer"
 > </B
 >
 	    In the Bugzilla administrator UI, edit the keyword and it will let you
-	    replace the old keyword name with a new one.  This will cause a problem
-	    with the keyword cache.  Run sanitycheck.cgi to fix it.
+	    replace the old keyword name with a new one. This will cause a problem
+	    with the keyword cache. Run sanitycheck.cgi to fix it.
 	  </P
 ></DIV
 ></DIV
@@ -11171,7 +11711,7 @@ CLASS="answer"
 > </B
 >
 	    Gerv and Myk suggest a 2-space indent, with embedded code sections on
-	    their own line, in line with outer tags.  Like this:</P
+	    their own line, in line with outer tags. Like this:</P
 ><TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -11206,7 +11746,7 @@ CLASS="programlisting"
 ><P
 >Please note that many have differing opinions on this subject,
 	and the existing templates in Bugzilla espouse both this and a 4-space
-	style.  Either is acceptable; the above is preferred.</P
+	style. Either is acceptable; the above is preferred.</P
 ></DIV
 ></DIV
 ><DIV
@@ -11244,7 +11784,7 @@ TARGET="_top"
 >here</A
 >.
 	    This list includes bugs for the 2.18 release that have already
-	    been fixed and checked into CVS.  Please consult the
+	    been fixed and checked into CVS. Please consult the
 	    <A
 HREF="http://www.bugzilla.org/"
 TARGET="_top"
@@ -11276,14 +11816,13 @@ CLASS="answer"
 ><B
 > </B
 >
-	    This is well-documented here: <A
+	    This is well-documented in <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=49862"
 TARGET="_top"
->&#13;	    http://bugzilla.mozilla.org/show_bug.cgi?id=49862</A
->.  Ultimately, it's as easy
-	    as adding the "---" priority field to your localconfig file in the appropriate area,
-	    re-running checksetup.pl, and then changing the default priority in your browser using
-	    "editparams.cgi". 
+>&#13;	    bug 49862</A
+>. Ultimately, it's as easy as adding the "---" priority field to your
+            localconfig file in the appropriate area, re-running checksetup.pl, and then changing the
+            default priority in your browser using "editparams.cgi". 
 	  </P
 ></DIV
 ></DIV
@@ -11332,7 +11871,7 @@ TARGET="_top"
 		  or new source file by clicking
 		  "Create a new attachment" link on the bug page you've just created, and
 		  include any descriptions of database changes you may make, into the bug
-		  ID you submitted in step #1.  Be sure and click the "Patch" checkbox
+		  ID you submitted in step #1. Be sure and click the "Patch" checkbox
 		  to indicate the text you are sending is a patch!
 		</P
 ></LI
@@ -11340,7 +11879,7 @@ TARGET="_top"
 ><P
 >&#13;		  Announce your patch and the associated URL
 		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX) for discussion in
-		  the newsgroup (netscape.public.mozilla.webtools).  You'll get a really
+		  the newsgroup (netscape.public.mozilla.webtools). You'll get a really
 		  good, fairly immediate reaction to the implications of your patch,
 		  which will also give us an idea how well-received the change would
 		  be.
@@ -11490,7 +12029,7 @@ NAME="dbdoc"
 ><P
 >But Certain Death speaks up -- a tiny voice, from the dark corners
     of the conference room. "I have a concern," the voice hisses from the
-    darkness, "about the use of the word 'verified'.</P
+    darkness, "about the use of the word 'verified'."</P
 ><P
 >The room, previously filled with happy chatter, lapses into
     reverential silence as Certain Death (better known as the Vice President
@@ -11517,7 +12056,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2091"
+NAME="AEN2190"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -11536,14 +12075,12 @@ CLASS="QUOTE"
 >"tinyint"</SPAN
 >
 
-      entry in MySQL. I recommend you refer to the MySQL documentation,
-      available at 
+      entry in MySQL. I recommend you refer to the
       <A
-HREF="http://www.mysql.com/doc.html"
+HREF="http://www.mysql.com/documentation/"
 TARGET="_top"
->MySQL.com</A
+>MySQL documentation</A
 >
-
       . Below are the basics you need to know about the Bugzilla database.
       Check the chart above for more details.</P
 ><P
@@ -11587,7 +12124,7 @@ HREF="http://www.mysql.com/php/manual.php3?section=Privilege_system"
 TARGET="_top"
 >MySQL
             searchable documentation</A
->.            
+>.
             </P
 ></LI
 ><LI
@@ -11633,7 +12170,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2118"
+NAME="AEN2217"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -11704,14 +12241,14 @@ CLASS="programlisting"
 ><P
 CLASS="literallayout"
 ><br>
-&nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
+&nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
 descriptive&nbsp;names&nbsp;that&nbsp;make&nbsp;it&nbsp;fairly&nbsp;trivial&nbsp;to&nbsp;figure&nbsp;out&nbsp;their&nbsp;jobs.<br>
 <br>
-attachments:&nbsp;This&nbsp;table&nbsp;stores&nbsp;all&nbsp;attachments&nbsp;to&nbsp;bugs.&nbsp;&nbsp;It&nbsp;tends&nbsp;to&nbsp;be&nbsp;your<br>
+attachments:&nbsp;This&nbsp;table&nbsp;stores&nbsp;all&nbsp;attachments&nbsp;to&nbsp;bugs.&nbsp;It&nbsp;tends&nbsp;to&nbsp;be&nbsp;your<br>
 largest&nbsp;table,&nbsp;yet&nbsp;also&nbsp;generally&nbsp;has&nbsp;the&nbsp;fewest&nbsp;entries&nbsp;because&nbsp;file<br>
 attachments&nbsp;are&nbsp;so&nbsp;(relatively)&nbsp;large.<br>
 <br>
-bugs:&nbsp;&nbsp;This&nbsp;is&nbsp;the&nbsp;core&nbsp;of&nbsp;your&nbsp;system.&nbsp;&nbsp;The&nbsp;bugs&nbsp;table&nbsp;stores&nbsp;most&nbsp;of&nbsp;the<br>
+bugs:&nbsp;&nbsp;This&nbsp;is&nbsp;the&nbsp;core&nbsp;of&nbsp;your&nbsp;system.&nbsp;The&nbsp;bugs&nbsp;table&nbsp;stores&nbsp;most&nbsp;of&nbsp;the<br>
 current&nbsp;information&nbsp;about&nbsp;a&nbsp;bug,&nbsp;with&nbsp;the&nbsp;exception&nbsp;of&nbsp;the&nbsp;info&nbsp;stored&nbsp;in&nbsp;the<br>
 other&nbsp;tables.<br>
 <br>
@@ -11719,26 +12256,26 @@ bugs_activity:&nbsp;&nbsp;This&nbsp;stores&nbsp;information&nbsp;regarding&nbsp;
 when&nbsp;--&nbsp;a&nbsp;history&nbsp;file.<br>
 <br>
 cc:&nbsp;&nbsp;This&nbsp;tiny&nbsp;table&nbsp;simply&nbsp;stores&nbsp;all&nbsp;the&nbsp;CC&nbsp;information&nbsp;for&nbsp;any&nbsp;bug&nbsp;which&nbsp;has<br>
-any&nbsp;entries&nbsp;in&nbsp;the&nbsp;CC&nbsp;field&nbsp;of&nbsp;the&nbsp;bug.&nbsp;&nbsp;Note&nbsp;that,&nbsp;like&nbsp;most&nbsp;other&nbsp;tables&nbsp;in<br>
+any&nbsp;entries&nbsp;in&nbsp;the&nbsp;CC&nbsp;field&nbsp;of&nbsp;the&nbsp;bug.&nbsp;Note&nbsp;that,&nbsp;like&nbsp;most&nbsp;other&nbsp;tables&nbsp;in<br>
 Bugzilla,&nbsp;it&nbsp;does&nbsp;not&nbsp;refer&nbsp;to&nbsp;users&nbsp;by&nbsp;their&nbsp;user&nbsp;names,&nbsp;but&nbsp;by&nbsp;their&nbsp;unique<br>
 userid,&nbsp;stored&nbsp;as&nbsp;a&nbsp;primary&nbsp;key&nbsp;in&nbsp;the&nbsp;profiles&nbsp;table.<br>
 <br>
 components:&nbsp;This&nbsp;stores&nbsp;the&nbsp;programs&nbsp;and&nbsp;components&nbsp;(or&nbsp;products&nbsp;and<br>
-components,&nbsp;in&nbsp;newer&nbsp;Bugzilla&nbsp;parlance)&nbsp;for&nbsp;Bugzilla.&nbsp;&nbsp;Curiously,&nbsp;the&nbsp;"program"<br>
+components,&nbsp;in&nbsp;newer&nbsp;Bugzilla&nbsp;parlance)&nbsp;for&nbsp;Bugzilla.&nbsp;Curiously,&nbsp;the&nbsp;"program"<br>
 (product)&nbsp;field&nbsp;is&nbsp;the&nbsp;full&nbsp;name&nbsp;of&nbsp;the&nbsp;product,&nbsp;rather&nbsp;than&nbsp;some&nbsp;other&nbsp;unique<br>
 identifier,&nbsp;like&nbsp;bug_id&nbsp;and&nbsp;user_id&nbsp;are&nbsp;elsewhere&nbsp;in&nbsp;the&nbsp;database.<br>
 <br>
 dependencies:&nbsp;Stores&nbsp;data&nbsp;about&nbsp;those&nbsp;cool&nbsp;dependency&nbsp;trees.<br>
 <br>
-fielddefs:&nbsp;&nbsp;A&nbsp;nifty&nbsp;table&nbsp;that&nbsp;defines&nbsp;other&nbsp;tables.&nbsp;&nbsp;For&nbsp;instance,&nbsp;when&nbsp;you<br>
+fielddefs:&nbsp;&nbsp;A&nbsp;nifty&nbsp;table&nbsp;that&nbsp;defines&nbsp;other&nbsp;tables.&nbsp;For&nbsp;instance,&nbsp;when&nbsp;you<br>
 submit&nbsp;a&nbsp;form&nbsp;that&nbsp;changes&nbsp;the&nbsp;value&nbsp;of&nbsp;"AssignedTo"&nbsp;this&nbsp;table&nbsp;allows<br>
 translation&nbsp;to&nbsp;the&nbsp;actual&nbsp;field&nbsp;name&nbsp;"assigned_to"&nbsp;for&nbsp;entry&nbsp;into&nbsp;MySQL.<br>
 <br>
-groups:&nbsp;&nbsp;defines&nbsp;bitmasks&nbsp;for&nbsp;groups.&nbsp;&nbsp;A&nbsp;bitmask&nbsp;is&nbsp;a&nbsp;number&nbsp;that&nbsp;can&nbsp;uniquely<br>
-identify&nbsp;group&nbsp;memberships.&nbsp;&nbsp;For&nbsp;instance,&nbsp;say&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to<br>
+groups:&nbsp;&nbsp;defines&nbsp;bitmasks&nbsp;for&nbsp;groups.&nbsp;A&nbsp;bitmask&nbsp;is&nbsp;a&nbsp;number&nbsp;that&nbsp;can&nbsp;uniquely<br>
+identify&nbsp;group&nbsp;memberships.&nbsp;For&nbsp;instance,&nbsp;say&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to<br>
 tweak&nbsp;parameters&nbsp;is&nbsp;assigned&nbsp;a&nbsp;value&nbsp;of&nbsp;"1",&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to&nbsp;edit<br>
 users&nbsp;is&nbsp;assigned&nbsp;a&nbsp;"2",&nbsp;and&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to&nbsp;create&nbsp;new&nbsp;groups&nbsp;is<br>
-assigned&nbsp;the&nbsp;bitmask&nbsp;of&nbsp;"4".&nbsp;&nbsp;By&nbsp;uniquely&nbsp;combining&nbsp;the&nbsp;group&nbsp;bitmasks&nbsp;(much<br>
+assigned&nbsp;the&nbsp;bitmask&nbsp;of&nbsp;"4".&nbsp;By&nbsp;uniquely&nbsp;combining&nbsp;the&nbsp;group&nbsp;bitmasks&nbsp;(much<br>
 like&nbsp;the&nbsp;chmod&nbsp;command&nbsp;in&nbsp;UNIX,)&nbsp;you&nbsp;can&nbsp;identify&nbsp;a&nbsp;user&nbsp;is&nbsp;allowed&nbsp;to&nbsp;tweak<br>
 parameters&nbsp;and&nbsp;create&nbsp;groups,&nbsp;but&nbsp;not&nbsp;edit&nbsp;users,&nbsp;by&nbsp;giving&nbsp;him&nbsp;a&nbsp;bitmask&nbsp;of<br>
 "5",&nbsp;or&nbsp;a&nbsp;user&nbsp;allowed&nbsp;to&nbsp;edit&nbsp;users&nbsp;and&nbsp;create&nbsp;groups,&nbsp;but&nbsp;not&nbsp;tweak<br>
@@ -11753,15 +12290,15 @@ keywords:&nbsp;Unlike&nbsp;what&nbsp;you'd&nbsp;think,&nbsp;this&nbsp;table&nbsp
 associated&nbsp;with&nbsp;which&nbsp;bug&nbsp;id's.<br>
 <br>
 logincookies:&nbsp;This&nbsp;stores&nbsp;every&nbsp;login&nbsp;cookie&nbsp;ever&nbsp;assigned&nbsp;to&nbsp;you&nbsp;for&nbsp;every<br>
-machine&nbsp;you've&nbsp;ever&nbsp;logged&nbsp;into&nbsp;Bugzilla&nbsp;from.&nbsp;&nbsp;Curiously,&nbsp;it&nbsp;never&nbsp;does&nbsp;any<br>
-housecleaning&nbsp;--&nbsp;I&nbsp;see&nbsp;cookies&nbsp;in&nbsp;this&nbsp;file&nbsp;I've&nbsp;not&nbsp;used&nbsp;for&nbsp;months.&nbsp;&nbsp;However,<br>
+machine&nbsp;you've&nbsp;ever&nbsp;logged&nbsp;into&nbsp;Bugzilla&nbsp;from.&nbsp;Curiously,&nbsp;it&nbsp;never&nbsp;does&nbsp;any<br>
+housecleaning&nbsp;--&nbsp;I&nbsp;see&nbsp;cookies&nbsp;in&nbsp;this&nbsp;file&nbsp;I've&nbsp;not&nbsp;used&nbsp;for&nbsp;months.&nbsp;However,<br>
 since&nbsp;Bugzilla&nbsp;never&nbsp;expires&nbsp;your&nbsp;cookie&nbsp;(for&nbsp;convenience'&nbsp;sake),&nbsp;it&nbsp;makes<br>
 sense.<br>
 <br>
 longdescs:&nbsp;&nbsp;The&nbsp;meat&nbsp;of&nbsp;bugzilla&nbsp;--&nbsp;here&nbsp;is&nbsp;where&nbsp;all&nbsp;user&nbsp;comments&nbsp;are&nbsp;stored!<br>
 You've&nbsp;only&nbsp;got&nbsp;2^24&nbsp;bytes&nbsp;per&nbsp;comment&nbsp;(it's&nbsp;a&nbsp;mediumtext&nbsp;field),&nbsp;so&nbsp;speak<br>
 sparingly&nbsp;--&nbsp;that's&nbsp;only&nbsp;the&nbsp;amount&nbsp;of&nbsp;space&nbsp;the&nbsp;Old&nbsp;Testament&nbsp;from&nbsp;the&nbsp;Bible<br>
-would&nbsp;take&nbsp;(uncompressed,&nbsp;16&nbsp;megabytes).&nbsp;&nbsp;Each&nbsp;comment&nbsp;is&nbsp;keyed&nbsp;to&nbsp;the<br>
+would&nbsp;take&nbsp;(uncompressed,&nbsp;16&nbsp;megabytes).&nbsp;Each&nbsp;comment&nbsp;is&nbsp;keyed&nbsp;to&nbsp;the<br>
 bug_id&nbsp;to&nbsp;which&nbsp;it's&nbsp;attached,&nbsp;so&nbsp;the&nbsp;order&nbsp;is&nbsp;necessarily&nbsp;chronological,&nbsp;for<br>
 comments&nbsp;are&nbsp;played&nbsp;back&nbsp;in&nbsp;the&nbsp;order&nbsp;in&nbsp;which&nbsp;they&nbsp;are&nbsp;received.<br>
 <br>
@@ -11769,12 +12306,12 @@ milestones:&nbsp;&nbsp;Interesting&nbsp;that&nbsp;milestones&nbsp;are&nbsp;assoc
 in&nbsp;this&nbsp;table,&nbsp;but&nbsp;Bugzilla&nbsp;does&nbsp;not&nbsp;yet&nbsp;support&nbsp;differing&nbsp;milestones&nbsp;by<br>
 product&nbsp;through&nbsp;the&nbsp;standard&nbsp;configuration&nbsp;interfaces.<br>
 <br>
-namedqueries:&nbsp;&nbsp;This&nbsp;is&nbsp;where&nbsp;everybody&nbsp;stores&nbsp;their&nbsp;"custom&nbsp;queries".&nbsp;&nbsp;Very<br>
+namedqueries:&nbsp;&nbsp;This&nbsp;is&nbsp;where&nbsp;everybody&nbsp;stores&nbsp;their&nbsp;"custom&nbsp;queries".&nbsp;Very<br>
 cool&nbsp;feature;&nbsp;it&nbsp;beats&nbsp;the&nbsp;tar&nbsp;out&nbsp;of&nbsp;having&nbsp;to&nbsp;bookmark&nbsp;each&nbsp;cool&nbsp;query&nbsp;you<br>
 construct.<br>
 <br>
 products:&nbsp;&nbsp;What&nbsp;products&nbsp;you&nbsp;have,&nbsp;whether&nbsp;new&nbsp;bug&nbsp;entries&nbsp;are&nbsp;allowed&nbsp;for&nbsp;the<br>
-product,&nbsp;what&nbsp;milestone&nbsp;you're&nbsp;working&nbsp;toward&nbsp;on&nbsp;that&nbsp;product,&nbsp;votes,&nbsp;etc.&nbsp;&nbsp;It<br>
+product,&nbsp;what&nbsp;milestone&nbsp;you're&nbsp;working&nbsp;toward&nbsp;on&nbsp;that&nbsp;product,&nbsp;votes,&nbsp;etc.&nbsp;It<br>
 will&nbsp;be&nbsp;nice&nbsp;when&nbsp;the&nbsp;components&nbsp;table&nbsp;supports&nbsp;these&nbsp;same&nbsp;features,&nbsp;so&nbsp;you<br>
 could&nbsp;close&nbsp;a&nbsp;particular&nbsp;component&nbsp;for&nbsp;bug&nbsp;entry&nbsp;without&nbsp;having&nbsp;to&nbsp;close&nbsp;an<br>
 entire&nbsp;product...<br>
@@ -11809,7 +12346,7 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;table;<br>
 mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table;<br>
 <br>
 &nbsp;&nbsp;--&nbsp;note:&nbsp;this&nbsp;is&nbsp;a&nbsp;very&nbsp;bad&nbsp;idea&nbsp;to&nbsp;do&nbsp;on,&nbsp;for&nbsp;instance,&nbsp;the&nbsp;"bugs"&nbsp;table&nbsp;if<br>
-you&nbsp;have&nbsp;50,000&nbsp;bugs.&nbsp;&nbsp;You'll&nbsp;be&nbsp;sitting&nbsp;there&nbsp;a&nbsp;while&nbsp;until&nbsp;you&nbsp;ctrl-c&nbsp;or<br>
+you&nbsp;have&nbsp;50,000&nbsp;bugs.&nbsp;You'll&nbsp;be&nbsp;sitting&nbsp;there&nbsp;a&nbsp;while&nbsp;until&nbsp;you&nbsp;ctrl-c&nbsp;or<br>
 50,000&nbsp;bugs&nbsp;play&nbsp;across&nbsp;your&nbsp;screen.<br>
 <br>
 &nbsp;&nbsp;You&nbsp;can&nbsp;limit&nbsp;the&nbsp;display&nbsp;from&nbsp;above&nbsp;a&nbsp;little&nbsp;with&nbsp;the&nbsp;command,&nbsp;where<br>
@@ -11822,7 +12359,7 @@ mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table&nbsp;where&nbsp;(column&nbsp;
 mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table&nbsp;where&nbsp;(column&nbsp;!=&nbsp;"some&nbsp;info");<br>
 <br>
 &nbsp;&nbsp;Let's&nbsp;take&nbsp;our&nbsp;example&nbsp;from&nbsp;the&nbsp;introduction,&nbsp;and&nbsp;assume&nbsp;you&nbsp;need&nbsp;to&nbsp;change<br>
-the&nbsp;word&nbsp;"verified"&nbsp;to&nbsp;"approved"&nbsp;in&nbsp;the&nbsp;resolution&nbsp;field.&nbsp;&nbsp;We&nbsp;know&nbsp;from&nbsp;the<br>
+the&nbsp;word&nbsp;"verified"&nbsp;to&nbsp;"approved"&nbsp;in&nbsp;the&nbsp;resolution&nbsp;field.&nbsp;We&nbsp;know&nbsp;from&nbsp;the<br>
 above&nbsp;information&nbsp;that&nbsp;the&nbsp;resolution&nbsp;is&nbsp;likely&nbsp;to&nbsp;be&nbsp;stored&nbsp;in&nbsp;the&nbsp;"bugs"<br>
 table.&nbsp;Note&nbsp;we'll&nbsp;need&nbsp;to&nbsp;change&nbsp;a&nbsp;little&nbsp;perl&nbsp;code&nbsp;as&nbsp;well&nbsp;as&nbsp;this&nbsp;database<br>
 change,&nbsp;but&nbsp;I&nbsp;won't&nbsp;plunge&nbsp;into&nbsp;that&nbsp;in&nbsp;this&nbsp;document.&nbsp;Let's&nbsp;verify&nbsp;the<br>
@@ -11833,10 +12370,10 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;bugs<br>
 &nbsp;&nbsp;(exceedingly&nbsp;long&nbsp;output&nbsp;truncated&nbsp;here)<br>
 |&nbsp;bug_status|&nbsp;enum('UNCONFIRMED','NEW','ASSIGNED','REOPENED','RESOLVED','VERIFIED','CLOSED')||MUL&nbsp;|&nbsp;UNCONFIRMED||<br>
 <br>
-&nbsp;&nbsp;Sorry&nbsp;about&nbsp;that&nbsp;long&nbsp;line.&nbsp;&nbsp;We&nbsp;see&nbsp;from&nbsp;this&nbsp;that&nbsp;the&nbsp;"bug&nbsp;status"&nbsp;column&nbsp;is<br>
+&nbsp;&nbsp;Sorry&nbsp;about&nbsp;that&nbsp;long&nbsp;line.&nbsp;We&nbsp;see&nbsp;from&nbsp;this&nbsp;that&nbsp;the&nbsp;"bug&nbsp;status"&nbsp;column&nbsp;is<br>
 an&nbsp;"enum&nbsp;field",&nbsp;which&nbsp;is&nbsp;a&nbsp;MySQL&nbsp;peculiarity&nbsp;where&nbsp;a&nbsp;string&nbsp;type&nbsp;field&nbsp;can<br>
-only&nbsp;have&nbsp;certain&nbsp;types&nbsp;of&nbsp;entries.&nbsp;&nbsp;While&nbsp;I&nbsp;think&nbsp;this&nbsp;is&nbsp;very&nbsp;cool,&nbsp;it's&nbsp;not<br>
-standard&nbsp;SQL.&nbsp;&nbsp;Anyway,&nbsp;we&nbsp;need&nbsp;to&nbsp;add&nbsp;the&nbsp;possible&nbsp;enum&nbsp;field&nbsp;entry<br>
+only&nbsp;have&nbsp;certain&nbsp;types&nbsp;of&nbsp;entries.&nbsp;While&nbsp;I&nbsp;think&nbsp;this&nbsp;is&nbsp;very&nbsp;cool,&nbsp;it's&nbsp;not<br>
+standard&nbsp;SQL.&nbsp;Anyway,&nbsp;we&nbsp;need&nbsp;to&nbsp;add&nbsp;the&nbsp;possible&nbsp;enum&nbsp;field&nbsp;entry<br>
 'APPROVED'&nbsp;by&nbsp;altering&nbsp;the&nbsp;"bugs"&nbsp;table.<br>
 <br>
 mysql&#62;&nbsp;ALTER&nbsp;table&nbsp;bugs&nbsp;CHANGE&nbsp;bug_status&nbsp;bug_status<br>
@@ -11852,15 +12389,15 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;bugs;<br>
 <br>
 &nbsp;&nbsp;you'll&nbsp;see&nbsp;that&nbsp;the&nbsp;bug_status&nbsp;field&nbsp;has&nbsp;an&nbsp;extra&nbsp;"APPROVED"&nbsp;enum&nbsp;that's<br>
 available!&nbsp;&nbsp;Cool&nbsp;thing,&nbsp;too,&nbsp;is&nbsp;that&nbsp;this&nbsp;is&nbsp;reflected&nbsp;on&nbsp;your&nbsp;query&nbsp;page&nbsp;as<br>
-well&nbsp;--&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;new&nbsp;status.&nbsp;&nbsp;But&nbsp;how's&nbsp;it&nbsp;fit&nbsp;into&nbsp;the&nbsp;existing<br>
+well&nbsp;--&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;new&nbsp;status.&nbsp;But&nbsp;how's&nbsp;it&nbsp;fit&nbsp;into&nbsp;the&nbsp;existing<br>
 scheme&nbsp;of&nbsp;things?<br>
 &nbsp;&nbsp;Looks&nbsp;like&nbsp;you&nbsp;need&nbsp;to&nbsp;go&nbsp;back&nbsp;and&nbsp;look&nbsp;for&nbsp;instances&nbsp;of&nbsp;the&nbsp;word&nbsp;"verified"<br>
 in&nbsp;the&nbsp;perl&nbsp;code&nbsp;for&nbsp;Bugzilla&nbsp;--&nbsp;wherever&nbsp;you&nbsp;find&nbsp;"verified",&nbsp;change&nbsp;it&nbsp;to<br>
 "approved"&nbsp;and&nbsp;you're&nbsp;in&nbsp;business&nbsp;(make&nbsp;sure&nbsp;that's&nbsp;a&nbsp;case-insensitive&nbsp;search).<br>
 Although&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;enum&nbsp;field,&nbsp;you&nbsp;can't&nbsp;give&nbsp;something&nbsp;a&nbsp;status<br>
-of&nbsp;"APPROVED"&nbsp;until&nbsp;you&nbsp;make&nbsp;the&nbsp;perl&nbsp;changes.&nbsp;&nbsp;&nbsp;Note&nbsp;that&nbsp;this&nbsp;change&nbsp;I<br>
+of&nbsp;"APPROVED"&nbsp;until&nbsp;you&nbsp;make&nbsp;the&nbsp;perl&nbsp;changes.&nbsp;Note&nbsp;that&nbsp;this&nbsp;change&nbsp;I<br>
 mentioned&nbsp;can&nbsp;also&nbsp;be&nbsp;done&nbsp;by&nbsp;editing&nbsp;checksetup.pl,&nbsp;which&nbsp;automates&nbsp;a&nbsp;lot&nbsp;of<br>
-this.&nbsp;&nbsp;But&nbsp;you&nbsp;need&nbsp;to&nbsp;know&nbsp;this&nbsp;stuff&nbsp;anyway,&nbsp;right?<br>
+this.&nbsp;But&nbsp;you&nbsp;need&nbsp;to&nbsp;know&nbsp;this&nbsp;stuff&nbsp;anyway,&nbsp;right?<br>
 	</P
 ></DIV
 ></DIV
@@ -12045,8 +12582,8 @@ NAME="variants"
   <A
 HREF="http://linas.org/linux/pm.html"
 TARGET="_top"
->&#13;  http://linas.org/linux/pm.html</A
->
+>http://linas.org/linux/pm.html</A
+>.
   </P
 ><DIV
 CLASS="section"
@@ -12058,26 +12595,25 @@ NAME="variant-redhat"
 >D.1. Red Hat Bugzilla</H1
 ><P
 >Red Hat's old fork of Bugzilla which was based on version 2.8 is now
-    obsolete.  The newest version in use is based on version 2.17.1 and is in
-    the process of being integrated into the main Bugzilla source tree.  The
+    obsolete. The newest version in use is based on version 2.17.1 and is in
+    the process of being integrated into the main Bugzilla source tree. The
     back-end is modified to work with PostgreSQL instead of MySQL and they have
     custom templates to get their desired look and feel, but other than that it
-    is Bugzilla 2.17.1.  Dave Lawrence of Red Hat put forth a great deal of
+    is Bugzilla 2.17.1. Dave Lawrence of Red Hat put forth a great deal of
     effort to make sure that the changes he made could be integrated back into
     the main tree. 
     <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=98304"
 TARGET="_top"
->Bug
-    98304</A
-> exists to track this integration.
+>Bug 98304</A
+>
+    exists to track this integration.
     </P
 ><P
->URL: 
-    <A
+>URL: <A
 HREF="http://bugzilla.redhat.com/bugzilla/"
 TARGET="_top"
->&#13;    http://bugzilla.redhat.com/bugzilla/</A
+>http://bugzilla.redhat.com/bugzilla/</A
 >
     </P
 ><P
@@ -12130,11 +12666,10 @@ NAME="variant-scarab"
 >Scarab is a new open source bug-tracking system built using Java
     Servlet technology. It is currently at version 1.0 beta 13.</P
 ><P
->URL: 
-    <A
+>URL: <A
 HREF="http://scarab.tigris.org/"
 TARGET="_top"
->http://scarab.tigris.org</A
+>http://scarab.tigris.org/</A
 >
     </P
 ><P
@@ -12156,12 +12691,10 @@ CLASS="QUOTE"
 >
     functionality.</P
 ><P
->URL: 
-    <A
+>URL: <A
 HREF="http://www.perforce.com/perforce/technotes/note052.html"
 TARGET="_top"
->&#13;    http://www.perforce.com/perforce/technotes/note052.html
-    </A
+>http://www.perforce.com/perforce/technotes/note052.html</A
 >
     </P
 ><P
@@ -12180,11 +12713,10 @@ NAME="variant-sourceforge"
     distributed free software and open source projects over the Internet.
     It has a built-in bug tracker, but it's not highly thought of.</P
 ><P
->URL: 
-    <A
+>URL: <A
 HREF="http://www.sourceforge.net"
 TARGET="_top"
->&#13;    http://www.sourceforge.net</A
+>http://www.sourceforge.net</A
 >
     </P
 ><P
@@ -12201,7 +12733,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2206"
+NAME="AEN2305"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12639,10 +13171,8 @@ NAME="gfdl-10"
     <A
 HREF="http://www.gnu.org/copyleft/"
 TARGET="_top"
->&#13;    http://www.gnu.org/copyleft/</A
->
-
-    .</P
+>http://www.gnu.org/copyleft/</A
+>.</P
 ><P
 >Each version of the License is given a distinguishing version
     number. If the Document specifies that a particular numbered version of
@@ -12666,7 +13196,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2296"
+NAME="AEN2395"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12703,7 +13233,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2301"
+NAME="AEN2400"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -12986,13 +13516,9 @@ NAME="gloss-component"
 NAME="gloss-cpan"
 ></A
 ><B
->&#13;        <SPAN
-CLASS="acronym"
->CPAN</SPAN
->
-      </B
+>Comprehensive Perl Archive Network</B
 ></DT
-><DD
+> (CPAN)<DD
 ><P
 >&#13;        <SPAN
 CLASS="acronym"
@@ -13232,6 +13758,22 @@ NAME="gloss-p"
 ></A
 >P</H1
 ><DL
+><DT
+><A
+NAME="gloss-ppm"
+></A
+><B
+>Perl Package Manager</B
+></DT
+> (PPM)<DD
+><P
+><A
+HREF="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/PPM/"
+TARGET="_top"
+>http://aspn.activestate.com/ASPN/Downloads/ActivePerl/PPM/</A
+>
+        </P
+></DD
 ><DT
 ><B
 >Product</B
@@ -13499,7 +14041,7 @@ NAME="gloss-zarro"
         Terry had the following to say:
         </P
 ><A
-NAME="AEN2521"
+NAME="AEN2626"
 ></A
 ><TABLE
 BORDER="0"

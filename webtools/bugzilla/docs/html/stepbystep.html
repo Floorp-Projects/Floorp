@@ -76,34 +76,21 @@ CLASS="section"
 NAME="stepbystep"
 ></A
 >4.1. Step-by-step Install</H1
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="intstall-into"
-></A
->4.1.1. Introduction</H2
 ><P
->Bugzilla has been successfully installed under Solaris, Linux,
-      and Win32. Win32 is not yet officially supported, but many people
-      have got it working fine.
-      Please see  
+>Bugzilla has been successfully installed under many different
+      operating systems including almost all Unix clones and
+      <SPAN
+CLASS="productname"
+>Microsoft Windows</SPAN
+>.  Many
+      operating systems have utilities that make installation easier or quirks
+      that make it harder. We have tried to collect that information in
       <A
-HREF="os-specific.html#os-win32"
->Section 4.3.1</A
->
-      for further advice on getting Bugzilla to work on Microsoft
-      Windows.</P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="install-package-list"
-></A
->4.1.2. Package List</H2
+HREF="os-specific.html"
+>Section 4.3</A
+>, so be sure to check out that section before
+      you start your installation.
+      </P
 ><DIV
 CLASS="note"
 ><P
@@ -125,231 +112,19 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
-> If you are running the very most recent
-        version of Perl and MySQL (both the executables and development
-        libraries) on your system, you can skip these manual installation 
-        steps for the Perl modules by using Bundle::Bugzilla; see
+>Windows is one of those operating systems that has many quirks
+        and is not yet officially supported by the Bugzilla team. If you wish
+        to install Bugzilla on Windows, be sure to see
         <A
-HREF="stepbystep.html#bundlebugzilla"
->Using Bundle::Bugzilla instead of manually installing Perl modules</A
+HREF="os-specific.html#os-win32"
+>Section 4.3.1</A
 >.
         </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
-><P
->The software packages necessary for the proper running of
-      Bugzilla (with download links) are: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;    <A
-HREF="http://www.mysql.com/"
-TARGET="_top"
->MySQL database server</A
->
-    (3.23.41 or greater)
-  </P
-></LI
-><LI
-><P
->&#13;    <A
-HREF="http://www.perl.org"
-TARGET="_top"
->Perl</A
->
-    (5.6, 5.6.1 is recommended if you wish to
-    use Bundle::Bugzilla)
-  </P
-></LI
-><LI
-><P
->Perl Modules (minimum version):
-  <P
-></P
-><OL
-TYPE="a"
-><LI
-><P
->&#13;        <A
-HREF="http://www.template-toolkit.org"
-TARGET="_top"
->Template</A
->
-        (v2.08)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.perldoc.com/perl5.6/lib/File/Temp.html"
-TARGET="_top"
->&#13;	File::Temp</A
->
-        (1.804) (Prerequisite for Template)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/AppConfig/"
-TARGET="_top"
->AppConfig 
-        </A
->
-        (1.52)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar.gz"
-TARGET="_top"
->Text::Wrap</A
-> 
-        (2001.0131)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://search.cpan.org/search?dist=File-Spec"
-TARGET="_top"
->File::Spec 
-        </A
->
-        (0.82)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Data/"
-TARGET="_top"
->Data::Dumper 
-        </A
-> 
-        (any)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Mysql/"
-TARGET="_top"
->DBD::mysql
-        </A
-> 
-        (2.1010)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/DBI/"
-TARGET="_top"
->DBI</A
-> 
-        (1.32)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Date/"
-TARGET="_top"
->Date::Parse
-        </A
-> 
-        (2.21)
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/CGI/"
-TARGET="_top"
->CGI
-        </A
-> 
-        (2.88)
-      </P
-></LI
-></OL
->
-  and, optionally:
-  <P
-></P
-><OL
-TYPE="a"
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/GD/"
-TARGET="_top"
->GD</A
->
-        (1.20) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        GD::Graph
-        (any) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        GD::Text::Align
-        (any) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        <A
-HREF="http://www.cpan.org/modules/by-module/Chart/"
-TARGET="_top"
->Chart::Base 
-        </A
->
-        (0.99c) for bug charting
-      </P
-></LI
-><LI
-><P
->&#13;        XML::Parser 
-        (any) for the XML interface
-      </P
-></LI
-><LI
-><P
->&#13;        MIME::Parser 
-        (any) for the email interface
-      </P
-></LI
-></OL
->          
-  </P
-></LI
-><LI
-><P
->&#13;    The web server of your choice. 
-    <A
-HREF="http://www.apache.org/"
-TARGET="_top"
->Apache</A
-> 
-    is highly recommended.
-  </P
-></LI
-></OL
->
-
-      <DIV
+><DIV
 CLASS="warning"
 ><P
 ></P
@@ -370,10 +145,9 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->It is a good idea, while installing Bugzilla, to ensure that there
-        is some kind of firewall between you and the rest of the Internet,
-        because your machine may be insecure for periods during the install.
-        Many
+>While installing Bugzilla, it is a good idea to ensure that there
+        is some kind of firewall between you and the rest of the Internet
+        as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
         vulnerable to an attack.</P
@@ -381,9 +155,74 @@ VALIGN="TOP"
 ></TR
 ></TABLE
 ></DIV
->
-
+><P
+>This guide assumes that you already have your operating system
+      installed, network configured, and have administrative access to the
+      shell on the machine you are installing Bugzilla onto. It is possible to
+      install and run Bugzilla without administrative access, but you have to
+      either make sure all the required software is installed or get somebody
+      with administrative access to install it for you.
       </P
+><P
+>The listing below is a basic step-by-step list. More information
+      can be found in the sections below. Minimum versions will be
+      included in parenthesis where appropriate.
+      </P
+><DIV
+CLASS="procedure"
+><OL
+TYPE="1"
+><LI
+><P
+><A
+HREF="stepbystep.html#install-mysql"
+>Install MySQL</A
+>
+          (3.23.41)
+          </P
+></LI
+><LI
+><P
+><A
+HREF="stepbystep.html#install-perl"
+>Install Perl</A
+>
+          (5.6)
+          </P
+></LI
+><LI
+><P
+><A
+HREF="stepbystep.html#install-perlmodules"
+>Install Perl Modules</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="stepbystep.html#install-webserver"
+>Install a Webserver</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="stepbystep.html#install-bzfiles"
+>Put Bugzilla in the Webspace</A
+>
+          </P
+></LI
+><LI
+><P
+><A
+HREF="stepbystep.html#install-setupdatabase"
+>Setup the MySQL Database</A
+>
+          </P
+></LI
+></OL
 ></DIV
 ><DIV
 CLASS="section"
@@ -392,13 +231,13 @@ CLASS="section"
 ><A
 NAME="install-mysql"
 ></A
->4.1.3. MySQL</H2
+>4.1.1. MySQL</H2
 ><P
 >Visit the MySQL homepage at 
       <A
 HREF="http://www.mysql.com"
 TARGET="_top"
->www.mysql.com</A
+>http://www.mysql.com</A
 >
       to grab and install the latest stable release of the server. 
       </P
@@ -441,53 +280,65 @@ CLASS="filename"
 ></TABLE
 ></DIV
 ><P
->If you install from something other than an RPM or Debian 
-      package, you will need to add <TT
-CLASS="filename"
->mysqld</TT
->
-      to your init scripts so the server daemon will come back up whenever
-      your machine reboots. Further discussion of UNIX init sequences are
-      beyond the scope of this guide. 
+>If you install from something other than a packaging/installation
+      system (such as .rpm, .dep, .exe, or .msi) you will need to configure
+      your system so the MySQL server daemon will come back up whenever
+      your machine reboots.
       </P
 ><P
->Change your init script to start 
+>If you wish to have attachments larger than 64K, you will have to
+      configure MySQL to accept large packets. This is done by adding the text
+      in <A
+HREF="stepbystep.html#install-mysql-packets"
+>Figure 4-1</A
+> to your
       <TT
 CLASS="filename"
->mysqld</TT
->
-      with the ability to accept large packets. By default, 
-      <TT
-CLASS="filename"
->mysqld</TT
->
-      only accepts packets up to 64K long. This limits the size of
-      attachments you may put on bugs. If you add 
-      <TT
-CLASS="option"
->-O max_allowed_packet=1M</TT
->
-      to the command that starts 
-      <TT
-CLASS="filename"
->mysqld</TT
->
-      (or <TT
-CLASS="filename"
->safe_mysqld</TT
->), 
-      then you will be able to have attachments up to about 1 megabyte.
-      There is a Bugzilla parameter for maximum attachment size;
-      you should configure it to match the value you choose here.</P
+>my.conf</TT
+> file. There is also a parameter in Bugzilla
+      for setting the maximum allowable attachment size.
+      
+      You should set this value to be slightly larger than that parameter.
+      </P
+><DIV
+CLASS="figure"
+><A
+NAME="install-mysql-packets"
+></A
 ><P
->If you plan on running Bugzilla and MySQL on the same machine,
-      consider using the 
-      <TT
+><B
+>Figure 4-1. Set Max Packet Size in MySQL</B
+></P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;[mysqld]
+# Allow packets up to 1M
+set-variable = max_allowed_packet=1M
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>If you are running Bugzilla and MySQL on the same machine, you may
+      also wish to utilize the <TT
 CLASS="option"
->--skip-networking</TT
->
-      option in the init script. This enhances security by preventing
-      network access to MySQL.</P
+>skip-networking</TT
+> option as
+      mentioned in <A
+HREF="security.html#security-mysql"
+>Section 5.6.2</A
+> for the added security.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
@@ -496,25 +347,207 @@ CLASS="section"
 ><A
 NAME="install-perl"
 ></A
->4.1.4. Perl</H2
+>4.1.2. Perl</H2
 ><P
 >Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from 
-      <A
+      Perl can be got in source form from <A
 HREF="http://www.perl.com"
 TARGET="_top"
->perl.com</A
-> for the rare 
-      *nix systems which don't have it. 
+>http://www.perl.com</A
+>.
+      There are also binary versions available for many platforms, most of which
+      are linked to from perl.com.
       Although Bugzilla runs with perl 5.6,
       it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
       version 5.8.</P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="install-perlmodules"
+></A
+>4.1.3. Perl Modules</H2
+><P
+>Perl modules can be found using
+      <A
+HREF="glossary.html#gloss-cpan"
+><I
+CLASS="glossterm"
+>CPAN</I
+></A
+> on Unix based systems or
+      <A
+HREF="glossary.html#gloss-ppm"
+><I
+CLASS="glossterm"
+>PPM</I
+></A
+> on Win32. The root servers
+      have a real tendency to bog down, so please use mirrors.
+      </P
+><P
+>Good instuctions can be found for using each of these services on
+      their respective websites. The basics can be found in
+      <A
+HREF="stepbystep.html#install-perlmodules-cpan"
+>Example 4-1</A
+> for CPAN and
+      <A
+HREF="os-specific.html#win32-perlmodules"
+>Section 4.3.1.2</A
+> for PPM.
+      </P
+><DIV
+CLASS="example"
+><A
+NAME="install-perlmodules-cpan"
+></A
+><P
+><B
+>Example 4-1. Installing perl modules with CPAN</B
+></P
+><P
+>The easy way:
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> perl -MCPAN -e 'install "&#60;modulename&#62;"'
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+        </P
+><P
+>Or the hard way:
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> tar xzvf &#60;module&#62;.tar.gz     <A
+NAME="cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> cd &#60;module&#62;                  <A
+NAME="cpan-moduledir"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+>
+<TT
+CLASS="prompt"
+>bash#</TT
+> perl Makefile.PL
+<TT
+CLASS="prompt"
+>bash#</TT
+> make
+<TT
+CLASS="prompt"
+>bash#</TT
+> make test
+<TT
+CLASS="prompt"
+>bash#</TT
+> make install
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          <DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="stepbystep.html#cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></DT
+><DD
+>This assumes that you've already downloaded the
+              <TT
+CLASS="filename"
+>&#60;module&#62;.tar.gz</TT
+> to the current working
+              directory.
+              </DD
+><DT
+><A
+HREF="stepbystep.html#cpan-moduledir"
+><IMG
+SRC="../images/callouts/2.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(2)"></A
+></DT
+><DD
+>The process of untaring the module as defined in
+              <A
+HREF="stepbystep.html#cpan-moduletar"
+><A
+HREF="stepbystep.html#cpan-moduletar"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></A
+> will create the
+              <TT
+CLASS="filename"
+>&#60;module&#62;</TT
+> directory.
+              </DD
+></DL
+></DIV
+>
+        </P
+></DIV
 ><DIV
 CLASS="tip"
-><A
-NAME="bundlebugzilla"
-></A
 ><P
 ></P
 ><TABLE
@@ -530,191 +563,6 @@ VALIGN="TOP"
 SRC="../images/tip.gif"
 HSPACE="5"
 ALT="Tip"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->You can skip the following Perl module installation steps by
-        installing 
-        <SPAN
-CLASS="productname"
->Bundle::Bugzilla</SPAN
->
-
-        from 
-        <A
-HREF="glossary.html#gloss-cpan"
-><I
-CLASS="glossterm"
->CPAN</I
-></A
->, 
-        which installs all required modules for you.</P
-><P
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->perl -MCPAN -e 'install "Bundle::Bugzilla"'</B
->
-          </TT
->
-        </P
-><P
->Bundle::Bugzilla doesn't include GD, Chart::Base, or
-        MIME::Parser, which are not essential to a basic Bugzilla install. If
-        installing this bundle fails, you should install each module
-        individually to isolate the problem.</P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="perl-modules"
-></A
->4.1.5. Perl Modules</H2
-><P
-> 
-      All Perl modules can be found on the
-      <A
-HREF="http://www.cpan.org"
-TARGET="_top"
->Comprehensive Perl 
-      Archive Network</A
-> (CPAN). The
-      CPAN servers have a real tendency to bog down, so please use mirrors.
-    </P
-><P
->Quality, general Perl module installation instructions can be
-      found on the CPAN website, but the easy thing to do is to just use the
-      CPAN shell which does all the hard work for you.
-      To use the CPAN shell to install a module: 
-      </P
-><P
->&#13;        <TT
-CLASS="computeroutput"
->&#13;          <TT
-CLASS="prompt"
->bash#</TT
->
-          <B
-CLASS="command"
->perl -MCPAN -e 'install "&#60;modulename&#62;"'</B
->
-        </TT
->
-      </P
-><P
->&#13;      To do it the hard way: 
-      </P
-><P
->Untar the module tarball -- it should create its own
-      directory</P
-><P
->CD to the directory just created, and enter the following
-      commands: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->perl Makefile.PL</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make test</B
->
-            </TT
->
-          </P
-></LI
-><LI
-><P
->&#13;            <TT
-CLASS="computeroutput"
->&#13;              <TT
-CLASS="prompt"
->bash#</TT
->
-
-              <B
-CLASS="command"
->make install</B
->
-            </TT
->
-          </P
-></LI
-></OL
->
-      </P
-><DIV
-CLASS="warning"
-><P
-></P
-><TABLE
-CLASS="warning"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/warning.gif"
-HSPACE="5"
-ALT="Warning"></TD
 ><TD
 ALIGN="LEFT"
 VALIGN="TOP"
@@ -740,43 +588,412 @@ CLASS="QUOTE"
 ></TR
 ></TABLE
 ></DIV
+><P
+>Perl Modules (minimum version):
+  <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-bundle-bugzilla"
+>Bundle::Bugzilla</A
+>
+        (Will allow you to skip the rest)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-appconfig"
+>AppConfig</A
+>
+        (1.52)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-cgi"
+>CGI</A
+> 
+        (2.88)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-data-dumper"
+>Data::Dumper</A
+> 
+        (any)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-date-format"
+>Date::Format</A
+>
+        (2.21)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-dbi"
+>DBI</A
+> 
+        (1.32)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-dbd-mysql"
+>DBD::mysql</A
+>
+        (2.1010)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-file-spec"
+>File::Spec</A
+>
+        (0.82)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-file-temp"
+>File::Temp</A
+>
+        (any)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-template"
+>Template Toolkit</A
+>
+        (2.08)
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-text-wrap"
+>Text::Wrap</A
+> 
+        (2001.0131)
+      </P
+></LI
+></OL
+>
+
+  and, optionally:
+  <P
+></P
+><OL
+TYPE="1"
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-gd"
+>GD</A
+>
+        (1.20) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-chart-base"
+>Chart::Base</A
+>
+        (0.99c) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-xml-parser"
+>XML::Parser</A
+>
+        (any) for the XML interface
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-gd-graph"
+>GD::Graph</A
+>
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-gd-text-align"
+>GD::Text::Align</A
+>
+        (any) for bug charting
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+HREF="stepbystep.html#install-modules-mime-parser"
+>MIME::Parser</A
+>
+        (any) for the email interface
+      </P
+></LI
+></OL
+>          
+  </P
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN566"
+NAME="install-modules-bundle-bugzilla"
 ></A
->4.1.5.1. DBI</H3
+>4.1.3.1. Bundle::Bugzilla</H3
+><P
+>If you are running at least perl 5.6.1, you can save yourself a lot
+      of time by using Bundle::Bugzilla. This bundle contains every module
+      required to get Bugzilla running. It does not include GD and friends, but
+      these are not required for a base install and can always be added later
+      if the need arises.
+      </P
+><P
+>Assuming your perl was installed with CPAN (most unix installations
+      are), using Bundle::Bugzilla is really easy. Simply follow along with the
+      commands below.
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>bash#</TT
+> <B
+CLASS="command"
+>perl -MCPAN -eshell</B
+>              <A
+NAME="bundle-cpanconfig"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+>
+cpan shell -- CPAN exploration and modules installation (v1.63)
+ReadLine support enabled
+
+<TT
+CLASS="prompt"
+>cpan&#62;</TT
+>
+
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="calloutlist"
+><DL
+COMPACT="COMPACT"
+><DT
+><A
+HREF="stepbystep.html#bundle-cpanconfig"
+><IMG
+SRC="../images/callouts/1.gif"
+HSPACE="0"
+VSPACE="0"
+BORDER="0"
+ALT="(1)"></A
+></DT
+><DD
+>At this point, unless you've used CPAN on this machine before,
+            you'll have to go through a series of configuration steps.
+            </DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-appconfig"
+></A
+>4.1.3.2. AppConfig (1.52)</H3
+><P
+>Dependency for Template Toolkit. We probably don't need to
+      specifically check for it anymore.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-cgi"
+></A
+>4.1.3.3. CGI (2.88)</H3
+><P
+>The CGI module parses form elements and cookies and does many
+      other usefule things. It come as a part of recent perl distributions, but
+      Bugzilla needs a fairly new version.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/CGI.pm/"
+TARGET="_top"
+>http://search.cpan.org/dist/CGI.pm/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/CGI.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/CGI.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-data-dumper"
+></A
+>4.1.3.4. Data::Dumper (any)</H3
+><P
+>The Data::Dumper module provides data structure persistence for
+      Perl (similar to Java's serialization). It comes with later
+      sub-releases of Perl 5.004, but a re-installation just to be sure it's
+      available won't hurt anything.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Data-Dumper/"
+TARGET="_top"
+>http://search.cpan.org/dist/Data-Dumper/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-date-format"
+></A
+>4.1.3.5. TimeDate modules (2.21)</H3
+><P
+>Many of the more common date/time/calendar related Perl modules
+      have been grouped into a bundle similar to the MySQL modules bundle.
+      This bundle is stored on the CPAN under the name TimeDate. 
+      The component module we're most interested in is the Date::Format
+      module, but installing all of them is probably a good idea anyway.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/TimeDate/"
+TARGET="_top"
+>http://search.cpan.org/dist/TimeDate/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-dbi"
+></A
+>4.1.3.6. DBI (1.32)</H3
 ><P
 >The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
       correctly the DBI module should be a breeze. It's a mixed Perl/C
       module, but Perl's MakeMaker system simplifies the C compilation
       greatly.</P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
-NAME="AEN569"
-></A
->4.1.5.2. Data::Dumper</H3
 ><P
->The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.</P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBI/"
+TARGET="_top"
+>http://search.cpan.org/dist/DBI/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://dbi.perl.org/doc/"
+TARGET="_top"
+>http://dbi.perl.org/doc/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN572"
+NAME="install-modules-dbd-mysql"
 ></A
->4.1.5.3. MySQL-related modules</H3
+>4.1.3.7. MySQL-related modules</H3
 ><P
 >The Perl/MySQL interface requires a few mutually-dependent Perl
       modules. These modules are grouped together into the the
@@ -794,34 +1011,161 @@ NAME="AEN572"
       with a null password should find itself with sufficient access to run
       tests on the 'test' database which MySQL created upon installation.
       </P
-></DIV
-><DIV
-CLASS="section"
-><H3
-CLASS="section"
-><A
-NAME="AEN577"
-></A
->4.1.5.4. TimeDate modules</H3
 ><P
->Many of the more common date/time/calendar related Perl modules
-      have been grouped into a bundle similar to the MySQL modules bundle.
-      This bundle is stored on the CPAN under the name TimeDate. 
-      The component module we're most interested in is the Date::Format
-      module, but installing all of them is probably a good idea anyway.
-      </P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBD-mysql/"
+TARGET="_top"
+>http://search.cpan.org/dist/DBD-mysql/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pod"
+TARGET="_top"
+>http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pod</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN580"
+NAME="install-file-spec"
 ></A
->4.1.5.5. GD (optional)</H3
+>4.1.3.8. File::Spec (0.82)</H3
+><P
+>File::Spec is a perl module that allows file operations, such as
+      generating full path names, to work cross platform.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/File-Spec/"
+TARGET="_top"
+>http://search.cpan.org/dist/File-Spec/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/File/Spec.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/File/Spec.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-file-temp"
+></A
+>4.1.3.9. File::Temp (any)</H3
+><P
+>File::Temp is used to generate a temporary filename that is
+      guaranteed to be unique. It comes as a standard part of perl
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/File-Spec/"
+TARGET="_top"
+>http://search.cpan.org/dist/File-Spec/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/File/Temp.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/File/Temp.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-template"
+></A
+>4.1.3.10. Template Toolkit (2.08)</H3
+><P
+>When you install Template Toolkit, you'll get asked various
+      questions about features to enable. The defaults are fine, except
+      that it is recommended you use the high speed XS Stash of the Template
+      Toolkit, in order to achieve best performance.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Template-Toolkit/"
+TARGET="_top"
+>http://search.cpan.org/dist/Template-Toolkit/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz"
+TARGET="_top"
+>http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.template-toolkit.org/docs.html"
+TARGET="_top"
+>http://www.template-toolkit.org/docs.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-text-wrap"
+></A
+>4.1.3.11. Text::Wrap (2001.0131)</H3
+><P
+>Text::Wrap is designed to proved intelligent text wrapping.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Text-Tabs+Wrap/"
+TARGET="_top"
+>http://search.cpan.org/dist/Text-Tabs+Wrap/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd"
+></A
+>4.1.3.12. GD (1.20) [optional]</H3
 ><P
 >The GD library was written by Thomas Boutell a long while ago to
-      programatically generate images in C. Since then it's become the
+      programmatically generate images in C. Since then it's become the
       defacto standard for programmatic image construction. The Perl bindings
       to it found in the GD library are used on millions of web pages to
       generate graphs on the fly. That's what Bugzilla will be using it for
@@ -865,36 +1209,224 @@ CLASS="classname"
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The version of the GD perl module you need is very closely tied
+        to the <TT
+CLASS="classname"
+>libgd</TT
+> version installed on your system.
+        If you have a version 1.x of <TT
+CLASS="classname"
+>libgd</TT
+> the 2.x
+        versions of the GD perl module won't work for you.
+       </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GD/"
+TARGET="_top"
+>http://search.cpan.org/dist/GD/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://stein.cshl.org/WWW/software/GD/"
+TARGET="_top"
+>http://stein.cshl.org/WWW/software/GD/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN587"
+NAME="install-modules-chart-base"
 ></A
->4.1.5.6. Chart::Base (optional)</H3
+>4.1.3.13. Chart::Base (0.99c) [optional]</H3
 ><P
 >The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
       fetched from CPAN. 
       Note that earlier versions that 0.99c used GIFs, which are no longer
       supported by the latest versions of GD.</P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/Chart/"
+TARGET="_top"
+>http://search.cpan.org/dist/Chart/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Chart.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Chart.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ><DIV
 CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN590"
+NAME="install-modules-xml-parser"
 ></A
->4.1.5.7. Template Toolkit</H3
+>4.1.3.14. XML::Parser (any) [Optional]</H3
 ><P
->When you install Template Toolkit, you'll get asked various
-      questions about features to enable. The defaults are fine, except
-      that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.
+>XML::Parser is used by the <TT
+CLASS="filename"
+>importxml.pl</TT
+>
+      script. You only need it if you are going to be importing bugs (such as
+      for bug moving).  XML::Parser requires that the
+      <TT
+CLASS="classname"
+>expat</TT
+> library is already installed on your machine.
       </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/XML-Parser/"
+TARGET="_top"
+>http://search.cpan.org/dist/XML-Parser/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html"
+TARGET="_top"
+>http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-graph"
+></A
+>4.1.3.15. GD::Graph (any) [Optional]</H3
+><P
+>In addition to GD listed above, the reporting interface of Bugzilla
+      needs to have the GD::Graph module installed.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDGraph/"
+TARGET="_top"
+>http://search.cpan.org/dist/GDGraph/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDGraph/Graph.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/GDGraph/Graph.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-gd-text-align"
+></A
+>4.1.3.16. GD::Text::Align (any) [Optional]</H3
+><P
+>GD::Text::Align, as the name implies, is used to draw aligned
+      strings of text. It is needed by the reporting interface.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDTextUtil/"
+TARGET="_top"
+>http://search.cpan.org/dist/GDTextUtil/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/GDTextUtil/Text/Align.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/GDTextUtil/Text/Align.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-mime-parser"
+></A
+>4.1.3.17. MIME::Parser (any) [Optional]</H3
+><P
+>MIME::Parser is only needed if you want to use the e-mail interface
+      located in the <TT
+CLASS="filename"
+>contrib</TT
+> directory.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/dist/MIME-tools/"
+TARGET="_top"
+>http://search.cpan.org/dist/MIME-tools/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PPM&nbsp;Download&nbsp;Link:&nbsp;<A
+HREF="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip"
+TARGET="_top"
+>http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm"
+TARGET="_top"
+>http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
 ></DIV
 ><DIV
@@ -902,9 +1434,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="sbs-http"
+NAME="install-webserver"
 ></A
->4.1.6. HTTP Server</H2
+>4.1.4. HTTP Server</H2
 ><P
 >You have freedom of choice here, pretty much any web server that
       is capable of running <A
@@ -944,7 +1476,12 @@ VALIGN="TOP"
 >We strongly recommend Apache as the web server to use. The
         Bugzilla Guide installation instructions, in general, assume you are
         using Apache. If you have got Bugzilla working using another webserver,
-        please share your experiences with us.</P
+        please share your experiences with us by filing a bug in <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
+TARGET="_top"
+>Bugzilla Documentation</A
+>.
+        </P
 ></TD
 ></TR
 ></TABLE
@@ -955,9 +1492,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN600"
+NAME="install-bzfiles"
 ></A
->4.1.7. Bugzilla</H2
+>4.1.5. Bugzilla</H2
 ><P
 >You should untar the Bugzilla files into a directory that you're
       willing to make writable by the default web server user (probably 
@@ -1020,178 +1557,88 @@ CLASS="filename"
 >checksetup.pl</TT
 >
       script, which locks down your installation.</P
+><DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The default Bugzilla distribution is not designed to be placed
+        in a <TT
+CLASS="filename"
+>cgi-bin</TT
+> directory (this
+        includes any directory which is configured using the
+        <TT
+CLASS="option"
+>ScriptAlias</TT
+> directive of Apache). This will probably
+        change as part of
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=44659"
+TARGET="_top"
+>bug
+        44659</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN611"
+NAME="install-setupdatabase"
 ></A
->4.1.8. Setting Up the MySQL Database</H2
+>4.1.6. Setting Up the MySQL Database</H2
 ><P
 >After you've gotten all the software installed and working you're
       ready to start preparing the database for its life as the back end to
       a high quality bug tracker.</P
 ><P
->First, you'll want to fix MySQL permissions to allow access from
-      Bugzilla. For the purpose of this Installation section, the Bugzilla
-      username will be 
+>This first thing you'll want to do is make sure you've given the
       <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->, and will have minimal permissions. 
-      </P
-><P
->Begin by giving the MySQL root user a password. MySQL passwords are limited
-      to 16 characters. 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->mysql -u root mysql</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->UPDATE user SET Password=PASSWORD('&#60;new_password&#62;')
-            WHERE user='root';</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->FLUSH PRIVILEGES;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-
-      From this point on, if you need to access MySQL as the MySQL root user,
-      you will need to use 
-      <B
-CLASS="command"
->mysql -u root -p</B
->
-
-      and enter &#60;new_password&#62;. Remember that MySQL user names have
-      nothing to do with Unix user names (login names).</P
-><P
->Next, we use an SQL <B
-CLASS="command"
->GRANT</B
-> command to create a 
-      <SPAN
+>"root"</SPAN
+> user a password as suggested in
+      <A
+HREF="security.html#security-mysql"
+>Section 5.6.2</A
+>. For clarity, these instructions will
+      assume that your MySQL user for Bugzilla will be <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->
-
-      user, and grant sufficient permissions for checksetup.pl, which we'll
-      use later, to work its magic. This also restricts the 
-      <SPAN
+>"bugs_user"</SPAN
+>,
+      the database will be called <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->
-      user to operations within a database called 
-      <SPAN
+>"bugs_db"</SPAN
+> and the password for
+      the <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
->, and only allows the account to connect from 
-      <SPAN
+>"bugs_user"</SPAN
+> user is <SPAN
 CLASS="QUOTE"
->"localhost"</SPAN
->. 
-      Modify it to reflect your setup if you will be connecting from
-      another machine or as a different user.</P
-><P
->Remember to set &#60;bugs_password&#62; to some unique password. 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
-            ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost
-            IDENTIFIED BY '&#60;bugs_password&#62;';</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->FLUSH PRIVILEGES;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
+>"bugs_password"</SPAN
+>. You
+      should, of course, substitute the values you intend to use for your site.
       </P
 ><DIV
 CLASS="note"
@@ -1214,8 +1661,97 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
+>Most people use <SPAN
+CLASS="QUOTE"
+>"bugs"</SPAN
+> for both the user and
+        database name.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>Next, we use an SQL <B
+CLASS="command"
+>GRANT</B
+> command to create a 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+      user, and grant sufficient permissions for checksetup.pl, which we'll
+      use later, to work its magic. This also restricts the 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_user"</SPAN
+>
+      user to operations within a database called 
+      <SPAN
+CLASS="QUOTE"
+>"bugs_db"</SPAN
+>, and only allows the account to connect from 
+      <SPAN
+CLASS="QUOTE"
+>"localhost"</SPAN
+>. 
+      Modify it to reflect your setup if you will be connecting from
+      another machine or as a different user.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+       DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
+       IDENTIFIED BY 'bugs_password';
+<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> FLUSH PRIVILEGES;
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
 >If you are using MySQL 4, the bugs user also needs to be granted
-        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        the <TT
+CLASS="computeroutput"
+>LOCK TABLES</TT
+> and 
+        <TT
+CLASS="computeroutput"
+>CREATE TEMPORARY TABLES</TT
+> permissions.
         </P
 ></TD
 ></TR
@@ -1227,9 +1763,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN649"
+NAME="AEN749"
 ></A
->4.1.9. <TT
+>4.1.7. <TT
 CLASS="filename"
 >checksetup.pl</TT
 ></H2
@@ -1238,10 +1774,11 @@ CLASS="filename"
       <A
 HREF="mailto:holgerschurig@nikocity.de"
 TARGET="_top"
->Holger Schurig </A
+>Holger Schurig</A
 > 
       for writing this script!) 
-      This script is designed to make sure your MySQL database and other
+      This script is designed to make sure your perl modules are the correct
+      version and your MySQL database and other
       configuration options are consistent with the Bugzilla CGI files. 
       It will make sure Bugzilla files and directories have reasonable
       permissions, set up the 
@@ -1250,35 +1787,28 @@ CLASS="filename"
 >data</TT
 >
       directory, and create all the MySQL tables. 
-      <P
-></P
+      </P
 ><TABLE
 BORDER="0"
-><TBODY
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
 ><TR
 ><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="screen"
+>&#13;<TT
 CLASS="prompt"
 >bash#</TT
->
-
-            <B
-CLASS="command"
->./checksetup.pl</B
->
-          </TT
->
-        </TD
+> ./checksetup.pl
+      </PRE
+></FONT
+></TD
 ></TR
-></TBODY
 ></TABLE
 ><P
-></P
->
-
-      The first time you run it, it will create a file called 
+>&#13;      The first time you run it, it will create a file called 
       <TT
 CLASS="filename"
 >localconfig</TT
@@ -1306,7 +1836,7 @@ CLASS="QUOTE"
 >database name: 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_db"</SPAN
 >
           if you're following these directions</P
 ></LI
@@ -1315,7 +1845,7 @@ CLASS="QUOTE"
 >MySQL username: 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_user"</SPAN
 >
           if you're following these directions</P
 ></LI
@@ -1324,9 +1854,12 @@ CLASS="QUOTE"
 >Password for the 
           <SPAN
 CLASS="QUOTE"
->"bugs"</SPAN
+>"bugs_user"</SPAN
 >
-          MySQL account; (&#60;bugs_password&#62;) above</P
+          MySQL account; (<SPAN
+CLASS="QUOTE"
+>"bugs_password"</SPAN
+> above)</P
 ></LI
 ></OL
 >
@@ -1380,9 +1913,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN681"
+NAME="AEN780"
 ></A
->4.1.10. Configuring Bugzilla</H2
+>4.1.8. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 

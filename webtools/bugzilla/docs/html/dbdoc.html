@@ -108,7 +108,7 @@ NAME="dbdoc"
 ><P
 >But Certain Death speaks up -- a tiny voice, from the dark corners
     of the conference room. "I have a concern," the voice hisses from the
-    darkness, "about the use of the word 'verified'.</P
+    darkness, "about the use of the word 'verified'."</P
 ><P
 >The room, previously filled with happy chatter, lapses into
     reverential silence as Certain Death (better known as the Vice President
@@ -135,7 +135,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN2091"
+NAME="AEN2190"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -154,14 +154,12 @@ CLASS="QUOTE"
 >"tinyint"</SPAN
 >
 
-      entry in MySQL. I recommend you refer to the MySQL documentation,
-      available at 
+      entry in MySQL. I recommend you refer to the
       <A
-HREF="http://www.mysql.com/doc.html"
+HREF="http://www.mysql.com/documentation/"
 TARGET="_top"
->MySQL.com</A
+>MySQL documentation</A
 >
-
       . Below are the basics you need to know about the Bugzilla database.
       Check the chart above for more details.</P
 ><P
@@ -205,7 +203,7 @@ HREF="http://www.mysql.com/php/manual.php3?section=Privilege_system"
 TARGET="_top"
 >MySQL
             searchable documentation</A
->.            
+>.
             </P
 ></LI
 ><LI
@@ -251,7 +249,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN2118"
+NAME="AEN2217"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -322,14 +320,14 @@ CLASS="programlisting"
 ><P
 CLASS="literallayout"
 ><br>
-&nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
+&nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
 descriptive&nbsp;names&nbsp;that&nbsp;make&nbsp;it&nbsp;fairly&nbsp;trivial&nbsp;to&nbsp;figure&nbsp;out&nbsp;their&nbsp;jobs.<br>
 <br>
-attachments:&nbsp;This&nbsp;table&nbsp;stores&nbsp;all&nbsp;attachments&nbsp;to&nbsp;bugs.&nbsp;&nbsp;It&nbsp;tends&nbsp;to&nbsp;be&nbsp;your<br>
+attachments:&nbsp;This&nbsp;table&nbsp;stores&nbsp;all&nbsp;attachments&nbsp;to&nbsp;bugs.&nbsp;It&nbsp;tends&nbsp;to&nbsp;be&nbsp;your<br>
 largest&nbsp;table,&nbsp;yet&nbsp;also&nbsp;generally&nbsp;has&nbsp;the&nbsp;fewest&nbsp;entries&nbsp;because&nbsp;file<br>
 attachments&nbsp;are&nbsp;so&nbsp;(relatively)&nbsp;large.<br>
 <br>
-bugs:&nbsp;&nbsp;This&nbsp;is&nbsp;the&nbsp;core&nbsp;of&nbsp;your&nbsp;system.&nbsp;&nbsp;The&nbsp;bugs&nbsp;table&nbsp;stores&nbsp;most&nbsp;of&nbsp;the<br>
+bugs:&nbsp;&nbsp;This&nbsp;is&nbsp;the&nbsp;core&nbsp;of&nbsp;your&nbsp;system.&nbsp;The&nbsp;bugs&nbsp;table&nbsp;stores&nbsp;most&nbsp;of&nbsp;the<br>
 current&nbsp;information&nbsp;about&nbsp;a&nbsp;bug,&nbsp;with&nbsp;the&nbsp;exception&nbsp;of&nbsp;the&nbsp;info&nbsp;stored&nbsp;in&nbsp;the<br>
 other&nbsp;tables.<br>
 <br>
@@ -337,26 +335,26 @@ bugs_activity:&nbsp;&nbsp;This&nbsp;stores&nbsp;information&nbsp;regarding&nbsp;
 when&nbsp;--&nbsp;a&nbsp;history&nbsp;file.<br>
 <br>
 cc:&nbsp;&nbsp;This&nbsp;tiny&nbsp;table&nbsp;simply&nbsp;stores&nbsp;all&nbsp;the&nbsp;CC&nbsp;information&nbsp;for&nbsp;any&nbsp;bug&nbsp;which&nbsp;has<br>
-any&nbsp;entries&nbsp;in&nbsp;the&nbsp;CC&nbsp;field&nbsp;of&nbsp;the&nbsp;bug.&nbsp;&nbsp;Note&nbsp;that,&nbsp;like&nbsp;most&nbsp;other&nbsp;tables&nbsp;in<br>
+any&nbsp;entries&nbsp;in&nbsp;the&nbsp;CC&nbsp;field&nbsp;of&nbsp;the&nbsp;bug.&nbsp;Note&nbsp;that,&nbsp;like&nbsp;most&nbsp;other&nbsp;tables&nbsp;in<br>
 Bugzilla,&nbsp;it&nbsp;does&nbsp;not&nbsp;refer&nbsp;to&nbsp;users&nbsp;by&nbsp;their&nbsp;user&nbsp;names,&nbsp;but&nbsp;by&nbsp;their&nbsp;unique<br>
 userid,&nbsp;stored&nbsp;as&nbsp;a&nbsp;primary&nbsp;key&nbsp;in&nbsp;the&nbsp;profiles&nbsp;table.<br>
 <br>
 components:&nbsp;This&nbsp;stores&nbsp;the&nbsp;programs&nbsp;and&nbsp;components&nbsp;(or&nbsp;products&nbsp;and<br>
-components,&nbsp;in&nbsp;newer&nbsp;Bugzilla&nbsp;parlance)&nbsp;for&nbsp;Bugzilla.&nbsp;&nbsp;Curiously,&nbsp;the&nbsp;"program"<br>
+components,&nbsp;in&nbsp;newer&nbsp;Bugzilla&nbsp;parlance)&nbsp;for&nbsp;Bugzilla.&nbsp;Curiously,&nbsp;the&nbsp;"program"<br>
 (product)&nbsp;field&nbsp;is&nbsp;the&nbsp;full&nbsp;name&nbsp;of&nbsp;the&nbsp;product,&nbsp;rather&nbsp;than&nbsp;some&nbsp;other&nbsp;unique<br>
 identifier,&nbsp;like&nbsp;bug_id&nbsp;and&nbsp;user_id&nbsp;are&nbsp;elsewhere&nbsp;in&nbsp;the&nbsp;database.<br>
 <br>
 dependencies:&nbsp;Stores&nbsp;data&nbsp;about&nbsp;those&nbsp;cool&nbsp;dependency&nbsp;trees.<br>
 <br>
-fielddefs:&nbsp;&nbsp;A&nbsp;nifty&nbsp;table&nbsp;that&nbsp;defines&nbsp;other&nbsp;tables.&nbsp;&nbsp;For&nbsp;instance,&nbsp;when&nbsp;you<br>
+fielddefs:&nbsp;&nbsp;A&nbsp;nifty&nbsp;table&nbsp;that&nbsp;defines&nbsp;other&nbsp;tables.&nbsp;For&nbsp;instance,&nbsp;when&nbsp;you<br>
 submit&nbsp;a&nbsp;form&nbsp;that&nbsp;changes&nbsp;the&nbsp;value&nbsp;of&nbsp;"AssignedTo"&nbsp;this&nbsp;table&nbsp;allows<br>
 translation&nbsp;to&nbsp;the&nbsp;actual&nbsp;field&nbsp;name&nbsp;"assigned_to"&nbsp;for&nbsp;entry&nbsp;into&nbsp;MySQL.<br>
 <br>
-groups:&nbsp;&nbsp;defines&nbsp;bitmasks&nbsp;for&nbsp;groups.&nbsp;&nbsp;A&nbsp;bitmask&nbsp;is&nbsp;a&nbsp;number&nbsp;that&nbsp;can&nbsp;uniquely<br>
-identify&nbsp;group&nbsp;memberships.&nbsp;&nbsp;For&nbsp;instance,&nbsp;say&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to<br>
+groups:&nbsp;&nbsp;defines&nbsp;bitmasks&nbsp;for&nbsp;groups.&nbsp;A&nbsp;bitmask&nbsp;is&nbsp;a&nbsp;number&nbsp;that&nbsp;can&nbsp;uniquely<br>
+identify&nbsp;group&nbsp;memberships.&nbsp;For&nbsp;instance,&nbsp;say&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to<br>
 tweak&nbsp;parameters&nbsp;is&nbsp;assigned&nbsp;a&nbsp;value&nbsp;of&nbsp;"1",&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to&nbsp;edit<br>
 users&nbsp;is&nbsp;assigned&nbsp;a&nbsp;"2",&nbsp;and&nbsp;the&nbsp;group&nbsp;that&nbsp;is&nbsp;allowed&nbsp;to&nbsp;create&nbsp;new&nbsp;groups&nbsp;is<br>
-assigned&nbsp;the&nbsp;bitmask&nbsp;of&nbsp;"4".&nbsp;&nbsp;By&nbsp;uniquely&nbsp;combining&nbsp;the&nbsp;group&nbsp;bitmasks&nbsp;(much<br>
+assigned&nbsp;the&nbsp;bitmask&nbsp;of&nbsp;"4".&nbsp;By&nbsp;uniquely&nbsp;combining&nbsp;the&nbsp;group&nbsp;bitmasks&nbsp;(much<br>
 like&nbsp;the&nbsp;chmod&nbsp;command&nbsp;in&nbsp;UNIX,)&nbsp;you&nbsp;can&nbsp;identify&nbsp;a&nbsp;user&nbsp;is&nbsp;allowed&nbsp;to&nbsp;tweak<br>
 parameters&nbsp;and&nbsp;create&nbsp;groups,&nbsp;but&nbsp;not&nbsp;edit&nbsp;users,&nbsp;by&nbsp;giving&nbsp;him&nbsp;a&nbsp;bitmask&nbsp;of<br>
 "5",&nbsp;or&nbsp;a&nbsp;user&nbsp;allowed&nbsp;to&nbsp;edit&nbsp;users&nbsp;and&nbsp;create&nbsp;groups,&nbsp;but&nbsp;not&nbsp;tweak<br>
@@ -371,15 +369,15 @@ keywords:&nbsp;Unlike&nbsp;what&nbsp;you'd&nbsp;think,&nbsp;this&nbsp;table&nbsp
 associated&nbsp;with&nbsp;which&nbsp;bug&nbsp;id's.<br>
 <br>
 logincookies:&nbsp;This&nbsp;stores&nbsp;every&nbsp;login&nbsp;cookie&nbsp;ever&nbsp;assigned&nbsp;to&nbsp;you&nbsp;for&nbsp;every<br>
-machine&nbsp;you've&nbsp;ever&nbsp;logged&nbsp;into&nbsp;Bugzilla&nbsp;from.&nbsp;&nbsp;Curiously,&nbsp;it&nbsp;never&nbsp;does&nbsp;any<br>
-housecleaning&nbsp;--&nbsp;I&nbsp;see&nbsp;cookies&nbsp;in&nbsp;this&nbsp;file&nbsp;I've&nbsp;not&nbsp;used&nbsp;for&nbsp;months.&nbsp;&nbsp;However,<br>
+machine&nbsp;you've&nbsp;ever&nbsp;logged&nbsp;into&nbsp;Bugzilla&nbsp;from.&nbsp;Curiously,&nbsp;it&nbsp;never&nbsp;does&nbsp;any<br>
+housecleaning&nbsp;--&nbsp;I&nbsp;see&nbsp;cookies&nbsp;in&nbsp;this&nbsp;file&nbsp;I've&nbsp;not&nbsp;used&nbsp;for&nbsp;months.&nbsp;However,<br>
 since&nbsp;Bugzilla&nbsp;never&nbsp;expires&nbsp;your&nbsp;cookie&nbsp;(for&nbsp;convenience'&nbsp;sake),&nbsp;it&nbsp;makes<br>
 sense.<br>
 <br>
 longdescs:&nbsp;&nbsp;The&nbsp;meat&nbsp;of&nbsp;bugzilla&nbsp;--&nbsp;here&nbsp;is&nbsp;where&nbsp;all&nbsp;user&nbsp;comments&nbsp;are&nbsp;stored!<br>
 You've&nbsp;only&nbsp;got&nbsp;2^24&nbsp;bytes&nbsp;per&nbsp;comment&nbsp;(it's&nbsp;a&nbsp;mediumtext&nbsp;field),&nbsp;so&nbsp;speak<br>
 sparingly&nbsp;--&nbsp;that's&nbsp;only&nbsp;the&nbsp;amount&nbsp;of&nbsp;space&nbsp;the&nbsp;Old&nbsp;Testament&nbsp;from&nbsp;the&nbsp;Bible<br>
-would&nbsp;take&nbsp;(uncompressed,&nbsp;16&nbsp;megabytes).&nbsp;&nbsp;Each&nbsp;comment&nbsp;is&nbsp;keyed&nbsp;to&nbsp;the<br>
+would&nbsp;take&nbsp;(uncompressed,&nbsp;16&nbsp;megabytes).&nbsp;Each&nbsp;comment&nbsp;is&nbsp;keyed&nbsp;to&nbsp;the<br>
 bug_id&nbsp;to&nbsp;which&nbsp;it's&nbsp;attached,&nbsp;so&nbsp;the&nbsp;order&nbsp;is&nbsp;necessarily&nbsp;chronological,&nbsp;for<br>
 comments&nbsp;are&nbsp;played&nbsp;back&nbsp;in&nbsp;the&nbsp;order&nbsp;in&nbsp;which&nbsp;they&nbsp;are&nbsp;received.<br>
 <br>
@@ -387,12 +385,12 @@ milestones:&nbsp;&nbsp;Interesting&nbsp;that&nbsp;milestones&nbsp;are&nbsp;assoc
 in&nbsp;this&nbsp;table,&nbsp;but&nbsp;Bugzilla&nbsp;does&nbsp;not&nbsp;yet&nbsp;support&nbsp;differing&nbsp;milestones&nbsp;by<br>
 product&nbsp;through&nbsp;the&nbsp;standard&nbsp;configuration&nbsp;interfaces.<br>
 <br>
-namedqueries:&nbsp;&nbsp;This&nbsp;is&nbsp;where&nbsp;everybody&nbsp;stores&nbsp;their&nbsp;"custom&nbsp;queries".&nbsp;&nbsp;Very<br>
+namedqueries:&nbsp;&nbsp;This&nbsp;is&nbsp;where&nbsp;everybody&nbsp;stores&nbsp;their&nbsp;"custom&nbsp;queries".&nbsp;Very<br>
 cool&nbsp;feature;&nbsp;it&nbsp;beats&nbsp;the&nbsp;tar&nbsp;out&nbsp;of&nbsp;having&nbsp;to&nbsp;bookmark&nbsp;each&nbsp;cool&nbsp;query&nbsp;you<br>
 construct.<br>
 <br>
 products:&nbsp;&nbsp;What&nbsp;products&nbsp;you&nbsp;have,&nbsp;whether&nbsp;new&nbsp;bug&nbsp;entries&nbsp;are&nbsp;allowed&nbsp;for&nbsp;the<br>
-product,&nbsp;what&nbsp;milestone&nbsp;you're&nbsp;working&nbsp;toward&nbsp;on&nbsp;that&nbsp;product,&nbsp;votes,&nbsp;etc.&nbsp;&nbsp;It<br>
+product,&nbsp;what&nbsp;milestone&nbsp;you're&nbsp;working&nbsp;toward&nbsp;on&nbsp;that&nbsp;product,&nbsp;votes,&nbsp;etc.&nbsp;It<br>
 will&nbsp;be&nbsp;nice&nbsp;when&nbsp;the&nbsp;components&nbsp;table&nbsp;supports&nbsp;these&nbsp;same&nbsp;features,&nbsp;so&nbsp;you<br>
 could&nbsp;close&nbsp;a&nbsp;particular&nbsp;component&nbsp;for&nbsp;bug&nbsp;entry&nbsp;without&nbsp;having&nbsp;to&nbsp;close&nbsp;an<br>
 entire&nbsp;product...<br>
@@ -427,7 +425,7 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;table;<br>
 mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table;<br>
 <br>
 &nbsp;&nbsp;--&nbsp;note:&nbsp;this&nbsp;is&nbsp;a&nbsp;very&nbsp;bad&nbsp;idea&nbsp;to&nbsp;do&nbsp;on,&nbsp;for&nbsp;instance,&nbsp;the&nbsp;"bugs"&nbsp;table&nbsp;if<br>
-you&nbsp;have&nbsp;50,000&nbsp;bugs.&nbsp;&nbsp;You'll&nbsp;be&nbsp;sitting&nbsp;there&nbsp;a&nbsp;while&nbsp;until&nbsp;you&nbsp;ctrl-c&nbsp;or<br>
+you&nbsp;have&nbsp;50,000&nbsp;bugs.&nbsp;You'll&nbsp;be&nbsp;sitting&nbsp;there&nbsp;a&nbsp;while&nbsp;until&nbsp;you&nbsp;ctrl-c&nbsp;or<br>
 50,000&nbsp;bugs&nbsp;play&nbsp;across&nbsp;your&nbsp;screen.<br>
 <br>
 &nbsp;&nbsp;You&nbsp;can&nbsp;limit&nbsp;the&nbsp;display&nbsp;from&nbsp;above&nbsp;a&nbsp;little&nbsp;with&nbsp;the&nbsp;command,&nbsp;where<br>
@@ -440,7 +438,7 @@ mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table&nbsp;where&nbsp;(column&nbsp;
 mysql&#62;&nbsp;select&nbsp;*&nbsp;from&nbsp;table&nbsp;where&nbsp;(column&nbsp;!=&nbsp;"some&nbsp;info");<br>
 <br>
 &nbsp;&nbsp;Let's&nbsp;take&nbsp;our&nbsp;example&nbsp;from&nbsp;the&nbsp;introduction,&nbsp;and&nbsp;assume&nbsp;you&nbsp;need&nbsp;to&nbsp;change<br>
-the&nbsp;word&nbsp;"verified"&nbsp;to&nbsp;"approved"&nbsp;in&nbsp;the&nbsp;resolution&nbsp;field.&nbsp;&nbsp;We&nbsp;know&nbsp;from&nbsp;the<br>
+the&nbsp;word&nbsp;"verified"&nbsp;to&nbsp;"approved"&nbsp;in&nbsp;the&nbsp;resolution&nbsp;field.&nbsp;We&nbsp;know&nbsp;from&nbsp;the<br>
 above&nbsp;information&nbsp;that&nbsp;the&nbsp;resolution&nbsp;is&nbsp;likely&nbsp;to&nbsp;be&nbsp;stored&nbsp;in&nbsp;the&nbsp;"bugs"<br>
 table.&nbsp;Note&nbsp;we'll&nbsp;need&nbsp;to&nbsp;change&nbsp;a&nbsp;little&nbsp;perl&nbsp;code&nbsp;as&nbsp;well&nbsp;as&nbsp;this&nbsp;database<br>
 change,&nbsp;but&nbsp;I&nbsp;won't&nbsp;plunge&nbsp;into&nbsp;that&nbsp;in&nbsp;this&nbsp;document.&nbsp;Let's&nbsp;verify&nbsp;the<br>
@@ -451,10 +449,10 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;bugs<br>
 &nbsp;&nbsp;(exceedingly&nbsp;long&nbsp;output&nbsp;truncated&nbsp;here)<br>
 |&nbsp;bug_status|&nbsp;enum('UNCONFIRMED','NEW','ASSIGNED','REOPENED','RESOLVED','VERIFIED','CLOSED')||MUL&nbsp;|&nbsp;UNCONFIRMED||<br>
 <br>
-&nbsp;&nbsp;Sorry&nbsp;about&nbsp;that&nbsp;long&nbsp;line.&nbsp;&nbsp;We&nbsp;see&nbsp;from&nbsp;this&nbsp;that&nbsp;the&nbsp;"bug&nbsp;status"&nbsp;column&nbsp;is<br>
+&nbsp;&nbsp;Sorry&nbsp;about&nbsp;that&nbsp;long&nbsp;line.&nbsp;We&nbsp;see&nbsp;from&nbsp;this&nbsp;that&nbsp;the&nbsp;"bug&nbsp;status"&nbsp;column&nbsp;is<br>
 an&nbsp;"enum&nbsp;field",&nbsp;which&nbsp;is&nbsp;a&nbsp;MySQL&nbsp;peculiarity&nbsp;where&nbsp;a&nbsp;string&nbsp;type&nbsp;field&nbsp;can<br>
-only&nbsp;have&nbsp;certain&nbsp;types&nbsp;of&nbsp;entries.&nbsp;&nbsp;While&nbsp;I&nbsp;think&nbsp;this&nbsp;is&nbsp;very&nbsp;cool,&nbsp;it's&nbsp;not<br>
-standard&nbsp;SQL.&nbsp;&nbsp;Anyway,&nbsp;we&nbsp;need&nbsp;to&nbsp;add&nbsp;the&nbsp;possible&nbsp;enum&nbsp;field&nbsp;entry<br>
+only&nbsp;have&nbsp;certain&nbsp;types&nbsp;of&nbsp;entries.&nbsp;While&nbsp;I&nbsp;think&nbsp;this&nbsp;is&nbsp;very&nbsp;cool,&nbsp;it's&nbsp;not<br>
+standard&nbsp;SQL.&nbsp;Anyway,&nbsp;we&nbsp;need&nbsp;to&nbsp;add&nbsp;the&nbsp;possible&nbsp;enum&nbsp;field&nbsp;entry<br>
 'APPROVED'&nbsp;by&nbsp;altering&nbsp;the&nbsp;"bugs"&nbsp;table.<br>
 <br>
 mysql&#62;&nbsp;ALTER&nbsp;table&nbsp;bugs&nbsp;CHANGE&nbsp;bug_status&nbsp;bug_status<br>
@@ -470,15 +468,15 @@ mysql&#62;&nbsp;show&nbsp;columns&nbsp;from&nbsp;bugs;<br>
 <br>
 &nbsp;&nbsp;you'll&nbsp;see&nbsp;that&nbsp;the&nbsp;bug_status&nbsp;field&nbsp;has&nbsp;an&nbsp;extra&nbsp;"APPROVED"&nbsp;enum&nbsp;that's<br>
 available!&nbsp;&nbsp;Cool&nbsp;thing,&nbsp;too,&nbsp;is&nbsp;that&nbsp;this&nbsp;is&nbsp;reflected&nbsp;on&nbsp;your&nbsp;query&nbsp;page&nbsp;as<br>
-well&nbsp;--&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;new&nbsp;status.&nbsp;&nbsp;But&nbsp;how's&nbsp;it&nbsp;fit&nbsp;into&nbsp;the&nbsp;existing<br>
+well&nbsp;--&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;new&nbsp;status.&nbsp;But&nbsp;how's&nbsp;it&nbsp;fit&nbsp;into&nbsp;the&nbsp;existing<br>
 scheme&nbsp;of&nbsp;things?<br>
 &nbsp;&nbsp;Looks&nbsp;like&nbsp;you&nbsp;need&nbsp;to&nbsp;go&nbsp;back&nbsp;and&nbsp;look&nbsp;for&nbsp;instances&nbsp;of&nbsp;the&nbsp;word&nbsp;"verified"<br>
 in&nbsp;the&nbsp;perl&nbsp;code&nbsp;for&nbsp;Bugzilla&nbsp;--&nbsp;wherever&nbsp;you&nbsp;find&nbsp;"verified",&nbsp;change&nbsp;it&nbsp;to<br>
 "approved"&nbsp;and&nbsp;you're&nbsp;in&nbsp;business&nbsp;(make&nbsp;sure&nbsp;that's&nbsp;a&nbsp;case-insensitive&nbsp;search).<br>
 Although&nbsp;you&nbsp;can&nbsp;query&nbsp;by&nbsp;the&nbsp;enum&nbsp;field,&nbsp;you&nbsp;can't&nbsp;give&nbsp;something&nbsp;a&nbsp;status<br>
-of&nbsp;"APPROVED"&nbsp;until&nbsp;you&nbsp;make&nbsp;the&nbsp;perl&nbsp;changes.&nbsp;&nbsp;&nbsp;Note&nbsp;that&nbsp;this&nbsp;change&nbsp;I<br>
+of&nbsp;"APPROVED"&nbsp;until&nbsp;you&nbsp;make&nbsp;the&nbsp;perl&nbsp;changes.&nbsp;Note&nbsp;that&nbsp;this&nbsp;change&nbsp;I<br>
 mentioned&nbsp;can&nbsp;also&nbsp;be&nbsp;done&nbsp;by&nbsp;editing&nbsp;checksetup.pl,&nbsp;which&nbsp;automates&nbsp;a&nbsp;lot&nbsp;of<br>
-this.&nbsp;&nbsp;But&nbsp;you&nbsp;need&nbsp;to&nbsp;know&nbsp;this&nbsp;stuff&nbsp;anyway,&nbsp;right?<br>
+this.&nbsp;But&nbsp;you&nbsp;need&nbsp;to&nbsp;know&nbsp;this&nbsp;stuff&nbsp;anyway,&nbsp;right?<br>
 	</P
 ></DIV
 ></DIV

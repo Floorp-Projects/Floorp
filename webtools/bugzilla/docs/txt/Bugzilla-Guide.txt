@@ -102,11 +102,13 @@ The Bugzilla Team
    Glossary
 
    List of Figures
-   4-1. Other File::Temp error messages
-   4-2. Patch for File::Temp in Perl 5.6.0
+   4-1. Set Max Packet Size in MySQL
+   4-2. Other File::Temp error messages
+   4-3. Patch for File::Temp in Perl 5.6.0
 
    List of Examples
-   4-1. .htaccess files for Apache
+   4-1. Installing perl modules with CPAN
+   4-2. .htaccess files for Apache
    5-1. Upgrading using CVS
    5-2. Upgrading using the tarball
    5-3. Upgrading using patches
@@ -178,16 +180,16 @@ Chapter 1. About This Guide
    of these mirrors to make sure you are reading an up-to-date version of
    the Guide.
 
-   The newest version of this guide can always be found at bugzilla.org;
-   including documentation for past releases and the current development
-   version.
+   The newest version of this guide can always be found at
+   http://www.bugzilla.org; including documentation for past releases and
+   the current development version.
 
    The documentation for the most recent stable release of Bugzilla can
    also be found at The Linux Documentation Project.
 
    The latest version of this document can always be checked out via CVS.
-   Please follow the instructions available at the Mozilla CVS page, and
-   check out the mozilla/webtools/bugzilla/docs/ subtree.
+   Please follow the Mozilla CVS instructions and check out the
+   mozilla/webtools/bugzilla/docs/ subtree.
 
    The Bugzilla Guide is currently only available in English. If you
    would like to volunteer to translate it, please contact Dave Miller.
@@ -234,7 +236,7 @@ Chapter 1. About This Guide
    Thanks also go to the following people for significant contributions
    to this documentation (in alphabetical order): Andrew Pearson, Ben
    FrantzDale, Eric Hanson, Gervase Markham, Joe Robins, Kevin Brannen,
-   Ron Teitelbaum, Spencer Smith, Zach Liption .
+   Martin Wulffeld, Ron Teitelbaum, Spencer Smith, Zach Liption .
      _________________________________________________________________
 
 1.5. Document Conventions
@@ -374,7 +376,7 @@ Chapter 3. Using Bugzilla
    Consult with the administrator responsible for your installation of
    Bugzilla for the URL you should use to access it. If you're
    test-driving Bugzilla, use this URL:
-   http://landfill.bugzilla.org/bugzilla-tip/
+   http://landfill.bugzilla.org/bugzilla-tip/.
 
     1. Click the "Open a new Bugzilla account" link, enter your email
        address and, optionally, your name in the spaces provided, then
@@ -472,7 +474,8 @@ Chapter 3. Using Bugzilla
 
    The Bugzilla Search page is is the interface where you can find any
    bug report, comment, or patch currently in the Bugzilla system. You
-   can play with it here: landfill.bugzilla.org/bugzilla-tip/query.cgi .
+   can play with it here:
+   http://landfill.bugzilla.org/bugzilla-tip/query.cgi.
 
    The Search page has controls for selecting different possible values
    for all of the fields in a bug, as described above. Once you've
@@ -673,64 +676,50 @@ Chapter 4. Installation
 
 4.1. Step-by-step Install
 
-4.1.1. Introduction
-
-   Bugzilla has been successfully installed under Solaris, Linux, and
-   Win32. Win32 is not yet officially supported, but many people have got
-   it working fine. Please see Section 4.3.1 for further advice on
-   getting Bugzilla to work on Microsoft Windows.
-     _________________________________________________________________
-
-4.1.2. Package List
+   Bugzilla has been successfully installed under many different
+   operating systems including almost all Unix clones and Microsoft
+   Windows. Many operating systems have utilities that make installation
+   easier or quirks that make it harder. We have tried to collect that
+   information in Section 4.3, so be sure to check out that section
+   before you start your installation.
 
    Note
 
-   If you are running the very most recent version of Perl and MySQL
-   (both the executables and development libraries) on your system, you
-   can skip these manual installation steps for the Perl modules by using
-   Bundle::Bugzilla; see Using Bundle::Bugzilla instead of manually
-   installing Perl modules.
-
-   The software packages necessary for the proper running of Bugzilla
-   (with download links) are:
-
-    1. MySQL database server (3.23.41 or greater)
-    2. Perl (5.6, 5.6.1 is recommended if you wish to use
-       Bundle::Bugzilla)
-    3. Perl Modules (minimum version):
-         a. Template (v2.08)
-         b. File::Temp (1.804) (Prerequisite for Template)
-         c. AppConfig (1.52)
-         d. Text::Wrap (2001.0131)
-         e. File::Spec (0.82)
-         f. Data::Dumper (any)
-         g. DBD::mysql (2.1010)
-         h. DBI (1.32)
-         i. Date::Parse (2.21)
-         j. CGI (2.88)
-       and, optionally:
-         a. GD (1.20) for bug charting
-         b. GD::Graph (any) for bug charting
-         c. GD::Text::Align (any) for bug charting
-         d. Chart::Base (0.99c) for bug charting
-         e. XML::Parser (any) for the XML interface
-         f. MIME::Parser (any) for the email interface
-    4. The web server of your choice. Apache is highly recommended.
+   Windows is one of those operating systems that has many quirks and is
+   not yet officially supported by the Bugzilla team. If you wish to
+   install Bugzilla on Windows, be sure to see Section 4.3.1.
 
    Warning
 
-   It is a good idea, while installing Bugzilla, to ensure that there is
-   some kind of firewall between you and the rest of the Internet,
-   because your machine may be insecure for periods during the install.
-   Many installation steps require an active Internet connection to
-   complete, but you must take care to ensure that at no point is your
-   machine vulnerable to an attack.
+   While installing Bugzilla, it is a good idea to ensure that there is
+   some kind of firewall between you and the rest of the Internet as your
+   machine may be insecure for periods during the install. Many
+   installation steps require an active Internet connection to complete,
+   but you must take care to ensure that at no point is your machine
+   vulnerable to an attack.
+
+   This guide assumes that you already have your operating system
+   installed, network configured, and have administrative access to the
+   shell on the machine you are installing Bugzilla onto. It is possible
+   to install and run Bugzilla without administrative access, but you
+   have to either make sure all the required software is installed or get
+   somebody with administrative access to install it for you.
+
+   The listing below is a basic step-by-step list. More information can
+   be found in the sections below. Minimum versions will be included in
+   parenthesis where appropriate.
+    1. Install MySQL (3.23.41)
+    2. Install Perl (5.6)
+    3. Install Perl Modules
+    4. Install a Webserver
+    5. Put Bugzilla in the Webspace
+    6. Setup the MySQL Database
      _________________________________________________________________
 
-4.1.3. MySQL
+4.1.1. MySQL
 
-   Visit the MySQL homepage at www.mysql.com to grab and install the
-   latest stable release of the server.
+   Visit the MySQL homepage at http://www.mysql.com to grab and install
+   the latest stable release of the server.
 
    Note
 
@@ -740,71 +729,68 @@ Chapter 4. Installation
    directory as an option to configure if you build MySQL from source
    yourself.
 
-   If you install from something other than an RPM or Debian package, you
-   will need to add mysqld to your init scripts so the server daemon will
-   come back up whenever your machine reboots. Further discussion of UNIX
-   init sequences are beyond the scope of this guide.
+   If you install from something other than a packaging/installation
+   system (such as .rpm, .dep, .exe, or .msi) you will need to configure
+   your system so the MySQL server daemon will come back up whenever your
+   machine reboots.
 
-   Change your init script to start mysqld with the ability to accept
-   large packets. By default, mysqld only accepts packets up to 64K long.
-   This limits the size of attachments you may put on bugs. If you add -O
-   max_allowed_packet=1M to the command that starts mysqld (or
-   safe_mysqld), then you will be able to have attachments up to about 1
-   megabyte. There is a Bugzilla parameter for maximum attachment size;
-   you should configure it to match the value you choose here.
+   If you wish to have attachments larger than 64K, you will have to
+   configure MySQL to accept large packets. This is done by adding the
+   text in Figure 4-1 to your my.conf file. There is also a parameter in
+   Bugzilla for setting the maximum allowable attachment size. You should
+   set this value to be slightly larger than that parameter.
 
-   If you plan on running Bugzilla and MySQL on the same machine,
-   consider using the --skip-networking option in the init script. This
-   enhances security by preventing network access to MySQL.
+   Figure 4-1. Set Max Packet Size in MySQL
+[mysqld]
+# Allow packets up to 1M
+set-variable = max_allowed_packet=1M
+
+   If you are running Bugzilla and MySQL on the same machine, you may
+   also wish to utilize the skip-networking option as mentioned in
+   Section 5.6.2 for the added security.
      _________________________________________________________________
 
-4.1.4. Perl
+4.1.2. Perl
 
    Any machine that doesn't have Perl on it is a sad machine indeed. Perl
-   can be got in source form from perl.com for the rare *nix systems
-   which don't have it. Although Bugzilla runs with perl 5.6, it's a good
+   can be got in source form from http://www.perl.com. There are also
+   binary versions available for many platforms, most of which are linked
+   to from perl.com. Although Bugzilla runs with perl 5.6, it's a good
    idea to be up to the very latest version if you can when running
    Bugzilla. As of this writing, that is Perl version 5.8.
-
-   Tip
-
-   You can skip the following Perl module installation steps by
-   installing Bundle::Bugzilla from CPAN, which installs all required
-   modules for you.
-
-   bash# perl -MCPAN -e 'install "Bundle::Bugzilla"'
-
-   Bundle::Bugzilla doesn't include GD, Chart::Base, or MIME::Parser,
-   which are not essential to a basic Bugzilla install. If installing
-   this bundle fails, you should install each module individually to
-   isolate the problem.
      _________________________________________________________________
 
-4.1.5. Perl Modules
+4.1.3. Perl Modules
 
-   All Perl modules can be found on the Comprehensive Perl Archive
-   Network (CPAN). The CPAN servers have a real tendency to bog down, so
-   please use mirrors.
+   Perl modules can be found using CPAN on Unix based systems or PPM on
+   Win32. The root servers have a real tendency to bog down, so please
+   use mirrors.
 
-   Quality, general Perl module installation instructions can be found on
-   the CPAN website, but the easy thing to do is to just use the CPAN
-   shell which does all the hard work for you. To use the CPAN shell to
-   install a module:
+   Good instuctions can be found for using each of these services on
+   their respective websites. The basics can be found in Example 4-1 for
+   CPAN and Section 4.3.1.2 for PPM.
 
-   bash# perl -MCPAN -e 'install "<modulename>"'
+   Example 4-1. Installing perl modules with CPAN
 
-   To do it the hard way:
+   The easy way:
+bash# perl -MCPAN -e 'install "<modulename>"'
 
-   Untar the module tarball -- it should create its own directory
+   Or the hard way:
+bash# tar xzvf <module>.tar.gz      (1)
+bash# cd <module>                   (2)
+bash# perl Makefile.PL
+bash# make
+bash# make test
+bash# make install
 
-   CD to the directory just created, and enter the following commands:
+   (1) 
+          This assumes that you've already downloaded the <module>.tar.gz
+          to the current working directory.
+   (2) 
+          The process of untaring the module as defined in (1) will
+          create the <module> directory.
 
-    1. bash# perl Makefile.PL
-    2. bash# make
-    3. bash# make test
-    4. bash# make install
-
-   Warning
+   Tip
 
    Many people complain that Perl modules will not install for them. Most
    times, the error messages complain that they are missing a file in
@@ -815,25 +801,115 @@ Chapter 4. Installation
    permissions issues; if you are the local UNIX sysadmin, please consult
    the newsgroup/mailing list for further assistance or hire someone to
    help you out.
+
+   Perl Modules (minimum version):
+
+    1. Bundle::Bugzilla (Will allow you to skip the rest)
+    2. AppConfig (1.52)
+    3. CGI (2.88)
+    4. Data::Dumper (any)
+    5. Date::Format (2.21)
+    6. DBI (1.32)
+    7. DBD::mysql (2.1010)
+    8. File::Spec (0.82)
+    9. File::Temp (any)
+   10. Template Toolkit (2.08)
+   11. Text::Wrap (2001.0131)
+
+   and, optionally:
+
+    1. GD (1.20) for bug charting
+    2. Chart::Base (0.99c) for bug charting
+    3. XML::Parser (any) for the XML interface
+    4. GD::Graph (any) for bug charting
+    5. GD::Text::Align (any) for bug charting
+    6. MIME::Parser (any) for the email interface
      _________________________________________________________________
 
-4.1.5.1. DBI
+4.1.3.1. Bundle::Bugzilla
 
-   The DBI module is a generic Perl module used the MySQL-related
-   modules. As long as your Perl installation was done correctly the DBI
-   module should be a breeze. It's a mixed Perl/C module, but Perl's
-   MakeMaker system simplifies the C compilation greatly.
+   If you are running at least perl 5.6.1, you can save yourself a lot of
+   time by using Bundle::Bugzilla. This bundle contains every module
+   required to get Bugzilla running. It does not include GD and friends,
+   but these are not required for a base install and can always be added
+   later if the need arises.
+
+   Assuming your perl was installed with CPAN (most unix installations
+   are), using Bundle::Bugzilla is really easy. Simply follow along with
+   the commands below.
+bash# perl -MCPAN -eshell               (1)
+cpan shell -- CPAN exploration and modules installation (v1.63)
+ReadLine support enabled
+
+cpan>
+
+
+   (1) 
+          At this point, unless you've used CPAN on this machine before,
+          you'll have to go through a series of configuration steps.
      _________________________________________________________________
 
-4.1.5.2. Data::Dumper
+4.1.3.2. AppConfig (1.52)
+
+   Dependency for Template Toolkit. We probably don't need to
+   specifically check for it anymore.
+     _________________________________________________________________
+
+4.1.3.3. CGI (2.88)
+
+   The CGI module parses form elements and cookies and does many other
+   usefule things. It come as a part of recent perl distributions, but
+   Bugzilla needs a fairly new version.
+
+           CPAN Download Page: http://search.cpan.org/dist/CGI.pm/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/CGI.zip
+           Documentation: http://www.perldoc.com/perl5.8.0/lib/CGI.html
+     _________________________________________________________________
+
+4.1.3.4. Data::Dumper (any)
 
    The Data::Dumper module provides data structure persistence for Perl
    (similar to Java's serialization). It comes with later sub-releases of
    Perl 5.004, but a re-installation just to be sure it's available won't
    hurt anything.
+
+           CPAN Download Page: http://search.cpan.org/dist/Data-Dumper/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/Data-Dumper.zip
+           Documentation: http://www.perldoc.com/perl5.8.0/lib/Data/Dumpe
+   r.html
      _________________________________________________________________
 
-4.1.5.3. MySQL-related modules
+4.1.3.5. TimeDate modules (2.21)
+
+   Many of the more common date/time/calendar related Perl modules have
+   been grouped into a bundle similar to the MySQL modules bundle. This
+   bundle is stored on the CPAN under the name TimeDate. The component
+   module we're most interested in is the Date::Format module, but
+   installing all of them is probably a good idea anyway.
+
+           CPAN Download Page: http://search.cpan.org/dist/TimeDate/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/TimeDate.zip
+           Documentation: http://search.cpan.org/dist/TimeDate/lib/Date/F
+   ormat.pm
+     _________________________________________________________________
+
+4.1.3.6. DBI (1.32)
+
+   The DBI module is a generic Perl module used the MySQL-related
+   modules. As long as your Perl installation was done correctly the DBI
+   module should be a breeze. It's a mixed Perl/C module, but Perl's
+   MakeMaker system simplifies the C compilation greatly.
+
+           CPAN Download Page: http://search.cpan.org/dist/DBI/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/DBI.zip
+           Documentation: http://dbi.perl.org/doc/
+     _________________________________________________________________
+
+4.1.3.7. MySQL-related modules
 
    The Perl/MySQL interface requires a few mutually-dependent Perl
    modules. These modules are grouped together into the the
@@ -850,21 +926,66 @@ Chapter 4. Installation
    A host of 'localhost' should be fine and a testing user of 'test' with
    a null password should find itself with sufficient access to run tests
    on the 'test' database which MySQL created upon installation.
+
+           CPAN Download Page: http://search.cpan.org/dist/DBD-mysql/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/DBD-Mysql.zip
+           Documentation: http://search.cpan.org/dist/DBD-mysql/lib/DBD/m
+   ysql.pod
      _________________________________________________________________
 
-4.1.5.4. TimeDate modules
+4.1.3.8. File::Spec (0.82)
 
-   Many of the more common date/time/calendar related Perl modules have
-   been grouped into a bundle similar to the MySQL modules bundle. This
-   bundle is stored on the CPAN under the name TimeDate. The component
-   module we're most interested in is the Date::Format module, but
-   installing all of them is probably a good idea anyway.
+   File::Spec is a perl module that allows file operations, such as
+   generating full path names, to work cross platform.
+
+           CPAN Download Page: http://search.cpan.org/dist/File-Spec/
+           PPM Download Page: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/File-Spec.zip
+           Documentation: http://www.perldoc.com/perl5.8.0/lib/File/Spec.
+   html
      _________________________________________________________________
 
-4.1.5.5. GD (optional)
+4.1.3.9. File::Temp (any)
+
+   File::Temp is used to generate a temporary filename that is guaranteed
+   to be unique. It comes as a standard part of perl
+
+           CPAN Download Page: http://search.cpan.org/dist/File-Spec/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/File-Spec.zip
+           Documentation: http://www.perldoc.com/perl5.8.0/lib/File/Temp.
+   html
+     _________________________________________________________________
+
+4.1.3.10. Template Toolkit (2.08)
+
+   When you install Template Toolkit, you'll get asked various questions
+   about features to enable. The defaults are fine, except that it is
+   recommended you use the high speed XS Stash of the Template Toolkit,
+   in order to achieve best performance.
+
+           CPAN Download Page: http://search.cpan.org/dist/Template-Toolk
+   it/
+           PPM Download Link: http://openinteract.sourceforge.net/ppmpack
+   ages/5.6/Template-Toolkit.tar.gz
+           Documentation: http://www.template-toolkit.org/docs.html
+     _________________________________________________________________
+
+4.1.3.11. Text::Wrap (2001.0131)
+
+   Text::Wrap is designed to proved intelligent text wrapping.
+
+           CPAN Download Page: http://search.cpan.org/dist/Text-Tabs+Wrap
+   /
+           Documentation: http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.
+   html
+     _________________________________________________________________
+
+4.1.3.12. GD (1.20) [optional]
 
    The GD library was written by Thomas Boutell a long while ago to
-   programatically generate images in C. Since then it's become the
+   programmatically generate images in C. Since then it's become the
    defacto standard for programmatic image construction. The Perl
    bindings to it found in the GD library are used on millions of web
    pages to generate graphs on the fly. That's what Bugzilla will be
@@ -877,25 +998,79 @@ Chapter 4. Installation
    be installed on your system, including libpng and libgd. The full
    requirements are listed in the Perl GD library README. If compiling GD
    fails, it's probably because you're missing a required library.
+
+   Tip
+
+   The version of the GD perl module you need is very closely tied to the
+   libgd version installed on your system. If you have a version 1.x of
+   libgd the 2.x versions of the GD perl module won't work for you.
+
+           CPAN Download Page: http://search.cpan.org/dist/GD/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/GD.zip
+           Documentation: http://stein.cshl.org/WWW/software/GD/
      _________________________________________________________________
 
-4.1.5.6. Chart::Base (optional)
+4.1.3.13. Chart::Base (0.99c) [optional]
 
    The Chart module provides Bugzilla with on-the-fly charting abilities.
    It can be installed in the usual fashion after it has been fetched
    from CPAN. Note that earlier versions that 0.99c used GIFs, which are
    no longer supported by the latest versions of GD.
+
+           CPAN Download Page: http://search.cpan.org/dist/Chart/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/Chart.zip
      _________________________________________________________________
 
-4.1.5.7. Template Toolkit
+4.1.3.14. XML::Parser (any) [Optional]
 
-   When you install Template Toolkit, you'll get asked various questions
-   about features to enable. The defaults are fine, except that it is
-   recommended you use the high speed XS Stash of the Template Toolkit,
-   in order to achieve best performance.
+   XML::Parser is used by the importxml.pl script. You only need it if
+   you are going to be importing bugs (such as for bug moving).
+   XML::Parser requires that the expat library is already installed on
+   your machine.
+
+           CPAN Download Page: http://search.cpan.org/dist/XML-Parser/
+           Documentation: http://www.perldoc.com/perl5.6.1/lib/XML/Parser
+   .html
      _________________________________________________________________
 
-4.1.6. HTTP Server
+4.1.3.15. GD::Graph (any) [Optional]
+
+   In addition to GD listed above, the reporting interface of Bugzilla
+   needs to have the GD::Graph module installed.
+
+           CPAN Download Page: http://search.cpan.org/dist/GDGraph/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/GDGraph.zip
+           Documentation: http://search.cpan.org/dist/GDGraph/Graph.pm
+     _________________________________________________________________
+
+4.1.3.16. GD::Text::Align (any) [Optional]
+
+   GD::Text::Align, as the name implies, is used to draw aligned strings
+   of text. It is needed by the reporting interface.
+
+           CPAN Download Page: http://search.cpan.org/dist/GDTextUtil/
+           PPM Download Page: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/GDTextUtil.zip
+           Documentation: http://search.cpan.org/dist/GDTextUtil/Text/Ali
+   gn.pm
+     _________________________________________________________________
+
+4.1.3.17. MIME::Parser (any) [Optional]
+
+   MIME::Parser is only needed if you want to use the e-mail interface
+   located in the contrib directory.
+
+           CPAN Download Page: http://search.cpan.org/dist/MIME-tools/
+           PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
+   /6xx-builds-only/MIME-tools.zip
+           Documentation: http://search.cpan.org/dist/MIME-tools/lib/MIME
+   /Parser.pm
+     _________________________________________________________________
+
+4.1.4. HTTP Server
 
    You have freedom of choice here, pretty much any web server that is
    capable of running CGI scripts will work. Section 4.4 has more
@@ -906,10 +1081,11 @@ Chapter 4. Installation
    We strongly recommend Apache as the web server to use. The Bugzilla
    Guide installation instructions, in general, assume you are using
    Apache. If you have got Bugzilla working using another webserver,
-   please share your experiences with us.
+   please share your experiences with us by filing a bug in Bugzilla
+   Documentation.
      _________________________________________________________________
 
-4.1.7. Bugzilla
+4.1.5. Bugzilla
 
    You should untar the Bugzilla files into a directory that you're
    willing to make writable by the default web server user (probably
@@ -928,44 +1104,42 @@ Chapter 4. Installation
    directory writable by your webserver's user. This is a temporary step
    until you run the post-install checksetup.pl script, which locks down
    your installation.
+
+   Caution
+
+   The default Bugzilla distribution is not designed to be placed in a
+   cgi-bin directory (this includes any directory which is configured
+   using the ScriptAlias directive of Apache). This will probably change
+   as part of bug 44659.
      _________________________________________________________________
 
-4.1.8. Setting Up the MySQL Database
+4.1.6. Setting Up the MySQL Database
 
    After you've gotten all the software installed and working you're
    ready to start preparing the database for its life as the back end to
    a high quality bug tracker.
 
-   First, you'll want to fix MySQL permissions to allow access from
-   Bugzilla. For the purpose of this Installation section, the Bugzilla
-   username will be "bugs", and will have minimal permissions.
+   This first thing you'll want to do is make sure you've given the
+   "root" user a password as suggested in Section 5.6.2. For clarity,
+   these instructions will assume that your MySQL user for Bugzilla will
+   be "bugs_user", the database will be called "bugs_db" and the password
+   for the "bugs_user" user is "bugs_password". You should, of course,
+   substitute the values you intend to use for your site.
 
-   Begin by giving the MySQL root user a password. MySQL passwords are
-   limited to 16 characters.
+   Note
 
-   bash# mysql -u root mysql
-   mysql> UPDATE user SET Password=PASSWORD('<new_password>') WHERE
-   user='root';
-   mysql> FLUSH PRIVILEGES;
+   Most people use "bugs" for both the user and database name.
 
-   From this point on, if you need to access MySQL as the MySQL root
-   user, you will need to use mysql -u root -p and enter <new_password>.
-   Remember that MySQL user names have nothing to do with Unix user names
-   (login names).
-
-   Next, we use an SQL GRANT command to create a "bugs" user, and grant
-   sufficient permissions for checksetup.pl, which we'll use later, to
-   work its magic. This also restricts the "bugs" user to operations
-   within a database called "bugs", and only allows the account to
-   connect from "localhost". Modify it to reflect your setup if you will
-   be connecting from another machine or as a different user.
-
-   Remember to set <bugs_password> to some unique password.
-
-   mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
-   ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost IDENTIFIED BY
-   '<bugs_password>';
-   mysql> FLUSH PRIVILEGES;
+   Next, we use an SQL GRANT command to create a "bugs_user" user, and
+   grant sufficient permissions for checksetup.pl, which we'll use later,
+   to work its magic. This also restricts the "bugs_user" user to
+   operations within a database called "bugs_db", and only allows the
+   account to connect from "localhost". Modify it to reflect your setup
+   if you will be connecting from another machine or as a different user.
+mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+       DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
+       IDENTIFIED BY 'bugs_password';
+mysql> FLUSH PRIVILEGES;
 
    Note
 
@@ -973,16 +1147,16 @@ Chapter 4. Installation
    LOCK TABLES and CREATE TEMPORARY TABLES permissions.
      _________________________________________________________________
 
-4.1.9. checksetup.pl
+4.1.7. checksetup.pl
 
    Next, run the magic checksetup.pl script. (Many thanks to Holger
    Schurig for writing this script!) This script is designed to make sure
-   your MySQL database and other configuration options are consistent
-   with the Bugzilla CGI files. It will make sure Bugzilla files and
-   directories have reasonable permissions, set up the data directory,
-   and create all the MySQL tables.
-
-   bash# ./checksetup.pl
+   your perl modules are the correct version and your MySQL database and
+   other configuration options are consistent with the Bugzilla CGI
+   files. It will make sure Bugzilla files and directories have
+   reasonable permissions, set up the data directory, and create all the
+   MySQL tables.
+bash# ./checksetup.pl
 
    The first time you run it, it will create a file called localconfig.
 
@@ -992,9 +1166,10 @@ Chapter 4. Installation
    The connection settings include:
 
     1. server's host: just use "localhost" if the MySQL server is local
-    2. database name: "bugs" if you're following these directions
-    3. MySQL username: "bugs" if you're following these directions
-    4. Password for the "bugs" MySQL account; (<bugs_password>) above
+    2. database name: "bugs_db" if you're following these directions
+    3. MySQL username: "bugs_user" if you're following these directions
+    4. Password for the "bugs_user" MySQL account; ("bugs_password"
+       above)
 
    Once you are happy with the settings, su to the user your web server
    runs as, and re-run checksetup.pl. (Note: on some security-conscious
@@ -1010,7 +1185,7 @@ Chapter 4. Installation
    Bugzilla.
      _________________________________________________________________
 
-4.1.10. Configuring Bugzilla
+4.1.8. Configuring Bugzilla
 
    You should run through the parameters on the Edit Parameters page
    (link in the footer) and set them all to appropriate values. They key
@@ -1122,9 +1297,8 @@ Chapter 4. Installation
    servers available, this is "mail", but you may need to change this.
 
    You can also try using OpenLDAP with Bugzilla, using any of a number
-   of administration tools. You should apply the patch attached this bug:
-   http://bugzilla.mozilla.org/show_bug.cgi?id=158630, then set the
-   following object classes for your users:
+   of administration tools. You should apply the patch attached to bug
+   158630 , then set the following object classes for your users:
 
     1. objectClass: person
     2. objectClass: organizationalPerson
@@ -1191,11 +1365,11 @@ set=ISO-8859-1/i" *.cgi *.pl
    speeds for other users. If your Bugzilla installation is experiencing
    this problem , you may install the Apache module mod_throttle which
    can limit connections by ip-address. You may download this module at
-   http://www.snert.com/Software/mod_throttle/ Follow the instructions to
-   install into your Apache install. This module only functions with the
-   Apache web server! You may use the ThrottleClientIP command provided
-   by this module to accomplish this goal. See the Module Instructions
-   for more information.
+   http://www.snert.com/Software/mod_throttle/. Follow the instructions
+   to install into your Apache install. This module only functions with
+   the Apache web server! You may use the ThrottleClientIP command
+   provided by this module to accomplish this goal. See the Module
+   Instructions for more information.
      _________________________________________________________________
 
 4.3. OS Specific Installation Notes
@@ -1237,7 +1411,7 @@ set=ISO-8859-1/i" *.cgi *.pl
 4.3.1.2. Perl Modules on Win32
 
    Bugzilla on Windows requires the same perl modules found in Section
-   4.1.2. The main difference is that windows uses ppm instead of CPAN.
+   4.1.3. The main difference is that windows uses PPM instead of CPAN.
 C:\perl> ppm <module name>
 
    Note
@@ -1344,7 +1518,7 @@ my $webservergid = '8'
 bash# urpmi perl-mysql
 bash# urpmi perl-chart
 bash# urpmi perl-gd
-bash# urpmi perl-MailTools     (1)
+bash# urpmi perl-MailTools              (1)
 bash# urpmi apache-modules
 
    (1) 
@@ -1369,7 +1543,7 @@ bash# urpmi apache-modules
    Bugzilla. You will have to make sure that Apache is properly
    configured to run the Bugzilla CGI scripts. You also need to make sure
    that the .htaccess files created by ./checksetup.pl (shown in Example
-   4-1 for the curious) are allowed to override Apache's normal access
+   4-2 for the curious) are allowed to override Apache's normal access
    permissions or else important password information may be exposed to
    the Internet.
 
@@ -1396,7 +1570,7 @@ AllowOverride Limit
    For more information on Apache and its directives, see the glossary
    entry on Apache.
 
-   Example 4-1. .htaccess files for Apache
+   Example 4-2. .htaccess files for Apache
 
    $BUGZILLA_HOME/.htaccess
 # don't allow people to retrieve non-cgi executable files or our private data
@@ -1567,9 +1741,9 @@ proc filter_deny { why } {
 
    This is caused by a bug in the version of File::Temp that is
    distributed with perl 5.6.0. Many minor variations of this error have
-   been reported. Examples can be found in Figure 4-1.
+   been reported. Examples can be found in Figure 4-2.
 
-   Figure 4-1. Other File::Temp error messages
+   Figure 4-2. Other File::Temp error messages
 Your vendor has not defined Fcntl macro O_NOINHERIT, used
 at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
 
@@ -1581,9 +1755,9 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
 
    Numerous people have reported that upgrading to version 5.6.1 or
    higher solved the problem for them. A less involved fix is to apply
-   the patch in Figure 4-2. The patch is also available as a patch file.
+   the patch in Figure 4-3. The patch is also available as a patch file.
 
-   Figure 4-2. Patch for File::Temp in Perl 5.6.0
+   Figure 4-3. Patch for File::Temp in Perl 5.6.0
 --- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
 +++ File/Temp.pm        Thu Feb  6 16:26:23 2003
 @@ -205,6 +205,7 @@
@@ -1953,10 +2127,10 @@ Chapter 5. Administering Bugzilla
        modify
     2. Maximum Votes per person: Setting this field to "0" disables
        voting.
-    3. Maximum Votes a person can put on a single bug": It should
-       probably be some number lower than the "Maximum votes per person".
-       Don't set this field to "0" if "Maximum votes per person" is
-       non-zero; that doesn't make any sense.
+    3. Maximum Votes a person can put on a single bug: It should probably
+       be some number lower than the "Maximum votes per person". Don't
+       set this field to "0" if "Maximum votes per person" is non-zero;
+       that doesn't make any sense.
     4. Number of votes a bug in this product needs to automatically get
        out of the UNCONFIRMED state: Setting this field to "0" disables
        the automatic move of bugs from UNCONFIRMED to NEW.
@@ -2624,7 +2798,7 @@ patching file globals.pl
 5.10.3. Perforce SCM
 
    You can find the project page for Bugzilla and Teamtrack Perforce
-   integration (p4dti) at: http://www.ravenbrook.com/project/p4dti .
+   integration (p4dti) at: http://www.ravenbrook.com/project/p4dti/ .
    "p4dti" is now an officially supported product from Perforce, and you
    can find the "Perforce Public Depot" p4dti page at
    http://public.perforce.com/public/perforce/p4dti/index.html .
@@ -2834,21 +3008,21 @@ Appendix A. The Bugzilla FAQ
    A.1.1. Where can I find information about Bugzilla?
 
    You can stay up-to-date with the latest Bugzilla information at
-   http://www.bugzilla.org/
+   http://www.bugzilla.org/.
 
    A.1.2. What license is Bugzilla distributed under?
 
    Bugzilla is covered by the Mozilla Public License. See details at
-   http://www.mozilla.org/MPL/
+   http://www.mozilla.org/MPL/.
 
    A.1.3. How do I get commercial support for Bugzilla?
 
    http://bugzilla.org/consulting.html is a list of people and companies
    who have asked us to list them as consultants for Bugzilla.
 
-   www.collab.net offers Bugzilla as part of their standard offering to
-   large projects. They do have some minimum fees that are pretty hefty,
-   and generally aren't interested in small projects.
+   http://www.collab.net/ offers Bugzilla as part of their standard
+   offering to large projects. They do have some minimum fees that are
+   pretty hefty, and generally aren't interested in small projects.
 
    There are several experienced Bugzilla hackers on the mailing
    list/newsgroup who are willing to make themselves available for
@@ -2924,7 +3098,8 @@ Appendix A. The Bugzilla FAQ
 
    There is currently work in progress to make Bugzilla work on
    PostgreSQL and Sybase in the default distribution. You can track the
-   progress of these initiatives in bugs 98304 and 173130 respectively.
+   progress of these initiatives in bug 98304 and bug 173130
+   respectively.
 
    Once both of these are done, adding support for additional database
    servers should be trivial.
@@ -2999,8 +3174,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
    compensate for the change.
 
    There is no GUI for adding fields to Bugzilla at this time. You can
-   follow development of this feature at
-   http://bugzilla.mozilla.org/show_bug.cgi?id=91037
+   follow development of this feature in bug 91037
 
    A.2.7. Does Bugzilla provide any reporting features, metrics, graphs,
    etc? You know, the type of stuff that management likes to see. :)
@@ -3099,7 +3273,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    MySQL, the database back-end for Bugzilla, allows hot-backup of data.
    You can find strategies for dealing with backup considerations at
-   http://www.mysql.com/doc/B/a/Backup.html
+   http://www.mysql.com/doc/B/a/Backup.html.
 
    A.2.17. Can users be on the system while a backup is in progress?
 
@@ -3184,10 +3358,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
    than, only new bugs. How do I do it?
 
    Try Klaas Freitag's excellent patch for "whineatassigned"
-   functionality. You can find it at
-   http://bugzilla.mozilla.org/show_bug.cgi?id=6679. This patch is
-   against an older version of Bugzilla, so you must apply the diffs
-   manually.
+   functionality. You can find it in bug 6679. This patch is against an
+   older version of Bugzilla, so you must apply the diffs manually.
 
    A.4.4. I don't like/want to use Procmail to hand mail off to
    bug_email.pl. What alternatives do I have?
@@ -3342,7 +3514,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    I reckon TimeDate and Data::Dumper come with the activeperl. You can
    check the ActiveState site for packages for installation through PPM.
-   http://www.activestate.com/Packages/
+   http://www.activestate.com/Packages/.
 
 7. Bugzilla Usage
 
@@ -3426,10 +3598,9 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
    A.8.3. How can I change the default priority to a null value? For
    instance, have the default priority be "---" instead of "P2"?
 
-   This is well-documented here:
-   http://bugzilla.mozilla.org/show_bug.cgi?id=49862. Ultimately, it's as
-   easy as adding the "---" priority field to your localconfig file in
-   the appropriate area, re-running checksetup.pl, and then changing the
+   This is well-documented in bug 49862. Ultimately, it's as easy as
+   adding the "---" priority field to your localconfig file in the
+   appropriate area, re-running checksetup.pl, and then changing the
    default priority in your browser using "editparams.cgi".
 
    A.8.4. What's the best way to submit patches? What guidelines should I
@@ -3516,7 +3687,7 @@ B.2. MySQL Bugzilla Database Introduction
 
    But Certain Death speaks up -- a tiny voice, from the dark corners of
    the conference room. "I have a concern," the voice hisses from the
-   darkness, "about the use of the word 'verified'.
+   darkness, "about the use of the word 'verified'."
 
    The room, previously filled with happy chatter, lapses into
    reverential silence as Certain Death (better known as the Vice
@@ -3546,9 +3717,8 @@ B.2.1. Bugzilla Database Basics
    internals of MySQL, and if it weren't for this executive order from
    the Vice President you couldn't care less about the difference between
    a "bigint" and a "tinyint" entry in MySQL. I recommend you refer to
-   the MySQL documentation, available at MySQL.com . Below are the basics
-   you need to know about the Bugzilla database. Check the chart above
-   for more details.
+   the MySQL documentation . Below are the basics you need to know about
+   the Bugzilla database. Check the chart above for more details.
 
     1. To connect to your database:
        bash# mysql -u root
@@ -3603,16 +3773,16 @@ B.2.1.1. Bugzilla Database Tables
 | watch             |
 +-------------------+
 
-     Here's an overview of what each table does.  Most columns in each ta
-   ble have
+     Here's an overview of what each table does. Most columns in each tab
+   le have
    descriptive names that make it fairly trivial to figure out their jobs
    .
-   attachments: This table stores all attachments to bugs.  It tends to b
-   e your
+   attachments: This table stores all attachments to bugs. It tends to be
+    your
    largest table, yet also generally has the fewest entries because file
    attachments are so (relatively) large.
-   bugs:  This is the core of your system.  The bugs table stores most of
-    the
+   bugs:  This is the core of your system. The bugs table stores most of
+   the
    current information about a bug, with the exception of the info stored
     in the
    other tables.
@@ -3621,33 +3791,33 @@ B.2.1.1. Bugzilla Database Tables
    when -- a history file.
    cc:  This tiny table simply stores all the CC information for any bug
    which has
-   any entries in the CC field of the bug.  Note that, like most other ta
-   bles in
+   any entries in the CC field of the bug. Note that, like most other tab
+   les in
    Bugzilla, it does not refer to users by their user names, but by their
     unique
    userid, stored as a primary key in the profiles table.
    components: This stores the programs and components (or products and
-   components, in newer Bugzilla parlance) for Bugzilla.  Curiously, the
-   "program"
+   components, in newer Bugzilla parlance) for Bugzilla. Curiously, the "
+   program"
    (product) field is the full name of the product, rather than some othe
    r unique
    identifier, like bug_id and user_id are elsewhere in the database.
    dependencies: Stores data about those cool dependency trees.
-   fielddefs:  A nifty table that defines other tables.  For instance, wh
-   en you
+   fielddefs:  A nifty table that defines other tables. For instance, whe
+   n you
    submit a form that changes the value of "AssignedTo" this table allows
    translation to the actual field name "assigned_to" for entry into MySQ
    L.
-   groups:  defines bitmasks for groups.  A bitmask is a number that can
-   uniquely
-   identify group memberships.  For instance, say the group that is allow
-   ed to
+   groups:  defines bitmasks for groups. A bitmask is a number that can u
+   niquely
+   identify group memberships. For instance, say the group that is allowe
+   d to
    tweak parameters is assigned a value of "1", the group that is allowed
     to edit
    users is assigned a "2", and the group that is allowed to create new g
    roups is
-   assigned the bitmask of "4".  By uniquely combining the group bitmasks
-    (much
+   assigned the bitmask of "4". By uniquely combining the group bitmasks
+   (much
    like the chmod command in UNIX,) you can identify a user is allowed to
     tweak
    parameters and create groups, but not edit users, by giving him a bitm
@@ -3662,10 +3832,10 @@ B.2.1.1. Bugzilla Database Tables
    associated with which bug id's.
    logincookies: This stores every login cookie ever assigned to you for
    every
-   machine you've ever logged into Bugzilla from.  Curiously, it never do
-   es any
+   machine you've ever logged into Bugzilla from. Curiously, it never doe
+   s any
    housecleaning -- I see cookies in this file I've not used for months.
-    However,
+   However,
    since Bugzilla never expires your cookie (for convenience' sake), it m
    akes
    sense.
@@ -3675,7 +3845,7 @@ B.2.1.1. Bugzilla Database Tables
    peak
    sparingly -- that's only the amount of space the Old Testament from th
    e Bible
-   would take (uncompressed, 16 megabytes).  Each comment is keyed to the
+   would take (uncompressed, 16 megabytes). Each comment is keyed to the
    bug_id to which it's attached, so the order is necessarily chronologic
    al, for
    comments are played back in the order in which they are received.
@@ -3685,14 +3855,14 @@ B.2.1.1. Bugzilla Database Tables
    by
    product through the standard configuration interfaces.
    namedqueries:  This is where everybody stores their "custom queries".
-    Very
+   Very
    cool feature; it beats the tar out of having to bookmark each cool que
    ry you
    construct.
    products:  What products you have, whether new bug entries are allowed
     for the
    product, what milestone you're working toward on that product, votes,
-   etc.  It
+   etc. It
    will be nice when the components table supports these same features, s
    o you
    could close a particular component for bug entry without having to clo
@@ -3725,8 +3895,8 @@ B.2.1.1. Bugzilla Database Tables
    mysql> select * from table;
      -- note: this is a very bad idea to do on, for instance, the "bugs"
    table if
-   you have 50,000 bugs.  You'll be sitting there a while until you ctrl-
-   c or
+   you have 50,000 bugs. You'll be sitting there a while until you ctrl-c
+    or
    50,000 bugs play across your screen.
      You can limit the display from above a little with the command, wher
    e
@@ -3737,8 +3907,8 @@ B.2.1.1. Bugzilla Database Tables
    mysql> select * from table where (column != "some info");
      Let's take our example from the introduction, and assume you need to
     change
-   the word "verified" to "approved" in the resolution field.  We know fr
-   om the
+   the word "verified" to "approved" in the resolution field. We know fro
+   m the
    above information that the resolution is likely to be stored in the "b
    ugs"
    table. Note we'll need to change a little perl code as well as this da
@@ -3750,13 +3920,13 @@ B.2.1.1. Bugzilla Database Tables
      (exceedingly long output truncated here)
    | bug_status| enum('UNCONFIRMED','NEW','ASSIGNED','REOPENED','RESOLVED
    ','VERIFIED','CLOSED')||MUL | UNCONFIRMED||
-     Sorry about that long line.  We see from this that the "bug status"
-   column is
+     Sorry about that long line. We see from this that the "bug status" c
+   olumn is
    an "enum field", which is a MySQL peculiarity where a string type fiel
    d can
-   only have certain types of entries.  While I think this is very cool,
-   it's not
-   standard SQL.  Anyway, we need to add the possible enum field entry
+   only have certain types of entries. While I think this is very cool, i
+   t's not
+   standard SQL. Anyway, we need to add the possible enum field entry
    'APPROVED' by altering the "bugs" table.
    mysql> ALTER table bugs CHANGE bug_status bug_status
        -> enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
@@ -3770,8 +3940,8 @@ B.2.1.1. Bugzilla Database Tables
    at's
    available!  Cool thing, too, is that this is reflected on your query p
    age as
-   well -- you can query by the new status.  But how's it fit into the ex
-   isting
+   well -- you can query by the new status. But how's it fit into the exi
+   sting
    scheme of things?
      Looks like you need to go back and look for instances of the word "v
    erified"
@@ -3781,11 +3951,10 @@ B.2.1.1. Bugzilla Database Tables
     search).
    Although you can query by the enum field, you can't give something a s
    tatus
-   of "APPROVED" until you make the perl changes.   Note that this change
-    I
+   of "APPROVED" until you make the perl changes. Note that this change I
    mentioned can also be done by editing checksetup.pl, which automates a
     lot of
-   this.  But you need to know this stuff anyway, right?
+   this. But you need to know this stuff anyway, right?
      _________________________________________________________________
 
 Appendix C. Useful Patches and Utilities for Bugzilla
@@ -3853,7 +4022,7 @@ Appendix D. Bugzilla Variants and Competitors
    I created this section to answer questions about Bugzilla competitors
    and variants, then found a wonderful site which covers an awful lot of
    what I wanted to discuss. Rather than quote it in its entirety, I'll
-   simply refer you here: http://linas.org/linux/pm.html
+   simply refer you here: http://linas.org/linux/pm.html.
      _________________________________________________________________
 
 D.1. Red Hat Bugzilla
@@ -3897,7 +4066,7 @@ D.4. Scarab
    Scarab is a new open source bug-tracking system built using Java
    Servlet technology. It is currently at version 1.0 beta 13.
 
-   URL: http://scarab.tigris.org
+   URL: http://scarab.tigris.org/
 
    This section last updated 18 Jan 2003
      _________________________________________________________________
@@ -3907,7 +4076,7 @@ D.5. Perforce SCM
    Although Perforce isn't really a bug tracker, it can be used as such
    through the "jobs" functionality.
 
-   URL: http://www.perforce.com/perforce/technotes/note052.html 
+   URL: http://www.perforce.com/perforce/technotes/note052.html
 
    This section last updated 27 Jul 2002
      _________________________________________________________________
@@ -4248,7 +4417,7 @@ Appendix E. GNU Free Documentation License
    GNU Free Documentation License from time to time. Such new versions
    will be similar in spirit to the present version, but may differ in
    detail to address new problems or concerns. See
-   http://www.gnu.org/copyleft/ .
+   http://www.gnu.org/copyleft/.
 
    Each version of the License is given a distinguishing version number.
    If the Document specifies that a particular numbered version of this
@@ -4363,7 +4532,7 @@ C
           creating a Product with no Components will create an error in
           Bugzilla).
 
-   CPAN 
+   Comprehensive Perl Archive Network (CPAN)
           CPAN stands for the "Comprehensive Perl Archive Network". CPAN
           maintains a large number of extremely useful Perl modules -
           encapsulated chunks of code for performing a particular task.
@@ -4416,6 +4585,9 @@ M
                 Section 5.6.2.
 
 P
+
+   Perl Package Manager (PPM)
+          http://aspn.activestate.com/ASPN/Downloads/ActivePerl/PPM/
 
    Product
           A Product is a broad category of types of bugs, normally
