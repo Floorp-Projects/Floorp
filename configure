@@ -5238,7 +5238,7 @@ EOF
     if test ! -f "${_LIBIDL_PREFIX_DIR}/include/libIDL/IDL.h"; then
         { echo "configure: error: Cannot find $_LIBIDL_PREFIX_DIR/include/libIDL/IDL.h ." 1>&2; exit 1; }
     fi
-    LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include"
+    LIBIDL_CFLAGS="-I${_LIBIDL_PREFIX_DIR}/include ${GLIB_CFLAGS}"
     LIBIDL_LIBS="${_LIBIDL_PREFIX_DIR}/lib/libidl-0.6.lib ${_GLIB_PREFIX_DIR}/lib/glib-1.2.lib"
 
     case "$target" in
