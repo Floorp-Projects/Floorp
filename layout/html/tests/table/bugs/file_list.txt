@@ -50,6 +50,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug3260.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3263.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3309-1.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3309-2.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug3517.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3718.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug4093.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug4284.html
