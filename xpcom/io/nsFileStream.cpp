@@ -136,7 +136,7 @@ nsOutputStream& nsOutputStream::operator << (short val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
-	sprintf(buf, "%d", val);
+	sprintf(buf, "%hd", val);
 	return (*this << buf);
 }
 
@@ -145,7 +145,7 @@ nsOutputStream& nsOutputStream::operator << (unsigned short val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
-	sprintf(buf, "%ud", val);
+	sprintf(buf, "%hu", val);
 	return (*this << buf);
 }
 
@@ -163,7 +163,25 @@ nsOutputStream& nsOutputStream::operator << (unsigned long val)
 //----------------------------------------------------------------------------------------
 {
 	char buf[30];
-	sprintf(buf, "%uld", val);
+	sprintf(buf, "%lu", val);
+	return (*this << buf);
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputStream& nsOutputStream::operator << (int val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%d", val);
+	return (*this << buf);
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputStream& nsOutputStream::operator << (unsigned int val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%u", val);
 	return (*this << buf);
 }
 

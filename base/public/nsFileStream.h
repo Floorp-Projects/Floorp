@@ -249,6 +249,8 @@ public:
     nsOutputStream&                   operator << (unsigned short val);
     nsOutputStream&                   operator << (long val);
     nsOutputStream&                   operator << (unsigned long val);
+    nsOutputStream&                   operator << (int val);
+    nsOutputStream&                   operator << (unsigned int val);
 
     // Support manipulators
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
@@ -513,6 +515,10 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (unsigned long val)
                                         { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (int val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned int val)
+                                        { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
 
@@ -544,6 +550,10 @@ public:
     nsOutputStream&                   operator << (long val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (unsigned long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (int val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned int val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
@@ -593,6 +603,10 @@ public:
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (unsigned long val)
                                         { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (int val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned int val)
+                                        { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
 
@@ -632,6 +646,10 @@ public:
     nsOutputStream&                   operator << (long val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (unsigned long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (int val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned int val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
@@ -696,6 +714,10 @@ public:
     nsOutputStream&                   operator << (long val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (unsigned long val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (int val)
+                                        { return nsOutputStream::operator << (val); }
+    nsOutputStream&                   operator << (unsigned int val)
                                         { return nsOutputStream::operator << (val); }
     nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
                                         { return nsOutputStream::operator << (pf); }
