@@ -31,7 +31,7 @@ is available from the DevEdge page at:
 
     http://developer.netscape.com/tech/directory/
 
-You will also need Perl v5.005, available at http://www.perl.com/.  Earlier
+You will also need Perl v5.004, available at http://www.perl.com/.  Earlier
 versions of Perl will NOT work with the binaries.  If you wish to use v5.004,
 you will need to compile PerLDAP from source.
 
