@@ -46,6 +46,14 @@ enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfi
     void Alert(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg);
 
     /**
+     * Puts up a dialog with OK button, and
+     * a message with a single checkbox.
+     * @return the value of the checkbox.
+     */
+    boolean AlertCheck(in nsIDOMWindow inParent, in wstring inDialogTitle, in wstring inMsg,
+                         in wstring inCheckMsg);
+
+    /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */

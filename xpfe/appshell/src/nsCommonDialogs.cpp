@@ -73,6 +73,39 @@ NS_IMETHODIMP nsCommonDialogs::Alert(nsIDOMWindow *inParent,  const PRUnichar *i
 	return rv;
 }
 
+
+
+NS_IMETHODIMP nsCommonDialogs::AlertCheck(nsIDOMWindow *inParent,  const PRUnichar *inWindowTitle,const PRUnichar *inMsg, const PRUnichar *inCheckMsg, PRBool *outCheckValue)
+{
+	nsresult rv;
+	nsIDialogParamBlock* block = NULL;
+	rv = nsComponentManager::CreateInstance( kDialogParamBlockCID,
+                                                      0,
+                                                      NS_GET_IID(nsIDialogParamBlock),
+                                                      (void**)&block );
+      
+	if ( NS_FAILED( rv ) )
+		return rv;
+	// Stuff in Parameters
+	block->SetInt( eNumberButtons,1 );
+	block->SetString( eMsg, inMsg );
+
+	block->SetString( eDialogTitle, inWindowTitle );
+
+	nsString url( kAlertIconURL );
+
+	block->SetString( eIconURL, url.GetUnicode());
+	block->SetString( eCheckboxMsg, inCheckMsg );
+	block->SetInt(eCheckboxState, *outCheckValue );
+	
+	rv = DoDialog( inParent, block, kPromptURL );
+	
+	block->GetInt(eCheckboxState, outCheckValue  );
+	
+    NS_IF_RELEASE( block );
+	return rv;
+}
+
 NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, PRBool *_retval)
 {
 	nsresult rv;
