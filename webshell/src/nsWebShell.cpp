@@ -1779,7 +1779,6 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
     shell = (nsIWebShell*)mChildren.ElementAt(i);
     if (shell == aFocusedWebShell) {
       if (++i < n) {
-        NS_RELEASE(shell);
         shell = (nsIWebShell*)mChildren.ElementAt(i);
         shell->SetFocus();
         break;
@@ -1790,7 +1789,6 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
       }
     }
   }
-  NS_IF_RELEASE(shell);
  
   return NS_OK;
 }
