@@ -57,7 +57,6 @@
 #include "prprf.h"
 #include "plstr.h"
 #include "prmem.h"
-#include "net.h"
 #include "nsString.h"
 #include <stdio.h>
 
