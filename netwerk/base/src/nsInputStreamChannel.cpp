@@ -68,11 +68,18 @@ nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
     mURI = uri;
     mLoadGroup = group;
     mContentLength = contentLength;
-    nsCAutoString cType(contentType);
-    cType.ToLowerCase();
-    mContentType = cType.ToNewCString();
-    if (mContentType == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (contentType) { 
+        mContentType = nsCRT::strdup(contentType);
+        const char *constContentType = mContentType;
+        if (!constContentType) return NS_ERROR_OUT_OF_MEMORY;
+        char* semicolon = PL_strchr(constContentType, ';');
+        CBufDescriptor cbd(constContentType,
+                           PR_TRUE,
+                           semicolon ? (semicolon-constContentType) + 1: PL_strlen(constContentType), // capacity 
+                           semicolon ? (semicolon-constContentType) : PL_strlen(constContentType)); 
+        nsCAutoString(cbd).ToLowerCase(); 
+    } 
     mInputStream = in;
     return NS_OK;
 }
