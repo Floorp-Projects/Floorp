@@ -82,7 +82,8 @@
         E_NO_DISK_SPACE = -627,     /* not eough disk space to install */
         E_CRC_FAILED    = -628,     /* CRC failed */
         E_USAGE_SHOWN   = -629,     /* showed the usage message */
-        E_DIR_NOT_EMPTY = -630      /* destination dir wasn't empty */
+        E_DIR_NOT_EMPTY = -630,     /* destination dir wasn't empty */
+        E_INVALID_PROXY = -631      /* invalid proxy settings */
     };
 
 #endif /* _XI_ERRORS_H_ */

@@ -497,6 +497,7 @@ IsErrFatal(int aErr)
         case E_MKDIR_FAIL:
         case E_OLD_INST:
         case E_DIR_NOT_EMPTY:
+        case E_INVALID_PROXY:
             bFatal = FALSE;
         default:
             break; 
