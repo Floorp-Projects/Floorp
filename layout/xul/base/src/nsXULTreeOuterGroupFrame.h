@@ -41,6 +41,16 @@ class nsCSSFrameConstructor;
 class nsDragOverListener;
 class nsDragAutoScrollTimer;
 
+
+// I want to eventually use a delay so that the user has to hover over
+// the top or bottom of a tree during a drag to get it to auto-scroll, but
+// right now Mac can't handle timers during a drag so I'm punting and the
+// tree will just always scroll when you drag the mouse near the top or
+// bottom. Leaving the code around so that if we ever get this, we'll be
+// good (pinkerton)
+#define USE_TIMER_TO_DELAY_SCROLLING 0
+
+
 enum nsTreeLayoutState {
   eTreeLayoutNormal,
   eTreeLayoutAbort,
@@ -72,82 +82,16 @@ public:
 };
 
 
-/*-----------------------------------------------------------------*/
-
-
-//
-// nsDragAutoScrollTimer
-//
-// A timer class for handling auto-scrolling during drags
-//
-class nsDragAutoScrollTimer : public nsITimerCallback
-{
-public:
-
-  NS_DECL_ISUPPORTS
-
-  nsDragAutoScrollTimer ( nsXULTreeOuterGroupFrame* inTree )
-      : mPoint(0,0), mDelay(30), mTree(inTree)
-  {
-    NS_INIT_ISUPPORTS();
-  }
-
-  virtual ~nsDragAutoScrollTimer()
-  {
-    if (mTimer)
-      mTimer->Cancel();
-  }
-
-  nsresult Start(const nsPoint& aPoint)
-  {
-    mPoint = aPoint;
-
-    if ( !mTimer ) {
-      nsresult result;
-      mTimer = do_CreateInstance("component://netscape/timer", &result);
-      if (NS_FAILED(result))
-        return result;
-    }
-
-    return mTimer->Init(this, mDelay);
-  }
-
-  nsresult Stop()
-  {
-    nsresult result = NS_OK;
-
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nsnull;
-    }
-
-    return result;
-  }
-
-  nsresult SetDelay(PRUint32 aDelay)
-  {
-    mDelay = aDelay;
-    return NS_OK;
-  }
-
-  NS_IMETHOD_(void) Notify(nsITimer *timer) ;
-  
-private:
-  nsXULTreeOuterGroupFrame *mTree;
-  nsCOMPtr<nsITimer> mTimer;
-  nsPoint         mPoint;
-  PRUint32        mDelay;
-  
-}; // nsDragAutoScrollTimer
-
-
 
 /*-----------------------------------------------------------------*/
 
 
 class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
-                                 public nsIReflowCallback
+                                 public nsIReflowCallback /*, public nsITimerCallback */
 {
+  nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
+  virtual ~nsXULTreeOuterGroupFrame();
+
 public:
   NS_DECL_ISUPPORTS
   
@@ -162,14 +106,14 @@ public:
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
 
-  // nsIReflowCallback
+    // nsIReflowCallback
   NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
 
-protected:
-  nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
-  virtual ~nsXULTreeOuterGroupFrame();
-
-public:
+#if USE_TIMER_TO_DELAY_SCROLLING
+    // nsITimerCallback
+  NS_IMETHOD_(void) Notify(nsITimer *timer) ;
+#endif
+  
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   {
     NeedsRecalc();
@@ -247,28 +191,33 @@ public:
 
   void PostReflowCallback();
 
-protected: // Data Members
+protected:
 
   void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
 
-    // Drag Auto-scrolling. Call HandleAutoScrollTracking() to setup everything and
-    // do the scrolling magic. It can be called multiple times, though the 
-    // setup will only be done once.
+    // Drag Auto-scrolling
   nsresult HandleAutoScrollTracking ( const nsPoint & aPoint );
-  nsresult StartAutoScrollTimer(const nsPoint& aPoint, PRUint32 aDelay);
-  nsresult StopAutoScrollTimer();
-  nsresult DoAutoScroll(const nsPoint& aPoint);
+  PRBool IsInDragScrollRegion ( const nsPoint& inPoint, PRBool* outScrollUp ) ;
+#if USE_TIMER_TO_DELAY_SCROLLING
+  nsresult StopScrollTracking();
+#endif
 
   nsXULTreeRowGroupInfo* mRowGroupInfo;
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRPackedBool mTreeIsSorted;
-
+  
+#if USE_TIMER_TO_DELAY_SCROLLING
+  PRPackedBool mAutoScrollTimerHasFired;
+  PRPackedBool mAutoScrollTimerStarted;
+  nsCOMPtr<nsITimer> mAutoScrollTimer;
+#endif
+  
     // our auto-scroll event listener registered with the content model. See the discussion
     // in Init() for why this is a weak ref.
   nsDragOverListener* mDragOverListener;
-  nsDragAutoScrollTimer* mAutoScrollTimer;      // actually a strong ref
+
   nsTreeLayoutState mTreeLayoutState;
   PRBool mReflowCallbackPosted;
 }; // class nsXULTreeOuterGroupFrame

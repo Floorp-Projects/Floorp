@@ -58,18 +58,21 @@ class nsDragOverListener : public nsIDOMDragListener
 {
 public:
 
-  nsDragOverListener ( nsXULTreeOuterGroupFrame* inTree );
+  nsDragOverListener ( nsXULTreeOuterGroupFrame* inTree )  
+    : mTree ( inTree ) 
+    {  NS_INIT_REFCNT(); }
+
   virtual ~nsDragOverListener() { } ;
 
   NS_DECL_ISUPPORTS
 
     // nsIDOMDragListener
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
+  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent) { return NS_OK; }
   virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
-  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent) { return NS_OK; }
+  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent) { return NS_OK; }
 
 protected:
 
@@ -79,12 +82,6 @@ protected:
 
 
 NS_IMPL_ISUPPORTS2(nsDragOverListener, nsIDOMEventListener, nsIDOMDragListener)
-
-nsDragOverListener :: nsDragOverListener ( nsXULTreeOuterGroupFrame* inTree )
-  : mTree ( inTree )
-{
-  NS_INIT_REFCNT();
-}
 
 
 //
@@ -108,44 +105,6 @@ nsDragOverListener :: DragOver(nsIDOMEvent* aDragEvent)
   return NS_OK;
 
 } // DragOver
-
-
-//
-// DragDrop
-//
-// Make sure we stop the timer when someone drops on our tree.
-//
-nsresult
-nsDragOverListener::DragDrop(nsIDOMEvent* aDragEvent)
-{
-  return mTree->StopAutoScrollTimer();
-}
-
-
-//
-// The rest are stubs
-//
-
-nsresult
-nsDragOverListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-nsresult
-nsDragOverListener::DragEnter(nsIDOMEvent* aDragEvent)
-{
-  return NS_OK;
-}
-nsresult
-nsDragOverListener::DragGesture(nsIDOMEvent* aDragEvent)
-{
-  return NS_OK;
-}
-nsresult
-nsDragOverListener::DragExit(nsIDOMEvent* aDragEvent)
-{
-  return NS_OK;
-}
 
 
 
@@ -180,7 +139,7 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mAutoScrollTimer(nsnull),
+ mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0),
  mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull),
  mTreeLayoutState(eTreeLayoutNormal), mReflowCallbackPosted(PR_FALSE)
 {
@@ -200,8 +159,10 @@ nsXULTreeOuterGroupFrame::~nsXULTreeOuterGroupFrame()
   
   delete mRowGroupInfo;
 
-  StopAutoScrollTimer();
-  NS_IF_RELEASE ( mAutoScrollTimer );
+#if USE_TIMER_TO_DELAY_SCROLLING
+  StopScrollTracking();
+  mAutoScrollTimer = nsnull;
+#endif
 
 }
 
@@ -1113,69 +1074,67 @@ nsXULTreeOuterGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsI
 //
 // HandleAutoScrollTracking
 //
-// Do all the setup for tracking drag auto-scrolling. This can be called repeatedly, but the
-// setup will only be done once. Handles capturing the mouse, starting a timer, and registering
-// ourselves with a manager that will let us know when we're to stop tracking.
 //
 nsresult
 nsXULTreeOuterGroupFrame :: HandleAutoScrollTracking ( const nsPoint & aPoint )
-{  
-  // kick off our timer
-  StartAutoScrollTimer ( aPoint, 30 );
+{
+#if USE_TIMER_TO_DELAY_SCROLLING
+// if we're in the scroll region and there is no timer, start one and return
+// if the timer has started but not yet fired, do nothing
+// if the timer has fired, scroll the direction it tells us.
+  PRBool scrollUp = PR_FALSE;
+  if ( IsInDragScrollRegion(aPoint, &scrollUp) ) {
+    if ( mAutoScrollTimerStarted ) {
+printf("waiting...\n");
+      if ( mAutoScrollTimerHasFired ) {
+        // we're in the right area and the timer has fired, so scroll
+        ScrollToIndex ( scrollUp ? mCurrentIndex - 1 : mCurrentIndex + 1);
+      }
+    }
+    else {
+printf("starting timer\n");
+      // timer hasn't started yet, kick it off. Remember, this timer is a one-shot
+      mAutoScrollTimer = do_CreateInstance("component://netscape/timer");
+      if ( mAutoScrollTimer ) {
+        mAutoScrollTimer->Init(this, 100);
+        mAutoScrollTimerStarted = PR_TRUE;
+      }
+      else
+          return NS_ERROR_FAILURE;
+    }
+  } // we're in an area we care about
+  else
+    StopScrollTracking();
+    
+#else
+
+  PRBool scrollUp = PR_FALSE;
+  if ( IsInDragScrollRegion(aPoint, &scrollUp) )
+    ScrollToIndex ( scrollUp ? mCurrentIndex - 1 : mCurrentIndex + 1);
+    
+#endif
 
   return NS_OK;
 
 } // HandleAutoScrollTracking
 
 
-nsresult
-nsXULTreeOuterGroupFrame::StartAutoScrollTimer(const nsPoint& aPoint, PRUint32 aDelay)
-{
-  nsresult result;
-
-  if (!mAutoScrollTimer) {
-    result = NS_NewAutoScrollTimer(this, &mAutoScrollTimer);
-    if (NS_FAILED(result))
-      return result;
-
-    if (!mAutoScrollTimer)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  result = mAutoScrollTimer->SetDelay(aDelay);
-
-  if (NS_FAILED(result))
-    return result;
-
-  return DoAutoScroll(aPoint); 
-}
-
-
-nsresult
-nsXULTreeOuterGroupFrame::StopAutoScrollTimer()
-{
-  if (mAutoScrollTimer)
-    return mAutoScrollTimer->Stop();
-
-  return NS_OK;
-}
-
-
 //
-// DoAutoScroll
+// IsInDragScrollRegion
 //
-// Given the current mouse position, checks if it is w/in the bounds of the row area
-// of the tree. If not, scroll up or down in increments of one row.
+// Determine if the current point is inside one of the scroll regions near the top
+// or bottom of the tree and will return PR_TRUE if it is, PR_FALSE if it isn't. 
+// If it is, this will set |outScrollUp| to PR_TRUE if the tree should scroll up,
+// PR_FALSE if it should scroll down.
 //
-nsresult
-nsXULTreeOuterGroupFrame::DoAutoScroll ( const nsPoint& aPoint )
+PRBool
+nsXULTreeOuterGroupFrame :: IsInDragScrollRegion ( const nsPoint& inPoint, PRBool* outScrollUp )
 {
-  if ( mAutoScrollTimer )
-    mAutoScrollTimer->Stop();
+  PRBool isInRegion = PR_FALSE;
 
   float pixelsToTwips = 0.0;
   mPresContext->GetPixelsToTwips ( &pixelsToTwips );
-  nsPoint mouseInTwips ( NSToIntRound(aPoint.x * pixelsToTwips), NSToIntRound(aPoint.y * pixelsToTwips) );
+  nsPoint mouseInTwips ( NSToIntRound(inPoint.x * pixelsToTwips), NSToIntRound(inPoint.y * pixelsToTwips) );
   
   // compute the offset to top level in twips and subtract the offset from
   // the mouse coord to put it into our coordinates.
@@ -1195,65 +1154,50 @@ nsXULTreeOuterGroupFrame::DoAutoScroll ( const nsPoint& aPoint )
 
   // scroll if we're inside the bounds of the tree and w/in |kMarginHeight|
   // from the top or bottom of the tree.
-  PRBool continueTracking = PR_TRUE;
   if ( mRect.Contains(mouseInTwips) ) {
-    if ( mouseInTwips.y <= kMarginHeight )
-      ScrollToIndex ( mCurrentIndex - 1 );
-    else if ( mouseInTwips.y > GetAvailableHeight() - kMarginHeight )
-      ScrollToIndex ( mCurrentIndex + 1 );
-    else
-      continueTracking = PR_FALSE;
+    if ( mouseInTwips.y <= kMarginHeight ) {
+      isInRegion = PR_TRUE;
+      if ( outScrollUp )
+        *outScrollUp = PR_TRUE;      // scroll up
+    }
+    else if ( mouseInTwips.y > GetAvailableHeight() - kMarginHeight ) {
+      isInRegion = PR_TRUE;
+      if ( outScrollUp )
+        *outScrollUp = PR_FALSE;     // scroll down
+    }
   }
-  else
-    continueTracking = PR_FALSE;
-
-  // restart the timer
-  if ( mAutoScrollTimer && continueTracking )
-    mAutoScrollTimer->Start(aPoint);
-
-  return NS_OK;
-}
+  
+  return isInRegion;
+  
+} // IsInDragScrollRegion
 
 
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-
-//
-// nsDragAutoScrollTimer Impl
-//
-
-
-NS_IMPL_ISUPPORTS1(nsDragAutoScrollTimer, nsITimerCallback)
-
+#if USE_TIMER_TO_DELAY_SCROLLING
 
 //
 // Notify
 //
-// Called when the timer fires. Tells the tree to try to scroll.
+// Called when the timer fires. Tells the tree that we're ready to scroll if the 
+// mouse is in the right position.
 //
 void
-nsDragAutoScrollTimer :: Notify(nsITimer *timer)
+nsXULTreeOuterGroupFrame :: Notify ( nsITimer* timer )
 {
-printf("-- timer fired\n");
-  mTree->DoAutoScroll(mPoint);
+printf("000 FIRE\n");
+  mAutoScrollTimerHasFired = PR_TRUE;
 }
 
 
 nsresult
-NS_NewAutoScrollTimer(nsXULTreeOuterGroupFrame* aTree, nsDragAutoScrollTimer **aResult)
+nsXULTreeOuterGroupFrame :: StopScrollTracking()
 {
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-  *aResult = new nsDragAutoScrollTimer(aTree);
-
-  if (!aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
+printf("--stop\n");
+  if ( mAutoScrollTimer && mAutoScrollTimerStarted )
+    mAutoScrollTimer->Cancel();
+  mAutoScrollTimerHasFired = PR_FALSE;
+  mAutoScrollTimerStarted = PR_FALSE;
+  
   return NS_OK;
 }
 
+#endif
