@@ -793,9 +793,20 @@ FrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
                   "unexpected frame type");
 #endif
 
-  PL_DHashTableOperate(&mPlaceholderMap,
-                       aPlaceholderFrame->GetOutOfFlowFrame(),
-                       PL_DHASH_REMOVE);
+  /*
+   * nsCSSFrameConstructor::ReconstructDocElementHierarchy calls
+   * ClearPlaceholderFrameMap and _then_ removes the fixed-positioned
+   * frames one by one.  As these are removed they call
+   * UnregisterPlaceholderFrame on their placeholders, but this is all
+   * happening when mPlaceholderMap is already finished, so there is
+   * nothing to do here.  See bug 144479.
+   */
+  if (mPlaceholderMap.ops) {
+    PL_DHashTableOperate(&mPlaceholderMap,
+                         aPlaceholderFrame->GetOutOfFlowFrame(),
+                         PL_DHASH_REMOVE);
+  }
+  
   return NS_OK;
 }
 
