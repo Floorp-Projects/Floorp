@@ -313,7 +313,20 @@ pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
 pref("capability.policy.mailnews.Location.toString", "noAccess");
 pref("capability.policy.mailnews.Range.toString", "noAccess");
+pref("capability.policy.mailnews.Window.blur", "noAccess");
+pref("capability.policy.mailnews.Window.focus", "noAccess");
+pref("capability.policy.mailnews.Window.innerWidth.set", "noAccess");
+pref("capability.policy.mailnews.Window.innerHeight.set", "noAccess");
+pref("capability.policy.mailnews.Window.moveBy", "noAccess");
+pref("capability.policy.mailnews.Window.moveTo", "noAccess");
 pref("capability.policy.mailnews.Window.name.set", "noAccess");
+pref("capability.policy.mailnews.Window.outerHeight.set", "noAccess");
+pref("capability.policy.mailnews.Window.outerWidth.set", "noAccess");
+pref("capability.policy.mailnews.Window.resizeBy", "noAccess");
+pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
+pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
+pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
+pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
 
 ////////////////////////////////////////////////////////////
 pref("capability.principal.codebase.foo.id", "http://www.netscape.com");
