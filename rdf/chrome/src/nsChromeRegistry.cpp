@@ -33,6 +33,7 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID, NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFObserverIID, NS_IRDFOBSERVER_IID);
 static NS_DEFINE_IID(kIRDFIntIID, NS_IRDFINT_IID);
@@ -81,8 +82,8 @@ public:
 protected:
     nsresult EnsureRegistryDataSource();
     nsresult GetSkinOrContentResource(const nsString& aChromeType, nsIRDFResource** aResult);
-    nsresult GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResource);
-    nsresult GetMainChromeFile(nsString& aResult, nsIRDFResource* aChromeResource);
+    nsresult GetChromeResource(nsString& aResult, nsIRDFResource* aChromeResource,
+                               nsIRDFResource* aProperty);
 };
 
 PRUint32 nsChromeRegistry::gRefCnt = 0;
@@ -247,7 +248,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     }
 
     nsString chromeBase;
-    if (NS_FAILED(rv = GetChromeBase(chromeBase, chromeResource))) {
+    if (NS_FAILED(rv = GetChromeResource(chromeBase, chromeResource, kCHROME_base))) {
         NS_ERROR("Unable to retrieve codebase for chrome entry.");
         return rv;
     }
@@ -260,7 +261,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     {
         // Append the "main" entry.
         nsString mainFile;
-        if (NS_FAILED(rv = GetMainChromeFile(mainFile, chromeResource))) {
+        if (NS_FAILED(rv = GetChromeResource(mainFile, chromeResource, kCHROME_main))) {
             NS_ERROR("Unable to retrieve the main file registry entry for a chrome URL.");
             return rv;
         }
@@ -337,7 +338,9 @@ nsChromeRegistry::GetSkinOrContentResource(const nsString& aChromeType,
 }
 
 nsresult 
-nsChromeRegistry::GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResource)
+nsChromeRegistry::GetChromeResource(nsString& aResult, 
+                                    nsIRDFResource* aChromeResource,
+                                    nsIRDFResource* aProperty)
 {
     nsresult rv = NS_OK;
 
@@ -345,21 +348,35 @@ nsChromeRegistry::GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResour
         return NS_ERROR_FAILURE; // Must have a DB to attempt this operation.
 
     nsCOMPtr<nsIRDFNode> chromeBase;
-    if (NS_FAILED(rv = gRegistryDB->GetTarget(kCHROME_base, aChromeResource, PR_TRUE, getter_AddRefs(chromeBase)))) {
+    if (NS_FAILED(rv = gRegistryDB->GetTarget(aChromeResource, aProperty, PR_TRUE, getter_AddRefs(chromeBase)))) {
         NS_ERROR("Unable to obtain a base resource.");
         return rv;
     }
     
-    // Now what?
+    nsCOMPtr<nsIRDFResource> resource;
+    nsCOMPtr<nsIRDFLiteral> literal;
+
+    if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(kIRDFResourceIID,
+                                                     (void**) getter_AddRefs(resource)))) {
+        nsXPIDLCString uri;
+        resource->GetValue( getter_Copies(uri) );
+        aResult = uri;
+    }
+    else if (NS_SUCCEEDED(rv = chromeBase->QueryInterface(kIRDFLiteralIID,
+                                                      (void**) getter_AddRefs(literal)))) {
+        nsXPIDLString s;
+        literal->GetValue( getter_Copies(s) );
+        aResult = s;
+    }
+    else {
+        // This should _never_ happen.
+        NS_ERROR("uh, this isn't a resource or a literal!");
+        return NS_ERROR_UNEXPECTED;
+    }
 
     return NS_OK;
 }
 
-nsresult
-nsChromeRegistry::GetMainChromeFile(nsString& aResult, nsIRDFResource* aChromeResource)
-{
-    return NS_OK;
-}
 
 nsresult
 NS_NewChromeRegistry(nsIChromeRegistry** aResult)
