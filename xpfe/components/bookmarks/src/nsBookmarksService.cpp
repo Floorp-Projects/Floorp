@@ -3084,9 +3084,9 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
     {
       *aType =  kNC_Folder;
     }
-	else
-	{
-#if defined(XP_BEOS)
+    else
+    {
+#ifdef XP_BEOS
       //solution for BeOS - bookmarks are stored as file attributes. 
       PRBool isBookmarkedFlag = PR_FALSE;
       rv = IsBookmarkedInternal(aNode, &isBookmarkedFlag);
