@@ -48,7 +48,6 @@ static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 
-
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
 
@@ -171,11 +170,13 @@ void MRJContext::processAppletTag()
 	info.fBaseURL = NULL;
 	info.fAppletCode = NULL;
 	info.fWidth = info.fHeight = 100;
+	info.fOptionalParameterCount = 0;
+	info.fParams = NULL;
 	
 	struct {
 		PRUint16 fCount;
-		const char*const* fNames;
-		const char*const* fValues;
+		const char* const* fNames;
+		const char* const* fValues;
 	} attributes = { 0, NULL, NULL }, parameters = { 0, NULL, NULL };
 
 	char* baseURL = NULL;
@@ -198,9 +199,8 @@ void MRJContext::processAppletTag()
 				if (baseURL != NULL) {
 					::strcpy(baseURL, documentBase);
 					char* lastSlash = ::strrchr(baseURL, '/');
-					if (lastSlash != NULL) {
+					if (lastSlash != NULL)
 						lastSlash[1] = '\0';	// remove any trailing document name.
-					}
 					
 					// establish a page context for this applet to run in.
 					nsIJVMPluginTagInfo* jvmTagInfo = NULL;
@@ -227,11 +227,19 @@ void MRJContext::processAppletTag()
 		tagInfo->Release();
 	}
 	
+	// if a default codeBase was established, use it here.
+	if (baseURL == NULL && mCodeBase != NULL) {
+		baseURL = mCodeBase;
+		mCodeBase = NULL;
+	}
+	
 	// assume that all arguments might be optional.
 	int optionalArgIndex = 0;
 	info.fParams = new JMLIBOptionalParams[attributes.fCount + parameters.fCount];
+	if (info.fParams == NULL)
+		goto done;
 
-	// process attributes.
+	// process APPLET/EMBED tag attributes.
 	for (int i = 0; i < attributes.fCount; i++) {
 		const char* name = attributes.fNames[i];
 		const char* value = attributes.fValues[i];
@@ -319,14 +327,15 @@ void MRJContext::processAppletTag()
 		pageAttributes.codeBase = baseURL;
 		mPage = findPage(pageAttributes);
 		
-		// keep the codeBase around for later.			
-		mCodeBase = baseURL;
+		// keep the codeBase around for later.
+		setCodeBase(baseURL);
 
 		status = ::JMNewAppletLocatorFromInfo(&mLocator, mSessionRef, &info, NULL);
 	} else {
 		::DebugStr("\pNeed a baseURL (CODEBASE)!");
 	}
-	
+
+done:
 	if (info.fBaseURL != NULL)
 		::JMDisposeTextRef(info.fBaseURL);
 	if (info.fAppletCode != NULL)
@@ -632,26 +641,38 @@ static nsresult getURL(nsISupports* peer, const char* url, const char* target)
 	return result;
 }
 
-void AsyncMessage::send()
+void AsyncMessage::send(Boolean async)
 {
 	// submit the message, and wait for the message to be executed asynchronously.
-	mSession->sendMessage(this);
+	mSession->sendMessage(this, async);
 }
 
 class GetURLMessage : public AsyncMessage {
 	MRJPluginInstance* mPluginInstance;
-	const char* mURL;
-	const char* mTarget;
+	char* mURL;
+	char* mTarget;
 public:
 	GetURLMessage(MRJPluginInstance* pluginInstance, const char* url, const char* target);
+	~GetURLMessage();
 
 	virtual void execute();
 };
 
 GetURLMessage::GetURLMessage(MRJPluginInstance* pluginInstance, const char* url, const char* target)
 	:	AsyncMessage(pluginInstance->getSession()),
-		mPluginInstance(pluginInstance), mURL(url), mTarget(target)
+		mPluginInstance(pluginInstance), mURL(::strdup(url)), mTarget(::strdup(target))
 {
+	NS_ADDREF(mPluginInstance);
+}
+
+GetURLMessage::~GetURLMessage()
+{
+	if (mURL != NULL)
+		delete[] mURL;
+	if (mTarget != NULL)
+		delete[] mTarget;
+
+	NS_RELEASE(mPluginInstance);
 }
 
 void GetURLMessage::execute()
@@ -659,13 +680,19 @@ void GetURLMessage::execute()
 	// get the URL.
 	nsIPluginInstance* pluginInstance = mPluginInstance;
 	nsresult result = thePluginManager->GetURL(pluginInstance, mURL, mTarget);
+	delete this;
 }
 
 void MRJContext::showURL(const char* url, const char* target)
 {
 	if (thePluginManager != NULL) {
-		GetURLMessage message(mPluginInstance, url, target);
-		message.send();
+#if 0
+		GetURLMessage* message = new GetURLMessage(mPluginInstance, url, target);
+		message->send(true);
+#else
+		nsIPluginInstance* pluginInstance = mPluginInstance;
+		thePluginManager->GetURL(pluginInstance, url, target);
+#endif
 	}
 }
 
@@ -916,7 +943,8 @@ void MRJContext::idle(short modifiers)
 
 void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 {
-	if (pluginWindow != NULL) {
+	// don't do anything if the AWTContext hasn't been created yet.
+	if (mContext != NULL && pluginWindow != NULL) {
 		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
 			mPluginWindow = pluginWindow;
 			mCache.window = NULL;
@@ -1137,6 +1165,13 @@ void MRJContext::releaseFrames()
 			}
 		}
 	}
+}
+
+void MRJContext::setCodeBase(char* codeBase)
+{
+	if (mCodeBase != NULL)
+		delete[] mCodeBase;
+	mCodeBase = codeBase;
 }
 
 const char* MRJContext::getCodeBase()
