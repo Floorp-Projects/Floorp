@@ -1,0 +1,4 @@
+BW_TESTDIR=`pwd`
+BW_TESTFILE=BWTestClass.lst
+BW_LOGDIR=`pwd`/log
+BW_LOGFILE=BWTest.log

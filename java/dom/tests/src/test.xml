@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE html [ 
+<!ENTITY Myimage SYSTEM "Image.gif" NDATA GIF>
+<!NOTATION GIF SYSTEM "/usr/dist/local/exe/xv">
+
+<!ELEMENT head (title, script, base)>
+
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT script (#PCDATA)>
+
+<!ELEMENT base EMPTY>
+<!ATTLIST base
+target CDATA #IMPLIED>
+
+<!ELEMENT body (#PCDATA)>
+<!ATTLIST body
+name CDATA   #IMPLIED>
+
+<!ENTITY myentity  "New Entity">
+]>
+
+<html>
+<body name="hello_body">
+Hello
+</body>
+</html>

@@ -1,0 +1,53 @@
+
+  1)  open mozilla.csh
+
+  2)  make changes to variables
+          BLACKWOOD_HOME 
+          MOZILLA_FIVE_HOME 
+          JAVA_HOME 
+          TEST_PATH 
+
+  3)  source mozilla.csh 
+      this will set up the environment
+
+  4)  Edit BWProperties file and change the locations for variables
+          BW_TESTDIR
+          BW_LOGDIR
+
+  5)  Run the Makefile
+
+  6)  Copy test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
+      (By default it is assumed that they can be accessed as
+        http://<server name>/text.html).
+        or
+        http://<server name>/~<username>/text.html).
+
+  7)  Invoke autorun.sh from command prompt.
+       sh autorun.sh
+
+  8)  The results are recorded in HTML file BWTest.html
+      and in log file BWTest.log
+      Individual test Log files are also found in 'log' directory.
+
+  
+---------------------------------------------------------------------------
+
+To Invoke a specific test case 
+   sh autorun.sh -t org.mozilla.dom.test.AttrImpl_getName
+
+NOTE: All Test Cases are recorded in file BWTestClass.lst.ORIG
+
+---------------------------------------------------------------------------
+
+
+Assumption:
+
+ I  assume that u have copied the files test.xml and test.html to your 
+ DOCUMENT_ROOT of your WebServer.
+ The URL it tries to load is  http://<servername>/test.html.
+
+ If it is set in users public_html then open file autorun.sh
+ and change DOCROOT accordingly.
+
+
+

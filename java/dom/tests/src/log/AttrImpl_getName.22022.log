@@ -1,0 +1,182 @@
+nsComponentManager: Autoregistration begins. dir = /workspace/mozilla/dist/bin/components
+nsComponentManager: Autoregistration ends. dir = /workspace/mozilla/dist/bin/components
+NSGetFactory for unix window service
+nsUnixToolkitService: Using 'gtk' for the Toolkit.
+NS_SetupRegistry() MOZ_TOOLKIT=gtk, WIDGET_DLL=libwidget_gtk.so, GFX_DLL=libgfx_gtk.so
+Profile Manager : Command Line Options : Begin
+Profile Manager : Command Line Options : End
+Initialized app shell component {4a85a5d0-cddd-11d2-b7f6-00805f05ffa5}, rv=0x00000000
+XPInstall Component created
+Initialized app shell component {18c2f989-b09f-11d2-bcde-00805f0e1353}, rv=0x00000000
+GFX: dpi=96 t2p=0.0666667 p2t=15 depth=24
+classpath is "/usr/local/java/jdk1.2/solaris/jre/lib/rt.jar:/usr/local/java/jdk1.2/solaris/jre/lib/i18n.jar:/usr/local/java/jdk1.2/solaris/jre/classes:/workspace/mozilla/java/dom/tests/src/../classes:/workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes:/opt/xml/xml.jar:."
+<GC: need to expand mark bits to cover 16384 bytes>
+[Opened /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar in 43 ms]
+[Opened /usr/local/java/jdk1.2/solaris/jre/lib/i18n.jar in 5 ms]
+[Opened /opt/xml/xml.jar in 0 ms]
+[Loaded java.lang.NoClassDefFoundError from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Class from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Object from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Throwable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.Serializable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.String from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Comparable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.ObjectStreamClass from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.ObjectStreamClass$ObjectStreamClassEntry from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.SoftReference from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.Reference from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.ObjectStreamField from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.ObjectStreamClass$CompareClassByName from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Comparator from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.ObjectStreamClass$CompareMemberByName from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.String$1 from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Thread from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Runnable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ClassLoader from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Vector from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.AbstractList from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.AbstractCollection from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Collection from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.List from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Cloneable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Stack from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ThreadDeath from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Error from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Exception from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.RuntimeException from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.StackOverflowError from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.VirtualMachineError from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.IOException from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FileNotFoundException from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.reflect.Method from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.reflect.AccessibleObject from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.reflect.Member from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.reflect.ReflectPermission from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.BasicPermission from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.Permission from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.Guard from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.LinkageError from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.OutOfMemoryError from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ThreadGroup from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.System from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.AccessController from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.AccessControlContext from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.InheritableThreadLocal from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ThreadLocal from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.Reference$Lock from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.Reference$ReferenceHandler from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.WeakReference from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.FinalReference from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.Finalizer from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.ReferenceQueue from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.ReferenceQueue$Null from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.ReferenceQueue$Lock from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.Finalizer$FinalizerThread from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ref.PhantomReference from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Properties from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Hashtable from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Dictionary from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Map from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Hashtable$Entry from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Map$Entry from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.ByteToCharConverter from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.Converters from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.security.action.GetPropertyAction from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.security.PrivilegedAction from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.CharacterEncoding from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.util.Locale from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Character from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.StringBuffer from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.ByteToCharASCII from /usr/local/java/jdk1.2/solaris/jre/lib/i18n.jar]
+[Loaded java.io.FileInputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.InputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FileDescriptor from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FileOutputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.OutputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.BufferedInputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FilterInputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.PrintStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FilterOutputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.BufferedOutputStream from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.OutputStreamWriter from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.Writer from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.CharToByteConverter from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.CharToByteASCII from /usr/local/java/jdk1.2/solaris/jre/lib/i18n.jar]
+[Loaded java.io.BufferedWriter from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher$Factory from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.net.URLStreamHandlerFactory from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.misc.Launcher$1 from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Compiler from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Runtime from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.File from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.FileSystem from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.UnixFileSystem from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ClassLoader$3 from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.Boolean from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.ClassLoader$NativeLibrary from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.lang.NullPointerException from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded org.mozilla.dom.DOMGarbageCollector from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DOMGarbageCollector.class]
+[Loaded org.mozilla.dom.DOMFactory from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DOMFactory.class]
+[Loaded org.mozilla.dom.DocumentLoadListener from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DocumentLoadListener.class]
+[Loaded org.mozilla.dom.DocumentImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DocumentImpl.class]
+[Loaded org.mozilla.dom.NodeImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/NodeImpl.class]
+[Loaded org.w3c.dom.Node from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Node.class]
+[Loaded org.w3c.dom.Document from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Document.class]
+[Loaded org.mozilla.dom.AttrImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/AttrImpl.class]
+[Loaded org.w3c.dom.Attr from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Attr.class]
+[Loaded org.mozilla.dom.CDATASectionImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/CDATASectionImpl.class]
+[Loaded org.mozilla.dom.TextImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/TextImpl.class]
+[Loaded org.mozilla.dom.CharacterDataImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/CharacterDataImpl.class]
+[Loaded org.w3c.dom.CharacterData from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/CharacterData.class]
+[Loaded org.w3c.dom.Text from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Text.class]
+[Loaded org.w3c.dom.CDATASection from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/CDATASection.class]
+[Loaded org.mozilla.dom.CommentImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/CommentImpl.class]
+[Loaded org.w3c.dom.Comment from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Comment.class]
+[Loaded org.mozilla.dom.DocumentFragmentImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DocumentFragmentImpl.class]
+[Loaded org.w3c.dom.DocumentFragment from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/DocumentFragment.class]
+[Loaded org.mozilla.dom.DocumentTypeImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DocumentTypeImpl.class]
+[Loaded org.w3c.dom.DocumentType from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/DocumentType.class]
+[Loaded org.mozilla.dom.DOMImplementationImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/DOMImplementationImpl.class]
+[Loaded org.w3c.dom.DOMImplementation from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/DOMImplementation.class]
+[Loaded org.mozilla.dom.ElementImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/ElementImpl.class]
+[Loaded org.w3c.dom.Element from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Element.class]
+[Loaded org.mozilla.dom.EntityImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/EntityImpl.class]
+[Loaded org.w3c.dom.Entity from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/Entity.class]
+[Loaded org.mozilla.dom.EntityReferenceImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/EntityReferenceImpl.class]
+[Loaded org.w3c.dom.EntityReference from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/EntityReference.class]
+[Loaded org.mozilla.dom.NamedNodeMapImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/NamedNodeMapImpl.class]
+[Loaded org.w3c.dom.NamedNodeMap from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/NamedNodeMap.class]
+[Loaded org.mozilla.dom.NodeListImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/NodeListImpl.class]
+[Loaded org.w3c.dom.NodeList from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/NodeList.class]
+[Loaded org.mozilla.dom.ProcessingInstructionImpl from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/ProcessingInstructionImpl.class]
+[Loaded org.w3c.dom.ProcessingInstruction from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/w3c/dom/ProcessingInstruction.class]
+Using '/workspace/mozilla/java/dom/tests/src/../../../../dist/bin' as the resource: base
+Profile Manager : Profile Wizard and Manager activites : Begin
+Profile Manager : Profile Wizard and Manager activites : End
+ProfileName : mozProfile
+ProfileDir  : /home/leilag/.mozilla/mozProfile
+Got the event queue from the service
+Calling gdk_input_add with event queue
+Note: frameverifytree is disabled
+Toolbar registered as Drag Listener
+Toolbar registered as Drag Listener
+Note: verifyreflow is disabled
+
+Gdk-WARNING **: shmat failed!
+failed to get sidebar_pref
+Doing Startup...
+Creating browser app core
+BrowserAppCore has been created.
+Adding app core to AppCoreManager in the base initialization.
+Setting content window
+browser.startup.page = 1
+startpage = http://www.mozillazine.org/
+Document http://cebu/~/test.html loaded successfully
+Document: Done (0.698 secs)
+[Loaded org.mozilla.dom.test.TestLoader from /workspace/mozilla/java/dom/tests/src/../../../../dist/bin/classes/org/mozilla/dom/test/TestLoader.class]
+[Loaded java.io.BufferedReader from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.Reader from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded java.io.InputStreamReader from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+[Loaded sun.io.ByteToCharISO8859_1 from /usr/local/java/jdk1.2/solaris/jre/lib/rt.jar]
+Could not create stream for file `pwd`/BWTestClass.lst
