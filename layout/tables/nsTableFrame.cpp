@@ -1747,7 +1747,14 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     
     // See if the pass1 maximum width is no longer valid because one of the
     // cell maximum widths changed
-    if (!IsMaximumWidthValid()) {
+    if (mPrevInFlow) {
+      // a next in flow just uses the preferred width of the 1st in flow.
+      nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow();
+      if (firstInFlow) {
+        aDesiredSize.mMaximumWidth = firstInFlow->GetPreferredWidth();
+      }
+    }
+    else if (!IsMaximumWidthValid()) {
       // Initialize the strategy and have it compute the natural size of
       // the table
       mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
