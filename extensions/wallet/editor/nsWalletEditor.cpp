@@ -67,29 +67,6 @@ WalletEditorImpl::GetValue(PRUnichar** aValue)
   return res;
 }
 
-#if 0
-static void DOMWindowToWebShellWindow(
-              nsIDOMWindow *DOMWindow,
-              nsCOMPtr<nsIWebShellWindow> *webWindow)
-{
-  if (!DOMWindow) {
-    return; // with webWindow unchanged -- its constructor gives it a null ptr
-  }
-  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIDocShell> docShell;
-  if (globalScript) {
-    globalScript->GetDocShell(getter_AddRefs(docShell));
-  }
-  nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-  nsCOMPtr<nsIWebShell> rootWebshell;
-  if(!webshell)
-   return;
-  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-  *webWindow = do_QueryInterface(topLevelWindow);
-}
-#endif /* 0 */
-
 NS_IMETHODIMP
 WalletEditorImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
 {
