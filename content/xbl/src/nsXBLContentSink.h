@@ -46,14 +46,23 @@
 #include "nsICSSParser.h"
 #include "nsLayoutCID.h"
 
+/*
+ * Enum that describes the primary state of the parsing process
+ */
 typedef enum {
-  eXBL_InDocument,
-  eXBL_InBinding,
-  eXBL_InResources,
-  eXBL_InImplementation,
-  eXBL_InHandlers
+  eXBL_InDocument,       /* outside any bindings */
+  eXBL_InBindings,       /* Inside a <bindings> element */
+  eXBL_InBinding,        /* Inside a <binding> */
+  eXBL_InResources,      /* Inside a <resources> */
+  eXBL_InImplementation, /* Inside a <implementation> */
+  eXBL_InHandlers,       /* Inside a <handlers> */
+  eXBL_Error             /* An error has occured.  Suspend binding construction */
 } XBLPrimaryState;
 
+/*
+ * Enum that describes our substate (typically when parsing something
+ * like <handlers> or <implementation>).
+ */
 typedef enum {
   eXBL_None,
   eXBL_InHandler,
@@ -140,6 +149,8 @@ protected:
                          const PRUnichar* aSourceText);
 
 protected:
+  nsresult ReportUnexpectedElement(nsIAtom* aElementName, PRUint32 aLineNumber);
+  
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
   nsIXBLDocumentInfo* mDocInfo;
