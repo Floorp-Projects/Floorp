@@ -1077,11 +1077,15 @@ WLLT_ExpirePassword() {
   Recycle(message);
 }
 
+PRBool changingPassword = PR_FALSE;
+
 PUBLIC
 void WLLT_ChangePassword() {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
+    changingPassword = PR_TRUE;
     rv = gSecretDecoderRing->ChangePassword();
+    changingPassword = PR_FALSE;
   }
   if (NS_FAILED(rv)) {
     PRUnichar * message = Wallet_Localize("PasswordNotChanged");
@@ -2816,12 +2820,13 @@ wallet_ReencryptAll(const char * newpref, void * data) {
   level ++;
 
   /* logout first so there is no conversion unless user knows the master password */
+if (!changingPassword) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
     rv = gSecretDecoderRing->Logout();
   }
-
   wallet_Initialize(PR_FALSE);
+}
   wallet_MapElement * ptr;
   nsAutoString value;
   PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
