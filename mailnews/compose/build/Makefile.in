@@ -41,9 +41,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-lmozreg \
-		-lmozjs \
-		-ljsdom \
-		-lappcores \
 		-lmsgbaseutil \
 		-lraptorhtmlpars \
 		$(NSPR_LIBS) \

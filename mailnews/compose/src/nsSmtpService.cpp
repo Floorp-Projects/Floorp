@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,6 +18,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
@@ -33,17 +34,24 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // foward declarations...
 
-nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, 
-							  const nsString& aRecipients, nsIUrlListener *, nsIURI ** aUrl);
+nsresult
+NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
+                     const char* aHostName, const char* aSender, 
+                     const nsString& aRecipients, nsIUrlListener *,
+                     nsIURI ** aUrl);
 nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
 nsSmtpService::nsSmtpService()
 {
     NS_INIT_REFCNT();
+    NS_NewISupportsArray(getter_AddRefs(mSmtpServers));
 }
 
 nsSmtpService::~nsSmtpService()
-{}
+{
+    // save the SMTP servers to disk
+
+}
 
 NS_IMPL_THREADSAFE_ADDREF(nsSmtpService);
 NS_IMPL_THREADSAFE_RELEASE(nsSmtpService);
@@ -69,8 +77,11 @@ nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
-nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, 
-										nsIUrlListener * aUrlListener, nsIURI ** aURL)
+nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath,
+                                        const nsString& aRecipients, 
+										nsIUrlListener * aUrlListener,
+                                        nsISmtpServer * aServer,
+                                        nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
 	nsresult rv = NS_OK;
@@ -85,11 +96,11 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 
 		if (NS_SUCCEEDED(rv) && identity)
 		{
-			char * hostName = nsnull;
-			char * senderName = nsnull;
+            nsXPIDLCString hostName;
+            nsXPIDLCString senderName;
 
-			identity->GetSmtpHostname(&hostName);
-			identity->GetSmtpUsername(&senderName);
+			identity->GetSmtpHostname(getter_Copies(hostName));
+			identity->GetSmtpUsername(getter_Copies(senderName));
 
             // todo:  are we leaking hostName and senderName
 
@@ -104,8 +115,6 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 			else
 				NS_IF_RELEASE(urlToRun);
 
-			PR_FREEIF(hostName);
-			PR_FREEIF(senderName);
 		} // if we have an identity
 		else
 			NS_ASSERTION(0, "no current identity found for this user....");
@@ -118,10 +127,9 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 
 // The following are two convience functions I'm using to help expedite building and running a mail to url...
 
-#define TEMP_DEFAULT_HOST "nsmail-2.mcom.com:25"
-
 // short cut function for creating a mailto url...
-nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, 
+nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
+                              const char* aHostName, const char* aSender, 
 							  const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
@@ -135,19 +143,17 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
 		// assemble a url spec...
-		char * recipients = aRecipients.ToNewCString();
-		char * hostName = aHostName.ToNewCString();
-		char * urlSpec= PR_smprintf("mailto://%s:%d/%s", hostName && *hostName ? hostName : TEMP_DEFAULT_HOST, 25, recipients ? recipients : "");
+        char *recipients = aRecipients.ToNewCString();
+		char * urlSpec= PR_smprintf("mailto://%s:%d/%s",
+                                    (const char*)aHostName, 25, recipients ? recipients : "");
 		if (recipients)
 			delete [] recipients;
-		if (hostName)
-			delete [] hostName;
 		if (urlSpec)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
-			smtpUrl->SetUserEmailAddress(nsCAutoString(aSender));
+			smtpUrl->SetUserEmailAddress(aSender);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
@@ -231,3 +237,58 @@ NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, nsIURI *aURI, nsIEvent
 	NS_ASSERTION(0, "unimplemented");
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSmtpService::GetSmtpServers(nsISupportsArray ** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = mSmtpServers;
+  NS_ADDREF(*aResult);
+
+  // now read in the servers from prefs if necessary
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpService::GetDefaultSmtpServer(nsISmtpServer **aServer)
+{
+  NS_ENSURE_ARG_POINTER(aServer);
+
+  nsresult rv;
+
+  *aServer = nsnull;
+  // always returns NS_OK, just leaving *aServer at nsnull
+  if (!mDefaultSmtpServer) {
+    nsCOMPtr<nsIEnumerator> enumerator;
+    rv = mSmtpServers->Enumerate(getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return NS_OK;
+    
+    rv = enumerator->First();
+    if (NS_FAILED(rv)) return NS_OK;
+
+    nsCOMPtr<nsISupports> curItem;
+    rv = enumerator->CurrentItem(getter_AddRefs(curItem));
+    if (NS_FAILED(rv)) return NS_OK;
+    
+    mDefaultSmtpServer = do_QueryInterface(curItem);
+  }
+
+  // XXX still need to make sure the default SMTP server is
+  // in the server list!
+    
+  *aServer = mDefaultSmtpServer;
+  NS_IF_ADDREF(*aServer);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpService::SetDefaultSmtpServer(nsISmtpServer *aServer)
+{
+  // XXX need to make sure the default SMTP server is in the array
+  mDefaultSmtpServer = aServer;
+  return NS_OK;
+}
+

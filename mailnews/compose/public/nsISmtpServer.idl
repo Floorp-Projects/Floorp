@@ -23,7 +23,9 @@
 
 [scriptable, uuid(6a0b35ce-54e4-11d3-81df-006008948010)]
 interface nsISmtpServer : nsISupports {
-  attribute string hostname;
-  attribute string username;
-  attribute string password;
+    attribute string key;       // unique identifier
+    
+    attribute string hostname;
+    attribute string username;
+    attribute string password;
 };

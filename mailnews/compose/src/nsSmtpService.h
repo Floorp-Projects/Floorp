@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,6 +20,8 @@
 #define nsSmtpService_h___
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 #include "nsISmtpService.h"
 #include "nsIProtocolHandler.h"
 
@@ -39,37 +41,51 @@ public:
 	
 	NS_DECL_ISUPPORTS
 
-	////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////
 	// we suppport the nsISmtpService interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-	
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// SendMailMessage requires the file name of the message to send, the sender, a comma delimited list of recipients.
-	// It builds an Smtp url, makes an smtp connection and runs the url. If you want a handle on the running task, pass in 
-	// a valid nsIURI ptr. You can later interrupt this action by asking the netlib service manager to interrupt the url you 
-	// are given back. Remember to release aURL when you are done with it. Pass nsnull in for aURL if you don't care about 
-	// the returned URL.
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////
+    
+	////////////////////////////////////////////////////////////////////////
+	// SendMailMessage requires the file name of the message to send, the
+    // sender, a comma delimited list of recipients.
+	// It builds an Smtp url, makes an smtp connection and runs the url. If
+    // you want a handle on the running task, pass in a valid nsIURI ptr.
+    // You can later interrupt this action by asking the netlib service
+    // manager to interrupt the url you are given back. Remember to release
+    // aURL when you are done with it.
+    // Pass nsnull in for aURL if you don't care about the returned URL.
+	////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, nsIUrlListener * aUrlListener, 
+	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath,
+                               const nsString& aRecipients,
+                               nsIUrlListener * aUrlListener,
+                               nsISmtpServer * aServer,
 							   nsIURI ** aURL);
 
-	////////////////////////////////////////////////////////////////////////////////////////
+  NS_IMETHOD GetSmtpServers(nsISupportsArray ** aResult);
+  NS_IMETHOD GetDefaultSmtpServer(nsISmtpServer **aServer);
+  NS_IMETHOD SetDefaultSmtpServer(nsISmtpServer *aServer);
+  
+	//////////////////////////////////////////////////////////////////////////
 	// End support of nsISmtpService interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 
-	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIProtocolHandler interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetScheme(char * *aScheme);
 	NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort);
 	NS_IMETHOD MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval);
 	NS_IMETHOD NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval);
 	NS_IMETHOD NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval);
 	
-	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 	// End support of nsIProtocolHandler interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+    
+private:
+    nsCOMPtr<nsISupportsArray> mSmtpServers;
+    nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
 };
 
 #endif /* nsSmtpService_h___ */

@@ -401,7 +401,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 	nsFilePath filePath (fileName);
 	nsIURI * url = nsnull;
-	m_smtpService->SendMailMessage(filePath, recipients, this, &url);
+	m_smtpService->SendMailMessage(filePath, recipients, this, nsnull, &url);
 	if (url)
 		m_smtpUrl = do_QueryInterface(url);
 

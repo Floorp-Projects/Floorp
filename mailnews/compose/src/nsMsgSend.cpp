@@ -2490,7 +2490,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // 
     nsFilePath    filePath(*mTempFileSpec);
   	AddRef();
-    rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull);
+    rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
