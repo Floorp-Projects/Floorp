@@ -19,6 +19,12 @@
 #include "nsArena.h"
 #include "nsCRT.h"
 
+ArenaImpl::ArenaImpl(void)
+{
+  NS_INIT_REFCNT();
+  nsCRT::memset(&mPool, 0, sizeof(PLArenaPool));
+}
+
 NS_IMETHODIMP
 ArenaImpl::Init(PRUint32 aBlockSize)
 {
