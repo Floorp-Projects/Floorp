@@ -30,7 +30,11 @@
 #include "nsIPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDocument.h"
 #include "nsISizeOfHandler.h"
+#include "nsIFormControlFrame.h"
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLabelElementIID, NS_IDOMHTMLLABELELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -296,10 +300,95 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                    PRUint32 aFlags,
                                    nsEventStatus& aEventStatus)
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+  nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-}
 
+  // Now a little special trickery because we are a label:
+  // We need to pass this event on to our child iff it is a focus,
+  // keypress/up/dn, mouseclick/dblclick/up/down.
+  if ((NS_OK == rv) && (nsEventStatus_eIgnore == aEventStatus) && (NS_EVENT_FLAG_INIT == aFlags)) {
+    PRBool isFormElement = PR_FALSE;
+    nsIHTMLContent* node = nsnull; // Strong ref to node we are a label for
+    switch (aEvent->message) {
+      case NS_FOCUS_CONTENT:
+      case NS_KEY_PRESS:
+      case NS_KEY_UP:
+      case NS_KEY_DOWN:
+      case NS_MOUSE_LEFT_CLICK:
+      case NS_MOUSE_LEFT_DOUBLECLICK:
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_CLICK:
+      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_CLICK:
+      case NS_MOUSE_RIGHT_DOUBLECLICK:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      {
+        // Get the element that this label is for
+        nsAutoString elementId;
+        rv = GetHtmlFor(elementId);
+        if (NS_SUCCEEDED(rv) && elementId.Length()) { // --- We have a FOR attr
+          nsIDocument* doc = nsnull; // Strong
+          rv = mInner.GetDocument(doc);
+          if (NS_SUCCEEDED(rv)) {
+            nsIDOMHTMLDocument* htmldoc = nsnull; // Strong
+            rv = doc->QueryInterface(nsIDOMHTMLDocument::GetIID(),(void**)&htmldoc);
+            if (NS_SUCCEEDED(rv)) {
+              nsIDOMElement* element = nsnull; // Strong
+              rv = htmldoc->GetElementById(elementId, &element);
+              if (NS_SUCCEEDED(rv)) {
+                rv = element->QueryInterface(nsIHTMLContent::GetIID(),(void**)&node);
+                // Find out of this is a form element.
+                if (NS_SUCCEEDED(rv)) {
+                  nsIFormControlFrame* fcFrame = nsnull;
+                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, fcFrame);
+                  isFormElement = NS_SUCCEEDED(gotFrame) && fcFrame;
+                }
+                NS_RELEASE(element);
+              }
+              NS_RELEASE(htmldoc);
+            }
+            NS_RELEASE(doc);
+          }
+        } else { // --- No FOR attribute, we are a label for our first child element
+          PRInt32 numNodes;
+          nsresult rv = mInner.ChildCount(numNodes);
+          if (NS_SUCCEEDED(rv)) {
+            nsIContent* contNode = nsnull;
+	    PRInt32 i;
+            for (i = 0; NS_SUCCEEDED(rv) && !isFormElement && (i < numNodes); i++) {
+              NS_IF_RELEASE(contNode);
+              rv = ChildAt(i, contNode);
+              if (NS_SUCCEEDED(rv) && contNode) {
+                // We need to make sure this child is a form element
+                nsresult isHTMLContent = contNode->QueryInterface(nsIHTMLContent::GetIID(),(void**)&node);
+                if (NS_SUCCEEDED(isHTMLContent) && node) {
+                  nsIFormControlFrame* fcFrame = nsnull;
+                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, fcFrame);
+                  isFormElement = NS_SUCCEEDED(gotFrame) && fcFrame;
+                }
+                NS_RELEASE(contNode);
+              }
+            }
+          }
+        }
+      } // Close should handle
+    } // Close switch
+    
+    // If we found an element, pass along the event to it.
+    if (NS_SUCCEEDED(rv) && node) {
+      // Only pass along event if this is a form element
+      if (isFormElement) {
+        rv = node->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+      }
+      NS_RELEASE(node);
+    }
+  } // Close trickery
+  return rv;
+}
 
 NS_IMETHODIMP
 nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
