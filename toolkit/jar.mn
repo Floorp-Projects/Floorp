@@ -57,7 +57,9 @@ toolkit.jar:
 +        content/global/nsUserSettings.js                   (obsolete/content/nsUserSettings.js) 
 
 en-US.jar:
++        locale/en-US/global/contents.rdf                   (locale/contents.rdf) 
 +        locale/en-US/global/about.xhtml                    (locale/about.xhtml)
++        locale/en-US/global/accept2locale.properties       (locale/accept2locale.properties) 
 +        locale/en-US/global/brand.dtd                      (locale/brand.dtd)
 *+       locale/en-US/global/brand.properties               (locale/brand.properties)
 +        locale/en-US/global/build.dtd                      (locale/build.dtd)
@@ -66,7 +68,10 @@ en-US.jar:
 +        locale/en-US/global/customizeToolbar.properties    (locale/customizeToolbar.properties)
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
 +        locale/en-US/global/finddialog.properties          (locale/finddialog.properties)
++        locale/en-US/global/intl.css                       (locale/intl.css) 
 +        locale/en-US/global/keys.properties                (locale/keys.properties)
++        locale/en-US/global/languageNames.properties       (locale/languageNames.properties) 
++        locale/en-US/global/regionNames.properties         (locale/regionNames.properties) 
 +        locale/en-US/global/dialog.properties              (locale/widgets/dialog.properties)
 +        locale/en-US/global/tabbrowser.properties          (locale/widgets/tabbrowser.properties)
 +        locale/en-US/global/tabbrowser.dtd                 (locale/widgets/tabbrowser.dtd)
@@ -91,3 +96,10 @@ en-unix.jar:
 en-mac.jar:
 +  locale/en-US/global-platform/contents.rdf		(locale/contents-platform.rdf)
 +  locale/en-US/global-platform/platformKeys.properties (locale/platformKeys-mac.properties)
+
+US.jar:
++  locale/US/global-region/contents.rdf                 (locale/contents-region.rdf) 
++  locale/US/global-region/region.dtd                   (locale/region.dtd)
++  locale/US/global-region/region.properties            (locale/region.properties)
++  locale/US/global-region/builtinURLs.rdf              (locale/builtinURLs.rdf) 
+
