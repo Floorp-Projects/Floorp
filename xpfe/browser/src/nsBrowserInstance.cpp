@@ -46,8 +46,6 @@
 #include "prprf.h"
 #include "nsIComponentManager.h"
 
-#include "nsIFileSpecWithUI.h"
-
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
