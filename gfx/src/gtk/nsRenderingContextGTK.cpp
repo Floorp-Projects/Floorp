@@ -25,7 +25,7 @@
 #include "nsRegionGTK.h"
 #include "nsImageGTK.h"
 #include "nsGraphicsStateGTK.h"
-#include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 #include <math.h>
 #include "nsGCCache.h"
 #include <gtk/gtk.h>
@@ -1307,7 +1307,7 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** font = metrics->mLoadedFonts;
       nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1469,7 +1469,7 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** font = metrics->mLoadedFonts;
       nsFontGTK** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1834,7 +1834,7 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
       nsFontGTK** font = metrics->mLoadedFonts;
       nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }

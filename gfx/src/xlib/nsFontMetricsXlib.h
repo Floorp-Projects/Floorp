@@ -28,6 +28,7 @@
 #define nsFontMetricsXlib_h__
 
 #include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
@@ -77,7 +78,7 @@ public:
   PRBool IsEmptyFont(XFontStruct*);
 
   inline int SupportsChar(PRUnichar aChar)
-    { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
+    { return mFont && CCMAP_HAS_CHAR(mCCMap, aChar); };
     
   virtual PRBool GetXlibFontIs10646(void);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
@@ -97,7 +98,7 @@ public:
 #endif /* MOZ_MATHML */
 
   XFontStruct           *mFont;
-  PRUint32              *mMap;
+  PRUint16              *mCCMap;
   nsFontCharSetXlibInfo *mCharSetInfo;
   char                  *mName;
   nsFontXlibUserDefined *mUserDefinedFont;

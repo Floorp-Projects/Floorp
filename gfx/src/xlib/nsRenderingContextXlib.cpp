@@ -29,7 +29,7 @@
 
 #include "nsRenderingContextXlib.h"
 #include "nsFontMetricsXlib.h"
-#include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 #include "xlibrgb.h"
 #include "prprf.h"
 #include "prmem.h"
@@ -1299,7 +1299,7 @@ nsRenderingContextXlib::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1469,7 +1469,7 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1864,7 +1864,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
