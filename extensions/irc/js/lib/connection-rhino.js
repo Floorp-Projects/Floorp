@@ -53,8 +53,10 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
         new java.io.DataInputStream(this._socket.getInputStream());
     this._outputStream = this._socket.getOutputStream();
     
+    // create a 512 byte buffer for reading into.
+    this._buffer = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 512);
     dd("connected to " + host);
-	
+    
     this.isConnected = true;
 
     return this.isConnected;
@@ -64,7 +66,7 @@ CBSConnection.prototype.disconnect = function()
 {
     if (this.isConnected) {
         this.isConnected = false;
-    	this._socket.close();
+        this._socket.close();
         delete this._socket;
         delete this._inputStream;
         delete this._outputStream;
@@ -108,7 +110,8 @@ CBSConnection.prototype.readData = function(timeout)
     
     try {
         this._socket.setSoTimeout(Number(timeout));
-        rv = this._inputStream.read();
+        var len = this._inputStream.read(this._buffer);
+        rv = new java.lang.String(this._buffer, 0, 0, len);
     } catch (ex) {
         
         if ((typeof ex != "undefined") &&
