@@ -57,19 +57,19 @@ const MISSING_INTERFACE = "@";  // flag to indicate missing interfaceinfo
 // accumulate a string with a stream-ish abstraction
 
 function Buffer() {
-    this.buffer = "";        
+    this.buffer = "";
 }
 
 Buffer.prototype = {
     write : function(s)  {
         if(s)
-            this.buffer += s;    
+            this.buffer += s;
     },
 
     writeln : function(s)  {
         if(s)
             this.buffer += s + "\n";
-        else        
+        else
             this.buffer += "\n";
     }
 }
@@ -80,14 +80,14 @@ Buffer.prototype = {
 * takes:   {xxx}
 * returns: uuid(xxx)
 */
-function formatID(str) 
+function formatID(str)
 {
     return "uuid("+str.substring(1,str.length-1)+")";
 }
 
 function formatConstType(type)
 {
-    switch(type) 
+    switch(type)
     {
         case nsIDataType.VTYPE_INT16:
             return "PRInt16";
@@ -102,10 +102,10 @@ function formatConstType(type)
     }
 }
 
-function formatTypeName(info, methodIndex, param, dimension) 
+function formatTypeName(info, methodIndex, param, dimension)
 {
     var type = info.getTypeForParam(methodIndex, param, dimension);
-     
+
     switch(type.dataType)
     {
         case nsIDataType.VTYPE_INT8 :
@@ -155,12 +155,12 @@ function formatTypeName(info, methodIndex, param, dimension)
             try  {
                 return info.getInfoForParam(methodIndex, param).name;
             } catch(e) {
-                return "/*!!! missing interface info, guessing!!!*/ nsISupports";    
+                return "/*!!! missing interface info, guessing!!!*/ nsISupports";
             }
         case nsIDataType.VTYPE_INTERFACE_IS:
             return "nsQIResult";
         case nsIDataType.VTYPE_ARRAY:
-            return formatTypeName(info, methodIndex, param, dimension+1); 
+            return formatTypeName(info, methodIndex, param, dimension+1);
         case nsIDataType.VTYPE_STRING_SIZE_IS:
             return "string";
         case nsIDataType.VTYPE_WSTRING_SIZE_IS:
@@ -186,31 +186,31 @@ function formatBracketForParam(info, methodIndex, param)
 
     if(param.isRetval)
     {
-        if(found++)    
+        if(found++)
             str += ", ";
         str += "retval"
     }
 
     if(param.isShared)
     {
-        if(found++)    
+        if(found++)
             str += ", ";
         str += "shared"
     }
 
     if(type.isArray)
     {
-        if(found++)    
+        if(found++)
             str += ", ";
         str += "array"
     }
 
     if(type.dataType == nsIDataType.VTYPE_INTERFACE_IS)
     {
-        if(found++)    
+        if(found++)
             str += ", ";
-        str += "iid_is("+ 
-                 PARAM_NAME_PREFIX + 
+        str += "iid_is("+
+                 PARAM_NAME_PREFIX +
                  info.getInterfaceIsArgNumberForParam(methodIndex, param) + ")";
     }
 
@@ -218,7 +218,7 @@ function formatBracketForParam(info, methodIndex, param)
        type.dataType == nsIDataType.VTYPE_STRING_SIZE_IS ||
        type.dataType == nsIDataType.VTYPE_WSTRING_SIZE_IS)
     {
-        if(found++)    
+        if(found++)
             str += ", ";
 
         size_is_ArgNum =
@@ -252,18 +252,18 @@ function doInterface(out, iid)
     var constBaseIndex = parent ? parent.constantCount : 0;
     var constTotalCount =  info.constantCount;
     var constLocalCount = constTotalCount - constBaseIndex;
-    
+
     var methodBaseIndex = parent ? parent.methodCount : 0;
     var methodTotalCount =  info.methodCount;
     var methodLocalCount = methodTotalCount - methodBaseIndex;
 
-    
+
     // maybe recurring to emit parent declarations is not a good idea...
 //    if(parent)
 //        doInterface(parent.interfaceID);
 
     out.writeln();
-    
+
     // comment out nsISupports
 //    if(iid.equals(nsISupports))
 //        out.writeln("/*\n");
@@ -271,7 +271,7 @@ function doInterface(out, iid)
     out.writeln("[" + (info.isScriptable ? "scriptable, " : "") +
                 formatID(info.interfaceID.number) + "]");
 
-    out.writeln("interface "+ info.name + 
+    out.writeln("interface "+ info.name +
                    (parent ? (" : "+parent.name) : "") + " {");
 
     if(constLocalCount)
@@ -282,7 +282,7 @@ function doInterface(out, iid)
             out.writeln("  const " + formatConstType(c.type.dataType) + " " +
                         c.name + " = " + c.value + ";");
         }
-    }    
+    }
 
     if(constLocalCount && methodLocalCount)
         out.writeln();
@@ -294,9 +294,9 @@ function doInterface(out, iid)
             m = info.getMethodInfo(i);
 
             if(m.isNotXPCOM)
-                bracketed = "[notxpcom] " 
+                bracketed = "[notxpcom] "
             else if(m.isHidden)
-                bracketed = "[noscript] " 
+                bracketed = "[noscript] "
             else
                 bracketed = "";
 
@@ -314,8 +314,8 @@ function doInterface(out, iid)
                             " " + m.name + ";\n");
 
                 if(!readonly)
-                    i++; // skip the next one, we have it covered.    
-            
+                    i++; // skip the next one, we have it covered.
+
                 continue;
             }
             // else...
@@ -338,13 +338,13 @@ function doInterface(out, iid)
                 retvalTypeName = formatTypeName(info, i, p, 0);
                 // no need to print it in the param list
                 paramCount-- ;
-            }       
-            else    
+            }
+            else
                 retvalTypeName = "void";
-            
+
             // print method name
 
-            out.writeln("  " + bracketed + retvalTypeName + " " + m.name + 
+            out.writeln("  " + bracketed + retvalTypeName + " " + m.name +
                         "(" + (paramCount ? "" : ");"));
 
             // print params
@@ -352,7 +352,7 @@ function doInterface(out, iid)
             for(k = 0; k < paramCount; k++)
             {
                 p = m.getParam(k);
-                out.writeln("              "+ 
+                out.writeln("              "+
                             formatBracketForParam(info, i, p) +
                             (p.isOut ? p.isIn ? "inout " : "out " : "in ") +
                             formatTypeName(info, i, p, 0) + " " +
@@ -380,24 +380,24 @@ function appendForwardDeclarations(list, info)
     for(i = 0; i < info.methodCount; i++)
     {
         m = info.getMethodInfo(i);
-        
+
         for(k = 0; k < m.paramCount; k++)
         {
             p = m.getParam(k);
-            
+
             if(p.type.dataType == nsIDataType.VTYPE_INTERFACE)
             {
                 var name;
                 try {
                     name = info.getInfoForParam(i, p).name;
                 } catch(e)  {
-                    name = MISSING_INTERFACE;                  
+                    name = MISSING_INTERFACE;
                 }
                 list.push(name);
             }
         }
     }
-}    
+}
 
 function doForwardDeclarations(out, iid)
 {
@@ -405,23 +405,23 @@ function doForwardDeclarations(out, iid)
     var list = [];
     appendForwardDeclarations(list, new IInfo(iid));
     list.sort();
-    
+
     out.writeln("// forward declarations...");
 
-    for(i = 0; i < list.length; i++) 
+    for(i = 0; i < list.length; i++)
     {
         cur = list[i];
-        if(cur != prev && cur != "nsISupports") 
+        if(cur != prev && cur != "nsISupports")
         {
-            if(cur == MISSING_INTERFACE)                 
+            if(cur == MISSING_INTERFACE)
                 out.writeln("/*\n * !!! Unable to find details for a declared "+
                             "interface (name unknown)!!!\n */");
             else
                 out.writeln("interface " + cur +";");
-            prev = cur;    
-        }    
+            prev = cur;
+        }
     }
-}    
+}
 
 function buildForwardDeclarationsList(iid)
 {
@@ -430,19 +430,19 @@ function buildForwardDeclarationsList(iid)
     var outList = [];
     appendForwardDeclarations(list, new IInfo(iid));
     list.sort();
-    
-    for(i = 0; i < list.length; i++) 
+
+    for(i = 0; i < list.length; i++)
     {
         cur = list[i];
-        if(cur != prev && cur != "nsISupports") 
+        if(cur != prev && cur != "nsISupports")
         {
-            if(cur != MISSING_INTERFACE)                 
-                outList.push(cur);   
-            prev = cur;    
-        }    
+            if(cur != MISSING_INTERFACE)
+                outList.push(cur);
+            prev = cur;
+        }
     }
-    return outList;    
-}       
+    return outList;
+}
 
 /*********************************************************/
 
@@ -454,17 +454,17 @@ nsInterfaceInfoToIDL.prototype =
 {
     // nsIInterfaceInfoToIDL methods...
 
-    // string generateIDL(in nsIIDRef aIID, 
+    // string generateIDL(in nsIIDRef aIID,
     //                    in PRBool withIncludes,
     //                    in PRBool withForwardDeclarations);
     generateIDL : function(aIID, withIncludes, withForwardDeclarations) {
         var out = new Buffer;
-        out.writeln();    
+        out.writeln();
 
         if(withIncludes)
         {
-            out.writeln('#include "nsISupports.idl"');    
-            out.writeln();    
+            out.writeln('#include "nsISupports.idl"');
+            out.writeln();
         }
 
         if(withForwardDeclarations)
@@ -472,13 +472,13 @@ nsInterfaceInfoToIDL.prototype =
             doForwardDeclarations(out, aIID);
             out.writeln("");
         }
-        
+
         doInterface(out, aIID);
 
         return out.buffer;
     },
 
-    // void getReferencedInterfaceNames(in nsIIDRef aIID, 
+    // void getReferencedInterfaceNames(in nsIIDRef aIID,
     //                                  out PRUint32 aArrayLength,
     //                                  [retval, array, size_is(aArrayLength)]
     //                                  out string aNames);
@@ -491,11 +491,12 @@ nsInterfaceInfoToIDL.prototype =
 
     // nsISupports methods...
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsIInterfaceInfoToIDL) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsIInterfaceInfoToIDL) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     }
 }
 
@@ -513,8 +514,8 @@ const MODULE_CTOR        = nsInterfaceInfoToIDL;
 // generic nsIModule part...
 
 function NSGetModule(compMgr, fileSpec) {
-    return new GenericModule(MODULE_NAME, MODULE_CONTRACT_ID, 
-                             MODULE_CID, MODULE_CTOR); 
+    return new GenericModule(MODULE_NAME, MODULE_CONTRACT_ID,
+                             MODULE_CID, MODULE_CTOR);
 }
 
 function GenericModule (name, contractID, CID, ctor) {
@@ -535,7 +536,7 @@ GenericModule.prototype = {
      */
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        compMgr.registerFactoryLocation(this.CID, this.name, this.contractID, 
+        compMgr.registerFactoryLocation(this.CID, this.name, this.contractID,
                                         fileSpec, location, type);
     },
 
@@ -556,7 +557,7 @@ GenericModule.prototype = {
 
     /* factory object */
     myFactory: {
-        
+
         /*
          * Construct an instance of the interface specified by iid, possibly
          * aggregating it with the provided outer.  (If you don't know what

@@ -74,17 +74,18 @@ nsHelperAppDialog.prototype = {
     // Dump text (if debug is on).
     dump: function( text ) {
         if ( this.debug ) {
-            dump( text ); 
+            dump( text );
         }
     },
 
     // This "class" supports nsIHelperAppLauncherDialog, and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsIHelperAppLauncherDialog) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsIHelperAppLauncherDialog) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // ---------- nsIHelperAppLauncherDialog methods ----------
@@ -125,7 +126,7 @@ nsHelperAppDialog.prototype = {
                            .createBundle( "chrome://global/locale/nsHelperAppDlg.properties");
 
         var windowTitle = bundle.GetStringFromName( "saveDialogTitle" );
-        
+
         var parent = aContext
                         .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
                         .getInterface( Components.interfaces.nsIDOMWindowInternal );
@@ -179,7 +180,7 @@ nsHelperAppDialog.prototype = {
         }
         return result;
     },
-    
+
     // ---------- implementation methods ----------
 
     // Web progress listener so we can detect errors while mLauncher is
@@ -253,7 +254,7 @@ nsHelperAppDialog.prototype = {
 
          if (suggestedFileName)
            fname = suggestedFileName;
-           
+
 
          this.mTitle = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
          win.setAttribute( "title", this.mTitle );
@@ -309,8 +310,8 @@ nsHelperAppDialog.prototype = {
         {
           // Use intro with descriptive text.
           modified = this.replaceInsert( this.getString( "intro.withDesc" ), 1, desc );
-        } 
-        else 
+        }
+        else
         {
           // Use intro without descriptive text.
           modified = this.getString( "intro.noDesc" );
@@ -323,7 +324,7 @@ nsHelperAppDialog.prototype = {
         // if mSourcePath is a local file, then let's use the pretty path name instead of an ugly
         // url...
         var pathString = this.mSourcePath;
-        try 
+        try
         {
           var fileURL = url.QueryInterface(Components.interfaces.nsIFileURL);
           if (fileURL)
@@ -361,10 +362,10 @@ nsHelperAppDialog.prototype = {
             // from the web), and, enable use of "system default" if it isn't
             // executable (because we will prompt the user for the default app
             // in that case).
-            
+
             // Need to get temporary file and check for executable-ness.
             var tmpFile = this.mLauncher.targetFile;
-            
+
             //  Default is Ok if the file isn't executable (and vice-versa).
             result = !tmpFile.isExecutable();
         } else {
@@ -375,7 +376,7 @@ nsHelperAppDialog.prototype = {
         }
         return result;
     },
-    
+
     // Set "default" application description field.
     initDefaultApp: function() {
         // Use description, if we can get one.
@@ -393,14 +394,14 @@ nsHelperAppDialog.prototype = {
 
         return file.path;
     },
-    
+
     // initAppAndSaveToDiskValues:
     initAppAndSaveToDiskValues: function() {
         // Fill in helper app info, if there is any.
         this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
         // Initialize "default application" field.
         this.initDefaultApp();
-        
+
         // Fill application name textbox.
         if (this.chosenApp && this.chosenApp.path) {
             this.dialogElement( "appPath" ).value = this.getPath(this.chosenApp);
@@ -428,7 +429,7 @@ nsHelperAppDialog.prototype = {
                 useDefault.radioGroup.selectedItem = this.dialogElement( "saveToDisk" );
             }
         }
-        
+
         // Enable/Disable choose application button and textfield
         this.toggleChoice();
     },
@@ -478,27 +479,27 @@ nsHelperAppDialog.prototype = {
 
     updateOKButton: function() {
         var ok = false;
-        if ( this.dialogElement( "saveToDisk" ).selected ) 
+        if ( this.dialogElement( "saveToDisk" ).selected )
         {
             // This is always OK.
             ok = true;
-        } 
+        }
         else if ( this.dialogElement( "useSystemDefault" ).selected )
         {
             // No app need be specified in this case.
             ok = true;
         }
-        else 
+        else
         {
-            // only enable the OK button if we have a default app to use or if 
+            // only enable the OK button if we have a default app to use or if
             // the user chose an app....
             ok = this.chosenApp || /\S/.test( this.dialogElement( "appPath" ).value );
         }
-        
+
         // Enable Ok button if ok to press.
         this.mDialog.document.documentElement.getButton( "accept" ).disabled = !ok;
     },
-    
+
     // Returns true iff the user-specified helper app has been modified.
     appChanged: function() {
         return this.helperAppChoice() != this.mLauncher.MIMEInfo.preferredApplicationHandler;
@@ -535,7 +536,7 @@ nsHelperAppDialog.prototype = {
         {
           // We will also need to update if the "always ask" flag has changed.
           needUpdate = needUpdate || this.mLauncher.MIMEInfo.alwaysAskBeforeHandling == this.dialogElement( "alwaysHandle" ).checked;
-        
+
           // One last special case: If the input "always ask" flag was false, then we always
           // update.  In that case we are displaying the helper app dialog for the first
           // time for this mime type and we need to store the user's action in the mimeTypes.rdf
@@ -543,14 +544,14 @@ nsHelperAppDialog.prototype = {
           // to store the "always ask" flag so the helper app dialog will or won't display
           // next time, per the user's selection).
           needUpdate = needUpdate || !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
-        
+
           // Make sure mime info has updated setting for the "always ask" flag.
           this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = !this.dialogElement( "alwaysHandle" ).checked;
         }
 
-        return needUpdate;        
+        return needUpdate;
     },
-    
+
     // See if the user changed things, and if so, update the
     // mimeTypes.rdf entry for this mime type.
     updateHelperAppPref: function() {
@@ -562,14 +563,14 @@ nsHelperAppDialog.prototype = {
                                  "chrome,modal=yes,resizable=no",
                                  this );
     },
-    
+
     // onOK:
     onOK: function() {
         // Verify typed app path, if necessary.
         if ( this.dialogElement( "openUsing" ).selected ) {
             var helperApp = this.helperAppChoice();
             if ( !helperApp || !helperApp.exists() ) {
-                // Show alert and try again.                            
+                // Show alert and try again.
                 var msg = this.replaceInsert( this.getString( "badApp" ), 1, this.dialogElement( "appPath" ).value );
                 var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
                             .getService( Components.interfaces.nsIPromptService );
@@ -588,12 +589,12 @@ nsHelperAppDialog.prototype = {
                 return false;
             }
         }
-        
+
         // Remove our web progress listener (a progress dialog will be
         // taking over).
         this.mLauncher.setWebProgressListener( null );
-        
-        // saveToDisk and launchWithApplication can return errors in 
+
+        // saveToDisk and launchWithApplication can return errors in
         // certain circumstances (e.g. The user clicks cancel in the
         // "Save to Disk" dialog. In those cases, we don't want to
         // update the helper application preferences in the RDF file.
@@ -603,7 +604,7 @@ nsHelperAppDialog.prototype = {
                 this.mLauncher.saveToDisk( null, false );
             else
                 this.mLauncher.launchWithApplication( null, false );
-        
+
             // Update user pref for this mime type (if necessary). We do not
             // store anything in the mime type preferences for the ambiguous
             // type application/octet-stream.
@@ -612,12 +613,12 @@ nsHelperAppDialog.prototype = {
             {
                 this.updateHelperAppPref();
             }
- 
+
         } catch(e) { }
-            
+
         // Unhook dialog from this object.
         this.mDialog.dialog = null;
-        
+
         // Close up dialog by returning true.
         return true;
     },
@@ -632,7 +633,7 @@ nsHelperAppDialog.prototype = {
             this.mLauncher.Cancel();
         } catch( exception ) {
         }
-        
+
         // Unhook dialog from this object.
         this.mDialog.dialog = null;
 
@@ -660,7 +661,7 @@ nsHelperAppDialog.prototype = {
 
         // XXX - We want to say nsIFilePicker.filterExecutable or something
         fp.appendFilters( nsIFilePicker.filterAll );
-        
+
         if ( fp.show() == nsIFilePicker.returnOK && fp.file ) {
             // Remember the file they chose to run.
             this.chosenApp = fp.file;

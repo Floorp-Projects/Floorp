@@ -52,9 +52,9 @@ const kTotalSecurityHostingFlags =
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_NOTHING;
 
 // Host only safe controls, no downloading or scripting
-const kHighSecurityHostingFlags = 
+const kHighSecurityHostingFlags =
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS;
-    
+
 // Host and script safe controls and allow downloads
 const kMediumSecurityGlobalHostingFlags =
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
@@ -67,9 +67,9 @@ const kLowSecurityHostFlags =
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS |
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_ALL_OBJECTS;
-    
+
 // Goodbye cruel world
-const kNoSecurityHostingFlags = 
+const kNoSecurityHostingFlags =
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
     nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS |
@@ -85,7 +85,7 @@ const kDefaultGlobalHostingFlags = kMediumSecurityGlobalHostingFlags;
 const kDefaultOtherHostingFlags  = kMediumSecurityGlobalHostingFlags;
 
 // Preferences security policy reads from
-const kHostingPrefPart1 = "security.xpconnect.activex."; 
+const kHostingPrefPart1 = "security.xpconnect.activex.";
 const kHostingPrefPart2 = ".hosting_flags";
 const kGlobalHostingFlagsPref = kHostingPrefPart1 + "global" + kHostingPrefPart2;
 
@@ -166,11 +166,13 @@ AxSecurityPolicy.prototype = {
     },
     // nsISupports
     QueryInterface: function(iid) {
-        if (!iid.equals(nsISupports) &&
-            !iid.equals(nsIActiveXSecurityPolicy) &&
-            !iid.equals(nsIObserver))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
+        if (iid.equals(nsISupports) ||
+            iid.equals(nsIActiveXSecurityPolicy) ||
+            iid.equals(nsIObserver))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     }
 };
 
@@ -199,7 +201,7 @@ var AxSecurityPolicyModule = {
             "ActiveX Security Policy Service",
             NS_IACTIVEXSECURITYPOLICY_CONTRACTID,
             fileSpec,
-            location, 
+            location,
             type);
     },
     unregisterSelf: function(compMgr, fileSpec, location)
@@ -215,7 +217,7 @@ var AxSecurityPolicyModule = {
         if (!iid.equals(Components.interfaces.nsIFactory))
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
-        throw Components.results.NS_ERROR_NO_INTERFACE;    
+        throw Components.results.NS_ERROR_NO_INTERFACE;
     },
     canUnload: function(compMgr)
     {

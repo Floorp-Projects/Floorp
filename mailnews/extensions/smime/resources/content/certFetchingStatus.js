@@ -43,7 +43,7 @@
   When bound, kick off the searches.
   On finding certificates, import into permanent cert database.
   When all searches are finished, close the dialog.
-*/ 
+*/
 
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
@@ -77,7 +77,7 @@ function search()
       .getService(Components.interfaces.nsIPrefService);
   var prefs = prefService.getBranch(null);
 
-  gLdapServerURL = 
+  gLdapServerURL =
     Components.classes["@mozilla.org/network/ldap-url;1"]
       .createInstance().QueryInterface(Components.interfaces.nsILDAPURL);
 
@@ -181,7 +181,7 @@ function kickOffSearch()
     for (var i = 0; i < gEmailAddresses.length; ++i) {
       mailFilter += "(mail=" + gEmailAddresses[i] + ")";
     }
-    
+
     var filter = prefix1 + prefix2 + mailFilter + suffix2 + suffix1;
 
     var wanted_attributes = new Array();
@@ -193,7 +193,7 @@ function kickOffSearch()
     // one for signing, one for encrypting.
     // Maybe that number should be larger, to allow for deployments,
     // where even more certs can be stored per user???
-    
+
     var maxEntriesWanted = gEmailAddresses.length * 2;
 
     getLDAPOperation();
@@ -211,18 +211,19 @@ function boundListener() {
 
 boundListener.prototype.QueryInterface =
   function(iid) {
-    if (!iid.equals(Components.interfaces.nsISupports) &&
-        !iid.equals(Components.interfaces.nsILDAPMessageListener))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsILDAPMessageListener))
+        return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   }
 
-boundListener.prototype.onLDAPMessage = 
+boundListener.prototype.onLDAPMessage =
   function(aMessage) {
   }
 
-boundListener.prototype.onLDAPInit = 
+boundListener.prototype.onLDAPInit =
   function(aConn, aStatus) {
     kickOffBind();
   }
@@ -233,14 +234,15 @@ function ldapMessageListener() {
 
 ldapMessageListener.prototype.QueryInterface =
   function(iid) {
-    if (!iid.equals(Components.interfaces.nsISupports) &&
-        !iid.equals(Components.interfaces.nsILDAPMessageListener))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsILDAPMessageListener))
+        return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   }
 
-ldapMessageListener.prototype.onLDAPMessage = 
+ldapMessageListener.prototype.onLDAPMessage =
   function(aMessage) {
     if (Components.interfaces.nsILDAPMessage.RES_SEARCH_RESULT == aMessage.type) {
       window.close();
@@ -273,7 +275,7 @@ ldapMessageListener.prototype.onLDAPMessage =
     }
   }
 
-ldapMessageListener.prototype.onLDAPInit = 
+ldapMessageListener.prototype.onLDAPInit =
   function(aConn, aStatus) {
   }
 
@@ -291,7 +293,7 @@ function getProxyOnUIThread(aObject, aInterface) {
             classes["@mozilla.org/xpcomproxy;1"].
             getService(Components.interfaces.nsIProxyObjectManager);
 
-    return proxyMgr.getProxyForObject(uiQueue, 
-            aInterface, aObject, 5); 
+    return proxyMgr.getProxyForObject(uiQueue,
+            aInterface, aObject, 5);
     // 5 == PROXY_ALWAYS | PROXY_SYNC
 }

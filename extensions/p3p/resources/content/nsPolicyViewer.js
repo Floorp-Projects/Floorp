@@ -56,7 +56,7 @@ const LOAD_POLICY   = 2;
 const LOAD_SUMMARY  = 3;
 const LOAD_OPTIONS  = 4;
 
-const POLICY_ERROR  = 5; 
+const POLICY_ERROR  = 5;
 const SUMMARY_ERROR = 6;
 const OPTIONS_ERROR = 7;
 
@@ -69,16 +69,16 @@ var gStrBundle           = null;
 var gBrandName           = null;
 
 /* class nsPolicyViewer
- * 
+ *
  * Used for viewing site's privacy policy, policy summary ( generated ),
- * and opt-ins/opt-outs 
+ * and opt-ins/opt-outs
  * @param - aMainURI -> The URI of the loaded document.
  *
  */
 function nsPolicyViewer(aDoc)
 {
   if (!gIOService) {
-    gIOService = 
+    gIOService =
       Components.classes["@mozilla.org/network/io-service;1"].getService(nsIIOService);
   }
 
@@ -92,7 +92,7 @@ function nsPolicyViewer(aDoc)
 
 }
 
-nsPolicyViewer.prototype = 
+nsPolicyViewer.prototype =
 {
   mAction          : null,
   mPolicyLocation  : null,
@@ -109,8 +109,8 @@ nsPolicyViewer.prototype =
   mFragment        : null,
   mFlag            : 0,
 
-  /* 
-   * Initiate privacy policy loading for a URI selected 
+  /*
+   * Initiate privacy policy loading for a URI selected
    * in the Page-Info-Privacy tab window.
    * @param - aSelectedURI -> Absolute URI that requests a privacy policy
    * @param - aAction      -> HUMAN READABLE | GENERATE SUMMARY | OPT-IN/OPT-OUT
@@ -131,25 +131,25 @@ nsPolicyViewer.prototype =
     }
   },
 
-  /* 
+  /*
    * Initialize nsPolicyViewer
    * @param - aSelectedURI -> URI that requests a privacy policy
    * @param - aAction      -> HUMAN READABLE | MACHINE READABLE | OPT-IN/OPT-OUT
    */
-  init : function(aSelectedURI, aAction) 
+  init : function(aSelectedURI, aAction)
   {
     try {
       if (!this.mPolicyReference) {
-        this.mPolicyReference = 
+        this.mPolicyReference =
           Components.classes["@mozilla.org/p3p/policyreference;1"].createInstance(nsIPolicyReference);
-          
+
         this.mPolicyTarget = this.mPolicyReference.QueryInterface(nsIPolicyTarget);
         this.mPolicyTarget.setupPolicyListener(this);
         this.mPolicyReference.initialize(this.mMainURI);
       }
 
-      this.mAction = aAction; 
-      
+      this.mAction = aAction;
+
       // aSelectedURI is already absolute spec
       if (!this.mSelectedURI) {
         this.mSelectedURI = gIOService.newURI(aSelectedURI, null, null);
@@ -171,7 +171,7 @@ nsPolicyViewer.prototype =
     catch (ex) {
       this.reportError(aAction);
       return FAILURE;
-    }        
+    }
   },
 
   /*
@@ -194,13 +194,13 @@ nsPolicyViewer.prototype =
     }
   },
 
-  /* 
+  /*
    * Initiate policy reference file ( PRF ) loading. A policy reference file
    * is used for locating the full p3p policy location.
    * @param - aURI   -> URI that requests a privacy policy
    * @param - aFlag  -> IS_MAIN_URI     - The loaded document's URI
    *                    IS_EMBEDDED_URI - URI, embedded in the current document, with a different host.
-   *                    IS_LINKED_URI   - URI referenced via HTML/XHTML LINK tag.             
+   *                    IS_LINKED_URI   - URI referenced via HTML/XHTML LINK tag.
    */
   handleURI : function (aURI, aFlag)
   {
@@ -209,7 +209,7 @@ nsPolicyViewer.prototype =
     }
     catch(ex) {
       this.reportError(this.mAction);
-    }   
+    }
   },
 
   /*
@@ -217,7 +217,7 @@ nsPolicyViewer.prototype =
    * @param - aLocation -> A full p3p policy location
    * @param - aError    -> POLICY_LOAD_SUCCESS | POLICY_LOAD_FAILURE
    */
-  notifyPolicyLocation : function (aLocation, aError) 
+  notifyPolicyLocation : function (aLocation, aError)
   {
     if (aError == nsIPolicyReference.POLICY_LOAD_SUCCESS) {
      if (!this.mPolicyURL) {
@@ -226,21 +226,21 @@ nsPolicyViewer.prototype =
      else {
        this.mPolicyURL.spec = aLocation;
      }
-      
+
       // We have located the full p3p policy location from
       // the policy reference file. Now let's try to load full p3p
       // policy document.
       if (!this.mXMLHttpRequest) {
         this.mXMLHttpRequest = new XMLHttpRequest();
       }
-      
+
       // If a fragment identifier is specified then we have to locate
       // the POLICY with a name specified by the fragment.
       // Ex. <POLICY name="one"> .... </POLICY> <POLICY name="two"> ...</POLICY>
       // if the fragment identifier is "#two" then we should find the POLICY named "two"
       this.mFragment = this.mPolicyURL.ref;
 
-      // If we've already loaded a full p3p policy then the policy 
+      // If we've already loaded a full p3p policy then the policy
       // document should be available ( note: Only for the same host's URIs ).
       if (this.mFlag & nsIPolicyReference.IS_MAIN_URI) {
         if (this.mDocument) {
@@ -261,7 +261,7 @@ nsPolicyViewer.prototype =
       }
 
       this.mXMLHttpRequest.onload = this;
-      // Override the mime type because without it XMLHttpRequest hangs 
+      // Override the mime type because without it XMLHttpRequest hangs
       // on certain sites that serve HTML instead ofXML.
       this.mXMLHttpRequest.overrideMimeType("text/xml");
       this.mXMLHttpRequest.open("GET", aLocation);
@@ -294,7 +294,7 @@ nsPolicyViewer.prototype =
       }
       this.reportError(this.mAction);
     }
-    else {   
+    else {
       this.reportError(this.mAction);
     }
   },
@@ -303,7 +303,7 @@ nsPolicyViewer.prototype =
    * Called on a policy load error.
    * @param - aError -> POLICY_LOAD_SUCCESS | POLICY_LOAD_FAILURE
    */
-  notifyPolicyError : function (aError) 
+  notifyPolicyError : function (aError)
   {
     this.reportError(this.mAction);
   },
@@ -313,24 +313,25 @@ nsPolicyViewer.prototype =
    * with the policy viewer and therefore all the objects can
    * be released
    */
-  finalize: function () 
+  finalize: function ()
   {
     if (this.mPolicyReference) {
       this.mPolicyReference.finalize();
     }
   },
-  
+
   /*
    * This is required to make the wrapper code happy
    */
-  QueryInterface: function (iid) 
+  QueryInterface: function (iid)
   {
-    if (!iid.equals(Components.interfaces.nsISupports) &&
-        !iid.equals(Components.interfaces.nsISupportsWeakReference) &&
-        !iid.equals(Components.interfaces.nsIDOMEventListener)) {
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    }
-    return this;
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+        iid.equals(Components.interfaces.nsIDOMEventListener))
+      return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   },
 
   /*
@@ -338,12 +339,12 @@ nsPolicyViewer.prototype =
    * version of the site's policy. That is, we load, on a new window,
    * the value of the "discuri" attribute of the POLICY node.
    */
-  viewHumanReadablePolicy : function () 
-  { 
+  viewHumanReadablePolicy : function ()
+  {
     var document = this.getDocument();
     if (document) {
       // Note: P3P policies can be associated with at least five
-      // different namespaces. For performance reasons intentionally 
+      // different namespaces. For performance reasons intentionally
       // accessing element by name without namespace.
       var nodelist = document.getElementsByTagName("POLICY");
       var length   = nodelist.length;
@@ -351,7 +352,7 @@ nsPolicyViewer.prototype =
         for (index = 0; index < length; index++) {
           var node = nodelist[index];
           var name = node.getAttribute("name");
-        
+
           // If a fragment identifier is specified then we have to locate
           // the POLICY with a name specified by that fragment.
           if (!this.mFragment || this.mFragment == name) {
@@ -359,7 +360,7 @@ nsPolicyViewer.prototype =
             if (discuri) {
               discuri = this.mPolicyURL.resolve(discuri);
               if (discuri.match(/^\s*https?:/i)) {
-                window.open(discuri); 
+                window.open(discuri);
                 return;
               }
             }
@@ -378,12 +379,12 @@ nsPolicyViewer.prototype =
    * The purpose of this method is to generate a summary ( using XSLT )
    * based on the machine readable format ( XML ) of the full p3p policy.
    */
-  viewMachineReadablePolicy : function () 
+  viewMachineReadablePolicy : function ()
   {
-    var document = this.getDocument(); 
+    var document = this.getDocument();
     if (document) {
       // Note: P3P policies can be associated with at least five
-      // different namespaces. For performance reasons intentionally 
+      // different namespaces. For performance reasons intentionally
       // accessing element by name without namespace.
       var nodelist = document.getElementsByTagName("POLICY");
       var length   = nodelist.length;
@@ -392,16 +393,16 @@ nsPolicyViewer.prototype =
         while (index < length) {
           var node = nodelist[index];
           var name = node.getAttribute("name");
-        
+
           // If a fragment identifier is specified then target
           // the POLICY with that fragment name. To achieve that
           // remove all other POLICY nodes that don't match the name.
           // By doing this the XSLT code doesn't have to know what
-          // part of the full policy needs to be transformed. 
+          // part of the full policy needs to be transformed.
           if (this.mFragment && this.mFragment != name) {
             node.parentNode.removeChild(node);
             // When a node gets removed it will be reflected on the nodelist.
-            // That is, the nodelist length will decrease. To stay within 
+            // That is, the nodelist length will decrease. To stay within
 				// bounds of the nodelist array do not increment index.
             --length;
           }
@@ -410,24 +411,24 @@ nsPolicyViewer.prototype =
           }
         }
       }
-    
+
       this.preTransform();
     }
   },
 
   /*
    * The purpose of this method is to display a human readable
-   * version of the site's opt-in / opt-out policy. That is, we 
-   * load, on a new window, the value of the "opturi" attribute 
+   * version of the site's opt-in / opt-out policy. That is, we
+   * load, on a new window, the value of the "opturi" attribute
    * of the POLICY node.
    */
-  viewOptInOptOutPolicy : function () 
+  viewOptInOptOutPolicy : function ()
   {
     var document = this.getDocument();
-  
+
     if (document) {
       // Note: P3P policies can be associated with at least five
-      // different namespaces. For performance reasons intentionally 
+      // different namespaces. For performance reasons intentionally
       // accessing element by name without namespace.
       var nodelist = document.getElementsByTagName("POLICY");
       var length   = nodelist.length;
@@ -443,11 +444,11 @@ nsPolicyViewer.prototype =
             if (opturi) {
               opturi = this.mPolicyURL.resolve(opturi);
               if (opturi.match(/^\s*https?:/i)) {
-                window.open(opturi); 
+                window.open(opturi);
                 return;
               }
             }
-            break;              
+            break;
           }
         }
         this.reportError(OPTIONS_ERROR);
@@ -490,7 +491,7 @@ nsPolicyViewer.prototype =
         return null;
       }
     }
-  
+
     return document;
   },
 
@@ -499,7 +500,7 @@ nsPolicyViewer.prototype =
    * based on the document's namespace and then initiate transformation
    * of the machine readable privacy policy into a human readable summary.
    */
-  preTransform : function () 
+  preTransform : function ()
   {
     try {
       this.mStyle  = document.implementation.createDocument("", "", null);
@@ -508,7 +509,7 @@ nsPolicyViewer.prototype =
 
       var sheet = null;
       var ns = this.getDocument().documentElement.namespaceURI;
-    
+
       if (ns == "http://www.w3.org/2002/01/P3Pv1") {
         sheet = STYLESHEET_URL_200201;
       } else if (ns == "http://www.w3.org/2001/09/P3Pv1") {
@@ -545,11 +546,11 @@ nsPolicyViewer.prototype =
     if (!this.mXSLTProcessor) {
       this.mXSLTProcessor = new XSLTProcessor();
     }
-  
+
     // An onload event ( triggered when a result window is opened )
     // would start the transformation.
-    var resultWin = window.openDialog("chrome://p3p/content/p3pSummary.xul", "_blank", 
-                                      "chrome,all,dialog=no", this.mXSLTProcessor, 
+    var resultWin = window.openDialog("chrome://p3p/content/p3pSummary.xul", "_blank",
+                                      "chrome,all,dialog=no", this.mXSLTProcessor,
                                       this.getDocument(), this.mStyle, this.mPolicyURL);
   },
 
@@ -583,7 +584,7 @@ nsPolicyViewer.prototype =
       spec = this.mSelectedURI;
       this.mSelectedURI = null;
     }
-    
+
     var errorMessage = getBundle().formatStringFromName(name, [spec], 1);
     alertMessage(errorMessage);
   }
@@ -592,15 +593,15 @@ nsPolicyViewer.prototype =
 /*
  * @return string bundle service.
  */
-function getStrBundleService () 
+function getStrBundleService ()
 {
   if (!gStrBundleService) {
-    gStrBundleService = 
+    gStrBundleService =
       Components.classes["@mozilla.org/intl/stringbundle;1"].getService(nsIStringBundleService);
   }
   return gStrBundleService;
 }
-    
+
 /*
  * This method is required for localized messages.
  * @return string bundle.
@@ -611,12 +612,12 @@ function getBundle ()
     gStrBundle = getStrBundleService().createBundle("chrome://p3p/locale/P3P.properties");
   }
   return gStrBundle;
-} 
+}
 
 /*
  * @return brand name.
  */
-function getBrandName () 
+function getBrandName ()
 {
   if (!gBrandName) {
     var brandBundle = getStrBundleService().createBundle("chrome://global/locale/brand.properties");
@@ -649,7 +650,7 @@ function isEquivalent (aLHS, aRHS)
       port1 = (port1 == 443) ? -1 : port1;
       port2 = (port2 == 443) ? -1 : port2;
     }
-    
+
     if (port1 == port2) {
       return true;
     }

@@ -14,12 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001-2002
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): ArentJan Banck <ajbanck@planet.nl> 
+ * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,7 +58,7 @@ function GetIOService()
   gPublishIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   if (!gPublishIOService)
     dump("failed to get io service\n");
-  
+
   return gPublishIOService;
 }
 
@@ -67,7 +67,7 @@ function GetIOService()
  * This is the entry point into the file from calendar.js
  * contentType is always text/calendar
  */
- 
+
 function calendarPublish(aDataString, newLocation, login, password, contentType)
 {
   try
@@ -80,7 +80,7 @@ function calendarPublish(aDataString, newLocation, login, password, contentType)
     }
     output_string_to_channel(protocolChannel, aDataString, contentType);
     protocolChannel.asyncOpen(gPublishingListener, null);
-  }  
+  }
   catch (e)
   {
     alert("an error occurred in calendarPublish: " + e + "\n");
@@ -99,7 +99,7 @@ function calendarUploadFile(aSourceFilename, newLocation, login, password, conte
       }
       output_file_to_channel(protocolChannel, aSourceFilename, contentType);
       protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
-       
+
       return;
    }
    catch (e)
@@ -124,13 +124,13 @@ function output_string_to_channel( aChannel, aDataString, contentType )
 function output_file_to_channel( aChannel, aFilePath, contentType )
 {
    var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
-   
+
    var thisFile = new File( aFilePath );
-   
+
    thisFile.open( "r" );
-   
+
    var theFileContents = thisFile.read();
-   
+
    output_string_to_channel( aChannel, theFileContents, contentType );
 }
 
@@ -161,7 +161,7 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
     catch(e) {
 	dump(e+"\n");
     }
-    
+
     try {
        switch(destChannel.URI.scheme)
        {
@@ -182,7 +182,7 @@ function get_destination_channel(destinationDirectoryLocation, login, password)
 		return null;
 	}
     }
-    catch( e ) 
+    catch( e )
     {
        return null;
     }
@@ -205,7 +205,7 @@ function create_channel_from_url(ioService, aURL, aLogin, aPassword)
     }
     return ioService.newChannelFromURI(nsiuri);
   }
-  catch (e) 
+  catch (e)
   {
     alert(e+"\n");
     return null;
@@ -243,7 +243,7 @@ function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, aLo
       dump("failed to get ftp channel\n");
       return;
     }
-    
+
     ftpChannel.open();
     protocolChannel.uploadStream = srcChannel.open();
     protocolChannel.asyncOpen(null, null);
@@ -260,13 +260,12 @@ var gPublishingListener =
 {
   QueryInterface: function(aIId, instance)
   {
-    if (aIId.equals(Components.interfaces.nsIStreamListener))
+    if (aIId.equals(Components.interfaces.nsIStreamListener) ||
+        aIId.equals(Components.interfaces.nsISupports))
       return this;
-    if (aIId.equals(Components.interfaces.nsISupports))
-      return this;
-    
-    dump("QueryInterface " + aIId + "\n");
-    throw Components.results.NS_NOINTERFACE;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   },
 
   onStartRequest: function(request, ctxt)

@@ -16,7 +16,7 @@
  *
  *
  * Contributor(s):
- *  David Bienvenu <bienvenu@nventure.com> (Original Author) 
+ *  David Bienvenu <bienvenu@nventure.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,7 +39,7 @@ var gOfflineStartupMode; //0 = remember last state, 1 = ask me, 2 == online, 3 =
 const kRememberLastState = 0;
 const kAskForOnlineState = 1;
 ////////////////////////////////////////////////////////////////////////
-// 
+//
 //   nsOfflineStartup : nsIProfileStartupListener, nsIObserver
 //
 //   Check if the user has set the pref to be prompted for
@@ -49,7 +49,7 @@ const kAskForOnlineState = 1;
 //
 ////////////////////////////////////////////////////////////////////////
 
-var nsOfflineStartup = 
+var nsOfflineStartup =
 {
   onProfileStartup: function(aProfileName)
   {
@@ -58,11 +58,11 @@ var nsOfflineStartup =
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
       var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  
+
       gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
 
     if (gOfflineStartupMode == kRememberLastState)
-    {    
+    {
       var offline = !prefs.getBoolPref("network.online");
       ioService.offline = offline;
       var observerService = Components.
@@ -77,7 +77,7 @@ var nsOfflineStartup =
       var promptService = Components.
         classes["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Components.interfaces.nsIPromptService);
-      
+
       var bundle = getBundle(kBundleURI);
       if (!bundle)
         return;
@@ -88,7 +88,7 @@ var nsOfflineStartup =
       var button1Text = bundle.GetStringFromName("workOffline");
       var checkVal = {value:0};
 
-      var result = promptService.confirmEx(null, title, desc, 
+      var result = promptService.confirmEx(null, title, desc,
         (promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_IS_STRING) +
         (promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING),
         button0Text, button1Text, null, null, checkVal);
@@ -124,17 +124,18 @@ var nsOfflineStartup =
 
   QueryInterface: function(aIID)
   {
-    if (!aIID.equals(Components.interfaces.nsIObserver) &&
-        !aIID.equals(Components.interfaces.nsIProfileStartupListener) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (aIID.equals(Components.interfaces.nsIObserver) ||
+        aIID.equals(Components.interfaces.nsIProfileStartupListener) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   }
 }
 
 
-var nsOfflineStartupModule = 
+var nsOfflineStartupModule =
 {
   mClassName:     "Offline Startup",
   mContractID:    "@mozilla.org/offline-startup;1",
@@ -157,12 +158,12 @@ var nsOfflineStartupModule =
 
     aCompMgr = aCompMgr.QueryInterface(
                  Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName, 
+    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName,
       this.mContractID, aFileSpec, aLocation, aType);
 
     // receive startup notification from the profile manager
     // (we get |createInstance()|d at startup-notification time)
-    this.getCategoryManager().addCategoryEntry("profile-startup-category", 
+    this.getCategoryManager().addCategoryEntry("profile-startup-category",
       this.mContractID, "", true, true);
   },
 
@@ -172,7 +173,7 @@ var nsOfflineStartupModule =
                  Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(this.mClassID, aFileSpec);
 
-    this.getCategoryManager().deleteCategoryEntry("profile-startup-category", 
+    this.getCategoryManager().deleteCategoryEntry("profile-startup-category",
       this.mContractID, true);
   },
 
@@ -203,7 +204,7 @@ var nsOfflineStartupModule =
           !aIID.equals(Components.interfaces.nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-      // return the singleton 
+      // return the singleton
       return nsOfflineStartup.QueryInterface(aIID);
     },
 

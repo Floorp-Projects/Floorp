@@ -67,7 +67,7 @@ nsResetPref.prototype = {
     // nsICmdLineHandler interface
     get commandLineArgument() { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
     get prefNameForStartup()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
-    get chromeUrlForTask()    { 
+    get chromeUrlForTask()    {
         try {
             // We trust that this has been called during command-line handling during
             // startup from nsAppRunner.cpp.
@@ -97,19 +97,20 @@ nsResetPref.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
     get helpText()            { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
-    get handlesArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
-    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
-    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
+    get handlesArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
     // nsISupports interface
 
     // This "class" supports nsICmdLineHandler and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsICmdLineHandler) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsICmdLineHandler) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // Dump text (if debug is on).
@@ -132,35 +133,35 @@ nsResetPref.prototype = {
                                              location,
                                              type );
         },
-    
+
         // getClassObject: Return this component's factory object.
         getClassObject: function (compMgr, cid, iid) {
             if (!cid.equals(this.cid))
                 throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
             if (!iid.equals(Components.interfaces.nsIFactory))
                 throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
+
             return this.factory;
         },
-    
+
         /* CID for this class */
         cid: Components.ID("{15ABFAF7-AD4F-4450-899B-0373EE9FAD95}"),
-    
+
         /* Contract ID for this class */
         contractId: "@mozilla.org/commandlinehandler/general-startup;1?type=resetPref",
-    
+
         /* factory object */
         factory: {
             // createInstance: Return a new nsResetPref object.
             createInstance: function (outer, iid) {
                 if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
-    
+
                 return (new nsResetPref()).QueryInterface(iid);
             }
         },
-    
+
         // canUnload: n/a (returns true)
         canUnload: function(compMgr) {
             return true;

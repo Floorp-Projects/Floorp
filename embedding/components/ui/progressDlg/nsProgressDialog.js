@@ -133,7 +133,7 @@ nsProgressDialog.prototype = {
     get cancelDownloadOnClose() { return this.mCancelDownloadOnClose; },
     set cancelDownloadOnClose(newval) { return this.mCancelDownloadOnClose = newval; },
 
-    set target(newval) { 
+    set target(newval) {
         // If newval references a file on the local filesystem, then grab a
         // reference to its corresponding nsIFile.
         if (newval instanceof nsIFileURL && newval.file instanceof nsILocalFile) {
@@ -168,7 +168,7 @@ nsProgressDialog.prototype = {
                                      this.dialogFeatures,
                                      this );
     },
-    
+
     init: function( aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aOperation ) {
       this.source = aSource;
       this.target = aTarget;
@@ -220,7 +220,7 @@ nsProgressDialog.prototype = {
 
         // If interval hasn't elapsed, ignore it.
         if ( now - this.lastUpdate < this.interval &&
-             aMaxTotalProgress != "-1" && 
+             aMaxTotalProgress != "-1" &&
              parseInt( aCurTotalProgress ) < parseInt( aMaxTotalProgress ) ) {
             return;
         }
@@ -259,7 +259,7 @@ nsProgressDialog.prototype = {
         } else {
             status = this.replaceInsert( status, 2, "??" );
         }
-    
+
         // Insert 3 is the download rate.
         if ( this.elapsed ) {
             this.rate = ( aCurTotalProgress * 1000 ) / this.elapsed;
@@ -268,10 +268,10 @@ nsProgressDialog.prototype = {
             // Rate not established, yet.
             status = this.replaceInsert( status, 3, "??.?" );
         }
-    
+
         // All 3 inserts are taken care of, now update status msg.
         this.setValue( "status", status );
-    
+
         // Update time remaining.
         if ( this.rate && ( aMaxTotalProgress > 0 ) ) {
             // Calculate how much time to download remaining at this rate.
@@ -293,10 +293,10 @@ nsProgressDialog.prototype = {
                                    .getService( Components.interfaces.nsIPromptService );
                 // Display error alert (using text supplied by back-end).
                 var title = this.getProperty( this.saving ? "savingAlertTitle" : "openingAlertTitle",
-                                              [ this.fileName() ], 
+                                              [ this.fileName() ],
                                               1 );
                 prompter.alert( this.dialog, title, aMessage );
-    
+
                 // Close the dialog.
                 if ( !this.completed ) {
                     this.onCancel();
@@ -356,16 +356,17 @@ nsProgressDialog.prototype = {
     // This "class" supports nsIProgressDialog, nsIWebProgressListener (by virtue
     // of interface inheritance), nsIObserver, and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsIProgressDialog) &&
-            !iid.equals(Components.interfaces.nsIDownload) && 
-            !iid.equals(Components.interfaces.nsITransfer) && 
-            !iid.equals(Components.interfaces.nsIWebProgressListener) &&
-            !iid.equals(Components.interfaces.nsIObserver) &&
-            !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsIProgressDialog) ||
+            iid.equals(Components.interfaces.nsIDownload) ||
+            iid.equals(Components.interfaces.nsITransfer) ||
+            iid.equals(Components.interfaces.nsIWebProgressListener) ||
+            iid.equals(Components.interfaces.nsIObserver) ||
+            iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // ---------- nsIInterfaceRequestor methods ----------
@@ -587,7 +588,7 @@ nsProgressDialog.prototype = {
         if ( this.targetFile != null )
             return this.targetFile.leafName;
         try {
-            var escapedFileName = this.target.QueryInterface(nsIURL).fileName; 
+            var escapedFileName = this.target.QueryInterface(nsIURL).fileName;
             var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                          .getService(nsITextToSubURI);
             return textToSubURI.unEscapeURIForUI(this.target.originCharset, escapedFileName);
@@ -599,7 +600,7 @@ nsProgressDialog.prototype = {
     setTitle: function() {
         // Start with saving/opening template.
         // If percentage is not known (-1), use alternate template
-        var title = this.saving 
+        var title = this.saving
             ? ( this.percent != -1 ? this.getString( "savingTitle" ) : this.getString( "unknownSavingTitle" ) )
             : ( this.percent != -1 ? this.getString( "openingTitle" ) : this.getString( "unknownOpeningTitle" ) );
 
@@ -649,7 +650,7 @@ nsProgressDialog.prototype = {
                 // Update progress meter percentage text.
                 this.setValue( "progressText", this.replaceInsert( this.getString( "percentMsg" ), 1, percent ) );
             }
-    
+
             // Update title.
             this.setTitle();
         }
@@ -782,19 +783,19 @@ nsProgressDialog.prototype = {
             result = this.getString( "longTimeFormat" );
         else
             result = this.getString( "shortTimeFormat" );
-    
+
         if ( hours < 10 )
             hours = "0" + hours;
         if ( mins < 10 )
             mins = "0" + mins;
         if ( secs < 10 )
             secs = "0" + secs;
-    
+
         // Insert hours, minutes, and seconds into result string.
         result = this.replaceInsert( result, 1, hours );
         result = this.replaceInsert( result, 2, mins );
         result = this.replaceInsert( result, 3, secs );
-    
+
         return result;
     },
 
@@ -806,7 +807,7 @@ nsProgressDialog.prototype = {
             try {
                 this.fields[ id ] = this.dialog.document.getElementById( id );
             } catch(e) {
-                this.fields[ id ] = { 
+                this.fields[ id ] = {
                     value: "",
                     setAttribute: function(id,val) {},
                     removeAttribute: function(id) {}
@@ -849,7 +850,7 @@ nsProgressDialog.prototype = {
        }
        return this.strings[ stringId ];
     },
-    
+
     // Replaces insert ("#n") with input text.
     replaceInsert: function( text, index, value ) {
         var result = text;

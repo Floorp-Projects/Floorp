@@ -80,7 +80,7 @@ function nsLDAPPrefsService() {
     var dirType;
     for (var i = 0; i < prefCount.value; i++)
     {
-      if ((arrayOfDirectories[i] != "ldap_2.servers.pab") && 
+      if ((arrayOfDirectories[i] != "ldap_2.servers.pab") &&
         (arrayOfDirectories[i] != "ldap_2.servers.history")) {
         try{
           position = gPrefInt.getIntPref(arrayOfDirectories[i]+".position");
@@ -120,34 +120,35 @@ nsLDAPPrefsService.prototype.availDirectories = null;
 nsLDAPPrefsService.prototype.QueryInterface =
 function (iid) {
 
-    if (!iid.equals(nsISupports) &&
-        !iid.equals(nsILDAPPrefsService))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(nsISupports) ||
+        iid.equals(nsILDAPPrefsService))
+        return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
 }
 
 const prefRoot = "ldap_2.servers";
 const parent = "ldap_2.servers.";
 
-nsLDAPPrefsService.prototype.getServerList = 
+nsLDAPPrefsService.prototype.getServerList =
 function (prefBranch, aCount) {
   var prefCount = {value:0};
-  
+
   // get all the preferences with prefix ldap_2.servers
   var directoriesList = prefBranch.getChildList(prefRoot, prefCount);
-  
+
   var childList = new Array();
   var count = 0;
   if (directoriesList) {
     directoriesList.sort();
     var prefixLen;
-    // lastDirectory contains the last entry that is added to the 
+    // lastDirectory contains the last entry that is added to the
     // array childList.
     var lastDirectory = "";
 
     // only add toplevel prefnames to the list,
-    // i.e. add ldap_2.servers.<server-name> 
+    // i.e. add ldap_2.servers.<server-name>
     // but not ldap_2.servers.<server-name>.foo
     for(var i=0; i<prefCount.value; i++) {
       // Assign the prefix ldap_2.servers.<server-name> to directoriesList
@@ -155,7 +156,7 @@ function (prefBranch, aCount) {
       if (prefixLen != -1) {
         directoriesList[i] = directoriesList[i].substr(0, prefixLen);
         if (directoriesList[i] != lastDirectory) {
-          // add the entry to childList 
+          // add the entry to childList
           // only if it is not added yet
           lastDirectory = directoriesList[i];
           childList[count] = directoriesList[i];
@@ -173,10 +174,10 @@ function (prefBranch, aCount) {
   return childList;
 }
 
-/* migrate 4.x ldap prefs to mozilla format. 
-   Converts hostname, basedn, port to uri (nsLDAPURL).    
+/* migrate 4.x ldap prefs to mozilla format.
+   Converts hostname, basedn, port to uri (nsLDAPURL).
  */
-nsLDAPPrefsService.prototype.migrate = 
+nsLDAPPrefsService.prototype.migrate =
 function () {
   var pref_string;
   var ldapUrl=null;
@@ -255,14 +256,14 @@ function () {
       uri.data = ldapUrl.spec;
       gPrefInt.setComplexValue(pref_string + ".uri", Components.interfaces.nsISupportsString, uri);
 
-      /* is this server selected for autocompletion? 
+      /* is this server selected for autocompletion?
          if yes, convert the preference to mozilla format.
-         Atmost one server is selected for autocompletion. 
+         Atmost one server is selected for autocompletion.
        */
       if (useDirectory && !enable){
         try {
          enable = gPrefInt.getBoolPref(pref_string + ".autocomplete.enabled");
-        } 
+        }
         catch(ex) {}
         if (enable) {
           gPrefInt.setCharPref("ldap_2.servers.directoryServer", pref_string);
@@ -277,7 +278,7 @@ function () {
     svc.savePrefFile(null);
   }
   catch (ex) {dump ("ERROR:" + ex + "\n");}
-    
+
   this.prefs_migrated = true;
 }
 
@@ -305,7 +306,7 @@ function (compMgr, fileSpec, location, type)
 
     compMgr.registerFactoryLocation(NS_LDAPPREFSSERVICE_CID,
                                     "nsLDAPPrefs Service",
-                                    NS_LDAPPREFSSERVICE_CONTRACTID, 
+                                    NS_LDAPPREFSSERVICE_CONTRACTID,
                                     fileSpec,
                                     location,
                                     type);
@@ -322,7 +323,7 @@ nsLDAPPrefsModule.getClassObject =
 function (compMgr, cid, iid) {
     if (cid.equals(nsILDAPPrefsService))
         return nsLDAPPrefsFactory;
-    throw Components.results.NS_ERROR_NO_INTERFACE;  
+    throw Components.results.NS_ERROR_NO_INTERFACE;
 }
 
 nsLDAPPrefsModule.canUnload =

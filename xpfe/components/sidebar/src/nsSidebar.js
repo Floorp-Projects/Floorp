@@ -74,7 +74,7 @@ function nsSidebar()
 {
     const RDF_CONTRACTID = "@mozilla.org/rdf/rdf-service;1";
     const nsIRDFService = Components.interfaces.nsIRDFService;
-    
+
     this.rdf = Components.classes[RDF_CONTRACTID].getService(nsIRDFService);
     this.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
     debug('datasource_uri is ' + this.datasource_uri);
@@ -92,13 +92,13 @@ nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
 nsSidebar.prototype.isPanel =
 function (aContentURL)
 {
-    var container = 
+    var container =
         Components.classes[CONTAINER_CONTRACTID].createInstance(nsIRDFContainer);
 
     container.Init(this.datasource, this.rdf.GetResource(this.resource));
-    
+
     /* Create a resource for the new panel and add it to the list */
-    var panel_resource = 
+    var panel_resource =
         this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
 
     return (container.IndexOf(panel_resource) != -1);
@@ -116,11 +116,11 @@ function (aTitle, aContentURL, aCustomizeURL)
 {
     debug("addPanel(" + aTitle + ", " + aContentURL + ", " +
           aCustomizeURL + ")");
-   
+
     return this.addPanelInternal(aTitle, aContentURL, aCustomizeURL, false);
 }
 
-nsSidebar.prototype.addPersistentPanel = 
+nsSidebar.prototype.addPersistentPanel =
 function(aTitle, aContentURL, aCustomizeURL)
 {
     debug("addPersistentPanel(" + aTitle + ", " + aContentURL + ", " +
@@ -148,7 +148,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     container.Init(this.datasource, panel_list);
 
     /* Create a resource for the new panel and add it to the list */
-    var panel_resource = 
+    var panel_resource =
         this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
     var panel_index = container.IndexOf(panel_resource);
     var stringBundle, brandStringBundle, titleMessage, dialogMessage;
@@ -169,7 +169,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
             titleMessage = "Sidebar";
             dialogMessage = aContentURL + " already exists in Sidebar.  No string bundle";
         }
-          
+
         this.promptService.alert(null, titleMessage, dialogMessage);
 
         return;
@@ -197,9 +197,9 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
         titleMessage = "Add Tab to Sidebar";
         dialogMessage = "No string bundle.  Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
     }
-          
+
     var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
-      
+
     if (!rv)
         return;
 
@@ -222,7 +222,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                            this.rdf.GetResource(this.nc + "persist"),
                            this.rdf.GetLiteral(persistValue),
                            true);
-        
+
     container.AppendElement(panel_resource);
 
     // Use an assertion to pass a "refresh" event to all the sidebars.
@@ -289,7 +289,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
         var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
         if (stringBundle) {
-            sidebarName = brandStringBundle.GetStringFromName("sidebarName");            
+            sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
@@ -305,14 +305,14 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         dialogMessage += "\nSearch Category: " + suggestedCategory;
         dialogMessage += "\nSource: " + engineURL;
     }
-          
+
     var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
-      
+
     if (!rv)
         return;
 
     var internetSearch = Components.classes[NETSEARCH_CONTRACTID].getService();
-    if (internetSearch)    
+    if (internetSearch)
         internetSearch = internetSearch.QueryInterface(nsIInternetSearchService);
     if (internetSearch)
     {
@@ -339,11 +339,13 @@ nsSidebar.prototype.getHelperForLanguage = function(count) {return null;}
 
 nsSidebar.prototype.QueryInterface =
 function (iid) {
-    if (!iid.equals(nsISidebar) && 
-        !iid.equals(nsIClassInfo) &&
-        !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
+    if (iid.equals(nsISidebar) ||
+        iid.equals(nsIClassInfo) ||
+        iid.equals(nsISupports))
+        return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
 }
 
 var sidebarModule = new Object();
@@ -354,10 +356,10 @@ function (compMgr, fileSpec, location, type)
     debug("registering (all right -- a JavaScript module!)");
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.registerFactoryLocation(SIDEBAR_CID, 
+    compMgr.registerFactoryLocation(SIDEBAR_CID,
                                     "Sidebar JS Component",
-                                    SIDEBAR_CONTRACTID, 
-                                    fileSpec, 
+                                    SIDEBAR_CONTRACTID,
+                                    fileSpec,
                                     location,
                                     type);
 
@@ -378,10 +380,10 @@ sidebarModule.getClassObject =
 function (compMgr, cid, iid) {
     if (!cid.equals(SIDEBAR_CID))
         throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
+
     return sidebarFactory;
 }
 
@@ -391,7 +393,7 @@ function(compMgr)
     debug("Unloading component.");
     return true;
 }
-    
+
 /* factory object */
 var sidebarFactory = new Object();
 
@@ -417,9 +419,9 @@ else
 
 function getSidebarDatasourceURI(panels_file_id)
 {
-    try 
+    try
     {
-        /* use the fileLocator to look in the profile directory 
+        /* use the fileLocator to look in the profile directory
          * to find 'panels.rdf', which is the
          * database of the user's currently selected panels. */
         var directory_service = Components.classes[DIR_SERV_CONTRACTID].getService(Components.interfaces.nsIProperties);
@@ -458,15 +460,15 @@ function srGetStrBundle(path)
    if (!strBundleService) {
        try {
           strBundleService =
-          Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
-          strBundleService = 
+          Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
+          strBundleService =
           strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
        } catch (ex) {
           dump("\n--** strBundleService failed: " + ex + "\n");
           return null;
       }
    }
-   strBundle = strBundleService.createBundle(path); 
+   strBundle = strBundleService.createBundle(path);
    if (!strBundle) {
        dump("\n--** strBundle createInstance failed **--\n");
    }

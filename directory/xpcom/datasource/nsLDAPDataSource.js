@@ -47,7 +47,7 @@ const RDF_NAMESPACE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 const LDAPATTR_NAMESPACE_URI = "http://www.mozilla.org/LDAPATTR-rdf#";
 
-// RDF-specific success nsresults 
+// RDF-specific success nsresults
 //
 const NS_ERROR_RDF_BASE = 0x804f0000; // XXX is this right?
 const NS_RDF_CURSOR_EMPTY = NS_ERROR_RDF_BASE + 1;
@@ -108,15 +108,15 @@ function getProxyOnUIThread(aObject, aInterface) {
             classes["@mozilla.org/xpcomproxy;1"].
             getService(Components.interfaces.nsIProxyObjectManager);
 
-    return proxyMgr.getProxyForObject(uiQueue, 
-            aInterface, aObject, 5); 
+    return proxyMgr.getProxyForObject(uiQueue,
+            aInterface, aObject, 5);
     // 5 == PROXY_ALWAYS | PROXY_SYNC
 }
 
 
 // the datasource object itself
 //
-const NS_LDAPDATASOURCE_CONTRACTID = 
+const NS_LDAPDATASOURCE_CONTRACTID =
     '@mozilla.org/rdf/datasource;1?name=ldap';
 const NS_LDAPDATASOURCE_CID =
     Components.ID('{8da18684-6486-4a7e-b261-35331f3e7163}');
@@ -128,7 +128,7 @@ nsLDAPDataSource.prototype = {
     // who is watching us; XXX ok to use new Array?
     mObserverList: new Array(),
 
-    // RDF property constants.  
+    // RDF property constants.
     //
     // XXXdmose - can these can actually be statics (ie JS class
     // properties rather than JS instance properties)?  or would that
@@ -140,17 +140,18 @@ nsLDAPDataSource.prototype = {
     kNC_recursiveChild: {},
 
     mRdfSvc: {},
-    
+
     // since we implement multiple interfaces, we have to provide QI
     //
     QueryInterface: function(iid) {
-      if (!iid.equals(Components.interfaces.nsISupports) &&
-          !iid.equals(Components.interfaces.nsIRDFDataSource) &&
-          !iid.equals(Components.interfaces.nsIRDFRemoteDataSource) &&
-          !iid.equals(Components.interfaces.nsIRDFObserver))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      if (iid.equals(Components.interfaces.nsISupports) ||
+          iid.equals(Components.interfaces.nsIRDFDataSource) ||
+          iid.equals(Components.interfaces.nsIRDFRemoteDataSource) ||
+          iid.equals(Components.interfaces.nsIRDFObserver))
+          return this;
 
-      return this;
+      Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+      return null;
     },
 
     /**
@@ -179,14 +180,14 @@ nsLDAPDataSource.prototype = {
             dump("Init() called with args: \n\t" + aURI + "\n\n");
         }
 
-        // XXX - if this a "single-connection" datasource 
+        // XXX - if this a "single-connection" datasource
         // (ie non-anonymous to a specific server); we should figure
         // that out here by noticing that there is a ; after "rdf:ldap", and
         // that after that there is a cookie which happens to be an LDAP URL
         // designating the connection.  for now, we just assume that this will
-        // be a "universal" (anonymous to any & all servers) datasource.  
+        // be a "universal" (anonymous to any & all servers) datasource.
         //
-        // XXX rayw changed the delimiter char; it's not a ; any more.  
+        // XXX rayw changed the delimiter char; it's not a ; any more.
         // I think it might be ? now.  He or waterson would know.  The code
         // that knows about this is somewhere in rdf, perhaps in the XUL
         // template builder.
@@ -225,7 +226,7 @@ nsLDAPDataSource.prototype = {
     },
 
     /**
-     * Request that a data source write it's contents out to 
+     * Request that a data source write it's contents out to
      * permanent storage, if applicable.
      */
     Flush: function()
@@ -252,7 +253,7 @@ nsLDAPDataSource.prototype = {
      */
     GetSource: function(aProperty, aTarget, aTruthValue) {
         if (DEBUG) {
-            dump("GetSource() called with args: \n\t" + aProperty.Value + 
+            dump("GetSource() called with args: \n\t" + aProperty.Value +
              "\n\t" + aTarget.Value + "\n\t" + aTruthValue + "\n\n");
         }
 
@@ -274,7 +275,7 @@ nsLDAPDataSource.prototype = {
      */
     GetSources: function(aProperty, aTarget, aTruthValue) {
         if (DEBUG) {
-            dump("GetSources() called with args: \n\t" + aProperty.Value + 
+            dump("GetSources() called with args: \n\t" + aProperty.Value +
              "\n\t" + aTarget.Value + "\n\t" + aTruthValue + "\n\n");
         }
 
@@ -294,7 +295,7 @@ nsLDAPDataSource.prototype = {
      */
     GetTarget: function(aSource, aProperty, aTruthValue) {
         if (DEBUG) {
-            dump("GetTarget() called with args: \n\t" + aSource.Value + 
+            dump("GetTarget() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
         }
 
@@ -352,7 +353,7 @@ nsLDAPDataSource.prototype = {
             // get the attribute array for the specified LDAP attribute and
             // return the first value if it isn't empty.
             var refStart = aProperty.Value.indexOf("#");
-            if (aProperty.Value.slice(0, refStart + 1) == 
+            if (aProperty.Value.slice(0, refStart + 1) ==
                 LDAPATTR_NAMESPACE_URI) {
 
                 try {
@@ -391,10 +392,10 @@ nsLDAPDataSource.prototype = {
      */
     GetTargets: function(aSource, aProperty, aTruthValue) {
         if (DEBUG) {
-            dump("GetTargets() called with args: \n\t" + aSource.Value + 
+            dump("GetTargets() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
         }
-        
+
         // We don't handle negative assertions.
         // XXX Should we? Can we?
         if (!aTruthValue) {
@@ -441,7 +442,7 @@ nsLDAPDataSource.prototype = {
             // get the attribute array for the specified LDAP attribute and
             // an enumerator for the array.
             var refStart = aProperty.Value.indexOf("#");
-            if (aProperty.Value.slice(0, refStart + 1) == 
+            if (aProperty.Value.slice(0, refStart + 1) ==
                  LDAPATTR_NAMESPACE_URI) {
                 try {
                     delegate = aSource.GetDelegate("message.ldap",
@@ -471,7 +472,7 @@ nsLDAPDataSource.prototype = {
      */
     Assert: function(aSource, aProperty, aTarget, aTruthValue) {
         if (DEBUG) {
-            dump("Assert() called with args: \n\t" + aSource.Value + 
+            dump("Assert() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTarget.Value +
              "\n\t" + aTruthValue + "\n\n");
         }
@@ -486,7 +487,7 @@ nsLDAPDataSource.prototype = {
      */
     Unassert: function(aSource, aProperty, aTarget) {
         if (DEBUG) {
-            dump("Unassert() called with args: \n\t" + aSource.Value + 
+            dump("Unassert() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\n");
         }
     },
@@ -497,7 +498,7 @@ nsLDAPDataSource.prototype = {
      *   [aSource]--[aProperty]-->[aOldTarget]
      *
      * to
-     * 
+     *
      *   [aSource]--[aProperty]-->[aNewTarget]
      *
      * void Change (in nsIRDFResource aSource,
@@ -507,7 +508,7 @@ nsLDAPDataSource.prototype = {
      */
     Change: function(aSource, aProperty, aOldTarget, aNewTarget) {
         if (DEBUG) {
-            dump("Change() called with args: \n\t" + aSource.Value + 
+            dump("Change() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aOldTarget.Value +
              "\n\t" + aNewTarget.Value + "\n\n");
         }
@@ -519,7 +520,7 @@ nsLDAPDataSource.prototype = {
      *   [aOldSource]--[aProperty]-->[aTarget]
      *
      * to
-     * 
+     *
      *   [aNewSource]--[aProperty]-->[aTarget]
      *
      * void Move (in nsIRDFResource aOldSource,
@@ -529,7 +530,7 @@ nsLDAPDataSource.prototype = {
      */
     Move: function(aOldSource, aNewSource, aProperty, aTarget) {
         if (DEBUG) {
-            dump("Move() called with args: \n\t" + aOldSource.Value + 
+            dump("Move() called with args: \n\t" + aOldSource.Value +
              "\n\t" + aNewSource.Value + "\n\t" + aProperty.Value +
              "\n\t" + aTarget.Value + "\n\n");
         }
@@ -624,7 +625,7 @@ nsLDAPDataSource.prototype = {
             // get the attribute array for the specified LDAP attribute and
             // an enumerator for the array.
             var refStart = aProperty.Value.indexOf("#");
-            if (aProperty.Value.slice(0, refStart + 1) == 
+            if (aProperty.Value.slice(0, refStart + 1) ==
                 LDAPATTR_NAMESPACE_URI) {
                 try {
                     delegate = aSource.GetDelegate("message.ldap",
@@ -700,13 +701,13 @@ nsLDAPDataSource.prototype = {
      */
     ArcLabelsIn: function(aNode) {
         if (DEBUG) {
-            dump("ArcLabelsIn() called with args: \n\t" + aNode.Value + 
+            dump("ArcLabelsIn() called with args: \n\t" + aNode.Value +
              "\n\n");
         }
 
         return new ArrayEnumerator(new Array());
     },
-    
+
     /**
      * Get a cursor to iterate over all the arcs that originate in
      * a resource.
@@ -717,10 +718,10 @@ nsLDAPDataSource.prototype = {
      *
      * nsISimpleEnumerator ArcLabelsOut(in nsIRDFResource aSource);
      */
-    ArcLabelsOut: function(aSource) 
+    ArcLabelsOut: function(aSource)
     {
         if (DEBUG) {
-            dump("ArcLabelsOut() called with args: \n\t" + aSource.Value + 
+            dump("ArcLabelsOut() called with args: \n\t" + aSource.Value +
              "\n\n");
         }
 
@@ -735,10 +736,10 @@ nsLDAPDataSource.prototype = {
      * boolean hasArcIn (in nsIRDFNode aNode,
      *                   in nsIRDFResource aArc);
      */
-    hasArcIn: function(aNode, aArc) 
+    hasArcIn: function(aNode, aArc)
     {
         if (DEBUG) {
-            dump("hasArcIn() called with args: \n\t" + aNode.Value + 
+            dump("hasArcIn() called with args: \n\t" + aNode.Value +
              "\n\t" + aArc.Value + "\n\n");
         }
 
@@ -747,16 +748,16 @@ nsLDAPDataSource.prototype = {
 
     /**
      * Returns true if the specified node has the specified outward arc.
-     * Equivalent to enumerating ArcLabelsOut and comparing for the specified 
+     * Equivalent to enumerating ArcLabelsOut and comparing for the specified
      * arc.
      *
      * boolean hasArcOut (in nsIRDFResource aSource,
      *                    in nsIRDFResource aArc);
      */
-    hasArcOut: function(aSource, aArc) 
+    hasArcOut: function(aSource, aArc)
     {
         if (DEBUG) {
-            dump("hasArcOut() called with args: \n\t" + aSource.Value + 
+            dump("hasArcOut() called with args: \n\t" + aSource.Value +
              "\n\t" + aArc.Value + "\n\n");
         }
 
@@ -807,7 +808,7 @@ nsLDAPDataSource.prototype = {
             }
             if (delegate != null) {
                 var attributeName = aArc.Value.slice(refStart + 1);
-                var attributeArray = this.getAttributeArray(delegate, 
+                var attributeArray = this.getAttributeArray(delegate,
                                                             attributeName);
                 if (attributeArray.length > 0) {
                     return true;
@@ -824,7 +825,7 @@ nsLDAPDataSource.prototype = {
     onAssert: function(aDataSource, aSource, aProperty, aTarget)
     {
         if (DEBUG) {
-            dump("OnAssert() called with args: \n\t" + aSource.Value + 
+            dump("OnAssert() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\n");
         }
 
@@ -838,7 +839,7 @@ nsLDAPDataSource.prototype = {
     onUnassert: function(aDataSource, aSource, aProperty, aTarget)
     {
         if (DEBUG) {
-            dump("onUnassert() called with args: \n\t" + aSource.Value + 
+            dump("onUnassert() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aTarget.Value + "\n\n");
         }
 
@@ -852,7 +853,7 @@ nsLDAPDataSource.prototype = {
     onChange: function(aDataSource, aSource, aProperty, aOldTarget, aNewTarget)
     {
         if (DEBUG) {
-            dump("onChange() called with args: \n\t" + aSource.Value + 
+            dump("onChange() called with args: \n\t" + aSource.Value +
              "\n\t" + aProperty.Value + "\n\t" + aOldTarget.Value +
              "\n\t" + aNewTarget.Value + "\n\n");
         }
@@ -915,18 +916,18 @@ nsLDAPDataSource.prototype = {
 
 // the nsILDAPMessage associated with a given resource
 //
-const NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID = 
+const NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID =
     '@mozilla.org/rdf/delegate-factory;1?key='+"message.ldap"+'&scheme=ldap'
-const NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
+const NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID =
     '@mozilla.org/rdf/delegate-factory;1?key=flat.messagelist.ldap&scheme=ldap'
-const NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID = 
+const NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID =
     '@mozilla.org/rdf/delegate-factory;1?key=recursive.messagelist.ldap&scheme=ldap'
-const NS_LDAPMESSAGERDFDELEGATEFACTORY_CID = 
+const NS_LDAPMESSAGERDFDELEGATEFACTORY_CID =
     Components.ID('{4b6fb566-1dd2-11b2-a1a9-889a3f852b0b}');
 
 function nsLDAPMessageRDFDelegateFactory() {}
 
-nsLDAPMessageRDFDelegateFactory.prototype = 
+nsLDAPMessageRDFDelegateFactory.prototype =
 {
     mRdfSvc: {},
     mLDAPSvc: {},
@@ -959,9 +960,9 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
             // get some RDF Resources that we'll need
             //
-            this.kNC_child = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + 
+            this.kNC_child = this.mRdfSvc.GetResource(NC_NAMESPACE_URI +
                                                        "child");
-            this.kNC_recursiveChild = this.mRdfSvc.GetResource(NC_NAMESPACE_URI + 
+            this.kNC_recursiveChild = this.mRdfSvc.GetResource(NC_NAMESPACE_URI +
                                                        "recursiveChild");
         }
     },
@@ -970,11 +971,12 @@ nsLDAPMessageRDFDelegateFactory.prototype =
         if (DEBUG) {
             dump("QueryInterface called\n\n");
         }
-        if (!iid.equals(Components.interfaces.nsISupports) &&
-            !iid.equals(Components.interfaces.nsIRDFDelegateFactory))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
+        if (iid.equals(Components.interfaces.nsISupports) ||
+            iid.equals(Components.interfaces.nsIRDFDelegateFactory))
+            return this;
 
-        return this;
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // from nsIRDFDelegateFactory:
@@ -989,21 +991,22 @@ nsLDAPMessageRDFDelegateFactory.prototype =
     //                     in nsIIDRef aIID,
     //                     [retval, iid_is(aIID)] out nsQIResult aResult);
     CreateDelegate: function (aOuter, aKey, aIID) {
-        
+
         function generateGetTargetsBoundCallback() {
             function getTargetsBoundCallback() {
             }
 
             getTargetsBoundCallback.prototype.QueryInterface =
                 function(iid) {
-                    if (!iid.equals(Components.interfaces.nsISupports) &&
-                        !iid.equals(Components.interfaces.nsILDAPMessageListener))
-                        throw Components.results.NS_ERROR_NO_INTERFACE;
+                    if (iid.equals(Components.interfaces.nsISupports) ||
+                        iid.equals(Components.interfaces.nsILDAPMessageListener))
+                        return this;
 
-                    return this;
+                    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+                    return null;
                 }
 
-            getTargetsBoundCallback.prototype.onLDAPMessage = 
+            getTargetsBoundCallback.prototype.onLDAPMessage =
                 function(aMessage) {
                     if (DEBUG) {
                         dump("getTargetsBoundCallback.onLDAPMessage()" +
@@ -1038,7 +1041,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                        0, -1);
                 }
 
-            getTargetsBoundCallback.prototype.onLDAPInit = 
+            getTargetsBoundCallback.prototype.onLDAPInit =
                 function(aConn, aStatus) {
                     if (DEBUG) {
                         dump("getTargetsBoundCallback.onLDAPInit()" +
@@ -1071,14 +1074,15 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             }
 
             getTargetsSearchCallback.prototype.QueryInterface = function(iid) {
-                if (!iid.equals(Components.interfaces.nsISupports) &&
-                    !iid.equals(Components.interfaces.nsILDAPMessageListener))
-                    throw Components.results.NS_ERROR_NO_INTERFACE;
+                if (iid.equals(Components.interfaces.nsISupports) ||
+                    iid.equals(Components.interfaces.nsILDAPMessageListener))
+                    return this;
 
-                return this;
+                Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+                return null;
             };
 
-            getTargetsSearchCallback.prototype.onLDAPMessage = 
+            getTargetsSearchCallback.prototype.onLDAPMessage =
                 function(aMessage) {
                     if (DEBUG) {
                         dump("getTargetsSearchCallback() called with message" +
@@ -1088,8 +1092,8 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                     var listHash = caller.mMessagesListHash;
                     if (aMessage.type == aMessage.RES_SEARCH_ENTRY) {
                         if (DEBUG) {
-                            dump("getTargetsSearchCallback() called with " + 
-                                 "message " + aMessage.dn + " for " + 
+                            dump("getTargetsSearchCallback() called with " +
+                                 "message " + aMessage.dn + " for " +
                                  aOuter.Value + "\n\n");
                         }
 
@@ -1103,7 +1107,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                         newURL.dn = aMessage.dn;
                         newURL.scope = SCOPE_BASE;
                         newURL.filter = "(objectClass=*)";
-                        var newResource = 
+                        var newResource =
                             caller.mRdfSvc.GetResource(newURL.spec);
 
                         // Add the LDAP message for the new resource in our
@@ -1131,7 +1135,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                             // Add the LDAP message to the result array for
                             // the query resource and onAssert the result
                             // as a child of the query resource.
-                            var queryResource = 
+                            var queryResource =
                                 caller.mRdfSvc.GetResource(queryURL.spec);
                             if (!listHash.hasOwnProperty(queryURL.spec)) {
                                 // No entry for the query resource in the
@@ -1188,7 +1192,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
         // message too (cf. mInProgressHash for messagelist's).
         //
         if (DEBUG) {
-            dump("GetDelegate() called with args: \n\t" + aOuter.Value + 
+            dump("GetDelegate() called with args: \n\t" + aOuter.Value +
              "\n\t" + aKey + "\n\t" + aIID + "\n\n");
         }
 
@@ -1238,7 +1242,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             queryURL.spec = aOuter.Value;
         }
 
-        // make sure that this if this URL is for a messagelist, it 
+        // make sure that this if this URL is for a messagelist, it
         // represents something other than a base search
         //
         if ((queryType == FLAT_LIST) && (queryURL.scope == SCOPE_BASE)) {
@@ -1288,8 +1292,8 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                             Components.interfaces.nsILDAPConnection.VERSION3);
 
             // XXXdmose - in this case, we almost certainly shouldn't be
-            // falling through to an error case, but instead returning 
-            // something reasonable, since this is actually a success 
+            // falling through to an error case, but instead returning
+            // something reasonable, since this is actually a success
             // condition
             //
             debug("falling through!\n");
@@ -1305,12 +1309,12 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 //
 const NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID =
     '@mozilla.org/rdf/delegate-factory/url.ldap;1';
-const NS_LDAPURLRDFDELEGATEFACTORY_CID = 
+const NS_LDAPURLRDFDELEGATEFACTORY_CID =
     Components.ID('b6048700-1dd1-11b2-ae88-a5e18bb1f25e');
 
 function nsLDAPURLRDFDelegateFactory() {}
 
-nsLDAPURLRDFDelegateFactory.prototype = 
+nsLDAPURLRDFDelegateFactory.prototype =
 {
     // from nsIRDFDelegateFactory:
     //
@@ -1329,14 +1333,14 @@ nsLDAPURLRDFDelegateFactory.prototype =
 
 // the nsILDAPConnection associated with a given resource
 //
-const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CONTRACTID = 
+const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CONTRACTID =
     '@mozilla.org/rdf/delegate-factory/connection.ldap;1';
-const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID = 
+const NS_LDAPCONNECTIONRDFDELEGATEFACTORY_CID =
     Components.ID('57075fc6-1dd2-11b2-9df5-dbb9111d1b38');
 
 function nsLDAPConnectionRDFDelegateFactory() {}
 
-nsLDAPConnectionRDFDelegateFactory.prototype = 
+nsLDAPConnectionRDFDelegateFactory.prototype =
 {
     // from nsIRDFDelegateFactory:
     //
@@ -1357,48 +1361,48 @@ var Datasource = null;
 var MessageDelegateFactory = null;
 
 // nsLDAPDataSource Module (for XPCOM registration)
-// 
+//
 var nsLDAPDataSourceModule = {
 
     registerSelf: function (compMgr, fileSpec, location, type) {
         debug("*** Registering LDAP datasource components" +
               " (all right -- a JavaScript module!)\n");
-        
+
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-        
+
         compMgr.registerFactoryLocation(
-                NS_LDAPDATASOURCE_CID, 
-                'LDAP RDF DataSource', 
-                NS_LDAPDATASOURCE_CONTRACTID, 
-                fileSpec, location, 
+                NS_LDAPDATASOURCE_CID,
+                'LDAP RDF DataSource',
+                NS_LDAPDATASOURCE_CONTRACTID,
+                fileSpec, location,
                 type);
 
         compMgr.registerFactoryLocation(
-                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
-                'LDAP Message RDF Delegate', 
-                NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, 
+                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID,
+                'LDAP Message RDF Delegate',
+                NS_LDAPMESSAGERDFDELEGATEFACTORY_CONTRACTID,
+                fileSpec, location,
                 type);
 
         compMgr.registerFactoryLocation(
-                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
-                'LDAP Flat MessageList RDF Delegate', 
-                NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, 
+                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID,
+                'LDAP Flat MessageList RDF Delegate',
+                NS_LDAPFLATMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID,
+                fileSpec, location,
                 type);
 
         compMgr.registerFactoryLocation(
-                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID, 
-                'LDAP Recursive MessageList RDF Delegate', 
-                NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, 
+                NS_LDAPMESSAGERDFDELEGATEFACTORY_CID,
+                'LDAP Recursive MessageList RDF Delegate',
+                NS_LDAPRECURSIVEMESSAGELISTRDFDELEGATEFACTORY_CONTRACTID,
+                fileSpec, location,
                 type);
 
         compMgr.registerFactoryLocation(
-                NS_LDAPURLRDFDELEGATEFACTORY_CID, 
-                'LDAP URL RDF Delegate', 
-                NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID, 
-                fileSpec, location, 
+                NS_LDAPURLRDFDELEGATEFACTORY_CID,
+                'LDAP URL RDF Delegate',
+                NS_LDAPURLRDFDELEGATEFACTORY_CONTRACTID,
+                fileSpec, location,
                 type);
     },
 
@@ -1408,7 +1412,7 @@ var nsLDAPDataSourceModule = {
         }
 
         if (cid.equals(NS_LDAPDATASOURCE_CID))
-            return this.nsLDAPDataSourceFactory;    
+            return this.nsLDAPDataSourceFactory;
         else if (cid.equals(NS_LDAPMESSAGERDFDELEGATEFACTORY_CID))
             return this.nsLDAPMessageRDFDelegateFactoryFactory;
         else if (cid.equals(NS_LDAPURLRDFDELEGATEFACTORY_CID))
@@ -1421,7 +1425,7 @@ var nsLDAPDataSourceModule = {
         createInstance: function(outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
+
             if (Datasource == null) {
                 Datasource = new nsLDAPDataSource();
             }
@@ -1438,7 +1442,7 @@ var nsLDAPDataSourceModule = {
             if (MessageDelegateFactory == null) {
                 MessageDelegateFactory = new nsLDAPMessageRDFDelegateFactory();
             }
-      
+
             return MessageDelegateFactory.QueryInterface(iid);
         }
     },
@@ -1447,7 +1451,7 @@ var nsLDAPDataSourceModule = {
         createInstance: function(outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
+
             return (new nsLDAPURLRDFDelegateFactory()).QueryInterface(iid);
         }
     },

@@ -62,11 +62,13 @@ nsTestServ.prototype =
 {
   QueryInterface: function(iid)
   {
-    if (!iid.equals(nsIObserver) &&
-        !iid.equals(nsIServerSocketListener) &&
-        !iid.equals(nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
+    if (iid.equals(nsIObserver) ||
+        iid.equals(nsIServerSocketListener) ||
+        iid.equals(nsISupports))
+      return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   },
 
   observe: function(subject, topic, data)
@@ -139,8 +141,8 @@ function (compMgr, fileSpec, location, type)
   compMgr.registerFactoryLocation(kTESTSERV_CID,
                                   "nsTestServ",
                                   kTESTSERV_CONTRACTID,
-                                  fileSpec, 
-                                  location, 
+                                  fileSpec,
+                                  location,
                                   type);
 
   const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";

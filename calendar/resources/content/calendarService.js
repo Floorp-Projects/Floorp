@@ -3,20 +3,20 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is mozilla.org code.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1999 Netscape Communications Corporation.  All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  * Seth Spitzer <sspitzer@netscape.com>
  * Robert Ginda <rginda@netscape.com>
  */
@@ -50,7 +50,7 @@ const ICALPROT_HANDLER_CID =
 /* components used in this file */
 const MEDIATOR_CONTRACTID =
     "@mozilla.org/appshell/window-mediator;1";
-const STANDARDURL_CONTRACTID = 
+const STANDARDURL_CONTRACTID =
     "@mozilla.org/network/standard-url;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
@@ -101,10 +101,12 @@ function ICALContentHandler ()
 ICALContentHandler.prototype.QueryInterface =
 function (iid) {
 
-    if (!iid.equals(nsIContentHandler))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(nsIContentHandler) ||
+        iid.equals(nsISupports))
+        return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
 }
 
 ICALContentHandler.prototype.handleContent =
@@ -112,7 +114,7 @@ function (aContentType, aWindowTarget, aRequest)
 {
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
-    
+
     /*
     dump ("ICALContentHandler.handleContent (" + aContentType + ", " +
            aWindowTarget + ", " + channel.URI.spec + ")\n");
@@ -126,7 +128,7 @@ function (aContentType, aWindowTarget, aRequest)
     if (w)
     {
         w.focus();
-        
+
         w.gCalendarWindow.calendarManager.checkCalendarURL( channel );
     }
     else
@@ -139,7 +141,7 @@ function (aContentType, aWindowTarget, aRequest)
         args.channel = channel;
         w.openDialog("chrome://calendar/content/calendar.xul", "calendar", "chrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", args);
     }
-    
+
 }
 
 /* content handler factory object (ICALContentHandler) */
@@ -163,7 +165,7 @@ function ICALProtocolHandler()
 
 ICALProtocolHandler.prototype.scheme = "webcal";
 ICALProtocolHandler.prototype.defaultPort = 8080;
-ICALProtocolHandler.prototype.protocolFlags = 
+ICALProtocolHandler.prototype.protocolFlags =
                    nsIProtocolHandler.URI_NORELATIVE |
                    nsIProtocolHandler.ALLOWS_PROXY;
 
@@ -179,7 +181,7 @@ function (aSpec, aCharset, aBaseURI)
     var url = Components.classes[STANDARDURL_CONTRACTID].
       createInstance(nsIStandardURL);
     url.init(nsIStandardURL.URLTYPE_STANDARD, 8080, aSpec, aCharset, aBaseURI);
-    
+
     return url.QueryInterface(nsIURI);
 }
 
@@ -213,11 +215,13 @@ function BogusChannel (aURI)
 BogusChannel.prototype.QueryInterface =
 function (iid) {
 
-    if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
-        !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (iid.equals(nsIChannel) ||
+        iid.equals(nsIRequest) ||
+        iid.equals(nsISupports))
+        return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
 }
 
 /* nsIChannel */
@@ -276,16 +280,16 @@ ChatzillaModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -webcal handler.\n");
-    
+
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
     compMgr.registerFactoryLocation(CLINE_SERVICE_CID,
                                     "Calendar CommandLine Service",
-                                    CLINE_SERVICE_CONTRACTID, 
+                                    CLINE_SERVICE_CONTRACTID,
                                     fileSpec,
-                                    location, 
+                                    location,
                                     type);
-    
+
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.addCategoryEntry("command-line-argument-handlers",
@@ -295,16 +299,16 @@ function (compMgr, fileSpec, location, type)
     dump("*** Registering text/calendar handler.\n");
     compMgr.registerFactoryLocation(ICALCNT_HANDLER_CID,
                                     "Webcal Content Handler",
-                                    ICALCNT_HANDLER_CONTRACTID, 
+                                    ICALCNT_HANDLER_CONTRACTID,
                                     fileSpec,
-                                    location, 
+                                    location,
                                     type);
 
     dump("*** Registering webcal protocol handler.\n");
     compMgr.registerFactoryLocation(ICALPROT_HANDLER_CID,
                                     "Webcal protocol handler",
-                                    ICALPROT_HANDLER_CONTRACTID, 
-                                    fileSpec, 
+                                    ICALPROT_HANDLER_CONTRACTID,
+                                    fileSpec,
                                     location,
                                     type);
 }
@@ -315,7 +319,7 @@ function(compMgr, fileSpec, location)
 
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID, 
+    compMgr.unregisterFactoryLocation(CLINE_SERVICE_CID,
                                       fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
@@ -333,12 +337,12 @@ function (compMgr, cid, iid) {
 
     if (cid.equals(ICALPROT_HANDLER_CID))
         return ICALProtocolHandlerFactory;
-    
+
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
 }
 
 ChatzillaModule.canUnload =

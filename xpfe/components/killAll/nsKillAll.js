@@ -65,7 +65,7 @@ nsKillAll.prototype = {
     get commandLineArgument() { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
     get prefNameForStartup()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
-    get chromeUrlForTask()    { 
+    get chromeUrlForTask()    {
 
       // turn off server mode
 
@@ -129,19 +129,20 @@ nsKillAll.prototype = {
     },
 
     get helpText()            { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
-    get handlesArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
-    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
-    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
+    get handlesArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
     // nsISupports interface
 
     // This "class" supports nsICmdLineHandler and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsICmdLineHandler) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsICmdLineHandler) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // This Component's module implementation.  All the code below is used to get this
@@ -157,35 +158,35 @@ nsKillAll.prototype = {
                                              location,
                                              type );
         },
-    
+
         // getClassObject: Return this component's factory object.
         getClassObject: function (compMgr, cid, iid) {
             if (!cid.equals(this.cid))
                 throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
             if (!iid.equals(Components.interfaces.nsIFactory))
                 throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
+
             return this.factory;
         },
-    
+
         /* CID for this class */
         cid: Components.ID("{F1F25940-4C8F-11d6-A651-0010A401EB10}"),
-    
+
         /* Contract ID for this class */
         contractId: "@mozilla.org/commandlinehandler/general-startup;1?type=killAll",
-    
+
         /* factory object */
         factory: {
             // createInstance: Return a new nsKillAll object.
             createInstance: function (outer, iid) {
                 if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
-    
+
                 return (new nsKillAll()).QueryInterface(iid);
             }
         },
-    
+
         // canUnload: n/a (returns true)
         canUnload: function(compMgr) {
             return true;

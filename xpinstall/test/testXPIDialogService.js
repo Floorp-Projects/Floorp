@@ -69,13 +69,13 @@ testXPIDialogService.prototype =
 {
     QueryInterface: function( iid )
     {
-        if (!iid.equals(Components.interfaces.nsIXPIDialogService) &&
-            !iid.equals(Components.interfaces.nsIXPIProgressDialog) &&
-            !iid.equals(Components.interfaces.nsISupports))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsIXPIDialogService) ||
+            iid.equals(Components.interfaces.nsIXPIProgressDialog) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     confirmInstall: function( parent, packages, count )

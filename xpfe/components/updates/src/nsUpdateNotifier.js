@@ -14,13 +14,13 @@
  *
  * The Original Code is the Update Notifier.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Samir Gehani <sgehani@netscape.com> (Original Author) 
+ *  Samir Gehani <sgehani@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,11 +42,11 @@ const kUNEnabledPref       = "update_notifications.enabled";
 const kUNDatasourceURIPref = "update_notifications.provider.0.datasource";
 const kUNFrequencyPref     = "update_notifications.provider.0.frequency";
 const kUNLastCheckedPref   = "update_notifications.provider.0.last_checked";
-const kUNBundleURI         = 
+const kUNBundleURI         =
   "chrome://communicator/locale/update-notifications.properties";
 
 ////////////////////////////////////////////////////////////////////////
-// 
+//
 //   nsUpdateNotifier : nsIProfileStartupListener, nsIObserver
 //
 //   Checks for updates of the client by polling a distributor's website
@@ -55,7 +55,7 @@ const kUNBundleURI         =
 //
 ////////////////////////////////////////////////////////////////////////
 
-var nsUpdateNotifier = 
+var nsUpdateNotifier =
 {
   onProfileStartup: function(aProfileName)
   {
@@ -76,7 +76,7 @@ var nsUpdateNotifier =
 
     if (aTopic == "domwindowopened")
     {
-      try 
+      try
       {
         const kITimer = Components.interfaces.nsITimer;
         this.mTimer = Components.classes["@mozilla.org/timer;1"].
@@ -116,7 +116,7 @@ var nsUpdateNotifier =
   checkForUpdate: function()
   {
     debug("checkForUpdate");
-    
+
     if (this.shouldCheckForUpdate())
     {
       try
@@ -131,7 +131,7 @@ var nsUpdateNotifier =
         var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].
           getService(Components.interfaces.nsIRDFService);
         var ds = rdf.GetDataSource(updateDatasourceURI);
-        
+
         ds = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
         ds.addXMLSinkObserver(nsUpdateDatasourceObserver);
       }
@@ -152,7 +152,7 @@ var nsUpdateNotifier =
     {
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
-  
+
       if (prefs.getBoolPref(kUNEnabledPref))
       {
         var freq = prefs.getIntPref(kUNFrequencyPref) * (24 * 60 * 60); // secs
@@ -160,7 +160,7 @@ var nsUpdateNotifier =
 
         if (!prefs.prefHasUserValue(kUNLastCheckedPref))
         {
-          // setting last_checked pref first time so must randomize in 
+          // setting last_checked pref first time so must randomize in
           // order that servers don't get flooded with updates.rdf checks
           // (and eventually downloads of new clients) all at the same time
 
@@ -173,7 +173,7 @@ var nsUpdateNotifier =
         var lastChecked = prefs.getIntPref(kUNLastCheckedPref);
         if ((lastChecked + freq) > now)
           return false;
-        
+
         prefs.setIntPref(kUNLastCheckedPref, now);
         prefs = prefs.QueryInterface(Components.interfaces.nsIPrefService);
         prefs.savePrefFile(null); // flush prefs now
@@ -192,12 +192,13 @@ var nsUpdateNotifier =
 
   QueryInterface: function(aIID)
   {
-    if (!aIID.equals(Components.interfaces.nsIObserver) &&
-        !aIID.equals(Components.interfaces.nsIProfileStartupListener) &&
-        !aIID.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+    if (aIID.equals(Components.interfaces.nsIObserver) ||
+        aIID.equals(Components.interfaces.nsIProfileStartupListener) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
 
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   }
 }
 
@@ -210,7 +211,7 @@ var nsUpdateNotifier =
 //
 ////////////////////////////////////////////////////////////////////////
 
-var nsUpdateDatasourceObserver = 
+var nsUpdateDatasourceObserver =
 {
   onBeginLoad: function(aSink)
   {
@@ -227,7 +228,7 @@ var nsUpdateDatasourceObserver =
   onEndLoad: function(aSink)
   {
     debug("onEndLoad");
-    
+
     aSink.removeXMLSinkObserver(this);
 
     var ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -240,29 +241,29 @@ var nsUpdateDatasourceObserver =
       var winWatcher = Components.
         classes["@mozilla.org/embedcomp/window-watcher;1"].
         getService(Components.interfaces.nsIWindowWatcher);
-      
+
       var unBundle = this.getBundle(kUNBundleURI);
       if (!unBundle)
         return;
 
-      var title = unBundle.formatStringFromName("title", 
+      var title = unBundle.formatStringFromName("title",
         [updateInfo.productName], 1);
-      var desc = unBundle.formatStringFromName("desc", 
+      var desc = unBundle.formatStringFromName("desc",
         [updateInfo.productName], 1);
       var button0Text = unBundle.GetStringFromName("getItNow");
       var button1Text = unBundle.GetStringFromName("noThanks");
       var checkMsg = unBundle.GetStringFromName("dontAskAgain");
       var checkVal = {value:0};
 
-      var result = promptService.confirmEx(winWatcher.activeWindow, title, desc, 
+      var result = promptService.confirmEx(winWatcher.activeWindow, title, desc,
         (promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_IS_STRING) +
         (promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING),
         button0Text, button1Text, null, checkMsg, checkVal);
 
-      // user wants update now so open new window 
+      // user wants update now so open new window
       // (result => 0 is button0)
       if (result == 0)
-        winWatcher.openWindow(winWatcher.activeWindow, updateInfo.URL, 
+        winWatcher.openWindow(winWatcher.activeWindow, updateInfo.URL,
           "_blank", "", null);
 
       // if "Don't ask again" was checked disable update notifications
@@ -302,17 +303,17 @@ var nsUpdateDatasourceObserver =
       info = null;
       debug("Exception getting update info: " + ex);
 
-      // NOTE: If the (possibly remote) datasource doesn't exist 
+      // NOTE: If the (possibly remote) datasource doesn't exist
       //       or fails to load the first |GetTarget()| call will fail
-      //       bringing us to this exception handler.  In turn, we 
-      //       will fail silently.  Testing has revealed that for a 
-      //       non-existent datasource (invalid URI) the 
+      //       bringing us to this exception handler.  In turn, we
+      //       will fail silently.  Testing has revealed that for a
+      //       non-existent datasource (invalid URI) the
       //       |nsIRDFXMLSinkObserver.onEndLoad()| is called instead of
-      //       |nsIRDFXMLSinkObserver.onError()| as one may expect.  In 
-      //       addition, if we QI the aSink parameter of |onEndLoad()| 
-      //       to an |nsIRDFRemoteDataSource| and check the |loaded| 
-      //       boolean, it reflects true so we can't use that.  The 
-      //       safe way to know we have failed to load the datasource 
+      //       |nsIRDFXMLSinkObserver.onError()| as one may expect.  In
+      //       addition, if we QI the aSink parameter of |onEndLoad()|
+      //       to an |nsIRDFRemoteDataSource| and check the |loaded|
+      //       boolean, it reflects true so we can't use that.  The
+      //       safe way to know we have failed to load the datasource
       //       is by handling the first exception as we are doing now.
     }
 
@@ -329,7 +330,7 @@ var nsUpdateDatasourceObserver =
 
   newerVersionAvailable: function(aUpdateInfo)
   {
-    // sanity check 
+    // sanity check
     if (!aUpdateInfo.registryName || !aUpdateInfo.version)
     {
       debug("Sanity check failed: aUpdateInfo is invalid!");
@@ -352,10 +353,10 @@ var nsUpdateDatasourceObserver =
       var httpHandler = Components.
         classes["@mozilla.org/network/protocol;1?name=http"].
         getService(Components.interfaces.nsIHttpProtocolHandler);
-      var synthesized = this.synthesizeVersion(httpHandler.misc, 
+      var synthesized = this.synthesizeVersion(httpHandler.misc,
         httpHandler.productSub);
       var local = new nsVersion(synthesized);
-      var server = new nsVersion(aUpdateInfo.version); 
+      var server = new nsVersion(aUpdateInfo.version);
 
       return (server.isNewerThan(local));
     }
@@ -367,23 +368,23 @@ var nsUpdateDatasourceObserver =
     }
 
     return false; // return value expected from this function
-  }, 
+  },
 
   xpinstallHaveNewer: function(aUpdateInfo)
   {
     // XXX Once InstallTrigger is a component we will be able to
     //     get at it without needing to reference it from hiddenDOMWindow.
-    //     This will enable us to |compareVersion()|s even when 
+    //     This will enable us to |compareVersion()|s even when
     //     XPInstall is disabled but update notifications are enabled.
     //     See <http://bugzilla.mozilla.org/show_bug.cgi?id=121506>.
     var ass = Components.classes["@mozilla.org/appshell/appShellService;1"].
       getService(Components.interfaces.nsIAppShellService);
     var trigger = ass.hiddenDOMWindow.InstallTrigger;
-    var diffLevel = trigger.compareVersion(aUpdateInfo.registryName, 
+    var diffLevel = trigger.compareVersion(aUpdateInfo.registryName,
       aUpdateInfo.version);
     if (diffLevel < trigger.EQUAL && diffLevel != trigger.NOT_FOUND)
       return true;
-    return false; // already have newer version or 
+    return false; // already have newer version or
                   // fail silently if old version not found on disk
   },
 
@@ -394,14 +395,14 @@ var nsUpdateDatasourceObserver =
     // with a default 0 value.  We are interested in the first 3
     // numbers delimited by periods.  The 4th comes from aProductSub.
     // e.g., x => x.0.0, x.1 => x.1.0, x.1.2 => x.1.2, x.1.2.3 => x.1.2
-    
+
     var synthesized = "0.0.0.";
 
     // match only digits and periods after "rv:" in the misc
     var onlyVer = /rv:([0-9.]+)/.exec(aMisc);
 
     // original string in onlyVer[0], matched substring in onlyVer[1]
-    if (onlyVer && onlyVer.length >= 2) 
+    if (onlyVer && onlyVer.length >= 2)
     {
       var parts = onlyVer[1].split('.');
       var len = parts.length;
@@ -419,7 +420,7 @@ var nsUpdateDatasourceObserver =
 
     // tack on productSub for nsVersion.mBuild field if available
     synthesized += aProductSub ? aProductSub : "0";
-   
+
     return synthesized;
   },
 
@@ -452,7 +453,7 @@ var nsUpdateDatasourceObserver =
 //
 //   Constructs a version object given a string representation.  This
 //   constructor populates the mMajor, mMinor, mRelease, and mBuild
-//   fields regardless of whether string contains all the fields.  
+//   fields regardless of whether string contains all the fields.
 //   The default for all unspecified fields is 0.
 //
 ////////////////////////////////////////////////////////////////////////
@@ -468,7 +469,7 @@ function nsVersion(aStringVersion)
   this.mBuild   = (len >= 4) ? this.getValidInt(parts[3]) : 0;
 }
 
-nsVersion.prototype = 
+nsVersion.prototype =
 {
   isNewerThan: function(aOther)
   {
@@ -516,7 +517,7 @@ nsVersion.prototype =
 //
 ////////////////////////////////////////////////////////////////////////
 
-var nsUpdateNotifierModule = 
+var nsUpdateNotifierModule =
 {
   mClassName:     "Update Notifier",
   mContractID:    "@mozilla.org/update-notifier;1",
@@ -539,12 +540,12 @@ var nsUpdateNotifierModule =
 
     aCompMgr = aCompMgr.QueryInterface(
                  Components.interfaces.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName, 
+    aCompMgr.registerFactoryLocation(this.mClassID, this.mClassName,
       this.mContractID, aFileSpec, aLocation, aType);
 
     // receive startup notification from the profile manager
     // (we get |createInstance()|d at startup-notification time)
-    this.getCategoryManager().addCategoryEntry("profile-startup-category", 
+    this.getCategoryManager().addCategoryEntry("profile-startup-category",
       this.mContractID, "", true, true);
   },
 
@@ -554,7 +555,7 @@ var nsUpdateNotifierModule =
                  Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(this.mClassID, aFileSpec);
 
-    this.getCategoryManager().deleteCategoryEntry("profile-startup-category", 
+    this.getCategoryManager().deleteCategoryEntry("profile-startup-category",
       this.mContractID, true);
   },
 
@@ -585,7 +586,7 @@ var nsUpdateNotifierModule =
           !aIID.equals(Components.interfaces.nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-      // return the singleton 
+      // return the singleton
       return nsUpdateNotifier.QueryInterface(aIID);
     },
 
