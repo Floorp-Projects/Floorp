@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include "nsITimelineService.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
@@ -61,50 +62,84 @@ public:
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
   NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
+
 private:
+
   nsString mCharset;
+
+private:
+
+  nsresult InitInfo();
+  nsresult MapToCharset(nsString& inANSICodePage, nsString& outCharset);
 };
 
 NS_IMPL_ISUPPORTS1(nsWinCharset, nsIPlatformCharset)
 
 nsWinCharset::nsWinCharset()
 {
+  NS_TIMELINE_START_TIMER("nsWinCharset()");
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&gCnt); // count for gInfo
 
-  // XXX We should make the following block critical section
-  if(nsnull == gInfo)
-  {
-     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/wincharset.properties");
-
-     nsURLProperties *info = new nsURLProperties( propertyURL );
-     NS_ASSERTION( info , " cannot create nsURLProperties");
-     gInfo = info;
-  }
-  NS_ASSERTION(gInfo, "Cannot open property file");
-  if( gInfo ) 
-  {
           UINT acp = ::GetACP();
           PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
           nsAutoString acpKey; acpKey.AssignWithConversion("acp.");
           acpKey.AppendInt(acpint, 10);
+  nsresult res = MapToCharset(acpKey, mCharset);
 
-          nsresult res = gInfo->Get(acpKey, mCharset);
-          if(NS_FAILED(res)) {
-              mCharset.AssignWithConversion("windows-1252");
+  NS_TIMELINE_STOP_TIMER("nsWinCharset()");
+  NS_TIMELINE_MARK_TIMER("nsWinCharset()");
           }
-
-  } else {
-        mCharset.AssignWithConversion("windows-1252");
-  }
-}
 nsWinCharset::~nsWinCharset()
 {
   PR_AtomicDecrement(&gCnt);
-  if(0 == gCnt) {
+  if ((0 == gCnt) && (nsnull != gInfo)) {
      delete gInfo;
      gInfo = nsnull;
   }
+}
+
+nsresult 
+nsWinCharset::InitInfo()
+{  
+  PR_AtomicIncrement(&gCnt); // count for gInfo
+
+  if (gInfo == nsnull) {
+    nsURLProperties *info = new nsURLProperties(nsAutoString(NS_LITERAL_STRING("resource:/res/wincharset.properties")));
+
+    NS_ASSERTION(info , "cannot open properties file");
+    NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
+    gInfo = info;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsWinCharset::MapToCharset(nsString& inANSICodePage, nsString& outCharset)
+{
+  //delay loading wincharset.properties bundle if possible
+  if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.1252"))) {
+    outCharset = NS_LITERAL_STRING("windows-1252");
+    return NS_OK;
+  } 
+
+  if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.932"))) {
+    outCharset = NS_LITERAL_STRING("Shift_JIS");
+    return NS_OK;
+  } 
+
+  // ensure the .property file is loaded
+  nsresult rv = InitInfo();
+  if (NS_FAILED(rv)) {
+    outCharset.Assign(NS_LITERAL_STRING("windows-1252"));
+    return rv;
+  }
+
+  rv = gInfo->Get(inANSICodePage, outCharset);
+  if (NS_FAILED(rv)) {
+    outCharset.Assign(NS_LITERAL_STRING("windows-1252"));
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -120,8 +155,8 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	nsCOMPtr<nsIWin32Locale>	winLocale;
 	LCID						localeAsLCID;
 	char						acp_name[6];
-	nsString					charset;charset.AssignWithConversion("windows-1252");
-	nsString					localeAsNSString(localeName);
+	nsAutoString    charset;
+	nsAutoString    localeAsNSString(localeName);
 
 	//
 	// convert locale name to a code page (through the LCID)
@@ -129,18 +164,14 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	nsresult result;
   winLocale = do_CreateInstance(NS_WIN32LOCALE_CONTRACTID, &result);
 	result = winLocale->GetPlatformLocale(&localeAsNSString,&localeAsLCID);
+
 	if (NS_FAILED(result)) { *_retValue = ToNewUnicode(charset); return result; }
 
 	if (GetLocaleInfo(localeAsLCID,LOCALE_IDEFAULTANSICODEPAGE,acp_name,sizeof(acp_name))==0) { *_retValue = ToNewUnicode(charset); return NS_ERROR_FAILURE; }
-
-	//
-	// load property file and convert from LCID->charset
-	//
-	if (!gInfo) { *_retValue = ToNewUnicode(charset); return NS_ERROR_OUT_OF_MEMORY; }
-
      nsAutoString acp_key; acp_key.AssignWithConversion("acp.");
 	 acp_key.AppendWithConversion(acp_name);
-	 result = gInfo->Get(acp_key,charset);
+
+	result = MapToCharset(acp_key,charset);
 	
 	 *_retValue = ToNewUnicode(charset);
 	 return result;
