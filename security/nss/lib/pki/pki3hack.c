@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.66 $ $Date: 2002/09/23 21:32:32 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.67 $ $Date: 2002/09/24 18:47:33 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -886,12 +886,11 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	NSSCryptoContext *cc = c->object.cryptoContext;
 	nssrv = nssCryptoContext_ImportTrust(cc, nssTrust);
 	if (nssrv != PR_SUCCESS) {
-	    nssTrust_Destroy(nssTrust);
-	    return nssrv;
+	    goto done;
 	}
 	if (c->object.numInstances == 0) {
 	    /* The context is the only instance, finished */
-	    return nssrv;
+	    goto done;
 	}
     }
     td = STAN_GetDefaultTrustDomain();
@@ -899,7 +898,10 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     moving_object = PR_FALSE;
     if (tok && PK11_IsReadOnly(tok->pk11slot))  {
 	tokens = nssList_CreateIterator(td->tokenList);
-	if (!tokens) return PR_FAILURE;
+	if (!tokens) {
+	    nssrv = PR_FAILURE;
+	    goto done;
+	}
 	for (tok  = (NSSToken *)nssListIterator_Start(tokens);
 	     tok != (NSSToken *)NULL;
 	     tok  = (NSSToken *)nssListIterator_Next(tokens))
@@ -932,7 +934,8 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 						     email,
 	                                             PR_TRUE);
 	    if (!newInstance) {
-		return PR_FAILURE;
+		nssrv = PR_FAILURE;
+		goto done;
 	    }
 	    nssPKIObject_AddInstance(&c->object, newInstance);
 	}
@@ -951,6 +954,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     } else {
 	nssrv = PR_FAILURE;
     }
+done:
     (void)nssTrust_Destroy(nssTrust);
     return nssrv;
 }
