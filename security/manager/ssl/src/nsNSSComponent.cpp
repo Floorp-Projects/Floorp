@@ -464,7 +464,10 @@ nsNSSComponent::InitializeNSS()
   if (NS_FAILED(rv)) 
     return rv;
   
-  NSS_InitReadWrite(profileStr);
+  if (NSS_InitReadWrite(profileStr) != SECSuccess) {
+    return NS_ERROR_ABORT;
+  }
+  
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
 

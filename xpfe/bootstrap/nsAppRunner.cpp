@@ -72,6 +72,7 @@
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
+#include "nsIEntropyCollector.h"
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
@@ -1008,6 +1009,44 @@ static nsresult InitializeWindowCreator()
   return NS_ERROR_FAILURE;
 }
 
+// Maximum allowed / used length of alert message is 255 chars, due to restrictions on Mac.
+// Please make sure that file contents and fallback_alert_text are at most 255 chars.
+// Fallback_alert_text must be non-const, because of inplace conversion on Mac.
+static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filename, char* fallback_alert_text)
+{
+  char message[256] = { 0 };
+  PRInt32 numRead = 0;
+  char *messageToShow = fallback_alert_text;
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> fileName;
+  nsCOMPtr<nsIProperties> directoryService;
+
+  directoryService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = directoryService->Get(NS_APP_RES_DIR, 
+                               NS_GET_IID(nsIFile), 
+                               getter_AddRefs(fileName));
+    if (NS_SUCCEEDED(rv) && fileName) {
+      fileName->Append(alert_filename);
+      PRFileDesc* fd = 0;
+      fileName->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
+      if (fd) {
+        numRead = PR_Read(fd, message, sizeof(message)-1);
+        if (numRead > 0) {
+          message[numRead] = 0;
+          messageToShow = message;
+        }
+      }
+    }
+  }
+
+  #ifdef MOZ_WIDGET_GTK
+  gtk_init(&argc, &argv);
+  #endif
+
+  ShowOSAlert( messageToShow );
+}
+
 static nsresult VerifyInstallation(int argc, char **argv)
 {
   nsresult rv;
@@ -1033,44 +1072,10 @@ static nsresult VerifyInstallation(int argc, char **argv)
   if (exists)
   {
     nsCOMPtr<nsIFile> binPath;
-    char cleanupMessage[256];
     char* lastResortMessage = "A previous install did not complete correctly.  Finishing install.";
-    PRInt32 numRead;
 
-    registryFile->Clone(getter_AddRefs(binPath));
-    nsCOMPtr<nsILocalFile>cleanupMessageFile = do_QueryInterface(binPath, &rv);
-#ifdef XP_MAC
-    nsCOMPtr<nsIFile> messageFileParent;
-    cleanupMessageFile->GetParent(getter_AddRefs(messageFileParent));
-    cleanupMessageFile = do_QueryInterface(messageFileParent, &rv);
-#endif
-    cleanupMessageFile->SetLeafName("res");
-    cleanupMessageFile->Append(CLEANUP_MESSAGE_FILENAME);
-  
-    PRFileDesc* fd;
-    cleanupMessageFile->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
-    if (fd)
-    {
-      numRead = PR_Read(fd, cleanupMessage, sizeof(cleanupMessage));
-      if (numRead > 0)
-        cleanupMessage[numRead] = 0;
-      else
-      {
-        //Something was wrong with the translated message file. empty? 
-        strcpy(cleanupMessage, lastResortMessage);
-      }
-    }
-    else
-    {
-      //Couldn't open the translated message file
-      strcpy(cleanupMessage, lastResortMessage);
-    }
-    //The cleanup registry file exists so we have cleanup work to do
-#ifdef MOZ_WIDGET_GTK
-    gtk_init(&argc, &argv);
-#endif
-    ShowOSAlert(cleanupMessage);
-
+    ShowOSAlertFromFile(argc, argv, CLEANUP_MESSAGE_FILENAME, lastResortMessage);
+    
     nsCOMPtr<nsIFile> cleanupUtility;
     registryFile->Clone(getter_AddRefs(cleanupUtility));
     cleanupUtility->SetLeafName(CLEANUP_UTIL);
@@ -1084,6 +1089,39 @@ static nsresult VerifyInstallation(int argc, char **argv)
     //We must exit because all open files must be released by the system
     return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIEntropyCollector> enCol =
+    do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &rv);
+  
+  if (rv == NS_ERROR_ABORT) {
+    // In case the security component can not do its internal initialization, 
+    // we must warn the user and exit.
+    
+    const char *panicMsg = "PANIC! The security component of Mozilla can not initialize.\n\n"
+      "While this can have multiple reasons, it is likely that there is a problem "
+      "with the directory on your hard disk where Mozilla stores your preferences. "
+      "Maybe the files containing security certificates can't be accessed or created.\n\n"
+      "Please check that the profile directory is readable and writeable, i.e. that you "
+      "have the proper permissions to write and read to all those files.\n"
+      "In addition you should check that there is free space left on the disk.\n\n"
+      "Please fix this problem or show this message to your system administrator.\n\n"
+      "The browser will now abort.";
+
+    const char *panicMessageFilename = "nssifail.txt";
+    
+    ShowOSAlertFromFile(argc, argv, panicMessageFilename, panicMsg);
+    
+    return rv;
+  }
+
+  // Any other return code means: Security component could initialize NSS fine,
+  // or, security components are not available.
   return NS_OK;
 }
 
@@ -1291,6 +1329,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("appShell->EnumerateAndInitializeComponents");
   appShell->EnumerateAndInitializeComponents();
   NS_TIMELINE_LEAVE("appShell->EnumerateAndInitializeComponents");
+
+  rv = VerifyPsmAbsentOrSane(argc, argv);
+  if (NS_FAILED(rv)) return rv;
 
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
