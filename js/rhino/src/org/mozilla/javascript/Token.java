@@ -72,6 +72,8 @@ public class Token
         EOL         = 1,  // end of line
 
         // Interpreter reuses the following as bytecodes
+        FIRST_BYTECODE_TOKEN = 2,
+
         POPV        = 2,
         ENTERWITH   = 3,
         LEAVEWITH   = 4,
@@ -102,94 +104,84 @@ public class Token
         NEW         = 29,
         DELPROP     = 30,
         TYPEOF      = 31,
-        NAMEINC     = 32,
-        PROPINC     = 33,
-        ELEMINC     = 34,
-        NAMEDEC     = 35,
-        PROPDEC     = 36,
-        ELEMDEC     = 37,
-        GETPROP     = 38,
-        SETPROP     = 39,
-        GETELEM     = 40,
-        SETELEM     = 41,
-        CALL        = 42,
-        NAME        = 43,
-        NUMBER      = 44,
-        STRING      = 45,
-        ZERO        = 46,
-        ONE         = 47,
-        NULL        = 48,
-        THIS        = 49,
-        FALSE       = 50,
-        TRUE        = 51,
-        SHEQ        = 52,   // shallow equality (===)
-        SHNE        = 53,   // shallow inequality (!==)
-        CLOSURE     = 54,
-        REGEXP      = 55,
-        POP         = 56,
-        POS         = 57,
-        VARINC      = 58,
-        VARDEC      = 59,
-        BINDNAME    = 60,
-        THROW       = 61,
-        IN          = 62,
-        INSTANCEOF  = 63,
-        GETTHIS     = 64,
-        NEWTEMP     = 65,
-        USETEMP     = 66,
-        GETBASE     = 67,
-        GETVAR      = 68,
-        SETVAR      = 69,
-        UNDEFINED   = 70,
-        TRY         = 71,
-        NEWSCOPE    = 72,
-        TYPEOFNAME  = 73,
-        ENUMINIT    = 74,
-        ENUMNEXT    = 75,
-        THISFN      = 76,
+        GETPROP     = 32,
+        SETPROP     = 33,
+        GETELEM     = 34,
+        SETELEM     = 35,
+        CALL        = 36,
+        NAME        = 37,
+        NUMBER      = 38,
+        STRING      = 39,
+        ZERO        = 40,
+        ONE         = 41,
+        NULL        = 42,
+        THIS        = 43,
+        FALSE       = 44,
+        TRUE        = 45,
+        SHEQ        = 46,   // shallow equality (===)
+        SHNE        = 47,   // shallow inequality (!==)
+        REGEXP      = 48,
+        POP         = 49,
+        POS         = 50,
+        BINDNAME    = 51,
+        THROW       = 52,
+        IN          = 53,
+        INSTANCEOF  = 54,
+        GETTHIS     = 55,
+        NEWTEMP     = 56,
+        USETEMP     = 57,
+        GETBASE     = 58,
+        GETVAR      = 59,
+        SETVAR      = 60,
+        UNDEFINED   = 61,
+        NEWSCOPE    = 62,
+        ENUMINIT    = 63,
+        ENUMNEXT    = 64,
+        THISFN      = 65,
 
-        LAST_BYTECODE_TOKEN = 76,
+        LAST_BYTECODE_TOKEN = 65,
         // End of interpreter bytecodes
 
-        SEMI        = 77,  // semicolon
-        LB          = 78,  // left and right brackets
-        RB          = 79,
-        LC          = 80,  // left and right curlies (braces)
-        RC          = 81,
-        LP          = 82,  // left and right parentheses
-        RP          = 83,
-        COMMA       = 84,  // comma operator
-        ASSIGN      = 85, // assignment ops (= += -= etc.)
-        HOOK        = 86, // conditional (?:)
-        COLON       = 87,
-        OR          = 88, // logical or (||)
-        AND         = 89, // logical and (&&)
-        EQOP        = 90, // equality ops (== !=)
-        RELOP       = 91, // relational ops (< <= > >=)
-        SHOP        = 92, // shift ops (<< >> >>>)
-        UNARYOP     = 93, // unary prefix operator
-        INC         = 94, // increment/decrement (++ --)
-        DEC         = 95,
-        DOT         = 96, // member operator (.)
-        PRIMARY     = 97, // true, false, null, this
-        FUNCTION    = 98, // function keyword
-        EXPORT      = 99, // export keyword
-        IMPORT      = 100, // import keyword
-        IF          = 101, // if keyword
-        ELSE        = 102, // else keyword
-        SWITCH      = 103, // switch keyword
-        CASE        = 104, // case keyword
-        DEFAULT     = 105, // default keyword
-        WHILE       = 106, // while keyword
-        DO          = 107, // do keyword
-        FOR         = 108, // for keyword
-        BREAK       = 109, // break keyword
-        CONTINUE    = 110, // continue keyword
-        VAR         = 111, // var keyword
-        WITH        = 112, // with keyword
-        CATCH       = 113, // catch keyword
-        FINALLY     = 114, // finally keyword
-        RESERVED    = 115, // reserved keywords
+        TRY         = 66,
+        SEMI        = 67,  // semicolon
+        LB          = 68,  // left and right brackets
+        RB          = 69,
+        LC          = 70,  // left and right curlies (braces)
+        RC          = 71,
+        LP          = 72,  // left and right parentheses
+        RP          = 73,
+        COMMA       = 74,  // comma operator
+        ASSIGN      = 75, // assignment ops (= += -= etc.)
+        HOOK        = 76, // conditional (?:)
+        COLON       = 77,
+        OR          = 78, // logical or (||)
+        AND         = 79, // logical and (&&)
+        EQOP        = 80, // equality ops (== !=)
+        RELOP       = 81, // relational ops (< <= > >=)
+        SHOP        = 82, // shift ops (<< >> >>>)
+        UNARYOP     = 83, // unary prefix operator
+        INC         = 84, // increment/decrement (++ --)
+        DEC         = 85,
+        DOT         = 86, // member operator (.)
+        PRIMARY     = 87, // true, false, null, this
+        FUNCTION    = 88, // function keyword
+        EXPORT      = 89, // export keyword
+        IMPORT      = 90, // import keyword
+        IF          = 91, // if keyword
+        ELSE        = 92, // else keyword
+        SWITCH      = 93, // switch keyword
+        CASE        = 94, // case keyword
+        DEFAULT     = 95, // default keyword
+        WHILE       = 96, // while keyword
+        DO          = 97, // do keyword
+        FOR         = 98, // for keyword
+        BREAK       = 99, // break keyword
+        CONTINUE    = 100, // continue keyword
+        VAR         = 101, // var keyword
+        WITH        = 102, // with keyword
+        CATCH       = 103, // catch keyword
+        FINALLY     = 104, // finally keyword
+        RESERVED    = 105, // reserved keywords
 
         /** Added by Mike - these are JSOPs in the jsref, but I
          * don't have them yet in the java implementation...
@@ -198,37 +190,37 @@ public class Token
          * Most of these go in the 'op' field when returning
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
-        NOP         = 116, // NOP
-        NOT         = 117, // etc.
-        PRE         = 118, // for INC, DEC nodes.
-        POST        = 119,
+        NOP         = 106, // NOP
+        NOT         = 107, // etc.
+        PRE         = 108, // for INC, DEC nodes.
+        POST        = 109,
 
         /**
          * For JSOPs associated with keywords...
          * eg. op = THIS; token = PRIMARY
          */
 
-        VOID        = 120,
+        VOID        = 110,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
-        BLOCK       = 121, // statement block
-        ARRAYLIT    = 122, // array literal
-        OBJLIT      = 123, // object literal
-        LABEL       = 124, // label
-        TARGET      = 125,
-        LOOP        = 126,
-        ENUMDONE    = 127,
-        EXPRSTMT    = 128,
-        PARENT      = 129,
-        CONVERT     = 130,
-        JSR         = 131,
-        NEWLOCAL    = 132,
-        USELOCAL    = 133,
-        SCRIPT      = 134,   // top-level node for entire script
+        BLOCK       = 111, // statement block
+        ARRAYLIT    = 112, // array literal
+        OBJLIT      = 113, // object literal
+        LABEL       = 114, // label
+        TARGET      = 115,
+        LOOP        = 116,
+        ENUMDONE    = 117,
+        EXPRSTMT    = 118,
+        PARENT      = 119,
+        CONVERT     = 120,
+        JSR         = 121,
+        NEWLOCAL    = 122,
+        USELOCAL    = 123,
+        SCRIPT      = 124,   // top-level node for entire script
 
-        LAST_TOKEN  = 134;
+        LAST_TOKEN  = 124;
 
     public static String name(int token)
     {
@@ -267,12 +259,6 @@ public class Token
                 case NEW:             return "new";
                 case DELPROP:         return "delprop";
                 case TYPEOF:          return "typeof";
-                case NAMEINC:         return "nameinc";
-                case PROPINC:         return "propinc";
-                case ELEMINC:         return "eleminc";
-                case NAMEDEC:         return "namedec";
-                case PROPDEC:         return "propdec";
-                case ELEMDEC:         return "elemdec";
                 case GETPROP:         return "getprop";
                 case SETPROP:         return "setprop";
                 case GETELEM:         return "getelem";
@@ -289,12 +275,9 @@ public class Token
                 case TRUE:            return "true";
                 case SHEQ:            return "sheq";
                 case SHNE:            return "shne";
-                case CLOSURE:         return "closure";
                 case REGEXP:          return "object";
                 case POP:             return "pop";
                 case POS:             return "pos";
-                case VARINC:          return "varinc";
-                case VARDEC:          return "vardec";
                 case BINDNAME:        return "bindname";
                 case THROW:           return "throw";
                 case IN:              return "in";
@@ -308,7 +291,6 @@ public class Token
                 case UNDEFINED:       return "undefined";
                 case TRY:             return "try";
                 case NEWSCOPE:        return "newscope";
-                case TYPEOFNAME:      return "typeofname";
                 case ENUMINIT:        return "enuminit";
                 case ENUMNEXT:        return "enumnext";
                 case THISFN:          return "thisfn";
