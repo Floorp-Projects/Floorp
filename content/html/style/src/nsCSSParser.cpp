@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   emk <VYV03354@nifty.ne.jp>
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsICSSParser.h"
 #include "nsCSSProps.h"
@@ -1348,7 +1349,7 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
 {
   return PRBool((aSelector.mNameSpace == kNameSpaceID_Unknown) && 
                 (aSelector.mTag == nsnull) && 
-                (aSelector.mID == nsnull) &&
+                (aSelector.mIDList == nsnull) &&
                 (aSelector.mClassList == nsnull) &&
                 (aSelector.mAttrList == nsnull) &&
                 (aSelector.mPseudoClassList != nsnull) &&
@@ -1640,11 +1641,10 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
   }
   for (;;) {
     if (eCSSToken_ID == mToken.mType) {   // #id
-      if ((0 == (dataMask & SEL_MASK_ID)) &&  // only one ID
-          (0 < mToken.mIdent.Length())) { // verify is legal ID
+      if (0 < mToken.mIdent.Length()) { // verify is legal ID
         mToken.AppendToString(aSource);
         dataMask |= SEL_MASK_ID;
-        aSelector.SetID(mToken.mIdent);
+        aSelector.AddID(mToken.mIdent);
       }
       else {
         REPORT_UNEXPECTED_TOKEN();

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #ifndef nsICSSStyleRule_h___
 #define nsICSSStyleRule_h___
@@ -87,7 +88,7 @@ public:
   void Reset(void);
   void SetNameSpace(PRInt32 aNameSpace);
   void SetTag(const nsString& aTag);
-  void SetID(const nsString& aID);
+  void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(const nsString& aPseudoClass);
   void AddPseudoClass(nsIAtom* aPseudoClass);
@@ -104,7 +105,7 @@ public:
 public:
   PRInt32         mNameSpace;
   nsIAtom*        mTag;
-  nsIAtom*        mID;
+  nsAtomList*     mIDList;
   nsAtomList*     mClassList;
   nsAtomList*     mPseudoClassList;
   nsAttrSelector* mAttrList;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsCOMPtr.h"
 #include "nsCSSRule.h"
@@ -283,7 +284,7 @@ PRUint32 gSelectorCount=0;
 
 nsCSSSelector::nsCSSSelector(void)
   : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
-    mID(nsnull), 
+    mIDList(nsnull), 
     mClassList(nsnull), 
     mPseudoClassList(nsnull),
     mAttrList(nsnull), 
@@ -300,7 +301,7 @@ nsCSSSelector::nsCSSSelector(void)
 
 nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy) 
   : mNameSpace(aCopy.mNameSpace), mTag(aCopy.mTag), 
-    mID(aCopy.mID), 
+    mIDList(nsnull), 
     mClassList(nsnull), 
     mPseudoClassList(nsnull),
     mAttrList(nsnull), 
@@ -309,7 +310,7 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
   NS_IF_ADDREF(mTag);
-  NS_IF_ADDREF(mID);
+  NS_IF_COPY(mIDList, aCopy.mIDList, nsAtomList);
   NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
@@ -334,21 +335,20 @@ nsCSSSelector::~nsCSSSelector(void)
 nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
 {
   NS_IF_RELEASE(mTag);
-  NS_IF_RELEASE(mID);
+  NS_IF_DELETE(mIDList);
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
   NS_IF_DELETE(mAttrList);
 
   mNameSpace    = aCopy.mNameSpace;
   mTag          = aCopy.mTag;
-  mID           = aCopy.mID;
+  NS_IF_COPY(mIDList, aCopy.mIDList, nsAtomList);
   NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
   mOperator     = aCopy.mOperator;
 
   NS_IF_ADDREF(mTag);
-  NS_IF_ADDREF(mID);
   return *this;
 }
 
@@ -360,8 +360,17 @@ PRBool nsCSSSelector::Equals(const nsCSSSelector* aOther) const
   if (nsnull != aOther) {
     if ((aOther->mNameSpace == mNameSpace) && 
         (aOther->mTag == mTag) && 
-        (aOther->mID == mID) && 
         (aOther->mOperator == mOperator)) {
+      if (nsnull != mIDList) {
+        if (PR_FALSE == mIDList->Equals(aOther->mIDList)) {
+          return PR_FALSE;
+        }
+      }
+      else {
+        if (nsnull != aOther->mIDList) {
+          return PR_FALSE;
+        }
+      }
       if (nsnull != mClassList) {
         if (PR_FALSE == mClassList->Equals(aOther->mClassList)) {
           return PR_FALSE;
@@ -403,7 +412,7 @@ void nsCSSSelector::Reset(void)
 {
   mNameSpace = kNameSpaceID_Unknown;
   NS_IF_RELEASE(mTag);
-  NS_IF_RELEASE(mID);
+  NS_IF_DELETE(mIDList);
   NS_IF_DELETE(mClassList);
   NS_IF_DELETE(mPseudoClassList);
   NS_IF_DELETE(mAttrList);
@@ -423,11 +432,14 @@ void nsCSSSelector::SetTag(const nsString& aTag)
   }
 }
 
-void nsCSSSelector::SetID(const nsString& aID)
+void nsCSSSelector::AddID(const nsString& aID)
 {
-  NS_IF_RELEASE(mID);
   if (0 < aID.Length()) {
-    mID = NS_NewAtom(aID);
+    nsAtomList** list = &mIDList;
+    while (nsnull != *list) {
+      list = &((*list)->mNext);
+    }
+    *list = new nsAtomList(aID);
   }
 }
 
@@ -499,10 +511,12 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
   if (nsnull != mTag) {
     weight += 0x000001;
   }
-  if (nsnull != mID) {
+  nsAtomList* list = mIDList;
+  while (nsnull != list) {
     weight += 0x010000;
+    list = list->mNext;
   }
-  nsAtomList* list = mClassList;
+  list = mClassList;
   while (nsnull != list) {
     weight += 0x000100;
     list = list->mNext;
@@ -524,7 +538,8 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
 * SizeOf method:
 *
 *  Self (reported as nsCSSSelector's size): 
-*    1) sizeof(*this) + the size of the mTag and mID atoms (if unique) 
+*    1) sizeof(*this) + the size of the mTag 
+*       + the size of the mIDList unique items 
 *       + the size of the mClassList and mPseudoClassList unique items
 *
 *  Contained / Aggregated data (not reported as nsCSSSelector's size):
@@ -558,12 +573,21 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mTag->SizeOf(aSizeOfHandler, &localSize);
     aSize += localSize;
   }
-  if(mID && uniqueItems->AddItem(mID)){
-    localSize = 0;
-    mID->SizeOf(aSizeOfHandler, &localSize);
-    aSize += localSize;
-  }
+
   // a couple of simple atom lists
+  if(mIDList && uniqueItems->AddItem(mIDList)){
+    aSize += sizeof(*mIDList);
+    nsAtomList *pNext = nsnull;
+    pNext = mIDList;    
+    while(pNext){
+      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
+        localSize = 0;
+        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
+        aSize += localSize;
+      }
+      pNext = pNext->mNext;
+    }
+  }
   if(mClassList && uniqueItems->AddItem(mClassList)){
     aSize += sizeof(*mClassList);
     nsAtomList *pNext = nsnull;
@@ -647,7 +671,7 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
   }
 
   // smells like a universal selector
-  if (!mTag && !mID && !mClassList) {
+  if (!mTag && !mIDList && !mClassList) {
     aString.Append(PRUnichar('*'));
   } else {
     // Append the tag name, if there is one
@@ -656,10 +680,14 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
       aString.Append(temp);
     }
     // Append the id, if there is one
-    if (mID) {
-      mID->GetUnicode(&temp);
-      aString.Append(PRUnichar('#'));
-      aString.Append(temp);
+    if (mIDList) {
+      nsAtomList* list = mIDList;
+      while (list != nsnull) {
+        list->mAtom->GetUnicode(&temp);
+        aString.Append(PRUnichar('#'));
+        aString.Append(temp);
+        list = list->mNext;
+      }
     }
     // Append each class in the linked list
     if (mClassList) {
@@ -3350,12 +3378,14 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   else {
     fputs("*", out);
   }
-  if (nsnull != aSelector->mID) {
-    aSelector->mID->ToString(buffer);
+  nsAtomList* list = aSelector->mIDList;
+  while (nsnull != list) {
+    list->mAtom->ToString(buffer);
     fputs("#", out);
     fputs(buffer, out);
+    list = list->mNext;
   }
-  nsAtomList* list = aSelector->mClassList;
+  list = aSelector->mClassList;
   while (nsnull != list) {
     list->mAtom->ToString(buffer);
     fputs(".", out);
