@@ -245,8 +245,10 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
 
   // If we're encoding only the selection, then we don't want to risk
   // ignoring whitespace which might be significant:
-  if (mFlags | nsIDocumentEncoder::OutputSelectionOnly)
-    mInWhitespace = PR_FALSE;
+// Unfortunately, this isn't the right solution because then we
+// always get a space at the beginning of selection-only output!
+//  if (mFlags | nsIDocumentEncoder::OutputSelectionOnly)
+//    mInWhitespace = PR_FALSE;
 
   return result;
 }
