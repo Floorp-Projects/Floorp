@@ -1595,10 +1595,3 @@ nsDOMEvent::AllocateEvent(const nsAString& aEventType)
   }
   mEvent->time = PR_Now();
 }
-  
-nsresult
-NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext,
-               nsEvent *aEvent) 
-{
-  return NS_ERROR_FAILURE;
-}
