@@ -128,7 +128,7 @@ static double zero   =  0.0;
 	k += (i>>20);
 	f = x-1.0;
 	if((0x000fffff&(2+hx))<3) {	/* |f| < 2**-20 */
-	    if(f==zero) if(k==0) return zero;  else {dk=(double)k;
+	    if(f==zero) { if(k==0) return zero; } else {dk=(double)k;
 				 return dk*ln2_hi+dk*ln2_lo;}
 	    R = f*f*(0.5-0.33333333333333333*f);
 	    if(k==0) return f-R; else {dk=(double)k;
