@@ -178,6 +178,19 @@ function loadCalendarEventDialog()
    setFieldValue( "location-field", gEvent.location );
    setFieldValue( "uri-field", gEvent.url );
    
+   switch( gEvent.status )
+   {
+      case gEvent.ICAL_STATUS_TENTATIVE:
+         setFieldValue( "status-field", "ICAL_STATUS_TENTATIVE" );
+      break;
+      case gEvent.ICAL_STATUS_CONFIRMED:
+         setFieldValue( "status-field", "ICAL_STATUS_CONFIRMED" );
+      break;
+      case gEvent.ICAL_STATUS_CANCELLED:
+         setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
+      break;
+   }
+   
    setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
@@ -316,6 +329,7 @@ function onOKCommand()
    gEvent.title       = getFieldValue( "title-field" );
    gEvent.description = getFieldValue( "description-field" );
    gEvent.location    = getFieldValue( "location-field" );
+   gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
    
    gEvent.allDay      = getFieldValue( "all-day-event-checkbox", "checked" );
    var startDate = getDateTimeFieldValue( "start-date-text" );

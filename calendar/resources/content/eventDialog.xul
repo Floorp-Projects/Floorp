@@ -270,6 +270,19 @@
                         </vbox>
                     </row>
 
+                    <!-- Calendar Status -->
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="Event Status"/>
+                        </hbox>
+                        <menulist id="status-field" label="&newevent.status.label;">
+                            <menupopup id="status-menulist-menupopup">
+                                <menuitem label="&newevent.status.tentative.label;"  value="ICAL_STATUS_TENTATIVE"/>
+										  <menuitem label="&newevent.status.confirmed.label;"  value="ICAL_STATUS_CONFIRMED"/>
+										  <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
+                            </menupopup>
+                        </menulist>
+                    </row>
 
                     <!-- Categories -->
                     <row align="center">

@@ -191,6 +191,32 @@
                         </hbox>
                     </row>
             
+                    <!-- Alarm -->    
+                    <row align="center" collapsed="true">
+                        <spacer />
+                        <vbox>
+									<hbox id="alarm-box" align="center">
+										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
+										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
+                               
+                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural">
+											  <menupopup>
+													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
+													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
+											  </menupopup>
+										 </menulist>
+										 
+										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+                               
+									</hbox>
+									<hbox id="alarm-box-email" collapsed="true" align="center">
+										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
+										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
+									</hbox>       
+                        </vbox>
+                    </row>
+                    
                     <!-- Completed -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
@@ -220,6 +246,21 @@
                         </hbox>
                     </row>
 
+                    <!-- Task Status -->
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="Event Status"/>
+                        </hbox>
+                        <menulist id="status-field" label="&newevent.status.label;">
+                            <menupopup id="status-menulist-menupopup">
+                                <menuitem label="&newevent.status.needsaction.label;"  value="ICAL_STATUS_NEEDSACTION"/>
+										  <menuitem label="&newevent.status.inprogress.label;"  value="ICAL_STATUS_INPROGRESS"/>
+										  <menuitem label="&newevent.status.completed.label;"  value="ICAL_STATUS_COMPLETED"/>
+                                <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
+                            </menupopup>
+                        </menulist>
+                    </row>
+                    
                     <!-- Categories -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
@@ -242,32 +283,6 @@
                                 <menuitem label="&priority.level.none;" value="0"/>
                             </menupopup>
                         </menulist>
-                    </row>
-                    
-                    <!-- Alarm -->    
-                    <row align="center" collapsed="true">
-                        <spacer />
-                        <vbox>
-									<hbox id="alarm-box" align="center">
-										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
-										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
-                               
-                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural">
-											  <menupopup>
-													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
-													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
-													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
-											  </menupopup>
-										 </menulist>
-										 
-										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
-                               
-									</hbox>
-									<hbox id="alarm-box-email" collapsed="true" align="center">
-										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
-										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
-									</hbox>       
-                        </vbox>
                     </row>
                 </rows>        
             </grid>

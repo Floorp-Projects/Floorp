@@ -95,6 +95,13 @@
 <!ENTITY newevent.recurrence.tab.label "Recurrence" >
 <!ENTITY newevent.contacts.tab.label "Contacts" >
 <!ENTITY newevent.files.tab.label "Files" >
+<!ENTITY newevent.status.label "Status" >
+<!ENTITY newevent.status.needsaction.label "Needs Action" >
+<!ENTITY newevent.status.inprogress.label  "In Progress" >
+<!ENTITY newevent.status.completed.label   "Completed" >
+<!ENTITY newevent.status.cancelled.label   "Cancelled" >
+<!ENTITY newevent.status.tentative.label   "Tentative" >
+<!ENTITY newevent.status.confirmed.label   "Confirmed" >
 
 <!ENTITY newtodo.completed.label "Completed">
 <!ENTITY newtodo.duedate.label "Due Date">

@@ -153,6 +153,22 @@ function loadCalendarToDoDialog()
    setFieldValue( "description-field", gToDo.description );
    setFieldValue( "uri-field", gToDo.url );
 
+   switch( gToDo.status )
+   {
+      case gToDo.ICAL_STATUS_NEEDSACTION:
+         setFieldValue( "status-field", "ICAL_STATUS_NEEDSACTION" );
+      break;
+      case gToDo.ICAL_STATUS_INPROGRESS:
+         setFieldValue( "status-field", "ICAL_STATUS_INPROGRESS" );
+      break;
+      case gToDo.ICAL_STATUS_COMPLETED:
+         setFieldValue( "status-field", "ICAL_STATUS_COMPLETED" );
+      break;
+      case gToDo.ICAL_STATUS_CANCELLED:
+         setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
+      break;
+   }
+   
    setFieldValue( "private-checkbox", gToDo.privateEvent, "checked" );
    
    if( gToDo.alarm === false && gToDo.alarmLength == 0 )
@@ -227,7 +243,8 @@ function onOKCommand()
    
    gToDo.title       = getFieldValue( "title-field" );
    gToDo.description = getFieldValue( "description-field" );
-   
+   gToDo.status      = eval( "gToDo."+getFieldValue( "status-field" ) );
+
    var dueDate = getDateTimeFieldValue( "due-date-text" );
    gToDo.due.year = dueDate.getYear()+1900;
    gToDo.due.month = dueDate.getMonth();
