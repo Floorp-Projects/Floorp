@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!perl
 
 require 5.000;
 
@@ -9,7 +9,6 @@ use Cwd;
 $Version = "1.000";
 
 sub InitVars {
-
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
     $BuildAdministrator = "$ENV{'USER'}\@$ENV{'HOST'}";
 
@@ -28,14 +27,13 @@ sub InitVars {
     # Set these to what makes sense for your system
     $cpus = 1;
     $Make = 'gmake'; # Must be gnu make
+    $MakeOverrides = '';
     $mail = '/bin/mail';
-    $Autoconf = 'autoconf -l build/autoconf';
     $CVS = 'cvs -z3';
     $CVSCO = 'co -P';
 
     # Set these proper values for your tinderbox server
     $Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
-    #$Tinderbox_server = 'external-tinderbox-incoming\@tinderbox.seawood.org';
 
     # These shouldn't really need to be changed
     $BuildSleep = 10; # Minimum wait period from start of build to start
@@ -51,36 +49,30 @@ sub InitVars {
     $BuildConfigDir = 'mozilla/config';
     $ClobberStr = 'realclean';
     $ConfigureEnvArgs = 'CFLAGS=-pipe CXXFLAGS=-pipe';
-    #$ConfigureEnvArgs = '';
-    # Yeah, i know, hardcoding is bad. Set this to what you want
-    $ConfigureArgs = "--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor --with-pthreads";
+    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
+    $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1';
 } #EndSub-InitVars
 
 sub ConditionalArgs {
     if ( $BuildClassic ) {
 	$FE = 'x';
 	$ConfigureArgs .= " --enable-fe=$FE";
-#	$BuildTree = 'raptor';
 	$BuildModule = 'Raptor';
 	$BuildTag = ''
 	    if ($BuildTag eq '');
 	$TopLevel = "mozilla-classic";
     } else {
-#	$BuildTree = 'raptor';
-#	$Toolkit = 'gtk';
 	$FE = 'apprunner'; 
-#	$BuildModule = 'Raptor';
 	$BuildModule = 'SeaMonkeyAll';
-#	$ConfigureArgs .= " --enable-toolkit=$Toolkit";
     }
     $CVSCO .= " -r $BuildTag" if ( $BuildTag ne '');
 }
 sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-    $ENV{"LD_LIBRARY_PATH"} = '/builds/tinderbox/SeaMonkey/nspr/lib:/builds/tinderbox/SeaMonkey/Linux_2.0.34_clobber/mozilla/obj-i586-pc-linux-gnu/dist/bin:/usr/lib/png:/usr/local/lib';
+    $ENV{"LD_LIBRARY_PATH"} = '/builds/tinderbox/SeaMonkey/nspr/lib:/builds/tinderbox/SeaMonkey/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
     $ENV{"DISPLAY"} = 'crucible.mcom.com:0.0';
 } #EndSub-SetupEnv
 
@@ -89,8 +81,49 @@ sub SetupPath {
     $Path = $ENV{PATH};
     print "Path before: $Path\n";
 
+    if ( $OS eq 'AIX' ) {
+	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
+	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib --disable-shared';
+	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
+	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1'
+    }
+
+    if ( $OS eq 'BSD_OS' ) {
+	$ENV{'PATH'} = '/usr/contrib/bin:/bin:/usr/bin:' . $ENV{'PATH'};
+	$ConfigureArgs .= '--disable-shared';
+	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
+	$mail = '/usr/ucb/mail';
+	$MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2'; # because ld dies if it encounters -include
+	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE='
+    }
+
+    if ( $OS eq 'FreeBSD' ) {
+	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
+	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+	$mail = '/usr/bin/mail';
+    }
+
+    if ( $OS eq 'HP-UX' ) {
+	$ENV{'PATH'} = '/opt/ansic/bin:/opt/aCC/bin:/builds/local/bin:' . $ENV{'PATH'};
+	$ENV{'LPATH'} = '/usr/lib:' . $ENV{'LD_LIBRARY_PATH'} . ':/builds/local/lib';
+	$ENV{'SHLIB_PATH'} = $ENV{'LPATH'};
+	$ConfigureArgs .= '--disable-gtktest --x-includes=/usr/include/X11 --x-libraries=/usr/lib';
+	$ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
+	# Use USE_PTHREADS=1 instead of CLASSIC_NSPR if you've got DCE installed.
+	$NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1'
+    }
+
+    if ( $OS eq 'OSF1' ) {
+	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
+	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
+	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1'
+    }
+
     if ( $OS eq 'SunOS' ) {
 	$ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
+	$ConfigureArgs .= '--with-pthreads';
+	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE= USE_PTHREADS=1'
     }
 
     $Path = $ENV{PATH};
@@ -105,46 +138,90 @@ sub GetSystemInfo {
 
     $OS = `uname -s`;
     $OSVer = `uname -r`;
-    
-    chop($OS, $OSVer);
-    
+    $CPU = `uname -m`;
+
+    chop($OS, $OSVer, $CPU);
+
     if ( $OS eq 'AIX' ) {
 	$OSVer = `uname -v`;
 	chop($OSVer);
 	$OSVer = $OSVer . "." . `uname -r`;
 	chop($OSVer);
     }
-        
+
+    if ( $OS eq 'BSD/OS' ) {
+	$OS = 'BSD_OS';
+    }
+
     if ( $OS eq 'IRIX64' ) {
 	$OS = 'IRIX';
     }
-    
+
     if ( $OS eq 'SCO_SV' ) {
 	$OS = 'SCOOS';
 	$OSVer = '5.0';
     }
-    
+
     my $host, $myhost = hostname;
     chomp($myhost);
     ($host, $junk) = split(/\./, $myhost);
-	
+
     $BuildName = ""; 
-	
+
     if ( "$host" ne "" ) {
 	$BuildName = $host . ' ';
     }
     $BuildName .= $OS . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     $DirName = $OS . '_' . $OSVer . '_' . ($BuildDepend?'depend':'clobber');
-    
-    $RealOS = $OS;
-    $RealOSVer = $OSVer;
+
+    #
+    # Defining ObjDir really ought to be done by first checking out
+    # mozilla/build/autoconf/config.guess, and then using it to do
+    # the definition once.
+    #
+
+    if ( $OS eq 'AIX' ) {
+	# Assumes 4.2.1 for now.
+	$ObjDir = 'obj-powerpc-ibm-aix4.2.1.0';
+    }
+
+    if ( $OS eq 'BSD_OS' ) {
+	$ObjDir = 'obj-' . $CPU . '-pc-bsdi' . $OSVer;
+	$BuildName = $host . ' BSD/OS ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+    }
+
+    if ( $OS eq 'FreeBSD' ) {
+	$ObjDir = 'obj-' . $CPU . '-unknown-freebsd' . $OSVer;
+	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z]*)$/$1/o;
+	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+    }
     
     if ( $OS eq 'HP-UX' ) {
-	$RealOSVer = substr($OSVer,0,4);
+	$ObjDir = 'obj-hppa1.1-hp-hpux' . $OSVer;
+	$ObjDir =~ s/hpux[AB]\./hpux/o;
     }
     
     if ( $OS eq 'Linux' ) {
-	$RealOSVer = substr($OSVer,0,3);
+	if ( $CPU eq 'alpha' ) {
+	    $ObjDir = 'obj-' . $CPU . '-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	} else {
+	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
+	}
+    }
+
+    if ( $OS eq 'OSF1' ) {
+	# Assumes 4.0D for now.
+	$ObjDir = 'obj-alpha-dec-osf4.0d';
+    }
+
+    if ( $OS eq 'SunOS' ) {
+	if ( $CPU eq 'i86pc' ) {
+	    $ObjDir = 'obj-i386-sun-solaris' . $OSVer;
+	} else {
+	    $ObjDir = 'obj-sparc-sun-solaris' . $OSVer;
+	}
+	$ObjDir =~ s/s5\./s2./o;
     }
 
     if ($BuildClassic) {
@@ -207,9 +284,6 @@ sub BuildIt {
 	    print LOG "$CVS $CVSCO $BuildModule\n";
 	    open (PULL, "$CVS $CVSCO $BuildModule 2>&1 |") || die "open: $!\n";
 	} else {
-#	    print "$CVS $CVSCO mozilla/nglayout.mk\n";
-#	    print LOG "$CVS $CVSCO mozilla/nglayout.mk\n";
-#	    open (PULL, "$CVS $CVSCO mozilla/nglayout.mk 2>&1 |") || die "open: $!\n";
 	    print "$CVS $CVSCO mozilla/client.mk\n";
 	    print LOG "$CVS $CVSCO mozilla/client.mk\n";
 	    open (PULL, "$CVS $CVSCO mozilla/client.mk 2>&1 |") || die "open: $!\n";
@@ -220,14 +294,8 @@ sub BuildIt {
 	}
 	close(PULL);
 	
-	# Move to topsrcdir
-	#chdir($Topsrcdir) || die "chdir($Topsrcdir): $!\n";
-         
-
 	# Do a separate checkout with toplevel makefile
 	if (! $BuildClassic) {
-	 #  print LOG "$Make -f nglayout.mk pull_all CVSCO='$CVS $CVSCO'|\n";
-	 #  open (PULLALL, "$Make -f nglayout.mk pull_all CVSCO='$CVS $CVSCO' |\n");
 	    print LOG "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO'|\n";
 	    open (PULLALL, "$Make -f mozilla/client.mk checkout CVSCO='$CVS $CVSCO' |\n");
 	    while (<PULLALL>) {
@@ -238,22 +306,12 @@ sub BuildIt {
 	}
 
 	chdir($Topsrcdir) || die "chdir($Topsrcdir): $!\n";
-
 	print LOG "Build nspr\n";
-	open (BUILDNSPR, "gmake -C nsprpub DIST=/builds/tinderbox/SeaMonkey/nspr NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= USE_PTHREADS=1 export 2>&1 | ") || die "Build nspr: $!\n";
+	open (BUILDNSPR, "gmake -C nsprpub $NSPRArgs export 2>&1 | ") || die "Build nspr: $!\n";
 	while(<BUILDNSPR>) {
 		print LOG $_;
 		print $_;
 	}
-
-
-	print LOG "$Autoconf\n";
-	open (AUTOCONF, "$Autoconf 2>&1 | ") || die "$Autoconf: $!\n";
-	while (<AUTOCONF>) {
-	    print LOG $_;
-	    print $_;
-	}
-	close(AUTOCONF);
 
 	print LOG "$ConfigGuess\n";
 	$BuildObjName = "obj-";
@@ -341,8 +399,8 @@ sub BuildIt {
 		close(FEBUILD);
 	    }
 	} else {
-		print LOG "$Make MAKE='$Make -j $cpus' 2>&1 |\n";
-		open(BUILD, "$Make MAKE='$Make -j $cpus' 2>&1 |\n");
+		print LOG "$Make MAKE='$Make -j $cpus' $MakeOverrides 2>&1 |\n";
+		open(BUILD, "$Make MAKE='$Make -j $cpus' $MakeOverrides 2>&1 |\n");
 		while (<BUILD>) {
 		    print $_;
 		    print LOG $_;
@@ -370,9 +428,6 @@ sub BuildIt {
 		else {
            $BuildStatusStr = 'busted';
         }
-# replaced by above lines
-#	    $BuildStatusStr = ( $BuildStatus ? 'busted' : 'success' );
-
 	    print LOG "tinderbox: tree: $BuildTree\n";
 	    print LOG "tinderbox: builddate: $StartTime\n";
 	    print LOG "tinderbox: status: $BuildStatusStr\n";
@@ -446,7 +501,6 @@ sub StartBuild {
 
     @felist = split(/,/, $FE);
 
-#    die "SERVER: " . $Tinderbox_server . "\n";
     open( LOG, "|$mail $Tinderbox_server" );
     foreach $fe ( @felist ) {
 	print LOG "\n";
@@ -575,11 +629,8 @@ sub RunSmokeTest {
     my($Binary);
     $fe = 'x' if (!defined($fe));
 
-    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . 'dist/bin/apprunner';
-	$BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
-    print LOG $BinName . "\n";
-	
-	system("cp -r $BinaryDir /builds/tinderbox/SeaMonkey/smokey");
+    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
+    print LOG $Binary . "\n";
 
    $waittime = 30;
 
@@ -591,11 +642,11 @@ sub RunSmokeTest {
    sleep $waittime;
    $status = waitpid $pid, WNOHANG();
    if ($status != 0) {
-     print LOG "$BinName has crashed or quit. Turn the tree orange now.\n";
+     print LOG "$Binary has crashed or quit. Turn the tree orange now.\n";
      return 333;
    }
 
-   print LOG "Success! $BinName is still running. Killing..\n";
+   print LOG "Success! $Binary is still running. Killing..\n";
    # try to kill 3 times, then try a kill -9
    for ($i=0 ; $i<3 ; $i++) {
      kill 'TERM',$pid,;
