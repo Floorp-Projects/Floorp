@@ -33,7 +33,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.2 2001/04/11 00:29:07 nelsonb%netscape.com Exp $
+ * $Id: keyhi.h,v 1.3 2001/04/24 20:04:13 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -149,10 +149,18 @@ extern CERTSubjectPublicKeyInfo *
 SECKEY_ConvertAndDecodeSubjectPublicKeyInfo(char *spkistr);
 
 /*
+ * extract the public key from a subject Public Key info structure.
+ * (used by JSS).
+ */
+extern SECKEYPublicKey *
+SECKEY_ExtractPublicKey(CERTSubjectPublicKeyInfo *);
+
+/*
 ** Destroy a private key object.
 **	"key" the object
 */
 extern void SECKEY_DestroyPrivateKey(SECKEYPrivateKey *key);
+
 
 /*
 ** Destroy a public key object.

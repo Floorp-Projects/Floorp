@@ -935,6 +935,14 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
     return NULL;
 }
 
+
+/* required for JSS */
+SECKEYPublicKey *
+SECKEY_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
+{
+    return seckey_ExtractPublicKey(spki);
+}
+
 SECKEYPublicKey *
 CERT_ExtractPublicKey(CERTCertificate *cert)
 {
