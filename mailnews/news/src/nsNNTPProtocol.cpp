@@ -454,7 +454,6 @@ void nsNNTPProtocol::Cleanup()  //free char* member variables
   PR_FREEIF(m_cancelID);
   PR_FREEIF(m_messageID);
   PR_FREEIF(m_commandSpecificData);
-
 }
 
 NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
@@ -1511,14 +1510,13 @@ PRInt32 nsNNTPProtocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool 
  */
 PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char * line = nsnull;
 	PRUint32 status = 0;
 	nsresult rv;
 
 	NS_PRECONDITION(nsnull != inputStream, "invalid input stream");
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -1672,10 +1670,8 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 
 	if (MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
-		char *line = nsnull;
-
 		PRBool pauseForMoreData = PR_FALSE;
-		line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+		char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 		if(pauseForMoreData)
 		{
@@ -1739,13 +1735,12 @@ PRInt32 nsNNTPProtocol::SendListSearches()
 
 PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = nsnull;
 	PRUint32 status = 0;
 
 	NS_PRECONDITION(inputStream, "invalid input stream");
 	
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -1790,11 +1785,10 @@ PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 
 PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = nsnull;
 	PRUint32 status = 0; 
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(pauseForMoreData)
 	{
@@ -1843,11 +1837,10 @@ PRInt32 nsNNTPProtocol::GetProperties()
 
 PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = NULL;
 	PRUint32 status = 0;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(pauseForMoreData)
 	{
@@ -1914,11 +1907,10 @@ PRInt32 nsNNTPProtocol::SendListSubscriptions()
 
 PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = NULL;
 	PRUint32 status = 0;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(pauseForMoreData)
 	{
@@ -2494,14 +2486,13 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
 PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line = nsnull;
 	PRUint32 status = 0;
 	
 	PRBool pauseForMoreData = PR_FALSE;
 	if (m_channelListener)
 	{
 
-		line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+		char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
  		if(pauseForMoreData)
 		{
 			PRUint32 inlength = 0;
@@ -2572,7 +2563,6 @@ nsresult nsNNTPProtocol::MarkCurrentMsgRead()
 
 PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
 	PRUint32 status = 0;
 	char *outputBuffer;
 	
@@ -2581,11 +2571,11 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	// if we have a channel listener, spool directly to it....
 	// otherwise we must be doing something like save to disk or cancel
 	// in which case we are doing the work.
-	if (m_channelListener) {
+  if (m_channelListener)
 		return DisplayArticle(inputStream, length);
-        }
 
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  
+  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
   if (m_newsFolder && line)
     m_newsFolder->NotifyDownloadedLine(line, m_key);
 
@@ -2984,120 +2974,120 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 
 PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line, *s, *s1=NULL, *s2=NULL, *flag=NULL;
-	PRInt32 oldest, youngest;
-	PRUint32 status = 0;
-    nsresult rv = NS_OK;
-    
-	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-
-	if(pauseForMoreData)
-	{
-		SetFlag(NNTP_PAUSE_FOR_READ);
-		return 0;
-	}
-
-    if(!line)
-        return(status);  /* no line yet */
-
-    /* End of list? 
+  char *line, *lineToFree, *s, *s1=NULL, *s2=NULL, *flag=NULL;
+  PRInt32 oldest, youngest;
+  PRUint32 status = 0;
+  nsresult rv = NS_OK;
+  
+  PRBool pauseForMoreData = PR_FALSE;
+  line = lineToFree = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  
+  if(pauseForMoreData)
+  {
+    SetFlag(NNTP_PAUSE_FOR_READ);
+    return 0;
+  }
+  
+  if(!line)
+    return(status);  /* no line yet */
+  
+                     /* End of list? 
 	 */
-    if (line[0]=='.' && line[1]=='\0')
-	{
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		PRBool xactive=PR_FALSE;
-		rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
-		if (NS_SUCCEEDED(rv) && xactive)
-		{
-          nsXPIDLCString groupName;
-          rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(getter_Copies(groupName));
-          if (NS_SUCCEEDED(rv)) {
-                rv = m_nntpServer->FindGroup((const char *)groupName, getter_AddRefs(m_newsFolder));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "FindGroup failed");
-				m_nextState = NNTP_LIST_XACTIVE;
-				PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) listing xactive for %s", this, (const char *)groupName));
-				PR_FREEIF(line);
-				return 0;
-		  }
-		}
-		m_nextState = NEWS_DONE;
-
-#ifdef UNREADY_CODE
-		if(ce->bytes_received == 0)
-		{
-			/* #### no new groups */
-		}
-#endif
-
-		PR_FREEIF(line);
-		if(status > 0)
-        	return MK_DATA_LOADED;
-		else
-        	return status;
-    }
-    else if (line [0] == '.' && line [1] == '.')
-      /* The NNTP server quotes all lines beginning with "." by doubling it. */
-      line++;
-
-    /* almost correct
-     */
-    if(status > 1)
-    {
-#ifdef UNREADY_CODE
-        ce->bytes_received += status;
-        FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
-#else
-		mBytesReceived += status;
-        mBytesReceivedSinceLastStatusUpdate += status;
-#endif
-    }
-
-    /* format is "rec.arts.movies.past-films 7302 7119 y"
-	 */
-	s = PL_strchr (line, ' ');
-	if (s)
-	{
-		*s = 0;
-		s1 = s+1;
-		s = PL_strchr (s1, ' ');
-		if (s)
-		{
-			*s = 0;
-			s2 = s+1;
-			s = PL_strchr (s2, ' ');
-			if (s)
-			{
-			  *s = 0;
-			  flag = s+1;
-			}
-		 }
-	}
-	youngest = s2 ? atol(s1) : 0;
-	oldest   = s1 ? atol(s2) : 0;
-
-#ifdef UNREADY_CODE
-	ce->bytes_received++;  /* small numbers of groups never seem to trigger this */
-#else
-	mBytesReceived += status;
-    mBytesReceivedSinceLastStatusUpdate += status;
-#endif
-
-	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
-	if (m_nntpServer) {
-		rv = m_nntpServer->AddNewsgroupToList(line);
-		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
-	}
-
+  if (line[0]=='.' && line[1]=='\0')
+  {
+    ClearFlag(NNTP_PAUSE_FOR_READ);
     PRBool xactive=PR_FALSE;
     rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
     if (NS_SUCCEEDED(rv) && xactive)
-	{
-      m_nntpServer->SetGroupNeedsExtraInfo(line, PR_TRUE);
-	}
-
-	PR_FREEIF(line);
-    return(status);
+    {
+      nsXPIDLCString groupName;
+      rv = m_nntpServer->GetFirstGroupNeedingExtraInfo(getter_Copies(groupName));
+      if (NS_SUCCEEDED(rv)) {
+        rv = m_nntpServer->FindGroup((const char *)groupName, getter_AddRefs(m_newsFolder));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "FindGroup failed");
+        m_nextState = NNTP_LIST_XACTIVE;
+        PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) listing xactive for %s", this, (const char *)groupName));
+        PR_Free(lineToFree);
+        return 0;
+      }
+    }
+    m_nextState = NEWS_DONE;
+    
+#ifdef UNREADY_CODE
+    if(ce->bytes_received == 0)
+    {
+      /* #### no new groups */
+    }
+#endif
+    
+    PR_Free(lineToFree);
+    if(status > 0)
+      return MK_DATA_LOADED;
+    else
+      return status;
+  }
+  else if (line [0] == '.' && line [1] == '.')
+    /* The NNTP server quotes all lines beginning with "." by doubling it. */
+    line++;
+  
+    /* almost correct
+  */
+  if(status > 1)
+  {
+#ifdef UNREADY_CODE
+    ce->bytes_received += status;
+    FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
+#else
+    mBytesReceived += status;
+    mBytesReceivedSinceLastStatusUpdate += status;
+#endif
+  }
+  
+  /* format is "rec.arts.movies.past-films 7302 7119 y"
+	 */
+  s = PL_strchr (line, ' ');
+  if (s)
+  {
+    *s = 0;
+    s1 = s+1;
+    s = PL_strchr (s1, ' ');
+    if (s)
+    {
+      *s = 0;
+      s2 = s+1;
+      s = PL_strchr (s2, ' ');
+      if (s)
+      {
+        *s = 0;
+        flag = s+1;
+      }
+    }
+  }
+  youngest = s2 ? atol(s1) : 0;
+  oldest   = s1 ? atol(s2) : 0;
+  
+#ifdef UNREADY_CODE
+  ce->bytes_received++;  /* small numbers of groups never seem to trigger this */
+#else
+  mBytesReceived += status;
+  mBytesReceivedSinceLastStatusUpdate += status;
+#endif
+  
+  NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+  if (m_nntpServer) {
+    rv = m_nntpServer->AddNewsgroupToList(line);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
+  }
+  
+  PRBool xactive=PR_FALSE;
+  rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
+  if (NS_SUCCEEDED(rv) && xactive)
+  {
+    m_nntpServer->SetGroupNeedsExtraInfo(line, PR_TRUE);
+  }
+  
+  PR_Free(lineToFree);
+  return(status);
 }
 
 /* Ahhh, this like print's out the headers and stuff
@@ -3157,19 +3147,19 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
   PRUint32 status = 1;
   
   PRBool pauseForMoreData = PR_FALSE;
-  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-  char *orig_line = line;
+  char *line, *lineToFree;
+  line = lineToFree = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
   
   if (pauseForMoreData)
   {
     SetFlag(NNTP_PAUSE_FOR_READ);
-    PR_FREEIF(orig_line);
+    PR_Free(lineToFree);
     return 0;
   }
   
   if (!line) 
     return(status);  /* no line yet */
-    
+  
   /* End of list? */
   if (line[0]=='.' && line[1]=='\0')
   {
@@ -3180,7 +3170,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     else
       m_nextState = DISPLAY_NEWSGROUPS;
     ClearFlag(NNTP_PAUSE_FOR_READ);
-    PR_FREEIF(orig_line);
+    PR_Free(lineToFree);
     return 0;  
   }
   else if (line[0] == '.')
@@ -3191,7 +3181,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
       // and some servers send ". 0000000001 0000000002 y"
       // just skip that those lines
       // see bug #69231 and #123560
-      PR_FREEIF(orig_line);
+      PR_Free(lineToFree);
       return status;
     }
     // The NNTP server quotes all lines beginning with "." by doubling it, so unquote
@@ -3245,7 +3235,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
       
       rv = msgStatusFeedback->ShowStatusString(statusString);
       if (NS_FAILED(rv)) {
-        PR_FREEIF(orig_line);
+        PR_Free(lineToFree);
         return rv;
       }
     }
@@ -3286,7 +3276,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
     if (NS_FAILED(rv)) {
-      PR_FREEIF(orig_line);
+      PR_Free(lineToFree);
       return -1;
     }
     
@@ -3297,15 +3287,16 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
       nsITimer::TYPE_ONE_SHOT);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
     if (NS_FAILED(rv)) {
-      PR_FREEIF(orig_line);
+      PR_Free(lineToFree);
       return -1;
     }
     
     m_nextState = NEWS_FINISHED;
   }
   
-  PR_FREEIF(orig_line);
-  if (NS_FAILED(rv)) return -1;
+  PR_Free(lineToFree);
+  if (NS_FAILED(rv))
+    return -1;
   return(status);
 }
 
@@ -3517,69 +3508,68 @@ PRInt32 nsNNTPProtocol::ReadXoverResponse()
 
 PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
-    nsresult rv;
-	PRUint32 status = 1;
-
-    PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-
-	if(pauseForMoreData)
-	{
-		SetFlag(NNTP_PAUSE_FOR_READ);
-		return 0;
-	}
-
-    if(!line)
-		return(status);  /* no line yet or TCP error */
-
-    if(line[0] == '.' && line[1] == '\0')
-    {
-		m_nextState = NNTP_FIGURE_NEXT_CHUNK;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		PR_FREEIF(line);
-		return(0);
-    }
-	else if (line [0] == '.' && line [1] == '.')
-	  /* The NNTP server quotes all lines beginning with "." by doubling it. */
-	  line++;
-
+  char *line, *lineToFree;
+  nsresult rv;
+  PRUint32 status = 1;
+  
+  PRBool pauseForMoreData = PR_FALSE;
+  line = lineToFree = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  
+  if(pauseForMoreData)
+  {
+    SetFlag(NNTP_PAUSE_FOR_READ);
+    return 0;
+  }
+  
+  if(!line)
+    return(status);  /* no line yet or TCP error */
+  
+  if(line[0] == '.' && line[1] == '\0')
+  {
+    m_nextState = NNTP_FIGURE_NEXT_CHUNK;
+    ClearFlag(NNTP_PAUSE_FOR_READ);
+    PR_Free(lineToFree);
+    return(0);
+  }
+  else if (line [0] == '.' && line [1] == '.')
+    /* The NNTP server quotes all lines beginning with "." by doubling it. */
+    line++;
+  
     /* almost correct
-     */
-    if(status > 1)
-    {
-		mBytesReceived += status;
-        mBytesReceivedSinceLastStatusUpdate += status;
-	}
-
-    rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process the XOVERLINE");
-
-    m_numArticlesLoaded++;
-    PR_FREEIF(line);
-    return NS_SUCCEEDED(rv) ? status : -1; /* keep going if no error */
+  */
+  if(status > 1)
+  {
+    mBytesReceived += status;
+    mBytesReceivedSinceLastStatusUpdate += status;
+  }
+  
+  rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process the XOVERLINE");
+  
+  m_numArticlesLoaded++;
+  PR_Free(lineToFree);
+  return NS_SUCCEEDED(rv) ? status : -1; /* keep going if no error */
 }
 
-
 /* Finished processing all the XOVER data.
- */
+*/
 
 PRInt32 nsNNTPProtocol::ProcessXover()
 {
-    nsresult rv;
-
-    /* xover_parse_state stored in MSG_Pane cd->pane */
-    NS_ASSERTION(m_newsgroupList, "no newsgroupList");
-    if (!m_newsgroupList) return -1;
-
-	PRInt32 status = 0;
-    rv = m_newsgroupList->FinishXOVERLINE(0,&status);
-    m_newsgroupList = nsnull;
-	if (NS_SUCCEEDED(rv) && status < 0) return status;
-
-	m_nextState = NEWS_DONE;
-
-    return(MK_DATA_LOADED);
+  nsresult rv;
+  
+  /* xover_parse_state stored in MSG_Pane cd->pane */
+  NS_ASSERTION(m_newsgroupList, "no newsgroupList");
+  if (!m_newsgroupList) return -1;
+  
+  PRInt32 status = 0;
+  rv = m_newsgroupList->FinishXOVERLINE(0,&status);
+  m_newsgroupList = nsnull;
+  if (NS_SUCCEEDED(rv) && status < 0) return status;
+  
+  m_nextState = NEWS_DONE;
+  
+  return(MK_DATA_LOADED);
 }
 
 PRInt32 nsNNTPProtocol::ReadNewsgroup()
@@ -3643,12 +3633,12 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupResponse()
  */
 PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32 length)
 {
-  char *line;
+  char *line, *lineToFree;
   nsresult rv;
   PRUint32 status = 1;
 
   PRBool pauseForMoreData = PR_FALSE;
-  line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  line = lineToFree = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(pauseForMoreData)
 	{
@@ -3675,7 +3665,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
   rv = m_newsgroupList->ProcessNonXOVER(line);
   /* convert nsresult->status */
-  PR_FREEIF(line);
+  PR_Free(lineToFree);
   return NS_FAILED(rv);
 }
 
@@ -4480,7 +4470,6 @@ PRInt32 nsNNTPProtocol::XPATSend()
 
 PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
 	PRUint32 status = 1; 
 
 	if (m_responseCode != MK_NNTP_RESPONSE_XPAT_OK)
@@ -4492,7 +4481,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -4567,7 +4556,6 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
 
 PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
 	char *prettyName;
 	PRUint32 status = 0;
 
@@ -4580,7 +4568,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -4650,7 +4638,6 @@ PRInt32 nsNNTPProtocol::ListXActive()
 
 PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
 	PRUint32 status = 0;
 	nsresult rv;
 
@@ -4664,7 +4651,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	}
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	NNTP_LOG_READ(line);
 
@@ -4808,7 +4795,6 @@ PRInt32 nsNNTPProtocol::SendListGroup()
 
 PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-  char *line;
   PRUint32 status = 0;
   
   NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_GROUP_SELECTED, "code != GROUP_SELECTED");
@@ -4820,7 +4806,7 @@ PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUi
   }
   
   PRBool pauseForMoreData = PR_FALSE;
-  line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
   
   if(pauseForMoreData)
   {
@@ -4872,11 +4858,10 @@ PRInt32 nsNNTPProtocol::SearchResponse()
 
 PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 length)
 {
-	char *line = NULL;
 	PRUint32 status = 1;
 
 	PRBool pauseForMoreData = PR_FALSE;
-	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+	char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
 	if(pauseForMoreData)
 	{
