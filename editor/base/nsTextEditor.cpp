@@ -53,6 +53,10 @@
 #include "nsIStyleContext.h"
 #include "nsVoidArray.h"
 
+#if DEBUG
+#include "TextEditorTest.h"
+#endif
+
 // transactions the text editor knows how to build itself
 #include "TransactionFactory.h"
 #include "PlaceholderTxn.h"
@@ -76,8 +80,6 @@
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
-
-class nsIFrame;
 
 
 #include "nsIComponentManager.h"
@@ -2434,4 +2436,22 @@ NS_IMETHODIMP
 nsTextEditor::EndComposition(void)
 {
 	return nsEditor::EndComposition();
+}
+NS_IMETHODIMP
+nsTextEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
+{
+#ifdef DEBUG
+  if (!outNumTests || !outNumTestsFailed)
+    return NS_ERROR_NULL_POINTER;
+
+	TextEditorTest *tester = new TextEditorTest();
+	if (!tester)
+	  return NS_ERROR_OUT_OF_MEMORY;
+	 
+  tester->Run(this, outNumTests, outNumTestsFailed);
+  delete tester;
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }

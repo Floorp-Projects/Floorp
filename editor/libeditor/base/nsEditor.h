@@ -199,7 +199,8 @@ public:
 
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
-
+  NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
+  
 /*END nsIEditor interfaces*/
 
 
@@ -300,6 +301,11 @@ protected:
   // called ONLY when we need to override the doc's modification
   // state. This should already be handled by nsIDiskDocument.
   NS_IMETHOD ResetDocModCount();
+  
+  // called after a transaction is done successfully
+  NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
+  // called after a transaction is undone successfully
+  NS_IMETHOD DoAfterUndoTransaction();
   
 protected:
 // XXXX: Horrible hack! We are doing this because

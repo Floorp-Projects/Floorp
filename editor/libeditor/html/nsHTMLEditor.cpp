@@ -2320,3 +2320,27 @@ NS_IMETHODIMP nsHTMLEditor::GetLocalFileURL(nsIDOMWindow* aParent, const nsStrin
 
   return result;
 }
+
+NS_IMETHODIMP
+nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
+{
+#ifdef DEBUG
+  if (!outNumTests || !outNumTestsFailed)
+    return NS_ERROR_NULL_POINTER;
+  
+  // first, run the text editor tests (is this appropriate?)
+  nsresult rv = nsTextEditor::DebugUnitTests(outNumTests, outNumTestsFailed);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  // now run our tests
+  
+  
+  
+  *outNumTests += 0;
+  *outNumTestsFailed += 0;
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}

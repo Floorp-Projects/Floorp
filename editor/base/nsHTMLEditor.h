@@ -207,7 +207,8 @@ protected:
 //  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
 //  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 
-
+  // this overrides the base class implementation. It is not exported in nsIHTMLEditor.
+  NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
 };
 
