@@ -155,14 +155,17 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
         {
             delete gProfileDir; // All that for nothing.  sigh.
             gProfileDir = nsnull;
+            return PR_FALSE;
         }
         NS_ASSERTION(*gProfileDir == currProfileDirSpec, "Profile spec does not match!");
+
+        if (!gProfileDir->Exists())
+            gProfileDir->CreateDir();
     }
+
     if (!gProfileDir)
         return PR_FALSE;
 
-    if (!gProfileDir->Exists())
-        gProfileDir->CreateDir();
     outSpec = *gProfileDir;
     return PR_TRUE;
 } // GetProfileDirectory
