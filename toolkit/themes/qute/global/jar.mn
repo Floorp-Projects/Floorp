@@ -23,6 +23,7 @@ classic.jar:
 +  skin/classic/global/menulist.css
 +  skin/classic/global/plugins.css
 +  skin/classic/global/popup.css
++  skin/classic/global/preferences.css
 +  skin/classic/global/Portrait.png
 +  skin/classic/global/Portrait-small.png
 +  skin/classic/global/preview.gif
