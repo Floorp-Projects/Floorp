@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.43 $ $Date: 2002/08/27 23:38:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.44 $ $Date: 2002/08/31 04:52:46 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -834,10 +834,10 @@ nssTrustDomain_FindCertificateByIssuerAndSerialNumber
     if (collection) {
 	(void)nssPKIObjectCollection_GetCertificates(collection, 
 	                                             &rvCert, 1, NULL);
-	nssPKIObjectCollection_Destroy(collection);
 	if (!rvCert) {
 	    goto loser;
 	}
+	nssPKIObjectCollection_Destroy(collection);
     }
     nssSlotArray_Destroy(slots);
     return rvCert;
