@@ -5,6 +5,7 @@ newsblog.jar:
 *  content/messenger-newsblog/debug-utils.js                    (content/debug-utils.js)
 *  content/messenger-newsblog/Feed.js                           (content/Feed.js)
 *  content/messenger-newsblog/FeedItem.js                       (content/FeedItem.js)
+*  content/messenger-newsblog/feed-parser.js                    (content/feed-parser.js)
 *  content/messenger-newsblog/file-utils.js                     (content/file-utils.js)
 *  content/messenger-newsblog/subscriptions.js                  (content/subscriptions.js)
 *  content/messenger-newsblog/utils.js                          (content/utils.js)

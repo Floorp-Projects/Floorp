@@ -309,6 +309,7 @@ function loadScripts()
   { 
     scriptLoader.loadSubScript("chrome://messenger-newsblog/content/Feed.js");
     scriptLoader.loadSubScript("chrome://messenger-newsblog/content/FeedItem.js");
+    scriptLoader.loadSubScript("chrome://messenger-newsblog/content/feed-parser.js");
     scriptLoader.loadSubScript("chrome://messenger-newsblog/content/file-utils.js");
     scriptLoader.loadSubScript("chrome://messenger-newsblog/content/utils.js");
   }
@@ -362,7 +363,7 @@ var progressNotifier = {
                                             [feed.url], 1));
       else if (aErrorCode == kNewsBlogRequestFailure)
         this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-networkError",
-                                            [feed.url], 1));      
+                                            [feed.url], 1));                                           
       this.mStatusFeedback.stopMeteors();
     }
 

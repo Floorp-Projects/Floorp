@@ -50,12 +50,13 @@
         windowtype="Mail:News-BlogSubscriptions"
         flex="1">
 
-  <script type="application/x-javascript" src="utils.js" />
-  <script type="application/x-javascript" src="file-utils.js" />
-  <script type="application/x-javascript" src="debug-utils.js" />
-  <script type="application/x-javascript" src="subscriptions.js" />
-  <script type="application/x-javascript" src="Feed.js" />
-  <script type="application/x-javascript" src="FeedItem.js" />
+  <script type="application/x-javascript" src="utils.js"/>
+  <script type="application/x-javascript" src="file-utils.js"/>
+  <script type="application/x-javascript" src="debug-utils.js"/>
+  <script type="application/x-javascript" src="subscriptions.js"/>
+  <script type="application/x-javascript" src="Feed.js"/>
+  <script type="application/x-javascript" src="FeedItem.js"/>
+  <script type="application/x-javascript" src="feed-parser.js"/>
 
   <stringbundle id="bundle_newsblog" src="chrome://messenger-newsblog/locale/newsblog.properties"/>
 

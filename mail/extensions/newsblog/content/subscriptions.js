@@ -119,7 +119,7 @@ var feedDownloadCallback = {
     } 
     else if (aErrorCode == kNewsBlogInvalidFeed) //  the feed was bad...
       window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-invalidFeed', [feed.url]));
-    else // we never even downloaded the feed...(kNewsBlogRequestFailure)
+    else if (aErrorCode == kNewsBlogRequestFailure) 
       window.alert(document.getElementById('bundle_newsblog').getFormattedString('newsblog-networkError', [feed.url]));
 
     // re-enable the add button now that we are done subscribing
