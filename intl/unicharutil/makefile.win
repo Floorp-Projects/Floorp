@@ -17,5 +17,5 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS= public src tests
+DIRS= idl public src tables tests
 include <$(DEPTH)\config\rules.mak>

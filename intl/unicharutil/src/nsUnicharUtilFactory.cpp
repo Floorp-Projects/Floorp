@@ -27,6 +27,7 @@
 #include "nsICaseConversion.h"
 #include "nsCaseConversionImp2.h"
 #include "nsIServiceManager.h"
+#include "nsEntityConverter.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -35,6 +36,7 @@ NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kHankakuToZenkakuCID, NS_HANKAKUTOZENKAKU_CID);
 NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
+NS_DEFINE_CID(kEntityConverterCID,NS_ENTITYCONVERTER_CID);
 
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
@@ -120,6 +122,15 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     }
     return res;
   }
+
+  if (aClass.Equals(kEntityConverterCID)) {
+	  nsEntityConverterFactory	*factory = new nsEntityConverterFactory();
+	  if (!factory) {*aFactory=nsnull; return NS_ERROR_OUT_OF_MEMORY;}
+	  nsresult res = factory->QueryInterface(kFactoryIID,(void**)aFactory);
+	  if (NS_FAILED(res)) {*aFactory=nsnull; delete factory;}
+	  return res;
+  }
+
   return NS_NOINTERFACE;
 }
 
@@ -152,6 +163,15 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_HANKAKUTOZENKAKU_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv))  goto done;
+
+  rv = compMgr->RegisterComponent(kEntityConverterCID,
+								  "Unicode to Entity Converter",
+								  NS_ENTITYCONVERTER_PROGID,
+								  path,
+								  PR_TRUE,PR_TRUE);
+  if(NS_FAILED(rv)) printf("registering entity converter failed.\n");
 
 done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -176,6 +196,10 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kHankakuToZenkakuCID, path);
+
+  if (NS_FAILED(rv)) goto done;
+
+  rv = compMgr->UnregisterComponent(kEntityConverterCID,path);
 
 done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
