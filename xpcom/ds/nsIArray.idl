@@ -144,7 +144,7 @@ interface nsIArray : nsISupports
  * @status UNDER_REVIEW
  */
 
-[scriptable, uuid(2cd0b2f8-d4dd-48b8-87ba-b0200501f079)]
+[scriptable, uuid(af059da0-c85b-40ec-af07-ae4bfdc192cc)]
 interface nsIMutableArray : nsIArray
 {
     /**
@@ -153,18 +153,19 @@ interface nsIMutableArray : nsIArray
      * Append an element at the end of the array.
      *
      * @param element The element to append.
-     * @param element Whether or not to store the element using a weak
+     * @param weak    Whether or not to store the element using a weak
      *                reference.
-     * @throws NS_ERROR_UNEXPECTED when a weak reference is requested,
-     *                             but the element does not support
-     *                             nsIWeakReference.
+     * @throws NS_ERROR_FAILURE when a weak reference is requested,
+     *                          but the element does not support
+     *                          nsIWeakReference.
      */
     void appendElement(in nsISupports element, in boolean weak);
 
     /**
      * removeElementAt()
      * 
-     * Remove an element at a specific position.
+     * Remove an element at a specific position, moving all elements
+     * stored at a higher position down one.
      * To remove a specific element, use indexOf() to find the index
      * first, then call removeElementAt().
      *
@@ -176,22 +177,51 @@ interface nsIMutableArray : nsIArray
     /**
      * insertElementAt()
      *
-     * Insert an element at the given position, and move all elements
-     * stored at a higher position up one.
+     * Insert an element at the given position, moving the element 
+     * currently located in that position, and all elements in higher
+     * position, up by one.
      *
      * @param element The element to insert
-     * @param index   The position in the array. If the position is
-     *                greater than or equal to the length of the array
-     *                (@see nsIArray) then the array will grow to
-     *                exactly accomadate the index, and the new length
-     *                will be index+1. The newly created entries will
-     *                be null.
+     * @param index   The position in the array:
+     *                If the position is lower than the current length
+     *                of the array, the elements at that position and
+     *                onwards are bumped one position up.
+     *                If the position is equal to the current length
+     *                of the array, the new element is appended.
+     *                An index lower than 0 or higher than the current
+     *                length of the array is invalid and will be ignored.
      *
      * @throws NS_ERROR_FAILURE when a weak reference is requested,
      *                          but the element does not support
      *                          nsIWeakReference.
      */
     void insertElementAt(in nsISupports element, in unsigned long index, in boolean weak);
+
+    /**
+     * replaceElementAt()
+     *
+     * Replace the element at the given position.
+     *
+     * @param element The new element to insert
+     * @param index   The position in the array
+     *                If the position is lower than the current length
+     *                of the array, an existing element will be replaced.
+     *                If the position is equal to the current length
+     *                of the array, the new element is appended.
+     *                If the position is higher than the current length
+     *                of the array, empty elements are appended followed
+     *                by the new element at the specified position.
+     *                An index lower than 0 is invalid and will be ignored.
+     *
+     * @param weak    Whether or not to store the new element using a weak
+     *                reference.
+     *
+     * @throws NS_ERROR_FAILURE when a weak reference is requested,
+     *                          but the element does not support
+     *                          nsIWeakReference.
+     */
+    void replaceElementAt(in nsISupports element, in unsigned long index, in boolean weak);
+    
     
     /**
      * clear()

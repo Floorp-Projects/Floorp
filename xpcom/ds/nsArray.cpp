@@ -154,6 +154,24 @@ nsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
 }
 
 NS_IMETHODIMP
+nsArray::ReplaceElementAt(nsISupports* aElement, PRUint32 aIndex, PRBool aWeak)
+{
+    nsCOMPtr<nsISupports> elementRef;
+    if (aWeak) {
+        elementRef =
+            getter_AddRefs(NS_STATIC_CAST(nsISupports*,
+                                          NS_GetWeakReference(aElement)));
+        NS_ASSERTION(elementRef, "ReplaceElementAt: Trying to use weak references on an object that doesn't support it");
+        if (!elementRef)
+            return NS_ERROR_FAILURE;
+    } else {
+        elementRef = aElement;
+    }
+    PRBool result = mArray.ReplaceObjectAt(elementRef, aIndex);
+    return result ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsArray::Clear()
 {
     mArray.Clear();
