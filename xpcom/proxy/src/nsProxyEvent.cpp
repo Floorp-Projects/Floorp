@@ -75,6 +75,10 @@ nsProxyObjectCallInfo::SetCompleted()
 
 NS_IMPL_ISUPPORTS0(nsProxyObject)
 
+nsProxyObject::nsProxyObject()
+{
+  // the mac compiler demands that I have this useless constructor.
+}
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
     NS_INIT_REFCNT();
