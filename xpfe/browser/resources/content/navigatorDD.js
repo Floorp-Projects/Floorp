@@ -19,41 +19,9 @@
  *
  * Contributor(s): 
  *  - Kevin Puetz (puetzk@iastate.edu)
+ *  - Ben Goodger <ben@netscape.com>
  */
 
-//
-// Determine if d&d is on or not, off by default for beta but we want mozilla
-// folks to be able to turn it on if they so desire.
-//
-var gDragDropEnabled = false;
-var pref = null;
-try {
-  pref = Components.classes['component://netscape/preferences'];
-  pref = pref.getService();
-  pref = pref.QueryInterface(Components.interfaces.nsIPref);
-}
-catch (ex) {
-  dump("failed to get prefs service!\n");
-  pref = null;
-}
-
-try {
-  gDragDropEnabled = pref.GetBoolPref("xpfe.dragdrop.enable");
-}
-catch (ex) {
-  dump("assuming d&d is off for Personal Toolbar\n");
-}  
-
-
-function GeneralDrag ( event )
-{
-  if ( !gDragDropEnabled )
-    return;
-
-  dump("****** DRAG MADE IT TO TOPLEVEL WINDOW ********\n");
-}
-
-  
 function BeginDragPersonalToolbar ( event )
 {
   if ( !gDragDropEnabled )
@@ -241,7 +209,7 @@ function DropPersonalToolbar ( event )
 
 function DragOverPersonalToolbar ( event )
 {
-  if ( !gDragDropEnabled )
+  if ( 1 )
     return;
   
   var validFlavor = false;
@@ -272,201 +240,82 @@ function DragOverPersonalToolbar ( event )
 } // DragOverPersonalToolbar
 
 
-//
-// BeginDragContentArea
-//
-function BeginDragContentArea ( event )
-{
-  if ( event.target == null )
-    return;
-
-  var dragService = Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService == null )
-    return;
-
-  var trans = Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-  if ( trans == null )
-    return;
-
-  var genTextData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-  var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-  if ( (genTextData == null) || (htmlData == null) )
-    return;
+var contentAreaDNDObserver = {
+  onDragStart: function (aEvent)
+    {  
+      var htmlstring = null;
+      var textstring = null;
+      var domselection = window.content.getSelection();
+      if (domselection && !domselection.isCollapsed && 
+          domselection.containsNode(event.target,false))
+        {
+          // the window has a selection so we should grab that rather than looking for specific elements
+          htmlstring = domselection.toString("text/html", 128+256, 0);
+          textstring = domselection.toString("text/plain", 0, 0);
+        }
+      else 
+        {
+          switch (aEvent.target.nodeName)   // switch (aEvent.target.localName) 
+            {
+              case 'AREA':
+              case 'IMG':
+                var imgsrc = aEvent.target.getAttribute("src");
+                var baseurl = window.content.location.href;
+                // need to do some stuff with the window.content.location here (path?) 
+                // to get base URL for image.
+                textstring = imgsrc;
+                htmlstring = "<img src=\"" + textstring + "\">";
+                break;
+              case 'A':
+                if (aEvent.target.href)
+                  {
+                    textstring = aEvent.target.getAttribute("href");
+                    htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
+                  }
+                else if (aEvent.target.name)
+                  {
+                    textstring = aEvent.target.getAttribute("name");
+                    htmlstring = "<a name=\"" + textstring + "\">" + textstring + "</a>"
+                  }
+                break;
+              default:
+              case '#text':
+              case 'LI':
+              case 'OL':
+              case 'DD':
+                textstring = enclosingLink(aEvent.target);
+                if (textstring != "")
+                  htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
+                else
+                  return;
+                break;
+            }
+        }
   
-  var htmlstring = null;
-  var textstring = null;
-  var domselection = window.content.getSelection();
-  if ( domselection && !domselection.isCollapsed  && domselection.containsNode(event.target,false))
-  {
-    // the window has a selection so we should grab that rather than looking for specific elements
-//    dump(domselection);
-    htmlstring = domselection.toString("text/html", 128+256, 0);
-    textstring = domselection.toString("text/plain", 0, 0);
-  }
-  else 
-  {
-    switch (event.target.nodeName)
+      var flavourList = { };
+      flavourList["text/html"] = { width: 2, data: htmlstring };
+      flavourList["text/unicode"] = { width: 2, data: textstring };
+      return flavourList;
+    },
+
+  onDrop: function (aData)
     {
-      case 'AREA':
-      case 'IMG':
-        var imgsrc = event.target.getAttribute("src");
-        var baseurl = window.content.location.href;
-        textstring = imgsrc;
-        htmlstring = "<img src=\"" + textstring + "\">";
-        break;
+      var aData = aData.length ? aData[0] : aData;
+      var url = retrieveURLFromData(aData);
+      var urlBar = document.getElementById("urlbar");
+      urlBar.value = url;
+      BrowserLoadURL();
+    },
 
-      case 'HR':
-        break;
-
-      case 'A':
-        if ( event.target.href )
-        {
-          // link
-          textstring = event.target.getAttribute("href");
-          htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
-        }
-        else if (event.target.name )
-        {
-          // named anchor
-          textstring = event.target.getAttribute("name");
-          htmlstring = "<a name=\"" + textstring + "\">" + textstring + "</a>"
-        }
-        break;
-
-      default:
-      case '#text':
-      case 'LI':
-      case 'OL':
-      case 'DD':
-        textstring = enclosingLink(event.target);
-        if ( textstring != "" )
-          htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
-        else
-          return;
-        break;
-    }
-  }
-  
-  htmlData.data = htmlstring;
-  trans.addDataFlavor("text/html");
-  trans.setTransferData ( "text/html", htmlData, htmlstring.length * 2 );  // double byte data
-
-  if ( textstring && (textstring != "") )
-  {
-    genTextData.data = textstring;
-    trans.addDataFlavor("text/unicode");
-    trans.setTransferData ( "text/unicode", genTextData, textstring.length * 2 );  // double byte data
-  }
-
-  var transArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-  if ( transArray )
-  {
-    // put it into the transferable as an |nsISupports|
-    var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-    transArray.AppendElement(genTrans);
-    var nsIDragService = Components.interfaces.nsIDragService;
-    dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                        nsIDragService.DRAGDROP_ACTION_MOVE );
-    event.preventBubble();
-  }
-}
-
-
-//
-// DragOverContentArea
-//
-// An example of how to handle drag-over. Looks for any of a handful of flavors and
-// if it finds them it marks the dragSession that the drop is allowed.
-//
-function DragOverContentArea ( event )
-{
-  var validFlavor = false;
-  var dragSession = null;
-
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    dragSession = dragService.getCurrentSession();
-    if ( dragSession ) {
-      if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
-        validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("text/unicode") )
-        validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("application/x-moz-file") )
-        validFlavor = true;
-      //XXX other flavors here...
-      
-      if ( validFlavor ) {
-        // XXX do some drag feedback here, set a style maybe???
-        
-        dragSession.canDrop = true;
-        event.preventBubble();
-      }
-    }
-  }
-} // DragOverContentArea
-
-
-//
-// DropOnContentArea
-//
-// An example of how to handle a drop. Basically looks for the text flavor, extracts it,
-// shoves it into the url bar, and loads the given URL. No checking is done to make sure
-// this is a url ;)
-//
-function DropOnContentArea ( event )
-{ 
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    var dragSession = dragService.getCurrentSession();
-    if ( dragSession ) {
-      var trans = 
-        Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-      if ( trans ) {
-        trans.addDataFlavor("text/unicode");
-        trans.addDataFlavor("application/x-moz-file");
-        for ( var i = 0; i < dragSession.numDropItems; ++i ) {
-          var id = "";
-          dragSession.getData ( trans, i );
-          var dataObj = new Object();
-          var bestFlavor = new Object();
-          var len = new Object();
-          trans.getAnyTransferData ( bestFlavor, dataObj, len );
- dump("best flavor is " + bestFlavor.value + "\n\n");
-          if ( bestFlavor.value == "text/unicode" ) {
-            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-            if ( dataObj ) {
-              // pull the URL out of the data object, two byte data
-              var id = dataObj.data.substring(0, len.value / 2);
-              dump("ID: '" + id + "'\n");
-            }
-          }
-          else if ( bestFlavor.value == "application/x-moz-file" ) {
-            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
-            if ( dataObj ) {
-              var fileURL = Components.classes["component://netscape/network/standard-url"]
-                              .createInstance(Components.interfaces.nsIFileURL);
-              if ( fileURL ) {
-                fileURL.file = dataObj;
-                id = fileURL.spec;
-                dump("File dropped was: '" + id + "'\n");
-              }
-            }
-          }
-          
-          // stuff it into the url field and go, baby, go!
-          var urlBar = document.getElementById ( "urlbar" );
-          urlBar.value = id;
-          BrowserLoadURL();
-            
-          event.preventBubble();
-        } // foreach drag item
-      }
-    }
-  }
-} // DropOnContentArea
-
+  getSupportedFlavours: function ()
+    {
+      var flavourList = { };
+      //flavourList["moz/toolbaritem"] = { width: 2 };
+      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
+      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
+      return flavourList;
+    },
+};
 
 //
 // DragProxyIcon
@@ -477,130 +326,87 @@ function DropOnContentArea ( event )
 // This is by no means the final implementation, just another example of what you can do with
 // JS. Much still left to do here.
 // 
-function DragProxyIcon ( event )
-{
-  var dragStarted = false;
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    var trans = 
-      Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-    if ( trans ) {
-      var genTextData =
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      if ( genTextData ) {
-      
-        // pull the url out of the url bar
-        var urlBar = document.getElementById ( "urlbar" );
-        if ( !urlBar )
-          return;            
-        var id = urlBar.value;
-        genTextData.data = id;
-      
-        dump("ID: " + id + "\n");
 
-        // first and foremost, we are a URL
-        var urlData = Components.classes["component://netscape/supports-wstring"].createInstance();
-        if ( urlData )
-          urlData = urlData.QueryInterface(Components.interfaces.nsISupportsWString);
-        if ( urlData ) {
-          urlData.data = id;
-          trans.addDataFlavor("text/x-moz-url");
-          trans.setTransferData( "text/x-moz-url", urlData, id.length * 2);
-        }
+var proxyIconDNDObserver = {
+  onDragStart: function ()
+    {
+      var urlBar = document.getElementById("urlbar");
+      var flavourList = { };
+      flavourList["text/unicode"] = { width: 2, data: urlBar.value };
+      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value };
+      var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
+      flavourList["text/html"] = { width: 2, data: htmlString };
+      return flavourList;
+    }
+};
+
+var homeButtonObserver = {
+  onDrop: function (aData)
+    {
+      var aData = aData.length ? aData[0] : aData;
+      var url = retrieveURLFromData(aData);
+      var prefService = nsJSComponentManager.getService("component://netscape/preferences",
+                                                        "nsIPref");
+      prefService.SetUnicharPref("browser.startup.homepage", url);                                           
+    },
+    
+  onDragOver: function (aEvent, aFlavour)
+    {
+      var homeButton = aEvent.target;
+      // preliminary attribute name for now
+      homeButton.setAttribute("home-dragover","true");
+		  var statusTextFld = document.getElementById("statusbar-display");
+      gStatus = gStatus ? gStatus : statusTextFld.value;
+      statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
+    },
+    
+  onDragExit: function ()
+    {
+      var homeButton = document.getElementById("homebutton");
+      homeButton.removeAttribute("home-dragover");
+      statusTextFld.setAttribute("value", gStatus);
+      gStatus = null;
+    },
         
-        // add text/html flavor next
-        var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance();
-        if ( htmlData )
-          htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
-        if ( htmlData ) {
-          var htmlstring = "<a href=\"" + genTextData + "\">" + genTextData + "</a>";
-          htmlData.data = htmlstring;
-          trans.addDataFlavor("text/html");
-          trans.setTransferData( "text/html", htmlData, htmlstring.length * 2);
-        }
-       
-        // add the text/unicode flavor as a fallback
-        trans.addDataFlavor("text/unicode");
-        trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
-      
-        var transArray = 
-          Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-        if ( transArray ) {
-          // put it into the transferable as an |nsISupports|
-          var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-          transArray.AppendElement(genTrans);
-          var nsIDragService = Components.interfaces.nsIDragService;
-          dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                              nsIDragService.DRAGDROP_ACTION_MOVE );
-          dragStarted = true;
-        }
-      } // if data object
-    } // if transferable
-  } // if drag service
-
-  if ( dragStarted )               // don't propagate the event if a drag has begun
-    event.preventBubble();
+  onDragStart: function ()
+    {
+      var prefService = nsJSComponentManager.getService("component://netscape/preferences",
+                                                        "nsIPref");
+      var homepage = prefService.CopyUnicharPref("browser.startup.homepage");                                                        
+      var flavourList = { };
+      flavourList["text/unicode"] = { width: 2, data: homepage };
+      flavourList["text/x-moz-url"] = { width: 2, data: homepage };
+      var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
+      flavourList["text/html"] = { width: 2, data: htmlString };
+      return flavourList;
+    },
   
-} // DragProxyIcon
+  getSupportedFlavours: function ()
+    {
+      var flavourList = { };
+      //flavourList["moz/toolbaritem"] = { width: 2 };
+      flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
+      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
+      return flavourList;
+    },  
+};
 
-
-//
-// DragContentLink
-//
-// Called when the user is starting a drag from the a content-area link. Basically
-// just gets the url from the link and places the data (as plain text) in the drag service.
-//
-// This is by no means the final implementation, just another example of what you can do with
-// JS. Much still left to do here.
-// 
-function DragContentLink ( event )
-{
-  var target = event.target;
-  var dragStarted = false;
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( dragService ) {
-    var trans = 
-      Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
-    if ( trans ) {
-      var genTextData =
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      var htmlData =
-        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      if ( genTextData && htmlData ) {
-      
-      trans.addDataFlavor("text/html");
-      trans.addDataFlavor("text/unicode");
-        // pull the url out of the link
-        var href = enclosingLink(target);
-        if ( href == "" )
-          return;
-        var id = href
-        genTextData.data = id;
-        var htmlstring = "<a href=\"" + id + "\">" + id + "</a>";
-        htmlData.data = htmlstring;
-     
-        dump("ID: " + id + "\n");
-
-        trans.setTransferData ( "text/html", htmlData, htmlstring.length * 2 );  // double byte data
-        trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
-        var transArray = 
-          Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-        if ( transArray ) {
-          // put it into the transferable as an |nsISupports|
-          var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
-          transArray.AppendElement(genTrans);
-          var nsIDragService = Components.interfaces.nsIDragService;
-          dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                              nsIDragService.DRAGDROP_ACTION_MOVE );
-          dragStarted = true;
-        }
-      } // if data object
-    } // if transferable
-  } // if drag service
-
-  if ( dragStarted )               // don't propagate the event if a drag has begun
-    event.preventBubble();
-  
-} // DragContentLink
+function retrieveURLFromData (aData)
+  {
+    switch (aData.flavour)
+      {
+        case "text/unicode":
+          return aData.data.data; 
+          break;
+        case "application/x-moz-file":
+          var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
+          if (dataObj)
+            {
+              var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url",
+                                                                "nsIFileURL");
+              fileURL.file = dataObj;
+              return fileURL.spec;
+            }
+      }             
+    return null;                                                         
+  }
