@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.4 2000/09/13 18:13:17 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.5 2000/09/13 22:44:28 mcgreer%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -404,8 +404,10 @@ NSS_CMSSignedData_Decode_AfterEnd(NSSCMSSignedData *sigd)
     signerinfos = sigd->signerInfos;
 
     /* set cmsg for all the signerinfos */
-    for (i = 0; signerinfos[i] != NULL; i++)
-	signerinfos[i]->cmsg = sigd->cmsg;
+    if (signerinfos) {
+	for (i = 0; signerinfos[i] != NULL; i++)
+	    signerinfos[i]->cmsg = sigd->cmsg;
+    }
 
     return SECSuccess;
 }
