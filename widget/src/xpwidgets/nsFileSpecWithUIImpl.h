@@ -102,6 +102,9 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD GetParent(nsIFileSpec * *aParent)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetParent(aParent) : NS_ERROR_NOT_INITIALIZED; }
 
+	/* boolean equals(in nsIFileSpec spec); */
+	NS_IMETHOD Equals(nsIFileSpec *spec, PRBool *result)                               		   { return mBaseFileSpec ? mBaseFileSpec->Equals(spec, result) : NS_ERROR_NOT_INITIALIZED; } 
+
 	/* nsIFileSpec makeUnique (); */
 	NS_IMETHOD MakeUnique()
 		{ return mBaseFileSpec ? mBaseFileSpec->MakeUnique() : NS_ERROR_NOT_INITIALIZED; }

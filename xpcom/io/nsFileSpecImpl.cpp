@@ -528,6 +528,29 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileSpec(nsFileSpec *aFileSpec)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::Equals(nsIFileSpec *spec, PRBool *result)
+//----------------------------------------------------------------------------------------
+{
+	nsresult rv;
+
+        if (!result || !spec) return NS_ERROR_NULL_POINTER;
+
+        nsFileSpec otherSpec;
+
+        rv = spec->GetFileSpec(&otherSpec);
+        if (NS_FAILED(rv)) return rv;
+
+        if (mFileSpec == otherSpec) {
+                *result = PR_TRUE;
+        }
+        else {
+                *result = PR_FALSE;
+        }
+
+        return NS_OK;
+}    
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::SetFromFileSpec(const nsFileSpec& aFileSpec)
 //----------------------------------------------------------------------------------------
 {
@@ -775,4 +798,3 @@ nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result)
 {
 	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), (void**)result);
 }
-
