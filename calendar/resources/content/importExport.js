@@ -257,8 +257,29 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
       if( silent )
       {
          if( ServerName == null || ServerName == "" || ServerName == false )
-            var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
-         
+         {
+            //see if there's a server selected in the calendar window first
+            //get the selected calendar
+            if( document.getElementById( "list-calendars-listbox" ) )
+            {
+               var selectedCalendarItem = document.getElementById( "list-calendars-listbox" ).selectedItem;
+            
+               if( selectedCalendarItem )
+               {
+                  ServerName = selectedCalendarItem.getAttribute( "calendarPath" );
+               }
+               else
+               {
+                  //otherwise use the default
+                  var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+               }
+            }
+            else
+            {
+               //otherwise use the default
+               var ServerName = gCalendarWindow.calendarManager.getDefaultServer();
+            }
+         }
          gICalLib.addEvent( calendarEvent, ServerName );
       }
       else
