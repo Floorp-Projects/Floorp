@@ -32,9 +32,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsITransport.h"
-#include "nsIURL.h"
-#include "nsINetService.h"
+#include "nsIURI.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 
@@ -43,7 +41,6 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIUrlListener.h"
 
-#include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -52,15 +49,13 @@
 #include "nsFileSpec.h"
 
 #ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
-#define PREF_DLL   "xppref32.dll"
-#define APPSHELL_DLL "nsappshell.dll"
+#define PREF_DLL   "d:\\mozilla\\dist\\win32_d.obj\\bin\\xppref32.dll"
+#define APPSHELL_DLL "d:\\mozilla\\dist\\win32_d.obj\\bin\\nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
 #define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
@@ -72,7 +67,6 @@
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -135,7 +129,7 @@ static void strip_nonprintable(char *string) {
 class nsSmtpTestDriver : public nsIUrlListener
 {
 public:
-	nsSmtpTestDriver(nsINetService * pService, nsIEventQueue *queue);
+	nsSmtpTestDriver(nsIEventQueue *queue);
 	virtual ~nsSmtpTestDriver();
 
 	NS_DECL_ISUPPORTS
@@ -172,7 +166,6 @@ protected:
 	PRBool		m_runningURL;
 	PRBool		m_runTestHarness;
 
-	nsCOMPtr<nsINetService>  m_netService;
 	nsISmtpService			*m_smtpService;
 	nsCOMPtr<nsISmtpUrl>	 m_smtpUrl;
     
@@ -211,8 +204,7 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	return NS_OK;
 }
 
-nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
-                                   nsIEventQueue *queue)
+nsSmtpTestDriver::nsSmtpTestDriver(nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -220,9 +212,8 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
-  m_eventQueue = queue;
-	m_netService = dont_QueryInterface(pNetService);
-  NS_IF_ADDREF(m_eventQueue);
+	m_eventQueue = queue;
+	NS_IF_ADDREF(m_eventQueue);
 
 	InitializeTestDriver(); // prompts user for initialization information...
 
@@ -429,15 +420,15 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 int main()
 {
-	nsINetService * pNetService;
     nsIEventQueue *queue;
     nsresult result;
 
-  nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	result = nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+	result = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
 
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
@@ -447,7 +438,7 @@ int main()
     if (NS_FAILED(result) || (prefs == nsnull)) {
         exit(result);
     }
-   
+	prefs->StartUp();
     if (NS_FAILED(prefs->ReadUserPrefs()))
     {
       printf("Failed on reading user prefs!\n");
@@ -462,14 +453,6 @@ int main()
     result = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(result)) return result;
 
-	// ask the net lib service for a nsINetStream:
-	result = NS_NewINetService(&pNetService, NULL);
-	if (NS_FAILED(result) || !pNetService)
-	{
-		printf("unable to initialize net serivce. \n");
-		return 1;
-	}
-
     result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
@@ -477,7 +460,7 @@ int main()
     }
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsSmtpTestDriver * driver = new nsSmtpTestDriver(pNetService,queue);
+	nsSmtpTestDriver * driver = new nsSmtpTestDriver(queue);
 	if (driver)
 	{
 		NS_ADDREF(driver);

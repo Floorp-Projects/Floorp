@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "nsIURI.h"
 #include "nsParseMailbox.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgDatabase.h"
@@ -32,6 +33,8 @@
 #include "nsFileStream.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
+#include "nsXPIDLString.h"
+#include "nsIURL.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilterService.h"
@@ -52,28 +55,32 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStre
 
 // Whenever data arrives from the connection, core netlib notifices the protocol by calling
 // OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, 
+												  PRUint32 aLength)
 {
 	// right now, this really just means turn around and process the url
-	ProcessMailboxInputStream(aURL, aIStream, aLength);
-	return NS_OK;
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIURI> url = do_QueryInterface(ctxt, &rv);
+	if (NS_SUCCEEDED(rv))
+		rv = ProcessMailboxInputStream(url, aIStream, aLength);
+	return rv;
 }
 
-NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, nsISupports *ctxt)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(aURL, &rv);
-	printf("\n+++ nsMsgMailboxParser::OnStartRequest: URL: %p, Content type: %s\n", aURL, aContentType);
+	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
+	nsCOMPtr<nsIURL> url = do_QueryInterface(ctxt);
 
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
-		const char	*fileName;
-		aURL->GetFile(&fileName);
+		nsXPIDLCString fileName;
+		url->DirFile(getter_Copies(fileName));
 		if (fileName)
 		{
 			nsFilePath dbPath(fileName);
@@ -88,7 +95,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIURI* aURL, const char *aCont
 				rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
 			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
-			printf("url file = %s\n", fileName);
+			printf("url file = %s\n", (const char *)fileName);
 		}
 	}
 
@@ -99,7 +106,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIURI* aURL, const char *aCont
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
 	DoneParsingFolder();
 	// what can we do? we can close the stream?
@@ -129,9 +136,9 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIURI* aURL, nsresult aStatus, 
 				nsMsgKey key;
 
 				msgHdr->GetMessageKey(&key);
-				msgHdr->GetAuthor(author);
-				msgHdr->GetSubject(subject);
-#ifdef DEBUG
+				msgHdr->GetAuthor(&author);
+				msgHdr->GetSubject(&subject);
+#ifdef DEBUG_bienvenu
 				// leak nsString return values...
 				printf("hdr key = %d, author = %s subject = %s\n", key, author.GetBuffer(), subject.GetBuffer());
 #endif

@@ -32,16 +32,11 @@
 #include "nsITransactionManager.h"
 #include "nsMsgTxn.h"
 #include "nsIMsgMessageService.h"
-#ifdef DEBUG_bienvenu
-#define DOING_FILTERS
-#endif
-#ifdef DOING_FILTERS
 #include "nsIMsgFilterHitNotify.h"
 #include "nsIMsgFilterList.h"
 
 class nsImapMoveCoalescer;
 
-#endif
 
 #define FOUR_K 4096
 
@@ -141,6 +136,9 @@ public:
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
+
+	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
+	NS_IMETHOD MarkAllMessagesRead(void);
     
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
@@ -305,7 +303,6 @@ public:
                                      nsISupports* copyState);
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
-#ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
@@ -314,7 +311,6 @@ public:
 									   char *destFolder,
 									   nsIMsgFilter *filter);
 	nsresult StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &msgKeys);
-#endif // DOING_FILTERS
 protected:
     // Helper methods
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
@@ -357,8 +353,9 @@ protected:
     void ClearCopyState(nsresult exitCode);
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
-                                 nsString2& msgIds, nsMsgKeyArray& keyArray);
+                                 nsCString& msgIds, nsMsgKeyArray& keyArray);
 
+	nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);
 	nsresult GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
 
     nsNativeFileSpec *m_pathName;

@@ -20,24 +20,32 @@
 
 #include "prtypes.h"
 #include "prio.h"
-#include "nsMimeRebuffer.h"
-#include "nsINetOStream.h"
 #include "nsIMimeEmitter.h"
+#include "nsMimeRebuffer.h"
+#include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
+#include "nsIPref.h"
+#include "nsIChannel.h"
 
 class nsMimeHtmlEmitter : public nsIMimeEmitter {
 public: 
     nsMimeHtmlEmitter ();
     virtual       ~nsMimeHtmlEmitter (void);
 
-    /* this macro defines QueryInterface, AddRef and Release for this class */
-    NS_DECL_ISUPPORTS 
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
 
     // These will be called to start and stop the total operation
-    NS_IMETHOD    Initialize(nsINetOStream *outStream);
+	// need this bogus channel requirement to pass onto the stream listener
+	// for the emitter....
+    NS_IMETHOD    Initialize(nsIURI *url, nsIChannel *aChannel);
     NS_IMETHOD    Complete();
 
-    // Set the output stream for processed data.
-    NS_IMETHOD    SetOutputStream(nsINetOStream *outStream);
+    // Set the output stream/listener for processed data.
+    NS_IMETHOD    SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream);
+    NS_IMETHOD    SetOutputListener(nsIStreamListener *listener);
 
     // Header handling routines.
     NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
@@ -65,25 +73,35 @@ public:
 
 protected:
     // For buffer management on output
-    MimeRebuffer  *mBufferMgr;
+    MimeRebuffer        *mBufferMgr;
 
     // For the output stream
-    nsINetOStream *mOutStream;
-    PRUint32      mTotalWritten;
-    PRUint32      mTotalRead;
+	// mscott - dont ref count the streams....the emitter is owned by the converter
+	// which owns these streams...
+    nsIOutputStream     *mOutStream;
+	nsIInputStream	    *mInputStream;
+    nsIStreamListener   *mOutListener;
+	nsIChannel			*mChannel;
+
+    PRUint32            mTotalWritten;
+    PRUint32            mTotalRead;
 
     // For header determination...
-    PRBool        mDocHeader;
-	
-    // For content type...
-    char          *mAttachContentType;
+    nsIPref             *mPrefs;          /* Connnection to prefs service manager */
+    PRBool              mDocHeader;
 
-    // For Header display
-    PRBool        mHeaderDisplayType;
-    
+    // For content type...
+    char                *mAttachContentType;
+
+    // the url for the data being processed...
+    nsIURI              *mURL;
+
+    // The setting for header output...
+    PRInt32             mHeaderDisplayType;
+
 #ifdef DEBUG_rhp
-    PRBool        mReallyOutput;
-    PRFileDesc    *mLogFile;        /* Temp file to put generated HTML into. */ 
+    PRBool              mReallyOutput;
+    PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
 #endif 
 };
 

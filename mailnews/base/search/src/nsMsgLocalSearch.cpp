@@ -505,12 +505,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         switch (pTerm->m_attribute)
         {
         case nsMsgSearchAttrib::Sender:
-            msgToMatch->GetAuthor(matchString);
-            err = pTerm->MatchRfc822String (nsAutoCString(matchString), charset);
+            msgToMatch->GetAuthor(&matchString);
+            err = pTerm->MatchRfc822String (nsAutoString(matchString,eOneByte).GetBuffer(), charset);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
-            msgToMatch->GetSubject(matchString /* , TRUE */);
+            msgToMatch->GetSubject(&matchString /* , TRUE */);
 			nsString2 singleByteString(matchString, eOneByte); 
             err = pTerm->MatchString (&singleByteString, charset);
 			}
@@ -518,12 +518,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         case nsMsgSearchAttrib::ToOrCC:
         {
             nsresult errKeepGoing = pTerm->MatchAllBeforeDeciding() ? NS_OK : NS_COMFALSE;
-            msgToMatch->GetRecipients(recipients);
-            err = pTerm->MatchRfc822String (nsAutoCString(recipients), charset);
+            msgToMatch->GetRecipients(&recipients);
+            err = pTerm->MatchRfc822String (nsAutoString(recipients,eOneByte).GetBuffer(), charset);
             if (errKeepGoing == err)
             {
-                msgToMatch->GetCCList(ccList);
-                err = pTerm->MatchRfc822String (nsAutoCString(ccList), charset);
+                msgToMatch->GetCCList(&ccList);
+                err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset);
             }
         }
             break;
@@ -561,12 +561,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 			}
             break;
         case nsMsgSearchAttrib::To:
-            msgToMatch->GetRecipients(recipients);
-            err = pTerm->MatchRfc822String(nsAutoCString(recipients), charset);
+            msgToMatch->GetRecipients(&recipients);
+            err = pTerm->MatchRfc822String(nsAutoString(recipients,eOneByte).GetBuffer(), charset);
             break;
         case nsMsgSearchAttrib::CC:
-            msgToMatch->GetCCList(ccList);
-            err = pTerm->MatchRfc822String (nsAutoCString(ccList), charset);
+            msgToMatch->GetCCList(&ccList);
+            err = pTerm->MatchRfc822String (nsAutoString(ccList,eOneByte).GetBuffer(), charset);
             break;
         case nsMsgSearchAttrib::AgeInDays:
 			{
@@ -701,7 +701,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 			pHeaders->GetFlags(&msgFlags);
             pValue->attribute = nsMsgSearchAttrib::Subject;
             char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? "Re: " : "";
-            pHeaders->GetSubject(subject);
+            pHeaders->GetSubject(&subject);
             pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) nsAutoCString(subject)); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
         }
@@ -710,7 +710,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         {
             pValue->attribute = nsMsgSearchAttrib::Sender;
 			nsString author;
-            pHeaders->GetAuthor(author);
+            pHeaders->GetAuthor(&author);
 			pValue->u.string = PL_strdup((const char *) nsAutoCString(author));
             newResult->AddValue (pValue);
             err = NS_ERROR_OUT_OF_MEMORY;

@@ -27,7 +27,7 @@
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIMsgSend.h"
 
-class QuotingOutputStreamImpl;
+class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
 
 class nsMsgCompose : public nsIMsgCompose
@@ -40,7 +40,7 @@ class nsMsgCompose : public nsIMsgCompose
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-/*** nsIMsgCompose pure virtual functions */
+	/*** nsIMsgCompose pure virtual functions */
 
 	/* void Initialize (in nsIDOMWindow aWindow, in wstring originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format, in nsIMsgCompFields compFields, in nsISupports object); */
 	NS_IMETHOD Initialize(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields *compFields, nsISupports *object);
@@ -104,7 +104,7 @@ class nsMsgCompose : public nsIMsgCompose
 	nsIWebShellWindow*			m_webShellWin;
 	nsMsgCompFields* 			m_compFields;
 	PRBool						m_composeHTML;
-	QuotingOutputStreamImpl *	mOutStream;
+	QuotingOutputStreamListener*	mQuoteStreamListener;
 	nsCOMPtr<nsIOutputStream>   mBaseStream;
 	nsCOMPtr<nsIMsgQuote>       mQuote;
 
@@ -117,29 +117,29 @@ class nsMsgCompose : public nsIMsgCompose
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
-// THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
+// THIS IS THE CLASS THAT IS THE STREAM Listener OF THE HTML OUPUT
 // FROM LIBMIME. THIS IS FOR QUOTING
 ////////////////////////////////////////////////////////////////////////////////////
-class QuotingOutputStreamImpl : public nsIOutputStream
+class QuotingOutputStreamListener : public nsIStreamListener
 {
 public:
-    QuotingOutputStreamImpl(void);
-    virtual ~QuotingOutputStreamImpl(void);
+    QuotingOutputStreamListener(void);
+    virtual ~QuotingOutputStreamListener(void);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
-    // nsIBaseStream interface
-    NS_IMETHOD Close(void);
+	// nsIStreamListener interface
+	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, 
+							 nsISupports    *ctxt, 
+                             nsIInputStream *inStr, 
+                             PRUint32       sourceOffset, 
+                             PRUint32       count);
+	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
-    // nsIOutputStream interface
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
-
-    NS_IMETHOD Flush(void);
-
-    NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
-
-    NS_IMETHOD  ConvertToPlainText();
+	NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+	NS_IMETHOD  ConvertToPlainText();
 
 private:
     nsMsgCompose    *mComposeObj;

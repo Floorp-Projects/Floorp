@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "msgCore.h"
 #include "mimerosetta.h"
 #include "mimei.h"
@@ -23,10 +23,8 @@
 #include "modmime.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "imap.h"
 #include "prefapi.h"
 #include "mimebuf.h"
-#include "plugin_inst.h"
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
 #include "nsCRT.h"

@@ -25,42 +25,31 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= nntpTest
 CPPSRCS		= nntpTest.cpp
 
-LIBS		= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
-		-lmozreg \
-		-lxpcom \
-		-lpwcac \
-		-lmozdbm \
-		-lxp \
-		-lpref \
-		-lmozjs \
-		-lsecfree \
-		-lraptorhtmlpars \
-		-lexpat \
-		-lxmltok \
-		-ljsdom \
-		-lcaps \
-		-ljsurl \
-		-limg \
-		-lmozutil \
-		-lmsgbaseutil \
-		$(TIMER_LIBS) \
-		$(ZLIB_LIBS) \
-		$(DIST)/lib/librdfbase_s.a \
-		$(NSPR_LIBS) \
-		$(TK_LIBS) \
-		$(NULL)
+LIBS = \
+	-lmozreg	\
+	-lxpcom	\
+	-lmozdbm	\
+	-lxp	\
+	-lpref	\
+	-lmozjs	\
+	-lsecfree \
+	-lraptorhtmlpars	\
+	-lexpat \
+	-lxmltok \
+	-ljsdom	\
+	-lcaps \
+	-ljsurl	\
+	-limg	\
+	-lmozutil	\
+	-lmsgbaseutil \
+	$(TIMER_LIBS) \
+	$(ZLIB_LIBS) \
+	$(DIST)/lib/librdfbase_s.a \
+	$(NSPR_LIBS) \
+	$(TK_LIBS) \
+	-lneckoutil_s \
+	$(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
 

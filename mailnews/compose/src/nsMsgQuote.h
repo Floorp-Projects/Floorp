@@ -22,6 +22,7 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIMsgMessageService.h"
+#include "nsIStreamListener.h"
 
 #define NS_MSGQUOTE_CID \
   {0x1C7ABF0C, 0x21E5, 0x11d3, \
@@ -29,21 +30,20 @@
 
 class nsMsgQuote: public nsIMsgQuote {
 public: 
-	nsMsgQuote();
-	virtual ~nsMsgQuote();
+  nsMsgQuote();
+  virtual ~nsMsgQuote();
 
-	/* this macro defines QueryInterface, AddRef and Release for this class */
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream); */
-  NS_IMETHOD QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream);
+  NS_IMETHOD QuoteMessage(const PRUnichar *msgURI, nsIStreamListener * aStreamListener);
 
   // 
   // Implementation data...
   //
   nsFileSpec      *mTmpFileSpec;
   nsIFileSpec     *mTmpIFileSpec;
-  nsIOutputStream *mOutStream;
+  nsCOMPtr<nsIStreamListener> mStreamListener;
   char            *mURI;
   nsIMsgMessageService    *mMessageService;
 };

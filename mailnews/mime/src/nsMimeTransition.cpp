@@ -57,13 +57,13 @@ NET_cinfo_find_info_by_type (char *uri)
 extern "C" PRBool
 EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
 {
-  if (AllHeaders == dispType)
+	if (nsMimeHeaderDisplayTypes::AllHeaders == dispType)
     return PR_TRUE;
 
   if ((!header) || (!*header))
     return PR_FALSE;
 
-  if (MicroHeaders == dispType)
+  if (nsMimeHeaderDisplayTypes::MicroHeaders == dispType)
   {
     if (
           (!PL_strcmp(header, HEADER_SUBJECT)) ||
@@ -75,7 +75,7 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
       return PR_FALSE;
   }
 
-  if (NormalHeaders == dispType)
+  if (nsMimeHeaderDisplayTypes::NormalHeaders == dispType)
   {
     if (
         (!PL_strcmp(header, HEADER_TO)) ||

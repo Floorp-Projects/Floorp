@@ -23,7 +23,6 @@
 #include <windows.h>    // for InterlockedIncrement
 #endif
 
-#include "nsINetService.h"
 #include "nsMailboxService.h"
 
 #include "nsMailboxUrl.h"
@@ -61,15 +60,21 @@ nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr
     if (aIID.Equals(nsIMailboxService::GetIID()) || aIID.Equals(kISupportsIID)) 
 	{
         *aInstancePtr = (void*) ((nsIMailboxService*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(nsIMsgMessageService::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
+	if (aIID.Equals(nsIProtocolHandler::GetIID()))
+	{
+        *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+	}
 
 #if defined(NS_DEBUG)
     /*
@@ -271,4 +276,47 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 	} // if we got a url
 
 	return rv;
+}
+
+NS_IMETHODIMP nsMailboxService::GetScheme(char * *aScheme)
+{
+	nsresult rv = NS_OK;
+	if (aScheme)
+		*aScheme = PL_strdup("mailbox");
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 
+}
+
+NS_IMETHODIMP nsMailboxService::GetDefaultPort(PRInt32 *aDefaultPort)
+{
+	nsresult rv = NS_OK;
+	if (aDefaultPort)
+		*aDefaultPort = -1;  // mailbox doesn't use a port!!!!!
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 	
+}
+
+NS_IMETHODIMP nsMailboxService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
+{
+	// no such thing as relative urls for smtp.....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+{
+	// i just haven't implemented this yet...I will be though....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval)
+{
+	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
+	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
+	// the necko team in more detail later on.
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
 }

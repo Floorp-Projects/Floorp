@@ -18,7 +18,6 @@
 
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
-#include "nsIFileSpec.idl"
 
 %{C++
 // {932C53A5-F398-11d2-82B7-444553540002}

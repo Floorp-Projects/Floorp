@@ -495,11 +495,11 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
   nsAutoString subject;
   if(sort)
 	{
-      rv = message->GetSubjectCollationKey(subject);
+      rv = message->GetSubjectCollationKey(&subject);
 	}
   else
 	{
-      rv = message->GetMime2EncodedSubject(subject);
+      rv = message->GetMime2DecodedSubject(&subject);
 			if(NS_FAILED(rv))
 				return rv;
       PRUint32 flags;
@@ -526,13 +526,13 @@ nsMsgMessageDataSource::createMessageSenderNode(nsIMessage *message,
   nsAutoString sender, senderUserName;
   if(sort)
 	{
-      rv = message->GetAuthorCollationKey(sender);
+      rv = message->GetAuthorCollationKey(&sender);
 			if(NS_SUCCEEDED(rv))
 	      rv = createNode(sender, target);
 	}
   else
 	{
-      rv = message->GetMime2EncodedAuthor(sender);
+      rv = message->GetMime2DecodedAuthor(&sender);
       if(NS_SUCCEEDED(rv))
 				 rv = GetSenderName(sender, &senderUserName);
 			if(NS_SUCCEEDED(rv))

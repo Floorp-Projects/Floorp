@@ -43,7 +43,6 @@ LLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\msgcore.lib \
- $(DIST)\lib\xplib.lib			\
  $(NULL)
 
 LLFLAGS= -SUBSYSTEM:CONSOLE 

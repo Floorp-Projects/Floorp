@@ -318,6 +318,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 
+	rv = compMgr->RegisterComponent(kNntpServiceCID,  
+                                    "NNTP Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "news",
+                                    path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) return rv;
+
 	rv = compMgr->RegisterComponent(kNewsFolderResourceCID,
                                   "News Folder Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news",

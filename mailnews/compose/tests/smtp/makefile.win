@@ -24,14 +24,12 @@ OBJS =                          \
 	.\$(OBJDIR)\smtpTest.obj    \
 	$(NULL)
 
-LLIBS=							\
- $(DIST)\lib\xpcom.lib		\
- $(LIBNSPR)						\
- $(DIST)\lib\raptorgfxwin.lib	\
- $(DIST)\lib\raptorwidget.lib	\
- $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\xplib.lib			\
- $(NULL)
+LLIBS=									\
+		$(DIST)\lib\xpcom.lib			\
+		$(LIBNSPR)						\
+		$(DIST)\lib\raptorgfxwin.lib	\
+		$(DIST)\lib\raptorwidget.lib	\
+		$(NULL)
 
 LLFLAGS=-SUBSYSTEM:CONSOLE 
 

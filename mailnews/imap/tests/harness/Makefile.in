@@ -27,24 +27,11 @@ PROGRAM		= testimap
 
 CPPSRCS		= imapProtocolTest.cpp
 
-LIBS		= \
-		-L$(DIST)/lib \
-		-L$(DIST)/bin \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
-		-lmozreg \
+LIBS =	\
+		-L$(DIST)/lib			\
+		-L$(DIST)/bin			\
+		-lmozreg				\
 		-lxpcom \
-		-lpwcac \
 		-lmozdbm \
 		-lxp \
 		-lpref \
@@ -62,6 +49,7 @@ LIBS		= \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
+		-lneckoutil_s \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -45,7 +45,7 @@
 
 #include "msgCore.h"
 #include "prprf.h"
-
+#include "nspr.h"
 #include <stdio.h>
 #include <assert.h>
 
@@ -53,6 +53,7 @@
 #include <windows.h>
 #endif
 
+#include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsIPref.h"
 #include "plstr.h"
@@ -61,37 +62,33 @@
 #include "nsIMailboxService.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsITransport.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
-
+#include "nsMsgDBCID.h"
 #include "nsIMailboxUrl.h"
-#include "nsMailboxUrl.h"
-#include "nsMailboxProtocol.h"
 #include "nsParseMailbox.h"
-#include "nsMailDatabase.h"
+#include "nsIMsgDatabase.h"
 #include "nsIUrlListener.h"
 #include "nsIUrlListenerManager.h"
 
-#include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsRDFCID.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
+#include "nsIFileLocator.h"
+#include "nsMsgUtils.h"
+#include "nsLocalUtils.h"
 
 #ifdef XP_PC
-#define NETLIB_DLL   "netlib.dll"
 #define XPCOM_DLL    "xpcom32.dll"
-#define RDF_DLL      "rdf.dll"
 #define PREF_DLL	 "xppref32.dll"
+#define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL   "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL    "libxpcom"MOZ_DLL_SUFFIX
 #define LOCAL_DLL	 "libmsglocal"MOZ_DLL_SUFFIX
 #define RDF_DLL      "librdf"MOZ_DLL_SUFFIX
@@ -102,23 +99,16 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
-
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -164,7 +154,7 @@ static void strip_nonprintable(char *string) {
 // would be asked to process it....right now it is just Mailbox specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsMailboxTestDriver : public nsIUrlListener, nsIStreamListener
+class nsMailboxTestDriver : public nsIStreamListener, nsIUrlListener
 {
 public:
 	NS_DECL_ISUPPORTS
@@ -198,13 +188,9 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface --> primarily to test copy, move and delete
 	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK;}
-	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} 
-	
-	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
@@ -226,7 +212,7 @@ protected:
 
 	void InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group); 
-	nsMailDatabase * OpenDB(nsFileSpec filePath);
+	nsIMsgDatabase * OpenDB(nsFileSpec filePath);
 };
 
 nsresult nsMailboxTestDriver::OnStartRunningUrl(nsIURI * aUrl)
@@ -264,16 +250,16 @@ NS_IMETHODIMP nsMailboxTestDriver::QueryInterface(const nsIID &aIID, void** aIns
     if (NULL == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
  
-    if (aIID.Equals(nsIStreamListener::GetIID()) || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsIStreamListener*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIUrlListener::GetIID())) 
+    if (aIID.Equals(nsCOMTypeInfo<nsIUrlListener>::GetIID())) 
 	{
         *aInstancePtr = (void*) ((nsIUrlListener*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
  
@@ -289,7 +275,7 @@ nsMailboxTestDriver::nsMailboxTestDriver(nsIEventQueue *queue, nsIStreamListener
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
     m_eventQueue = queue;
-		NS_IF_ADDREF(queue);
+	NS_IF_ADDREF(queue);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 
@@ -344,23 +330,7 @@ void nsMailboxTestDriver::InitializeTestDriver()
 {
 	PL_strcpy(m_urlSpec, DEFAULT_URL_TYPE); // copy "mailbox://" part into url spec...
 	// read in the default mail folder path...
-
-	// propogating bienvenu's preferences hack.....
-	#define ROOT_PATH_LENGTH 128 
-	char* rootPath;
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-	if (prefs && NS_SUCCEEDED(rv))
-	{
-		rv = prefs->CopyCharPref(kMsgRootFolderPref, &rootPath);
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
-	}
-
-	if (NS_SUCCEEDED(rv))
-	{
-		m_folderSpec = rootPath;
-	}
-	PR_FREEIF(rootPath);
+	m_folderSpec = "c:\\Program Files\\Netscape\\Users\\mscott\\mail";
 }
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
@@ -446,12 +416,19 @@ nsresult nsMailboxTestDriver::OnExit()
 	return NS_OK;
 }
 
-nsMailDatabase * nsMailboxTestDriver::OpenDB(nsFileSpec filePath)
+nsIMsgDatabase * nsMailboxTestDriver::OpenDB(nsFileSpec filePath)
 {
-	nsMailDatabase * mailDb = nsnull;
-	nsresult rv = NS_OK;
-	rv = nsMailDatabase::Open(filePath, PR_FALSE, &mailDb);
-	return mailDb;
+	nsIMsgDatabase * db;
+	nsCOMPtr<nsIMsgDatabase> mailDB;
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsCOMTypeInfo<nsIMsgDatabase>::GetIID(), (void **) getter_AddRefs(mailDB));
+	if (NS_SUCCEEDED(rv) && mailDB)
+	{
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(filePath, getter_AddRefs(dbFileSpec));
+		rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_FALSE, &db);
+	}
+
+	return db;
 }
 
 nsresult nsMailboxTestDriver::OnCopyMessage()
@@ -483,13 +460,14 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 	PR_FREEIF(displayString);
 
 	// concatenate folder name onto folder path....
-	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "",PR_DIRECTORY_SEPARATOR, m_userData);
+	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "", '\\', m_userData);
+	char * mailboxName = PL_strdup(m_userData);
 	PR_FREEIF(folderPath);
 	// now turn this into a nsFilePath...
 	nsFileSpec filePath(fullFolderPath);
 	PR_FREEIF(fullFolderPath);
 
-	nsMailDatabase * mailDb = OpenDB(filePath);
+	nsIMsgDatabase * mailDb = OpenDB(filePath);
 	if (mailDb)
 	{
 		// extract the message key array
@@ -508,19 +486,22 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 		// okay, we have the msgKey so let's get rid of our db state...
 		mailDb->Close(PR_TRUE);
 
-		// now ask the mailbox service to parse this mailbox...
-		NS_WITH_SERVICE(nsIMailboxService, mailboxService, kCMailboxServiceCID, &rv);
-		if (NS_SUCCEEDED(rv) && mailboxService)
+		// mscott - hacky....sprintf up a mailbox URI to represent the message.
+		char * uri = nsnull;
+		char * testString = PR_smprintf("%s%s", "mscott@dredd.mcom.com/", mailboxName);
+		rv = nsBuildLocalMessageURI(/* (const char *) filePath */ testString, msgKey, &uri);
+		if (NS_SUCCEEDED(rv))
 		{
-			nsIURI * url = nsnull;
-			if (copyMessage)
-				mailboxService->CopyMessage("", this, PR_FALSE, this, nsnull);
-			else // display the message
-				mailboxService->DisplayMessage(filePath, msgKey, nsnull, nsnull, this, nsnull);
-			
-			if (url)
-				url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
-			NS_IF_RELEASE(url);
+			nsIMsgMessageService * messageService = nsnull;
+			rv = GetMessageServiceFromURI(uri, &messageService);
+
+			if (NS_SUCCEEDED(rv) && messageService)
+			{
+				nsISupports * asupport = nsnull;
+				QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void **) asupport);
+				messageService->DisplayMessage(uri, asupport, nsnull, nsnull);
+				ReleaseMessageServiceFromURI(uri, messageService);
+			}
 		}
 	}
 	else
@@ -554,7 +535,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	PR_FREEIF(displayString);
 
 	// concatenate folder name onto folder path....
-	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "",PR_DIRECTORY_SEPARATOR, m_userData);
+	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "",'\\', m_userData);
 	PR_FREEIF(folderPath);
 	// now turn this into a nsFileSpec...
 	nsFileSpec filePath(fullFolderPath);
@@ -580,15 +561,15 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 // End on command handlers for mailbox
 /////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURI* aURL, nsIInputStream *aStream, PRUint32 aLength)
+NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	// read the data out and print it to the screen....
 	if (aLength > 0)
 	{
 		char * buffer = (char *) PR_Malloc(sizeof(char) * aLength + 1);
-		if (buffer && aStream)
+		if (buffer && inStr)
 		{
-			aStream->Read(buffer, aLength, nsnull);
+			inStr->Read(buffer, aLength, nsnull);
 			printf(buffer);
 		}
 
@@ -597,62 +578,58 @@ NS_IMETHODIMP nsMailboxTestDriver::OnDataAvailable(nsIURI* aURL, nsIInputStream 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStartRequest(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxTestDriver::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
-	nsIMailboxUrl * mailboxUrl = nsnull;
-	if (aURL)
-		aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &mailboxUrl);
-
+	nsCOMPtr<nsIMailboxUrl> mailboxUrl = do_QueryInterface(ctxt);
 	if (mailboxUrl)
 	{
 		nsMsgKey msgKey;
-		mailboxUrl->GetMessageKey(msgKey);
+		mailboxUrl->GetMessageKey(&msgKey);
 		printf ("Begin Copying Message with message key %d.\n", msgKey);
 	}
-
-	NS_IF_RELEASE(mailboxUrl);
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMailboxTestDriver::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxTestDriver::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
-	nsIMailboxUrl * mailboxUrl = nsnull;
-	if (aURL)
-		aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &mailboxUrl);
+	nsCOMPtr<nsIMailboxUrl> mailboxUrl = do_QueryInterface(ctxt);
 
 	if (mailboxUrl)
 	{
 		nsMsgKey msgKey;
-		mailboxUrl->GetMessageKey(msgKey);
+		mailboxUrl->GetMessageKey(&msgKey);
 		printf ("\nEnd Copying Message with message key %d.\n", msgKey);
 	}
-
-	NS_IF_RELEASE(mailboxUrl);
-
 	return NS_OK;
 }
 
 
 int main()
 {
-	nsINetService * pNetService;
     nsCOMPtr<nsIEventQueue> queue;
     nsresult result;
 
-    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsComponentManager::RegisterComponent(kCMailboxServiceCID, nsnull, nsnull, LOCAL_DLL, PR_TRUE, PR_TRUE);
+	result = nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
-    // make sure prefs get initialized and loaded..
-    // mscott - this is just a bad bad bad hack right now until prefs
-    // has the ability to take nsnull as a parameter. Once that happens,
-    // prefs will do the work of figuring out which prefs file to load...
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result);
-    if (NS_FAILED(result) || !prefs) {
+	result = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+
+	// make sure prefs get initialized and loaded..
+	// mscott - this is just a bad bad bad hack right now until prefs
+	// has the ability to take nsnull as a parameter. Once that happens,
+	// prefs will do the work of figuring out which prefs file to load...
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
+    if (NS_FAILED(result) || (prefs == nsnull)) {
         exit(result);
-    }  
+    }
+	prefs->StartUp();
+    if (NS_FAILED(prefs->ReadUserPrefs()))
+    {
+      printf("Failed on reading user prefs!\n");
+      exit(-1);
+    } 
 
     // Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
@@ -664,14 +641,6 @@ int main()
     result = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(result)) return result;
 
-	// ask the net lib service for a nsINetStream:
-	result = NS_NewINetService(&pNetService, NULL);
-	if (NS_FAILED(result) || !pNetService)
-	{
-		printf("unable to initialize net serivce. \n");
-		return 1;
-	}
-
     pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
@@ -681,8 +650,8 @@ int main()
 	// bienvenu -- this is where you replace my creation of a stub mailbox parser with one of your own
 	// that gets passed into the mailbox test driver and it binds your parser to the mailbox url you run
 	// through the driver.
-	nsIStreamListener * mailboxParser = nsnull;
-	nsComponentManager::CreateInstance(kCMailboxParser, nsnull, nsIStreamListener::GetIID(), (void **) &mailboxParser);
+	nsCOMPtr<nsIStreamListener> mailboxParser = nsnull;
+	nsComponentManager::CreateInstance(kCMailboxParser, nsnull, nsIStreamListener::GetIID(), getter_AddRefs(mailboxParser));
    
 	// okay, everything is set up, now we just need to create a test driver and run it...
 	nsMailboxTestDriver * driver = new nsMailboxTestDriver(queue, mailboxParser);
@@ -694,9 +663,5 @@ int main()
 		NS_RELEASE(driver);
 	}
 
-	// shut down:
-	NS_IF_RELEASE(mailboxParser);
-	NS_IF_RELEASE(pNetService);
-    
     return 0;
 }

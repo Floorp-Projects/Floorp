@@ -64,7 +64,7 @@ nsMsgCompose::nsMsgCompose()
 	m_webShell = nsnull;
 	m_webShellWin = nsnull;
 	m_editor = nsnull;
-	mOutStream=nsnull;
+	mQuoteStreamListener=nsnull;
 	m_compFields = new nsMsgCompFields;
 	NS_IF_ADDREF(m_compFields);
 	mBodyLoaded = PR_FALSE;
@@ -100,7 +100,7 @@ nsMsgCompose::~nsMsgCompose()
 {
 	NS_IF_RELEASE(m_sendListener);
 	NS_IF_RELEASE(m_compFields);
-	NS_IF_RELEASE(mOutStream);
+	NS_IF_RELEASE(mQuoteStreamListener);
 // ducarroz: we don't need to own the editor shell as JS does it for us.
 //  NS_IF_RELEASE(m_editor);
 }
@@ -603,8 +603,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
       nsString encodedCharset;  // we don't use this
       char *aCString;
       
-      message->GetCharSet(aCharset);
-      message->GetSubject(aString);
+      message->GetCharSet(&aCharset);
+      message->GetSubject(&aString);
       switch (type)
       {
       default: break;        
@@ -623,7 +623,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
           else
           	m_compFields->SetSubject(bString.GetUnicode());
 
-            message->GetAuthor(aString);		
+            message->GetAuthor(&aString);		
             m_compFields->SetTo(nsAutoCString(aString));
             if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(aString, encodedCharset, decodedString)))
               if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
@@ -635,9 +635,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
               if (type == MSGCOMP_TYPE_ReplyAll)
               {
                 nsString cString, dString;
-                message->GetRecipients(cString);
+                message->GetRecipients(&cString);
                 CleanUpRecipients(cString);
-                message->GetCCList(dString);
+                message->GetCCList(&dString);
                 CleanUpRecipients(dString);
                 if (cString.Length() > 0 && dString.Length() > 0)
                   cString = cString + ", ";
@@ -695,13 +695,13 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
 // THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
 // FROM LIBMIME. THIS IS FOR QUOTING
 ////////////////////////////////////////////////////////////////////////////////////
-QuotingOutputStreamImpl::~QuotingOutputStreamImpl() 
+QuotingOutputStreamListener::~QuotingOutputStreamListener() 
 {
   if (mComposeObj)
     NS_RELEASE(mComposeObj);
 }
 
-QuotingOutputStreamImpl::QuotingOutputStreamImpl(void) 
+QuotingOutputStreamListener::QuotingOutputStreamListener(void) 
 { 
   mComposeObj = nsnull;
   mMsgBody = "<br><BLOCKQUOTE TYPE=CITE><html><br>--- Original Message ---<br><br>";
@@ -709,7 +709,7 @@ QuotingOutputStreamImpl::QuotingOutputStreamImpl(void)
 }
 
 nsresult
-QuotingOutputStreamImpl::ConvertToPlainText()
+QuotingOutputStreamListener::ConvertToPlainText()
 {
   nsresult    rv;
   nsString    convertedText;
@@ -733,7 +733,7 @@ QuotingOutputStreamImpl::ConvertToPlainText()
         // Set the charset...
         // RICHIE
         //nsAutoString utf8("UTF-8");
-printf("Warning: UTF-8 output is choking Ender!!!\n");
+		printf("Warning: UTF-8 output is choking Ender!!!\n");
         nsAutoString utf8("US-ASCII");
         parser->SetDocumentCharset(utf8, kCharsetFromMetaTag);
         
@@ -759,8 +759,12 @@ printf("Warning: UTF-8 output is choking Ender!!!\n");
   return rv;
 }
 
-nsresult
-QuotingOutputStreamImpl::Close(void) 
+NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
   if (mComposeObj) 
   {
@@ -791,40 +795,40 @@ QuotingOutputStreamImpl::Close(void)
   return NS_OK;
 }
 
-nsresult
-QuotingOutputStreamImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) 
+NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, 
+							 nsISupports *ctxt, nsIInputStream *inStr, 
+                             PRUint32 sourceOffset, PRUint32 count)
 {
-  char *newBuf = (char *)PR_Malloc(aCount + 1);
-  *aWriteCount = 0;
-  if (!newBuf)
-    return NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
+	if (!inStr)
+		return NS_ERROR_NULL_POINTER;
 
-  *aWriteCount = aCount;
-  
-  nsCRT::memcpy(newBuf, aBuf, aCount);
-  newBuf[aCount] = '\0';
-  mMsgBody += newBuf;
-  printf("%s", newBuf);
-  PR_FREEIF(newBuf);
-  return NS_OK;
+	char *newBuf = (char *)PR_Malloc(count + 1);
+	if (!newBuf)
+		return NS_ERROR_FAILURE;
+
+	PRUint32 numWritten = 0; 
+	rv = inStr->Read(newBuf, count, &numWritten);
+	newBuf[count] = '\0';
+	if (NS_SUCCEEDED(rv))
+	{
+		mMsgBody += newBuf;
+	}
+
+	PR_FREEIF(newBuf);
+	return rv;
 }
 
 nsresult
-QuotingOutputStreamImpl::Flush(void) 
-{
-  return NS_OK;
-}
-
-nsresult
-QuotingOutputStreamImpl::SetComposeObj(nsMsgCompose *obj)
+QuotingOutputStreamListener::SetComposeObj(nsMsgCompose *obj)
 {
   mComposeObj = obj;
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(QuotingOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetIID());
+NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
-// END OF QUOTING CONSUMER STREAM
+// END OF QUOTING LISTENER
 ////////////////////////////////////////////////////////////////////////////////////
 
 // net service definitions....
@@ -875,20 +879,19 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
     return NS_ERROR_FAILURE;
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
-  mOutStream = new QuotingOutputStreamImpl();
+  mQuoteStreamListener = new QuotingOutputStreamListener();
   
-  if (!mOutStream)
+  if (!mQuoteStreamListener)
   {
-    printf("Failed to create nsIOutputStream\n");
+    printf("Failed to create mQuoteStreamListener\n");
     return NS_ERROR_FAILURE;
   }
-  NS_ADDREF(mOutStream);
+  NS_ADDREF(mQuoteStreamListener);
 
   NS_ADDREF(this);
-  mOutStream->SetComposeObj(this);
+  mQuoteStreamListener->SetComposeObj(this);
 
-//  mBaseStream = do_QueryInterface(mOutStream);
-  return mQuote->QuoteMessage(originalMsgURI, mOutStream);
+  return mQuote->QuoteMessage(originalMsgURI, mQuoteStreamListener);
 }
 
 void nsMsgCompose::HackToGetBody(PRInt32 what)

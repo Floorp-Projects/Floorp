@@ -34,6 +34,7 @@ public:
     NS_IMETHOD			GetNumberOfMessages(PRInt32 *result);
     NS_IMETHOD			GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result);
     NS_IMETHOD			GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result);
+	NS_IMETHOD			GetNumberOfRecentMessages(PRInt32 *result);
 
     PRInt32				GetNumberOfDeletedMessages();
     

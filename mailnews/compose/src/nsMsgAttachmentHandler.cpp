@@ -27,6 +27,8 @@
 #include "nsURLFetcher.h"
 #include "nsMimeTypes.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsXPIDLString.h"
+
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -297,11 +299,11 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
   else if (!PL_strcasecmp(m_encoding, ENCODING_UUENCODE))
   {
     char        *tailName = NULL;
-    const char  *turl;
+    nsXPIDLCString turl;
     
     if (mURL)
     {
-      mURL->GetSpec(&turl);
+      mURL->GetSpec(getter_Copies(turl));
       
       tailName = PL_strrchr(turl, '/');
       if (tailName) 
@@ -322,7 +324,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
         PR_FREEIF(tmp);
       }
     }
-    
+
     m_encoder_data = MIME_UUEncoderInit((char *)(tailName ? tailName : ""),
       mime_encoder_output_fn,
       m_mime_delivery_state);
@@ -404,8 +406,8 @@ nsresult
 nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 {
   nsresult      status = 0;
-  const char    *url_string = nsnull;
   char          *tempName = nsnull;
+  nsXPIDLCString url_string;
 
   NS_ASSERTION (! m_done, "Already done");
 
@@ -440,7 +442,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     return NS_MSG_UNABLE_TO_OPEN_TMP_FILE; 
   }
 
-  mURL->GetSpec(&url_string);
+  mURL->GetSpec(getter_Copies(url_string));
 
 #ifdef XP_MAC
   // do we need to add IMAP: to this list? nsMsgIsLocalFileURL returns PR_FALSE always for IMAP 
@@ -477,7 +479,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // the old fe_MakeAppleDoubleEncodeStream() stream in 4.x
       // 
 
-      printf("...and then magic happens...which converts %s to appledouble encoding\n", url_string);
+      printf("...and then magic happens...which converts %s to appledouble encoding\n", (const char*)url_string);
 
       //
       // Now that we have morphed this file, we need to change where mURL is pointing.
@@ -495,7 +497,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      if (NS_FAILED(nsMsgNewURL(&mURL, nsString(newURLSpec))))
+      if (NS_FAILED(nsMsgNewURL(&mURL, newURLSpec)))
       {
         PR_FREEIF(src_filename);
   		  PR_FREEIF(separator);
@@ -569,7 +571,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   // Ok, here we are, we need to fire the URL off and get the data
   // in the temp file
   //
-
   // Create a fetcher for the URL attachment...
   mFetcher = new nsURLFetcher();
   if (!mFetcher)

@@ -27,6 +27,7 @@ public:
     NS_IMETHOD				GetNumberOfMessages(PRInt32 *result) = 0;
     NS_IMETHOD				GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result) = 0;
     NS_IMETHOD				GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *resul) = 0;
+	NS_IMETHOD				GetNumberOfRecentMessages(PRInt32 *result) = 0;
 };
 
 

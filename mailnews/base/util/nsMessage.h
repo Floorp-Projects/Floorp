@@ -58,19 +58,19 @@ public:
     NS_IMETHOD SetSubject(const char *subject);
     NS_IMETHOD SetStatusOffset(PRUint32 statusOffset);
 
-	NS_IMETHOD GetAuthor(nsString &resultAuthor);
-	NS_IMETHOD GetSubject(nsString &resultSubject);
-	NS_IMETHOD GetRecipients(nsString &resultRecipients);
-	NS_IMETHOD GetCCList(nsString &ccList);
-	NS_IMETHOD GetMessageId(nsString &resultMessageId);
+	NS_IMETHOD GetAuthor(nsString *resultAuthor);
+	NS_IMETHOD GetSubject(nsString *resultSubject);
+	NS_IMETHOD GetRecipients(nsString *resultRecipients);
+	NS_IMETHOD GetCCList(nsString *ccList);
+	NS_IMETHOD GetMessageId(nsString *resultMessageId);
 
-	NS_IMETHOD GetMime2EncodedAuthor(nsString &resultAuthor);
-	NS_IMETHOD GetMime2EncodedSubject(nsString &resultSubject);
-	NS_IMETHOD GetMime2EncodedRecipients(nsString &resultRecipients);
+	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor);
+	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject);
+	NS_IMETHOD GetMime2DecodedRecipients(nsString *resultRecipients);
 
-	NS_IMETHOD GetAuthorCollationKey(nsString &resultAuthor);
-	NS_IMETHOD GetSubjectCollationKey(nsString &resultSubject);
-	NS_IMETHOD GetRecipientsCollationKey(nsString &resultRecipients);
+	NS_IMETHOD GetAuthorCollationKey(nsString *resultAuthor);
+	NS_IMETHOD GetSubjectCollationKey(nsString *resultSubject);
+	NS_IMETHOD GetRecipientsCollationKey(nsString *resultRecipients);
 
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result);
@@ -93,7 +93,7 @@ public:
     NS_IMETHOD SetPriority(const char *priority);
     NS_IMETHOD GetMessageOffset(PRUint32 *result);
     NS_IMETHOD GetStatusOffset(PRUint32 *result); 
-	NS_IMETHOD GetCharSet(nsString &result);
+	NS_IMETHOD GetCharSet(nsString *result);
     NS_IMETHOD GetPriority(nsMsgPriority *result);
     NS_IMETHOD GetThreadParent(nsMsgKey *result);
     NS_IMETHOD SetThreadParent(nsMsgKey inKey);

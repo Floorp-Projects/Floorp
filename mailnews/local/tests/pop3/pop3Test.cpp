@@ -31,9 +31,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsITransport.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsIPref.h"
@@ -43,7 +41,6 @@
 
 // include the event sinks for the protocol you are testing
 
-#include "nsINetService.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -56,7 +53,6 @@
 #include "nsMsgBaseCID.h"
 
 #ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define PREF_DLL   "xppref32.dll"
 #define APPSHELL_DLL "nsappshell.dll"
@@ -64,7 +60,6 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
 #define APPCORES_DLL "libappcores"MOZ_DLL_SUFFIX
@@ -75,8 +70,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -98,7 +91,7 @@ static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 class nsPop3TestDriver : public nsIUrlListener
 {
 public:
-	nsPop3TestDriver(nsINetService * pService, nsIEventQueue *queue);
+	nsPop3TestDriver(nsIEventQueue *queue);
 	virtual ~nsPop3TestDriver();
 	NS_DECL_ISUPPORTS
 
@@ -139,8 +132,7 @@ protected:
 
 NS_IMPL_ISUPPORTS(nsPop3TestDriver, nsIUrlListener::GetIID())
 
-nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService,
-                                   nsIEventQueue *queue)
+nsPop3TestDriver::nsPop3TestDriver(nsIEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
@@ -472,14 +464,12 @@ nsresult nsPop3TestDriver::OnGet()
 int main()
 {
     nsCOMPtr<nsIEventQueue> queue;
-	nsINetService * pNetService;
     nsresult result;
 
-	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
@@ -488,6 +478,12 @@ int main()
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
     if (NS_FAILED(result) || !prefs) {
         exit(result);
+    }
+	prefs->StartUp();
+	if (NS_FAILED(prefs->ReadUserPrefs()))
+    {
+      printf("Failed on reading user prefs!\n");
+      exit(-1);
     }
     
 	// Create the Event Queue for this thread...
@@ -498,14 +494,6 @@ int main()
     result = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(result)) return result;
 
-	// ask the net lib service for a nsINetStream:
-	result = NS_NewINetService(&pNetService, NULL);
-	if (NS_FAILED(result) || !pNetService)
-	{
-		printf("unable to initialize net serivce. \n");
-		return 1;
-	}
-
     result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
@@ -513,16 +501,13 @@ int main()
     }
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsPop3TestDriver * driver = new nsPop3TestDriver(pNetService, queue);
+	nsPop3TestDriver * driver = new nsPop3TestDriver(queue);
 	if (driver)
 	{
 		driver->RunDriver();
 		// when it kicks out...it is done....so delete it...
 		delete driver;
 	}
-
-	// shut down:
-	NS_RELEASE(pNetService);
     
     return 0;
 }

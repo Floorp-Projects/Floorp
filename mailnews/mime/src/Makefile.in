@@ -34,42 +34,41 @@ CPPSRCS		= \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
 		nsMimeAddress.cpp \
-		plugin_inst.cpp \
-		mimecont.cpp \
-		mimeebod.cpp \
-		mimeenc.cpp \
-		mimeeobj.cpp \
-		mimehdrs.cpp \
-		mimei.cpp \
-		mimeiimg.cpp \
-		mimeleaf.cpp \
-		mimemalt.cpp \
-		mimemapl.cpp \
-		mimemdig.cpp \
-		mimemmix.cpp \
-		mimempar.cpp \
-		mimemrel.cpp \
-		mimemsg.cpp \
-		mimemsig.cpp \
-		mimemult.cpp \
-		mimeobj.cpp \
-		mimepbuf.cpp \
-		mimesun.cpp \
-		mimetenr.cpp \
-		mimetext.cpp \
-		mimethtm.cpp \
-		mimetpla.cpp \
-		mimetric.cpp \
-		mimeunty.cpp \
-		mimecth.cpp \
-		mimebuf.cpp \
-		mimecom.cpp \
-		mimemoz2.cpp \
-		comi18n.cpp \
+		mimecont.cpp	\
+		mimeebod.cpp	\
+		mimeenc.cpp		\
+		mimeeobj.cpp	\
+		mimehdrs.cpp	\
+		mimei.cpp		\
+		mimeiimg.cpp	\
+		mimeleaf.cpp	\
+		mimemalt.cpp	\
+		mimemapl.cpp	\
+		mimemdig.cpp	\
+		mimemmix.cpp	\
+		mimempar.cpp	\
+		mimemrel.cpp	\
+		mimemsg.cpp		\
+		mimemsig.cpp	\
+		mimemult.cpp	\
+		mimeobj.cpp		\
+		mimepbuf.cpp	\
+		mimesun.cpp		\
+		mimetenr.cpp	\
+		mimetext.cpp	\
+		mimethtm.cpp	\
+		mimetpla.cpp	\
+		mimetric.cpp	\
+		mimeunty.cpp	\
+		mimecth.cpp		\
+		mimebuf.cpp		\
+		mimecom.cpp		\
+		mimemoz2.cpp	\
+		comi18n.cpp		\
 		nsMimeTransition.cpp \
 		nsMsgHeaderParser.cpp \
 		nsStreamConverter.cpp \
-		nsMimeEmitter2.cpp \
+		mimedrft.cpp	\
 		$(NULL)
 
 EXPORTS		= \

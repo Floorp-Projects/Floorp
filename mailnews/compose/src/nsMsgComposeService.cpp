@@ -22,14 +22,12 @@
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsINetService.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMToolkitCore.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
 

@@ -26,37 +26,25 @@ PROGRAM		= TestMSGCompose
 
 CPPSRCS		= test.cpp
 
-LIBS		= \
+LIBS = \
 		-lmsgbaseutil \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
-		-lmozreg \
-		-lxpcom \
-		-lpwcac \
-		-lmozdbm \
-		-lxp \
-		-lpref \
-		-lmozjs \
-		-ljsdom \
-		-ljsurl \
-		-lsecfree \
+        -lreg   \
+        -lxpcom \
+        -lmozdbm        \
+        -lxp    \
+        -lpref  \
+        -lmozjs \
+        -ljsdom \
+        -ljsurl \
+        -lsecfree \
 		$(TIMER_LIBS) \
-		$(ZLIB_LIBS) \
-		$(NSPR_LIBS) \
-		-limg \
-		-lmozutil \
-		$(TK_LIBS) \
-		$(NULL)
+        $(ZLIB_LIBS) \
+        $(NSPR_LIBS) \
+        -limg           \
+        -lmozutil       \
+        $(TK_LIBS) \
+		-lneckoutil_s \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -217,8 +217,8 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
 
-	msgHdr->GetAuthor(author);
-	msgHdr->GetSubject(subject);
+	msgHdr->GetAuthor(&author);
+	msgHdr->GetSubject(&subject);
 	if (stream)
 	{
 		*stream << "Applied filter \"";
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 		if (actionType == nsMsgFilterAction::MoveToFolder)
 		{
 			nsString msgId;
-			msgHdr->GetMessageId(msgId);
+			msgHdr->GetMessageId(&msgId);
 			*stream << "mailbox:";
 			*stream << (char *) value;
 			*stream << "id = ";

@@ -20,49 +20,28 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
     NS_INIT_REFCNT();
-
-	// nsINetLibUrl specific state
-    m_URL_s = nsnull;
  
 	// nsIURI specific state
-    m_protocol = nsnull;
-    m_host = nsnull;
-    m_file = nsnull;
-    m_ref = nsnull;
-    m_port = 0;
-    m_spec = nsnull;
-    m_search = nsnull;
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
+
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID(), (void **) getter_AddRefs(m_urlListeners));
- 
-    m_container = nsnull;
+	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(m_baseURL));
 }
  
 nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
 {
-    NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
-
-    PR_FREEIF(m_spec);
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_file);
-    PR_FREEIF(m_ref);
-    PR_FREEIF(m_search);
 }
   
-NS_IMPL_THREADSAFE_ADDREF(nsMsgMailNewsUrl);
-NS_IMPL_THREADSAFE_RELEASE(nsMsgMailNewsUrl);
+NS_IMPL_ADDREF(nsMsgMailNewsUrl);
+NS_IMPL_RELEASE(nsMsgMailNewsUrl);
 
 nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 {
@@ -71,25 +50,25 @@ nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr
     }
     if (aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID())) {
         *aInstancePtr = (void*) ((nsIURI*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsCOMTypeInfo<nsINetlibURL>::GetIID())) {
-        *aInstancePtr = (void*) ((nsINetlibURL*)this);
-        AddRef();
+	if (aIID.Equals(nsCOMTypeInfo<nsIURL>::GetIID())) {
+        *aInstancePtr = (void*) ((nsIURL*)this);
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 	if (aIID.Equals(nsCOMTypeInfo<nsIMsgMailNewsUrl>::GetIID()))
 	{
 		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
-		AddRef();
+		NS_ADDREF_THIS();
 		return NS_OK;
 	}
  
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
+	if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
 	{
 		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
-		AddRef();
+		NS_ADDREF_THIS();
 		return NS_OK;
 	}
 #if defined(NS_DEBUG)
@@ -146,20 +125,16 @@ nsresult nsMsgMailNewsUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
 
 nsresult nsMsgMailNewsUrl::SetErrorMessage (char * errorMessage)
 {
-	NS_LOCK_INSTANCE();
 	if (errorMessage)
 	{
 		PR_FREEIF(m_errorMessage);
 		m_errorMessage = errorMessage;
 	}
-	NS_UNLOCK_INSTANCE();
 	return NS_OK;
 }
 
-// caller must free using PR_FREE
 nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage) const
 {
-	NS_LOCK_INSTANCE();
 	if (errorMessage)
 	{
 		if (m_errorMessage)
@@ -167,7 +142,6 @@ nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage) const
 		else
 			*errorMessage = nsnull;
 	}
-    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
@@ -176,280 +150,129 @@ nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage) const
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Begin nsINetlibURL support
-////////////////////////////////////////////////////////////////////////////////////
-
-NS_METHOD nsMsgMailNewsUrl::SetURLInfo(URL_Struct *URL_s)
-{
-    nsresult result = NS_OK;
-  
-    /* Hook us up with the world. */
-    m_URL_s = URL_s;
-    return result;
-}
-  
-NS_METHOD nsMsgMailNewsUrl::GetURLInfo(URL_Struct_** aResult) const
-{
-  nsresult rv;
-
-  if (nsnull == aResult)
-    rv = NS_ERROR_NULL_POINTER;
-  else 
-  {
-    *aResult = m_URL_s;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End nsINetlibURL support
-////////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIURI support
 ////////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsMsgMailNewsUrl::GetProtocol(const char* *result) const
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetSpec(char * *aSpec)
 {
-    NS_LOCK_INSTANCE();
-    *result = m_protocol;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+	return m_baseURL->GetSpec(aSpec);
 }
 
-nsresult nsMsgMailNewsUrl::SetProtocol(const char *aNewProtocol)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(char * aSpec)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_protocol = nsCRT::strdup(aNewProtocol);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+	return m_baseURL->SetSpec(aSpec);
 }
 
-nsresult nsMsgMailNewsUrl::GetHost(const char* *result) const
+NS_IMETHODIMP nsMsgMailNewsUrl::GetScheme(char * *aScheme)
 {
-    NS_LOCK_INSTANCE();
-    *result = m_host;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+	return m_baseURL->GetScheme(aScheme);
 }
 
-nsresult nsMsgMailNewsUrl::SetHost(const char *aNewHost)
+NS_IMETHODIMP nsMsgMailNewsUrl::SetScheme(char * aScheme)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_host = nsCRT::strdup(aNewHost);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetFile(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_file;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetFile(const char *aNewFile)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_file = nsCRT::strdup(aNewFile);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetSpec(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_spec;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetSpec(const char *aNewSpec)
-{
-    // XXX is this right, or should we call ParseURL?
-    nsresult rv = NS_OK;
-//    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    rv = ParseUrl(aNewSpec);
-#if 0
-    PR_FREEIF(m_spec);
-    m_spec = nsCRT::strdup(aNewSpec);
-#endif
-    NS_UNLOCK_INSTANCE();
-    return rv;
-}
-
-nsresult nsMsgMailNewsUrl::GetRef(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_ref;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetRef(const char *aNewRef)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_ref = nsCRT::strdup(aNewRef);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetHostPort(PRUint32 *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_port;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetHostPort(PRUint32 aNewPort)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_port = aNewPort;
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetSearch(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_search;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetSearch(const char *aNewSearch)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_search = nsCRT::strdup(aNewSearch);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetContainer(nsISupports* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsMsgMailNewsUrl::SetContainer(nsISupports* container)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(m_container);
-    m_container = container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::GetContentLength(PRInt32 *len)
-{
-    NS_LOCK_INSTANCE();
-    *len = m_URL_s->content_length;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetPostHeader(const char* name, const char* value)
-{
-    NS_LOCK_INSTANCE();
-    // XXX
-    PR_ASSERT(0);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsMsgMailNewsUrl::SetPostData(nsIInputStream* input)
-{
-    return NS_OK;
+	return m_baseURL->SetScheme(aScheme);
 }
 
 
-PRBool nsMsgMailNewsUrl::Equals(const nsIURI* aURL) const 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPreHost(char * *aPreHost)
 {
-    PRBool bIsEqual;
-    nsIMsgMailNewsUrl * other;
-    NS_LOCK_INSTANCE();
-	// for now just compare the pointers until 
-	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURI*)aURL)->QueryInterface(nsCOMTypeInfo<nsIMsgMailNewsUrl>::GetIID(), (void**)&other) == NS_OK) {
-        bIsEqual = other == (nsIMsgMailNewsUrl *) this; // compare the pointers...
-    }
-    else
-        bIsEqual = PR_FALSE;
-    NS_UNLOCK_INSTANCE();
-    return bIsEqual;
+	return m_baseURL->GetPreHost(aPreHost);
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// End of nsIURI support
-////////////////////////////////////////////////////////////////////////////////////
- 
-////////////////////////////////////////////////////////////////////////////////////
-// The following set of functions should become obsolete once we take them out of
-// nsIURI.....
-////////////////////////////////////////////////////////////////////////////////////
-nsresult nsMsgMailNewsUrl::GetLoadAttribs(nsILoadAttribs* *result) const
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(char * aPreHost)
 {
-    NS_LOCK_INSTANCE();
-    *result = NULL;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsMsgMailNewsUrl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
+	return m_baseURL->SetPreHost(aPreHost);
 }
 
-nsresult nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup* *result) const
+NS_IMETHODIMP nsMsgMailNewsUrl::GetHost(char * *aHost)
 {
-    return NS_OK;
+	return m_baseURL->GetHost(aHost);
 }
-  
-nsresult nsMsgMailNewsUrl::SetLoadGroup(nsILoadGroup* group)
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetHost(char * aHost)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
+	return m_baseURL->SetHost(aHost);
 }
 
-nsresult nsMsgMailNewsUrl::GetServerStatus(PRInt32 *status)
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPort(PRInt32 *aPort)
 {
-    NS_LOCK_INSTANCE();
-    *status = m_URL_s->server_status;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+	return m_baseURL->GetPort(aPort);
 }
 
-nsresult nsMsgMailNewsUrl::ToString(PRUnichar* *aString) const
-{ 
-	if (aString)
-		*aString = nsnull; 
-	return NS_OK;
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPort(PRInt32 aPort)
+{
+	return m_baseURL->SetPort(aPort);
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURI
-////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPath(char * *aPath)
+{
+	return m_baseURL->GetPath(aPath);
+}
 
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(char * aPath)
+{
+	return m_baseURL->SetPath(aPath);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
+{
+	return m_baseURL->Equals(other, _retval);
+}
+
+
+NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
+{
+	return m_baseURL->Clone(_retval);
+}	
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetRelativePath(const char *i_RelativePath)
+{
+	return m_baseURL->SetRelativePath(i_RelativePath);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
+{
+	return m_baseURL->GetDirectory(aDirectory);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetDirectory(char *aDirectory)
+{
+
+	return m_baseURL->SetDirectory(aDirectory);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
+{
+	return m_baseURL->GetFileName(aFileName);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(char * aFileName)
+{
+	return m_baseURL->SetFileName(aFileName);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetQuery(char * *aQuery)
+{
+	return m_baseURL->GetQuery(aQuery);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetQuery(char *aQuery)
+{
+	return m_baseURL->SetQuery(aQuery);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetRef(char * *aRef)
+{
+	return m_baseURL->GetRef(aRef);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetRef(char *aRef)
+{
+	return m_baseURL->SetRef(aRef);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::DirFile(char **o_DirFile)
+{
+	return m_baseURL->DirFile(o_DirFile);
+}

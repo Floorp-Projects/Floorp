@@ -19,16 +19,10 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsMsgImapCID.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 #include "nsIEventQueueService.h"
 
 #include "nsIURL.h"
 #include "nsImapUrl.h"
-
-#include "nsINetService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIIMAPHostSessionList.h"
 #include "nsIMAPGenericParser.h"
@@ -41,6 +35,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsImapUtils.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -239,140 +234,30 @@ NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
 // End nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsImapUrl::ParseUrl(const nsString& aSpec)
+NS_IMETHODIMP nsImapUrl::SetSpec(char * aSpec)
 {
-#ifdef DEBUG_mscott
-	// mscott - i just added a new method for intialization, I'm adding a quick
-	// check here to verify that initialize was called on this class...this is
-	// really for debugging purposes so I can find out if I missed a spot where
-	// I needed to initialize the url before using it.
-	NS_ASSERTION(m_userName, "oops...looks like we didn't initialize the url.");
-#endif
+	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+	if (NS_SUCCEEDED(rv))
+		rv = ParseUrl();
+	return rv;
+}
 
-    // XXX hack!
-    char* cSpec = aSpec.ToNewCString();
+nsresult nsImapUrl::ParseUrl()
+{
+	nsresult rv = NS_OK;
+	NS_LOCK_INSTANCE();
 
-    NS_LOCK_INSTANCE();
-
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_search);
-	PR_FREEIF(m_file);
-    m_port = IMAP_PORT;
-
-	// mscott -> eventually we'll replace all of this duplicate host and port parsing code with a url parser
-	// class..this should come with N2 Landing...
-
-
-    // The URL is considered absolute if and only if it begins with a
-    // protocol spec. A protocol spec is an alphanumeric string of 1 or
-    // more characters that is terminated with a colon.
-    PRBool isAbsolute = PR_FALSE;
-    char* cp = nsnull;
-	char *imapPartOfUrl = nsnull;
-
-    char* ap = cSpec;
-    char ch;
-    while (0 != (ch = *ap)) 
+	char * imapPartOfUrl = nsnull;
+	rv = GetPath(&imapPartOfUrl);
+	if (NS_SUCCEEDED(rv) && imapPartOfUrl && imapPartOfUrl+1)
 	{
-        if (((ch >= 'a') && (ch <= 'z')) ||
-            ((ch >= 'A') && (ch <= 'Z')) ||
-            ((ch >= '0') && (ch <= '9'))) 
-		{
-            ap++;
-            continue;
-        }
-        if ((ch == ':') && (ap - cSpec >= 2)) 
-		{
-            isAbsolute = PR_TRUE;
-            cp = ap;
-            break;
-        }
-        break;
-    }
-
-    PRInt32 slen = aSpec.Length();
-    m_spec = (char *) PR_Malloc(slen + 1);
-    aSpec.ToCString(m_spec, slen+1);
-
-    // get protocol first
-    PRInt32 plen = cp - cSpec;
-    m_protocol = (char*) PR_Malloc(plen + 1);
-    PL_strncpy(m_protocol, cSpec, plen);
-    m_protocol[plen] = 0;
-    cp++;                               // eat : in protocol
-    
-	// skip over one, two or three slashes
-    if (*cp == '/') 
-	{
-		cp++;
-        if (*cp == '/') 
-		{
-			cp++;
-			if (*cp == '/') 
-				cp++;
-        }
-	} 
-	else 
-	{
-		delete [] cSpec;
-		NS_UNLOCK_INSTANCE();
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-	// Host name follows protocol for http style urls
-	const char* cp0 = cp;
-    cp = PL_strchr(cp0, '@');
-    
-    if (cp) {
-        // we have a username between cp0 and cp
-        PR_FREEIF(m_userName);
-        m_userName = PL_strndup(cp0, (cp - cp0));
-        cp0 = cp+1;
-    }
-    
-	cp = PL_strpbrk(cp0, "/:");
-	if (nsnull == cp) 
-	{
-		// There is only a host name
-		PRInt32 hlen = PL_strlen(cp0);
-        m_host = (char*) PR_Malloc(hlen + 1);
-        PL_strcpy(m_host, cp0);
+		ParseImapPart(imapPartOfUrl+1);  // GetPath leaves leading '/' in the path!!!
+		nsCRT::free(imapPartOfUrl);
 	}
-    else {
-		PRInt32 hlen = cp - cp0;
-        m_host = (char*) PR_Malloc(hlen + 1);
-        PL_strncpy(m_host, cp0, hlen);        
-        m_host[hlen] = 0;
-
-		if (':' == *cp) 
-		{
-			// We have a port number
-            cp0 = cp+1;
-            cp = PL_strchr(cp, '/');
-            m_port = strtol(cp0, (char **)nsnull, 10 /* base 10 */);
-        }
-		imapPartOfUrl = cp + 1; // #### probably not quite right - should check for "/"??
-        cp = PL_strchr(cp, '?');
-        if (cp)
-        {
-            cp++;
-            PRInt32 cplen = PL_strlen(cp);
-            m_search = (char*) PR_Malloc(cplen+1);
-            PL_strcpy(m_search, cp);
-        }
-	}
-
-	if (imapPartOfUrl)
-		m_file = PL_strdup(imapPartOfUrl);
-
-	ParseImapPart(imapPartOfUrl);
-
-    delete [] cSpec;
-
-    if (m_host)
+	nsXPIDLCString host;
+	rv = GetHost(getter_Copies(host));
+    if (NS_SUCCEEDED(rv) && host)
     {
-        nsresult rv = NS_OK;
         NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
         if (NS_FAILED(rv)) return rv;
         
@@ -382,7 +267,7 @@ nsresult nsImapUrl::ParseUrl(const nsString& aSpec)
         
         nsCOMPtr<nsIMsgIncomingServer> server;
         rv = accountManager->FindServer(m_userName,
-                                        m_host,
+                                        host,
                                         "imap",
                                         getter_AddRefs(server));
         if (NS_FAILED(rv)) return rv;
@@ -394,43 +279,6 @@ nsresult nsImapUrl::ParseUrl(const nsString& aSpec)
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
-
-void nsImapUrl::ReconstructSpec(void)
-{
-    PR_FREEIF(m_spec);
-
-    char portBuffer[10];
-    if (0 != m_port)
-        PR_snprintf(portBuffer, 10, ":%d", m_port);
-    else
-        portBuffer[0] = '\0';
-
-    PRInt32 plen = PL_strlen(m_protocol) + PL_strlen(m_host) +
-        PL_strlen(portBuffer) + 4;
-
-	if (m_file)
-		plen += 1 + PL_strlen(m_file);
-
-    if (m_search)
-        plen += 1 + PL_strlen(m_search);
-
-    m_spec = (char *) PR_Malloc(plen + 1);
-    PR_snprintf(m_spec, plen, "%s://%s%s", 
-                m_protocol, ((nsnull != m_host) ? m_host : ""), portBuffer);
-
-	if (m_file)
-	{
-		PL_strcat(m_spec, "/");
-		PL_strcat(m_spec, m_file);
-	}
-    if (m_search) 
-	{
-        PL_strcat(m_spec, "?");
-        PL_strcat(m_spec, m_search);
-    }
-}
-
-
 
 NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsString2 *aResult)
 {
@@ -466,7 +314,7 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsString2 *aResult)
 	// since that can specify an IMAP MIME part
 	char *wherePart = PL_strstr(m_listOfMessageIds, "/;section=");
 	if (wherePart)
-		bytesToCopy = MIN(bytesToCopy, wherePart - m_listOfMessageIds);
+		bytesToCopy = PR_MIN(bytesToCopy, wherePart - m_listOfMessageIds);
 
 	aResult->Assign(m_listOfMessageIds, bytesToCopy);
 
@@ -896,7 +744,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
     nsresult rv = NS_ERROR_NULL_POINTER;
     char *canonicalPath = nsnull;
 	char delimiterToUse = onlineDelimiter;
-    const char* hostName = nsnull;
+    nsXPIDLCString hostName;
     char* userName = nsnull;
     nsString aString;
 	char *currentPath = (char *) serverPath;
@@ -918,7 +766,7 @@ NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onli
 	if (!serverPath || NS_FAILED(rv))
 		goto done;
 
-    GetHost(&hostName);
+    GetHost(getter_Copies(hostName));
     m_server->GetUsername(&userName);
 
     hostSessionList->GetOnlineDirForHost(hostName, userName, aString); 
@@ -1090,7 +938,11 @@ nsImapUrl::GetURI(char** aURI)
     {
         *aURI = nsnull;
         PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
-        return nsBuildImapMessageURI(m_file, key, aURI);
+		nsXPIDLCString theFile;
+		// mscott --> this is probably wrong (the part about getting the file part)
+		// we may need to extract it from a different part of the uri.
+		GetFileName(getter_Copies(theFile));
+        return nsBuildImapMessageURI(theFile, key, aURI);
     }
     return rv;
 }

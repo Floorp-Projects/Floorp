@@ -18,7 +18,6 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
-#include "nsINetService.h"
 #include "nsIStringBundle.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsIServiceManager.h"

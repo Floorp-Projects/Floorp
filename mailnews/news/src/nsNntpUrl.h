@@ -65,11 +65,7 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
-protected:
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec);
-	virtual void ReconstructSpec(void);
-    
+protected:  
     nsINNTPNewsgroupPost *m_newsgroupPost;
     
     nsFileSpec	*m_filePath; 

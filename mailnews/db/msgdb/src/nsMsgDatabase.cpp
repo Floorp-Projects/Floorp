@@ -2005,7 +2005,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult err;
 	nsString nakedString;
@@ -2029,52 +2029,56 @@ nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_to
 	return err;
 }
 
+nsresult nsMsgDatabase::GetCollationKeyGenerator()
+{
+	nsresult err = NS_OK;
+	if (!m_collationKeyGenerator)
+	{
+		nsCOMPtr <nsILocale> locale; 
+		nsString localeName; 
+
+		// get a locale factory 
+		nsILocaleFactory*	localeFactory;
+		err = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**) &localeFactory); 
+		if (NS_SUCCEEDED(err) && localeFactory)
+		{
+			// do this for a new db if no UI to be provided for locale selection 
+			err = localeFactory->GetApplicationLocale(getter_AddRefs(locale)); 
+
+			if (locale)
+			{
+				// or generate a locale from a stored locale name ("en_US", "fr_FR") 
+				//err = localeFactory->NewLocale(&localeName, &locale); 
+
+				nsCOMPtr <nsICollationFactory> f;
+
+				err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+										  kICollationFactoryIID, getter_AddRefs(f)); 
+				if (NS_SUCCEEDED(err) && f)
+				{
+					// get a collation interface instance 
+					err = f->CreateCollation(locale, getter_AddRefs(m_collationKeyGenerator));
+
+				}
+			}
+			NS_RELEASE(localeFactory);
+		}
+	}
+	return err;
+}
+
 nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
 	nsString nakedString;
 	nsresult err;
 
-	err = RowCellColumnTonsString(row, columnToken, nakedString);
+	err = RowCellColumnToMime2DecodedString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err))
 	{
-		nsILocaleFactory* localeFactory; 
-		nsILocale* locale; 
-		nsString localeName; 
-
-		// get a locale factory 
-		err = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
-		if (NS_SUCCEEDED(err) && localeFactory)
+		err = GetCollationKeyGenerator();
+		if (NS_SUCCEEDED(err) && m_collationKeyGenerator)
 		{
-			// do this for a new db if no UI to be provided for locale selection 
-			err = localeFactory->GetApplicationLocale(&locale); 
-
-			// or generate a locale from a stored locale name ("en_US", "fr_FR") 
-			//err = localeFactory->NewLocale(&localeName, &locale); 
-
-			// release locale factory
-			NS_RELEASE(localeFactory);
-
-			nsICollationFactory *f;
-
-			err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-									  kICollationFactoryIID, (void**) &f); 
-			if (NS_SUCCEEDED(err) && f)
-			{
-				nsICollation *inst;
-
-				// get a collation interface instance 
-				err = f->CreateCollation(locale, &inst);
-
-				// release locale, collation factory
-				NS_RELEASE(locale);
-				NS_RELEASE(f);
-
-				if (NS_SUCCEEDED(err) && inst)
-				{
-					err = inst->CreateSortKey( kCollationCaseInSensitive, nakedString, resultStr) ;
-					NS_RELEASE(inst);
-				}
-			}
+			err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, nakedString, resultStr) ;
  		}
 	}
 	return err;
@@ -2389,7 +2393,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	// try subject threading if we couldn't find a reference and the subject starts with Re:
 	nsAutoString subject (eOneByte);
 
-	newHdr->GetSubject(subject);
+	newHdr->GetSubject(&subject);
 	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
 	{
 		thread = getter_AddRefs(GetThreadForSubject(subject));
@@ -2558,7 +2562,7 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 	
 	nsString2 subject(eOneByte);
 
-	nsresult err = msgHdr->GetSubject(subject);
+	nsresult err = msgHdr->GetSubject(&subject);
 
 	err = CreateNewThread(msgHdr->m_messageKey, subject.GetBuffer(), &threadHdr);
 	msgHdr->SetThreadId(msgHdr->m_messageKey);
@@ -2686,8 +2690,8 @@ nsresult nsMsgDatabase::DumpContents()
             nsAutoString subject;
 
 			msgHdr->GetMessageKey(&key);
-			msgHdr->GetAuthor(author);
-			msgHdr->GetSubject(subject);
+			msgHdr->GetAuthor(&author);
+			msgHdr->GetSubject(&subject);
 			char *authorStr = author.ToNewCString();
 			char *subjectStr = subject.ToNewCString();
 			printf("hdr key = %u, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
@@ -2741,7 +2745,7 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 					nsMsgKey key;
 					nsString subject;
 					(void)pMessage->GetMessageKey(&key);
-					pMessage->GetSubject(subject);
+					pMessage->GetSubject(&subject);
 
 					printf("message in thread %u %s\n", key, (const char *) nsAutoCString(subject));
 				}

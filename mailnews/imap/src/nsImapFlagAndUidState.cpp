@@ -59,6 +59,26 @@ NS_IMETHODIMP	nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex, ima
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfRecentMessages(PRInt32 *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+    PR_CEnterMonitor(this);
+	PRUint32 counter = 0;
+	PRInt32 numUnseenMessages = 0;
+
+	for (counter = 0; counter < (PRUint32) fNumberOfMessagesAdded; counter++)
+	{
+		if (fFlags[counter] & kImapMsgRecentFlag)
+			numUnseenMessages++;
+	}
+    PR_CExitMonitor(this);
+
+	*result = numUnseenMessages;
+
+	return NS_OK;
+}
 
 /* amount to expand for imap entry flags when we need more */
 

@@ -18,14 +18,8 @@
 
 #include "msgCore.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsSmtpUrl.h"
-
-#include "nsINetService.h"  /* XXX: NS_FALSE */
 #include "nsString.h"
 
 extern "C" {
@@ -72,8 +66,6 @@ nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(),
 	m_priorityPart = nsnull;
 
 	m_userNameString = nsnull;
- 
-    m_port = SMTP_PORT;
 }
  
 nsSmtpUrl::~nsSmtpUrl()
@@ -274,199 +266,37 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 }
 
 
-
-// XXX recode to use nsString api's
-// XXX don't bother with port numbers
-// XXX don't bother with ref's
-// XXX null pointer checks are incomplete
-
-nsresult nsSmtpUrl::ParseUrl(const nsString& aSpec)
+NS_IMETHODIMP nsSmtpUrl::SetSpec(char * aSpec)
 {
-    // XXX hack!
-    char* cSpec = aSpec.ToNewCString();
-
-    NS_LOCK_INSTANCE();
-
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_ref);
-	PR_FREEIF(m_search);
-
-    m_port = SMTP_PORT;
-
-    // Strip out reference and search info
-    char* ref = strpbrk(cSpec, "#?");
-    if (nsnull != ref) {
-        char* search = nsnull;
-        if ('#' == *ref) {
-            search = PL_strchr(ref + 1, '?');
-            if (nsnull != search) {
-                *search++ = '\0';
-            }
-
-            PRIntn hashLen = PL_strlen(ref + 1);
-            if (0 != hashLen) {
-                m_ref = (char*) PR_Malloc(hashLen + 1);
-                PL_strcpy(m_ref, ref + 1);
-            }      
-        }
-        else {
-            search = ref + 1;
-        }
-
-        if (search) {
-            // The rest is the search
-            PRIntn searchLen = PL_strlen(search);
-            if (0 != searchLen) {
-                m_search = (char*) PR_Malloc(searchLen + 1);
-                PL_strcpy(m_search, search);
-            }      
-        }
-
-        // XXX Terminate string at start of reference or search
-        *ref = '\0';
-    }
-
-    // The URL is considered absolute if and only if it begins with a
-    // protocol spec. A protocol spec is an alphanumeric string of 1 or
-    // more characters that is terminated with a colon.
-    PRBool isAbsolute = PR_FALSE;
-    char* cp = nsnull;
-    char* ap = cSpec;
-    char ch;
-    while (0 != (ch = *ap)) {
-        if (((ch >= 'a') && (ch <= 'z')) ||
-            ((ch >= 'A') && (ch <= 'Z')) ||
-            ((ch >= '0') && (ch <= '9'))) {
-            ap++;
-            continue;
-        }
-        if ((ch == ':') && (ap - cSpec >= 2)) {
-            isAbsolute = PR_TRUE;
-            cp = ap;
-            break;
-        }
-        break;
-    }
-
-	// absolute spec
-    PR_FREEIF(m_spec);
-    PRInt32 slen = aSpec.Length();
-    m_spec = (char *) PR_Malloc(slen + 1);
-    aSpec.ToCString(m_spec, slen+1);
-
-    // get protocol first
-    PRInt32 plen = cp - cSpec;
-    m_protocol = (char*) PR_Malloc(plen + 1);
-    PL_strncpy(m_protocol, cSpec, plen);
-    m_protocol[plen] = 0;
-    cp++;                               // eat : in protocol
-
-    // skip over one, two or three slashes
-	if (*cp == '/') 
-	{
-		cp++;
-        if (*cp == '/') 
-		{
-           cp++;
-           if (*cp == '/') 
-			   cp++;
-        } 
-		else 
-		{
-            delete cSpec;
-
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
-        }
-
-        const char* cp0 = cp;
-        // To field follows protocol for smtp style urls
-        cp = PL_strpbrk(cp, "/:");
-      
-        if (nsnull == cp) 
-		{
-			 // There is only a host name
-             PRInt32 hlen = PL_strlen(cp0);
-             m_toPart = (char*) PR_Malloc(hlen + 1);
-             PL_strcpy(m_toPart, cp0);
-		}
-		else 
-		{
-			// host name came first....the recipients are really just after
-			// the host name....so cp points to "/recip1,recip2,..."
-
-			// grab the host name if it is there....
-			PRInt32 hlen = cp - cp0;
-			if (hlen > 0)
-			{
-				m_host = (char*) PR_Malloc(hlen + 1);
-				PL_strncpy(m_host, cp0, hlen);
-				m_host[hlen] = 0;
-			}
-			
-			// what about the port?
-			if (*cp == ':') // then port follows the ':"
-			{
-				// We have a port number
-                cp0 = cp+1;
-                cp = PL_strchr(cp, '/');
-                m_port = strtol(cp0, (char **)nsnull, 10);
-			}
-			
-			if (*cp == '/')
-				cp++;
-			if (cp)
-				m_toPart = PL_strdup(cp);			
-		}
-	}
-
-	// now parse out the search field...
-	ParseMessageToPost(m_search);
-    delete cSpec;
-
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
+	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+	if (NS_SUCCEEDED(rv))
+		rv = ParseUrl();
+	return rv;
 }
 
-void nsSmtpUrl::ReconstructSpec(void)
+// mscott - i think this function can be obsoleted and its functionality
+// moved into SetSpec or an init method....
+nsresult nsSmtpUrl::ParseUrl()
 {
-    PR_FREEIF(m_spec);
+    NS_LOCK_INSTANCE();
 
-    char portBuffer[10];
-    if (-1 != m_port) {
-        PR_snprintf(portBuffer, 10, ":%d", m_port);
-    }
-    else {
-        portBuffer[0] = '\0';
-    }
+	nsresult rv = NS_OK;
 
-    PRInt32 plen = PL_strlen(m_protocol) + PL_strlen(m_host) +
-        PL_strlen(portBuffer) + PL_strlen(m_file) + 4;
-    if (m_ref) {
-        plen += 1 + PL_strlen(m_ref);
-    }
-    if (m_search) {
-        plen += 1 + PL_strlen(m_search);
-    }
+	// the recipients should consist of just the path part up to to the query part
+	char * uriPath = nsnull;
+	rv = GetFileName(&m_toPart);
 
-    m_spec = (char *) PR_Malloc(plen + 1);
-    PR_snprintf(m_spec, plen, "%s://%s%s%s", 
-                m_protocol, ((nsnull != m_host) ? m_host : ""), portBuffer,
-                m_file);
+	// now parse out the search field...
+	char * searchPart = nsnull;
+	rv = GetQuery(&searchPart);
+	if (NS_SUCCEEDED(rv) && searchPart)
+	{
+		ParseMessageToPost(searchPart);
+		nsCRT::free(searchPart);
+	}
 
-    if (m_ref) {
-        PL_strcat(m_spec, "#");
-        PL_strcat(m_spec, m_ref);
-    }
-    if (m_search) {
-        PL_strcat(m_spec, "?");
-        PL_strcat(m_spec, m_search);
-    }
-
-	// and as a last step, parse the search field as it contains the message (if the messasge
-	// is in the url....
-	ParseMessageToPost(m_search);
+    NS_UNLOCK_INSTANCE();
+    return rv;
 }
 
 nsresult nsSmtpUrl::GetUserEmailAddress(const char ** aUserName)

@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsIURL.h"
-#include "plugin_inst.h"
 #include <stdio.h>
 #include <string.h>
 #include "plstr.h"

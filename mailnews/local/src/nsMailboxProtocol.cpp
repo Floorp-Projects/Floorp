@@ -20,7 +20,6 @@
 #include "nsMailboxProtocol.h"
 #include "nscore.h"
 #include "nsIOutputStream.h"
-#include "nsINetService.h"
 #include "nsIMsgDatabase.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgLineBuffer.h"
@@ -38,7 +37,6 @@
 
 #define ENABLE_SMOKETEST  1
 
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
@@ -68,14 +66,33 @@ nsMailboxProtocol::~nsMailboxProtocol()
 void nsMailboxProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
+	nsresult rv = NS_OK;
 	if (aURL)
 	{
 		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
+			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction); 
 			nsFileSpec * fileSpec = nsnull;
 			m_runningUrl->GetFilePath(&fileSpec);
-			rv = OpenFileSocket(aURL, fileSpec);
+			if (m_mailboxAction == nsIMailboxUrl::ActionParseMailbox)
+				rv = OpenFileSocket(aURL, fileSpec, 0, -1 /* read in all the bytes in the file */);
+			else
+			{
+				// we need to specify a byte range to read in so we read in JUST the message we want.
+				SetupMessageExtraction();
+				nsMsgKey aMsgKey;
+				PRUint32 aMsgSize = 0;
+				rv = m_runningUrl->GetMessageKey(&aMsgKey);
+				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
+				rv = m_runningUrl->GetMessageSize(&aMsgSize);
+				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
+
+				// mscott -- oops...impedence mismatch between aMsgSize and the desired
+				// argument type!
+				rv = OpenFileSocket(aURL, fileSpec, (PRUint32) aMsgKey, aMsgSize);
+				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
+			}
 		}
 	}
 
@@ -92,7 +109,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIURI* aURL, const char *aContentType)
+NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
@@ -101,26 +118,25 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIURI* aURL, const char *aConte
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that it's time to start...
-		m_mailboxParser->OnStartRequest(aURL, aContentType);
-
+		m_mailboxParser->OnStartRequest(aChannel, ctxt);
 	}
 	else if(m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStartRequest(aURL, aContentType); 
+		m_mailboxCopyHandler->OnStartRequest(aChannel, ctxt); 
 
 	return NS_OK;
 
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
-		m_mailboxParser->OnStopRequest(aURL, 0, nsnull);
+		m_mailboxParser->OnStopRequest(aChannel, ctxt, 0, nsnull);
 	}
 	else if (m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStopRequest(aURL, 0, nsnull); 
+		m_mailboxCopyHandler->OnStopRequest(aChannel, ctxt, 0, nsnull); 
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
 		DoneReadingMessage();
@@ -148,7 +164,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, c
 	// is coming from netlib so they are never going to ping us again with on data available. This means
 	// we'll never be going through the Process loop...
 
-	nsMsgProtocol::OnStopRequest(aURL, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(aChannel, ctxt, aStatus, aMsg);
 	return CloseSocket(); 
 }
 
@@ -170,7 +186,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 		nsFileURL  fileURL(filePath);
 		char * message_path_url = PL_strdup(fileURL.GetAsString());
 
-		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
+		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE);
 
 		PR_FREEIF(message_path_url);
 
@@ -210,7 +226,6 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
-	HG77067
 	if (aURL)
 	{
 		m_runningUrl = do_QueryInterface(aURL);
@@ -244,14 +259,12 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					// converting the message from RFC-822 to HTML before displaying it...
 					ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
 					m_tempMessageFile->openStreamForWriting();
-					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
 				case nsIMailboxUrl::ActionCopyMessage:
 				case nsIMailboxUrl::ActionMoveMessage:
 					rv = m_runningUrl->GetMailboxCopyHandler(getter_AddRefs(m_mailboxCopyHandler));
-					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
@@ -268,7 +281,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	return rv;
 }
 	
-PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUint32 length)
+PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUint32 sourceOffset, PRUint32 length)
 {
 	// okay we are doing a folder read in 8K chunks of a mail folder....
 	// this is almost too easy....we can just forward the data in this stream on to our
@@ -279,7 +292,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	if (m_mailboxParser)
 	{
 		nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
-		rv = m_mailboxParser->OnDataAvailable(url, inputStream, length); // let the parser deal with it...
+		rv = m_mailboxParser->OnDataAvailable(nsnull, url, inputStream, sourceOffset, length); // let the parser deal with it...
 	}
 
 	if (NS_FAILED(rv))
@@ -299,7 +312,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	return 0; 
 }
 
-PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length)
+PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRUint32 sourceOffset, PRUint32 length)
 {
 	char *line = nsnull;
 	PRUint32 status = 0;
@@ -313,7 +326,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 		if (m_mailboxCopyHandler)
 		{
 			nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
-			rv = m_mailboxCopyHandler->OnDataAvailable(url, inputStream, length);
+			rv = m_mailboxCopyHandler->OnDataAvailable(nsnull, url, inputStream, sourceOffset, length);
 		}
 	}
 	else
@@ -369,7 +382,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
  *
  * returns zero or more if the transfer needs to be continued.
  */
-nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 offset, PRUint32 length)
 {
     PRInt32 status = 0;
     ClearFlag(MAILBOX_PAUSE_FOR_READ); /* already paused; reset */
@@ -383,13 +396,13 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
 				if (inputStream == nsnull)
 					SetFlag(MAILBOX_PAUSE_FOR_READ);
 				else
-					status = ReadMessageResponse(inputStream, length);
+					status = ReadMessageResponse(inputStream, offset, length);
 				break;
 			case MAILBOX_READ_FOLDER:
 				if (inputStream == nsnull)
 					SetFlag(MAILBOX_PAUSE_FOR_READ);   // wait for file socket to read in the next chunk...
 				else
-					status = ReadFolderResponse(inputStream, length);
+					status = ReadFolderResponse(inputStream, offset, length);
 				break;
 			case MAILBOX_DONE:
 			case MAILBOX_ERROR_DONE:

@@ -18,19 +18,20 @@
 DEPTH=..\..\..
 MODULE=mime
 
-XPIDLSRCS =   \
-	.\nsIMimeURLUtils.idl		\
-	.\nsIMsgHeaderParser.idl		\
-	$(NULL)
+
+XPIDLSRCS = \
+	.\nsIMimeEmitter.idl				\
+	.\nsIMimeURLUtils.idl				\
+	.\nsIMsgHeaderParser.idl			\
+	.\nsIMimeStreamConverter.idl		\
+        $(NULL)
 
 EXPORTS =							\
 	nsIMimeObjectClassAccess.h		\
-	nsIMimeConverter.h		\
-	nsIMimeEmitter.h				\
+	nsIMimeConverter.h				\
 	nsMailHeaders.h					\
 	nsIMimeContentTypeHandler.h		\
-	nsIStreamConverter.h		\
-        $(NULL)
+    $(NULL)
 
 
 include <$(DEPTH)\config\rules.mak>

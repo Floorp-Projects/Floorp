@@ -30,8 +30,8 @@
 /* Creation and destruction.
  */
 extern MimeHeaders *MimeHeaders_new (void);
-extern void MimeHeaders_free (MimeHeaders *);
-extern MimeHeaders *MimeHeaders_copy (MimeHeaders *);
+//extern void MimeHeaders_free (MimeHeaders *);
+//extern MimeHeaders *MimeHeaders_copy (MimeHeaders *);
 
 
 /* Feed this method the raw data from which you would like a header

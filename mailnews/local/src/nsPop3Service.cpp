@@ -18,7 +18,6 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#include "nsINetService.h"
 #include "nsPop3Service.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
@@ -26,8 +25,13 @@
 #include "nsPop3URL.h"
 #include "nsPop3Sink.h"
 #include "nsPop3Protocol.h"
-
 #include "nsCOMPtr.h"
+#include "nsMsgLocalCID.h"
+
+#define POP3_PORT 110 // The IANA port for Pop3
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 
 nsPop3Service::nsPop3Service()
 {
@@ -37,7 +41,27 @@ nsPop3Service::nsPop3Service()
 nsPop3Service::~nsPop3Service()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsPop3Service, nsIPop3Service::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(nsPop3Service);
+NS_IMPL_THREADSAFE_RELEASE(nsPop3Service);
+
+nsresult nsPop3Service::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsIPop3Service::GetIID()) || aIID.Equals(kISupportsIID))
+	{
+        *aInstancePtr = (void*) ((nsIPop3Service*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+	if (aIID.Equals(nsIProtocolHandler::GetIID()))
+	{
+		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+    return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox, 
@@ -58,7 +82,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 	if (NS_SUCCEEDED(rv) && popServer && hostname)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s?check", hostname);
+        char * urlSpec = PR_smprintf("pop3://%s:%d?check", hostname, POP3_PORT);
         rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url));
         PR_FREEIF(urlSpec);
 		if (hostname) PL_strfree(hostname);
@@ -98,7 +122,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s", popHost);
+        char * urlSpec = PR_smprintf("pop3://%s:%d", popHost, POP3_PORT);
         rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url));
         PR_FREEIF(urlSpec);
 	}
@@ -118,14 +142,12 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 	return rv;
 }
 
-nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
+nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
 									 nsIUrlListener * aUrlListener,
                                      nsIURI ** aUrl)
 {
-	nsresult rv = NS_OK;
-	// create a sink to run the url with
 	nsPop3Sink * pop3Sink = new nsPop3Sink();
 	if (pop3Sink)
 	{
@@ -134,21 +156,36 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 	}
 
 	// now create a pop3 url and a protocol instance to run the url....
-	nsPop3URL * pop3Url = new nsPop3URL();
+	nsCOMPtr<nsIPop3URL> pop3Url;
+	nsresult rv = nsComponentManager::CreateInstance(kPop3UrlCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIPop3URL>::GetIID(),
+                                            getter_AddRefs(pop3Url));
 	if (pop3Url)
 	{
 		pop3Url->SetPop3Sink(pop3Sink);
-		pop3Url->SetSpec(urlSpec);
+		if (aUrlListener)
+		{
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
+			if (mailnewsurl)
+				mailnewsurl->RegisterListener(aUrlListener);
+		}
+
+
+		if (aUrl)
+		{
+			rv = pop3Url->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void **) aUrl);
+			if (*aUrl)
+			{
+				(*aUrl)->SetSpec(urlSpec);
+				// the following is only a temporary work around hack because necko
+				// is loosing our port when the url is just scheme://host:port.
+				// when they fix this bug I can remove the following code where we
+				// manually set the port.
+				(*aUrl)->SetPort(POP3_PORT);
+			}
+		}
 	}
-
-	// does the caller want to listen to the url?
-	if (aUrlListener)
-		pop3Url->RegisterListener(aUrlListener);
-
-	if (aUrl)
-		rv = pop3Url->QueryInterface(nsIURI::GetIID(), (void **) aUrl);
-	else  // hmmm delete is protected...what can we do here? no one has a ref cnt on the object...
-		NS_IF_RELEASE(pop3Url);
 
 	return rv;
 }
@@ -178,4 +215,48 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 	} // if server
 
 	return rv;
+}
+
+
+NS_IMETHODIMP nsPop3Service::GetScheme(char * *aScheme)
+{
+	nsresult rv = NS_OK;
+	if (aScheme)
+		*aScheme = PL_strdup("pop3");
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 
+}
+
+NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
+{
+	nsresult rv = NS_OK;
+	if (aDefaultPort)
+		*aDefaultPort = POP3_PORT;
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 	
+}
+
+NS_IMETHODIMP nsPop3Service::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
+{
+	// no such thing as relative urls for smtp.....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+{
+	// i just haven't implemented this yet...I will be though....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval)
+{
+	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
+	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
+	// the necko team in more detail later on.
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
 }

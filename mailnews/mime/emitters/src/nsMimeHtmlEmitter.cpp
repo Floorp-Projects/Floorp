@@ -15,18 +15,20 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "stdio.h"
 #include "nsMimeRebuffer.h"
 #include "nsMimeHtmlEmitter.h"
 #include "plstr.h"
-#include "nsEmitterUtils.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"
-#include "nsEscape.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsEscape.h"
+#include "prmem.h"
+#include "nsEmitterUtils.h"
 
-// For the prefs api
+// For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
@@ -47,28 +49,29 @@ NS_IMPL_RELEASE(nsMimeHtmlEmitter)
 NS_IMPL_QUERY_INTERFACE(nsMimeHtmlEmitter, nsIMimeEmitter::GetIID()); /* we need to pass in the interface ID of this interface */
 
 /*
- * nsIMimeEmitter definitions....
+ * nsMimeHtmlEmitter definitions....
  */
 nsMimeHtmlEmitter::nsMimeHtmlEmitter()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
-  
-  mOutStream = NULL;
+  NS_INIT_REFCNT(); 
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
   mAttachContentType = NULL;
-  mHeaderDisplayType = NormalHeaders;
-  
-  nsIPref     *pref;
-  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(pref));
-  if ((pref && NS_SUCCEEDED(rv)))
-	{
-    pref->GetIntPref("mail.show_headers", &mHeaderDisplayType);
-    NS_RELEASE(pref);
-  }
+
+  mInputStream = nsnull;
+  mOutStream = nsnull;
+  mOutListener = nsnull;
+  mURL = nsnull;
+  mHeaderDisplayType = nsMimeHeaderDisplayTypes::NormalHeaders;
+
+  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
+  if (! (mPrefs && NS_SUCCEEDED(rv)))
+    return;
+
+  if ((mPrefs && NS_SUCCEEDED(rv)))
+    mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
 
 #ifdef DEBUG_rhp
   mLogFile = NULL;    /* Temp file to put generated HTML into. */
@@ -80,12 +83,18 @@ nsMimeHtmlEmitter::~nsMimeHtmlEmitter(void)
 {
   if (mBufferMgr)
     delete mBufferMgr;
+
+  // Release the prefs service
+  if (mPrefs)
+    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
 }
 
 // Set the output stream for processed data.
 nsresult
-nsMimeHtmlEmitter::SetOutputStream(nsINetOStream *outStream)
+nsMimeHtmlEmitter::SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream)
 {
+  mInputStream = aInputStream;
+  mOutStream = outStream;
   return NS_OK;
 }
 
@@ -93,9 +102,11 @@ nsMimeHtmlEmitter::SetOutputStream(nsINetOStream *outStream)
 // anything to the stream since these may be image data
 // output streams, etc...
 nsresult       
-nsMimeHtmlEmitter::Initialize(nsINetOStream *outStream)
+nsMimeHtmlEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
 {
-  mOutStream = outStream;
+  // set the url
+  mURL = url;
+  mChannel = aChannel;
 
   // Create rebuffering object
   mBufferMgr = new MimeRebuffer();
@@ -106,8 +117,16 @@ nsMimeHtmlEmitter::Initialize(nsINetOStream *outStream)
 
 #ifdef DEBUG_rhp
   PR_Delete("C:\\email.html");
-  mLogFile = PR_Open("C:\\email.html", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
+  // mLogFile = PR_Open("C:\\email.html", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
 #endif /* DEBUG */
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlEmitter::SetOutputListener(nsIStreamListener *listener)
+{
+  mOutListener = listener;
 
   return NS_OK;
 }
@@ -126,13 +145,8 @@ nsMimeHtmlEmitter::Complete()
   // to flush it...if we try and fail, we should probably return
   // an error!
   PRUint32      written; 
-  if (mBufferMgr->GetSize() > 0)
+  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
     Write("", 0, &written);
-
-#ifdef DEBUG_rhp
-  printf("TOTAL WRITTEN = %d\n", mTotalWritten);
-  printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
-#endif
 
 #ifdef DEBUG_rhp
   if (mLogFile) 
@@ -184,7 +198,7 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
   //
   if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
     return NS_OK;
-    
+
   char  *newValue = nsEscapeHTML(value);
   if (!newValue)
     return NS_OK;
@@ -194,7 +208,27 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
   UtilityWrite("<td>");
   UtilityWrite("<div align=right>");
   UtilityWrite("<B>");
-  UtilityWrite(field);
+
+  // Here is where we are going to try to L10N the tagName so we will always
+  // get a field name next to an emitted header value. Note: Default will always
+  // be the name of the header itself.
+  //
+  nsString  newTagName(field);
+  newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
+  newTagName.ToUpperCase();
+  char *upCaseField = newTagName.ToNewCString();
+
+  char *l10nTagName = LocalizeHeaderName(upCaseField, field);
+  if ( (!l10nTagName) || (!*l10nTagName) )
+    UtilityWrite(field);
+  else
+  {
+    UtilityWrite(l10nTagName);
+    PR_FREEIF(l10nTagName);
+  }
+
+  // Now write out the actual value itself and move on!
+  //
   UtilityWrite(":");
   UtilityWrite("</B>");
   UtilityWrite("</div>");
@@ -207,6 +241,7 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
   UtilityWrite("</TR>");
 
   PR_FREEIF(newValue);
+  PR_FREEIF(upCaseField);
   return NS_OK;
 }
 
@@ -414,7 +449,8 @@ nsresult
 nsMimeHtmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
   unsigned int        written = 0;
-  PRUint32            rc, aReadyCount = 0;
+  PRUint32            rc = 0;
+  PRUint32            needToWrite;
 
 #ifdef DEBUG_rhp
   if ((mLogFile) && (mReallyOutput))
@@ -427,46 +463,41 @@ nsMimeHtmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   // it on the next time through
   //
   *amountWritten = 0;
-  rc = mOutStream->WriteReady(&aReadyCount);
 
+  needToWrite = mBufferMgr->GetSize();
   // First, handle any old buffer data...
-  if (mBufferMgr->GetSize() > 0)
+  if (needToWrite > 0)
   {
-    if (aReadyCount >= mBufferMgr->GetSize())
-    {
-      rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
+    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
                             mBufferMgr->GetSize(), &written);
-      mTotalWritten += written;
-      mBufferMgr->ReduceBuffer(written);
-    }
-    else
+    mTotalWritten += written;
+    mBufferMgr->ReduceBuffer(written);
+    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+    *amountWritten = written;
+
+    // if we couldn't write all the old data, buffer the new data
+    // and return
+    if (mBufferMgr->GetSize() > 0)
     {
-      rc += mOutStream->Write(mBufferMgr->GetBuffer(),
-                             aReadyCount, &written);
-      mTotalWritten += written;
-      mBufferMgr->ReduceBuffer(written);
       mBufferMgr->IncreaseBuffer(buf, size);
-      return rc;
+      return NS_OK;
     }
   }
 
-  // Now, deal with the new data the best way possible...
-  rc = mOutStream->WriteReady(&aReadyCount);
-  if (aReadyCount >= size)
-  {
-    rc += mOutStream->Write(buf, size, &written);
-    mTotalWritten += written;
-    *amountWritten = written;
-    return rc;
-  }
-  else
-  {
-    rc += mOutStream->Write(buf, aReadyCount, &written);
-    mTotalWritten += written;
+
+  // if we get here, we are dealing with new data...try to write
+  // and then do the right thing...
+  rc = mOutStream->Write(buf, size, &written);
+  *amountWritten = written;
+  mTotalWritten += written;
+
+  if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
-    *amountWritten = written;
-    return rc;
-  }
+
+  if (mOutListener)
+    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+
+  return rc;
 }
 
 nsresult

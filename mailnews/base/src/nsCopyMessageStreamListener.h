@@ -24,6 +24,7 @@
 #include "nsIMsgFolder.h"
 #include "nsICopyMessageListener.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
 
 class nsCopyMessageStreamListener : public nsIStreamListener, public nsICopyMessageStreamListener {
 
@@ -37,16 +38,9 @@ public:
 	NS_IMETHOD Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData);
 
 	//nsIStreamListener implementation
-	NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-	NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                               PRUint32 aLength);
-	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-
-	NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-
-	NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-
-	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 protected:
 	nsCOMPtr<nsICopyMessageListener> mDestination;

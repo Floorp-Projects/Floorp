@@ -507,7 +507,7 @@ int nsMsgSendPart::Write()
       nsCOMPtr<nsIMimeURLUtils> myURLUtil;
       char                      *tmp = NULL;
       
-      int res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
+      nsresult res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
         NULL, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
         (void **) getter_AddRefs(myURLUtil)); 
       if (!NS_SUCCEEDED(res))

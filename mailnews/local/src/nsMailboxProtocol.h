@@ -86,11 +86,8 @@ public:
 	// we suppport the nsIStreamListener interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-
-	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-
+	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
@@ -119,7 +116,8 @@ private:
 	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 
-	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									      PRUint32 sourceOffset, PRUint32 length);
 	virtual nsresult CloseSocket();
 
 	// initialization function given a new url and transport layer
@@ -134,8 +132,8 @@ private:
 
 	// When parsing a mailbox folder in chunks, this protocol state reads in the current chunk
 	// and forwards it to the mailbox parser. 
-	PRInt32 ReadFolderResponse(nsIInputStream * inputStream, PRUint32 length);
-	PRInt32 ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length);
+	PRInt32 ReadFolderResponse(nsIInputStream * inputStream, PRUint32 sourceOffset, PRUint32 length);
+	PRInt32 ReadMessageResponse(nsIInputStream * inputStream, PRUint32 sourceOffset, PRUint32 length);
 	PRInt32 DoneReadingMessage();
 
 	////////////////////////////////////////////////////////////////////////////////////////

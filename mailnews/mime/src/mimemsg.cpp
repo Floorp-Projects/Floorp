@@ -190,14 +190,15 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 #ifdef MIME_DRAFTS
   if ( obj->options &&
-	   obj->options->decompose_file_p &&
-	   ! obj->options->is_multipart_msg &&
-	   obj->options->done_parsing_outer_headers &&
-	   obj->options->decompose_file_output_fn ) {
-	status =  obj->options->decompose_file_output_fn ( line,
-													   length,
-											    obj->options->stream_closure );
-	if (status < 0) return status;
+	     obj->options->decompose_file_p &&
+	     ! obj->options->is_multipart_msg &&
+	     obj->options->done_parsing_outer_headers &&
+	     obj->options->decompose_file_output_fn ) 
+  {
+  	status =  obj->options->decompose_file_output_fn( line, length,
+											                                obj->options->stream_closure );
+  	if (status < 0) 
+      return status;
   }
 #endif /* MIME_DRAFTS */
 
@@ -622,10 +623,19 @@ MimeMessage_write_headers_html (MimeObject *obj)
 
   mimeEmitterEndHeader(obj->options);
 
-  if (obj->options->headers == MimeHeadersOnly)
-    return -1;
-  else
-    return 0;
+  // rhp:
+  // For now, we are going to parse the entire message, even if we are
+  // only interested in headers...why? Well, because this is the only
+  // way to build the attachment list. Now we will have the attachment
+  // list in the output being created by the XML emitter. If we ever
+  // want to go back to where we were before, just uncomment the conditional
+  // and it will stop at header parsing.
+  //
+  // if (obj->options->headers == MimeHeadersOnly)
+  //   return -1;
+  // else
+
+  return 0;
 }
 
 

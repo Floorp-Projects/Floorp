@@ -188,7 +188,7 @@ NS_IMETHODIMP nsMessage::SetStatusOffset(PRUint32 statusOffset)
 }
 
 
-NS_IMETHODIMP nsMessage::GetAuthor(nsString &resultAuthor)
+NS_IMETHODIMP nsMessage::GetAuthor(nsString *resultAuthor)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetAuthor(resultAuthor);
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsMessage::GetAuthor(nsString &resultAuthor)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetSubject(nsString &resultSubject)
+NS_IMETHODIMP nsMessage::GetSubject(nsString *resultSubject)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetSubject(resultSubject);
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsMessage::GetSubject(nsString &resultSubject)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetRecipients(nsString &resultRecipients)
+NS_IMETHODIMP nsMessage::GetRecipients(nsString *resultRecipients)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetRecipients(resultRecipients);
@@ -212,7 +212,7 @@ NS_IMETHODIMP nsMessage::GetRecipients(nsString &resultRecipients)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetCCList(nsString &ccList)
+NS_IMETHODIMP nsMessage::GetCCList(nsString *ccList)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetCCList(ccList);
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsMessage::GetCCList(nsString &ccList)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMessageId(nsString &resultMessageId)
+NS_IMETHODIMP nsMessage::GetMessageId(nsString *resultMessageId)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMessageId(resultMessageId);
@@ -229,32 +229,32 @@ NS_IMETHODIMP nsMessage::GetMessageId(nsString &resultMessageId)
 }
 
 
-NS_IMETHODIMP nsMessage::GetMime2EncodedAuthor(nsString &resultAuthor)
+NS_IMETHODIMP nsMessage::GetMime2DecodedAuthor(nsString *resultAuthor)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetMime2EncodedAuthor(resultAuthor);
+		return mMsgHdr->GetMime2DecodedAuthor(resultAuthor);
 	else
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMime2EncodedSubject(nsString &resultSubject)
+NS_IMETHODIMP nsMessage::GetMime2DecodedSubject(nsString *resultSubject)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetMime2EncodedSubject(resultSubject);
+		return mMsgHdr->GetMime2DecodedSubject(resultSubject);
 	else
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMime2EncodedRecipients(nsString &resultRecipients)
+NS_IMETHODIMP nsMessage::GetMime2DecodedRecipients(nsString *resultRecipients)
 {
 	if(mMsgHdr)
-		return mMsgHdr->GetMime2EncodedRecipients(resultRecipients);
+		return mMsgHdr->GetMime2DecodedRecipients(resultRecipients);
 	else
 		return NS_ERROR_FAILURE;
 }
 
 
-NS_IMETHODIMP nsMessage::GetAuthorCollationKey(nsString &resultAuthor)
+NS_IMETHODIMP nsMessage::GetAuthorCollationKey(nsString *resultAuthor)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetAuthorCollationKey(resultAuthor);
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsMessage::GetAuthorCollationKey(nsString &resultAuthor)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetSubjectCollationKey(nsString &resultSubject)
+NS_IMETHODIMP nsMessage::GetSubjectCollationKey(nsString *resultSubject)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetSubjectCollationKey(resultSubject);
@@ -270,7 +270,7 @@ NS_IMETHODIMP nsMessage::GetSubjectCollationKey(nsString &resultSubject)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(nsString &resultRecipients)
+NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(nsString *resultRecipients)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetRecipientsCollationKey(resultRecipients);
@@ -424,7 +424,7 @@ NS_IMETHODIMP nsMessage::GetStatusOffset(PRUint32 *result)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetCharSet(nsString &result)
+NS_IMETHODIMP nsMessage::GetCharSet(nsString *result)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetCharSet(result);

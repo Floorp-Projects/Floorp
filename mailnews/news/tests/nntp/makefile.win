@@ -29,10 +29,8 @@ LLIBS=							\
  $(LIBNSPR)						\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
- $(DIST)\lib\netlib.lib			\
  $(DIST)\lib\msgbase.lib		\
  $(DIST)\lib\msgbaseutil.lib	\
- $(DIST)\lib\xplib.lib			\
  $(NULL)
 
 LLFLAGS=-SUBSYSTEM:CONSOLE 

@@ -107,7 +107,7 @@ PRBool      nsMsgMIMEGetConformToStandard (void);
 //
 // network service type calls...
 //
-nsresult    nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec);
+nsresult    nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec);
 PRBool      nsMsgIsLocalFile(const char *url);
 char        *nsMsgGetLocalFileFromURL(char *url);
 char        *nsMsgPlatformFileToURL (const char *name);

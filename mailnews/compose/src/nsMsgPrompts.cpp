@@ -98,18 +98,14 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
   if (!msg)
     return NS_ERROR_INVALID_ARG;
 
-#ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
-#else
-  NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
-#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FACTORY_NOT_LOADED;
   
   nsAutoString confirmText(msg);
   if (dialog) 
   {
-    rv = dialog->Confirm(confirmText, &result);
+    rv = dialog->Confirm(confirmText.GetUnicode(), &result);
     if (result == 1) 
     {
       *answer = PR_TRUE;
@@ -133,18 +129,14 @@ nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
   if ((!msg) || (!*msg))
     return NS_ERROR_INVALID_ARG;
 
-#ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
-#else
-  NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
-#endif
   if (NS_FAILED(rv))
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   
   nsAutoString confirmText(msg);
   if (dialog) 
   {
-    rv = dialog->Confirm(confirmText, &result);
+    rv = dialog->Confirm(confirmText.GetUnicode(), &result);
     if (result == 1) 
     {
       *answer = PR_TRUE;

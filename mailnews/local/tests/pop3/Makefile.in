@@ -25,37 +25,26 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= pop3Test
 CPPSRCS		= pop3Test.cpp
 
-LIBS		= \
-		-labouturl \
-		-lfileurl \
-		-lftpurl \
-		-lgophurl \
-		-lremoturl \
-		-lhttpurl \
-		-lsockstuburl \
-		-lnetcache \
-		-lmimetype \
-		-lnetcnvts \
-		-lnetwork \
-		-lnetlib \
-		-lmsgbaseutil \
-		-lmozreg \
-		-lxpcom \
-		-lpwcac \
-		-lmozdbm \
-		-lxp \
-		-lpref \
-		-lmozjs \
-		-ljsdom \
-		-ljsurl \
-		-lsecfree \
-		$(TIMER_LIBS) \
-		$(ZLIB_LIBS) \
-		$(NSPR_LIBS) \
-		-limg \
-		-lmozutil \
-		$(TK_LIBS) \
-		$(NULL)
+
+LIBS = \
+	-lmsgbaseutil \
+	-lmozreg	\
+	-lxpcom	\
+	-lmozdbm	\
+	-lxp	\
+	-lpref	\
+	-lmozjs	\
+	-ljsdom	\
+	-ljsurl	\
+	-lsecfree \
+	$(TIMER_LIBS) \
+	$(ZLIB_LIBS) \
+	$(NSPR_LIBS) \
+	-limg		\
+	-lmozutil	\
+	-lneckoutil_s \
+	$(TK_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

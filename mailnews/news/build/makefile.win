@@ -38,7 +38,6 @@ LLIBS=											\
 			$(DIST)\lib\xpcom.lib				\
 			$(DIST)\lib\msgbaseutil.lib			\
 			$(DIST)\lib\msgnews_s.lib			\
-			$(DIST)\lib\netlib.lib				\
 			$(LIBNSPR)							\
 			$(DIST)\lib\rdfutil_s.lib			\
 			$(NULL)

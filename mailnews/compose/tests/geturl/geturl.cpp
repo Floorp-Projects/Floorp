@@ -25,11 +25,10 @@
 #define NS_IMPL_IDS
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-
+#include "nsIIOService.h"
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
 #include "nsIEventQueueService.h"
-#include "nsINetService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIGenericFactory.h"
@@ -41,6 +40,11 @@
 #include "prprf.h"
 #include "nsIAllocator.h" // for the CID
 #include "nsURLFetcher.h"
+
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #ifdef WIN32
 #include "windows.h"
@@ -77,7 +81,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 // netlib definitions....
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
@@ -97,7 +100,6 @@ SetupRegistry(void)
   }
 
   // netlib
-  nsComponentManager::RegisterComponent(kNetServiceCID,     NULL, NULL, NETLIB_DLL,  PR_FALSE, PR_FALSE);
   
   // xpcom
   static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
@@ -159,19 +161,15 @@ NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, nsCOMTypeInfo<nsIOutputStream>::GetII
 
 // Utility to create a nsIURI object...
 nsresult 
-nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
+nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
 {  
+  nsresult rv = NS_OK;
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   
-  nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
-                                             (nsISupports **)&inet);
-  if (rv != NS_OK) 
-    return rv;
-
-  rv = inet->CreateURL(aInstancePtrResult, aSpec, nsnull, nsnull, nsnull);
-  nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
+  if (NS_SUCCEEDED(rv) && pNetService)
+	rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);
   return rv;
 }
 
@@ -221,7 +219,7 @@ main(int argc, char** argv)
     return rv;
 
   // Create an nsIURI object needed for the URL operation IO...
-  if (NS_FAILED(nsMsgNewURL(&aURL, nsString(argv[1]))))
+  if (NS_FAILED(nsMsgNewURL(&aURL, argv[1])))
   {
     printf("Unable to create URL\n");
     return NS_ERROR_FAILURE;

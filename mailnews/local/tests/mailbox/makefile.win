@@ -24,28 +24,16 @@ PROGRAM = .\$(OBJDIR)\mailboxTest.exe
 
 OBJS =										\
 	.\$(OBJDIR)\mailboxTest.obj				\
-#	.\$(OBJDIR)\nsMsgMailboxParserStub.obj	\
 	$(NULL)
 
-LINCS=  -I$(PUBLIC)\raptor					\
-		-I$(PUBLIC)\xpcom					\
-		-I$(PUBLIC)\netlib					\
-		-I$(PUBLIC)\mailnews				\
-		-I$(PUBLIC)\security				\
-		-I$(PUBLIC)\pref					\
-		-I$(PUBLIC)\rdfutil					\
-		-I$(PUBLIC)\rdf						\
-		-I$(PUBLIC)\js						\
-
 LLIBS=							\
- $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\xpcom.lib			\
  $(LIBNSPR)						\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
- $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\rdfutil_s.lib		\
- $(DIST)\lib\xplib.lib			\
- $(DIST)\lib\mork.lib			\
+ $(DIST)\lib\msgdb.lib			\
+ $(DIST)\lib\msgbaseutil.lib	\
+ $(DIST)\lib\msglocal_s.lib		\
  $(NULL)
 
 LLFLAGS= -SUBSYSTEM:CONSOLE 

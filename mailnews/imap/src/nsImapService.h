@@ -24,13 +24,14 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
+#include "nsIProtocolHandler.h"
 
 class nsIImapHostSessionList; 
 class nsString2;
 class nsIImapUrl;
 class nsIMsgFolder;
 
-class nsImapService : public nsIImapService, public nsIMsgMessageService
+class nsImapService : public nsIImapService, public nsIMsgMessageService, public nsIProtocolHandler
 {
 public:
 
@@ -149,6 +150,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIMsgMessageService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -160,6 +162,19 @@ public:
 
 	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
 								 nsIUrlListener *aUrlListener, nsIURI **aURL);
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// we suppport the nsIProtocolHandler interface 
+	////////////////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD GetScheme(char * *aScheme);
+	NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort);
+	NS_IMETHOD MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval);
+	NS_IMETHOD NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval);
+	NS_IMETHOD NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval);
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	// End support of nsIProtocolHandler interface 
+	////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,

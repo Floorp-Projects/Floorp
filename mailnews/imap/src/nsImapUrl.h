@@ -30,6 +30,9 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 
+	// nsIURI override
+	NS_IMETHOD SetSpec(char * aSpec);
+
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
@@ -93,8 +96,7 @@ public:
 
 protected:
 
-	virtual nsresult ParseUrl(const nsString& aSpec);
-	virtual void ReconstructSpec(void);
+	virtual nsresult ParseUrl();
 	char		*m_listOfMessageIds;
 
 	// handle the imap specific parsing

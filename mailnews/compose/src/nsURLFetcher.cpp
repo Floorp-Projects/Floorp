@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "msgCore.h" // for pre-compiled headers
 #include "nsCOMPtr.h"
 #include "stdio.h"
 #include "nscore.h"
@@ -24,14 +26,14 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsRepository.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsString.h"
-#include "nsINetService.h"
-#include "nsIServiceManager.h"
 #include "nsURLFetcher.h"
+#include "nsIIOService.h"
+#include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
 
-// netlib definitions....
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 /* 
  * This function will be used by the factory to generate an 
@@ -68,23 +70,15 @@ nsURLFetcher::nsURLFetcher()
   // Init member variables...
   mOutStream = nsnull;
   mTotalWritten = 0;
-  mURL = nsnull;
   mStillRunning = PR_TRUE;
   mCallback = nsnull;
-  mNetService = nsnull;
   mContentType = nsnull;
 }
 
 nsURLFetcher::~nsURLFetcher()
 {
   mStillRunning = PR_FALSE;
-  if (mNetService)
-  {
-    nsServiceManager::ReleaseService(kNetServiceCID, mNetService);
-  }
-
   PR_FREEIF(mContentType);
-  NS_IF_RELEASE(mURL);
 }
 
 nsresult
@@ -96,36 +90,9 @@ nsURLFetcher::StillRunning(PRBool *running)
 
 
 // Methods for nsIStreamListener...
-//
-// Return information regarding the current URL load.<BR>
-// The info structure that is passed in is filled out and returned
-// to the caller. 
-// 
-//This method is currently not called.  
-//
 nsresult
-nsURLFetcher::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-#ifdef NS_DEBUG_rhp
-  printf("nsURLFetcher::GetBindInfo()\n");
-#endif
-
-  return NS_OK;
-}
-
-/**
-* Notify the client that data is available in the input stream.  This
-* method is called whenver data is written into the input stream by the
-* networking library...<BR><BR>
-* 
-* @param pIStream  The input stream containing the data.  This stream can
-* be either a blocking or non-blocking stream.
-* @param length    The amount of data that was just pushed into the stream.
-* @return The return value is currently ignored.
-*/
-nsresult
-nsURLFetcher::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                                   PRUint32 aLength)
+nsURLFetcher::OnDataAvailable(nsIChannel * aChannel, nsISupports * ctxt, nsIInputStream *aIStream, 
+                              PRUint32 sourceOffset, PRUint32 aLength)
 {
   PRUint32        readLen = aLength;
   PRUint32        wroteIt;
@@ -155,70 +122,26 @@ nsURLFetcher::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream,
 
 
 // Methods for nsIStreamObserver 
-/**
-* Notify the observer that the URL has started to load.  This method is
-* called only once, at the beginning of a URL load.<BR><BR>
-*
-* @return The return value is currently ignored.  In the future it may be
-* used to cancel the URL load..
-*/
 nsresult
-nsURLFetcher::OnStartRequest(nsIURI* aURL, const char *aContentType)
+nsURLFetcher::OnStartRequest(nsIChannel *aChannel, nsISupports *ctxt)
 {
+  if (aChannel)
+  {
+    char    *contentType = nsnull;
+    if (NS_SUCCEEDED(aChannel->GetContentType(&contentType)) && contentType)
+      mContentType = PL_strdup(contentType);
+  }
+
 #ifdef NS_DEBUG_rhp
-  printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", aContentType);
+  printf("nsURLFetcher::OnStartRequest() for Content-Type: %s\n", mContentType);
 #endif
-
-  if (aContentType)
-    mContentType = PL_strdup(aContentType);
-
   return NS_OK;
 }
 
-/**
-* Notify the observer that progress as occurred for the URL load.<BR>
-*/
 nsresult
-nsURLFetcher::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+nsURLFetcher::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg)
 {
-#ifdef NS_DEBUG_rhp
-  printf("nsURLFetcher::OnProgress() - %d bytes\n", aProgress);
-#endif
-
-  return NS_OK;
-}
-
-/**
-* Notify the observer with a status message for the URL load.<BR>
-*/
-nsresult
-nsURLFetcher::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-#ifdef NS_DEBUG_rhp
-  nsString  tmp(aMsg);
-  char      *msg = tmp.ToNewCString();
-  printf("nsURLFetcher::OnStatus(): %s\n", msg);
-  PR_FREEIF(msg);
-#endif
-
-  return NS_OK;
-}
-
-/**
-* Notify the observer that the URL has finished loading.  This method is 
-* called once when the networking library has finished processing the 
-* URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
-* 
-* This method is called regardless of whether the URL loaded successfully.<BR><BR>
-* 
-* @param status    Status code for the URL load.
-* @param msg   A text string describing the error.
-* @return The return value is currently ignored.
-*/
-nsresult
-nsURLFetcher::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
-{
-#ifdef NS_DEBUG_rhp
+#ifdef NS_DEBUG_richie
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 
@@ -255,24 +178,20 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
     return NS_ERROR_FAILURE;
   }
 
-  rv = nsServiceManager::GetService(kNetServiceCID, nsCOMTypeInfo<nsINetService>::GetIID(),
-                                             (nsISupports **)&mNetService);
-  if ((rv != NS_OK)  || (!mNetService))
-  {
-    return NS_ERROR_FACTORY_NOT_LOADED;
-  }
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  if (NS_FAILED(mNetService->OpenStream(aURL, this)))
-  {
-    nsServiceManager::ReleaseService(kNetServiceCID, mNetService);  
-    return NS_ERROR_UNEXPECTED;
-  }
+  nsCOMPtr<nsIChannel> channel;
+  rv = service->NewChannelFromURI("load", aURL, nsnull, getter_AddRefs(channel));
+  if (NS_FAILED(rv)) return rv;
 
-  mURL = aURL;
+  rv = channel->AsyncRead(0, -1, nsnull, this);
+  if (NS_FAILED(rv)) return rv;
+
+  mURL = dont_QueryInterface(aURL);
   mOutStream = fOut;
   mCallback = cb;
   mTagData = tagData;
-  NS_ADDREF(mURL);
   NS_ADDREF(this);
   return NS_OK;
 }

@@ -21,28 +21,21 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "nsIURL.h"
-#include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsIUrlListener.h"
 #include "nsIUrlListenerManager.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIURL.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
 // several common interfaces (in addition to those provided through nsIURI). 
-// So I decided to group them all in this interface.
-// This interface may grow or it may get smaller (if these things get pushed up
-// into nsIURI). The unfortunate thing is that we'd also like to have all of our
-// mail news protocols inherit implementations of this interface. But that is
-// implementation inheritance across dlls. We could do it though....something else
-// to add to the list =).
+// So I decided to group them all in this implementation so we don't have to
+// duplicate the code.
 //
-// mscott - I'm now adding a base url implementation for mailnews to unify
-// some common code....
 //////////////////////////////////////////////////////////////////////////////////
 
-class NS_MSG_BASE nsMsgMailNewsUrl : public nsIMsgMailNewsUrl, public nsINetlibURL
+class NS_MSG_BASE nsMsgMailNewsUrl : public nsIMsgMailNewsUrl
 {
 public:
 	nsMsgMailNewsUrl();
@@ -73,63 +66,65 @@ public:
 	NS_IMETHOD SetUrlState(PRBool runningUrl, nsresult aStatusCode);
 	NS_IMETHOD GetUrlState(PRBool *runningUrl);
 
+	//////////////////////////////////////////////////////////////////////////////////
 	// nsIURI support
-	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
-	// from nsIURI and then we can remove them from here as well....
-    NS_IMETHOD_(PRBool) Equals(const nsIURI *aURL) const;
-    NS_IMETHOD GetSpec(const char* *result) const;
-    NS_IMETHOD SetSpec(const char* spec);
-    NS_IMETHOD GetProtocol(const char* *result) const;
-    NS_IMETHOD SetProtocol(const char* protocol);
-    NS_IMETHOD GetHost(const char* *result) const;
-    NS_IMETHOD SetHost(const char* host);
-    NS_IMETHOD GetHostPort(PRUint32 *result) const;
-    NS_IMETHOD SetHostPort(PRUint32 port);
-    NS_IMETHOD GetFile(const char* *result) const;
-    NS_IMETHOD SetFile(const char* file);
-    NS_IMETHOD GetRef(const char* *result) const;
-    NS_IMETHOD SetRef(const char* ref);
-    NS_IMETHOD GetSearch(const char* *result) const;
-    NS_IMETHOD SetSearch(const char* search);
-    NS_IMETHOD GetContainer(nsISupports* *result) const;
-    NS_IMETHOD SetContainer(nsISupports* container);	
-    NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const;	// make obsolete
-    NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs);	// make obsolete
-    NS_IMETHOD GetLoadGroup(nsILoadGroup* *result) const;	// make obsolete
-    NS_IMETHOD SetLoadGroup(nsILoadGroup* group);	// make obsolete
-    NS_IMETHOD SetPostHeader(const char* name, const char* value);	// make obsolete
-    NS_IMETHOD SetPostData(nsIInputStream* input);	// make obsolete
-    NS_IMETHOD GetContentLength(PRInt32 *len);
-    NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
-    NS_IMETHOD ToString(PRUnichar* *aString) const;
+	NS_IMETHOD GetSpec(char * *aSpec);
+	NS_IMETHOD SetSpec(char * aSpec);
 
-    // from nsINetlibURL:
+	/* attribute string Scheme; */
+	NS_IMETHOD GetScheme(char * *aScheme);
+	NS_IMETHOD SetScheme(char * aScheme);
 
-    NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const;
-    NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s);
+	/* attribute string PreHost; */
+	NS_IMETHOD GetPreHost(char * *aPreHost);
+	NS_IMETHOD SetPreHost(char * aPreHost);
+
+	/* attribute string Host; */
+	NS_IMETHOD GetHost(char * *aHost);
+	NS_IMETHOD SetHost(char * aHost);
+
+	/* attribute long Port; */
+	NS_IMETHOD GetPort(PRInt32 *aPort);
+	NS_IMETHOD SetPort(PRInt32 aPort);
+
+	/* attribute string Path; */
+	NS_IMETHOD GetPath(char * *aPath);
+	NS_IMETHOD SetPath(char * aPath);
+
+	/* boolean Equals (in nsIURI other); */
+	NS_IMETHOD Equals(nsIURI *other, PRBool *_retval);
+
+	/* nsIURI Clone (); */
+	NS_IMETHOD Clone(nsIURI **_retval);
+
+	NS_IMETHOD SetRelativePath(const char *i_RelativePath);
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// nsIURL support
+	NS_IMETHOD GetDirectory(char * *aDirectory);
+	NS_IMETHOD SetDirectory(char * aDirectory);
+
+	/* attribute string FileName; */
+	NS_IMETHOD GetFileName(char * *aFileName);
+	NS_IMETHOD SetFileName(char * aFileName);
+
+	/* attribute string Query; */
+	NS_IMETHOD GetQuery(char * *aQuery);
+	NS_IMETHOD SetQuery(char * aQuery);
+
+	/* attribute string Ref; */
+	NS_IMETHOD GetRef(char * *aRef);
+	NS_IMETHOD SetRef(char * aRef);
+
+	NS_IMETHOD DirFile(char **o_DirFile);
 
 protected:
 	virtual ~nsMsgMailNewsUrl();
-	virtual void ReconstructSpec(void) = 0;
-	
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec) = 0;
 
-	char		*m_spec;
-    char		*m_protocol;
-    char		*m_host;
-    char		*m_file;
-    char		*m_ref;
-    char		*m_search;
+	nsCOMPtr<nsIURL> m_baseURL;
 	char		*m_errorMessage;
 
-	/* Here's our link to the netlib world.... */
-    URL_Struct *m_URL_s;
-
 	PRBool		m_runningUrl;
-    
-	PRInt32			m_port;
-    nsISupports*    m_container;
 
 	// manager of all of current url listeners....
 	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;

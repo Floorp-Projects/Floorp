@@ -20,6 +20,7 @@ MODULE=addrbook
 
 XPIDLSRCS =						 \
 			.\nsIAbListener.idl	 \
+			.\nsIAbBase.idl \
 			.\nsIAbDirectory.idl \
 			.\nsIAbCard.idl		 \
 			.\nsIAddrDBAnnouncer.idl	\

@@ -41,7 +41,7 @@
 // to add to the list =).
 //////////////////////////////////////////////////////////////////////////////////
 
-class nsIMsgMailNewsUrl : public nsIURI
+class nsIMsgMailNewsUrl : public nsIURL
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }

@@ -157,54 +157,43 @@ NS_IMETHODIMP nsCopyMessageStreamListener::Init(nsIMsgFolder *srcFolder, nsICopy
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                               PRUint32 aLength)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports *ctxt, nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	nsresult rv;
 	rv = mDestination->CopyData(aIStream, aLength);
 	return rv;
 }
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
+
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
 	nsCOMPtr<nsIMessage> message;
-	nsresult rv;
-
-
-	rv = GetMessage(aURL, getter_AddRefs(message));
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);
+	
+	if (NS_SUCCEEDED(rv))
+		rv = GetMessage(uri, getter_AddRefs(message));
 	if(NS_SUCCEEDED(rv))
 		rv = mDestination->BeginCopy(message);
 
 	return rv;
 }
 
-NS_IMETHODIMP nsCopyMessageStreamListener::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg)
 {
 	nsresult rv = NS_OK;
+	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);
+
+	if (NS_FAILED(rv)) return rv;
 	PRBool copySucceeded = (aStatus == NS_BINDING_SUCCEEDED);
 	rv = mDestination->EndCopy(copySucceeded);
 	//If this is a move and we finished the copy, delete the old message.
 	if(copySucceeded)
 	{
 		PRBool moveMessage;
-		IsMoveMessage(aURL, &moveMessage);
+		IsMoveMessage(uri, &moveMessage);
 		if(moveMessage)
 		{
-			rv = DeleteMessage(aURL, mSrcFolder);
+			rv = DeleteMessage(uri, mSrcFolder);
 		}
 	}
 	//Even if the above actions failed we probably still want to return NS_OK.  There should probably

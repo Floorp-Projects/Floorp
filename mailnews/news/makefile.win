@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=public src tests build resources
+DIRS=public src build resources
 
 include <$(DEPTH)\config\rules.mak>

@@ -39,7 +39,6 @@ LLIBS=											\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcompose_s.lib		\
 			$(DIST)\lib\appcores.lib			\
-			$(DIST)\lib\netlib.lib				\
 			$(DIST)\lib\msgbaseutil.lib			\
 			$(DIST)\lib\raptorhtmlpars.lib			\
 			$(LIBNSPR)							\

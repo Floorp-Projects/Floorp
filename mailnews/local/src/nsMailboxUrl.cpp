@@ -18,15 +18,9 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsIMailboxUrl.h"
 #include "nsMailboxUrl.h"
-
-#include "nsINetService.h"  /* XXX: NS_FALSE */
 
 #include "nsString.h"
 #include "nsEscape.h"
@@ -55,7 +49,7 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-static char *nsMailboxGetURI(char *nativepath)
+static char *nsMailboxGetURI(const char *nativepath)
 {
 
     nsresult rv;
@@ -105,7 +99,7 @@ static char *nsMailboxGetURI(char *nativepath)
             if (NS_FAILED(rv)) continue;
             
             // the relpath is just past the serverpath
-            char *relpath = nativepath + len;
+            const char *relpath = nativepath + len;
             // skip past leading / if any
             while (*relpath == '/') relpath++;
             uri = PR_smprintf("%s/%s", (const char*)serverURI, relpath);
@@ -225,30 +219,21 @@ nsresult nsMailboxUrl::GetFilePath(nsFileSpec ** aFilePath)
 	return NS_OK;
 }
 
-#if 0
-nsresult nsMailboxUrl::SetFilePath(const nsFileSpec& aFilePath)
-{
-	NS_LOCK_INSTANCE();
-	if (m_filePath)
-		delete m_filePath;
-	m_filePath = new nsFileSpec(aFilePath);
-
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;	
-}
-#endif
-
 nsresult nsMailboxUrl::GetMessageKey(nsMsgKey* aMessageKey)
 {
 	*aMessageKey = m_messageKey;
 	return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMailboxUrl::GetMessageSize(PRUint32 *aMessageSize)
+NS_IMETHODIMP nsMailboxUrl::GetMessageSize(PRUint32 * aMessageSize)
 {
-    *aMessageSize = m_messageSize;
-    return NS_OK;
+	if (aMessageSize)
+	{
+		*aMessageSize = m_messageSize;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
@@ -257,7 +242,7 @@ nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
 	return NS_OK;
 }
 
-// from nsIMsgUriUrl
+
 NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 {
 	// function not implemented yet....
@@ -325,6 +310,7 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 	return NS_OK;
 }
 
+#if 0   // mscott - i can remove this function once I move the funcionality elsewhere...
 NS_IMETHODIMP nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetURLInfo(URL_s);
@@ -339,22 +325,23 @@ NS_IMETHODIMP nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 
     return rv;
 }
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMailboxUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-
 // possible search part phrases include: MessageID=id&number=MessageKey
 
 nsresult nsMailboxUrl::ParseSearchPart()
 {
+	nsXPIDLCString searchPart;
+	nsresult rv = GetQuery(getter_Copies(searchPart));
 	// add code to this function to decompose everything past the '?'.....
-	if (m_search)
+	if (NS_SUCCEEDED(rv) && searchPart && *searchPart)
 	{
-		char * messageKey = extractAttributeValue(m_search, "number=");
-		m_messageID = extractAttributeValue(m_search,"messageid=");
+		char * messageKey = extractAttributeValue(searchPart, "number=");
+		m_messageID = extractAttributeValue(searchPart,"messageid=");
 		if (messageKey)
 			m_messageKey = atol(messageKey); // convert to a long...
 		if (messageKey || m_messageID)
@@ -362,152 +349,29 @@ nsresult nsMailboxUrl::ParseSearchPart()
 			m_mailboxAction = nsIMailboxUrl::ActionDisplayMessage;
 		PR_FREEIF(messageKey);
 	}
+	else
+		m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
 
-	return NS_OK;
+	return rv;
 }
 
 // warning: don't assume when parsing the url that the protocol part is "news"...
-
 nsresult nsMailboxUrl::ParseUrl(const nsString& aSpec)
 {
-    // XXX hack!
-    char* cSpec = aSpec.ToNewCString();
-
-    NS_LOCK_INSTANCE();
-
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_file);
-    PR_FREEIF(m_ref);
-    PR_FREEIF(m_search);
-
-    // The URL is considered absolute if and only if it begins with a
-    // protocol spec. A protocol spec is an alphanumeric string of 1 or
-    // more characters that is terminated with a colon.
-    PRBool isAbsolute = PR_FALSE;
-    char* cp=NULL;
-    char* ap = cSpec;
-    char ch;
-    while (0 != (ch = *ap)) 
-	{
-        if (((ch >= 'a') && (ch <= 'z')) ||
-            ((ch >= 'A') && (ch <= 'Z')) ||
-            ((ch >= '0') && (ch <= '9'))) 
-		{
-            ap++;
-            continue;
-        }
-        if ((ch == ':') && (ap - cSpec >= 2)) 
-		{
-            isAbsolute = PR_TRUE;
-            cp = ap;
-            break;
-        }
-        break;
-    }
-
-	PR_FREEIF(m_spec);
-    PRInt32 slen = aSpec.Length();
-    m_spec = (char *) PR_Malloc(slen + 1);
-    aSpec.ToCString(m_spec, slen+1);
-
-    // get protocol first
-    PRInt32 plen = cp - cSpec;
-    m_protocol = (char*) PR_Malloc(plen + 1);
-    PL_strncpy(m_protocol, cSpec, plen);
-    m_protocol[plen] = 0;
-    cp++;                               // eat : in protocol
-
-    // skip over one, two or three slashes
-    if (*cp == '/') 
-	{
-        cp++;
-        if (*cp == '/') 
-		{
-            cp++;
-            if (*cp == '/')
-                cp++;
-        }
-    } 
-	else 
-	{
-        delete [] cSpec;
-
-        NS_UNLOCK_INSTANCE();
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-
-//#if defined(XP_UNIX) || defined (XP_MAC) || defined(XP_BEOS)
-        // Always leave the top level slash for absolute file paths under Mac and UNIX.
-        // The code above sometimes results in stripping all of slashes
-        // off. This only happens when a previously stripped url is asked to be
-        // parsed again. Under Win32 this is not a problem since file urls begin
-        // with a drive letter not a slash. This problem show's itself when 
-        // nested documents such as iframes within iframes are parsed.
-
-        if ((PL_strcmp(m_protocol, "mailbox") == 0) ||
-            (PL_strcmp(m_protocol, "mailboxMessage") ==0)) {
-            if (*cp != '/') {
-                cp--;
-            }
-        }
-//#endif /* XP_UNIX */
-
-        // The remainder of the string is the file name and the search path....
-		// Strip out the ? stuff....
-		char* search = strpbrk(cSpec, "?");
-		if (nsnull != search)
-		{
-			search++; // advance past the question mark
-			// The rest is the search..copy it so we can parse it later...
-			if (search)
-				m_search = PL_strdup(search);
-
-			if (search - cp - 1 > 0)
-				m_file = PL_strndup(cp, search - cp -1);
-			else
-				m_file = nsnull;
-		}
-		else // the rest of the rl is the file part....
-		{
-			m_file = PL_strdup(cp);
-		}
-      
-#ifdef NS_WIN32
-       // If the filename starts with a "x|" where is an single
-       // character then we assume it's a drive name and change the
-       // vertical bar back to a ":"
-       if ((PL_strlen(m_file) >= 2) && (m_file[1] == '|')) 
-		   m_file[1] = ':';
-#endif /* NS_WIN32 */
- 
-	delete [] cSpec;
-
 	if (m_filePath)
 		delete m_filePath;
+	DirFile(getter_Copies(m_file));
 	ParseSearchPart();
 	m_filePath = new nsFileSpec(nsFilePath(m_file));
-
-	// we need to set the mailbox action type that this url represented....
-	// if we had a search field then we parsed it and it set the mailbox state...
-	// otherwise there was no search part to the urlSpec so we should manually set the
-	// parse mailbox action (which is the default)
-	if (m_search == nsnull)
-		m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
-
-    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
-void nsMailboxUrl::ReconstructSpec(void)
+NS_IMETHODIMP nsMailboxUrl::SetSpec(char * aSpec)
 {
-    PR_FREEIF(m_spec);
-
-	if (m_search)
-		m_spec = PR_smprintf("%s://%s?%s", m_protocol, m_file, m_search);
-	else
-		m_spec = PR_smprintf("%s://%s", m_protocol, m_file);
+	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
+	if (NS_SUCCEEDED(rv))
+		rv = ParseUrl("");
+	return rv;
 }
 
 // takes a string like ?messageID=fooo&number=MsgKey and returns a new string 

@@ -19,9 +19,9 @@
 #define nsURLFetcher_h_
 
 #include "nsCOMPtr.h"
+#include "nsIBufferInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsFileStream.h"
-#include "nsINetService.h"
 
 //
 // Callback declarations for URL completion
@@ -49,70 +49,20 @@ public:
   NS_IMETHOD FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut, 
                             nsAttachSaveCompletionCallback cb, void *tagData);
 
-  // Methods for nsIStreamListener...
-  /**
-   * Return information regarding the current URL load.<BR>
-   * The info structure that is passed in is filled out and returned
-   * to the caller. 
-   * 
-   * This method is currently not called.  
-   */
-  NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
-
-  /**
-   * Notify the client that data is available in the input stream.  This
-   * method is called whenver data is written into the input stream by the
-   * networking library...<BR><BR>
-   * 
-   * @param pIStream  The input stream containing the data.  This stream can
-   * be either a blocking or non-blocking stream.
-   * @param length    The amount of data that was just pushed into the stream.
-   * @return The return value is currently ignored.
-   */
-  NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
-                             PRUint32 aLength);
+  NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 
 
   // Methods for nsIStreamObserver 
-  /**
-  * Notify the observer that the URL has started to load.  This method is
-  * called only once, at the beginning of a URL load.<BR><BR>
-  *
-  * @return The return value is currently ignored.  In the future it may be
-  * used to cancel the URL load..
-  */
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  
-  /**
-  * Notify the observer that progress as occurred for the URL load.<BR>
-  */
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  
-  /**
-  * Notify the observer with a status message for the URL load.<BR>
-  */
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  
-  /**
-  * Notify the observer that the URL has finished loading.  This method is 
-  * called once when the networking library has finished processing the 
-  * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
-  * 
-  * This method is called regardless of whether the URL loaded successfully.<BR><BR>
-  * 
-  * @param status    Status code for the URL load.
-  * @param msg   A text string describing the error.
-  * @return The return value is currently ignored.
-  */
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+  NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);  
+  NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg);
+
 
 
 private:
-  nsINetService                   *mNetService;   // Net service for the URL operation
   nsOutputFileStream              *mOutStream;    // the output file stream
   PRBool                          mStillRunning;  // Are we still running?
   PRInt32                         mTotalWritten;  // Size counter variable
-  nsIURI                          *mURL;          // URL being processed
+  nsCOMPtr<nsIURI>                mURL;          // URL being processed
   char                            *mContentType;  // The content type retrieved from the server
   void                            *mTagData;      // Tag data for callback...
   nsAttachSaveCompletionCallback  mCallback;      // Callback to call once the file is saved...

@@ -30,19 +30,12 @@
 
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsITransport.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nntpCore.h"
 
 #include "nsINntpService.h"
-
-#include "nsINetService.h"
-#include "nsIServiceManager.h"
-#include "nsIEventQueue.h" 
-#include "nsIEventQueueService.h"
 #include "nsIUrlListener.h"
 
 #include "nsIPref.h"
@@ -53,7 +46,6 @@
 #include "nsString.h"
 
 #ifdef XP_PC
-#define NETLIB_DLL	"netlib.dll"
 #define XPCOM_DLL	"xpcom32.dll"
 #define NEWS_DLL	"msgnews.dll"
 #define PREF_DLL	"xppref32.dll"
@@ -62,7 +54,6 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define NEWS_DLL   "libmsgnews"MOZ_DLL_SUFFIX
 #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX

@@ -19,10 +19,6 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsCOMPtr.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -33,6 +29,7 @@
 #include "nsSmtpProtocol.h"
 
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // foward declarations...
 
@@ -48,8 +45,27 @@ nsSmtpService::nsSmtpService()
 nsSmtpService::~nsSmtpService()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsCOMTypeInfo<nsISmtpService>::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(nsSmtpService);
+NS_IMPL_THREADSAFE_RELEASE(nsSmtpService);
 
+nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsCOMTypeInfo<nsISmtpService>::GetIID()) || aIID.Equals(kISupportsIID))
+	{
+        *aInstancePtr = (void*) ((nsISmtpService*)this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+	if (aIID.Equals(nsCOMTypeInfo<nsIProtocolHandler>::GetIID()))
+	{
+		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+    return NS_NOINTERFACE;
+}
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
@@ -173,3 +189,45 @@ nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer)
 	return rv;
 }
 
+NS_IMETHODIMP nsSmtpService::GetScheme(char * *aScheme)
+{
+	nsresult rv = NS_OK;
+	if (aScheme)
+		*aScheme = PL_strdup("mailto");
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 
+}
+
+NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
+{
+	nsresult rv = NS_OK;
+	if (aDefaultPort)
+		*aDefaultPort = SMTP_PORT;
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv; 	
+}
+
+NS_IMETHODIMP nsSmtpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
+{
+	// no such thing as relative urls for smtp.....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
+{
+	// i just haven't implemented this yet...I will be though....
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval)
+{
+	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
+	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
+	// the necko team in more detail later on.
+	NS_ASSERTION(0, "unimplemented");
+	return NS_OK;
+}

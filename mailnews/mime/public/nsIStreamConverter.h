@@ -20,6 +20,7 @@
 
 #include "nsIStreamListener.h" 
 #include "nsIOutputStream.h" 
+#include "nsIURI.h" 
 
 // {C9CDF8E5-95FA-11d2-8807-00805F5A1FB8} 
 #define NS_ISTREAM_CONVERTER_IID \
@@ -31,6 +32,17 @@
     { 0x588595cb, 0x2012, 0x11d3,   \
     { 0x8e, 0xf0, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 
+// Message delivery modes
+typedef enum
+{
+  nsMimeMessageSplitDisplay,    // the wrapper HTML output to produce the split header/body display
+  nsMimeMessageHeaderDisplay,   // the split header - header display
+  nsMimeMessageBodyDisplay,     // the split header - body display
+  nsMimeMessageQuoting,         // all HTML quoted output
+  nsMimeMessageRaw,             // the raw RFC822 data (view source?)
+  nsMimeUnknown                 // Don't know the format, figure it out from the URL/headers
+} nsMimeOutputType;
+
 class nsIStreamConverter : public nsIStreamListener { 
 public: 
   static const nsIID& GetIID() { static nsIID iid = NS_ISTREAM_CONVERTER_IID; return iid; }
@@ -39,7 +51,14 @@ public:
     // This is the output stream where the stream converter will write processed data after 
     // conversion. 
     // 
-    NS_IMETHOD SetOutputStream(nsIOutputStream *outStream, char *url) = 0; 
+    NS_IMETHOD SetOutputStream(nsIOutputStream *aOutStream, nsIURI *aURI, nsMimeOutputType aType,
+                               nsMimeOutputType *aOutFormat, char **aOutputContentType) = 0; 
+
+    // 
+    // This is the type of output operation that is being requested by libmime. The types
+    // of output are specified by nsIMimeOutputType enum
+    // 
+    NS_IMETHOD SetOutputType(nsMimeOutputType aType) = 0; 
 
     // 
     // The output listener can be set to allow for the flexibility of having the stream converter 
@@ -47,13 +66,13 @@ public:
     // this output listener is not set, the data will be written into the output stream but it is 
     // the responsibility of the client of the stream converter to handle the resulting data. 
     // 
-    NS_IMETHOD SetOutputListener(nsIStreamListener *outListner) = 0; 
+    NS_IMETHOD SetOutputListener(nsIStreamListener *aOutListener) = 0; 
 
     // 
-    // This is needed by libmime for MHTML link processing...the url is the URL string associated
+    // This is needed by libmime for MHTML link processing...this is the URI associated
     // with this input stream
     // 
-    NS_IMETHOD SetStreamURL(char *url) = 0; 
+    NS_IMETHOD SetStreamURI(nsIURI *aURI) = 0; 
 }; 
 
 #endif /* nsIStreamConverter_h_ */

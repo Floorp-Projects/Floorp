@@ -35,7 +35,6 @@ OBJS=\
 LLIBS=				\
  $(DIST)\lib\rdf.lib            \
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\netlib.lib         \
  $(DIST)\lib\uconv.lib           \
  $(LIBNSPR)  
 

@@ -182,7 +182,10 @@ NS_IMETHODIMP nsMsgHdr::GetProperty(const char *propertyName, nsString &resultPr
 	nsresult err = NS_OK;
 	mdb_token	property_token;
 
-	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (m_mdb->GetStore())
+		err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	else
+		err = NS_ERROR_NULL_POINTER;
 	if (err == NS_OK)
 		err = m_mdb->RowCellColumnTonsString(GetMDBRow(), property_token, resultProperty);
 
@@ -451,65 +454,65 @@ NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 	return SetPriority(priorityVal);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetAuthor(nsString &resultAuthor)
+NS_IMETHODIMP nsMsgHdr::GetAuthor(nsString *resultAuthor)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_senderColumnToken, *resultAuthor);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetSubject(nsString &resultSubject)
+NS_IMETHODIMP nsMsgHdr::GetSubject(nsString *resultSubject)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_subjectColumnToken, *resultSubject);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString &resultRecipients)
+NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString *resultRecipients)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_recipientsColumnToken, *resultRecipients);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetCCList(nsString &resultCCList)
+NS_IMETHODIMP nsMsgHdr::GetCCList(nsString *resultCCList)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, resultCCList);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, *resultCCList);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMessageId(nsString &resultMessageId)
+NS_IMETHODIMP nsMsgHdr::GetMessageId(nsString *resultMessageId)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageIdColumnToken, resultMessageId);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageIdColumnToken, *resultMessageId);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMime2EncodedAuthor(nsString &resultAuthor)
+NS_IMETHODIMP nsMsgHdr::GetMime2DecodedAuthor(nsString *resultAuthor)
 {
-	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+	return m_mdb->RowCellColumnToMime2DecodedString(GetMDBRow(), m_mdb->m_senderColumnToken, *resultAuthor);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMime2EncodedSubject(nsString &resultSubject)
+NS_IMETHODIMP nsMsgHdr::GetMime2DecodedSubject(nsString *resultSubject)
 {
-	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+	return m_mdb->RowCellColumnToMime2DecodedString(GetMDBRow(), m_mdb->m_subjectColumnToken, *resultSubject);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMime2EncodedRecipients(nsString &resultRecipients)
+NS_IMETHODIMP nsMsgHdr::GetMime2DecodedRecipients(nsString *resultRecipients)
 {
-	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+	return m_mdb->RowCellColumnToMime2DecodedString(GetMDBRow(), m_mdb->m_recipientsColumnToken, *resultRecipients);
 }
 
 
-NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString &resultAuthor)
+NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString *resultAuthor)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_senderColumnToken, *resultAuthor);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(nsString &resultSubject)
+NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(nsString *resultSubject)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_subjectColumnToken, *resultSubject);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(nsString &resultRecipients)
+NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(nsString *resultRecipients)
 {
-	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, *resultRecipients);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetCharSet(nsString &result)
+NS_IMETHODIMP nsMsgHdr::GetCharSet(nsString *result)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, result);
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, *result);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetThreadParent(nsMsgKey inKey)
@@ -599,7 +602,7 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 	nsAutoString2 reference(eOneByte);
 	nsAutoString2 messageId(eOneByte);
 
-	GetMessageId(messageId);
+	GetMessageId(&messageId);
 	possibleChild->GetStringReference(numReferences - 1, reference);
 
 	return (messageId.Equals(reference));

@@ -33,14 +33,13 @@ CPP_OBJS=									\
 			.\$(OBJDIR)\nsMsgFactory.obj    \
 			$(NULL)
 
-LLIBS=								\
+LLIBS=										\
 			$(DIST)\lib\xpcom.lib			\
 			$(DIST)\lib\msgbaseutil.lib		\
 			$(DIST)\lib\msgbase_s.lib		\
 			$(DIST)\lib\msgsearch_s.lib		\
-			$(DIST)\lib\netlib.lib			\
 			$(DIST)\lib\timer_s.lib 		\
-			$(LIBNSPR)				\
+			$(LIBNSPR)						\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -27,6 +27,9 @@ class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl
 public:
 	NS_DECL_ISUPPORTS_INHERITED
 
+	// nsIURI over-ride...
+	NS_IMETHOD SetSpec(char * aSpec);
+
 	// From nsISmtpUrl
 
 	// mscott: I used to have individual getters for ALL of these fields but it was
@@ -72,12 +75,10 @@ public:
 
     nsSmtpUrl();
 
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec);
-
 protected:
     virtual ~nsSmtpUrl();
-	virtual void ReconstructSpec(void);
+	// protocol specific code to parse a url...
+    virtual nsresult ParseUrl();
 
 	// data retrieved from parsing the url: (Note the url could be a post from file or it could be inthe url)
     char		*m_toPart;

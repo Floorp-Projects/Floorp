@@ -296,6 +296,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+	rv = compMgr->RegisterComponent(kCSmtpServiceCID,  
+                                    "SMTP Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailto",
+                                    path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
+
   
     rv = compMgr->RegisterComponent(kCMsgQuoteCID,
 										"Message Quoting",

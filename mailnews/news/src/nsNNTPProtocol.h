@@ -36,6 +36,7 @@
 
 #include "nsMsgLineBuffer.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
@@ -164,13 +165,14 @@ public:
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-	NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
+	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg);
 
 	char * m_ProxyServer;		/* proxy server hostname */
 
 private:
 	// over-rides from nsMsgProtocol
-	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									      PRUint32 sourceOffset, PRUint32 length);
 	virtual nsresult CloseSocket();
 
 	// we have our own implementation of SendData which writes to the nntp log
@@ -214,7 +216,7 @@ private:
     PRInt32     m_responseCode;    /* code returned from NNTP server */
 	PRInt32 	m_previousResponseCode; 
     char       *m_responseText;   /* text returned from NNTP server */
-	char	   *m_hostName;
+	nsXPIDLCString m_hostName;
 
     char		*m_dataBuf;
     PRUint32	 m_dataBufSize;
@@ -376,7 +378,7 @@ private:
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	nsresult ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
+	nsresult ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 };
 
 NS_BEGIN_EXTERN_C

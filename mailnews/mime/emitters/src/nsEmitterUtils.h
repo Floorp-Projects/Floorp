@@ -22,6 +22,7 @@
 #include "plstr.h"
 
 extern "C" PRBool   EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header);
+extern "C" char     *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
 #endif // _nsEmitterUtils_h_
 

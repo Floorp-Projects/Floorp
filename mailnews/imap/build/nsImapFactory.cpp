@@ -243,6 +243,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
+	rv = compMgr->RegisterComponent(kCImapService,  
+                                    "Imap Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "imap",
+                                    path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
+
 	rv = compMgr->RegisterComponent(kCImapMessageResource,
                                    "Imap Message Resource Factory",
                                    NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message",

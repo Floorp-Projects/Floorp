@@ -434,7 +434,7 @@ nsMimeEmitter2::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
     mBufferMgr->ReduceBuffer(written);
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(mOutStream); 
     if (inputStream)
-      mOutListener->OnDataAvailable(mURL, inputStream, written);
+      mOutListener->OnDataAvailable(nsnull, mURL, inputStream, written);
     *amountWritten = written;
 
     // if we couldn't write all the old data, buffer the new data
@@ -458,7 +458,7 @@ nsMimeEmitter2::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(mOutStream); 
     if (inputStream)
-      mOutListener->OnDataAvailable(mURL, inputStream, written);
+      mOutListener->OnDataAvailable(nsnull, mURL, inputStream, written);
   }
 
   return rc;

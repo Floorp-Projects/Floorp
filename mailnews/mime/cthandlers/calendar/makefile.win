@@ -89,7 +89,6 @@ MSGLIBS=				\
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
-			$(DIST)\lib\xplib.lib       	\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
 #define NS_IMPL_IDS
+#include "nsCOMPtr.h"
+#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 
@@ -31,10 +33,10 @@
 #include "mimexpcom.h"
 #include "mimevcrd.h"
 #include "nsEscape.h"
+#include "nsIURI.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
-#include "nsINetService.h"
 #include "nsIPref.h"
 #include "nsVCardStringResources.h"
 
@@ -73,6 +75,9 @@ typedef struct
 	} AttributeName;
 
 #define kNumAttributes 12
+
+// Define CIDs...
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 /*
  * These functions are the public interface for this content type
@@ -1926,57 +1931,51 @@ vCard_SACat (char **destination, const char *source)
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define VCARD_URL       "resource:/res/mailnews/messenger/vcard.properties"
 
 extern "C" 
 char *
-VCardGetStringByIDREAL(PRInt32 stringID)
+MimeGetStringByIDREAL(PRInt32 stringID)
 {
-  nsresult    res;
+  nsresult    res = NS_OK;
   char*       propertyURL;
-
-/***************************************     
-    // Father forgive me...
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQueueService, kEventQueueServiceCID, &res); 
-//    nsresult ret = nsServiceManager::GetService(kEventQueueServiceCID,
-//      kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
-    if (NS_FAILED(res)) {
-      printf("cannot get event queue service\n");
-      return "xx";
-    }
-    res = pEventQueueService->CreateThreadEventQueue();
-    if (NS_FAILED(res)) 
-    {
-      printf("CreateThreadEventQueue failed\n");
-      return "xx";
-    }
-****************************************/
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->CopyCharPref("mail.strings.vcard", &propertyURL);
+    res = prefs->CopyCharPref("mail.strings.mime", &propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
-    propertyURL = PL_strdup(VCARD_URL);
+    propertyURL = VCARD_URL;
 
-  // we're not using propertyURL anywhere, so free it.
-  PL_strfree(propertyURL);
-  
-  NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
-  if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
+  nsCOMPtr<nsIURI> pURI;
+  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) 
   {
-      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    if (propertyURL != VCARD_URL)
+      PR_FREEIF(propertyURL);
+    return PL_strdup("???");   // Don't I18N this string...failsafe return value
+  }
+
+  res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
+  if (NS_FAILED(res))
+  {
+    if (propertyURL != VCARD_URL)
+      PR_FREEIF(propertyURL);
+    return PL_strdup("???");   // Don't I18N this string...failsafe return value
+  }
+
+  if (propertyURL != VCARD_URL)
+  {
+    PR_FREEIF(propertyURL);
+    propertyURL = nsnull;
   }
 
   NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
-    nsIURI      *url = nsnull;
     nsILocale   *locale = nsnull;
-
 #if 1
     nsIStringBundle* sBundle = nsnull;
     res = sBundleService->CreateBundle(VCARD_URL, locale, &sBundle);
@@ -1988,8 +1987,9 @@ VCardGetStringByIDREAL(PRInt32 stringID)
     }
 
     nsIStringBundle* sBundle = nsnull;
-    res = sBundleService->CreateBundle(url, locale, &sBundle);
+    res = sBundleService->CreateBundle(pURI, locale, &sBundle);
 #endif
+
     if (NS_FAILED(res)) 
     {
       return PL_strdup("???");   // Don't I18N this string...failsafe return value

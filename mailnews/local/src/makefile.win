@@ -35,6 +35,7 @@ EXPORTS=				\
 	nsPop3IncomingServer.h	\
 	nsLocalMessage.h	\
 	nsLocalMailFolder.h \
+	nsLocalUtils.h		\
 	$(NULL)
 
 ################################################################################

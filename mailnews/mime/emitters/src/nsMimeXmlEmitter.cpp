@@ -15,25 +15,23 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "stdio.h"
 #include "nsMimeRebuffer.h"
 #include "nsMimeXmlEmitter.h"
 #include "plstr.h"
-#include "nsEmitterUtils.h"
+#include "nsIMimeEmitter.h"
 #include "nsMailHeaders.h"
+#include "nscore.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsString.h"
 #include "nsEscape.h"
+#include "prmem.h"
+#include "nsEmitterUtils.h"
 
 // For the new pref API's
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-/* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
 nsresult NS_NewMimeXmlEmitter(const nsIID& iid, void **result)
 {
 	nsMimeXmlEmitter *obj = new nsMimeXmlEmitter();
@@ -52,34 +50,38 @@ NS_IMPL_RELEASE(nsMimeXmlEmitter)
 NS_IMPL_QUERY_INTERFACE(nsMimeXmlEmitter, nsIMimeEmitter::GetIID()); /* we need to pass in the interface ID of this interface */
 
 /*
- * nsIMimeEmitter definitions....
+ * nsMimeXmlEmitter definitions....
  */
 nsMimeXmlEmitter::nsMimeXmlEmitter()
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
-  
-  mOutStream = NULL;
+  NS_INIT_REFCNT(); 
+
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
-  mXMLHeaderStarted = PR_FALSE;
+  mAttachContentType = NULL;
   mAttachCount = 0;
 
-#ifdef DEBUG_rhp
-  mLogFile = NULL;    /* Temp file to put generated XML into. */
-  mReallyOutput = PR_FALSE;
-#endif
+  mInputStream = nsnull;
+  mOutStream = nsnull;
+  mOutListener = nsnull;
+  mURL = nsnull;
+  mHeaderDisplayType = nsMimeHeaderDisplayTypes::NormalHeaders;
 
-  mHeaderDisplayType = NormalHeaders;
-
-  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(mPrefs));
+  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
   if (! (mPrefs && NS_SUCCEEDED(rv)))
     return;
 
-  mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+  if ((mPrefs && NS_SUCCEEDED(rv)))
+    mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+
+#ifdef DEBUG_rhp
+  mLogFile = NULL;    /* Temp file to put generated HTML into. */
+  mReallyOutput = PR_FALSE;
+#endif
 }
+
 
 nsMimeXmlEmitter::~nsMimeXmlEmitter(void)
 {
@@ -92,9 +94,11 @@ nsMimeXmlEmitter::~nsMimeXmlEmitter(void)
 }
 
 // Set the output stream for processed data.
-nsresult
-nsMimeXmlEmitter::SetOutputStream(nsINetOStream *outStream)
+NS_IMETHODIMP
+nsMimeXmlEmitter::SetPipe(nsIInputStream * aInputStream, nsIOutputStream *outStream)
 {
+  mInputStream = aInputStream;
+  mOutStream = outStream;
   return NS_OK;
 }
 
@@ -102,9 +106,11 @@ nsMimeXmlEmitter::SetOutputStream(nsINetOStream *outStream)
 // anything to the stream since these may be image data
 // output streams, etc...
 nsresult       
-nsMimeXmlEmitter::Initialize(nsINetOStream *outStream)
+nsMimeXmlEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
 {
-  mOutStream = outStream;
+  // set the url
+  mURL = url;
+  mChannel = aChannel;
 
   // Create rebuffering object
   mBufferMgr = new MimeRebuffer();
@@ -114,9 +120,17 @@ nsMimeXmlEmitter::Initialize(nsINetOStream *outStream)
   mTotalRead = 0;
 
 #ifdef DEBUG_rhp
-  PR_Delete("C:\\mail.xml");
-  mLogFile = PR_Open("C:\\mail.xml", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
+  PR_Delete("C:\\email.html");
+  // mLogFile = PR_Open("C:\\email.html", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
 #endif /* DEBUG */
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeXmlEmitter::SetOutputListener(nsIStreamListener *listener)
+{
+  mOutListener = listener;
 
   return NS_OK;
 }
@@ -131,13 +145,21 @@ nsMimeXmlEmitter::Complete()
   mReallyOutput = PR_TRUE;
 #endif
 
+  char  buf[16];
+
+  // Now write out the total count of attachments for this message
+  UtilityWrite("<mailattachcount>");
+  sprintf(buf, "%d", mAttachCount);
+  UtilityWrite(buf);
+  UtilityWrite("</mailattachcount>");
+
   UtilityWrite("</message>");
 
   // If we are here and still have data to write, we should try
   // to flush it...if we try and fail, we should probably return
   // an error!
   PRUint32      written; 
-  if (mBufferMgr->GetSize() > 0)
+  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
     Write("", 0, &written);
 
 #ifdef DEBUG_rhp
@@ -165,9 +187,9 @@ nsMimeXmlEmitter::WriteXMLHeader(const char *msgID)
     
   UtilityWrite("<?xml version=\"1.0\"?>");
 
-  if (mHeaderDisplayType == MicroHeaders)
+  if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
     UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
-  else if (mHeaderDisplayType == NormalHeaders)
+  else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
     UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-normal.css\" type=\"text/css\"?>");
   else /* AllHeaders */
     UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-all.css\" type=\"text/css\"?>");
@@ -202,8 +224,26 @@ nsMimeXmlEmitter::WriteXMLTag(const char *tagName, const char *value)
   UtilityWrite(upCaseTag);
   UtilityWrite("\">");
 
-  UtilityWrite(newValue);
+  // Here is where we are going to try to L10N the tagName so we will always
+  // get a field name next to an emitted header value. Note: Default will always
+  // be the name of the header itself.
+  //
+  UtilityWrite("<headerdisplayname>");
+  char *l10nTagName = LocalizeHeaderName(upCaseTag, tagName);
+  if ( (!l10nTagName) || (!*l10nTagName) )
+    UtilityWrite(tagName);
+  else
+  {
+    UtilityWrite(l10nTagName);
+    PR_FREEIF(l10nTagName);
+  }
 
+  UtilityWrite(": ");
+  UtilityWrite("</headerdisplayname>");
+
+  // Now write out the actual value itself and move on!
+  //
+  UtilityWrite(newValue);
   UtilityWrite("</header>");
 
   delete[] upCaseTag;
@@ -211,7 +251,6 @@ nsMimeXmlEmitter::WriteXMLTag(const char *tagName, const char *value)
 
   return NS_OK;
 }
-
 
 // Header handling routines.
 nsresult
@@ -226,7 +265,7 @@ nsMimeXmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const ch
   WriteXMLHeader(msgID);
   UtilityWrite("<mailheader>");
 
-  return NS_OK;
+  return NS_OK; 
 }
 
 nsresult
@@ -251,8 +290,9 @@ nsMimeXmlEmitter::EndHeader()
 #endif
 
   UtilityWrite("</mailheader>");
-  return NS_OK;
+  return NS_OK; 
 }
+
 
 // Attachment handling routines
 nsresult
@@ -268,6 +308,7 @@ nsMimeXmlEmitter::StartAttachment(const char *name, const char *contentType, con
   sprintf(buf, "<mailattachment id=%d>", mAttachCount);
   UtilityWrite(buf);
 
+  AddAttachmentField(HEADER_PARM_FILENAME, name);
   return NS_OK;
 }
 
@@ -301,10 +342,13 @@ nsMimeXmlEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outC
   mReallyOutput = PR_TRUE;
 #endif
 
+  // For now, we are going to just eat the message body
+  /**
   if (bodyOnly && !mXMLHeaderStarted)
     WriteXMLHeader(msgID);
 
   UtilityWrite("<mailbody>");
+  ***/
   return NS_OK;
 }
 
@@ -315,7 +359,8 @@ nsMimeXmlEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
   mReallyOutput = PR_TRUE;
 #endif
 
-  Write(buf, size, amountWritten);
+  // For now, we are going to just eat the message body
+  //Write(buf, size, amountWritten);
   return NS_OK;
 }
 
@@ -326,7 +371,8 @@ nsMimeXmlEmitter::EndBody()
   mReallyOutput = PR_TRUE;
 #endif
 
-  UtilityWrite("</mailbody>");
+  // For now, we are going to just eat the message body
+  // UtilityWrite("</mailbody>");
   return NS_OK;
 }
 
@@ -338,7 +384,8 @@ nsresult
 nsMimeXmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
   unsigned int        written = 0;
-  PRUint32            rc, aReadyCount = 0;
+  PRUint32            rc = 0;
+  PRUint32            needToWrite;
 
 #ifdef DEBUG_rhp
   if ((mLogFile) && (mReallyOutput))
@@ -351,46 +398,42 @@ nsMimeXmlEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   // it on the next time through
   //
   *amountWritten = 0;
-  rc = mOutStream->WriteReady(&aReadyCount);
 
+  needToWrite = mBufferMgr->GetSize();
   // First, handle any old buffer data...
-  if (mBufferMgr->GetSize() > 0)
+  if (needToWrite > 0)
   {
-    if (aReadyCount >= mBufferMgr->GetSize())
-    {
-      rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
+    rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
                             mBufferMgr->GetSize(), &written);
-      mTotalWritten += written;
-      mBufferMgr->ReduceBuffer(written);
-    }
-    else
+    mTotalWritten += written;
+    mBufferMgr->ReduceBuffer(written);
+    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+
+    *amountWritten = written;
+
+    // if we couldn't write all the old data, buffer the new data
+    // and return
+    if (mBufferMgr->GetSize() > 0)
     {
-      rc += mOutStream->Write(mBufferMgr->GetBuffer(),
-                             aReadyCount, &written);
-      mTotalWritten += written;
-      mBufferMgr->ReduceBuffer(written);
       mBufferMgr->IncreaseBuffer(buf, size);
-      return rc;
+      return NS_OK;
     }
   }
 
-  // Now, deal with the new data the best way possible...
-  rc = mOutStream->WriteReady(&aReadyCount);
-  if (aReadyCount >= size)
-  {
-    rc += mOutStream->Write(buf, size, &written);
-    mTotalWritten += written;
-    *amountWritten = written;
-    return rc;
-  }
-  else
-  {
-    rc += mOutStream->Write(buf, aReadyCount, &written);
-    mTotalWritten += written;
+
+  // if we get here, we are dealing with new data...try to write
+  // and then do the right thing...
+  rc = mOutStream->Write(buf, size, &written);
+  *amountWritten = written;
+  mTotalWritten += written;
+
+  if (written < size)
     mBufferMgr->IncreaseBuffer(buf+written, (size-written));
-    *amountWritten = written;
-    return rc;
-  }
+
+  if (mOutListener)
+    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
+
+  return rc;
 }
 
 nsresult

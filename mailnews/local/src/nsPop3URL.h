@@ -35,12 +35,10 @@ public:
 	
     NS_DECL_ISUPPORTS_INHERITED
 
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec);
-
 protected:
 	virtual ~nsPop3URL();
-	virtual void ReconstructSpec(void);
+	// protocol specific code to parse a url...
+    virtual nsresult ParseUrl(const nsString& aSpec);
 
 	/* Pop3 specific event sinks */
     nsCOMPtr<nsIPop3Sink> m_pop3Sink;

@@ -24,12 +24,13 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
 {
 public:
-	// overrides for nsIURI
-	NS_IMETHOD SetURLInfo(URL_Struct *URL_s);
+	// nsIURI over-ride...
+	NS_IMETHOD SetSpec(char * aSpec);
 
 	// from nsIMailboxUrl:
 	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
@@ -57,10 +58,10 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
 
-	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl(const nsString& aSpec);
 
 protected:
+	// protocol specific code to parse a url...
+    virtual nsresult ParseUrl(const nsString& aSpec);
 
 	// mailboxurl specific state
 	nsCOMPtr<nsIStreamListener> m_mailboxParser;
@@ -71,11 +72,10 @@ protected:
 	char		*m_messageID;
 	PRUint32	m_messageSize;
 	nsMsgKey	m_messageKey;
+	nsXPIDLCString m_file;
 
 	// used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
-
-	virtual void ReconstructSpec(void);
 	nsresult ParseSearchPart();
 };
 

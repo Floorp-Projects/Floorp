@@ -453,10 +453,10 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FAILURE;
 
   // Get the recipients...
-  if (NS_FAILED(mMessage->GetRecipients(recips)))
+  if (NS_FAILED(mMessage->GetRecipients(&recips)))
     return NS_ERROR_UNEXPECTED;
   else
-  	mMessage->GetCCList(ccList);
+  	mMessage->GetCCList(&ccList);
 
   // Get the composition fields interface
   nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
@@ -592,7 +592,7 @@ nsMsgSendLater::StartNextMailFileSend()
 
   char *tString = nsnull;
   nsString      subject;
-  mMessage->GetSubject(subject);
+  mMessage->GetSubject(&subject);
   tString = subject.ToNewCString();
 #ifdef NS_DEBUG
   printf("Sending message: [%s]\n", tString);

@@ -18,47 +18,34 @@
 
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
-#include "nsIFileSpec.idl"
-#include "nsIOutputStream.idl"
-
-READ_THIS:
-THIS INTERFACE IS ALL DONE AS SOON AS SOMEONE DEFINES nsIStreamListener 
-IN IDL!
-
 #include "nsIStreamListener.idl"
 
+interface nsIOutputStream;
+interface nsIURI;
+interface nsIChannel;
 
 %{C++
-#include "nsIStreamListener.h"
-
 // {588595CB-2012-11d3-8EF0-00A024A7D144}
 #define NS_STREAM_CONVERTER_CID  \
     { 0x588595cb, 0x2012, 0x11d3,   \
     { 0x8e, 0xf0, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } }
 %}
 
-
 [scriptable, uuid(C9CDF8E5-95FA-11d2-8807-00805F5A1FB8)]
 interface nsIStreamConverter : nsIStreamListener {
 
     /* 
-     * This is the output stream where the stream converter will write processed data after 
-     * conversion. 
+	 * right now anyway, we need to know the uri for the stream converter...
+	 * the outlistener allows you to hook up the stream converter to another
+	 * stream listener. As Data is converted, the listener is notified.
      */
-    void SetOutputStream(in nsIOutputStream outStream, in string url); 
 
-    /*
-     * The output listener can be set to allow for the flexibility of having the stream converter 
-     * directly notify the listener of the output stream for any processed/converter data. If 
-     * this output listener is not set, the data will be written into the output stream but it is 
-     * the responsibility of the client of the stream converter to handle the resulting data. 
-     */
-    void SetOutputListener(in nsIStreamListener outListner); 
+	void Init(in nsIURI aURI, in nsIStreamListener outListener, in nsIChannel aChannel); 
 
-    /* 
-     * This is needed by libmime for MHTML link processing...the url is the URL string associated
-     * with this input stream
-     */ 
-    void SetStreamURL(in string url); 
+	/* After initializing the converter you can ask for the output content type
+	 * for the converter 
+	 */
+
+	void GetContentType(out string aOutputContentType);
 };
 

@@ -23,9 +23,9 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = public src build resources
-ifdef ENABLE_TESTS
-DIRS += tests
-endif 
+#ifdef ENABLE_TESTS
+#DIRS += tests
+#endif 
 
 include $(topsrcdir)/config/config.mk
 

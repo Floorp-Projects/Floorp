@@ -16,7 +16,7 @@
  * Reserved.
 */
 #include "nsISupports.idl"
-#include "nsIOutputStream.idl"
+#include "nsIStreamListener.idl"
 
 %{ C++
 %}
@@ -29,6 +29,6 @@ interface nsIMsgQuote : nsISupports {
 	 * This is the primary interface for quoting a particular message specified
 	 * by a URI
 	 */
-	void		QuoteMessage(in wstring msgURI, in nsIOutputStream outStream);
+	void		QuoteMessage(in wstring msgURI, in nsIStreamListener aStreamListener);
 };
 

@@ -21,7 +21,9 @@
 #define _nsIMimeEmitter_h_
 
 #include "prtypes.h"
-#include "nsINetOStream.h"
+#include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
+#include "nsIURI.h"
 
 typedef enum {
   MicroHeaders  = 0,
@@ -39,11 +41,12 @@ public:
 static const nsIID& GetIID() { static nsIID iid = NS_IMIME_EMITTER_IID; return iid; }
 
     // These will be called to start and stop the total operation
-    NS_IMETHOD    Initialize(nsINetOStream *outStream) = 0;
+    NS_IMETHOD    Initialize(nsIURI *url) = 0;
     NS_IMETHOD    Complete() = 0;
 
-    // Set the output stream for processed data.
-    NS_IMETHOD    SetOutputStream(nsINetOStream *outStream) = 0;
+    // Set the output stream/listener for processed data.
+    NS_IMETHOD    SetOutputStream(nsIOutputStream *outStream) = 0;
+    NS_IMETHOD    SetOutputListener(nsIStreamListener *listener) = 0;
 
     // Header handling routines.
     NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,

@@ -25,6 +25,8 @@
 
 #include "prtypes.h"
 #include "nsMailHeaders.h"
+#include "nsIMimeStreamConverter.h"
+#include "nsIPref.h"
 
 #define MIME_DRAFTS
 
@@ -134,6 +136,9 @@ typedef char *(*MimeHTMLGeneratorFunction) (const char *data, void *closure,
 
 struct MimeDisplayOptions
 {
+  nsIPref             *prefs;       /* Connnection to prefs service manager */
+  nsMimeOutputType    format_out;   // The format out type
+
   const char *url;			/* Base URL for the document.  This string should
 							   be freed by the caller, after the parser
 							   completes (possibly at the same time as the

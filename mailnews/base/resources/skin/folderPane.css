@@ -77,7 +77,7 @@ treeitem[SpecialFolder="Inbox"] > treerow > treecell > titledbutton.folderIcon {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
- list-style-image: url("chrome:/messenger/skin/closedInbox.gif");
+ list-style-image: url("chrome://messenger/skin/closedInbox.gif");
 }
 
 treeitem[SpecialFolder="Trash"] > treerow > treecell > titledbutton.folderIcon {

@@ -26,14 +26,13 @@
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsFileStream.h"
+#include "nsIAllocator.h"
 
 #include "nsCOMPtr.h"
 
 // mscott: this is a short term hack for the demo...we should be able to remove this webshell
 // dependency at a later date....
 #include "nsIWebShell.h"
-
-#include "nsINetService.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
@@ -488,18 +487,9 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
       return rv;
     }
 	
-	const char * hostName = NULL;
-	aURL->GetHost(&hostName);
-	if (hostName)
-		m_hostName = nsCRT::strdup(hostName);
-	else
-		m_hostName = NULL;
-
-	PRUint32 port = NEWS_PORT;
-	aURL->GetHostPort(&port);
-
+	aURL->GetHost(getter_Copies(m_hostName));
 	// call base class to set up the transport
-	rv = OpenNetworkSocket(aURL, port, m_hostName);
+	rv = OpenNetworkSocket(aURL);
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
@@ -540,7 +530,6 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
   PRBool bVal = FALSE;
-  char *hostAndPort = nsnull;
   char *group = nsnull;
   char *commandSpecificData = nsnull;
   PRBool cancel = FALSE;
@@ -562,6 +551,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   if (aURL)
   {
+	  aURL->GetHost(getter_Copies(m_hostName));
 	  m_runningURL = do_QueryInterface(aURL);
 
 	  // okay, now fill in our event sinks...Note that each getter ref counts before
@@ -582,19 +572,15 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
-  rv = ParseURL(aURL, &hostAndPort, &bVal, &group, &m_messageID, &commandSpecificData);
+  rv = ParseURL(aURL,&bVal, &group, &m_messageID, &commandSpecificData);
 
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
   {
       char *colon = nsnull;
-      PRUint32 port = 0;
+      PRInt32 port = 0;
+	  aURL->GetPort(&port);
  
-      colon = PL_strchr (hostAndPort, ':');
-      if (colon) {
-          *colon = '\0';  /* turn hostname:port into hostname */
-          port = (PRUint32) strtol(colon + 1, (char **)nsnull, 10 /* base 10 */);
-      }
 	  rv = nsComponentManager::CreateInstance(kNNTPHostCID,
                                             nsnull,
                                             nsINNTPHost::GetIID(),
@@ -603,9 +589,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       if (NS_FAILED(rv) || (!m_newsHost)) 
           goto FAIL;
 
-      // at this point, hostAndPort is really just the hostname
-      // because we put a '\0' in for the colon, if there was one
-      m_newsHost->Initialize(hostAndPort /* really just hostname */, port ? port : NEWS_PORT);
+      m_newsHost->Initialize(m_hostName, port ? port : NEWS_PORT);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);
@@ -825,9 +809,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   m_nextState = SEND_FIRST_NNTP_COMMAND;
 
  FAIL:
-
-  PR_FREEIF (hostAndPort);
-  PR_FREEIF (group);
+  nsAllocator::Free(group);
   PR_FREEIF (commandSpecificData);
 
   if (NS_FAILED(rv))
@@ -839,20 +821,13 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   }
   else 
   {
-	  // our first state is a process state so drive the state machine...
-	  PRBool transportOpen = PR_FALSE;
-	  rv = m_transport->IsTransportOpen(&transportOpen);
-	  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	  if (mailnewsurl)
-		mailnewsurl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
-	  if (!transportOpen)
+	  if (!m_socketIsOpen)
 	  {
 		  m_nextStateAfterResponse = m_nextState;
 		  m_nextState = NNTP_RESPONSE; 
-		  rv = m_transport->Open(mailnewsurl);  // opening the url will cause to get notified when the connection is established
 	  }
-	  else  // the connection is already open so we should begin processing our new url...
-		 return ProcessProtocolState(mailnewsurl, nsnull, 0); 
+
+	  rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
   }
 
   return rv;
@@ -860,9 +835,9 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
+NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
-	nsMsgProtocol::OnStopRequest(aURL, aStatus, aMsg);
+	nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
@@ -911,69 +886,26 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
 		So, we'll make sure we quote / in message IDs as %2F.
 
  */
-nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID,
+nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup, char ** aMessageID,
 								  char ** aCommandSpecificData)
 {
-	char * hostAndPort = NULL;
 	PRInt32 status = 0;
 	PRInt32 port = 0;
+	char *fullPath = 0;
 	char *group = 0;
     char *message_id = 0;
     char *command_specific_data = 0;
-    const char *path_part;
 	const char * url = 0;
 	char * s = 0;
-	const char * host;
-	
-	aURL->GetHost(&host);
-	if (host)
-		hostAndPort = nsCRT::strdup(host);
 
-	// mscott: I took out default code to generate host and port
-    // if the url didn't have any...add this later...
-	if (!hostAndPort)
-	{
-	   status = MK_NO_NEWS_SERVER;
-	   goto FAIL;
-	}
+	// get the file path part and store it as the group...
+	aURL->GetPath(&fullPath);
+	if (fullPath && *fullPath == '/')
+		group = PL_strdup(fullPath+1); 
+	else
+		group = PL_strdup(fullPath);
 
-
-	/* If a port was specified, but it was the default port, pretend
-	   it wasn't specified.
-	*/
-  	s = PL_strchr (hostAndPort, ':');
-	if (s && PR_sscanf(s+1, " %u ", &port) == 1 && HG05998)
-		*s = 0;
-
-	// I think the path part is just the file part of the nsIURI interface...
-//	aURL->GetFile(&path_part); 
-	aURL->GetSpec(&url);
-	path_part = PL_strchr (url, ':');
-    PR_ASSERT (path_part);
-    if (!path_part)
-	{
-	  status = -1;
-	  goto FAIL;
-	}
-
-	path_part++;
-	if (path_part[0] == '/' && path_part[1] == '/')
-	{
-	  /* Skip over host name. */
-	  path_part = PL_strchr (path_part + 2, '/');
-	  if (path_part)
-		path_part++;
-	}
-  
-	if (!path_part)
-		path_part = "";
-
-	group = nsCRT::strdup (path_part);
-	if (!group)
-	{
-	  status = MK_OUT_OF_MEMORY;
-	  goto FAIL;
-	}
+	nsAllocator::Free(fullPath);
 
 	nsUnescape (group);
 
@@ -992,7 +924,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * 
 	}
     else if (!*group)
 	{
-	  PR_Free (group);
+   	  nsCRT::free (group);
 	  group = 0;
 	}
 
@@ -1004,7 +936,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * 
 	 random-characters part of the ID (before @), but not in the host part
 	 (after @).)
    */
-   if (message_id || group || hostAndPort)
+   if (message_id || group)
    {
 	  char *start;
 	  if (message_id)
@@ -1015,7 +947,7 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * 
 	  }
 	  else
 	  {
-		  start = group ? group : hostAndPort;
+		  start = group; /*  ? group : hostAndPort; */ // mscott -- fix me...necko sloppiness on my part
 	  }
 
 	  /* Take off the "?" or "#" search data */
@@ -1050,20 +982,18 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aHostAndPort, PRBool * 
   FAIL:
   PR_ASSERT (!message_id || message_id != group);
   if (status >= 0)
-  {
-      if (aHostAndPort)
-          *aHostAndPort = hostAndPort;
-      
-      if (aGroup) *aGroup = group;
-      else PR_FREEIF(group);
+  {  
+      if (aGroup) 
+		  *aGroup = group;
+      else 
+		  nsCRT::free(group);
       
       if (aMessageID) *aMessageID = message_id;
       else PR_FREEIF(message_id);
       
-	  if (aCommandSpecificData) *aCommandSpecificData = command_specific_data;
+	  if (aCommandSpecificData) 
+		  *aCommandSpecificData = command_specific_data;
       else PR_FREEIF(command_specific_data);
-      
-	  HG45873
   }
   else
   {
@@ -1976,7 +1906,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 				m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
             
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
             m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
         }
   
@@ -1994,8 +1924,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 #ifdef DEBUG_NEWS
 			printf("load this url to display the error message: %s\n", error_path_url);
 #endif
-
-			m_displayConsumer->LoadURL(nsAutoString(error_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			printf ("mscott fix me...as part of necko...we don't have stream converters hooked up...");
+			m_displayConsumer->LoadURL(nsAutoString(error_path_url).GetUnicode(), nsnull, PR_TRUE);
 			
 			PR_FREEIF(error_path_url);
 		}
@@ -2128,8 +2058,8 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   {
       m_tempArticleFile.Delete(PR_FALSE);
       m_tempArticleStream = null_nsCOMPtr();
-      nsCOMPtr<nsIURI> aURL(do_QueryInterface(m_runningURL));
-      m_copyStreamListener->OnStartRequest(aURL, "");
+      nsCOMPtr<nsISupports> aURL(do_QueryInterface(m_runningURL));
+      m_copyStreamListener->OnStartRequest(nsnull, aURL);
   }
   else
   {
@@ -2173,7 +2103,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	if(!line)
 	  return(status);  /* no line yet or error */
 	
-    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+    nsCOMPtr<nsISupports> ctxt = do_QueryInterface(m_runningURL);
 
 	if (m_typeWanted == CANCEL_WANTED && m_responseCode != MK_NNTP_RESPONSE_ARTICLE_HEAD)
 	{
@@ -2193,7 +2123,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		if (m_tempArticleStream)
 			m_tempArticleStream->Close();
         else if (m_copyStreamListener)
-            m_copyStreamListener->OnStopRequest(url, 0, nsnull);
+            m_copyStreamListener->OnStopRequest(nsnull, ctxt, 0, nsnull);
 
 		if (m_displayConsumer)
 		{
@@ -2204,9 +2134,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 #ifdef DEBUG_NEWS
 			printf("load this url to display the message: %s\n", article_path_url);
 #endif
-
-			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReloadBypassCache, 0);
-			
+			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE);			
 			PR_FREEIF(article_path_url);
 		}
 
@@ -2268,8 +2196,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
                 nsCOMPtr<nsIInputStream> aInputStream =
                     do_QueryInterface(dummyStream);
                 if (aInputStream)
-                    m_copyStreamListener->OnDataAvailable(url,
-                            aInputStream, PL_strlen(outputBuffer));
+                    m_copyStreamListener->OnDataAvailable(nsnull, ctxt,
+                            aInputStream, 0 /* source offset */, PL_strlen(outputBuffer));
             }
 		}
 	}
@@ -2992,11 +2920,6 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
 	const char * host_and_port = NULL;
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	if (mailnewsurl)
-		mailnewsurl->GetHost(&host_and_port);
-
-	if (!host_and_port) return MK_OUT_OF_MEMORY;
-
 	if (m_firstArticle > 0) 
 	{
       char *groupName;
@@ -3054,9 +2977,8 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	
 	}
 
-	if (NS_FAILED(rv)) {
+	if (NS_FAILED(rv))
 	  return status;
-	}
 
 	if (m_firstArticle <= 0 || m_firstArticle > m_lastArticle) 
 	{
@@ -4623,7 +4545,8 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 // It returns a negative number (mscott: we'll change this to be an enumerated type which we'll coordinate
 // with the netlib folks?) when we are done processing.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									      PRUint32 sourceOffset, PRUint32 length)
 {
 	PRInt32 status = 0; 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
@@ -5038,9 +4961,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// cache so we aren't creating new connections to process each request...
 				// but until that time, we always want to properly shutdown the connection
 
-				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopRequest to get called
-				if (m_transport)
-					m_transport->OnStopRequest(mailnewsurl, 0, nsnull);
+				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopBinding to get called
 				CloseSocket();
 				return NS_OK;
 				//SetFlag(NNTP_PAUSE_FOR_READ);

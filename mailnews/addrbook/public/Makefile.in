@@ -30,6 +30,7 @@ XPIDLSRCS =				  \
 		nsIAddrDBListener.idl	\
 		nsIAddrDatabase.idl	\
 		nsIAddressBook.idl	\
+		nsIAbBase.idl \
 		nsIAddrBookSession.idl	\
 		nsIAutoCompleteListener.idl \
 		nsIAutoCompleteSession.idl  \

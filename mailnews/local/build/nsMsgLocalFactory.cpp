@@ -266,6 +266,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  rv = compMgr->RegisterComponent(kMailboxServiceCID,  
+                                    "Mailbox Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailbox",
+                                    path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   rv = compMgr->RegisterComponent(kMailboxParserCID, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
@@ -277,6 +283,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->RegisterComponent(kPop3ServiceCID, nsnull, 
 								  "component://netscape/messenger/popservice",
 								  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->RegisterComponent(kPop3ServiceCID,  
+                                    "POP Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "pop3",
+                                    path, PR_TRUE, PR_TRUE);
+
   if (NS_FAILED(rv)) finalResult = rv;
 
   // register our RDF resource factories:

@@ -15,33 +15,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-README_PLEASE:
-DON'T USE THIS IDL UNTIL NECKO LANDS!!!!
-
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
-#include "nsIFileSpec.idl"
-#include "nsIOutputStream.idl"
 
+interface nsIOutputStream;
+interface nsIInputStream;
 interface nsIURI;
 interface nsIStreamListener;
+interface nsIChannel;
 
-%{C++
-#include "nsIRUL.h"
-#include "nsIStreamListener.h"
-%}
-
+[scriptable, uuid(39E329E2-357F-11d3-8EFD-00A024A7D144)] 
+interface nsMimeHeaderDisplayTypes 
+{ 
+    const long MicroHeaders = 0; 
+    const long NormalHeaders = 1; 
+    const long AllHeaders = 2; 
+}; 
 
 [scriptable, uuid(D01D7B59-DCCD-11d2-A411-00805F613C79)]
 interface nsIMimeEmitter : nsISupports{
 
     // These will be called to start and stop the total operation
-    void    Initialize(in nsIURI url);
+    void    Initialize(in nsIURI url, in nsIChannel aChannel);
     void    Complete();
 
     // Set the output stream/listener for processed data.
-    void    SetOutputStream(in nsIOutputStream outStream);
+    void    SetPipe(in nsIInputStream inputStream, in nsIOutputStream outStream);
     void    SetOutputListener(in nsIStreamListener listener);
 
     // Header handling routines.

@@ -64,6 +64,8 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgAccountManager.obj		\
 	.\$(OBJDIR)\nsMsgAccount.obj			\
 	.\$(OBJDIR)\nsMsgFolderDataSource.obj	\
+	.\$(OBJDIR)\nsMsgFolderCache.obj		\
+	.\$(OBJDIR)\nsMsgFolderCacheElement.obj		\
 	.\$(OBJDIR)\nsMsgMessageDataSource.obj	\
 	.\$(OBJDIR)\nsMsgRDFUtils.obj			\
 	.\$(OBJDIR)\nsMsgRDFDataSource.obj		\
@@ -74,8 +76,6 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgBiffManager.obj		\
 	.\$(OBJDIR)\nsMsgNotificationManager.obj \
 	.\$(OBJDIR)\nsMsgCopyService.obj		\
-	.\$(OBJDIR)\nsMsgFolderCache.obj		\
-	.\$(OBJDIR)\nsMsgFolderCacheElement.obj		\
 	$(NULL)
 
 
