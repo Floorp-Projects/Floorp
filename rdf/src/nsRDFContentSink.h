@@ -88,7 +88,7 @@ protected:
     void FindNameSpaceAttributes(const nsIParserNode& aNode);
 
     void OpenNameSpace(const nsString& aPrefix, const nsString& aURI);
-    const nsString& GetNameSpaceURI(const nsString& aPrefix);
+    void GetNameSpaceURI(const nsString& aPrefix, nsString& rURI);
     void CloseNameSpacesAtNestLevel(PRInt32 mNestLevel);
   
     nsVoidArray* mNameSpaces;
@@ -102,11 +102,11 @@ protected:
     nsresult GetResourceAttribute(const nsIParserNode& aNode, nsString& rResource);
     nsresult AddProperties(const nsIParserNode& aNode, nsIRDFNode* aSubject);
 
-    nsresult OpenRDF(const nsIParserNode& aNode);
-    nsresult OpenObject(const nsIParserNode& aNode);
-    nsresult OpenProperty(const nsIParserNode& aNode);
-    nsresult OpenMember(const nsIParserNode& aNode);
-    nsresult OpenValue(const nsIParserNode& aNode);
+    virtual nsresult OpenRDF(const nsIParserNode& aNode);
+    virtual nsresult OpenObject(const nsIParserNode& aNode);
+    virtual nsresult OpenProperty(const nsIParserNode& aNode);
+    virtual nsresult OpenMember(const nsIParserNode& aNode);
+    virtual nsresult OpenValue(const nsIParserNode& aNode);
 
     // RDF helper routines
     nsresult Assert(nsIRDFNode* subject, nsIRDFNode* predicate, nsIRDFNode* object);
