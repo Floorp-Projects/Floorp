@@ -35,6 +35,7 @@ bin\mozilla.exe
 bin\netscape.cfg
 bin\oji.dll
 bin\prstrms4.dll
+bin\mozctl.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
@@ -74,7 +75,6 @@ bin\components\mimetype.dll
 bin\components\mozbrwsr.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
-bin\components\mozctl.dll
 bin\components\mozfind.dll
 bin\components\mozfind.xpt
 bin\components\mozucth.dll

@@ -115,9 +115,9 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT -DHACK_AROUND_NONREENTRANT_IN
 PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
-	regsvr32 /s /c $(DIST)\bin\components\$(DLLNAME).dll
+	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
 
 clobber::
 	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
