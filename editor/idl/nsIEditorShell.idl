@@ -321,7 +321,31 @@ interface nsIEditorShell : nsISupports
   void DeleteTableCellContents();
   void DeleteTableRow(in PRInt32 number);
   void DeleteTableColumn(in PRInt32 number);
+  /** Merges contents of all selected cells
+    * for selected cells that are adjacent,
+    * this will result in a larger cell with appropriate 
+    * rowspan and colspan, and original cells are deleted
+    * The resulting cell is in the location of the 
+    *   cell at the upper-left corner of the adjacent
+    *   block of selected cells
+    * Non-adjacent cells are not deleted,
+    *   but their contents are still moved 
+    *   to the upper-left cell
+    * If there are no selected cells,
+    *   and selection or caret is in a cell,
+    *   that cell and the one to the right 
+    *   are merged
+    */
   void JoinTableCells();
+  
+  /** Split a cell that has rowspan and/or colspan > 0
+    *   into cells such that all new cells have 
+    *   rowspan = 1 and colspan = 1
+    *  All of the contents are not touched --
+    *   they will appear to be in the upper-left cell 
+    */
+  void SplitTableCell();
+
   /** Table selection methods
     * Selecting a row or column actually
     * selects all cells (not TR in the case of rows)

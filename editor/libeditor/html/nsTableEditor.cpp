@@ -1316,6 +1316,35 @@ nsHTMLEditor::SelectTableColumn()
 }
 
 NS_IMETHODIMP 
+nsHTMLEditor::SplitTableCell()
+{
+  nsCOMPtr<nsIDOMElement> table;
+  nsCOMPtr<nsIDOMElement> targetCell;
+  PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
+  PRBool  isSelected;
+  nsCOMPtr<nsIDOMElement> cell2;
+  PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
+  PRBool  isSelected2;
+
+  // Get cell and table at selection anchor node (and other data)
+  nsresult res = GetCellContext(nsnull,
+                                getter_AddRefs(table), 
+                                getter_AddRefs(targetCell),
+                                nsnull, nsnull,
+                                &startRowIndex, &startColIndex);
+  if (NS_FAILED(res)) return res;
+  if(!table || !targetCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+
+  // We need rowspan and colspan data
+  res = GetCellDataAt(table, startRowIndex, startColIndex, *getter_AddRefs(targetCell),
+                      startRowIndex, startColIndex, rowSpan, colSpan, 
+                      actualRowSpan, actualColSpan, isSelected);
+
+  //TODO: FINISH THIS!
+  return res;
+}
+
+NS_IMETHODIMP 
 nsHTMLEditor::JoinTableCells()
 {
   nsCOMPtr<nsIDOMElement> table;
@@ -1358,7 +1387,7 @@ nsHTMLEditor::JoinTableCells()
 
   if (firstCell)
   {
-    // Merge selected cells
+    // Merge selected cells into uppper-left-most cell
   }
   else
   {

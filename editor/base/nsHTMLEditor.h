@@ -192,6 +192,7 @@ public:
   NS_IMETHOD SelectTable();
   NS_IMETHOD SelectAllTableCells();
   NS_IMETHOD JoinTableCells();
+  NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32& aRowIndex, PRInt32& aColIndex);
   NS_IMETHOD GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& aColCount);

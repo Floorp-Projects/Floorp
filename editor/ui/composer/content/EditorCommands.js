@@ -1104,8 +1104,24 @@ function EditorInitFormatMenu()
       menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
 
     }
-    menuItem.setAttribute("value", menuStr)
+    menuItem.setAttribute("value", menuStr);
   }
+}
+
+function InitTableMenu()
+{
+  // Change text on the "Join..." item depending if we
+  //   are joining selected cells or just cell to right
+  // TODO: What to do about normal selection that crosses
+  //       table border? Try to figure out all cells
+  //       included in the selection?
+  var menuText;
+  if (editorShell.GetFirstSelectedCell())
+    menuText = editorShell.GetString("JoinSelectedCells");
+  else
+    menuText = editorShell.GetString("JoinCellToRight");
+
+  document.getElementById("tableJoinCells").setAttribute("value",menuText);
 }
 
 function EditorInitToolbars()
@@ -1570,6 +1586,12 @@ function EditorNormalizeTable()
 function EditorJoinTableCells()
 {
   editorShell.JoinTableCells();
+  contentWindow.focus();
+}
+
+function EditorSplitTableCell()
+{
+  editorShell.SplitTableCell();
   contentWindow.focus();
 }
 

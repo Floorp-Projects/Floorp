@@ -3582,6 +3582,25 @@ nsEditorShell::JoinTableCells()
 }
 
 NS_IMETHODIMP    
+nsEditorShell::SplitTableCell()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SplitTableCell();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
 nsEditorShell::SelectTableCell()
 {
   nsresult  result = NS_NOINTERFACE;

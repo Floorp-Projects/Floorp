@@ -100,15 +100,30 @@ public:
   NS_IMETHOD SelectTable()=0;
   NS_IMETHOD SelectAllTableCells()=0;
 
-  /** Join the contents of the selected cells into one cell,
-    *   expanding that cells ROWSPAN and COLSPAN to take up
-    *   the same number of cellmap locations as before.
-    *   Cells whose contents were moved are deleted.
-    *   If there's one cell selected or caret is in one cell,
-    *     it is joined with the cell to the right, if it exists
+  /** Merges contents of all selected cells
+    * for selected cells that are adjacent,
+    * this will result in a larger cell with appropriate 
+    * rowspan and colspan, and original cells are deleted
+    * The resulting cell is in the location of the 
+    *   cell at the upper-left corner of the adjacent
+    *   block of selected cells
+    * Non-adjacent cells are not deleted,
+    *   but their contents are still moved 
+    *   to the upper-left cell
+    * If there are no selected cells,
+    *   and selection or caret is in a cell,
+    *   that cell and the one to the right 
+    *   are merged
     */
   NS_IMETHOD JoinTableCells()=0;
 
+  /** Split a cell that has rowspan and/or colspan > 0
+    *   into cells such that all new cells have 
+    *   rowspan = 1 and colspan = 1
+    *  All of the contents are not touched --
+    *   they will appear to be in the upper-left cell 
+    */
+  NS_IMETHOD SplitTableCell()=0;
 
   /** Scan through all rows and add cells as needed so 
     *   all locations in the cellmap are occupied.
@@ -265,6 +280,27 @@ public:
     *                                                       and in each column, all cells are selected
     */
   NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType)=0;
+
+  /** Get first selected element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * @param aCell     Selected cell or null if ranges don't contain cell selections
+    * @param aRange    Optional: if not null, return the selection range 
+    *                     associated with the cell
+    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
+    */
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
+  
+  /** Get next selected cell element from first selection range.
+    * Assumes cell-selection model where each cell
+    * is in a separate range (selection parent node is table row)
+    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
+    * @param aCell     Selected cell or null if no more selected cells
+    *                     or ranges don't contain cell selections
+    * @param aRange    Optional: if not null, return the selection range 
+    *                     associated with the cell
+    */
+  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
 
   /** Get first selected element from first selection range.
     * Assumes cell-selection model where each cell

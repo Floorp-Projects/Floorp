@@ -490,7 +490,9 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
      ("JoinSelectedCells" and "JoinCellToRight")
      the access key must exist in both of those strings
 -->
-<!ENTITY tablejoin.accesskey "j">
+<!ENTITY tablejoincells.accesskey "j">
+<!ENTITY tableSplitCell.label "Split cell">
+<!ENTITY tablesplitcell.accesskey "i">
 <!ENTITY tableProperties.label "Table Properties...">
 <!-- These may be shared in other menus -->
 <!ENTITY properties.label "Properties...">
