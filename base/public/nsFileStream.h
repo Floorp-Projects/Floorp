@@ -72,8 +72,7 @@
 #ifndef _FILESTREAM_H_
 #define _FILESTREAM_H_
 
-#include <istream.h>
- 
+
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
 #else
@@ -84,7 +83,7 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if defined(__MWERKS__) || defined(XP_PC) 
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_PC))
 #define NS_USING_NAMESPACE
 #endif
 
@@ -92,6 +91,8 @@
 #define NS_NAMESPACE_PROTOTYPE
 #define NS_NAMESPACE namespace
 #define NS_NAMESPACE_END
+#define BASIC_STREAMBUF basic_streambuf
+#include <istream>
 	using std::ios_base;
 	using std::basic_streambuf;
 	using std::codecvt_base;
@@ -103,9 +104,11 @@
 	using std::basic_iostream;
 	using std::char_traits;
 #else
+#include <istream.h>
 #define NS_NAMESPACE_PROTOTYPE static
 #define NS_NAMESPACE struct
 #define NS_NAMESPACE_END ;
+#define BASIC_STREAMBUF streambuf
 #endif
 
 #ifdef __MWERKS__
@@ -135,7 +138,7 @@ NS_NAMESPACE nsFileStreamHelpers
 {
 	NS_NAMESPACE_PROTOTYPE PRFileDesc* open(
 		const nsFilePath& inFile,
-	    ios_base::openmode mode,
+	    ios::openmode mode,
 	    PRIntn accessMode);
 } NS_NAMESPACE_END // nsFileStreamHelpers
 
@@ -147,7 +150,7 @@ NS_NAMESPACE nsFileStreamHelpers
 template<class charT, class traits>
 class nsFileBufferT
 //========================================================================================
-:    public basic_streambuf<charT, traits>
+:    public BASIC_STREAMBUF<charT, traits>
 {
     typedef codecvt_base::result result;
 
@@ -169,7 +172,7 @@ public:
     bool                               is_open() const;
     filebuf_type*                      open(
                                            const nsFilePath& inFile,
-                                           ios_base::openmode mode,
+                                           ios::openmode mode,
                                            PRIntn accessMode);
     filebuf_type*                      close();
  
@@ -178,11 +181,11 @@ protected:
     virtual                            int_type pbackfail(int_type c=traits::eof());
     virtual                            int_type underflow();
     virtual                            pos_type seekoff(
-                                            off_type off, ios_base::seekdir way, 
-                                          ios_base::openmode which=ios_base::in|ios_base::out);
+                                            off_type off, ios::seekdir way, 
+                                          ios::openmode which=ios::in|ios::out);
     virtual                            pos_type seekpos(pos_type sp,
-                                            ios_base::openmode which=ios_base::in|ios_base::out);
-    virtual                            basic_streambuf<charT, traits>* setbuf(char_type* s, streamsize n);
+                                            ios::openmode which=ios::in|ios::out);
+    virtual                            BASIC_STREAMBUF<charT, traits>* setbuf(char_type* s, streamsize n);
     virtual                            int sync();
     virtual                            int_type uflow();
     virtual                            void imbue(const locale& loc);
@@ -192,7 +195,7 @@ protected:
  
 private:
     PRFileDesc*                        mFileDesc;    
-    ios_base::openmode                 mode_;
+    ios::openmode                      mode_;
 }; // class nsFileBufferT
 
 //========================================================================================
@@ -213,7 +216,7 @@ public:
                                       nsInputFileStreamT();
                                       explicit nsInputFileStreamT(
                                           const nsFilePath& inFile,
-                                          ios_base::openmode mode=ios_base::in,
+                                          ios::openmode mode=ios::in,
                                           PRIntn accessMode = 0x00400);
 
     virtual                           ~nsInputFileStreamT();
@@ -222,7 +225,7 @@ public:
     inline bool                       is_open();
     inline void                       open(
                                            const nsFilePath& inFile,
-                                           ios_base::openmode mode=ios_base::in,
+                                           ios::openmode mode=ios::in,
                                            PRIntn accessMode = 0x00400);
     inline void                       close();
 
@@ -248,7 +251,7 @@ public:
                                       nsOutputFileStreamT();
                                       explicit nsOutputFileStreamT(
                                            const nsFilePath& inFile,
-                                           ios_base::openmode mode = ios_base::out|ios_base::trunc,
+                                           ios::openmode mode = ios::out|ios::trunc,
                                            PRIntn accessMode = 0x00200);
  
     virtual                           ~nsOutputFileStreamT();
@@ -257,7 +260,7 @@ public:
     inline bool                       is_open();
     inline void                       open(
                                           const nsFilePath& inFile,
-                                          ios_base::openmode mode = ios_base::out|ios_base::trunc,
+                                          ios::openmode mode = ios::out|ios::trunc,
                                           PRIntn accessMode = 0x00200);
     inline void                       close();
 
@@ -272,7 +275,7 @@ private:
 //----------------------------------------------------------------------------------------
 template<class charT, class traits>
 inline nsFileBufferT<charT, traits>::nsFileBufferT()
-    :    basic_streambuf<charT, traits>(), mFileDesc(NULL)
+    :    BASIC_STREAMBUF<charT, traits>(), mFileDesc(NULL)
 //----------------------------------------------------------------------------------------
 {
 }
@@ -280,7 +283,7 @@ inline nsFileBufferT<charT, traits>::nsFileBufferT()
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 inline nsFileBufferT<charT, traits>::nsFileBufferT(PRFileDesc* pfarg)
-    :    basic_streambuf<charT, traits>(), mFileDesc(pfarg)
+    :    BASIC_STREAMBUF<charT, traits>(), mFileDesc(pfarg)
 //----------------------------------------------------------------------------------------
 {
 }
@@ -305,10 +308,9 @@ nsFileBufferT<charT, traits>::is_open() const
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-nsFileBufferT<charT, traits>::filebuf_type* 
-nsFileBufferT<charT, traits>::open(
+nsFileBufferT<charT, traits>* nsFileBufferT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode) 
 //----------------------------------------------------------------------------------------
 {
@@ -324,7 +326,7 @@ nsFileBufferT<charT, traits>::open(
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-nsFileBufferT<charT, traits>::filebuf_type* nsFileBufferT<charT, traits>::close()
+nsFileBufferT<charT, traits>* nsFileBufferT<charT, traits>::close()
 //----------------------------------------------------------------------------------------
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR) 
@@ -344,7 +346,7 @@ nsFileBufferT<charT, traits>:: sync()
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline basic_streambuf<charT, traits>*
+inline BASIC_STREAMBUF<charT, traits>*
 nsFileBufferT<charT, traits>::setbuf(char_type*, streamsize)
 //----------------------------------------------------------------------------------------
 {
@@ -499,18 +501,18 @@ nsFileBufferT<charT, traits>::showmanyc()
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
     off_type  off, 
-    ios_base::seekdir way,
-    ios_base::openmode /* which */)
+    ios::seekdir way,
+    ios::openmode /* which */)
 //----------------------------------------------------------------------------------------
 {
-    if (!mFileDesc || ((way&ios_base::beg) && off<0) || ((way&ios_base::end) && off > 0))
+    if (!mFileDesc || ((way&ios::beg) && off<0) || ((way&ios::end) && off > 0))
         return pos_type(-1);
     PRSeekWhence  poseek = PR_SEEK_CUR;
     switch (way)
     {
-        case ios_base::beg : poseek= PR_SEEK_SET; 
+        case ios::beg : poseek= PR_SEEK_SET; 
                         break;
-        case ios_base::end : poseek= PR_SEEK_END; 
+        case ios::end : poseek= PR_SEEK_END; 
                         break;
     }
     PRInt32 position = PR_Seek(mFileDesc, off, poseek);
@@ -522,7 +524,7 @@ nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type
-nsFileBufferT<charT, traits>::seekpos(pos_type sp, ios_base::openmode)
+nsFileBufferT<charT, traits>::seekpos(pos_type sp, ios::openmode)
 //----------------------------------------------------------------------------------------
 {
     if (!mFileDesc || sp==pos_type(-1))
@@ -550,7 +552,7 @@ inline nsInputFileStreamT<charT, traits>::nsInputFileStreamT()
 template<class charT, class traits> 
 inline nsInputFileStreamT<charT, traits>::nsInputFileStreamT(
     const nsFilePath& inFile, 
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
     : basic_istream<charT, traits>(&mBuffer)
@@ -569,11 +571,11 @@ inline nsInputFileStreamT<charT, traits>::~nsInputFileStreamT()
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline nsInputFileStreamT<charT, traits>::filebuf_type* 
+inline nsFileBufferT<charT, traits>* 
 nsInputFileStreamT<charT, traits>::rdbuf() const 
 //----------------------------------------------------------------------------------------
 {
-    return (filebuf_type*)&mBuffer;
+    return (nsFileBufferT<charT, traits>*)&mBuffer;
 }
 
 //----------------------------------------------------------------------------------------
@@ -590,7 +592,7 @@ template<class charT, class traits>
 inline void 
 nsInputFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
@@ -624,7 +626,7 @@ inline nsOutputFileStreamT<charT, traits>::nsOutputFileStreamT()
 template<class charT, class traits> 
 nsOutputFileStreamT<charT, traits>::nsOutputFileStreamT(
     const nsFilePath& inFile, 
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 :   basic_ostream<charT, traits>(&mBuffer)
@@ -643,11 +645,11 @@ inline nsOutputFileStreamT<charT, traits>::~nsOutputFileStreamT()
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline nsOutputFileStreamT<charT, traits>::filebuf_type* 
+inline nsFileBufferT<charT, traits>* 
 nsOutputFileStreamT<charT, traits>::rdbuf() const
 //----------------------------------------------------------------------------------------
 {
-    return (filebuf_type*)&mBuffer;
+    return (nsFileBufferT<charT, traits>*)&mBuffer;
 }
 
 //----------------------------------------------------------------------------------------
@@ -662,7 +664,7 @@ inline bool nsOutputFileStreamT<charT, traits>:: is_open()
 template<class charT, class traits> 
 inline void nsOutputFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
@@ -696,7 +698,7 @@ public:
                                         nsIOFileStreamT();
                                         explicit nsIOFileStreamT(
                                             const nsFilePath& inFile, 
-                                            ios_base::openmode mode = ios_base::in|ios_base::out,
+                                            ios::openmode mode = ios::in|ios::out,
                                             PRIntn accessMode = 0x00600);
 
     virtual                             ~nsIOFileStreamT();
@@ -705,7 +707,7 @@ public:
     inline bool                         is_open();
     inline void                         open(
                                             const nsFilePath& inFile,
-                                            ios_base::openmode mode = ios_base::in|ios_base::out,
+                                            ios::openmode mode = ios::in|ios::out,
                                             PRIntn accessMode = 0x00600);
     inline void                         close();
 
@@ -730,7 +732,7 @@ inline nsIOFileStreamT<charT, traits>::nsIOFileStreamT()
 template<class charT, class traits> 
 inline nsIOFileStreamT<charT, traits>::nsIOFileStreamT(
     const nsFilePath& inFile, 
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
     : mBuffer(), basic_iostream<charT, traits>(&mBuffer)
@@ -747,11 +749,11 @@ inline nsIOFileStreamT<charT, traits>::~nsIOFileStreamT()
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline nsIOFileStreamT<charT, traits>::filebuf_type* 
+inline nsFileBufferT<charT, traits>* 
 nsIOFileStreamT<charT, traits>::rdbuf() const
 //----------------------------------------------------------------------------------------
 {
-    return (filebuf_type*)&mBuffer;
+    return (nsFileBufferT<charT, traits>*)&mBuffer;
 }
 
 //----------------------------------------------------------------------------------------
@@ -768,7 +770,7 @@ template<class charT, class traits>
 inline void 
 nsIOFileStreamT<charT, traits>::open(
     const nsFilePath& inFile,
-    ios_base::openmode mode,
+    ios::openmode mode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {

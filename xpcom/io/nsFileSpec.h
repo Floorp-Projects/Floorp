@@ -103,12 +103,10 @@
 #ifndef _FILESPEC_H_
 #define _FILESPEC_H_
 
-#include <ostream.h>
-
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if defined(__MWERKS__) || defined(XP_PC) 
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_PC))
 #define NS_USING_NAMESPACE
 #endif
 
@@ -116,11 +114,13 @@
 #define NS_NAMESPACE_PROTOTYPE
 #define NS_NAMESPACE namespace
 #define NS_NAMESPACE_END
+#include <ostream>
 	using std::ostream;
 #else
 #define NS_NAMESPACE_PROTOTYPE static
 #define NS_NAMESPACE struct
 #define NS_NAMESPACE_END ;
+#include <ostream.h>
 #endif
 //=========================== End Compiler-specific macros ===============================
 
@@ -206,7 +206,7 @@ class nsNativeFileSpec
 #ifdef XP_MAC
         FSSpec                  mSpec;
         OSErr                   mError;
-#elif defined(XP_UNIX) || defined(XP_PC)
+#else
         char*                   mPath;
 #endif
 }; // class nsNativeFileSpec
