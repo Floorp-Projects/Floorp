@@ -98,17 +98,13 @@ else
   mkdir ("$inDistPath\\setup",0775);
 }
 
-# Make .js files
-MakeJsFile("xpcom");
-MakeJsFile("browser");
-MakeJsFile("mail");
-MakeJsFile("chatzilla");
-
 # Make .xpi files
 MakeXpiFile("xpcom");
 MakeXpiFile("browser");
 MakeXpiFile("mail");
 MakeXpiFile("chatzilla");
+MakeXpiFile("deflenus");
+MakeXpiFile("langengb");
 
 MakeUninstall();
 MakeConfigFile();
@@ -202,6 +198,9 @@ sub MakeJsFile
 sub MakeXpiFile
 {
   my($componentName) = @_;
+
+  # Make .js files
+  MakeJsFile($componentName);
 
   # Make .xpi file
   if(system("perl makexpi.pl $componentName $inStagePath $inDistPath\\xpi") != 0)
