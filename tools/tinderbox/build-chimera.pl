@@ -276,6 +276,8 @@ sub main {
   my $chimera_startup_test            = 1;
   my $chimera_window_leaks_test       = 1;
 
+  my $safari_layout_performance_test  = 0;
+
   my $chimera_clean_profile = 1;
 
   # Build flags
@@ -444,6 +446,21 @@ sub main {
 
   }
 
+
+  # Pageload test -- Safari.
+  if ($safari_layout_performance_test) {
+      
+      TinderUtils::run_system_cmd("/Applications/Utilities/Safari.app/Contents/MacOS/Safari-wrap.pl http://$Settings::pageload_server/page-loader/loader.pl?delay=1000%26nocache=0%26maxcyc=4%26timeout=$Settings::LayoutPerformanceTestPageTimeout%26auto=1", 30);
+        
+        # This is a hack.
+        TinderUtils::run_system_cmd("sync; sleep 400", 405);
+
+        TinderUtils::run_system_cmd("/Applications/Utilities/Safari.app/Contents/MacOS/Safari-wrap.pl quit", 30);
+      
+        TinderUtils::print_log "TinderboxPrint:" .
+            "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" . ::hostname() . "-aux&autoscale=1&days=7&avg=1\">~Tp" . "</a>\n";
+        
+  }
 
   # Startup test.
   if ($chimera_startup_test and $post_status eq 'success') {
