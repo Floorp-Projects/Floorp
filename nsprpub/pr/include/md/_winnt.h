@@ -176,10 +176,9 @@ struct _MDFileDesc {
                                  * for this osfd has been committed and
                                  * cannot be changed.  The osfd has been
                                  * either associated with the io
-                                 * completion port or made nonblocking.
-                                 * This is only used for sockets, not
-                                 * for files. */
-    PRBool nonoverlapped;
+                                 * completion port or made nonblocking. */
+    PRBool sync_file_io;        /* Use synchronous file I/O on the osfd
+                                 * (a file handle) */
     PRBool accepted_socket;     /* Is this an accepted socket (on the
                                  * server side)? */
     PRNetAddr peer_addr;        /* If this is an accepted socket, cache
@@ -241,6 +240,8 @@ extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
 #define _MD_GETSOCKOPT                _PR_MD_GETSOCKOPT
 #define _MD_SETSOCKOPT                _PR_MD_SETSOCKOPT
 #define _MD_SELECT                    select
+extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
+    const struct timeval *);
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SOCKETAVAILABLE           _PR_MD_SOCKETAVAILABLE
 #define _MD_SET_FD_INHERITABLE        _PR_MD_SET_FD_INHERITABLE

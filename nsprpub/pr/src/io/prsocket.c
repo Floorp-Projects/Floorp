@@ -349,8 +349,15 @@ PRIntervalTime timeout)
 	}
 
 	fd2->secret->nonblocking = fd->secret->nonblocking;
+	fd2->secret->inheritable = fd->secret->inheritable;
 #ifdef WINNT
-	fd2->secret->md.io_model_committed = PR_TRUE;
+	if (!fd2->secret->nonblocking && !fd2->secret->inheritable) {
+		/*
+		 * The new socket has been associated with an I/O
+		 * completion port.  There is no going back.
+		 */
+		fd2->secret->md.io_model_committed = PR_TRUE;
+	}
 	PR_ASSERT(al == PR_NETADDR_SIZE(addr));
 	fd2->secret->md.accepted_socket = PR_TRUE;
 	memcpy(&fd2->secret->md.peer_addr, addr, al);

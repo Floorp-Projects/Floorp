@@ -41,9 +41,9 @@ void _PR_InitIO(void)
     _pr_stderr = PR_AllocFileDesc((PRInt32)GetStdHandle(STD_ERROR_HANDLE),
             methods);
 #ifdef WINNT
-    _pr_stdin->secret->md.nonoverlapped = PR_TRUE;
-    _pr_stdout->secret->md.nonoverlapped = PR_TRUE;
-    _pr_stderr->secret->md.nonoverlapped = PR_TRUE;
+    _pr_stdin->secret->md.sync_file_io = PR_TRUE;
+    _pr_stdout->secret->md.sync_file_io = PR_TRUE;
+    _pr_stderr->secret->md.sync_file_io = PR_TRUE;
 #endif
 #else
     _pr_stdin = PR_AllocFileDesc(0, methods);
