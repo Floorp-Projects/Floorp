@@ -7,3 +7,4 @@ motif.mk
 autoconf.mk
 Makefile
 bsdecho
+build_number
