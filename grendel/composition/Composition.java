@@ -185,6 +185,10 @@ public class Composition extends GeneralFrame {
             mCompositionPanel.setSubject("Re: " + mextra.simplifiedSubject());
         } catch (MessagingException e) {
         }
+
+        // Quote the original text
+        mCompositionPanel.QuoteOriginalMessage();
+
     }
 
     class PanelListener implements CompositionPanelListener {

@@ -175,13 +175,22 @@ public class CompositionPanel extends GeneralPanel {
   public void addCompositionPanelListener(CompositionPanelListener l) {
     mListeners.add(CompositionPanelListener.class, l);
   }
-
+  
   /**
    * Remove a CompositionPanelListener
    */
 
   public void removeCompositionPanelListener(CompositionPanelListener l) {
     mListeners.remove(CompositionPanelListener.class, l);
+  }
+
+  /**
+   * Quote the orgininal message in a reply
+   */
+   
+  public void QuoteOriginalMessage() {
+    QuoteOriginalText qot = new QuoteOriginalText();
+    qot.actionPerformed(new ActionEvent(this,0,""));
   }
 
   protected void notifySendingMail() {
