@@ -227,11 +227,14 @@ InitNumerics::InitNumerics()
 	word1(nan) = 0xFFFFFFFF;
 }
 
+// had to move these here since they depend upon the values
+// initialized above, and we can't guarantee order other than
+// lexically in a single file.
 const JSValue JSTypes::kUndefinedValue;
 const JSValue JSTypes::kNaNValue = JSValue(nan);
 const JSValue JSTypes::kTrueValue = JSValue(true);
 const JSValue JSTypes::kFalseValue = JSValue(false);
-const JSValue JSTypes::kNullValue = JSValue(JSValue::Tag::null_tag);
+const JSValue JSTypes::kNullValue = JSValue(JSValue::null_tag);
 const JSValue JSTypes::kNegativeZero = JSValue(-0.0);
 const JSValue JSTypes::kPositiveZero = JSValue(0.0);
 const JSValue JSTypes::kNegativeInfinity = JSValue(negativeInfinity);

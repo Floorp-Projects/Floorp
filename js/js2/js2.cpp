@@ -173,7 +173,7 @@ static JSValue load(Context *cx, const JSValues &argv)
 
 static bool goGeorge = false;
 
-static JSValue george(Context *cx, const JSValues &argv)
+static JSValue george(Context *, const JSValues &)
 {
     goGeorge = !goGeorge;
     
