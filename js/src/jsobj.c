@@ -2386,12 +2386,12 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     if (JSVAL_IS_PRIMITIVE(v))
 	return JS_TRUE;
     obj2 = JSVAL_TO_OBJECT(v);
-    do {
+    while ((obj2 = OBJ_GET_PROTO(cx, obj2)) != NULL) {
 	if (obj2 == obj) {
 	    *bp = JS_TRUE;
 	    break;
 	}
-    } while ((obj2 = OBJ_GET_PROTO(cx, obj2)) != NULL);
+    }
     return JS_TRUE;
 }
 
