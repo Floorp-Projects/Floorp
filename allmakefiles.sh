@@ -970,6 +970,7 @@ toolkit/mozapps/contents-content.rdf
 toolkit/mozapps/contents-locale.rdf
 "
 
+
 MAKEFILES_thunderbird="
 mail/Makefile
 mail/app/Makefile
@@ -982,6 +983,7 @@ mail/components/prefwindow/Makefile
 mail/extensions/Makefile
 mail/extensions/smime/Makefile
 mail/extensions/offline/Makefile
+mail/extensions/inspector/Makefile
 mail/config/Makefile
 xpfe/components/build2/Makefile
 mail/base/content/contents.rdf
@@ -990,6 +992,7 @@ mail/base/content/messenger-views.rdf
 mail/base/content/navigator.rdf
 mail/extensions/offline/content/contents.rdf
 mail/extensions/offline/locale/contents.rdf
+mail/extensions/inspector/content/contents.rdf
 "
 
 MAKEFILES_standalone_composer="
