@@ -911,10 +911,11 @@ nsGfxTextControlFrame::InstallEditor()
       presShell->GetViewManager(getter_AddRefs(vm));
       if (vm) 
       {
-        nsCOMPtr<nsIScrollableView> sv;
-        vm->GetRootScrollableView(getter_AddRefs(sv));
+        nsIScrollableView *sv=nsnull;
+        vm->GetRootScrollableView(&sv);
         if (sv) {
           sv->SetScrollPreference(nsScrollPreference_kNeverScroll);
+          // views are not refcounted
         }
       }
     }
