@@ -377,7 +377,7 @@ native_netscape_softupdate_InstallDelete_NativeComplete(JRIEnv* env,
 			{
 				if ( XP_STAT_READONLY( statinfo ) )
 				{
-					err = get_netscape_softupdate_InstallDelete_FILE_READ_ONLY( env, self);
+					err = netscape_softupdate_SoftwareUpdate_FILE_READ_ONLY;
 				}
 				else if (!S_ISDIR(statinfo.st_mode))
 				{
@@ -394,12 +394,12 @@ native_netscape_softupdate_InstallDelete_NativeComplete(JRIEnv* env,
 				}
                 else
                 {
-                    err = get_netscape_softupdate_InstallDelete_FILE_IS_DIRECTORY( env, self);;
+                    err = netscape_softupdate_SoftwareUpdate_FILE_IS_DIRECTORY;
                 }
 			}
 			else
 			{
-				err = get_netscape_softupdate_InstallDelete_FILE_DOES_NOT_EXIST( env, self);
+				err = netscape_softupdate_SoftwareUpdate_FILE_DOES_NOT_EXIST;
 			}
     		
         }
@@ -444,7 +444,7 @@ native_netscape_softupdate_InstallDelete_NativeCheckFileStatus(JRIEnv* env,
 			{
 				if ( XP_STAT_READONLY( statinfo ) )
 				{
-					err = get_netscape_softupdate_InstallDelete_FILE_READ_ONLY( env, self);
+					err = netscape_softupdate_SoftwareUpdate_FILE_READ_ONLY;
 				}
                 else if (!S_ISDIR(statinfo.st_mode))
                 {
@@ -452,12 +452,12 @@ native_netscape_softupdate_InstallDelete_NativeCheckFileStatus(JRIEnv* env,
                 }
                 else
                 {
-                    err = get_netscape_softupdate_InstallDelete_FILE_IS_DIRECTORY( env, self);
+                    err = netscape_softupdate_SoftwareUpdate_FILE_IS_DIRECTORY;
                 }
 			}
 			else
 			{
-				err = get_netscape_softupdate_InstallDelete_FILE_DOES_NOT_EXIST( env, self);
+				err = netscape_softupdate_SoftwareUpdate_FILE_DOES_NOT_EXIST;
 			}
         }
 		else
