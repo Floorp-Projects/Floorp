@@ -739,15 +739,24 @@ PRBool CopyFontCharSetMapXlib(nsFontMetricsXlibContext *aFmctx)
   size1[1] = size2[1] = size3[1] = 0;
   size1[2] = size2[2] = size3[2] = 0;
 
+/* Alignment macros to force memory alignment required by most RISC platforms
+ * MAX_ALIGN_BYTES = sizeof(pointer) incl. the doubleword alignment required
+ * by some platforms, ALIGN_PTR() aligns the given pointer to match
+ * MAX_ALIGN_BYTES alignment
+ * XXX: NSPR should define that...
+ */
+#define MAX_ALIGN_BYTES (sizeof(void *) * 2)
+#define ALIGN_PTR(ptr) ((void *)(((PRUptrdiff)(ptr) & ~(MAX_ALIGN_BYTES-1L)) + MAX_ALIGN_BYTES))
+
   for( l = 0 ; l < 3 ; l++ )
   {  
     /* Count entries in fcsm */
-
     for( count[l]=0 ; fcsm[l][count[l]].mName ; count[l]++ ) ;
+
     count[l]++;
-    size1[l] = sizeof(nsFontCharSetMapXlib)   * count[l];
-    size2[l] = sizeof(nsFontLangGroupXlib)    * count[l];
-    size3[l] = sizeof(nsFontCharSetInfoXlib)  * count[l];
+    size1[l] = sizeof(nsFontCharSetMapXlib)   * count[l] + MAX_ALIGN_BYTES;
+    size2[l] = sizeof(nsFontLangGroupXlib)    * count[l] + MAX_ALIGN_BYTES;
+    size3[l] = sizeof(nsFontCharSetInfoXlib)  * count[l] + MAX_ALIGN_BYTES;
     count[l]--;
   }
   
@@ -757,11 +766,11 @@ PRBool CopyFontCharSetMapXlib(nsFontMetricsXlibContext *aFmctx)
   if (!s)
     return PR_FALSE;
 
-  copy[0]     = (nsFontCharSetMapXlib *)s;  s += size1[0];
-  copy[1]     = (nsFontCharSetMapXlib *)s;  s += size1[1];
-  copy[2]     = (nsFontCharSetMapXlib *)s;  s += size1[2];
-  langgroup   = (nsFontLangGroupXlib  *)s;  s += size2[0] + size2[1] + size2[2];
-  charsetinfo = (nsFontCharSetInfoXlib *)s;
+  copy[0]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[0];
+  copy[1]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[1];
+  copy[2]     = (nsFontCharSetMapXlib *)ALIGN_PTR(s);  s += size1[2];
+  langgroup   = (nsFontLangGroupXlib  *)ALIGN_PTR(s);  s += size2[0] + size2[1] + size2[2];
+  charsetinfo = (nsFontCharSetInfoXlib *)ALIGN_PTR(s);
 
   for( l = 0 ; l < 3 ; l++ )
   { 
