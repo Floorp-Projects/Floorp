@@ -315,9 +315,8 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
     case NS_DESTROY:
       {
 	nsViewerApp* app = bw->mApp;
+	app->CloseWindow(bw);
 	result = nsEventStatus_eConsumeDoDefault;
-	bw->Close();
-	NS_RELEASE(bw);
 
 #ifndef XP_MAC
 	// XXX Really shouldn't just exit, we should just notify somebody...

@@ -615,6 +615,16 @@ nsViewerApp::OpenWindow()
 }
 
 NS_IMETHODIMP
+nsViewerApp::CloseWindow(nsBrowserWindow* aBrowserWindow)
+{
+	aBrowserWindow->Close();
+	NS_RELEASE(aBrowserWindow);
+  mCrawler->SetBrowserWindow(nsnull);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsViewerApp::ViewSource(nsString& aURL)
 {
   // Create browser window

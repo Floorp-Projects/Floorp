@@ -657,8 +657,9 @@ nsWebCrawler::FindMoreURLs()
 void 
 nsWebCrawler::SetBrowserWindow(nsIBrowserWindow* aWindow) 
 {
+  NS_IF_RELEASE(mBrowser);
   mBrowser = aWindow;
-  NS_ADDREF(mBrowser);
+  NS_IF_ADDREF(mBrowser);
 }
 
 static void
