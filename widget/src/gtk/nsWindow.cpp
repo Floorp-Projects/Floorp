@@ -82,16 +82,6 @@ extern "C" int usleep(unsigned int);
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-gint handle_toplevel_focus_in (
-    GtkWidget *      aWidget, 
-    GdkEventFocus *  aGdkFocusEvent, 
-    gpointer         aData);
-
-gint handle_toplevel_focus_out (
-    GtkWidget *      aWidget, 
-    GdkEventFocus *  aGdkFocusEvent, 
-    gpointer         aData);
-
 gint handle_mozarea_focus_in (
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
@@ -120,8 +110,8 @@ nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 // we get our drop after the leave.
 nsWindow *nsWindow::mLastLeaveWindow = NULL;
 
-PRBool gJustGotActivate = PR_FALSE;
-PRBool gJustGotDeactivate = PR_TRUE;
+PRBool gJustGotDeactivate = PR_FALSE;
+PRBool gJustGotActivate   = PR_FALSE;
 
 static void printDepth(int depth) {
   int i;
@@ -1060,37 +1050,43 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
+  PRBool sendActivate = gJustGotActivate;
+  gJustGotActivate = PR_FALSE;
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::SetFocus %p\n", this);
+  printf("nsWindow::SetFocus %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
-
-  if (mHasFocus)
-  {
-#ifdef DEBUG_FOCUS
-    printf("Already have focus.\n");
-#endif /* DEBUG_FOCUS */
-    return NS_OK;
-  }
 
   GtkWidget *top_mozarea = GetMozArea();
-  
+
+#ifdef DEBUG_FOCUS
+  printf("top moz area is %p\n", NS_STATIC_CAST(void *, top_mozarea));
+#endif
+
   if (top_mozarea)
   {
     if (!GTK_WIDGET_HAS_FOCUS(top_mozarea))
     {
       nsWindow *mozAreaWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-      mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
 #ifdef DEBUG_FOCUS
       printf("mozarea grabbing focus!\n");
 #endif
+      mozAreaWindow->mBlockMozAreaFocusIn = PR_TRUE;
       gtk_widget_grab_focus(top_mozarea);
+      mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
       // this will show the window if it's minimized and bring it to
       // the front of the stacking order.
       GetAttention();
-      mozAreaWindow->mBlockMozAreaFocusIn = PR_FALSE;
     }
   }
-  
+
+  if (mHasFocus)
+  {
+#ifdef DEBUG_FOCUS
+    printf("Returning: Already have focus.\n");
+#endif /* DEBUG_FOCUS */
+    return NS_OK;
+  }
+
   // check to see if we need to send a focus out event for the old window
   if (sFocusWindow)
   {
@@ -1109,10 +1105,13 @@ nsWindow::SetFocus(void)
 #endif // USE_XIM 
 
   DispatchSetFocusEvent();
-  if (/*gJustGotActivate &&*/ gJustGotDeactivate) {
+  if (sendActivate) {
     DispatchActivateEvent();
-    gJustGotActivate = PR_FALSE;
   }
+
+#ifdef DEBUG_FOCUS
+  printf("Returning:\n");
+#endif
 
   return NS_OK;
 }
@@ -1120,7 +1119,7 @@ nsWindow::SetFocus(void)
 void nsWindow::DispatchSetFocusEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchSetFocusEvent %p\n", this);
+  printf("nsWindow::DispatchSetFocusEvent %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
 
   nsGUIEvent event;
@@ -1142,7 +1141,7 @@ void nsWindow::DispatchLostFocusEvent(void)
 {
 
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchLostFocusEvent %p\n", this);
+  printf("nsWindow::DispatchLostFocusEvent %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
 
   nsGUIEvent event;
@@ -1165,11 +1164,8 @@ void nsWindow::DispatchLostFocusEvent(void)
 void nsWindow::DispatchActivateEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchActivateEvent %p\n", this);
+  printf("nsWindow::DispatchActivateEvent %p\n", NS_STATIC_CAST(void *, this));
 #endif
-
-  if(!gJustGotDeactivate)
-    return;
 
 #ifdef USE_XIM
   IMEBeingActivate(PR_TRUE);
@@ -1199,13 +1195,12 @@ void nsWindow::DispatchActivateEvent(void)
 void nsWindow::DispatchDeactivateEvent(void)
 {
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::DispatchDeactivateEvent %p\n", this);
+  printf("nsWindow::DispatchDeactivateEvent %p\n", 
+         NS_STATIC_CAST(void *, this));
 #endif
 #ifdef USE_XIM
   IMEBeingActivate(PR_TRUE);
 #endif // USE_XIM
-
-  gJustGotDeactivate = PR_TRUE;
 
   nsGUIEvent event;
   event.message = NS_DEACTIVATE;
@@ -1231,11 +1226,6 @@ void nsWindow::DispatchDeactivateEvent(void)
 
 void nsWindow::HandleMozAreaFocusIn(void)
 {
-  // If there's a shell window then we aren't embedded so all the
-  // functionality is done in the focus handlers for the toplevel
-  // window.  Do nothing.
-  if (mShell)
-    return;
   // If we're getting this focus in as a result of a child superwin
   // getting called with SetFocus() this flag will be set.  We don't
   // want to generate extra focus in events so just return.
@@ -1243,7 +1233,7 @@ void nsWindow::HandleMozAreaFocusIn(void)
     return;
   // otherwise, dispatch our focus events
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::HandleMozAreaFocusIn %p\n", this);
+  printf("nsWindow::HandleMozAreaFocusIn %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
   gJustGotActivate = PR_TRUE;
   DispatchSetFocusEvent();
@@ -1254,35 +1244,46 @@ void nsWindow::HandleMozAreaFocusIn(void)
 
 void nsWindow::HandleMozAreaFocusOut(void)
 {
-  // Working around unexplained missing calls to top level focus out
-  gJustGotDeactivate = PR_TRUE; 
-   
-  // If there's a shell window then we aren't embedded so all the
-  // functionality is done in the focus handlers for the toplevel
-  // window.  Do nothing.
-  if (mShell)
-    return;
-  
   // otherwise handle our focus out here.
 #ifdef DEBUG_FOCUS
-  printf("nsWindow::HandleMozAreaFocusOut %p\n", this);
+  printf("nsWindow::HandleMozAreaFocusOut %p\n", NS_STATIC_CAST(void *, this));
 #endif /* DEBUG_FOCUS */
   // if there's a window with focus, send a focus out event for that
   // window.
   if (sFocusWindow)
   {
-    nsWidget *focusWidget = sFocusWindow;
+    // Figure out of the focus widget is the child of this widget.  If
+    // it isn't then we don't send the event since it was already sent
+    // earlier.
+    PRBool isChild = PR_FALSE;
+    GdkWindow *window;
+    window = (GdkWindow *)sFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
+    while (window)
+    {
+      gpointer data = NULL;
+      gdk_window_get_user_data(window, &data);
+      if (GTK_IS_MOZAREA(data)) 
+      {
+        GtkWidget *tmpMozArea = GTK_WIDGET(data);
+        if (tmpMozArea == mMozArea)
+        {
+          isChild = PR_TRUE;
+          break;
+        }
+      }
+      window = gdk_window_get_parent(window);
+    }
 
-    NS_ADDREF(focusWidget);
-   
-    focusWidget->DispatchLostFocusEvent();
-    focusWidget->DispatchDeactivateEvent();
-    focusWidget->LoseFocus();
+    if (isChild)
+    {
+      nsWidget *focusWidget = sFocusWindow;
+      nsCOMPtr<nsIWidget> focusWidgetGuard(focusWidget);
 
-    NS_RELEASE(focusWidget);
-
+      focusWidget->DispatchLostFocusEvent();
+      focusWidget->DispatchDeactivateEvent();
+      focusWidget->LoseFocus();
+    }
   }
-
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1478,7 +1479,7 @@ nsWindow::dumpWindowChildren(Window aWindow, unsigned int depth)
                                                               thisWindow);
       if (childWindow)
       {
-        g_print("(shell_window for nsWindow %p)\n", childWindow);
+        g_print("(shell_window for nsWindow %p)\n", NS_STATIC_CAST(void *, childWindow));
       }
     }
   }
@@ -1503,12 +1504,12 @@ nsWindow::DumpWindowTree(void)
     // see where we are starting
     if (mShell)
     {
-      g_print("dumping from shell for %p.\n", this);
+      g_print("dumping from shell for %p.\n", NS_STATIC_CAST(void *, this));
       startWindow = mShell->window;
     }
     else 
     {
-      g_print("dumping from superwin for %p.\n", this);
+      g_print("dumping from superwin for %p.\n", NS_STATIC_CAST(void *, this));
       startWindow = mSuperWin->shell_window;
     }
     Window window;
@@ -1517,7 +1518,7 @@ nsWindow::DumpWindowTree(void)
   }
   else
   {
-    g_print("no windows for %p.\n", this);
+    g_print("no windows for %p.\n", NS_STATIC_CAST(void *, this));
   }
     
 }
@@ -1721,30 +1722,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set up all the focus handling
 
   if (mShell) {
-    // Track focus in event for the shell.  We only need the focus in
-    // event so that we can dispatch it to the mMozArea
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "focus_in_event",
-                       GTK_SIGNAL_FUNC(handle_toplevel_focus_in),
-                       this);
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "focus_out_event",
-                       GTK_SIGNAL_FUNC(handle_toplevel_focus_out),
-                       this);
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "property_notify_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_property_change),
                        this);
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "key_press_event",
-                       GTK_SIGNAL_FUNC(handle_key_press_event),
-                       this);
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "key_release_event",
-                       GTK_SIGNAL_FUNC(handle_key_release_event),
-                       this);
-
-
     mask = (GdkEventMask) (GDK_PROPERTY_CHANGE_MASK |
                            GDK_KEY_PRESS_MASK |
                            GDK_KEY_RELEASE_MASK |
@@ -1757,7 +1738,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   }
 
   if (mMozArea) {
-    // track focus events for the moz area, too
+    // track focus events for the moz area
     gtk_signal_connect(GTK_OBJECT(mMozArea),
                        "focus_in_event",
                        GTK_SIGNAL_FUNC(handle_mozarea_focus_in),
@@ -2648,84 +2629,6 @@ nsWindow::OnRealize(GtkWidget *aWidget)
   }
 }
 
-gint handle_toplevel_focus_in(GtkWidget *      aWidget, 
-                              GdkEventFocus *  aGdkFocusEvent, 
-                              gpointer         aData)
-{
-  GtkWindow *window = NULL;
-  GtkBin    *bin = NULL;
-
-  if (!aWidget)
-    return PR_TRUE;
-
-  if (!aGdkFocusEvent)
-    return PR_TRUE;
-
-  nsWindow *widget = (nsWindow *)aData;
-
-  if (!widget)
-    return PR_TRUE;
-
-#ifdef DEBUG_FOCUS
-  printf("handle_toplevel_focus_in %p\n", widget);
-#endif /* DEBUG_FOCUS */
-
-  window = GTK_WINDOW(aWidget);
-  bin = GTK_BIN(window);
-  
-  gtk_widget_grab_focus(bin->child);
-
-  gJustGotActivate = PR_TRUE;
-  if(gJustGotDeactivate) {
-    widget->DispatchSetFocusEvent();
-  }
-
-  return PR_TRUE;
-}
-
-gint handle_toplevel_focus_out(GtkWidget *      aWidget, 
-                               GdkEventFocus *  aGdkFocusEvent, 
-                               gpointer         aData)
-{
-  if (!aWidget)
-    return PR_TRUE;
-  
-  if (!aGdkFocusEvent)
-    return PR_TRUE;
-
-  nsWindow *widget = (nsWindow *) aData;
-
-  if (!widget)
-    return PR_TRUE;
-
-#ifdef DEBUG_FOCUS
-  printf("handle_toplevel_focus_out %p\n", widget); 
-#endif
-
-  // addref the widget here since we might send > 1 event to it.
-  NS_ADDREF(widget);
-    
-  // if there's a window with focus, send a focus out event for that
-  // window.
-  if (widget->sFocusWindow)
-  {
-    nsWidget *focusWidget = widget->sFocusWindow;
-
-    NS_ADDREF(focusWidget);
-   
-    focusWidget->DispatchLostFocusEvent();
-    focusWidget->DispatchDeactivateEvent();
-    focusWidget->LoseFocus();
-
-    NS_RELEASE(focusWidget);
-
-  }
-
-  NS_RELEASE(widget);
-  
-  return PR_TRUE;
-}
-
 gint handle_mozarea_focus_in(GtkWidget *      aWidget, 
                              GdkEventFocus *  aGdkFocusEvent, 
                              gpointer         aData)
@@ -2748,9 +2651,13 @@ gint handle_mozarea_focus_in(GtkWidget *      aWidget,
   // make sure that we set our focus flag
   GTK_WIDGET_SET_FLAGS(aWidget, GTK_HAS_FOCUS);
 
+#ifdef DEBUG_FOCUS
+  printf("aWidget is %p\n", NS_STATIC_CAST(void *, aWidget));
+#endif
+
   widget->HandleMozAreaFocusIn();
 
-  return PR_TRUE;
+  return TRUE;
 }
 
 gint handle_mozarea_focus_out(GtkWidget *      aWidget, 
@@ -2780,7 +2687,7 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
 
   widget->HandleMozAreaFocusOut();
 
-  return PR_TRUE;
+  return TRUE;
 }
 
 
@@ -2893,7 +2800,6 @@ nsWindow::GetGrabWindow(void)
 {
   if (nsWindow::sIsGrabbing)
   {
-    NS_ADDREF(sGrabWindow);
     return sGrabWindow;
   }
   else

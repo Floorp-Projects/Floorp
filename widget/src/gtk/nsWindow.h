@@ -139,8 +139,8 @@ public:
   //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
   void ShowCrossAtLocation(guint x, guint y);
 
-  // this will get the nsWindow with the grab.  this will AddRef()
-  // before returning.
+  // this will get the nsWindow with the grab.  The return will not be
+  // addrefed.
   static nsWindow *GetGrabWindow(void);
   
   virtual void DispatchSetFocusEvent(void);
