@@ -873,7 +873,6 @@ function st_invalidate ()
 function HelpText ()
 {
     this.tabWidth = console.prefs["sourcetext.tab.width"];
-    this.lineMap = new Array();
     this.fileName = MSG_HELP_TITLE;
     this.reloadSource();
 }
