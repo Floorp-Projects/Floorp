@@ -91,7 +91,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     ParseContextImpl pContext(aResolver, !doc || doc->IsCaseSensitive());
     Expr* expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
-                                &expression);
+                                  &expression);
     if (NS_FAILED(rv)) {
         return NS_ERROR_DOM_INVALID_EXPRESSION_ERR;
     }
