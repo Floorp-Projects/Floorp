@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="sidebar.css" type="text/css"?>
+
+<xul:window
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#">
+
+<xul:tree xul:datasources="rdf:bookmarks rdf:mail">
+  <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+  <xul:treehead>
+    <xul:treeitem>
+      <xul:treecell>Name</xul:treecell>
+      <xul:treecell>URL</xul:treecell>
+      <xul:treecell>Last Modified</xul:treecell>
+    </xul:treeitem>
+  </xul:treehead>
+
+  <xul:treebody>
+    <xul:treeitem xul:id="NC:PersonalToolbarFolder" xul:open="true">
+      <xul:treechildren>
+
+        <xul:treeitem>
+          <xul:treecell>
+            <xul:treeindentation/>Hard-<html:i>coded</html:i> <html:b>Item</html:b>
+          </xul:treecell>
+          <xul:treecell>http://blah.blah.com</xul:treecell>
+
+          <xul:treechildren>
+            <xul:treeitem>
+              <xul:treecell><xul:treeindentation/>
+                 <html:img html:src="http://www.mozilla.org/images/logo-star.gif"/>
+                 <html:i>Another</html:i> hard-coded <html:font html:color="green">item</html:font>
+              </xul:treecell>
+              <xul:treecell>http://moreblah.blah.com</xul:treecell>
+            </xul:treeitem>
+          </xul:treechildren>
+
+        </xul:treeitem>
+
+      </xul:treechildren>
+    </xul:treeitem>
+
+    <xul:treeitem xul:id="NC:BookmarksRoot">
+      <xul:treecell>Bookmarks</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+
+    <xul:treeitem xul:id="NC:MailRoot">
+      <xul:treecell>Mail</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+  </xul:treebody>
+</xul:tree>
+
+</xul:window>
