@@ -426,6 +426,8 @@ var gFeedSubscriptionsWindow = {
       }
     }
     this.mView.mRowCount = numFolders;
+
+    gFeedSubscriptionsWindow.mTree.focus();
   },
   
   updateFeedData: function (aItem)
@@ -447,8 +449,19 @@ var gFeedSubscriptionsWindow = {
     for (i = 0; i < ids.length; ++i)
       document.getElementById(ids[i]).disabled = !aItem || aItem.container;
   },
-    
-  onRSSFeedSelected: function () 
+  
+  onKeyPress: function(aEvent)
+  { 
+    if (aEvent.keyCode == aEvent.DOM_VK_ENTER || aEvent.keyCode == aEvent.DOM_VK_RETURN)
+    {
+      var seln = this.mTree.view.selection;
+      item = this.mView.getItemAtIndex(seln.currentIndex);
+      if (item && !item.container)
+        this.editFeed();
+     }
+  },
+
+  onSelect: function () 
   {
     var properties, item;
     var seln = this.mTree.view.selection;
@@ -601,6 +614,58 @@ var gFeedSubscriptionsWindow = {
     document.getElementById('addFeed').setAttribute('disabled', 'true');
     feed.download(true, this.mFeedDownloadCallback);
   },
+
+  editFeed: function() 
+  {
+    var seln = this.mView.selection;
+    if (seln.count != 1) 
+      return;
+
+    var itemToEdit = this.mView.getItemAtIndex(seln.currentIndex);
+    if (!itemToEdit || itemToEdit.container)
+      return;
+
+    var resource = rdf.GetResource(itemToEdit.url);
+    var feed = new Feed(resource, this.mRSSServer);
+
+    var ds = getSubscriptionsDS(this.mRSSServer);
+    var currentFolder = ds.GetTarget(resource, FZ_DESTFOLDER, true);
+    var currentFolderURI = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+   
+    var userModifiedFeed = false; 
+    var feedProperties = { feedLocation: itemToEdit.url, serverURI: this.mRSSServer.serverURI, 
+                           serverPrettyName: this.mRSSServer.prettyName, folderURI: currentFolderURI, 
+                           quickMode: feed.quickMode, newFeed: false, result: userModifiedFeed};
+
+    feedProperties = openFeedEditor(feedProperties);
+    if (!feedProperties.result) // did the user cancel?
+      return;
+
+    // check to see if the quickMode value changed
+    if (feed.quickMode != feedProperties.quickMode)
+      feed.quickMode = feedProperties.quickMode;
+
+    // did the user change the folder URI for storing the feed?
+    if (feedProperties.folderURI && feedProperties.folderURI != currentFolderURI)
+    {
+      // we need to find the index of the new parent folder...
+      var newParentIndex = kRowIndexUndefined;
+      for (index = 0; index < this.mView.rowCount; index++)
+      {
+        var item = this.mView.getItemAtIndex(index);
+        if (item && item.container && item.url == feedProperties.folderURI)
+        {
+          newParentIndex = index;
+          break;
+        }      
+      }
+
+      if (newParentIndex != kRowIndexUndefined)
+        this.moveFeed(seln.currentIndex, newParentIndex)
+    }
+      
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+  }, 
 
   // moves the feed located at aOldFeedIndex to a child of aNewParentIndex
   moveFeed: function(aOldFeedIndex, aNewParentIndex)
@@ -758,63 +823,4 @@ function clearStatusInfo()
 {
   document.getElementById('statusText').value = "";
   document.getElementById('progressMeter').collapsed = true;
-}
-
-function doEdit() {
-    // XXX There should be some way of correlating feed RDF resources
-    // with their corresponding Feed objects.  Perhaps in the end much
-    // of this code could hang off methods of the Feed object.
-    var ds = getSubscriptionsDS(this.mRSSServer);
-    var tree = document.getElementById('subscriptions');
-    var item = tree.view.getItemAtIndex(tree.view.selection.currentIndex);
-    var resource = rdf.GetResource(item.id);
-    var old_url = ds.GetTarget(resource, DC_IDENTIFIER, true);
-    old_url = old_url ? old_url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
-    var feed = new Feed(resource);
-
-    var currentFolder = ds.GetTarget(resource, FZ_DESTFOLDER, true);
-    var currentFolderURI = currentFolder.QueryInterface(Components.interfaces.nsIRDFResource).Value;
-
-    currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
-   
-    var userModifiedFeed = false; 
-    var feedProperties = { feedLocation: old_url, serverURI: this.mRSSServer.serverURI, 
-                           serverPrettyName: this.mRSSServer.prettyName, folderURI: currentFolderURI, 
-                           quickMode: feed.quickMode, result: userModifiedFeed};
-
-    feedProperties = openFeedEditor(feedProperties);
-    if (!feedProperties.result) // did the user cancel?
-        return;
-
-    // did the user change the folder URI for storing the feed?
-    if (feedProperties.folderURI && feedProperties.folderURI != currentFolderURI)
-    {
-      // unassert the older URI, add an assertion for the new URI...
-      ds.Change(resource, FZ_DESTFOLDER, currentFolder, rdf.GetResource(feedProperties.folderURI));
-
-      // we need to update the feed url attributes on the databases for each folder
-      var folderResource = rdf.GetResource(feedProperties.folderURI);   
-      var newFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-      currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
-
-      updateFolderFeedUrl(currentFolder, old_url, true); // remove our feed url property from the current folder
-      updateFolderFeedUrl(newFolder, feedProperties.feedLocation, false); // add our feed url property to the new folder
-
-      currentFolder = newFolder; // the folder has changed
-    }
-
-    // check to see if the location changed
-    if (feedProperties.feedLocation && feedProperties.feedLocation != old_url)
-    {
-      ds.Change(resource, DC_IDENTIFIER, rdf.GetLiteral(old_url), rdf.GetLiteral(feedProperties.feedLocation));
-      // now update our feed url property on the destination folder
-      updateFolderFeedUrl(currentFolder, old_url, false); // remove the old url
-      updateFolderFeedUrl(currentFolder, feedProperties.feedLocation, true);  // add the new one
-    }
-
-    // check to see if the quickMode value changed
-    if (feed.quickMode != feedProperties.quickMode)
-      feed.quickMode = feedProperties.quickMode;
-
-   ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 }

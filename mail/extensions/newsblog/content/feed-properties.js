@@ -38,8 +38,11 @@
 
 function onLoad()
 { 
+  var feedLocationEl = document.getElementById('feedLocation');
+  var rssAccountMenuItem = document.getElementById('rssAccountMenuItem');
+
   if (window.arguments[0].feedLocation)
-    document.getElementById('feedLocation').value = window.arguments[0].feedLocation;  
+    feedLocationEl.value = window.arguments[0].feedLocation;  
 
   // root the location picker to the news & blogs server
   document.getElementById('selectFolder').setAttribute('ref', window.arguments[0].serverURI);
@@ -47,15 +50,18 @@ function onLoad()
   SetFolderPicker(window.arguments[0].folderURI ? window.arguments[0].folderURI : window.arguments[0].serverURI, 'selectFolder');
   document.getElementById('selectFolder').setInitialSelection();
 
-  document.getElementById('rssAccountMenuItem').label = window.arguments[0].serverPrettyName;
-  document.getElementById('rssAccountMenuItem').value = window.arguments[0].serverURI;
+  rssAccountMenuItem.label = window.arguments[0].serverPrettyName;
+  rssAccountMenuItem.value = window.arguments[0].serverURI;
 
   // set quick mode value
   document.getElementById('quickMode').checked = window.arguments[0].quickMode;
 
-  // if we are editing an existing feed, disable the top level account
   if (!window.arguments[0].newFeed)
-    document.getElementById('rssAccountMenuItem').setAttribute('disabled', 'true');
+  {
+    // if we are editing an existing feed, disable the top level account
+    rssAccountMenuItem.setAttribute('disabled', 'true');
+    feedLocationEl.disabled = true;
+  }
 }
 
 function onOk()

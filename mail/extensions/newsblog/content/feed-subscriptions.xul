@@ -75,12 +75,13 @@
 
   <tree id="rssSubscriptionsList" flex="1" style="height: 10em;"
       hidecolumnpicker="true"
-      onselect="gFeedSubscriptionsWindow.onRSSFeedSelected();"
+      onselect="gFeedSubscriptionsWindow.onSelect();"
+      onkeypress="gFeedSubscriptionsWindow.onKeyPress(event);"
       seltype="single">
     <treecols>
       <treecol id="folderNameCol" flex="2" primary="true" hideheader="true"/>
     </treecols>
-    <treechildren id="subscriptionChildren" ondraggesture="gFeedSubscriptionsWindow.beginDrag(event);"/>
+    <treechildren id="subscriptionChildren" ondblclick="gFeedSubscriptionsWindow.editFeed();" ondraggesture="gFeedSubscriptionsWindow.beginDrag(event);"/>
   </tree>
 
   <hbox id="rssFeedInfoBox">
