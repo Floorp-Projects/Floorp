@@ -23,6 +23,7 @@ content/messenger/addressbook,			     msg/content/messenger/addressbook
 
 content/editor,				              comm/content/editor
 content/editor-region,				      comm/content/editor-region
+content/editor/images,				      comm/content/editor/images
 content/communicator-region,                          comm/content/communicator-region,
 content/communicator-platform,                        comm/content/communicator-platform
 content/communicator/contents.rdf, 		      comm/content/communicator/contents.rdf
@@ -73,6 +74,8 @@ content/communicator/pref/pref-proxies.xul,           comm/content/communicator/
 content/communicator/pref/pref.xul,                   comm/content/communicator/pref//pref.xul
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
 content/communicator/downloadmanager, 		      comm/content/communicator/downloadmanager
+
+content/help/contextHelp.js,	 		      comm/content/help/contextHelp.js
 
 # from profile
 content/communicator/profile,                         comm/content/communicator/profile

@@ -24,7 +24,7 @@ components\import.xpt
 components\impComm4xMail.xpt
 components\mailview.xpt
 
-chrome\messenger.jar
+chrome\mail.jar
 chrome\icons\default\abcardWindow.ico
 chrome\icons\default\addressbookWindow.ico
 chrome\icons\default\messengerWindow.ico
@@ -50,15 +50,12 @@ components\msgsmime.dll
 ; Chrome Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-chrome\comm.jar
-chrome\toolkit.jar
-chrome\classic.jar
-chrome\en-US.jar
+chrome\qute.jar
+chrome\en-US-mail.jar
 chrome\en-win.jar
-chrome\US.jar
 chrome\pippki.jar
 chrome\pipnss.jar
-chrome\chrome.rdf
+;chrome\chrome.rdf
 chrome\overlayinfo\messenger\content\overlays.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -300,6 +297,7 @@ res\quirk.css
 res\forms.css
 res\platform-forms.css
 res\builtin\*
+res\entityTables\htmlEntityVersions.properties
 
 
 

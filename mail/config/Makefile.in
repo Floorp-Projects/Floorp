@@ -31,12 +31,50 @@ BASEMAIL_SUPP = basemail-win-supp
 APP_NAME=thunderbird
 _PLATFORM = dos
 
+mail_chrome: mail-jar.mn
+
+-$(RM) -rf $(DIST)/$(APP_NAME)/
+
+ifeq ($(OS_ARCH),WINNT)
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/comm
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/comm $(DIST)/bin/chrome/comm.jar
+
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/toolkit
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/toolkit $(DIST)/bin/chrome/toolkit.jar
+	
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/msg
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/msg $(DIST)/bin/chrome/messenger.jar
+
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/classic
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/classic $(DIST)/bin/chrome/classic.jar
+
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/en-US
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/en-US $(DIST)/bin/chrome/en-US.jar
+
+	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/US
+	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/US $(DIST)/bin/chrome/US.jar
+endif
+
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/mail-jar.mn -mozpath $(MOZILLA_DIR) -jarfile mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/mail-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/mail-tmp.mn
+
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/qute-jar.mn -mozpath $(MOZILLA_DIR) -jarfile qute.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/qute-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/qute-tmp.mn
+
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/en-US-jar.mn -mozpath $(MOZILLA_DIR) -jarfile en-US-mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
+
+	-$(RM) -f $(MOZILLA_DIR)/mail/config/mail-tmp.mn
+	-$(RM) -f $(MOZILLA_DIR)/mail/config/qute-tmp.mn
+	-$(RM) -f $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
+	-$(RM) -rf $(DIST)/$(APP_NAME)/tmpchrome 
+
 mail_copy::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEMAIL) -o $(_PLATFORM) -v
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
-	$(NSINSTALL) -t $(DIST)/bin/chrome/installed-chrome.txt $(DIST)/$(APP_NAME)/chrome
-
+	$(NSINSTALL) -t $(MOZILLA_DIR)/mail/config/installed-chrome.txt $(DIST)/$(APP_NAME)/chrome
 
 libs::
+	$(MAKE) mail_chrome
 	$(MAKE) mail_copy
 

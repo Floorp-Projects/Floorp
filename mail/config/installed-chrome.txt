@@ -3,6 +3,7 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/necko/
 content,install,url,jar:resource:/chrome/mail.jar!/content/xbl-marquee/
 content,install,url,jar:resource:/chrome/mail.jar!/content/editor/
 content,install,url,jar:resource:/chrome/mail.jar!/content/editor-region/
+content,install,url,jar:resource:/chrome/mail.jar!/content/help/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/editor/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/global/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/communicator/

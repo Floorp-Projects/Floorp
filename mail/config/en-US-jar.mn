@@ -12,6 +12,7 @@ locale/en-US/messenger,                                   en-US/locale/en-US/mes
 locale/en-US/messenger-mdn,                               en-US/locale/en-US/messenger-mdn
 locale/en-US/messenger/addressbook,                       en-US/locale/en-US/messenger/addressbook
 locale/en-US/messenger/messengercompose,                 en-US/locale/en-US/messenger/messengercompose
+locale/en-US/messenger-smime,                             en-US/locale/en-US/messenger-smime
 
 
 #################################################################################################
@@ -21,6 +22,8 @@ locale/en-US/mozldap,                                     en-US/locale/en-US/moz
 locale/en-US/wallet,					  en-US/locale/en-US/wallet
 locale/en-US/necko,					  en-US/locale/en-US/necko
 
+
+locale/en-US/navigator/contents.rdf,		  	  en-US/locale/en-US/navigator/contents.rdf
 locale/en-US/navigator/navigator.properties,		  en-US/locale/en-US/navigator/navigator.properties
 
 #################################################################################################
@@ -76,6 +79,10 @@ locale/en-US/editor/EditorReplace.dtd,                    en-US/locale/en-US/edi
 locale/en-US/editor/EditorColorProperties.dtd,            en-US/locale/en-US/editor/EditorColorProperties.dtd
 locale/en-US/editor/EditorSpellCheck.dtd,                 en-US/locale/en-US/editor/EditorSpellCheck.dtd
 locale/en-US/editor/EditorTableProperties.dtd,            en-US/locale/en-US/editor/EditorTableProperties.dtd
+locale/en-US/editor/EdColorPicker.dtd,                    en-US/locale/en-US/editor/EdColorPicker.dtd
+locale/en-US/editor/editor.properties,                    en-US/locale/en-US/editor/editor.properties
+locale/en-US/editor/EdNamedAnchorProperties.dtd,          en-US/locale/en-US/editor/EdNamedAnchorProperties.dtd
+locale/en-US/editor/EdAdvancedEdit.dtd,                   en-US/locale/en-US/editor/EdAdvancedEdit.dtd
 
 
 #################################################################################################
