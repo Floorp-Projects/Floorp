@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
-static char *nsMailboxGetURI(char *filepath)
+static char *nsMailboxGetURI(char *nativepath)
 {
 
     nsresult rv;
@@ -63,6 +63,9 @@ static char *nsMailboxGetURI(char *filepath)
     nsCOMPtr<nsISupportsArray> serverArray;
     accountManager->GetAllServers(getter_AddRefs(serverArray));
 
+    // do a char*->fileSpec->char* conversion to normalize the path
+    nsFilePath filePath(nativepath);
+    
     PRInt32 count = serverArray->Count();
     PRInt32 i;
     for (i=0; i<count; i++) {
@@ -74,27 +77,29 @@ static char *nsMailboxGetURI(char *filepath)
 
         if (!server) continue;
 
-        char *serverPath;
-        rv = server->GetLocalPath(&serverPath);
+        // get the path string, convert it to an nsFilePath
+        char *nativeServerPath;
+        rv = server->GetLocalPath(&nativeServerPath);
         if (NS_FAILED(rv)) continue;
-
+        
+        nsFilePath serverPath(nativeServerPath);
+        PL_strfree(nativeServerPath);
+        
         // check if filepath begins with serverPath
         PRInt32 len = PL_strlen(serverPath);
-        if (PL_strncmp(serverPath, filepath, len) == 0) {
+        if (PL_strncasecmp(serverPath, filePath, len) == 0) {
             char *hostname;
             rv = server->GetHostName(&hostname);
             if (NS_FAILED(rv)) continue;
             
             // the relpath is just past the serverpath
-            char *relpath = filepath + len;
+            char *relpath = nativepath + len;
             // this may break if local paths are not stored with "/"
-            uri = PR_smprintf("mailbox://%s%s", hostname, relpath);
+            uri = PR_smprintf("mailbox://%s/%s", hostname, relpath);
 
             PL_strfree(hostname);
-            PL_strfree(serverPath);
             break;
         }
-        PL_strfree(serverPath);
     }
     return uri;
 }
