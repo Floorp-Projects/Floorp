@@ -453,10 +453,22 @@ pa_map_escape(char *buf, int32 len, int32 *esc_len, unsigned char *out,
 				 * Only match a prefix if the next
 				 * character is NOT an alphanumeric
 				 */
-				if ((!XP_IS_ALPHA(*(buf +
-					PA_Name2Unicode[cnt].len)))&&
-				    (!XP_IS_DIGIT(*(buf +
-					PA_Name2Unicode[cnt].len))))
+				/* 
+				 * The following bug have been related to the following line
+				 * bug 241429, 57959, 33262, 57912 if you work on this.
+				 * After we add HTML 4.0 entity table we change the algorithm to prevent
+                                 * &part= be treat as name entity.
+				 * The algorithm is as following:
+				 * If the unicode value is in the Latin 1 range
+				 *   We mantain the SGML compliant
+				 * otherwise
+				 *   We only treat it as name entity if it start from & and end with a ;
+				*/
+				if(((PA_Name2Unicode[cnt].unicode <= 256) &&
+				       (!XP_IS_ALPHA(*(buf + PA_Name2Unicode[cnt].len))) &&
+				       (!XP_IS_DIGIT(*(buf + PA_Name2Unicode[cnt].len)))
+				   ) || (';' == (*(buf + PA_Name2Unicode[cnt].len)))
+				) 
 				{
 					unicode = PA_Name2Unicode[cnt].unicode;
 					*esc_len = PA_Name2Unicode[cnt].len;
