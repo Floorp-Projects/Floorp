@@ -19,8 +19,8 @@
 #
 # Contributor(s): 
 
-DEPTH           = ../..
-topsrcdir	= ../..
+DEPTH           = ../../..
+topsrcdir	= ../../..
 srcdir		= .
 VPATH		= .
 
