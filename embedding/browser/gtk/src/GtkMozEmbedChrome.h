@@ -59,10 +59,16 @@ public:
   NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData);
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData);
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData);
-  NS_IMETHOD GetLinkMessage               (const char **retval);
-  NS_IMETHOD GetJSStatus                  (const char **retval);
-  NS_IMETHOD GetLocation                  (const char **retval);
-  NS_IMETHOD GetTitleChar                 (const char **retval);
+  NS_IMETHOD SetLinkChangeCallback        (GtkMozEmbedLinkCB *aCallback, void *aData);
+  NS_IMETHOD SetJSStatusChangeCallback    (GtkMozEmbedJSStatusCB *aCallback, void *aData);
+  NS_IMETHOD SetLocationChangeCallback    (GtkMozEmbedLocationCB *aCallback, void *aData);
+  NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData);
+  NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData);
+  NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData);
+  NS_IMETHOD GetLinkMessage               (char **retval);
+  NS_IMETHOD GetJSStatus                  (char **retval);
+  NS_IMETHOD GetLocation                  (char **retval);
+  NS_IMETHOD GetTitleChar                 (char **retval);
 
   NS_DECL_ISUPPORTS
 
@@ -84,6 +90,18 @@ private:
   void                      *mDestroyCBData;
   GtkMozEmbedVisibilityCB   *mVisibilityCB;
   void                      *mVisibilityCBData;
+  GtkMozEmbedLinkCB         *mLinkCB;
+  void                      *mLinkCBData;
+  GtkMozEmbedJSStatusCB     *mJSStatusCB;
+  void                      *mJSStatusCBData;
+  GtkMozEmbedLocationCB     *mLocationCB;
+  void                      *mLocationCBData;
+  GtkMozEmbedTitleCB        *mTitleCB;
+  void                      *mTitleCBData;
+  GtkMozEmbedProgressCB     *mProgressCB;
+  void                      *mProgressCBData;
+  GtkMozEmbedNetCB          *mNetCB;
+  void                      *mNetCBData;
   nsRect                     mBounds;
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;

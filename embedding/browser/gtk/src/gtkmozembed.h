@@ -47,14 +47,21 @@ struct _GtkMozEmbed
 struct _GtkMozEmbedClass
 {
   GtkBinClass parent_class;
+
+  void (* link_message) (GtkMozEmbed *embed);
+  void (* js_status)    (GtkMozEmbed *embed);
+  void (* location)     (GtkMozEmbed *embed);
+  void (* title)        (GtkMozEmbed *embed);
+  void (* net_status)   (GtkMozEmbed *embed, gint32 status, gint32 status);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
 extern void         gtk_moz_embed_load_url         (GtkWidget *widget, const char *url);
-extern const char  *gtk_moz_embed_get_link_message (GtkWidget *widget);
-extern const char  *gtk_moz_embed_get_js_status    (GtkWidget *widget);
-extern const char  *gtk_moz_embed_get_title        (GtkWidget *widget);
+extern char        *gtk_moz_embed_get_link_message (GtkWidget *widget);
+extern char        *gtk_moz_embed_get_js_status    (GtkWidget *widget);
+extern char        *gtk_moz_embed_get_title        (GtkWidget *widget);
+extern char        *gtk_moz_embed_get_location     (GtkWidget *widget);
 
 #ifdef __cplusplus
 }

@@ -49,9 +49,11 @@ public:
 /* signals */
 
 enum {
-  LOAD_START,
-  LOAD_PROGRESS,
-  LOAD_COMPLETE,
+  LINK_MESSAGE,
+  JS_STATUS,
+  LOCATION,
+  TITLE,
+  NET_STATUS,
   LAST_SIGNAL
 };
 
@@ -98,12 +100,32 @@ gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, v
 static void
 gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData);
 
+/* callbacks from various changes in the window */
+static void
+gtk_moz_embed_handle_link_change(GtkMozEmbed *embed);
+
+static void
+gtk_moz_embed_handle_js_status_change(GtkMozEmbed *embed);
+
+static void
+gtk_moz_embed_handle_location_change(GtkMozEmbed *embed);
+
+static void
+gtk_moz_embed_handle_title_change(GtkMozEmbed *embed);
+
+static void
+gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress);
+
 static GtkBinClass *parent_class;
 
 static PRBool NS_SetupRegistryCalled = PR_FALSE;
 static PRBool ThreadQueueSetup       = PR_FALSE;
 
 extern "C" void NS_SetupRegistry();
+
+// we use this for adding callbacks to the C++ code that doesn't know
+// anything about the GtkMozEmbed class
+typedef void (*generic_cb_with_data) (void *);
 
 GtkType
 gtk_moz_embed_get_type(void)
@@ -138,7 +160,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   container_class = GTK_CONTAINER_CLASS(klass);
   bin_class       = GTK_BIN_CLASS(klass);
   widget_class    = GTK_WIDGET_CLASS(klass);
-  object_class    = GTK_OBJECT_CLASS(klass);
+  object_class    = (GtkObjectClass *)klass;
 
   parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
 
@@ -179,8 +201,48 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
       NS_RELEASE(eventQService);
     }
     ThreadQueueSetup = PR_TRUE;
-    
   }
+  
+  // set up our signals
+
+  moz_embed_signals[LINK_MESSAGE] = 
+    gtk_signal_new ("link_message",
+		    GTK_RUN_FIRST,
+		    object_class->type,
+		    GTK_SIGNAL_OFFSET(GtkMozEmbedClass, link_message),
+		    gtk_marshal_NONE__NONE,
+		    GTK_TYPE_NONE, 0);
+  moz_embed_signals[JS_STATUS] =
+    gtk_signal_new ("js_status",
+		    GTK_RUN_FIRST,
+		    object_class->type,
+		    GTK_SIGNAL_OFFSET(GtkMozEmbedClass, js_status),
+		    gtk_marshal_NONE__NONE,
+		    GTK_TYPE_NONE, 0);
+  moz_embed_signals[LOCATION] =
+    gtk_signal_new ("location",
+		    GTK_RUN_FIRST,
+		    object_class->type,
+		    GTK_SIGNAL_OFFSET(GtkMozEmbedClass, location),
+		    gtk_marshal_NONE__NONE,
+		    GTK_TYPE_NONE, 0);
+  moz_embed_signals[TITLE] = 
+    gtk_signal_new("title",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, title),
+		   gtk_marshal_NONE__NONE,
+		   GTK_TYPE_NONE, 0);
+  moz_embed_signals[NET_STATUS] =
+    gtk_signal_new("net_status",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_status),
+		   gtk_marshal_NONE__INT_INT,
+		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_INT);
+
+  gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
+
 }
 
 static void
@@ -210,6 +272,17 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // set the widget as the owner of the object
   embed_private->embed->Init((GtkWidget *)embed);
 
+  // track the window changes
+  embed_private->embed->SetLinkChangeCallback((generic_cb_with_data)gtk_moz_embed_handle_link_change,
+					      embed);
+  embed_private->embed->SetJSStatusChangeCallback((generic_cb_with_data)gtk_moz_embed_handle_js_status_change,
+						  embed);
+  embed_private->embed->SetLocationChangeCallback((generic_cb_with_data)gtk_moz_embed_handle_location_change,
+						  embed);
+  embed_private->embed->SetTitleChangeCallback((generic_cb_with_data)gtk_moz_embed_handle_title_change,
+					       embed);
+  embed_private->embed->SetProgressCallback((void (*)(void *, gint32, gint32))gtk_moz_embed_handle_progress,
+					    embed);
 }
 
 GtkWidget *
@@ -245,12 +318,12 @@ gtk_moz_embed_load_url(GtkWidget *widget, const char *url)
   navigation->LoadURI(URLString.GetUnicode());
 }
 
-const char *
+char *
 gtk_moz_embed_get_link_message (GtkWidget *widget)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
-  const char *retval = NULL;
+  char *retval = NULL;
 
   g_return_val_if_fail ((widget != NULL), NULL);
   g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
@@ -264,12 +337,12 @@ gtk_moz_embed_get_link_message (GtkWidget *widget)
   return retval;
 }
 
-const char  *
+char  *
 gtk_moz_embed_get_js_status (GtkWidget *widget)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
-  const char *retval = NULL;
+  char *retval = NULL;
   
   g_return_val_if_fail ((widget != NULL), NULL);
   g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
@@ -283,12 +356,12 @@ gtk_moz_embed_get_js_status (GtkWidget *widget)
   return retval;
 }
 
-const char *
+char *
 gtk_moz_embed_get_title (GtkWidget *widget)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
-  const char *retval = NULL;
+  char *retval = NULL;
   
   g_return_val_if_fail ((widget != NULL), NULL);
   g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
@@ -298,6 +371,25 @@ gtk_moz_embed_get_title (GtkWidget *widget)
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
   embed_private->embed->GetTitleChar(&retval);
+
+  return retval;
+}
+
+char *
+gtk_moz_embed_get_location     (GtkWidget *widget)
+{
+  GtkMozEmbed        *embed;
+  GtkMozEmbedPrivate *embed_private;
+  char *retval = NULL;
+  
+  g_return_val_if_fail ((widget != NULL), NULL);
+  g_return_val_if_fail ((GTK_IS_MOZ_EMBED(widget)), NULL);
+  
+  embed = GTK_MOZ_EMBED(widget);
+  
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  embed_private->embed->GetLocation(&retval);
 
   return retval;
 }
@@ -508,7 +600,7 @@ gtk_moz_embed_handle_new_browser(PRUint32 chromeMask, nsIWebBrowser **_retval, v
   // track visibility requests
   newEmbedPrivate->embed->SetVisibilityCallback(gtk_moz_embed_handle_toplevel_visibility_change,
 						newMozEmbed);
-  
+
   *_retval = newEmbedPrivate->webBrowser;
   g_print("returning new toplevel web browser as %p\n", *_retval);
   NS_ADDREF(*_retval);
@@ -544,4 +636,44 @@ gtk_moz_embed_handle_toplevel_visibility_change(PRBool aVisibility, void *aData)
     gtk_widget_hide(GTK_WIDGET(embed)->parent);
     gtk_widget_hide(GTK_WIDGET(embed));
   }
+}
+
+static void
+gtk_moz_embed_handle_link_change(GtkMozEmbed *embed)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[LINK_MESSAGE]);
+}
+
+static void
+gtk_moz_embed_handle_js_status_change(GtkMozEmbed *embed)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[JS_STATUS]);
+}
+
+static void
+gtk_moz_embed_handle_location_change(GtkMozEmbed *embed)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[LOCATION]);
+}
+
+static void
+gtk_moz_embed_handle_title_change(GtkMozEmbed *embed)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[TITLE]);
+}
+
+static void
+gtk_moz_embed_handle_progress(GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress)
+{
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  
+  gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATUS], maxprogress, curprogress);
 }

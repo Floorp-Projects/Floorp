@@ -31,9 +31,16 @@
  {0xebe19ea4, 0x1dd1, 0x11b2, \
    { 0xbc, 0x20, 0x8e, 0x81, 0x05, 0x51, 0x6b, 0x2f }}
 
-typedef nsresult (GtkMozEmbedChromeCB)     (PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
-typedef void     (GtkMozEmbedDestroyCB)    (void *aData);
-typedef void     (GtkMozEmbedVisibilityCB) (PRBool aVisibility, void *aData);
+typedef nsresult (GtkMozEmbedChromeCB)          (PRUint32 chromeMask, nsIWebBrowser **_retval, void *aData);
+typedef void     (GtkMozEmbedDestroyCB)         (void *aData);
+typedef void     (GtkMozEmbedVisibilityCB)      (PRBool aVisibility, void *aData);
+typedef void     (GtkMozEmbedLinkCB)            (void *aData);
+typedef void     (GtkMozEmbedJSStatusCB)        (void *aData);
+typedef void     (GtkMozEmbedLocationCB)        (void *aData);
+typedef void     (GtkMozEmbedTitleCB)           (void *aData);
+typedef void     (GtkMozEmbedProgressCB)        (void *aData, PRInt32 aProgressTotal,
+						 PRInt32 aProgressCurrent);
+typedef void     (GtkMozEmbedNetCB)             (void *aData, PRInt32 aFlags);
 
 class nsIGtkEmbed : public nsISupports
 {
@@ -45,10 +52,16 @@ public:
   NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData) = 0;
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData) = 0;
-  NS_IMETHOD GetLinkMessage               (const char **retval) = 0;
-  NS_IMETHOD GetJSStatus                  (const char **retval) = 0;
-  NS_IMETHOD GetLocation                  (const char **retval) = 0;
-  NS_IMETHOD GetTitleChar                 (const char **retval) = 0;
+  NS_IMETHOD SetLinkChangeCallback        (GtkMozEmbedLinkCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetJSStatusChangeCallback    (GtkMozEmbedJSStatusCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetLocationChangeCallback    (GtkMozEmbedLocationCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetTitleChangeCallback       (GtkMozEmbedTitleCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetProgressCallback          (GtkMozEmbedProgressCB *aCallback, void *aData) = 0;
+  NS_IMETHOD SetNetCallback               (GtkMozEmbedNetCB *aCallback, void *aData) = 0;
+  NS_IMETHOD GetLinkMessage               (char **retval) = 0;
+  NS_IMETHOD GetJSStatus                  (char **retval) = 0;
+  NS_IMETHOD GetLocation                  (char **retval) = 0;
+  NS_IMETHOD GetTitleChar                 (char **retval) = 0;
 };
 
 #endif /* __nsIGtkEmbed_h__ */
