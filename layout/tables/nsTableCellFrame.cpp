@@ -957,13 +957,14 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
   PRInt32 colIndex;
   GetColIndex(colIndex);
   aTableFrame->GetColumnFrame(colIndex, colFrame);
-  const nsStyleText* colTextStyle;
-  colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
-  if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated)
-  {
-    nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
-    mutableTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
-    return; // valign set from COL info
+  if (colFrame) {
+    const nsStyleText* colTextStyle;
+    colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+    if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+      nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+      mutableTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
+      return; // valign set from COL info
+	}
   }
 
   // otherwise, set the vertical align attribute to the HTML default
@@ -1004,13 +1005,15 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext, nsTableF
   PRInt32 colIndex;
   GetColIndex(colIndex);
   aTableFrame->GetColumnFrame(colIndex, colFrame);
-  const nsStyleText* colTextStyle;
-  colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
-  if (colTextStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
-  {
-    nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
-    mutableTextStyle->mTextAlign.SetIntValue(colTextStyle->mTextAlign.GetIntValue(), eStyleUnit_Enumerated);
-    return; // halign set from COL info
+  if (colFrame) {
+    const nsStyleText* colTextStyle;
+    colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+    if (colTextStyle->mTextAlign.GetUnit() == eStyleUnit_Enumerated)
+	{
+      nsStyleText* mutableTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
+      mutableTextStyle->mTextAlign.SetIntValue(colTextStyle->mTextAlign.GetIntValue(), eStyleUnit_Enumerated);
+      return; // halign set from COL info
+	}
   }
 
   // otherwise, set the vertical align attribute to the HTML default (center for TH, left for TD and all others)

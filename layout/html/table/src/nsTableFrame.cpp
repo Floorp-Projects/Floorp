@@ -4351,7 +4351,6 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
       childFrame->GetNextSibling(&childFrame);
     }
   }
-  NS_POSTCONDITION(nsnull!=aColFrame, "no column frame could be found.");
   return NS_OK;
 }
 
