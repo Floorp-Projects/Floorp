@@ -101,6 +101,7 @@ protected:
   PRBool IsTextNode(nsIDOMNode* aNode);
   PRBool IsBlockNode(nsIContent* aNode);
   PRBool SkipNode(nsIContent* aNode);
+  PRBool IsVisibleNode(nsIDOMNode *aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsIDOMRange* aSearchRange,

@@ -49,6 +49,9 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsIDocument.h"
+#include "nsIStyleContext.h"
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -337,7 +340,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     printf(":::::: Got the first node "); DumpNode(dnode);
 #endif
     tc = do_QueryInterface(content);
-    if (tc)
+    if (tc && !SkipNode(content))
     {
       mIterNode = do_QueryInterface(content);
       // Also set mIterOffset if appropriate:
@@ -451,6 +454,42 @@ PRBool nsFind::IsTextNode(nsIDOMNode* aNode)
   if (atom.get() == sTextAtom)
     return PR_TRUE;
   return PR_FALSE;
+}
+
+PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
+  if (!content)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDocument> doc;
+  content->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell)
+    return PR_FALSE;
+
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(content, &frame);
+  if (!frame) {
+    // No frame! Not visible then.
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIStyleContext> styleContext;
+  frame->GetStyleContext(getter_AddRefs(styleContext));
+  if (styleContext) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
+    if (!vis || !vis->IsVisible()) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
 }
 
 PRBool nsFind::SkipNode(nsIContent* aContent)
@@ -813,68 +852,72 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 #endif
 
         // Make the range:
-        if (aRangeRet)
+        nsCOMPtr<nsIDOMNode> startParent;
+        nsCOMPtr<nsIDOMNode> endParent;
+        nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kRangeCID));
+        if (range)
         {
-          nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kRangeCID));
-          if (range)
+          PRInt32 matchStartOffset, matchEndOffset;
+          // convert char index to range point:
+          PRInt32 mao = matchAnchorOffset + (mFindBackward ? 1 : 0);
+          if (mFindBackward)
           {
-            PRInt32 matchStartOffset, matchEndOffset;
-            if (range)
-            {
-              nsCOMPtr<nsIDOMNode> startParent;
-              nsCOMPtr<nsIDOMNode> endParent;
-              // convert char index to range point:
-              PRInt32 mao = matchAnchorOffset + (mFindBackward ? 1 : 0);
-              if (mFindBackward)
-              {
-                startParent = do_QueryInterface(tc);
-                endParent = matchAnchorNode;
-                matchStartOffset = findex;
-                matchEndOffset = mao;
-              }
-              else
-              {
-                startParent = matchAnchorNode;
-                endParent = do_QueryInterface(tc);
-                matchStartOffset = mao;
-                matchEndOffset = findex+1;
-              }
-              if (startParent && endParent)
-              {
-                range->SetStart(startParent, matchStartOffset);
-                range->SetEnd(endParent, matchEndOffset);
-                *aRangeRet = range.get();
-                NS_ADDREF(*aRangeRet);
-              }
-            }
+            startParent = do_QueryInterface(tc);
+            endParent = matchAnchorNode;
+            matchStartOffset = findex;
+            matchEndOffset = mao;
+          }
+          else
+          {
+            startParent = matchAnchorNode;
+            endParent = do_QueryInterface(tc);
+            matchStartOffset = mao;
+            matchEndOffset = findex+1;
+          }
+          if (startParent && endParent && 
+              IsVisibleNode(startParent) && IsVisibleNode(endParent))
+          {
+            range->SetStart(startParent, matchStartOffset);
+            range->SetEnd(endParent, matchEndOffset);
+            *aRangeRet = range.get();
+            NS_ADDREF(*aRangeRet);
+          }
+          else {
+            startParent = nsnull; // This match is no good -- invisible or bad range
           }
         }
 
-        // Reset the offset to the other end of the found string:
-        mIterOffset = findex + (mFindBackward ? 1 : 0);
-#ifdef DEBUG_FIND
-        printf("mIterOffset = %d, mIterNode = ", mIterOffset);
-        DumpNode(mIterNode);
-#endif
+        if (startParent) {
+          // If startParent == nsnull, we didn't successfully make range
+          // or, we didn't make a range because the start or end node were invisible
+          // Reset the offset to the other end of the found string:
+          mIterOffset = findex + (mFindBackward ? 1 : 0);
+  #ifdef DEBUG_FIND
+          printf("mIterOffset = %d, mIterNode = ", mIterOffset);
+          DumpNode(mIterNode);
+  #endif
 
-        ResetAll();
-        return NS_OK;
+          ResetAll();
+          return NS_OK;
+        }
+        matchAnchorNode = nsnull;  // This match is no good, continue on in document
       }
 
-      // Not done, but still matching.
-
-      // Advance and loop around for the next characters.
-      // But don't advance from a space to a non-space:
-      if (!inWhitespace || DONE_WITH_PINDEX || IsSpace(patStr[pindex+incr]))
-      {
-        pindex += incr;
-        inWhitespace = PR_FALSE;
+      if (matchAnchorNode) {
+        // Not done, but still matching.
+        // Advance and loop around for the next characters.
+        // But don't advance from a space to a non-space:
+        if (!inWhitespace || DONE_WITH_PINDEX || IsSpace(patStr[pindex+incr]))
+        {
+          pindex += incr;
+          inWhitespace = PR_FALSE;
 #ifdef DEBUG_FIND
-        printf("Advancing pindex to %d\n", pindex);
+          printf("Advancing pindex to %d\n", pindex);
 #endif
-      }
+        }
       
-      continue;
+        continue;
+      }
     }
 
 #ifdef DEBUG_FIND
