@@ -24,6 +24,9 @@
 #ifndef _NS_EVENTHANDLER_H_
 #define _NS_EVENTHANDLER_H_
 
+#include <MacTypes.h>
+#include <Events.h>
+
 class nsEventHandler
 {
 

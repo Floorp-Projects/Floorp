@@ -28,12 +28,16 @@
 #include "MoreFilesExtras.h"
 #include "MoreDesktopMgr.h"
 #include "IterateDirectory.h"
+#ifdef MOZILLA_CLIENT
 #include "nsISupportsUtils.h"
+#endif
 
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
+#ifdef MOZILLA_CLIENT
 MOZ_DECL_CTOR_COUNTER(nsAppleSingleDecoder);
+#endif
 
 nsAppleSingleDecoder::nsAppleSingleDecoder(FSSpec *inSpec, FSSpec *outSpec)
 : mInSpec(NULL), 
@@ -41,7 +45,9 @@ nsAppleSingleDecoder::nsAppleSingleDecoder(FSSpec *inSpec, FSSpec *outSpec)
   mInRefNum(0),
   mRenameReqd(false)
 {
+#ifdef MOZILLA_CLIENT
     MOZ_COUNT_CTOR(nsAppleSingleDecoder);
+#endif
 
     if (inSpec && outSpec)
 	{
@@ -57,13 +63,17 @@ nsAppleSingleDecoder::nsAppleSingleDecoder()
   mInRefNum(0),
   mRenameReqd(false)
 {
+#ifdef MOZILLA_CLIENT
     MOZ_COUNT_CTOR(nsAppleSingleDecoder);
+#endif
 }
 
 nsAppleSingleDecoder::~nsAppleSingleDecoder()
 {
 	/* not freeing FSSpecs since we don't own 'em */
+#ifdef MOZILLA_CLIENT
     MOZ_COUNT_DTOR(nsAppleSingleDecoder);
+#endif
 }
 
 

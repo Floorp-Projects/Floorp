@@ -26,6 +26,9 @@
 #endif
 
 #include <AppleEvents.h>
+#include <Balloons.h>
+#include <MacTypes.h>
+
 #include "nsEventHandler.h"
 #include "nsAppleSingleEncoder.h"
 #include "nsAppleSingleDecoder.h"
