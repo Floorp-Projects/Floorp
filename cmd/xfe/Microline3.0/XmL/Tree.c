@@ -253,9 +253,9 @@ Destroy(Widget w)
 		XFreePixmap(dpy, t->tree.filePixmask);
 		XFreePixmap(dpy, t->tree.folderPixmask);
 		XFreePixmap(dpy, t->tree.folderOpenPixmask);
-		XFreePixmap(dpy, t->tree.filePixmask);
-		XFreePixmap(dpy, t->tree.folderPixmask);
-		XFreePixmap(dpy, t->tree.folderOpenPixmask);
+		XFreePixmap(dpy, t->tree.filePixmap);
+		XFreePixmap(dpy, t->tree.folderPixmap);
+		XFreePixmap(dpy, t->tree.folderOpenPixmap);
 		XFreeColors(dpy, attr.colormap, t->tree.pixColors, 4, 0L);
 		}
 	}
