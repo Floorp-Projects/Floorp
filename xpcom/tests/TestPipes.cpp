@@ -169,7 +169,7 @@ main(int argc, char* argv[])
     }
 #endif
     // test for small buffers
-    rv = NS_NewPipe2(&in, &out, 12, 24);
+    rv = NS_NewPipe(&in, &out, 12, 24, PR_FALSE, nsnull);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");
         return -1;
@@ -184,7 +184,7 @@ main(int argc, char* argv[])
     }
 
     // test for large buffers
-    rv = NS_NewPipe2(&in, &out, 4096, 4096*16);
+    rv = NS_NewPipe(&in, &out, 4096, 4096*16, PR_FALSE, nsnull);
     if (NS_FAILED(rv)) {
         printf("NewPipe failed\n");
         return -1;

@@ -171,7 +171,8 @@ TestMallocBuffers(PRUint32 growByPages, PRUint32 pageCount)
            pageCount, growByPages);
     rv = NS_NewBuffer(&buffer,
                       NS_PAGEMGR_PAGE_SIZE * growByPages, 
-                      NS_PAGEMGR_PAGE_SIZE * pageCount);
+                      NS_PAGEMGR_PAGE_SIZE * pageCount,
+					  nsnull);
     if (NS_FAILED(rv)) {
         printf("failed to create buffer\n");
         return rv;
@@ -190,7 +191,8 @@ TestPageBuffers(PRUint32 growByPages, PRUint32 pageCount)
            pageCount, growByPages);
     rv = NS_NewPageBuffer(&buffer,
                           NS_PAGEMGR_PAGE_SIZE * growByPages,
-                          NS_PAGEMGR_PAGE_SIZE * pageCount);
+                          NS_PAGEMGR_PAGE_SIZE * pageCount,
+						  nsnull);
     if (NS_FAILED(rv)) {
         printf("failed to create buffer\n");
         return rv;
@@ -211,7 +213,7 @@ TestSearch(const char* delim, PRUint32 segDataSize)
     PRUint32 bufDataSize = segDataSize * 2;
     PRUint32 segSize = segDataSize + nsIBuffer::SEGMENT_OVERHEAD;
     PRUint32 bufSize = segSize * 2;
-    rv = NS_NewBuffer(&buffer, segSize, bufSize);
+    rv = NS_NewBuffer(&buffer, segSize, bufSize, nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NewBuffer failed");
 
     PRUint32 i, amt;
