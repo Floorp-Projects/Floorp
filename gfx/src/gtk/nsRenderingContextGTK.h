@@ -34,7 +34,7 @@
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 
-#include "nsOldDrawingSurfaceGTK.h"
+#include "nsDrawingSurfaceGTK.h"
 #include "nsRegionGTK.h"
 
 #include <gtk/gtk.h>
@@ -153,7 +153,7 @@ public:
 
 protected:
   nsDrawingSurfaceGTK   *mOffscreenSurface;  
-  nsDrawingSurfaceGTK   *mRenderingSurface;
+  nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
   nsIFontMetrics        *mFontMetrics;
   nsRegionGTK           *mRegion;

@@ -35,6 +35,7 @@ CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS = \
+	nsDrawingSurfaceGTK.cpp \
 	nsDeviceContextGTK.cpp \
 	nsDeviceContextSpecFactoryG.cpp \
 	nsDeviceContextSpecG.cpp \
