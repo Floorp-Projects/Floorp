@@ -760,12 +760,12 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 	{
 	case nsMsgSearchOpContains:
 		if ((nsnull != n_header) && (n_str[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			n_str.Find(*stringToMatch, PR_TRUE) != -1)
+			stringToMatch->Find(n_str, PR_TRUE) != -1)
 			err = NS_OK;
 		break;
 	case nsMsgSearchOpDoesntContain:
-		if ((nsnull != n_header) && (n_str[0]) && ( /* !INTL_StrContains(csid, n_header, n_str) */
-			n_str.Find(*stringToMatch, PR_TRUE) == -1))
+		if ((nsnull != n_header) && (n_str[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
+			stringToMatch->Find(n_str, PR_TRUE) == -1)
 			err = NS_OK;
 		break;
 	case nsMsgSearchOpIs:
@@ -801,7 +801,9 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrBeginWith(csid, n_header, n_str))
 			err = NS_OK;
 #else
-		NS_ASSERTION(PR_FALSE, "not implemented yet");
+		// ### DMB - not the  most efficient way to do this.
+		if (stringToMatch->Find(n_str, PR_TRUE) == 0)
+			err = NS_OK;
 #endif
 		break;
 	case nsMsgSearchOpEndsWith: 
@@ -850,9 +852,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		err = errContinueLoop = NS_COMFALSE;
 
 	PRUint32 count;
-	err = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, count) ;
+	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, count) ;
 
-	if (NS_SUCCEEDED(err) && count > 0)
+	if (NS_SUCCEEDED(parseErr) && count > 0)
 	{
 		NS_ASSERTION(names, "couldn't get names");
 		NS_ASSERTION(addresses, "couldn't get addresses");
