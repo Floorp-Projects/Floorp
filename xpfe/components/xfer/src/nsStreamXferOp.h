@@ -23,7 +23,7 @@
 #define __nsStreamXferOp_h
 
 #include "nsIStreamTransferOperation.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
@@ -43,7 +43,7 @@ class nsIDOMWindow;
 // should get called when the dialog closes.
 //
 class nsStreamXferOp : public nsIStreamTransferOperation,
-                       public nsIEventSinkGetter,
+                       public nsICapabilities,
                        public nsIProgressEventSink,
                        public nsIStreamListener {
 public:
@@ -59,8 +59,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMTRANSFEROPERATION
 
-    // nsIEventSinkGetter methods:
-    NS_DECL_NSIEVENTSINKGETTER
+    // nsICapabilities methods:
+    NS_DECL_NSICAPABILITIES
 
     // nsIProgressEventSink methods:
     NS_DECL_NSIPROGRESSEVENTSINK
