@@ -1,0 +1,38 @@
+interface SilentDownloadTask
+{
+/* IID: { 0x8648c1e0, 0x938b, 0x11d2, \
+{ 0xb0, 0xdd, 0x0, 0x80, 0x5f, 0x8a, 0x88, 0x50 }} */
+	
+	const int SDL_NOT_INITED       	= -2;
+	const int SDL_NOT_ADDED       	= -1;
+	const int SDL_STARTED    		= 0;
+	const int SDL_SUSPENDED			= 1;
+	const int SDL_COMPLETED			= 2;
+	const int SDL_DOWNLOADING_NOW	= 3;
+	const int SDL_ERROR				= 4;
+
+
+	readonly attribute wstring id;
+    readonly attribute wstring url;
+    readonly attribute wstring script;
+	
+	attribute long    state;
+	attribute wstring errorMsg;
+    attribute long    nextByte;
+    
+	readonly attribute wstring outFile;
+
+	void SilentDownloadTask();
+	void Init(in wstring id, in wstring url, in wstring script);
+	
+	void Remove();
+	void Suspend();
+	void Resume();
+	void DownloadNow();
+
+
+	void DownloadSelf(in long range);
+
+};
+
+

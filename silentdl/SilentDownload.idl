@@ -1,0 +1,16 @@
+interface SilentDownload
+{
+/* IID: { 0x8648c1e0, 0x938b, 0x11d2, \
+  { 0xb0, 0xdd, 0x0, 0x80, 0x5f, 0x8a, 0x88, 0x51 }} */
+	
+	attribute long    ByteRange;
+    attribute long    Interval;
+
+	void Startup();
+	void Shutdown();
+	
+	void Add(in SilentDownloadTask task);
+    void Remove(in SilentDownloadTask task);
+
+	SilentDownloadTask Find(in wstring id);
+};
