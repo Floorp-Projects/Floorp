@@ -37,8 +37,9 @@ packages/core.jar:
     communicator/content/pref/pref-debug.xul                    (prefwindow/resources/content/pref-debug.xul)
     communicator/content/pref/pref-download.xul                 (prefwindow/resources/content/pref-download.xul)
     communicator/content/pref/pref-editing.xul                  (prefwindow/resources/content/pref-editing.xul)
-    communicator/content/pref/pref-fonts.xul                    (prefwindow/resources/content/pref-fonts.xul)
     communicator/content/pref/pref-fonts.js                     (prefwindow/resources/content/pref-fonts.js)
+    communicator/content/pref/pref-fonts.xul                    (prefwindow/resources/content/pref-fonts.xul)
+    communicator/content/pref/pref-history.xul                  (prefwindow/resources/content/pref-history.xul)
     communicator/content/pref/pref-languages.xul                (prefwindow/resources/content/pref-languages.xul)
     communicator/content/pref/pref-languages2.xul               (prefwindow/resources/content/pref-languages2.xul)
     communicator/content/pref/pref-languages-add.xul            (prefwindow/resources/content/pref-languages-add.xul)
@@ -95,6 +96,8 @@ packages/core.jar:
     communicator/content/sidebar/local-panels.rdf               (sidebar/resources/local-panels.rdf)
     communicator/content/timebomb/warn.xul                      (timebomb/resources/content/warn.xul)
     communicator/content/timebomb/expireText.xul                (timebomb/resources/content/expireText.xul)
+    global/content/filepicker.js				(filepicker/res/content/filepicker.js)
+    global/content/filepicker.xul				(filepicker/res/content/filepicker.xul)
 
 locales/en-US.jar:
     communicator/locale/bookmarks/bm-find.dtd             (bookmarks/resources/locale/en-US/bm-find.dtd)
@@ -119,6 +122,7 @@ locales/en-US.jar:
     communicator/locale/pref/pref-debug.dtd               (prefwindow/resources/locale/en-US/pref-debug.dtd)
     communicator/locale/pref/pref-editing.dtd             (prefwindow/resources/locale/en-US/pref-editing.dtd)
     communicator/locale/pref/pref-fonts.dtd               (prefwindow/resources/locale/en-US/pref-fonts.dtd)
+    communicator/locale/pref/pref-history.dtd             (prefwindow/resources/locale/en-US/pref-history.dtd)
     communicator/locale/pref/pref-languages.dtd           (prefwindow/resources/locale/en-US/pref-languages.dtd)
     communicator/locale/pref/pref-languages2.dtd          (prefwindow/resources/locale/en-US/pref-languages2.dtd)
     communicator/locale/pref/pref-navigator.dtd           (prefwindow/resources/locale/en-US/pref-navigator.dtd)

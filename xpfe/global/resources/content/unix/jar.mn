@@ -4,3 +4,5 @@ packages/widget-toolkit.jar:
 	global/content/platformInputBindings.xul
 	global/content/platformTextAreaBindings.xul
 	global/content/platformHTMLBindings.xml
+	global/content/printdialog.js
+	global/content/printdialog.xul

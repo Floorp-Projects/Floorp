@@ -1,3 +1,4 @@
 locales/en-US.jar:
-    global/content/platformGlobalOverlay.dtd
-    global/content/platformDialogOverlay.dtd
+    global/locale/platformGlobalOverlay.dtd
+    global/locale/platformDialogOverlay.dtd
+    global/locale/printdialog.dtd
