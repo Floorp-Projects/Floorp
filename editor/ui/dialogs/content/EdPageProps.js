@@ -43,6 +43,7 @@ function Startup()
   {
     dump("Failed to create dialog object!!!\n");
     window.close();
+    return;
   }
   dialog.PageLocation     = document.getElementById("PageLocation");
   dialog.TitleInput       = document.getElementById("TitleInput");
@@ -75,8 +76,10 @@ dump(", lastmod date="+lastmoddate+"\n");
   {
     authorElement = CreateMetaElement("author");
     if (!authorElement)
+    {
       window.close();
-
+      return;
+    }
     insertNewAuthor = true;
   }
 

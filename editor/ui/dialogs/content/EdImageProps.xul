@@ -67,9 +67,7 @@
             />
           <textbox
             id         = "srcInput" 
-            oninput    = "doOverallEnabling()"
-            onmouseup  = "doOverallEnabling()"
-            onchange   = "ChangeImageSrc()"
+            oninput    = "ChangeImageSrc()"
             style      = "min-width : 20em"/>
           <!-- from EdDialogOverlay.xul -->
           <button id="ChooseFile"/>

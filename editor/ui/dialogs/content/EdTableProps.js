@@ -94,8 +94,10 @@ function Startup()
 
   dialog = new Object;
   if (!dialog)
+  {
     window.close();
-
+    return;
+  }
   // Get dialog widgets - Table Panel
   dialog.TableRowsInput = document.getElementById("TableRowsInput");
   dialog.TableColumnsInput = document.getElementById("TableColumnsInput");
@@ -121,8 +123,6 @@ function Startup()
   dialog.CellHeightUnits = document.getElementById("CellHeightUnits");
   dialog.CellWidthInput = document.getElementById("CellWidthInput");
   dialog.CellWidthUnits = document.getElementById("CellWidthUnits");
-  dialog.RowSpanInput = document.getElementById("RowSpanInput");
-  dialog.ColSpanInput = document.getElementById("ColSpanInput");
   dialog.CellHAlignList = document.getElementById("CellHAlignList");
   dialog.CellVAlignList = document.getElementById("CellVAlignList");
   dialog.CellInheritColor = document.getElementById("CellInheritColor");
@@ -134,8 +134,6 @@ function Startup()
   //  and that's probably not what they expect!
   dialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
   dialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
-  dialog.RowSpanCheckbox = document.getElementById("RowSpanCheckbox");
-  dialog.ColSpanCheckbox = document.getElementById("ColSpanCheckbox");
   dialog.CellHAlignCheckbox = document.getElementById("CellHAlignCheckbox");
   dialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
   dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
@@ -151,6 +149,7 @@ function Startup()
   {
     dump("Failed to get table element!\n");
     window.close();
+    return;
   }
   globalTableElement = TableElement.cloneNode(false);
 
@@ -167,7 +166,6 @@ function Startup()
 
     // Tells us whether cell, row, or column is selected
     SelectedCellsType = editorShell.GetSelectedCellsType(TableElement);
-    SetSpanEnable();
 
     // Ignore types except Cell, Row, and Column
     if (SelectedCellsType < SELECT_CELL || SelectedCellsType > SELECT_COLUMN)
@@ -310,14 +308,6 @@ function InitCellPanel()
     previousValue= dialog.CellWidthInput.value;
     dialog.CellWidthInput.value = InitPixelOrPercentMenulist(globalCellElement, CellElement, "width", "CellWidthUnits", gPixel);
     dialog.CellWidthCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellWidthInput.value;
-
-    previousValue = dialog.RowSpanInput.value;
-    dialog.RowSpanInput.value = globalCellElement.getAttribute("rowspan");
-    dialog.RowSpanCheckbox.checked = AdvancedEditUsed && previousValue != dialog.RowSpanInput.value;
-
-    previousValue = dialog.ColSpanInput.value;
-    dialog.ColSpanInput.value = globalCellElement.getAttribute("colspan");
-    dialog.ColSpanCheckbox.checked = AdvancedEditUsed && previousValue != dialog.ColSpanInput.value;
 
     var previousIndex = dialog.CellVAlignList.selectedIndex;
     var valign = globalCellElement.vAlign.toLowerCase();
@@ -758,21 +748,6 @@ function DisableSelectionButtons( disable )
   dialog.NextButton.setAttribute("disabled", disable ? "true" : "false");
 }
 
-function SetSpanEnable()
-{
-  // If entire row is selected, don't allow changing colspan...
-  if ( SelectedCellsType == SELECT_COLUMN )
-    dialog.RowSpanInput.setAttribute("disabled", "true");
-  else
-    dialog.RowSpanInput.removeAttribute("disabled");
-
-  // ...and similarly:
-  if ( SelectedCellsType == SELECT_ROW )
-    dialog.ColSpanInput.setAttribute("disabled", "true");
-  else
-    dialog.ColSpanInput.removeAttribute("disabled");
-}
-
 function SwitchToValidatePanel()
 {
   if (currentPanel != validatePanel)
@@ -847,20 +822,6 @@ function ValidateCellData()
   {
     ValidateNumber(dialog.CellWidthInput, dialog.CellWidthUnits,
                    1, maxPixels, globalCellElement, "width");
-    if (gValidationError) return false;
-  }
-
-  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.disabled != "true")
-  {
-    // Note that span = 0 is allowed and means "span entire row/col"
-    ValidateNumber(dialog.RowSpanInput, null,
-                   0, rowCount, globalCellElement, "rowspan");
-    if (gValidationError) return false;
-  }
-  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
-  {
-    ValidateNumber(dialog.ColSpanInput, null,
-                   0, colCount, globalCellElement, "colspan");
     if (gValidationError) return false;
   }
 
@@ -1223,12 +1184,6 @@ function ApplyAttributesToOneCell(destElement)
   if (dialog.CellWidthCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "width");
 
-  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.getAttribute("disabled") != "true")
-    CloneAttribute(destElement, globalCellElement, "rowspan");
-
-  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
-    CloneAttribute(destElement, globalCellElement, "colspan");
-
   if (dialog.CellHAlignCheckbox.checked)
   {
     CloneAttribute(destElement, globalCellElement, "align");
@@ -1283,7 +1238,7 @@ function Apply()
     {
       ApplyCellAttributes();
       // Be sure user didn't mess up table by setting incorrect span values
-      editorShell.NormalizeTable(TableElement);
+//      editorShell.NormalizeTable(TableElement);
     }
 
     editorShell.EndBatchChanges();

@@ -692,6 +692,17 @@ function forceInteger(elementID)
   }
 }
 
+function LimitStringLength(elementID, length)
+{
+  var editField = document.getElementById( elementID );
+  if ( !editField )
+    return;
+
+  var stringIn = editField.value;
+  if (stringIn && stringIn.length > length)
+    editField.value = stringIn.slice(0,length);
+}
+
 
 function onAdvancedEdit()
 {
@@ -901,7 +912,7 @@ function GetLocalFileURL(filterType)
     fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
   }
-  else (filterType == "html")
+  else if (filterType == "html")
   {
     fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 

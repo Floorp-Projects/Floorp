@@ -170,66 +170,58 @@
             <text class="label" value="&applyBeforeChange2.label;"/>
           </box>
         </titledbox>
-
-        <!-- cell size titledbox -->
-        <titledbox><label align="left" value="&size.label;"/>
-          <grid>
-            <columns><column/><column/><column/></columns>
-            <rows>
-              <row valign="middle" autostretch="never">
-                <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
-                <textbox class="narrow" id="CellHeightInput"
-                         oninput="ChangeIntTextbox(this.id,'CellHeightCheckbox');"/>
-                <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
-              </row>
-              <row valign="middle" autostretch="never">
-                <checkbox id="CellWidthCheckbox" label="&tableWidth.label;"/>
-                <textbox class="narrow" id="CellWidthInput"
-                         oninput="ChangeIntTextbox(this.id,'CellWidthCheckbox');"/>
-                <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
-              </row>
-            </rows>
-          </grid>
-          <spring class="bigspacer"/>
-          <grid>
-            <columns><column/><column/></columns>
-            <rows>
-              <row valign="middle" autostretch="never">
-                <checkbox id="RowSpanCheckbox" label="&cellRowSpan.label;"/>
-                <textbox class="narrow" id="RowSpanInput"
-                         oninput="ChangeIntTextbox(this.id,'RowSpanCheckbox');"/>
-              </row>
-              <row valign="middle" autostretch="never">
-                <checkbox id="ColSpanCheckbox" label="&cellColSpan.label;"/>
-                <textbox class="narrow" id="ColSpanInput"
-                         oninput="ChangeIntTextbox(this.id,'ColSpanCheckbox');"/>
-              </row>
-            </rows>
-          </grid>
-        </titledbox>
-
-        <!-- Alignment -->
-        <titledbox valign="middle" autostretch="never">
-          <label value="&cellContentAlignment.label;"/>
-          <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;"/>
-          <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
-            <menupopup>
-              <menuitem label="&AlignLeft.label;"        value="left"/>
-              <menuitem label="&AlignCenter.label;"      value="center"/>
-              <menuitem label="&AlignRight.label;"       value="right"/>
-              <menuitem label="&cellAlignJustify.label;" value="justify"/>
-            </menupopup>
-          </menulist>
-          <spring class="spacer"/>
-          <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
-          <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
-            <menupopup>
-              <menuitem label="&cellAlignTop.label;"    value="top"/>
-              <menuitem label="&cellAlignMiddle.label;" value="middle"/>
-              <menuitem label="&cellAlignBottom.label;" value="bottom"/>
-            </menupopup>
-          </menulist>
-        </titledbox>
+        <box autostretch="never">
+          <!-- cell size titledbox -->
+          <titledbox><label align="left" value="&size.label;"/>
+            <grid>
+              <columns><column/><column/><column/></columns>
+              <rows>
+                <row valign="middle" autostretch="never">
+                  <checkbox id="CellHeightCheckbox" label="&tableHeight.label;"/>
+                  <textbox class="narrow" id="CellHeightInput"
+                           oninput="ChangeIntTextbox(this.id,'CellHeightCheckbox');"/>
+                  <menulist id="CellHeightUnits" oncommand="SetCheckbox('CellHeightCheckbox');"/>
+                </row>
+                <row valign="middle" autostretch="never">
+                  <checkbox id="CellWidthCheckbox" label="&tableWidth.label;"/>
+                  <textbox class="narrow" id="CellWidthInput"
+                           oninput="ChangeIntTextbox(this.id,'CellWidthCheckbox');"/>
+                  <menulist id="CellWidthUnits" oncommand="SetCheckbox('CellWidthCheckbox');"/>
+                </row>
+              </rows>
+            </grid>
+            <spring class="bigspacer"/>
+          </titledbox>
+          <!-- Alignment -->
+          <titledbox><label value="&cellContentAlignment.label;"/>
+            <grid>
+              <columns><column/><column/><column/></columns>
+              <rows>
+                <row valign="middle" autostretch="never">
+                  <checkbox id="CellVAlignCheckbox" label="&cellVertical.label;"/>
+                  <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
+                    <menupopup>
+                      <menuitem label="&cellAlignTop.label;"    value="top"/>
+                      <menuitem label="&cellAlignMiddle.label;" value="middle"/>
+                      <menuitem label="&cellAlignBottom.label;" value="bottom"/>
+                    </menupopup>
+                  </menulist>
+                </row>
+                <row valign="middle" autostretch="never">
+                  <checkbox id="CellHAlignCheckbox" label="&cellHorizontal.label;"/>
+                  <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
+                    <menupopup>
+                      <menuitem label="&AlignLeft.label;"        value="left"/>
+                      <menuitem label="&AlignCenter.label;"      value="center"/>
+                      <menuitem label="&AlignRight.label;"       value="right"/>
+                      <menuitem label="&cellAlignJustify.label;" value="justify"/>
+                    </menupopup>
+                  </menulist>
+                </row>
+              </rows>
+            </grid>
+          </titledbox>
+        </box>
         <spring class="spacer"/>
         <box valign="middle" autostretch="never">
           <checkbox id="CellStyleCheckbox" label="&cellStyle.label;"/>

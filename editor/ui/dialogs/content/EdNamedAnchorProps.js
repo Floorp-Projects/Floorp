@@ -70,6 +70,7 @@ function Startup()
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
+    return;
   }
 
   InitDialog();

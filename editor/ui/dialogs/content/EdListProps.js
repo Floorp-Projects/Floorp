@@ -36,9 +36,10 @@ function Startup()
   if (!InitEditorShell())
     return;
   dialog = new Object;
-  if (!dialog)
+  if (!dialog) {
     window.close();
-
+    return;
+  }
   doSetOKCancel(onOK, onCancel);
 
   dialog.ListTypeList = document.getElementById("ListType");

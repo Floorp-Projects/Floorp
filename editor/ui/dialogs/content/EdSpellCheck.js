@@ -37,6 +37,7 @@ function Startup()
   if (!spellChecker) {
     dump("SpellChecker not found!!!\n");
     window.close();
+    return;
   }
 
   // Start the spell checker module.
@@ -50,6 +51,7 @@ function Startup()
   catch(ex) {
    dump("*** Exception error: InitSpellChecker\n");
     window.close();
+    return;
   }
 
   // Create dialog object to store controls for easy access

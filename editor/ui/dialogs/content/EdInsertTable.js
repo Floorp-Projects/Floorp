@@ -45,6 +45,7 @@ function Startup()
   {
     dump("Failed to create a new table!\n");
     window.close();
+    return;
   }
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -78,7 +79,7 @@ function Startup()
   // Resize window
   window.sizeToContent();
 
-  SetTextboxFocus(dialog.rowsInput);
+  SetTextboxFocusById("rowsInput");
 
   SetWindowLocation();
 }
@@ -142,7 +143,6 @@ function onOK()
     editorShell.CloneAttributes(tableElement, globalElement);
 
     // Create necessary rows and cells for the table
-    // AFTER BUG 30378 IS FIXED, DON'T INSERT TBODY!
     var tableBody = editorShell.CreateElementWithDefaults("tbody");
     if (tableBody)
     {
@@ -186,7 +186,7 @@ function onOK()
         if (countObj.value > 1)
         {
           // Assume user wants to replace a block of
-          //  contiguous cells with a tabl, so
+          //  contiguous cells with a table, so
           //  join the selected cells
           editorShell.JoinTableCells(false);
           

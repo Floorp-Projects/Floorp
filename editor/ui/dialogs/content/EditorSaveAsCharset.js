@@ -54,7 +54,10 @@ function Startup()
   {
     contenttypeElement = CreateHTTPEquivMetaElement("content-type");
     if( ! contenttypeElement )
+    {
       window.close();
+      return;
+    }
     insertNewContentType = true;
   }
 

@@ -120,10 +120,12 @@ var DocumentStateListener =
     EditorInitToolbars();
     BuildRecentMenu(true);      // Build the recent files menu and save to prefs
 
-    window._content.focus();
+    // Just for convenience
+    gContentWindow = window._content;
+    gContentWindow.focus();
 
     // udpate menu items now that we have an editor to play with
-    // Note: This must be AFTER window._content.focus();
+    // Note: This must be AFTER gContentWindow.focus();
     window.updateCommands("create");
 
     if (!("InsertCharWindow" in window))
@@ -141,7 +143,7 @@ var DocumentStateListener =
     // hack! Should not need this updateCommands, but there is some controller
     //  bug that this works around. ??
     // comment out the following line because it cause 41573 IME problem on Mac
-    //window._content.focus();
+    //gContentWindow.focus();
     window.updateCommands("create");
     window.updateCommands("save");
   }
@@ -199,6 +201,9 @@ function EditorStartup(editorType, editorElement)
 // This is the only method also called by Message Composer
 function EditorSharedStartup()
 {
+  // Just for convenience
+  gContentWindow = window._content;
+
   // set up JS-implemented commands for Text or HTML editing
   switch (editorShell.editorType)
   {
@@ -218,9 +223,6 @@ function EditorSharedStartup()
         window.gDefaultSaveMimeType = "text/plain";
         break;
   }
-
-  // Just for convenience
-  gContentWindow = window._content;
 
   gIsWindows = navigator.appVersion.indexOf("Win") != -1;
   gIsUNIX = (navigator.appVersion.indexOf("X11") ||
@@ -540,7 +542,7 @@ function doStatefulCommand(commandID, newState)
   var commandNode = document.getElementById(commandID);
   if (commandNode)
       commandNode.setAttribute("state", newState);
-  window._content.focus();   // needed for command dispatch to work
+  gContentWindow.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
 }
 
@@ -834,7 +836,7 @@ function SetSmiley(smileyText)
 {
   editorShell.InsertText(smileyText);
 
-  window._content.focus();
+  gContentWindow.focus();
 }
 
 function EditorSelectColor(colorType, mouseEvent)
@@ -952,7 +954,7 @@ function EditorSelectColor(colorType, mouseEvent)
 
     goUpdateCommand("cmd_backgroundColor");
   }
-  window._content.focus();
+  gContentWindow.focus();
 }
 
 function GetParentTable(element)
@@ -960,7 +962,20 @@ function GetParentTable(element)
   var node = element;
   while (node)
   {
-    if (node.tagName.toLowerCase() == "table")
+    if (node.nodeName.toLowerCase() == "table")
+      return node;
+
+    node = node.parentNode;
+  }
+  return node;
+}
+
+function GetParentTableCell(element)
+{
+  var node = element;
+  while (node)
+  {
+    if (node.nodeName.toLowerCase() == "td" || node.nodeName.toLowerCase() == "th")
       return node;
 
     node = node.parentNode;
@@ -1111,7 +1126,7 @@ function SetEditMode(mode)
       if (bodyNode)
         editorShell.editorSelection.collapse(bodyNode, 0);
 
-      window._content.focus();
+      gContentWindow.focus();
     }
     ResetWindowTitleWithFilename();
   }
@@ -1216,7 +1231,7 @@ function SetDisplayMode(mode)
         gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
       }
 
-      window._content.focus();
+      gContentWindow.focus();
     }
 
     // We must set check on menu item since toolbar may have been used
@@ -1310,17 +1325,16 @@ function EditorToggleParagraphMarks()
   }
 }
 
-function EditorInitEditMenu()
+function InitPasteAsMenu()
 {
-/*
-  // Fake the keybinding hint for the "Clear" item
-  // (Don't bother for Mac?)
-  if (!gIsMac)
-    document.getElementById("menu_clear").setAttribute("acceltext", GetString("Del"));
-*/
-
-  //TODO: We should modify the Paste menuitem to build a submenu
-  //      with multiple paste format types
+  var menuItem = document.getElementById("menu_pasteTable")
+  if(menuItem)
+  {
+    menuItem.IsInTable  
+    menuItem.setAttribute("label", GetString(IsInTable() ? "NestedTable" : "Table"));
+   // menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
+  }
+  // TODO: Do enabling based on what is in the clipboard
 }
 
 function EditorOpenUrl(url)
@@ -2183,7 +2197,8 @@ function goUpdateTableMenuItems(commandset)
     {
       if (commandID == "cmd_InsertTable" ||
           commandID == "cmd_JoinTableCells" ||
-          commandID == "cmd_SplitTableCell")
+          commandID == "cmd_SplitTableCell" ||
+          commandID == "cmd_ConvertToTable")
       {
         // Call the update method in the command class
         goUpdateCommand(commandID);
@@ -2246,9 +2261,14 @@ function EditorInsertOrEditTable(insertAllowed)
   if (IsInTable()) {
     // Edit properties of existing table
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
-    window._content.focus();
+    gContentWindow.focus();
   } else if(insertAllowed) {
-    EditorInsertTable();
+    if (editorShell.editorSelection.isCollapsed)
+      // If we have a caret, insert a blank table...
+      EditorInsertTable();
+    else
+      // else convert the selection into a table
+      goDoCommand("cmd_ConvertToTable");
   }
 }
 
@@ -2256,7 +2276,7 @@ function EditorInsertTable()
 {
   // Insert a new table
   window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
-  window._content.focus();
+  gContentWindow.focus();
 }
 
 function EditorTableCellProperties()
@@ -2265,7 +2285,7 @@ function EditorTableCellProperties()
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
-    window._content.focus();
+    gContentWindow.focus();
   }
 }
 

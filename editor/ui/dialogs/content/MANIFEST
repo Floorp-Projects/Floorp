@@ -67,3 +67,5 @@ EditConflict.xul
 EditConflict.js
 EditorSaveAsCharset.xul
 EditorSaveAsCharset.js
+EdConvertToTable.xul
+EdConvertToTable.js
