@@ -260,7 +260,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   char  szBuf[MAX_BUF];
-  LPSTR *szMessage;
+  LPSTR *szStrList;
   RECT  rDlg;
 
   switch(msg)
@@ -269,10 +269,11 @@ LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       NS_LoadString(hSetupRscInst, IDS_MB_WARNING_STR, szBuf, sizeof(szBuf));
       SetWindowText(hDlg, szBuf);
 
-      szMessage = (LPSTR *)lParam;
+      szStrList = (LPSTR *)lParam;
 
-      SetDlgItemText(hDlg, IDC_MESSAGE0, szMessage[0]);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, szMessage[1]);
+      SetDlgItemText(hDlg, IDC_DELETE_PATH, szStrList[0]);
+      SetDlgItemText(hDlg, IDC_MESSAGE0,    szStrList[1]);
+      SetDlgItemText(hDlg, IDC_MESSAGE1,    szStrList[2]);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1667,8 +1668,10 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diAdvancedSettings.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diAdvancedSettings.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diAdvancedSettings.szMessage1);
+      SetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE1,          diAdvancedSettings.szMessage1);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
+      SetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1696,7 +1699,7 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       else
         SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
 
-      if(bSaveInstallerFiles)
+      if(diAdvancedSettings.bSaveInstaller)
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
       else
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
@@ -1713,18 +1716,13 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
 
           /* get the state of the Save Installer Files checkbox */
           if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
-            bSaveInstallerFiles = TRUE;
+            diAdvancedSettings.bSaveInstaller = TRUE;
           else
-            bSaveInstallerFiles = FALSE;
+            diAdvancedSettings.bSaveInstaller = FALSE;
 
           /* get the proxy server and port information */
-          GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, sgProduct.szProxyServer, MAX_BUF);
-          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   sgProduct.szProxyPort,   MAX_BUF);
-          if((*sgProduct.szProxyServer == '\0') || (*sgProduct.szProxyPort == '\0'))
-          {
-            ZeroMemory(sgProduct.szProxyServer, MAX_BUF);
-            ZeroMemory(sgProduct.szProxyPort,   MAX_BUF);
-          }
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
+          GetDlgItemText(hDlg, IDC_EDIT_PROXY_PORT,   diAdvancedSettings.szProxyPort,   MAX_BUF);
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
@@ -2312,12 +2310,12 @@ void DlgSequenceNext()
         /* PRE_SMARTUPDATE process file manipulation functions */
         ProcessFileOps(T_PRE_SMARTUPDATE);
 
-        /* save the installer files in the local machine */
-        if(bSaveInstallerFiles)
-          SaveInstallerFiles();
-
         if(CheckInstances())
         {
+          /* save the installer files in the local machine */
+          if(diAdvancedSettings.bSaveInstaller)
+            SaveInstallerFiles();
+
           CleanupXpcomFile();
           PostQuitMessage(0);
 
@@ -2325,27 +2323,39 @@ void DlgSequenceNext()
           break;
         }
 
+        lstrcpy(szBuf, sgProduct.szPath);
+        if(*sgProduct.szSubPath != '\0')
+        {
+          AppendBackSlash(szBuf, sizeof(szBuf));
+          lstrcat(szBuf, sgProduct.szSubPath);
+        }
+        AppendBackSlash(szBuf, sizeof(szBuf));
+
         if(gdwUpgradeValue == UG_DELETE)
         {
           char szMessage[MAX_BUF];
+
           NS_LoadString(hSetupRscInst, IDS_STR_DELETING_DESTINATION_DIR, szMessage, sizeof(szMessage));
           ShowMessage(szMessage, TRUE);
-          DirectoryRemove(sgProduct.szPath, TRUE);
-
-          lstrcpy(szBuf, sgProduct.szPath);
-          AppendBackSlash(szBuf, sizeof(szBuf));
+          DirectoryRemove(szBuf, TRUE);
           CreateDirectoriesAll(szBuf, TRUE);
           ShowMessage(szMessage, FALSE);
         }
 
-        lstrcpy(szBuf, sgProduct.szPath);
-        AppendBackSlash(szBuf, sizeof(szBuf));
         lstrcat(szBuf, "Uninstall\\");
         CreateDirectoriesAll(szBuf, TRUE);
+
+        /* save the installer files in the local machine */
+        if(diAdvancedSettings.bSaveInstaller)
+          SaveInstallerFiles();
 
         hrErr = SmartUpdateJars();
         if((hrErr == WIZ_OK) || (hrErr == 999))
         {
+#ifdef XXX_DISABLED_BUG_39015
+          UpdateJSProxyInfo();
+#endif
+
           /* POST_SMARTUPDATE process file manipulation functions */
           ProcessFileOps(T_POST_SMARTUPDATE);
           /* PRE_LAUNCHAPP process file manipulation functions */

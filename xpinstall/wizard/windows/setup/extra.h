@@ -128,7 +128,7 @@ BOOL              DeleteIniRedirect(void);
 HRESULT           LaunchApps(void);
 HRESULT           FileExists(LPSTR szFile);
 int               ExtractDirEntries(char* directory,void* vZip);
-BOOL              LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize, BOOL bIncludeTempDir);
 HRESULT           AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, char *szFileIdiGetArchives);
 int               SiCNodeGetIndexDS(char *szInDescriptionShort);
 void              ViewSiComponents(void);

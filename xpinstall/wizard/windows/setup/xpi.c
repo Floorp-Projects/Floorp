@@ -169,7 +169,13 @@ HRESULT SmartUpdateJars()
   ShowMessage(szMsgSmartUpdateStart, TRUE);
   if(InitializeXPIStub() == WIZ_OK)
   {
-    hrResult = pfnXpiInit(sgProduct.szPath, cbXPIProgress);
+    lstrcpy(szBuf, sgProduct.szPath);
+    if(*sgProduct.szSubPath != '\0')
+    {
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      lstrcat(szBuf, sgProduct.szSubPath);
+    }
+    hrResult = pfnXpiInit(szBuf, cbXPIProgress);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
     InitProgressDlg();

@@ -72,7 +72,6 @@ BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
 BOOL            bCreateDestinationDir;
 BOOL            bReboot;
-BOOL            bSaveInstallerFiles;
 
 setupGen        sgProduct;
 diS             diSetup;

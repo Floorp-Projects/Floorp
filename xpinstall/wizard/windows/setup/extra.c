@@ -233,7 +233,6 @@ HRESULT Initialize(HINSTANCE hInstance)
 
   bSDInit             = FALSE;
   bSDUserCanceled     = FALSE;
-  bSaveInstallerFiles = FALSE;
   hDlgMessage         = NULL;
   DetermineOSVersion();
 
@@ -781,7 +780,7 @@ HRESULT GetConfigIni()
   return(hResult);
 }
 
-BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
+BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize, BOOL bIncludeTempDir)
 {
   BOOL bRet;
   char szBuf[MAX_BUF * 2];
@@ -835,14 +834,15 @@ BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
 
       if(FileExists(szBuf))
       {
-#ifdef XXX_SSU
-        /* jar file found.  Unset attribute to download from the net */
-        siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
-        /* save the path of where jar was found at */
-        lstrcpy(siCObject->szArchivePath, szTempDirTemp);
-        AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
-        bRet = TRUE;
-#endif
+        if(bIncludeTempDir == TRUE)
+        {
+          /* jar file found.  Unset attribute to download from the net */
+          siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+          /* save the path of where jar was found at */
+          lstrcpy(siCObject->szArchivePath, szTempDirTemp);
+          AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
+          bRet = TRUE;
+        }
 
         /* if the archive name is in the archive.lst file, then it was uncompressed
          * by the self extracting .exe file.  Assume that the .xpi file exists.
@@ -910,14 +910,15 @@ BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
 
         if(FileExists(szBuf))
         {
-#ifdef XXX_SSU
-          /* jar file found.  Unset attribute to download from the net */
-          siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
-          /* save the path of where jar was found at */
-          lstrcpy(siCObject->szArchivePath, szTempDirTemp);
-          AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
-          bRet = TRUE;
-#endif
+          if(bIncludeTempDir == TRUE)
+          {
+            /* jar file found.  Unset attribute to download from the net */
+            siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+            /* save the path of where jar was found at */
+            lstrcpy(siCObject->szArchivePath, szTempDirTemp);
+            AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
+            bRet = TRUE;
+          }
 
           /* save path where archive is located */
           if(szPath != NULL)
@@ -1151,6 +1152,7 @@ long RetrieveArchives()
   AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
   lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
 
+  lResult   = WIZ_OK;
   dwIndex0  = 0;
   dwCounter = 0;
   itoa(dwIndex0,  szIndex0,  10);
@@ -1161,7 +1163,7 @@ long RetrieveArchives()
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
       /* only download jars if not already in the local machine */
-      if(LocateJar(siCObject, NULL, 0) == FALSE)
+      if(LocateJar(siCObject, NULL, 0, FALSE) == FALSE)
       {
         lstrcpy(szSComponent, "Component");
         lstrcat(szSComponent, szIndex0);
@@ -1200,17 +1202,43 @@ long RetrieveArchives()
     WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetArchives);
 
     /* proxy support */
-    if((*sgProduct.szProxyServer != '\0') && (*sgProduct.szProxyPort != '\0'))
+    if((*diAdvancedSettings.szProxyServer != '\0') && (*diAdvancedSettings.szProxyPort != '\0'))
     {
-      WritePrivateProfileString("Proxy", "server", sgProduct.szProxyServer, szFileIdiGetArchives);
-      WritePrivateProfileString("Proxy", "port",   sgProduct.szProxyPort,   szFileIdiGetArchives);
+      WritePrivateProfileString("Proxy", "server", diAdvancedSettings.szProxyServer, szFileIdiGetArchives);
+      WritePrivateProfileString("Proxy", "port",   diAdvancedSettings.szProxyPort,   szFileIdiGetArchives);
     }
 
-    if((lResult = SdArchives(szFileIdiGetArchives, szTempDir)) != 0)
-      return(lResult);
+    lResult = SdArchives(szFileIdiGetArchives, szTempDir);
+
+    if((lResult == 0) || (lResult == 2))
+    {
+      dwIndex0  = 0;
+      siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+      while(siCObject)
+      {
+        if(siCObject->dwAttributes & SIC_SELECTED)
+        {
+          /* only download jars if not already in the local machine */
+          if(LocateJar(siCObject, NULL, 0, TRUE) == FALSE)
+          {
+            char szEFileNotFound[MAX_BUF];
+
+            if(NS_LoadString(hSetupRscInst, IDS_ERROR_FILE_NOT_FOUND, szEFileNotFound, MAX_BUF) == WIZ_OK)
+            {
+              wsprintf(szBuf, szEFileNotFound, siCObject->szArchiveName);
+              PrintError(szBuf, ERROR_CODE_HIDE);
+            }
+            lResult = 3; // not all .xpi files were downloaded
+          }
+        }
+
+        ++dwIndex0;
+        siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+      }
+    }
   }
 
-  return(0);
+  return(lResult);
 }
 
 void RemoveBackSlash(LPSTR szInput)
@@ -1713,12 +1741,17 @@ void DeInitDlgProgramFolder(diPF *diDialog)
 
 HRESULT InitDlgAdvancedSettings(diAS *diDialog)
 {
-  diDialog->bShowDialog = FALSE;
+  diDialog->bShowDialog    = FALSE;
+  diDialog->bSaveInstaller = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessage0    = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessage1    = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szProxyServer = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szProxyPort   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -1729,6 +1762,8 @@ void DeInitDlgAdvancedSettings(diAS *diDialog)
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szProxyServer));
+  FreeMemory(&(diDialog->szProxyPort));
 }
 
 HRESULT InitDlgStartInstall(diSI *diDialog)
@@ -1775,6 +1810,10 @@ HRESULT InitSetupGeneral()
 
   if((sgProduct.szPath                        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((sgProduct.szSubPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((sgProduct.szProgramName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
   if((sgProduct.szProductName                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szProgramFolderName           = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1784,10 +1823,6 @@ HRESULT InitSetupGeneral()
   if((sgProduct.szAlternateArchiveSearchPath  = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szParentProcessFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((sgProduct.szProxyServer                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((sgProduct.szProxyPort                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((szTempSetupPath                         = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -1810,13 +1845,13 @@ HRESULT InitSetupGeneral()
 void DeInitSetupGeneral()
 {
   FreeMemory(&(sgProduct.szPath));
+  FreeMemory(&(sgProduct.szSubPath));
+  FreeMemory(&(sgProduct.szProgramName));
   FreeMemory(&(sgProduct.szProductName));
   FreeMemory(&(sgProduct.szProgramFolderName));
   FreeMemory(&(sgProduct.szProgramFolderPath));
   FreeMemory(&(sgProduct.szAlternateArchiveSearchPath));
   FreeMemory(&(sgProduct.szParentProcessFilename));
-  FreeMemory(&(sgProduct.szProxyServer));
-  FreeMemory(&(sgProduct.szProxyPort));
   FreeMemory(&(szTempSetupPath));
   FreeMemory(&(sgProduct.szSetupTitle0));
   FreeMemory(&(sgProduct.szSetupTitle1));
@@ -2552,7 +2587,7 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 
         case DSR_TEMP:
         case DSR_DOWNLOAD_SIZE:
-          if((LocateJar(siCTemp, NULL, 0) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
+          if((LocateJar(siCTemp, NULL, 0, FALSE) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
             ullTotalSize += siCTemp->ullInstallSizeArchive;
           break;
       }
@@ -2575,7 +2610,7 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 
           case DSR_TEMP:
           case DSR_DOWNLOAD_SIZE:
-            if((LocateJar(siCTemp, NULL, 0) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
+            if((LocateJar(siCTemp, NULL, 0, FALSE) == FALSE) || (dwType == DSR_DOWNLOAD_SIZE))
               ullTotalSize += siCTemp->ullInstallSizeArchive;
             break;
         }
@@ -2804,21 +2839,6 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
 HRESULT VerifyDiskSpace()
 {
-#ifdef XXX_SSU
-  ULONGLONG ullDSAPath;
-  ULONGLONG ullDSRPath;
-  ULONGLONG ullDSASysPath;
-  ULONGLONG ullDSRSysPath;
-  ULONGLONG ullDSATempPath;
-  ULONGLONG ullDSRTempPath;
-  ULONGLONG ullDSTotalAvailable;
-  ULONGLONG ullDSTotalRequired;
-  char      szSysPath[MAX_BUF];
-  char      szBufPath[MAX_BUF];
-  char      szBufSysPath[MAX_BUF];
-  char      szBufTempPath[MAX_BUF];
-#endif
-
   ULONGLONG ullDSAvailable;
   HRESULT   hRetValue = FALSE;
   dsN       *dsnComponentDSRequirement = NULL;
@@ -2847,112 +2867,6 @@ HRESULT VerifyDiskSpace()
   }
 
   DeInitDSNode(&dsnComponentDSRequirement);
-
-#ifdef XXX_SSU
-  /* Calculate disk space for destination path */
-  ullDSAPath = GetDiskSpaceAvailable(sgProduct.szPath);
-  ullDSRPath = GetDiskSpaceRequired(DSR_DESTINATION);
-
-  if(GetSystemDirectory(szSysPath, MAX_BUF) != 0)
-  {
-    /* Calculate disk space for system path */
-    ullDSASysPath = GetDiskSpaceAvailable(szSysPath);
-    ullDSRSysPath = GetDiskSpaceRequired(DSR_SYSTEM);
-  }
-  else
-  {
-    ullDSASysPath = 0;
-    ullDSRSysPath = 0;
-    ZeroMemory(szSysPath, MAX_BUF);
-  }
-
-  /* Calculate disk space for temp path */
-  ullDSATempPath = GetDiskSpaceAvailable(szTempDir);
-  ullDSRTempPath = GetDiskSpaceRequired(DSR_TEMP);
-
-  ParsePath(sgProduct.szPath, szBufPath,      sizeof(szBufPath),     PP_ROOT_ONLY);
-  ParsePath(szSysPath,        szBufSysPath,   sizeof(szBufSysPath),  PP_ROOT_ONLY);
-  ParsePath(szTempDir,        szBufTempPath,  sizeof(szBufTempPath), PP_ROOT_ONLY);
-
-  AppendBackSlash(szBufPath,      sizeof(szBufPath));
-  AppendBackSlash(szBufSysPath,   sizeof(szBufSysPath));
-  AppendBackSlash(szBufTempPath,  sizeof(szBufTempPath));
-
-  /* destination == temp == system */
-  if((lstrcmpi(szBufPath, szBufTempPath) == 0) &&
-     (lstrcmpi(szBufPath, szBufSysPath)  == 0))
-  {
-    ullDSTotalRequired  = ullDSRPath + ullDSRTempPath + ullDSRSysPath;
-    ullDSTotalAvailable = ullDSAPath;
-
-    if(ullDSTotalAvailable < ullDSTotalRequired)
-      return(ErrorMsgDiskSpace(ullDSTotalAvailable, ullDSTotalRequired, sgProduct.szPath, FALSE));
-  }
-  else
-  {
-    if((lstrcmpi(szBufPath,     szBufTempPath) != 0) &&
-       (lstrcmpi(szBufPath,     szBufSysPath)  != 0) &&
-       (lstrcmpi(szBufTempPath, szBufSysPath)  != 0))
-    {
-      /* check TEMP drive */
-      if(ullDSATempPath < ullDSRTempPath)
-      {
-        return(ErrorMsgDiskSpace(ullDSATempPath, ullDSRTempPath, szTempDir, TRUE));
-      }
-
-      /* check SYSTEM drive */
-      if(ullDSASysPath < ullDSRSysPath)
-      {
-        return(ErrorMsgDiskSpace(ullDSASysPath, ullDSRSysPath, szSysPath, TRUE));
-      }
-
-      /* check Destination drive */
-      if(ullDSAPath < ullDSRPath)
-      {
-        return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
-      }
-    }
-    else
-    {
-      /* temp == system */
-      if(lstrcmpi(szBufTempPath, szBufSysPath) == 0)
-      {
-        /* check temp + system */
-        if(ullDSATempPath < (ullDSRTempPath + ullDSRSysPath))
-          return(ErrorMsgDiskSpace(ullDSATempPath, (ullDSRTempPath + ullDSRSysPath), szTempDir, TRUE));
-
-        /* check destination only */
-        if(ullDSAPath < ullDSRPath)
-          return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
-      }
-
-      /* destination == temp */
-      if(lstrcmpi(szBufPath, szBufTempPath) == 0)
-      {
-        /* check destination + temp */
-        if(ullDSAPath < (ullDSRPath + ullDSRTempPath))
-          return(ErrorMsgDiskSpace(ullDSAPath, (ullDSRPath + ullDSRTempPath), sgProduct.szPath, FALSE));
-
-        /* check system only */
-        if(ullDSASysPath < ullDSRSysPath)
-          return(ErrorMsgDiskSpace(ullDSASysPath, ullDSRSysPath, szSysPath, TRUE));
-      }
-
-      /* destination == system */
-      if(lstrcmpi(szBufPath, szBufSysPath) == 0)
-      {
-        /* check destination + system */
-        if(ullDSAPath < (ullDSRPath + ullDSRSysPath))
-          return(ErrorMsgDiskSpace(ullDSAPath, (ullDSRPath + ullDSRSysPath), sgProduct.szPath, FALSE));
-
-        /* check temp only */
-        if(ullDSATempPath < ullDSRTempPath)
-          return(ErrorMsgDiskSpace(ullDSATempPath, ullDSRTempPath, szTempDir, TRUE));
-      }
-    }
-  }
-#endif
-
   return(hRetValue);
 }
 
@@ -3947,19 +3861,24 @@ BOOL CheckLegacy(HWND hDlg)
 {
   char      szSection[MAX_BUF];
   char      szFilename[MAX_BUF];
-  LPSTR     szMessage[2];
+  LPSTR     szMessage[3];
   char      szIndex[MAX_BUF];
   char      szVersionNew[MAX_BUF];
   char      szDecryptedFilePath[MAX_BUF];
   int       iIndex;
   BOOL      bContinue;
+  BOOL      bRv;
   DWORD     dwRv0;
   DWORD     dwRv1;
   verBlock  vbVersionNew;
   verBlock  vbVersionOld;
 
-  bContinue = TRUE;
-  iIndex    = -1;
+  bRv          = FALSE;
+  szMessage[0] = NULL;
+  szMessage[1] = NULL;
+  szMessage[2] = NULL;
+  bContinue    = TRUE;
+  iIndex       = -1;
   while(bContinue)
   {
     ZeroMemory(szFilename,      sizeof(szFilename));
@@ -3979,13 +3898,31 @@ BOOL CheckLegacy(HWND hDlg)
     else if(*szFilename != '\0')
     {
       if((szMessage[0] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-        return(1);
+      {
+        bRv = TRUE;
+        break;
+      }
       if((szMessage[1] = NS_GlobalAlloc(MAX_BUF)) == NULL)
-        return(1);
+      {
+        bRv = TRUE;
+        break;
+      }
+      if((szMessage[2] = NS_GlobalAlloc(MAX_BUF)) == NULL)
+      {
+        bRv = TRUE;
+        break;
+      }
 
-      GetPrivateProfileString(szSection, "Message0", "", szMessage[0], MAX_BUF, szFileIniConfig);
-      GetPrivateProfileString(szSection, "Message1", "", szMessage[1], MAX_BUF, szFileIniConfig);
-      if((*szMessage[0] == '\0') && (*szMessage[1] == '\0'))
+      lstrcpy(szMessage[0], sgProduct.szPath);
+      if(*sgProduct.szSubPath != '\0')
+      {
+        AppendBackSlash(szMessage[0], MAX_BUF);
+        lstrcat(szMessage[0], sgProduct.szSubPath);
+      }
+
+      GetPrivateProfileString(szSection, "Message0", "", szMessage[1], MAX_BUF, szFileIniConfig);
+      GetPrivateProfileString(szSection, "Message1", "", szMessage[2], MAX_BUF, szFileIniConfig);
+      if((*szMessage[1] == '\0') && (*szMessage[2] == '\0'))
         /* no message string input. so just continue with the next check */
         continue;
 
@@ -3996,7 +3933,10 @@ BOOL CheckLegacy(HWND hDlg)
         {
           MessageBeep(MB_ICONEXCLAMATION);
           if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
-            return(TRUE);
+          {
+            bRv = TRUE;
+            break;
+          }
         }
         /* file does not exist, so it's okay.  Continue with the next check */
         continue;
@@ -4009,17 +3949,23 @@ BOOL CheckLegacy(HWND hDlg)
         {
           MessageBeep(MB_ICONEXCLAMATION);
           if((gdwUpgradeValue = DialogBoxParam(hSetupRscInst, MAKEINTRESOURCE(DLG_UPGRADE), hDlgCurrent, DlgProcUpgrade, (LPARAM)szMessage)) == UG_GOBACK)
-            return(TRUE);
+          {
+            bRv = TRUE;
+            break;
+          }
         }
       }
-      FreeMemory(&szMessage[0]);
-      FreeMemory(&szMessage[1]);
     }
   }
+
+  FreeMemory(&szMessage[0]);
+  FreeMemory(&szMessage[1]);
+  FreeMemory(&szMessage[2]);
+
   /* returning TRUE means the user wants to go back and choose a different destination path
    * returning FALSE means the user is ignoring the warning
    */
-  return(FALSE);
+  return(bRv);
 }
 
 COLORREF DecryptFontColor(LPSTR szColor)
@@ -4050,6 +3996,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 {
   HDC  hdc;
   char szBuf[MAX_BUF];
+  char szPreviousPath[MAX_BUF];
   char szShowDialog[MAX_BUF];
 
   if(CheckInstances())
@@ -4094,12 +4041,74 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   /* get product name description */
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF, szFileIniConfig);
   
   /* get main install path */
-  if(LocatePreviousPath("Locate Previous Product Path", sgProduct.szPath, MAX_PATH) == FALSE)
+  if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
     GetPrivateProfileString("General", "Path", "", szBuf, MAX_BUF, szFileIniConfig);
     DecryptString(sgProduct.szPath, szBuf);
+  }
+  else
+  {
+    /* If the previous path is located in the regsitry, then we need to check to see if the path from
+     * the regsitry plus the Sub Path contains the Program Name file.  If it does, then we have the
+     * correct path, so just use it.
+     *
+     * If it does not contain the Program Name file, then check the parent path (from the registry) +
+     * SubPath.  If this path contains the Program Name file, then we found an older path format.  We
+     * then need to use the parent path as the default path.
+     *
+     * Only do the older path format checking if the Sub Path= and Program Name= keys exist.  If
+     * either are not set, then assume that the path from the registry is what we want.
+     */
+    if((*sgProduct.szSubPath != '\0') && (*sgProduct.szProgramName != '\0'))
+    {
+      /* If the Sub Path= and Program Name= keys exist, do extra parsing for the correct path */
+      lstrcpy(szBuf, szPreviousPath);
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      lstrcat(szBuf, sgProduct.szSubPath);
+      AppendBackSlash(szBuf, sizeof(szBuf));
+      lstrcat(szBuf, sgProduct.szProgramName);
+
+      /* Check to see if PreviousPath + SubPath + ProgramName exists.  If it does, then we have the
+       * correct path.
+       */
+      if(FileExists(szBuf))
+      {
+        lstrcpy(sgProduct.szPath, szPreviousPath);
+      }
+      else
+      {
+        /* If not, try parent of PreviousPath + SubPath + ProgramName.
+         * If this exists, then we need to use the parent path of PreviousPath.
+         */
+        RemoveBackSlash(szPreviousPath);
+        ParsePath(szPreviousPath, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+        AppendBackSlash(szBuf, sizeof(szBuf));
+        lstrcat(szBuf, sgProduct.szSubPath);
+        AppendBackSlash(szBuf, sizeof(szBuf));
+        lstrcat(szBuf, sgProduct.szProgramName);
+
+        if(FileExists(szBuf))
+        {
+          RemoveBackSlash(szPreviousPath);
+          ParsePath(szPreviousPath, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+          lstrcpy(sgProduct.szPath, szBuf);
+        }
+        else
+        {
+          /* If we still can't locate ProgramName file, then use the default in the config.ini */
+          GetPrivateProfileString("General", "Path", "", szBuf, MAX_BUF, szFileIniConfig);
+          DecryptString(sgProduct.szPath, szBuf);
+        }
+      }
+    }
+    else
+    {
+      lstrcpy(sgProduct.szPath, szPreviousPath);
+    }
   }
   RemoveBackSlash(sgProduct.szPath);
 
@@ -4237,10 +4246,15 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     diProgramFolder.bShowDialog = TRUE;
 
   /* Advanced Settings dialog */
-  GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Advanced Settings",       "Title",        "", diAdvancedSettings.szTitle,      MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Advanced Settings",       "Message0",     "", diAdvancedSettings.szMessage0,   MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Advanced Settings",       "Message1",     "", diAdvancedSettings.szMessage1,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",    "", szShowDialog,                     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Title",          "", diAdvancedSettings.szTitle,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Message0",       "", diAdvancedSettings.szMessage0,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Message1",       "", diAdvancedSettings.szMessage1,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Server",   "", diAdvancedSettings.szProxyServer, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Port",     "", diAdvancedSettings.szProxyPort,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Save Installer", "", szBuf,                            MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diAdvancedSettings.bSaveInstaller = TRUE;
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diAdvancedSettings.bShowDialog = TRUE;
 
@@ -4497,7 +4511,7 @@ DWORD GetTotalArchivesToDownload()
   {
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
-      if(LocateJar(siCObject, NULL, 0) == FALSE)
+      if(LocateJar(siCObject, NULL, 0, FALSE) == FALSE)
       {
         ++dwTotalArchivesToDownload;
       }
@@ -4949,10 +4963,20 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   else if(lstrcmpi(szVariable, "SETUP PATH") == 0)
   {
     lstrcpy(szVariable, sgProduct.szPath);
+    if(*sgProduct.szSubPath != '\0')
+    {
+      AppendBackSlash(szVariable, dwVariableSize);
+      lstrcat(szVariable, sgProduct.szSubPath);
+    }
   }
   else if(lstrcmpi(szVariable, "Default Path") == 0)
   {
     lstrcpy(szVariable, sgProduct.szPath);
+    if(*sgProduct.szSubPath != '\0')
+    {
+      AppendBackSlash(szVariable, dwVariableSize);
+      lstrcat(szVariable, sgProduct.szSubPath);
+    }
   }
   else if(lstrcmpi(szVariable, "SETUP STARTUP PATH") == 0)
   {
@@ -5101,7 +5125,7 @@ HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
     }
     else
     {
-      bDecrypted = DecryptVariable(szVariable, MAX_BUF);
+      bDecrypted = DecryptVariable(szVariable, sizeof(szVariable));
     }
 
     if(!bDecrypted)
@@ -5381,8 +5405,15 @@ void CleanTempFiles()
 
 void DeInitialize()
 {
+  char szBuf[MAX_BUF];
+
   if(bCreateDestinationDir)
-    DirectoryRemove(sgProduct.szPath, FALSE);
+  {
+    lstrcpy(szBuf, sgProduct.szPath);
+    AppendBackSlash(szBuf, sizeof(szBuf));
+    DirectoryRemove(szBuf, FALSE);
+  }
+
   if(hbmpBoxChecked)
     DeleteObject(hbmpBoxChecked);
   if(hbmpBoxCheckedDisabled)
@@ -5409,10 +5440,6 @@ void DeInitialize()
 
   FreeMemory(&szTempDir);
   FreeMemory(&szOSTempDir);
-  FreeMemory(&sgProduct.szProgramFolderPath);
-  FreeMemory(&sgProduct.szProgramFolderName);
-  FreeMemory(&sgProduct.szProductName);
-  FreeMemory(&sgProduct.szPath);
   FreeMemory(&szSetupDir);
   FreeMemory(&szFileIniConfig);
   FreeMemory(&szEGlobalAlloc);
@@ -5437,6 +5464,11 @@ void SaveInstallerFiles()
 
   lstrcpy(szDestination, sgProduct.szPath);
   AppendBackSlash(szDestination, sizeof(szDestination));
+  if(*sgProduct.szSubPath != '\0')
+  {
+    lstrcat(szDestination, sgProduct.szSubPath);
+    AppendBackSlash(szDestination, sizeof(szDestination));
+  }
   lstrcat(szDestination, "Install");
   AppendBackSlash(szDestination, sizeof(szDestination));
 
@@ -5488,7 +5520,7 @@ void SaveInstallerFiles()
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
-    LocateJar(siCObject, szArchivePath, sizeof(szArchivePath));
+    LocateJar(siCObject, szArchivePath, sizeof(szArchivePath), FALSE);
     if(*szArchivePath != '\0')
     {
       lstrcpy(szBuf, szArchivePath);
