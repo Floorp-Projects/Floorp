@@ -319,6 +319,11 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) goto done;
     }
 
+    // Hook up the notification callbacks InterfaceRequestor...
+    rv = mFileTransport->SetNotificationCallbacks(mCallbacks,
+                                                 (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
+    if (NS_FAILED(rv)) goto done;
+
 #if 0
     if (mContentType == nsnull) {
         rv = mStreamIO->Open(&mContentType, &mContentLength);
@@ -393,8 +398,18 @@ nsStreamIOChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificatio
 NS_IMETHODIMP
 nsStreamIOChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
+  nsresult rv = NS_OK;
+
   mCallbacks = aNotificationCallbacks;
-  return NS_OK;
+
+  if (mFileTransport) {
+    // If a file transport is active, then pass it the new notification
+    // callbacks too...
+    rv = mFileTransport->SetNotificationCallbacks(aNotificationCallbacks,
+                                                 (mLoadAttributes & nsIChannel::LOAD_BACKGROUND));
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
