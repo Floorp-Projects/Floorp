@@ -86,4 +86,5 @@ else
 endif
 	cd ui;gmake
 	gmake
+	cd server;gmake build_xpi
 
