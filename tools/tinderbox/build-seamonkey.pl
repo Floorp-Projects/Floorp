@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.9 $ ';
+$Version = '$Revision: 1.10 $ ';
 
 
 sub PrintUsage {
@@ -575,6 +575,18 @@ sub PrintEnv {
   foreach $key (sort keys %ENV) {
     print LOG "$key=$ENV{$key}\n";
     print "$key=$ENV{$key}\n";
+  }
+  if (-e $ENV{MOZCONFIG}) {
+    print LOG '-->mozconfig<----------------------------------------\n';
+    print     '-->mozconfig<----------------------------------------\n';
+    open CONFIG, "$ENV{MOZCONFIG}";
+    while (<CONFIG>) {
+      print LOG "$_";
+      print     "$_";
+    }
+    close CONFIG;
+    print LOG '-->end mozconfig<----------------------------------------\n';
+    print     '-->end mozconfig<----------------------------------------\n';
   }
 }
 
