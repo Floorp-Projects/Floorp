@@ -28,6 +28,7 @@
 
 class nsIDocumentEncoder;
 class nsIDocument;
+class nsIDOMRange;
 class nsISelection;
 class nsIOutputStream;
 class nsISupportsArray;
@@ -51,9 +52,18 @@ class nsISupportsArray;
 
 #define NS_DOC_ENCODER_CONTRACTID_BASE "@mozilla.org/layout/documentEncoder;1?type="
 
+// {7f915b01-98fc-11d4-8eb0-a803f80ff1bc}
+#define NS_HTMLCOPY_TEXT_ENCODER_CID                      \
+{ 0x7f915b01, 0x98fc, 0x11d4, { 0x8e, 0xb0, 0xa8, 0x03, 0xf8, 0x0f, 0xf1, 0xbc } }
+
+
+#define NS_HTMLCOPY_ENCODER_CONTRACTID "@mozilla.org/layout/htmlCopyEncoder"
+
 class nsIDocumentEncoder : public nsISupports
 {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
 
   /**
    * Output methods flag bits.
@@ -106,13 +116,12 @@ public:
     OutputCRLineBreak = 512,
     OutputLFLineBreak = 1024
   };
-  
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
 
   /**
    *  Initialize with a pointer to the document and the mime type.
    */
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 flags) = 0;
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType,
+                  PRUint32 flags) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
@@ -120,6 +129,13 @@ public:
    *  document is encoded.
    */
   NS_IMETHOD SetSelection(nsISelection* aSelection) = 0;
+
+  /**
+   *  If the range is set to a non-null value, then the
+   *  range is used for encoding, otherwise the entire
+   *  document or selection is encoded.
+   */
+  NS_IMETHOD SetRange(nsIDOMRange* aRange) = 0;
 
   /**
    *  Documents typically have an intrinsic character set.
@@ -146,25 +162,17 @@ public:
    */
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream) = 0;
   NS_IMETHOD EncodeToString(nsAWritableString& aOutputString) = 0;
+
+  /**
+   *  The document is encoded, the result is sent to the 
+   *  to aEncodedString.  Parent heirarchy information is encoded
+   *  to aContextString.  Extra context info is encoded in aInfoString.
+   * 
+   */
+  NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
+                                       nsAWritableString& aContextString, 
+                                       nsAWritableString& aInfoString) = 0;
 };
-
-// XXXXXXXXXXXXXXXX nsITextEncoder is going away! XXXXXXXXXXXXXXXXXXXXXX
-#ifdef USE_OBSOLETE_TEXT_ENCODER
-// Example of a output service for a particular encoder.
-// The text encoder handles XIF, HTML, and plaintext.
-class nsITextEncoder : public nsIDocumentEncoder
-{
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_TEXT_ENCODER_CID; return iid; }
-
-  // Get embedded objects -- images, links, etc.
-  // NOTE: we may want to use an enumerator
-  NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
-  NS_IMETHOD SetWrapColumn(PRUint32 aWC) = 0;
-  NS_IMETHOD AddHeader(PRBool aYes) = 0;
-};
-#endif /* USE_OBSOLETE_TEXT_ENCODER */
-
 
 #endif /* nsIDocumentEncoder_h__ */
 

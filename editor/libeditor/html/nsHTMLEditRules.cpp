@@ -69,15 +69,6 @@ enum
  ********************************************************/
  
  
-class nsTrivialFunctor : public nsBoolDomIterFunctor
-{
-  public:
-    virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
-    {
-      return PR_TRUE;
-    }
-};
-
 class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 {
   public:
@@ -213,9 +204,8 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   }
   
   // make a utility range for use by the listenter
-  res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
-                                                    getter_AddRefs(mUtilRange));
-  if (NS_FAILED(res)) return res;
+  mUtilRange = do_CreateInstance(kRangeCID);
+  if (!mUtilRange) return NS_ERROR_NULL_POINTER;
   
   // pass over document and add any needed mozBRs
   // first turn off undo
@@ -230,10 +220,11 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   {
     // temporarily turn off rules sniffing
     nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
-    res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
-                                                    getter_AddRefs(mDocChangeRange));
-    if (NS_FAILED(res)) return res;
-    if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
+    if (!mDocChangeRange)
+    {
+      mDocChangeRange = do_CreateInstance(kRangeCID);
+      if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
+    }
     mDocChangeRange->SelectNode(bodyNode);
     res = ReplaceNewlines(mDocChangeRange);
     if (NS_FAILED(res)) return res;
@@ -260,11 +251,9 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   if (!mActionNesting)
   {
-    mDocChangeRange = nsnull;  // clear out our accounting of what changed
-    // total hack to clear mUtilRange.  This is because there is the
-    // unposition call is not available thru nsIDOMRange.idl
-    nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
-                                                    getter_AddRefs(mUtilRange));
+    if (mDocChangeRange) mDocChangeRange->Detach();  // clear out our accounting of what changed
+    if (mUtilRange) mUtilRange->Detach();  // ditto for mUtilRange.  
+    
     // turn off caret
     nsCOMPtr<nsISelectionController> selCon;
     mEditor->GetSelectionController(getter_AddRefs(selCon));
@@ -312,7 +301,18 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   
-  if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
+  // do we have a real range to act on?
+  PRBool bDamagedRange = PR_FALSE;  
+  if (mDocChangeRange)
+  {  
+    nsCOMPtr<nsIDOMNode> rangeStartParent, rangeEndParent;
+    mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartParent));
+    mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndParent));
+    if (rangeStartParent && rangeEndParent) 
+      bDamagedRange = PR_TRUE; 
+  }
+  
+  if (bDamagedRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
   {
     // dont let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
@@ -359,10 +359,11 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     res = RemoveEmptyNodes();
     if (NS_FAILED(res)) return res;
     
-    // adjust selection for insert text and delete actions
+    // adjust selection for insert text, html paste, and delete actions
     if ((action == nsEditor::kOpInsertText) || 
         (action == nsEditor::kOpInsertIMEText) ||
-        (action == nsEditor::kOpDeleteSelection))
+        (action == nsEditor::kOpDeleteSelection) ||
+        (action == nsEditor::kOpHTMLPaste))
     {
       res = AdjustSelection(selection, aDirection);
       if (NS_FAILED(res)) return res;
@@ -741,6 +742,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
         {
           nsAutoString tag;
           nsEditor::GetTagString(block,tag);
+          tag.ToLowerCase();
           format = tag;
         }
         else
@@ -757,6 +759,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     {
       nsAutoString tag;
       nsEditor::GetTagString(curNode,tag);
+      tag.ToLowerCase();
       format = tag;
     }
     else if (nsIEditProperty::p == atom.get()           ||
@@ -991,14 +994,15 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // the correct portion of the document.
     if (!mDocChangeRange)
     {
-      res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
-                                                    getter_AddRefs(mDocChangeRange));
-      if (NS_FAILED(res)) return res;
-    		if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
+      mDocChangeRange = do_CreateInstance(kRangeCID);
+      if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
     }
     res = mDocChangeRange->SetStart(selNode, selOffset);
     if (NS_FAILED(res)) return res;
-    res = mDocChangeRange->SetEnd(curNode, curOffset);
+    if (curNode)
+      res = mDocChangeRange->SetEnd(curNode, curOffset);
+    else
+      res = mDocChangeRange->SetEnd(selNode, selOffset);
     if (NS_FAILED(res)) return res;
   }
   return res;
@@ -1906,6 +1910,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     {
       nsAutoString existingListStr;
       res = mEditor->GetTagString(curNode, existingListStr);
+      existingListStr.ToLowerCase();
       // do we have a curList already?
       if (curList && !nsHTMLEditUtils::IsDescendantOf(curNode, curList))
       {
@@ -1935,6 +1940,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     {
       nsAutoString existingListStr;
       res = mEditor->GetTagString(curParent, existingListStr);
+      existingListStr.ToLowerCase();
       if ( existingListStr != *aListType )
       {
         // list item is in wrong type of list.  
@@ -2319,6 +2325,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
       {
         nsAutoString listTag;
         nsEditor::GetTagString(curParent,listTag);
+        listTag.ToLowerCase();
         // create a new nested list of correct type
         res = SplitAsNeeded(&listTag, &curParent, &offset);
         if (NS_FAILED(res)) return res;
@@ -4385,7 +4392,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
     if (NS_FAILED(res)) return res;
     nsAutoString curNodeTag;
     nsEditor::GetTagString(curNode, curNodeTag);
-        
+    curNodeTag.ToLowerCase();
  
     // is it already the right kind of block?
     if (!bNoParent && curNodeTag == *aBlockTag)
@@ -5001,11 +5008,8 @@ nsHTMLEditRules::RemoveEmptyNodes()
   if (NS_FAILED(res)) return res;
 
   // need an iterator
-  res = nsComponentManager::CreateInstance(kContentIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
+  iter = do_CreateInstance(kContentIteratorCID);
+  if (!iter) return NS_ERROR_NULL_POINTER;
   
   // loop over iter and create list of empty containers
   do

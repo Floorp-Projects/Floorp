@@ -75,7 +75,8 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
                                        PRInt32 aStartOffset,
                                        PRInt32 aEndOffset,
                                        nsAWritableString& aStr,
-                                       PRBool aTranslateEntities)
+                                       PRBool aTranslateEntities,
+                                       PRBool aIncrColumn)
 {
   nsCOMPtr<nsITextContent> content = do_QueryInterface(aNode);
   if (!content) return NS_ERROR_FAILURE;
@@ -88,12 +89,14 @@ nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode,
     if (frag->Is2b()) {
       AppendToString(nsLiteralString(frag->Get2b()+aStartOffset, length),
                      aStr,
-                     aTranslateEntities);
+                     aTranslateEntities,
+                     aIncrColumn);
     }
     else {
       AppendToString(NS_ConvertASCIItoUCS2(frag->Get1b()+aStartOffset, length),
                      aStr,
-                     aTranslateEntities);
+                     aTranslateEntities,
+                     aIncrColumn);
     }
   }
 
@@ -108,8 +111,7 @@ nsXMLContentSerializer::AppendText(nsIDOMText* aText,
 {
   NS_ENSURE_ARG(aText);
 
-
-  return AppendTextData(aText, aStartOffset, aEndOffset, aStr, PR_TRUE);
+  return AppendTextData(aText, aStartOffset, aEndOffset, aStr, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -122,7 +124,7 @@ nsXMLContentSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
   nsresult rv;
 
   AppendToString(NS_LITERAL_STRING("<![CDATA["), aStr);
-  rv = AppendTextData(aCDATASection, aStartOffset, aEndOffset, aStr, PR_FALSE);
+  rv = AppendTextData(aCDATASection, aStartOffset, aEndOffset, aStr, PR_FALSE, PR_TRUE);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
   AppendToString(NS_LITERAL_STRING("]]>"), aStr);
 
@@ -200,7 +202,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   rv = aDoctype->GetSystemId(systemId);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = aDoctype->GetInternalSubset(publicId);
+  rv = aDoctype->GetInternalSubset(internalSubset);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), aStr);
@@ -538,7 +540,8 @@ static const char* kEntities[] = {
 void
 nsXMLContentSerializer::AppendToString(const nsAReadableString& aStr,
                                        nsAWritableString& aOutputStr,
-                                       PRBool aTranslateEntities)
+                                       PRBool aTranslateEntities,
+                                       PRBool aIncrColumn)
 {
   if (aTranslateEntities) {
     nsReadingIterator<PRUnichar> done_reading;

@@ -85,9 +85,9 @@ class nsParserBundle;
 #endif
 
 
-CLASS_EXPORT_HTMLPARS nsParser : public nsIParser,
-                                 public nsISupportsParserBundle,
-                                 public nsIStreamListener{
+class nsParser : public nsIParser,
+                 public nsISupportsParserBundle,
+                 public nsIStreamListener{
 
   
   public:

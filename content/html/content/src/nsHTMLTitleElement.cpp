@@ -30,7 +30,6 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIXIFConverter.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"

@@ -32,7 +32,7 @@ CPPSRCS = \
 	nsFileSpecWithUIImpl.cpp         \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
-	nsXIFFormatConverter.cpp         \
+	nsHTMLFormatConverter.cpp         \
 	nsPrimitiveHelpers.cpp         \
 	nsXPLookAndFeel.cpp         \
 	$(NULL)
@@ -46,7 +46,7 @@ OBJS= \
 	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
-	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
+	.\$(OBJDIR)\nsHTMLFormatConverter.obj  \
 	.\$(OBJDIR)\nsPrimitiveHelpers.obj  \
 	.\$(OBJDIR)\nsXPLookAndFeel.obj  \
 	$(NULL)

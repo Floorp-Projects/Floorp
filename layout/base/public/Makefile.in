@@ -88,7 +88,8 @@ nsIStatefulFrame.h \
 nsISelfScrollingFrame.h \
 nsIScrollableFrame.h \
 nsIPrivateDOMImplementation.h \
-nsIXIFConverter.h \
+nsIContentSerializer.h \
+nsIHTMLToTextSink.h \
 $(NULL)
 
 XPIDLSRCS	= \

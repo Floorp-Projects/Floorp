@@ -28,7 +28,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIXIFConverter.h"
 #include "nsRange.h"
 
 #include "nsISelection.h"
@@ -168,9 +167,6 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
   // Implementation for nsIContent
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const;
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const;
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const;
   NS_IMETHOD CanContainChildren(PRBool& aResult) const { aResult = PR_FALSE; return NS_OK; }
 
   NS_IMETHOD ChildCount(PRInt32& aResult) const { aResult = 0; return NS_OK;  }
@@ -321,30 +317,6 @@ nsresult nsAttributeContent::QueryInterface(const nsIID& aIID, void** aInstanceP
 
 // Implementation of nsIContent
 
-
-nsresult
-nsAttributeContent::BeginConvertToXIF(nsIXIFConverter* ) const
-{
-  return NS_OK;
-}
-
-nsresult
-nsAttributeContent::FinishConvertToXIF(nsIXIFConverter*) const
-{
-  return NS_OK;
-}
-
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- */
-nsresult
-nsAttributeContent::ConvertContentToXIF(nsIXIFConverter* ) const
-{
-
-  return NS_OK;
-}
 
 void
 nsAttributeContent::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,

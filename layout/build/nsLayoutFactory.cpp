@@ -62,7 +62,10 @@
 
 #include "nsIAutoCopy.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIXIFConverter.h"
+
+#include "nsXMLContentSerializer.h"
+#include "nsHTMLContentSerializer.h"
+#include "nsPlainTextSerializer.h"
 
 #include "nsINodeInfo.h"
 #include "nsIComputedDOMStyle.h"
@@ -103,6 +106,11 @@ static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
+static NS_DEFINE_CID(kHTMLCopyTextEncoderCID, NS_HTMLCOPY_TEXT_ENCODER_CID);
+
+static NS_DEFINE_CID(kXMLContentSerializerCID, NS_XMLCONTENTSERIALIZER_CID);
+static NS_DEFINE_CID(kHTMLContentSerializerCID, NS_HTMLCONTENTSERIALIZER_CID);
+static NS_DEFINE_CID(kPlainTextSerializerCID, NS_PLAINTEXTSERIALIZER_CID);
 
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
@@ -120,7 +128,6 @@ static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
 static NS_DEFINE_CID(kContentPolicyCID, NS_CONTENTPOLICY_CID);
-static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 
@@ -140,7 +147,7 @@ extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 extern nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
 extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 
-extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
+extern nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 extern nsresult NS_NewXBLService(nsIXBLService** aResult);
@@ -161,7 +168,6 @@ extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
-extern nsresult NS_NewXIFConverter(nsIXIFConverter** aResult);
 
 //----------------------------------------------------------------------
 
@@ -412,6 +418,34 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+  else if (mClassID.Equals(kHTMLCopyTextEncoderCID)) {
+    res = NS_NewHTMLCopyTextEncoder((nsIDocumentEncoder**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLCopyTextEncoder", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXMLContentSerializerCID)) {
+    res = NS_NewXMLContentSerializer((nsIContentSerializer**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXMLContentSerializer", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kHTMLContentSerializerCID)) {
+    res = NS_NewHTMLContentSerializer((nsIContentSerializer**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLContentSerializer", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kPlainTextSerializerCID)) {
+    res = NS_NewPlainTextSerializer((nsIContentSerializer**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewPlainTextSerializer", res);
+      return res;
+    }
+  }
   else if (mClassID.Equals(kXBLServiceCID)) {
     res = NS_NewXBLService((nsIXBLService**) &inst);
     if (NS_FAILED(res)) {
@@ -489,13 +523,6 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
-  else if (mClassID.Equals(kXIFConverterCID)) {
-    res = NS_NewXIFConverter((nsIXIFConverter**) &inst);
-    if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewAutoCopyService", res);
-      return res;
-    }
-  }  
   else if (mClassID.Equals(kDOMImplementationCID)) {
     res = NS_NewDOMImplementation((nsIDOMDOMImplementation**) &inst);
     if (NS_FAILED(res)) {

@@ -1082,3 +1082,13 @@ nsresult COtherDTD::WillInterruptParse(void){
   return result;
 }
 
+// CTransitionalDTD is a subclass of COtherDTD that defaults to transitional mode.  
+// Used by the editor
+
+CTransitionalDTD::CTransitionalDTD()
+{
+  if (mBodyContext) mBodyContext->mFlags.mTransitional = PR_TRUE;
+}
+
+CTransitionalDTD::~CTransitionalDTD() {}
+

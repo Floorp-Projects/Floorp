@@ -68,7 +68,6 @@
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_CID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
-static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,          NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kPrefServiceCID,          NS_PREF_CID);
 

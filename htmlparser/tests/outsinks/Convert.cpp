@@ -23,12 +23,12 @@
 #include <ctype.h>      // for isdigit()
 
 #include "CNavDTD.h"
-#include "nsXIFDTD.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "nsHTMLContentSinkStream.h"
+#include "nsIContentSerializer.h"
+#include "nsLayoutCID.h"
+#include "nsIHTMLToTextSink.h"
 #include "nsIComponentManager.h"
 
 extern "C" void NS_SetupRegistry();
@@ -42,11 +42,8 @@ extern "C" void NS_SetupRegistry();
 #define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
 #endif
 
-// Class IID's
-static NS_DEFINE_IID(kParserCID, NS_PARSER_IID);
-
-// Interface IID's
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
+static NS_DEFINE_CID(kParserCID, NS_PARSER_IID); // don't panic. NS_PARSER_IID just has the wrong name.
 
 int
 Compare(nsString& str, nsString& aFileName)
@@ -120,27 +117,55 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
     return NS_ERROR_FAILURE;
   }
 
-  nsIHTMLContentSink* sink = nsnull;
-
   // Create the appropriate output sink
-  if (outType.EqualsWithConversion("text/html"))
-    rv = NS_New_HTML_ContentSinkStream(&sink, &outString, flags);
+#ifdef USE_SERIALIZER
+  nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
+  progId.AppendWithConversion(outType);
 
-  else  // default to plaintext
-    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, wrapCol, flags);
+  // The syntax used here doesn't work
+  nsCOMPtr<nsIContentSerializer> mSerializer;
+  mSerializer = do_CreateInstance(NS_STATIC_CAST(const char *, progId));
+  NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);
 
-  if (NS_FAILED(rv))
+  mSerializer->Init(flags, wrapCol);
+
+  nsCOMPtr<nsIHTMLContentSink> sink (do_QueryInterface(mSerializer));
+  if (!sink)
   {
-    printf("Couldn't create new content sink: 0x%x\n", rv);
-    return rv;
+    printf("Couldn't get content sink!\n");
+    return NS_ERROR_UNEXPECTED;
   }
+#else /* USE_SERIALIZER */
+  nsCOMPtr<nsIContentSink> sink;
+  if (inType != NS_LITERAL_STRING("text/html")
+      || outType != NS_LITERAL_STRING("text/plain"))
+  {
+    char* in = inType.ToNewCString();
+    char* out = outType.ToNewCString();
+    printf("Don't know how to convert from %s to %s\n", in, out);
+    Recycle(in);
+    Recycle(out);
+    return NS_ERROR_FAILURE;
+  }
+
+  sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
+  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
+
+  textSink->Initialize(&outString, flags, wrapCol);
+#endif /* USE_SERIALIZER */
 
   parser->SetContentSink(sink);
   nsIDTD* dtd = nsnull;
-  if (inType.EqualsWithConversion("text/xif"))
-    rv = NS_NewXIFDTD(&dtd);
-  else
+  if (inType.EqualsWithConversion("text/html"))
     rv = NS_NewNavHTMLDTD(&dtd);
+  else
+  {
+    printf("Don't know how to deal with non-html input!\n");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
   if (NS_FAILED(rv))
   {
     printf("Couldn't create new HTML DTD: 0x%x\n", rv);
@@ -159,7 +184,6 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   }
 
   NS_IF_RELEASE(dtd);
-  NS_IF_RELEASE(sink);
   NS_RELEASE(parser);
 
   if (compareAgainst.Length() > 0)

@@ -957,67 +957,11 @@ class CLIElement: public CElement {
 public:
 
   CLIElement(eHTMLTags aTag=eHTMLTag_li) : CElement(aTag) {
-    CListElement::Initialize(*this,aTag);
+    CFlowElement::Initialize(*this,aTag);
     mGroup.mAllBits=0;
     mGroup.mBits.mList=1;
-    mInlineGroup=CInlineElement::GetContainedGroups();
-    mFlowGroup=mInlineGroup;
-    mFlowGroup.mBits.mBlock=1;
-    mFlowGroup.mBits.mBlockEntity=1;
   }
 
-  /**********************************************************
-    LI handles the opening of it's own children
-   **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-
-    PRInt32 theCount=aContext->GetCount();
-    eHTMLTags theGrandParent=aContext->TagAt(theCount-2);
-
-    switch(theGrandParent) {
-
-      case eHTMLTag_menu:
-      case eHTMLTag_dir:
-        mContainsGroups=mInlineGroup;
-        break;
-
-      default:
-        mContainsGroups=mFlowGroup;
-        break;
-    }
-
-    return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
-  }
-
-  virtual PRBool CanContain(CElement* anElement,nsDTDContext* aContext) {
-    PRBool result=(mTag==anElement->mTag) ? result=PR_FALSE : CElement::CanContain(anElement,aContext);
-    return result;
-  }
-
-  /**********************************************************
-    LI handles the closing of it's own children
-   **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    PRInt32 theCount=aContext->GetCount();
-    eHTMLTags theGrandParent=aContext->TagAt(theCount-2);
-
-    switch(theGrandParent) {
-
-      case eHTMLTag_menu:
-      case eHTMLTag_dir:
-        mContainsGroups=mInlineGroup;
-        break;
-
-      default:
-        mContainsGroups=mFlowGroup;
-        break;
-    }
-
-    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
-  }
-
-  CGroupMembers mFlowGroup;
-  CGroupMembers mInlineGroup;
 };
 
 /**********************************************************

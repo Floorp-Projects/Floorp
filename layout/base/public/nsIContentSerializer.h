@@ -70,6 +70,8 @@ class nsIContentSerializer : public nsISupports {
 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
                               nsAWritableString& aStr) = 0;
+
+  NS_IMETHOD Flush(nsAWritableString& aStr) = 0;
 };
 
 #define NS_CONTENTSERIALIZER_CONTRACTID_PREFIX \

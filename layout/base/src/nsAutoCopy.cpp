@@ -31,9 +31,15 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocumentEncoder.h"
 
 #include "nsIDocument.h"
 #include "nsSupportsPrimitives.h"
+
+// private clipboard data flavors for html copy, used by editor when pasting
+#define kHTMLContext   "text/_moz_htmlcontext"
+#define kHTMLInfo      "text/_moz_htmlinfo"
+
 
 class nsAutoCopyService : public nsIAutoCopyService , public nsISelectionListener
 {
@@ -52,7 +58,6 @@ public:
   //end nsISelectionListener 
 protected:
   nsCOMPtr<nsIClipboard> mClipboard;
-  nsCOMPtr<nsIFormatConverter> mXIF;
   nsCOMPtr<nsITransferable> mTransferable;
   nsCOMPtr<nsIFormatConverter> mConverter;
 };
@@ -89,7 +94,7 @@ nsAutoCopyService::Listen(nsISelection *aDomSelection)
 /*
  * What we do now:
  * On every selection change, we copy to the clipboard anew, creating a
- * XIF buffer, a transferable, a XIFFormatConverter, an nsISupportsWString and
+ * HTML buffer, a transferable, an nsISupportsWString and
  * a huge mess every time.  This is basically what nsPresShell::DoCopy does
  * to move the selection into the clipboard for Edit->Copy.
  * 
@@ -97,7 +102,7 @@ nsAutoCopyService::Listen(nsISelection *aDomSelection)
  * Create a singleton transferable with our own magic converter.  When selection
  * changes (use a quick cache to detect ``real'' changes), we put the new
  * nsISelection in the transferable.  Our magic converter will take care of
- * transferable->XIF->whatever-other-format when the time comes to actually
+ * transferable->whatever-other-format when the time comes to actually
  * hand over the clipboard contents.
  *
  * Other issues:
@@ -139,45 +144,68 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
 
   nsCOMPtr<nsIDocument> doc;
   doc = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,aDoc),&rv);
-  nsAutoString xifBuffer;
-  /* nsPresShell::DoCopy thinks that this is infalliable -- do you? */
-  if (NS_FAILED(doc->CreateXIF(xifBuffer, aSel)))
-    return NS_ERROR_FAILURE;
-  
+  nsAutoString buffer, parents, info;
+
+  nsCOMPtr<nsIDocumentEncoder> docEncoder;
+
+  docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
+  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+
+  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
+  docEncoder->SetSelection(aSel);
+
+  rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   /* create a transferable */
   static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
   nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                          NS_GET_IID(nsITransferable),
-                                          (void **)getter_AddRefs(trans));
-  if (NS_FAILED(rv))
-    return rv;
+  trans = do_CreateInstance(kCTransferableCID);
+  if (!trans)
+    return NS_ERROR_FAILURE;
 
-  if (!mXIF) {
-    static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
-    rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull,
-                                            NS_GET_IID(nsIFormatConverter),
-                                            (void **)getter_AddRefs(mXIF));
-    if (NS_FAILED(rv))
-      return rv;
+  if (!mConverter) {
+    static NS_DEFINE_CID(kHTMLConverterCID, NS_HTMLFORMATCONVERTER_CID);
+    mConverter = do_CreateInstance(kHTMLConverterCID);
+    if (!mConverter)
+      return NS_ERROR_FAILURE;
   }
 
-  trans->AddDataFlavor(kXIFMime);
-  trans->SetConverter(mXIF);
+  trans->AddDataFlavor(kHTMLMime);
+  trans->SetConverter(mConverter);
   
-  nsCOMPtr<nsISupportsWString> dataWrapper;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
-                                          NS_GET_IID(nsISupportsWString),
-                                          getter_AddRefs(dataWrapper));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  dataWrapper->SetData( NS_CONST_CAST(PRUnichar*,xifBuffer.GetUnicode()));
-  
-  nsCOMPtr<nsISupports> generic(do_QueryInterface(dataWrapper));
-  /* Length() is in characters, *2 gives bytes. */
-  trans->SetTransferData(kXIFMime, generic, xifBuffer.Length() * 2);
-  mClipboard->SetData(trans, nsnull,nsIClipboard::kSelectionClipboard);
+  // Add the html DataFlavor to the transferable
+  trans->AddDataFlavor(kHTMLMime);
+  // Add the htmlcontext DataFlavor to the transferable
+  trans->AddDataFlavor(kHTMLContext);
+  // Add the htmlinfo DataFlavor to the transferable
+  trans->AddDataFlavor(kHTMLInfo);
+
+  // get wStrings to hold clip data
+  nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
+  dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+  NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
+  contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+  NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
+  infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+  NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
+
+  // populate the strings
+  dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
+  contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.GetUnicode()) );
+  infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.GetUnicode()) );
+      
+  // QI the data object an |nsISupports| so that when the transferable holds
+  // onto it, it will addref the correct interface.
+  nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
+  trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
+  genericDataObj = do_QueryInterface(contextWrapper);
+  trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
+  genericDataObj = do_QueryInterface(infoWrapper);
+  trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
+
+  // put the transferable on the clipboard
+  mClipboard->SetData(trans, nsnull, nsIClipboard::kSelectionClipboard);
 
 #ifdef DEBUG_CLIPBOARD
   static char *reasons[] = {

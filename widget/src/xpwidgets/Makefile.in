@@ -34,7 +34,7 @@ CPPSRCS		= \
 		nsBaseWidget.cpp \
 		nsBaseFilePicker.cpp \
 		nsTransferable.cpp \
-		nsXIFFormatConverter.cpp \
+		nsHTMLFormatConverter.cpp \
 		nsBaseDragService.cpp \
 		nsBaseClipboard.cpp \
 		nsFileSpecWithUIImpl.cpp \

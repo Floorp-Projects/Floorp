@@ -787,8 +787,6 @@
            oncommand="EditorGetText()"/>
     <menuitem value="&outputHTMLCmd.label;"
            oncommand="EditorGetHTML()"/>
-    <menuitem value="&outputXIFCmd.label;"
-           oncommand="EditorGetXIF()"/>
     <menuitem value="Dom Serializer"
            oncommand="EditorSerialize()"/>
     <menuseparator />

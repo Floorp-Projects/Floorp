@@ -1956,8 +1956,8 @@ ERROR_OUT:
 //
 #include "nsIParser.h"
 #include "nsParserCIID.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "CNavDTD.h"
+#include "nsIHTMLToTextSink.h"
+#include "nsIContentSink.h"
 #include "nsICharsetConverterManager.h"
 
 /**
@@ -1971,7 +1971,7 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
 {
   nsresult    rv;
   nsString    convertedText;
-  nsIParser   *parser;
+  nsCOMPtr<nsIParser> parser;
 
   if (aConBuf.IsEmpty())
     return NS_OK;
@@ -1980,10 +1980,9 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID); 
 
   rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          kCParserIID, (void **)&parser);
+                                          kCParserIID, getter_AddRefs(parser));
   if (NS_SUCCEEDED(rv) && parser)
   {
-    nsHTMLToTXTSinkStream     *sink = nsnull;
     PRUint32 converterFlags = 0;
     PRUint32 wrapWidth = 72;
     
@@ -1994,25 +1993,20 @@ ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
     if(formatflowed)
       converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
     
-    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
-    if (sink && NS_SUCCEEDED(rv)) 
-    {  
-        sink->DoFragment(PR_TRUE);
-        parser->SetContentSink(sink);
+    nsCOMPtr<nsIContentSink> sink;
 
-        nsIDTD* dtd = nsnull;
-        rv = NS_NewNavHTMLDTD(&dtd);
-        if (NS_SUCCEEDED(rv)) 
-        {
-          parser->RegisterDTD(dtd);
-          rv = parser->Parse(aConBuf, 0, NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);           
-        }
-        NS_IF_RELEASE(dtd);
-        NS_IF_RELEASE(sink);
-    }
+    sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
+    NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
 
-    NS_RELEASE(parser);
+    nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+    NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
 
+    textSink->Initialize(&convertedText, converterFlags, wrapWidth);
+
+    parser->SetContentSink(sink);
+
+    nsAutoString contentType; contentType = NS_LITERAL_STRING("text/html");
+    parser->Parse(aConBuf, 0, contentType, PR_FALSE, PR_TRUE);
     //
     // Now if we get here, we need to get from ASCII text to 
     // UTF-8 format or there is a problem downstream...

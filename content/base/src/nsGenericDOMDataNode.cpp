@@ -27,7 +27,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIXIFConverter.h"
 #include "nsRange.h"
 #include "nsTextContentChangeData.h"
 #include "nsISelection.h"
@@ -536,103 +535,6 @@ nsGenericDOMDataNode::GetListenerManager(nsIContent* aOuterContent, nsIEventList
 
 // Implementation of nsIContent
 
-
-nsresult
-nsGenericDOMDataNode::BeginConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::FinishConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- */
-nsresult
-nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
-                                          nsIXIFConverter* aConverter) const
-{
-  const nsIContent* content = aOuterContent;
-  nsCOMPtr<nsISelection> sel;
-  aConverter->GetSelection(getter_AddRefs(sel));
-
-  if (sel && mDocument && mDocument->IsInSelection(sel,content))
-  {
-    nsCOMPtr<nsIEnumerator> enumerator;
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(sel));
-    if (NS_SUCCEEDED(selPrivate->GetEnumerator(getter_AddRefs(enumerator)))) {
-      for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
-        nsIDOMRange* range = nsnull;
-        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
-      
-          // add whatever part of the node is actually in this range:
-          nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(range));
-          if (!nsrange)
-            continue;
-          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(NS_CONST_CAST(nsIContent*,content)));
-          if (!node)
-            continue;
-          PRBool intersects;
-          nsresult rv = nsrange->IntersectsNode(node, &intersects);
-          if (NS_FAILED(rv))
-            return rv;
-          if (!intersects)
-            continue;   // This range doesn't intersect the node at all
-
-          // Put all of our text into the buffer, initially:
-          nsAutoString  buffer;
-          mText.AppendTo(buffer);
-
-          // Clip to whatever is inside the range:
-          nsCOMPtr<nsIDOMNode> startNode;
-          nsCOMPtr<nsIDOMNode> endNode;
-          PRInt32 startOffset = 0;
-          PRInt32 endOffset = 0;
-
-          range->GetStartContainer(getter_AddRefs(startNode));
-          range->GetEndContainer(getter_AddRefs(endNode));
-
-          range->GetStartOffset(&startOffset);
-          range->GetEndOffset(&endOffset);
-
-          nsCOMPtr<nsIContent> startContent;
-          nsCOMPtr<nsIContent> endContent;
-          startContent = do_QueryInterface(startNode);
-          endContent = do_QueryInterface(endNode);
-
-          if (startContent.get() == content || endContent.get() == content)
-          { 
-            // NOTE: ORDER MATTERS!
-            // This must go before the Cut
-            if (endContent.get() == content)
-              buffer.Truncate(endOffset);            
-      
-            // This must go after the Truncate
-            if (startContent.get() == content)
-              buffer.Cut(0,startOffset); 
-          }
-
-          aConverter->AddContent(buffer);
-
-          NS_RELEASE(range);
-        }
-      }
-    }
-  }
-  else  
-  {
-    nsAutoString  buffer;
-    mText.AppendTo(buffer);
-    aConverter->AddContent(buffer);
-  }
-  return NS_OK;
-}
 
 void
 nsGenericDOMDataNode::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,

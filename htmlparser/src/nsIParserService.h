@@ -20,6 +20,9 @@
  * Contributor(s): 
  */
 
+#ifndef nsIParserService_h__
+#define nsIParserService_h__
+
 #include "nsISupports.h"
 #include "nsString.h"
 
@@ -42,7 +45,8 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const =0;
 
-  NS_IMETHOD IsContainer(nsString& aTag, PRBool& aIsContainer) const =0;
-  NS_IMETHOD IsBlock(nsString& aTag, PRBool& aIsBlock) const =0;
+  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const =0;
+  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const =0;
 };
 
+#endif // nsIParserService_h__

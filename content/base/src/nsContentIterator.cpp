@@ -1073,11 +1073,20 @@ nsresult nsContentSubtreeIterator::GetTopAncestorInRange(
   if (nodeBefore || nodeAfter)
     return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIContent> parent;
+  nsCOMPtr<nsIContent> parent, tmp;
   while (aNode)
   {
-    if (NS_FAILED(aNode->GetParent(*getter_AddRefs(parent))) || !parent)
+    if (NS_FAILED(aNode->GetParent(*getter_AddRefs(parent))))
       return NS_ERROR_FAILURE;
+    if (!parent)
+    {
+      if (tmp)
+      {
+        *outAnestor = tmp;
+        return NS_OK;
+      }
+      else return NS_ERROR_FAILURE;
+    }
     if (NS_FAILED(CompareNodeToRange(parent, mRange, &nodeBefore, &nodeAfter)))
       return NS_ERROR_FAILURE;
     if (nodeBefore || nodeAfter)
@@ -1085,6 +1094,7 @@ nsresult nsContentSubtreeIterator::GetTopAncestorInRange(
       *outAnestor = aNode;
       return NS_OK;
     }
+    tmp = aNode;
     aNode = parent;
   }
   return NS_ERROR_FAILURE;

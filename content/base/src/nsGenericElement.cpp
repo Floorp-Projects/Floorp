@@ -3125,25 +3125,6 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-// XXX To be implemented
-nsresult 
-nsGenericContainerElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-
-nsresult 
-nsGenericContainerElement::ConvertContentToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
- 
-nsresult 
-nsGenericContainerElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-
 nsresult
 nsGenericContainerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                                   size_t aInstanceSize) const

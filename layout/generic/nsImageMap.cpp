@@ -28,7 +28,6 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsIXIFConverter.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
@@ -64,17 +63,6 @@ public:
 
   void ToHTML(nsString& aResult);
   void HasFocus(PRBool aHasFocus);
-
-
-  /**
-   * Translate the content object into the (XIF) XML Interchange Format
-   * XIF is an intermediate form of the content model, the buffer
-   * will then be parsed into any number of formats including HTML, TXT, etc.
-   */
-  virtual void BeginConvertToXIF(nsIXIFConverter* aConverter) const;
-  virtual void ConvertContentToXIF(nsIXIFConverter* aConverter) const;
-  virtual void FinishConvertToXIF(nsIXIFConverter* aConverter) const;
-
 
   void GetHREF(nsString& aHref) const;
   void GetTarget(nsString& aTarget) const;
@@ -369,81 +357,10 @@ void Area::ToHTML(nsString& aResult)
   aResult.AppendWithConversion('>');
 }
 
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- */
-
 void Area::HasFocus(PRBool aHasFocus)
 {
   mHasFocus = aHasFocus;
 }
-
-void Area::BeginConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  nsAutoString href, target, altText;
-
-  if (mArea) {
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::target, target);
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, altText);
-  }
-
-  nsAutoString  tag; tag.AssignWithConversion("area");
-  aConverter->BeginStartTag(tag);
-
-
-  nsAutoString name; name.AssignWithConversion("shape");
-  nsAutoString shape;
-  GetShapeName(shape);
-  aConverter->AddAttribute(name,shape);
-   
-
-  nsAutoString  coords;
-  if (nsnull != mCoords) {
-    PRInt32 i, n = mNumCoords;
-    for (i = 0; i < n; i++) {
-      coords.AppendInt(mCoords[i], 10);
-      if (i < n - 1) {
-        coords.AppendWithConversion(',');
-      }
-    }
-  }
-  name.AssignWithConversion("coords");
-  aConverter->AddAttribute(name,coords);
-
-  name.AssignWithConversion("href");
-  aConverter->AddAttribute(name,href);
-
-  
-  if (0 < target.Length()) {
-    name.AssignWithConversion("target");
-    aConverter->AddAttribute(name,target);
-  }
-  if (0 < altText.Length()) {
-    name.AssignWithConversion("alt");
-    aConverter->AddAttribute(name,altText);
-  }
-  if (mSuppressFeedback) {
-    name.AssignWithConversion("suppress");
-    aConverter->AddAttribute(name);
-  }
-}
-
-void Area::FinishConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  nsAutoString  tag; tag.AssignWithConversion("area");
-  aConverter->FinishStartTag(tag,PR_TRUE, PR_TRUE);
-}
-
-void Area::ConvertContentToXIF(nsIXIFConverter* ) const
-{
-  // Nothing needs to be done here, all of the logic
-  // is handled in the start and finish methods
-
-}
-
 
 //----------------------------------------------------------------------
 

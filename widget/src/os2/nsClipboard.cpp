@@ -303,7 +303,6 @@ static FormatRecord records[] =
   { kTextMime,      CF_TEXT, 0,      Import8Bit,  Export8Bit  },
   { kUnicodeMime,   0, "CF_UNICODE", Import16Bit, Export16Bit },
   { kHTMLMime,      0, "CF_HTML",    Import8Bit,  Export8Bit  },
-  { kXIFMime,       0, "CF_XIF",     Import8Bit,  Export8Bit  },
   { kPNGImageMime,  0, "CF_PNG",     ImportBin,   ExportBin   },
   { kGIFImageMime,  0, "CF_GIF",     ImportBin,   ExportBin   },
   { kJPEGImageMime, 0, "CF_JPEG",    ImportBin,   ExportBin   },

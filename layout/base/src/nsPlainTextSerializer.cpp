@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *     Daniel Bratell <bratell@lysator.liu.se>
+ *     Ben Bucksch <mozilla@bucksch.org>
  */
 
 #include "nsPlainTextSerializer.h"
@@ -64,6 +66,17 @@ static PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n);
 static const PRUint32 TagStackSize = 500;
 static const PRUint32 OLStackSize = 100;
 
+nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
+{
+  nsPlainTextSerializer* it = new nsPlainTextSerializer();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(NS_GET_IID(nsIContentSerializer),
+                            (void**)aSerializer);
+}
+
 nsPlainTextSerializer::nsPlainTextSerializer()
 {
   NS_INIT_ISUPPORTS();
@@ -105,16 +118,18 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
   delete[] mOLStack;
 }
 
-NS_IMPL_ISUPPORTS3(nsPlainTextSerializer, 
+NS_IMPL_ISUPPORTS4(nsPlainTextSerializer, 
                    nsIContentSerializer,
                    nsIContentSink,
-                   nsIHTMLContentSink)
+                   nsIHTMLContentSink,
+                   nsIHTMLToTextSink)
 
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
 {
   mFlags = aFlags;
+  mWrapColumn = aWrapColumn;
 
   nsresult rv;
   NS_WITH_SERVICE(nsILineBreakerFactory, lf, kLWBrkCID, &rv);
@@ -155,6 +170,21 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPlainTextSerializer::Initialize(nsAWritableString* aOutString,
+                                  PRUint32 aFlags, PRUint32 aWrapCol)
+{
+  nsresult rv = Init(aFlags, aWrapCol);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX This is wrong. It violates XPCOM string ownership rules.
+  // We're only getting away with this because instances of this
+  // class are restricted to single function scope.
+  mOutputString = aOutString;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsPlainTextSerializer::AppendText(nsIDOMText* aText, 
                                   PRInt32 aStartOffset,
@@ -163,7 +193,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 {
   NS_ENSURE_ARG(aText);
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   PRInt32 length = 0;
   nsAutoString textstr;
 
@@ -183,6 +213,8 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
     }
   }
 
+  mOutputString = &aStr;
+
   nsAutoString linebuffer;
 
   // We have to split the string across newlines
@@ -194,28 +226,30 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
     // Pass in the line
     textstr.Mid(linebuffer, start, offset-start);
     rv = DoAddLeaf(eHTMLTag_text, linebuffer);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) break;
 
     // Pass in a newline
     rv = DoAddLeaf(eHTMLTag_newline, mLineBreak);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) break;
     
     start = offset+1;
     offset = textstr.FindCharInSet("\n\r", start);
   }
 
   // Consume the last bit of the string if there's any left
-  if (start < length) {
+  if (NS_SUCCEEDED(rv) & (start < length)) {
     if (start) {
       textstr.Mid(linebuffer, start, offset-start);
-      return DoAddLeaf(eHTMLTag_text, linebuffer);
+      rv = DoAddLeaf(eHTMLTag_text, linebuffer);
     }
     else {
-      return DoAddLeaf(eHTMLTag_text, textstr);
+      rv = DoAddLeaf(eHTMLTag_text, textstr);
     }
   }
   
-  return NS_OK;
+  mOutputString = nsnull;
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -227,20 +261,17 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
   mContent = do_QueryInterface(aElement);
   if (!mContent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAtom> tagname;
-  mContent->GetTag(*getter_AddRefs(tagname));
-
   nsresult rv;
   PRInt32 id;
   rv = GetIdForContent(mContent, &id);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool isContainer = IsContainer(tagname);
+  PRBool isContainer = IsContainer(id);
 
   mOutputString = &aStr;
 
   if (isContainer) {
-    rv = DoOpenContainer(id, tagname);
+    rv = DoOpenContainer(id);
   }
   else {
     nsAutoString empty;
@@ -262,27 +293,33 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
   mContent = do_QueryInterface(aElement);
   if (!mContent) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAtom> tagname;
-  mContent->GetTag(*getter_AddRefs(tagname));
-
   nsresult rv;
   PRInt32 id;
   rv = GetIdForContent(mContent, &id);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool isContainer = IsContainer(tagname);
+  PRBool isContainer = IsContainer(id);
 
   mOutputString = &aStr;
 
   rv = NS_OK;
   if (isContainer) {
-    rv = DoCloseContainer(id, tagname);
+    rv = DoCloseContainer(id);
   }
 
   mContent = 0;
   mOutputString = nsnull;
 
   return rv;
+}
+
+NS_IMETHODIMP 
+nsPlainTextSerializer::Flush(nsAWritableString& aStr)
+{
+  mOutputString = &aStr;
+  FlushLine();
+  mOutputString = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -292,7 +329,8 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
   const nsString&   namestr = aNode.GetText();
   nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
 
-  return DoOpenContainer(type, name);
+  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
+  return DoOpenContainer(type);
 }
 
 NS_IMETHODIMP 
@@ -302,7 +340,8 @@ nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
   const nsString&   namestr = aNode.GetText();
   nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
   
-  return DoCloseContainer(type, name);
+  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
+  return DoCloseContainer(type);
 }
  
 NS_IMETHODIMP 
@@ -311,6 +350,7 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
   PRInt32 type = aNode.GetNodeType();
   const nsString& text = aNode.GetText();
 
+  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
   return DoAddLeaf(type, text);
 }
 
@@ -407,8 +447,7 @@ nsPlainTextSerializer::DoFragment(PRBool aFlag)
 }
 
 nsresult
-nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag, 
-                                       nsIAtom* aName)
+nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
@@ -512,7 +551,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag,
   }
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
-  else if (IsBlockLevel(aName)) {
+  else if (IsBlockLevel(aTag)) {
     EnsureVerticalSpace(0);
   }
 
@@ -650,8 +689,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag,
 }
 
 nsresult
-nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag, 
-                                        nsIAtom* aName)
+nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
@@ -683,7 +721,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag,
     // Items that should always end a line, but get no more whitespace
     EnsureVerticalSpace(0);
   } 
-  else if (IsBlockLevel(aName)
+  else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
            && type != eHTMLTag_script
            && type != eHTMLTag_markupDecl) {
@@ -1063,7 +1101,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
       if (goodSpace < 0) {
         // If we don't found a good place to break, accept long line and
         // try to find another place to break
-        goodSpace=mWrapColumn-prefixwidth+1;
+        goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
         result = NS_OK;
         if (nsnull != mLineBreaker) {
           result = mLineBreaker->Next(mCurrentLine.GetUnicode(), 
@@ -1072,7 +1110,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         }
         // fallback if the line breaker is unavailable or failed
         if (nsnull == mLineBreaker || NS_FAILED(result)) {
-          goodSpace=mWrapColumn-prefixwidth;
+          goodSpace=(prefixwidth>mWrapColumn)?1:mWrapColumn-prefixwidth;
           while (goodSpace < linelength &&
                  !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
             goodSpace++;
@@ -1163,12 +1201,10 @@ nsPlainTextSerializer::EndLine(PRBool softlinebreak)
     // "-- " in a format=flowed output. "-- " is the sig delimiter
     // by convention and shouldn't be touched even in format=flowed
     // (see RFC 2646).
-    nsAutoString sig_delimiter;
-    sig_delimiter.AssignWithConversion("-- ");
     PRUint32 currentlinelength = mCurrentLine.Length();
     while((currentlinelength > 0) &&
           (' ' == mCurrentLine[currentlinelength-1]) &&
-          (sig_delimiter != mCurrentLine)) {
+          (!mCurrentLine.EqualsWithConversion("-- "))) {
       mCurrentLine.SetLength(--currentlinelength);
     }
 
@@ -1405,8 +1441,8 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
     }
   }
   else if (mParserNode) {
-    nsAutoString name; 
-    aName->ToString(name);
+    const PRUnichar *name; 
+    aName->GetUnicode(&name);
 
     PRInt32 count = mParserNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {
@@ -1484,32 +1520,28 @@ nsPlainTextSerializer::GetParserService(nsIParserService** aParserService)
 }
 
 PRBool 
-nsPlainTextSerializer::IsBlockLevel(nsIAtom* aAtom)
+nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 {
   PRBool isBlock = PR_FALSE;
 
   nsCOMPtr<nsIParserService> parserService;
   GetParserService(getter_AddRefs(parserService));
   if (parserService) {
-    nsAutoString name;
-    aAtom->ToString(name);
-    parserService->IsBlock(name, isBlock);
+    parserService->IsBlock(aId, isBlock);
   }
 
   return isBlock;
 }
 
 PRBool 
-nsPlainTextSerializer::IsContainer(nsIAtom* aAtom)
+nsPlainTextSerializer::IsContainer(PRInt32 aId)
 {
   PRBool isContainer = PR_FALSE;
 
   nsCOMPtr<nsIParserService> parserService;
   GetParserService(getter_AddRefs(parserService));
   if (parserService) {
-    nsAutoString name;
-    aAtom->ToString(name);
-    parserService->IsContainer(name, isContainer);
+    parserService->IsContainer(aId, isContainer);
   }
 
   return isContainer;

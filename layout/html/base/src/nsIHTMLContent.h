@@ -29,7 +29,6 @@ class nsIFrame;
 class nsIStyleRule;
 class nsIMutableStyleContext;
 class nsIPresContext;
-class nsIXIFConverter;
 class nsIHTMLMappedAttributes;
 class nsIURI;
 

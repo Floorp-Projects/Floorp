@@ -43,7 +43,7 @@
 
 #include "nsClipboard.h"
 #include "nsTransferable.h"
-#include "nsXIFFormatConverter.h"
+#include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 
 #if USE_NATIVE_VERSION
@@ -92,7 +92,7 @@ static NS_DEFINE_CID(kCPopUpMenu,     NS_POPUPMENU_CID);
 static NS_DEFINE_CID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_CID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_CID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_CID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
 
 // Sound services (just Beep for now)
@@ -245,8 +245,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     else if (mClassID.Equals(kCTransferable))
         inst = (nsISupports*)new nsTransferable();
-    else if (mClassID.Equals(kCXIFFormatConverter))
-        inst = (nsISupports*)new nsXIFFormatConverter();
+    else if (mClassID.Equals(kCHTMLFormatConverter))
+        inst = (nsISupports*)new nsHTMLFormatConverter();
     else if (mClassID.Equals(kCClipboard))
         inst = (nsISupports*)new nsClipboard();
     else if (mClassID.Equals(kCDragService))

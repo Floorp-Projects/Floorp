@@ -51,11 +51,9 @@ CPPSRCS=					\
 	nsToken.cpp				\
 	nsTokenHandler.cpp			\
 	nsHTMLContentSinkStream.cpp		\
-	nsHTMLToTXTSinkStream.cpp		\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
-	nsXIFDTD.cpp				\
 	nsExpatDTD.cpp			\
 	prstrm.cpp				\
 	nsParserModule.cpp			\
@@ -83,11 +81,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsToken.obj			\
 	.\$(OBJDIR)\nsTokenHandler.obj		\
 	.\$(OBJDIR)\nsHTMLContentSinkStream.obj	\
-	.\$(OBJDIR)\nsHTMLToTXTSinkStream.obj	\
 	.\$(OBJDIR)\nsValidDTD.obj		\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsViewSourceHTML.obj		\
-	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\nsExpatDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	.\$(OBJDIR)\nsParserModule.obj		\
@@ -102,7 +98,6 @@ EXPORTS=					\
 	nsILoggingSink.h			\
 	nsHTMLContentSinkStream.h		\
 	nsIHTMLFragmentContentSink.h		\
-	nsHTMLToTXTSinkStream.h		\
 	nsHTMLEntities.h			\
 	nsHTMLEntityList.h			\
 	nsHTMLTags.h				\
@@ -120,7 +115,6 @@ EXPORTS=					\
 	CRTFDTD.h				\
 	COtherDTD.h				\
 	nsIDTD.h				\
-	nsXIFDTD.h				\
 	nsExpatDTD.h				\
 	nsParserCIID.h 				\
 	nsParserError.h 			\

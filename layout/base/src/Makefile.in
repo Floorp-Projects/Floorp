@@ -72,14 +72,15 @@ CPPSRCS		= \
 		nsTextContentChangeData.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
-		nsXIFConverter.cpp \
 		nsLayoutHistoryState.cpp \
+		nsXMLContentSerializer.cpp \
+		nsHTMLContentSerializer.cpp \
+		nsPlainTextSerializer.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsDocument.h \
 		nsNodeInfoManager.h \
-		nsXIFConverter.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

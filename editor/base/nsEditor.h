@@ -192,7 +192,8 @@ public:
     kOpDeleteText,
     kOpInsertText,
     kOpInsertIMEText,
-    kOpDeleteSelection
+    kOpDeleteSelection,
+    kOpHTMLPaste
   };
 
   static const char* kMOZEditorBogusNodeAttr;
