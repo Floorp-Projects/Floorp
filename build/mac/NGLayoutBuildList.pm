@@ -331,6 +331,7 @@ sub BuildClientDist()
 
 	#UNICHARUTIL
 	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",				"$distdirectory:unicharutil");
+	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
 	#LOCALE
 	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",						"$distdirectory:locale:");
@@ -807,6 +808,7 @@ sub BuildIDLProjects()
 
 	BuildIDLProject(":mozilla:intl:locale:macbuild:nsLocaleIDL.mcp",					"nsLocale");
 	BuildIDLProject(":mozilla:intl:strres:macbuild:strresIDL.mcp",					"nsIStringBundle");
+	BuildIDLProject(":mozilla:intl:unicharutil:macbuild:unicharutilIDL.mcp",					"unicharutil");
 
 	print("--- IDL projects complete ----\n")
 }
@@ -1095,6 +1097,7 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
 	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
+	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
     _InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
