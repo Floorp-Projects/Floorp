@@ -119,7 +119,7 @@ button[type="menu-button"] {
 .button-menubutton-dropmarker {
   margin: 1px;
   background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-  min-width:11px;
+  min-width:5px;
   min-height:11px;
 }
   
