@@ -20,7 +20,6 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-class nsEditor;
 
 /*
 EditFactory that can make an editor
@@ -56,8 +55,13 @@ public:
 
   virtual ~nsEditFactory(void);
 private:
-  nsEditFactory(nsIFactory **aFactory); //will fill the aFactory with the result from queryinterface
+  nsEditFactory(const nsCID &aClass); //will fill the aFactory with the result from queryinterface
+
+  /** getEditFactory
+   *  creates an edit factory other CSID supported friend functions here.
+   */
   friend nsresult getEditFactory(nsIFactory **);
+  const nsCID &mCID;
 };
 
 #endif //nsIEditFactory_h___

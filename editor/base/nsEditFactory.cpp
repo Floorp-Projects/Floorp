@@ -20,12 +20,13 @@
 #include "nsIEditor.h"
 #include "editor.h"
 #include "nsRepository.h"
-
+#include "nsEditorCID.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,      NS_IEDITOR_IID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kEditorCID,       NS_EDITOR_CID);
 
 
 
@@ -37,14 +38,12 @@ getEditFactory(nsIFactory **aFactory)
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)
   {
-    nsEditFactory *factory = new nsEditFactory(getter_AddRefs(g_pNSIFactory));
-    *aFactory = g_pNSIFactory;
-    NS_IF_ADDREF(*aFactory);
+    nsEditFactory *factory = new nsEditFactory(kEditorCID);
+    g_pNSIFactory = factory;
     if (factory)
       result = NS_OK;
   }
-  else
-    result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
+  result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
   PR_ExitMonitor(getEditorMonitor());
   return result;
 }
@@ -62,7 +61,7 @@ nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(kIFactoryIID) ||
     aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) this; 
-    AddRef(); 
+    AddRef();  
     return NS_OK; 
   }
   return NS_NOINTERFACE; 
@@ -78,18 +77,23 @@ NS_IMPL_RELEASE(nsEditFactory)
 NS_METHOD
 nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  nsEditor *editor = nsnull;
   *aResult  = nsnull;
-  
+  nsISupports *obj = nsnull;
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
   if (aOuter && !aIID.Equals(kISupportsIID))
     return NS_NOINTERFACE;   // XXX right error?
-  editor = new nsEditor();
-  if (editor->QueryInterface(aIID,
-    (void**)aResult) != NS_OK) {
-    // then we're trying get a interface other than nsISupports and
-    // nsIEditor
-    delete editor;
-    return NS_ERROR_FAILURE;
+
+
+  if (mCID.Equals(kEditorCID))
+    obj = (nsISupports *)new nsEditor();
+  //more class ids to support. here
+
+
+  if (NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
+  {
+    delete obj;
+    return NS_NOINTERFACE;
   }
   return NS_OK;
 }
@@ -107,20 +111,15 @@ nsEditFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////
 // from nsEditFactory:
 
-nsEditFactory::nsEditFactory(nsIFactory **aFactory)
+nsEditFactory::nsEditFactory(const nsCID &aClass)
+:mCID(aClass)
 {
   NS_INIT_REFCNT();
-  nsresult     err         = NS_OK;
-  NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-  if (aFactory)
-  {
-    err = this->QueryInterface(kIFactoryIID, (void**)aFactory); 
-  }
 }
 
 nsEditFactory::~nsEditFactory()
 {
-  nsRepository::UnregisterFactory(kIEditFactoryIID, (nsIFactory *)this); //we are out of ref counts anyway
+  nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }
 
 
