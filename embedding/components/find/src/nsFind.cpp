@@ -383,29 +383,8 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     // e.g. is it part of a script or other invisible node?
     // Note that we don't ask for CSS information;
     // a node can be invisible due to CSS, and we'd still find it.
-    while (SkipNode(content))
-    {
-      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(content));
-      if (node)
-      {
-        nsCOMPtr<nsIDOMNode> sib;
-        if (mFindBackward)
-          node->GetPreviousSibling(getter_AddRefs(sib));
-        else
-          node->GetNextSibling(getter_AddRefs(sib));
-        content = do_QueryInterface(sib);
-        if (content)
-          mIterator->PositionAt(content);
-#if DEBUG_FIND
-        else {
-          // What should we do if node is not an nsIContent?
-          // Should we loop until we find something that is?
-          // In practice, this doesn't seem to cause problems.
-          //NS_ASSERTION(content, "Find: Node is not content\n");
-        }
-#endif
-      }
-    }
+    if (SkipNode(content))
+      continue;
 
     tc = do_QueryInterface(content);
     if (tc)
@@ -570,6 +549,9 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
          (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
 #endif
 
+  NS_ENSURE_ARG_POINTER(aRangeRet);
+  *aRangeRet = 0;
+
   if (!aPatText)
     return NS_ERROR_NULL_POINTER;
 
@@ -615,6 +597,12 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   nsCOMPtr<nsIDOMNode> matchAnchorNode;
   PRInt32 matchAnchorOffset = 0;
 
+  // Get the end point, so we know when to end searches:
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 endOffset;
+  aEndPoint->GetEndContainer(getter_AddRefs(endNode));
+  aEndPoint->GetEndOffset(&endOffset);
+
   while (1)
   {
 #ifdef DEBUG_FIND
@@ -637,7 +625,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         // Reset the iterator, so this nsFind will be usable if
         // the user wants to search again (from beginning/end).
         ResetAll();
-        return PR_FALSE;
+        return NS_OK;
       }
 
       offset = mIterOffset;
@@ -669,7 +657,8 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
       {
         mIterator = nsnull;
         mLastBlockParent = 0;
-        return PR_FALSE;
+        ResetAll();
+        return NS_OK;
       }
 
       nsresult rv = tc->GetText(&frag);
@@ -737,6 +726,16 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
         offset = -1;
         continue;
       }
+    }
+
+    // Have we gone past the endpoint yet?
+    // If we have, and we're not in the middle of a match, return.
+    if (mIterNode == endNode && !continuing &&
+        ((mFindBackward && (findex < endOffset)) ||
+         (!mFindBackward && (findex > endOffset))))
+    {
+      ResetAll();
+      return NS_OK;
     }
 
     // The two characters we'll be comparing:
@@ -839,7 +838,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 #endif
 
         ResetAll();
-        return PR_TRUE;
+        return NS_OK;
       }
 
       // Not done, but still matching.
@@ -864,7 +863,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // If we were continuing, then this ends our search.
     if (continuing) {
       ResetAll();
-      return PR_FALSE;
+      return NS_OK;
     }
 
     // If we didn't match, go back to the beginning of patStr,
@@ -894,7 +893,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
 
   // Out of nodes, and didn't match.
   ResetAll();
-  return PR_FALSE;
+  return NS_OK;
 }
 
 
