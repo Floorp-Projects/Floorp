@@ -632,12 +632,14 @@ public:
 
     NS_IMETHOD Flush(void);
 
-    NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult);
+    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                  nsISupportsArray* aArguments,
+                                  nsIEnumerator**   aResult);
 
-    NS_IMETHOD DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget);
+    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray* aArguments);
+
 };
 
 nsIRDFService		*BookmarkDataSourceImpl::gRDFService;
@@ -713,22 +715,22 @@ BookmarkDataSourceImpl::Flush(void)
 
 
 NS_IMETHODIMP
-BookmarkDataSourceImpl::IsCommandEnabled(const char* aCommand,
-                                         nsIRDFResource* aCommandTarget,
-                                         PRBool* aResult)
+BookmarkDataSourceImpl::GetEnabledCommands(nsISupportsArray* aSources,
+                                           nsISupportsArray* aArguments,
+                                           nsIEnumerator**   aResult)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-BookmarkDataSourceImpl::DoCommand(const char* aCommand,
-                                  nsIRDFResource* aCommandTarget)
+BookmarkDataSourceImpl::DoCommand(nsISupportsArray* aSources,
+                                  nsIRDFResource*   aCommand,
+                                  nsISupportsArray* aArguments)
 {
-    PR_ASSERT(0);
+    NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 nsresult
 BookmarkDataSourceImpl::ReadBookmarks(void)

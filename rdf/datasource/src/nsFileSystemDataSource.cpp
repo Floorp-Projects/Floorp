@@ -498,26 +498,23 @@ FileSystemDataSource::Flush()
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-
 NS_IMETHODIMP
-FileSystemDataSource::IsCommandEnabled(const char* aCommand,
-                                 nsIRDFResource* aCommandTarget,
-                                 PRBool* aResult)
+FileSystemDataSource::GetEnabledCommands(nsISupportsArray* aSources,
+                                         nsISupportsArray* aArguments,
+                                         nsIEnumerator**   aResult)
 {
-	return NS_OK;
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-
 NS_IMETHODIMP
-FileSystemDataSource::DoCommand(const char* aCommand,
-                          nsIRDFResource* aCommandTarget)
+FileSystemDataSource::DoCommand(nsISupportsArray* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray* aArguments)
 {
-	return NS_OK;
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
 
 nsresult
 NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)

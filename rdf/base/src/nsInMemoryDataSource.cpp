@@ -208,12 +208,13 @@ public:
 
     NS_IMETHOD Flush();
 
-    NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult);
+    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                  nsISupportsArray* aArguments,
+                                  nsIEnumerator**   aResult);
 
-    NS_IMETHOD DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget);
+    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray* aArguments);
 
     // Implemenatation methods
     Assertion* GetForwardArcs(nsIRDFResource* u);
@@ -1443,20 +1444,22 @@ InMemoryDataSource::Flush()
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::IsCommandEnabled(const char* aCommand,
-                                     nsIRDFResource* aCommandTarget,
-                                     PRBool* aResult)
+InMemoryDataSource::GetEnabledCommands(nsISupportsArray* aSources,
+                                       nsISupportsArray* aArguments,
+                                       nsIEnumerator**   aResult)
 {
-    return NS_OK;
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-InMemoryDataSource::DoCommand(const char* aCommand,
-                              nsIRDFResource* aCommandTarget)
+InMemoryDataSource::DoCommand(nsISupportsArray* aSources,
+                              nsIRDFResource*   aCommand,
+                              nsISupportsArray* aArguments)
 {
-    return NS_OK;
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -197,15 +197,16 @@ public:
         return mInner->Flush();
     }
 
-    NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult) {
-        return mInner->IsCommandEnabled(aCommand, aCommandTarget, aResult);
+    NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                  nsISupportsArray* aArguments,
+                                  nsIEnumerator**   aResult) {
+        return mInner->GetEnabledCommands(aSources, aArguments, aResult);
     }
 
-    NS_IMETHOD DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget) {
-        return mInner->DoCommand(aCommand, aCommandTarget);
+    NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray* aArguments) {
+        return mInner->DoCommand(aSources, aCommand, aArguments);
     }
 
     NS_IMETHOD GetURI(const char* *uri) const {
