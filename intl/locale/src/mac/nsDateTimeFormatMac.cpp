@@ -52,6 +52,7 @@
 #include "nsCRT.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "nsUnicharUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +248,9 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   else {
     res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-      if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsAutoString(aLocaleUnichar))) {
+      if (!mLocale.IsEmpty() &&
+          mLocale.Equals(aLocaleUnichar,
+                         nsCaseInsensitiveStringComparator())) {
         nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }

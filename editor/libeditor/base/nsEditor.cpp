@@ -41,6 +41,7 @@
 #include "pratom.h"
 #include "nsIDOMDocument.h"
 #include "nsIPref.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
@@ -3452,7 +3453,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
     element->GetTagName(tag);
     const PRUnichar *unicodeString;
     aTag->GetUnicode(&unicodeString);
-    if (tag.EqualsIgnoreCase(nsAutoString(unicodeString)))
+    if (tag.Equals(unicodeString, nsCaseInsensitiveStringComparator()))
     {
       return PR_TRUE;
     }
