@@ -132,3 +132,23 @@ NS_METHOD nsButton::GetLabel(nsString& aBuffer)
   return (NS_OK);
 
 }
+
+//-------------------------------------------------------------------------
+//
+// set font for button
+//
+//-------------------------------------------------------------------------
+/* virtual */
+void nsButton::SetFontNative(GdkFont *aFont)
+{
+  GtkStyle *style = gtk_style_copy(GTK_BIN (mWidget)->child->style);
+  // gtk_style_copy ups the ref count of the font
+  gdk_font_unref (style->font);
+  
+  style->font = aFont;
+  gdk_font_ref(style->font);
+  
+  gtk_widget_set_style(GTK_BIN (mWidget)->child, style);
+  
+  gtk_style_unref(style);
+}

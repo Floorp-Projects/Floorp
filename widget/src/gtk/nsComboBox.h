@@ -59,6 +59,8 @@ public:
   PRInt32         GetSelectedCount();
   NS_IMETHOD      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
+  virtual void SetFontNative(GdkFont *aFont);
+
 protected:
   NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
   virtual void InitCallbacks(char * aName = nsnull);

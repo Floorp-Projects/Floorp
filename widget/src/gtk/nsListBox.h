@@ -59,6 +59,8 @@ public:
   NS_IMETHOD SelectItem(PRInt32 aPosition);
   NS_IMETHOD Deselect() ;
 
+  virtual void SetFontNative(GdkFont *aFont);
+
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
   virtual void InitCallbacks(char * aName = nsnull);

@@ -352,3 +352,23 @@ nsComboBox::OnUnmapSignal(GtkWidget * aWidget)
   InitEvent(event, NS_CONTROL_CHANGE, &point);
   DispatchWindowEvent(&event);
 }
+
+//-------------------------------------------------------------------------
+//
+// Get handle for style
+//
+//-------------------------------------------------------------------------
+/*virtual*/
+void nsComboBox::SetFontNative(GdkFont *aFont)
+{
+  GtkStyle *style = gtk_style_copy(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0))->style);
+  // gtk_style_copy ups the ref count of the font
+  gdk_font_unref (style->font);
+  
+  style->font = aFont;
+  gdk_font_ref(style->font);
+  
+  gtk_widget_set_style(GTK_BIN (mWidget)->child, style);
+  
+  gtk_style_unref(style);
+}

@@ -434,22 +434,8 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
             return NS_ERROR_FAILURE;
         }
 
-        if (mWidget) {
-            gtk_widget_ensure_style(mWidget);
-
-            GtkStyle *style = gtk_style_copy(mWidget->style);
-            // gtk_style_copy ups the ref count of the font
-            gdk_font_unref (style->font);
-
-            GdkFont *font = (GdkFont *)fontHandle;
-            style->font = font;
-            gdk_font_ref(style->font);
-
-            gtk_widget_set_style(mWidget, style);
-
-            gtk_style_unref(style);
-        }
-
+        if (mWidget) 
+          SetFontNative((GdkFont *)fontHandle);
     }
     NS_RELEASE(mFontMetrics);
     return NS_OK;
@@ -1806,4 +1792,22 @@ nsWidget::GetWindowForSetBackground()
   }
 
   return gdk_window;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// default setfont for most widgets
+/*virtual*/
+void nsWidget::SetFontNative(GdkFont *aFont)
+{
+  GtkStyle *style = gtk_style_copy(mWidget->style);
+  // gtk_style_copy ups the ref count of the font
+  gdk_font_unref (style->font);
+  
+  style->font = aFont;
+  gdk_font_ref(style->font);
+  
+  gtk_widget_set_style(mWidget, style);
+  
+  gtk_style_unref(style);
 }
