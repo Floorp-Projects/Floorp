@@ -44,11 +44,6 @@ interface nsIWebBrowserChrome : nsISupports
 	void setOverLink(in wstring link);
 
 	/*
-		Called when the page is requesting the chrome to change the title.
-	*/
-	void setTitle(in wstring title);
-
-	/*
 		This is the currently loaded webBrowser.  The browser chrome may be
 		told to set the webBrowser object to a new object via setting of this
 		attribute.  In this case the implementer is responsible for taking the 
