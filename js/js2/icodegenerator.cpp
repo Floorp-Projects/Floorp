@@ -149,7 +149,7 @@ namespace ICG {
     Register ICodeGenerator::loadString(String &value)
     {
         Register dest = getRegister();
-        LoadString *instr = new LoadString(dest, &value);
+        LoadString *instr = new LoadString(dest, new JSString(value));
         iCode->push_back(instr);
         return dest;
     }

@@ -303,7 +303,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case LOAD_STRING:
                 {
                     LoadString* ls = static_cast<LoadString*>(instruction);
-                    (*registers)[dst(ls)] = JSValue(new JSString(src1(ls)));
+                    (*registers)[dst(ls)] = JSValue(src1(ls));
                 }
                 break;
             case BRANCH:

@@ -89,7 +89,7 @@ $ops{"LOAD_STRING"} =
   {
    super  => "Instruction_2",
    rem    => "dest, immediate value (string)",
-   params => [ ("Register", "String" ) ]
+   params => [ ("Register", "JSString*" ) ]
   };
 $ops{"LOAD_NAME"} =
   {
@@ -415,7 +415,7 @@ sub get_print_body {
             push (@oplist, "\"R\" << mOp$op");
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << mOp$op->mOffset");
-        } elsif ($type =~ /StringAtom/) {
+        } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } else {
             push (@oplist, "mOp$op");
