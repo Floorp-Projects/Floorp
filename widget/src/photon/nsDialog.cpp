@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsPhWidgetLog.h"
 #include "nsDialog.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
@@ -35,6 +36,7 @@
 #include "nsGfxCIID.h"
 //#include "resource.h"
 
+
 NS_IMPL_ADDREF(nsDialog)
 NS_IMPL_RELEASE(nsDialog)
 
@@ -48,25 +50,6 @@ nsDialog::nsDialog() : nsWindow(), nsIDialog()
   NS_INIT_REFCNT();
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Create the proper widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsDialog::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return nsWindow::Create(aParent,aRect,aHandleEventFunction,aContext,aAppShell,aToolkit,aInitData);
-  
-}
-
-
 //-------------------------------------------------------------------------
 //
 // nsDialog destructor
@@ -74,43 +57,20 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 nsDialog::~nsDialog()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDialog::~nsDialog - Not Implemented.\n"));
 }
 
 //-------------------------------------------------------------------------
 //
-// Set this button label
+// Create the native Photon Dialog widget (just a window)
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsDialog::SetLabel(const nsString& aText)
+
+NS_METHOD nsDialog::CreateNative( PtWidget_t *parentWindow )
 {
-  nsresult result = NS_OK;
-
-  if( mWidget )
-  {
-    PtArg_t arg;
-    NS_ALLOC_STR_BUF(label, aText, 256);
-
-    PtSetArg( &arg, Pt_ARG_TEXT_STRING, label, 0 );
-    if( PtSetResources( mWidget, 1, &arg ) != 0 )
-      result = NS_ERROR_FAILURE;
-
-    NS_FREE_STR_BUF(label);
-  }
-
-  return result;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get this button label
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
-{
+  nsWindow::CreateNative( parentWindow );
   return NS_OK;
 }
-
-
 
 //-------------------------------------------------------------------------
 //
@@ -119,12 +79,12 @@ NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {
       *aInstancePtr = (void*) ((nsIDialog*)this);
-      NS_ADDREF_THIS();
+      AddRef();
       result = NS_OK;
   }
 
@@ -134,33 +94,39 @@ nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// move, paint, resizes message - ignore
+// Set this button label
 //
 //-------------------------------------------------------------------------
-PRBool nsDialog::OnMove(PRInt32, PRInt32)
+NS_METHOD nsDialog::SetLabel(const nsString& aText)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDialog::SetLabel - Not Implemented.\n"));
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get this button label
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDialog::GetLabel - Not Implemented.\n"));
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// paint message. Don't send the paint out
+//
+//-------------------------------------------------------------------------
+PRBool nsDialog::OnPaint(nsPaintEvent &aEvent)
 {
   return PR_FALSE;
 }
 
-PRBool nsDialog::OnPaint()
+PRBool nsDialog::OnResize(nsSizeEvent &aEvent)
 {
-  return nsWindow::OnPaint();
+    return PR_FALSE;
 }
 
-PRBool nsDialog::OnResize(nsRect &aWindowRect)
-{
-  return nsWindow::OnResize(aWindowRect);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// get position/dimensions
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsDialog::GetBounds(nsRect &aRect)
-{
-  return nsWindow::GetBounds(aRect);
-}
 

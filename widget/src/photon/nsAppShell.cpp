@@ -17,11 +17,53 @@
  */
 
 #include "nsAppShell.h"
+#include "nsIAppShell.h"
+
+#include "plevent.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include <stdlib.h>
+
+
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
 #include "nsIWidget.h"
+
 #include <Pt.h>
+#include <errno.h>
+
 
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
+
+PRBool            nsAppShell::mPtInited = PR_FALSE;
+
+#include <prlog.h>
+PRLogModuleInfo  *PhWidLog = NULL;
+unsigned char PhWidLogState = 0;		/* 0= Not Enabled */
+#include "nsPhWidgetLog.h"
+
+#if 1
+void SigUsr1Handler(int signo)
+{
+  printf("SigUsr1Handler: PhWidLogState=<%d>\n", PhWidLogState);
+  
+  if (PhWidLogState)
+    PhWidLogState=0;
+  else
+    PhWidLogState=1;
+
+#if 1
+  /* Should do this in a function in GFX */
+  extern unsigned char PhGfxLogState;
+  if (PhGfxLogState)
+    PhGfxLogState=0;
+  else
+    PhGfxLogState=1;
+#endif
+}
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -31,12 +73,65 @@ NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 nsAppShell::nsAppShell()  
 { 
   NS_INIT_REFCNT();
-  mDispatchListener = 0;
+  mDispatchListener = nsnull;
   mEventBufferSz = sizeof( PhEvent_t ) + 1000;
   mEvent = (PhEvent_t*) malloc( mEventBufferSz );
   NS_ASSERTION( mEvent, "Out of memory" );
+
+  /* Run this only once per application startup */
+  if( !mPtInited )
+  {
+    PtInit( NULL );
+    PtChannelCreate(); // Force use of pulses
+    mPtInited = PR_TRUE;
+
+#if 1
+extern int double_buffer;
+//extern int raw_container_color;
+
+  if (getenv("DOUBLE_BUFFER")!=0)
+  {
+    double_buffer = atoi(getenv("DOUBLE_BUFFER"));
+  }
+  printf ("double_buffer: %d\n",double_buffer);
+
+/*  if (getenv("RAW_CONTAINER_COLOR")!=0)
+  {
+    raw_container_color = atoi(getenv("RAW_CONTAINER_COLOR"));
+  }
+  printf ("raw_container_color: %d\n",raw_container_color);
+*/
+#endif
+  }
 }
 
+
+NS_METHOD nsAppShell::Spinup()
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spinup - Not Implemented.\n"));
+  return NS_OK;
+}
+
+
+NS_METHOD nsAppShell::Spindown()
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spindown - Not Implemented.\n"));
+  return NS_OK;
+}
+
+
+NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeEvent - Not Implemented.\n"));
+  return NS_OK;
+}
+
+
+NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::DispatchNativeEvent - Not Implemented.\n"));
+  return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------
@@ -47,12 +142,15 @@ nsAppShell::nsAppShell()
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Create - Not Implemented.\n"));
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::SetDispatchListener.\n"));
+
   mDispatchListener = aDispatchListener;
   return NS_OK;
 }
@@ -62,15 +160,72 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 // Enter a message handler loop
 //
 //-------------------------------------------------------------------------
+//struct PLEventQueue;
+nsIEventQueue * kedlEQueue = nsnull;
+
+int event_processor_callback(int fd, void *data, unsigned mode)
+{
+//	printf ("kedl: event processor callback!\n"); fflush (stdout);
+//  printf ("kedl: to pr process events!\n"); fflush(stdout);
+//    PR_ProcessPendingEvents(kedlEQueue);
+//  printf ("kedl: back from pr process events!\n"); fflush(stdout);
+
+nsIEventQueue * eventQueue = (nsIEventQueue *) data;
+eventQueue->ProcessPendingEvents();
+}
 
 nsresult nsAppShell::Run()
 {
+  nsresult   rv = NS_OK;
+  nsIEventQueue * EQueue = nsnull;
+
+  // Get the event queue service 
+  rv = nsServiceManager::GetService(kEventQueueServiceCID, 
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **) &mEventQService);
+
+  if (NS_OK != rv) {
+    NS_ASSERTION(0,"Could not obtain event queue service");
+    return rv;
+  }
+
+  printf("Got thew event queue from the service\n");
+  //Get the event queue for the thread.
+  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+
+  // If a queue already present use it.
+  if (nsnull != EQueue)
+     goto done;
+
+  // Create the event queue for the thread
+  rv = mEventQService->CreateThreadEventQueue();
+  if (NS_OK != rv) {
+    NS_ASSERTION(0,"Could not create the thread event queue");
+    return rv;
+  }
+  //Get the event queue for the thread
+  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  if (NS_OK != rv) {
+      NS_ASSERTION(0,"Could not obtain the thread event queue");
+      return rv;
+  }    
+
+done:
+	kedlEQueue=EQueue;
+//	printf("setting up input with event queue\n");
+	PtAppAddFd(NULL,EQueue->GetEventQueueSelectFD(),Pt_FD_READ,event_processor_callback,EQueue);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Run.\n"));
+
   NS_ADDREF_THIS();
 
   nsresult        result = NS_OK;
-  PhEvent_t       *event;
-  unsigned short  locEventBufferSz = sizeof( PhEvent_t ) + 1000; /* initially */
+//  PhEvent_t       *event;
+//  unsigned long   locEventBufferSz = sizeof( PhEvent_t ) + 4000; /* initially */
 
+  PtMainLoop();
+
+#if 0
   if( nsnull != ( event = (PhEvent_t*) malloc( locEventBufferSz )))
   {
     PRBool done = PR_FALSE;
@@ -87,8 +242,10 @@ nsresult nsAppShell::Run()
 
       case Ph_RESIZE_MSG:
         locEventBufferSz = PhGetMsgSize( event );
+        printf( "nsAppShell::Run got resize msg (%lu).\n", locEventBufferSz );
         if(( event = (PhEvent_t*) realloc( event, locEventBufferSz )) == nsnull )
         {
+          printf( "realloc barfed.\n" );
           result = 0; // Meaningful error code?
           done = PR_TRUE;
         }
@@ -99,11 +256,15 @@ nsresult nsAppShell::Run()
       }
     }
 
+    printf( "nsAppShell::Run exiting event loop.\n" );
+
     free( event );
   }
-
+#endif
 
   Release();
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Run - done.\n"));
 
   return result;
 }
@@ -115,6 +276,12 @@ nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &
   PRBool   done = PR_FALSE;
 
   aIsInWindow = PR_FALSE;
+
+//kedl
+//  printf ("kedl: to pr process events!\n"); fflush(stdout);
+//  PR_ProcessPendingEvents(kedlEQueue);
+kedlEQueue->ProcessPendingEvents();
+//  printf ("kedl: back from pr process events!\n"); fflush(stdout);
 
   while(!done)
   {
@@ -190,8 +357,13 @@ nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
 
 NS_METHOD nsAppShell::Exit()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit - Not Implemented.\n"));
+
   // REVISIT - How do we do this under Photon??? 
   // PtSendEventToWidget( m_window, quit_event );
+
+  /* kirk: Hack until we figure out what to do here */
+  exit ( EXIT_SUCCESS );
 
   return NS_OK;
 }
@@ -203,6 +375,7 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::~nsAppShell - Not Implemented.\n"));
 }
 
 //-------------------------------------------------------------------------
@@ -212,6 +385,8 @@ nsAppShell::~nsAppShell()
 //-------------------------------------------------------------------------
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeShell - Not Implemented.\n"));
+
   if( aDataType == NS_NATIVE_SHELL )
   {
     return nsnull;
@@ -219,4 +394,18 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
+#if 0
+NS_METHOD nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetSelectionMgr - Not Implemented.\n"));
 
+  return NS_OK;
+}
+#endif
+
+NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget, PRBool *aForWindow)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::EventIsForModalWindow - Not Implemented.\n"));
+
+  return NS_OK;
+}

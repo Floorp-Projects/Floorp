@@ -19,6 +19,7 @@
 #ifndef TOOLKIT_H      
 #define TOOLKIT_H
 
+#include <Pt.h>
 #include "nsIToolkit.h"
 
 class nsToolkit : public nsIToolkit
@@ -28,11 +29,12 @@ public:
 
   NS_DECL_ISUPPORTS
 
-              nsToolkit();
-  NS_IMETHOD  Init( PRThread *aThread );
+               nsToolkit();
+  NS_IMETHOD   Init( PRThread *aThread );
 
 private:
-              ~nsToolkit();
+               ~nsToolkit();
+  PtWidget_t*  mWidget;
 
 protected:
 

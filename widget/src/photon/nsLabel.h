@@ -16,42 +16,46 @@
  * Reserved.
  */
 
-#ifndef nsDialog_h__
-#define nsDialog_h__
+#ifndef nsLabel_h__
+#define nsLabel_h__
 
-#include "nsWindow.h"
-#include "nsIDialog.h"
+#include "nsWidget.h"
+#include "nsIAppShell.h"
+#include "nsILabel.h"
 
 /**
- * Native Photon dialog wrapper
+ * Native Photon Label wrapper
  */
-
-class nsDialog :  public nsWindow,
-                  public nsIDialog
+class nsLabel :  public nsWidget,
+                 public nsILabel
 {
 
 public:
 
-  nsDialog();
-  virtual ~nsDialog();
+  nsLabel();
+  virtual ~nsLabel();
 
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    // nsIButton part
-  NS_IMETHOD     SetLabel(const nsString& aText);
-  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  // nsILabel part
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetLabel(nsString &aBuffer);
+  NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment);
 
-  virtual PRBool OnPaint(nsPaintEvent & aEvent);
+  NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
+
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
+  virtual PRBool OnPaint(nsPaintEvent &aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
-  //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
-
 protected:
-  NS_IMETHOD  CreateNative(PtWidget_t *parentWindow);
+  NS_METHOD CreateNative( PtWidget_t *aParent );
+
+  nsLabelAlignment mAlignment;
 
 };
 
-#endif // nsDialog_h__
+#endif // nsLabel_h__

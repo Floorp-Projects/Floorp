@@ -20,7 +20,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsToolkit.h"
-#include "nsIWidget.h"
+#include "nsWidget.h"
 #include "nsIMenuBar.h"
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
@@ -36,153 +36,94 @@
  * Native Photon window wrapper. 
  */
 
-class nsWindow : public nsBaseWidget
+class nsWindow : public nsWidget
 {
 
 public:
+      // nsIWidget interface
+
     nsWindow();
     virtual ~nsWindow();
 
-    // nsIWidget interface
-    NS_IMETHOD            Create(nsIWidget *aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
-    NS_IMETHOD              Create(nsNativeWidget aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
-
-     // Utility method for implementing both Create(nsIWidget ...) and
-     // Create(nsNativeWidget...)
-
-    virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
-                            const nsRect &aRect,
-                            EVENT_CALLBACK aHandleEventFunction,
-                            nsIDeviceContext *aContext,
-                            nsIAppShell *aAppShell,
-                            nsIToolkit *aToolkit,
-                            nsWidgetInitData *aInitData,
-                            nsNativeWidget aNativeParent = nsnull);
-
-    NS_IMETHOD              Destroy();
-    virtual nsIWidget*      GetParent(void);
-    NS_IMETHOD              Show(PRBool bState);
-    NS_IMETHOD              IsVisible(PRBool & aState);
-
-    NS_IMETHOD              Move(PRUint32 aX, PRUint32 aY);
-    NS_IMETHOD              Resize(PRUint32 aWidth,
-                                   PRUint32 aHeight,
-                                   PRBool   aRepaint);
-    NS_IMETHOD              Resize(PRUint32 aX,
-                                   PRUint32 aY,
-                                   PRUint32 aWidth,
-                                   PRUint32 aHeight,
-                                   PRBool   aRepaint);
-    NS_IMETHOD              Enable(PRBool bState);
-    NS_IMETHOD              SetFocus(void);
-    NS_IMETHOD              GetBounds(nsRect &aRect);
-    NS_IMETHOD              GetClientBounds(nsRect &aRect);
-    NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-    virtual nsIFontMetrics* GetFont(void);
-    NS_IMETHOD              SetFont(const nsFont &aFont);
-    NS_IMETHOD              SetCursor(nsCursor aCursor);
-    NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
-    NS_IMETHOD              Update();
-    virtual void*           GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
-    NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    NS_IMETHOD              SetTitle(const nsString& aTitle); 
-    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
-    NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    NS_IMETHOD              RemoveTooltips();
-    NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
-    NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD              BeginResizingChildren(void);
-    NS_IMETHOD              EndResizingChildren(void);
-    NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
-    NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
-    NS_IMETHOD              EnableFileDrop(PRBool aEnable);
-
-   	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
-
-
-
-    virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
-    virtual PRBool          AutoErase();
-    nsPoint*                GetLastPoint() { return &mLastPoint; }
-
-    PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId;}
-
-
-protected:
-
-    static int RawEventHandler( PtWidget_t *, void *, PtCallbackInfo_t * );
-    PRBool HandleEvent( PtCallbackInfo_t* );
-
-    virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
-
-     // Allow Derived classes to modify the height that is passed
-     // when the window is created or resized.
-    virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
-
-    virtual void            OnDestroy();
-    virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool          OnPaint();
-    virtual PRBool          OnResize(nsRect &aWindowRect);
-    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
-
-    virtual PRBool          DispatchFocus(PRUint32 aEventType);
-
-    static PRBool ConvertStatus(nsEventStatus aStatus);
-
-    PRBool DispatchStandardEvent(PRUint32 aMsg);
-
-    void GetNonClientBounds(nsRect &aRect);
-
-protected:
-    static      nsWindow* gCurrentWindow;
-    nsPoint     mLastPoint;
-    PtWidget_t* mWidget;
+    // nsIsupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
-    PRBool      mHas3DBorder;
-    PRBool      mIsShiftDown;
-    PRBool      mIsControlDown;
-    PRBool      mIsAltDown;
-    PRBool      mIsDestroying;
-    PRBool      mOnDestroyCalled;
-    PRBool      mIsVisible;
-    // XXX Temporary, should not be caching the font
-    nsFont *    mFont;
+    virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
-    PRInt32     mPreferredWidth;
-    PRInt32     mPreferredHeight;
+    NS_IMETHOD           PreCreateWidget(nsWidgetInitData *aWidgetInitData);
 
-    nsIMenuBar  * mMenuBar;
-    PRInt32       mMenuCmdId;
-    nsIMenu     * mHitMenu;
-    nsVoidArray * mHitSubMenus;
+    virtual void*        GetNativeData(PRUint32 aDataType);
 
-    // Enumeration of the methods which are accessable on the "main GUI thread"
-    // via the CallMethod(...) mechanism...
-    // see nsSwitchToUIThread
-    enum {
-        CREATE       = 0x0101,
-        CREATE_NATIVE,
-        DESTROY, 
-        SET_FOCUS,
-        SET_CURSOR,
-        CREATE_HACK
-    };
+    NS_IMETHOD           SetColorMap(nsColorMap *aColorMap);
+    NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+
+    NS_IMETHOD           SetTitle(const nsString& aTitle);
+    NS_IMETHOD           SetMenuBar(nsIMenuBar * aMenuBar);
+
+    NS_IMETHOD           GetBounds( nsRect &aRect );
+    NS_IMETHOD           GetClientBounds( nsRect &aRect );
+
+    NS_IMETHOD           SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
+    NS_IMETHOD           UpdateTooltips(nsRect* aNewTips[]);
+    NS_IMETHOD           RemoveTooltips();
+
+    NS_IMETHOD           BeginResizingChildren(void);
+    NS_IMETHOD           EndResizingChildren(void);
+//    NS_IMETHOD           Destroy(void);
+    NS_IMETHOD           Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint);
+    NS_IMETHOD Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
+		      PRUint32 aHeight, PRBool aRepaint);
+//    NS_IMETHOD           Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+//    NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+
+
+    virtual PRBool IsChild() { return(PR_FALSE); };
+    virtual void SetIsDestroying( PRBool val) { mIsDestroying = val; };
+    virtual int GetMenuBarHeight();
+
+     // Utility methods
+    virtual  PRBool OnPaint(nsPaintEvent &event);
+    PRBool   OnKey(nsKeyEvent &aEvent);
+    PRBool   DispatchFocus(nsGUIEvent &aEvent);
+    virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+  // in nsWidget now
+    //PRBool OnResize( nsRect &rect );
+
+//    char gInstanceClassName[256];
+  
+protected:
+//    virtual void            OnDestroy();
+    static  void RawDrawFunc( PtWidget_t *pWidget, PhTile_t *damage );
+//  virtual void InitCallbacks(char * aName = nsnull);
+
+  NS_IMETHOD  CreateNative(PtWidget_t *parentWidget);
+  static int  ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+//  static int  RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
+  PRBool      HandleEvent( PtCallbackInfo_t* aCbInfo );
+  void        ScreenToWidget( PhPoint_t &pt );
+
+  PtWidget_t  *mClientWidget;
+  PtWidget_t  *mRawDraw;
+  nsIFontMetrics *mFontMetrics;
+  PRBool      mVisible;
+  PRBool      mDisplayed;
+  PRBool      mIsDestroying;
+
+
+//  GtkWindowType mBorderStyle;
+
+  // XXX Temporary, should not be caching the font
+  nsFont *    mFont;
+
+  // Resize event management
+  nsRect mResizeRect;
+  int    mResized;
+  PRBool mLowerLeft;
+
+//  GtkWidget *mShell;  /* used for toplevel windows */
+//  GtkWidget *mVBox;
 
 };
 
@@ -190,11 +131,9 @@ protected:
 // A child window is a window with different style
 //
 class ChildWindow : public nsWindow {
-
-public:
-             ChildWindow(){}
-    PRBool   DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
-
+  public:
+    ChildWindow() {};
+    virtual PRBool IsChild() { return(PR_TRUE); };
 };
 
 
