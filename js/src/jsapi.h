@@ -1590,15 +1590,15 @@ extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx);
 
 /*
- * Save the current exception state. This takes a snapshot of the current
+ * Save the current exception state.  This takes a snapshot of cx's current
  * exception state without making any change to that state.
  *
- * The returned object MUST be later passed to either JS_RestoreExceptionState
- * (to restore that saved state) or JS_DropExceptionState (to cleanup the state
- * object in case it is not desireable to restore to that state). Both
- * JS_RestoreExceptionState and JS_DropExceptionState will destroy the
- * JSExceptionState object -- so that object can not be referenced again
- * after making either of those calls.
+ * The returned state pointer MUST be passed later to JS_RestoreExceptionState
+ * (to restore that saved state, overriding any more recent state) or else to
+ * JS_DropExceptionState (to free the state struct in case it is not correct
+ * or desirable to restore it).  Both Restore and Drop free the state struct,
+ * so callers must stop using the pointer returned from Save after calling the
+ * Release or Drop API.
  */
 extern JS_PUBLIC_API(JSExceptionState *)
 JS_SaveExceptionState(JSContext *cx);
@@ -1610,10 +1610,11 @@ extern JS_PUBLIC_API(void)
 JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
 
 /*
- * If the given jsval is an engine exception with an attached error report
- * then return a pointer to that report. Else, return NULL.
- * The lifetime of the error report that might be returned is linked to the
- * lifetime of the exception.
+ * If the given value is an exception object that originated from an error,
+ * the exception will contain an error report struct, and this API will return
+ * the address of that struct.  Otherwise, it returns NULL.  The lifetime of
+ * the error report struct that might be returned is the same as the lifetime
+ * of the exception object.
  */
 extern JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, jsval v);

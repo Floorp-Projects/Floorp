@@ -326,22 +326,26 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
  * type message, and then hope the process ends swiftly.
  */
 void
-js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback)
+js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
 {
     JSStackFrame *fp = cx->fp;
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
+
     /* Get the message for this error, but we won't expand any arguments. */
-    const JSErrorFormatString *fmtData = (*errorCallback)(NULL, NULL, JSMSG_OUT_OF_MEMORY);
-    const char *msg = fmtData ? fmtData->format : "Out Of Memory";
+    const JSErrorFormatString *efs = callback(NULL, NULL, JSMSG_OUT_OF_MEMORY);
+    const char *msg = efs ? efs->format : "Out of memory";
 
     memset(&report, 0, sizeof (struct JSErrorReport));
-    /* Fill out the report, but don't do anything that requires an allocation. */
+
+    /* Fill out the report, but don't do anything that requires allocation. */
     report.errorNumber = JSMSG_OUT_OF_MEMORY;
     report.flags = JSREPORT_ERROR;
 
-    /* Walk stack until we find a frame that is associated with
-       some script rather than a native frame. */
+    /*
+     * Walk stack until we find a frame that is associated with some script
+     * rather than a native frame.
+     */
     while (fp && (!fp->script || !fp->pc))
         fp = fp->down;
 
@@ -363,7 +367,7 @@ js_ReportOutOfMemory(JSContext *cx, JSErrorCallback errorCallback)
     }
 
     if (onError)
-        (*onError)(cx, msg, &report);
+        onError(cx, msg, &report);
 }
 
 JSBool
@@ -421,7 +425,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         char **messagep, JSErrorReport *reportp,
                         JSBool *warningp, JSBool charArgs, va_list ap)
 {
-    const JSErrorFormatString *fmtData;
+    const JSErrorFormatString *efs;
     int i;
     int argCount;
 
@@ -433,11 +437,11 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 
     *messagep = NULL;
     if (callback) {
-        fmtData = (*callback)(userRef, "Mountain View", errorNumber);
-        if (fmtData != NULL) {
+        efs = callback(userRef, NULL, errorNumber);
+        if (efs) {
             size_t totalArgsLength = 0;
             size_t argLengths[10]; /* only {0} thru {9} supported */
-            argCount = fmtData->argCount;
+            argCount = efs->argCount;
             JS_ASSERT(argCount <= 10);
             if (argCount > 0) {
                 /*
@@ -472,13 +476,13 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              * for {X} in the format.
              */
             if (argCount > 0) {
-                if (fmtData->format) {
+                if (efs->format) {
                     const char *fmt;
                     const jschar *arg;
                     jschar *out;
                     int expandedArgs = 0;
                     size_t expandedLength
-                        = strlen(fmtData->format)
+                        = strlen(efs->format)
                             - (3 * argCount) /* exclude the {n} */
                             + totalArgsLength;
                     /*
@@ -489,7 +493,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
                     if (!out)
                         goto error;
-                    fmt = fmtData->format;
+                    fmt = efs->format;
                     while (*fmt) {
                         if (*fmt == '{') {      /* balance} */
                             if (isdigit(fmt[1])) {
@@ -521,8 +525,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                  * Zero arguments: the format string (if it exists) is the
                  * entire message.
                  */
-                if (fmtData->format) {
-                    *messagep = JS_strdup(cx, fmtData->format);
+                if (efs->format) {
+                    *messagep = JS_strdup(cx, efs->format);
                     if (!*messagep)
                         goto error;
                     reportp->ucmessage
@@ -659,7 +663,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
         }
     }
     if (onError)
-        (*onError)(cx, cx->lastMessage, reportp);
+        onError(cx, cx->lastMessage, reportp);
 }
 
 void
