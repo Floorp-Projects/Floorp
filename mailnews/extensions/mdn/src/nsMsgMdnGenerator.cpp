@@ -562,26 +562,20 @@ nsresult nsMsgMdnGenerator::CreateFirstPart()
         return rv;
    
     nsXPIDLCString subject;
-    m_headers->ExtractHeader(HEADER_SUBJECT, PR_FALSE,
-                             getter_Copies(subject));
-    parm = PR_smprintf ("%s - %s", 
-                        (receipt_string ? 
-                         NS_LossyConvertUCS2toASCII(receipt_string).get() :
-                         "Return Receipt"), (subject ? subject.get()  : ""));
+    m_headers->ExtractHeader(HEADER_SUBJECT, PR_FALSE, getter_Copies(subject));
     convbuf = nsMsgI18NEncodeMimePartIIStr(
-        parm ? parm : "Return Receipt", 
-        PR_FALSE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
+        subject.Length() ? subject.get() : "[no subject]", 
+        PR_TRUE, NS_LossyConvertUCS2toASCII(m_charset).get(), 0,
         conformToStandard);
-    tmpBuffer = PR_smprintf("Subject: %s" CRLF, 
+    tmpBuffer = PR_smprintf("Subject: %s - %s" CRLF, 
+                            (receipt_string ? 
+                             NS_LossyConvertUCS2toASCII(receipt_string).get() :
+                             "Return Receipt"),
                             (convbuf ? convbuf : 
-                             (parm ? parm : "Return Receipt")));
+                             (subject.Length() ? subject.get() : 
+                              "[no subject]")));
 
     PUSH_N_FREE_STRING(tmpBuffer);
-    if (parm)
-    {
-        PR_smprintf_free(parm);
-        parm = 0;
-    }
     PR_Free(convbuf);
 
     convbuf = nsMsgI18NEncodeMimePartIIStr(
