@@ -337,7 +337,7 @@ pref("mail.server.default.delete_mail_left_on_server", false);
 pref("mail.server.default.valid", true);
 pref("mail.server.default.abbreviate",true);
 pref("mail.server.default.isSecure", false);
-pref("mail.server.default.useSecAuth", true);
+pref("mail.server.default.useSecAuth", false);
 pref("mail.server.default.override_namespaces", true);
 
 pref("mail.server.default.delete_model", 1);
