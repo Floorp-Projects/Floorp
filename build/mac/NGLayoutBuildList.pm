@@ -562,9 +562,12 @@ sub MakeResourceAliases()
 
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_content_chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_content_chrome_dir");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",					"$chrome_dir");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",				"$chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",			"$chrome_dir");
 	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",			"$global_locale_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",		"$global_locale_chrome_dir", 0);
+
 
 	_InstallResources(":mozilla:docshell:base:MANIFEST",								"$global_locale_chrome_dir", 0);
 
@@ -724,6 +727,7 @@ sub MakeResourceAliases()
 
 
 	# XXX autocomplete needs to move somewhere
+	_InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",		"$chrome_dir");
 
 	{
 		my($wallet_content_chrome_dir) = "$communicator_content_chrome_dir"."wallet:";
