@@ -174,12 +174,9 @@ static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
 #endif
-#ifndef NECKO
-static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
-#include "nsINetSupportDialogService.h"
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-#endif
-
+#include "nsICommonDialogs.h"
+static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
+static NS_DEFINE_IID( kIPromptIID, NS_IPROMPT_IID );
 #include "nsIWebShell.h"
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
@@ -304,13 +301,12 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
      NS_ADDREF_THIS();
      return NS_OK;
   }	
-#ifndef NECKO
-  if (aIID.Equals(kINetSupportIID )) {
-    *aInstancePtr = (void*)(nsINetSupport*)this;
+ if (aIID.Equals(kIPromptIID )) {
+    *aInstancePtr = (void*)(nsIPrompt*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
+  
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
@@ -2783,69 +2779,127 @@ nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
 }
 
 
-// nsINetSupport
-#ifdef NECKO
-#else
-void nsWebShellWindow::Alert(const nsString &aText)
+// nsIPrompt
+NS_IMETHODIMP nsWebShellWindow::Alert(const PRUnichar *text)
 {
-	nsresult rv;
-	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-  
-  if ( dialog )
-   	dialog->Alert( aText );  
-}
-
-PRBool nsWebShellWindow::Confirm(const nsString &aText)
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-  PRInt32 result = 0;
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
+  {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
  
-  if ( dialog )
-   	dialog->Confirm( aText,&result );  
-  return result ? PR_TRUE : PR_FALSE;
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->Alert( domWindow, text );
+  return rv; 
 }
 
-PRBool nsWebShellWindow::Prompt(const nsString &aText,
-                           const nsString &aDefault,
-                           nsString &aResult)
+NS_IMETHODIMP nsWebShellWindow::Confirm(const PRUnichar *text, PRBool *_retval)
 {
-	nsresult rv;
-	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-	PRInt32 result = 0;
-  if ( dialog )
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
   {
-   	dialog->Prompt( aText, aDefault, aResult,&result ); 
-	}
-	 return result ? PR_TRUE : PR_FALSE;
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->Confirm( domWindow, text, _retval );
+  return rv; 
 }
 
-PRBool nsWebShellWindow::PromptUserAndPassword(
-				const nsString &aText, nsString &aUser, nsString &aPassword)
+NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
-	nsresult rv;
-	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-	PRInt32 result = 0;
-  if ( dialog )
+	 nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
   {
-   		dialog->PromptUserAndPassword( aText, aUser, aPassword, &result );  
-
-	}
-	 return result ? PR_TRUE : PR_FALSE;
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv =dialog->ConfirmCheck( domWindow, text, checkMsg, checkValue, _retval );
+  return rv; 
 }
 
-PRBool nsWebShellWindow::PromptPassword(const nsString &aText,
-                                   nsString &aPassword)
- {
- 	nsresult rv;
- 	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-	PRInt32 result = 0;
-  if ( dialog )
+NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
+{
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
   {
-  	
-   	dialog->PromptPassword( aText, aPassword, &result ); 
-   
-	}
-	 return result ? PR_TRUE : PR_FALSE;
- }
-#endif
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->Prompt( domWindow, text, defaultText, result, _retval );
+  return rv; 
+}
+
+NS_IMETHODIMP nsWebShellWindow::PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval)
+{	
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
+  {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->PromptUsernameAndPassword( domWindow, text, user, pwd, _retval );
+  return rv;
+}
+
+NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval)
+{
+  nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
+  {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+ 	rv = dialog->PromptPassword( domWindow, text, pwd, _retval );
+  return rv;
+}
+
+NS_IMETHODIMP nsWebShellWindow::ConfirmYN(const PRUnichar *text, PRBool *_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}

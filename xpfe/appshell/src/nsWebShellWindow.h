@@ -30,9 +30,9 @@
 #include "nsVoidArray.h"
 #include "nsIMenu.h"
 #include "nsIUrlDispatcher.h"
-#ifndef NECKO
-#include "nsINetSupport.h"
-#endif
+
+#include "nsIPrompt.h"
+
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -62,10 +62,9 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
 						             public nsIUrlDispatcher
-#ifdef NECKO
-#else
-						           , public nsINetSupport
-#endif
+
+						           , public nsIPrompt
+
 {
 public:
   nsWebShellWindow();
@@ -255,19 +254,16 @@ public:
 
   NS_DECL_IURLDISPATCHER
   // nsINetSupport
-#if NECKO
-#else
-  NS_IMETHOD_(void) Alert(const nsString &aText);  
-  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
-  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
-                             const nsString &aDefault,
-                             nsString &aResult);
-  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
-                                            nsString &aUser,
-                                            nsString &aPassword);
-  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                     nsString &aPassword);
-#endif
+
+
+  NS_IMETHOD Alert(const PRUnichar *text);
+  NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
+  NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+  NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
+  NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
+  NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
+  NS_IMETHOD ConfirmYN(const PRUnichar *text, PRBool *_retval);
+  NS_IMETHOD ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
 protected:
   
   PRInt32 GetDocHeight(nsIDocument * aDoc);
