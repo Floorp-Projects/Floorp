@@ -72,7 +72,9 @@ LLIBS =                                \
         $(DIST)\lib\xpcomxptcmd_s.lib  \
         $(DIST)\lib\xpcomxptinfo_s.lib \
         $(DIST)\lib\xpcomproxy_s.lib   \
-        $(DIST)\lib\mozreg.lib       \
+        $(DIST)\lib\string_s.lib       \
+        $(DIST)\lib\string_obsolete_s.lib   \
+        $(DIST)\lib\mozreg.lib         \
         $(NULL)
 
 WIN_LIBS =                             \
