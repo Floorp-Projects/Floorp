@@ -1585,8 +1585,12 @@ void
 nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame** aResult)
 {
   *aResult = nsnull;
+  if (!mContent)
+    return;
   nsCOMPtr<nsIDocument> document;
   mContent->GetDocument(*getter_AddRefs(document));
+  if (!document)
+    return;
   nsCOMPtr<nsIBindingManager> bindingManager;
   document->GetBindingManager(getter_AddRefs(bindingManager));
   if (!bindingManager)
