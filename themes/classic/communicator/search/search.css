@@ -72,6 +72,7 @@ treeitem > treerow.searchresult > treecell {
 treeitem > treerow.searchresult > treecell:hover {
    color: blue;
    text-decoration: underline;
+   cursor: pointer;
 }
 
 treeitem > treerow.searchresult > treecell > titledbutton:active {
