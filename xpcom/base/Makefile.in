@@ -51,6 +51,7 @@ CPPSRCS		= \
 ifdef GC_LEAK_DETECTOR
 CSRCS += nsGarbageCollector.c
 CPPSRCS += nsLeakDetector.cpp
+REQUIRES	+= boehm
 endif
 
 EXPORTS		= \
