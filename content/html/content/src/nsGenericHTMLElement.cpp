@@ -1635,6 +1635,9 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
   else if (mTag == nsHTMLAtoms::spacer) {
     rv = NS_NewSpacerFrame(mContent, aParentFrame, frame);
   }
+  else if (mTag == nsHTMLAtoms::wbr) {
+    rv = NS_NewWBRFrame(mContent, aParentFrame, frame);
+  }
   if (NS_OK != rv) {
     return rv;
   }
