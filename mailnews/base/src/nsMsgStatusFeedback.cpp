@@ -176,7 +176,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::Observe( nsISupports *aSubject,
   if ( aSubject && mWebShellWindow ) 
   {
     nsCOMPtr<nsIWebShellWindow> window = do_QueryInterface(aSubject, &rv);
-    if ( NS_SUCCEEDED(rv) && window && (window == mWebShellWindow) ) 
+    if ( NS_SUCCEEDED(rv) && window && (window.get() == mWebShellWindow) ) 
     {
       nsString topic1 = prefix;
       topic1 += ";status";
