@@ -159,7 +159,7 @@ PRBool nsString::IsOrdered(void) const {
   if(mLength>1) {
     PRInt32 theIndex;
     for(theIndex=1;theIndex<mLength;theIndex++) {
-      if(mStr[theIndex-1]>=mStr[theIndex]) {
+      if(mStr[theIndex-1]>mStr[theIndex]) {
         result=PR_FALSE;
         break;
       }
