@@ -445,7 +445,9 @@ ErrorHandler(int aErr, const char* aErrMsg)
     else
         sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
     
-    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT)
+    // lack of gCtx->window indicates we have not yet run RunWizard 
+    // and gtk_init
+    if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT || !gCtx->window)
     {
         fprintf (stderr, "%s\n", msg);
         return aErr;
