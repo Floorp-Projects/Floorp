@@ -77,6 +77,10 @@ namespace Interpreter {
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
         void doCall(JSFunction *target, Instruction *pc);
 
+
+        ICodeModule* genCode(StmtNode *p, const String &fileName);
+        JSValue readEvalFile(FILE* in, const String& fileName);
+
     private:
         void broadcast(Event event);
 

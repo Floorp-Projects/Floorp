@@ -41,12 +41,18 @@
 
 #include <stdexcept>
 
+
+
 namespace JavaScript {
 namespace ICG {
 
 using namespace VM;
 using namespace JSTypes;
 using namespace JSClasses;
+using namespace Interpreter;
+
+inline char narrow(char16 ch) { return char(ch); }
+
 
 uint32 ICodeModule::sMaxID = 0;
     
@@ -206,7 +212,7 @@ TypedRegister ICodeGenerator::loadBoolean(bool value)
     return dest;
 }
 
-TypedRegister ICodeGenerator::newObject(RegisterList */*args*/)
+TypedRegister ICodeGenerator::newObject(RegisterList * /*args*/)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     NewObject *instr = new NewObject(dest);
@@ -1117,7 +1123,11 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::index :
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            TypedRegister base = genExpr(b->op1);     
+            TypedRegister base = genExpr(b->op1);
+            JSClass *clazz = dynamic_cast<JSClass*>(base.second);
+            if (clazz) {
+                // look for operator [] and invoke it
+            }
             TypedRegister index = genExpr(b->op2);
             ret = getElement(base, index);
         }
@@ -1695,6 +1705,22 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             if (f->function.name->getKind() == ExprNode::identifier) {
                 const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
                 mGlobal->defineFunction(name, icm);
+            }
+        }
+        break;
+    case StmtNode::Import:
+        {
+            ImportStmtNode *i = static_cast<ImportStmtNode *>(p);
+            String *fileName = i->bindings->packageName.str;
+            if (fileName) { /// if not, build one from the idList instead
+                std::string str(fileName->length(), char());
+                std::transform(fileName->begin(), fileName->end(), str.begin(), narrow);
+                FILE* f = fopen(str.c_str(), "r");
+                if (f) {
+                    Context cx(*mWorld, mGlobal);
+                    JSValue result = cx.readEvalFile(f, *fileName);
+                    fclose(f);
+                }
             }
         }
         break;

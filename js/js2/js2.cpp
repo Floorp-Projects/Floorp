@@ -145,91 +145,28 @@ static JSValue dump(const JSValues &argv)
     return kUndefinedValue;
 }
 
-static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
-{
-    ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
-    
-    TypedRegister ret(NotARegister, &None_Type);
-    while (p) {
-        ret = icg.genStmt(p);
-        p = p->next;
-    }
-    icg.returnStmt(ret);
-
-    ICodeModule *icm = icg.complete();
-    icm->setFileName (fileName);
-    return icm;
-}
-
-static JSValue readEvalFile(FILE* in, const String& fileName)
-{
-    Context cx(world, &global);
-
-    String buffer;
-    string line;
-    LineReader inReader(in);
-    JSValues emptyArgs;
-    JSValue result;
-        
-    while (inReader.readLine(line) != 0) {
-        appendChars(buffer, line.data(), line.size());
-        try {
-            Arena a;
-            Parser p(world, a, buffer, fileName);
-            StmtNode *parsedStatements = p.parseProgram();
-			ASSERT(p.lexer.peek(true).hasKind(Token::end));
-            {
-            	PrettyPrinter f(stdOut, 30);
-            	{
-            		PrettyPrinter::Block b(f, 2);
-                	f << "Program =";
-                	f.linearBreak(1);
-                	StmtNode::printStatements(f, parsedStatements);
-            	}
-            	f.end();
-            }
-    	    stdOut << '\n';
-
-			// Generate code for parsedStatements, which is a linked 
-            // list of zero or more statements
-            ICodeModule* icm = genCode(cx, parsedStatements, fileName);
-            if (icm) {
-                result = cx.interpret(icm, emptyArgs);
-                delete icm;
-            }
-
-            clear(buffer);
-        } catch (Exception &e) {
-            /* If we got a syntax error on the end of input,
-             * then wait for a continuation
-             * of input rather than printing the error message. */
-            if (!(e.hasKind(Exception::syntaxError) &&
-                  e.lineNum && e.pos == buffer.size() &&
-                  e.sourceFile == fileName)) {
-                stdOut << '\n' << e.fullMessage();
-                clear(buffer);
-            }
-        }
-    }
-    return result;
-}
 
 inline char narrow(char16 ch) { return char(ch); }
 
 static JSValue load(const JSValues &argv)
 {
+
     JSValue result;
     size_t n = argv.size();
-    if (n > 1) {                // the 'this' parameter is un-interesting
+    if (n > 1) {
+        ASSERT(argv[0].isObject());
+        JSScope *scope = dynamic_cast<JSScope *>(argv[0].object);
+        ASSERT(scope);
         for (size_t i = 1; i < n; ++i) {
             JSValue val = argv[i].toString();
             if (val.isString()) {
+                Context cx(world, scope);
                 String fileName(*val.string);
                 std::string str(fileName.length(), char());
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
                 FILE* f = fopen(str.c_str(), "r");
                 if (f) {
-                    result = readEvalFile(f, fileName);
+                    result = cx.readEvalFile(f, fileName);
                     fclose(f);
                 }
             }
@@ -288,7 +225,7 @@ static void readEvalPrint(FILE *in, World &world)
 #endif
 				// Generate code for parsedStatements, which is a linked 
                 // list of zero or more statements
-                ICodeModule* icm = genCode(cx, parsedStatements, ConsoleName);
+                ICodeModule* icm = cx.genCode(parsedStatements, ConsoleName);
                 if (icm) {
                     JSValue result = cx.interpret(icm, JSValues());
                     stdOut << "result = " << result << "\n";

@@ -103,7 +103,16 @@ const JSType *JSValue::getType() const
     case JSValue::f64_tag:
         return &Number_Type;
     case JSValue::object_tag:
-        return &Any_Type;        // XXX get type from Object
+        {
+            //
+            // XXX why isn't there a class for Object? XXX
+            //
+            JSClass *clazz = dynamic_cast<JSClass *>(object->getType());
+            if (clazz) 
+                return clazz;
+            else
+                return &Any_Type;
+        }
     case JSValue::array_tag:
         return &Array_Type;
     case JSValue::function_tag:

@@ -114,6 +114,75 @@ struct Activation : public gc_base {
 
 };
 
+
+JSValue Context::readEvalFile(FILE* in, const String& fileName)
+{
+    String buffer;
+    string line;
+    LineReader inReader(in);
+    JSValues emptyArgs;
+    JSValue result;
+        
+    while (inReader.readLine(line) != 0) {
+        appendChars(buffer, line.data(), line.size());
+        try {
+            Arena a;
+            Parser p(getWorld(), a, buffer, fileName);
+            StmtNode *parsedStatements = p.parseProgram();
+			ASSERT(p.lexer.peek(true).hasKind(Token::end));
+            {
+            	PrettyPrinter f(stdOut, 30);
+            	{
+            		PrettyPrinter::Block b(f, 2);
+                	f << "Program =";
+                	f.linearBreak(1);
+                	StmtNode::printStatements(f, parsedStatements);
+            	}
+            	f.end();
+            }
+    	    stdOut << '\n';
+
+			// Generate code for parsedStatements, which is a linked 
+            // list of zero or more statements
+            ICodeModule* icm = genCode(parsedStatements, fileName);
+            if (icm) {
+                result = interpret(icm, emptyArgs);
+                delete icm;
+            }
+
+            clear(buffer);
+        } catch (Exception &e) {
+            /* If we got a syntax error on the end of input,
+             * then wait for a continuation
+             * of input rather than printing the error message. */
+            if (!(e.hasKind(Exception::syntaxError) &&
+                  e.lineNum && e.pos == buffer.size() &&
+                  e.sourceFile == fileName)) {
+                stdOut << '\n' << e.fullMessage();
+                clear(buffer);
+            }
+        }
+    }
+    return result;
+}
+
+ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
+{
+    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    
+    TypedRegister ret(NotARegister, &None_Type);
+    while (p) {
+        ret = icg.genStmt(p);
+        p = p->next;
+    }
+    icg.returnStmt(ret);
+
+    ICodeModule *icm = icg.complete();
+    icm->setFileName (fileName);
+    return icm;
+}
+
+
 JSValues& Context::getRegisters()    { return mActivation->mRegisters; }
 ICodeModule* Context::getICode()     { return mActivation->mICode; }
 
@@ -248,7 +317,7 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 < rv.f64);
     }
 }
-static JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
+static JSValue lessOrEqual_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
@@ -314,7 +383,7 @@ public:
     typedef enum { 
         Add, Subtract, Multiply, Divide,
         Remainder, LeftShift, RightShift, LogicalRightShift,
-        BitwiseOr, BitwiseXor, BitwiseAnd, Less, LessEqual,
+        BitwiseOr, BitwiseXor, BitwiseAnd, Less, LessOrEqual,
         Equal, Identical
     } BinaryOp;
 
@@ -349,7 +418,7 @@ BinaryOperator::BinaryOp BinaryOperator::mapICodeOp(ICodeOp op) {
     case XOR        : return BitwiseXor;
     
     case COMPARE_LT : return Less;
-    case COMPARE_LE : return LessEqual;
+    case COMPARE_LE : return LessOrEqual;
     case COMPARE_EQ : return Equal;
     case STRICT_EQ  : return Identical;
     default :
@@ -377,7 +446,7 @@ JSBinaryOperator::JSBinaryCode defaultFunction[] = {
     xor_Default,
     and_Default,
     less_Default,
-    lessEqual_Default,
+    lessOrEqual_Default,
     equal_Default,
     identical_Default
 };
@@ -407,34 +476,88 @@ static JSValue defineAdd(const JSValues& argv)
     return kUndefinedValue;
 }
 
+#define DEFINE_OBO(NAME)                                                            \
+    static JSValue define##NAME(const JSValues& argv)                               \
+    {                                                                               \
+        ASSERT(argv[0].isType());                                                   \
+        ASSERT(argv[1].isType());                                                   \
+        ASSERT(argv[2].isFunction());                                               \
+        binaryOperators[BinaryOperator::##NAME].push_back(                          \
+            new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));      \
+        return kUndefinedValue;                                                     \
+    }                                                                               \
+
+DEFINE_OBO(Subtract)
+DEFINE_OBO(Multiply)
+DEFINE_OBO(Divide)
+DEFINE_OBO(Remainder)
+DEFINE_OBO(LeftShift)
+DEFINE_OBO(RightShift)
+DEFINE_OBO(LogicalRightShift)
+DEFINE_OBO(BitwiseOr)
+DEFINE_OBO(BitwiseXor)
+DEFINE_OBO(BitwiseAnd)
+DEFINE_OBO(Less)
+DEFINE_OBO(LessOrEqual)
+DEFINE_OBO(Equal)
+DEFINE_OBO(Identical)
+
 void Context::initContext()
 {
 // if global has a parent, assume it's been initialized already.
     if (mGlobal->getParent())
         return;
 
-// predefine the predefined types;
+// predefine the umm, predefined types;
+    struct PDT {
+        char *name;
+        JSType *type;
+    } PDTs[] = {
+        { "any", &Any_Type },
+        { "Integer", &Integer_Type },
+        { "Number", &Number_Type },
+        { "Character", &Character_Type },
+        { "String", &String_Type },
+        { "Function", &Function_Type },
+        { "Array", &Array_Type },
+        { "Type", &Type_Type },
+        { "Boolean", &Boolean_Type },
+        { "Null", &Null_Type },
+        { "Void", &Void_Type },
+        { "none", &None_Type }
+    };
 
-    mGlobal->defineVariable(widenCString("any"), &Type_Type, JSValue(&Any_Type));
-    mGlobal->defineVariable(widenCString("Integer"), &Type_Type, JSValue(&Integer_Type));
-    mGlobal->defineVariable(widenCString("Number"), &Type_Type, JSValue(&Number_Type));
-    mGlobal->defineVariable(widenCString("Character"), &Type_Type, JSValue(&Character_Type));
-    mGlobal->defineVariable(widenCString("String"), &Type_Type, JSValue(&String_Type));
-    mGlobal->defineVariable(widenCString("Function"), &Type_Type, JSValue(&Function_Type));
-    mGlobal->defineVariable(widenCString("Array"), &Type_Type, JSValue(&Array_Type));
-    mGlobal->defineVariable(widenCString("Type"), &Type_Type, JSValue(&Type_Type));
-    mGlobal->defineVariable(widenCString("Boolean"), &Type_Type, JSValue(&Boolean_Type));
-    mGlobal->defineVariable(widenCString("Null"), &Type_Type, JSValue(&Null_Type));
-    mGlobal->defineVariable(widenCString("Void"), &Type_Type, JSValue(&Void_Type));
-    mGlobal->defineVariable(widenCString("none"), &Type_Type, JSValue(&None_Type));
+    for (int i = 0; i < sizeof(PDTs) / sizeof(struct PDT); i++)
+        mGlobal->defineVariable(widenCString(PDTs[i].name), &Type_Type, JSValue(PDTs[i].type));
 
 
 // hack - the following should be available only after importing the 'Operators' package
 // (hmm, how will that work - the import needs to connect the functions into this mechanism
 //   do we watch for the specific package name???)
 
-    StringAtom& name = mWorld.identifiers[widenCString("defineAdd")];
-    mGlobal->defineNativeFunction(name, defineAdd);
+    struct OBO {
+        char *name;
+        JSValue (*fun)(const JSValues& argv);
+    } OBOs[] = {
+        { "defineAdd",              defineAdd },
+        { "defineSubtract",         defineSubtract },
+        { "defineMultiply",         defineMultiply },
+        { "defineDivide",           defineDivide },
+        { "defineRemainder",        defineRemainder },
+        { "defineLeftShift",        defineLeftShift },
+        { "defineRightShift",       defineRightShift },
+        { "defineLogicalRightShift",defineLogicalRightShift },
+        { "defineBitwiseOr",        defineBitwiseOr },
+        { "defineBitwiseXor",       defineBitwiseXor },
+        { "defineBitwiseAnd",       defineBitwiseAnd },
+        { "defineLess",             defineLess },
+        { "defineLessOrEqual",      defineLessOrEqual },
+        { "defineEqual",            defineEqual },
+        { "defineIdentical",        defineIdentical },
+    };
+
+    for (i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
+        mGlobal->defineNativeFunction(mWorld.identifiers[widenCString(OBOs[i].name)], OBOs[i].fun);
 }
 
 static const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
@@ -918,6 +1041,11 @@ using JSString throughout.
             case COMPARE_EQ:
             case STRICT_EQ:
                 {
+                    //
+                    //  XXX if Package 'Operators' has not been seen, these operators cannot have been
+                    //  overridden, so we should use a different dispatch and execute the default
+                    //  behaviour inline instead,
+                    //
                     Arithmetic* mul = static_cast<Arithmetic*>(instruction);
                     JSValue& dest = (*registers)[dst(mul).first];
                     JSValue& r1 = (*registers)[src1(mul).first];
