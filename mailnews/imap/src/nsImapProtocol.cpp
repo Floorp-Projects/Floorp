@@ -204,6 +204,7 @@ void nsMsgImapHdrXferInfo::ResetAll()
 void nsMsgImapHdrXferInfo::ReleaseAll()
 {
   m_hdrInfos->Clear();
+  m_nextFreeHdrInfo = 0;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapLineDownloadCache, nsIImapHeaderInfo)
