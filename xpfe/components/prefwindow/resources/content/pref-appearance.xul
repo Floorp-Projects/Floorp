@@ -70,8 +70,8 @@
 			</html:div>
 			<html:div>
 				<html:input type="checkbox" id="ref:0:bool:general.startup.calendar" />
-				<html:label for="ref:0:bool:general.startup.calendar" accesskey="a" tabindex="0">
-				&compCheck.label;
+				<html:label for="pref:0:bool:general.startup.calendar" accesskey="a" tabindex="0">
+				&calCheck.label;
 				</html:label>
 			</html:div>
 		
