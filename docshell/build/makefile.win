@@ -38,7 +38,9 @@ CPP_OBJS=				\
 LLIBS =                              \
  $(DIST)\lib\htmldocshell_s.lib      \
  $(DIST)\lib\basedocshell_s.lib      \
- $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\xpcom.lib		           \
+ $(DIST)\lib\neckoutil_s.lib	       \
+ $(DIST)\lib\gkgfxwin.lib	           \
  $(LIBNSPR)
 
 include <$(DEPTH)\config\config.mak>
