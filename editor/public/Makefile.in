@@ -32,7 +32,7 @@ EXPORTS		= \
 		nsIEditActionListener.h \
 		nsIEditor.h \
 		nsEditorCID.h \
-	      nsIEditorController.h \
+		nsIEditorController.h \
 		nsICiter.h \
 		nsIEditorIMESupport.h \
 		nsIEditorLogging.h \
