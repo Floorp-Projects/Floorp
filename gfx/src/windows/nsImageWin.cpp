@@ -1092,7 +1092,7 @@ UINT  palType;
 nsresult 
 nsImageWin::ConvertDDBtoDIB(PRInt32 aWidth, PRInt32 aHeight)
 {
-PRInt32             numbytes;
+PRInt32             numbytes,tWidth,tHeight;
 BITMAP              srcinfo;
 HBITMAP             oldbits;
 HDC                 memPrDC;
@@ -1106,10 +1106,13 @@ UINT                palType;
 
       numbytes = ::GetObject(mHBitmap,sizeof(BITMAP),&srcinfo);
       
+      tWidth = mBHead->biWidth;
+      tHeight = mBHead->biHeight;
+
       if (nsnull != mBHead){
         delete[] mBHead;
       }
-      BuildDIB(&mBHead,mBHead->biWidth,mBHead->biHeight,srcinfo.bmBitsPixel,&mNumBytesPixel);
+      BuildDIB(&mBHead,tWidth,tHeight,srcinfo.bmBitsPixel,&mNumBytesPixel);
       mRowBytes = CalcBytesSpan(mBHead->biWidth);
       mSizeImage = mRowBytes * mBHead->biHeight; // no compression
 
