@@ -409,8 +409,19 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
  
   nsCAutoString finalURL;
   GetBaseURL(package, provider, finalURL);
-  if (finalURL.IsEmpty())
+  if (finalURL.IsEmpty()) {
+/* to test the themes / skin switching stuff I'm doing */
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+    if (provider.Equals("skin")) {
+      finalURL = "resource:/chrome/modern/";
+    }
+    else {
+      finalURL = "resource:/chrome/";
+    }
+#else
     finalURL = "resource:/chrome/";
+#endif
+  } 
 
   finalURL += package;
   finalURL += "/";
