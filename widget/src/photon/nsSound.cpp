@@ -48,7 +48,6 @@
 #include "nsCOMPtr.h"
 
 #include <Pt.h>
-#include "nsPhWidgetLog.h"
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 

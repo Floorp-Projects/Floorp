@@ -51,7 +51,6 @@
 
 #include "nsIWidget.h"
 #include "nsIPref.h"
-#include "nsPhWidgetLog.h"
 #include "nsCRT.h"
 
 #include <Pt.h>
@@ -195,9 +194,6 @@ static void client_connect( PtConnector_t *cntr, PtConnectionServer_t *csrvr, vo
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
-  if (!PhWidLog)
-    PhWidLog =  PR_NewLogModule("PhWidLog");
-
   int argc = bac ? *bac : 0;
   char **argv = bav;
 

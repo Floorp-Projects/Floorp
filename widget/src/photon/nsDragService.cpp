@@ -47,7 +47,6 @@
 #include "nsXPIDLString.h"
 
 #include "nsWidgetsCID.h"
-#include "nsPhWidgetLog.h"
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)

@@ -62,10 +62,6 @@
 
 #include "nsFilePicker.h"
 
-#include <prlog.h>
-struct PRLogModuleInfo  *PhWidLog =  nsnull;
-#include "nsPhWidgetLog.h"
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)

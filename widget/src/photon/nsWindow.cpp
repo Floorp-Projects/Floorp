@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#include "nsPhWidgetLog.h"
 #include <Pt.h>
 #include <photon/PtServer.h>
 #include "PtRawDrawContainer.h"
@@ -77,6 +76,16 @@ static PhTile_t *GetWindowClipping( PtWidget_t *aWidget );
 nsIRollupListener *nsWindow::gRollupListener = nsnull;
 nsIWidget         *nsWindow::gRollupWidget = nsnull;
 static PtWidget_t	*gMenuRegion;
+
+/* avoid making a costly PhWindowQueryVisible call */
+static PhRect_t gConsoleRect;
+static PRBool gConsoleRectValid = PR_FALSE;
+#define QueryVisible( )	{\
+													if( gConsoleRectValid == PR_FALSE ) { \
+															PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &gConsoleRect ); \
+															gConsoleRectValid = PR_TRUE;\
+															} \
+													}
 
 //-------------------------------------------------------------------------
 //
@@ -117,13 +126,12 @@ NS_IMETHODIMP nsWindow::WidgetToScreen( const nsRect& aOldRect, nsRect& aNewRect
 	PhPoint_t pos, offset;
 	PtWidget_t *disjoint = PtFindDisjoint( mWidget );
 
-	PhRect_t console;
-	PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
+	QueryVisible( );
 
 	PtGetAbsPosition( disjoint, &pos.x, &pos.y );
 	PtWidgetOffset( mWidget, &offset );
-	aNewRect.x = pos.x + offset.x + aOldRect.x - console.ul.x;
-	aNewRect.y = pos.y + offset.y + aOldRect.y - console.ul.y;
+	aNewRect.x = pos.x + offset.x + aOldRect.x - gConsoleRect.ul.x;
+	aNewRect.y = pos.y + offset.y + aOldRect.y - gConsoleRect.ul.y;
 
 	aNewRect.width = aOldRect.width;
 	aNewRect.height = aOldRect.height;
@@ -304,11 +312,9 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 	}
     else if ((mWindowType == eWindowType_toplevel) && parentWidget)
     {
-			PhRect_t console;
-			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
-
-      pos.x += console.ul.x;
-      pos.y += console.ul.y;
+			QueryVisible( );
+      pos.x += gConsoleRect.ul.x;
+      pos.y += gConsoleRect.ul.y;
     	PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
     }
 
@@ -366,7 +372,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 		PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
 		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, -1 );
 		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_MANAGED_FLAGS, 0, Ph_WM_CLOSE );
-		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE, ~0 );
+		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE|Ph_WM_CONSWITCH|Ph_WM_FOCUS, ~0 );
 		PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
 
 		PtRawCallback_t cb_raw = { Ph_EV_INFO, EvInfo, NULL };
@@ -387,7 +393,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
       	PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       	PtAddEventHandler( mWidget,
       	  Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
-      	  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY|Ph_EV_DRAG /* | Ph_EV_WM | Ph_EV_EXPOSE */
+      	  Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY|Ph_EV_DRAG
       	  , RawEventHandler, this );
 	
     		PtArg_t arg;
@@ -402,10 +408,10 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
     else if( mWindowType == eWindowType_popup ) {
       		PtAddEventHandler( mClientWidget,
       			 	Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON | 
-      		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY | Ph_EV_WM /*| Ph_EV_EXPOSE*/,
+      		  	Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY,
       			  RawEventHandler, this );
 
-      		PtAddEventHandler( mWidget, Ph_EV_DRAG /*| Ph_EV_EXPOSE*/, RawEventHandler, this );
+      		PtAddEventHandler( mWidget, Ph_EV_DRAG, RawEventHandler, this );
 
       		PtArg_t arg;
       		PtRawCallback_t callback;
@@ -579,12 +585,10 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		// center the dialog
 		if( mWindowType == eWindowType_dialog ) {
 			PhPoint_t p;
-			PhRect_t console;
-			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
-
+			QueryVisible( );
 			PtCalcAbsPosition( NULL, NULL, &dim, &p );
-			p.x -= console.ul.x;
-			p.y -= console.ul.y;
+			p.x -= gConsoleRect.ul.x;
+			p.y -= gConsoleRect.ul.y;
 			Move(p.x, p.y); // the move should be in coordinates assuming the console is 0, 0
 			}
 		if( aRepaint == PR_FALSE )  PtStartFlux(mWidget);
@@ -639,6 +643,19 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 			  NS_RELEASE(win);
 		  }
 		break;
+
+		case Ph_WM_CONSWITCH:
+			gConsoleRectValid = PR_FALSE; /* force a call tp PhWindowQueryVisible() next time, since we might have moved this window into a different console */
+      /* rollup the menus */
+      if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
+			break;
+
+		case Ph_WM_FOCUS:
+			if( we->event_state == Ph_WM_EVSTATE_FOCUSLOST ) {
+      	/* rollup the menus */
+      	if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
+				}
+			break;
 	}
 	
 	return Pt_CONTINUE;
@@ -820,16 +837,12 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
-	PRInt32 origX, origY;
 
-
-	if( mWindowType != eWindowType_popup && (mBounds.x == aX) && (mBounds.y == aY) ) {
+	if( mWindowType != eWindowType_popup && (mBounds.x == aX) && (mBounds.y == aY) )
 		return NS_OK;
-		}
 
-	/* Keep an untouched version of the coordinates laying around for comparison */
-	origX=aX;
-	origY=aY;
+	mBounds.x = aX;
+	mBounds.y = aY;
 
 	switch( mWindowType ) {
 		case eWindowType_popup:
@@ -864,23 +877,20 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 		case eWindowType_dialog:
 		case eWindowType_toplevel:
 			/* Offset to the current virtual console */
-			PhRect_t console;
-			PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
-			aX += console.ul.x;
-			aY += console.ul.y;
+			QueryVisible( );
+			aX += gConsoleRect.ul.x;
+			aY += gConsoleRect.ul.y;
 			break;
 		}
 
-	/* Call my base class */
-	nsresult res = nsWidget::Move(aX, aY);
+  if( mWidget ) {
+    if(( mWidget->area.pos.x != aX ) || ( mWidget->area.pos.y != aY )) {
+      PhPoint_t pos = { aX, aY };
+      PtSetResource( mWidget, Pt_ARG_POS, &pos, 0 );
+    	}
+  	}
 
-	/* If I am a top-level window my origin should always be 0,0 */
-	if( mWindowType != eWindowType_child ) {
-		mBounds.x = origX;
-		mBounds.y = origY;
-		}
-
-	return res;
+	return NS_OK;
 	}
 
 int nsWindow::MenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {

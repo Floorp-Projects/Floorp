@@ -58,7 +58,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsIPref.h"
-#include "nsPhWidgetLog.h"
 
 #include <errno.h>
 #include <photon/PtServer.h>
@@ -902,6 +901,7 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
 //    result = w->OnKey(keyEvent); 
 
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_PRESS);
+    if( aPhKeyEvent->key_cap == Pk_Alt_L || aPhKeyEvent->key_cap == Pk_Alt_R ) keyEvent.message = NS_KEY_DOWN;
     result = w->OnKey(keyEvent); 
   	}
   else if (aPhKeyEvent->key_flags & Pk_KF_Key_Repeat) {
