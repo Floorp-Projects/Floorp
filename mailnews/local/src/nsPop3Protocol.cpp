@@ -1799,6 +1799,17 @@ nsPop3Protocol::GurlResponse()
 
 PRInt32 nsPop3Protocol::SendList()
 {
+    // check for server returning number of messages that will cause the calculation
+    // of the size of the block for msg_info to
+    // overflow a 32 bit int, in turn causing us to allocate a block of memory much
+    // smaller than we think we're allocating, and
+    // potentially allowing the server to make us overwrite memory outside our heap
+    // block.
+
+    if (m_pop3ConData->number_of_messages > (0xFFFFF000 / sizeof(Pop3MsgInfo)))
+        return MK_OUT_OF_MEMORY; 
+
+
     m_pop3ConData->msg_info = (Pop3MsgInfo *) 
       PR_CALLOC(sizeof(Pop3MsgInfo) *
       (m_pop3ConData->number_of_messages < kLargeNumberOfMessages ? m_pop3ConData->number_of_messages : kLargeNumberOfMessages));
