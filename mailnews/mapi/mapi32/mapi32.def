@@ -1,0 +1,14 @@
+EXPORTS
+	MAPILogon
+	MAPILogoff
+	MAPISendMail
+	MAPISendDocuments
+	MAPIFreeBuffer
+	MAPIFindNext
+	MAPIReadMail
+	MAPISaveMail
+	MAPIDeleteMail
+	MAPIAddress
+	MAPIDetails
+	MAPIResolveName
+  MAPIGetNetscapeVersion
