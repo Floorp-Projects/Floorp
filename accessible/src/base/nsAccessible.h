@@ -54,7 +54,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIBindingManager.h"
 
-#define ACCESSIBLE_BUNDLE_URL "chrome://global/locale/accessible.properties"
+#define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 
 class nsIContent;
 class nsIDocShell;
