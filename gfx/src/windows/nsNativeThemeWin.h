@@ -86,6 +86,8 @@ private:
   HANDLE mComboBoxTheme;
 
   nsCOMPtr<nsIAtom> mCheckedAtom;
+  nsCOMPtr<nsIAtom> mInputAtom;
+  nsCOMPtr<nsIAtom> mInputCheckedAtom;
   nsCOMPtr<nsIAtom> mDisabledAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
