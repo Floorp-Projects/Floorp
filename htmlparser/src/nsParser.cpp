@@ -147,6 +147,9 @@ public:
   nsTagStack() : nsITagStack(), mTags(0) {
   }
 
+  virtual ~nsTagStack() {
+  }
+
   virtual void Push(PRUnichar* aTag){
     mTags.Push(aTag);
   }
