@@ -4340,7 +4340,10 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
       continue;  //we should NOT be getting stuck on the same piece of content on the same line. skip to next line.
   }
   newFrame->GetRect(testRect);
-  if (testRect.IsEmpty()) { // this must be a non-renderable frame creatd at the end of the line by Bidi reordering
+  if ((mState & NS_FRAME_IS_BIDI) && testRect.IsEmpty())
+  {
+    // If the rectangle is empty and the NS_FRAME_IS_BIDI flag is set, this is most likely 
+    // a non-renderable frame created at the end of the line by Bidi reordering.
     lineJump = PR_TRUE;
     aPos->mAmount = eSelectNoAmount;
   }
