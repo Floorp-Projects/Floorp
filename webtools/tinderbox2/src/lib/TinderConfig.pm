@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2000/09/10 17:32:00 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/09/18 19:32:46 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -72,6 +72,12 @@ $REFRESH_TIME = (60 * 15);
 # Pick how you wish to the Tinderbox popup windows to be implemented:
 # Uncomment only one HTMLPopUp implementation.
 
+# MajorCoolWindow: Should be portable to all browsers
+# MozillaLayers:   Will not display on any browser other then Netscape
+# None:            A null implementation which will not use any popups
+#                  provide no popup windows. Use this if you do not run
+#                  JavaScript in your browsers.
+ 
 $PopUpImpl = (
 	      # 'HTMLPopUp::MozillaLayers',
 	      'HTMLPopUp::MajorCoolWindow',
@@ -136,8 +142,10 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 	       # this is not implemented yet
 	       #'TinderHeader::Image,
 	      );
-# each of the TinderHeader method appears on the left side of this
-# hash and gets a default value.
+
+# Each of the TinderHeader method appears on the left side of this
+# hash and gets a default value.  You must have a default value for
+# every header even if you do not use an implementation for it.
 
 %HEADER2DEFAULT_HTML = (
                         # the build module has one piece of info
@@ -183,9 +191,15 @@ $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 
 $DEFAULT_DISPLAY_HOURS = 6;
 
+# The default page for a tree, used in several types of href links to
+# 'return to the tree'.
+
+#$DEFAULT_HTML_PAGE = 'index.html';
+$DEFAULT_HTML_PAGE = 'status.html';
+
+# the amount of time rmlogs keeps logs on file
 
 $BRIEF_LOG_TRIM_DAYS = 1;
-
 $FULL_LOG_TRIM_DAYS = 7;
 
 1;
