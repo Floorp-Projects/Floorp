@@ -201,7 +201,6 @@ bin\components\signonviewer.xpt
 bin\components\strres.dll
 bin\components\txmgr.dll
 bin\components\txmgr.xpt
-bin\components\txtsvc.dll
 bin\components\uconv.dll
 bin\components\uconv.xpt
 bin\components\ucvmath.dll

@@ -176,7 +176,6 @@ viewer:Components:search.xpt
 viewer:Components:shistory.shlb 
 viewer:Components:shistory.xpt 
 viewer:Components:strres.shlb 
-viewer:Components:TextServices.shlb
 viewer:Components:tmbm.xpt
 viewer:Components:txmgr.xpt 
 viewer:Components:uconv.shlb 
