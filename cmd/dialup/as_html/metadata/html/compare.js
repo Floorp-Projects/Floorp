@@ -18,7 +18,7 @@
 <!--  to hide script contents from old browsers
 
 var				ispRadio = null;
-var				out = java.lang.System.out;
+//var				out = java.lang.System.out;
 
 //window.captureEvents( Event.MOUSEUP| Event.MOUSEDOWN| Event.MOUSEDRAG );
 
@@ -66,7 +66,7 @@ function syncTabs()
 
 function toggleTab( tab )
 {
-	out.println( "toggleTab" );
+//	out.println( "toggleTab" );
 	allisp = document.layers[ "allisp" ];
 	
 	for ( i = tabIndex( tab ); i < allisp.layers.length; i++ )
@@ -77,14 +77,14 @@ function toggleTab( tab )
 		showLayer = controls.layers[ "show" ];
 		hideLayer = controls.layers[ "hide" ];
 
-		out.println( "pageY: " + levelLayer.pageY );
+//		out.println( "pageY: " + levelLayer.pageY );
 		
 		if ( tab == levelLayer )
 		{
 			// toggleState == false is closed 
 			if ( levelLayer.toggleState == false )
 			{
-				out.println( "OPENING" );
+//				out.println( "OPENING" );
 				// open "tab"
 				showLayer.visibility = "hide";
 				hideLayer.visibility = "show";
@@ -95,7 +95,7 @@ function toggleTab( tab )
 			}
 			else
 			{
-				out.println( "CLOSING" );
+//				out.println( "CLOSING" );
 				// close "tab"
 				hideLayer.visibility = "hide";
 				showLayer.visibility = "show";
