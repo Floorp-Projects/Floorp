@@ -1828,6 +1828,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       // We let child blocks make their own decisions the same
       // way we are here.
       if (line->IsBlock() ||
+          // XXXldb We need HasPercentageDescendant, not HasPercentageChild!!!
           line->HasPercentageChild() || 
           line->HasFloats() ||
           (line != mLines.back() && !line->HasBreakAfter()) ||
