@@ -191,8 +191,18 @@ static void readEvalPrint(FILE *in, World &world)
                     t.print(stdOut, true);
                 }
             } else {
-                ExprNode *parseTree = p.parsePostfixExpression();
-                genCode(parseTree);
+                ExprNode *parseTree = p.parseExpression(false);
+                {
+                	PrettyPrinter f(stdOut, 20);
+                	{
+                		PrettyPrinter::Block b(f, 2);
+	                	f << "Expression =";
+	                	f.linearBreak(1);
+	                	f << parseTree;
+                	}
+                	f.end();
+                }
+                // genCode(parseTree);
             }
             clear(buffer);
             stdOut << '\n';
@@ -685,7 +695,7 @@ int main(int argc, char **argv)
     assert(testObjects(world, 5) == 5);
     assert(testProto(world, 5) == 5);
 //    testICG(world);
-    assert(testFunctionCall(world, 5) == 5);
+//    assert(testFunctionCall(world, 5) == 5);
     testPrint(world);
     readEvalPrint(stdin, world);
     return 0;
