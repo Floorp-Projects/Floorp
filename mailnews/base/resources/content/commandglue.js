@@ -257,12 +257,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
 
 function isNewsURI(uri)
 {
-    if (!uri || uri[0] != 'n') {
-        return false;
-    }
-    else {
-        return ((uri.substring(0,6) == "news:/") || (uri.substring(0,14) == "news-message:/"));
-    }
+  return ((/^news-message:/.test(uri)) || (/^news:/.test(uri)));
 }
 
 function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
