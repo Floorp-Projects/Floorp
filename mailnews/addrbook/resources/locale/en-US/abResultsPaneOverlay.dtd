@@ -64,7 +64,7 @@
 <!ENTITY sortDescending.accesskey "D">
 
 <!-- context menu -->
-<!ENTITY composeEmail.label "Compose Email To...">
+<!ENTITY composeEmail.label "Compose Email To">
 <!ENTITY composeEmail.accesskey "C">
 <!ENTITY deleteAddrBookCard.label "Delete">
 <!ENTITY deleteAddrBookCard.accesskey "D">
@@ -72,5 +72,5 @@
 <!ENTITY newAddrBookCard.accesskey "N">
 <!ENTITY newAddrBookMailingList.label "New Mailing List...">
 <!ENTITY newAddrBookMailingList.accesskey "M">
-<!ENTITY addrBookCardProperties.label "Properties...">
+<!ENTITY addrBookCardProperties.label "Properties">
 <!ENTITY addrBookCardProperties.accesskey "P">
