@@ -701,13 +701,7 @@ nsNSSCertificate::~nsNSSCertificate()
       nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
       PK11_DeleteTokenCertAndKey(mCert, cxt);
       CERT_DestroyCertificate(mCert);
-    } else 
-#ifdef NSS_3_4
-           if (!PK11_IsReadOnly(mCert->slot))
-#else
-           if (!mCert->slot)
-#endif
-                                              {
+    } else if (!PK11_IsReadOnly(mCert->slot)) {
       // If the cert isn't a user cert and it is on an external token, 
       // then we'll just leave it as untrusted, but won't delete it 
       // from the cert db.
@@ -911,7 +905,6 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 }
 
 
-#ifdef NSS_3_4
 #define NS_NSS_LONG 4
 #define NS_NSS_GET_LONG(x) ((((unsigned long)((x)[0])) << 24) | \
                             (((unsigned long)((x)[1])) << 16) | \
@@ -921,7 +914,6 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
                                   (dest)[1] = (((src) >> 16) & 0xff); \
                                   (dest)[2] = (((src) >>  8) & 0xff); \
                                   (dest)[3] = ((src) & 0xff); 
-#endif
 
 
 /* readonly attribute string dbKey; */
@@ -932,7 +924,6 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
 
   NS_ENSURE_ARG(aDbKey);
   *aDbKey = nsnull;
-#ifdef NSS_3_4
   key.len = NS_NSS_LONG*4+mCert->serialNumber.len+mCert->derIssuer.len;
   key.data = (unsigned char *)nsMemory::Alloc(key.len);
   NS_NSS_PUT_LONG(0,key.data); // later put moduleID
@@ -943,19 +934,9 @@ nsNSSCertificate::GetDbKey(char * *aDbKey)
 						mCert->serialNumber.len);
   memcpy(&key.data[NS_NSS_LONG*4+mCert->serialNumber.len],
 			mCert->derIssuer.data, mCert->derIssuer.len);
-#else
-  SECStatus srv;
-  srv = CERT_KeyFromIssuerAndSN(mCert->arena, &mCert->derIssuer,
-                                &mCert->serialNumber, &key);
-  if (srv != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-#endif
   
   *aDbKey = NSSBase64_EncodeItem(nsnull, nsnull, 0, &key);
-#ifdef NSS_3_4
   nsMemory::Free(key.data); // SECItem is a 'c' type without a destrutor
-#endif
   return (*aDbKey) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1338,12 +1319,7 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
     // has been loaded from the token.  Though the trust is correct (grabbed
     // from the cert db), the source is wrong.  I believe this is a safe
     // way to work around this.
-#ifdef NSS_3_4
-    // This is not a problem in NSS 3.4, & mCert->slot is always set
     if (mCert->slot) {
-#else
-    if (mCert->slot && !mCert->isperm) {
-#endif
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
         *aTokenName = ToNewUnicode(NS_ConvertUTF8toUCS2(token));
@@ -1983,12 +1959,6 @@ ProcessRawBytes(SECItem *data, nsString &text)
   return NS_OK;
 }    
 
-#ifdef NSS_3_4
-#define __WRAPPER_SEC_ASN1DecodeItem_Param3(p)  SEC_ASN1_GET(p)
-#else
-#define __WRAPPER_SEC_ASN1DecodeItem_Param3(p)  p
-#endif
-
 static nsresult
 ProcessNSCertTypeExtensions(SECItem  *extData, 
                             nsString &text,
@@ -1998,7 +1968,7 @@ ProcessNSCertTypeExtensions(SECItem  *extData,
   decoded.data = nsnull;
   decoded.len  = 0;
   SEC_ASN1DecodeItem(nsnull, &decoded, 
-		__WRAPPER_SEC_ASN1DecodeItem_Param3(SEC_BitStringTemplate), extData);
+		SEC_ASN1_GET(SEC_BitStringTemplate), extData);
   unsigned char nsCertType = decoded.data[0];
   nsString local;
   nsMemory::Free(decoded.data);
@@ -2055,7 +2025,7 @@ ProcessKeyUsageExtension(SECItem *extData, nsString &text,
   decoded.data = nsnull;
   decoded.len  = 0;
   SEC_ASN1DecodeItem(nsnull, &decoded, 
-				__WRAPPER_SEC_ASN1DecodeItem_Param3(SEC_BitStringTemplate), extData);
+				SEC_ASN1_GET(SEC_BitStringTemplate), extData);
   unsigned char keyUsage = decoded.data[0];
   nsString local;
   nsMemory::Free(decoded.data);  
@@ -2826,17 +2796,12 @@ nsNSSCertificateDB::GetCertByDBKey(const char *aDBkey, nsIPK11Token *aToken,
 {
   SECItem keyItem = {siBuffer, nsnull, 0};
   SECItem *dummy;
-#ifdef NSS_3_4
   CERTIssuerAndSN issuerSN;
   unsigned long moduleID,slotID;
-#endif
   *_cert = nsnull; 
   if (!aDBkey) return NS_ERROR_FAILURE;
   dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, aDBkey,
                                  (PRUint32)PL_strlen(aDBkey)); 
-#ifdef NSS_3_4
-  // the future is now, the cert is not longer loaded into temp db's forn now
-  // just fail
   CERTCertificate *cert;
 
   // someday maybe we can speed up the search using the moduleID and slotID
@@ -2851,12 +2816,6 @@ nsNSSCertificateDB::GetCertByDBKey(const char *aDBkey, nsIPK11Token *aToken,
                                               issuerSN.serialNumber.len];
 
   cert = CERT_FindCertByIssuerAndSN(CERT_GetDefaultCertDB(), &issuerSN);
-#else
-  // In the future, this should actually look on the token.  But for now,
-  // take it for granted that the cert has been loaded into the temp db.
-  CERTCertificate *cert = CERT_FindCertByKey(CERT_GetDefaultCertDB(),
-                                             &keyItem);
-#endif
   PR_FREEIF(keyItem.data);
   if (cert) {
     nsNSSCertificate *nssCert = new nsNSSCertificate(cert);
@@ -3120,16 +3079,11 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
   CERTCertificate *tmpCert;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-#ifdef NSS_3_4
   tmpCert = CERT_FindCertByDERCert(certdb, &der);
   if (!tmpCert) {
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nsnull, PR_FALSE, PR_TRUE);
   }
-#else
-  tmpCert = CERT_NewTempCertificate(certdb, &der,
-                                    nsnull, PR_FALSE, PR_TRUE);
-#endif
   if (!tmpCert) {
     NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
@@ -3138,11 +3092,7 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   CERTCertificateCleaner tmpCertCleaner(tmpCert);
 
   PRBool canceled;
-#ifdef NSS_3_4
   if (tmpCert->isperm) {
-#else
-  if (tmpCert->isperm) {
-#endif
     dialogs->CACertExists(ctx, &canceled);
     return NS_ERROR_FAILURE;
   }
@@ -3597,19 +3547,12 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
   PK11_FreeSlot(slot);
 
   /* pick a nickname for the cert */
-#ifdef NSS_3_4
   if (cert->nickname) {
 	/* sigh, we need a call to look up other certs with this subject and
 	 * identify nicknames from them. We can no longer walk down internal
 	 * database structures  rjr */
   	nickname = cert->nickname;
   }
-#else
-  if (cert->subjectList && cert->subjectList->entry && 
-    cert->subjectList->entry->nickname) {
-  	nickname = cert->subjectList->entry->nickname;
-  }
-#endif
   else {
     nickname = default_nickname(cert, ctx);
   }
@@ -4071,20 +4014,9 @@ nsNSSCertificateDB::GetOCSPResponders(nsISupportsArray ** aResponders)
     return rv;
   }
 
-#ifdef NSS_3_4
   sec_rv = PK11_TraverseSlotCerts(::GetOCSPResponders,
                                   respondersArray,
                                   nsnull);
-#else
-  sec_rv = SEC_TraversePermCerts(CERT_GetDefaultCertDB(),
-                              ::GetOCSPResponders,
-                              respondersArray);
-  if (sec_rv == SECSuccess) {
-    sec_rv = PK11_TraverseSlotCerts(::GetOCSPResponders,
-                                  respondersArray,
-                                  nsnull);
-  }
-#endif
   if (sec_rv != SECSuccess) {
     goto loser;
   }
@@ -4227,7 +4159,7 @@ nsNSSCertificateDB::ImportCrl (char *aData, PRUint32 aLength, nsIURI * aURI, PRU
     }
   } else {
     sec_rv = SEC_ASN1DecodeItem(arena,
-                            &sd, __WRAPPER_SEC_ASN1DecodeItem_Param3(CERT_SignedDataTemplate), 
+                            &sd, SEC_ASN1_GET(CERT_SignedDataTemplate), 
                             &derCrl);
     if (sec_rv != SECSuccess) {
       goto loser;
@@ -4840,7 +4772,6 @@ loser:
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCertByEmailAddress(nsIPK11Token *aToken, const char *aEmailAddress, nsIX509Cert **_retval)
 {
-#ifdef NSS_3_4
   CERTCertificate *any_cert = CERT_FindCertByNicknameOrEmailAddr(CERT_GetDefaultCertDB(), (char*)aEmailAddress);
   if (!any_cert)
     return NS_ERROR_FAILURE;
@@ -4868,37 +4799,6 @@ nsNSSCertificateDB::GetCertByEmailAddress(nsIPK11Token *aToken, const char *aEma
   NS_ADDREF(nssCert);
   *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   return NS_OK;
-#else
-  CERTCertList *certList = nsnull;
-  SECStatus sec_rv;
-  nsresult rv = NS_OK;
-
-  certList = CERT_CreateEmailAddrCertList(nsnull, CERT_GetDefaultCertDB(),
-          (char*)aEmailAddress, PR_Now(), PR_TRUE);
-
-  if (certList == nsnull) {
-    rv = NS_ERROR_FAILURE;
-    goto loser;
-  }
-
-  sec_rv = CERT_FilterCertListByUsage(certList, certUsageEmailRecipient, PR_FALSE);
-
-  if (!CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
-    nsNSSCertificate *nssCert = new nsNSSCertificate(CERT_LIST_HEAD(certList)->cert);
-    if (nssCert == nsnull) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto loser;
-    }
-    NS_ADDREF(nssCert);
-    *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
-  }
-loser:
-  if (certList) {
-    CERT_DestroyCertList(certList);
-  }
-
-  return rv;
-#endif
 }
 
 /* nsIX509Cert constructX509FromBase64 (in string base64); */

@@ -29,16 +29,10 @@ include $(DEPTH)/config/autoconf.mk
 
 LOADABLE_ROOT_MODULE = $(LIB_PREFIX)nssckbi$(DLL_SUFFIX)
 
-NSS_3_4=1
-
-ifdef NSS_3_4
-DEFINES += -DNSS_3_4
-
 NSS3_LIB = $(LIB_PREFIX)nss3$(DLL_SUFFIX)
 SMIME3_LIB = $(LIB_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB =  $(LIB_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(LIB_PREFIX)softokn3$(DLL_SUFFIX)
-endif
 
 FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
 FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
@@ -97,12 +91,10 @@ else
 endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
-ifdef NSS_3_4
 	$(INSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DIST)/bin
 	$(INSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DIST)/bin
-endif
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifneq ($(OS_TEST),i86pc)
 ifndef HAVE_64BIT_OS
@@ -117,12 +109,10 @@ endif
 
 install::
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
-ifdef NSS_3_4
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SOFTOKEN3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(NSS3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SSL3_LIB) $(DESTDIR)$(mozappdir)
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(SMIME3_LIB) $(DESTDIR)$(mozappdir)
-endif
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifneq ($(OS_TEST),i86pc)
 ifndef HAVE_64BIT_OS

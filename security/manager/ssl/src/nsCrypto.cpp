@@ -63,9 +63,7 @@
 extern "C" {
 #include "crmf.h"
 #include "crmfi.h"
-#ifdef NSS_3_4
 #include "pk11pqg.h"
-#endif
 }
 #include "cmmf.h"
 #include "nssb64.h"
@@ -236,20 +234,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMPL_THREADSAFE_ADDREF(nsCryptoRunArgs)
 NS_IMPL_THREADSAFE_RELEASE(nsCryptoRunArgs)
-
-#ifndef NSS_3_4
-/*
- * We're cheating for now so that escrowing keys on smart cards 
- * will work.  The NSS team gave us their blessing to do this
- * until they export a public function with equivalent functionality.
- */
-extern "C" SECKEYPrivateKey*
-pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
-                SECKEYPublicKey *pubKey, PRBool token, PRBool sensitive);
-#define __FUNCTIONNAME_PK11_LoadPrivKey         pk11_loadPrivKey
-#else
-#define __FUNCTIONNAME_PK11_LoadPrivKey         PK11_LoadPrivKey
-#endif
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
@@ -496,18 +480,6 @@ cryptojs_interpret_key_gen_type(char *keyAlg)
   return invalidKeyGen;
 }
 
-#ifdef NSS_3_4
-#define __FUNCTIONNAME_PK11_PQG_ParamGen        PK11_PQG_ParamGen
-#define __FUNCTIONNAME_PK11_PQG_DestroyVerify   PK11_PQG_DestroyVerify
-#define __FUNCTIONNAME_PK11_PQG_DestroyParams   PK11_PQG_DestroyParams
-#define __WRAPPER_SEC_ASN1EncodeItem_Param4(p)  SEC_ASN1_GET(p)
-#else
-#define __FUNCTIONNAME_PK11_PQG_ParamGen        PQG_ParamGen
-#define __FUNCTIONNAME_PK11_PQG_DestroyVerify   PQG_DestroyVerify
-#define __FUNCTIONNAME_PK11_PQG_DestroyParams   PQG_DestroyParams
-#define __WRAPPER_SEC_ASN1EncodeItem_Param4(p)  p
-#endif
-
 //Take the string passed into us via crypto.generateCRMFRequest
 //as the keygen type parameter and convert it to parameters 
 //we can actually pass to the PKCS#11 layer.
@@ -555,13 +527,13 @@ nsConvertToActualKeyGenParams(PRUint32 keyGenMech, char *params,
          returnParams = nsnull;
          break;
        }
-       rv = __FUNCTIONNAME_PK11_PQG_ParamGen(0, &pqgParams, &vfy);
+       rv = PK11_PQG_ParamGen(0, &pqgParams, &vfy);
        if (vfy) {
-         __FUNCTIONNAME_PK11_PQG_DestroyVerify(vfy);
+         PK11_PQG_DestroyVerify(vfy);
        }
        if (rv != SECSuccess) {
          if (pqgParams) {
-           __FUNCTIONNAME_PK11_PQG_DestroyParams(pqgParams);
+           PK11_PQG_DestroyParams(pqgParams);
          }
          return nsnull;
        }
@@ -602,7 +574,7 @@ nsFreeKeyGenParams(CK_MECHANISM_TYPE keyGenMechanism, void *params)
     nsMemory::Free(params);
     break;
   case CKM_DSA_KEY_PAIR_GEN:
-    __FUNCTIONNAME_PK11_PQG_DestroyParams(NS_STATIC_CAST(PQGParams*,params));
+    PK11_PQG_DestroyParams(NS_STATIC_CAST(PQGParams*,params));
     break;
   }
 }
@@ -713,7 +685,7 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
   //If we generated the key pair on the internal slot because the
   // keys were going to be escrowed, move the keys over right now.
   if (willEscrow && intSlot) {
-    SECKEYPrivateKey *newPrivKey = __FUNCTIONNAME_PK11_LoadPrivKey(origSlot, 
+    SECKEYPrivateKey *newPrivKey = PK11_LoadPrivKey(origSlot, 
                                                     keyPairInfo->privKey,
                                                     keyPairInfo->pubKey,
                                                     PR_TRUE, PR_TRUE);
@@ -946,7 +918,7 @@ nsSetRegToken(CRMFCertRequest *certReq, char *regToken)
     src.data = (unsigned char*)regToken;
     src.len  = strlen(regToken);
     SECItem *derEncoded = SEC_ASN1EncodeItem(nsnull, nsnull, &src, 
-                                        __WRAPPER_SEC_ASN1EncodeItem_Param4(SEC_UTF8StringTemplate));
+                                        SEC_ASN1_GET(SEC_UTF8StringTemplate));
 
     if (!derEncoded)
       return NS_ERROR_FAILURE;
@@ -974,7 +946,7 @@ nsSetAuthenticator(CRMFCertRequest *certReq, char *authenticator)
     src.data = (unsigned char*)authenticator;
     src.len  = strlen(authenticator);
     SECItem *derEncoded = SEC_ASN1EncodeItem(nsnull, nsnull, &src,
-                                     __WRAPPER_SEC_ASN1EncodeItem_Param4(SEC_UTF8StringTemplate));
+                                     SEC_ASN1_GET(SEC_UTF8StringTemplate));
     if (!derEncoded)
       return NS_ERROR_FAILURE;
 
@@ -1791,16 +1763,7 @@ nsCertAlreadyExists(SECItem *derCert)
   if (!arena)
     return PR_FALSE; //What else could we return?
 
-#ifdef NSS_3_4
   cert = CERT_FindCertByDERCert(handle, derCert);
-#else
-  SECItem key;
-  SECStatus srv = CERT_KeyFromDERCert(arena, derCert, &key);
-  if (srv != SECSuccess)
-    return PR_FALSE;
-
-  cert = CERT_FindCertByKey(handle, &key);
-#endif
   if (cert) {
     if (cert->isperm && !cert->nickname && !cert->emailAddr) {
       //If the cert doesn't have a nickname or email addr, it is
@@ -1923,16 +1886,9 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
     // Let's figure out which nickname to give the cert.  If 
     // a certificate with the same subject name already exists,
     // then just use that one, otherwise, get the default nickname.
-#ifdef NSS_3_4
     if (currCert->nickname) {
       localNick = currCert->nickname;
     }
-#else
-    if (currCert->subjectList && currCert->subjectList->entry &&
-      currCert->subjectList->entry->nickname) {
-      localNick = currCert->subjectList->entry->nickname;
-    }
-#endif
     else if (nickname == nsnull || nickname[0] == '\0') {
       localNick = default_nickname(currCert, ctx);
       freeLocalNickname = PR_TRUE;

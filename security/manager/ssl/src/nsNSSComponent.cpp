@@ -79,9 +79,6 @@
 #include "ocsp.h"
 #include "cms.h"
 extern "C" {
-#ifndef NSS_3_4
-#include "pkcs11.h"
-#endif
 #include "pkcs12.h"
 #include "p12plcy.h"
 }
@@ -95,11 +92,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 int nsNSSComponent::mInstanceCount = 0;
 
 // XXX tmp callback for slot password
-#ifdef NSS_3_4
 extern char * PR_CALLBACK 
-#else
-extern char *
-#endif
 pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
@@ -1173,12 +1166,7 @@ static PRBool DecryptionAllowedCallback(SECAlgorithmID *algid,
   return SECMIME_DecryptionAllowed(algid, bulkkey);
 }
 
-#ifdef NSS_3_4
 static void * GetPasswordKeyCallback(void *arg, void *handle)
-#else
-static SECItem * GetPasswordKeyCallback(void *arg,
-                                               SECKEYKeyDBHandle *handle)
-#endif
 {
   return NULL;
 }
