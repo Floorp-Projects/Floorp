@@ -3096,9 +3096,9 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_ENCODE) {
         clasp = OBJ_GET_CLASS(cx, *objp);
         className = clasp->name;
-        classId = JS_FindClassIdByName(xdr, className);
+        classId = JS_XDRFindClassIdByName(xdr, className);
         classDef = !classId;
-        if (classDef && !JS_RegisterClass(xdr, clasp, &classId))
+        if (classDef && !JS_XDRRegisterClass(xdr, clasp, &classId))
             return JS_FALSE;
     } else {
         classDef = 0;
@@ -3123,11 +3123,11 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
             if (!ok)
                 goto out;
             clasp = OBJ_GET_CLASS(cx, proto);
-            ok = JS_RegisterClass(xdr, clasp, &classId);
+            ok = JS_XDRRegisterClass(xdr, clasp, &classId);
             if (!ok)
                 goto out;
         } else {
-            clasp = JS_FindClassById(xdr, classId);
+            clasp = JS_XDRFindClassById(xdr, classId);
             if (!clasp) {
                 char numBuf[12];
                 JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)classId);
@@ -3312,4 +3312,3 @@ void printAtom(JSAtom *atom) {
 }
 
 #endif
-

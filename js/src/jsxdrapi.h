@@ -66,11 +66,11 @@ JS_BEGIN_EXTERN_C
 #define JSXDR_SWAB32(x) x
 #define JSXDR_SWAB16(x) x
 #elif defined IS_BIG_ENDIAN
-#define JSXDR_SWAB32(x) (((x) >> 24) |                                        \
-			 (((x) >> 8) & 0xff00) |                              \
-			 (((x) << 8) & 0xff0000) |                            \
-			 ((x) << 24))
-#define JSXDR_SWAB16(x) (((x) >> 8) | ((x) << 8))
+#define JSXDR_SWAB32(x) (((uint32)(x) >> 24) |                                \
+                         (((uint32)(x) >> 8) & 0xff00) |                      \
+                         (((uint32)(x) << 8) & 0xff0000) |                    \
+                         ((uint32)(x) << 24))
+#define JSXDR_SWAB16(x) (((uint16)(x) >> 8) | ((uint16)(x) << 8))
 #else
 #error "unknown byte order"
 #endif
@@ -105,12 +105,14 @@ struct JSXDRState {
     JSXDROps    *ops;
     JSContext   *cx;
     JSClass     **registry;
-    uintN       nclasses;
+    uintN       numclasses;
+    uintN       maxclasses;
+    void        *reghash;
     void        *data;
 };
 
 extern JS_PUBLIC_API(void)
-JS_XDRNewBase(JSContext *cx, JSXDRState *xdr, JSXDRMode mode);
+JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx);
 
 extern JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode);
@@ -155,16 +157,20 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
+JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
 
 extern JS_PUBLIC_API(uint32)
-JS_FindClassIdByName(JSXDRState *xdr, const char *name);
+JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name);
 
 extern JS_PUBLIC_API(JSClass *)
-JS_FindClassById(JSXDRState *xdr, uint32 id);
+JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 
-/* Magic values */
-
+/*
+ * Magic numbers.
+ */
 #define JSXDR_MAGIC_SCRIPT_1        0xdead0001
 #define JSXDR_MAGIC_SCRIPT_2        0xdead0002
 #define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_2
