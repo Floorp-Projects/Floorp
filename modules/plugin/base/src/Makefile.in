@@ -101,7 +101,7 @@ DEFINES		+= -D_IMPL_NS_PLUGIN
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt $(MOZ_GTK_LDFLAGS)
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin $(XLDFLAGS) -lXt $(MOZ_GTK_LDFLAGS)
 endif		#MOZ_ENABLE_GTK
 
 ifdef MOZ_ENABLE_QT
