@@ -517,26 +517,15 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
 {
     nsresult rv;
 
-    nsCAutoString charSet;
-    charSet.AssignWithConversion(nsMsgI18NFileSystemCharset());
-
-    nsAutoString htmlStr;
-    htmlStr.Append(NS_LITERAL_STRING("<html><head>").get());
-    htmlStr.Append(NS_LITERAL_STRING("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=").get());
-    htmlStr.AppendWithConversion(charSet);
-    htmlStr.Append(NS_LITERAL_STRING("\">").get());
-    htmlStr.Append(NS_LITERAL_STRING("</head><body>").get());
+    nsString htmlStr;
+    htmlStr.Append(NS_LITERAL_STRING("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>").get());
     htmlStr.Append(body);
     htmlStr.Append(NS_LITERAL_STRING("</body></html>").get());
 
-    nsCAutoString convertedHtml;
-    rv = nsMsgI18NConvertFromUnicode(charSet,htmlStr,convertedHtml);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    char *encodedHtml = PL_Base64Encode((const char *)convertedHtml, 0, nsnull);
+    char *encodedHtml = PL_Base64Encode(NS_ConvertUCS2toUTF8(htmlStr).get(), 0, nsnull);
     if (!encodedHtml) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCAutoString dataSpec;
+    nsCString dataSpec;
     dataSpec = "data:text/html;base64,";
     dataSpec += encodedHtml;
 
