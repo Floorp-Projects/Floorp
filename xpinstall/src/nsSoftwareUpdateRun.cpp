@@ -366,7 +366,7 @@ extern "C" void RunInstallOnThread(void *data)
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) 
     {   
-        eventQService->CreateThreadEventQueue();
+        eventQService->CreateMonitoredThreadEventQueue();
         eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
 
