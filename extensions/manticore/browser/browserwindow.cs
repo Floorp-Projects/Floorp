@@ -121,10 +121,11 @@ namespace Silverstone.Manticore.BrowserWindow
 	    mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", mCommandHandler, this);
 	    mToolbarBuilder.Build();
 
-      LoadStartPage();
+      // Start Page handler
+      this.VisibleChanged += new EventHandler(LoadStartPage);
     }
 
-    private void LoadStartPage()
+    private void LoadStartPage(object sender, EventArgs e)
     {
       int startMode = application.Prefs.GetIntPref("browser.homepage.mode");
       switch (startMode) {
