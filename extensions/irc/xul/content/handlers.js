@@ -107,13 +107,15 @@ function onTabClick (e, id)
 
 function onMessageViewClick(e)
 {
-    if (e.which != 1)
+    if ((e.which != 1) && (e.which != 2))
         return;
     
     var cx = getMessagesContext(null, e.target);
     var command;
     
-    if (e.metaKey || e.altKey)
+    if (e.which == 2)
+        command = client.prefs["messages.middleClick"];
+    else if (e.metaKey || e.altKey)
         command = client.prefs["messages.metaClick"];
     else if (e.ctrlKey)
         command = client.prefs["messages.ctrlClick"];

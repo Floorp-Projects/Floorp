@@ -96,6 +96,7 @@ function initPrefs()
          ["messages.click",     "goto-url"],
          ["messages.ctrlClick", "goto-url-newwin"],
          ["messages.metaClick", "goto-url-newtab"],
+         ["messages.middleClick", "goto-url-newtab"],
          ["motif.dark",         "chrome://chatzilla/skin/output-dark.css"],
          ["motif.light",        "chrome://chatzilla/skin/output-light.css"],
          ["motif.default",      "chrome://chatzilla/skin/output-default.css"],
