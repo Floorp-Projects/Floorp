@@ -4536,6 +4536,7 @@ NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec)
   // Append that to icon resource path.
   iconPath.Append( iconSpec.GetUnicode() + n - 1 );
 
+  ::SetLastError( 0 ); 
   HICON bigIcon = (HICON)::LoadImageW( NULL,
                                        (LPCWSTR)iconPath.GetUnicode(),
                                        IMAGE_ICON,
@@ -4548,6 +4549,31 @@ NS_METHOD nsWindow::SetIcon(const nsAReadableString& anIconSpec)
                                          ::GetSystemMetrics(SM_CXSMICON),
                                          ::GetSystemMetrics(SM_CYSMICON),
                                          LR_LOADFROMFILE | LR_SHARED );
+
+  // See if unicode API not implemented and if not, try ascii version
+  if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
+      nsCOMPtr<nsILocalFile> pathConverter;
+      if ( NS_SUCCEEDED( NS_NewUnicodeLocalFile( iconPath.GetUnicode(),
+                                                 PR_FALSE,
+                                                 getter_AddRefs( pathConverter ) ) ) ) {
+          // Now try the char* path.
+          nsXPIDLCString aPath;
+          pathConverter->GetPath( getter_Copies( aPath ) );
+          bigIcon = (HICON)::LoadImage( NULL,
+                                        (const char*)aPath,
+                                        IMAGE_ICON,
+                                        ::GetSystemMetrics(SM_CXICON),
+                                        ::GetSystemMetrics(SM_CYICON),
+                                        LR_LOADFROMFILE | LR_SHARED );
+          smallIcon = (HICON)::LoadImage( NULL,
+                                          (const char*)aPath,
+                                          IMAGE_ICON,
+                                          ::GetSystemMetrics(SM_CXSMICON),
+                                          ::GetSystemMetrics(SM_CYSMICON),
+                                          LR_LOADFROMFILE | LR_SHARED );
+      }
+  }
+
   if ( bigIcon ) {
       LRESULT rv = 0;
       rv = ::SendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
