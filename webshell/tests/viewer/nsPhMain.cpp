@@ -19,11 +19,14 @@
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsWidgetsCID.h"
+#include "nsIServiceManager.h"
 #include "nsIImageManager.h"
 #include "nsIComponentManager.h"
 #include "nsIMenuBar.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
+#include "nsIThread.h"
+
 #include <stdlib.h>
 #include "plevent.h"
 #include "resources.h"
@@ -118,9 +121,16 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 int main(int argc, char **argv)
 {
+  nsresult rv;
+
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
   nsIImageManager *manager;
   NS_NewImageManager(&manager);
+
+  rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+  NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
+
   gTheApp = new nsNativeViewerApp();
   gTheApp->Initialize(argc, argv);
   gTheApp->Run();
