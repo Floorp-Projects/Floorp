@@ -178,10 +178,17 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   // using or use a library that provides multi locale support. 
   // ICU is a possible example of a multi locale library.
   //     http://oss.software.ibm.com/icu/
+  //
+  // A more common cause of hitting this warning than the above is that 
+  // Mozilla is launched under an ll_CC.UTF-8 locale. In xpLocale, 
+  // we only store the language and the region (ll-CC) losing 'UTF-8', which
+  // leads |mLocale| to be different from |localeName|. Although we lose
+  // 'UTF-8', we init'd |mCharset| with the value obtained via 
+  // |nl_langinfo(CODESET)| so that we're all right here.
   // 
-  NS_ASSERTION(0, "GetDefaultCharsetForLocale: need to add multi locale support");
+  NS_WARNING("GetDefaultCharsetForLocale: need to add multi locale support");
 #ifdef DEBUG_jungshik
-  printf("localeName=%s mCharset=%s\n", NS_ConvertUCS2toUTF8(localeName).get(),
+  printf("localeName=%s mCharset=%s\n", NS_ConvertUTF16toUTF8(localeName).get(),
          mCharset.get());
 #endif
   // until we add multi locale support: use the the charset of the user's locale
