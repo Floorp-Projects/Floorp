@@ -67,8 +67,8 @@ CountArray(void **array)
     return count;
 }
 
-static void
-**AddToArray(PRArenaPool *arena, void **array, void *element)
+static void **
+AddToArray(PRArenaPool *arena, void **array, void *element)
 {
     unsigned count;
     void **ap;
@@ -96,35 +96,6 @@ static void
     return array;
 }
 
-#if 0
-static void
-**RemoveFromArray(void **array, void *element)
-{
-    unsigned count;
-    void **ap;
-    int slot;
-
-    /* Look for element */
-    ap = array;
-    if (ap) {
-	count = 1;			/* count the null at the end */
-	slot = -1;
-	for (; *ap; ap++, count++) {
-	    if (*ap == element) {
-		/* Found it */
-		slot = ap - array;
-	    }
-	}
-	if (slot >= 0) {
-	    /* Found it. Squish array down */
-	    PORT_Memmove((void*) (array + slot), (void*) (array + slot + 1),
-		       (count - slot - 1) * sizeof(void*));
-	    /* Don't bother reallocing the memory */
-	}
-    }
-    return array;
-}
-#endif /* 0 */
 
 SECOidTag
 CERT_GetAVATag(CERTAVA *ava)
@@ -461,27 +432,38 @@ SECStatus
 CERT_CopyName(PRArenaPool *arena, CERTName *to, CERTName *from)
 {
     CERTRDN **rdns, *frdn, *trdn;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
 
-    if (!to || !from)
+    if (!to || !from) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
+    }
 
     CERT_DestroyName(to);
     to->arena = arena;
 
     /* Copy each rdn from from */
     rdns = from->rdns;
-    while ((frdn = *rdns++) != 0) {
-	trdn = CERT_CreateRDN(arena, 0);
-	if ( trdn == NULL ) {
-	    return(SECFailure);
+    if (rdns) {
+    	if (rdns[0] == NULL) {
+	    rv = CERT_AddRDN(to, NULL);
+	    return rv;
 	}
-	rv = CERT_CopyRDN(arena, trdn, frdn);
-	if (rv) return rv;
-	rv = CERT_AddRDN(to, trdn);
-	if (rv) return rv;
+	while ((frdn = *rdns++) != NULL) {
+	    trdn = CERT_CreateRDN(arena, 0);
+	    if (!trdn) {
+		rv = SECFailure;
+		break;
+	    }
+	    rv = CERT_CopyRDN(arena, trdn, frdn);
+	    if (rv != SECSuccess) 
+	        break;
+	    rv = CERT_AddRDN(to, trdn);
+	    if (rv != SECSuccess) 
+	        break;
+	}
     }
-    return SECSuccess;
+    return rv;
 }
 
 /************************************************************************/
