@@ -659,7 +659,7 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
 
-  return NS_OK;
+  return rv;
 }
 
 
