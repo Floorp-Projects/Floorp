@@ -31,7 +31,7 @@ O_OPTIONS=ON            # accept options (see above for listing)
 WIN_WAIT_FOREVER=ON     # first we wait forever for a TESTDIR to appear, than 
                         # we wait forever for the build to finish...
 
-TBX_EXIT=10             # in case we are running on a tinderbox build, any 
+TBX_EXIT=50             # in case we are running on a tinderbox build, any 
                         # early exit needs to return an error
 . `dirname $0`/header   # utilities, shellfunctions etc, global to NSS QA
 
