@@ -35,6 +35,9 @@
 #include "nsDOMWindowList.h"
 #include "nsIDOMEventTarget.h"
 
+#define DEFAULT_HOME_PAGE "www.mozilla.org"
+#define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
+
 class nsIEventListenerManager;
 class nsIDOMDocument;
 class nsIPresContext;
