@@ -97,7 +97,7 @@ SECU_PrintError(char *progName, char *msg, ...)
     if (errString != NULL && PORT_Strlen(errString) > 0)
 	fprintf(stderr, ": %s\n", errString);
     else
-	fprintf(stderr, "\n");
+	fprintf(stderr, ": error %d\n", (int)err);
 
     va_end(args);
 }
