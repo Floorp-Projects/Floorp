@@ -15,4 +15,9 @@
 <!ENTITY  defaultengine.label             "Netscape Search">
 <!ENTITY  searchResults.label             "Search Results">
 
+<!ENTITY  sidebarSearchTabPref.label      "My Sidebar Search Tab Preference">
+<!ENTITY  searchModeBasic.label           "Basic">
+<!ENTITY  searchModeBasic.accesskey       "b">
+<!ENTITY  searchModeAdvanced.label        "Advanced">
+<!ENTITY  searchModeAdvanced.accesskey    "a">
 
