@@ -414,11 +414,11 @@ nsLineLayout::ReflowChild()
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nscoord dx = mReflowData.mX + kidSpacing->mMargin.left;
   if (isBlock) {
-    mSpaceManager->Translate(dx, 0);
+    mSpaceManager->Translate(dx, mY);
     rv = mBlock->ReflowBlockChild(mKidFrame, mPresContext,
                                   mSpaceManager, kidAvailSize, kidRect,
                                   kidMaxElementSize, kidReflowStatus);
-    mSpaceManager->Translate(-dx, 0);
+    mSpaceManager->Translate(-dx, -mY);
     kidRect.x = dx;
     kidRect.y = mY;
     kidSize.width = kidRect.width;
