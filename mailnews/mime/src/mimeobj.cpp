@@ -222,7 +222,7 @@ MimeObject_parse_begin (MimeObject *obj)
             mime_typep(obj->parent, (MimeObjectClass*) &mimeMultipartAppleDoubleClass))
           {
             obj->output_p = !nsCRT::strncmp((const char*)id, (const char*)obj->options->part_to_load, 
-                                            strlen(obj->options->part_to_load));
+                                            (unsigned int)strlen(obj->options->part_to_load));
           }
       }
     }
