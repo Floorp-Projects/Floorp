@@ -98,9 +98,20 @@ NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID,
 // nsDocShell::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS7(nsDocShell, nsIDocShell, nsIDocShellEdit, 
-   nsIDocShellFile, nsIGenericWindow, nsIScrollable, nsITextScroll, 
-   nsIHTMLDocShell)
+NS_IMPL_ADDREF(nsDocShell)
+NS_IMPL_RELEASE(nsDocShell)
+
+NS_IMPL_QUERY_HEAD(nsDocShell)
+   NS_IMPL_QUERY_BODY(nsIDocShell)
+   NS_IMPL_QUERY_BODY(nsIHTMLDocShell)
+   NS_IMPL_QUERY_BODY(nsIDocShellEdit)
+   NS_IMPL_QUERY_BODY(nsIDocShellFile)
+   NS_IMPL_QUERY_BODY(nsIGenericWindow)
+   NS_IMPL_QUERY_BODY(nsIScrollable)
+   NS_IMPL_QUERY_BODY(nsITextScroll)
+//   NS_IMPL_QUERY_BODY(nsIInterfaceRequestor)
+NS_IMPL_QUERY_TAIL(nsIDocShell)
+
 
 //*****************************************************************************
 // nsDocShell::nsIDocShell
@@ -1945,11 +1956,8 @@ NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
   if (parent)
   {
     // Get the document object for the parent
-    nsCOMPtr<nsIContentViewerContainer> parentAsContentViewerContainer;
-    parentAsContentViewerContainer = do_QueryInterface(parent);
-    NS_ENSURE_TRUE(parentAsContentViewerContainer, NS_ERROR_FAILURE);
     nsCOMPtr<nsIContentViewer> parentContentViewer;
-    NS_ENSURE_SUCCESS(parentAsContentViewerContainer->GetContentViewer(getter_AddRefs(parentContentViewer)), 
+    NS_ENSURE_SUCCESS(parent->GetContentViewer(getter_AddRefs(parentContentViewer)), 
                       NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(parentContentViewer, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocumentViewer> parentDocViewer;
