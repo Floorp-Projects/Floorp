@@ -1663,7 +1663,6 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_MOVE);
-
 	if (lastWidgetHit)
 	{
 		Point macPoint = aOSEvent.where;
@@ -1690,10 +1689,32 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 		{
 			if (lastWidgetPointed)
 			{
+        // We need to convert the coords to be relative to lastWidgetPointed.
+        nsPoint widgetHitPoint = mouseEvent.point;
+
+        Point macPoint = aOSEvent.where;
+        WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
+        nsGraphicsUtils::SafeSetPortWindowPort(wind);
+
+        {
+          StOriginSetter originSetter(wind);
+          ::GlobalToLocal(&macPoint);
+        }
+
+        nsPoint lastWidgetHitPoint(macPoint.h, macPoint.v);
+
+          nsRect bounds;
+          lastWidgetPointed->GetBounds(bounds);
+          nsPoint widgetOrigin(bounds.x, bounds.y);
+          lastWidgetPointed->LocalToWindowCoordinate(widgetOrigin);
+          lastWidgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 				mouseEvent.widget = lastWidgetPointed;
+				mouseEvent.point = lastWidgetHitPoint;
 				mouseEvent.message = NS_MOUSE_EXIT;
 				lastWidgetPointed->DispatchMouseEvent(mouseEvent);
 				retVal = PR_TRUE;
+
+				mouseEvent.point = widgetHitPoint;
 			}
 
       gEventDispatchHandler.SetWidgetPointed(widgetPointed);
