@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIMsgCompFields */
+/* starting interface:    nsIMsgCompFields */
 
 /* {3E89CAE3-BD2D-11d2-8293-000000000000} */
 #define NS_IMSGCOMPFIELDS_IID_STR "3E89CAE3-BD2D-11d2-8293-000000000000"
@@ -22,10 +22,7 @@
 
 class nsIMsgCompFields : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IMSGCOMPFIELDS_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGCOMPFIELDS_IID)
 
   /* void Copy (in nsIMsgCompFields pMsgCompFields); */
   NS_IMETHOD Copy(nsIMsgCompFields *pMsgCompFields) = 0;
