@@ -33,7 +33,7 @@ class nsString;
 enum nsCharSetID {
   eCharSetID_IsoLatin1 = 0,
   eCharSetID_UTF8,
-  eCharSetID_ShiftJis,
+  eCharSetID_ShiftJis
   // XXX more i'm sure...
 };
 
