@@ -36,6 +36,7 @@
 #include "xpt_cpp.h"
 #include "xpcforwards.h"
 #include "xpcvariant.h"
+#include "xpclog.h"
 
 extern const char* XPC_VAL_STR; // 'value' property name for out params
 
@@ -67,6 +68,8 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD GetWrappedNativeOfJSObject(JSContext* aJSContext,
                                     JSObject* aJSObj,
                                     nsIXPConnectWrappedNative** aWrapper);
+
+    NS_IMETHOD DebugDump(int depth);
 
     // non-interface implementation
 public:
@@ -117,6 +120,7 @@ public:
     IID2WrappedNativeClassMap* GetWrappedNativeClassMap() {return mWrappedNativeClassMap;}
 
     JSBool Init(JSObject* aGlobalObj = NULL);
+    void DebugDump(int depth);
 
     ~XPCContext();
 private:
@@ -288,8 +292,7 @@ public:
     void SetReadOnlyAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RO;}
     void SetWritableAttribute() {flags=(flags&~NMD_CAT_MASK)|NMD_ATTRIB_RW;}
 
-    XPCNativeMemberDescriptor()
-        : invokeFuncObj(NULL), id(0), flags(0) {}
+    XPCNativeMemberDescriptor();
 private:
     uint16          flags;
 };
@@ -305,7 +308,7 @@ private:
 class nsIXPCWrappedNativeClass : public nsISupports
 {
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
-    // no methods
+    NS_IMETHOD DebugDump(int depth) = 0;
 };
 
 /*************************/
@@ -314,7 +317,7 @@ class nsXPCWrappedNativeClass : public nsIXPCWrappedNativeClass
 {
     // all the interface method declarations...
     NS_DECL_ISUPPORTS;
-
+    NS_IMETHOD DebugDump(int depth);
 public:
     static nsXPCWrappedNativeClass* GetNewOrUsedClass(XPCContext* xpcc,
                                                      REFNSIID aIID);

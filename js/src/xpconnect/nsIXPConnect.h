@@ -145,6 +145,7 @@ public:
                                     JSObject* aJSObj,
                                     nsIXPConnectWrappedNative** aWrapper) = 0;
 
+    NS_IMETHOD DebugDump(int depth) = 0;
     // other stuff...
 
 };
@@ -153,6 +154,15 @@ JS_BEGIN_EXTERN_C
 // XXX remove this and use ServiceManager instead
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
+
+#ifdef DEBUG
+XPC_PUBLIC_API(void)
+XPC_Dump(nsISupports* p, int depth);
+#define XPC_DUMP(x,d) XPC_Dump(x,d)
+#else
+#define XPC_DUMP(x,d) ((void*)0)
+#endif
+
 JS_END_EXTERN_C
 
 #ifdef DEBUG

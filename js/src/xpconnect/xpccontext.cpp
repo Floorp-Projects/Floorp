@@ -96,3 +96,43 @@ XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
            nsXPCWrappedJSClass::InitForContext(this) &&
            nsXPCWrappedNativeClass::InitForContext(this);
 }        
+
+#ifdef DEBUG
+WrappedNativeClassMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
+{
+    ((nsXPCWrappedNativeClass*)he->value)->DebugDump(*(int*)arg);
+    return HT_ENUMERATE_NEXT;
+}        
+#endif        
+
+
+void 
+XPCContext::DebugDump(int depth)
+{
+#ifdef DEBUG
+    depth--; 
+    XPC_LOG_ALWAYS(("XPCContext @ %x", this));
+        XPC_LOG_INDENT();
+        XPC_LOG_ALWAYS(("mJSContext @ %x", mJSContext));
+        XPC_LOG_ALWAYS(("mGlobalObj @ %x", mGlobalObj));
+        XPC_LOG_ALWAYS(("mWrappedNativeClassMap @ %x with %d classes", \
+            mWrappedNativeClassMap, \
+            mWrappedNativeClassMap ? mWrappedNativeClassMap->Count() : 0));
+        if(depth && mWrappedNativeClassMap && mWrappedNativeClassMap->Count())
+        {
+            XPC_LOG_INDENT();
+            mWrappedNativeClassMap->Enumerate(WrappedNativeClassMapDumpEnumerator, &depth);
+            XPC_LOG_OUTDENT();
+        }
+        XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d classes", \
+            mWrappedJSClassMap, \
+            mWrappedJSClassMap ? mWrappedJSClassMap->Count() : 0));
+        XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers", \
+            mWrappedNativeMap, \
+            mWrappedNativeMap ? mWrappedNativeMap->Count() : 0));
+        XPC_LOG_ALWAYS(("mWrappedJSMap @ %x with %d wrappers", \
+            mWrappedJSMap, \
+            mWrappedJSMap ? mWrappedJSMap->Count() : 0));
+        XPC_LOG_OUTDENT();
+#endif        
+}        
