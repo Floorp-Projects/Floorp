@@ -35,11 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file holds our vocabulary definition for the helper
-// app data source. The helper app data source contains user specified helper
-// application override information.
+/** @file
+ * This file holds our vocabulary definition for the helper
+ * app data source. The helper app data source contains user specified helper
+ * application override information.
+ *
+ * @see profile/defaults/mimeTypes.rdf for documentation on these properties
+ */
 
-// See profile/defaults/mimeTypes.rdf for documentation on these properties
 
 #define NC_RDF_MIMETYPES				NC_NAMESPACE_URI"MIME-Types"
 // a mime type has the following properties...

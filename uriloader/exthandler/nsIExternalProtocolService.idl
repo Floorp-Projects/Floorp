@@ -20,27 +20,32 @@
  *   Scott MacGregor <mscott@netscape.com>
  */
 
-/* The external protocol service is used for finding and launching
-   platform specific applications for particular protocols.
-
-   You can ask the external protocol service if it has an external
-   handler for a given protocol scheme. And you can ask it to load 
-   the url using the default handler...
- */
-
 #include "nsISupports.idl"
 
 interface nsIURI;
 interface nsIFile;
 
+/**
+ * The external protocol service is used for finding and launching
+ * platform specific applications for particular protocols.
+ *
+ * You can ask the external protocol service if it has an external
+ * handler for a given protocol scheme. And you can ask it to load 
+ * the url using the default handler.
+ */
 [scriptable, uuid(100FD4B3-4557-11d4-98D0-001083010E9B)]
 interface nsIExternalProtocolService : nsISupports
 {
-  // aProtocolScheme --> the scheme from a url: http, ftp, mailto, etc.
-  // returns true if we have a handler and false otherwise...
+  /**
+   * Check whether a handler for a specific protocol exists.
+   * @param aProtocolScheme The scheme from a url: http, ftp, mailto, etc.
+   * @return true if we have a handler and false otherwise.
+   */
   boolean externalProtocolHandlerExists(in string aProtocolScheme);
 
-  // used to load a url via an external protocol handler (if one exists)
-  // aURL --> the url to load
+  /**
+   * Used to load a url via an external protocol handler (if one exists)
+   * @param aURL The url to load
+   */
   void loadUrl (in nsIURI aURL);  
 }; 
