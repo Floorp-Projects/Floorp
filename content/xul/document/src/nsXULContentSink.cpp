@@ -84,6 +84,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeCache.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
@@ -247,6 +248,7 @@ protected:
     nsString               mPreferredStyle;
     nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
     nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
+    nsCOMPtr<nsIScriptSecurityManager> mSecMan;
 };
 
 nsrefcnt XULContentSinkImpl::gRefCnt;
@@ -1426,6 +1428,19 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
       if (! src.IsEmpty()) {
           // Use the SRC attribute value to load the URL
           rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nsnull, mDocumentURL);
+
+          // Check if this document is allowed to load a script from this source
+          // NOTE: if we ever allow scripts added via the DOM to run, we need to
+          // add a CheckLoadURI call for that as well.
+          if (NS_SUCCEEDED(rv)) {
+              if (!mSecMan)
+                  mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+              if (NS_SUCCEEDED(rv)) {
+                  rv = mSecMan->CheckLoadURI(mDocumentURL, script->mSrcURI,
+                                             nsIScriptSecurityManager::ALLOW_CHROME);
+              }
+          }
+
           if (NS_FAILED(rv)) {
               delete script;
               return rv;
