@@ -154,6 +154,7 @@ function WaitFinishLoadingDocument(msgType)
 		CompFields2Recipients(msgCompose.compFields, msgType);
 		SetComposeWindowTitle(13);
 		AdjustFocus();
+		window.updateCommands("create");
 	}
 	else
 		setTimeout("WaitFinishLoadingDocument(" + msgType + ");", 200);
@@ -237,10 +238,12 @@ function ComposeStartup()
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 
-			window.editorShell.SetContentWindow(contentWindow);
-			window.editorShell.SetWebShellWindow(window);
-			window.editorShell.SetToolbarWindow(window);
-			
+			window.editorShell.webShellWindow = window;
+			window.editorShell.contentWindow = contentWindow;
+
+			// set up JS-implemented commands
+			SetupControllerCommands();
+
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
 	    	{
@@ -291,6 +294,10 @@ function ComposeStartup()
 			msgCompose.editor = window.editorShell;
 
 			msgCompose.RegisterStateListener(stateListener);
+
+			// call updateCommands to disable while we're loading the page
+			window.updateCommands("create");
+			
 			WaitFinishLoadingDocument(args.type);
 		}
 	}

@@ -45,6 +45,7 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+<html:script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
@@ -53,6 +54,11 @@ Rights Reserved.
 	<commandset id="globalEditMenuItems"/>
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>
+
+    <commandset id="composerMenuItems"/>
+    <commandset id="composerEditMenuItems"/>
+    <commandset id="composerSaveMenuItems"/>    
+    <commandset id="composerStyleMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
