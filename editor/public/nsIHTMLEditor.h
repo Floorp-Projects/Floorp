@@ -197,9 +197,16 @@ public:
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
 
   /**
-   * document me!
+   * Insert some HTML source at the current location.
    */
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
+
+  /**
+   * Insert some HTML source at the current location, interpreting
+   * the string argument according to the given charset.
+   */
+  NS_IMETHOD InsertHTMLWithCharset(const nsString &aInputString,
+                                   const nsString& aCharset)=0;
 
 
   /** Insert an element, which may have child nodes, at the selection

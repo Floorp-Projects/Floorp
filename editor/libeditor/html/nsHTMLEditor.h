@@ -109,6 +109,8 @@ public:
   NS_IMETHOD InsertBreak();
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertHTML(const nsString &aInputString);
+  NS_IMETHOD InsertHTMLWithCharset(const nsString& aInputString,
+                                   const nsString& aCharset);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
   NS_IMETHOD DeleteSelection(EDirection aAction);
@@ -161,7 +163,10 @@ public:
   NS_IMETHOD PasteAsQuotation();
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText, nsIDOMNode **aNodeInserted);
   NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation);
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation, nsIDOMNode **aNodeInserted);
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText,
+                                    const nsString& aCitation,
+                                    const nsString& aCharset,
+                                    nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
 

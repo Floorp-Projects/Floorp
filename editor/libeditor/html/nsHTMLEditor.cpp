@@ -1295,7 +1295,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
   // This can't happen inside selection batching --
   // selection refuses to move if batching is on.
   if (aAction == eNextWord || aAction == ePreviousWord
-      || aAction == eToEndOfLine)
+      || aAction == eToBeginningOfLine || aAction == eToEndOfLine)
   {
     if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
@@ -1314,6 +1314,10 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
           break;
         case ePreviousWord:
           result = selCont->WordMove(PR_FALSE, PR_TRUE);
+          aAction = eNone;
+          break;
+        case eToBeginningOfLine:
+          result = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
           aAction = eNone;
           break;
         case eToEndOfLine:
@@ -1400,6 +1404,13 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
+{
+  nsAutoString charset;
+  return InsertHTMLWithCharset(aInputString, charset);
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
+                                                  const nsString& aCharset)
 {
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
@@ -3747,7 +3758,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsString& aQuotedText,
     return InsertAsPlaintextQuotation(aQuotedText, aNodeInserted);
 
   nsAutoString citation ("");
-  return InsertAsCitedQuotation(aQuotedText, citation, aNodeInserted);
+  nsAutoString charset ("");
+  return InsertAsCitedQuotation(aQuotedText, citation, charset, aNodeInserted);
 }
 
 // text insert.
@@ -3828,6 +3840,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
 NS_IMETHODIMP
 nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
                                      const nsString& aCitation,
+                                     const nsString& aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
   nsAutoEditBatch beginBatching(this);
@@ -3856,7 +3869,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
       selection->Collapse(newNode, 0);
   }
 
-  res = InsertHTML(aQuotedText);
+  res = InsertHTMLWithCharset(aQuotedText, aCharset);
   if (aNodeInserted)
   {
     if (NS_SUCCEEDED(res))

@@ -98,6 +98,8 @@ nsEditorController::nsEditorController()
   mDeleteCharForward = "cmd_deleteCharForward";
   mDeleteWordBackward = "cmd_deleteWordBackward";
   mDeleteWordForward = "cmd_deleteWordForward";
+
+  mDeleteToBeginningOfLine = "cmd_deleteToBeginningOfLine";
   mDeleteToEndOfLine = "cmd_deleteToEndOfLine";
 }
 
@@ -218,6 +220,7 @@ NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRB
       (PR_TRUE==mDeleteCharBackward.Equals(aCommand)) ||
       (PR_TRUE==mDeleteWordForward.Equals(aCommand)) ||
       (PR_TRUE==mDeleteWordBackward.Equals(aCommand)) ||
+      (PR_TRUE==mDeleteToBeginningOfLine.Equals(aCommand)) ||
       (PR_TRUE==mDeleteToEndOfLine.Equals(aCommand)) ||
       (PR_TRUE==mSelectAllString.Equals(aCommand)) ||
       (PR_TRUE==mBeginLineString.Equals(aCommand)) ||
@@ -317,6 +320,12 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
   else if (PR_TRUE==mDeleteWordBackward.Equals(aCommand))
   { 
     NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::ePreviousWord),
+                      NS_ERROR_FAILURE);
+  }
+
+  else if (PR_TRUE==mDeleteToBeginningOfLine.Equals(aCommand))
+  {
+    NS_ENSURE_SUCCESS(editor->DeleteSelection(nsIEditor::eToBeginningOfLine),
                       NS_ERROR_FAILURE);
   }
   else if (PR_TRUE==mDeleteToEndOfLine.Equals(aCommand))
