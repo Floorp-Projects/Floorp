@@ -50,6 +50,7 @@
 #include "key.h"
 #include "secmod.h"
 #include "secutil.h"
+#include "pk11func.h"
 
 /* SSL Header Files */
 #include "ssl.h"
@@ -121,6 +122,7 @@ struct ThreadData cl,svr;
 
 #define INSERT_TABLES
 #include "sslt.h"
+#include "nss.h"
 
 
 
@@ -132,20 +134,8 @@ struct ThreadData cl,svr;
 
 int OpenDBs() {
   int r;
-  SECU_ConfigDirectory(".");
-  SECU_DefaultSSLDir();  
- 
-  SECU_PKCS11Init(PR_FALSE);
-  
-  SEC_Init();
 
-  cert_db_handle = PR_NEWZAP(CERTCertDBHandle);
-  if (!cert_db_handle) return Error(30);
-
-  r = CERT_OpenCertDB(cert_db_handle, PR_TRUE, SECU_CertDBNameCallback, NULL);
-  if (r) return Error(31);
-
-  CERT_SetDefaultCertDB(cert_db_handle);
+  NSS_Init(".");
   return 0;
 }
 
