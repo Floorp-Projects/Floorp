@@ -1102,7 +1102,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIURI* aURL, nsresult a
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 #endif // NECKO
-  nsPluginReason  reason = nsPluginReason_NoReason;
+  // nsPluginReason  reason = nsPluginReason_NoReason;
 
   if(nsnull != mPStreamListener)
   {
