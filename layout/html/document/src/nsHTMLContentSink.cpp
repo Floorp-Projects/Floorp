@@ -61,6 +61,9 @@
 #include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"
 #include "nsIFrame.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsICharsetAlias.h"
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -120,6 +123,7 @@ static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 //----------------------------------------------------------------------
 
@@ -311,6 +315,7 @@ public:
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
   nsString* mTitle;
+  nsString  mUnicodeXferBuf;
 
   PRBool mLayoutStarted;
   PRInt32 mInScript;
@@ -4164,26 +4169,69 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                   const char* string)
 {
   nsresult rv = NS_OK;
-  nsString aData(string, stringLen);
+  
+  if (stringLen) {
 
-  if (NS_OK == aStatus) {
-    PRBool bodyPresent = PreEvaluateScript();
-    
-    //-- Merge the principal of the script file with that of the document
-    nsCOMPtr<nsISupports> owner;
-    aLoader->GetOwner(getter_AddRefs(owner));
-    if (owner)
+    PRUnichar *unicodeString;
+    PRInt32 unicodeLength;
+    nsAutoString characterSet;
+    nsICharsetConverterManager  *charsetConv = nsnull;
+    nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
+
+    // charset from document default
+    rv = mDocument->GetDocumentCharacterSet(characterSet);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
+
+    rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                   NS_GET_IID(nsICharsetConverterManager), 
+                   (nsISupports**)&charsetConv);
+
+    if (NS_SUCCEEDED(rv) && (charsetConv))
     {
-      nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner, &rv);
-      if (NS_FAILED(rv)) return rv;
-      rv = mDocument->AddPrincipal(prin);
-      if (NS_FAILED(rv)) return rv;
+       rv = charsetConv->GetUnicodeDecoder(&characterSet,
+           getter_AddRefs(unicodeDecoder));
+       NS_RELEASE(charsetConv);
     }
 
-    rv = EvaluateScript(aData, mScriptURI, 1, mScriptLanguageVersion);
-    if (NS_FAILED(rv)) return rv;
+    // converts from the charset to unicode
+    if (NS_SUCCEEDED(rv)) {
+      rv = unicodeDecoder->GetMaxLength(string, stringLen, &unicodeLength);
+      if (NS_SUCCEEDED(rv)) {
+          mUnicodeXferBuf.SetCapacity(unicodeLength);
+          unicodeString = (PRUnichar *) mUnicodeXferBuf.GetUnicode();
+          rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
+          if (NS_SUCCEEDED(rv)) {
+            mUnicodeXferBuf.SetLength(unicodeLength);
+          } else {
+            mUnicodeXferBuf.SetLength(0); 
+          }
+      }
+    }
 
-    PostEvaluateScript(bodyPresent);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not convert Script input to Unicode!");
+    nsAutoString jsUnicodeBuffer(CBufDescriptor(unicodeString, PR_TRUE, unicodeLength+1, unicodeLength));
+
+    if (NS_OK == aStatus) {
+      PRBool bodyPresent = PreEvaluateScript();
+
+      //-- Merge the principal of the script file with that of the document
+      nsCOMPtr<nsISupports> owner;
+      aLoader->GetOwner(getter_AddRefs(owner));
+      if (owner)
+      {
+        nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = mDocument->AddPrincipal(prin);
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      rv = EvaluateScript(jsUnicodeBuffer, mScriptURI, 1, mScriptLanguageVersion);
+      if (NS_FAILED(rv)) return rv;
+
+      PostEvaluateScript(bodyPresent);
+
+    }
   }
 
   rv = ResumeParsing();
@@ -4192,6 +4240,8 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
+  //invalidate Xfer buffer content
+  mUnicodeXferBuf.SetLength(0); 
 
   return rv;
 }
