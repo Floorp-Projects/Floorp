@@ -926,11 +926,11 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
 
   nsCOMPtr<nsIRDFDataSource> installSource;
   rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_FALSE, PR_FALSE, getter_AddRefs(installSource));
-  if (NS_FAILED(rv) || !installSource) return rv;
+  if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIRDFDataSource> profileSource;
   if (mProfileInitialized) {
     rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_TRUE, PR_FALSE, getter_AddRefs(profileSource));
-    if (NS_FAILED(rv) || !profileSource) return rv;
+    if (NS_FAILED(rv)) return rv;
   }
 
   nsCAutoString lookup;
