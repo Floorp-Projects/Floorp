@@ -45,7 +45,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  necko \
 		  $(NULL)
-      
+
 ifdef MOZ_PROFILESHARING
 REQUIRES	+= ipcd \
 		  profilesharingsetup \
@@ -68,43 +68,14 @@ CPPSRCS	+= nsSharedPrefHandler.cpp
 SHARED_LIBRARY_LIBS	= $(DIST)/lib/$(LIB_PREFIX)ipcdutil_s.$(LIB_SUFFIX)
 endif
 
-PREF_JS_EXPORTS	= \
-		$(srcdir)/init/all.js \
-		$(srcdir)/init/mailnews.js \
-		$(srcdir)/init/editor.js \
-		$(NULL)
+DEFINES += -DOS_ARCH=$(OS_ARCH) \
+           -DMOZ_WIDGET_TOOLKIT=$(MOZ_WIDGET_TOOLKIT) \
+           $(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-PREF_JS_EXPORTS += $(srcdir)/mac/macprefs.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-PREF_JS_EXPORTS += $(srcdir)/win/winpref.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-PREF_JS_EXPORTS	+= $(srcdir)/os2/os2pref.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-PREF_JS_EXPORTS	+= $(srcdir)/beos/beos.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-PREF_JS_EXPORTS += $(srcdir)/unix/photon.js
-endif
-PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
-endif
-endif
-endif
-endif
-
-ifeq ($(OS_ARCH),OpenVMS)
-PREF_JS_EXPORTS	+= $(srcdir)/unix/openvms.js
-endif
+PREF_JS_EXPORTS	= $(srcdir)/init/all.js
 
 ifdef MOZ_PROFILESHARING
 PREF_JS_EXPORTS	+= $(srcdir)/init/non-shared.txt
-endif
-
-ifeq ($(OS_ARCH),AIX)
-PREF_JS_EXPORTS	+= $(srcdir)/unix/aix.js
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -118,4 +89,3 @@ include $(topsrcdir)/config/rules.mk
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 			all.js mailnews.js editor.js \
 			aix.js beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
-

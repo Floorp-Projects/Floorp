@@ -282,6 +282,7 @@ bin/chrome/icons/default/main-window*.xpm
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
+bin/greprefs/*
 bin/defaults/pref/*
 bin/defaults/autoconfig/*
 ; this is only here if you have plugins -blizzard

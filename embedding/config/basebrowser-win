@@ -58,6 +58,9 @@ components\mozreg.dll
 ;components\mozreg.xpt
 components\xpcom_obsolete.xpt
 
+; required prefs files
+greprefs\*
+
 ; xpconnect
 components\xpc3250.dll
 components\xpconnect.xpt

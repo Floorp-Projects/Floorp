@@ -231,9 +231,7 @@ res/unixcharset.properties
 ; res/strres.properties 
 
 ; required prefs files
-defaults/pref/all.js
-defaults/pref/unix.js
-
+greprefs/*
 
 ;
 ; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):

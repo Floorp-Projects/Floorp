@@ -238,6 +238,7 @@ bin\chrome\chromelist.txt
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
+bin\greprefs\*
 bin\defaults\pref\*
 bin\defaults\autoconfig\*
 bin\res\ua.css

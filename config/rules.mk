@@ -1232,26 +1232,47 @@ endif # NO_DIST_INSTALL
 endif 
 
 ################################################################################
-# Copy each element of PREF_JS_EXPORTS to $(DIST)/bin/defaults/pref
+# Copy each element of PREF_JS_EXPORTS
 
 ifneq ($(PREF_JS_EXPORTS),)
-$(DIST)/bin/defaults/pref::
+ifdef GRE_MODULE
+PREF_DIST_DIR    = $(GRE_DIST)
+PREF_DIR = greprefs
+else
+PREF_DIST_DIR    = $(DIST)/bin
+PREF_DIR = defaults/pref
+endif
+
+$(DIST)/bin/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 ifndef NO_DIST_INSTALL
-export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	@for i in $(PREF_JS_EXPORTS); do $(PERL) -pe "s/([^\r]?)\n/\1\r\n/" $$i > $(DIST)/bin/defaults/pref/`basename $$i`; done
-else
-	$(INSTALL) $(IFLAGS1) $^
+export:: $(PREF_JS_EXPORTS) $(PREF_DIST_DIR)/$(PREF_DIR)
+	@$(EXIT_ON_ERROR)  \
+	for i in $(PREF_JS_EXPORTS); \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(PREF_DIST_DIR)/$(PREF_DIR)/`basename $$i`; \
+	done
+
+ifdef GRE_MODULE
+ifndef _SKIP_OLD_GRE_INSTALL
+export:: $(PREF_JS_EXPORTS) $(DIST)/bin/$(PREF_DIR)
+	@$(EXIT_ON_ERROR)  \
+	for i in $(PREF_JS_EXPORTS); \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(DIST)/bin/$(PREF_DIR)/`basename $$i`; \
+	done
+endif
 endif
 endif
 
-install:: $(PREF_JS_EXPORTS)
 ifndef NO_INSTALL
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/pref
+install:: $(PREF_JS_EXPORTS)
+	@$(EXIT_ON_ERROR)  \
+	for i in $(PREF_JS_EXPORTS); \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(AC_DEFINES) $$i > $(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
+	done
 endif
-endif 
+endif
+
 ################################################################################
 # Copy each element of AUTOCFG_JS_EXPORTS to $(DIST)/bin/defaults/autoconfig
 
