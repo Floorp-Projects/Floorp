@@ -96,6 +96,7 @@ PRBool nsTypeAheadFind::gIsFindingText = PR_FALSE;
 
 
 NS_INTERFACE_MAP_BEGIN(nsTypeAheadFind)
+  NS_INTERFACE_MAP_ENTRY(nsITypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
@@ -375,10 +376,15 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMEventTarget> domEventTarget;
   aEvent->GetTarget(getter_AddRefs(domEventTarget));
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(domEventTarget));
+  return HandleFocusInternal(domEventTarget);
+}
+
+nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget)
+{
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aDOMEventTarget));
   if (!domNode)
-    return NS_OK;  // prevents listener callbacks from resetting us during typeahead find processing
-  if (!gIsFindingText)
+    return NS_OK;  
+  if (!gIsFindingText) // prevents listener callbacks from resetting us during typeahead find processing
     CancelFind();
 
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -395,7 +401,7 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
   nsCOMPtr<nsIDOMEventTarget> rootTarget(do_QueryInterface(domWin));
 
-  if (!rootTarget || (domWin == mFocusedWindow && docTarget != domEventTarget))
+  if (!rootTarget || (domWin == mFocusedWindow && docTarget != aDOMEventTarget))
     return NS_OK;  // Return early for elements focused within currently focused  document
 
   // Focus event in a new doc -- trigger keypress event listening
@@ -516,7 +522,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) || 
      (nsTypeAheadFind::gAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta))) {
     // We steal Accel+G (find next) and Accel+Shift+G (find prev), avoid early return
-    aEvent->PreventDefault(); // If back space is normally used for a command, don't do it
     if (mRepeatingMode == eRepeatingChar)
       mTypeAheadBuffer = mTypeAheadBuffer.First();
     mRepeatingMode = (charCode=='G')? eRepeatingReverse: eRepeatingForward;
@@ -571,7 +576,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   else if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
     if (mTypeAheadBuffer.IsEmpty())
       return NS_OK;
-    aEvent->PreventDefault(); // If back space is normally used for a command, don't do it
     if (mTypeAheadBuffer.Length() == 1) {
       if (mStartFindRange) {
         mFocusedDocSelection->RemoveAllRanges();
@@ -640,6 +644,9 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   }
 #endif
 
+  aEvent->PreventDefault(); // Prevent normal processing of this keystroke
+  aEvent->StopPropagation();
+
   // ------- If accessibility.typeaheadfind.timeout is set, cancel find after specified # milliseconds
   if (mTimeoutLength) {
     if (!mTimer)
@@ -653,7 +660,6 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   if (NS_SUCCEEDED(rv)) {
     // ------- Success!!! ---------------------------------------------------------------------------------
     mKeepSelectionOnCancel = !isLinksOnly;   // Next time CancelFind() is called, selection will be collapsed
-    DisplayStatus(PR_TRUE, PR_FALSE);    // display success status
 
     // ------- Store current find string for regular find usage: find-next or find dialog text field ------
 
@@ -668,7 +674,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   else {
     // ----- Nothing found -----
     nsCOMPtr<nsISound> soundInterface(do_CreateInstance("@mozilla.org/sound;1"));
-    DisplayStatus(PR_FALSE, PR_FALSE); // Display failure status
+    DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
     if (soundInterface)
       soundInterface->Beep();
     // Remove bad character from buffer, so we can continue typing from last matched character
@@ -796,10 +802,13 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinks
                                                  nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
       nsCOMPtr<nsIEventStateManager> esm;
       presContext->GetEventStateManager(getter_AddRefs(esm));
+      nsCOMPtr<nsIContent> focusedContent;
       if (esm) {
         PRBool isSelectionWithFocus;
         esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+        esm->GetFocusedContent(getter_AddRefs(focusedContent));
       }
+      DisplayStatus(PR_TRUE, focusedContent, PR_FALSE);
       return NS_OK;
     }   
     // ================= end-inner-while: go through a single document ==================
@@ -1066,9 +1075,6 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinks
   if (!windowInternal)
     return NS_ERROR_FAILURE;
 
-  CancelFind();   // Reset. Clears out type ahead find in manual find windows completely
-  mLinksOnly = aLinksOnly;
-
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aWindow));
   if (!eventTarget)
     return NS_ERROR_FAILURE;
@@ -1076,8 +1082,16 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinks
   RemoveCurrentWindowFocusListener();
   AttachNewWindowFocusListener(eventTarget);
 
-  windowInternal->Focus();  // This should get chain of events started for auto find. 
-  
+  windowInternal->Focus();  
+  if (mFocusedWindow != aWindow) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    eventTarget = do_QueryInterface(domDoc);
+    if (eventTarget)
+      HandleFocusInternal(eventTarget);  // This routine will set up the keypress listener
+  }
+  mLinksOnly = aLinksOnly;
+
   return NS_OK;
 }
 
@@ -1118,7 +1132,7 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 
   if (!mTypeAheadBuffer.IsEmpty()) {
     mTypeAheadBuffer.Truncate();
-    DisplayStatus(PR_FALSE, PR_TRUE); // Clear status
+    DisplayStatus(PR_FALSE, nsnull, PR_TRUE); // Clear status
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
     if (!mKeepSelectionOnCancel && presShell)
       mFocusedDocSelection->CollapseToStart();
@@ -1200,13 +1214,13 @@ void nsTypeAheadFind::RemoveCurrentKeypressListener()
 {
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mFocusedWindow));
   if (target)
-    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_FALSE);
+    target->RemoveEventListener(NS_LITERAL_STRING("keypress"), NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_TRUE);
 }
 
 
 void nsTypeAheadFind::AttachNewKeypressListener(nsIDOMEventTarget *aTarget)
 {
-  aTarget->AddEventListener(NS_LITERAL_STRING("keypress"),  NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_FALSE);
+  aTarget->AddEventListener(NS_LITERAL_STRING("keypress"),  NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_TRUE);
 }
 
 
@@ -1358,11 +1372,8 @@ nsresult nsTypeAheadFind::GetTranslatedString(const nsAString& aKey, nsAString& 
 }
 
 
-void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, PRBool aClearStatus)
+void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, PRBool aClearStatus)
 {
-  // Cache mBrowserChrome, used for showing status messages
-  // XXX Change nsIPresShell:DoCopyLinkLocation to return a string so that 
-  // we can include target URL in status message
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
   if (!presShell)
     return;
@@ -1390,11 +1401,24 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, PRBool aClearStatus)
   else {
     if (NS_SUCCEEDED(GetTranslatedString(mLinksOnly? (aSuccess? NS_LITERAL_STRING("linkfound"): NS_LITERAL_STRING("linknotfound")): 
        (aSuccess? NS_LITERAL_STRING("textfound"): NS_LITERAL_STRING("textnotfound")), statusString))) {
-      nsAutoString closeQuoteString;
+      nsAutoString closeQuoteString, urlString;
       GetTranslatedString(NS_LITERAL_STRING("closequote"), closeQuoteString);
       statusString += mTypeAheadBuffer + closeQuoteString;
+#ifdef ADD_TYPEAHEADFIND_URL_TO_STATUS
+      nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(aFocusedContent));
+      if (focusedNode)
+        presShell->GetLinkLocation(focusedNode, urlString);
+      if (! urlString.IsEmpty()) {   // Add URL in parenthesis
+        nsAutoString openParenString, closeParenString;
+        GetTranslatedString(NS_LITERAL_STRING("openparen"), openParenString);
+        GetTranslatedString(NS_LITERAL_STRING("closeparen"), closeParenString);
+        statusString += NS_LITERAL_STRING("   ")  + openParenString + urlString + closeParenString;
+      }
+#endif
     }
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, PromiseFlatString(statusString).get());
 }
+
+
 

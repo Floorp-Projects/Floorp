@@ -66,7 +66,8 @@
 
 enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse}; 
 
-class nsTypeAheadFind : public nsIDOMFocusListener,
+class nsTypeAheadFind : public nsITypeAheadFind,
+                        public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
                         public nsIDOMLoadListener,
                         public nsIWebProgressListener,
@@ -120,6 +121,7 @@ protected:
   static int PR_CALLBACK TypeAheadFindPrefsReset(const char* aPrefName, void* instance_data);
 
   // Helper methods
+  nsresult nsTypeAheadFind::HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget);
   void AttachNewSelectionListener();
   void RemoveCurrentSelectionListener();
   void AttachNewScrollPositionListener(nsIPresShell *aPresShell);
@@ -140,7 +142,7 @@ protected:
                                PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, nsIPresContext **aPresContext,
                                nsIDOMRange **aSearchRange, nsIDOMRange **aStartRange, nsIDOMRange **aEndRange);
-  void DisplayStatus(PRBool aSuccess, PRBool aClearStatus);
+  void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, PRBool aClearStatus);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
   // Used by GetInstance and ReleaseInstance
@@ -183,4 +185,6 @@ protected:
   // The windows where type ahead find does not start automatically as the user types
   nsCOMPtr<nsISupportsArray> mManualFindWindows; // List of windows where automatic typeahead find is disabled
 };
+
+
 
