@@ -20,7 +20,6 @@
  *   Patrick C. Beard <beard@netscape.com>
  */
 
-#define GC_LEAK_DETECTOR
 #if defined(GC_LEAK_DETECTOR)
 
 #include "nsLeakDetector.h"
