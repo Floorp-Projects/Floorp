@@ -1357,10 +1357,7 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 		newName = (char *) XP_ALLOC(_MAX_PATH);
 		sprintf(newName, "%s\\newsfilt.log", (const char *)g_MsgPrefs.m_csNewsDir);
 		break;
-	case xpMailPopState:
-        newName = (char *) XP_ALLOC(_MAX_PATH);
-        sprintf(newName, "%s\\popstate.dat", (const char *)g_MsgPrefs.m_csMailDir);
-		break;
+ 
 	case xpMailSubdirectory:
         {
             newName = (char *) XP_ALLOC(_MAX_PATH);
@@ -1375,6 +1372,10 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
         }
 		break;
 #endif // MOZ_MAIL_NEWS      
+	case xpMailPopState:
+        newName = (char *) XP_ALLOC(_MAX_PATH);
+        sprintf(newName, "%s\\%s\\popstate.dat", (const char *)theApp.m_UserDirectory, name);
+		break;
     // name of global cross-platform registry
     case xpRegistry:
         // eventually need to support arbitrary names; this is the default
