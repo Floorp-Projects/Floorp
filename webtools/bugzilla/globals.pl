@@ -346,7 +346,7 @@ sub GetVersionTable {
         do 'data/versioncache';
 
         if (!defined %::versions) {
-            die "Can't generate version info; tell terry.";
+            die "Can't generate file data/versioncache";
         }
     }
 }

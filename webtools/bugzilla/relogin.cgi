@@ -34,20 +34,9 @@ Content-type: text/html
 The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>
-<a href=query.cgi>Back to the query page.</a>
 ";
 
+navigation_header();
+
 exit;
-
-# The below was a different way, that prompted you for a login right then.
-
-# catch {unset COOKIE(Bugzilla_login)}
-# catch {unset COOKIE(Bugzilla_password)}
-# confirm_login
-
-# puts "Content-type: text/html\n"
-# puts "<H1>OK, logged in.</H1>"
-# puts "You are now logged in as <b>$COOKIE(Bugzilla_login)</b>."
-# puts "<p>"
-# puts "<a href=query.cgi>Back to the query page.</a>"
 

@@ -124,9 +124,8 @@ SendSQL("update profiles set emailnotification='$::FORM{'emailnotification'}' wh
 
 
 PutHeader("Preferences updated.");
-
-
 print "
 Your preferences have been updated.
-<p>
-<a href=query.cgi>Back to query page.</a>\n";
+<p>";
+navigation_header();
+
