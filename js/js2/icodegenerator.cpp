@@ -1874,7 +1874,6 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     ASSERT(v->name->getKind() == ExprNode::identifier);
                                     if (v->initializer) {
                                         IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
-                                        JSType* type = extractType(v->type);
                                         if (isStatic) {
                                             scg.setStatic(thisClass, idExpr->name, scg.genExpr(v->initializer));
                                             scg.resetStatement();
@@ -2415,23 +2414,23 @@ void ICodeGenerator::readICode(const char *fileName)
         XMLNode *node = *i;
 
         if (node->name().compare(widenCString("class")) == 0) {
-            String className;
-            String superName;
+            String* className;
+            String* superName;
             JSClass* superclass = 0;
 
-            node->getValue(widenCString("name"), className);
-            if (node->getValue(widenCString("super"), superName)) {
-                const JSValue& superclassValue = mGlobal->getVariable(superName);
+            node->getValue(widenCString("name"), &className);
+            if (node->getValue(widenCString("super"), &superName)) {
+                const JSValue& superclassValue = mGlobal->getVariable(*superName);
                 superclass = static_cast<JSClass*>(superclassValue.object);
             }
-            JSClass* thisClass = new JSClass(mGlobal, className, superclass);
+            JSClass* thisClass = new JSClass(mGlobal, *className, superclass);
             JSScope* thisScope = thisClass->getScope();
             ICodeGenerator scg(mWorld, thisScope, thisClass, kIsStaticMethod);
             ICodeGenerator ccg(mWorld, thisScope, thisClass, kNoFlags);
             ccg.allocateParameter(mWorld->identifiers["this"], thisClass);
             thisClass->defineStatic(mInitName, &Function_Type);
 
-            mGlobal->defineVariable(className, &Type_Type, JSValue(thisClass));
+            mGlobal->defineVariable(*className, &Type_Type, JSValue(thisClass));
 
             bool hasDefaultConstructor = false;
             XMLNodeList &elements = node->children();
@@ -2439,10 +2438,12 @@ void ICodeGenerator::readICode(const char *fileName)
                 XMLNode *element = *j;
 
                 if (element->name().compare(widenCString("method")) == 0) {
-                    String methodName, resultTypeName;
-                    element->getValue(widenCString("name"), methodName);
-                    element->getValue(widenCString("result"), resultTypeName);
+                    String *methodName, *resultTypeName;
+                    element->getValue(widenCString("name"), &methodName);
+                    element->getValue(widenCString("result"), &resultTypeName);
+#ifdef ROB_DONE
                     JSType *resultType = findType(mWorld->identifiers[resultTypeName]);
+#endif
                     String &body = element->body();
                     if (body.length()) {
                         std::string str(body.length(), char());
@@ -2469,18 +2470,17 @@ void ICodeGenerator::readICode(const char *fileName)
                 }
                 else {
                     if (element->name().compare(widenCString("field")) == 0) {
-                        String fieldName;
-                        String fieldType;
+                        String *fieldName;
+                        String *fieldType;
 
-                        element->getValue(widenCString("name"), fieldName);
-                        element->getValue(widenCString("type"), fieldType);
-                        JSType *type = findType(mWorld->identifiers[fieldType]);
+                        element->getValue(widenCString("name"), &fieldName);
+                        element->getValue(widenCString("type"), &fieldType);
+                        JSType *type = findType(mWorld->identifiers[*fieldType]);
 
                         if (element->hasAttribute(widenCString("static")))
-                            thisClass->defineStatic(fieldName, type);
-                        else {
-                            const JSSlot& slot = thisClass->defineSlot(fieldName, type);
-                        }
+                            thisClass->defineStatic(*fieldName, type);
+                        else
+                            thisClass->defineSlot(*fieldName, type);
                     }
                 }
             }
@@ -2496,8 +2496,8 @@ void ICodeGenerator::readICode(const char *fileName)
                 if (thisClass->hasStatic(mInitName))
                     icg.call(icg.getStatic(thisClass, mInitName), thisValue, &args);
                 icg.returnStmt(thisValue);
-                thisClass->defineConstructor(className);
-                scg.setStatic(thisClass, mWorld->identifiers[className], scg.newFunction(icg.complete(&Void_Type)));
+                thisClass->defineConstructor(*className);
+                scg.setStatic(thisClass, mWorld->identifiers[*className], scg.newFunction(icg.complete(&Void_Type)));
             }
             thisClass->complete();
         

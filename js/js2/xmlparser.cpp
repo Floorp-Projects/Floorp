@@ -8,13 +8,13 @@
 namespace JavaScript {
     
 
-bool XMLTag::getValue(String &name, String &value)
+bool XMLTag::getValue(String &name, String **value)
 {
     AttributeList::iterator i = mAttributeList.find(name);
     if (i == mAttributeList.end())
         return false;
     else {
-        value = i->second;
+        *value = &i->second;
         return true;
     }
 }
