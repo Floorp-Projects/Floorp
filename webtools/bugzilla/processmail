@@ -183,7 +183,7 @@ sub ProcessOneBug {
             $diffheader .= FormatTriple("What    ", "Removed", "Added");
             $diffheader .= ('-' x 76) . "\n";
         }
-        $what =~ s/^Attachment/Attachment #$attachid/ if $attachid;
+        $what =~ s/^(Attachment )?/Attachment #$attachid / if $attachid;
         if( $fieldname eq 'estimated_time' ||
             $fieldname eq 'remaining_time' ) {
             $old = FormatTimeUnit($old);
