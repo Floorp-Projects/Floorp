@@ -1,3 +1,4 @@
 <!-- brand.dtd -->
 <!ENTITY  vendorURL             "http://www.mozilla.org/">
 <!ENTITY  releaseURL            "http://www.mozilla.org/releases/">
+<!ENTITY  getNewThemesURL       "http://www.themes.org/skins/mozilla/">
