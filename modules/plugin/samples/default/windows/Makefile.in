@@ -30,7 +30,7 @@ MODULE		= plugin
 LIBRARY_NAME	= npnul32
 RESFILE		= npnul32.res
 DEFFILE		= $(srcdir)/npnul32.def
-REQUIRES	= java
+REQUIRES	= java plugin
 
 CPPSRCS		= \
 		maindll.cpp \

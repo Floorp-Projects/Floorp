@@ -25,8 +25,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 EXPORTS         = \
-		npapi.h \
-		npupp.h \
                 platform.h \
                 xp_core.h \
                 xp_file.h \
@@ -34,8 +32,6 @@ EXPORTS         = \
 		xp_path.h \
 		xp_str.h \
                 $(NULL)
-
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
