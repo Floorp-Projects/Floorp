@@ -196,7 +196,8 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-      nsAutoString str = path;
+      const char *chpath = path;
+      nsAutoString str(chpath);
       str += sep;
       path = str;
     }
@@ -875,7 +876,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 {
-  if (mPath == nsnull) {
+  nsFileSpec nopath("");
+  if (mPath == nopath) {
     nsresult rv = nsURI2Path(kMailboxRootURI, mURI, mPath);
     if (NS_FAILED(rv)) return rv;
   }

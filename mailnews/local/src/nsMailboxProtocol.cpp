@@ -314,7 +314,7 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 	{
 		nsMailDatabase * mailDb = nsnull;
 		nsIMessage * msgHdr = nsnull;
-		nsMailDatabase::Open((const nsFileSpec) *dbFileSpec, PR_FALSE, &mailDb);
+		nsMailDatabase::Open((nsFileSpec&) *dbFileSpec, PR_FALSE, &mailDb);
 		if (mailDb) // did we get a db back?
 		{
 			mailDb->GetMsgHdrForKey(messageKey, &msgHdr);
