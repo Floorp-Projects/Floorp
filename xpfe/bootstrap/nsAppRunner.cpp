@@ -66,6 +66,7 @@
 #include "nsProcess.h"
 
 #include "InstallCleanupDefines.h"
+#include "nsISoftwareUpdate.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -1074,8 +1075,20 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
 #endif
 
-  // XXX: This call will be replaced by a registry initialization...
-  NS_SetupRegistry_1( PR_TRUE );
+  // Ask XPInstall if we need to autoregister anything new.
+  PRBool needAutoReg = NS_SoftwareUpdateNeedsAutoReg();
+
+#ifdef DEBUG
+  // _Always_ autoreg if we're in a debug build, under the assumption
+  // that people are busily modifying components and will be angry if
+  // their changes aren't noticed.
+  needAutoReg = PR_TRUE;
+#endif
+
+  NS_SetupRegistry_1(needAutoReg);
+
+  if (needAutoReg)  // XXX ...and autoreg was successful?
+    NS_SoftwareUpdateDidAutoReg();
 
   // remove the nativeApp as an XPCOM autoreg observer
   if (obsService)

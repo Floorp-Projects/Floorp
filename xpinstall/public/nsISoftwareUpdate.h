@@ -37,6 +37,9 @@
 #include "nsIGenericFactory.h"
 #include "nsIDOMWindowInternal.h"
 
+#include "nsIRegistry.h"
+#include "nsIRegistryUtils.h"
+
 #define NS_IXPINSTALLCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall;1"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
@@ -108,6 +111,85 @@ protected:
     nsCOMPtr<nsIGenericFactory> mInstallVersionFactory;
 };
 
+#define XPI_ROOT_KEY    "software/mozilla/xpinstall"
+#define XPI_AUTOREG_VAL "Autoreg"
+#define XPCOM_KEY       "software/mozilla/XPCOM"
+
+/**
+ * @return PR_TRUE if XPI has requested an autoreg be performed.
+ */
+inline PRBool
+NS_SoftwareUpdateNeedsAutoReg()
+{
+  nsresult rv;
+
+  // Conservatively assume that we'll need to autoreg.
+  PRBool needAutoReg = PR_TRUE;
+
+  nsCOMPtr<nsIRegistry> reg = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_SUCCEEDED(rv)) {
+      nsRegistryKey idKey = 0;
+      rv = reg->GetSubtree(nsIRegistry::Common, XPI_ROOT_KEY, &idKey);
+      if (NS_SUCCEEDED(rv)) {
+        char* autoRegVal = nsnull;
+        rv = reg->GetStringUTF8(idKey, XPI_AUTOREG_VAL, &autoRegVal);
+
+        // If the string exists and isn't yes'', then we can avoid
+        // autoreg; otherwise, be conservative and autoregister.
+        if (NS_SUCCEEDED(rv) && (PL_strcmp(autoRegVal, "yes") != 0))
+            needAutoReg = PR_FALSE;
+
+        if (autoRegVal)
+          nsMemory::Free(autoRegVal);
+      }
+    }
+  }
+
+  return needAutoReg;
+}
+
+/**
+ * Notify XPI that autoreg was performed successfully.
+ */
+inline void
+NS_SoftwareUpdateDidAutoReg()
+{
+  nsresult rv;
+  nsCOMPtr<nsIRegistry> reg = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_SUCCEEDED(rv)) {
+      nsRegistryKey idKey = 0;
+      rv = reg->AddSubtree(nsIRegistry::Common, XPI_ROOT_KEY, &idKey);
+
+      if (NS_SUCCEEDED(rv))
+        reg->SetStringUTF8(idKey, XPI_AUTOREG_VAL, "no");
+    }
+  }
+}
+
+/**
+ * Request that an autoreg be performed at next startup. (Used
+ * internally by XPI.)
+ */
+inline void
+NS_SoftwareUpdateRequestAutoReg()
+{
+  nsresult rv;
+  nsCOMPtr<nsIRegistry> reg = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+    if (NS_SUCCEEDED(rv)) {
+      nsRegistryKey idKey = 0;
+      rv = reg->AddSubtree(nsIRegistry::Common, XPI_ROOT_KEY, &idKey);
+
+      if (NS_SUCCEEDED(rv))
+        reg->SetStringUTF8(idKey, XPI_AUTOREG_VAL, "yes");
+    }
+  }
+}
 
 #endif // nsISoftwareUpdate_h__
 

@@ -25,10 +25,6 @@ class nsInstallInfo;
 #include "nsTopProgressNotifier.h"
 
 
-#define XPI_ROOT_KEY    "software/mozilla/xpinstall"
-#define XPI_AUTOREG_VAL "Autoreg"
-#define XPCOM_KEY       "software/mozilla/XPCOM"
-
 class nsSoftwareUpdate: public nsISoftwareUpdate, 
                         public nsPIXPIStubHook,
                         public nsIObserver
