@@ -33,7 +33,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
-#include "nsITimer.h"
 
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -80,7 +79,7 @@ static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
 static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
-nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
+nsAppShellService::nsAppShellService() : mWindowMediator( NULL ), mShuttingDown( PR_FALSE )
 {
   NS_INIT_REFCNT();
 
@@ -407,12 +406,10 @@ nsAppShellService::Quit()
   // Quit the application. We will asynchronously call the appshell's
   // Exit() method via the ExitCallback() to allow one last pass
   // through any events in the queue. This guarantees a tidy cleanup.
+  nsresult rv = NS_OK;
 
-  if (! mShutdownTimer) {
-    // Only set the shutdown timer if it hasn't already been set.
-    nsresult rv;
-    rv = NS_NewTimer(getter_AddRefs(mShutdownTimer));
-    if (NS_FAILED(rv)) return rv;
+  if (! mShuttingDown) {
+    mShuttingDown = PR_TRUE;
 
     // Enumerate through each open window and close it
     NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -444,25 +441,63 @@ nsAppShellService::Quit()
     }
 
     // Note that we don't allow any premature returns from the above
-    // loop: no matter what, make sure we set the callback timer.  If
+    // loop: no matter what, make sure we send the exit event.  If
     // worst comes to worst, we'll do a leaky shutdown but we WILL
-    // shut down.
-    rv = mShutdownTimer->Init(ExitCallback, this, 0);
+    // shut down. Well, assuming that all *this* stuff works ;-).
+    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIEventQueue> queue;
+    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+
+    ExitEvent* event = new ExitEvent;
+    if (! event)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                 nsnull,
+                 HandleExitEvent,
+                 DestroyExitEvent);
+
+    event->mService = this;
+    NS_ADDREF(event->mService);
+
+    rv = queue->EnterMonitor();
+    if (NS_SUCCEEDED(rv)) {
+      rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+    }
+    (void) queue->ExitMonitor();
+
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(event->mService);
+      delete event;
+    }
   }
 
-  return NS_OK;
+  return rv;
+}
+
+void*
+nsAppShellService::HandleExitEvent(PLEvent* aEvent)
+{
+  ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
+
+  // Tell the appshell to exit
+  event->mService->mAppShell->Exit();
+
+  // We're done "shutting down".
+  event->mService->mShuttingDown = PR_FALSE;
+
+  return nsnull;
 }
 
 void
-nsAppShellService::ExitCallback(nsITimer* aTimer, void* aClosure)
+nsAppShellService::DestroyExitEvent(PLEvent* aEvent)
 {
-  nsAppShellService* svc = NS_REINTERPRET_CAST(nsAppShellService*, aClosure);
-
-  // Tell the appshell to exit
-  svc->mAppShell->Exit();
-
-  svc->mShutdownTimer = nsnull;
+  ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
+  NS_RELEASE(event->mService);
+  delete event;
 }
 
 NS_IMETHODIMP
