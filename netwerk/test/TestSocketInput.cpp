@@ -151,7 +151,7 @@ main(int argc, char* argv[])
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  PLEventQueue* eventQ;
+  nsIEventQueue* eventQ;
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
 

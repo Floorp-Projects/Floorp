@@ -30,7 +30,7 @@
 #include <ctype.h>      // for isalpha
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -185,7 +185,7 @@ nsNetService::NewConnection(nsIUrl* url,
     rv = GetProtocolHandler(scheme, &handler);
     if (NS_FAILED(rv)) return rv;
 
-    PLEventQueue* eventQ;
+    nsIEventQueue* eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);

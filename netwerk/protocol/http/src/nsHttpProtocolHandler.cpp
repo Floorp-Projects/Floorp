@@ -122,7 +122,7 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 NS_IMETHODIMP
 nsHttpProtocolHandler::NewConnection(nsIUrl* url,
                                      nsISupports* eventSink,
-                                     PLEventQueue* eventQueue,
+                                     nsIEventQueue* eventQueue,
                                      nsIProtocolConnection* *result)
 {
     nsresult rv;

@@ -23,7 +23,7 @@
 #include "nsISupportsArray.h"
 #include "nsIThread.h"
 #include "nscore.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 class nsFileTransport;
 

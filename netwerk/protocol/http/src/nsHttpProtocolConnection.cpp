@@ -45,6 +45,7 @@ nsHttpProtocolConnection::~nsHttpProtocolConnection()
     NS_IF_RELEASE(mHandler);
     NS_IF_RELEASE(mUrl);
     NS_IF_RELEASE(mEventSink);
+    NS_IF_RELEASE(mEventQueue);
 }
 
 NS_IMPL_ADDREF(nsHttpProtocolConnection);
@@ -73,7 +74,7 @@ nsHttpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsresult 
 nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink, 
                                nsHttpProtocolHandler* handler,
-                               PLEventQueue* eventQueue)
+                               nsIEventQueue* eventQueue)
 {
     nsresult rv;
 
@@ -87,6 +88,7 @@ nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink,
     if (NS_FAILED(rv)) return rv;
 
     mEventQueue = eventQueue;
+    NS_IF_ADDREF(mEventQueue);
     
     return rv;
 }

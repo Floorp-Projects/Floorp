@@ -20,7 +20,7 @@
 #define nsIProtocolHandler_h___
 
 #include "nsISupports.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 class nsIConnectionGroup;
 class nsIUrl;
@@ -59,7 +59,7 @@ public:
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
-                             PLEventQueue* eventQueue,
+                             nsIEventQueue* eventQueue,
                              nsIProtocolConnection* *result) = 0;
 };
 

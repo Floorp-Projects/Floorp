@@ -55,11 +55,12 @@ nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     return NS_NOINTERFACE; 
 }
 
-nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamListener* aListener) {
+nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener* aListener) {
 	NS_INIT_REFCNT();
     
     mEventQueue = aEventQ; // whoever creates us must provide an event queue
                            // so we can post events back to them.
+    NS_IF_ADDREF(mEventQueue);
     mListener = aListener;
     NS_IF_ADDREF(mListener);
     mAction = GET;
@@ -72,6 +73,7 @@ nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamLis
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
     NS_IF_RELEASE(mListener);
+    NS_IF_RELEASE(mEventQueue);
 }
 
 

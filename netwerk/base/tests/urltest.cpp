@@ -28,7 +28,7 @@
 #endif
 
 #include "plstr.h"
-#include "plevent.h"
+#include "nsIEventQueue.h"
 
 #include "nsIComponentManager.h"
 
