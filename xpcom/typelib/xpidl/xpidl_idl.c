@@ -152,7 +152,7 @@ new_input_data(const char *filename, IncludePathEntry *include_path)
 #endif
 
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
-    // on Mac, fopen knows how to find files.
+    /* on Mac, fopen knows how to find files. */
     inputfile = fopen(filename, "r");
 #elif defined(XP_OS2)
     // if filename is fully qualified (starts with driver letter), then

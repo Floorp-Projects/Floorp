@@ -80,71 +80,72 @@ extern int gettimeofday(struct timeval *tv);
 #endif /* XP_UNIX */
 
 #ifdef XP_MAC
-static uint64			dstLocalBaseMicroseconds;
-static unsigned long	gJanuaryFirst1970Seconds;
+static uint64 			 dstLocalBaseMicroseconds;
+static unsigned long	 gJanuaryFirst1970Seconds;
 
 static void MacintoshInitializeTime(void)
 {
-	uint64					upTime;
-	unsigned long			currentLocalTimeSeconds,
-							startupTimeSeconds;
-	uint64					startupTimeMicroSeconds;
-	uint32					upTimeSeconds;
-	uint64					oneMillion, upTimeSecondsLong, microSecondsToSeconds;
-	DateTimeRec				firstSecondOfUnixTime;
+    uint64					upTime;
+    unsigned long			currentLocalTimeSeconds,
+	   startupTimeSeconds;
+    uint64				startupTimeMicroSeconds;
+    uint32				upTimeSeconds;
+    uint64				oneMillion, upTimeSecondsLong, microSecondsToSeconds;
+    DateTimeRec				firstSecondOfUnixTime;
 
-	//	Figure out in local time what time the machine
-	//	started up.  This information can be added to
-	//	upTime to figure out the current local time
-	//	as well as GMT.
+    /*
+     * Figure out in local time what time the machine started up. This information can be added to
+     * upTime to figure out the current local time as well as GMT.
+     */
 
-	Microseconds((UnsignedWide*)&upTime);
+    Microseconds((UnsignedWide*)&upTime);
 
-	GetDateTime(&currentLocalTimeSeconds);
+    GetDateTime(&currentLocalTimeSeconds);
 
-	JSLL_I2L(microSecondsToSeconds, PRMJ_USEC_PER_SEC);
-	JSLL_DIV(upTimeSecondsLong, upTime, microSecondsToSeconds);
-	JSLL_L2I(upTimeSeconds, upTimeSecondsLong);
+    JSLL_I2L(microSecondsToSeconds, PRMJ_USEC_PER_SEC);
+    JSLL_DIV(upTimeSecondsLong, upTime, microSecondsToSeconds);
+    JSLL_L2I(upTimeSeconds, upTimeSecondsLong);
 
-	startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
+    startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
 
-	//	Make sure that we normalize the macintosh base seconds
-	//	to the unix base of January 1, 1970.
+    /*  Make sure that we normalize the macintosh base seconds to the unix base of January 1, 1970.
+     */
 
-	firstSecondOfUnixTime.year = 1970;
-	firstSecondOfUnixTime.month = 1;
-	firstSecondOfUnixTime.day = 1;
-	firstSecondOfUnixTime.hour = 0;
-	firstSecondOfUnixTime.minute = 0;
-	firstSecondOfUnixTime.second = 0;
-	firstSecondOfUnixTime.dayOfWeek = 0;
+    firstSecondOfUnixTime.year = 1970;
+    firstSecondOfUnixTime.month = 1;
+    firstSecondOfUnixTime.day = 1;
+    firstSecondOfUnixTime.hour = 0;
+    firstSecondOfUnixTime.minute = 0;
+    firstSecondOfUnixTime.second = 0;
+    firstSecondOfUnixTime.dayOfWeek = 0;
 
-	DateToSeconds(&firstSecondOfUnixTime, &gJanuaryFirst1970Seconds);
+    DateToSeconds(&firstSecondOfUnixTime, &gJanuaryFirst1970Seconds);
 
-	startupTimeSeconds -= gJanuaryFirst1970Seconds;
+    startupTimeSeconds -= gJanuaryFirst1970Seconds;
 
-	//	Now convert the startup time into a wide so that we
-	//	can figure out GMT and DST.
+    /*  Now convert the startup time into a wide so that we can figure out GMT and DST.
+     */
 
-	JSLL_I2L(startupTimeMicroSeconds, startupTimeSeconds);
-	JSLL_I2L(oneMillion, PRMJ_USEC_PER_SEC);
-	JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
+    JSLL_I2L(startupTimeMicroSeconds, startupTimeSeconds);
+    JSLL_I2L(oneMillion, PRMJ_USEC_PER_SEC);
+    JSLL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
 }
 
-// Because serial port and SLIP conflict with ReadXPram calls,
-// we cache the call here
+/* Because serial port and SLIP conflict with ReadXPram calls,
+ * we cache the call here
+ */
 
 static void MyReadLocation(MachineLocation * loc)
 {
-	static MachineLocation storedLoc;	// InsideMac, OSUtilities, page 4-20
-	static JSBool didReadLocation = JS_FALSE;
-	if (!didReadLocation)
-	{
-		MacintoshInitializeTime();
-		ReadLocation(&storedLoc);
-		didReadLocation = JS_TRUE;
-	}
-	*loc = storedLoc;
+    static MachineLocation storedLoc;	/* InsideMac, OSUtilities, page 4-20 */
+    static JSBool didReadLocation = JS_FALSE;
+    if (!didReadLocation)
+    {
+        MacintoshInitializeTime();
+        ReadLocation(&storedLoc);
+        didReadLocation = JS_TRUE;
+     }
+     *loc = storedLoc;
 }
 #endif /* XP_MAC */
 
@@ -368,17 +369,17 @@ PRMJ_DSTOffset(JSInt64 local_time)
     JSLL_UI2L(maxtimet,PRMJ_MAX_UNIX_TIMET);
 
     if(JSLL_CMP(local_time,>,maxtimet)){
-      JSLL_UI2L(local_time,PRMJ_MAX_UNIX_TIMET);
+        JSLL_UI2L(local_time,PRMJ_MAX_UNIX_TIMET);
     } else if(!JSLL_GE_ZERO(local_time)){
-      /*go ahead a day to make localtime work (does not work with 0) */
-      JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
+        /*go ahead a day to make localtime work (does not work with 0) */
+        JSLL_UI2L(local_time,PRMJ_DAY_SECONDS);
     }
     JSLL_L2UI(local,local_time);
     PRMJ_basetime(local_time,&prtm);
 #if ( defined( USE_AUTOCONF ) && !defined( HAVE_LOCALTIME_R) ) || ( !defined ( USE_AUTOCONF ) && ( defined( XP_PC ) || defined( __FreeBSD__ ) || defined ( HPUX9 ) || defined ( SNI ) || defined ( NETBSD ) || defined ( OPENBSD ) || defined( RHAPSODY ) ) )
     ptm = localtime(&local);
     if(!ptm){
-      return JSLL_ZERO;
+        return JSLL_ZERO;
     }
     tm = *ptm;
 #else
@@ -457,10 +458,10 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 
 /* table for number of days in a month */
 static int mtab[] = {
-  /* jan, feb,mar,apr,may,jun */
-  31,28,31,30,31,30,
-  /* july,aug,sep,oct,nov,dec */
-  31,31,30,31,30,31
+    /* jan, feb,mar,apr,may,jun */
+    31,28,31,30,31,30,
+    /* july,aug,sep,oct,nov,dec */
+    31,31,30,31,30,31
 };
 
 /*
@@ -501,18 +502,18 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
     JSLL_ADD(result2,result,result1);
 
-  /* get the year */
+    /* get the year */
     while ((isleap == 0) ? !JSLL_CMP(tsecs,<,result) : !JSLL_CMP(tsecs,<,result2)) {
-	/* subtract a year from tsecs */
-	JSLL_SUB(tsecs,tsecs,result);
-	days += 365;
-	/* is it a leap year ? */
-	if(IS_LEAP(year)){
-	    JSLL_SUB(tsecs,tsecs,result1);
-	    days++;
-	}
-	year++;
-	isleap = IS_LEAP(year);
+        /* subtract a year from tsecs */
+        JSLL_SUB(tsecs,tsecs,result);
+        days += 365;
+        /* is it a leap year ? */
+        if(IS_LEAP(year)){
+            JSLL_SUB(tsecs,tsecs,result1);
+            days++;
+        }
+        year++;
+        isleap = IS_LEAP(year);
     }
 
     JSLL_UI2L(result1,PRMJ_DAY_SECONDS);
@@ -520,22 +521,22 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
     JSLL_DIV(result,tsecs,result1);
     JSLL_L2I(mday,result);
 
-  /* let's find the month */
+    /* let's find the month */
     while(((month == 1 && isleap) ?
-	   (mday >= mtab[month] + 1) :
-	   (mday >= mtab[month]))){
-	yday += mtab[month];
-	days += mtab[month];
+            (mday >= mtab[month] + 1) :
+            (mday >= mtab[month]))){
+	 yday += mtab[month];
+	 days += mtab[month];
 
-	mday -= mtab[month];
+	 mday -= mtab[month];
 
-    /* it's a Feb, check if this is a leap year */
-	if(month == 1 && isleap != 0){
-	    yday++;
-	    days++;
-	    mday--;
-	}
-	month++;
+         /* it's a Feb, check if this is a leap year */
+	 if(month == 1 && isleap != 0){
+	     yday++;
+	     days++;
+	     mday--;
+	 }
+	 month++;
     }
 
     /* now adjust tsecs */
