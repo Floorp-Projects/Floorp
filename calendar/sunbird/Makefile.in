@@ -103,8 +103,9 @@ endif
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/navigator/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/navigator/content
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/browser/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/browser/content
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/messenger/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/messenger/content
-	cp $(topsrcdir)/dist/bin/greprefs/security-prefs.js ./MozillaSunbird/greprefs/pref
-	cp $(topsrcdir)/dist/bin/defaults/pref/all.js ./MozillaSunbird/defaults/pref
+	cp $(topsrcdir)/dist/bin/greprefs/security-prefs.js ./MozillaSunbird/greprefs
+	cp $(topsrcdir)/dist/bin/greprefs/all.js ./MozillaSunbird/greprefs
+	cp $(topsrcdir)/dist/bin/defaults/pref/sunbird.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/greprefs/xpinstall.js ./MozillaSunbird/greprefs
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userContent-example.css ./MozillaSunbird/defaults/profile/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userChrome-example.css ./MozillaSunbird/defaults/profile/chrome
