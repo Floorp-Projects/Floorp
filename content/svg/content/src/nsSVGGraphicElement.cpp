@@ -205,7 +205,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  transforms->GetConsolidation(getter_AddRefs(matrix));
+  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
 
   return CTM->Multiply(matrix, _retval);
 }
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  transforms->GetConsolidation(getter_AddRefs(matrix));
+  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
 
   return screenCTM->Multiply(matrix, _retval);
 }

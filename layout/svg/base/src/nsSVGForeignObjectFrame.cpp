@@ -655,7 +655,7 @@ nsSVGForeignObjectFrame::GetCanvasTM()
       PRUint32 numberOfItems;
       transforms->GetNumberOfItems(&numberOfItems);
       if (numberOfItems>0)
-        transforms->GetConsolidation(getter_AddRefs(localTM));
+        transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
     }
     
     if (localTM)

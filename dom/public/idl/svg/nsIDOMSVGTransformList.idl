@@ -66,5 +66,5 @@ interface nsIDOMSVGTransformList : nsISupports
   nsIDOMSVGTransform consolidate();
 
   // Mozilla extension, not part of W3 SVG DOM:
-  nsIDOMSVGMatrix getConsolidation();
+  nsIDOMSVGMatrix getConsolidationMatrix();
 };
