@@ -40,7 +40,10 @@
 #include "BookmarkMenu.h"	  // Need for file bookmark generate function
 #endif
 
+#ifdef OLD_BOOKMARKS
 #include "bkmks.h"
+#endif /*OLD_BOOKMARKS*/
+#include "htrdf.h"
 #include "net.h"
 #include "layers.h"
 #include "ntypes.h"
@@ -68,6 +71,7 @@
 
 extern int XFE_ERROR_SAVING_OPTIONS;
 extern int XFE_COMMANDS_OPEN_FILE_USAGE;
+extern int XFE_COMMANDS_ADD_BOOKMARK_USAGE;
 #ifdef EDITOR
 extern int XFE_EDITOR_ALERT_ABOUT_DOCUMENT;
 extern int XFE_EDITOR_ALERT_FRAME_DOCUMENT;
@@ -523,7 +527,9 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
     }
   else if (IS_CMD(xfeCmdOpenPageChooseFile))
     {
-      openFileAction(info->params, info->nparams);
+      XP_ASSERT(info);
+
+      openFileAction(info->params, *info->nparams);
 
       getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
       return;
@@ -763,18 +769,30 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
   HG28732
   else if (IS_CMD(xfeCmdAddBookmark))
     {
-      History_entry *h = SHIST_GetCurrent (&m_contextData->hist);
-      BM_Entry *bm;
-      char *new_title;
+      XP_ASSERT(info);
 
-      if (!h) return;
-      
-      if (!h->title || !*h->title) new_title = h->address;
-      else new_title = h->title;
-      bm = (BM_Entry*)BM_NewUrl( new_title, h->address, NULL, h->last_access);
-      
-      BM_AppendToHeader (XFE_BookmarkFrame::main_bm_context,
-			 BM_GetAddHeader(XFE_BookmarkFrame::main_bm_context), bm);
+      Cardinal ac = *info->nparams;
+      String *av = info->params;
+
+      if (ac == 1 && av[0])
+      {
+          HT_AddBookmark (av[0], NULL);
+      }
+      else if (ac == 2 && av[0] && av[1])
+      {
+          HT_AddBookmark (av[0], av[1]);
+      }
+      else if (ac > 2)
+      {
+          fprintf (stderr, XP_GetString(XFE_COMMANDS_ADD_BOOKMARK_USAGE),
+                   fe_progname);
+      }
+      else
+      {
+          History_entry *h = SHIST_GetCurrent (&m_contextData->hist);
+          if (h) 
+              HT_AddBookmark (h->address, h->title);
+      }
       return;
     }
   else if (IS_CMD(xfeCmdAddFrameBookmark))
@@ -787,35 +805,16 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
 
       History_entry *h = SHIST_GetCurrent (&context->hist);
 
-      if (!h) return;
-      
-      BM_Entry *bm;
-      char *new_title;
+      if (h)
+          HT_AddBookmark (h->address, h->title);
 
-      if (!h->title || !*h->title) new_title = h->address;
-      else new_title = h->title;
-
-      bm = (BM_Entry*)BM_NewUrl( new_title, h->address, NULL, h->last_access);
-      
-      BM_AppendToHeader (XFE_BookmarkFrame::main_bm_context,
-			 BM_GetAddHeader(XFE_BookmarkFrame::main_bm_context), bm);
       return;
     }
   else if (IS_CMD(xfeCmdAddLinkBookmark))
     {
-      if (!m_urlUnderMouse) return;
-      
-      BM_Entry *bm;
-      char *new_title;
+      if (m_urlUnderMouse)
+          HT_AddBookmark (m_urlUnderMouse->address, NULL);
 
-      new_title = m_urlUnderMouse->address; /* Maybe we can do something
-                                               smart someday. -slamm */
-
-      bm = (BM_Entry*)BM_NewUrl( new_title, m_urlUnderMouse->address,
-                                 NULL, 0);
-      
-      BM_AppendToHeader (XFE_BookmarkFrame::main_bm_context,
-			 BM_GetAddHeader(XFE_BookmarkFrame::main_bm_context), bm);
       return;
     }
   else if (IS_CMD(xfeCmdPrint))
@@ -2485,42 +2484,29 @@ fe_openTargetUrl(MWContext * context,LO_AnchorData * anchor_data)
 }
 
 void
-XFE_HTMLView::openFileAction (String *av, Cardinal *ac)
+XFE_HTMLView::openFileAction (String *av, Cardinal ac)
 {
   MWContext *context = m_contextData;
-  MWContext *old_context = NULL;
+  Boolean useNewWindow = False;
 
-  /* See also fe_open_url_action() */
-  Boolean other_p = False;
-
-  fe_UserActivity (context);
-  if (*ac && av[*ac-1] && !strcmp (av[*ac-1], "<remote>"))
-    (*ac)--;
-
-  if (*ac > 1 && av[*ac-1] )
+  if (ac > 1 && av[ac-1] )
     {
-      if ((!strcasecomp (av[*ac-1], "new-window") ||
-           !strcasecomp (av[*ac-1], "new_window") ||
-           !strcasecomp (av[*ac-1], "newWindow") ||
-           !strcasecomp (av[*ac-1], "new")))
-        {
-          other_p = True;
-          (*ac)--;
-        }
-      else if ((old_context = XP_FindNamedContextInList(context, av[*ac-1])))
-        {
-          context = old_context;
-          other_p = False;
-          (*ac)--;
-        }
+      // Search context list for the parameter string
+      // If there is a match, use that context.
+      // Otherwise, the param was probably a "new_window" param.
+      // If not "new_window", too bad, give a new window anyway.
+
+      MWContext *named_context = XP_FindNamedContextInList(context, av[ac-1]);
+      
+      if (named_context)
+          context = named_context;
       else 
-        {
-          other_p = True;
-          (*ac)--;
-        }
+          useNewWindow = True;
+
+      ac--;
     }
 
-  if (*ac == 1 && av[0])
+  if (ac == 1 && av[0])
     {
 #ifndef PATH_MAX
 #define PATH_MAX 1024     
@@ -2540,11 +2526,8 @@ XFE_HTMLView::openFileAction (String *av, Cardinal *ac)
           PR_snprintf (newURL, sizeof (newURL), "file:%s/%.900s",
                        cwd_buf, av[0]);
         }
-#ifdef DEBUG_slamm
-      fprintf(stderr,"%s",newURL);
-#endif
       url_struct = NET_CreateURLStruct (newURL, NET_DONT_RELOAD);
-      if (other_p) 
+      if (useNewWindow) 
         {
           fe_MakeWindow (XtParent (CONTEXT_WIDGET (context)),
                          context, url_struct, NULL, 
@@ -2553,7 +2536,7 @@ XFE_HTMLView::openFileAction (String *av, Cardinal *ac)
       else
         fe_GetURL (context, url_struct, FALSE);
     }
-  else if (*ac > 1)
+  else if (ac > 1)
     {
       fprintf (stderr,
 	       XP_GetString(XFE_COMMANDS_OPEN_FILE_USAGE),

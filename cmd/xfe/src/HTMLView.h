@@ -136,7 +136,7 @@ private:
   void makeScroller(Widget parent);
   void findLayerForPopupMenu(Widget widget, XEvent *event);
   void reload(Widget, XEvent *event, XP_Bool onlyReloadFrame = FALSE);
-  void openFileAction (String *av, Cardinal *ac);
+  void openFileAction (String *av, Cardinal ac);
 
   // This gets called by our toplevel when the encoding has
   // changed for this window.
