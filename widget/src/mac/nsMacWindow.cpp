@@ -308,19 +308,19 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	// build the main native window
 	if (aNativeParent == nsnull)
 	{
-		nsBorderStyle borderStyle;
+		nsWindowType windowType;
 		if (aInitData)
-			borderStyle = aInitData->mBorderStyle;
+			windowType = aInitData->mWindowType;
 		else
-			borderStyle = (mIsDialog ? eBorderStyle_dialog : eBorderStyle_window);
+			windowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
 		short			wDefProcID;
 		Boolean		goAwayFlag;
 		short			hOffset;
 		short			vOffset;
-		switch (borderStyle)
+		switch (windowType)
 		{
-			case eBorderStyle_BorderlessTopLevel:
+			case eWindowType_popup:
 			    // (pinkerton)
 			    // Added very very early support for |eBorderStyle_BorderlessTopLevel| but
 			    // it isn't correct because it takes the focus away from the main window
@@ -328,33 +328,34 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			    //
 			    // ...fall through...
 			    
-			case eBorderStyle_none:
+			case eWindowType_child:
 				wDefProcID = plainDBox;
 				goAwayFlag = false;
 				hOffset = 0;
 				vOffset = 0;
 				break;
 
-			case eBorderStyle_dialog:
+			case eWindowType_dialog:
 				wDefProcID = kWindowMovableModalDialogProc;
 				goAwayFlag = true;
 				hOffset = kDialogMarginWidth;
 				vOffset = kDialogTitleBarHeight;
 				break;
 
-			case eBorderStyle_window:
+			case eWindowType_toplevel:
 				wDefProcID = kWindowFullZoomGrowDocumentProc;
 				goAwayFlag = true;
 				hOffset = kWindowMarginWidth;
 				vOffset = kWindowTitleBarHeight;
 				break;
-
+        /*
 			case eBorderStyle_3DChildWindow:
 				wDefProcID = altDBoxProc;
 				goAwayFlag = false;
 				hOffset = 0;
 				vOffset = 0;
 				break;
+        */
 		}
 
 		Rect wRect;

@@ -559,7 +559,8 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
     nsWidgetInitData widgetInitData;
-    widgetInitData.mBorderStyle = eBorderStyle_window;
+    widgetInitData.mWindowType = eWindowType_toplevel;
+    widgetInitData.mBorderStyle = eBorderStyle_all;
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
@@ -633,7 +634,8 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
     nsWidgetInitData widgetInitData;
-    widgetInitData.mBorderStyle = eBorderStyle_dialog;
+    widgetInitData.mWindowType = eWindowType_dialog;
+    widgetInitData.mBorderStyle = eBorderStyle_default;
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {

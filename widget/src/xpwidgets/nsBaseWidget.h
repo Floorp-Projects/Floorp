@@ -77,6 +77,7 @@ public:
     virtual nsIAppShell *   GetAppShell();
     virtual nsIToolkit*     GetToolkit();  
     NS_IMETHOD              SetModal(void); 
+    NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
     NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
     NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
@@ -122,6 +123,7 @@ protected:
     nscolor           mBackground;
     nscolor           mForeground;
     nsCursor          mCursor;
+    nsWindowType      mWindowType;
     nsBorderStyle     mBorderStyle;
     PRBool            mIsShiftDown;
     PRBool            mIsControlDown;

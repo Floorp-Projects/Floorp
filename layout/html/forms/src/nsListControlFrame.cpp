@@ -1524,7 +1524,8 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosit
   if (IsInDropDownMode() == PR_TRUE) {
     nsWidgetInitData widgetData;
     aView->SetZIndex(kMaxZ);
-    widgetData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
+    widgetData.mWindowType = eWindowType_popup;
+    widgetData.mBorderStyle = eBorderStyle_default;
     static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
     aView->CreateWidget(kCChildCID,
                        &widgetData,

@@ -137,7 +137,8 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   // Create a widget for ourselves.
   nsWidgetInitData widgetData;
   ourView->SetZIndex(kMaxZ);
-  widgetData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
+  widgetData.mWindowType = eWindowType_popup;
+  widgetData.mBorderStyle = eBorderStyle_default;
   static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
   ourView->CreateWidget(kCChildCID,
                      &widgetData,

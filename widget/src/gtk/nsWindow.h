@@ -79,6 +79,7 @@ public:
     NS_IMETHOD           EndResizingChildren(void);
     NS_IMETHOD           Destroy(void);
 
+    GdkWMDecoration ConvertBorderStyles(nsBorderStyle bs);
 
     virtual PRBool IsChild() const;
 
@@ -132,8 +133,6 @@ protected:
   PRBool      mVisible;
   PRBool      mDisplayed;
   PRBool      mIsDestroyingWindow;
-
-  nsBorderStyle mBorderStyle;
 
   // XXX Temporary, should not be caching the font
   nsFont *    mFont;
