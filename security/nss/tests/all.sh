@@ -73,7 +73,7 @@
 #
 ########################################################################
 
-TESTS="cert ssl sdr cipher smime perf tools fips dbtest"
+TESTS="cert ssl sdr cipher smime perf tools fips dbtests"
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	# will cause problems if sourced 
