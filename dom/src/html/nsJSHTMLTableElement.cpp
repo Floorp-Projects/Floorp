@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -88,22 +89,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLTableCaptionElement* prop;
         if (NS_OK == a->GetCaption(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -115,22 +101,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLTableSectionElement* prop;
         if (NS_OK == a->GetTHead(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -142,22 +113,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLTableSectionElement* prop;
         if (NS_OK == a->GetTFoot(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -169,22 +125,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetRows(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -196,22 +137,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetTBodies(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -222,9 +148,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -235,9 +159,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBgColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -248,9 +170,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetBorder(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -261,9 +181,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCellPadding(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -274,9 +192,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCellSpacing(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -287,9 +203,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetFrame(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -300,9 +214,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetRules(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -313,9 +225,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSummary(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -326,9 +236,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWidth(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -336,25 +244,11 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -379,82 +273,46 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CAPTION:
       {
         nsIDOMHTMLTableCaptionElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLTableCaptionElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLTableCaptionElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIHTMLTableCaptionElementIID, "HTMLTableCaptionElement",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetCaption(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case HTMLTABLEELEMENT_THEAD:
       {
         nsIDOMHTMLTableSectionElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLTableSectionElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLTableSectionElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIHTMLTableSectionElementIID, "HTMLTableSectionElement",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetTHead(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case HTMLTABLEELEMENT_TFOOT:
       {
         nsIDOMHTMLTableSectionElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLTableSectionElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLTableSectionElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIHTMLTableSectionElementIID, "HTMLTableSectionElement",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetTFoot(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case HTMLTABLEELEMENT_ALIGN:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAlign(prop);
         
@@ -463,13 +321,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BGCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBgColor(prop);
         
@@ -478,13 +330,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BORDER:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetBorder(prop);
         
@@ -493,13 +339,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLPADDING:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCellPadding(prop);
         
@@ -508,13 +348,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLSPACING:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCellSpacing(prop);
         
@@ -523,13 +357,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_FRAME:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetFrame(prop);
         
@@ -538,13 +366,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_RULES:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetRules(prop);
         
@@ -553,13 +375,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_SUMMARY:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSummary(prop);
         
@@ -568,38 +384,18 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_WIDTH:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWidth(prop);
         
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -612,18 +408,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLTableElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -633,17 +418,7 @@ FinalizeHTMLTableElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLTableElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -653,17 +428,7 @@ EnumerateHTMLTableElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLTableElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMHTMLTableElement *a = (nsIDOMHTMLTableElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 
@@ -690,22 +455,7 @@ HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function createTHead requires 0 parameters");
@@ -772,22 +522,7 @@ HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function createTFoot requires 0 parameters");
@@ -854,22 +589,7 @@ HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function createCaption requires 0 parameters");
@@ -942,22 +662,7 @@ HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function insertRow requires 1 parameters");

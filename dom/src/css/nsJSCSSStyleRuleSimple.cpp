@@ -26,33 +26,35 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMHTMLFontElement.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSStyleRuleSimple.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIHTMLFontElementIID, NS_IDOMHTMLFONTELEMENT_IID);
+static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
+static NS_DEFINE_IID(kICSSStyleRuleSimpleIID, NS_IDOMCSSSTYLERULESIMPLE_IID);
 
-NS_DEF_PTR(nsIDOMHTMLFontElement);
+NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
+NS_DEF_PTR(nsIDOMCSSStyleRuleSimple);
 
 //
-// HTMLFontElement property ids
+// CSSStyleRuleSimple property ids
 //
-enum HTMLFontElement_slots {
-  HTMLFONTELEMENT_COLOR = -1,
-  HTMLFONTELEMENT_FACE = -2,
-  HTMLFONTELEMENT_SIZE = -3
+enum CSSStyleRuleSimple_slots {
+  CSSSTYLERULESIMPLE_SELECTORTEXT = -1,
+  CSSSTYLERULESIMPLE_STYLE = -2
 };
 
 /***********************************************************************/
 //
-// HTMLFontElement Properties Getter
+// CSSStyleRuleSimple Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFontElement *a = (nsIDOMHTMLFontElement*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -61,10 +63,10 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLFONTELEMENT_COLOR:
+      case CSSSTYLERULESIMPLE_SELECTORTEXT:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetColor(prop)) {
+        if (NS_OK == a->GetSelectorText(prop)) {
           nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -72,22 +74,12 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLFONTELEMENT_FACE:
+      case CSSSTYLERULESIMPLE_STYLE:
       {
-        nsAutoString prop;
-        if (NS_OK == a->GetFace(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case HTMLFONTELEMENT_SIZE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetSize(prop)) {
-          nsConvertStringToJSVal(prop, cx, vp);
+        nsIDOMCSSStyleDeclaration* prop;
+        if (NS_OK == a->GetStyle(&prop)) {
+          // get the js object
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -107,12 +99,12 @@ GetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// HTMLFontElement Properties Setter
+// CSSStyleRuleSimple Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHTMLFontElement *a = (nsIDOMHTMLFontElement*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -121,30 +113,12 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLFONTELEMENT_COLOR:
+      case CSSSTYLERULESIMPLE_SELECTORTEXT:
       {
         nsAutoString prop;
         nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetColor(prop);
-        
-        break;
-      }
-      case HTMLFONTELEMENT_FACE:
-      {
-        nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
-      
-        a->SetFace(prop);
-        
-        break;
-      }
-      case HTMLFONTELEMENT_SIZE:
-      {
-        nsAutoString prop;
-        nsConvertJSValToString(prop, cx, *vp);
-      
-        a->SetSize(prop);
+        a->SetSelectorText(prop);
         
         break;
       }
@@ -161,30 +135,30 @@ SetHTMLFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// HTMLFontElement finalizer
+// CSSStyleRuleSimple finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeHTMLFontElement(JSContext *cx, JSObject *obj)
+FinalizeCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
 {
   nsGenericFinalize(cx, obj);
 }
 
 
 //
-// HTMLFontElement enumerate
+// CSSStyleRuleSimple enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateHTMLFontElement(JSContext *cx, JSObject *obj)
+EnumerateCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
 {
   return nsGenericEnumerate(cx, obj);
 }
 
 
 //
-// HTMLFontElement resolve
+// CSSStyleRuleSimple resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveHTMLFontElement(JSContext *cx, JSObject *obj, jsval id)
+ResolveCSSStyleRuleSimple(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsGenericResolve(cx, obj, id);
 }
@@ -192,57 +166,56 @@ ResolveHTMLFontElement(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for HTMLFontElement
+// class for CSSStyleRuleSimple
 //
-JSClass HTMLFontElementClass = {
-  "HTMLFontElement", 
+JSClass CSSStyleRuleSimpleClass = {
+  "CSSStyleRuleSimple", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetHTMLFontElementProperty,
-  SetHTMLFontElementProperty,
-  EnumerateHTMLFontElement,
-  ResolveHTMLFontElement,
+  GetCSSStyleRuleSimpleProperty,
+  SetCSSStyleRuleSimpleProperty,
+  EnumerateCSSStyleRuleSimple,
+  ResolveCSSStyleRuleSimple,
   JS_ConvertStub,
-  FinalizeHTMLFontElement
+  FinalizeCSSStyleRuleSimple
 };
 
 
 //
-// HTMLFontElement class properties
+// CSSStyleRuleSimple class properties
 //
-static JSPropertySpec HTMLFontElementProperties[] =
+static JSPropertySpec CSSStyleRuleSimpleProperties[] =
 {
-  {"color",    HTMLFONTELEMENT_COLOR,    JSPROP_ENUMERATE},
-  {"face",    HTMLFONTELEMENT_FACE,    JSPROP_ENUMERATE},
-  {"size",    HTMLFONTELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {"selectorText",    CSSSTYLERULESIMPLE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"style",    CSSSTYLERULESIMPLE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
 
 //
-// HTMLFontElement class methods
+// CSSStyleRuleSimple class methods
 //
-static JSFunctionSpec HTMLFontElementMethods[] = 
+static JSFunctionSpec CSSStyleRuleSimpleMethods[] = 
 {
   {0}
 };
 
 
 //
-// HTMLFontElement constructor
+// CSSStyleRuleSimple constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-HTMLFontElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSStyleRuleSimple(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// HTMLFontElement class initialization
+// CSSStyleRuleSimple class initialization
 //
-nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitCSSStyleRuleSimpleClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -251,23 +224,23 @@ nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototy
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "HTMLFontElement", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CSSStyleRuleSimple", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitHTMLElementClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCSSStyleRuleClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &HTMLFontElementClass,      // JSClass
-                         HTMLFontElement,            // JSNative ctor
+                         &CSSStyleRuleSimpleClass,      // JSClass
+                         CSSStyleRuleSimple,            // JSNative ctor
                          0,             // ctor args
-                         HTMLFontElementProperties,  // proto props
-                         HTMLFontElementMethods,     // proto funcs
+                         CSSStyleRuleSimpleProperties,  // proto props
+                         CSSStyleRuleSimpleMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -290,17 +263,17 @@ nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototy
 
 
 //
-// Method for creating a new HTMLFontElement JavaScript object
+// Method for creating a new CSSStyleRuleSimple JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptCSSStyleRuleSimple(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHTMLFontElement");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCSSStyleRuleSimple");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMHTMLFontElement *aHTMLFontElement;
+  nsIDOMCSSStyleRuleSimple *aCSSStyleRuleSimple;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -316,23 +289,23 @@ extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContex
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitHTMLFontElementClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitCSSStyleRuleSimpleClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIHTMLFontElementIID, (void **)&aHTMLFontElement);
+  result = aSupports->QueryInterface(kICSSStyleRuleSimpleIID, (void **)&aCSSStyleRuleSimple);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &HTMLFontElementClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &CSSStyleRuleSimpleClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHTMLFontElement);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aCSSStyleRuleSimple);
   }
   else {
-    NS_RELEASE(aHTMLFontElement);
+    NS_RELEASE(aCSSStyleRuleSimple);
     return NS_ERROR_FAILURE; 
   }
 

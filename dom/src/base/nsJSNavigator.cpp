@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -68,9 +69,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetUserAgent(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -81,9 +80,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAppCodeName(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -94,9 +91,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAppVersion(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -107,9 +102,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAppName(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -120,9 +113,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetLanguage(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -133,9 +124,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetPlatform(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -146,9 +135,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSecurityPolicy(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -156,25 +143,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -198,25 +171,11 @@ SetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -229,18 +188,7 @@ SetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeNavigator(JSContext *cx, JSObject *obj)
 {
-  nsIDOMNavigator *a = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -250,17 +198,7 @@ FinalizeNavigator(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNavigator(JSContext *cx, JSObject *obj)
 {
-  nsIDOMNavigator *a = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -270,17 +208,7 @@ EnumerateNavigator(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNavigator(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMNavigator *a = (nsIDOMNavigator*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 

@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -86,22 +87,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         if (NS_OK == a->GetStartParent(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -124,22 +110,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         if (NS_OK == a->GetEndParent(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -173,22 +144,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         if (NS_OK == a->GetCommonParent(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -196,25 +152,11 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -239,12 +181,7 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ISPOSITIONED:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -255,24 +192,14 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_STARTPARENT:
       {
         nsIDOMNode* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Node");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kINodeIID, "Node",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetStartParent(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case RANGE_STARTOFFSET:
@@ -294,24 +221,14 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ENDPARENT:
       {
         nsIDOMNode* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Node");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kINodeIID, "Node",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetEndParent(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case RANGE_ENDOFFSET:
@@ -333,12 +250,7 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_ISCOLLAPSED:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -349,46 +261,22 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case RANGE_COMMONPARENT:
       {
         nsIDOMNode* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Node");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kINodeIID, "Node",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetCommonParent(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -401,18 +289,7 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeRange(JSContext *cx, JSObject *obj)
 {
-  nsIDOMRange *a = (nsIDOMRange*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -422,17 +299,7 @@ FinalizeRange(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateRange(JSContext *cx, JSObject *obj)
 {
-  nsIDOMRange *a = (nsIDOMRange*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -442,17 +309,7 @@ EnumerateRange(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveRange(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMRange *a = (nsIDOMRange*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 
@@ -476,21 +333,11 @@ RangeSetStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
   if (argc >= 2) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -534,21 +381,11 @@ RangeSetEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   if (argc >= 2) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -591,8 +428,7 @@ RangeCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
   if (argc >= 1) {
 
-    if (!JS_ValueToBoolean(cx, argv[0], &b0)) {
-      JS_ReportError(cx, "Parameter must be a boolean");
+    if (!nsConvertJSValToBool(&b0, cx, argv[0])) {
       return JS_FALSE;
     }
 
@@ -663,21 +499,11 @@ RangeSelectNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -715,21 +541,11 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -804,22 +620,7 @@ RangeExtractContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function extractContents requires 0 parameters");
@@ -853,22 +654,7 @@ RangeCopyContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function copyContents requires 0 parameters");
@@ -898,21 +684,11 @@ RangeInsertNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -950,21 +726,11 @@ RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   if (argc >= 1) {
 
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Node");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
+    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
       return JS_FALSE;
     }
 
@@ -1006,22 +772,7 @@ RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function clone requires 0 parameters");
@@ -1055,9 +806,7 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function toString requires 0 parameters");

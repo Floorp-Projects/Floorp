@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -90,9 +91,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -104,22 +103,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         if (NS_OK == a->GetTarget(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -365,22 +349,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
           if(NS_OK == b->GetRc(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -395,25 +364,11 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -438,13 +393,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_TYPE:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetType(prop);
         
@@ -453,24 +402,14 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_TARGET:
       {
         nsIDOMNode* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kINodeIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Node");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kINodeIID, "Node",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetTarget(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case EVENT_SCREENX:
@@ -540,12 +479,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_ALTKEY:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -556,12 +490,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_CTRLKEY:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -572,12 +501,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_SHIFTKEY:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -588,12 +512,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_METAKEY:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -604,12 +523,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_CANCELBUBBLE:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -791,25 +705,11 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -822,18 +722,7 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeEvent(JSContext *cx, JSObject *obj)
 {
-  nsIDOMEvent *a = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -843,17 +732,7 @@ FinalizeEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateEvent(JSContext *cx, JSObject *obj)
 {
-  nsIDOMEvent *a = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -863,17 +742,7 @@ EnumerateEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveEvent(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMEvent *a = (nsIDOMEvent*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 

@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -63,9 +64,7 @@ GetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCite(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -76,9 +75,7 @@ GetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetDateTime(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -86,25 +83,11 @@ GetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -129,13 +112,7 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_CITE:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCite(prop);
         
@@ -144,38 +121,18 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMODELEMENT_DATETIME:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetDateTime(prop);
         
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -188,18 +145,7 @@ SetHTMLModElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLModElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLModElement *a = (nsIDOMHTMLModElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -209,17 +155,7 @@ FinalizeHTMLModElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLModElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLModElement *a = (nsIDOMHTMLModElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -229,17 +165,7 @@ EnumerateHTMLModElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLModElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMHTMLModElement *a = (nsIDOMHTMLModElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 

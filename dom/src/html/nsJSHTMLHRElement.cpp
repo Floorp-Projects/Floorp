@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -65,9 +66,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -89,9 +88,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetSize(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -102,9 +99,7 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetWidth(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -112,25 +107,11 @@ GetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -155,13 +136,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHRELEMENT_ALIGN:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetAlign(prop);
         
@@ -170,12 +145,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHRELEMENT_NOSHADE:
       {
         PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
+        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
         }
       
@@ -186,13 +156,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHRELEMENT_SIZE:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetSize(prop);
         
@@ -201,38 +165,18 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHRELEMENT_WIDTH:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetWidth(prop);
         
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -245,18 +189,7 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLHRElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLHRElement *a = (nsIDOMHTMLHRElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -266,17 +199,7 @@ FinalizeHTMLHRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLHRElement(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLHRElement *a = (nsIDOMHTMLHRElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -286,17 +209,7 @@ EnumerateHTMLHRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLHRElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMHTMLHRElement *a = (nsIDOMHTMLHRElement*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 

@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -63,9 +64,7 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetData(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -84,25 +83,11 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -127,38 +112,18 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CHARACTERDATA_DATA:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetData(prop);
         
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -171,18 +136,7 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeCharacterData(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCharacterData *a = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -192,17 +146,7 @@ FinalizeCharacterData(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCharacterData(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCharacterData *a = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -212,17 +156,7 @@ EnumerateCharacterData(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCharacterData(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMCharacterData *a = (nsIDOMCharacterData*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 
@@ -261,9 +195,7 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function substringData requires 2 parameters");
@@ -293,13 +225,7 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->AppendData(b0)) {
       return JS_FALSE;
@@ -341,13 +267,7 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       return JS_FALSE;
     }
 
-    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
-    if (nsnull != jsstring1) {
-      b1.SetString(JS_GetStringChars(jsstring1));
-    }
-    else {
-      b1.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->InsertData(b0, b1)) {
       return JS_FALSE;
@@ -440,13 +360,7 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
       return JS_FALSE;
     }
 
-    JSString *jsstring2 = JS_ValueToString(cx, argv[2]);
-    if (nsnull != jsstring2) {
-      b2.SetString(JS_GetStringChars(jsstring2));
-    }
-    else {
-      b2.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->ReplaceData(b0, b1, b2)) {
       return JS_FALSE;

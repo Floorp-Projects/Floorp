@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -63,9 +64,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->GetCssText(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -87,9 +86,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       {
         nsAutoString prop;
         if (NS_OK == a->Item(JSVAL_TO_INT(id), prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -98,13 +95,7 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -129,38 +120,18 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case CSSSTYLEDECLARATION_CSSTEXT:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCssText(prop);
         
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -173,18 +144,7 @@ SetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 PR_STATIC_CALLBACK(void)
 FinalizeCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSStyleDeclaration *a = (nsIDOMCSSStyleDeclaration*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -194,17 +154,7 @@ FinalizeCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSStyleDeclaration *a = (nsIDOMCSSStyleDeclaration*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -214,17 +164,7 @@ EnumerateCSSStyleDeclaration(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSStyleDeclaration(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMCSSStyleDeclaration *a = (nsIDOMCSSStyleDeclaration*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 
@@ -248,21 +188,13 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetPropertyValue(b0, nativeRet)) {
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getPropertyValue requires 1 parameters");
@@ -293,21 +225,13 @@ CSSStyleDeclarationGetPropertyPriority(JSContext *cx, JSObject *obj, uintN argc,
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetPropertyPriority(b0, nativeRet)) {
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getPropertyPriority requires 1 parameters");
@@ -339,29 +263,11 @@ CSSStyleDeclarationSetProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   if (argc >= 3) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
-    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
-    if (nsnull != jsstring1) {
-      b1.SetString(JS_GetStringChars(jsstring1));
-    }
-    else {
-      b1.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b1, cx, argv[1]);
 
-    JSString *jsstring2 = JS_ValueToString(cx, argv[2]);
-    if (nsnull != jsstring2) {
-      b2.SetString(JS_GetStringChars(jsstring2));
-    }
-    else {
-      b2.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->SetProperty(b0, b1, b2)) {
       return JS_FALSE;
@@ -407,9 +313,7 @@ CSSStyleDeclarationItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function item requires 1 parameters");

@@ -18,6 +18,7 @@
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
+#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIJSScriptObject.h"
@@ -96,9 +97,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetTitle(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -109,9 +108,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetReferrer(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -122,9 +119,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetDomain(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -135,9 +130,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetURL(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -149,22 +142,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLElement* prop;
         if (NS_OK == a->GetBody(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -176,22 +154,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetImages(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -203,22 +166,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetApplets(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -230,22 +178,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetLinks(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -257,22 +190,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetForms(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -284,22 +202,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetAnchors(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -310,9 +213,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsAutoString prop;
         if (NS_OK == a->GetCookie(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -325,9 +226,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetAlinkColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -347,9 +246,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetLinkColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -369,9 +266,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetVlinkColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -391,9 +286,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetBgColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -413,9 +306,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetFgColor(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -435,9 +326,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetLastModified(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+          nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -458,22 +347,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetEmbeds(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -494,22 +368,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetLayers(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -530,22 +389,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
           if(NS_OK == b->GetPlugins(&prop)) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
@@ -560,15 +404,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->GetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
   }
   else if (JSVAL_IS_STRING(id)) {
@@ -589,31 +425,10 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         NS_RELEASE(b);
         if (NULL != prop) {
           // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          nsIJSScriptObject *object;
-          if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-            PRBool rval;
-            rval =  object->GetProperty(cx, id, vp);
-            NS_RELEASE(object);
-            return rval;
-          }
+          return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
         }
       }
       else {
@@ -627,13 +442,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->GetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectGetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -658,13 +467,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_TITLE:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetTitle(prop);
         
@@ -673,36 +476,20 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_BODY:
       {
         nsIDOMHTMLElement* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLElementIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLElement");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
+        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIHTMLElementIID, "HTMLElement",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
         a->SetBody(prop);
-        if (prop) NS_RELEASE(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       case HTMLDOCUMENT_COOKIE:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         a->SetCookie(prop);
         
@@ -711,13 +498,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         nsIDOMNSHTMLDocument *b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -735,13 +516,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         nsIDOMNSHTMLDocument *b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -759,13 +534,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         nsIDOMNSHTMLDocument *b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -783,13 +552,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         nsIDOMNSHTMLDocument *b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -807,13 +570,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
+        nsConvertJSValToString(prop, cx, *vp);
       
         nsIDOMNSHTMLDocument *b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -829,25 +586,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-      {
-        nsIJSScriptObject *object;
-        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-          PRBool rval;
-          rval =  object->SetProperty(cx, id, vp);
-          NS_RELEASE(object);
-          return rval;
-        }
-      }
+        return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
   }
   else {
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      PRBool rval;
-      rval =  object->SetProperty(cx, id, vp);
-      NS_RELEASE(object);
-      return rval;
-    }
+    return nsCallJSScriptObjectSetProperty(a, cx, id, vp);
   }
 
   return PR_TRUE;
@@ -860,18 +603,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(void)
 FinalizeHTMLDocument(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-      owner->SetScriptObject(nsnull);
-      NS_RELEASE(owner);
-    }
-
-    NS_RELEASE(a);
-  }
+  nsGenericFinalize(cx, obj);
 }
 
 
@@ -881,17 +613,7 @@ FinalizeHTMLDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLDocument(JSContext *cx, JSObject *obj)
 {
-  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->EnumerateProperty(cx);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericEnumerate(cx, obj);
 }
 
 
@@ -901,17 +623,7 @@ EnumerateHTMLDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLDocument(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(cx, id);
-      NS_RELEASE(object);
-    }
-  }
-  return JS_TRUE;
+  return nsGenericResolve(cx, obj, id);
 }
 
 
@@ -1067,34 +779,13 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetElementById(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getElementById requires 1 parameters");
@@ -1125,34 +816,13 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->GetElementsByName(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getElementsByName requires 1 parameters");
@@ -1192,9 +862,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
       return JS_FALSE;
     }
 
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
+    nsConvertStringToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function getSelection requires 0 parameters");
@@ -1231,34 +899,13 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 1) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
+    nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->NamedItem(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
+    nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function namedItem requires 1 parameters");

@@ -79,6 +79,7 @@ JSStubGen::Generate(char *aFileName,
 
 static const char *kIncludeDefaultsStr = "\n"
 "#include \"jsapi.h\"\n"
+"#include \"nsJSUtils.h\"\n"
 "#include \"nscore.h\"\n"
 "#include \"nsIScriptContext.h\"\n"
 "#include \"nsIJSScriptObject.h\"\n"
@@ -250,15 +251,7 @@ static const char *kPropFuncBeginStr = "\n"
 
 static const char *kPropFuncDefaultStr = 
 "      default:\n"
-"      {\n"
-"        nsIJSScriptObject *object;\n"
-"        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"          PRBool rval;\n"
-"          rval =  object->%sProperty(cx, id, vp);\n"
-"          NS_RELEASE(object);\n"
-"          return rval;\n"
-"        }\n"
-"      }\n"
+"        return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "    }\n"
 "  }\n";
 
@@ -301,13 +294,7 @@ static const char *kPropFuncDefaultItemNonPrimaryStr =
 
 static const char *kPropFuncEndStr = 
 "  else {\n"
-"    nsIJSScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"      PRBool rval;\n"
-"      rval =  object->%sProperty(cx, id, vp);\n"
-"      NS_RELEASE(object);\n"
-"      return rval;\n"
-"    }\n"
+"    return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "  }\n"
 "\n"
 "  return PR_TRUE;\n"
@@ -331,13 +318,7 @@ static const char *kPropFuncNamedItemStr =
 "%s"
 "      }\n"
 "      else {\n"
-"        nsIJSScriptObject *object;\n"
-"        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"          PRBool rval;\n"
-"          rval =  object->%sProperty(cx, id, vp);\n"
-"          NS_RELEASE(object);\n"
-"          return rval;\n"
-"        }\n"
+"        return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "      }\n"
 "    }\n"
 "    else {\n"
@@ -366,13 +347,7 @@ static const char *kPropFuncNamedItemNonPrimaryStr =
 "%s"
 "        }\n"
 "        else {\n"
-"          nsIJSScriptObject *object;\n"
-"          if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"            PRBool rval;\n"
-"            rval =  object->%sProperty(cx, id, vp);\n"
-"            NS_RELEASE(object);\n"
-"            return rval;\n"
-"          }\n"
+"          return nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "        }\n"
 "      }\n"
 "      else {\n"
@@ -539,27 +514,10 @@ static const char *kGetCaseNonPrimaryStr =
 
 static const char *kObjectGetCaseStr = 
 "          // get the js object\n"
-"          if (prop != nsnull) {\n"
-"            nsIScriptObjectOwner *owner = nsnull;\n"
-"            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
-"              JSObject *object = nsnull;\n"
-"              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {\n"
-"                // set the return value\n"
-"                *vp = OBJECT_TO_JSVAL(object);\n"
-"              }\n"
-"              NS_RELEASE(owner);\n"
-"            }\n"
-"            NS_RELEASE(prop);\n"
-"          }\n"
-"          else {\n"
-"            *vp = JSVAL_NULL;\n"
-"          }\n";
+"          nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);\n";
 
 static const char *kStringGetCaseStr = 
-"          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());\n"
-"          // set the return value\n"
-"          *vp = STRING_TO_JSVAL(jsstring);\n";
+"          nsConvertStringToJSVal(prop, cx, vp);\n";
 
 static const char *kIntGetCaseStr = 
 "          *vp = INT_TO_JSVAL(prop);\n";
@@ -670,32 +628,16 @@ static const char *kSetCaseNonPrimaryStr =
 
 
 static const char *kObjectSetCaseStr = 
-"        if (JSVAL_IS_NULL(*vp)) {\n"
-"          prop = nsnull;\n"
-"        }\n"
-"        else if (JSVAL_IS_OBJECT(*vp)) {\n"
-"          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); \n"
-"          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);\n"
-"          if (NS_OK != supports->QueryInterface(kI%sIID, (void **)&prop)) {\n"
-"            JS_ReportError(cx, \"Parameter must be of type %s\");\n"
-"            return JS_FALSE;\n"
-"          }\n"
-"        }\n"
-"        else {\n"
-"          JS_ReportError(cx, \"Parameter must be an object\");\n"
+"        if (PR_FALSE == nsConvertJSValToObject((nsISupports **)&prop,\n"
+"                                                kI%sIID, \"%s\",\n"
+"                                                cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
 
-static const char *kObjectSetCaseEndStr = "if (prop) NS_RELEASE(prop);";
+static const char *kObjectSetCaseEndStr = "NS_IF_RELEASE(prop);";
 
 static const char *kStringSetCaseStr = 
-"        JSString *jsstring;\n"
-"        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {\n"
-"          prop.SetString(JS_GetStringChars(jsstring));\n"
-"        }\n"
-"        else {\n"
-"          prop.SetString((const char *)nsnull);\n"
-"        }\n";
+"        nsConvertJSValToString(prop, cx, *vp);\n";
 
 static const char *kIntSetCaseStr = 
 "        int32 temp;\n"
@@ -708,15 +650,9 @@ static const char *kIntSetCaseStr =
 "        }\n";
 
 static const char *kBoolSetCaseStr =
-"        JSBool temp;\n"
-"        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {\n"  
-"          prop = (%s)temp;\n"
-"        }\n"
-"        else {\n"
-"          JS_ReportError(cx, \"Parameter must be a boolean\");\n"
+"        if (PR_FALSE == nsConvertJSValToBool(&prop, cx, *vp)) {\n"
 "          return JS_FALSE;\n"
 "        }\n";
-
 
 void
 JSStubGen::GeneratePropSetter(ofstream *file,
@@ -735,7 +671,7 @@ JSStubGen::GeneratePropSetter(ofstream *file,
 
   switch (aAttribute.GetType()) {
     case TYPE_BOOLEAN:
-      sprintf(case_buf, kBoolSetCaseStr, attr_type);
+      sprintf(case_buf, kBoolSetCaseStr);
       break;
     case TYPE_LONG:
     case TYPE_SHORT:
@@ -777,18 +713,7 @@ static const char *kFinalizeStr =
 "PR_STATIC_CALLBACK(void)\n"
 "Finalize%s(JSContext *cx, JSObject *obj)\n"
 "{\n"
-"  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  \n"
-"  if (nsnull != a) {\n"
-"    // get the js object\n"
-"    nsIScriptObjectOwner *owner = nsnull;\n"
-"    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
-"      owner->SetScriptObject(nsnull);\n"
-"      NS_RELEASE(owner);\n"
-"    }\n"
-"\n"
-"    NS_RELEASE(a);\n"
-"  }\n"
+"  nsGenericFinalize(cx, obj);\n"
 "}\n";
 
 static const char *kGlobalFinalizeStr = 
@@ -811,8 +736,7 @@ JSStubGen::GenerateFinalize(IdlSpecification &aSpec)
     sprintf(buf, kGlobalFinalizeStr, iface->GetName(), iface->GetName());
   }
   else {
-    sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName(), 
-            iface->GetName(), iface->GetName());
+    sprintf(buf, kFinalizeStr, iface->GetName(), iface->GetName());
   }
   *file << buf;
 }
@@ -825,21 +749,11 @@ static const char *kEnumerateStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Enumerate%s(JSContext *cx, JSObject *obj)\n"
 "{\n"
-"  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  \n"
-"  if (nsnull != a) {\n"
-"    // get the js object\n"
-"    nsIJSScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"      object->EnumerateProperty(cx);\n"
-"      NS_RELEASE(object);\n"
-"    }\n"
-"  }\n"
-"  return JS_TRUE;\n"
+"  return nsGenericEnumerate(cx, obj);\n"
 "}\n";
 
 #define JSGEN_GENERATE_ENUMERATE(buf, className)                           \
-  sprintf(buf, kEnumerateStr, className, className, className, className);
+  sprintf(buf, kEnumerateStr, className, className);
 
 void     
 JSStubGen::GenerateEnumerate(IdlSpecification &aSpec)
@@ -861,21 +775,11 @@ static const char *kResolveStr =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Resolve%s(JSContext *cx, JSObject *obj, jsval id)\n"
 "{\n"
-"  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  \n"
-"  if (nsnull != a) {\n"
-"    // get the js object\n"
-"    nsIJSScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
-"      object->Resolve(cx, id);\n"
-"      NS_RELEASE(object);\n"
-"    }\n"
-"  }\n"
-"  return JS_TRUE;\n"
+"  return nsGenericResolve(cx, obj, id);\n"
 "}\n";
 
 #define JSGEN_GENERATE_RESOLVE(buf, className)                           \
-  sprintf(buf, kResolveStr, className, className, className, className);
+  sprintf(buf, kResolveStr, className, className);
 
 void     
 JSStubGen::GenerateResolve(IdlSpecification &aSpec)
@@ -931,47 +835,27 @@ static const char *kMethodBodyBeginStr = "\n"
 "  if (argc >= %d) {\n";
 
 static const char *kMethodObjectParamStr = "\n"
-"    if (JSVAL_IS_NULL(argv[%d])){\n"
-"      b%d = nsnull;\n"
-"    }\n"
-"    else if (JSVAL_IS_OBJECT(argv[%d])) {\n"
-"      nsISupports *supports%d = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[%d]));\n"
-"      NS_ASSERTION(nsnull != supports%d, \"null pointer\");\n"
-"\n"
-"      if ((nsnull == supports%d) ||\n"
-"          (NS_OK != supports%d->QueryInterface(kI%sIID, (void **)(b%d.Query())))) {\n"
-"        JS_ReportError(cx, \"Parameter must be of type %s\");\n"
-"        return JS_FALSE;\n"
-"      }\n"
-"    }\n"
-"    else {\n"
-"      JS_ReportError(cx, \"Parameter must be an object\");\n"
+"    if (JS_FALSE == nsConvertJSValToObject((nsISupports **)&b%d,\n"
+"                                           kI%sIID,\n"
+"                                           \"%s\",\n"
+"                                           cx,\n"
+"                                           argv[%d])) {\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
 #define JSGEN_GENERATE_OBJECTPARAM(buffer, paramNum, paramType) \
-    sprintf(buffer, kMethodObjectParamStr, paramNum, paramNum, \
-            paramNum, paramNum,  \
-            paramNum, paramNum, paramNum, paramNum, paramType,  \
-            paramNum, paramType)
+    sprintf(buffer, kMethodObjectParamStr, paramNum, paramType,  \
+            paramType, paramNum)
 
 
 static const char *kMethodStringParamStr = "\n"
-"    JSString *jsstring%d = JS_ValueToString(cx, argv[%d]);\n"
-"    if (nsnull != jsstring%d) {\n"
-"      b%d.SetString(JS_GetStringChars(jsstring%d));\n"
-"    }\n"
-"    else {\n"
-"      b%d.SetString(\"\");   // Should this really be null?? \n"
-"    }\n";
+"    nsConvertJSValToString(b%d, cx, argv[%d]);\n";
 
 #define JSGEN_GENERATE_STRINGPARAM(buffer, paramNum) \
-    sprintf(buffer, kMethodStringParamStr, paramNum, paramNum, \
-            paramNum, paramNum, paramNum, paramNum)
+    sprintf(buffer, kMethodStringParamStr, paramNum, paramNum)
 
 static const char *kMethodBoolParamStr = "\n"
-"    if (!JS_ValueToBoolean(cx, argv[%d], &b%d)) {\n"
-"      JS_ReportError(cx, \"Parameter must be a boolean\");\n"
+"    if (!nsConvertJSValToBool(&b%d, cx, argv[%d])) {\n"
 "      return JS_FALSE;\n"
 "    }\n";
 
@@ -1006,27 +890,10 @@ static const char *kMethodBodyMiddleNoReturnStr =
 "\n";
 
 static const char *kMethodObjectRetStr = 
-"    if (nativeRet != nsnull) {\n"
-"      nsIScriptObjectOwner *owner = nsnull;\n"
-"      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
-"        JSObject *object = nsnull;\n"
-"        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {\n"
-"          // set the return value\n"
-"          *rval = OBJECT_TO_JSVAL(object);\n"
-"        }\n"
-"        NS_RELEASE(owner);\n"
-"      }\n"
-"      NS_RELEASE(nativeRet);\n"
-"    }\n"
-"    else {\n"
-"      *rval = JSVAL_NULL;\n"
-"    }\n";
+"    nsConvertObjectToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodStringRetStr = 
-"    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());\n"
-"    // set the return value\n"
-"    *rval = STRING_TO_JSVAL(jsstring);\n";
+"    nsConvertStringToJSVal(nativeRet, cx, rval);\n";
 
 static const char *kMethodIntRetStr = 
 "    *rval = INT_TO_JSVAL(nativeRet);\n";

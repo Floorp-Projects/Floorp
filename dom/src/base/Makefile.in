@@ -39,8 +39,11 @@ CPPSRCS =			 \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
 	nsFrameList.cpp		 \
-	nsJSSecurityManager.cpp \
+	nsJSSecurityManager.cpp  \
+	nsJSUtils.cpp		 \
 	$(NULL)
+
+EXPORTS = nsJSUtils.h
 
 include $(topsrcdir)/config/config.mk
 
