@@ -96,10 +96,6 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
     {
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
-      nsString outStr;
-      mRange->ToString(outStr);
-      cout << "The results of Range::ToString() on deletion range:" << endl;
-      cout << outStr << endl;
     }         
   }
 #endif
@@ -313,17 +309,6 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
       {
         txn->Init(mEditor, textNode, start, numToDelete);
         AppendChild(txn);
-        
-#ifdef NS_DEBUG
-        if (gNoisy) 
-        {
-          nsString delStr;
-          textNode->SubstringData(start, numToDelete, delStr);
-          cout << "deleting portion of text node:" << endl;
-          cout << delStr << endl;
-        }
-#endif
-
       }
       else
         return NS_ERROR_NULL_POINTER;
@@ -342,7 +327,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 
   nsCOMPtr<nsIContentIterator> iter;
   
-  result = nsRepository::CreateInstance(kSubtreeIteratorCID,
+  result = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
                                         nsnull,
                                         nsIContentIterator::GetIID(), 
                                         getter_AddRefs(iter));
@@ -366,23 +351,6 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
       {
         txn->Init(node);
         AppendChild(txn);
-
-#ifdef NS_DEBUG
-        if (gNoisy)
-        {
-          nsString delStr;
-          nsCOMPtr<nsIDOMRange> range;
-          nsRepository::CreateInstance(kRangeCID,
-                                        nsnull,
-                                        nsIDOMRange::GetIID(), 
-                                        getter_AddRefs(range));
-          range->SelectNode(node);
-          range->ToString(delStr);
-          cout << "deleting node:" << endl;
-          cout << delStr << endl;
-        }
-#endif
-
       }
       else
         return NS_ERROR_NULL_POINTER;
