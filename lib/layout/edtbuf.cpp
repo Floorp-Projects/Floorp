@@ -15056,7 +15056,7 @@ CEditTableCellElement* CEditBuffer::SelectCell(XP_Bool bSelect, LO_CellStruct *p
             return NULL;
     }
 
-    XP_Bool bWasSelected = (XP_Bool)pLoCell->ele_attrmask & LO_ELE_SELECTED;
+    XP_Bool bWasSelected = (pLoCell->ele_attrmask & LO_ELE_SELECTED) ? TRUE : FALSE;
 
     // Get corresponding Edit cell if not supplied
     if( !pEdCell )
@@ -15153,7 +15153,7 @@ void CEditBuffer::DisplaySpecialCellSelection( CEditTableCellElement *pFocusCell
         LO_CellStruct *pLoCell = m_SelectedLoCells[i];
         CEditTableCellElement *pEdCell = m_SelectedEdCells[i];
         XP_ASSERT(pEdCell);
-        XP_Bool bWasSpecial = (XP_Bool)pLoCell->ele_attrmask & LO_ELE_SELECTED_SPECIAL;
+        XP_Bool bWasSpecial = (pLoCell->ele_attrmask & LO_ELE_SELECTED_SPECIAL) ? TRUE : FALSE;
 
         if( pEdCell == pFocusCell )
         {

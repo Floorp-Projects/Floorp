@@ -3476,22 +3476,22 @@ void CEditTableElement::GetParentSize(MWContext *pContext, int32 *pWidth, int32 
 void CEditTableElement::SetSizeMode(MWContext *pContext, int iMode)
 {
     int32 iParentWidth, iParentHeight;
-    XP_Bool bCellPercent = (XP_Bool)(iMode & ED_MODE_CELL_PERCENT);
-    XP_Bool bTablePercent = (XP_Bool)(iMode & ED_MODE_TABLE_PERCENT);
-    XP_Bool bCellPixels = (XP_Bool)(iMode & ED_MODE_CELL_PIXELS);
-    XP_Bool bTablePixels = (XP_Bool)(iMode & ED_MODE_TABLE_PIXELS);
-    XP_Bool bUseCols = (XP_Bool)(iMode & ED_MODE_USE_COLS);
-    XP_Bool bNoCols = (XP_Bool)(iMode & ED_MODE_NO_COLS);
+    XP_Bool bCellPercent = (iMode & ED_MODE_CELL_PERCENT) ? TRUE : FALSE;
+    XP_Bool bTablePercent = (iMode & ED_MODE_TABLE_PERCENT) ? TRUE : FALSE;
+    XP_Bool bCellPixels = (iMode & ED_MODE_CELL_PIXELS) ? TRUE : FALSE;
+    XP_Bool bTablePixels = (iMode & ED_MODE_TABLE_PIXELS) ? TRUE : FALSE;
+    XP_Bool bUseCols = (iMode & ED_MODE_USE_COLS) ? TRUE : FALSE;
+    XP_Bool bNoCols = (iMode & ED_MODE_NO_COLS) ? TRUE : FALSE;
     XP_Bool bChanged = FALSE;
-    XP_Bool bSetTableWidth = iMode & ED_MODE_USE_TABLE_WIDTH;
-    XP_Bool bClearTableWidth = iMode & ED_MODE_NO_TABLE_WIDTH;
-    XP_Bool bSetTableHeight = iMode & ED_MODE_USE_TABLE_HEIGHT;
-    XP_Bool bClearTableHeight = iMode & ED_MODE_NO_TABLE_HEIGHT;
+    XP_Bool bSetTableWidth = (iMode & ED_MODE_USE_TABLE_WIDTH) ? TRUE : FALSE;
+    XP_Bool bClearTableWidth = (iMode & ED_MODE_NO_TABLE_WIDTH) ? TRUE : FALSE;
+    XP_Bool bSetTableHeight = (iMode & ED_MODE_USE_TABLE_HEIGHT) ? TRUE : FALSE;
+    XP_Bool bClearTableHeight = (iMode & ED_MODE_NO_TABLE_HEIGHT) ? TRUE : FALSE;
 
-    XP_Bool bSetCellWidth = iMode & ED_MODE_USE_CELL_WIDTH;
-    XP_Bool bClearCellWidth = iMode & ED_MODE_NO_CELL_WIDTH;
-    XP_Bool bSetCellHeight = iMode & ED_MODE_USE_CELL_HEIGHT;
-    XP_Bool bClearCellHeight = iMode & ED_MODE_NO_CELL_HEIGHT;
+    XP_Bool bSetCellWidth = (iMode & ED_MODE_USE_CELL_WIDTH) ? TRUE : FALSE;
+    XP_Bool bClearCellWidth = (iMode & ED_MODE_NO_CELL_WIDTH) ? TRUE : FALSE;
+    XP_Bool bSetCellHeight = (iMode & ED_MODE_USE_CELL_HEIGHT) ? TRUE : FALSE;
+    XP_Bool bClearCellHeight = (iMode & ED_MODE_NO_CELL_HEIGHT) ? TRUE : FALSE;
     
     //XP_TRACE(("SetSizeMode: bPixels=%d, bPercent=%d, bSetCellWidth=%d, bClearCellWidth=%d", bPixels, bPercent, bSetCellWidth, bClearCellWidth));
 
@@ -9237,8 +9237,8 @@ CEditImageElement::CEditImageElement(IStreamIn *pStreamIn, CEditBuffer *pBuffer)
             m_href(ED_LINK_ID_NONE),
             m_align(ED_ALIGN_DEFAULT) {
     m_align = (ED_Alignment) pStreamIn->ReadInt();
-    m_bSizeWasGiven = (XP_Bool) pStreamIn->ReadInt();
-    m_bSizeIsBogus = (XP_Bool) pStreamIn->ReadInt();
+    m_bSizeWasGiven = pStreamIn->ReadInt() ? TRUE : FALSE;
+    m_bSizeIsBogus = pStreamIn->ReadInt() ? TRUE : FALSE;
     m_iHeight = pStreamIn->ReadInt();
     m_iWidth = pStreamIn->ReadInt();
     m_bWidthPercent =  pStreamIn->ReadInt();
@@ -9994,7 +9994,7 @@ CEditIconElement::CEditIconElement(IStreamIn *pStreamIn, CEditBuffer *pBuffer):
             {
     m_originalTagType = (TagType) pStreamIn->ReadInt();
     m_iconTag = pStreamIn->ReadInt();
-    m_bEndTag = (XP_Bool) pStreamIn->ReadInt();
+    m_bEndTag = pStreamIn->ReadInt() ? TRUE : FALSE;
     m_pSpoofData = pStreamIn->ReadZString();
 }
 

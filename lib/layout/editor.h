@@ -3871,7 +3871,7 @@ public:
     void ClearTableIfContainsElement(CEditElement *pElement);
     
     XP_Bool IsTableSelected() {return m_pSelectedEdTable != NULL; }
-    XP_Bool IsTableOrCellSelected() { return (XP_Bool)(m_pSelectedEdTable ? TRUE : m_SelectedEdCells.Size()); }
+    XP_Bool IsTableOrCellSelected() { return m_pSelectedEdTable ? TRUE : (m_SelectedEdCells.Size() > 0 ? TRUE : FALSE); }
     int     GetSelectedCellCount() { return m_SelectedEdCells.Size(); }
     
     // New cell with space management. 
