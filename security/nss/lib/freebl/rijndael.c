@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.8 2001/10/08 19:06:31 ian.mcgreer%sun.com Exp $
+ * $Id: rijndael.c,v 1.9 2001/10/30 22:11:49 ian.mcgreer%sun.com Exp $
  */
 
 #include "prinit.h"
@@ -531,16 +531,17 @@ rijndael_invkey_expansion(AESContext *cx, unsigned char *key, unsigned int Nk)
 #define BYTE3WORD(w) ((w) & 0x000000ff)
 #endif
 
-#define COLUMN_0(array) *((PRUint32 *)(array     ))
-#define COLUMN_1(array) *((PRUint32 *)(array +  4))
-#define COLUMN_2(array) *((PRUint32 *)(array +  8))
-#define COLUMN_3(array) *((PRUint32 *)(array + 12))
-#define COLUMN_4(array) *((PRUint32 *)(array + 16))
-#define COLUMN_5(array) *((PRUint32 *)(array + 20))
-#define COLUMN_6(array) *((PRUint32 *)(array + 24))
-#define COLUMN_7(array) *((PRUint32 *)(array + 28))
+typedef union {
+    PRUint32 w[4];
+    PRUint8  b[16];
+} rijndael_state;
 
-#define STATE_BYTE(i) clone[i]
+#define COLUMN_0(state) state.w[0]
+#define COLUMN_1(state) state.w[1]
+#define COLUMN_2(state) state.w[2]
+#define COLUMN_3(state) state.w[3]
+
+#define STATE_BYTE(i) state.b[i]
 
 static SECStatus 
 rijndael_encryptBlock128(AESContext *cx, 
@@ -549,12 +550,13 @@ rijndael_encryptBlock128(AESContext *cx,
 {
     unsigned int r;
     PRUint32 *roundkeyw;
-    PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
+    rijndael_state state;
+    PRUint32 C0, C1, C2, C3;
 #if defined(_X86_)
 #define pIn input
 #define pOut output
 #else
-    unsigned char * pIn, *pOut;
+    unsigned char *pIn, *pOut;
     PRUint32 inBuf[4], outBuf[4];
 
     if ((ptrdiff_t)input & 0x3) {
@@ -571,57 +573,61 @@ rijndael_encryptBlock128(AESContext *cx,
 #endif
     roundkeyw = cx->expandedKey;
     /* Step 1: Add Round Key 0 to initial state */
-    COLUMN_0(clone) = COLUMN_0(pIn) ^ *roundkeyw++;
-    COLUMN_1(clone) = COLUMN_1(pIn) ^ *roundkeyw++;
-    COLUMN_2(clone) = COLUMN_2(pIn) ^ *roundkeyw++;
-    COLUMN_3(clone) = COLUMN_3(pIn) ^ *roundkeyw++;
+    COLUMN_0(state) = *((PRUint32 *)(pIn     )) ^ *roundkeyw++;
+    COLUMN_1(state) = *((PRUint32 *)(pIn + 4 )) ^ *roundkeyw++;
+    COLUMN_2(state) = *((PRUint32 *)(pIn + 8 )) ^ *roundkeyw++;
+    COLUMN_3(state) = *((PRUint32 *)(pIn + 12)) ^ *roundkeyw++;
     /* Step 2: Loop over rounds [1..NR-1] */
     for (r=1; r<cx->Nr; ++r) {
         /* Do ShiftRow, ByteSub, and MixColumn all at once */
-	COLUMN_0(pOut  ) = T0(STATE_BYTE(0))  ^
-	                   T1(STATE_BYTE(5))  ^
-	                   T2(STATE_BYTE(10)) ^
-	                   T3(STATE_BYTE(15));
-	COLUMN_1(pOut  ) = T0(STATE_BYTE(4))  ^
-	                   T1(STATE_BYTE(9))  ^
-	                   T2(STATE_BYTE(14)) ^
-	                   T3(STATE_BYTE(3));
-	COLUMN_2(pOut  ) = T0(STATE_BYTE(8))  ^
-	                   T1(STATE_BYTE(13)) ^
-	                   T2(STATE_BYTE(2))  ^
-	                   T3(STATE_BYTE(7));
-	COLUMN_3(pOut  ) = T0(STATE_BYTE(12)) ^
-	                   T1(STATE_BYTE(1))  ^
-	                   T2(STATE_BYTE(6))  ^
-	                   T3(STATE_BYTE(11));
+	C0 = T0(STATE_BYTE(0))  ^
+	     T1(STATE_BYTE(5))  ^
+	     T2(STATE_BYTE(10)) ^
+	     T3(STATE_BYTE(15));
+	C1 = T0(STATE_BYTE(4))  ^
+	     T1(STATE_BYTE(9))  ^
+	     T2(STATE_BYTE(14)) ^
+	     T3(STATE_BYTE(3));
+	C2 = T0(STATE_BYTE(8))  ^
+	     T1(STATE_BYTE(13)) ^
+	     T2(STATE_BYTE(2))  ^
+	     T3(STATE_BYTE(7));
+	C3 = T0(STATE_BYTE(12)) ^
+	     T1(STATE_BYTE(1))  ^
+	     T2(STATE_BYTE(6))  ^
+	     T3(STATE_BYTE(11));
 	/* Round key addition */
-	COLUMN_0(clone) = COLUMN_0(pOut  ) ^ *roundkeyw++;
-	COLUMN_1(clone) = COLUMN_1(pOut  ) ^ *roundkeyw++;
-	COLUMN_2(clone) = COLUMN_2(pOut  ) ^ *roundkeyw++;
-	COLUMN_3(clone) = COLUMN_3(pOut  ) ^ *roundkeyw++;
+	COLUMN_0(state) = C0 ^ *roundkeyw++;
+	COLUMN_1(state) = C1 ^ *roundkeyw++;
+	COLUMN_2(state) = C2 ^ *roundkeyw++;
+	COLUMN_3(state) = C3 ^ *roundkeyw++;
     }
     /* Step 3: Do the last round */
     /* Final round does not employ MixColumn */
-    COLUMN_0(pOut  ) = ((BYTE0WORD(T2(STATE_BYTE(0))))   |
-                        (BYTE1WORD(T3(STATE_BYTE(5))))   |
-                        (BYTE2WORD(T0(STATE_BYTE(10))))  |
-                        (BYTE3WORD(T1(STATE_BYTE(15)))))  ^
-	                *roundkeyw++;
-    COLUMN_1(pOut  ) = ((BYTE0WORD(T2(STATE_BYTE(4))))   |
-                        (BYTE1WORD(T3(STATE_BYTE(9))))   |
-                        (BYTE2WORD(T0(STATE_BYTE(14))))  |
-                        (BYTE3WORD(T1(STATE_BYTE(3)))))   ^
-	                *roundkeyw++;
-    COLUMN_2(pOut  ) = ((BYTE0WORD(T2(STATE_BYTE(8))))   |
-                        (BYTE1WORD(T3(STATE_BYTE(13))))  |
-                        (BYTE2WORD(T0(STATE_BYTE(2))))   |
-                        (BYTE3WORD(T1(STATE_BYTE(7)))))   ^
-	                *roundkeyw++;
-    COLUMN_3(pOut  ) = ((BYTE0WORD(T2(STATE_BYTE(12))))  |
-                        (BYTE1WORD(T3(STATE_BYTE(1))))   |
-                        (BYTE2WORD(T0(STATE_BYTE(6))))   |
-                        (BYTE3WORD(T1(STATE_BYTE(11)))))  ^
-	                *roundkeyw++;
+    C0 = ((BYTE0WORD(T2(STATE_BYTE(0))))   |
+          (BYTE1WORD(T3(STATE_BYTE(5))))   |
+          (BYTE2WORD(T0(STATE_BYTE(10))))  |
+          (BYTE3WORD(T1(STATE_BYTE(15)))))  ^
+          *roundkeyw++;
+    C1 = ((BYTE0WORD(T2(STATE_BYTE(4))))   |
+          (BYTE1WORD(T3(STATE_BYTE(9))))   |
+          (BYTE2WORD(T0(STATE_BYTE(14))))  |
+          (BYTE3WORD(T1(STATE_BYTE(3)))))   ^
+          *roundkeyw++;
+    C2 = ((BYTE0WORD(T2(STATE_BYTE(8))))   |
+          (BYTE1WORD(T3(STATE_BYTE(13))))  |
+          (BYTE2WORD(T0(STATE_BYTE(2))))   |
+          (BYTE3WORD(T1(STATE_BYTE(7)))))   ^
+          *roundkeyw++;
+    C3 = ((BYTE0WORD(T2(STATE_BYTE(12))))  |
+          (BYTE1WORD(T3(STATE_BYTE(1))))   |
+          (BYTE2WORD(T0(STATE_BYTE(6))))   |
+          (BYTE3WORD(T1(STATE_BYTE(11)))))  ^
+          *roundkeyw++;
+    *((PRUint32 *) pOut     )  = C0;
+    *((PRUint32 *)(pOut + 4))  = C1;
+    *((PRUint32 *)(pOut + 8))  = C2;
+    *((PRUint32 *)(pOut + 12)) = C3;
 #if defined(_X86_)
 #undef pIn
 #undef pOut
@@ -640,12 +646,13 @@ rijndael_decryptBlock128(AESContext *cx,
 {
     int r;
     PRUint32 *roundkeyw;
-    PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
+    rijndael_state state;
+    PRUint32 C0, C1, C2, C3;
 #if defined(_X86_)
 #define pIn input
 #define pOut output
 #else
-    unsigned char * pIn, *pOut;
+    unsigned char *pIn, *pOut;
     PRUint32 inBuf[4], outBuf[4];
 
     if ((ptrdiff_t)input & 0x3) {
@@ -660,60 +667,59 @@ rijndael_decryptBlock128(AESContext *cx,
 	pOut = (unsigned char *)output;
     }
 #endif
-
     roundkeyw = cx->expandedKey + cx->Nb * cx->Nr + 3;
     /* reverse the final key addition */
-    COLUMN_3(clone) = COLUMN_3(pIn) ^ *roundkeyw--;
-    COLUMN_2(clone) = COLUMN_2(pIn) ^ *roundkeyw--;
-    COLUMN_1(clone) = COLUMN_1(pIn) ^ *roundkeyw--;
-    COLUMN_0(clone) = COLUMN_0(pIn) ^ *roundkeyw--;
+    COLUMN_3(state) = *((PRUint32 *)(pIn + 12)) ^ *roundkeyw--;
+    COLUMN_2(state) = *((PRUint32 *)(pIn +  8)) ^ *roundkeyw--;
+    COLUMN_1(state) = *((PRUint32 *)(pIn +  4)) ^ *roundkeyw--;
+    COLUMN_0(state) = *((PRUint32 *)(pIn     )) ^ *roundkeyw--;
     /* Loop over rounds in reverse [NR..1] */
     for (r=cx->Nr; r>1; --r) {
 	/* Invert the (InvByteSub*InvMixColumn)(InvShiftRow(state)) */
-	COLUMN_0(pOut)   = TInv0(STATE_BYTE(0))  ^
-	                   TInv1(STATE_BYTE(13)) ^
-	                   TInv2(STATE_BYTE(10)) ^
-	                   TInv3(STATE_BYTE(7));
-	COLUMN_1(pOut)   = TInv0(STATE_BYTE(4))  ^
-	                   TInv1(STATE_BYTE(1))  ^
-	                   TInv2(STATE_BYTE(14)) ^
-	                   TInv3(STATE_BYTE(11));
-	COLUMN_2(pOut)   = TInv0(STATE_BYTE(8))  ^
-	                   TInv1(STATE_BYTE(5))  ^
-	                   TInv2(STATE_BYTE(2))  ^
-	                   TInv3(STATE_BYTE(15));
-	COLUMN_3(pOut)   = TInv0(STATE_BYTE(12)) ^
-	                   TInv1(STATE_BYTE(9))  ^
-	                   TInv2(STATE_BYTE(6))  ^
-	                   TInv3(STATE_BYTE(3));
+	C0 = TInv0(STATE_BYTE(0))  ^
+	     TInv1(STATE_BYTE(13)) ^
+	     TInv2(STATE_BYTE(10)) ^
+	     TInv3(STATE_BYTE(7));
+	C1 = TInv0(STATE_BYTE(4))  ^
+	     TInv1(STATE_BYTE(1))  ^
+	     TInv2(STATE_BYTE(14)) ^
+	     TInv3(STATE_BYTE(11));
+	C2 = TInv0(STATE_BYTE(8))  ^
+	     TInv1(STATE_BYTE(5))  ^
+	     TInv2(STATE_BYTE(2))  ^
+	     TInv3(STATE_BYTE(15));
+	C3 = TInv0(STATE_BYTE(12)) ^
+	     TInv1(STATE_BYTE(9))  ^
+	     TInv2(STATE_BYTE(6))  ^
+	     TInv3(STATE_BYTE(3));
 	/* Invert the key addition step */
-	COLUMN_3(clone) = COLUMN_3(pOut) ^ *roundkeyw--;
-	COLUMN_2(clone) = COLUMN_2(pOut) ^ *roundkeyw--;
-	COLUMN_1(clone) = COLUMN_1(pOut) ^ *roundkeyw--;
-	COLUMN_0(clone) = COLUMN_0(pOut) ^ *roundkeyw--;
+	COLUMN_3(state) = C3 ^ *roundkeyw--;
+	COLUMN_2(state) = C2 ^ *roundkeyw--;
+	COLUMN_1(state) = C1 ^ *roundkeyw--;
+	COLUMN_0(state) = C0 ^ *roundkeyw--;
     }
     /* inverse sub */
-    pOut[ 0] = SINV(clone[ 0]);
-    pOut[ 1] = SINV(clone[13]);
-    pOut[ 2] = SINV(clone[10]);
-    pOut[ 3] = SINV(clone[ 7]);
-    pOut[ 4] = SINV(clone[ 4]);
-    pOut[ 5] = SINV(clone[ 1]);
-    pOut[ 6] = SINV(clone[14]);
-    pOut[ 7] = SINV(clone[11]);
-    pOut[ 8] = SINV(clone[ 8]);
-    pOut[ 9] = SINV(clone[ 5]);
-    pOut[10] = SINV(clone[ 2]);
-    pOut[11] = SINV(clone[15]);
-    pOut[12] = SINV(clone[12]);
-    pOut[13] = SINV(clone[ 9]);
-    pOut[14] = SINV(clone[ 6]);
-    pOut[15] = SINV(clone[ 3]);
+    pOut[ 0] = SINV(STATE_BYTE( 0));
+    pOut[ 1] = SINV(STATE_BYTE(13));
+    pOut[ 2] = SINV(STATE_BYTE(10));
+    pOut[ 3] = SINV(STATE_BYTE( 7));
+    pOut[ 4] = SINV(STATE_BYTE( 4));
+    pOut[ 5] = SINV(STATE_BYTE( 1));
+    pOut[ 6] = SINV(STATE_BYTE(14));
+    pOut[ 7] = SINV(STATE_BYTE(11));
+    pOut[ 8] = SINV(STATE_BYTE( 8));
+    pOut[ 9] = SINV(STATE_BYTE( 5));
+    pOut[10] = SINV(STATE_BYTE( 2));
+    pOut[11] = SINV(STATE_BYTE(15));
+    pOut[12] = SINV(STATE_BYTE(12));
+    pOut[13] = SINV(STATE_BYTE( 9));
+    pOut[14] = SINV(STATE_BYTE( 6));
+    pOut[15] = SINV(STATE_BYTE( 3));
     /* final key addition */
-    COLUMN_3(pOut) ^= *roundkeyw--;
-    COLUMN_2(pOut) ^= *roundkeyw--;
-    COLUMN_1(pOut) ^= *roundkeyw--;
-    COLUMN_0(pOut) ^= *roundkeyw--;
+    *((PRUint32 *)(pOut + 12)) ^= *roundkeyw--;
+    *((PRUint32 *)(pOut +  8)) ^= *roundkeyw--;
+    *((PRUint32 *)(pOut +  4)) ^= *roundkeyw--;
+    *((PRUint32 *) pOut      ) ^= *roundkeyw--;
 #if defined(_X86_)
 #undef pIn
 #undef pOut
