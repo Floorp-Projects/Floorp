@@ -66,6 +66,7 @@
 #include "nsICategoryManager.h"
 
 #include "nsAtomService.h"
+#include "nsTraceRefcnt.h"
 
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
@@ -654,7 +655,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     nsMemoryImpl::Shutdown();
     NS_PurgeAtomTable();
 
-#ifdef DEBUG
+#if (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING))
     nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
 #endif
