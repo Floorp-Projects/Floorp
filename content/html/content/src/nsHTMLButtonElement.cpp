@@ -236,8 +236,9 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLButtonElement::GetType(nsString& aType)
 {
-  aType.Assign("button");
-  return NS_OK;
+  return AttributeToString(nsHTMLAtoms::type,
+                           nsHTMLValue(mType, eHTMLUnit_Enumerated),
+                           aType);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
