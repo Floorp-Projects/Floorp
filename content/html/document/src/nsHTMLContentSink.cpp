@@ -2294,7 +2294,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         }
       }
     } else {
-      nsIContent* content;
+      nsITextContent* content;
       rv = NS_NewTextNode(&content);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2302,8 +2302,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
       content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       // Set the text in the text node
-      nsCOMPtr<nsITextContent> text(do_QueryInterface(content));
-      text->SetText(mText, mTextLength, PR_FALSE);
+      content->SetText(mText, mTextLength, PR_FALSE);
 
       // Eat up the rest of the text up in state.
       mLastTextNode = content;
@@ -3161,14 +3160,11 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   rv = NS_NewHTMLTitleElement(getter_AddRefs(it), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> text;
+  nsCOMPtr<nsITextContent> text;
   rv = NS_NewTextNode(getter_AddRefs(text));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text));
-  NS_ENSURE_TRUE(tc, NS_ERROR_UNEXPECTED);
-
-  tc->SetData(mTitle);
+  text->SetText(mTitle, PR_TRUE);
 
   it->AppendChildTo(text, PR_FALSE, PR_FALSE);
   text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
@@ -5674,14 +5670,12 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // content of the script tag
 
   if (!script.IsEmpty()) {
-    nsCOMPtr<nsIContent> text;
+    nsCOMPtr<nsITextContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text, &rv));
-    if (NS_OK == rv) {
-      tc->SetData(script);
-    }
+    text->SetText(script, PR_TRUE);
+
     element->AppendChildTo(text, PR_FALSE, PR_FALSE);
     text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   }
@@ -5801,14 +5795,11 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if (!content.IsEmpty()) {
     // Create a text node holding the content
-    nsCOMPtr<nsIContent> text;
+    nsCOMPtr<nsITextContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMText> tc = do_QueryInterface(text);
-    NS_ENSURE_TRUE(tc, NS_ERROR_UNEXPECTED);
-
-    tc->SetData(content);
+    text->SetText(content, PR_TRUE);
 
     element->AppendChildTo(text, PR_FALSE, PR_FALSE);
   }

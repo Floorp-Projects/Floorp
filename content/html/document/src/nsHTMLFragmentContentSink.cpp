@@ -834,13 +834,11 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsStr
   
   if(aContent) {
     if (!aText.IsEmpty()) {
-      nsCOMPtr<nsIContent> text;
+      nsCOMPtr<nsITextContent> text;
       result = NS_NewTextNode(getter_AddRefs(text));
       if (NS_SUCCEEDED(result)) {
-        nsCOMPtr<nsIDOMText> tc=do_QueryInterface(text,&result);
-        if (NS_SUCCEEDED(result)) {
-          tc->SetData(aText);
-        }
+        text->SetText(aText, PR_TRUE);
+
         result=aContent->AppendChildTo(text, PR_FALSE, PR_FALSE);
       }
     }
@@ -851,32 +849,27 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsStr
 nsresult
 nsHTMLFragmentContentSink::FlushText()
 {
-  nsresult rv = NS_OK;
-  if (0 != mTextLength) {
-    nsIContent* content;
-    rv = NS_NewTextNode(&content);
-    if (NS_OK == rv) {
-      
-      // Set the text in the text node
-      nsITextContent* text = nsnull;
-      content->QueryInterface(NS_GET_IID(nsITextContent), (void**) &text);
-      text->SetText(mText, mTextLength, PR_FALSE);
-      NS_RELEASE(text);
-
-      // Add text to its parent
-      nsIContent *parent = GetCurrentContent();
-      
-      if (nsnull == parent) {
-        parent = mRoot;
-      }
-      
-      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
-
-      NS_RELEASE(content);
-    }
-
-    mTextLength = 0;
+  if (0 == mTextLength) {
+    return NS_OK;
   }
+
+  nsCOMPtr<nsITextContent> content;
+  nsresult rv = NS_NewTextNode(getter_AddRefs(content));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the text in the text node
+  content->SetText(mText, mTextLength, PR_FALSE);
+
+  // Add text to its parent
+  nsIContent *parent = GetCurrentContent();
+
+  if (!parent) {
+    parent = mRoot;
+  }
+
+  rv = parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+
+  mTextLength = 0;
 
   return rv;
 }

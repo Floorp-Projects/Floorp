@@ -141,7 +141,7 @@ public:
 
 // XXX These belong elsewhere
 extern nsresult
-NS_NewTextNode(nsIContent** aResult);
+NS_NewTextNode(nsITextContent** aResult);
 
 extern nsresult
 NS_NewCommentNode(nsIContent** aResult);

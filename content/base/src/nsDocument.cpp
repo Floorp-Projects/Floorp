@@ -2378,10 +2378,12 @@ nsDocument::CreateElementNS(const nsAString & namespaceURI,
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 {
-  nsCOMPtr<nsIContent> text;
+  *aReturn = nsnull;
+
+  nsCOMPtr<nsITextContent> text;
   nsresult rv = NS_NewTextNode(getter_AddRefs(text));
 
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
     rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
     (*aReturn)->AppendData(aData);
   }

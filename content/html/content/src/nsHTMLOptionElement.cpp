@@ -561,10 +561,10 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
   PRInt32 numNodes, i;
   PRBool usedExistingTextNode = PR_FALSE;  // Do we need to create a text node?
 
-  nsresult result = ChildCount(numNodes);
+  nsresult rv = ChildCount(numNodes);
 
-  if (NS_FAILED(result)) {
-    return result;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   for (i = 0; i < numNodes; i++) {
@@ -572,51 +572,43 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
 
     ChildAt(i, *getter_AddRefs(node));
 
-    if (node) {
-      nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
+    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
 
-      if (domText) {
-        result = domText->SetData(aText);
+    if (domText) {
+      rv = domText->SetData(aText);
 
-        if (NS_SUCCEEDED(result)) {
-          // If we used an existing node, the notification will not happen (the
-          // notification typically happens in AppendChildTo).
-          NotifyTextChanged();
-          usedExistingTextNode = PR_TRUE;
-        }
-
-        break;
+      if (NS_SUCCEEDED(rv)) {
+        // If we used an existing node, the notification will not happen (the
+        // notification typically happens in AppendChildTo).
+        NotifyTextChanged();
+        usedExistingTextNode = PR_TRUE;
       }
+
+      break;
     }
   }
 
   if (!usedExistingTextNode) {
-    nsCOMPtr<nsIContent> text;
-    result = NS_NewTextNode(getter_AddRefs(text));
-    if (NS_OK == result) {
-      nsCOMPtr<nsIDOMText> domtext(do_QueryInterface(text));
+    nsCOMPtr<nsITextContent> text;
+    rv = NS_NewTextNode(getter_AddRefs(text));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (domtext) {
-        result = domtext->SetData(aText);
+    rv = text->SetText(aText, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-	    if (NS_SUCCEEDED(result)) {
-          result = AppendChildTo(text, PR_TRUE, PR_FALSE);
+    rv = AppendChildTo(text, PR_TRUE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-          if (NS_SUCCEEDED(result)) {
-            nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIDocument> doc;
 
-            result = GetDocument(*getter_AddRefs(doc));
+    GetDocument(*getter_AddRefs(doc));
 
-            if (NS_SUCCEEDED(result)) {
-              text->SetDocument(doc, PR_FALSE, PR_TRUE);
-            }
-          }
-        }
-      }
+    if (doc) {
+      rv = text->SetDocument(doc, PR_FALSE, PR_TRUE);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -739,29 +731,24 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
     JSString* jsstr = JS_ValueToString(aContext, argv[0]);
     if (jsstr) {
       // Create a new text node and append it to the option
-      nsCOMPtr<nsIContent> content;
+      nsCOMPtr<nsITextContent> textContent;
 
-      result = NS_NewTextNode(getter_AddRefs(content));
+      result = NS_NewTextNode(getter_AddRefs(textContent));
       if (NS_FAILED(result)) {
         return result;
       }
 
-      nsCOMPtr<nsITextContent> textContent(do_QueryInterface(content));
-
-      if (!textContent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      result = textContent->SetText(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstr)),
-                                JS_GetStringLength(jsstr),
-                                PR_FALSE);
+      result =
+        textContent->SetText(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                 JS_GetStringChars(jsstr)),
+                             JS_GetStringLength(jsstr),
+                             PR_FALSE);
 
       if (NS_FAILED(result)) {
         return result;
       }
       
-      // this addrefs textNode:
-      result = AppendChildTo(content, PR_FALSE, PR_FALSE);
+      result = AppendChildTo(textContent, PR_FALSE, PR_FALSE);
       if (NS_FAILED(result)) {
         return result;
       }
