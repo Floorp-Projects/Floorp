@@ -1,3 +1,4 @@
+IGNORE_MANIFEST=1
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -45,6 +46,19 @@ LLIBS32 = $(LLIBS32) uuid2.lib
 LLIBS = $(LLIBS) $(LLIBS32)
 !else
 LLIBS = $(LLIBS) $(LLIBS16)
+!endif
+
+
+MODULE=winprefs 
+DEPTH=..\..\..\..\.. 
+REQUIRES=dllcom winprefs pref dbm nspr js 
+CPPSRCS=edpref.cpp pages.cpp edpages.cpp 
+CPP_OBJS=.\$(OBJDIR)\edpref.obj .\$(OBJDIR)\pages.obj \
+    .\$(OBJDIR)\edpages.obj 
+!if "$(MOZ_BITS)" != "16"
+LINCS=-I$(XPDIST)\public\dllcom -I$(XPDIST)\public\winprefs \
+    -I$(XPDIST)\public\pref -I$(XPDIST)\public\dbm \
+    -I$(XPDIST)\public\nspr -I$(XPDIST)\public\js 
 !endif
 
 !include "$(MOZ_SRC)\ns\config\rules.mak"
