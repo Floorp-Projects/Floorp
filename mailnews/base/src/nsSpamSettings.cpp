@@ -274,7 +274,8 @@ NS_IMETHODIMP nsSpamSettings::ClearLog()
   // disable logging while clearing
   mLoggingEnabled = PR_FALSE;
 
-  nsresult rv = TruncateLog();
+  nsresult rv;
+  rv = TruncateLog();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to truncate filter log");
 
   mLoggingEnabled = loggingEnabled;
