@@ -76,7 +76,12 @@ const char* const JavaDOMGlobals::DOM_EXCEPTION_MESSAGE[] =
    "Modification disallowed",
    "Node not found",
    "Type is unsupported",
-   "Attribute is alreay in use"};
+   "Attribute is alreay in use", 
+   "Invalid state",
+   "Syntax error",
+   "Invalid modification",
+   "Namespace error",
+   "Invalid access"};
 
 PRLogModuleInfo* JavaDOMGlobals::log = NULL;
 

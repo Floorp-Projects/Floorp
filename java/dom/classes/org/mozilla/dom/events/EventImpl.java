@@ -130,9 +130,7 @@ public class EventImpl implements Event {
      * on the current <code>EventTarget</code> before event flow stops.  This 
      * method may be used during any stage of event flow.
      */
-    public void stopPropagation() {
-	throw new UnsupportedOperationException();
-    }
+    public native void stopPropagation();
     
     /**
      * 
@@ -149,7 +147,5 @@ public class EventImpl implements Event {
 				 boolean canBubbleArg, 
 				 boolean cancelableArg);
     
-    public long getTimeStamp() {
-        throw new UnsupportedOperationException();
-    }
+    public native long getTimeStamp();
 }

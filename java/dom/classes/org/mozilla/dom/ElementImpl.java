@@ -42,38 +42,12 @@ public class ElementImpl extends NodeImpl implements Element {
     public native Attr setAttributeNode(Attr newAttr);
 
     //since DOM2
-    public String getAttributeNS(String namespaceURI, String localName) {
-        throw new UnsupportedOperationException();
-    }
-
-    public void setAttributeNS(String namespaceURI, String localName,
-                               String value) throws DOMException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void removeAttributeNS(String namespacURI, String localName)   
-                                              throws DOMException {
-        throw new UnsupportedOperationException();
-    }
-
-    public Attr getAttributeNodeNS(String namespaceURI, String localName) {
-        throw new UnsupportedOperationException();
-    }
-
-    public Attr setAttributeNodeNS(Attr newAttr) throws DOMException {
-        throw new UnsupportedOperationException();
-    }
-
-    public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean hasAttribute(String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean hasAttributeNS(String namespaceURI, 
-                                  String localName) {
-        throw new UnsupportedOperationException();
-    }
+    public native String getAttributeNS(String namespaceURI, String localName);
+    public native void setAttributeNS(String namespaceURI, String qualifiedName, String value);
+    public native void removeAttributeNS(String namespacURI, String localName);   
+    public native Attr getAttributeNodeNS(String namespaceURI, String localName);
+    public native Attr setAttributeNodeNS(Attr newAttr);
+    public native NodeList getElementsByTagNameNS(String namespaceURI, String localName);
+    public native boolean hasAttribute(String name);
+    public native boolean hasAttributeNS(String namespaceURI, String localName);
 }

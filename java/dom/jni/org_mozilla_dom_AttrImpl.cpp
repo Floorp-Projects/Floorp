@@ -148,4 +148,30 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
   }
 }
 
+/*
+ * Class:     org_mozilla_dom_AttrImpl
+ * Method:    getOwnerElement
+ * Signature: ()Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_AttrImpl_getOwnerElement
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMAttr* attr = (nsIDOMAttr*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!attr) {
+    JavaDOMGlobals::ThrowException(env,
+      "Attr.setValue: NULL pointer\n");
+    return NULL;
+  }
+
+  nsIDOMElement* aOwnerElement = nsnull;
+  nsresult rv = attr->GetOwnerElement(&aOwnerElement);
+  if (NS_FAILED(rv)) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Attr.getOwnerElement: failed (%x)\n", rv));
+    return NULL;
+  }
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)aOwnerElement);
+}
 

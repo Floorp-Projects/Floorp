@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* Inaccessible static: javaDOMlisteners */
 /*
  * Class:     org_mozilla_dom_AttrImpl
  * Method:    getName
@@ -38,6 +39,14 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getValue
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_dom_AttrImpl
+ * Method:    getOwnerElement
+ * Signature: ()Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_AttrImpl_getOwnerElement
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

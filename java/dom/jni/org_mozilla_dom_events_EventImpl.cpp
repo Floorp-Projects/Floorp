@@ -331,3 +331,53 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
 	   ("Event.initEvent: failed (%x)\n", rv));
   }
 }
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    stopPropagation
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_stopPropagation
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMEvent* event = (nsIDOMEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+        "Event.stopPropagation: NULL pointer");
+    return;
+  }
+
+  nsresult rv = event->StopPropagation();
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Event.stopPropagation: failed", rv);
+  }
+}
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getTimeStamp
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_events_EventImpl_getTimeStamp
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMEvent* event = (nsIDOMEvent*)
+    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+  if (!event) {
+    JavaDOMGlobals::ThrowException(env,
+        "Event.getTimeStamp: NULL pointer");
+    return 0;
+  }
+
+  PRUint64 aTimeStamp;
+  nsresult rv = event->GetTimeStamp(&aTimeStamp);
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Event.getTimeStamp: failed", rv);
+      return 0; 
+  }
+
+  return (jlong)aTimeStamp;
+}

@@ -104,6 +104,30 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
   (JNIEnv *, jobject);
 
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    createEvent
+ * Signature: (Ljava/lang/String;)Lorg/w3c/dom/events/Event;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEvent
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    getElementsByTagNameNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/NodeList;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagNameNS
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    getElementById
+ * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

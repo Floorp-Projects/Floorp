@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+/* Inaccessible static: javaDOMlisteners */
 /*
  * Class:     org_mozilla_dom_ElementImpl
  * Method:    getAttribute
@@ -79,6 +79,70 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
   (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    getAttributeNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNS
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    setAttributeNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNS
+  (JNIEnv *, jobject, jstring, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    removeAttributeNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNS
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    getAttributeNodeNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/Attr;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNodeNS
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    setAttributeNodeNS
+ * Signature: (Lorg/w3c/dom/Attr;)Lorg/w3c/dom/Attr;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNodeNS
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    getElementsByTagNameNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/NodeList;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagNameNS
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    hasAttribute
+ * Signature: (Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttribute
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_dom_ElementImpl
+ * Method:    hasAttributeNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttributeNS
+  (JNIEnv *, jobject, jstring, jstring);
 
 #ifdef __cplusplus
 }

@@ -81,16 +81,16 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getRelatedNode
- * Signature: ()Lorg/w3c/dom/Node;
+ * Method:    getRelatedTarget
+ * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedTarget
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
  * Method:    initMouseEvent
- * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;IIIIIZZZZSLorg/w3c/dom/Node;)V
+ * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;IIIIIZZZZSLorg/w3c/dom/events/EventTarget;)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
   (JNIEnv *, jobject, jstring, jboolean, jboolean, jobject, jint, jint, jint, jint, jint, jboolean, jboolean, jboolean, jboolean, jshort, jobject);

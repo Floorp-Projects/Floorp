@@ -141,25 +141,11 @@ public class NodeImpl implements Node, EventTarget {
     private native int XPCOM_hashCode();
 
     //since DOM level 2
-    public boolean supports(String feature, String version) {
-        throw new UnsupportedOperationException();
-    }
-    
-    public String getNamespaceURI() {
-        throw new UnsupportedOperationException(); 
-    }
-    
-    public String getPrefix() {
-        throw new UnsupportedOperationException();
-    }
-
-    public void setPrefix(String prefix) throws DOMException {
-        throw new UnsupportedOperationException();
-    }
-
-    public String getLocalName() {
-        throw new UnsupportedOperationException();
-    }
+    public native boolean supports(String feature, String version);
+    public native String getNamespaceURI();
+    public native String getPrefix();
+    public native void setPrefix(String prefix);
+    public native String getLocalName();
     
     public void addEventListener(String type, 
                                  EventListener listener, 

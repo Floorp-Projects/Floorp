@@ -23,9 +23,8 @@ Building
      Perl 5 must be in your path
      JDKHOME environment variable set to your JDK dir
      CLASSPATH environment cvariable set to contain 
-        org.w3c.dom classes. The sources can be found at	
-        http://www.w3.org/TR/2000/CR-DOM-Level-2-20000307/java-binding.html
-        and the binaries can be found at http://www.mozilla.org/projects/blackwood/webclient/bin/m3/files.html
+	org.w3c.dom classes. The sources can be found at	
+        http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/java-binding.html
 
      Solaris specific
      ----------------

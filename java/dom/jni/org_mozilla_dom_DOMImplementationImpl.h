@@ -39,6 +39,22 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1equ
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1hashCode
   (JNIEnv *, jobject);
 
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    createDocumentType
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/DocumentType;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocumentType
+  (JNIEnv *, jobject, jstring, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    createDocument
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Lorg/w3c/dom/DocumentType;)Lorg/w3c/dom/Document;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocument
+  (JNIEnv *, jobject, jstring, jstring, jobject);
+
 #ifdef __cplusplus
 }
 #endif

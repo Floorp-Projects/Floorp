@@ -143,3 +143,101 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getNotations
   return jret;
 }
 
+/*
+ * Class:     org_mozilla_dom_DocumentTypeImpl
+ * Method:    getPublicId
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getPublicId
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMDocumentType* docType = (nsIDOMDocumentType*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!docType) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("DocumentType.getPublicId: NULL pointer\n"));
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = docType->GetPublicId(ret);
+  if (NS_FAILED(rv)) {
+      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getPublicId: failed (%x)\n", rv));
+    return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getPublicId: NewString failed\n"));
+  }
+
+  return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentTypeImpl
+ * Method:    getSystemId
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getSystemId
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMDocumentType* docType = (nsIDOMDocumentType*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!docType) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("DocumentType.getSystemId: NULL pointer\n"));
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = docType->GetSystemId(ret);
+  if (NS_FAILED(rv)) {
+      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getSystemId: failed (%x)\n", rv));
+    return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getSystemId: NewString failed\n"));
+  }
+
+  return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentTypeImpl
+ * Method:    getInternalSubset
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getInternalSubset
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMDocumentType* docType = (nsIDOMDocumentType*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!docType) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("DocumentType.getInternalSubset: NULL pointer\n"));
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = docType->GetInternalSubset(ret);
+  if (NS_FAILED(rv)) {
+      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getInternalSubset: failed (%x)\n", rv));
+    return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("DocumentType.getInternalSubset: NewString failed\n"));
+  }
+
+  return jret;
+}

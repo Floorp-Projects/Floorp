@@ -39,7 +39,5 @@ public class AttrImpl extends NodeImpl implements Attr {
      * <code>null</code> if this attribute is not in use.
      * @since DOM Level 2
      */
-    public Element            getOwnerElement() {
-        throw new UnsupportedOperationException();
-    }
+    public native Element getOwnerElement();
 }

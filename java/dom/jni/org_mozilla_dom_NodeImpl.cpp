@@ -836,8 +836,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     }
     JavaDOMGlobals::ThrowException(env,
       "Node.setNodeValue: failed", rv, exceptionType);
-
-    return;
   }
 }
 
@@ -934,3 +932,184 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
     }
 }
 
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    supports
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
+  (JNIEnv *env, jobject jthis, jstring jfeature, jstring jversion)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node || !jfeature) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.supports: NULL pointer");
+    return  JNI_FALSE;
+  }
+
+  nsString* feature = JavaDOMGlobals::GetUnicode(env, jfeature);
+  if (!feature)
+      return JNI_FALSE;
+
+  nsString* version;
+  if (jversion) {
+      version = JavaDOMGlobals::GetUnicode(env, jversion);
+      if (!version) {
+	  nsString::Recycle(feature);
+	  return JNI_FALSE;
+      }
+  } else {
+      version = new nsString();
+  }
+
+  PRBool ret = PR_FALSE;
+  nsresult rv = node->Supports(*feature, *version, &ret);
+  nsString::Recycle(feature);
+  nsString::Recycle(version);
+
+  if (NS_FAILED(rv)) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.supports: failed (%x)\n", rv));
+  }
+
+  return ret == PR_TRUE ? JNI_TRUE : JNI_FALSE;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getNamespaceURI
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNamespaceURI
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNamespaceURI: NULL pointer");
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = node->GetNamespaceURI(ret);
+
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Node.getNamespaceURI: failed");
+      return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.getNamespaceURI: NewString failed\n"));
+  }
+
+  return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getPrefix
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getPrefix
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getPrefix: NULL pointer");
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = node->GetPrefix(ret);
+
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Node.getPrefix: failed");
+      return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.getPrefix: NewString failed\n"));
+  }
+
+  return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    setPrefix
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setPrefix
+  (JNIEnv *env, jobject jthis, jstring jprefix)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node || !jprefix) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.setPrefix: NULL pointer");
+    return;
+  }
+
+  nsString* prefix = JavaDOMGlobals::GetUnicode(env, jprefix);
+  if (!prefix)
+    return;
+
+  nsresult rv = node->SetPrefix(*prefix);
+  nsString::Recycle(prefix);
+
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+	(rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+	 rv == NS_ERROR_DOM_NAMESPACE_ERR ||
+	 rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+	exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.setPrefix: failed", rv, exceptionType);
+  }
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getLocalName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getLocalName
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getLocalName: NULL pointer");
+    return NULL;
+  }
+
+  nsString ret;
+  nsresult rv = node->GetLocalName(ret);
+
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Node.getLocalName: failed");
+      return NULL;
+  }
+
+  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  if (!jret) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.getLocalName: NewString failed\n"));
+  }
+
+  return jret;
+}

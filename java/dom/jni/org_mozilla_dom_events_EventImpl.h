@@ -25,10 +25,10 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
 
 /*
  * Class:     org_mozilla_dom_events_EventImpl
- * Method:    getCurrentNode
- * Signature: ()Lorg/w3c/dom/Node;
+ * Method:    getCurrentTarget
+ * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentTarget
   (JNIEnv *, jobject);
 
 /*
@@ -81,11 +81,27 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventDefault
 
 /*
  * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    stopPropagation
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_stopPropagation
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
  * Method:    initEvent
  * Signature: (Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
   (JNIEnv *, jobject, jstring, jboolean, jboolean);
+
+/*
+ * Class:     org_mozilla_dom_events_EventImpl
+ * Method:    getTimeStamp
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_events_EventImpl_getTimeStamp
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_DOMImplementationImpl.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -174,4 +175,116 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
   }
 
   return ret == PR_TRUE ? JNI_TRUE : JNI_FALSE;
+}
+
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    createDocumentType
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/DocumentType;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocumentType
+  (JNIEnv *env, jobject jthis, jstring jqualifiedName, jstring jpublicID, jstring jsystemID)
+{
+  nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
+    env->GetLongField(jthis, JavaDOMGlobals::domImplementationPtrFID);
+  if (!dom || !jqualifiedName || ! jpublicID || jsystemID) {
+    JavaDOMGlobals::ThrowException(env,
+	"DOMImplementation.createDocumentType: NULL pointer");
+    return NULL;
+  }
+
+  nsString* qualifiedName = JavaDOMGlobals::GetUnicode(env, jqualifiedName);
+  if (!qualifiedName)
+      return NULL;
+
+  nsString* publicID = JavaDOMGlobals::GetUnicode(env, jpublicID);
+  if (!publicID) {
+      nsString::Recycle(qualifiedName);
+      return NULL;
+  }
+
+  nsString* systemID = JavaDOMGlobals::GetUnicode(env, jsystemID);
+  if (!systemID) {
+      nsString::Recycle(qualifiedName);
+      nsString::Recycle(publicID);
+      return NULL;
+  }
+
+  nsIDOMDocumentType* docType = nsnull;
+  nsresult rv = dom->CreateDocumentType(*qualifiedName, *publicID, *systemID, &docType);
+  nsString::Recycle(qualifiedName);
+  nsString::Recycle(publicID);
+  nsString::Recycle(systemID);
+
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+      if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+	  (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+	   rv == NS_ERROR_DOM_NAMESPACE_ERR)) {
+	  exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+      }
+      JavaDOMGlobals::ThrowException(env,
+	  "DOMImplementation.createDocumentType: failed", rv, exceptionType);
+      return NULL;
+  }
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)docType);
+}
+
+/*
+ * Class:     org_mozilla_dom_DOMImplementationImpl
+ * Method:    createDocument
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Lorg/w3c/dom/DocumentType;)Lorg/w3c/dom/Document;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocument
+  (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jqualifiedName, jobject jdoctype)
+{
+  nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
+    env->GetLongField(jthis, JavaDOMGlobals::domImplementationPtrFID);
+  if (!dom || !jnamespaceURI || !jqualifiedName) {
+    JavaDOMGlobals::ThrowException(env,
+	"DOMImplementation.createDocument: NULL pointer");
+    return NULL;
+  }
+
+  nsString* namespaceURI = JavaDOMGlobals::GetUnicode(env, jnamespaceURI);
+  if (!namespaceURI)
+      return NULL;
+
+  nsString* qualifiedName = JavaDOMGlobals::GetUnicode(env, jqualifiedName);
+  if (!qualifiedName) {
+      nsString::Recycle(namespaceURI);
+      return NULL;
+  }
+
+  nsIDOMDocumentType* docType = nsnull;
+  if (jdoctype) {
+      docType = (nsIDOMDocumentType*)
+	env->GetLongField(jdoctype, JavaDOMGlobals::nodeListPtrFID);
+      if (!docType) {
+	JavaDOMGlobals::ThrowException(env,
+	    "DOMImplementation.createDocument: NULL arg pointer");
+	return NULL;
+      }
+  }
+
+  nsIDOMDocument* doc = nsnull;
+  nsresult rv = dom->CreateDocument(*namespaceURI, *qualifiedName, docType, &doc);
+  nsString::Recycle(namespaceURI);
+  nsString::Recycle(qualifiedName);
+
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+      if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
+	  (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+	   rv == NS_ERROR_DOM_NAMESPACE_ERR ||
+	   rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
+	  exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+      }
+      JavaDOMGlobals::ThrowException(env,
+	  "DOMImplementation.createDocument: failed", rv, exceptionType);
+      return NULL;
+  }
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)doc);    
 }

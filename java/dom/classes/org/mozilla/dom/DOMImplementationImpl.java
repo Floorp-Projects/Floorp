@@ -52,20 +52,11 @@ public class DOMImplementationImpl implements DOMImplementation {
     private native int XPCOM_hashCode();
 
     //since DOM2
-    public DocumentType createDocumentType(String qualifiedName, String publicID, String systemID) {
-        throw new UnsupportedOperationException();
-    }
+    public native DocumentType createDocumentType(String qualifiedName, 
+						  String publicID, 
+						  String systemID);
 
-    public Document  createDocument(String namespaceURI,
-                                    String qualifiedName,
-                                    DocumentType doctype) throws DOMException {
-        throw new UnsupportedOperationException();
-    }
-
-    public DocumentType createDocumentType(String qualifiedName, 
-                                           String publicId, 
-                                           String systemId, 
-                                           String internalSubset) {
-        throw new UnsupportedOperationException();
-    }                                                                                                      
+    public native Document createDocument(String namespaceURI,
+					  String qualifiedName,
+					  DocumentType doctype);
 }

@@ -31,9 +31,18 @@
 #include "nsIDOMEntityReference.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMDocumentEvent.h"
 #include "nsDOMError.h"
 #include "javaDOMGlobals.h"
+#include "javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_DocumentImpl.h"
+
+static NS_DEFINE_IID(kIDOMDocumentEventIID, NS_IDOMDOCUMENTEVENT_IID);
+
+// undefine macros from WINBASE.H
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
 
 /*
  * Class:     org_mozilla_dom_DocumentImpl
@@ -617,4 +626,119 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
 
   impl->AddRef();
   return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    createEvent
+ * Signature: (Ljava/lang/String;)Lorg/w3c/dom/events/Event;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEvent
+  (JNIEnv *env, jobject jthis, jstring jtype)
+{
+  nsISupports *doc = (nsISupports*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!doc || !jtype) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEvent: NULL pointer");
+    return NULL;
+  }
+
+  nsString* type = JavaDOMGlobals::GetUnicode(env, jtype);
+  if (!type)
+    return NULL;
+
+  nsIDOMDocumentEvent* docEvent = nsnull;
+  doc->QueryInterface(kIDOMDocumentEventIID, (void **) &docEvent);
+  if(!docEvent) {
+      JavaDOMGlobals::ThrowException(env,
+	  "Document.createEvent: NULL DOMDocumentEvent pointer");
+      return NULL;
+  }
+
+  nsIDOMEvent* event = nsnull;
+  nsresult rv = docEvent->CreateEvent(*type, &event);
+  nsString::Recycle(type);
+
+  if (NS_FAILED(rv) || !event) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.createEvent: failed", rv);
+    return NULL;
+  }
+
+  return JavaDOMEventsGlobals::CreateEventSubtype(env, event);
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    getElementsByTagNameNS
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/NodeList;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagNameNS
+  (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
+{
+  nsIDOMDocument* doc = (nsIDOMDocument*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!doc || !jnamespaceURI || !jlocalName) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagNameNS: NULL pointer");
+    return NULL;
+  }
+
+  nsString* namespaceURI = JavaDOMGlobals::GetUnicode(env, jnamespaceURI);
+  if (!namespaceURI)
+    return NULL;
+
+  nsString* localName = JavaDOMGlobals::GetUnicode(env, jlocalName);
+  if (!localName) {
+    nsString::Recycle(namespaceURI);
+    return NULL;
+  }
+
+  nsIDOMNodeList* elements = nsnull;
+
+  nsresult rv = doc->GetElementsByTagNameNS(*namespaceURI, *localName, &elements);  
+  nsString::Recycle(namespaceURI);
+  nsString::Recycle(localName);
+
+  if (NS_FAILED(rv) || !elements) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementsByTagNameNS: failed", rv);
+    return NULL;
+  }
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)elements);
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    getElementById
+ * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Element;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
+  (JNIEnv *env, jobject jthis, jstring jelementId)
+{
+  nsIDOMDocument* doc = (nsIDOMDocument*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!doc || !jelementId) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementById: NULL pointer");
+    return NULL;
+  }
+
+  nsString* elementId = JavaDOMGlobals::GetUnicode(env, jelementId);
+  if (!elementId)
+    return NULL;
+
+  nsIDOMElement* element = nsnull;
+  nsresult rv = doc->GetElementById(*elementId, &element);  
+  nsString::Recycle(elementId);
+
+  if (NS_FAILED(rv) || !element) {
+    JavaDOMGlobals::ThrowException(env,
+      "Document.getElementById: failed", rv);
+    return NULL;
+  }
+
+  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)element);
 }

@@ -7,30 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     org_mozilla_dom_NodeImpl
- * Method:    XPCOM_equals
- * Signature: (Ljava/lang/Object;)Z
- */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
-  (JNIEnv *, jobject, jobject);
-
-/*
- * Class:     org_mozilla_dom_NodeImpl
- * Method:    XPCOM_hashCode
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_mozilla_dom_NodeImpl
- * Method:    addNativeEventListener
- * Signature: (Ljava/lang/String;Lorg/w3c/dom/events/EventListener;Z)J
- */
-JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
-  (JNIEnv *, jobject, jstring, jobject, jboolean);
-
+/* Inaccessible static: javaDOMlisteners */
 /*
  * Class:     org_mozilla_dom_NodeImpl
  * Method:    appendChild
@@ -46,14 +23,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
  */
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_cloneNode
   (JNIEnv *, jobject, jboolean);
-
-/*
- * Class:     org_mozilla_dom_NodeImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_finalize
-  (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_NodeImpl
@@ -169,14 +138,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
 
 /*
  * Class:     org_mozilla_dom_NodeImpl
- * Method:    removeNativeEventListener
- * Signature: (Ljava/lang/String;JZ)V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
-  (JNIEnv *, jobject, jstring, jlong, jboolean);
-
-/*
- * Class:     org_mozilla_dom_NodeImpl
  * Method:    replaceChild
  * Signature: (Lorg/w3c/dom/Node;Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
@@ -190,6 +151,86 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
  */
 JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    finalize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_finalize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    XPCOM_equals
+ * Signature: (Ljava/lang/Object;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    XPCOM_hashCode
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    supports
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getNamespaceURI
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNamespaceURI
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getPrefix
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getPrefix
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    setPrefix
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setPrefix
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getLocalName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getLocalName
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    addNativeEventListener
+ * Signature: (Ljava/lang/String;Lorg/w3c/dom/events/EventListener;Z)J
+ */
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
+  (JNIEnv *, jobject, jstring, jobject, jboolean);
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    removeNativeEventListener
+ * Signature: (Ljava/lang/String;JZ)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
+  (JNIEnv *, jobject, jstring, jlong, jboolean);
 
 #ifdef __cplusplus
 }
