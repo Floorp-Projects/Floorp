@@ -867,28 +867,6 @@ function EditorColorProperties()
   contentWindow.focus();
 }
 
-function EditorApplyStyleSheet(styleSheetURL)
-{
-  // Second param is true for "override" type of sheet
-  // We don't let users use that option
-  editorShell.ApplyStyleSheet(styleSheetURL);
-  contentWindow.focus();
-}
-
-function EditorImageMap()
-{
-  if (editorShell){
-    var tagName = "img";
-    image = editorShell.GetSelectedElement(tagName);
-
-    //Test selected element to see if it's an image
-    if (image){
-      //If it is, launch image map dialog
-      window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close", "");
-    }
-  }
-}
-
 // --------------------------- Dialogs ---------------------------
 
 function EditorInsertHTML()
