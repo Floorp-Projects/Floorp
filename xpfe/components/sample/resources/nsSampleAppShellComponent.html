@@ -5,7 +5,7 @@ var title  = "Sample Application Shell Component Test";
 var progid = "component://netscape/appshell/component/sample";
 var iid    = Components.interfaces.nsISampleAppShellComponent;
 var observer = {
-    Observe: function( observer, subject, topic, data ) {
+    Observe: function( subject, topic, data ) {
         dump( "observe called; subject=[" + subject + "] topic=[" + topic +
               "] data=[" + data + "]\n" );
     }
