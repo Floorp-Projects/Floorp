@@ -878,7 +878,7 @@ sub get_test_list {
 
         $actually_skipped = $orig_size - ($#test_list + 1);
 
-        &dd ($actually_skipped . " of " . ($#test_list + 1) .
+        &dd ($actually_skipped . " of " . $orig_size .
              " tests will be skipped.");
         &dd ((($#neg_list + 1) - $actually_skipped) . " skip tests were " .
              "not actually part of the test list.");
