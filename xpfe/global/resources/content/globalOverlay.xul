@@ -52,12 +52,12 @@
 				 oncommand="goDoCommand('cmd_paste')"
 				 onchange="goUpdateCommand('cmd_paste')"
 				 disabled="true"/>
-	<broadcaster id="cmd_delete" 
+	<broadcaster id="cmd_delete" commandupdater="true"
 				 oncommand="goDoCommand('cmd_delete')"
 				 onchange="goUpdateCommand('cmd_delete')"
 				 valueDefault="&deleteCmd.label;"
 				 disabled="true"/>
-	<broadcaster id="cmd_selectAll" 
+	<broadcaster id="cmd_selectAll" commandupdater="true"
 				 oncommand="goDoCommand('cmd_selectAll')"
 				 onchange="goUpdateCommand('cmd_selectAll')"
 				 disabled="true"/>
