@@ -34,7 +34,9 @@
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
+#include "nsGfxUtils.h"
 #include "nsCOMPtr.h"
+
 #include "plhash.h"
 
 #include <FixMath.h>
@@ -44,30 +46,6 @@
 
 #define STACK_TREASHOLD 1000
 
-
-//------------------------------------------------------------------------
-// utility port setting class
-//------------------------------------------------------------------------
-
-class StPortSetter {
-public:
-	StPortSetter(GrafPtr newPort)
-		: mNewPort(newPort), mOldPort(::GetQDGlobalsThePort())
-	{
-		if (mOldPort != newPort)
-			::SetPort(newPort);
-	}
-	
-	~StPortSetter()
-	{
-		if (mOldPort != mNewPort)
-			::SetPort(mOldPort);
-	}
-
-protected:
-	GrafPtr		mNewPort;
-	GrafPtr		mOldPort;
-};
 
 //------------------------------------------------------------------------
 
