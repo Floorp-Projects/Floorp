@@ -12380,7 +12380,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       }
     }
     else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType)) {
+             (nsLayoutAtoms::lineFrame == frameType) ||
+             (nsLayoutAtoms::positionedInlineFrame == frameType)) {
       nsIFrame* kids = frame->GetFirstChild(nsnull);
       WrapFramesInFirstLetterFrame(aPresShell, aPresContext, aState, frame, kids,
                                    aModifiedParent, aTextFrame,
@@ -12570,7 +12571,8 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       break;
     }
     else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType)) {
+             (nsLayoutAtoms::lineFrame == frameType) ||
+             (nsLayoutAtoms::positionedInlineFrame == frameType)) {
       // Look inside child inline frame for the letter frame
       RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager, kid,
                               aStopLooking);
