@@ -1,3 +1,4 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 ################################
 # Bugzilla Module              #
 ################################
@@ -48,19 +49,31 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^\s*(?:please\s+)?(?:(?:could\s+you\s+)?(?:please\s+)?show\s+me\s+|what\s+is\s+|what's\s+)?bug(?:\s*id)?s?[#\s]+([0-9].*?|&.+?)(?:\s+please)?[?!.]*\s*$/osi) {
+    if ($message =~ m/^ \s*                      # some optional whitespace
+                        (?:please\s+)?           # an optional "please", followed optionally by either:
+                        (?: (?:could\s+you\s+)?  # 1. an optional "could you",
+                            (?:please\s+)?       #    another optional "please",
+                            show\s+me\s+ |       #    and the text "show me"
+                            what\s+is\s+ |       # 2. the text "what is"
+                            what\'s\s+     )?    # 3. or the text "what's"
+                        bug (?:\s*id)?s? [\#\s]+ # a variant on "bug", "bug id", "bugids", etc
+                        ([0-9].*?|               # a query string, either a number followed by some optional text, or
+                         &.+?)                   # a query string, starting with a &.
+                        (?:\s+please)?           # followed by yet another optional "please"
+                        [?!.\s]*                 # ending with some optional punctuation
+                      $/osix) {
         my $target = $event->{'target'};
         my $bug = $1;
         $self->FetchBug($event, $bug, 'bugs', 0, 0);
-        $self->{'bugsHistory'}->{$target}->{$bug} = time() if $bug =~ /^[0-9]+$/os;
-    } elsif ($message =~ /^\s*bug-?total\s+(.+?)\s*$/osi) {
+        $self->{'bugsHistory'}->{$target}->{$bug} = time() if $bug =~ m/^[0-9]+$/os;
+    } elsif ($message =~ m/^\s*bug-?total\s+(.+?)\s*$/osi) {
         $self->FetchBug($event, $1, 'total', 0, 0);
     } elsif ($self->isAdmin($event)) {
-        if ($message =~ /^\s*mute\s+bugzilla\s+in\s+(\S+?)\s*$/osi) {
+        if ($message =~ m/^\s*mute\s+bugzilla\s+in\s+(\S+?)\s*$/osi) {
             $self->{'mutes'} .= " $1";
             $self->saveConfig();
             $self->say($event, "$event->{'from'}: Watching for bug numbers disabled in channel $1.");
-        } elsif ($message =~ /^\s*unmute\s+bugzilla\s+in\s+(\S+)\s*$/osi) {
+        } elsif ($message =~ m/^\s*unmute\s+bugzilla\s+in\s+(\S+)\s*$/osi) {
             my %mutedChannels = map { $_ => 1 } split(/ /o, $self->{'mutes'});
             delete($mutedChannels{$1}); # get rid of any mentions of that channel
             $self->{'mutes'} = join(' ', keys(%mutedChannels));
@@ -78,28 +91,48 @@ sub Told {
 sub CheckForBugs {
     my $self = shift;
     my ($event, $message) = @_;
-    my $bug;
-    my $skipURI;
-    if ($message =~ /^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?bug[\s#]*([0-9]+)(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/osi) {
-        $bug = $1;
-        $skipURI = 0;
-    } elsif ($message =~ /\Q$self->{'bugsURI'}\Eshow_bug.cgi\?id=([0-9]+)(?:[^0-9&].*)?$/si) {
-        $bug = $1;
-        $skipURI = 1;
-    }
-    if (($bug) and ((not $event->{'channel'}) or ($self->{'mutes'} !~ /^(.*\s|)\Q$event->{'channel'}\E(|\s.*)$/si)) and 
-        (not $self->ignoringCommentsFrom($event->{'from'})) and (not $self->ignoringCommentsTo($message))) {
-        $self->debug("Noticed someone mention bug $bug -- investigating...");
-        my $last = 0;
-        $last = $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} if defined($self->{'bugsHistory'}->{$event->{'target'}}->{$bug});
-        if ((time()-$last) > $self->{'backoffTime'}) {
-            $self->FetchBug($event, $bug, 'bugs', $skipURI, 1);
+    if ((($event->{'channel'} eq '') or # either it was /msg'ed, or
+         ($self->{'mutes'} !~ m/^(?:.*\s|)\Q$event->{'channel'}\E(?:|\s.*)$/si)) and # it was sent on a channel in which we aren't muted
+        (not $self->ignoringCommentsFrom($event->{'from'})) and # we aren't ignoring them
+        (not $self->ignoringCommentsTo($message))) { # and they aren't talking to someone we need to ignore
+        my $rest = $message;
+        my $bugsFound = 0;
+        my $bugsToFetch = '';
+        my $bug;
+        my $skipURI;
+        do {
+            if ($rest =~ m/ (?:^|                        # either the start of the string
+                               []\s,.;:\\\/=?!()<>{}[-]) # or some punctuation
+                            bug [\s\#]* ([0-9]+)         # followed a string similar to "bug # 123" (put the number in $1)
+                            (?:[]\s,.;:\\\/=?!()<>{}[-]+ # followed optionally by some punctuation,
+                            (.*))?$/osix) {              # and everything else (which we put in $2)
+                $bug = $1;
+                $skipURI = 0;
+                $rest = $2;
+            } elsif ($rest =~ m/\Q$self->{'bugsURI'}\Eshow_bug.cgi\?id=([0-9]+)(?:[^0-9&](.*))?$/si) {
+                $bug = $1;
+                $skipURI = 1;
+                $rest = $2;
+            } else {
+                $bug = undef;
+            }
+            if (defined($bug)) {
+                $self->debug("Noticed someone mention bug $bug -- investigating...");
+                my $last = 0;
+                $last = $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} if defined($self->{'bugsHistory'}->{$event->{'target'}}->{$bug});
+                if ((time()-$last) > $self->{'backoffTime'}) {
+                    $bugsToFetch .= "$bug ";
+                }
+                $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = time();
+                $bugsFound++;
+            }
+        } while (defined($bug));
+        if ($bugsToFetch ne '') {
+            $self->FetchBug($event, $bugsToFetch, 'bugs', $skipURI, 1);
         }
-        $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = time();
-        return 1;
-    } else {
-        return 0;
+        return $bugsFound;
     }
+    return 0;
 }
 
 sub Heard {
@@ -114,7 +147,7 @@ sub Heard {
 sub Baffled {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^\s*(...+?)\s+bugs\s*$/osi) {
+    if ($message =~ m/^\s*(...+?)\s+bugs\s*$/osi) {
         my $target = $event->{'target'};
         $self->FetchBug($event, $1, 'dwim', 0, 0);
     } else {
@@ -166,7 +199,7 @@ sub GotURI {
         # magicness
         { no warnings; # this can go _very_ wrong easily
 
-        $lots = ($output !~ /<FORM\s+METHOD=POST\s+ACTION="long_list.cgi">/osi); # if we got truncated, then this will be missing
+        $lots = ($output !~ m/<FORM\s+METHOD=POST\s+ACTION="long_list.cgi">/osi); # if we got truncated, then this will be missing
         $output =~ s/<\/TABLE><TABLE .+?<\/A><\/TH>//gosi;
         (undef, $output) = split(/Summary<\/A><\/TH>/osi, $output);
         ($output, undef) = split(/<\/TABLE>/osi, $output);
@@ -235,7 +268,7 @@ sub ignoringCommentsTo {
     my $self = shift;
     my ($who) = @_;
     foreach (@{$self->{'ignoreCommentsTo'}}) {
-        return 1 if $who =~ /^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?\Q$_\E(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/is;
+        return 1 if $who =~ m/^(?:.*[]\s,.;:\\\/=?!()<>{}[-])?\Q$_\E(?:[]\s,.;:\\\/=?!()<>{}[-].*)?$/is;
     }
     return 0;
 }
