@@ -20,17 +20,12 @@
 #define nsISelectControlFrame_h___
 
 #include "nsISupports.h"
-#include "nsFont.h"
-class nsFormFrame;
-class nsIPresContext;
-class nsString;
-class nsIContent;
 
-
-// IID for the nsIListControlFrame class
+// IID for the nsISelectControlFrame class
 #define NS_ISELECTCONTROLFRAME_IID    \
-{ 0xf44db101, 0xa73c, 0x11d2,  \
-  { 0x8d, 0xcf, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
+{ 0x162a2ae3, 0x5a79, 0x11d3,  \
+  { 0x96, 0xea, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
+// {162A2AE3-5A79-11d3-96EA-0060B0FB9956}
 
 /** 
   * nsISelectControlFrame is the interface for combo boxes and listboxes
