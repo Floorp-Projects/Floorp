@@ -427,11 +427,11 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIPrincipal> newPrincipal;
-      doc->GetPrincipal(getter_AddRefs(newPrincipal));
-
-      nsresult rv =
-        sSecMan->CheckSameOriginPrincipal(mDocumentPrincipal,
-                                          newPrincipal);
+      nsresult rv = doc->GetPrincipal(getter_AddRefs(newPrincipal));
+      if (NS_SUCCEEDED(rv)) {
+        rv = sSecMan->CheckSameOriginPrincipal(mDocumentPrincipal,
+                                               newPrincipal);
+      }
 
       if (NS_SUCCEEDED(rv)) {
         // Same origins.  Notify the navigator object that we are
