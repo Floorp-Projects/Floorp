@@ -169,6 +169,9 @@ int main(int argc, char **argv)
         SECU_PrintPRandOSError(progName);
         ret=NSS_INITIALIZE_FAILED_ERR;
     } else {
+        if (NSS_Shutdown() != SECSuccess) {
+            exit(1);
+        }
         ret=SUCCESS;
     }
 
