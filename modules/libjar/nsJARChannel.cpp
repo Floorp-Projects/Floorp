@@ -371,8 +371,30 @@ ReadJARElement(nsJARChannel* jarChannel, void* closure)
 NS_IMETHODIMP
 nsJARChannel::AsyncRead(nsIStreamListener* listener, nsISupports* ctxt)
 {
+    nsresult rv;
     mUserContext = ctxt;
     mUserListener = listener;
+
+    if (mLoadGroup) {
+        if (mUserListener) {
+            nsCOMPtr<nsILoadGroupListenerFactory> factory;
+            //
+            // Create a load group "proxy" listener...
+            //
+            rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+            if (factory) {
+                nsIStreamListener *newListener;
+                rv = factory->CreateLoadGroupListener(mUserListener, &newListener);
+                if (NS_SUCCEEDED(rv)) {
+                    mUserListener = newListener;
+                    NS_RELEASE(newListener);
+                }
+            }
+        }
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return EnsureJARFileAvailable(ReadJARElement, nsnull);
 }
 
@@ -404,26 +426,6 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
            ("nsJarProtocol: EnsureJARFileAvailable %s", (const char*)jarURLStr));
 #endif
-
-    if (mLoadGroup) {
-        if (mUserListener) {
-            nsCOMPtr<nsILoadGroupListenerFactory> factory;
-            //
-            // Create a load group "proxy" listener...
-            //
-            rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-            if (factory) {
-                nsIStreamListener *newListener;
-                rv = factory->CreateLoadGroupListener(mUserListener, &newListener);
-                if (NS_SUCCEEDED(rv)) {
-                    mUserListener = newListener;
-                    NS_RELEASE(newListener);
-                }
-            }
-        }
-        rv = mLoadGroup->AddChannel(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
     if (NS_FAILED(rv)) goto error;
