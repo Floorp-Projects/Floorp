@@ -637,6 +637,41 @@ RDFServiceImpl::GetRDFService(nsIRDFService** mgr)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(RDFServiceImpl, nsIRDFService, nsISupportsWeakReference)
 
+// Per RFC2396.
+static const PRUint8
+kLegalSchemeChars[] = {
+          //        ASCII    Bits     Ordered  Hex
+          //                 01234567 76543210
+    0x00, // 00-07
+    0x00, // 08-0F
+    0x00, // 10-17
+    0x00, // 18-1F
+    0x00, // 20-27   !"#$%&' 00000000 00000000
+    0x28, // 28-2F  ()*+,-./ 00010100 00101000 0x28
+    0xff, // 30-37  01234567 11111111 11111111 0xFF
+    0x03, // 38-3F  89:;<=>? 11000000 00000011 0x03
+    0xfe, // 40-47  @ABCDEFG 01111111 11111110 0xFE
+    0xff, // 48-4F  HIJKLMNO 11111111 11111111 0xFF
+    0xff, // 50-57  PQRSTUVW 11111111 11111111 0xFF
+    0x87, // 58-5F  XYZ[\]^_ 11100001 10000111 0x87
+    0xfe, // 60-67  `abcdefg 01111111 11111110 0xFE
+    0xff, // 68-6F  hijklmno 11111111 11111111 0xFF
+    0xff, // 70-77  pqrstuvw 11111111 11111111 0xFF
+    0x07, // 78-7F  xyz{|}~  11100000 00000111 0x07
+    0x00, 0x00, 0x00, 0x00, // >= 80
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+static inline PRBool
+IsLegalSchemeCharacter(const char aChar)
+{
+    PRUint8 mask = kLegalSchemeChars[aChar >> 3];
+    PRUint8 bit = PR_BIT(aChar & 0x7);
+    return PRBool((mask & bit) != 0);
+}
+
 
 NS_IMETHODIMP
 RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
@@ -678,7 +713,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
     // XXX Although it's really not correct, we'll allow underscore
     // characters ('_'), too.
     const char* p = aURI;
-    while ((*p) && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || (*p == '_')) && (*p != ':'))
+    while (IsLegalSchemeCharacter(*p))
         ++p;
 
     nsresult rv;
