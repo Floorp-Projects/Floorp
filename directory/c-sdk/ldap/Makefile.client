@@ -27,7 +27,7 @@ MOD_DEPTH = ..
 include $(NSPR_TREE)/config/rules.mk
 include ../build.mk
 
-SRCDIRS	= build include libraries
+SRCDIRS	= include libraries
 
 ifeq ($(BUILDCLU), 1)
 SRCDIRS += clients/tools
