@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "gtklayout.h"
 
 #include "nsMenuBar.h"
 #include "nsIMenu.h"
@@ -67,6 +68,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   GtkWidget *mainWindow = XtParent(parentWidget);
 #endif
   mMenu = gtk_menu_bar_new();
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mMenu, 0, 0);
   gtk_widget_show(mMenu);
 // does this need to be added?
 //  gtk_layout_put(GTK_LAYOUT(parentWidget), mMenu, 0, 0);

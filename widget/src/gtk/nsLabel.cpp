@@ -19,14 +19,15 @@
 #include <gtk/gtk.h>
 #include "gtklayout.h"
 
-#include "nsWindow.h"
 #include "nsLabel.h"
+#include "nsIAppShell.h"
 #include "nsILabel.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nsWidget.h"
 
 #include "nsGtkEventHandler.h"
 
@@ -38,7 +39,7 @@ NS_IMPL_RELEASE(nsLabel)
 // nsLabel constructor
 //
 //-------------------------------------------------------------------------
-nsLabel::nsLabel() : nsWindow(), nsILabel()
+nsLabel::nsLabel() : nsWidget(), nsILabel()
 {
   NS_INIT_REFCNT();
   mAlignment = eAlign_Left;
@@ -57,9 +58,9 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
   GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (GtkWidget*) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else if (aAppShell) {
-    parentWidget = (GtkWidget*) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
   }
 
   InitToolkit(aToolkit, aParent);
@@ -70,6 +71,7 @@ NS_METHOD nsLabel::Create(nsIWidget *aParent,
   mWidget = gtk_label_new("");
   gtk_widget_show(mWidget);
 //  gtk_misc_set_alignment(GTK_MISC(mWidget), alignment);
+  gtk_widget_set_usize(GTK_WIDGET(mWidget), aRect.width, aRect.height);
   gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
 
   /* we need add this to the parent, and set its width, etc */
@@ -146,7 +148,8 @@ nsLabel::~nsLabel()
 //-------------------------------------------------------------------------
 nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+
+  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
   static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kILabelIID)) {
