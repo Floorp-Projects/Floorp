@@ -1907,7 +1907,7 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
          "error, it may indicate that the site has not yet been updated to "
          "support standards implemented by the Mozilla browser such as the "
          "W3C Document Object Model (DOM).  Please see "
-         "http://developer.netsape.com/mozilla/ for more information.";
+         "http://developer.netscape.com/mozilla/ for more information.";
       showAlert = PR_TRUE;
       }
    else
