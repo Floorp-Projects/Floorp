@@ -42,7 +42,6 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIFileLocator.h"
-#include "nsIPrefWindow.h"
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -160,30 +159,6 @@ PrintUsage(void)
 }
 
 //----------------------------------------------------------------------------------------
-static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
-  //----------------------------------------------------------------------------------------
-{
-  // Support the "-pref" command-line option, which just puts up the pref window, so that
-  // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
-  // the application.
-  char* cmdResult;
-  nsresult rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
-  if (NS_SUCCEEDED(rv) && cmdResult && (PL_strcmp("1",cmdResult) == 0))
-  {
-    nsIPrefWindow* prefWindow;
-    rv = nsComponentManager::CreateInstance(
-                                            NS_PREFWINDOW_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsIPrefWindow),
-                                            (void **)&prefWindow);
-    if (NS_SUCCEEDED(rv))
-      prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
-    NS_IF_RELEASE(prefWindow);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-} // CheckandRunPrefs
-
 static void InitFullCircle()
 {
   // initialization for Full Circle
@@ -579,9 +554,6 @@ static nsresult main1(int argc, char* argv[])
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
   appShell->CreateHiddenWindow();
-
-  if ( CheckAndRunPrefs(cmdLineArgs) )
-  	return NS_OK;
 
 #ifdef NS_BUILD_REFCNT_LOGGING  
   nsTraceRefcnt::SetPrefServiceAvailability(PR_TRUE);
