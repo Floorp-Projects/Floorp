@@ -116,7 +116,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     mBlockedSites = nsnull;
 
     BOOL gotPref;
-    BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_plugins" withSuccess:&gotPref];
+    BOOL pluginsEnabled = [[PreferenceManager sharedInstance] getBooleanPref:"camino.enable_plugins" withSuccess:&gotPref];
     if (gotPref && !pluginsEnabled)
       [mBrowserView setProperty:nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS toValue:PR_FALSE];
     

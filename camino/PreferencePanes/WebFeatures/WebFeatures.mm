@@ -31,8 +31,6 @@
   [mEnableJS setState:jsEnabled];
   BOOL javaEnabled = [self getBooleanPref:"security.enable_java" withSuccess:&gotPref] && gotPref;
   [mEnableJava setState:javaEnabled];
-  BOOL pluginsEnabled = [self getBooleanPref:"chimera.enable_plugins" withSuccess:&gotPref] && gotPref;
-  [mEnablePlugins setState:pluginsEnabled];
 
   // set initial value on popup blocking checkbox and disable the whitelist
   // button if it's off
@@ -75,16 +73,6 @@
 -(IBAction) clickEnableJava:(id)sender
 {
   [self setPref:"security.enable_java" toBoolean:[sender state] == NSOnState];
-}
-
-//
-// clickEnablePlugins
-//
-// Set pref if plugins are enabled
-//
--(IBAction) clickEnablePlugins:(id)sender
-{
-  [self setPref:"chimera.enable_plugins" toBoolean:[sender state] == NSOnState];
 }
 
 //

@@ -60,7 +60,7 @@ pref("browser.quartz.enable.all_font_sizes", true);
 pref("chimera.store_passwords_with_keychain", true);
 pref("chimera.keychain_passwords_autofill", true);
 
-pref("chimera.enable_plugins", true);
+pref("camino.enable_plugins", true);
 pref("chimera.log_js_to_console", true);
 
 // Identify Camino in the UA string
