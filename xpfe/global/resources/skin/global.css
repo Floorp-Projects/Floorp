@@ -14,11 +14,11 @@
 @import url(chrome://global/skin/tree.css);
 @import url(chrome://global/skin/menubutton.css);
 @import url(chrome://global/skin/menulist.css);
-@import url(chrome://global/skin/colors.css);
+@import url(chrome://global/skin/formatting.css);
 @import url(chrome://global/skin/textfield.css);
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
-@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+@namespace html url("http://www.w3.org/TR/REC-html40"); 
 
 /**********************************
  * Window
@@ -101,7 +101,7 @@ toolbargrippy:hover {
   background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
 } 
 
-toolbar.standard {
+.standard {
 	color: white;
 	background-color: #003366;
 	padding: 0px;
@@ -113,15 +113,13 @@ toolbar.standard {
 /**
  * Navigation Toolbar
  */
-toolbar.decorated {
+.decorated {
 	background-image: url("chrome://global/skin/navbar-bg.gif");
-	background-repeat: repeat-x;
-	background-position: 0% 0%;
 	background-color: #CCCCCC;
 	padding: 0px;
 }
 
-toolbar.decorated > #toolbar_throbber_box { 
+.decorated > #toolbar_throbber_box { 
 	background-color: #CCCCCC;
 	min-width: 68px;
 	max-width: 68px;
@@ -130,13 +128,13 @@ toolbar.decorated > #toolbar_throbber_box {
 	background-position: 100% 0%;
 }
 
-toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber
+.decorated > #toolbar_throbber_box > titledbutton#Throbber
 {
 	margin-top: 0px;
 	margin-left: 9px;
 }
 
-toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber:hover:active {
+.decorated > #toolbar_throbber_box > titledbutton#Throbber:hover:active {
 	margin-top: 1px;
 	margin-left: 10px;
 }
@@ -574,6 +572,7 @@ window[orient="vertical"]>splitter {
 	cursor: n-resize;
 }
 
+  
 rows>splitter {
 	/* a vertical splitter */
     cursor: n-resize;
@@ -677,28 +676,22 @@ box
 titledbox
 {
   display: block;
-  border: 2px groove white;
-  padding: 5px;
-  padding-bottom: 2px;
+  border: 2px groove #CCCCCC;
+  padding: 7px;
   margin: 5px;
 }
 
 title
 {
    display: block;
-   font-weight: bold;
+   margin-left: 6px;
+   padding-right: 40px;
 }
 
 title > *
 {
-   margin-left: 5px;
-   margin-right: 5px;
-}
-
-title > html|*
-{
-   margin-left: 5px;
-   margin-right: 5px;
+   margin-left: 3px;
+   margin-right: 3px;
 }
 
 :titledbox-content {
@@ -1914,11 +1907,11 @@ html|select[size="1"]:-moz-display-comboboxcontrol-frame:focus {
     
   html
     {
-      margin              : 5px;
+      margin              : 1px 5px 4px 5px;
       cursor              : default;
     }
 
-  html.header 
+  .header 
     {
       font-weight         : bold;
     }
@@ -1964,16 +1957,36 @@ html|select[size="1"]:-moz-display-comboboxcontrol-frame:focus {
     
     
 /** box formatting **/
-  box[autostretch="never"][valign="center"] 
+  box[autostretch="never"]
     {
       vertical-align      : middle;
     }
-  
-  box[autostretch="never"][orient="vertical"][halign="center"] 
+    
+  box[autostretch="never"][valign="top"]
+    {
+      vertical-align      : top;
+    }
+    
+  box[autostretch="never"][valign="bottom"]
+    {
+      vertical-align      : bottom;
+    }
+    
+  box[autostretch="never"][halign="center"] 
     {
       text-align          : center;
     }
+    
+  box[autostretch="never"][halign="right"]
+    {
+      text-align          : right;
+    }
 
+  row
+    {
+      vertical-align      : middle;
+    }
+    
 /** XUL <scrollbar> element **/
   scrollbar 
     { 

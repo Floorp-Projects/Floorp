@@ -31,7 +31,7 @@ DIRS		= unix
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/tasksOverlay.css \
 		$(srcdir)/global.css \
-		$(srcdir)/colors.css \
+		$(srcdir)/formatting.css \
 		$(srcdir)/textfield.css \
 		$(srcdir)/button.css \
 		$(srcdir)/checkbox.css \

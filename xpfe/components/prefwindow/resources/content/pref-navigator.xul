@@ -29,82 +29,78 @@
 
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+        class="color-dialog"
         orient="vertical" title="&title.label;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-navigator' ); else parent.queuedTag = 'pref-navigator';">
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
 
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <html:script language="javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>
-
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["startupPage", "browserStartupHomepage", "histDay"];
+  ]]>
+  </script>
+  
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
   <!-- navigator starts with -->  
-  <titledbox  orient="vertical">
+  <titledbox>
 	  <title><text value="&navRadio;"/></title>	
-		<html:div>
-			<html:input name="starts" type="radio" id="browserStartupPage0"
-                  pref="true" preftype="int" prefindex="0" prefstring="browser.startup.page"/>
-			<html:label for="browserStartupPage0" accesskey="" tabindex="0">
-				&blankRadio;			
-			</html:label>
-		</html:div>
-		<html:div>
-			<html:input name="starts" type="radio" id="browserStartupPage1"
-                  pref="true" preftype="int" prefindex="1" prefstring="browser.startup.page"/>
-			<html:label for="browserStartupPage1" accesskey="" tabindex="0">			
-				&header2.label;
-			</html:label>
-		</html:div>
-		<html:div>
-			<html:input name="starts" type="radio" id="browserStartupPage2"
-                  pref="true" preftype="int" prefindex="2" prefstring="browser.startup.page"/>
-			<html:label for="browserStartupPage2" accesskey="" tabindex="0">			
-				&lastPageRadio;
-			</html:label>
-		</html:div>
-		</titledbox>  
+    
+    <radiogroup id="startupPage" autostretch="never" orient="vertical"
+                pref="true" preftype="int" prefstring="browser.startup.page"
+                prefattribute="data" wsm_persist="true">
+      <radio group="startupPage" data="0" value="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
+      <radio group="startupPage" data="1" value="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
+      <radio group="startupPage" data="2" value="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
+    </radiogroup>
+
+  </titledbox>
 	
-    <!-- homepage specification -->
-		<titledbox  orient="vertical">
-			<title><text value="&header2.label;"/></title>
-      <box orient="vertical" flex="1">
-  			<html:div>&clickRadio;</html:div>
-        <html:div>
-          <html:label for="browserStartupHomepage" style="padding-left: 1px;">&location;</html:label>
-  	  		<html:input size="50" name="homepage" type="text"	id="browserStartupHomepage" 
-                      pref="true" preftype="string" prefstring="browser.startup.homepage" />
-  		  </html:div>
-        <box orient="horizontal">
-  				<spring flex="1"/>
-  				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="setHomePageToCurrentPage('browserStartupHomepage');" />
-  				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false);"/>
-  			</box>		
-			</box>		
-		</titledbox>  
-<!-- commenting out for beta -->
-		<titledbox  orient="vertical"  style="display: none;">
-			<title><text value="&header3.label;"/></title>
-      <box orient="vertical" flex="1">
-			  <html:div>&historyPages;</html:div>	
-        <box orient="horizontal" autostretch="never" style="vertical-align: middle">
-    			<html:label for="histDay" style="padding: 0px;">&pagesHis;</html:label>
-          <html:input type="text" value="&histDay;" id="histDay" style="margin-left: 2px; margin-right: 5px;"
-                pref="true" preftype="string" prefstring="browser.history_expire_days" size="3"/>
-    			<html:div>&daysRadio;</html:div>
-          <spring flex="1"/>
-	    		<titledbutton class="dialog push" name="Clearit" value="&clearHis;" />		
-        </box>
+  <!-- homepage specification -->
+  <titledbox orient="vertical">
+  	<title><text value="&header2.label;"/></title>
+    <html>&homePageIntro.label;</html>
+    <box autostretch="never">
+      <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
+      <textfield id="browserStartupHomepage" flex="1" wsm_persist="true"
+                 pref="true" preftype="string" prefstring="browser.startup.homepage"
+                 prefattribute="value"/>  <!-- we may wish to change this to data
+                                               when we support fancy formatted local filenames -->
+    </box>
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+              oncommand="setHomePageToCurrentPage('browserStartupHomepage');"/>
+      <button class="dialog" value="&browseFile.label;" accesskey="&browseFile.accesskey;"
+              oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
+  	</box>		
+  </titledbox>  
+  
+  <!-- history -->
+  <titledbox orient="vertical">
+  	<title><text value="&header3.label;"/></title>
+    <html>&historyPages.label;</html>
+    <box autostretch="never">
+      <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
+      <textfield id="histDay" size="3" wsm_persist="true"
+                 pref="true" preftype="int" prefstring="browser.history_expire_days"
+                 prefattribute="value"/>
+      <text class="label" value="&days.label;"/>
+      <spring flex="1"/>
+      <button class="dialog" value="&clearHistory.label;" accesskey="&clearHistory.accesskey;"/>
+    </box>
+  </titledbox>  
+  
+  <!-- no honey, I haven't been viewing porn, honest! -->
+  <titledbox orient="vertical">
+  	<title><text value="&locationBarHistory.label;"/></title>
+    <box autostretch="never">
+      <html flex="1">&clearLocationBar.label;</html>
+      <box autostretch="never" halign="right">
+        <button class="dialog" value="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"/>
       </box>
-		</titledbox>  
-<!-- commenting out for beta -->
-		<titledbox  orient="vertical"  style="display: none;">
-			<title><html:div>&header4.label;</html:div></title>
-      <box orient="horizontal" flex="1" autostretch="never" style="vertical-align: middle">
-        <html:label style="padding: 0px;">&clearBar;</html:label>
-        <spring flex="1"/>
-		    <titledbutton class="dialog push" name="starts" type="button" value="&clearLoc;" />		
-      </box>
-		</titledbox>  
+    </box>
+  </titledbox>  
+
 </window>
 

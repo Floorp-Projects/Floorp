@@ -7,24 +7,27 @@
  
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+        class="color-dialog"
         align="vertical" 
         title="&title.label;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smartupdate' ); else parent.queuedTag = 'pref-smartupdate';">
-
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');">
+  
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["XPInstallEnabled", "XPInstallNotificationsEnabled"];
+  ]]>
+  </script>
+        
+        
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
     
   <titledbox orient="vertical">
-    <html:div class="vertical-gap">
-      <html:input type="checkbox" id="XPInstallEnabled"
-                  pref="true" preftype="bool" prefstring="xpinstall.enabled" />
-      <html:label for="XPInstallEnabled">&enableSU.label;</html:label>
-    </html:div>
-    <html:div>
-      <html:input type="checkbox" id="XPInstallNotificationsEnabled"
-                  pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"/>
-      <html:label for="XPInstallNotificationsEnabled">&enableNotification.label;</html:label>
-    </html:div>
+    <checkbox id="XPInstallEnabled" value="&enableSU.label;" accesskey="&enableSU.accesskey;"
+              pref="true" preftype="bool" prefstring="xpinstall.enabled"
+              prefattribute="checked"/>
+    <checkbox id="XPInstallNotificationsEnabled" value="&enableNotification.label;" accesskey="&enableNotification.accesskey;"
+              pref="true" preftype="bool" prefstring="xpinstall.notifications.enabled"
+              prefattribute="checked"/>
   </titledbox>
 
 <!--
@@ -43,7 +46,7 @@
       </tree>
       <spring flex="5%"/>
       <box align="vertical">
-        <titledbutton class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;"/>
+        <titledbutton class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
         <spring flex="100%"/>
       </box>
     </box>

@@ -20,7 +20,6 @@
    
    Contributor(s): 
   -->
-
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -28,131 +27,74 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-proxies.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog" title="Sample Prefs Panel"
-        align="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-proxies' ); else parent.queuedTag = 'pref-proxies';">
+        class="color-dialog"
+        orient="vertical"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-proxies.xul');">
 
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <html:script language="JavaScript" src="chrome://communicator/content/pref/pref-proxies.js"/>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP", "networkProxyHTTP_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
+  ]]>
+  </script>
+        
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="JavaScript" src="chrome://communicator/content/pref/pref-proxies.js"></script>
   
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <box align="vertical" style="width: 100%;">
-		<titledbox orient="vertical">
-   		<html:div>&networkHeader.label;</html:div>
-		<spring class="vgap"/>
-      <box>
-  			<html:div>
-          <html:input name="directManualOrAuto" type="radio" id="networkProxyType0"
-                      onclick="DoEnabling();"
-                      pref="true" preftype="int" prefindex="0" prefstring="network.proxy.type"/>
-   			<html:label for="networkProxyType0" accesskey="d" tabindex="0">
-     			&directTypeRadio.label;
-   			</html:label>
- 			</html:div>
+  <titledbox orient="vertical">
+    <html>&networkHeader.label;</html>
 
+    <radiogroup id="networkProxyType" orient="vertical"
+                pref="true" preftype="int" prefstring="network.proxy.type"
+                prefattribute="data">
+      <radio data="0" value="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <radio data="1" value="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <grid class="indent" flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        
+        <rows>
+          <row>
+            <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
+            <box autostretch="never">
+              <textfield id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
+                         prefattribute="value" flex="1"/>
+              <text class="label" value="&port.label;" accesskey="&FTPport.accesskey;" for="networkProxyFTP_Port"/>
+              <textfield id="networkProxyFTP_Port" pref="true" preftype="string" prefstring="network.proxy.ftp_port"
+                         prefattribute="value" size="5"/>
+            </box>
+          </row>
+          <row>
+            <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
+            <box autostretch="never">
+              <textfield id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
+                         prefattribute="value" flex="1"/>
+              <text class="label" value="&port.label;" accesskey="&HTTPport.accesskey;" for="networkProxyHTTP_Port"/>
+              <textfield id="networkProxyHTTP_Port" pref="true" preftype="string" prefstring="network.proxy.http_port"
+                         prefattribute="value" size="5"/>
+            </box>
+          </row>
+          <row> 
+            <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
+            <textfield id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
+                       prefattribute="value"/>
+          </row>
+        </rows>
+      </grid>
+      <radio data="2" value="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <box class="indent" flex="1">
+        <textfield id="networkProxyAutoconfigURL" flex="1" 
+                   pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
+                   prefattribute="value"/>        
+        <button id="autoReload" class="dialog" value="&reload.label;" accesskey="&reload.accesskey;"/>
       </box>
-      <box align="horizontal" flex="1">
-  			<html:div>
-     			<html:input name="directManualOrAuto" type="radio" id="networkProxyType1"
-                      onclick="DoEnabling();"
-                      pref="true" preftype="int" prefindex="1" prefstring="network.proxy.type"/>
-   			<html:label for="networkProxyType1" accesskey="m" tabindex="0">
-    			&manualTypeRadio.label;
-   			</html:label>
- 			</html:div>
+    </radiogroup>
 
-        <spring flex="1"/>
-   			<!--<titledbutton id="viewhideManual" class="dialog push" value="&view.label;" onclick="showManualProxyConfig();"/>-->
-      </box>
-      <html:div align="horizontal" id="manual-proxy" style="width: 100px; height: 100px; padding-left: 21px">
-       	<html:table>
-       		<html:tr>
-       		  <html:td>&ftp.label;</html:td>
-       		  <html:td>
-         		  <html:input name="ftpproxy" type="text" id="networkProxyFTP"
-                          pref="true" preftype="string" prefstring="network.proxy.ftp" size="20"/>
-       		  </html:td>
-       		  <html:td>&port.label;</html:td>
-       		  <html:td>
-      		    <html:input name="ftpproxyport" type="text" id="networkProxyFTP_Port"
-                          pref="true" preftype="int" prefstring="network.proxy.ftp_port" size="5"/>
-         		</html:td>
-         	</html:tr>	
-       	  <html:tr>
-       		  <html:td>&http.label;</html:td>
-         		<html:td>
-         		  <html:input name="httpproxy" type="text" id="networkProxyHTTP"
-                          pref="true" preftype="string" prefstring="network.proxy.http" size="20"/>
-       		  </html:td>
-         		<html:td>&port.label;</html:td>
-         		<html:td>
-       	  	  <html:input name="httpproxyport" type="text" id="networkProxyHTTP_Port"
-                          pref="true" preftype="int" prefstring="network.proxy.http_port" size="5"/>
-       	    </html:td>
-         	</html:tr>
-          <html:tr>
-         		<html:td>&noproxy.label;</html:td>
-        		<html:td>
-           		<html:input name="noproxy" type="text" id="networkProxyNone"
-                          pref="true" preftype="string" prefstring="network.proxy.no_proxies_on" size="20"/>
-         	  </html:td>
-         	</html:tr>
-        </html:table>
-      </html:div>
-          <!-- Not supporting gopher -->
-          <!--	
-            <box align="horizontal">
-          		<html:div>&gopher.label;</html:div>
-          		<html:div>&port.label;</html:div>
-         		  <html:input name="gopherproxyport" type="text" id="pref:string:network.proxy.gopher_port" size="5" />
-    	      </box>  
-          -->
-        	<!--  Not supporting wais right now  -->
-          <!--	
-            <box align="horizontal">
-          		<html:div>&wais.label;</html:div>
-          		<html:input name="waisproxy" type="text" id="pref:string:network.proxy.wais" size="20" />
-          		<spring flex="100%"/>
-          		<html:div>&port.label;</html:div>
-          		<html:input name="waisproxyport" type="text" id="pref:string:network.proxy.wais_port" size="5" />  
-          	</box>  
-          -->
-          <!--	
-            <box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
-          		<spring flex="100%"/>
-          		<html:div>&direct.label;</html:div>
-          	</box>   
-          -->
-    	    <!-- No supporting at this point  -->
-          <!--	
-            <box align="horizontal">
-          		<html:div>&sockhost.label;</html:div>
-          		<html:input name="sockshost" type="text" id="pref:string:network.socks.host" size="20" />
-              <spring flex="100%"/>
-          		<html:div>&port.label;</html:div>
-          		<html:input name="socksport" type="text" id="pref:string:network.socks.port" size="5" />
-          	</box>  
-          -->
-  			<html:div>
-          <html:input name="directManualOrAuto" type="radio" id="networkProxyType2"
-                      onclick="DoEnabling();"
-                      pref="true" preftype="int" prefindex="2" prefstring="network.proxy.type"/>
-  			<html:label for="networkProxyType2" accesskey="a" tabindex="0">&autoTypeRadio.label;</html:label>
-
-  			</html:div>
-      <box align="horizontal">
-   			&configAutoconfigText.label;
-      </box>
-      <box align="horizontal" flex="100%" style="width: 100%;">
-        <spring flex="25%"/>
-   			<html:input name="" type="text" flex="100%" id="networkProxyAutoconfigURL"
-                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"/>
-        <titledbutton class="dialog push" id="autoReload" value="&reload.label;"/>
-      </box>
-		</titledbox>
-	</box>
+  </titledbox>
 
 </window>
 
