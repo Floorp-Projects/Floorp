@@ -37,6 +37,7 @@
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 class nsIContent;
+class nsIScrollableView;
 
 class nsDOMEvent : public nsIDOMKeyEvent, 
                    public nsIDOMMouseEvent,
@@ -150,6 +151,9 @@ public:
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
 
 protected:
+
+  //Internal helper funcs
+  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
 
   nsEvent* mEvent;
   nsIPresContext* mPresContext;
