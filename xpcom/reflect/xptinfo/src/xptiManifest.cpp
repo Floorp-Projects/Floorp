@@ -85,7 +85,7 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     PRIntn interfaceCount = 0;
 
     nsCOMPtr<nsILocalFile> tempFile;
-    if(!aMgr->GetComponentsDir(getter_AddRefs(tempFile)) || !tempFile)
+    if(!aMgr->GetManifestDir(getter_AddRefs(tempFile)) || !tempFile)
         return PR_FALSE;
 
     if(NS_FAILED(tempFile->Append(g_TempManifestFilename)))
@@ -176,7 +176,7 @@ out:
     {
         // delete the old file and rename this
         nsCOMPtr<nsILocalFile> mainFile;
-        if(!aMgr->GetComponentsDir(getter_AddRefs(mainFile)) || !mainFile)
+        if(!aMgr->GetManifestDir(getter_AddRefs(mainFile)) || !mainFile)
             return PR_FALSE;
     
         if(NS_FAILED(mainFile->Append(g_MainManifestFilename)))
@@ -192,13 +192,18 @@ out:
         // XXX Would prefer MoveTo with a 'null' newdir, the but nsILocalFile
         // implementation are broken.
         // http://bugzilla.mozilla.org/show_bug.cgi?id=33098
-
+#if 1        
         nsCOMPtr<nsILocalFile> dir;
-        if(!aMgr->GetComponentsDir(getter_AddRefs(dir)) || !dir)
+        if(!aMgr->GetManifestDir(getter_AddRefs(dir)) || !dir)
             return PR_FALSE;
 
         if(NS_FAILED(tempFile->CopyTo(dir, g_MainManifestFilename)))
             return PR_FALSE;
+#else
+        // so let's try the MoveTo!
+        if(NS_FAILED(tempFile->MoveTo(nsnull, g_MainManifestFilename)))
+            return PR_FALSE;
+#endif
     }
 
     return succeeded;
@@ -215,12 +220,25 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     char* whole = nsnull;
 
     nsCOMPtr<nsILocalFile> aFile;
-    if(!aMgr->GetComponentsDir(getter_AddRefs(aFile)) || !aFile)
+    if(!aMgr->GetManifestDir(getter_AddRefs(aFile)) || !aFile)
         return nsnull;
     
     if(NS_FAILED(aFile->Append(g_MainManifestFilename)))
         return nsnull;
-    
+
+#ifdef DEBUG
+    {
+        static PRBool shown = PR_FALSE;
+        char* path;
+        if(!shown && NS_SUCCEEDED(aFile->GetPath(&path)) && path)
+        {
+            printf("Type Manifest File: %s\n", path);
+            nsMemory::Free(path);
+            shown = PR_TRUE;        
+        } 
+    }            
+#endif
+
     if(NS_FAILED(aFile->GetFileSize(&fileSize)) || !(flen = nsInt64(fileSize)))
         return nsnull;
 

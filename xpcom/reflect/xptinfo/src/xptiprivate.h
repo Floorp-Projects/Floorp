@@ -25,6 +25,10 @@
 #ifndef xptiprivate_h___
 #define xptiprivate_h___
 
+#ifndef XPCOM_STANDALONE
+#define XPTI_HAS_ZIP_SUPPORT 1
+#endif /* XPCOM_STANDALONE */
+
 #include "nscore.h"
 #include "nsISupports.h"
 
@@ -50,9 +54,11 @@
 #include "nsInt64.h"
 
 #include "nsQuickSort.h"
-#ifndef XPCOM_STANDALONE
+
+#ifdef XPTI_HAS_ZIP_SUPPORT
 #include "nsIZipReader.h"
-#endif /* XPCOM_STANDALONE */
+#endif /* XPTI_HAS_ZIP_SUPPORT */
+
 #include "nsIInputStream.h"
 
 #include "nsAutoLock.h"
@@ -575,6 +581,8 @@ public:
                xptiWorkingSet* aWorkingSet) = 0;
 };
 
+#ifdef XPTI_HAS_ZIP_SUPPORT
+
 class xptiZipLoader
 {
 public:
@@ -590,15 +598,23 @@ public:
                        const char* entryName,
                        xptiWorkingSet* aWorkingSet);
 
+    static void
+    Shutdown();
+
 private:    
-#ifndef XPCOM_STANDALONE
     static XPTHeader* 
-    ReadXPTFileFromOpenZip(nsIZipReader * zip,
+    ReadXPTFileFromOpenZip(nsIZipReader* zip,
                            nsIZipEntry* entry,
                            const char* entryName,
                            xptiWorkingSet* aWorkingSet);
-#endif /* XPCOM_STANDALONE */
+
+    static nsIZipReader*
+    GetZipReader(nsILocalFile* file);
+
+    static nsCOMPtr<nsIZipReaderCache> gCache;
 };
+
+#endif /* XPTI_HAS_ZIP_SUPPORT */
 
 /***************************************************************************/
 
@@ -671,6 +687,7 @@ public:
                     xptiWorkingSet* aWorkingSet = nsnull);
 
     PRBool GetComponentsDir(nsILocalFile** aDir);
+    PRBool GetManifestDir(nsILocalFile** aDir);
     
     static PRLock* GetResolveLock(xptiInterfaceInfoManager* self = nsnull) 
         {if(!self && !(self = GetInterfaceInfoManagerNoAddRef())) 
