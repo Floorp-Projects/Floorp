@@ -105,13 +105,13 @@
      </rule>
   </template>
 
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
-  <treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
-  <treecol id="LastVisitColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-  <treecol id="AddedOnColumn" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-  <treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+  <treecol persist="width" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol persist="width" id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol persist="width" id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+  <treecol persist="width" id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
+  <treecol persist="width" id="LastVisitColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+  <treecol persist="width" id="AddedOnColumn" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
+  <treecol persist="width" id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
   <treehead>
     <treerow>
