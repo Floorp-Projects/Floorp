@@ -76,8 +76,8 @@ function Startup()
   if (backgroundImage)
     dialog.BackgroundImageInput.value = backgroundImage;
 
-  // "data" attribute value is a string conversion of boolean!
-  if( document.getElementById( "useCustomColors" ).data == "true" )
+  // "value" attribute value is a string conversion of boolean!
+  if( document.getElementById( "useCustomColors" ).value == "true" )
     UseCustomColors();
   else
     UseDefaultColors();
