@@ -632,6 +632,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 
   widgetInit.clipChildren = PR_FALSE;
+  widgetInit.mBorderStyle = eBorderStyle_3DChildWindow;
   mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                   mDeviceContext, nsnull, nsnull, &widgetInit);
 
